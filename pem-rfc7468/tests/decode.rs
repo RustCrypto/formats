@@ -10,6 +10,26 @@ fn pkcs1_example() {
 }
 
 #[test]
+fn pkcs1_enc_example() {
+    let pem = include_bytes!("examples/ssh_rsa_pem_password.pem");
+    let mut buf = [0u8; 2048];
+    match pem_rfc7468::decode(pem, &mut buf) {
+        Err(pem_rfc7468::Error::HeaderDetected) => (),
+        _ => panic!("Expected HeaderDetected error"),
+    }
+}
+
+#[test]
+fn header_of_length_64() {
+    let pem = include_bytes!("examples/chosen_header.pem");
+    let mut buf = [0u8; 2048];
+    match pem_rfc7468::decode(pem, &mut buf) {
+        Err(pem_rfc7468::Error::HeaderDetected) => (),
+        _ => panic!("Expected HeaderDetected error"),
+    }
+}
+
+#[test]
 fn pkcs8_example() {
     let pem = include_bytes!("examples/pkcs8.pem");
     let mut buf = [0u8; 2048];

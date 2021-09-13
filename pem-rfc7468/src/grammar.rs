@@ -19,6 +19,9 @@ pub(crate) const CHAR_CR: u8 = 0x0d;
 /// Line feed
 pub(crate) const CHAR_LF: u8 = 0x0a;
 
+/// Colon ':'
+pub(crate) const CHAR_COLON: u8 = 0x3A;
+
 /// Does the provided byte match a character allowed in a label?
 // TODO(tarcieri): relax this to match the RFC 7468 ABNF
 pub(crate) fn is_labelchar(char: u8) -> bool {

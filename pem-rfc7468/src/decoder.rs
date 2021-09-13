@@ -31,7 +31,20 @@ pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o 
     let mut out_len = 0;
 
     for line in encapsulation.encapsulated_text() {
-        out_len += Base64::decode(line?, &mut buf[out_len..])?.len();
+        let line = line?;
+        match Base64::decode(line, &mut buf[out_len..]) {
+            Err(error) => {
+                // in the case that we are decoding the first line
+                // and we error, then attribute the error to an unsupported header
+                // if a colon char is present in the line
+                if out_len == 0 && line.iter().any(|&b| b == grammar::CHAR_COLON) {
+                    return Err(Error::HeaderDetected);
+                } else {
+                    return Err(error.into());
+                }
+            }
+            Ok(out) => out_len += out.len(),
+        }
     }
 
     Ok((label, &buf[..out_len]))
@@ -154,6 +167,7 @@ impl<'a> Encapsulation<'a> {
     /// encapsulated text.
     pub fn encapsulated_text(self) -> Lines<'a> {
         Lines {
+            is_start: true,
             bytes: self.encapsulated_text,
         }
     }
@@ -169,6 +183,8 @@ impl<'a> TryFrom<&'a [u8]> for Encapsulation<'a> {
 
 /// Iterator over the lines in the encapsulated text.
 struct Lines<'a> {
+    /// true if no lines have been read
+    is_start: bool,
     /// Remaining data being iterated over.
     bytes: &'a [u8],
 }
@@ -179,13 +195,24 @@ impl<'a> Iterator for Lines<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.bytes.len() > BASE64_WRAP_WIDTH {
             let (line, rest) = self.bytes.split_at(BASE64_WRAP_WIDTH);
-            let result = grammar::strip_leading_eol(rest)
-                .ok_or(Error::EncapsulatedText)
-                .map(|rest| {
-                    self.bytes = rest;
-                    line
-                });
-            Some(result)
+            if let Some(rest) = grammar::strip_leading_eol(rest) {
+                self.is_start = false;
+                self.bytes = rest;
+                Some(Ok(line))
+            } else {
+                // if bytes remaining does not split at BASE64_WRAP_WIDTH such
+                // that the next char(s) in the rest is vertical whitespace
+                // then attribute the error generically as `EncapsulatedText`
+                // unless we are at the first line and the line contains a colon
+                // then it may be a unsupported header
+                Some(Err(
+                    if self.is_start && line.iter().any(|&b| b == grammar::CHAR_COLON) {
+                        Error::HeaderDetected
+                    } else {
+                        Error::EncapsulatedText
+                    },
+                ))
+            }
         } else if !self.bytes.is_empty() {
             let line = self.bytes;
             self.bytes = &[];
