@@ -2,7 +2,6 @@
 //! for Abstract Syntax Notation One (ASN.1) as described in ITU [X.690].
 //!
 //! # About
-//!
 //! This crate provides a `no_std`-friendly implementation of a subset of ASN.1
 //! DER necessary for decoding/encoding various cryptography-related formats
 //! implemented as part of the [RustCrypto] project, e.g. the [`pkcs5`] and
@@ -12,14 +11,12 @@
 //! that allocate gated under the off-by-default `alloc` feature).
 //!
 //! # Minimum Supported Rust Version
-//!
 //! This crate requires **Rust 1.51** at a minimum.
 //!
 //! We may change the MSRV in the future, but it will be accompanied by a minor
 //! version bump.
 //!
 //! # Usage
-//!
 //! ## [`Decodable`] and [`Encodable`] traits
 //!
 //! The [`Decodable`] and [`Encodable`] traits are the core abstractions on
@@ -55,7 +52,6 @@
 //! - [`Utf8String`]: ASN.1 `UTF8String`
 //!
 //! ## Example
-//!
 //! The following example implements X.509's `AlgorithmIdentifier` message type
 //! as defined in [RFC 5280 Section 4.1.1.2].
 //!
@@ -223,7 +219,6 @@
 //! ```
 //!
 //! ## Custom derive support
-//!
 //! When the `derive` feature of this crate is enabled, the following custom
 //! derive macros are available:
 //!
@@ -231,7 +226,6 @@
 //! - [`Message`]: derive for `SEQUENCE` struct (see [`der_derive::Message`])
 //!
 //! ### Derive [`Message`] for `SEQUENCE` struct
-//!
 //! The following is a code example of how to use the [`Message`] custom derive:
 //!
 //! ```
@@ -312,7 +306,6 @@
 //! ```
 //!
 //! # See also
-//!
 //! For more information about ASN.1 DER we recommend the following guides:
 //!
 //! - [A Layman's Guide to a Subset of ASN.1, BER, and DER] (RSA Laboratories)
@@ -345,7 +338,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/der/0.4.1"
+    html_root_url = "https://docs.rs/der/0.4.2"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
