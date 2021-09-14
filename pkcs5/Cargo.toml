@@ -1,6 +1,6 @@
 [package]
 name = "pkcs5"
-version = "0.3.1" # Also update html_root_url in lib.rs when bumping this
+version = "0.3.2" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #5:
 Password-Based Cryptography Specification Version 2.1 (RFC 8018)
@@ -32,10 +32,10 @@ hex-literal = "0.3"
 
 [features]
 alloc = []
+3des = ["pbes2", "des"]
+des-insecure = ["pbes2", "des"]
 pbes2 = ["aes", "block-modes", "hmac", "pbkdf2", "scrypt", "sha2"]
 sha1 = ["pbes2", "sha-1"]
-des-insecure = ["pbes2", "des"]
-3des = ["pbes2", "des"]
 
 [package.metadata.docs.rs]
 all-features = true
