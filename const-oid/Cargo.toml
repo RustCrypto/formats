@@ -1,6 +1,6 @@
 [package]
 name = "const-oid"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 edition = "2018"
@@ -10,7 +10,7 @@ as defined in ITU X.660, with support for BER/DER encoding/decoding as well as
 heapless no_std (i.e. embedded) support
 """
 documentation = "https://docs.rs/const-oid"
-repository = "https://github.com/RustCrypto/formats"
+repository = "https://github.com/RustCrypto/formats/tree/master/const-oid"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["iso", "iec", "itu", "oid"]
 readme = "README.md"
