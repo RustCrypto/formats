@@ -79,20 +79,19 @@
 //!     - PBKDF2 ([RFC 8018](https://datatracker.ietf.org/doc/html/rfc8018#section-5.2))
 //!       - SHA-2 based PRF with HMAC-SHA224, HMAC-SHA256, HMAC-SHA384, or HMAC-SHA512
 //!       - SHA-1 based PRF with HMAC-SHA1, when the `sha1` feature of this crate is enabled.
-//!   - Symmetric encryption: AES-128-CBC, AES-192-CBC, or AES-256-CBC (best available options for PKCS#5v2)
+//!   - Symmetric encryption: AES-128-CBC, AES-192-CBC, or AES-256-CBC
+//!     (best available options for PKCS#5v2)
 //!  
-//! # DES-CBC and DES-EDE3-CBC (3DES) Support
-//! When the `des-insecure` and `3des` features are enabled this crate provides support for Private Keys encrypted
-//! with DES-CBC and DES-EDE3-CBC (3DES or Triple DES) symmetric encryption, respectively.
+//! ## Legacy DES-CBC and DES-EDE3-CBC (3DES) support (optional)
+//! When the `des-insecure` and/or `3des` features are enabled this crate provides support for
+//! private keys encrypted with with DES-CBC and DES-EDE3-CBC (3DES or Triple DES) symmetric
+//! encryption, respectively.
 //!
-//! **WARNING**
+//! ⚠️ WARNING ⚠️
 //!
-//! DES support is implemented to allow for decryption of legacy files. DES is considered insecure due to
-//! its short key size and SHOULD NOT be used for new keys. The algorithms implemented under the `encryption`
-//! feature should be used where possible.
+//! DES support is implemented to allow for decryption of legacy files.
 //!
-//! **WARNING**
-//!
+//! DES is considered insecure due to its short key size. New keys should use AES instead.
 //!
 //! # PKCS#1 support (optional)
 //! When the `pkcs1` feature of this crate is enabled, this crate provides
@@ -113,7 +112,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pkcs8/0.7.5"
+    html_root_url = "https://docs.rs/pkcs8/0.7.6"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
