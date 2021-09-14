@@ -20,6 +20,31 @@ use crate::{
 use base64ct::{Base64, Encoding};
 use core::{convert::TryFrom, str};
 
+fn decode_encapsulated_text<'i, 'o>(
+    encapsulation: &Encapsulation<'i>,
+    buf: &'o mut [u8],
+    out_len: &mut usize,
+) -> Result<()> {
+    for line in encapsulation.encapsulated_text() {
+        let line = line?;
+
+        match Base64::decode(line, &mut buf[*out_len..]) {
+            Err(error) => {
+                // in the case that we are decoding the first line
+                // and we error, then attribute the error to an unsupported header
+                // if a colon char is present in the line
+                if *out_len == 0 && line.iter().any(|&b| b == grammar::CHAR_COLON) {
+                    return Err(Error::HeaderDetected);
+                } else {
+                    return Err(error.into());
+                }
+            }
+            Ok(out) => *out_len += out.len(),
+        }
+    }
+    Ok(())
+}
+
 /// Decode a PEM document according to RFC 7468's "Strict" grammar.
 ///
 /// On success, writes the decoded document into the provided buffer, returning
@@ -30,22 +55,7 @@ pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o 
     let label = encapsulation.label();
     let mut out_len = 0;
 
-    for line in encapsulation.encapsulated_text() {
-        let line = line?;
-        match Base64::decode(line, &mut buf[out_len..]) {
-            Err(error) => {
-                // in the case that we are decoding the first line
-                // and we error, then attribute the error to an unsupported header
-                // if a colon char is present in the line
-                if out_len == 0 && line.iter().any(|&b| b == grammar::CHAR_COLON) {
-                    return Err(Error::HeaderDetected);
-                } else {
-                    return Err(error.into());
-                }
-            }
-            Ok(out) => out_len += out.len(),
-        }
-    }
+    decode_encapsulated_text(&encapsulation, buf, &mut out_len)?;
 
     Ok((label, &buf[..out_len]))
 }
@@ -57,17 +67,12 @@ pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o 
 pub fn decode_vec(pem: &[u8]) -> Result<(&str, Vec<u8>)> {
     let encapsulation = Encapsulation::try_from(pem)?;
     let label = encapsulation.label();
-    let mut max_len = 0;
-
-    for line in encapsulation.encapsulated_text() {
-        max_len += line?.len() * 3 / 4;
-    }
-
+    // count all chars (gives over-estimation, due to whitespace)
+    let max_len = encapsulation.encapsulated_text.len() * 3 / 4;
     let mut result = vec![0u8; max_len];
     let mut actual_len = 0;
-    for line in encapsulation.encapsulated_text() {
-        actual_len += Base64::decode(line?, &mut result[actual_len..])?.len();
-    }
+
+    decode_encapsulated_text(&encapsulation, &mut result, &mut actual_len)?;
 
     // Actual encoded length can be slightly shorter than estimated
     // TODO(tarcieri): more reliable length estimation
