@@ -1,4 +1,4 @@
-# RustCrypto: PKCS#1 (RSA)
+# [RustCrypto]: PKCS#1 (RSA)
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
@@ -59,4 +59,5 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (links)
 
+[RustCrypto]: https://github.com/rustcrypto
 [RFC 8017]: https://datatracker.ietf.org/doc/html/rfc8017
