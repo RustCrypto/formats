@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = [
+    "base64ct",
+    "const-oid",
+    "der",
+    "der/derive",
+    "pem-rfc7468",
+    "pkcs1",
+    "pkcs5",
+    "pkcs8",
+    "spki",
+    "x509"
+]
