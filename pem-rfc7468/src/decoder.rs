@@ -34,7 +34,7 @@ fn decode_encapsulated_text<'i, 'o>(
                 // and we error, then attribute the error to an unsupported header
                 // if a colon char is present in the line
                 if *out_len == 0 && line.iter().any(|&b| b == grammar::CHAR_COLON) {
-                    return Err(Error::HeaderDetected);
+                    return Err(Error::HeaderDisallowed);
                 } else {
                     return Err(error.into());
                 }
@@ -212,7 +212,7 @@ impl<'a> Iterator for Lines<'a> {
                 // then it may be a unsupported header
                 Some(Err(
                     if self.is_start && line.iter().any(|&b| b == grammar::CHAR_COLON) {
-                        Error::HeaderDetected
+                        Error::HeaderDisallowed
                     } else {
                         Error::EncapsulatedText
                     },
