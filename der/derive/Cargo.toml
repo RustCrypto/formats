@@ -1,15 +1,12 @@
 [package]
 name = "der_derive"
-version = "0.4.0" # Also update html_root_url in lib.rs when bumping this
-description = """
-Procedural macro for automatically deriving the `der` crate's `Choice` and
-`Message` traits
-"""
+version = "0.4.1" # Also update html_root_url in lib.rs when bumping this
+description = "Custom derive support for the `der` crate's `Choice` and `Message` traits"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 edition = "2018"
 documentation = "https://docs.rs/der"
-repository = "https://github.com/RustCrypto/formats/tree/master/der"
+repository = "https://github.com/RustCrypto/formats/tree/master/der/derive"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["asn1", "der", "crypto", "itu", "pkcs"]
 readme = "README.md"

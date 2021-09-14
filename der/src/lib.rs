@@ -322,7 +322,6 @@
 //! [RustCrypto]: https://github.com/rustcrypto
 //! [`pkcs5`]: https://docs.rs/pkcs5/
 //! [`pkcs8`]: https://docs.rs/pkcs8/
-//! [RustCrypto/utils#370]: https://github.com/RustCrypto/utils/issues/370
 //! [RFC 5280 Section 4.1.1.2]: https://tools.ietf.org/html/rfc5280#section-4.1.1.2
 //! [A Layman's Guide to a Subset of ASN.1, BER, and DER]: https://luca.ntop.org/Teaching/Appunti/asn1.html
 //! [A Warm Welcome to ASN.1 and DER]: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/
