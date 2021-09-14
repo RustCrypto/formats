@@ -20,6 +20,46 @@ use crate::{
 use base64ct::{Base64, Encoding};
 use core::{convert::TryFrom, str};
 
+/// Decode a PEM document according to RFC 7468's "Strict" grammar.
+///
+/// On success, writes the decoded document into the provided buffer, returning
+/// the decoded label and the portion of the provided buffer containing the
+/// decoded message.
+pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o [u8])> {
+    let encapsulation = Encapsulation::try_from(pem)?;
+    let label = encapsulation.label();
+    let mut out_len = 0;
+    decode_encapsulated_text(&encapsulation, buf, &mut out_len)?;
+    Ok((label, &buf[..out_len]))
+}
+
+/// Decode a PEM document according to RFC 7468's "Strict" grammar, returning
+/// the result as a [`Vec`] upon success.
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub fn decode_vec(pem: &[u8]) -> Result<(&str, Vec<u8>)> {
+    let encapsulation = Encapsulation::try_from(pem)?;
+    let label = encapsulation.label();
+    // count all chars (gives over-estimation, due to whitespace)
+    let max_len = encapsulation.encapsulated_text.len() * 3 / 4;
+    let mut result = vec![0u8; max_len];
+    let mut actual_len = 0;
+
+    decode_encapsulated_text(&encapsulation, &mut result, &mut actual_len)?;
+
+    // Actual encoded length can be slightly shorter than estimated
+    // TODO(tarcieri): more reliable length estimation
+    result.truncate(actual_len);
+    Ok((label, result))
+}
+
+/// Decode the encapsulation boundaries of a PEM document according to RFC 7468's "Strict" grammar.
+///
+/// On success, returning the decoded label.
+pub fn decode_label(pem: &[u8]) -> Result<&str> {
+    Ok(Encapsulation::try_from(pem)?.label())
+}
+
 fn decode_encapsulated_text<'i, 'o>(
     encapsulation: &Encapsulation<'i>,
     buf: &'o mut [u8],
@@ -43,47 +83,6 @@ fn decode_encapsulated_text<'i, 'o>(
         }
     }
     Ok(())
-}
-/// Decode the encapsulation boundaries of a PEM document according to RFC 7468's "Strict" grammar.
-///
-/// On success, returning the decoded label.
-pub fn decode_label(pem: &[u8]) -> Result<&str> {
-    Ok(Encapsulation::try_from(pem)?.label())
-}
-
-/// Decode a PEM document according to RFC 7468's "Strict" grammar.
-///
-/// On success, writes the decoded document into the provided buffer, returning
-/// the decoded label and the portion of the provided buffer containing the
-/// decoded message.
-pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o [u8])> {
-    let encapsulation = Encapsulation::try_from(pem)?;
-    let label = encapsulation.label();
-    let mut out_len = 0;
-
-    decode_encapsulated_text(&encapsulation, buf, &mut out_len)?;
-
-    Ok((label, &buf[..out_len]))
-}
-
-/// Decode a PEM document according to RFC 7468's "Strict" grammar, returning
-/// the result as a [`Vec`] upon success.
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub fn decode_vec(pem: &[u8]) -> Result<(&str, Vec<u8>)> {
-    let encapsulation = Encapsulation::try_from(pem)?;
-    let label = encapsulation.label();
-    // count all chars (gives over-estimation, due to whitespace)
-    let max_len = encapsulation.encapsulated_text.len() * 3 / 4;
-    let mut result = vec![0u8; max_len];
-    let mut actual_len = 0;
-
-    decode_encapsulated_text(&encapsulation, &mut result, &mut actual_len)?;
-
-    // Actual encoded length can be slightly shorter than estimated
-    // TODO(tarcieri): more reliable length estimation
-    result.truncate(actual_len);
-    Ok((label, result))
 }
 
 /// PEM encapsulation parser.
