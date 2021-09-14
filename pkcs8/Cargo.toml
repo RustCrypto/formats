@@ -1,6 +1,6 @@
 [package]
 name = "pkcs8"
-version = "0.7.5" # Also update html_root_url in lib.rs when bumping this
+version = "0.7.6" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #8:
 Private-Key Information Syntax Specification (RFC 5208), with additional
@@ -29,13 +29,13 @@ zeroize = { version = "1", optional = true, default-features = false, features =
 hex-literal = "0.3"
 
 [features]
-encryption = ["alloc", "pkcs5/alloc", "pkcs5/pbes2", "rand_core"]
-std = ["alloc", "der/std"]
 alloc = ["der/alloc", "zeroize"]
+3des = ["encryption", "pkcs5/3des"]
+des-insecure = ["encryption", "pkcs5/des-insecure"]
+encryption = ["alloc", "pkcs5/alloc", "pkcs5/pbes2", "rand_core"]
 pem = ["alloc", "pem-rfc7468/alloc"]
 sha1 = ["encryption", "pkcs5/sha1"]
-des-insecure = ["encryption", "pkcs5/des-insecure"]
-3des = ["encryption", "pkcs5/3des"]
+std = ["alloc", "der/std"]
 
 [package.metadata.docs.rs]
 all-features = true
