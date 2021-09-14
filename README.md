@@ -1,4 +1,4 @@
-# RustCrypto: Formats [![Project Chat][chat-image]][chat-link] [![dependency status][deps-image]][deps-link] ![MSRV][msrv-image]
+# RustCrypto: Formats [![Project Chat][chat-image]][chat-link] ![MSRV][msrv-image] [![dependency status][deps-image]][deps-link] 
 
 Cryptography-related format encoders/decoders e.g. PKCS, X.509
 
@@ -7,9 +7,9 @@ Cryptography-related format encoders/decoders e.g. PKCS, X.509
 | Name | crates.io | Docs | Description |
 |------|-----------|------|--------------|
 | `base64ct` | [![crates.io](https://img.shields.io/crates/v/base64ct.svg)](https://crates.io/crates/base64ct) | [![Documentation](https://docs.rs/base64ct/badge.svg)](https://docs.rs/base64ct) | Constant-time encoder and decoder of several Base64 variants |
-| `const—oid` | [![crates.io](https://img.shields.io/crates/v/const-oid.svg)](https://crates.io/crates/const-oid) | [![Documentation](https://docs.rs/const-oid/badge.svg)](https://docs.rs/const-oid) | Const-friendly implementation of the ISO/IEC Object Identifier (OID) standard as defined in [ITU X.660] |
+| `const‑oid` | [![crates.io](https://img.shields.io/crates/v/const-oid.svg)](https://crates.io/crates/const-oid) | [![Documentation](https://docs.rs/const-oid/badge.svg)](https://docs.rs/const-oid) | Const-friendly implementation of the ISO/IEC Object Identifier (OID) standard as defined in [ITU X.660] |
 | `der` | [![crates.io](https://img.shields.io/crates/v/der.svg)](https://crates.io/crates/der) | [![Documentation](https://docs.rs/der/badge.svg)](https://docs.rs/der) | Decoder and encoder of the Distinguished Encoding Rules (DER) for Abstract Syntax Notation One (ASN.1) as described in [ITU X.690] |
-| `pem—rfc7468` | [![crates.io](https://img.shields.io/crates/v/pem-rfc7468.svg)](https://crates.io/crates/pem-rfc7468) | [![Documentation](https://docs.rs/pem-rfc7468/badge.svg)](https://docs.rs/pem-rfc7468) | Strict PEM encoding for PKIX/PKCS/CMS objects |
+| `pem‑rfc7468` | [![crates.io](https://img.shields.io/crates/v/pem-rfc7468.svg)](https://crates.io/crates/pem-rfc7468) | [![Documentation](https://docs.rs/pem-rfc7468/badge.svg)](https://docs.rs/pem-rfc7468) | Strict PEM encoding for PKIX/PKCS/CMS objects |
 | `pkcs1` | [![crates.io](https://img.shields.io/crates/v/pkcs1.svg)](https://crates.io/crates/pkcs1) | [![Documentation](https://docs.rs/pkcs1/badge.svg)](https://docs.rs/pkcs1) | Implementation of PKCS#1: RSA Cryptography Specifications Version 2.2 ([RFC 8017]) |
 | `pkcs5` | [![crates.io](https://img.shields.io/crates/v/pkcs5.svg)](https://crates.io/crates/pkcs5) | [![Documentation](https://docs.rs/pkcs5/badge.svg)](https://docs.rs/pkcs5) | Implementation of PKCS#5: Password-Based Cryptography Specification Version 2.1 ([RFC 8018]) |
 | `pkcs8` | [![crates.io](https://img.shields.io/crates/v/pkcs8.svg)](https://crates.io/crates/pkcs8) | [![Documentation](https://docs.rs/pkcs8/badge.svg)](https://docs.rs/pkcs8) | Implementation of PKCS#8(v2): Private-Key Information Syntax Specification ([RFC 5208]) and asymmetric key packages ([RFC 5958]) |
