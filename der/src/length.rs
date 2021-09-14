@@ -7,12 +7,12 @@ use core::{
     ops::Add,
 };
 
-/// Maximum length as a `u32` (1 MiB).
-const MAX_U32: u32 = 0xf_ffff;
+/// Maximum length as a `u32` (256 MiB).
+const MAX_U32: u32 = 0xfff_ffff;
 
 /// ASN.1-encoded length.
 ///
-/// Maximum length is defined by the [`Length::MAX`] constant (1 MiB).
+/// Maximum length is defined by the [`Length::MAX`] constant (256 MiB).
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Length(u32);
 
@@ -23,7 +23,7 @@ impl Length {
     /// Length of `1`
     pub const ONE: Self = Self(1);
 
-    /// Maximum length currently supported: 1 MiB
+    /// Maximum length currently supported: 256 MiB
     pub const MAX: Self = Self(MAX_U32);
 
     /// Create a new [`Length`] for any value which fits inside of a [`u16`].
@@ -160,10 +160,12 @@ impl Decodable<'_> for Length {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
             // lengths, which are not allowed in DER, so disallow that byte.
             len if len < 0x80 => Ok(len.into()),
-            tag @ 0x81..=0x83 => {
+            // 1-4 byte variable-sized length prefix
+            tag @ 0x81..=0x84 => {
                 let nbytes = tag.checked_sub(0x80).ok_or(ErrorKind::Overlength)? as usize;
-                let mut decoded_len = 0;
+                debug_assert!(nbytes <= 4);
 
+                let mut decoded_len = 0;
                 for _ in 0..nbytes {
                     decoded_len = (decoded_len << 8) | decoder.byte()? as u32;
                 }
