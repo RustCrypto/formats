@@ -44,6 +44,12 @@ fn decode_encapsulated_text<'i, 'o>(
     }
     Ok(())
 }
+/// Decode the encapsulation boundaries of a PEM document according to RFC 7468's "Strict" grammar.
+///
+/// On success, returning the decoded label.
+pub fn decode_label(pem: &[u8]) -> Result<&str> {
+    Ok(Encapsulation::try_from(pem)?.label())
+}
 
 /// Decode a PEM document according to RFC 7468's "Strict" grammar.
 ///
