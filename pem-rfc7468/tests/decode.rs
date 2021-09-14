@@ -17,6 +17,8 @@ fn pkcs1_enc_example() {
         Err(pem_rfc7468::Error::HeaderDisallowed) => (),
         _ => panic!("Expected HeaderDetected error"),
     }
+    let label = pem_rfc7468::decode_label(pem).unwrap();
+    assert_eq!(label, "RSA PRIVATE KEY");
 }
 
 #[test]
@@ -37,6 +39,8 @@ fn header_of_length_64() {
         Err(pem_rfc7468::Error::HeaderDisallowed) => (),
         _ => panic!("Expected HeaderDetected error"),
     }
+    let label = pem_rfc7468::decode_label(pem).unwrap();
+    assert_eq!(label, "RSA PRIVATE KEY");
 }
 
 #[test]
