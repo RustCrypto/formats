@@ -1,4 +1,4 @@
-# RustCrypto: Object Identifiers (OIDs)
+# [RustCrypto]: Object Identifiers (OIDs)
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
@@ -85,4 +85,5 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (links)
 
+[RustCrypto]: https://github.com/rustcrypto
 [X.660]: https://www.itu.int/rec/T-REC-X.660
