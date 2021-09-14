@@ -14,7 +14,7 @@ fn pkcs1_enc_example() {
     let pem = include_bytes!("examples/ssh_rsa_pem_password.pem");
     let mut buf = [0u8; 2048];
     match pem_rfc7468::decode(pem, &mut buf) {
-        Err(pem_rfc7468::Error::HeaderDetected) => (),
+        Err(pem_rfc7468::Error::HeaderDisallowed) => (),
         _ => panic!("Expected HeaderDetected error"),
     }
 }
@@ -24,7 +24,7 @@ fn pkcs1_enc_example() {
 fn pkcs1_enc_example_with_vec() {
     let pem = include_bytes!("examples/ssh_rsa_pem_password.pem");
     match pem_rfc7468::decode_vec(pem) {
-        Err(pem_rfc7468::Error::HeaderDetected) => (),
+        Err(pem_rfc7468::Error::HeaderDisallowed) => (),
         _ => panic!("Expected HeaderDetected error"),
     }
 }
@@ -34,7 +34,7 @@ fn header_of_length_64() {
     let pem = include_bytes!("examples/chosen_header.pem");
     let mut buf = [0u8; 2048];
     match pem_rfc7468::decode(pem, &mut buf) {
-        Err(pem_rfc7468::Error::HeaderDetected) => (),
+        Err(pem_rfc7468::Error::HeaderDisallowed) => (),
         _ => panic!("Expected HeaderDetected error"),
     }
 }
@@ -44,7 +44,7 @@ fn header_of_length_64() {
 fn header_of_length_64_with_vec() {
     let pem = include_bytes!("examples/chosen_header.pem");
     match pem_rfc7468::decode_vec(pem) {
-        Err(pem_rfc7468::Error::HeaderDetected) => (),
+        Err(pem_rfc7468::Error::HeaderDisallowed) => (),
         res => panic!("Expected HeaderDetected error; Found {:?}", res),
     }
 }

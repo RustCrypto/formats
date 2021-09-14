@@ -19,7 +19,7 @@ pub enum Error {
     EncapsulatedText,
 
     /// Header detected in the encapsulated text
-    HeaderDetected,
+    HeaderDisallowed,
 
     /// Invalid label.
     Label,
@@ -40,7 +40,7 @@ impl fmt::Display for Error {
             Error::Base64 => "PEM Base64 error",
             Error::CharacterEncoding => "PEM character encoding error",
             Error::EncapsulatedText => "PEM error in encapsulated text",
-            Error::HeaderDetected => "PEM header (disallowed) detected in encapsulated text",
+            Error::HeaderDisallowed => "PEM headers disallowed by RFC7468",
             Error::Label => "PEM type label invalid",
             Error::Length => "PEM length invalid",
             Error::PreEncapsulationBoundary => "PEM error in pre-encapsulation boundary",
