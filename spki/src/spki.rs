@@ -65,6 +65,7 @@ impl<'a> Message<'a> for SubjectPublicKeyInfo<'a> {
 }
 
 #[cfg(feature = "fingerprint")]
+#[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
 #[derive(Debug)]
 pub enum FingerprintError {
     DerEncodingError(Error),
@@ -72,6 +73,7 @@ pub enum FingerprintError {
 }
 
 #[cfg(feature = "fingerprint")]
+#[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
 impl<'a> SubjectPublicKeyInfo<'a> {
     /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo
     pub fn fingerprint(
