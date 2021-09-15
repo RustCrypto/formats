@@ -90,13 +90,12 @@ impl<'a> SubjectPublicKeyInfo<'a> {
 
         let mut encoder = Encoder::new(&mut buf);
         self.encode(&mut encoder)
-            .map_err(|e| FingerprintError::DerEncodingError(e))?;
+            .map_err(FingerprintError::DerEncodingError)?;
         let spki_der = encoder
             .finish()
-            .map_err(|e| FingerprintError::DerEncodingError(e))?;
+            .map_err(FingerprintError::DerEncodingError)?;
 
         let hash = Sha256::digest(spki_der);
-        Base64::encode(hash.as_slice(), fingerprint)
-            .map_err(|e| FingerprintError::Base64EncodingError(e))
+        Base64::encode(hash.as_slice(), fingerprint).map_err(FingerprintError::Base64EncodingError)
     }
 }
