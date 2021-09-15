@@ -1,11 +1,17 @@
 //! X.509 `SubjectPublicKeyInfo`
 
+#[cfg(feature = "fingerprint")]
+extern crate sha2;
+
 use crate::AlgorithmIdentifier;
+use base64ct::{Base64, Encoding, InvalidLengthError};
 use core::convert::TryFrom;
 use der::{
     asn1::{Any, BitString},
-    Decodable, Encodable, Error, Message, Result,
+    Decodable, Encodable, Encoder, Error, Message, Result,
 };
+#[cfg(feature = "fingerprint")]
+use sha2::{Digest, Sha256};
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 Section 4.1.2.7].
 ///
@@ -55,5 +61,35 @@ impl<'a> Message<'a> for SubjectPublicKeyInfo<'a> {
         F: FnOnce(&[&dyn Encodable]) -> Result<T>,
     {
         f(&[&self.algorithm, &BitString::new(self.subject_public_key)?])
+    }
+}
+
+#[cfg(feature = "fingerprint")]
+#[derive(Debug)]
+pub enum FingerprintError {
+    DerEncodingError(Error),
+    Base64EncodingError(InvalidLengthError),
+}
+
+#[cfg(feature = "fingerprint")]
+impl<'a> SubjectPublicKeyInfo<'a> {
+    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo
+    pub fn fingerprint(
+        &self,
+        fingerprint: &'a mut [u8],
+    ) -> core::result::Result<&'a str, FingerprintError> {
+        const BUFSIZE: usize = 4096;
+        let mut buf = [0u8; BUFSIZE];
+
+        let mut encoder = Encoder::new(&mut buf);
+        self.encode(&mut encoder)
+            .map_err(|e| FingerprintError::DerEncodingError(e))?;
+        let spki_der = encoder
+            .finish()
+            .map_err(|e| FingerprintError::DerEncodingError(e))?;
+
+        let hash = Sha256::digest(spki_der);
+        Base64::encode(hash.as_slice(), fingerprint)
+            .map_err(|e| FingerprintError::Base64EncodingError(e))
     }
 }
