@@ -10,6 +10,15 @@ fn pkcs1_example() {
 }
 
 #[test]
+fn pkcs1_example_with_preceeding_junk() {
+    let pem = include_bytes!("examples/pkcs1_with_preceeding_junk.pem");
+    let mut buf = [0u8; 2048];
+    let (label, decoded) = pem_rfc7468::decode(pem, &mut buf).unwrap();
+    assert_eq!(label, "RSA PRIVATE KEY");
+    assert_eq!(decoded, include_bytes!("examples/pkcs1.der"));
+}
+
+#[test]
 fn pkcs1_enc_example() {
     let pem = include_bytes!("examples/ssh_rsa_pem_password.pem");
     let mut buf = [0u8; 2048];

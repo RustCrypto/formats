@@ -124,20 +124,60 @@ struct Encapsulation<'a> {
 }
 
 impl<'a> Encapsulation<'a> {
+    /// Adapted from:
+    /// https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore%E2%80%93Horspool_algorithm#Description
+    /// https://github.com/peterjoel/needle/blob/master/src/skip_search.rs#L36-L47 (MIT LICENSE)
+    const fn generate_bad_char_table() -> [usize; 256] {
+        let needle = PRE_ENCAPSULATION_BOUNDARY;
+        let mut table = [needle.len(); 256];
+        let mut i = 0;
+
+        while i < needle.len() - 1 {
+            let c = needle[i] as usize;
+            table[c] = needle.len() - i - 1;
+            i += 1;
+        }
+
+        table
+    }
+
+    const PRE_ENCAPSULATION_BOUNDARY_BAD_CHARS_TABLE: [usize; 256] =
+        Self::generate_bad_char_table();
+
+    /// Adapted from:
+    /// https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore%E2%80%93Horspool_algorithm#Description
+    /// https://github.com/peterjoel/needle/blob/f40693aff55a932eeca16e6b921ad4619a1f3b42/src/skip_search.rs#L14-L33 (MIT LICENSE)
+    fn boyer_moore_horspool(haystack: &[u8]) -> Option<usize> {
+        let needle = PRE_ENCAPSULATION_BOUNDARY;
+        let mut position = 0;
+        let max_position = haystack.len() - needle.len();
+        let mut res = None;
+
+        'outer: while position <= max_position {
+            let mut needle_position = needle.len() - 1;
+            while haystack[position + needle_position] == needle[needle_position] {
+                if needle_position == 0 {
+                    res = Some(position);
+                    break 'outer;
+                } else {
+                    needle_position -= 1;
+                }
+            }
+            let bad_char = haystack[position + needle.len() - 1];
+            let jump = Self::PRE_ENCAPSULATION_BOUNDARY_BAD_CHARS_TABLE[bad_char as usize];
+            position += jump;
+        }
+
+        res
+    }
+
     /// Parse the type label and encapsulated text from between the
     /// pre/post-encapsulation boundaries.
-    ///
-    /// Note that the current implementation does not permit data before the
-    /// pre-encapsulation bounadry. This may technically be in violation of
-    /// RFC 7468:
-    /// > Data before the encapsulation boundaries are permitted, and
-    /// > parsers MUST NOT malfunction when processing such data.
-    // TODO(tarcieri): determine what is allowed before the pre-encapsulation boundary
     pub fn parse(data: &'a [u8]) -> Result<Self> {
-        // Parse pre-encapsulation boundary (including label)
-        let data = data
-            .strip_prefix(PRE_ENCAPSULATION_BOUNDARY)
-            .ok_or(Error::PreEncapsulationBoundary)?;
+        // search for position of PRE_ENCAPSULATION_BOUNDARY
+        let position = Self::boyer_moore_horspool(data).ok_or(Error::PreEncapsulationBoundary)?;
+        // drop everything before the expected start of the label
+        let data = &data[position + PRE_ENCAPSULATION_BOUNDARY.len()..];
 
         let (label, body) = grammar::split_label(data).ok_or(Error::Label)?;
 
