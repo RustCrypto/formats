@@ -1,8 +1,7 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::Any, Choice, Decodable, Encodable, Encoder, Error, ErrorKind, Header, Length, Result,
-    Tag, TagNumber,
+    asn1::Any, Choice, Decodable, Encodable, Encoder, Error, Header, Length, Result, Tag, TagNumber,
 };
 use core::convert::TryFrom;
 
@@ -58,11 +57,7 @@ impl<'a> TryFrom<Any<'a>> for ContextSpecific<'a> {
                 tag_number,
                 value: Any::from_der(any.as_bytes())?,
             }),
-            actual => Err(ErrorKind::UnexpectedTag {
-                expected: None,
-                actual,
-            }
-            .into()),
+            tag => Err(tag.unexpected_error(None)),
         }
     }
 }

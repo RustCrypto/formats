@@ -92,11 +92,7 @@ impl Tag {
         if self == expected {
             Ok(self)
         } else {
-            Err(ErrorKind::UnexpectedTag {
-                expected: Some(expected),
-                actual: self,
-            }
-            .into())
+            Err(self.unexpected_error(Some(expected)))
         }
     }
 
@@ -136,6 +132,16 @@ impl Tag {
     /// identified by this tag.
     pub fn non_canonical_error(self) -> Error {
         ErrorKind::Value { tag: self }.into()
+    }
+
+    /// Create an [`Error`] because the current tag was unexpected, with an
+    /// optional expected tag.
+    pub fn unexpected_error(self, expected: Option<Self>) -> Error {
+        ErrorKind::UnexpectedTag {
+            expected,
+            actual: self,
+        }
+        .into()
     }
 
     /// Create an [`Error`] for an invalid value with the ASN.1 type identified
