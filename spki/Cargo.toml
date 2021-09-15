@@ -25,7 +25,7 @@ hex-literal = "0.3"
 
 [features]
 std = ["der/std"]
-fingerprint = ["sha2"]
+fingerprint = ["sha2", "base64ct"]
 
 [package.metadata.docs.rs]
 all-features = true

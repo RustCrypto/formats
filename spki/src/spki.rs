@@ -1,14 +1,19 @@
 //! X.509 `SubjectPublicKeyInfo`
 
 #[cfg(feature = "fingerprint")]
+extern crate base64ct;
+#[cfg(feature = "fingerprint")]
 extern crate sha2;
 
 use crate::AlgorithmIdentifier;
+#[cfg(feature = "fingerprint")]
 use base64ct::{Base64, Encoding, InvalidLengthError};
 use core::convert::TryFrom;
+#[cfg(feature = "fingerprint")]
+use der::Encoder;
 use der::{
     asn1::{Any, BitString},
-    Decodable, Encodable, Encoder, Error, Message, Result,
+    Decodable, Encodable, Error, Message, Result,
 };
 #[cfg(feature = "fingerprint")]
 use sha2::{Digest, Sha256};
