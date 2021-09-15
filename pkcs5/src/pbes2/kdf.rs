@@ -1,6 +1,8 @@
 //! Key derivation functions.
 
-use crate::{AlgorithmIdentifier, CryptoError, Error};
+use crate::AlgorithmIdentifier;
+#[cfg(feature = "scrypt")]
+use crate::{Error, Result};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
@@ -45,6 +47,14 @@ pub enum Kdf<'a> {
 }
 
 impl<'a> Kdf<'a> {
+    /// Get derived key length, if defined
+    pub fn key_length(&self) -> Option<u16> {
+        match self {
+            Self::Pbkdf2(params) => params.key_length,
+            Self::Scrypt(params) => params.key_length,
+        }
+    }
+
     /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
     pub fn oid(&self) -> ObjectIdentifier {
         match self {
@@ -111,7 +121,7 @@ impl<'a> From<ScryptParams<'a>> for Kdf<'a> {
 }
 
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Kdf<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         match alg.oid {
@@ -156,13 +166,13 @@ pub struct Pbkdf2Params<'a> {
 
 impl<'a> Pbkdf2Params<'a> {
     /// Initialize PBKDF2-SHA256 with the given iteration count and salt
-    pub fn hmac_with_sha256(iteration_count: u16, salt: &'a [u8]) -> Result<Self, CryptoError> {
-        Ok(Self {
+    pub fn hmac_with_sha256(iteration_count: u16, salt: &'a [u8]) -> Self {
+        Self {
             salt,
             iteration_count,
             key_length: None,
             prf: Pbkdf2Prf::HmacWithSha256,
-        })
+        }
     }
 }
 
@@ -195,7 +205,7 @@ impl<'a> Message<'a> for Pbkdf2Params<'a> {
 }
 
 impl<'a> TryFrom<Any<'a>> for Pbkdf2Params<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(any: Any<'a>) -> der::Result<Self> {
         any.sequence(|params| {
@@ -263,7 +273,7 @@ impl Default for Pbkdf2Prf {
 }
 
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Pbkdf2Prf {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         if let Some(params) = alg.parameters {
@@ -341,19 +351,19 @@ pub struct ScryptParams<'a> {
 }
 
 impl<'a> ScryptParams<'a> {
+    #[cfg(feature = "scrypt")]
+    const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: SCRYPT_OID };
+
     /// Get the [`ScryptParams`] for the provided upstream [`scrypt::Params`]
     /// and a provided salt string.
     #[cfg(feature = "scrypt")]
     #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
-    pub fn from_params_and_salt(
-        params: scrypt::Params,
-        salt: &'a [u8],
-    ) -> Result<Self, CryptoError> {
+    pub fn from_params_and_salt(params: scrypt::Params, salt: &'a [u8]) -> Result<Self> {
         Ok(Self {
             salt,
             cost_parameter: 1 << params.log_n(),
-            block_size: params.r().try_into().map_err(|_| CryptoError)?,
-            parallelization: params.p().try_into().map_err(|_| CryptoError)?,
+            block_size: params.r().try_into().map_err(|_| Self::INVALID_ERR)?,
+            parallelization: params.p().try_into().map_err(|_| Self::INVALID_ERR)?,
             key_length: None,
         })
     }
@@ -381,7 +391,7 @@ impl<'a> Message<'a> for ScryptParams<'a> {
 }
 
 impl<'a> TryFrom<Any<'a>> for ScryptParams<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(any: Any<'a>) -> der::Result<Self> {
         any.sequence(|params| {
@@ -405,9 +415,9 @@ impl<'a> TryFrom<Any<'a>> for ScryptParams<'a> {
 #[cfg(feature = "scrypt")]
 #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
 impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
-    type Error = CryptoError;
+    type Error = Error;
 
-    fn try_from(params: ScryptParams<'a>) -> Result<scrypt::Params, CryptoError> {
+    fn try_from(params: ScryptParams<'a>) -> Result<scrypt::Params> {
         scrypt::Params::try_from(&params)
     }
 }
@@ -415,16 +425,16 @@ impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
 #[cfg(feature = "scrypt")]
 #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
 impl<'a> TryFrom<&ScryptParams<'a>> for scrypt::Params {
-    type Error = CryptoError;
+    type Error = Error;
 
-    fn try_from(params: &ScryptParams<'a>) -> Result<scrypt::Params, CryptoError> {
+    fn try_from(params: &ScryptParams<'a>) -> Result<scrypt::Params> {
         let n = params.cost_parameter;
 
         // Compute log2 and verify its correctness
         let log_n = ((8 * core::mem::size_of::<ScryptCost>() as u32) - n.leading_zeros() - 1) as u8;
 
         if 1 << log_n != n {
-            return Err(CryptoError);
+            return Err(ScryptParams::INVALID_ERR);
         }
 
         scrypt::Params::new(
@@ -432,6 +442,6 @@ impl<'a> TryFrom<&ScryptParams<'a>> for scrypt::Params {
             params.block_size.into(),
             params.parallelization.into(),
         )
-        .map_err(|_| CryptoError)
+        .map_err(|_| ScryptParams::INVALID_ERR)
     }
 }
