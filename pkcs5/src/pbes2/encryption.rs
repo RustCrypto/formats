@@ -51,18 +51,14 @@ pub fn encrypt_in_place<'b>(
                 .map_err(|_| CryptoError)?;
             cipher.encrypt(buffer, pos).map_err(|_| CryptoError)
         }
-        #[cfg(feature = "des-insecure")]
-        EncryptionScheme::DesCbc { iv } => {
-            let cipher =
-                DesCbc::new_from_slices(encryption_key.as_slice(), iv).map_err(|_| CryptoError)?;
-            cipher.encrypt(buffer, pos).map_err(|_| CryptoError)
-        }
         #[cfg(feature = "3des")]
         EncryptionScheme::DesEde3Cbc { iv } => {
             let cipher = DesEde3Cbc::new_from_slices(encryption_key.as_slice(), iv)
                 .map_err(|_| CryptoError)?;
             cipher.encrypt(buffer, pos).map_err(|_| CryptoError)
         }
+        #[cfg(feature = "des-insecure")]
+        EncryptionScheme::DesCbc { .. } => Err(CryptoError),
     }
 }
 
