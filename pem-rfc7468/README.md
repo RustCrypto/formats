@@ -53,7 +53,7 @@ Section 3 Figure 3.
   In the happy path, only 1-byte of secret data is potentially
   branched upon.
 
-Note: a forthcoming paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Util::Lookup]
+The paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Util::Lookup]
 demonstrates how the leakage from non-constant-time PEM parsers can be used
 to practically extract RSA private keys from SGX enclaves.
 
@@ -91,4 +91,4 @@ dual licensed as above, without any additional terms or conditions.
 [RFC 1421]: https://datatracker.ietf.org/doc/html/rfc1421
 [RFC 7468]: https://datatracker.ietf.org/doc/html/rfc7468
 [`base64ct`]: https://github.com/RustCrypto/formats/tree/master/base64ct
-[Util::Lookup]: https://twitter.com/JanWichelmann/status/1418532480081145857
+[Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf

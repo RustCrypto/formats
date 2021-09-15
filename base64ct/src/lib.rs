@@ -3,7 +3,14 @@
 //!
 //! # About
 //!
-//! This crate implements several Base64 variants in constant-time.
+//! This crate implements several Base64 variants in constant-time for
+//! sidechannel resistance, aimed at purposes like encoding/decoding the
+//! "PEM" format used to store things like cryptographic
+//! private keys.
+//!
+//! The paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Util::Lookup]
+//! demonstrates how the leakage from non-constant-time Base64 parsers can be used
+//! to practically extract RSA private keys from SGX enclaves.
 //!
 //! The padded variants require (`=`) padding. Unpadded variants expressly
 //! reject such padding.
@@ -70,6 +77,7 @@
 //! Derived code is dual licensed MIT + Apache 2 (with permission from Sc00bz).
 //!
 //! [RFC 4648, section 4]: https://tools.ietf.org/html/rfc4648#section-4
+//! [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
