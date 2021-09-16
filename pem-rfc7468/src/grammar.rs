@@ -4,7 +4,7 @@
 //! The grammar described below is intended to follow the "ABNF (Strict)"
 //! subset of the grammar as described in Section 3 Figure 3.
 
-use crate::{Error, Result};
+use crate::{Error, Result, PRE_ENCAPSULATION_BOUNDARY};
 use core::str;
 
 /// NUL char
@@ -92,6 +92,41 @@ pub(crate) fn split_label(bytes: &[u8]) -> Option<(&str, &[u8])> {
         [b'-', b'-', b'-', b'-', b'-', body @ ..] => Some((label, strip_leading_eol(body)?)),
         _ => None,
     }
+}
+
+/// Strip the "preamble", i.e. data that appears before the PEM
+/// pre-encapsulation boundary.
+///
+/// Presently no attempt is made to ensure the preamble decodes successfully
+/// under any particular character encoding. The only byte which is disallowed
+/// is the NUL byte. This restriction does not appear in RFC7468, but rather
+/// is inspired by the OpenSSL PEM decoder.
+///
+/// Returns a slice which starts at the beginning of the encapsulated text.
+///
+/// From RFC7468:
+/// > Data before the encapsulation boundaries are permitted, and
+/// > parsers MUST NOT malfunction when processing such data.
+pub(crate) fn strip_preamble(mut bytes: &[u8]) -> Result<&[u8]> {
+    if bytes.starts_with(PRE_ENCAPSULATION_BOUNDARY) {
+        return Ok(bytes);
+    }
+
+    while let Some((byte, remaining)) = bytes.split_first() {
+        match *byte {
+            CHAR_NUL => {
+                return Err(Error::Preamble);
+            }
+            CHAR_LF if remaining.starts_with(PRE_ENCAPSULATION_BOUNDARY) => {
+                return Ok(remaining);
+            }
+            _ => (),
+        }
+
+        bytes = remaining;
+    }
+
+    Err(Error::Preamble)
 }
 
 /// Strip a newline (`eol`) from the beginning of the provided byte slice.

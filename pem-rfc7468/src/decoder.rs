@@ -60,6 +60,8 @@ pub fn decode_label(pem: &[u8]) -> Result<&str> {
     Ok(Encapsulation::try_from(pem)?.label())
 }
 
+/// Decode the "encapsulated text", i.e. Base64-encoded data which lies between
+/// the pre/post-encapsulation boundaries.
 fn decode_encapsulated_text<'i, 'o>(
     encapsulation: &Encapsulation<'i>,
     buf: &'o mut [u8],
@@ -124,79 +126,16 @@ struct Encapsulation<'a> {
 }
 
 impl<'a> Encapsulation<'a> {
-    /// Adapted from:
-    /// https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore%E2%80%93Horspool_algorithm#Description
-    /// https://github.com/peterjoel/needle/blob/master/src/skip_search.rs#L36-L47 (MIT LICENSE)
-    const fn generate_bad_char_table() -> [usize; 256] {
-        let needle = PRE_ENCAPSULATION_BOUNDARY;
-        let mut table = [needle.len(); 256];
-        let mut i = 0;
-
-        while i < needle.len() - 1 {
-            let c = needle[i] as usize;
-            table[c] = needle.len() - i - 1;
-            i += 1;
-        }
-
-        table
-    }
-
-    const PRE_ENCAPSULATION_BOUNDARY_BAD_CHARS_TABLE: [usize; 256] =
-        Self::generate_bad_char_table();
-
-    /// Adapted from:
-    /// https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore%E2%80%93Horspool_algorithm#Description
-    /// https://github.com/peterjoel/needle/blob/f40693aff55a932eeca16e6b921ad4619a1f3b42/src/skip_search.rs#L14-L33 (MIT LICENSE)
-    fn boyer_moore_horspool(haystack: &[u8]) -> Result<usize> {
-        let needle = PRE_ENCAPSULATION_BOUNDARY;
-        let mut position = 0;
-        let max_position = haystack.len() - needle.len();
-
-        while position <= max_position {
-            let mut needle_position = needle.len() - 1;
-            while haystack[position + needle_position] == needle[needle_position] {
-                if needle_position == 0 {
-                    return Ok(position);
-                } else {
-                    needle_position -= 1;
-                }
-            }
-            let bad_char = haystack[position + needle.len() - 1];
-            if bad_char == grammar::CHAR_NUL {
-                return Err(Error::InvalidText);
-            }
-            let jump = Self::PRE_ENCAPSULATION_BOUNDARY_BAD_CHARS_TABLE[bad_char as usize];
-            position += jump;
-        }
-
-        Err(Error::PreEncapsulationBoundary)
-    }
-
     /// Parse the type label and encapsulated text from between the
     /// pre/post-encapsulation boundaries.
     pub fn parse(data: &'a [u8]) -> Result<Self> {
-        // search for position of pre-encapsulation boundary
-        let position = Self::boyer_moore_horspool(data)?;
+        // Strip the "preamble": optional text occurring before the pre-encapsulation boundary
+        let data = grammar::strip_preamble(data)?;
 
-        let data = if position > 0 {
-            // found pre-encapsulation boundary after some non-zero preamble
-            // preamble must not contain any NUL chars
-            // and the pre-encapsulation boundary must be at the start of a line
-
-            if data[..position].iter().any(|&b| b == grammar::CHAR_NUL) {
-                return Err(Error::InvalidText);
-            } else if data[position - 1] != grammar::CHAR_LF {
-                // strictly the line feed char is required
-                // replicating OpenSSL behavior
-                // https://github.com/RustCrypto/formats/pull/29#issuecomment-920548938
-                return Err(Error::PreEncapsulationBoundary);
-            } else {
-                // drop everything before the expected start of the label
-                &data[position + PRE_ENCAPSULATION_BOUNDARY.len()..]
-            }
-        } else {
-            &data[PRE_ENCAPSULATION_BOUNDARY.len()..]
-        };
+        // Parse pre-encapsulation boundary (including label)
+        let data = data
+            .strip_prefix(PRE_ENCAPSULATION_BOUNDARY)
+            .ok_or(Error::PreEncapsulationBoundary)?;
 
         let (label, body) = grammar::split_label(data).ok_or(Error::Label)?;
 

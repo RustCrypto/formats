@@ -12,16 +12,13 @@ pub enum Error {
     /// Base64-related errors.
     Base64,
 
-    /// Contents of document is not valid text (contains NUL char)
-    InvalidText,
-
     /// Character encoding-related errors.
     CharacterEncoding,
 
     /// Errors in the encapsulated text (which aren't specifically Base64-related).
     EncapsulatedText,
 
-    /// Header detected in the encapsulated text
+    /// Header detected in the encapsulated text.
     HeaderDisallowed,
 
     /// Invalid label.
@@ -29,6 +26,9 @@ pub enum Error {
 
     /// Invalid length.
     Length,
+
+    /// "Preamble" (text before pre-encapsulation boundary) contains invalid data.
+    Preamble,
 
     /// Errors in the pre-encapsulation boundary.
     PreEncapsulationBoundary,
@@ -41,12 +41,12 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Error::Base64 => "PEM Base64 error",
-            Error::InvalidText => "PEM is not valid text as NUL char was found",
             Error::CharacterEncoding => "PEM character encoding error",
             Error::EncapsulatedText => "PEM error in encapsulated text",
             Error::HeaderDisallowed => "PEM headers disallowed by RFC7468",
             Error::Label => "PEM type label invalid",
             Error::Length => "PEM length invalid",
+            Error::Preamble => "PEM preamble contains invalid data (NUL byte)",
             Error::PreEncapsulationBoundary => "PEM error in pre-encapsulation boundary",
             Error::PostEncapsulationBoundary => "PEM error in post-encapsulation boundary",
         })
