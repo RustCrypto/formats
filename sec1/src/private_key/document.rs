@@ -1,6 +1,6 @@
 //! SEC1 EC private key document.
 
-use crate::{error, EcPrivateKey, Error, FromEcPrivateKey, Result, ToEcPrivateKey};
+use crate::{EcPrivateKey, Error, FromEcPrivateKey, Result, ToEcPrivateKey};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{
     convert::{TryFrom, TryInto},
@@ -41,10 +41,6 @@ impl EcPrivateKeyDocument {
 }
 
 impl FromEcPrivateKey for EcPrivateKeyDocument {
-    fn from_sec1_private_key(private_key: EcPrivateKey<'_>) -> Result<Self> {
-        Ok(Self(Zeroizing::new(private_key.to_vec()?)))
-    }
-
     fn from_sec1_der(bytes: &[u8]) -> Result<Self> {
         // Ensure document is well-formed
         EcPrivateKey::from_der(bytes)?;
@@ -112,27 +108,27 @@ impl AsRef<[u8]> for EcPrivateKeyDocument {
     }
 }
 
-impl From<EcPrivateKey<'_>> for EcPrivateKeyDocument {
-    fn from(private_key: EcPrivateKey<'_>) -> EcPrivateKeyDocument {
-        EcPrivateKeyDocument::from(&private_key)
-    }
-}
-
-impl From<&EcPrivateKey<'_>> for EcPrivateKeyDocument {
-    fn from(private_key: &EcPrivateKey<'_>) -> EcPrivateKeyDocument {
-        private_key
-            .to_vec()
-            .ok()
-            .and_then(|buf| buf.try_into().ok())
-            .expect(error::DER_ENCODING_MSG)
-    }
-}
-
 impl TryFrom<&[u8]> for EcPrivateKeyDocument {
     type Error = Error;
 
     fn try_from(bytes: &[u8]) -> Result<Self> {
         EcPrivateKeyDocument::from_sec1_der(bytes)
+    }
+}
+
+impl TryFrom<EcPrivateKey<'_>> for EcPrivateKeyDocument {
+    type Error = Error;
+
+    fn try_from(private_key: EcPrivateKey<'_>) -> Result<Self> {
+        Self::try_from(&private_key)
+    }
+}
+
+impl TryFrom<&EcPrivateKey<'_>> for EcPrivateKeyDocument {
+    type Error = Error;
+
+    fn try_from(private_key: &EcPrivateKey<'_>) -> Result<Self> {
+        Ok(Self(Zeroizing::new(private_key.to_vec()?)))
     }
 }
 

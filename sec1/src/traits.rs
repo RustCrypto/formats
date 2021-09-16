@@ -1,6 +1,7 @@
 //! Traits for parsing objects from SEC1 encoded documents
 
-use crate::{EcPrivateKey, Result};
+use crate::{EcPrivateKey, Error, Result};
+use core::convert::TryFrom;
 use der::Decodable;
 
 #[cfg(feature = "alloc")]
@@ -16,14 +17,11 @@ use std::path::Path;
 use zeroize::Zeroizing;
 
 /// Parse an [`EcPrivateKey`] from a SEC1-encoded document.
-pub trait FromEcPrivateKey: Sized {
-    /// Parse the [`EcPrivateKey`] from a SEC1-encoded document.
-    fn from_sec1_private_key(private_key: EcPrivateKey<'_>) -> Result<Self>;
-
+pub trait FromEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> + Sized {
     /// Deserialize SEC1 private key from ASN.1 DER-encoded data
     /// (binary format).
     fn from_sec1_der(bytes: &[u8]) -> Result<Self> {
-        Self::from_sec1_private_key(EcPrivateKey::from_der(bytes)?)
+        Self::try_from(EcPrivateKey::from_der(bytes)?)
     }
 
     /// Deserialize SEC1-encoded private key from PEM.
@@ -36,8 +34,7 @@ pub trait FromEcPrivateKey: Sized {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_sec1_pem(s: &str) -> Result<Self> {
-        EcPrivateKeyDocument::from_sec1_pem(s)
-            .and_then(|doc| Self::from_sec1_private_key(doc.private_key()))
+        EcPrivateKeyDocument::from_sec1_pem(s).and_then(|doc| Self::try_from(doc.private_key()))
     }
 
     /// Load SEC1 private key from an ASN.1 DER-encoded file on the local
@@ -46,7 +43,7 @@ pub trait FromEcPrivateKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_sec1_der_file(path: &Path) -> Result<Self> {
         EcPrivateKeyDocument::read_sec1_der_file(path)
-            .and_then(|doc| Self::from_sec1_private_key(doc.private_key()))
+            .and_then(|doc| Self::try_from(doc.private_key()))
     }
 
     /// Load SEC1 private key from a PEM-encoded file on the local filesystem.
@@ -55,7 +52,7 @@ pub trait FromEcPrivateKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_sec1_pem_file(path: &Path) -> Result<Self> {
         EcPrivateKeyDocument::read_sec1_pem_file(path)
-            .and_then(|doc| Self::from_sec1_private_key(doc.private_key()))
+            .and_then(|doc| Self::try_from(doc.private_key()))
     }
 }
 
@@ -67,6 +64,8 @@ pub trait ToEcPrivateKey {
     fn to_sec1_der(&self) -> Result<EcPrivateKeyDocument>;
 
     /// Serialize this private key as PEM-encoded SEC1 with the given [`LineEnding`].
+    ///
+    /// To use the OS's native line endings, pass `Default::default()`.
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_sec1_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {

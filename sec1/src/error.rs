@@ -5,10 +5,6 @@ use core::fmt;
 #[cfg(feature = "pem")]
 use crate::pem;
 
-/// Message to display when an `expect`-ed DER encoding error occurs
-#[cfg(feature = "alloc")]
-pub(crate) const DER_ENCODING_MSG: &str = "DER encoding error";
-
 /// Result type
 pub type Result<T> = core::result::Result<T, Error>;
 
