@@ -12,6 +12,9 @@ pub enum Error {
     /// Base64-related errors.
     Base64,
 
+    /// Contents of document is not valid text (contains NUL char)
+    InvalidText,
+
     /// Character encoding-related errors.
     CharacterEncoding,
 
@@ -38,6 +41,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Error::Base64 => "PEM Base64 error",
+            Error::InvalidText => "PEM is not valid text as NUL char was found",
             Error::CharacterEncoding => "PEM character encoding error",
             Error::EncapsulatedText => "PEM error in encapsulated text",
             Error::HeaderDisallowed => "PEM headers disallowed by RFC7468",

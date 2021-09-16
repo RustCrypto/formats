@@ -147,37 +147,56 @@ impl<'a> Encapsulation<'a> {
     /// Adapted from:
     /// https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore%E2%80%93Horspool_algorithm#Description
     /// https://github.com/peterjoel/needle/blob/f40693aff55a932eeca16e6b921ad4619a1f3b42/src/skip_search.rs#L14-L33 (MIT LICENSE)
-    fn boyer_moore_horspool(haystack: &[u8]) -> Option<usize> {
+    fn boyer_moore_horspool(haystack: &[u8]) -> Result<usize> {
         let needle = PRE_ENCAPSULATION_BOUNDARY;
         let mut position = 0;
         let max_position = haystack.len() - needle.len();
-        let mut res = None;
 
-        'outer: while position <= max_position {
+        while position <= max_position {
             let mut needle_position = needle.len() - 1;
             while haystack[position + needle_position] == needle[needle_position] {
                 if needle_position == 0 {
-                    res = Some(position);
-                    break 'outer;
+                    return Ok(position);
                 } else {
                     needle_position -= 1;
                 }
             }
             let bad_char = haystack[position + needle.len() - 1];
+            if bad_char == grammar::CHAR_NUL {
+                return Err(Error::InvalidText);
+            }
             let jump = Self::PRE_ENCAPSULATION_BOUNDARY_BAD_CHARS_TABLE[bad_char as usize];
             position += jump;
         }
 
-        res
+        Err(Error::PreEncapsulationBoundary)
     }
 
     /// Parse the type label and encapsulated text from between the
     /// pre/post-encapsulation boundaries.
     pub fn parse(data: &'a [u8]) -> Result<Self> {
-        // search for position of PRE_ENCAPSULATION_BOUNDARY
-        let position = Self::boyer_moore_horspool(data).ok_or(Error::PreEncapsulationBoundary)?;
-        // drop everything before the expected start of the label
-        let data = &data[position + PRE_ENCAPSULATION_BOUNDARY.len()..];
+        // search for position of pre-encapsulation boundary
+        let position = Self::boyer_moore_horspool(data)?;
+
+        let data = if position > 0 {
+            // found pre-encapsulation boundary after some non-zero preamble
+            // preamble must not contain any NUL chars
+            // and the pre-encapsulation boundary must be at the start of a line
+
+            if data[..position].iter().any(|&b| b == grammar::CHAR_NUL) {
+                return Err(Error::InvalidText);
+            } else if data[position - 1] != grammar::CHAR_LF {
+                // strictly the line feed char is required
+                // replicating OpenSSL behavior
+                // https://github.com/RustCrypto/formats/pull/29#issuecomment-920548938
+                return Err(Error::PreEncapsulationBoundary);
+            } else {
+                // drop everything before the expected start of the label
+                &data[position + PRE_ENCAPSULATION_BOUNDARY.len()..]
+            }
+        } else {
+            &data[PRE_ENCAPSULATION_BOUNDARY.len()..]
+        };
 
         let (label, body) = grammar::split_label(data).ok_or(Error::Label)?;
 

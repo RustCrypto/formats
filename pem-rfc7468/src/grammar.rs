@@ -7,6 +7,9 @@
 use crate::{Error, Result};
 use core::str;
 
+/// NUL char
+pub(crate) const CHAR_NUL: u8 = 0x00;
+
 /// Horizontal tab
 pub(crate) const CHAR_HT: u8 = 0x09;
 

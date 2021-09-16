@@ -10,6 +10,16 @@ fn pkcs1_example() {
 }
 
 #[test]
+fn binary_example() {
+    let der = include_bytes!("examples/pkcs1.der");
+    let mut buf = [0u8; 2048];
+    match pem_rfc7468::decode(der, &mut buf) {
+        Err(pem_rfc7468::Error::InvalidText) => (),
+        _ => panic!("Expected InvalidText error"),
+    }
+}
+
+#[test]
 fn pkcs1_example_with_preceeding_junk() {
     let pem = include_bytes!("examples/pkcs1_with_preceeding_junk.pem");
     let mut buf = [0u8; 2048];
