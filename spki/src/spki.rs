@@ -1,22 +1,22 @@
 //! X.509 `SubjectPublicKeyInfo`
 
-#[cfg(feature = "fingerprint")]
+#[cfg(feature = "alloc")]
 extern crate base64ct;
 #[cfg(feature = "fingerprint")]
 extern crate sha2;
 
 use crate::AlgorithmIdentifier;
-#[cfg(feature = "fingerprint")]
-use base64ct::{Base64, Encoding, InvalidLengthError};
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(all(feature = "fingerprint", feature = "alloc"))]
+use base64ct::{Base64, Encoding};
 use core::convert::TryFrom;
-#[cfg(feature = "fingerprint")]
-use der::Encoder;
 use der::{
     asn1::{Any, BitString},
     Decodable, Encodable, Error, Message, Result,
 };
 #[cfg(feature = "fingerprint")]
-use sha2::{Digest, Sha256};
+use sha2::{digest::Output, Digest, Sha256};
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 Section 4.1.2.7].
 ///
@@ -71,31 +71,21 @@ impl<'a> Message<'a> for SubjectPublicKeyInfo<'a> {
 
 #[cfg(feature = "fingerprint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-#[derive(Debug)]
-pub enum FingerprintError {
-    DerEncodingError(Error),
-    Base64EncodingError(InvalidLengthError),
-}
-
-#[cfg(feature = "fingerprint")]
-#[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
 impl<'a> SubjectPublicKeyInfo<'a> {
+    const BUFSIZE: usize = 4096;
+
+    #[cfg(all(feature = "fingerprint", feature = "alloc"))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "fingerprint", feature = "alloc"))))]
+    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo and encode it as a Base64 string
+    pub fn fingerprint_base64(&self) -> core::result::Result<String, Error> {
+        Ok(Base64::encode_string(self.fingerprint()?.as_slice()))
+    }
+
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
     /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo
-    pub fn fingerprint(
-        &self,
-        fingerprint: &'a mut [u8],
-    ) -> core::result::Result<&'a str, FingerprintError> {
-        const BUFSIZE: usize = 4096;
-        let mut buf = [0u8; BUFSIZE];
-
-        let mut encoder = Encoder::new(&mut buf);
-        self.encode(&mut encoder)
-            .map_err(FingerprintError::DerEncodingError)?;
-        let spki_der = encoder
-            .finish()
-            .map_err(FingerprintError::DerEncodingError)?;
-
-        let hash = Sha256::digest(spki_der);
-        Base64::encode(hash.as_slice(), fingerprint).map_err(FingerprintError::Base64EncodingError)
+    pub fn fingerprint(&self) -> core::result::Result<Output<Sha256>, Error> {
+        let mut buf = [0u8; Self::BUFSIZE];
+        Ok(Sha256::digest(self.encode_to_slice(&mut buf)?))
     }
 }
