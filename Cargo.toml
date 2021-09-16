@@ -9,6 +9,7 @@ members = [
     "pkcs1",
     "pkcs5",
     "pkcs8",
+    "sec1",
     "spki",
     "x509"
 ]

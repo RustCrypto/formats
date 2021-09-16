@@ -282,6 +282,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sec1"
+version = "0.0.0"
+dependencies = [
+ "der",
+ "hex-literal",
+ "pem-rfc7468",
+ "zeroize",
+]
+
+[[package]]
 name = "sha-1"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
