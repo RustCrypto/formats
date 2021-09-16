@@ -18,7 +18,7 @@ pub enum Error {
     /// Errors in the encapsulated text (which aren't specifically Base64-related).
     EncapsulatedText,
 
-    /// Header detected in the encapsulated text
+    /// Header detected in the encapsulated text.
     HeaderDisallowed,
 
     /// Invalid label.
@@ -26,6 +26,9 @@ pub enum Error {
 
     /// Invalid length.
     Length,
+
+    /// "Preamble" (text before pre-encapsulation boundary) contains invalid data.
+    Preamble,
 
     /// Errors in the pre-encapsulation boundary.
     PreEncapsulationBoundary,
@@ -43,6 +46,7 @@ impl fmt::Display for Error {
             Error::HeaderDisallowed => "PEM headers disallowed by RFC7468",
             Error::Label => "PEM type label invalid",
             Error::Length => "PEM length invalid",
+            Error::Preamble => "PEM preamble contains invalid data (NUL byte)",
             Error::PreEncapsulationBoundary => "PEM error in pre-encapsulation boundary",
             Error::PostEncapsulationBoundary => "PEM error in post-encapsulation boundary",
         })

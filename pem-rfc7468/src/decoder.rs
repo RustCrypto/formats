@@ -60,6 +60,8 @@ pub fn decode_label(pem: &[u8]) -> Result<&str> {
     Ok(Encapsulation::try_from(pem)?.label())
 }
 
+/// Decode the "encapsulated text", i.e. Base64-encoded data which lies between
+/// the pre/post-encapsulation boundaries.
 fn decode_encapsulated_text<'i, 'o>(
     encapsulation: &Encapsulation<'i>,
     buf: &'o mut [u8],
@@ -126,14 +128,10 @@ struct Encapsulation<'a> {
 impl<'a> Encapsulation<'a> {
     /// Parse the type label and encapsulated text from between the
     /// pre/post-encapsulation boundaries.
-    ///
-    /// Note that the current implementation does not permit data before the
-    /// pre-encapsulation bounadry. This may technically be in violation of
-    /// RFC 7468:
-    /// > Data before the encapsulation boundaries are permitted, and
-    /// > parsers MUST NOT malfunction when processing such data.
-    // TODO(tarcieri): determine what is allowed before the pre-encapsulation boundary
     pub fn parse(data: &'a [u8]) -> Result<Self> {
+        // Strip the "preamble": optional text occurring before the pre-encapsulation boundary
+        let data = grammar::strip_preamble(data)?;
+
         // Parse pre-encapsulation boundary (including label)
         let data = data
             .strip_prefix(PRE_ENCAPSULATION_BOUNDARY)
