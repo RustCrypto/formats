@@ -16,7 +16,7 @@ use {
     alloc::string::String,
 };
 
-/// Type label for PEM-encoded private keys.
+/// Type label for PEM-encoded public keys.
 #[cfg(feature = "pem")]
 pub(crate) const PEM_TYPE_LABEL: &str = "RSA PUBLIC KEY";
 
