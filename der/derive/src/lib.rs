@@ -177,8 +177,5 @@ fn derive_message(s: Structure<'_>) -> TokenStream {
 ///
 /// Returns `None` if there is no first lifetime.
 fn parse_lifetime(generics: &Generics) -> Option<&Lifetime> {
-    generics
-        .lifetimes()
-        .next()
-        .map(|ref lt_ref| &lt_ref.lifetime)
+    generics.lifetimes().next().map(|lt_ref| &lt_ref.lifetime)
 }
