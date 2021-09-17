@@ -28,9 +28,8 @@ use core::{convert::TryFrom, str};
 pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o [u8])> {
     let encapsulation = Encapsulation::try_from(pem)?;
     let label = encapsulation.label();
-    let mut out_len = 0;
-    decode_encapsulated_text(&encapsulation, buf, &mut out_len)?;
-    Ok((label, &buf[..out_len]))
+    let decoded_bytes = encapsulation.decode(buf)?;
+    Ok((label, decoded_bytes))
 }
 
 /// Decode a PEM document according to RFC 7468's "Strict" grammar, returning
@@ -40,16 +39,16 @@ pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o 
 pub fn decode_vec(pem: &[u8]) -> Result<(&str, Vec<u8>)> {
     let encapsulation = Encapsulation::try_from(pem)?;
     let label = encapsulation.label();
+
     // count all chars (gives over-estimation, due to whitespace)
     let max_len = encapsulation.encapsulated_text.len() * 3 / 4;
-    let mut result = vec![0u8; max_len];
-    let mut actual_len = 0;
 
-    decode_encapsulated_text(&encapsulation, &mut result, &mut actual_len)?;
+    let mut result = vec![0u8; max_len];
+    let decoded_len = encapsulation.decode(&mut result)?.len();
 
     // Actual encoded length can be slightly shorter than estimated
     // TODO(tarcieri): more reliable length estimation
-    result.truncate(actual_len);
+    result.truncate(decoded_len);
     Ok((label, result))
 }
 
@@ -58,33 +57,6 @@ pub fn decode_vec(pem: &[u8]) -> Result<(&str, Vec<u8>)> {
 /// On success, returning the decoded label.
 pub fn decode_label(pem: &[u8]) -> Result<&str> {
     Ok(Encapsulation::try_from(pem)?.label())
-}
-
-/// Decode the "encapsulated text", i.e. Base64-encoded data which lies between
-/// the pre/post-encapsulation boundaries.
-fn decode_encapsulated_text<'i, 'o>(
-    encapsulation: &Encapsulation<'i>,
-    buf: &'o mut [u8],
-    out_len: &mut usize,
-) -> Result<()> {
-    for line in encapsulation.encapsulated_text() {
-        let line = line?;
-
-        match Base64::decode(line, &mut buf[*out_len..]) {
-            Err(error) => {
-                // in the case that we are decoding the first line
-                // and we error, then attribute the error to an unsupported header
-                // if a colon char is present in the line
-                if *out_len == 0 && line.iter().any(|&b| b == grammar::CHAR_COLON) {
-                    return Err(Error::HeaderDisallowed);
-                } else {
-                    return Err(error.into());
-                }
-            }
-            Ok(out) => *out_len += out.len(),
-        }
-    }
-    Ok(())
 }
 
 /// PEM encapsulation parser.
@@ -178,6 +150,32 @@ impl<'a> Encapsulation<'a> {
             is_start: true,
             bytes: self.encapsulated_text,
         }
+    }
+
+    /// Decode the "encapsulated text", i.e. Base64-encoded data which lies between
+    /// the pre/post-encapsulation boundaries.
+    fn decode<'o>(&self, buf: &'o mut [u8]) -> Result<&'o [u8]> {
+        let mut out_len = 0;
+
+        for line in self.encapsulated_text() {
+            let line = line?;
+
+            match Base64::decode(line, &mut buf[out_len..]) {
+                Err(error) => {
+                    // in the case that we are decoding the first line
+                    // and we error, then attribute the error to an unsupported header
+                    // if a colon char is present in the line
+                    if out_len == 0 && line.iter().any(|&b| b == grammar::CHAR_COLON) {
+                        return Err(Error::HeaderDisallowed);
+                    } else {
+                        return Err(error.into());
+                    }
+                }
+                Ok(out) => out_len += out.len(),
+            }
+        }
+
+        Ok(&buf[..out_len])
     }
 }
 
