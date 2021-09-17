@@ -39,61 +39,6 @@ pub(crate) fn is_wsp(char: u8) -> bool {
     matches!(char, CHAR_HT | CHAR_SP)
 }
 
-/// Split a slice beginning with a type label as located in an encapsulation
-/// boundary. Returns the label as a `&str`, and slice beginning with the
-/// encapsulated text with leading `-----` and newline removed.
-///
-/// This implementation follows the rules put forth in Section 2, which are
-/// stricter than those found in the ABNF grammar:
-///
-/// > Labels are formally case-sensitive, uppercase, and comprised of zero or more
-/// > characters; they do not contain consecutive spaces or hyphen-minuses,
-/// > nor do they contain spaces or hyphen-minuses at either end.
-///
-/// We apply a slightly stricter interpretation:
-/// - Labels MAY be empty
-/// - Non-empty labels MUST start with an upper-case letter: `'A'..='Z'`
-/// - The only allowable characters subsequently are `'A'..='Z'` or WSP.
-///   (NOTE: this is an overly strict initial implementation and should be relaxed)
-/// - Whitespace MUST NOT contain more than one consecutive WSP character
-// TODO(tarcieri): evaluate whether this is too strict; support '-'
-pub(crate) fn split_label(bytes: &[u8]) -> Option<(&str, &[u8])> {
-    let mut n = 0;
-
-    // TODO(tarcieri): handle hyphens in labels as well as spaces
-    let mut last_was_wsp = false;
-
-    for &char in bytes {
-        // Validate character
-        // TODO(tarcieri): unify with `is_labelchar`/`validate_label`
-        if matches!(char, b'A'..=b'Z') {
-            last_was_wsp = false;
-        } else if char == b'-' {
-            // Possible start of encapsulation boundary delimiter
-            break;
-        } else if n != 0 && is_wsp(char) {
-            // Repeated whitespace disallowed
-            if last_was_wsp {
-                return None;
-            }
-
-            last_was_wsp = true;
-        } else {
-            return None;
-        }
-
-        n += 1;
-    }
-
-    let (raw_label, rest) = bytes.split_at(n);
-    let label = str::from_utf8(raw_label).ok()?;
-
-    match rest {
-        [b'-', b'-', b'-', b'-', b'-', body @ ..] => Some((label, strip_leading_eol(body)?)),
-        _ => None,
-    }
-}
-
 /// Strip the "preamble", i.e. data that appears before the PEM
 /// pre-encapsulation boundary.
 ///
@@ -157,6 +102,61 @@ pub(crate) fn strip_trailing_eol(bytes: &[u8]) -> Option<&[u8]> {
         [head @ .., CHAR_CR, CHAR_LF] => Some(head),
         [head @ .., CHAR_LF] => Some(head),
         [head @ .., CHAR_CR] => Some(head),
+        _ => None,
+    }
+}
+
+/// Split a slice beginning with a type label as located in an encapsulation
+/// boundary. Returns the label as a `&str`, and slice beginning with the
+/// encapsulated text with leading `-----` and newline removed.
+///
+/// This implementation follows the rules put forth in Section 2, which are
+/// stricter than those found in the ABNF grammar:
+///
+/// > Labels are formally case-sensitive, uppercase, and comprised of zero or more
+/// > characters; they do not contain consecutive spaces or hyphen-minuses,
+/// > nor do they contain spaces or hyphen-minuses at either end.
+///
+/// We apply a slightly stricter interpretation:
+/// - Labels MAY be empty
+/// - Non-empty labels MUST start with an upper-case letter: `'A'..='Z'`
+/// - The only allowable characters subsequently are `'A'..='Z'` or WSP.
+///   (NOTE: this is an overly strict initial implementation and should be relaxed)
+/// - Whitespace MUST NOT contain more than one consecutive WSP character
+// TODO(tarcieri): evaluate whether this is too strict; support '-'
+pub(crate) fn split_label(bytes: &[u8]) -> Option<(&str, &[u8])> {
+    let mut n = 0;
+
+    // TODO(tarcieri): handle hyphens in labels as well as spaces
+    let mut last_was_wsp = false;
+
+    for &char in bytes {
+        // Validate character
+        // TODO(tarcieri): unify with `is_labelchar`/`validate_label`
+        if matches!(char, b'A'..=b'Z') {
+            last_was_wsp = false;
+        } else if char == b'-' {
+            // Possible start of encapsulation boundary delimiter
+            break;
+        } else if n != 0 && is_wsp(char) {
+            // Repeated whitespace disallowed
+            if last_was_wsp {
+                return None;
+            }
+
+            last_was_wsp = true;
+        } else {
+            return None;
+        }
+
+        n += 1;
+    }
+
+    let (raw_label, rest) = bytes.split_at(n);
+    let label = str::from_utf8(raw_label).ok()?;
+
+    match rest {
+        [b'-', b'-', b'-', b'-', b'-', body @ ..] => Some((label, strip_leading_eol(body)?)),
         _ => None,
     }
 }
