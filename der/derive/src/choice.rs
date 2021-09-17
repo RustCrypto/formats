@@ -61,8 +61,8 @@ impl DeriveChoice {
             match variant_info.bindings().len() {
                 // TODO(tarcieri): handle 0 bindings for ASN.1 NULL
                 1 => {
-                    state.derive_variant_encoder(&variant_info, asn1_type);
-                    state.derive_variant_encoded_len(&variant_info);
+                    state.derive_variant_encoder(variant_info, asn1_type);
+                    state.derive_variant_encoded_len(variant_info);
                 }
                 other => panic!(
                     "unsupported number of ASN.1 variant bindings for {}: {}",

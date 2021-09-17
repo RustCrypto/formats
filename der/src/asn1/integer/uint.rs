@@ -21,7 +21,7 @@ pub(super) fn decode_slice(any: Any<'_>) -> Result<&[u8]> {
         [] => Err(tag.non_canonical_error()),
         [0] => Ok(bytes),
         [0, byte, ..] if *byte < 0x80 => Err(tag.non_canonical_error()),
-        [0, rest @ ..] => Ok(&rest),
+        [0, rest @ ..] => Ok(rest),
         [byte, ..] if *byte >= 0x80 => Err(tag.value_error()),
         _ => Ok(bytes),
     }
@@ -40,7 +40,7 @@ pub(super) fn decode_array<const N: usize>(any: Any<'_>) -> Result<[u8; N]> {
 
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.
 pub(super) fn encode(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
-    let bytes = strip_leading_zeroes(&bytes);
+    let bytes = strip_leading_zeroes(bytes);
     let leading_zero = needs_leading_zero(bytes);
     let len = (Length::try_from(bytes.len())? + leading_zero as u8)?;
     Header::new(Tag::Integer, len)?.encode(encoder)?;
@@ -55,7 +55,7 @@ pub(super) fn encode(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
 /// Get the encoded length for the given unsigned integer serialized as bytes.
 #[inline]
 pub(super) fn encoded_len(bytes: &[u8]) -> Result<Length> {
-    let bytes = strip_leading_zeroes(&bytes);
+    let bytes = strip_leading_zeroes(bytes);
     Length::try_from(bytes.len())? + needs_leading_zero(bytes) as u8
 }
 

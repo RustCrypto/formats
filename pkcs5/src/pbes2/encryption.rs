@@ -157,7 +157,7 @@ impl EncryptionKey {
                 Ok(key)
             }
             Kdf::Scrypt(scrypt_params) => {
-                EncryptionKey::derive_with_scrypt(password, &scrypt_params, key_size)
+                EncryptionKey::derive_with_scrypt(password, scrypt_params, key_size)
             }
         }
     }

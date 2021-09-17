@@ -10,7 +10,7 @@ authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 edition = "2018"
 repository = "https://github.com/RustCrypto/formats/tree/master/der"
-categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
+categories = ["cryptography", "data-structures", "encoding", "no-std", "parsing"]
 keywords = ["asn1", "crypto", "itu", "pkcs"]
 readme = "README.md"
 

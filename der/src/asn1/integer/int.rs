@@ -17,7 +17,7 @@ pub(super) fn decode_array<const N: usize>(any: Any<'_>) -> Result<[u8; N]> {
 
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.
 pub(super) fn encode(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
-    let bytes = strip_leading_ones(&bytes);
+    let bytes = strip_leading_ones(bytes);
     let len = Length::try_from(bytes.len())?;
     Header::new(Tag::Integer, len)?.encode(encoder)?;
     encoder.bytes(bytes)
@@ -26,7 +26,7 @@ pub(super) fn encode(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
 /// Get the encoded length for the given unsigned integer serialized as bytes.
 #[inline]
 pub(super) fn encoded_len(bytes: &[u8]) -> Result<Length> {
-    Length::try_from(strip_leading_ones(&bytes).len())
+    Length::try_from(strip_leading_ones(bytes).len())
 }
 
 /// Strip the leading all-ones bytes from the given byte slice.
