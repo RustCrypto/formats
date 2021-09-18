@@ -1,10 +1,5 @@
 //! X.509 `SubjectPublicKeyInfo`
 
-#[cfg(feature = "alloc")]
-extern crate base64ct;
-#[cfg(feature = "fingerprint")]
-extern crate sha2;
-
 use crate::AlgorithmIdentifier;
 #[cfg(feature = "alloc")]
 use alloc::string::String;
