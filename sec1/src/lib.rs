@@ -1,5 +1,6 @@
-//! Pure Rust implementation of [SEC1: Elliptic Curve Cryptography] encoding formats
-//! including ASN.1 DER-serialized private keys.
+//! Pure Rust implementation of [SEC1: Elliptic Curve Cryptography] encoding
+//! formats including ASN.1 DER-serialized private keys as well as the
+//! `Elliptic-Curve-Point-to-Octet-String` encoding.
 //!
 //! # Minimum Supported Rust Version
 //! This crate requires **Rust 1.51** at a minimum.
@@ -20,6 +21,8 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+pub mod point;
+
 mod error;
 mod parameters;
 mod private_key;
@@ -30,6 +33,7 @@ pub use der;
 pub use self::{
     error::{Error, Result},
     parameters::EcParameters,
+    point::EncodedPoint,
     private_key::EcPrivateKey,
     traits::FromEcPrivateKey,
 };

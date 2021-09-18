@@ -2,10 +2,7 @@
 
 use crate::{EcPrivateKey, Error, FromEcPrivateKey, Result, ToEcPrivateKey};
 use alloc::{borrow::ToOwned, vec::Vec};
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
+use core::{convert::TryFrom, fmt};
 use der::{Decodable, Encodable};
 use zeroize::{Zeroize, Zeroizing};
 
@@ -17,7 +14,10 @@ use {
 };
 
 #[cfg(feature = "std")]
-use std::{fs, path::Path, str};
+use {
+    core::convert::TryInto,
+    std::{fs, path::Path, str},
+};
 
 /// SEC1 `EC PRIVATE KEY` document.
 ///

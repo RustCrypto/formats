@@ -1,4 +1,4 @@
-name: pkcs1
+name: sec1
 
 on:
   pull_request:
@@ -7,14 +7,14 @@ on:
       - "const-oid/**"
       - "der/**"
       - "pem-rfc7468/**"
-      - "pkcs1/**"
+      - "sec1/**"
       - "Cargo.*"
   push:
     branches: master
 
 defaults:
   run:
-    working-directory: pkcs1
+    working-directory: sec1
 
 env:
   CARGO_INCREMENTAL: 0
@@ -40,6 +40,11 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features pem
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features subtle
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features zeroize
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc,pem,subtle,zeroize
 
   test:
     runs-on: ubuntu-latest

@@ -6,6 +6,7 @@ on:
       - "base64ct/**"
       - "const-oid/**"
       - "der/**"
+      - "pem-rfc7468/**"
       - "pkcs8/**"
       - "spki/**"
       - "Cargo.*"

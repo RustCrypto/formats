@@ -286,8 +286,10 @@ name = "sec1"
 version = "0.0.0"
 dependencies = [
  "der",
+ "generic-array",
  "hex-literal",
  "pem-rfc7468",
+ "subtle",
  "zeroize",
 ]
 

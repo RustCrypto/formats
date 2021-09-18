@@ -3,7 +3,8 @@ name = "sec1"
 version = "0.0.0" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of SEC1: Elliptic Curve Cryptography encoding formats
-including ASN.1 DER-serialized private keys
+including ASN.1 DER-serialized private keys as well as the
+Elliptic-Curve-Point-to-Octet-String encoding
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
@@ -15,9 +16,11 @@ readme = "README.md"
 
 [dependencies]
 der = { version = "0.4", features = ["oid"], path = "../der" }
+generic-array = { version = "0.14", default-features = false }
 
 # optional dependencies
 pem-rfc7468 = { version = "0.2", optional = true, path = "../pem-rfc7468" }
+subtle = { version = ">=2, <2.5", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false, features = ["alloc"] }
 
 [dev-dependencies]

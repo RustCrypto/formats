@@ -5,7 +5,7 @@ use core::fmt;
 #[cfg(feature = "pem")]
 use crate::pem;
 
-/// Result type
+/// Result type with `sec1` crate's [`Error`] type.
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Error type
@@ -42,6 +42,10 @@ pub enum Error {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     PermissionDenied,
 
+    /// Errors relating to the `Elliptic-Curve-Point-to-Octet-String` or
+    /// `Octet-String-to-Elliptic-Curve-Point` encodings.
+    PointEncoding,
+
     /// Version errors
     Version,
 }
@@ -57,6 +61,7 @@ impl fmt::Display for Error {
             Error::Io => f.write_str("I/O error"),
             #[cfg(feature = "pem")]
             Error::Pem(err) => write!(f, "SEC1 {}", err),
+            Error::PointEncoding => f.write_str("elliptic curve point encoding error"),
             Error::Version => f.write_str("SEC1 version error"),
             #[cfg(feature = "std")]
             Error::PermissionDenied => f.write_str("permission denied"),
