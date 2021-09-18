@@ -30,6 +30,7 @@
 //! [RFC 5280 Section 4.1]: https://tools.ietf.org/html/rfc5280#section-4.1
 
 #![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
@@ -37,6 +38,9 @@
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 mod algorithm;
 mod spki;

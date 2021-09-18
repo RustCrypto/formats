@@ -321,7 +321,10 @@ dependencies = [
 name = "spki"
 version = "0.4.1"
 dependencies = [
+ "base64ct",
  "der",
+ "hex-literal",
+ "sha2",
 ]
 
 [[package]]

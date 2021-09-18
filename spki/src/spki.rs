@@ -1,11 +1,17 @@
 //! X.509 `SubjectPublicKeyInfo`
 
 use crate::AlgorithmIdentifier;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(all(feature = "fingerprint", feature = "alloc"))]
+use base64ct::{Base64, Encoding};
 use core::convert::TryFrom;
 use der::{
     asn1::{Any, BitString},
     Decodable, Encodable, Error, Message, Result,
 };
+#[cfg(feature = "fingerprint")]
+use sha2::{digest::Output, Digest, Sha256};
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 Section 4.1.2.7].
 ///
@@ -55,5 +61,26 @@ impl<'a> Message<'a> for SubjectPublicKeyInfo<'a> {
         F: FnOnce(&[&dyn Encodable]) -> Result<T>,
     {
         f(&[&self.algorithm, &BitString::new(self.subject_public_key)?])
+    }
+}
+
+#[cfg(feature = "fingerprint")]
+#[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+impl<'a> SubjectPublicKeyInfo<'a> {
+    const BUFSIZE: usize = 4096;
+
+    #[cfg(all(feature = "fingerprint", feature = "alloc"))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "fingerprint", feature = "alloc"))))]
+    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo and encode it as a Base64 string
+    pub fn fingerprint_base64(&self) -> core::result::Result<String, Error> {
+        Ok(Base64::encode_string(self.fingerprint()?.as_slice()))
+    }
+
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo
+    pub fn fingerprint(&self) -> core::result::Result<Output<Sha256>, Error> {
+        let mut buf = [0u8; Self::BUFSIZE];
+        Ok(Sha256::digest(self.encode_to_slice(&mut buf)?))
     }
 }
