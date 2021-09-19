@@ -24,11 +24,13 @@ pub(crate) const PEM_TYPE_LABEL: &str = "EC PRIVATE KEY";
 
 /// `ECPrivateKey` version.
 ///
-/// From RFC5913 Section 3:
+/// From [RFC5913 Section 3]:
 /// > version specifies the syntax version number of the elliptic curve
 /// > private key structure.  For this version of the document, it SHALL
 /// > be set to ecPrivkeyVer1, which is of type INTEGER and whose value
 /// > is one (1).
+///
+/// [RFC5915 Section 3]: https://datatracker.ietf.org/doc/html/rfc5915#section-3
 const VERSION: u8 = 1;
 
 /// Context-specific tag number for the elliptic curve parameters.

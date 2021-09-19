@@ -6,6 +6,7 @@
 
 use crate::{Error, Result};
 use core::{
+    cmp::Ordering,
     fmt::{self, Debug},
     ops::Add,
 };
@@ -60,7 +61,7 @@ impl_modulus_size!(U28, U32, U48, U66);
 /// This type is an enum over the compressed and uncompressed encodings,
 /// useful for cases where either encoding can be supported, or conversions
 /// between the two forms.
-#[derive(Clone, Default, PartialOrd, Ord)]
+#[derive(Clone, Default)]
 pub struct EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -278,6 +279,8 @@ where
     }
 }
 
+impl<Size: ModulusSize> Eq for EncodedPoint<Size> {}
+
 impl<Size> PartialEq for EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -287,7 +290,23 @@ where
     }
 }
 
-impl<Size: ModulusSize> Eq for EncodedPoint<Size> {}
+impl<Size: ModulusSize> PartialOrd for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<Size: ModulusSize> Ord for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_bytes().cmp(other.as_bytes())
+    }
+}
 
 #[cfg(feature = "zeroize")]
 impl<Size> Zeroize for EncodedPoint<Size>
