@@ -1,11 +1,13 @@
 //! Pure Rust implementation of [SEC1: Elliptic Curve Cryptography] encoding
-//! formats including ASN.1 DER-serialized private keys as well as the
-//! `Elliptic-Curve-Point-to-Octet-String` encoding.
+//! formats including ASN.1 DER-serialized private keys (also described in
+//! [RFC5915]) as well as the `Elliptic-Curve-Point-to-Octet-String` and
+//! `Octet-String-to-Elliptic-Curve-Point` encoding algorithms.
 //!
 //! # Minimum Supported Rust Version
 //! This crate requires **Rust 1.51** at a minimum.
 //!
 //! [SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf
+//! [RFC5915]: https://datatracker.ietf.org/doc/html/rfc5915
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(
@@ -37,6 +39,8 @@ pub use self::{
     private_key::EcPrivateKey,
     traits::FromEcPrivateKey,
 };
+
+pub use generic_array::typenum::consts;
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]

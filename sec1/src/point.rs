@@ -1,8 +1,9 @@
-//! Support for the SEC1 `Elliptic-Curve-Point-to-Octet-String` encoding.
+//! Support for the SEC1 `Elliptic-Curve-Point-to-Octet-String` and
+//! `Octet-String-to-Elliptic-Curve-Point` encoding algorithms.
 //!
-//! Described in SEC1: Elliptic Curve Cryptography (Version 2.0) section 2.3.3 (p.10):
+//! Described in [SEC1: Elliptic Curve Cryptography] (Version 2.0) section 2.3.3 (p.10).
 //!
-//! <https://www.secg.org/sec1-v2.pdf>
+//! [SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf
 
 use crate::{Error, Result};
 use core::{
