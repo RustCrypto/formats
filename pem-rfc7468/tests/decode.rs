@@ -107,3 +107,10 @@ fn pkcs8_enc_example_with_vec() {
     assert_eq!(label, "ENCRYPTED PRIVATE KEY");
     assert_eq!(decoded, include_bytes!("examples/pkcs8-enc.der"));
 }
+
+#[test]
+fn ed25519_example() {
+    let pem = include_bytes!("examples/ed25519_id.pem");
+    let label = pem_rfc7468::decode_label(pem).unwrap();
+    assert_eq!(label, "ED25519 CERT");
+}
