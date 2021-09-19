@@ -25,10 +25,16 @@ pub(crate) const CHAR_LF: u8 = 0x0a;
 /// Colon ':'
 pub(crate) const CHAR_COLON: u8 = 0x3A;
 
-/// Does the provided byte match a character allowed in a label?
-// TODO(tarcieri): relax this to match the RFC 7468 ABNF
+/// Any printable character except hyphen-minus, as defined in the
+/// 'labelchar' production in the RFC 7468 ABNF grammar
 pub(crate) fn is_labelchar(char: u8) -> bool {
-    matches!(char, b'A'..=b'Z' | CHAR_HT | CHAR_SP)
+    matches!(char, 0x21..=0x2C | 0x2E..=0x7E)
+}
+
+/// Does the provided byte match a character allowed in a label?
+// TODO: allow hyphen-minus to match the 'label' production in the ABNF grammar
+pub(crate) fn is_allowed_in_label(char: u8) -> bool {
+    is_labelchar(char) || matches!(char, CHAR_HT | CHAR_SP)
 }
 
 /// Does the provided byte match the "WSP" ABNF production from Section 3?
@@ -132,8 +138,7 @@ pub(crate) fn split_label(bytes: &[u8]) -> Option<(&str, &[u8])> {
 
     for &char in bytes {
         // Validate character
-        // TODO(tarcieri): unify with `is_labelchar`/`validate_label`
-        if matches!(char, b'A'..=b'Z') {
+        if is_labelchar(char) {
             last_was_wsp = false;
         } else if char == b'-' {
             // Possible start of encapsulation boundary delimiter
@@ -168,7 +173,7 @@ pub(crate) fn validate_label(label: &[u8]) -> Result<()> {
     let mut last_was_wsp = false;
 
     for &char in label {
-        if !is_labelchar(char) {
+        if !is_allowed_in_label(char) {
             return Err(Error::Label);
         }
 
