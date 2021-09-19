@@ -60,7 +60,7 @@ impl_modulus_size!(U28, U32, U48, U66);
 /// This type is an enum over the compressed and uncompressed encodings,
 /// useful for cases where either encoding can be supported, or conversions
 /// between the two forms.
-#[derive(Clone, Default, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Default, PartialOrd, Ord)]
 pub struct EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -277,6 +277,17 @@ where
         write!(f, "EncodedPoint({:?})", self.coordinates())
     }
 }
+
+impl<Size> PartialEq for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.as_bytes() == other.as_bytes()
+    }
+}
+
+impl<Size: ModulusSize> Eq for EncodedPoint<Size> {}
 
 #[cfg(feature = "zeroize")]
 impl<Size> Zeroize for EncodedPoint<Size>
