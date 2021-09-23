@@ -37,18 +37,18 @@ impl TagNumber {
     }
 
     /// Create an `APPLICATION` tag with this tag number.
-    pub fn application(self) -> Tag {
-        Tag::Application(self)
+    pub fn application(self, constructed: bool) -> Tag {
+        Tag::Application(self, constructed)
     }
 
     /// Create a `CONTEXT-SPECIFIC` tag with this tag number.
-    pub fn context_specific(self) -> Tag {
-        Tag::ContextSpecific(self)
+    pub fn context_specific(self, constructed: bool) -> Tag {
+        Tag::ContextSpecific(self, constructed)
     }
 
     /// Create a `PRIVATE` tag with this tag number.
-    pub fn private(self) -> Tag {
-        Tag::Private(self)
+    pub fn private(self, constructed: bool) -> Tag {
+        Tag::Private(self, constructed)
     }
 
     /// Get the inner value.

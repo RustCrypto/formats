@@ -11,6 +11,9 @@ use core::{convert::TryFrom, fmt};
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
 const CONSTRUCTED_FLAG: u8 = 0b100000;
 
+/// Indicates whether or not this type is constructed
+type Constructed = bool;
+
 /// Types with an associated ASN.1 [`Tag`].
 pub trait Tagged {
     /// ASN.1 tag
@@ -75,13 +78,13 @@ pub enum Tag {
     GeneralizedTime,
 
     /// Application tag.
-    Application(TagNumber),
+    Application(TagNumber, Constructed),
 
     /// Context-specific tag.
-    ContextSpecific(TagNumber),
+    ContextSpecific(TagNumber, Constructed),
 
     /// Private tag number.
-    Private(TagNumber),
+    Private(TagNumber, Constructed),
 }
 
 impl Tag {
@@ -99,9 +102,9 @@ impl Tag {
     /// Get the [`Class`] that corresponds to this [`Tag`].
     pub fn class(self) -> Class {
         match self {
-            Tag::Application(_) => Class::Application,
-            Tag::ContextSpecific(_) => Class::ContextSpecific,
-            Tag::Private(_) => Class::Private,
+            Tag::Application(_, _) => Class::Application,
+            Tag::ContextSpecific(_, _) => Class::ContextSpecific,
+            Tag::Private(_, _) => Class::Private,
             _ => Class::Universal,
         }
     }
@@ -122,9 +125,9 @@ impl Tag {
             Tag::Ia5String => 0x16,
             Tag::UtcTime => 0x17,
             Tag::GeneralizedTime => 0x18,
-            Tag::Application(number) | Tag::ContextSpecific(number) | Tag::Private(number) => {
-                self.class().octet(number, true)
-            }
+            Tag::Application(number, constructed)
+            | Tag::ContextSpecific(number, constructed)
+            | Tag::Private(number, constructed) => self.class().octet(number, constructed),
         }
     }
 
@@ -169,9 +172,12 @@ impl TryFrom<u8> for Tag {
             0x18 => Ok(Tag::GeneralizedTime),
             0x30 => Ok(Tag::Sequence), // constructed
             0x31 => Ok(Tag::Set),      // constructed
-            0x60..=0x7E => Ok(Tag::Application(TagNumber(byte & 0b11111))), // constructed
-            0xA0..=0xBE => Ok(Tag::ContextSpecific(TagNumber(byte & 0b11111))), // constructed
-            0xE0..=0xFE => Ok(Tag::Private(TagNumber(byte & 0b11111))), // constructed
+            0x40..=0x5E => Ok(Tag::Application(TagNumber(byte & 0b11111), false)), // primitive
+            0x60..=0x7E => Ok(Tag::Application(TagNumber(byte & 0b11111), true)), // constructed
+            0x80..=0x9E => Ok(Tag::ContextSpecific(TagNumber(byte & 0b11111), false)), // primitive
+            0xA0..=0xBE => Ok(Tag::ContextSpecific(TagNumber(byte & 0b11111), true)), // constructed
+            0xC0..=0xDE => Ok(Tag::Private(TagNumber(byte & 0b11111), false)), //primitive
+            0xE0..=0xFE => Ok(Tag::Private(TagNumber(byte & 0b11111), true)), // constructed
             _ => Err(ErrorKind::UnknownTag { byte }.into()),
         }
     }
@@ -221,9 +227,11 @@ impl fmt::Display for Tag {
             Tag::UtcTime => f.write_str("UTCTime"),
             Tag::GeneralizedTime => f.write_str("GeneralizedTime"),
             Tag::Sequence => f.write_str("SEQUENCE"),
-            Tag::Application(n) => write!(f, "APPLICATION {}", n),
-            Tag::ContextSpecific(n) => write!(f, "CONTEXT-SPECIFIC {}", n),
-            Tag::Private(n) => write!(f, "PRIVATE {}", n),
+            Tag::Application(n, c) => write!(f, "APPLICATION {} CONSTRUCTED {}", n, *c as u8),
+            Tag::ContextSpecific(n, c) => {
+                write!(f, "CONTEXT-SPECIFIC {} CONSTRUCTED {}", n, *c as u8)
+            }
+            Tag::Private(n, c) => write!(f, "PRIVATE {} CONSTRUCTED {}", n, *c as u8),
         }
     }
 }
@@ -257,12 +265,18 @@ mod tests {
 
         for num in 0..=30 {
             let tag_num = TagNumber::new(num);
-            assert_eq!(Tag::Application(tag_num).class(), Class::Application);
+            assert_eq!(Tag::Application(tag_num, true).class(), Class::Application);
+            assert_eq!(Tag::Application(tag_num, false).class(), Class::Application);
             assert_eq!(
-                Tag::ContextSpecific(tag_num).class(),
+                Tag::ContextSpecific(tag_num, true).class(),
                 Class::ContextSpecific
             );
-            assert_eq!(Tag::Private(tag_num).class(), Class::Private);
+            assert_eq!(
+                Tag::ContextSpecific(tag_num, false).class(),
+                Class::ContextSpecific
+            );
+            assert_eq!(Tag::Private(tag_num, true).class(), Class::Private);
+            assert_eq!(Tag::Private(tag_num, false).class(), Class::Private);
         }
     }
 }

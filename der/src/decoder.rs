@@ -141,7 +141,7 @@ impl<'a> Decoder<'a> {
     pub fn context_specific(&mut self, tag: TagNumber) -> Result<Option<Any<'a>>> {
         loop {
             match self.peek().map(Tag::try_from).transpose()? {
-                Some(Tag::ContextSpecific(actual_tag)) => {
+                Some(Tag::ContextSpecific(actual_tag, _)) => {
                     match actual_tag.cmp(&tag) {
                         Ordering::Less => {
                             // Decode and ignore lower-numbered fields if

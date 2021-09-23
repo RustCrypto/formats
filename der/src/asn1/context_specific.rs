@@ -22,11 +22,14 @@ pub struct ContextSpecific<'a> {
 
     /// Value of the field.
     pub value: Any<'a>,
+
+    /// Whether or not this CS-field is contructed
+    pub constructed: bool,
 }
 
 impl<'a> Choice<'a> for ContextSpecific<'a> {
     fn can_decode(tag: Tag) -> bool {
-        matches!(tag, Tag::ContextSpecific(_))
+        matches!(tag, Tag::ContextSpecific(_, _))
     }
 }
 
@@ -36,7 +39,7 @@ impl<'a> Encodable for ContextSpecific<'a> {
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        let tag = Tag::ContextSpecific(self.tag_number);
+        let tag = Tag::ContextSpecific(self.tag_number, self.constructed);
         Header::new(tag, self.value.encoded_len()?)?.encode(encoder)?;
         self.value.encode(encoder)
     }
@@ -53,9 +56,10 @@ impl<'a> TryFrom<Any<'a>> for ContextSpecific<'a> {
 
     fn try_from(any: Any<'a>) -> Result<ContextSpecific<'a>> {
         match any.tag() {
-            Tag::ContextSpecific(tag_number) => Ok(Self {
+            Tag::ContextSpecific(tag_number, constructed) => Ok(Self {
                 tag_number,
                 value: Any::from_der(any.as_bytes())?,
+                constructed,
             }),
             tag => Err(tag.unexpected_error(None)),
         }
