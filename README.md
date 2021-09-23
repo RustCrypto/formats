@@ -13,6 +13,7 @@ Cryptography-related format encoders/decoders: PKCS, PKIX.
 | `pkcs1` | [![crates.io](https://img.shields.io/crates/v/pkcs1.svg)](https://crates.io/crates/pkcs1) | [![Documentation](https://docs.rs/pkcs1/badge.svg)](https://docs.rs/pkcs1) | Implementation of PKCS#1: RSA Cryptography Specifications Version 2.2 ([RFC 8017]) |
 | `pkcs5` | [![crates.io](https://img.shields.io/crates/v/pkcs5.svg)](https://crates.io/crates/pkcs5) | [![Documentation](https://docs.rs/pkcs5/badge.svg)](https://docs.rs/pkcs5) | Implementation of PKCS#5: Password-Based Cryptography Specification Version 2.1 ([RFC 8018]) |
 | `pkcs8` | [![crates.io](https://img.shields.io/crates/v/pkcs8.svg)](https://crates.io/crates/pkcs8) | [![Documentation](https://docs.rs/pkcs8/badge.svg)](https://docs.rs/pkcs8) | Implementation of PKCS#8(v2): Private-Key Information Syntax Specification ([RFC 5208]) and asymmetric key packages ([RFC 5958]) |
+| `sec1` | [![crates.io](https://img.shields.io/crates/v/sec1.svg)](https://crates.io/crates/sec1) | [![Documentation](https://docs.rs/sec1/badge.svg)](https://docs.rs/sec1) | [SEC1: Elliptic Curve Cryptography] encoding formats |
 | `spki` | [![crates.io](https://img.shields.io/crates/v/spki.svg)](https://crates.io/crates/spki) | [![Documentation](https://docs.rs/spki/badge.svg)](https://docs.rs/spki) | X.509 Subject Public Key Info ([RFC 5280 Section 4.1]) describing public keys as well as their associated AlgorithmIdentifiers (i.e. OIDs) |
 | `x509` | [![crates.io](https://img.shields.io/crates/v/x509.svg)](https://crates.io/crates/x509) | [![Documentation](https://docs.rs/x509/badge.svg)](https://docs.rs/x509) | Implementation of the X.509 Public Key Infrastructure Certificate format as described in [RFC 5280] |
 
@@ -49,3 +50,4 @@ dual licensed as above, without any additional terms or conditions.
 [RFC 5958]: https://datatracker.ietf.org/doc/html/rfc5958
 [RFC 8017]: https://datatracker.ietf.org/doc/html/rfc8017
 [RFC 8018]: https://datatracker.ietf.org/doc/html/rfc8018
+[SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf

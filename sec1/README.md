@@ -12,7 +12,8 @@
 ## About
 
 Pure Rust implementation of [SEC1: Elliptic Curve Cryptography] encoding formats
-including ASN.1 DER-serialized private keys.
+including ASN.1 DER-serialized private keys  as well as the
+`Elliptic-Curve-Point-to-Octet-String` encoding.
 
 ## License
 
