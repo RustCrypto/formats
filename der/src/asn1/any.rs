@@ -27,12 +27,21 @@ pub struct Any<'a> {
     length: Length,
 
     /// Inner value encoded as bytes.
-    value: ByteSlice<'a>,
+    pub(crate) value: ByteSlice<'a>,
 }
 
 impl<'a> Any<'a> {
     /// Create a new [`Any`] from the provided [`Tag`] and byte slice.
     pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self> {
+        let bytes = if has_leading_zero_byte(tag) {
+            match bytes.split_first() {
+                Some((0, rest)) => rest,
+                _ => return Err(tag.non_canonical_error()),
+            }
+        } else {
+            bytes
+        };
+
         let value = ByteSlice::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
 
         let length = if has_leading_zero_byte(tag) {

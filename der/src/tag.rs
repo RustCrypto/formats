@@ -35,53 +35,71 @@ pub trait Tagged {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Tag {
-    /// `BOOLEAN` tag: 0x01
+    /// `BOOLEAN` tag: `0x01`.
     Boolean,
 
-    /// `INTEGER` tag: 0x02
+    /// `INTEGER` tag: `0x02`.
     Integer,
 
-    /// `BIT STRING` tag: 0x03
+    /// `BIT STRING` tag: `0x03`.
     BitString,
 
-    /// `OCTET STRING` tag: 0x04
+    /// `OCTET STRING` tag: `0x04`.
     OctetString,
 
-    /// `NULL` tag: 0x05
+    /// `NULL` tag: `0x05`.
     Null,
 
-    /// `OBJECT IDENTIFIER` tag: 0x06
+    /// `OBJECT IDENTIFIER` tag: `0x06`.
     ObjectIdentifier,
 
-    /// `UTF8String` tag: 0x0C
+    /// `UTF8String` tag: `0x0C`.
     Utf8String,
 
-    /// `SEQUENCE` tag: 0x10
+    /// `SEQUENCE` tag: `0x10`.
     Sequence,
 
-    /// `SET` and `SET OF` tag: 0x11
+    /// `SET` and `SET OF` tag: `0x11`.
     Set,
 
-    /// `PrintableString` tag: 0x13
+    /// `PrintableString` tag: `0x13`.
     PrintableString,
 
-    /// `IA5String` tag: 0x16
+    /// `IA5String` tag: `0x16`.
     Ia5String,
 
-    /// `UTCTime` tag: 0x17
+    /// `UTCTime` tag: `0x17`.
     UtcTime,
 
-    /// `GeneralizedTime` tag: 0x18
+    /// `GeneralizedTime` tag: `0x18`.
     GeneralizedTime,
 
     /// Application tag.
-    Application(TagNumber),
+    Application {
+        /// Is this tag constructed? (vs primitive).
+        constructed: bool,
+
+        /// Tag number.
+        number: TagNumber,
+    },
 
     /// Context-specific tag.
-    ContextSpecific(TagNumber),
+    ContextSpecific {
+        /// Is this tag constructed? (vs primitive).
+        constructed: bool,
+
+        /// Tag number.
+        number: TagNumber,
+    },
 
     /// Private tag number.
-    Private(TagNumber),
+    Private {
+        /// Is this tag constructed? (vs primitive).
+        constructed: bool,
+
+        /// Tag number.
+        number: TagNumber,
+    },
 }
 
 impl Tag {
@@ -99,11 +117,16 @@ impl Tag {
     /// Get the [`Class`] that corresponds to this [`Tag`].
     pub fn class(self) -> Class {
         match self {
-            Tag::Application(_) => Class::Application,
-            Tag::ContextSpecific(_) => Class::ContextSpecific,
-            Tag::Private(_) => Class::Private,
+            Tag::Application { .. } => Class::Application,
+            Tag::ContextSpecific { .. } => Class::ContextSpecific,
+            Tag::Private { .. } => Class::Private,
             _ => Class::Universal,
         }
+    }
+
+    /// Does this tag represent a constructed (as opposed to primitive) field?
+    pub fn constructed(self) -> bool {
+        self.octet() & CONSTRUCTED_FLAG != 0
     }
 
     /// Get the octet encoding for this [`Tag`].
@@ -122,9 +145,18 @@ impl Tag {
             Tag::Ia5String => 0x16,
             Tag::UtcTime => 0x17,
             Tag::GeneralizedTime => 0x18,
-            Tag::Application(number) | Tag::ContextSpecific(number) | Tag::Private(number) => {
-                self.class().octet(number, true)
+            Tag::Application {
+                constructed,
+                number,
             }
+            | Tag::ContextSpecific {
+                constructed,
+                number,
+            }
+            | Tag::Private {
+                constructed,
+                number,
+            } => self.class().octet(constructed, number),
         }
     }
 
@@ -155,6 +187,9 @@ impl TryFrom<u8> for Tag {
     type Error = Error;
 
     fn try_from(byte: u8) -> Result<Tag> {
+        let constructed = byte & CONSTRUCTED_FLAG != 0;
+        let number = TagNumber(byte & 0b11111);
+
         match byte {
             0x01 => Ok(Tag::Boolean),
             0x02 => Ok(Tag::Integer),
@@ -169,9 +204,18 @@ impl TryFrom<u8> for Tag {
             0x18 => Ok(Tag::GeneralizedTime),
             0x30 => Ok(Tag::Sequence), // constructed
             0x31 => Ok(Tag::Set),      // constructed
-            0x60..=0x7E => Ok(Tag::Application(TagNumber(byte & 0b11111))), // constructed
-            0xA0..=0xBE => Ok(Tag::ContextSpecific(TagNumber(byte & 0b11111))), // constructed
-            0xE0..=0xFE => Ok(Tag::Private(TagNumber(byte & 0b11111))), // constructed
+            0x40..=0x7E => Ok(Tag::Application {
+                constructed,
+                number,
+            }),
+            0x80..=0xBE => Ok(Tag::ContextSpecific {
+                constructed,
+                number,
+            }),
+            0xC0..=0xFE => Ok(Tag::Private {
+                constructed,
+                number,
+            }),
             _ => Err(ErrorKind::UnknownTag { byte }.into()),
         }
     }
@@ -207,6 +251,8 @@ impl Encodable for Tag {
 
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        const FIELD_TYPE: [&str; 2] = ["primitive", "constructed"];
+
         match self {
             Tag::Boolean => f.write_str("BOOLEAN"),
             Tag::Integer => f.write_str("INTEGER"),
@@ -221,9 +267,30 @@ impl fmt::Display for Tag {
             Tag::UtcTime => f.write_str("UTCTime"),
             Tag::GeneralizedTime => f.write_str("GeneralizedTime"),
             Tag::Sequence => f.write_str("SEQUENCE"),
-            Tag::Application(n) => write!(f, "APPLICATION {}", n),
-            Tag::ContextSpecific(n) => write!(f, "CONTEXT-SPECIFIC {}", n),
-            Tag::Private(n) => write!(f, "PRIVATE {}", n),
+            Tag::Application {
+                constructed,
+                number,
+            } => write!(
+                f,
+                "APPLICATION [{}] ({})",
+                number, FIELD_TYPE[*constructed as usize]
+            ),
+            Tag::ContextSpecific {
+                constructed,
+                number,
+            } => write!(
+                f,
+                "CONTEXT-SPECIFIC [{}] ({})",
+                number, FIELD_TYPE[*constructed as usize]
+            ),
+            Tag::Private {
+                constructed,
+                number,
+            } => write!(
+                f,
+                "PRIVATE [{}] ({})",
+                number, FIELD_TYPE[*constructed as usize]
+            ),
         }
     }
 }
@@ -256,13 +323,36 @@ mod tests {
         assert_eq!(Tag::Sequence.class(), Class::Universal);
 
         for num in 0..=30 {
-            let tag_num = TagNumber::new(num);
-            assert_eq!(Tag::Application(tag_num).class(), Class::Application);
-            assert_eq!(
-                Tag::ContextSpecific(tag_num).class(),
-                Class::ContextSpecific
-            );
-            assert_eq!(Tag::Private(tag_num).class(), Class::Private);
+            for constructed in [false, true] {
+                let number = TagNumber::new(num);
+
+                assert_eq!(
+                    Tag::Application {
+                        constructed,
+                        number
+                    }
+                    .class(),
+                    Class::Application
+                );
+
+                assert_eq!(
+                    Tag::ContextSpecific {
+                        constructed,
+                        number
+                    }
+                    .class(),
+                    Class::ContextSpecific
+                );
+
+                assert_eq!(
+                    Tag::Private {
+                        constructed,
+                        number
+                    }
+                    .class(),
+                    Class::Private
+                );
+            }
         }
     }
 }

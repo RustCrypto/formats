@@ -83,13 +83,13 @@ mod tests {
 
     #[test]
     fn decode_empty_bitstring() {
-        let bs = parse_bitstring_from_any(&[]).unwrap();
+        let bs = parse_bitstring_from_any(&[0]).unwrap();
         assert_eq!(bs.as_ref(), &[]);
     }
 
     #[test]
     fn decode_non_empty_bitstring() {
-        let bs = parse_bitstring_from_any(&[1, 2, 3]).unwrap();
+        let bs = parse_bitstring_from_any(&[0, 1, 2, 3]).unwrap();
         assert_eq!(bs.as_ref(), &[1, 2, 3]);
     }
 }
