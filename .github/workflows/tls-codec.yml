@@ -26,7 +26,6 @@ jobs:
           - 1.51.0 # MSRV
           - stable
         target:
-          - thumbv7em-none-eabi
           - wasm32-unknown-unknown
     steps:
       - uses: actions/checkout@v1
@@ -62,10 +61,12 @@ jobs:
 
           # Windows
           - os: windows-latest
+            target: x86_64-pc-windows-msvc
             rust: stable
 
           # macOS
           - os: macos-latest
+            target: x86_64-apple-darwin
             rust: stable
     steps:
       - uses: actions/checkout@v1
