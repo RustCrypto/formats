@@ -58,16 +58,6 @@ jobs:
             rust: 1.51.0 # MSRV
           - target: x86_64-unknown-linux-gnu
             rust: stable
-
-          # Windows
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            rust: stable
-
-          # macOS
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            rust: stable
     steps:
       - uses: actions/checkout@v1
       - uses: actions-rs/toolchain@v1
@@ -81,3 +71,14 @@ jobs:
       - run: cargo test --target ${{ matrix.target }} --release --features derive
       - run: cargo test --target ${{ matrix.target }} --release --features serde_serialize
       - run: cargo test --target ${{ matrix.target }} --release --all-features
+
+  test-mac-windows:
+    runs-on:
+      - windows-latest
+      - macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: cargo test --release
+      - run: cargo test --release --features derive
+      - run: cargo test --release --features serde_serialize
+      - run: cargo test --release --all-features
