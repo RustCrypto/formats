@@ -190,14 +190,17 @@ impl<'a> TryFrom<Any<'a>> for PrivateKeyInfo<'a> {
             let version = Version::decode(decoder)?;
             let algorithm = decoder.decode()?;
             let private_key = decoder.octet_string()?.into();
-            let attributes = decoder.context_specific(ATTRIBUTES_TAG)?;
+            let attributes = decoder.context_specific_explicit(ATTRIBUTES_TAG)?;
 
             let public_key = decoder
-                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG)?
+                .context_specific_explicit::<BitString<'_>>(PUBLIC_KEY_TAG)?
                 .map(|bs| bs.as_bytes());
 
             if version.has_public_key() != public_key.is_some() {
-                return Err(decoder.value_error(der::Tag::ContextSpecific(PUBLIC_KEY_TAG)));
+                return Err(decoder.value_error(der::Tag::ContextSpecific {
+                    constructed: true,
+                    number: PUBLIC_KEY_TAG,
+                }));
             }
 
             // Ignore any remaining extension fields

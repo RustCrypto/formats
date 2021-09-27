@@ -160,6 +160,12 @@ impl<'a> Encodable for Any<'a> {
     }
 }
 
+impl<'a> From<Any<'a>> for ByteSlice<'a> {
+    fn from(any: Any<'a>) -> ByteSlice<'a> {
+        any.value
+    }
+}
+
 impl<'a> TryFrom<&'a [u8]> for Any<'a> {
     type Error = Error;
 
