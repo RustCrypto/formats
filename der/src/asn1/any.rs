@@ -26,6 +26,16 @@ pub struct Any<'a> {
     /// Encoded length of this [`Any`] value.
     length: Length,
 
+    /// An optional "leading octet" of the inner value, stored separately
+    /// from the rest.
+    ///
+    /// This allows adding a 1-byte prefix to any value, when the rest may come
+    /// from an existing slice.
+    ///
+    /// It's used for the encoding of `BIT STRING` (which has a leading `0`
+    /// byte) as well as any `IMPLICIT` value which decodes to a `BIT STRING`.
+    leading_octet: Option<u8>,
+
     /// Inner value encoded as bytes.
     value: ByteSlice<'a>,
 }
@@ -34,14 +44,7 @@ impl<'a> Any<'a> {
     /// Create a new [`Any`] from the provided [`Tag`] and byte slice.
     pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self> {
         let value = ByteSlice::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
-
-        let length = if has_leading_zero_byte(tag) {
-            (value.len() + 1u8)?
-        } else {
-            value.len()
-        };
-
-        Ok(Self { tag, length, value })
+        Ok(Self::from_tag_and_value(tag, value))
     }
 
     /// Infallible creation of an [`Any`] from a [`ByteSlice`].
@@ -49,8 +52,25 @@ impl<'a> Any<'a> {
         Self {
             tag,
             length: value.len(),
+            leading_octet: None,
             value,
         }
+    }
+
+    /// Infallible creation of an [`Any`] with a leading octet from a [`ByteSlice`].
+    pub(crate) fn from_tag_and_octet_prefixed_value(
+        tag: Tag,
+        octet: u8,
+        value: ByteSlice<'a>,
+    ) -> Result<Self> {
+        let length = (value.len() + Length::ONE)?;
+
+        Ok(Self {
+            tag,
+            length,
+            leading_octet: Some(octet),
+            value,
+        })
     }
 
     /// Get the tag for this [`Any`] type.
@@ -145,6 +165,11 @@ impl<'a> Any<'a> {
     pub fn utf8_string(self) -> Result<Utf8String<'a>> {
         self.try_into()
     }
+
+    /// Get the leading octet of this `Any` if one is present.
+    pub(crate) fn leading_octet(self) -> Option<u8> {
+        self.leading_octet
+    }
 }
 
 impl<'a> Choice<'a> for Any<'a> {
@@ -157,24 +182,9 @@ impl<'a> Decodable<'a> for Any<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Any<'a>> {
         let header = Header::decode(decoder)?;
         let tag = header.tag;
-        let mut value = decoder
+        let value = decoder
             .bytes(header.length)
             .map_err(|_| decoder.error(ErrorKind::Length { tag }))?;
-
-        if has_leading_zero_byte(tag) {
-            let (byte, rest) = value
-                .split_first()
-                .ok_or(ErrorKind::Truncated)
-                .map_err(|e| decoder.error(e))?;
-
-            // The first octet of a BIT STRING encodes the number of unused bits.
-            // We presently constrain this to 0.
-            if *byte != 0 {
-                return Err(decoder.error(ErrorKind::Noncanonical { tag }));
-            }
-
-            value = rest;
-        }
 
         Self::new(tag, value).map_err(|e| decoder.error(e.kind()))
     }
@@ -188,8 +198,8 @@ impl<'a> Encodable for Any<'a> {
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         Header::new(self.tag, self.len())?.encode(encoder)?;
 
-        if has_leading_zero_byte(self.tag) {
-            encoder.byte(0)?;
+        if let Some(octet) = self.leading_octet {
+            encoder.byte(octet)?;
         }
 
         encoder.bytes(self.as_bytes())
@@ -204,36 +214,9 @@ impl<'a> TryFrom<&'a [u8]> for Any<'a> {
     }
 }
 
-// Special handling for the leading `0` byte on [`BitString`]
-impl<'a> TryFrom<Any<'a>> for BitString<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<BitString<'a>> {
-        any.tag().assert_eq(Tag::BitString)?;
-
-        Ok(BitString {
-            inner: any.value,
-            encoded_len: any.length,
-        })
+/// Obtain the inner [`ByteSlice`] value contained in an [`Any`]
+impl<'a> From<Any<'a>> for ByteSlice<'a> {
+    fn from(any: Any<'a>) -> ByteSlice<'a> {
+        any.value
     }
-}
-
-// Special handling for the leading `0` byte on [`BitString`]
-impl<'a> From<BitString<'a>> for Any<'a> {
-    fn from(bit_string: BitString<'a>) -> Any<'a> {
-        Any {
-            tag: Tag::BitString,
-            length: bit_string.encoded_len,
-            value: bit_string.inner,
-        }
-    }
-}
-
-/// Does a value with this tag have a leading zero byte?
-///
-/// This is mostly a hack for `BIT STRING`, and permits simple `From`
-/// conversions from `BitString` into `Any`.
-// TODO(tarcieri): better generalize this? or is there a better solution?
-fn has_leading_zero_byte(tag: Tag) -> bool {
-    tag == Tag::BitString
 }
