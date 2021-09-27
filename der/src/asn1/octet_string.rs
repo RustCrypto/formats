@@ -53,7 +53,7 @@ impl<'a> TryFrom<Any<'a>> for OctetString<'a> {
 
     fn try_from(any: Any<'a>) -> Result<OctetString<'a>> {
         any.tag().assert_eq(Tag::OctetString)?;
-        Ok(Self { inner: any.into() })
+        Self::new(any.value())
     }
 }
 

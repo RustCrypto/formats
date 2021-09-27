@@ -1,10 +1,7 @@
 //! PKCS#8 `PrivateKeyInfo`.
 
 use crate::{AlgorithmIdentifier, Attributes, Error, Result, Version};
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
+use core::{convert::TryFrom, fmt};
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
     Decodable, Encodable, Message, TagNumber,
@@ -193,16 +190,10 @@ impl<'a> TryFrom<Any<'a>> for PrivateKeyInfo<'a> {
             let version = Version::decode(decoder)?;
             let algorithm = decoder.decode()?;
             let private_key = decoder.octet_string()?.into();
-
-            let attributes = decoder
-                .context_specific(ATTRIBUTES_TAG)?
-                .map(TryInto::try_into)
-                .transpose()?;
+            let attributes = decoder.context_specific(ATTRIBUTES_TAG)?;
 
             let public_key = decoder
-                .context_specific(PUBLIC_KEY_TAG)?
-                .map(|any| any.bit_string())
-                .transpose()?
+                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG)?
                 .map(|bs| bs.as_bytes());
 
             if version.has_public_key() != public_key.is_some() {
@@ -211,7 +202,7 @@ impl<'a> TryFrom<Any<'a>> for PrivateKeyInfo<'a> {
 
             // Ignore any remaining extension fields
             while !decoder.is_finished() {
-                decoder.decode::<ContextSpecific<'_>>()?;
+                decoder.decode::<ContextSpecific<Any<'_>>>()?;
             }
 
             Ok(Self {
@@ -235,16 +226,14 @@ impl<'a> Message<'a> for PrivateKeyInfo<'a> {
             &OctetString::new(self.private_key)?,
             &self.attributes.map(|value| ContextSpecific {
                 tag_number: ATTRIBUTES_TAG,
-                value: value.into(),
+                value,
             }),
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::new(pk).and_then(|value| {
-                        Ok(ContextSpecific {
-                            tag_number: PUBLIC_KEY_TAG,
-                            value: value.try_into()?,
-                        })
+                    BitString::new(pk).map(|value| ContextSpecific {
+                        tag_number: PUBLIC_KEY_TAG,
+                        value,
                     })
                 })
                 .transpose()?,

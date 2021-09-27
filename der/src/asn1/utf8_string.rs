@@ -79,7 +79,7 @@ impl<'a> TryFrom<Any<'a>> for Utf8String<'a> {
 
     fn try_from(any: Any<'a>) -> Result<Utf8String<'a>> {
         any.tag().assert_eq(Tag::Utf8String)?;
-        Self::new(any.as_bytes())
+        Self::new(any.value())
     }
 }
 

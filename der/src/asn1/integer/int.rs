@@ -10,8 +10,8 @@ use core::convert::TryFrom;
 pub(super) fn decode_array<const N: usize>(any: Any<'_>) -> Result<[u8; N]> {
     any.tag().assert_eq(Tag::Integer)?;
     let mut output = [0xFFu8; N];
-    let offset = N.saturating_sub(any.as_bytes().len());
-    output[offset..].copy_from_slice(any.as_bytes());
+    let offset = N.saturating_sub(any.value().len());
+    output[offset..].copy_from_slice(any.value());
     Ok(output)
 }
 

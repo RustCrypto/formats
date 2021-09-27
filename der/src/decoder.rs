@@ -138,7 +138,10 @@ impl<'a> Decoder<'a> {
     ///   higher numbered field consumed as a follow-up.
     /// - Returns `Ok(None)` if anything other than a [`ContextSpecific`] field
     ///   is encountered.
-    pub fn context_specific(&mut self, tag: TagNumber) -> Result<Option<Any<'a>>> {
+    pub fn context_specific<T>(&mut self, tag: TagNumber) -> Result<Option<T>>
+    where
+        T: Decodable<'a>,
+    {
         loop {
             match self.peek().map(Tag::try_from).transpose()? {
                 Some(Tag::ContextSpecific(actual_tag)) => {
@@ -146,12 +149,10 @@ impl<'a> Decoder<'a> {
                         Ordering::Less => {
                             // Decode and ignore lower-numbered fields if
                             // they parse correctly.
-                            self.decode::<ContextSpecific<'_>>()?;
+                            self.decode::<Any<'_>>()?;
                         }
                         Ordering::Equal => {
-                            return self
-                                .decode::<ContextSpecific<'_>>()
-                                .map(|cs| Some(cs.value))
+                            return self.decode::<ContextSpecific<T>>().map(|cs| Some(cs.value))
                         }
                         Ordering::Greater => return Ok(None),
                     }
@@ -290,23 +291,23 @@ mod tests {
 
         // Empty message
         let mut decoder = Decoder::new(&[]);
-        assert_eq!(decoder.context_specific(tag).unwrap(), None);
+        assert_eq!(decoder.context_specific::<u8>(tag).unwrap(), None);
 
         // Message containing a non-context-specific type
         let mut decoder = Decoder::new(&hex!("020100"));
-        assert_eq!(decoder.context_specific(tag).unwrap(), None);
+        assert_eq!(decoder.context_specific::<u8>(tag).unwrap(), None);
 
         //
         let mut decoder = Decoder::new(&hex!("A003020100"));
-        let field = decoder.context_specific(tag).unwrap().unwrap();
-        assert_eq!(u8::try_from(field).unwrap(), 0);
+        let field = decoder.context_specific::<u8>(tag).unwrap().unwrap();
+        assert_eq!(field, 0);
     }
 
     #[test]
     fn context_specific_skipping_unknown_field() {
         let tag = TagNumber::new(1);
         let mut decoder = Decoder::new(&hex!("A003020100A103020101"));
-        let field = decoder.context_specific(tag).unwrap().unwrap();
+        let field = decoder.context_specific::<u8>(tag).unwrap().unwrap();
         assert_eq!(u8::try_from(field).unwrap(), 1);
     }
 
@@ -314,7 +315,7 @@ mod tests {
     fn context_specific_returns_none_on_greater_tag_number() {
         let tag = TagNumber::new(0);
         let mut decoder = Decoder::new(&hex!("A103020101"));
-        assert_eq!(decoder.context_specific(tag).unwrap(), None);
+        assert_eq!(decoder.context_specific::<u8>(tag).unwrap(), None);
     }
 
     #[test]

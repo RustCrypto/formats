@@ -15,7 +15,7 @@ impl TryFrom<Any<'_>> for Null {
     fn try_from(any: Any<'_>) -> Result<Null> {
         let tag = any.tag().assert_eq(Tag::Null)?;
 
-        if any.is_empty() {
+        if any.value().is_empty() {
             Ok(Null)
         } else {
             Err(ErrorKind::Length { tag }.into())
@@ -47,13 +47,7 @@ impl TryFrom<Any<'_>> for () {
     type Error = Error;
 
     fn try_from(any: Any<'_>) -> Result<()> {
-        let tag = any.tag().assert_eq(Tag::Null)?;
-
-        if any.is_empty() {
-            Ok(())
-        } else {
-            Err(ErrorKind::Length { tag }.into())
-        }
+        Null::try_from(any).map(|_| ())
     }
 }
 
@@ -65,11 +59,11 @@ impl<'a> From<()> for Any<'a> {
 
 impl Encodable for () {
     fn encoded_len(&self) -> Result<Length> {
-        Any::from(()).encoded_len()
+        Null.encoded_len()
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(()).encode(encoder)
+        Null.encode(encoder)
     }
 }
 
