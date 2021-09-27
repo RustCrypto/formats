@@ -127,9 +127,11 @@ impl<'a> Message<'a> for EcPrivateKey<'a> {
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::new(pk).map(|value| ContextSpecific {
-                        tag_number: PUBLIC_KEY_TAG,
-                        value: value.into(),
+                    BitString::new(pk).and_then(|value| {
+                        Ok(ContextSpecific {
+                            tag_number: PUBLIC_KEY_TAG,
+                            value: value.try_into()?,
+                        })
                     })
                 })
                 .transpose()?,

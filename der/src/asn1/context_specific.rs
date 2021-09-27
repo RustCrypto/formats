@@ -77,7 +77,7 @@ mod tests {
         let field = ContextSpecific::from_der(EXAMPLE_BYTES).unwrap();
         assert_eq!(field.tag_number.value(), 1);
         assert_eq!(field.value.tag(), Tag::BitString);
-        assert_eq!(field.value.as_bytes(), &EXAMPLE_BYTES[5..]);
+        assert_eq!(field.value.as_bytes(), &EXAMPLE_BYTES[4..]);
 
         let mut buf = [0u8; 128];
         let encoded = field.encode_to_slice(&mut buf).unwrap();
