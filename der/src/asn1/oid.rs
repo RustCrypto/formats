@@ -9,7 +9,7 @@ impl TryFrom<Any<'_>> for ObjectIdentifier {
 
     fn try_from(any: Any<'_>) -> Result<ObjectIdentifier> {
         any.tag().assert_eq(Tag::ObjectIdentifier)?;
-        Ok(ObjectIdentifier::from_bytes(any.as_bytes())?)
+        Ok(ObjectIdentifier::from_bytes(any.value())?)
     }
 }
 

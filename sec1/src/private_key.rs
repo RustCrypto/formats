@@ -9,10 +9,7 @@
 pub(crate) mod document;
 
 use crate::{EcParameters, Error};
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
+use core::{convert::TryFrom, fmt};
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
     Decodable, Encodable, Message, TagNumber,
@@ -91,16 +88,9 @@ impl<'a> TryFrom<Any<'a>> for EcPrivateKey<'a> {
             }
 
             let private_key = decoder.octet_string()?.as_bytes();
-
-            let parameters = decoder
-                .context_specific(EC_PARAMETERS_TAG)?
-                .map(TryInto::try_into)
-                .transpose()?;
-
+            let parameters = decoder.context_specific(EC_PARAMETERS_TAG)?;
             let public_key = decoder
-                .context_specific(PUBLIC_KEY_TAG)?
-                .map(|any| any.bit_string())
-                .transpose()?
+                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG)?
                 .map(|bs| bs.as_bytes());
 
             Ok(EcPrivateKey {
@@ -122,16 +112,14 @@ impl<'a> Message<'a> for EcPrivateKey<'a> {
             &OctetString::new(self.private_key)?,
             &self.parameters.as_ref().map(|params| ContextSpecific {
                 tag_number: EC_PARAMETERS_TAG,
-                value: params.into(),
+                value: *params,
             }),
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::new(pk).and_then(|value| {
-                        Ok(ContextSpecific {
-                            tag_number: PUBLIC_KEY_TAG,
-                            value: value.try_into()?,
-                        })
+                    BitString::new(pk).map(|value| ContextSpecific {
+                        tag_number: PUBLIC_KEY_TAG,
+                        value,
                     })
                 })
                 .transpose()?,

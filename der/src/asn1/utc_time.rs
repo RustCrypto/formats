@@ -90,7 +90,7 @@ impl TryFrom<Any<'_>> for UtcTime {
     fn try_from(any: Any<'_>) -> Result<UtcTime> {
         any.tag().assert_eq(Self::TAG)?;
 
-        match *any.as_bytes() {
+        match *any.value() {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [year1, year2, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
                 let year = datetime::decode_decimal(Self::TAG, year1, year2)?;

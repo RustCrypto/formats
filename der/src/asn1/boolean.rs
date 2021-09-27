@@ -18,7 +18,7 @@ impl TryFrom<Any<'_>> for bool {
     fn try_from(any: Any<'_>) -> Result<bool> {
         let tag = any.tag().assert_eq(Tag::Boolean)?;
 
-        match any.as_bytes() {
+        match any.value() {
             [FALSE_OCTET] => Ok(false),
             [TRUE_OCTET] => Ok(true),
             _ => Err(tag.non_canonical_error()),

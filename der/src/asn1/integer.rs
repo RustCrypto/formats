@@ -14,7 +14,7 @@ macro_rules! impl_int_encoding {
                 type Error = Error;
 
                 fn try_from(any: Any<'_>) -> Result<Self> {
-                    let result = if is_highest_bit_set(any.as_bytes()) {
+                    let result = if is_highest_bit_set(any.value()) {
                         <$uint>::from_be_bytes(int::decode_array(any)?) as $int
                     } else {
                         Self::from_be_bytes(uint::decode_array(any)?)

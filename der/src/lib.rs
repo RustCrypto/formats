@@ -345,7 +345,6 @@
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
-
 #[cfg(feature = "std")]
 extern crate std;
 
@@ -353,7 +352,6 @@ pub mod asn1;
 pub mod message;
 
 mod byte_slice;
-mod choice;
 mod datetime;
 mod decodable;
 mod decoder;
@@ -365,8 +363,9 @@ mod length;
 mod str_slice;
 mod tag;
 
+pub(crate) use crate::byte_slice::ByteSlice;
 pub use crate::{
-    choice::Choice,
+    asn1::{Any, Choice},
     decodable::Decodable,
     decoder::Decoder,
     encodable::Encodable,
@@ -385,5 +384,3 @@ pub use crypto_bigint as bigint;
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
 pub use der_derive::{Choice, Message};
-
-pub(crate) use crate::byte_slice::ByteSlice;

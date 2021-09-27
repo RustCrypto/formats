@@ -102,7 +102,7 @@ where
 
     fn try_from(any: Any<'a>) -> Result<Self> {
         any.tag().assert_eq(Tag::Set)?;
-        Self::new(any.as_bytes())
+        Self::new(any.value())
     }
 }
 
@@ -201,7 +201,7 @@ where
         any.tag().assert_eq(Tag::Set)?;
 
         let mut result = BTreeSet::new();
-        let mut decoder = Decoder::new(any.as_bytes());
+        let mut decoder = Decoder::new(any.value());
         let mut last_value = None;
 
         while !decoder.is_finished() {

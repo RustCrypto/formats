@@ -23,19 +23,6 @@ pub struct Any<'a> {
     /// Tag representing the type of the encoded value.
     tag: Tag,
 
-    /// Encoded length of this [`Any`] value.
-    length: Length,
-
-    /// An optional "leading octet" of the inner value, stored separately
-    /// from the rest.
-    ///
-    /// This allows adding a 1-byte prefix to any value, when the rest may come
-    /// from an existing slice.
-    ///
-    /// It's used for the encoding of `BIT STRING` (which has a leading `0`
-    /// byte) as well as any `IMPLICIT` value which decodes to a `BIT STRING`.
-    leading_octet: Option<u8>,
-
     /// Inner value encoded as bytes.
     value: ByteSlice<'a>,
 }
@@ -44,33 +31,12 @@ impl<'a> Any<'a> {
     /// Create a new [`Any`] from the provided [`Tag`] and byte slice.
     pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self> {
         let value = ByteSlice::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
-        Ok(Self::from_tag_and_value(tag, value))
+        Ok(Self { tag, value })
     }
 
     /// Infallible creation of an [`Any`] from a [`ByteSlice`].
     pub(crate) fn from_tag_and_value(tag: Tag, value: ByteSlice<'a>) -> Self {
-        Self {
-            tag,
-            length: value.len(),
-            leading_octet: None,
-            value,
-        }
-    }
-
-    /// Infallible creation of an [`Any`] with a leading octet from a [`ByteSlice`].
-    pub(crate) fn from_tag_and_octet_prefixed_value(
-        tag: Tag,
-        octet: u8,
-        value: ByteSlice<'a>,
-    ) -> Result<Self> {
-        let length = (value.len() + Length::ONE)?;
-
-        Ok(Self {
-            tag,
-            length,
-            leading_octet: Some(octet),
-            value,
-        })
+        Self { tag, value }
     }
 
     /// Get the tag for this [`Any`] type.
@@ -78,24 +44,19 @@ impl<'a> Any<'a> {
         self.tag
     }
 
-    /// Get the [`Length`] of this [`Any`] type's value.
-    pub fn len(self) -> Length {
-        self.length
+    /// Get the raw value for this [`Any`] type as a byte slice.
+    pub fn value(self) -> &'a [u8] {
+        self.value.as_bytes()
     }
 
-    /// Is the body of this [`Any`] type empty?
-    pub fn is_empty(self) -> bool {
-        self.value.is_empty()
+    /// Get the [`Length`] of this [`Any`] type's value.
+    pub fn len(self) -> Length {
+        self.value.len()
     }
 
     /// Is this value an ASN.1 NULL value?
     pub fn is_null(self) -> bool {
         Null::try_from(self).is_ok()
-    }
-
-    /// Get the raw value for this [`Any`] type as a byte slice.
-    pub fn as_bytes(self) -> &'a [u8] {
-        self.value.as_bytes()
     }
 
     /// Attempt to decode an ASN.1 `BIT STRING`.
@@ -104,7 +65,10 @@ impl<'a> Any<'a> {
     }
 
     /// Attempt to decode an ASN.1 `CONTEXT-SPECIFIC` field.
-    pub fn context_specific(self) -> Result<ContextSpecific<'a>> {
+    pub fn context_specific<T>(self) -> Result<ContextSpecific<T>>
+    where
+        T: Decodable<'a>,
+    {
         self.try_into()
     }
 
@@ -165,11 +129,6 @@ impl<'a> Any<'a> {
     pub fn utf8_string(self) -> Result<Utf8String<'a>> {
         self.try_into()
     }
-
-    /// Get the leading octet of this `Any` if one is present.
-    pub(crate) fn leading_octet(self) -> Option<u8> {
-        self.leading_octet
-    }
 }
 
 impl<'a> Choice<'a> for Any<'a> {
@@ -197,12 +156,7 @@ impl<'a> Encodable for Any<'a> {
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         Header::new(self.tag, self.len())?.encode(encoder)?;
-
-        if let Some(octet) = self.leading_octet {
-            encoder.byte(octet)?;
-        }
-
-        encoder.bytes(self.as_bytes())
+        encoder.bytes(self.value())
     }
 }
 
@@ -211,12 +165,5 @@ impl<'a> TryFrom<&'a [u8]> for Any<'a> {
 
     fn try_from(bytes: &'a [u8]) -> Result<Any<'a>> {
         Any::from_der(bytes)
-    }
-}
-
-/// Obtain the inner [`ByteSlice`] value contained in an [`Any`]
-impl<'a> From<Any<'a>> for ByteSlice<'a> {
-    fn from(any: Any<'a>) -> ByteSlice<'a> {
-        any.value
     }
 }

@@ -1,7 +1,7 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Encodable, Encoder, Error, ErrorKind, Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, Encodable, Encoder, Error, ErrorKind, Header, Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -9,15 +9,18 @@ use core::convert::TryFrom;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct BitString<'a> {
     /// Inner value
-    inner: ByteSlice<'a>,
+    pub(crate) inner: ByteSlice<'a>,
+
+    /// Length after encoding (with leading `0`0 byte)
+    pub(crate) encoded_len: Length,
 }
 
 impl<'a> BitString<'a> {
     /// Create a new ASN.1 `BIT STRING` from a byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
-        ByteSlice::new(bytes)
-            .map(|inner| Self { inner })
-            .map_err(|_| ErrorKind::Length { tag: Self::TAG }.into())
+        let inner = ByteSlice::new(bytes).map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
+        let encoded_len = (inner.len() + 1u8).map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
+        Ok(Self { inner, encoded_len })
     }
 
     /// Borrow the inner byte slice.
@@ -60,41 +63,30 @@ impl<'a> TryFrom<Any<'a>> for BitString<'a> {
     fn try_from(any: Any<'a>) -> Result<BitString<'a>> {
         any.tag().assert_eq(Self::TAG)?;
 
-        let (prefix, inner) = if let Some(octet) = any.leading_octet() {
-            (octet, any.into())
-        } else if let Some((octet, rest)) = any.as_bytes().split_first() {
-            (*octet, ByteSlice::new(rest)?)
-        } else {
-            return Err(Self::TAG.non_canonical_error());
-        };
-
         // The prefix octet indicates the the number of bits which are
         // contained in the final byte of the BIT STRING.
         //
         // In DER this value is always `0`.
-        if prefix != 0 {
-            return Err(Self::TAG.non_canonical_error());
+        if let Some((&0, inner)) = any.value().split_first() {
+            Ok(BitString {
+                inner: ByteSlice::new(inner)?,
+                encoded_len: any.len(),
+            })
+        } else {
+            Err(Tag::BitString.non_canonical_error())
         }
-
-        Ok(Self { inner })
-    }
-}
-
-impl<'a> TryFrom<BitString<'a>> for Any<'a> {
-    type Error = Error;
-
-    fn try_from(bit_string: BitString<'a>) -> Result<Any<'a>> {
-        Any::from_tag_and_octet_prefixed_value(Tag::BitString, 0, bit_string.inner)
     }
 }
 
 impl<'a> Encodable for BitString<'a> {
     fn encoded_len(&self) -> Result<Length> {
-        Any::try_from(*self)?.encoded_len()
+        self.encoded_len.for_tlv()
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::try_from(*self)?.encode(encoder)
+        Header::new(Self::TAG, (Length::ONE + self.inner.len())?)?.encode(encoder)?;
+        encoder.byte(0)?;
+        encoder.bytes(self.as_bytes())
     }
 }
 

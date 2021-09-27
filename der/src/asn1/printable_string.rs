@@ -116,7 +116,7 @@ impl<'a> TryFrom<Any<'a>> for PrintableString<'a> {
 
     fn try_from(any: Any<'a>) -> Result<PrintableString<'a>> {
         any.tag().assert_eq(Tag::PrintableString)?;
-        Self::new(any.as_bytes())
+        Self::new(any.value())
     }
 }
 

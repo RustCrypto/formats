@@ -9,28 +9,46 @@ use core::convert::TryFrom;
 ///
 /// This type encodes a field which is specific to a particular context,
 /// and is identified by a [`TagNumber`].
-///
-/// Any context-specific field can be decoded/encoded with this type.
-/// The intended use is to dynamically dispatch off of the context-specific
-/// tag number when decoding, which allows support for extensions, which are
-/// denoted in an ASN.1 schema using the `...` ellipsis extension marker.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct ContextSpecific<'a> {
+pub struct ContextSpecific<T> {
     /// Context-specific tag number sans the leading `0b10000000` class
     /// identifier bit and `0b100000` constructed flag.
     pub tag_number: TagNumber,
 
     /// Value of the field.
-    pub value: Any<'a>,
+    pub value: T,
 }
 
-impl<'a> Choice<'a> for ContextSpecific<'a> {
+impl<'a, T> Choice<'a> for ContextSpecific<T>
+where
+    T: Decodable<'a> + Encodable,
+{
     fn can_decode(tag: Tag) -> bool {
         matches!(tag, Tag::ContextSpecific(_))
     }
 }
 
-impl<'a> Encodable for ContextSpecific<'a> {
+impl<'a, T> TryFrom<Any<'a>> for ContextSpecific<T>
+where
+    T: Decodable<'a>,
+{
+    type Error = Error;
+
+    fn try_from(any: Any<'a>) -> Result<ContextSpecific<T>> {
+        match any.tag() {
+            Tag::ContextSpecific(tag_number) => Ok(Self {
+                tag_number,
+                value: T::from_der(any.value())?,
+            }),
+            tag => Err(tag.unexpected_error(None)),
+        }
+    }
+}
+
+impl<T> Encodable for ContextSpecific<T>
+where
+    T: Encodable,
+{
     fn encoded_len(&self) -> Result<Length> {
         self.value.encoded_len()?.for_tlv()
     }
@@ -42,30 +60,10 @@ impl<'a> Encodable for ContextSpecific<'a> {
     }
 }
 
-impl<'a> From<&ContextSpecific<'a>> for ContextSpecific<'a> {
-    fn from(value: &ContextSpecific<'a>) -> ContextSpecific<'a> {
-        *value
-    }
-}
-
-impl<'a> TryFrom<Any<'a>> for ContextSpecific<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<ContextSpecific<'a>> {
-        match any.tag() {
-            Tag::ContextSpecific(tag_number) => Ok(Self {
-                tag_number,
-                value: Any::from_der(any.as_bytes())?,
-            }),
-            tag => Err(tag.unexpected_error(None)),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::ContextSpecific;
-    use crate::{Decodable, Encodable, Tag};
+    use crate::{asn1::BitString, Decodable, Encodable};
     use hex_literal::hex;
 
     // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`
@@ -74,10 +72,9 @@ mod tests {
 
     #[test]
     fn round_trip() {
-        let field = ContextSpecific::from_der(EXAMPLE_BYTES).unwrap();
+        let field = ContextSpecific::<BitString<'_>>::from_der(EXAMPLE_BYTES).unwrap();
         assert_eq!(field.tag_number.value(), 1);
-        assert_eq!(field.value.tag(), Tag::BitString);
-        assert_eq!(field.value.as_bytes(), &EXAMPLE_BYTES[4..]);
+        assert_eq!(field.value, BitString::new(&EXAMPLE_BYTES[5..]).unwrap());
 
         let mut buf = [0u8; 128];
         let encoded = field.encode_to_slice(&mut buf).unwrap();

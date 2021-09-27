@@ -58,7 +58,7 @@ impl<'a> TryFrom<Any<'a>> for Sequence<'a> {
 
     fn try_from(any: Any<'a>) -> Result<Self> {
         any.tag().assert_eq(Tag::Sequence)?;
-        Self::new(any.as_bytes())
+        Self::new(any.value())
     }
 }
 

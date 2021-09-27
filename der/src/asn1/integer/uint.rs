@@ -9,7 +9,7 @@ use core::convert::TryFrom;
 /// Returns a byte array of the requested size containing a big endian integer.
 pub(super) fn decode_slice(any: Any<'_>) -> Result<&[u8]> {
     let tag = any.tag().assert_eq(Tag::Integer)?;
-    let bytes = any.as_bytes();
+    let bytes = any.value();
 
     // The `INTEGER` type always encodes a signed value, so for unsigned
     // values the leading `0x00` byte may need to be removed.
