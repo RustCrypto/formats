@@ -24,7 +24,7 @@ where
     T: Decodable<'a> + Encodable,
 {
     fn can_decode(tag: Tag) -> bool {
-        matches!(tag, Tag::ContextSpecific(_))
+        tag.is_context_specific()
     }
 }
 
@@ -36,8 +36,11 @@ where
 
     fn try_from(any: Any<'a>) -> Result<ContextSpecific<T>> {
         match any.tag() {
-            Tag::ContextSpecific(tag_number) => Ok(Self {
-                tag_number,
+            Tag::ContextSpecific {
+                number,
+                constructed: true,
+            } => Ok(Self {
+                tag_number: number,
                 value: T::from_der(any.value())?,
             }),
             tag => Err(tag.unexpected_error(None)),
@@ -54,7 +57,10 @@ where
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        let tag = Tag::ContextSpecific(self.tag_number);
+        let tag = Tag::ContextSpecific {
+            number: self.tag_number,
+            constructed: true,
+        };
         Header::new(tag, self.value.encoded_len()?)?.encode(encoder)?;
         self.value.encode(encoder)
     }

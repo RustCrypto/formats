@@ -374,7 +374,7 @@ pub use crate::{
     header::Header,
     length::Length,
     message::Message,
-    tag::{Class, Tag, TagNumber, Tagged},
+    tag::{Class, Tag, TagMode, TagNumber, Tagged},
 };
 
 #[cfg(feature = "bigint")]

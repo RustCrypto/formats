@@ -88,9 +88,9 @@ impl<'a> TryFrom<Any<'a>> for EcPrivateKey<'a> {
             }
 
             let private_key = decoder.octet_string()?.as_bytes();
-            let parameters = decoder.context_specific(EC_PARAMETERS_TAG)?;
+            let parameters = decoder.context_specific_explicit(EC_PARAMETERS_TAG)?;
             let public_key = decoder
-                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG)?
+                .context_specific_explicit::<BitString<'_>>(PUBLIC_KEY_TAG)?
                 .map(|bs| bs.as_bytes());
 
             Ok(EcPrivateKey {

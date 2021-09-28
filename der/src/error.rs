@@ -193,6 +193,9 @@ pub enum ErrorKind {
         byte: u8,
     },
 
+    /// Unknown tag mode.
+    UnknownTagMode,
+
     /// UTF-8 errors.
     Utf8(Utf8Error),
 
@@ -252,6 +255,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::UnknownTag { byte } => {
                 write!(f, "unknown/unsupported ASN.1 DER tag: 0x{:02x}", byte)
             }
+            ErrorKind::UnknownTagMode => write!(f, "unknown tag mode"),
             ErrorKind::Utf8(e) => write!(f, "{}", e),
             ErrorKind::Value { tag } => write!(f, "malformed ASN.1 DER value for {}", tag),
         }

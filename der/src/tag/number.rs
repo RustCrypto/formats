@@ -25,6 +25,9 @@ impl TagNumber {
     /// Maximum tag number supported (inclusive).
     pub const MAX: u8 = 30;
 
+    /// Mask value used to obtain the tag number from a tag octet.
+    pub(super) const MASK: u8 = 0b11111;
+
     /// Create a new tag number (const-friendly).
     ///
     /// Panics if the tag number is greater than [`TagNumber::MAX`]. For a fallible
@@ -37,18 +40,27 @@ impl TagNumber {
     }
 
     /// Create an `APPLICATION` tag with this tag number.
-    pub fn application(self) -> Tag {
-        Tag::Application(self)
+    pub fn application(self, constructed: bool) -> Tag {
+        Tag::Application {
+            constructed,
+            number: self,
+        }
     }
 
     /// Create a `CONTEXT-SPECIFIC` tag with this tag number.
-    pub fn context_specific(self) -> Tag {
-        Tag::ContextSpecific(self)
+    pub fn context_specific(self, constructed: bool) -> Tag {
+        Tag::ContextSpecific {
+            constructed,
+            number: self,
+        }
     }
 
     /// Create a `PRIVATE` tag with this tag number.
-    pub fn private(self) -> Tag {
-        Tag::Private(self)
+    pub fn private(self, constructed: bool) -> Tag {
+        Tag::Private {
+            constructed,
+            number: self,
+        }
     }
 
     /// Get the inner value.
