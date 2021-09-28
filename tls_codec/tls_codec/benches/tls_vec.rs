@@ -1,6 +1,4 @@
 use criterion::{criterion_group, criterion_main};
-extern crate tls_codec;
-
 use criterion::{BatchSize, Criterion};
 
 fn vector(c: &mut Criterion) {

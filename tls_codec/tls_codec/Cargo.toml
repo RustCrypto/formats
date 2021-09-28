@@ -7,7 +7,7 @@ edition = "2018"
 documentation = "https://docs.rs/tls_codec/"
 description = "A pure Rust implementation of the TLS (de)serialization"
 readme = "../README.md"
-repository = "https://github.com/RustCrypto/formats/tree/master/tls-codec/tls_codec"
+repository = "https://github.com/RustCrypto/formats/tree/master/tls_codec/tls_codec"
 
 [dependencies]
 zeroize = { version = "1.3", features = ["zeroize_derive"] }

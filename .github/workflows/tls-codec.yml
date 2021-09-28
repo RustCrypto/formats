@@ -1,9 +1,9 @@
-name: tls-codec
+name: tls_codec
 
 on:
   pull_request:
     paths:
-      - "tls-codec/**"
+      - "tls_codec/**"
       - "Cargo.*"
   push:
     branches:
@@ -11,7 +11,7 @@ on:
 
 defaults:
   run:
-    working-directory: tls-codec/tls_codec
+    working-directory: tls_codec/tls_codec
 
 env:
   CARGO_INCREMENTAL: 0

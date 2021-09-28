@@ -39,8 +39,8 @@ serialization/deserialization
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg?style=for-the-badge
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 [license-image]: https://img.shields.io/badge/license-Apache2.0-blue.svg?style=for-the-badge
-[tls_codec-ci]: https://img.shields.io/github/workflow/status/RustCrypto/formats/tls-codec?style=for-the-badge
-[tls_codec-ci-link]: https://github.com/RustCrypto/formats/actions/workflows/tls-codec.yml
+[tls_codec-ci]: https://img.shields.io/github/workflow/status/RustCrypto/formats/tls_codec?style=for-the-badge
+[tls_codec-ci-link]: https://github.com/RustCrypto/formats/actions/workflows/tls_codec.yml
 [tls_codec]: https://img.shields.io/crates/v/tls_codec?style=for-the-badge
 [tls_codec-link]: https://crates.io/crates/tls_codec
 [tls_codec_docs]: https://img.shields.io/docsrs/tls_codec/latest?style=for-the-badge
