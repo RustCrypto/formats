@@ -103,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.4.3"
+version = "0.5.0-pre"
 dependencies = [
  "const-oid",
  "crypto-bigint",
@@ -197,7 +197,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs1"
-version = "0.2.4"
+version = "0.3.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -207,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.3.2"
+version = "0.4.0-pre"
 dependencies = [
  "aes",
  "block-modes",
@@ -224,7 +224,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.7.6"
+version = "0.8.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -283,7 +283,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "der",
  "generic-array",
@@ -321,7 +321,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.4.1"
+version = "0.5.0-pre"
 dependencies = [
  "base64ct",
  "der",
