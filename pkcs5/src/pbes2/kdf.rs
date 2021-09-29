@@ -4,7 +4,7 @@ use crate::{AlgorithmIdentifier, CryptoError, Error};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Encodable, Encoder, ErrorKind, Length, Message,
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Message,
 };
 
 /// Password-Based Key Derivation Function (PBKDF2) OID.
@@ -80,6 +80,24 @@ impl<'a> Kdf<'a> {
     }
 }
 
+impl<'a> Decodable<'a> for Kdf<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        AlgorithmIdentifier::decode(decoder)?.try_into()
+    }
+}
+
+impl<'a> Message<'a> for Kdf<'a> {
+    fn fields<F, T>(&self, f: F) -> der::Result<T>
+    where
+        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+    {
+        match self {
+            Self::Pbkdf2(params) => f(&[&self.oid(), params]),
+            Self::Scrypt(params) => f(&[&self.oid(), params]),
+        }
+    }
+}
+
 impl<'a> From<Pbkdf2Params<'a>> for Kdf<'a> {
     fn from(params: Pbkdf2Params<'a>) -> Self {
         Kdf::Pbkdf2(params)
@@ -92,40 +110,14 @@ impl<'a> From<ScryptParams<'a>> for Kdf<'a> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for Kdf<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<Self> {
-        AlgorithmIdentifier::try_from(any).and_then(TryInto::try_into)
-    }
-}
-
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Kdf<'a> {
     type Error = Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         match alg.oid {
-            PBKDF2_OID => alg
-                .parameters_any()
-                .and_then(TryFrom::try_from)
-                .map(Self::Pbkdf2),
-            SCRYPT_OID => alg
-                .parameters_any()
-                .and_then(TryFrom::try_from)
-                .map(Self::Scrypt),
+            PBKDF2_OID => alg.parameters_any()?.try_into().map(Self::Pbkdf2),
+            SCRYPT_OID => alg.parameters_any()?.try_into().map(Self::Scrypt),
             oid => Err(ErrorKind::UnknownOid { oid }.into()),
-        }
-    }
-}
-
-impl<'a> Message<'a> for Kdf<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
-    {
-        match self {
-            Self::Pbkdf2(params) => f(&[&self.oid(), params]),
-            Self::Scrypt(params) => f(&[&self.oid(), params]),
         }
     }
 }
@@ -174,24 +166,9 @@ impl<'a> Pbkdf2Params<'a> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for Pbkdf2Params<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<Self> {
-        any.sequence(|params| {
-            // TODO(tarcieri): support salt `CHOICE` w\ `AlgorithmIdentifier`
-            let salt = params.octet_string()?;
-            let iteration_count = params.decode()?;
-            let key_length = params.optional()?;
-            let prf: Option<AlgorithmIdentifier<'_>> = params.optional()?;
-
-            Ok(Self {
-                salt: salt.as_bytes(),
-                iteration_count,
-                key_length,
-                prf: prf.map(TryInto::try_into).transpose()?.unwrap_or_default(),
-            })
-        })
+impl<'a> Decodable<'a> for Pbkdf2Params<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.any()?.try_into()
     }
 }
 
@@ -214,6 +191,27 @@ impl<'a> Message<'a> for Pbkdf2Params<'a> {
                 &self.prf,
             ])
         }
+    }
+}
+
+impl<'a> TryFrom<Any<'a>> for Pbkdf2Params<'a> {
+    type Error = Error;
+
+    fn try_from(any: Any<'a>) -> der::Result<Self> {
+        any.sequence(|params| {
+            // TODO(tarcieri): support salt `CHOICE` w\ `AlgorithmIdentifier`
+            let salt = params.octet_string()?;
+            let iteration_count = params.decode()?;
+            let key_length = params.optional()?;
+            let prf: Option<AlgorithmIdentifier<'_>> = params.optional()?;
+
+            Ok(Self {
+                salt: salt.as_bytes(),
+                iteration_count,
+                key_length,
+                prf: prf.map(TryInto::try_into).transpose()?.unwrap_or_default(),
+            })
+        })
     }
 }
 
@@ -261,14 +259,6 @@ impl Pbkdf2Prf {
 impl Default for Pbkdf2Prf {
     fn default() -> Self {
         Self::HmacWithSha1
-    }
-}
-
-impl<'a> TryFrom<Any<'a>> for Pbkdf2Prf {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<Self> {
-        AlgorithmIdentifier::try_from(any).and_then(TryInto::try_into)
     }
 }
 
@@ -369,6 +359,27 @@ impl<'a> ScryptParams<'a> {
     }
 }
 
+impl<'a> Decodable<'a> for ScryptParams<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.any()?.try_into()
+    }
+}
+
+impl<'a> Message<'a> for ScryptParams<'a> {
+    fn fields<F, T>(&self, f: F) -> der::Result<T>
+    where
+        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+    {
+        f(&[
+            &OctetString::new(self.salt)?,
+            &self.cost_parameter,
+            &self.block_size,
+            &self.parallelization,
+            &self.key_length,
+        ])
+    }
+}
+
 impl<'a> TryFrom<Any<'a>> for ScryptParams<'a> {
     type Error = Error;
 
@@ -388,21 +399,6 @@ impl<'a> TryFrom<Any<'a>> for ScryptParams<'a> {
                 key_length,
             })
         })
-    }
-}
-
-impl<'a> Message<'a> for ScryptParams<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
-    {
-        f(&[
-            &OctetString::new(self.salt)?,
-            &self.cost_parameter,
-            &self.block_size,
-            &self.parallelization,
-            &self.key_length,
-        ])
     }
 }
 

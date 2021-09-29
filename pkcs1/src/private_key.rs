@@ -2,10 +2,7 @@
 
 use crate::{Error, Result, RsaPublicKey, Version};
 use core::{convert::TryFrom, fmt};
-use der::{
-    asn1::{Any, UIntBytes},
-    Decodable, Encodable, Message,
-};
+use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Message};
 
 #[cfg(feature = "alloc")]
 use crate::RsaPrivateKeyDocument;
@@ -104,31 +101,9 @@ impl<'a> RsaPrivateKey<'a> {
     }
 }
 
-impl<'a> From<RsaPrivateKey<'a>> for RsaPublicKey<'a> {
-    fn from(private_key: RsaPrivateKey<'a>) -> RsaPublicKey<'a> {
-        private_key.public_key()
-    }
-}
-
-impl<'a> From<&RsaPrivateKey<'a>> for RsaPublicKey<'a> {
-    fn from(private_key: &RsaPrivateKey<'a>) -> RsaPublicKey<'a> {
-        private_key.public_key()
-    }
-}
-
-impl<'a> TryFrom<&'a [u8]> for RsaPrivateKey<'a> {
-    type Error = Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
-        Ok(Self::from_der(bytes)?)
-    }
-}
-
-impl<'a> TryFrom<Any<'a>> for RsaPrivateKey<'a> {
-    type Error = der::Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<RsaPrivateKey<'a>> {
-        any.sequence(|decoder| {
+impl<'a> Decodable<'a> for RsaPrivateKey<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.sequence(|decoder| {
             Ok(Self {
                 version: decoder.decode()?,
                 modulus: decoder.decode()?,
@@ -160,6 +135,26 @@ impl<'a> Message<'a> for RsaPrivateKey<'a> {
             &self.exponent2,
             &self.coefficient,
         ])
+    }
+}
+
+impl<'a> From<RsaPrivateKey<'a>> for RsaPublicKey<'a> {
+    fn from(private_key: RsaPrivateKey<'a>) -> RsaPublicKey<'a> {
+        private_key.public_key()
+    }
+}
+
+impl<'a> From<&RsaPrivateKey<'a>> for RsaPublicKey<'a> {
+    fn from(private_key: &RsaPrivateKey<'a>) -> RsaPublicKey<'a> {
+        private_key.public_key()
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for RsaPrivateKey<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+        Ok(Self::from_der(bytes)?)
     }
 }
 

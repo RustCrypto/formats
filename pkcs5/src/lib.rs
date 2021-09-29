@@ -38,7 +38,7 @@ use core::{
     convert::{TryFrom, TryInto},
     fmt,
 };
-use der::{asn1::Any, message, Encodable, Encoder, Length};
+use der::{Decodable, Decoder, Encodable, Encoder, Length};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
@@ -162,29 +162,26 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for EncryptionScheme<'a> {
-    type Error = Error;
-
-    fn try_from(bytes: &'a [u8]) -> der::Result<EncryptionScheme<'a>> {
-        AlgorithmIdentifier::try_from(bytes).and_then(TryInto::try_into)
+impl<'a> Decodable<'a> for EncryptionScheme<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        AlgorithmIdentifier::decode(decoder)?.try_into()
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for EncryptionScheme<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<EncryptionScheme<'a>> {
-        AlgorithmIdentifier::try_from(any).and_then(TryInto::try_into)
+impl<'a> Encodable for EncryptionScheme<'a> {
+    fn encoded_len(&self) -> der::Result<Length> {
+        match self {
+            Self::Pbes1(pbes1) => pbes1.encoded_len(),
+            Self::Pbes2(pbes2) => {
+                (pbes2::PBES2_OID.encoded_len()? + pbes2.encoded_len()?)?.for_tlv()
+            }
+        }
     }
-}
 
-impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
-    type Error = Error;
-
-    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<EncryptionScheme<'_>> {
-        match alg.oid {
-            pbes2::PBES2_OID => pbes2::Parameters::try_from(alg.parameters_any()?).map(Into::into),
-            _ => pbes1::Parameters::try_from(alg).map(Into::into),
+    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
+        match self {
+            Self::Pbes1(pbes1) => pbes1.encode(encoder),
+            Self::Pbes2(pbes2) => encoder.message(&[&pbes2::PBES2_OID, pbes2]),
         }
     }
 }
@@ -201,18 +198,21 @@ impl<'a> From<pbes2::Parameters<'a>> for EncryptionScheme<'a> {
     }
 }
 
-impl<'a> Encodable for EncryptionScheme<'a> {
-    fn encoded_len(&self) -> der::Result<Length> {
-        match self {
-            Self::Pbes1(pbes1) => pbes1.encoded_len(),
-            Self::Pbes2(pbes2) => message::encoded_len(&[&pbes2::PBES2_OID, pbes2]),
+impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
+    type Error = Error;
+
+    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<EncryptionScheme<'_>> {
+        match alg.oid {
+            pbes2::PBES2_OID => pbes2::Parameters::try_from(alg.parameters_any()?).map(Into::into),
+            _ => pbes1::Parameters::try_from(alg).map(Into::into),
         }
     }
+}
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        match self {
-            Self::Pbes1(pbes1) => pbes1.encode(encoder),
-            Self::Pbes2(pbes2) => encoder.message(&[&pbes2::PBES2_OID, pbes2]),
-        }
+impl<'a> TryFrom<&'a [u8]> for EncryptionScheme<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> der::Result<EncryptionScheme<'a>> {
+        AlgorithmIdentifier::try_from(bytes).and_then(TryInto::try_into)
     }
 }

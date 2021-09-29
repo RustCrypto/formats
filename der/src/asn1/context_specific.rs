@@ -1,9 +1,10 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::Any, Choice, Decodable, Encodable, Encoder, Error, Header, Length, Result, Tag, TagNumber,
+    asn1::Any, Choice, Decodable, Decoder, Encodable, Encoder, Error, Header, Length, Result, Tag,
+    TagNumber,
 };
-use core::convert::TryFrom;
+use core::convert::{TryFrom, TryInto};
 
 /// Context-specific field.
 ///
@@ -28,23 +29,12 @@ where
     }
 }
 
-impl<'a, T> TryFrom<Any<'a>> for ContextSpecific<T>
+impl<'a, T> Decodable<'a> for ContextSpecific<T>
 where
     T: Decodable<'a>,
 {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<ContextSpecific<T>> {
-        match any.tag() {
-            Tag::ContextSpecific {
-                number,
-                constructed: true,
-            } => Ok(Self {
-                tag_number: number,
-                value: T::from_der(any.value())?,
-            }),
-            tag => Err(tag.unexpected_error(None)),
-        }
+    fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
+        Any::decode(decoder)?.try_into()
     }
 }
 
@@ -63,6 +53,26 @@ where
         };
         Header::new(tag, self.value.encoded_len()?)?.encode(encoder)?;
         self.value.encode(encoder)
+    }
+}
+
+impl<'a, T> TryFrom<Any<'a>> for ContextSpecific<T>
+where
+    T: Decodable<'a>,
+{
+    type Error = Error;
+
+    fn try_from(any: Any<'a>) -> Result<ContextSpecific<T>> {
+        match any.tag() {
+            Tag::ContextSpecific {
+                number,
+                constructed: true,
+            } => Ok(Self {
+                tag_number: number,
+                value: T::from_der(any.value())?,
+            }),
+            tag => Err(tag.unexpected_error(None)),
+        }
     }
 }
 

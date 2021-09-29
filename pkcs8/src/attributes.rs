@@ -1,7 +1,7 @@
 //! PKCS#8 attributes.
 
 use core::convert::TryFrom;
-use der::{asn1::Any, Encodable, Encoder, Length};
+use der::{asn1::Any, Decodable, Decoder, Encodable, Encoder, Length};
 
 /// Attributes as defined in [RFC 5958 Section 2].
 ///
@@ -30,11 +30,9 @@ impl<'a> From<Attributes<'a>> for Any<'a> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for Attributes<'a> {
-    type Error = der::Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<Attributes<'a>> {
-        Ok(Attributes(any))
+impl<'a> Decodable<'a> for Attributes<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        Any::decode(decoder).map(Self)
     }
 }
 
@@ -47,5 +45,13 @@ impl<'a> Encodable for Attributes<'a> {
     /// Encode this value as ASN.1 DER using the provided [`Encoder`].
     fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
         self.0.encode(encoder)
+    }
+}
+
+impl<'a> TryFrom<Any<'a>> for Attributes<'a> {
+    type Error = der::Error;
+
+    fn try_from(any: Any<'a>) -> der::Result<Attributes<'a>> {
+        Ok(Attributes(any))
     }
 }

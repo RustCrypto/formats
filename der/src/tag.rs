@@ -186,10 +186,15 @@ impl Tag {
         }
     }
 
+    /// Create an [`Error`] for an invalid [`Length`].
+    pub fn length_error(self) -> Error {
+        ErrorKind::Length { tag: self }.into()
+    }
+
     /// Create an [`Error`] for an non-canonical value with the ASN.1 type
     /// identified by this tag.
     pub fn non_canonical_error(self) -> Error {
-        ErrorKind::Value { tag: self }.into()
+        ErrorKind::Noncanonical { tag: self }.into()
     }
 
     /// Create an [`Error`] because the current tag was unexpected, with an

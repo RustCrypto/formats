@@ -5,8 +5,8 @@
 use crate::{AlgorithmIdentifier, Error};
 use core::convert::{TryFrom, TryInto};
 use der::{
-    asn1::{Any, ObjectIdentifier, OctetString},
-    message, Encodable, Encoder, ErrorKind, Header, Length, Result, Tag,
+    asn1::{ObjectIdentifier, OctetString},
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Tag, Tagged,
 };
 
 /// `pbeWithMD2AndDES-CBC` Object Identifier (OID).
@@ -65,20 +65,49 @@ impl Parameters {
     pub fn oid(&self) -> ObjectIdentifier {
         self.encryption.oid()
     }
+
+    /// Get the inner length of the encoded sequence
+    fn inner_len(&self) -> der::Result<Length> {
+        let oid_len = self.encryption.oid().encoded_len()?;
+        let params_len = (self.salt_string()?.encoded_len()?
+            + self.iteration_count.encoded_len()?)?
+        .for_tlv()?;
+        oid_len + params_len
+    }
+
+    /// Get an [`OctetString`] wrapper for the salt
+    fn salt_string(&self) -> der::Result<OctetString<'_>> {
+        OctetString::new(&self.salt)
+    }
 }
 
-impl<'a> TryFrom<Any<'a>> for Parameters {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<Self> {
-        AlgorithmIdentifier::try_from(any).and_then(TryInto::try_into)
+impl Decodable<'_> for Parameters {
+    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
+        AlgorithmIdentifier::decode(decoder)?.try_into()
     }
+}
+
+impl Encodable for Parameters {
+    fn encoded_len(&self) -> der::Result<Length> {
+        self.inner_len()?.for_tlv()
+    }
+
+    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
+        encoder.sequence(self.inner_len()?, |encoder| {
+            encoder.oid(self.encryption.oid())?;
+            encoder.message(&[&self.salt_string()?, &self.iteration_count])
+        })
+    }
+}
+
+impl Tagged for Parameters {
+    const TAG: Tag = Tag::Sequence;
 }
 
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Parameters {
     type Error = Error;
 
-    fn try_from(alg: AlgorithmIdentifier<'a>) -> Result<Self> {
+    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         // Ensure that we have a supported PBES1 algorithm identifier
         let encryption = EncryptionScheme::try_from(alg.oid)
             .map_err(|_| der::Tag::ObjectIdentifier.value_error())?;
@@ -98,42 +127,6 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Parameters {
                 iteration_count,
             })
         })
-    }
-}
-
-impl Encodable for Parameters {
-    fn encoded_len(&self) -> Result<Length> {
-        self.header()?.encoded_len()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.header()?.encode(encoder)?;
-        let inner_len = self.inner_len()?;
-
-        encoder.sequence(inner_len, |nested_encoder| {
-            nested_encoder.oid(self.encryption.oid())?;
-            nested_encoder.message(&[&self.salt_string()?, &self.iteration_count])?;
-            Ok(())
-        })
-    }
-}
-
-impl Parameters {
-    /// Get the DER [`Header`]
-    fn header(&self) -> Result<Header> {
-        Header::new(Tag::Sequence, self.inner_len()?)
-    }
-
-    /// Get the inner length of the encoded sequence
-    fn inner_len(&self) -> Result<Length> {
-        let oid_len = self.encryption.oid().encoded_len()?;
-        let params_len = message::encoded_len(&[&self.salt_string()?, &self.iteration_count])?;
-        oid_len + params_len
-    }
-
-    /// Get an [`OctetString`] wrapper for the salt
-    fn salt_string(&self) -> Result<OctetString<'_>> {
-        OctetString::new(&self.salt)
     }
 }
 
@@ -164,7 +157,7 @@ pub enum EncryptionScheme {
 impl TryFrom<ObjectIdentifier> for EncryptionScheme {
     type Error = Error;
 
-    fn try_from(oid: ObjectIdentifier) -> Result<Self> {
+    fn try_from(oid: ObjectIdentifier) -> der::Result<Self> {
         match oid {
             PBE_WITH_MD2_AND_DES_CBC_OID => Ok(Self::PbeWithMd2AndDesCbc),
             PBE_WITH_MD2_AND_RC2_CBC_OID => Ok(Self::PbeWithMd2AndRc2Cbc),
@@ -216,11 +209,11 @@ impl EncryptionScheme {
 }
 
 impl Encodable for EncryptionScheme {
-    fn encoded_len(&self) -> Result<Length> {
+    fn encoded_len(&self) -> der::Result<Length> {
         self.oid().encoded_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
         self.oid().encode(encoder)
     }
 }

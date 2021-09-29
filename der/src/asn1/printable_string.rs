@@ -1,7 +1,8 @@
 //! ASN.1 `PrintableString` support.
 
 use crate::{
-    asn1::Any, str_slice::StrSlice, Encodable, Encoder, Error, Length, Result, Tag, Tagged,
+    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error,
+    Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, fmt, str};
 
@@ -105,6 +106,12 @@ impl AsRef<[u8]> for PrintableString<'_> {
     }
 }
 
+impl<'a> DecodeValue<'a> for PrintableString<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
+    }
+}
+
 impl<'a> From<&PrintableString<'a>> for PrintableString<'a> {
     fn from(value: &PrintableString<'a>) -> PrintableString<'a> {
         *value
@@ -115,8 +122,7 @@ impl<'a> TryFrom<Any<'a>> for PrintableString<'a> {
     type Error = Error;
 
     fn try_from(any: Any<'a>) -> Result<PrintableString<'a>> {
-        any.tag().assert_eq(Tag::PrintableString)?;
-        Self::new(any.value())
+        any.decode_into()
     }
 }
 

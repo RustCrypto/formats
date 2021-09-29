@@ -1,7 +1,8 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    asn1::Any, str_slice::StrSlice, Encodable, Encoder, Error, Length, Result, Tag, Tagged,
+    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error,
+    Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, fmt, str};
 
@@ -68,6 +69,22 @@ impl AsRef<[u8]> for Utf8String<'_> {
     }
 }
 
+impl<'a> DecodeValue<'a> for Utf8String<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
+    }
+}
+
+impl<'a> Encodable for Utf8String<'a> {
+    fn encoded_len(&self) -> Result<Length> {
+        Any::from(*self).encoded_len()
+    }
+
+    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        Any::from(*self).encode(encoder)
+    }
+}
+
 impl<'a> From<&Utf8String<'a>> for Utf8String<'a> {
     fn from(value: &Utf8String<'a>) -> Utf8String<'a> {
         *value
@@ -78,8 +95,7 @@ impl<'a> TryFrom<Any<'a>> for Utf8String<'a> {
     type Error = Error;
 
     fn try_from(any: Any<'a>) -> Result<Utf8String<'a>> {
-        any.tag().assert_eq(Tag::Utf8String)?;
-        Self::new(any.value())
+        any.decode_into()
     }
 }
 
@@ -92,16 +108,6 @@ impl<'a> From<Utf8String<'a>> for Any<'a> {
 impl<'a> From<Utf8String<'a>> for &'a [u8] {
     fn from(utf8_string: Utf8String<'a>) -> &'a [u8] {
         utf8_string.as_bytes()
-    }
-}
-
-impl<'a> Encodable for Utf8String<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
     }
 }
 

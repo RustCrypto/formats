@@ -1,8 +1,8 @@
 //! ASN.1 `ANY` type.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Header,
-    Length, Result, Tag,
+    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, Encodable, Encoder, Error,
+    ErrorKind, Header, Length, Result, Tag, Tagged,
 };
 use core::convert::{TryFrom, TryInto};
 
@@ -50,8 +50,19 @@ impl<'a> Any<'a> {
     }
 
     /// Get the [`Length`] of this [`Any`] type's value.
-    pub fn len(self) -> Length {
+    pub fn value_len(self) -> Length {
         self.value.len()
+    }
+
+    /// Attempt to decode this [`Any`] type into the inner value.
+    pub fn decode_into<T>(self) -> Result<T>
+    where
+        T: DecodeValue<'a> + Tagged,
+    {
+        self.tag.assert_eq(T::TAG)?;
+        let mut decoder = Decoder::new(self.value());
+        let result = T::decode_value(&mut decoder, self.value_len())?;
+        decoder.finish(result)
     }
 
     /// Is this value an ASN.1 NULL value?
@@ -141,21 +152,18 @@ impl<'a> Decodable<'a> for Any<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Any<'a>> {
         let header = Header::decode(decoder)?;
         let tag = header.tag;
-        let value = decoder
-            .bytes(header.length)
-            .map_err(|_| decoder.error(ErrorKind::Length { tag }))?;
-
-        Self::new(tag, value).map_err(|e| decoder.error(e.kind()))
+        let value = ByteSlice::decode_value(decoder, header.length)?;
+        Ok(Self { tag, value })
     }
 }
 
 impl<'a> Encodable for Any<'a> {
     fn encoded_len(&self) -> Result<Length> {
-        self.len().for_tlv()
+        self.value_len().for_tlv()
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(self.tag, self.len())?.encode(encoder)?;
+        Header::new(self.tag, self.value_len())?.encode(encoder)?;
         encoder.bytes(self.value())
     }
 }

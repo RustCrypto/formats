@@ -3,7 +3,8 @@
 use crate::{
     asn1::Any,
     datetime::{self, DateTime},
-    Encodable, Encoder, Error, Header, Length, Result, Tag, Tagged,
+    ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, Header, Length, Result, Tag,
+    Tagged,
 };
 use core::{convert::TryFrom, time::Duration};
 
@@ -63,27 +64,9 @@ impl GeneralizedTime {
     }
 }
 
-impl From<&GeneralizedTime> for GeneralizedTime {
-    fn from(value: &GeneralizedTime) -> GeneralizedTime {
-        *value
-    }
-}
-
-#[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl From<GeneralizedTime> for SystemTime {
-    fn from(utc_time: GeneralizedTime) -> SystemTime {
-        utc_time.to_system_time()
-    }
-}
-
-impl TryFrom<Any<'_>> for GeneralizedTime {
-    type Error = Error;
-
-    fn try_from(any: Any<'_>) -> Result<GeneralizedTime> {
-        any.tag().assert_eq(Self::TAG)?;
-
-        match *any.value() {
+impl DecodeValue<'_> for GeneralizedTime {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        match *ByteSlice::decode_value(decoder, length)?.as_bytes() {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
                 let year = datetime::decode_decimal(Self::TAG, y1, y2)? * 100
@@ -126,6 +109,28 @@ impl Encodable for GeneralizedTime {
         datetime::encode_decimal(encoder, Self::TAG, datetime.minute())?;
         datetime::encode_decimal(encoder, Self::TAG, datetime.second())?;
         encoder.byte(b'Z')
+    }
+}
+
+impl From<&GeneralizedTime> for GeneralizedTime {
+    fn from(value: &GeneralizedTime) -> GeneralizedTime {
+        *value
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl From<GeneralizedTime> for SystemTime {
+    fn from(utc_time: GeneralizedTime) -> SystemTime {
+        utc_time.to_system_time()
+    }
+}
+
+impl TryFrom<Any<'_>> for GeneralizedTime {
+    type Error = Error;
+
+    fn try_from(any: Any<'_>) -> Result<GeneralizedTime> {
+        any.decode_into()
     }
 }
 

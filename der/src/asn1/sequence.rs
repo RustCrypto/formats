@@ -4,8 +4,8 @@ pub(super) mod iter;
 
 use self::iter::SequenceIter;
 use crate::{
-    asn1::Any, ByteSlice, Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Length, Result,
-    Tag, Tagged,
+    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind,
+    Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -53,18 +53,9 @@ impl AsRef<[u8]> for Sequence<'_> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for Sequence<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<Self> {
-        any.tag().assert_eq(Tag::Sequence)?;
-        Self::new(any.value())
-    }
-}
-
-impl<'a> From<Sequence<'a>> for Any<'a> {
-    fn from(seq: Sequence<'a>) -> Any<'a> {
-        Any::from_tag_and_value(Tag::Sequence, seq.inner)
+impl<'a> DecodeValue<'a> for Sequence<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
     }
 }
 
@@ -75,6 +66,20 @@ impl<'a> Encodable for Sequence<'a> {
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         Any::from(*self).encode(encoder)
+    }
+}
+
+impl<'a> From<Sequence<'a>> for Any<'a> {
+    fn from(seq: Sequence<'a>) -> Any<'a> {
+        Any::from_tag_and_value(Tag::Sequence, seq.inner)
+    }
+}
+
+impl<'a> TryFrom<Any<'a>> for Sequence<'a> {
+    type Error = Error;
+
+    fn try_from(any: Any<'a>) -> Result<Self> {
+        any.decode_into()
     }
 }
 

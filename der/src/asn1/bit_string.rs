@@ -1,7 +1,8 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Encodable, Encoder, Error, ErrorKind, Header, Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Header,
+    Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -45,6 +46,33 @@ impl AsRef<[u8]> for BitString<'_> {
     }
 }
 
+impl<'a> DecodeValue<'a> for BitString<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, encoded_len: Length) -> Result<Self> {
+        // The prefix octet indicates the the number of bits which are
+        // contained in the final byte of the BIT STRING.
+        //
+        // In DER this value is always `0`.
+        if decoder.byte()? != 0 {
+            return Err(Tag::BitString.non_canonical_error());
+        }
+
+        let inner = ByteSlice::decode_value(decoder, (encoded_len - Length::ONE)?)?;
+        Ok(Self { inner, encoded_len })
+    }
+}
+
+impl<'a> Encodable for BitString<'a> {
+    fn encoded_len(&self) -> Result<Length> {
+        self.encoded_len.for_tlv()
+    }
+
+    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        Header::new(Self::TAG, (Length::ONE + self.inner.len())?)?.encode(encoder)?;
+        encoder.byte(0)?;
+        encoder.bytes(self.as_bytes())
+    }
+}
+
 impl<'a> From<&BitString<'a>> for BitString<'a> {
     fn from(value: &BitString<'a>) -> BitString<'a> {
         *value
@@ -61,32 +89,7 @@ impl<'a> TryFrom<Any<'a>> for BitString<'a> {
     type Error = Error;
 
     fn try_from(any: Any<'a>) -> Result<BitString<'a>> {
-        any.tag().assert_eq(Self::TAG)?;
-
-        // The prefix octet indicates the the number of bits which are
-        // contained in the final byte of the BIT STRING.
-        //
-        // In DER this value is always `0`.
-        if let Some((&0, inner)) = any.value().split_first() {
-            Ok(BitString {
-                inner: ByteSlice::new(inner)?,
-                encoded_len: any.len(),
-            })
-        } else {
-            Err(Tag::BitString.non_canonical_error())
-        }
-    }
-}
-
-impl<'a> Encodable for BitString<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        self.encoded_len.for_tlv()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(Self::TAG, (Length::ONE + self.inner.len())?)?.encode(encoder)?;
-        encoder.byte(0)?;
-        encoder.bytes(self.as_bytes())
+        any.decode_into()
     }
 }
 

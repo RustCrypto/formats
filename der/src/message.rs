@@ -1,7 +1,7 @@
 //! The [`Message`] trait simplifies writing decoders/encoders which map ASN.1
 //! `SEQUENCE`s to Rust structs.
 
-use crate::{Decodable, Encodable, Encoder, Header, Length, Result, Tag, Tagged};
+use crate::{Decodable, Encodable, EncodeValue, Encoder, Length, Result, Tag, Tagged};
 
 /// Messages encoded as an ASN.1 `SEQUENCE`.
 ///
@@ -23,19 +23,22 @@ pub trait Message<'a>: Decodable<'a> {
         F: FnOnce(&[&dyn Encodable]) -> Result<T>;
 }
 
-impl<'a, M> Encodable for M
+impl<'a, M> EncodeValue for M
 where
     M: Message<'a>,
 {
-    fn encoded_len(&self) -> Result<Length> {
-        self.fields(|fields| {
-            let inner_len = encoded_len_inner(fields)?;
-            Header::new(Tag::Sequence, inner_len)?.encoded_len() + inner_len
-        })
+    fn value_len(&self) -> Result<Length> {
+        self.fields(|fields| encoded_len_inner(fields))
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.fields(|fields| encoder.message(fields))
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.fields(|fields| {
+            for &field in fields {
+                field.encode(encoder)?;
+            }
+
+            Ok(())
+        })
     }
 }
 
@@ -46,18 +49,10 @@ where
     const TAG: Tag = Tag::Sequence;
 }
 
-/// Obtain the length of an ASN.1 `SEQUENCE` consisting of the given
-/// [`Encodable`] fields when serialized as ASN.1 DER, including the header
-/// (i.e. tag and length)
-pub fn encoded_len(fields: &[&dyn Encodable]) -> Result<Length> {
-    let inner_len = encoded_len_inner(fields)?;
-    Header::new(Tag::Sequence, inner_len)?.encoded_len() + inner_len
-}
-
 /// Obtain the length of an ASN.1 message `SEQUENCE` consisting of the given
 /// [`Encodable`] fields when serialized as ASN.1 DER, including the header
 /// (i.e. tag and length)
-pub(crate) fn encoded_len_inner(fields: &[&dyn Encodable]) -> Result<Length> {
+pub(super) fn encoded_len_inner(fields: &[&dyn Encodable]) -> Result<Length> {
     fields.iter().fold(Ok(Length::ZERO), |sum, encodable| {
         sum + encodable.encoded_len()?
     })
