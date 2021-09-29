@@ -1,8 +1,8 @@
 //! ASN.1 `SET OF` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Length, Result,
-    Tag, Tagged,
+    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind,
+    Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, marker::PhantomData};
 
@@ -18,10 +18,11 @@ use {
 /// When encoded as DER, `SET OF` is lexicographically ordered. To implement
 /// that requirement, types `T` which are elements of [`SetOf`] MUST provide
 /// an impl of `Ord` which ensures that the corresponding DER encodings of
-/// a given type are ordered.
+/// a given type are ordffvkjnkjnlvceubbngtirurinkbvfditfnihengdigvl
+/// ered.
 pub trait SetOf<'a, 'b, T>: Decodable<'a> + Encodable
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
 {
     /// Iterator over the elements of the set.
     ///
@@ -94,24 +95,12 @@ where
     }
 }
 
-impl<'a, T> TryFrom<Any<'a>> for SetOfRef<'a, T>
+impl<'a, T> DecodeValue<'a> for SetOfRef<'a, T>
 where
     T: Clone + Decodable<'a> + Encodable + Ord,
 {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<Self> {
-        any.tag().assert_eq(Tag::Set)?;
-        Self::new(any.value())
-    }
-}
-
-impl<'a, T> From<SetOfRef<'a, T>> for Any<'a>
-where
-    T: Clone + Decodable<'a> + Encodable + Ord,
-{
-    fn from(set: SetOfRef<'a, T>) -> Any<'a> {
-        Any::from_tag_and_value(Tag::Set, set.inner)
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
     }
 }
 
@@ -128,9 +117,30 @@ where
     }
 }
 
-impl<'a, 'b, T> SetOf<'a, 'b, T> for SetOfRef<'a, T>
+impl<'a, T> From<SetOfRef<'a, T>> for Any<'a>
 where
     T: Clone + Decodable<'a> + Encodable + Ord,
+{
+    fn from(set: SetOfRef<'a, T>) -> Any<'a> {
+        Any::from_tag_and_value(Tag::Set, set.inner)
+    }
+}
+
+impl<'a, T> TryFrom<Any<'a>> for SetOfRef<'a, T>
+where
+    T: Clone + Decodable<'a> + Encodable + Ord,
+{
+    type Error = Error;
+
+    fn try_from(any: Any<'a>) -> Result<Self> {
+        any.tag().assert_eq(Tag::Set)?;
+        Self::new(any.value())
+    }
+}
+
+impl<'a, 'b, T> SetOf<'a, 'b, T> for SetOfRef<'a, T>
+where
+    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
 {
     type Iter = SetOfRefIter<'a, T>;
 
@@ -191,20 +201,17 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, T> TryFrom<Any<'a>> for BTreeSet<T>
+impl<'a, T> DecodeValue<'a> for BTreeSet<T>
 where
     T: Clone + Decodable<'a> + Encodable + Ord,
 {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<Self> {
-        any.tag().assert_eq(Tag::Set)?;
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        let end_pos = (decoder.position() + length)?;
 
         let mut result = BTreeSet::new();
-        let mut decoder = Decoder::new(any.value());
         let mut last_value = None;
 
-        while !decoder.is_finished() {
+        while decoder.position() < end_pos {
             let value = decoder.decode()?;
 
             if let Some(last) = last_value.take() {
@@ -216,6 +223,10 @@ where
             }
 
             last_value = Some(value);
+        }
+
+        if decoder.position() != end_pos {
+            decoder.error(ErrorKind::Length { tag: Self::TAG });
         }
 
         if let Some(last) = last_value {
@@ -251,12 +262,25 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, 'b, T: 'b> SetOf<'a, 'b, T> for BTreeSet<T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
 {
     type Iter = core::iter::Cloned<btree_set::Iter<'b, T>>;
 
     fn elements(&'b self) -> Self::Iter {
         self.iter().cloned()
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<'a, T> TryFrom<Any<'a>> for BTreeSet<T>
+where
+    T: Clone + Decodable<'a> + Encodable + Ord,
+{
+    type Error = Error;
+
+    fn try_from(any: Any<'a>) -> Result<Self> {
+        any.decode_into()
     }
 }
 

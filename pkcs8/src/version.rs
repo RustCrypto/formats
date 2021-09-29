@@ -1,7 +1,7 @@
 //! PKCS#8 version identifier.
 
-use core::convert::{TryFrom, TryInto};
-use der::{asn1::Any, Encodable, Encoder, Tag, Tagged};
+use core::convert::TryFrom;
+use der::{Decodable, Decoder, Encodable, Encoder, Tag, Tagged};
 
 use crate::Error;
 
@@ -27,6 +27,22 @@ impl Version {
     }
 }
 
+impl Decodable<'_> for Version {
+    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
+        Version::try_from(u8::decode(decoder)?).map_err(|_| Self::TAG.value_error())
+    }
+}
+
+impl Encodable for Version {
+    fn encoded_len(&self) -> der::Result<der::Length> {
+        der::Length::from(1u8).for_tlv()
+    }
+
+    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
+        u8::from(*self).encode(encoder)
+    }
+}
+
 impl From<Version> for u8 {
     fn from(version: Version) -> Self {
         version as u8
@@ -41,25 +57,6 @@ impl TryFrom<u8> for Version {
             1 => Ok(Version::V2),
             _ => Err(Self::TAG.value_error().into()),
         }
-    }
-}
-
-impl<'a> TryFrom<Any<'a>> for Version {
-    type Error = der::Error;
-    fn try_from(any: Any<'a>) -> der::Result<Version> {
-        u8::try_from(any)?
-            .try_into()
-            .map_err(|_| Self::TAG.value_error())
-    }
-}
-
-impl Encodable for Version {
-    fn encoded_len(&self) -> der::Result<der::Length> {
-        der::Length::from(1u8).for_tlv()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        u8::from(*self).encode(encoder)
     }
 }
 

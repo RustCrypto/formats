@@ -91,23 +91,15 @@ impl DeriveChoice {
         let tag = asn1_type.tag();
 
         let decoder = match asn1_type {
-            Asn1Type::BitString => quote!(any.bit_string()),
-            Asn1Type::GeneralizedTime => quote!(any.generalized_time()),
-            Asn1Type::OctetString => quote!(any.octet_string()),
-            Asn1Type::PrintableString => quote!(any.printable_string()),
-            Asn1Type::UtcTime => quote!(any.utc_time()),
-            Asn1Type::Utf8String => quote!(any.utf8_string()),
+            Asn1Type::BitString => quote!(decoder.bit_string()),
+            Asn1Type::GeneralizedTime => quote!(decoder.generalized_time()),
+            Asn1Type::OctetString => quote!(decoder.octet_string()),
+            Asn1Type::PrintableString => quote!(decoder.printable_string()),
+            Asn1Type::UtcTime => quote!(decoder.utc_time()),
+            Asn1Type::Utf8String => quote!(decoder.utf8_string()),
         };
 
-        {
-            quote! {
-                #tag => #decoder
-                    .ok()
-                    .and_then(|val| val.try_into().ok())
-                    .ok_or_else(|| #tag.value_error()),
-            }
-        }
-        .to_tokens(&mut self.decode_body);
+        { quote!(#tag => Ok(#decoder?.try_into()?),) }.to_tokens(&mut self.decode_body);
     }
 
     /// Derive a match arm for the impl body for `der::Encodable::encode`.
@@ -180,14 +172,18 @@ impl DeriveChoice {
                 }
             }
 
-            gen impl core::convert::TryFrom<::der::asn1::Any<#lifetime>> for @Self {
-                type Error = der::Error;
-
-                fn try_from(any: ::der::asn1::Any<#lifetime>) -> der::Result<Self> {
+            gen impl ::der::Decodable<#lifetime> for @Self {
+                fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     #[allow(unused_imports)]
-                    use core::convert::TryInto;
+                    use core::convert::{TryFrom, TryInto};
 
-                    match any.tag() {
+                    let octet = decoder.peek().ok_or_else(|| {
+                        decoder.error(::der::ErrorKind::Truncated)
+                    })?;
+
+                    let tag = ::der::Tag::try_from(octet).map_err(|e| decoder.error(e.kind()))?;
+
+                    match tag {
                         #decode_body
                         actual => Err(der::ErrorKind::UnexpectedTag {
                             expected: None,

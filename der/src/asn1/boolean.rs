@@ -1,7 +1,10 @@
 //! ASN.1 `BOOLEAN` support.
 
-use crate::{asn1::Any, Encodable, Encoder, Error, Header, Length, Result, Tag, Tagged};
-use core::convert::TryFrom;
+use crate::{
+    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Header,
+    Length, Result, Tag, Tagged,
+};
+use core::convert::{TryFrom, TryInto};
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
 ///
@@ -12,16 +15,16 @@ const TRUE_OCTET: u8 = 0b11111111;
 /// Byte used to encode `false` in ASN.1 DER.
 const FALSE_OCTET: u8 = 0b00000000;
 
-impl TryFrom<Any<'_>> for bool {
-    type Error = Error;
+impl<'a> DecodeValue<'a> for bool {
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        if length != Length::ONE {
+            return Err(decoder.error(ErrorKind::Length { tag: Self::TAG }));
+        }
 
-    fn try_from(any: Any<'_>) -> Result<bool> {
-        let tag = any.tag().assert_eq(Tag::Boolean)?;
-
-        match any.value() {
-            [FALSE_OCTET] => Ok(false),
-            [TRUE_OCTET] => Ok(true),
-            _ => Err(tag.non_canonical_error()),
+        match decoder.byte()? {
+            FALSE_OCTET => Ok(false),
+            TRUE_OCTET => Ok(true),
+            _ => Err(Self::TAG.non_canonical_error()),
         }
     }
 }
@@ -40,6 +43,25 @@ impl Encodable for bool {
 
 impl Tagged for bool {
     const TAG: Tag = Tag::Boolean;
+}
+
+impl From<bool> for Any<'static> {
+    fn from(value: bool) -> Any<'static> {
+        let value = ByteSlice::from(match value {
+            false => &[FALSE_OCTET],
+            true => &[TRUE_OCTET],
+        });
+
+        Any::from_tag_and_value(Tag::Boolean, value)
+    }
+}
+
+impl TryFrom<Any<'_>> for bool {
+    type Error = Error;
+
+    fn try_from(any: Any<'_>) -> Result<bool> {
+        any.try_into()
+    }
 }
 
 #[cfg(test)]

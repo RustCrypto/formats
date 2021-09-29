@@ -2,7 +2,8 @@
 
 use super::uint;
 use crate::{
-    asn1::Any, ByteSlice, Encodable, Encoder, Error, ErrorKind, Header, Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Header,
+    Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -56,17 +57,17 @@ impl<'a> UIntBytes<'a> {
     }
 }
 
-impl<'a> From<&UIntBytes<'a>> for UIntBytes<'a> {
-    fn from(value: &UIntBytes<'a>) -> UIntBytes<'a> {
-        *value
-    }
-}
+impl<'a> DecodeValue<'a> for UIntBytes<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
+        let result = Self::new(uint::decode_to_slice(bytes)?)?;
 
-impl<'a> TryFrom<Any<'a>> for UIntBytes<'a> {
-    type Error = Error;
+        // Ensure we compute the same encoded length as the original any value
+        // if any.encoded_len()? != result.encoded_len()? {
+        //     return Err(Self::TAG.non_canonical_error());
+        // }
 
-    fn try_from(any: Any<'a>) -> Result<UIntBytes<'a>> {
-        Self::new(uint::decode_slice(any)?)
+        Ok(result)
     }
 }
 
@@ -84,6 +85,20 @@ impl<'a> Encodable for UIntBytes<'a> {
         }
 
         encoder.bytes(self.as_bytes())
+    }
+}
+
+impl<'a> From<&UIntBytes<'a>> for UIntBytes<'a> {
+    fn from(value: &UIntBytes<'a>) -> UIntBytes<'a> {
+        *value
+    }
+}
+
+impl<'a> TryFrom<Any<'a>> for UIntBytes<'a> {
+    type Error = Error;
+
+    fn try_from(any: Any<'a>) -> Result<UIntBytes<'a>> {
+        any.decode_into()
     }
 }
 

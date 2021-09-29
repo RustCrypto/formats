@@ -54,6 +54,18 @@ impl<'a> Decoder<'a> {
         self.bytes.is_none()
     }
 
+    /// Get the position within the buffer.
+    pub fn position(&self) -> Length {
+        self.position
+    }
+
+    /// Peek at the next byte in the decoder without modifying the cursor.
+    pub fn peek(&self) -> Option<u8> {
+        self.remaining()
+            .ok()
+            .and_then(|bytes| bytes.get(0).cloned())
+    }
+
     /// Finish decoding, returning the given value if there is no
     /// remaining data, or an error otherwise
     pub fn finish<T>(self, value: T) -> Result<T> {
@@ -275,17 +287,10 @@ impl<'a> Decoder<'a> {
         let result = self
             .remaining()?
             .get(..len.try_into()?)
-            .ok_or(ErrorKind::Truncated)?;
+            .ok_or_else(|| self.error(ErrorKind::Truncated))?;
 
         self.position = (self.position + len)?;
         Ok(result)
-    }
-
-    /// Peek at the next byte in the decoder without modifying the cursor.
-    pub(crate) fn peek(&self) -> Option<u8> {
-        self.remaining()
-            .ok()
-            .and_then(|bytes| bytes.get(0).cloned())
     }
 
     /// Obtain the remaining bytes in this decoder from the current cursor
@@ -313,7 +318,7 @@ impl<'a> From<&'a [u8]> for Decoder<'a> {
 #[cfg(test)]
 mod tests {
     use super::Decoder;
-    use crate::{asn1::BitString, Decodable, ErrorKind, Length, Tag, TagNumber};
+    use crate::{asn1::BitString, Decodable, ErrorKind, Length, TagNumber};
     use core::convert::TryFrom;
     use hex_literal::hex;
 
@@ -391,7 +396,7 @@ mod tests {
     fn invalid_field_length() {
         let mut decoder = Decoder::new(&[0x02, 0x01]);
         let err = i8::decode(&mut decoder).err().unwrap();
-        assert_eq!(ErrorKind::Length { tag: Tag::Integer }, err.kind());
+        assert_eq!(ErrorKind::Truncated, err.kind());
         assert_eq!(Some(Length::from(2u8)), err.position());
     }
 

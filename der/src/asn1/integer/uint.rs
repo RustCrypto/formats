@@ -1,16 +1,13 @@
 //! Unsigned integer decoders/encoders.
 
-use crate::{asn1::Any, Encodable, Encoder, Header, Length, Result, Tag};
+use crate::{Encodable, Encoder, Header, Length, Result, Tag};
 use core::convert::TryFrom;
 
 /// Decode an unsigned integer into a big endian byte slice with all leading
 /// zeroes removed.
 ///
 /// Returns a byte array of the requested size containing a big endian integer.
-pub(super) fn decode_slice(any: Any<'_>) -> Result<&[u8]> {
-    let tag = any.tag().assert_eq(Tag::Integer)?;
-    let bytes = any.value();
-
+pub(super) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
     // The `INTEGER` type always encodes a signed value, so for unsigned
     // values the leading `0x00` byte may need to be removed.
     //
@@ -18,19 +15,19 @@ pub(super) fn decode_slice(any: Any<'_>) -> Result<&[u8]> {
     // integer (since we're decoding an unsigned integer).
     // We expect all such cases to have a leading `0x00` byte.
     match bytes {
-        [] => Err(tag.non_canonical_error()),
+        [] => Err(Tag::Integer.non_canonical_error()),
         [0] => Ok(bytes),
-        [0, byte, ..] if *byte < 0x80 => Err(tag.non_canonical_error()),
+        [0, byte, ..] if *byte < 0x80 => Err(Tag::Integer.non_canonical_error()),
         [0, rest @ ..] => Ok(rest),
-        [byte, ..] if *byte >= 0x80 => Err(tag.value_error()),
+        [byte, ..] if *byte >= 0x80 => Err(Tag::Integer.value_error()),
         _ => Ok(bytes),
     }
 }
 
 /// Decode an unsigned integer into a byte array of the requested size
 /// containing a big endian integer.
-pub(super) fn decode_array<const N: usize>(any: Any<'_>) -> Result<[u8; N]> {
-    let input = decode_slice(any)?;
+pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
+    let input = decode_to_slice(bytes)?;
 
     // Input has leading zeroes removed, so we need to add them back
     let mut output = [0u8; N];
@@ -39,7 +36,7 @@ pub(super) fn decode_array<const N: usize>(any: Any<'_>) -> Result<[u8; N]> {
 }
 
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.
-pub(super) fn encode(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
+pub(super) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
     let bytes = strip_leading_zeroes(bytes);
     let leading_zero = needs_leading_zero(bytes);
     let len = (Length::try_from(bytes.len())? + leading_zero as u8)?;

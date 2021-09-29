@@ -17,7 +17,7 @@ readme = "README.md"
 [dependencies]
 const-oid = { version = "0.6", optional = true, path = "../const-oid" }
 crypto-bigint = { version = "0.2", optional = true, features = ["generic-array"] }
-der_derive = { version = "0.4", optional = true, path = "derive" }
+der_derive = { version = "=0.5.0-pre", optional = true, path = "derive" }
 
 [dev-dependencies]
 hex-literal = "0.3"

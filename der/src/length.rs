@@ -4,7 +4,7 @@ use crate::{Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Result};
 use core::{
     convert::{TryFrom, TryInto},
     fmt,
-    ops::Add,
+    ops::{Add, Sub},
 };
 
 /// Maximum length as a `u32` (256 MiB).
@@ -31,6 +31,11 @@ impl Length {
     /// This function is const-safe and therefore useful for [`Length`] constants.
     pub const fn new(value: u16) -> Self {
         Length(value as u32)
+    }
+
+    /// Is this length equal to zero?
+    pub fn is_zero(self) -> bool {
+        self == Length::ZERO
     }
 
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`
@@ -109,6 +114,31 @@ impl Add<Length> for Result<Length> {
 
     fn add(self, other: Length) -> Self {
         self? + other
+    }
+}
+
+impl Sub for Length {
+    type Output = Result<Self>;
+
+    fn sub(self, other: Length) -> Result<Self> {
+        self.0
+            .checked_sub(other.0)
+            .ok_or_else(|| {
+                ErrorKind::Underlength {
+                    expected: other,
+                    actual: self,
+                }
+                .into()
+            })
+            .and_then(TryInto::try_into)
+    }
+}
+
+impl Sub<Length> for Result<Length> {
+    type Output = Self;
+
+    fn sub(self, other: Length) -> Self {
+        self? - other
     }
 }
 

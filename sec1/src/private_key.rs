@@ -11,8 +11,8 @@ pub(crate) mod document;
 use crate::{EcParameters, Error};
 use core::{convert::TryFrom, fmt};
 use der::{
-    asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decodable, Encodable, Message, TagNumber,
+    asn1::{BitString, ContextSpecific, OctetString},
+    Decodable, Decoder, Encodable, Message, TagNumber,
 };
 
 /// Type label for PEM-encoded private keys.
@@ -70,19 +70,9 @@ pub struct EcPrivateKey<'a> {
     pub public_key: Option<&'a [u8]>,
 }
 
-impl<'a> TryFrom<&'a [u8]> for EcPrivateKey<'a> {
-    type Error = Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<EcPrivateKey<'a>, Error> {
-        Ok(Self::from_der(bytes)?)
-    }
-}
-
-impl<'a> TryFrom<Any<'a>> for EcPrivateKey<'a> {
-    type Error = der::Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<EcPrivateKey<'a>> {
-        any.sequence(|decoder| {
+impl<'a> Decodable<'a> for EcPrivateKey<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.sequence(|decoder| {
             if decoder.uint8()? != VERSION {
                 return Err(der::Tag::Integer.value_error());
             }
@@ -124,6 +114,14 @@ impl<'a> Message<'a> for EcPrivateKey<'a> {
                 })
                 .transpose()?,
         ])
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for EcPrivateKey<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> Result<EcPrivateKey<'a>, Error> {
+        Ok(Self::from_der(bytes)?)
     }
 }
 

@@ -1,7 +1,8 @@
 //! ASN.1 `NULL` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Encodable, Encoder, Error, ErrorKind, Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Length,
+    Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -9,23 +10,13 @@ use core::convert::TryFrom;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Null;
 
-impl TryFrom<Any<'_>> for Null {
-    type Error = Error;
-
-    fn try_from(any: Any<'_>) -> Result<Null> {
-        let tag = any.tag().assert_eq(Tag::Null)?;
-
-        if any.value().is_empty() {
+impl DecodeValue<'_> for Null {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        if length.is_zero() {
             Ok(Null)
         } else {
-            Err(ErrorKind::Length { tag }.into())
+            Err(decoder.error(ErrorKind::Length { tag: Self::TAG }))
         }
-    }
-}
-
-impl<'a> From<Null> for Any<'a> {
-    fn from(_: Null) -> Any<'a> {
-        Any::from_tag_and_value(Tag::Null, ByteSlice::default())
     }
 }
 
@@ -39,8 +30,22 @@ impl Encodable for Null {
     }
 }
 
+impl<'a> From<Null> for Any<'a> {
+    fn from(_: Null) -> Any<'a> {
+        Any::from_tag_and_value(Tag::Null, ByteSlice::default())
+    }
+}
+
+impl TryFrom<Any<'_>> for Null {
+    type Error = Error;
+
+    fn try_from(any: Any<'_>) -> Result<Null> {
+        any.decode_into()
+    }
+}
+
 impl Tagged for Null {
-    const TAG: Tag = Tag::Integer;
+    const TAG: Tag = Tag::Null;
 }
 
 impl TryFrom<Any<'_>> for () {
@@ -54,6 +59,13 @@ impl TryFrom<Any<'_>> for () {
 impl<'a> From<()> for Any<'a> {
     fn from(_: ()) -> Any<'a> {
         Null.into()
+    }
+}
+
+impl DecodeValue<'_> for () {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        Null::decode_value(decoder, length)?;
+        Ok(())
     }
 }
 
@@ -78,7 +90,7 @@ mod tests {
 
     #[test]
     fn decode() {
-        assert!(Null::from_der(&[0x05, 0x00]).is_ok());
+        Null::from_der(&[0x05, 0x00]).unwrap();
     }
 
     #[test]

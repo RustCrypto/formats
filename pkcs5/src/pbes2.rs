@@ -16,7 +16,7 @@ use crate::{AlgorithmIdentifier, CryptoError};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Encodable, Encoder, Error, ErrorKind, Length, Message,
+    Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Length, Message,
 };
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -206,6 +206,21 @@ impl<'a> Parameters<'a> {
     }
 }
 
+impl<'a> Decodable<'a> for Parameters<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.any()?.try_into()
+    }
+}
+
+impl<'a> Message<'a> for Parameters<'a> {
+    fn fields<F, T>(&self, f: F) -> der::Result<T>
+    where
+        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+    {
+        f(&[&self.kdf, &self.encryption])
+    }
+}
+
 impl<'a> TryFrom<Any<'a>> for Parameters<'a> {
     type Error = Error;
 
@@ -219,15 +234,6 @@ impl<'a> TryFrom<Any<'a>> for Parameters<'a> {
                 encryption: encryption.try_into()?,
             })
         })
-    }
-}
-
-impl<'a> Message<'a> for Parameters<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
-    {
-        f(&[&self.kdf, &self.encryption])
     }
 }
 
@@ -296,11 +302,9 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for EncryptionScheme<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<Self> {
-        AlgorithmIdentifier::try_from(any).and_then(TryInto::try_into)
+impl<'a> Decodable<'a> for EncryptionScheme<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        AlgorithmIdentifier::decode(decoder).and_then(TryInto::try_into)
     }
 }
 

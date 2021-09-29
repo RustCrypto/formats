@@ -4,7 +4,7 @@ use crate::{AlgorithmIdentifier, Attributes, Error, Result, Version};
 use core::{convert::TryFrom, fmt};
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decodable, Encodable, Message, TagNumber,
+    Decodable, Decoder, Encodable, Message, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -173,19 +173,9 @@ impl<'a> PrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for PrivateKeyInfo<'a> {
-    type Error = Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
-        Ok(Self::from_der(bytes)?)
-    }
-}
-
-impl<'a> TryFrom<Any<'a>> for PrivateKeyInfo<'a> {
-    type Error = der::Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<PrivateKeyInfo<'a>> {
-        any.sequence(|decoder| {
+impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<PrivateKeyInfo<'a>> {
+        decoder.sequence(|decoder| {
             // Parse and validate `version` INTEGER.
             let version = Version::decode(decoder)?;
             let algorithm = decoder.decode()?;
@@ -241,6 +231,14 @@ impl<'a> Message<'a> for PrivateKeyInfo<'a> {
                 })
                 .transpose()?,
         ])
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for PrivateKeyInfo<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+        Ok(Self::from_der(bytes)?)
     }
 }
 

@@ -1,15 +1,26 @@
 //! ASN.1 `OBJECT IDENTIFIER`
 
-use crate::{asn1::Any, Encodable, Encoder, Error, Length, Result, Tag, Tagged};
+use crate::{
+    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, Length, Result, Tag,
+    Tagged,
+};
 use const_oid::ObjectIdentifier;
 use core::convert::{TryFrom, TryInto};
 
-impl TryFrom<Any<'_>> for ObjectIdentifier {
-    type Error = Error;
+impl DecodeValue<'_> for ObjectIdentifier {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
+        Ok(Self::from_bytes(bytes)?)
+    }
+}
 
-    fn try_from(any: Any<'_>) -> Result<ObjectIdentifier> {
-        any.tag().assert_eq(Tag::ObjectIdentifier)?;
-        Ok(ObjectIdentifier::from_bytes(any.value())?)
+impl Encodable for ObjectIdentifier {
+    fn encoded_len(&self) -> Result<Length> {
+        Any::from(self).encoded_len()
+    }
+
+    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        Any::from(self).encode(encoder)
     }
 }
 
@@ -28,13 +39,12 @@ impl<'a> From<&'a ObjectIdentifier> for Any<'a> {
     }
 }
 
-impl Encodable for ObjectIdentifier {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(self).encoded_len()
-    }
+impl TryFrom<Any<'_>> for ObjectIdentifier {
+    type Error = Error;
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(self).encode(encoder)
+    fn try_from(any: Any<'_>) -> Result<ObjectIdentifier> {
+        any.tag().assert_eq(Tag::ObjectIdentifier)?;
+        Ok(ObjectIdentifier::from_bytes(any.value())?)
     }
 }
 
