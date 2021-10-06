@@ -56,8 +56,9 @@
 //! following algorithms:
 //!
 //! - ECC (`id-ecPublicKey`)
-//! - Ed25519 (`Ed25519`)
-//! - RSA (`rsaEncryption`)
+//! - Ed25519 (`id-Ed25519`)
+//! - RSA (`id-rsaEncryption`)
+//! - X25519 (`id-X25519`)
 //!
 //! Please open an issue if you encounter trouble using it with other
 //! algorithms.

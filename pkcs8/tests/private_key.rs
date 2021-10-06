@@ -19,6 +19,9 @@ const ED25519_DER_V2_EXAMPLE: &[u8] = include_bytes!("examples/ed25519-priv-pkcs
 /// RSA-2048 PKCS#8 private key encoded as ASN.1 DER
 const RSA_2048_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.der");
 
+/// X25519 PKCS#8 private key encoded as ASN.1 DER
+const X25519_DER_EXAMPLE: &[u8] = include_bytes!("examples/x25519-priv.der");
+
 /// Elliptic Curve (P-256) PKCS#8 private key encoded as PEM
 #[cfg(feature = "pem")]
 const EC_P256_PEM_EXAMPLE: &str = include_str!("examples/p256-priv.pem");
@@ -30,6 +33,10 @@ const ED25519_PEM_V1_EXAMPLE: &str = include_str!("examples/ed25519-priv-pkcs8v1
 /// RSA-2048 PKCS#8 private key encoded as PEM
 #[cfg(feature = "pem")]
 const RSA_2048_PEM_EXAMPLE: &str = include_str!("examples/rsa2048-priv.pem");
+
+/// X25519 PKCS#8 private key encoded as PEM
+#[cfg(feature = "pem")]
+const X25519_PEM_EXAMPLE: &str = include_str!("examples/x25519-priv.pem");
 
 #[test]
 fn decode_ec_p256_der() {
@@ -91,6 +98,21 @@ fn decode_rsa_2048_der() {
 }
 
 #[test]
+fn decode_x25519_der() {
+    let pk = PrivateKeyInfo::try_from(X25519_DER_EXAMPLE).unwrap();
+    assert_eq!(pk.version(), Version::V1);
+    assert_eq!(pk.algorithm.oid, "1.3.101.110".parse().unwrap());
+    assert_eq!(pk.algorithm.parameters, None);
+
+    // Extracted with:
+    // $ openssl asn1parse -inform der -in tests/examples/x25519-priv.der
+    assert_eq!(
+        pk.private_key,
+        &hex!("04207060252933AC6E7A4A9B0EB2632C5A040A87257ADB869A3ECCC3D16B724F2647")[..]
+    );
+}
+
+#[test]
 #[cfg(feature = "pem")]
 fn decode_ec_p256_pem() {
     let pkcs8_doc: PrivateKeyDocument = EC_P256_PEM_EXAMPLE.parse().unwrap();
@@ -120,6 +142,17 @@ fn decode_rsa_2048_pem() {
 
     // Ensure `PrivateKeyDocument` parses successfully
     let pk_info = PrivateKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    assert_eq!(pkcs8_doc.private_key_info().algorithm, pk_info.algorithm);
+}
+
+#[test]
+#[cfg(feature = "pem")]
+fn decode_x25519_pem() {
+    let pkcs8_doc: PrivateKeyDocument = X25519_PEM_EXAMPLE.parse().unwrap();
+    assert_eq!(pkcs8_doc.as_ref(), X25519_DER_EXAMPLE);
+
+    // Ensure `PrivateKeyDocument` parses successfully
+    let pk_info = PrivateKeyInfo::try_from(X25519_DER_EXAMPLE).unwrap();
     assert_eq!(pkcs8_doc.private_key_info().algorithm, pk_info.algorithm);
 }
 
