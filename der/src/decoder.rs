@@ -1,6 +1,9 @@
 //! DER decoder.
 
-use crate::{asn1::*, Choice, Decodable, Error, ErrorKind, Length, Result, Tag, TagNumber, Tagged};
+use crate::{
+    asn1::*, Choice, Decodable, DecodeValue, Error, ErrorKind, Length, Result, Tag, TagNumber,
+    Tagged,
+};
 use core::convert::{TryFrom, TryInto};
 
 /// DER decoder.
@@ -165,7 +168,7 @@ impl<'a> Decoder<'a> {
     // yet because this method has more restrictive trait bounds.
     pub fn context_specific_implicit<T>(&mut self, tag_number: TagNumber) -> Result<Option<T>>
     where
-        T: TryFrom<Any<'a>, Error = Error> + Tagged,
+        T: DecodeValue<'a> + Tagged,
     {
         ContextSpecific::<T>::decode_implicit(self, tag_number)
     }
