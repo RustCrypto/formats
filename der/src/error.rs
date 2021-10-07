@@ -103,6 +103,9 @@ impl std::error::Error for ErrorKind {}
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ErrorKind {
+    /// Date-and-time related errors.
+    DateTime,
+
     /// Indicates a field which is duplicated when only one is expected.
     DuplicateField {
         /// Tag of the duplicated field.
@@ -217,6 +220,7 @@ impl ErrorKind {
 impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            ErrorKind::DateTime => write!(f, "date/time error"),
             ErrorKind::DuplicateField { tag } => write!(f, "duplicate field for {}", tag),
             ErrorKind::Failed => write!(f, "operation failed"),
             ErrorKind::Length { tag } => write!(f, "incorrect length for {}", tag),
