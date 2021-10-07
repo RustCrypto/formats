@@ -151,16 +151,7 @@ impl<'a> Decoder<'a> {
     where
         T: Decodable<'a>,
     {
-        if let Some(any) = self.context_specific_any(tag_number)? {
-            if !any.tag().is_constructed() {
-                return Err(any.tag().non_canonical_error());
-            }
-
-            let cs = ContextSpecific::<T>::try_from(any)?;
-            Ok(Some(cs.value))
-        } else {
-            Ok(None)
-        }
+        ContextSpecific::<T>::decode_explicit(self, tag_number)
     }
 
     /// Attempt to decode an `IMPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
@@ -176,34 +167,7 @@ impl<'a> Decoder<'a> {
     where
         T: TryFrom<Any<'a>, Error = Error> + Tagged,
     {
-        if let Some(any) = self.context_specific_any(tag_number)? {
-            if any.tag().is_constructed() != T::TAG.is_constructed() {
-                return Err(any.tag().non_canonical_error());
-            }
-
-            T::try_from(Any::from_tag_and_value(T::TAG, any.into())).map(Some)
-        } else {
-            Ok(None)
-        }
-    }
-
-    /// Attempt to decode a context-specific field as an [`Any`] type.
-    fn context_specific_any(&mut self, tag_number: TagNumber) -> Result<Option<Any<'a>>> {
-        while let Some(octet) = self.peek() {
-            let tag = Tag::try_from(octet)?;
-
-            if !tag.is_context_specific() || tag.number() > tag_number {
-                break;
-            }
-
-            let any = self.decode::<Any<'a>>()?;
-
-            if tag.number() == tag_number {
-                return Ok(Some(any));
-            }
-        }
-
-        Ok(None)
+        ContextSpecific::<T>::decode_implicit(self, tag_number)
     }
 
     /// Attempt to decode an ASN.1 `GeneralizedTime`.
