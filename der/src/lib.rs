@@ -361,6 +361,7 @@ mod value;
 
 pub use crate::{
     asn1::{Any, Choice},
+    datetime::DateTime,
     decodable::Decodable,
     decoder::Decoder,
     encodable::Encodable,

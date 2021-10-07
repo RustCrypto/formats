@@ -5,7 +5,7 @@
 // Copyright (c) 2016 The humantime Developers
 // Released under the MIT OR Apache 2.0 licenses
 
-use crate::{Encoder, Result, Tag};
+use crate::{Encoder, ErrorKind, Result, Tag};
 use core::time::Duration;
 
 /// Minimum year allowed in [`DateTime`] values.
@@ -15,35 +15,14 @@ const MIN_YEAR: u16 = 1970;
 /// [`DateTime`] (non-inclusive).
 const MAX_UNIX_DURATION: Duration = Duration::from_secs(253_402_300_800);
 
-/// Decode 2-digit decimal value
-pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u16> {
-    if (b'0'..=b'9').contains(&hi) && (b'0'..=b'9').contains(&lo) {
-        Ok((hi - b'0') as u16 * 10 + (lo - b'0') as u16)
-    } else {
-        Err(tag.value_error())
-    }
-}
-
-/// Encode 2-digit decimal value
-pub(crate) fn encode_decimal(encoder: &mut Encoder<'_>, tag: Tag, value: u16) -> Result<()> {
-    let hi_val = value / 10;
-
-    if hi_val >= 10 {
-        return Err(tag.value_error());
-    }
-
-    encoder.byte(hi_val as u8 + b'0')?;
-    encoder.byte((value % 10) as u8 + b'0')
-}
-
-/// Inner date/time type shared by multiple ASN.1 types
+/// Date-and-time type shared by multiple ASN.1 types
 /// (e.g. `GeneralizedTime`, `UTCTime`).
 ///
 /// Following conventions from RFC 5280, this type is always Z-normalized
 /// (i.e. represents a UTC time). However, it isn't named "UTC time" in order
 /// to prevent confusion with ASN.1 `UTCTime`.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub(crate) struct DateTime {
+pub struct DateTime {
     /// Full year (e.g. 2000).
     ///
     /// Must be >=1970 to permit positive conversions to Unix time.
@@ -58,54 +37,54 @@ pub(crate) struct DateTime {
     /// Hour (0-23)
     hour: u16,
 
-    /// Minute (0-59)
-    minute: u16,
+    /// Minutes (0-59)
+    minutes: u16,
 
-    /// Second (0-59)
-    second: u16,
+    /// Seconds (0-59)
+    seconds: u16,
 }
 
 impl DateTime {
     /// Create a new [`DateTime`] from the given UTC time components.
-    ///
-    /// Note that this does not fully validate the components of the date.
-    /// To ensure the date is valid, it must be converted to a Unix timestamp
-    /// by calling [`DateTime::unix_timestamp`].
-    pub(crate) fn new(
+    pub fn new(
         year: u16,
         month: u16,
         day: u16,
         hour: u16,
         minute: u16,
         second: u16,
-    ) -> Option<Self> {
+    ) -> Result<Self> {
         // Basic validation of the components.
-        if year >= MIN_YEAR
-            && (1..=12).contains(&month)
-            && (1..=31).contains(&day)
-            && (0..=23).contains(&hour)
-            && (0..=59).contains(&minute)
-            && (0..=59).contains(&second)
+        if year < MIN_YEAR
+            || !(1..=12).contains(&month)
+            || !(1..=31).contains(&day)
+            || !(0..=23).contains(&hour)
+            || !(0..=59).contains(&minute)
+            || !(0..=59).contains(&second)
         {
-            Some(Self {
-                year,
-                month,
-                day,
-                hour,
-                minute,
-                second,
-            })
-        } else {
-            None
+            return Err(ErrorKind::DateTime.into());
         }
+
+        let result = Self {
+            year,
+            month,
+            day,
+            hour,
+            minutes: minute,
+            seconds: second,
+        };
+
+        // Validate time maps to a Unix duration
+        result.unix_duration()?;
+        Ok(result)
     }
 
     /// Compute a [`DateTime`] from the given [`Duration`] since the `UNIX_EPOCH`.
     ///
     /// Returns `None` if the value is outside the supported date range.
-    pub fn from_unix_duration(unix_duration: Duration) -> Option<Self> {
+    pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
         if unix_duration > MAX_UNIX_DURATION {
-            return None;
+            return Err(ErrorKind::DateTime.into());
         }
 
         let secs_since_epoch = unix_duration.as_secs();
@@ -179,38 +158,38 @@ impl DateTime {
         )
     }
 
-    /// Get the year
+    /// Get the year.
     pub fn year(&self) -> u16 {
         self.year
     }
 
-    /// Get the month
+    /// Get the month.
     pub fn month(&self) -> u16 {
         self.month
     }
 
-    /// Get the day
+    /// Get the day.
     pub fn day(&self) -> u16 {
         self.day
     }
 
-    /// Get the hour
+    /// Get the hour.
     pub fn hour(&self) -> u16 {
         self.hour
     }
 
-    /// Get the minute
-    pub fn minute(&self) -> u16 {
-        self.minute
+    /// Get the minutes.
+    pub fn minutes(&self) -> u16 {
+        self.minutes
     }
 
-    /// Get the second
-    pub fn second(&self) -> u16 {
-        self.second
+    /// Get the seconds.
+    pub fn seconds(&self) -> u16 {
+        self.seconds
     }
 
     /// Compute [`Duration`] since `UNIX_EPOCH` from the given calendar date.
-    pub(crate) fn unix_duration(&self) -> Option<Duration> {
+    pub fn unix_duration(&self) -> Result<Duration> {
         let leap_years = ((self.year - 1) - 1968) / 4 - ((self.year - 1) - 1900) / 100
             + ((self.year - 1) - 1600) / 400;
 
@@ -230,11 +209,11 @@ impl DateTime {
             10 => (273, 31),
             11 => (304, 30),
             12 => (334, 31),
-            _ => return None,
+            _ => return Err(ErrorKind::DateTime.into()),
         };
 
         if self.day > mdays || self.day == 0 {
-            return None;
+            return Err(ErrorKind::DateTime.into());
         }
 
         ydays += self.day - 1;
@@ -244,14 +223,35 @@ impl DateTime {
         }
 
         let days = (self.year - 1970) as u64 * 365 + leap_years as u64 + ydays as u64;
-        let time = self.second as u64 + (self.minute as u64 * 60) + (self.hour as u64 * 3600);
-        Some(Duration::from_secs(time + days * 86400))
+        let time = self.seconds as u64 + (self.minutes as u64 * 60) + (self.hour as u64 * 3600);
+        Ok(Duration::from_secs(time + days * 86400))
     }
 
     /// Is the year a leap year?
     fn is_leap_year(&self) -> bool {
         self.year % 4 == 0 && (self.year % 100 != 0 || self.year % 400 == 0)
     }
+}
+
+/// Decode 2-digit decimal value
+pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u16> {
+    if (b'0'..=b'9').contains(&hi) && (b'0'..=b'9').contains(&lo) {
+        Ok((hi - b'0') as u16 * 10 + (lo - b'0') as u16)
+    } else {
+        Err(tag.value_error())
+    }
+}
+
+/// Encode 2-digit decimal value
+pub(crate) fn encode_decimal(encoder: &mut Encoder<'_>, tag: Tag, value: u16) -> Result<()> {
+    let hi_val = value / 10;
+
+    if hi_val >= 10 {
+        return Err(tag.value_error());
+    }
+
+    encoder.byte(hi_val as u8 + b'0')?;
+    encoder.byte((value % 10) as u8 + b'0')
 }
 
 #[cfg(test)]
@@ -262,7 +262,7 @@ mod tests {
     fn is_date_valid(year: u16, month: u16, day: u16, hour: u16, minute: u16, second: u16) -> bool {
         DateTime::new(year, month, day, hour, minute, second)
             .and_then(|dt| dt.unix_duration())
-            .is_some()
+            .is_ok()
     }
 
     #[test]

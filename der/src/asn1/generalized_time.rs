@@ -79,7 +79,7 @@ impl DecodeValue<'_> for GeneralizedTime {
 
                 DateTime::new(year, month, day, hour, minute, second)
                     .and_then(|dt| dt.unix_duration())
-                    .ok_or_else(|| Self::TAG.value_error())
+                    .map_err(|_| Self::TAG.value_error())
                     .and_then(Self::new)
             }
             _ => Err(Self::TAG.value_error()),
@@ -95,9 +95,7 @@ impl Encodable for GeneralizedTime {
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         Header::new(Self::TAG, Self::LENGTH)?.encode(encoder)?;
 
-        let datetime =
-            DateTime::from_unix_duration(self.0).ok_or_else(|| Self::TAG.value_error())?;
-
+        let datetime = DateTime::from_unix_duration(self.0).map_err(|_| Self::TAG.value_error())?;
         let year_hi = datetime.year() / 100;
         let year_lo = datetime.year() % 100;
 
@@ -106,8 +104,8 @@ impl Encodable for GeneralizedTime {
         datetime::encode_decimal(encoder, Self::TAG, datetime.month())?;
         datetime::encode_decimal(encoder, Self::TAG, datetime.day())?;
         datetime::encode_decimal(encoder, Self::TAG, datetime.hour())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.minute())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.second())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.minutes())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.seconds())?;
         encoder.byte(b'Z')
     }
 }
