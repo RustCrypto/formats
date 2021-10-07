@@ -5,7 +5,7 @@ mod int;
 mod uint;
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, Length, Result, Tag,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag,
     Tagged,
 };
 use core::convert::TryFrom;
@@ -32,16 +32,16 @@ macro_rules! impl_int_encoding {
                 }
             }
 
-            impl Encodable for $int {
-                fn encoded_len(&self) -> Result<Length> {
+            impl EncodeValue for $int {
+                fn value_len(&self) -> Result<Length> {
                     if *self < 0 {
-                        int::encoded_len(&(*self as $uint).to_be_bytes())?.for_tlv()
+                        int::encoded_len(&(*self as $uint).to_be_bytes())
                     } else {
-                        uint::encoded_len(&self.to_be_bytes())?.for_tlv()
+                        uint::encoded_len(&self.to_be_bytes())
                     }
                 }
 
-                fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+                fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
                     if *self < 0 {
                         int::encode_bytes(encoder, &(*self as $uint).to_be_bytes())
                     } else {
@@ -82,12 +82,12 @@ macro_rules! impl_uint_encoding {
                 }
             }
 
-            impl Encodable for $uint {
-                fn encoded_len(&self) -> Result<Length> {
-                    uint::encoded_len(&self.to_be_bytes())?.for_tlv()
+            impl EncodeValue for $uint {
+                fn value_len(&self) -> Result<Length> {
+                    uint::encoded_len(&self.to_be_bytes())
                 }
 
-                fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+                fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
                     uint::encode_bytes(encoder, &self.to_be_bytes())
                 }
             }

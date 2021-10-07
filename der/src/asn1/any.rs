@@ -1,8 +1,8 @@
 //! ASN.1 `ANY` type.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, Encodable, Encoder, Error,
-    ErrorKind, Header, Length, Result, Tag, Tagged,
+    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder,
+    Error, ErrorKind, Header, Length, Result, Tag, Tagged,
 };
 use core::convert::{TryFrom, TryInto};
 
@@ -49,11 +49,6 @@ impl<'a> Any<'a> {
         self.value.as_bytes()
     }
 
-    /// Get the [`Length`] of this [`Any`] type's value.
-    pub fn value_len(self) -> Length {
-        self.value.len()
-    }
-
     /// Attempt to decode this [`Any`] type into the inner value.
     pub fn decode_into<T>(self) -> Result<T>
     where
@@ -61,7 +56,7 @@ impl<'a> Any<'a> {
     {
         self.tag.assert_eq(T::TAG)?;
         let mut decoder = Decoder::new(self.value());
-        let result = T::decode_value(&mut decoder, self.value_len())?;
+        let result = T::decode_value(&mut decoder, self.value.len())?;
         decoder.finish(result)
     }
 
@@ -159,11 +154,21 @@ impl<'a> Decodable<'a> for Any<'a> {
 
 impl<'a> Encodable for Any<'a> {
     fn encoded_len(&self) -> Result<Length> {
-        self.value_len().for_tlv()
+        self.value.len().for_tlv()
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(self.tag, self.value_len())?.encode(encoder)?;
+        Header::new(self.tag, self.value.len())?.encode(encoder)?;
+        self.encode_value(encoder)
+    }
+}
+
+impl<'a> EncodeValue for Any<'a> {
+    fn value_len(&self) -> Result<Length> {
+        Ok(self.value.len())
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         encoder.bytes(self.value())
     }
 }
