@@ -43,16 +43,15 @@ impl<T> ContextSpecific<T> {
     where
         T: Decodable<'a>,
     {
-        if let Some(any) = Self::decode_any(decoder, tag_number)? {
+        Self::decode_with(decoder, tag_number, |decoder| {
+            let any = Any::decode(decoder)?;
+
             if !any.tag().is_constructed() {
                 return Err(any.tag().non_canonical_error());
             }
 
-            let cs = ContextSpecific::<T>::try_from(any)?;
-            Ok(Some(cs.value))
-        } else {
-            Ok(None)
-        }
+            Ok(ContextSpecific::<T>::try_from(any)?.value)
+        })
     }
 
     /// Attempt to decode an `IMPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
@@ -71,30 +70,35 @@ impl<T> ContextSpecific<T> {
     where
         T: TryFrom<Any<'a>, Error = Error> + Tagged,
     {
-        if let Some(any) = Self::decode_any(decoder, tag_number)? {
+        Self::decode_with(decoder, tag_number, |decoder| {
+            let any = Any::decode(decoder)?;
+
             if any.tag().is_constructed() != T::TAG.is_constructed() {
                 return Err(any.tag().non_canonical_error());
             }
 
-            T::try_from(Any::from_tag_and_value(T::TAG, any.into())).map(Some)
-        } else {
-            Ok(None)
-        }
+            T::try_from(Any::from_tag_and_value(T::TAG, any.into()))
+        })
     }
 
     /// Attempt to decode a context-specific field as an [`Any`] type.
-    fn decode_any<'a>(decoder: &mut Decoder<'a>, tag_number: TagNumber) -> Result<Option<Any<'a>>> {
+    fn decode_with<'a, F>(
+        decoder: &mut Decoder<'a>,
+        tag_number: TagNumber,
+        f: F,
+    ) -> Result<Option<T>>
+    where
+        F: FnOnce(&mut Decoder<'a>) -> Result<T>,
+    {
         while let Some(octet) = decoder.peek() {
             let tag = Tag::try_from(octet)?;
 
             if !tag.is_context_specific() || tag.number() > tag_number {
                 break;
-            }
-
-            let any = decoder.decode::<Any<'a>>()?;
-
-            if tag.number() == tag_number {
-                return Ok(Some(any));
+            } else if tag.number() == tag_number {
+                return Some(f(decoder)).transpose();
+            } else {
+                decoder.any()?;
             }
         }
 
