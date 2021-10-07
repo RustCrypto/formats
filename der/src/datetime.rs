@@ -6,7 +6,7 @@
 // Released under the MIT OR Apache 2.0 licenses
 
 use crate::{Encoder, ErrorKind, Result, Tag};
-use core::time::Duration;
+use core::{fmt, time::Duration};
 
 /// Minimum year allowed in [`DateTime`] values.
 const MIN_YEAR: u16 = 1970;
@@ -233,6 +233,16 @@ impl DateTime {
     }
 }
 
+impl fmt::Display for DateTime {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{:02}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
+            self.year, self.month, self.day, self.hour, self.minutes, self.seconds
+        )
+    }
+}
+
 /// Decode 2-digit decimal value
 pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u16> {
     if (b'0'..=b'9').contains(&hi) && (b'0'..=b'9').contains(&lo) {
@@ -270,6 +280,14 @@ mod tests {
         assert!(is_date_valid(2000, 2, 29, 0, 0, 0));
         assert!(!is_date_valid(2001, 2, 29, 0, 0, 0));
         assert!(!is_date_valid(2100, 2, 29, 0, 0, 0));
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn display() {
+        use alloc::string::ToString;
+        let datetime = DateTime::new(2001, 01, 02, 12, 13, 14).unwrap();
+        assert_eq!(&datetime.to_string(), "2001-01-02T12:13:14Z");
     }
 
     #[test]
