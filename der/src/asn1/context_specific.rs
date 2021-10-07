@@ -1,8 +1,8 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::Any, Choice, Decodable, Decoder, Encodable, Encoder, Error, Header, Length, Result, Tag,
-    TagNumber, Tagged,
+    asn1::Any, Choice, Decodable, DecodeValue, Decoder, Encodable, Encoder, Error, Header, Length,
+    Result, Tag, TagNumber, Tagged,
 };
 use core::convert::{TryFrom, TryInto};
 
@@ -57,27 +57,24 @@ impl<T> ContextSpecific<T> {
     /// Attempt to decode an `IMPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
     /// provided [`TagNumber`].
     ///
-    /// This method otherwise behaves the same as `context_specific_implicit`,
+    /// This method otherwise behaves the same as `decode_explicit`,
     /// but should be used in cases where the particular fields are `IMPLICIT`
     /// as opposed to `EXPLICIT`.
-    // TODO(tarcieri): unify `decode_explicit/decode_implicit`
-    // They can accept a `TagMode` as a parameter. However, this can't be done
-    // yet because this method has more restrictive trait bounds.
     pub fn decode_implicit<'a>(
         decoder: &mut Decoder<'a>,
         tag_number: TagNumber,
     ) -> Result<Option<T>>
     where
-        T: TryFrom<Any<'a>, Error = Error> + Tagged,
+        T: DecodeValue<'a> + Tagged,
     {
         Self::decode_with(decoder, tag_number, |decoder| {
-            let any = Any::decode(decoder)?;
+            let header = Header::decode(decoder)?;
 
-            if any.tag().is_constructed() != T::TAG.is_constructed() {
-                return Err(any.tag().non_canonical_error());
+            if header.tag.is_constructed() != T::TAG.is_constructed() {
+                return Err(header.tag.non_canonical_error());
             }
 
-            T::try_from(Any::from_tag_and_value(T::TAG, any.into()))
+            T::decode_value(decoder, header.length)
         })
     }
 
