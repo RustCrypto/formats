@@ -1,7 +1,10 @@
 //! Common handling for types backed by byte slices with enforcement of a
 //! library-level length limitation i.e. `Length::max()`.
 
-use crate::{str_slice::StrSlice, DecodeValue, Decoder, Error, ErrorKind, Length, Result};
+use crate::{
+    str_slice::StrSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
+    Result,
+};
 use core::convert::TryFrom;
 
 /// Byte slice newtype which respects the `Length::max()` limit.
@@ -52,6 +55,16 @@ impl<'a> DecodeValue<'a> for ByteSlice<'a> {
             .bytes(length)
             .map_err(|_| decoder.error(ErrorKind::Truncated))
             .and_then(Self::new)
+    }
+}
+
+impl<'a> EncodeValue for ByteSlice<'a> {
+    fn value_len(&self) -> Result<Length> {
+        Ok(self.length)
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        encoder.bytes(self.as_ref())
     }
 }
 

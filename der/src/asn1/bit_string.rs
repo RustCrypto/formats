@@ -1,8 +1,8 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Header,
-    Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
+    Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -12,7 +12,7 @@ pub struct BitString<'a> {
     /// Inner value
     pub(crate) inner: ByteSlice<'a>,
 
-    /// Length after encoding (with leading `0`0 byte)
+    /// Length after encoding (with leading `0` byte)
     pub(crate) encoded_len: Length,
 }
 
@@ -61,13 +61,12 @@ impl<'a> DecodeValue<'a> for BitString<'a> {
     }
 }
 
-impl<'a> Encodable for BitString<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        self.encoded_len.for_tlv()
+impl<'a> EncodeValue for BitString<'a> {
+    fn value_len(&self) -> Result<Length> {
+        Ok(self.encoded_len)
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(Self::TAG, (Length::ONE + self.inner.len())?)?.encode(encoder)?;
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         encoder.byte(0)?;
         encoder.bytes(self.as_bytes())
     }

@@ -123,7 +123,6 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-mod attributes;
 mod error;
 mod private_key_info;
 mod traits;
@@ -136,7 +135,6 @@ mod document;
 pub(crate) mod encrypted_private_key_info;
 
 pub use crate::{
-    attributes::Attributes,
     error::{Error, Result},
     private_key_info::PrivateKeyInfo,
     traits::{FromPrivateKey, FromPublicKey},

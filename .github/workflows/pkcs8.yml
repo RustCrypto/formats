@@ -42,13 +42,15 @@ jobs:
           override: true
       - run: cargo build --release --target ${{ matrix.target }} --no-default-features
       - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features alloc
+      - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features 3des
+      - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features des-insecure
       - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features encryption
       - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features pem
       - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features pkcs1
       - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features pkcs5
       - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features sha1
-      - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features 3des
-      - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features des-insecure
+      - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features subtle
+      - run: cargo build --release --target ${{ matrix.target }} --no-default-features --features zeroize
 
   test:
     runs-on: ubuntu-latest
