@@ -180,8 +180,8 @@ impl From<&PrivateKeyInfo<'_>> for PrivateKeyDocument {
     fn from(private_key_info: &PrivateKeyInfo<'_>) -> PrivateKeyDocument {
         private_key_info
             .to_vec()
-            .ok()
-            .and_then(|buf| buf.try_into().ok())
+            .expect(error::DER_ENCODING_MSG)
+            .try_into()
             .expect(error::DER_ENCODING_MSG)
     }
 }

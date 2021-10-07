@@ -12,7 +12,7 @@ use crate::{EcParameters, Error};
 use core::{convert::TryFrom, fmt};
 use der::{
     asn1::{BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Message, TagNumber,
+    Decodable, Decoder, Encodable, Message, TagMode, TagNumber,
 };
 
 /// Type label for PEM-encoded private keys.
@@ -78,9 +78,9 @@ impl<'a> Decodable<'a> for EcPrivateKey<'a> {
             }
 
             let private_key = decoder.octet_string()?.as_bytes();
-            let parameters = decoder.context_specific_explicit(EC_PARAMETERS_TAG)?;
+            let parameters = decoder.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
             let public_key = decoder
-                .context_specific_explicit::<BitString<'_>>(PUBLIC_KEY_TAG)?
+                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?
                 .map(|bs| bs.as_bytes());
 
             Ok(EcPrivateKey {
@@ -102,6 +102,7 @@ impl<'a> Message<'a> for EcPrivateKey<'a> {
             &OctetString::new(self.private_key)?,
             &self.parameters.as_ref().map(|params| ContextSpecific {
                 tag_number: EC_PARAMETERS_TAG,
+                tag_mode: TagMode::Explicit,
                 value: *params,
             }),
             &self
@@ -109,6 +110,7 @@ impl<'a> Message<'a> for EcPrivateKey<'a> {
                 .map(|pk| {
                     BitString::new(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
+                        tag_mode: TagMode::Explicit,
                         value,
                     })
                 })

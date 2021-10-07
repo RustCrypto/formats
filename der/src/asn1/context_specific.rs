@@ -1,8 +1,8 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::Any, Choice, Decodable, DecodeValue, Decoder, Encodable, Encoder, Error, Header, Length,
-    Result, Tag, TagNumber, Tagged,
+    asn1::Any, Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
+    Header, Length, Result, Tag, TagMode, TagNumber, Tagged,
 };
 use core::convert::{TryFrom, TryInto};
 
@@ -15,6 +15,9 @@ pub struct ContextSpecific<T> {
     /// Context-specific tag number sans the leading `0b10000000` class
     /// identifier bit and `0b100000` constructed flag.
     pub tag_number: TagNumber,
+
+    /// Tag mode: `EXPLICIT` VS `IMPLICIT`.
+    pub tag_mode: TagMode,
 
     /// Value of the field.
     pub value: T,
@@ -39,7 +42,7 @@ impl<T> ContextSpecific<T> {
     pub fn decode_explicit<'a>(
         decoder: &mut Decoder<'a>,
         tag_number: TagNumber,
-    ) -> Result<Option<T>>
+    ) -> Result<Option<Self>>
     where
         T: Decodable<'a>,
     {
@@ -50,7 +53,7 @@ impl<T> ContextSpecific<T> {
                 return Err(any.tag().non_canonical_error());
             }
 
-            Ok(ContextSpecific::<T>::try_from(any)?.value)
+            Self::try_from(any)
         })
     }
 
@@ -63,7 +66,7 @@ impl<T> ContextSpecific<T> {
     pub fn decode_implicit<'a>(
         decoder: &mut Decoder<'a>,
         tag_number: TagNumber,
-    ) -> Result<Option<T>>
+    ) -> Result<Option<Self>>
     where
         T: DecodeValue<'a> + Tagged,
     {
@@ -74,7 +77,13 @@ impl<T> ContextSpecific<T> {
                 return Err(header.tag.non_canonical_error());
             }
 
-            T::decode_value(decoder, header.length)
+            let value = T::decode_value(decoder, header.length)?;
+
+            Ok(Self {
+                tag_number,
+                tag_mode: TagMode::Implicit,
+                value,
+            })
         })
     }
 
@@ -83,9 +92,9 @@ impl<T> ContextSpecific<T> {
         decoder: &mut Decoder<'a>,
         tag_number: TagNumber,
         f: F,
-    ) -> Result<Option<T>>
+    ) -> Result<Option<Self>>
     where
-        F: FnOnce(&mut Decoder<'a>) -> Result<T>,
+        F: FnOnce(&mut Decoder<'a>) -> Result<Self>,
     {
         while let Some(octet) = decoder.peek() {
             let tag = Tag::try_from(octet)?;
@@ -100,6 +109,22 @@ impl<T> ContextSpecific<T> {
         }
 
         Ok(None)
+    }
+
+    /// Get the tag for this field.
+    pub fn tag(&self) -> Tag
+    where
+        T: Tagged,
+    {
+        let constructed = match self.tag_mode {
+            TagMode::Explicit => true,
+            TagMode::Implicit => T::TAG.is_constructed(),
+        };
+
+        Tag::ContextSpecific {
+            number: self.tag_number,
+            constructed,
+        }
     }
 }
 
@@ -123,19 +148,34 @@ where
 
 impl<T> Encodable for ContextSpecific<T>
 where
-    T: Encodable,
+    T: EncodeValue + Tagged,
 {
     fn encoded_len(&self) -> Result<Length> {
-        self.value.encoded_len()?.for_tlv()
+        self.value_len()?.for_tlv()
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        let tag = Tag::ContextSpecific {
-            number: self.tag_number,
-            constructed: true,
-        };
-        Header::new(tag, self.value.encoded_len()?)?.encode(encoder)?;
-        self.value.encode(encoder)
+        Header::new(self.tag(), self.value_len()?)?.encode(encoder)?;
+        self.encode_value(encoder)
+    }
+}
+
+impl<T> EncodeValue for ContextSpecific<T>
+where
+    T: EncodeValue + Tagged,
+{
+    fn value_len(&self) -> Result<Length> {
+        match self.tag_mode {
+            TagMode::Explicit => self.value.encoded_len(),
+            TagMode::Implicit => self.value.value_len(),
+        }
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        match self.tag_mode {
+            TagMode::Explicit => self.value.encode(encoder),
+            TagMode::Implicit => self.value.encode_value(encoder),
+        }
     }
 }
 
@@ -152,6 +192,7 @@ where
                 constructed: true,
             } => Ok(Self {
                 tag_number: number,
+                tag_mode: TagMode::default(),
                 value: T::from_der(any.value())?,
             }),
             tag => Err(tag.unexpected_error(None)),
@@ -162,8 +203,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::ContextSpecific;
-    use crate::{asn1::BitString, Decodable, Decoder, Encodable, TagNumber};
-    use core::convert::TryFrom;
+    use crate::{asn1::BitString, Decodable, Decoder, Encodable, TagMode, TagNumber};
     use hex_literal::hex;
 
     // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`
@@ -183,29 +223,31 @@ mod tests {
 
     #[test]
     fn context_specific_with_explicit_field() {
-        let tag = TagNumber::new(0);
+        let tag_number = TagNumber::new(0);
 
         // Empty message
         let mut decoder = Decoder::new(&[]);
         assert_eq!(
-            ContextSpecific::<u8>::decode_explicit(&mut decoder, tag).unwrap(),
+            ContextSpecific::<u8>::decode_explicit(&mut decoder, tag_number).unwrap(),
             None
         );
 
         // Message containing a non-context-specific type
         let mut decoder = Decoder::new(&hex!("020100"));
         assert_eq!(
-            ContextSpecific::<u8>::decode_explicit(&mut decoder, tag).unwrap(),
+            ContextSpecific::<u8>::decode_explicit(&mut decoder, tag_number).unwrap(),
             None
         );
 
         // Message containing an EXPLICIT context-specific field
         let mut decoder = Decoder::new(&hex!("A003020100"));
-        let field = ContextSpecific::<u8>::decode_explicit(&mut decoder, tag)
+        let field = ContextSpecific::<u8>::decode_explicit(&mut decoder, tag_number)
             .unwrap()
             .unwrap();
 
-        assert_eq!(field, 0);
+        assert_eq!(field.tag_number, tag_number);
+        assert_eq!(field.tag_mode, TagMode::Explicit);
+        assert_eq!(field.value, 0);
     }
 
     #[test]
@@ -222,11 +264,16 @@ mod tests {
         let tag_number = TagNumber::new(1);
 
         let mut decoder = Decoder::new(&context_specific_implicit_bytes);
-        let bitstring = ContextSpecific::<BitString<'_>>::decode_implicit(&mut decoder, tag_number)
+        let field = ContextSpecific::<BitString<'_>>::decode_implicit(&mut decoder, tag_number)
             .unwrap()
             .unwrap();
 
-        assert_eq!(bitstring.as_bytes(), &context_specific_implicit_bytes[3..]);
+        assert_eq!(field.tag_number, tag_number);
+        assert_eq!(field.tag_mode, TagMode::Implicit);
+        assert_eq!(
+            field.value.as_bytes(),
+            &context_specific_implicit_bytes[3..]
+        );
     }
 
     #[test]
@@ -236,7 +283,7 @@ mod tests {
         let field = ContextSpecific::<u8>::decode_explicit(&mut decoder, tag)
             .unwrap()
             .unwrap();
-        assert_eq!(u8::try_from(field).unwrap(), 1);
+        assert_eq!(field.value, 1);
     }
 
     #[test]

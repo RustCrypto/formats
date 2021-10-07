@@ -1,8 +1,8 @@
 //! DER decoder.
 
 use crate::{
-    asn1::*, Choice, Decodable, DecodeValue, Error, ErrorKind, Length, Result, Tag, TagNumber,
-    Tagged,
+    asn1::*, Choice, Decodable, DecodeValue, Error, ErrorKind, Length, Result, Tag, TagMode,
+    TagNumber, Tagged,
 };
 use core::convert::{TryFrom, TryInto};
 
@@ -135,42 +135,21 @@ impl<'a> Decoder<'a> {
         self.decode()
     }
 
-    /// Attempt to decode an `EXPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
+    /// Attempt to decode an ASN.1 `CONTEXT-SPECIFIC` field with the
     /// provided [`TagNumber`].
-    ///
-    /// This method has the following behavior which is designed to simplify
-    /// handling of extension fields, which are denoted in an ASN.1 schema
-    /// using the `...` ellipsis extension marker:
-    ///
-    /// - Skips over [`ContextSpecific`] fields with a tag number lower than
-    ///   the current one, consuming and ignoring them.
-    /// - Returns `Ok(None)` if a [`ContextSpecific`] field with a higher tag
-    ///   number is encountered. These fields are not consumed in this case,
-    ///   allowing a field with a lower tag number to be omitted, then the
-    ///   higher numbered field consumed as a follow-up.
-    /// - Returns `Ok(None)` if anything other than a [`ContextSpecific`] field
-    ///   is encountered.
-    pub fn context_specific_explicit<T>(&mut self, tag_number: TagNumber) -> Result<Option<T>>
-    where
-        T: Decodable<'a>,
-    {
-        ContextSpecific::<T>::decode_explicit(self, tag_number)
-    }
-
-    /// Attempt to decode an `IMPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
-    /// provided [`TagNumber`].
-    ///
-    /// This method otherwise behaves the same as `context_specific_implicit`,
-    /// but should be used in cases where the particular fields are `IMPLICIT`
-    /// as opposed to `EXPLICIT`.
-    // TODO(tarcieri): unify `context_specific_explicit/implicit`
-    // They can accept a `TagMode` as a parameter. However, this can't be done
-    // yet because this method has more restrictive trait bounds.
-    pub fn context_specific_implicit<T>(&mut self, tag_number: TagNumber) -> Result<Option<T>>
+    pub fn context_specific<T>(
+        &mut self,
+        tag_number: TagNumber,
+        tag_mode: TagMode,
+    ) -> Result<Option<T>>
     where
         T: DecodeValue<'a> + Tagged,
     {
-        ContextSpecific::<T>::decode_implicit(self, tag_number)
+        Ok(match tag_mode {
+            TagMode::Explicit => ContextSpecific::<T>::decode_explicit(self, tag_number)?,
+            TagMode::Implicit => ContextSpecific::<T>::decode_implicit(self, tag_number)?,
+        }
+        .map(|field| field.value))
     }
 
     /// Attempt to decode an ASN.1 `GeneralizedTime`.
@@ -285,71 +264,7 @@ impl<'a> From<&'a [u8]> for Decoder<'a> {
 #[cfg(test)]
 mod tests {
     use super::Decoder;
-    use crate::{asn1::BitString, Decodable, ErrorKind, Length, TagNumber};
-    use core::convert::TryFrom;
-    use hex_literal::hex;
-
-    #[test]
-    fn context_specific_with_explicit_field() {
-        let tag = TagNumber::new(0);
-
-        // Empty message
-        let mut decoder = Decoder::new(&[]);
-        assert_eq!(decoder.context_specific_explicit::<u8>(tag).unwrap(), None);
-
-        // Message containing a non-context-specific type
-        let mut decoder = Decoder::new(&hex!("020100"));
-        assert_eq!(decoder.context_specific_explicit::<u8>(tag).unwrap(), None);
-
-        // Message containing an EXPLICIT context-specific field
-        let mut decoder = Decoder::new(&hex!("A003020100"));
-        let field = decoder
-            .context_specific_explicit::<u8>(tag)
-            .unwrap()
-            .unwrap();
-
-        assert_eq!(field, 0);
-    }
-
-    #[test]
-    fn context_specific_with_implicit_field() {
-        // From RFC8410 Section 10.3:
-        // <https://datatracker.ietf.org/doc/html/rfc8410#section-10.3>
-        //
-        //    81  33:   [1] 00 19 BF 44 09 69 84 CD FE 85 41 BA C1 67 DC 3B
-        //                  96 C8 50 86 AA 30 B6 B6 CB 0C 5C 38 AD 70 31 66
-        //                  E1
-        let context_specific_implicit_bytes =
-            hex!("81210019BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
-
-        let tag_number = TagNumber::new(1);
-
-        let mut decoder = Decoder::new(&context_specific_implicit_bytes);
-        let bitstring = decoder
-            .context_specific_implicit::<BitString<'_>>(tag_number)
-            .unwrap()
-            .unwrap();
-
-        assert_eq!(bitstring.as_bytes(), &context_specific_implicit_bytes[3..]);
-    }
-
-    #[test]
-    fn context_specific_skipping_unknown_field() {
-        let tag = TagNumber::new(1);
-        let mut decoder = Decoder::new(&hex!("A003020100A103020101"));
-        let field = decoder
-            .context_specific_explicit::<u8>(tag)
-            .unwrap()
-            .unwrap();
-        assert_eq!(u8::try_from(field).unwrap(), 1);
-    }
-
-    #[test]
-    fn context_specific_returns_none_on_greater_tag_number() {
-        let tag = TagNumber::new(0);
-        let mut decoder = Decoder::new(&hex!("A103020101"));
-        assert_eq!(decoder.context_specific_explicit::<u8>(tag).unwrap(), None);
-    }
+    use crate::{Decodable, ErrorKind, Length};
 
     #[test]
     fn truncated_message() {

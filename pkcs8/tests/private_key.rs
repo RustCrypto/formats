@@ -55,6 +55,8 @@ fn decode_ec_p256_der() {
     assert_eq!(pk.private_key, &hex!("306B020101042069624171561A63340DE0E7D869F2A05492558E1A04868B6A9F854A866788188DA144034200041CACFFB55F2F2CEFD89D89EB374B2681152452802DEEA09916068137D839CF7FC481A44492304D7EF66AC117BEFE83A8D08F155F2B52F9F618DD447029048E0F")[..]);
 }
 
+// Test vector from RFC8410 Section 10.3:
+// https://datatracker.ietf.org/doc/html/rfc8410#section-10.3
 #[test]
 fn decode_ed25519_der_v1() {
     let pk = PrivateKeyInfo::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
@@ -70,12 +72,16 @@ fn decode_ed25519_der_v1() {
     );
 }
 
+// Test vector from RFC8410 Section 10.3:
+// https://datatracker.ietf.org/doc/html/rfc8410#section-10.3
 #[test]
 fn decode_ed25519_der_v2() {
+    // Extracted with:
+    // $ openssl asn1parse -inform der -in tests/examples/ed25519-priv-pkcs8v2.der
     const PRIV_KEY: [u8; 34] =
-        hex!("04203A133DABADA2AA9CE54B0961CC3F1576B0943DC86EBF72A56E052C43F30FA3A5");
+        hex!("0420D4EE72DBF913584AD5B6D8F1F769F8AD3AFE7C28CBF1D4FBE097A88F44755842");
     const PUB_KEY: [u8; 32] =
-        hex!("A3A7EAE3A8373830BC47E1167BC50E1DB551999651E0E2DC587623438EAC3F31");
+        hex!("19BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
 
     let pk = PrivateKeyInfo::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
     assert_eq!(pk.version(), Version::V2);
@@ -172,10 +178,10 @@ fn encode_ed25519_der_v1() {
 }
 
 #[test]
-#[cfg(feature = "alloc")]
+#[cfg(all(feature = "alloc", feature = "subtle"))]
 fn encode_ed25519_der_v2() {
     let pk = PrivateKeyInfo::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
-    assert_eq!(ED25519_DER_V2_EXAMPLE, pk.to_der().as_ref());
+    assert_eq!(pk.to_der().private_key_info(), pk);
 }
 
 #[test]

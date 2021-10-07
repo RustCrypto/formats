@@ -1,7 +1,6 @@
-use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier},
-    Choice, Decodable, Decoder, Encodable, Encoder, Length, Tag,
+    DecodeValue, Decoder, EncodeValue, Encoder, Length, Tag, Tagged,
 };
 
 /// Elliptic curve parameters as described in
@@ -28,28 +27,22 @@ pub enum EcParameters {
     NamedCurve(ObjectIdentifier),
 }
 
-impl Choice<'_> for EcParameters {
-    fn can_decode(tag: Tag) -> bool {
-        tag == Tag::ObjectIdentifier
+impl DecodeValue<'_> for EcParameters {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> der::Result<Self> {
+        ObjectIdentifier::decode_value(decoder, length).map(Self::NamedCurve)
     }
 }
 
-impl Decodable<'_> for EcParameters {
-    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
-        decoder.any()?.try_into()
-    }
-}
-
-impl Encodable for EcParameters {
-    fn encoded_len(&self) -> der::Result<Length> {
+impl EncodeValue for EcParameters {
+    fn value_len(&self) -> der::Result<Length> {
         match self {
-            Self::NamedCurve(oid) => oid.encoded_len(),
+            Self::NamedCurve(oid) => oid.value_len(),
         }
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
         match self {
-            Self::NamedCurve(oid) => encoder.oid(*oid),
+            Self::NamedCurve(oid) => oid.encode_value(encoder),
         }
     }
 }
@@ -77,13 +70,6 @@ impl From<ObjectIdentifier> for EcParameters {
     }
 }
 
-impl TryFrom<Any<'_>> for EcParameters {
-    type Error = der::Error;
-
-    fn try_from(any: Any<'_>) -> der::Result<EcParameters> {
-        match any.tag() {
-            Tag::ObjectIdentifier => any.oid().map(Self::NamedCurve),
-            tag => Err(tag.unexpected_error(Some(Tag::ObjectIdentifier))),
-        }
-    }
+impl Tagged for EcParameters {
+    const TAG: Tag = Tag::ObjectIdentifier;
 }

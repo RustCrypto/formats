@@ -1,7 +1,8 @@
 //! DER encoder.
 
 use crate::{
-    asn1::*, message, Encodable, Error, ErrorKind, Header, Length, Result, Tag, TagNumber,
+    asn1::*, message, Encodable, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag,
+    TagMode, TagNumber, Tagged,
 };
 use core::convert::{TryFrom, TryInto};
 
@@ -77,28 +78,21 @@ impl<'a> Encoder<'a> {
     }
 
     /// Encode a `CONTEXT-SPECIFIC` field with `EXPLICIT` tagging.
-    pub fn context_specific_explicit<T>(&mut self, tag_number: TagNumber, value: T) -> Result<()>
-    where
-        T: Encodable,
-    {
-        ContextSpecific { tag_number, value }.encode(self)
-    }
-
-    /// Encode a `CONTEXT-SPECIFIC` field with `IMPLICIT` tagging.
-    pub fn context_specific_implicit<'b, T>(
+    pub fn context_specific<T>(
         &mut self,
         tag_number: TagNumber,
+        tag_mode: TagMode,
         value: T,
     ) -> Result<()>
     where
-        T: Into<Any<'b>>,
+        T: EncodeValue + Tagged,
     {
-        let any = value.into();
-        let tag = Tag::ContextSpecific {
-            constructed: any.tag().is_constructed(),
-            number: tag_number,
-        };
-        Any::from_tag_and_value(tag, any.into()).encode(self)
+        ContextSpecific {
+            tag_number,
+            tag_mode,
+            value,
+        }
+        .encode(self)
     }
 
     /// Encode the provided value as an ASN.1 `GeneralizedTime`
@@ -267,7 +261,7 @@ impl<'a> Encoder<'a> {
 #[cfg(test)]
 mod tests {
     use super::Encoder;
-    use crate::{asn1::OctetString, Encodable, ErrorKind, Length, TagNumber};
+    use crate::{asn1::BitString, Encodable, ErrorKind, Length, TagMode, TagNumber};
     use hex_literal::hex;
 
     #[test]
@@ -291,15 +285,12 @@ mod tests {
             &hex!("81210019BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
 
         let tag_number = TagNumber::new(1);
-
-        // TODO(tarcieri): switch to `BitString` to match example
-        // Right now it depends on an `Into<Any>` bound
-        let bit_string = OctetString::new(&EXPECTED_BYTES[2..]).unwrap();
+        let bit_string = BitString::new(&EXPECTED_BYTES[3..]).unwrap();
 
         let mut buf = [0u8; EXPECTED_BYTES.len()];
         let mut encoder = Encoder::new(&mut buf);
         encoder
-            .context_specific_implicit(tag_number, bit_string)
+            .context_specific(tag_number, TagMode::Implicit, bit_string)
             .unwrap();
 
         assert_eq!(EXPECTED_BYTES, encoder.finish().unwrap());

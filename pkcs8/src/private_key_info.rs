@@ -1,10 +1,10 @@
 //! PKCS#8 `PrivateKeyInfo`.
 
-use crate::{AlgorithmIdentifier, Attributes, Error, Result, Version};
+use crate::{AlgorithmIdentifier, Error, Result, Version};
 use core::{convert::TryFrom, fmt};
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Message, TagNumber,
+    Decodable, Decoder, Encodable, Message, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -23,8 +23,8 @@ use {
     zeroize::Zeroizing,
 };
 
-/// Context-specific tag number for [`Attributes`].
-const ATTRIBUTES_TAG: TagNumber = TagNumber::new(0);
+#[cfg(feature = "subtle")]
+use subtle::{Choice, ConstantTimeEq};
 
 /// Context-specific tag number for the public key.
 const PUBLIC_KEY_TAG: TagNumber = TagNumber::new(1);
@@ -36,7 +36,8 @@ pub(crate) const PEM_TYPE_LABEL: &str = "PRIVATE KEY";
 /// PKCS#8 `PrivateKeyInfo`.
 ///
 /// ASN.1 structure containing an [`AlgorithmIdentifier`], private key
-/// data in an algorithm specific format, and optional attributes.
+/// data in an algorithm specific format, and optional attributes
+/// (ignored by this implementation).
 ///
 /// Supports PKCS#8 v1 as described in [RFC 5208] and PKCS#8 v2 as described
 /// in [RFC 5958]. PKCS#8 v2 keys include an additional public key field.
@@ -101,9 +102,6 @@ pub struct PrivateKeyInfo<'a> {
     /// Private key data.
     pub private_key: &'a [u8],
 
-    /// Attributes.
-    pub attributes: Option<Attributes<'a>>,
-
     /// Public key data, optionally available if version is V2.
     pub public_key: Option<&'a [u8]>,
 }
@@ -117,7 +115,6 @@ impl<'a> PrivateKeyInfo<'a> {
         Self {
             algorithm,
             private_key,
-            attributes: None,
             public_key: None,
         }
     }
@@ -180,10 +177,8 @@ impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
             let version = Version::decode(decoder)?;
             let algorithm = decoder.decode()?;
             let private_key = decoder.octet_string()?.into();
-            let attributes = decoder.context_specific_explicit(ATTRIBUTES_TAG)?;
-
             let public_key = decoder
-                .context_specific_explicit::<BitString<'_>>(PUBLIC_KEY_TAG)?
+                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Implicit)?
                 .map(|bs| bs.as_bytes());
 
             if version.has_public_key() != public_key.is_some() {
@@ -201,7 +196,6 @@ impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
             Ok(Self {
                 algorithm,
                 private_key,
-                attributes,
                 public_key,
             })
         })
@@ -217,15 +211,12 @@ impl<'a> Message<'a> for PrivateKeyInfo<'a> {
             &u8::from(self.version()),
             &self.algorithm,
             &OctetString::new(self.private_key)?,
-            &self.attributes.map(|value| ContextSpecific {
-                tag_number: ATTRIBUTES_TAG,
-                value,
-            }),
             &self
                 .public_key
                 .map(|pk| {
                     BitString::new(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
+                        tag_mode: TagMode::Implicit,
                         value,
                     })
                 })
@@ -247,8 +238,31 @@ impl<'a> fmt::Debug for PrivateKeyInfo<'a> {
         f.debug_struct("PrivateKeyInfo")
             .field("version", &self.version())
             .field("algorithm", &self.algorithm)
-            .field("attributes", &self.attributes)
             .field("public_key", &self.public_key)
             .finish() // TODO: use `finish_non_exhaustive` when stable
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl<'a> ConstantTimeEq for PrivateKeyInfo<'a> {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        // NOTE: public fields are not compared in constant time
+        let public_fields_eq =
+            self.algorithm == other.algorithm && self.public_key == other.public_key;
+
+        self.private_key.ct_eq(other.private_key) & Choice::from(public_fields_eq as u8)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl<'a> PartialEq for PrivateKeyInfo<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl<'a> Eq for PrivateKeyInfo<'a> {}

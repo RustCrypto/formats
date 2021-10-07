@@ -233,6 +233,7 @@ dependencies = [
  "pkcs5",
  "rand_core",
  "spki",
+ "subtle",
  "zeroize",
 ]
 

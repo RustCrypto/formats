@@ -1,7 +1,7 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Length,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
     Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
@@ -51,13 +51,13 @@ impl<'a> DecodeValue<'a> for OctetString<'a> {
     }
 }
 
-impl<'a> Encodable for OctetString<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
+impl<'a> EncodeValue for OctetString<'a> {
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
     }
 }
 
