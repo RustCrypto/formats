@@ -1,7 +1,7 @@
 //! ASN.1 `IA5String` support.
 
 use crate::{
-    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error,
+    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
     Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, fmt, str};
@@ -79,13 +79,13 @@ impl<'a> DecodeValue<'a> for Ia5String<'a> {
     }
 }
 
-impl<'a> Encodable for Ia5String<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
+impl<'a> EncodeValue for Ia5String<'a> {
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
     }
 }
 

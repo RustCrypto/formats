@@ -1,8 +1,8 @@
 //! ASN.1 `BOOLEAN` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Header,
-    Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
+    Result, Tag, Tagged,
 };
 use core::convert::{TryFrom, TryInto};
 
@@ -29,15 +29,13 @@ impl<'a> DecodeValue<'a> for bool {
     }
 }
 
-impl Encodable for bool {
-    fn encoded_len(&self) -> Result<Length> {
-        Length::ONE.for_tlv()
+impl EncodeValue for bool {
+    fn value_len(&self) -> Result<Length> {
+        Ok(Length::ONE)
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(Self::TAG, Length::ONE)?.encode(encoder)?;
-        let byte = if *self { TRUE_OCTET } else { FALSE_OCTET };
-        encoder.byte(byte)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        encoder.byte(if *self { TRUE_OCTET } else { FALSE_OCTET })
     }
 }
 

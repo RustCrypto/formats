@@ -1,8 +1,8 @@
 //! ASN.1 `SET OF` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind,
-    Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
+    ErrorKind, Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, marker::PhantomData};
 
@@ -104,16 +104,16 @@ where
     }
 }
 
-impl<'a, T> Encodable for SetOfRef<'a, T>
+impl<'a, T> EncodeValue for SetOfRef<'a, T>
 where
     T: Clone + Decodable<'a> + Encodable + Ord,
 {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(self.clone()).encoded_len()
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(self.clone()).encode(encoder)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
     }
 }
 

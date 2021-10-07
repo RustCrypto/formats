@@ -1,8 +1,8 @@
 //! ASN.1 `NULL` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Length,
-    Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error, ErrorKind,
+    Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -20,13 +20,13 @@ impl DecodeValue<'_> for Null {
     }
 }
 
-impl Encodable for Null {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
+impl EncodeValue for Null {
+    fn value_len(&self) -> Result<Length> {
+        Ok(Length::ZERO)
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
+    fn encode_value(&self, _encoder: &mut Encoder<'_>) -> Result<()> {
+        Ok(())
     }
 }
 

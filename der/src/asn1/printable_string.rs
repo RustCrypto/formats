@@ -1,7 +1,7 @@
 //! ASN.1 `PrintableString` support.
 
 use crate::{
-    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error,
+    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
     Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, fmt, str};
@@ -112,6 +112,16 @@ impl<'a> DecodeValue<'a> for PrintableString<'a> {
     }
 }
 
+impl<'a> EncodeValue for PrintableString<'a> {
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
+    }
+}
+
 impl<'a> From<&PrintableString<'a>> for PrintableString<'a> {
     fn from(value: &PrintableString<'a>) -> PrintableString<'a> {
         *value
@@ -135,16 +145,6 @@ impl<'a> From<PrintableString<'a>> for Any<'a> {
 impl<'a> From<PrintableString<'a>> for &'a [u8] {
     fn from(printable_string: PrintableString<'a>) -> &'a [u8] {
         printable_string.as_bytes()
-    }
-}
-
-impl<'a> Encodable for PrintableString<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
     }
 }
 

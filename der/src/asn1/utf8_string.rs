@@ -1,8 +1,8 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error,
-    Length, Result, Tag, Tagged,
+    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue,
+    Encoder, Error, Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, fmt, str};
 
@@ -75,13 +75,13 @@ impl<'a> DecodeValue<'a> for Utf8String<'a> {
     }
 }
 
-impl<'a> Encodable for Utf8String<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
+impl<'a> EncodeValue for Utf8String<'a> {
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
     }
 }
 

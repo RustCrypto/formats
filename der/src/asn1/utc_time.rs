@@ -3,8 +3,7 @@
 use crate::{
     asn1::Any,
     datetime::{self, DateTime},
-    ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, Header, Length, Result, Tag,
-    Tagged,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, time::Duration};
 
@@ -96,14 +95,12 @@ impl DecodeValue<'_> for UtcTime {
     }
 }
 
-impl Encodable for UtcTime {
-    fn encoded_len(&self) -> Result<Length> {
-        Self::LENGTH.for_tlv()
+impl EncodeValue for UtcTime {
+    fn value_len(&self) -> Result<Length> {
+        Ok(Self::LENGTH)
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(Self::TAG, Self::LENGTH)?.encode(encoder)?;
-
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         let datetime = DateTime::from_unix_duration(self.0).map_err(|_| Self::TAG.value_error())?;
         debug_assert!((1950..2050).contains(&datetime.year()));
 

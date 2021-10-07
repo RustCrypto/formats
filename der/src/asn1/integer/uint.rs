@@ -1,6 +1,6 @@
 //! Unsigned integer decoders/encoders.
 
-use crate::{Encodable, Encoder, Header, Length, Result, Tag};
+use crate::{Encoder, Length, Result, Tag};
 use core::convert::TryFrom;
 
 /// Decode an unsigned integer into a big endian byte slice with all leading
@@ -38,11 +38,8 @@ pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.
 pub(super) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
     let bytes = strip_leading_zeroes(bytes);
-    let leading_zero = needs_leading_zero(bytes);
-    let len = (Length::try_from(bytes.len())? + leading_zero as u8)?;
-    Header::new(Tag::Integer, len)?.encode(encoder)?;
 
-    if leading_zero {
+    if needs_leading_zero(bytes) {
         encoder.byte(0)?;
     }
 

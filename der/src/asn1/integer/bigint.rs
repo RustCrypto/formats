@@ -2,8 +2,8 @@
 
 use super::uint;
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, Encoder, Error, ErrorKind, Header,
-    Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
+    Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -50,11 +50,6 @@ impl<'a> UIntBytes<'a> {
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
-
-    /// Get the length of the inner integer value when encoded.
-    fn inner_len(self) -> Result<Length> {
-        uint::encoded_len(self.inner.as_bytes())
-    }
 }
 
 impl<'a> DecodeValue<'a> for UIntBytes<'a> {
@@ -71,16 +66,14 @@ impl<'a> DecodeValue<'a> for UIntBytes<'a> {
     }
 }
 
-impl<'a> Encodable for UIntBytes<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        self.inner_len()?.for_tlv()
+impl<'a> EncodeValue for UIntBytes<'a> {
+    fn value_len(&self) -> Result<Length> {
+        uint::encoded_len(self.inner.as_bytes())
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(Self::TAG, self.inner_len()?)?.encode(encoder)?;
-
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         // Add leading `0x00` byte if required
-        if self.inner_len()? > self.len() {
+        if self.value_len()? > self.len() {
             encoder.byte(0)?;
         }
 
@@ -137,19 +130,19 @@ where
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
-impl<'a, const LIMBS: usize> Encodable for UInt<LIMBS>
+impl<'a, const LIMBS: usize> EncodeValue for UInt<LIMBS>
 where
     UInt<LIMBS>: ArrayEncoding,
 {
-    fn encoded_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length> {
         // TODO(tarcieri): more efficient length calculation
         let array = self.to_be_byte_array();
-        UIntBytes::new(&array)?.encoded_len()
+        UIntBytes::new(&array)?.value_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         let array = self.to_be_byte_array();
-        UIntBytes::new(&array)?.encode(encoder)
+        UIntBytes::new(&array)?.encode_value(encoder)
     }
 }
 
