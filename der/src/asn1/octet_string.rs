@@ -1,7 +1,8 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Encodable, Encoder, Error, ErrorKind, Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
+    Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -42,6 +43,24 @@ impl AsRef<[u8]> for OctetString<'_> {
     }
 }
 
+impl<'a> DecodeValue<'a> for OctetString<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        Ok(Self {
+            inner: ByteSlice::decode_value(decoder, length)?,
+        })
+    }
+}
+
+impl<'a> EncodeValue for OctetString<'a> {
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
+    }
+}
+
 impl<'a> From<&OctetString<'a>> for OctetString<'a> {
     fn from(value: &OctetString<'a>) -> OctetString<'a> {
         *value
@@ -52,8 +71,7 @@ impl<'a> TryFrom<Any<'a>> for OctetString<'a> {
     type Error = Error;
 
     fn try_from(any: Any<'a>) -> Result<OctetString<'a>> {
-        any.tag().assert_eq(Tag::OctetString)?;
-        Self::new(any.as_bytes())
+        any.decode_into()
     }
 }
 
@@ -66,16 +84,6 @@ impl<'a> From<OctetString<'a>> for Any<'a> {
 impl<'a> From<OctetString<'a>> for &'a [u8] {
     fn from(octet_string: OctetString<'a>) -> &'a [u8] {
         octet_string.as_bytes()
-    }
-}
-
-impl<'a> Encodable for OctetString<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
     }
 }
 

@@ -1,7 +1,8 @@
 //! ASN.1 `IA5String` support.
 
 use crate::{
-    asn1::Any, str_slice::StrSlice, Encodable, Encoder, Error, Length, Result, Tag, Tagged,
+    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
+    Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, fmt, str};
 
@@ -72,6 +73,22 @@ impl AsRef<[u8]> for Ia5String<'_> {
     }
 }
 
+impl<'a> DecodeValue<'a> for Ia5String<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
+    }
+}
+
+impl<'a> EncodeValue for Ia5String<'a> {
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
+    }
+}
+
 impl<'a> From<&Ia5String<'a>> for Ia5String<'a> {
     fn from(value: &Ia5String<'a>) -> Ia5String<'a> {
         *value
@@ -82,8 +99,7 @@ impl<'a> TryFrom<Any<'a>> for Ia5String<'a> {
     type Error = Error;
 
     fn try_from(any: Any<'a>) -> Result<Ia5String<'a>> {
-        any.tag().assert_eq(Tag::Ia5String)?;
-        Self::new(any.as_bytes())
+        any.decode_into()
     }
 }
 
@@ -96,16 +112,6 @@ impl<'a> From<Ia5String<'a>> for Any<'a> {
 impl<'a> From<Ia5String<'a>> for &'a [u8] {
     fn from(printable_string: Ia5String<'a>) -> &'a [u8] {
         printable_string.as_bytes()
-    }
-}
-
-impl<'a> Encodable for Ia5String<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
     }
 }
 

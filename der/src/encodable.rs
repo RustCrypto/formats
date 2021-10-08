@@ -1,6 +1,6 @@
 //! Trait definition for [`Encodable`].
 
-use crate::{Encoder, Length, Result};
+use crate::{EncodeValue, Encoder, Header, Length, Result, Tagged};
 
 #[cfg(feature = "alloc")]
 use {
@@ -59,5 +59,21 @@ pub trait Encodable {
         let mut buf = Vec::new();
         self.encode_to_vec(&mut buf)?;
         Ok(buf)
+    }
+}
+
+impl<T> Encodable for T
+where
+    T: EncodeValue + Tagged,
+{
+    /// Compute the length of this value in bytes when encoded as ASN.1 DER.
+    fn encoded_len(&self) -> Result<Length> {
+        self.value_len().and_then(|len| len.for_tlv())
+    }
+
+    /// Encode this value as ASN.1 DER using the provided [`Encoder`].
+    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        Header::new(T::TAG, self.value_len()?)?.encode(encoder)?;
+        self.encode_value(encoder)
     }
 }

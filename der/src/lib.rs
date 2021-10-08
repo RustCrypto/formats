@@ -86,7 +86,7 @@
 //! use core::convert::{TryFrom, TryInto};
 //! use der::{
 //!     asn1::{Any, ObjectIdentifier},
-//!     Decodable, Encodable, Message
+//!     Decodable, Decoder, Encodable, Message
 //! };
 //!
 //! /// X.509 `AlgorithmIdentifier`.
@@ -100,17 +100,12 @@
 //!     pub parameters: Option<Any<'a>>
 //! }
 //!
-//! // Note: types which impl `TryFrom<Any<'a>, Error = der::Error>` receive a
-//! // blanket impl of the `Decodable` trait, therefore satisfying the
-//! // `Decodable` trait bounds on `Message`, which is impl'd below.
-//! impl<'a> TryFrom<Any<'a>> for AlgorithmIdentifier<'a> {
-//!    type Error = der::Error;
-//!
-//!     fn try_from(any: Any<'a>) -> der::Result<AlgorithmIdentifier> {
-//!         // The `Any::sequence` method asserts that an `Any` value
-//!         // contains an ASN.1 `SEQUENCE` then calls the provided `FnOnce`
-//!         // with a `der::Decoder` which can be used to decode it.
-//!         any.sequence(|decoder| {
+//! impl<'a> Decodable<'a> for AlgorithmIdentifier<'a> {
+//!     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+//!         // The `Decoder::sequence` method decodes an ASN.1 `SEQUENCE` tag
+//!         // and length then calls the provided `FnOnce` with a nested
+//!         // `der::Decoder` which can be used to decode it.
+//!         decoder.sequence(|decoder| {
 //!             // The `der::Decoder::Decode` method can be used to decode any
 //!             // type which impls the `Decodable` trait, which is impl'd for
 //!             // all of the ASN.1 built-in types in the `der` crate.
@@ -345,15 +340,12 @@
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
-
 #[cfg(feature = "std")]
 extern crate std;
 
 pub mod asn1;
-pub mod message;
 
 mod byte_slice;
-mod choice;
 mod datetime;
 mod decodable;
 mod decoder;
@@ -362,11 +354,14 @@ mod encoder;
 mod error;
 mod header;
 mod length;
+mod message;
 mod str_slice;
 mod tag;
+mod value;
 
 pub use crate::{
-    choice::Choice,
+    asn1::{Any, Choice},
+    datetime::DateTime,
     decodable::Decodable,
     decoder::Decoder,
     encodable::Encodable,
@@ -375,8 +370,11 @@ pub use crate::{
     header::Header,
     length::Length,
     message::Message,
-    tag::{Class, Tag, TagNumber, Tagged},
+    tag::{Class, Tag, TagMode, TagNumber, Tagged},
+    value::{DecodeValue, EncodeValue},
 };
+
+pub(crate) use crate::byte_slice::ByteSlice;
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
@@ -385,5 +383,3 @@ pub use crypto_bigint as bigint;
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
 pub use der_derive::{Choice, Message};
-
-pub(crate) use crate::byte_slice::ByteSlice;

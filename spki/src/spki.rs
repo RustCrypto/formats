@@ -1,17 +1,17 @@
 //! X.509 `SubjectPublicKeyInfo`
 
 use crate::AlgorithmIdentifier;
+use core::convert::TryFrom;
+use der::{asn1::BitString, Decodable, Decoder, Encodable, Error, Message, Result};
+
 #[cfg(feature = "alloc")]
 use alloc::string::String;
+
+#[cfg(feature = "fingerprint")]
+use sha2::{digest, Digest, Sha256};
+
 #[cfg(all(feature = "fingerprint", feature = "alloc"))]
 use base64ct::{Base64, Encoding};
-use core::convert::TryFrom;
-use der::{
-    asn1::{Any, BitString},
-    Decodable, Encodable, Error, Message, Result,
-};
-#[cfg(feature = "fingerprint")]
-use sha2::{digest::Output, Digest, Sha256};
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 Section 4.1.2.7].
 ///
@@ -34,19 +34,26 @@ pub struct SubjectPublicKeyInfo<'a> {
     pub subject_public_key: &'a [u8],
 }
 
-impl<'a> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a> {
-    type Error = Error;
+impl<'a> SubjectPublicKeyInfo<'a> {
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo
+    pub fn fingerprint(&self) -> Result<digest::Output<Sha256>> {
+        let mut buf = [0u8; 4096];
+        Ok(Sha256::digest(self.encode_to_slice(&mut buf)?))
+    }
 
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
-        Self::from_der(bytes)
+    #[cfg(all(feature = "fingerprint", feature = "alloc"))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "fingerprint", feature = "alloc"))))]
+    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo and encode it as a Base64 string
+    pub fn fingerprint_base64(&self) -> Result<String> {
+        Ok(Base64::encode_string(self.fingerprint()?.as_slice()))
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for SubjectPublicKeyInfo<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<SubjectPublicKeyInfo<'a>> {
-        any.sequence(|decoder| {
+impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
+        decoder.sequence(|decoder| {
             Ok(Self {
                 algorithm: decoder.decode()?,
                 subject_public_key: decoder.bit_string()?.as_bytes(),
@@ -64,23 +71,10 @@ impl<'a> Message<'a> for SubjectPublicKeyInfo<'a> {
     }
 }
 
-#[cfg(feature = "fingerprint")]
-#[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-impl<'a> SubjectPublicKeyInfo<'a> {
-    const BUFSIZE: usize = 4096;
+impl<'a> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a> {
+    type Error = Error;
 
-    #[cfg(all(feature = "fingerprint", feature = "alloc"))]
-    #[cfg_attr(docsrs, doc(cfg(all(feature = "fingerprint", feature = "alloc"))))]
-    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo and encode it as a Base64 string
-    pub fn fingerprint_base64(&self) -> core::result::Result<String, Error> {
-        Ok(Base64::encode_string(self.fingerprint()?.as_slice()))
-    }
-
-    #[cfg(feature = "fingerprint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo
-    pub fn fingerprint(&self) -> core::result::Result<Output<Sha256>, Error> {
-        let mut buf = [0u8; Self::BUFSIZE];
-        Ok(Sha256::digest(self.encode_to_slice(&mut buf)?))
+    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+        Self::from_der(bytes)
     }
 }

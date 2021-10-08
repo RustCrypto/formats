@@ -3,7 +3,7 @@
 use crate::{
     asn1::Any,
     datetime::{self, DateTime},
-    Encodable, Encoder, Error, Header, Length, Result, Tag, Tagged,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, time::Duration};
 
@@ -63,6 +63,50 @@ impl GeneralizedTime {
     }
 }
 
+impl DecodeValue<'_> for GeneralizedTime {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        match *ByteSlice::decode_value(decoder, length)?.as_bytes() {
+            // RFC 5280 requires mandatory seconds and Z-normalized time zone
+            [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
+                let year = datetime::decode_decimal(Self::TAG, y1, y2)? * 100
+                    + datetime::decode_decimal(Self::TAG, y3, y4)?;
+                let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
+                let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
+                let hour = datetime::decode_decimal(Self::TAG, hour1, hour2)?;
+                let minute = datetime::decode_decimal(Self::TAG, min1, min2)?;
+                let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
+
+                DateTime::new(year, month, day, hour, minute, second)
+                    .and_then(|dt| dt.unix_duration())
+                    .map_err(|_| Self::TAG.value_error())
+                    .and_then(Self::new)
+            }
+            _ => Err(Self::TAG.value_error()),
+        }
+    }
+}
+
+impl EncodeValue for GeneralizedTime {
+    fn value_len(&self) -> Result<Length> {
+        Ok(Self::LENGTH)
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        let datetime = DateTime::from_unix_duration(self.0).map_err(|_| Self::TAG.value_error())?;
+        let year_hi = datetime.year() / 100;
+        let year_lo = datetime.year() % 100;
+
+        datetime::encode_decimal(encoder, Self::TAG, year_hi)?;
+        datetime::encode_decimal(encoder, Self::TAG, year_lo)?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.month())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.day())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.hour())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.minutes())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.seconds())?;
+        encoder.byte(b'Z')
+    }
+}
+
 impl From<&GeneralizedTime> for GeneralizedTime {
     fn from(value: &GeneralizedTime) -> GeneralizedTime {
         *value
@@ -81,51 +125,7 @@ impl TryFrom<Any<'_>> for GeneralizedTime {
     type Error = Error;
 
     fn try_from(any: Any<'_>) -> Result<GeneralizedTime> {
-        any.tag().assert_eq(Self::TAG)?;
-
-        match *any.as_bytes() {
-            // RFC 5280 requires mandatory seconds and Z-normalized time zone
-            [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
-                let year = datetime::decode_decimal(Self::TAG, y1, y2)? * 100
-                    + datetime::decode_decimal(Self::TAG, y3, y4)?;
-                let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
-                let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
-                let hour = datetime::decode_decimal(Self::TAG, hour1, hour2)?;
-                let minute = datetime::decode_decimal(Self::TAG, min1, min2)?;
-                let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
-
-                DateTime::new(year, month, day, hour, minute, second)
-                    .and_then(|dt| dt.unix_duration())
-                    .ok_or_else(|| Self::TAG.value_error())
-                    .and_then(Self::new)
-            }
-            _ => Err(Self::TAG.value_error()),
-        }
-    }
-}
-
-impl Encodable for GeneralizedTime {
-    fn encoded_len(&self) -> Result<Length> {
-        Self::LENGTH.for_tlv()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(Self::TAG, Self::LENGTH)?.encode(encoder)?;
-
-        let datetime =
-            DateTime::from_unix_duration(self.0).ok_or_else(|| Self::TAG.value_error())?;
-
-        let year_hi = datetime.year() / 100;
-        let year_lo = datetime.year() % 100;
-
-        datetime::encode_decimal(encoder, Self::TAG, year_hi)?;
-        datetime::encode_decimal(encoder, Self::TAG, year_lo)?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.month())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.day())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.hour())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.minute())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.second())?;
-        encoder.byte(b'Z')
+        any.decode_into()
     }
 }
 
@@ -145,13 +145,13 @@ impl<'a> TryFrom<Any<'a>> for SystemTime {
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl Encodable for SystemTime {
-    fn encoded_len(&self) -> Result<Length> {
-        GeneralizedTime::from_system_time(*self)?.encoded_len()
+impl EncodeValue for SystemTime {
+    fn value_len(&self) -> Result<Length> {
+        GeneralizedTime::from_system_time(*self)?.value_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        GeneralizedTime::from_system_time(*self)?.encode(encoder)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        GeneralizedTime::from_system_time(*self)?.encode_value(encoder)
     }
 }
 

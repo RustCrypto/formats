@@ -9,13 +9,10 @@
 pub(crate) mod document;
 
 use crate::{EcParameters, Error};
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
+use core::{convert::TryFrom, fmt};
 use der::{
-    asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decodable, Encodable, Message, TagNumber,
+    asn1::{BitString, ContextSpecific, OctetString},
+    Decodable, Decoder, Encodable, Message, TagMode, TagNumber,
 };
 
 /// Type label for PEM-encoded private keys.
@@ -73,34 +70,17 @@ pub struct EcPrivateKey<'a> {
     pub public_key: Option<&'a [u8]>,
 }
 
-impl<'a> TryFrom<&'a [u8]> for EcPrivateKey<'a> {
-    type Error = Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<EcPrivateKey<'a>, Error> {
-        Ok(Self::from_der(bytes)?)
-    }
-}
-
-impl<'a> TryFrom<Any<'a>> for EcPrivateKey<'a> {
-    type Error = der::Error;
-
-    fn try_from(any: Any<'a>) -> der::Result<EcPrivateKey<'a>> {
-        any.sequence(|decoder| {
+impl<'a> Decodable<'a> for EcPrivateKey<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.sequence(|decoder| {
             if decoder.uint8()? != VERSION {
                 return Err(der::Tag::Integer.value_error());
             }
 
             let private_key = decoder.octet_string()?.as_bytes();
-
-            let parameters = decoder
-                .context_specific(EC_PARAMETERS_TAG)?
-                .map(TryInto::try_into)
-                .transpose()?;
-
+            let parameters = decoder.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
             let public_key = decoder
-                .context_specific(PUBLIC_KEY_TAG)?
-                .map(|any| any.bit_string())
-                .transpose()?
+                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?
                 .map(|bs| bs.as_bytes());
 
             Ok(EcPrivateKey {
@@ -122,18 +102,28 @@ impl<'a> Message<'a> for EcPrivateKey<'a> {
             &OctetString::new(self.private_key)?,
             &self.parameters.as_ref().map(|params| ContextSpecific {
                 tag_number: EC_PARAMETERS_TAG,
-                value: params.into(),
+                tag_mode: TagMode::Explicit,
+                value: *params,
             }),
             &self
                 .public_key
                 .map(|pk| {
                     BitString::new(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
-                        value: value.into(),
+                        tag_mode: TagMode::Explicit,
+                        value,
                     })
                 })
                 .transpose()?,
         ])
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for EcPrivateKey<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> Result<EcPrivateKey<'a>, Error> {
+        Ok(Self::from_der(bytes)?)
     }
 }
 

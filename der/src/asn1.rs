@@ -3,6 +3,7 @@
 mod any;
 mod bit_string;
 mod boolean;
+mod choice;
 mod context_specific;
 mod generalized_time;
 mod ia5_string;
@@ -21,6 +22,7 @@ mod utf8_string;
 pub use self::{
     any::Any,
     bit_string::BitString,
+    choice::Choice,
     context_specific::ContextSpecific,
     generalized_time::GeneralizedTime,
     ia5_string::Ia5String,

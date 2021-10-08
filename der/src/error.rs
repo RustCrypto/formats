@@ -103,6 +103,9 @@ impl std::error::Error for ErrorKind {}
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ErrorKind {
+    /// Date-and-time related errors.
+    DateTime,
+
     /// Indicates a field which is duplicated when only one is expected.
     DuplicateField {
         /// Tag of the duplicated field.
@@ -193,6 +196,9 @@ pub enum ErrorKind {
         byte: u8,
     },
 
+    /// Unknown tag mode.
+    UnknownTagMode,
+
     /// UTF-8 errors.
     Utf8(Utf8Error),
 
@@ -214,6 +220,7 @@ impl ErrorKind {
 impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            ErrorKind::DateTime => write!(f, "date/time error"),
             ErrorKind::DuplicateField { tag } => write!(f, "duplicate field for {}", tag),
             ErrorKind::Failed => write!(f, "operation failed"),
             ErrorKind::Length { tag } => write!(f, "incorrect length for {}", tag),
@@ -252,6 +259,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::UnknownTag { byte } => {
                 write!(f, "unknown/unsupported ASN.1 DER tag: 0x{:02x}", byte)
             }
+            ErrorKind::UnknownTagMode => write!(f, "unknown tag mode"),
             ErrorKind::Utf8(e) => write!(f, "{}", e),
             ErrorKind::Value { tag } => write!(f, "malformed ASN.1 DER value for {}", tag),
         }

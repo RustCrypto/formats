@@ -1,8 +1,8 @@
 //! ASN.1 `SET OF` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Length, Result,
-    Tag, Tagged,
+    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
+    ErrorKind, Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, marker::PhantomData};
 
@@ -18,10 +18,11 @@ use {
 /// When encoded as DER, `SET OF` is lexicographically ordered. To implement
 /// that requirement, types `T` which are elements of [`SetOf`] MUST provide
 /// an impl of `Ord` which ensures that the corresponding DER encodings of
-/// a given type are ordered.
+/// a given type are ordffvkjnkjnlvceubbngtirurinkbvfditfnihengdigvl
+/// ered.
 pub trait SetOf<'a, 'b, T>: Decodable<'a> + Encodable
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
 {
     /// Iterator over the elements of the set.
     ///
@@ -94,15 +95,25 @@ where
     }
 }
 
-impl<'a, T> TryFrom<Any<'a>> for SetOfRef<'a, T>
+impl<'a, T> DecodeValue<'a> for SetOfRef<'a, T>
 where
     T: Clone + Decodable<'a> + Encodable + Ord,
 {
-    type Error = Error;
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
+    }
+}
 
-    fn try_from(any: Any<'a>) -> Result<Self> {
-        any.tag().assert_eq(Tag::Set)?;
-        Self::new(any.as_bytes())
+impl<'a, T> EncodeValue for SetOfRef<'a, T>
+where
+    T: Clone + Decodable<'a> + Encodable + Ord,
+{
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
     }
 }
 
@@ -115,22 +126,21 @@ where
     }
 }
 
-impl<'a, T> Encodable for SetOfRef<'a, T>
+impl<'a, T> TryFrom<Any<'a>> for SetOfRef<'a, T>
 where
     T: Clone + Decodable<'a> + Encodable + Ord,
 {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(self.clone()).encoded_len()
-    }
+    type Error = Error;
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(self.clone()).encode(encoder)
+    fn try_from(any: Any<'a>) -> Result<Self> {
+        any.tag().assert_eq(Tag::Set)?;
+        Self::new(any.value())
     }
 }
 
 impl<'a, 'b, T> SetOf<'a, 'b, T> for SetOfRef<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
 {
     type Iter = SetOfRefIter<'a, T>;
 
@@ -191,20 +201,17 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, T> TryFrom<Any<'a>> for BTreeSet<T>
+impl<'a, T> DecodeValue<'a> for BTreeSet<T>
 where
     T: Clone + Decodable<'a> + Encodable + Ord,
 {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<Self> {
-        any.tag().assert_eq(Tag::Set)?;
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        let end_pos = (decoder.position() + length)?;
 
         let mut result = BTreeSet::new();
-        let mut decoder = Decoder::new(any.as_bytes());
         let mut last_value = None;
 
-        while !decoder.is_finished() {
+        while decoder.position() < end_pos {
             let value = decoder.decode()?;
 
             if let Some(last) = last_value.take() {
@@ -216,6 +223,10 @@ where
             }
 
             last_value = Some(value);
+        }
+
+        if decoder.position() != end_pos {
+            decoder.error(ErrorKind::Length { tag: Self::TAG });
         }
 
         if let Some(last) = last_value {
@@ -251,12 +262,25 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, 'b, T: 'b> SetOf<'a, 'b, T> for BTreeSet<T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
 {
     type Iter = core::iter::Cloned<btree_set::Iter<'b, T>>;
 
     fn elements(&'b self) -> Self::Iter {
         self.iter().cloned()
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<'a, T> TryFrom<Any<'a>> for BTreeSet<T>
+where
+    T: Clone + Decodable<'a> + Encodable + Ord,
+{
+    type Error = Error;
+
+    fn try_from(any: Any<'a>) -> Result<Self> {
+        any.decode_into()
     }
 }
 

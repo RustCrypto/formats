@@ -1,6 +1,9 @@
 //! DER encoder.
 
-use crate::{asn1::*, message, Encodable, Error, ErrorKind, Header, Length, Result, Tag};
+use crate::{
+    asn1::*, message, Encodable, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag,
+    TagMode, TagNumber, Tagged,
+};
 use core::convert::{TryFrom, TryInto};
 
 /// DER encoder.
@@ -66,12 +69,30 @@ impl<'a> Encoder<'a> {
         }
     }
 
-    /// Encode the provided value as an ASN.1 `BIT STRING`
+    /// Encode the provided value as an ASN.1 `BIT STRING`.
     pub fn bit_string(&mut self, value: impl TryInto<BitString<'a>>) -> Result<()> {
         value
             .try_into()
             .map_err(|_| self.value_error(Tag::BitString))
             .and_then(|value| self.encode(&value))
+    }
+
+    /// Encode a `CONTEXT-SPECIFIC` field with `EXPLICIT` tagging.
+    pub fn context_specific<T>(
+        &mut self,
+        tag_number: TagNumber,
+        tag_mode: TagMode,
+        value: T,
+    ) -> Result<()>
+    where
+        T: EncodeValue + Tagged,
+    {
+        ContextSpecific {
+            tag_number,
+            tag_mode,
+            value,
+        }
+        .encode(self)
     }
 
     /// Encode the provided value as an ASN.1 `GeneralizedTime`
@@ -82,7 +103,7 @@ impl<'a> Encoder<'a> {
             .and_then(|value| self.encode(&value))
     }
 
-    /// Encode the provided value as an ASN.1 `IA5String`
+    /// Encode the provided value as an ASN.1 `IA5String`.
     pub fn ia5_string(&mut self, value: impl TryInto<Ia5String<'a>>) -> Result<()> {
         value
             .try_into()
@@ -240,7 +261,8 @@ impl<'a> Encoder<'a> {
 #[cfg(test)]
 mod tests {
     use super::Encoder;
-    use crate::{Encodable, ErrorKind, Length};
+    use crate::{asn1::BitString, Encodable, ErrorKind, Length, TagMode, TagNumber};
+    use hex_literal::hex;
 
     #[test]
     fn overlength_message() {
@@ -249,5 +271,28 @@ mod tests {
         let err = false.encode(&mut encoder).err().unwrap();
         assert_eq!(err.kind(), ErrorKind::Overlength);
         assert_eq!(err.position(), Some(Length::ZERO));
+    }
+
+    #[test]
+    fn context_specific_with_implicit_field() {
+        // From RFC8410 Section 10.3:
+        // <https://datatracker.ietf.org/doc/html/rfc8410#section-10.3>
+        //
+        //    81  33:   [1] 00 19 BF 44 09 69 84 CD FE 85 41 BA C1 67 DC 3B
+        //                  96 C8 50 86 AA 30 B6 B6 CB 0C 5C 38 AD 70 31 66
+        //                  E1
+        const EXPECTED_BYTES: &[u8] =
+            &hex!("81210019BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
+
+        let tag_number = TagNumber::new(1);
+        let bit_string = BitString::new(&EXPECTED_BYTES[3..]).unwrap();
+
+        let mut buf = [0u8; EXPECTED_BYTES.len()];
+        let mut encoder = Encoder::new(&mut buf);
+        encoder
+            .context_specific(tag_number, TagMode::Implicit, bit_string)
+            .unwrap();
+
+        assert_eq!(EXPECTED_BYTES, encoder.finish().unwrap());
     }
 }

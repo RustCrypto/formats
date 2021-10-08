@@ -4,8 +4,8 @@ pub(super) mod iter;
 
 use self::iter::SequenceIter;
 use crate::{
-    asn1::Any, ByteSlice, Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Length, Result,
-    Tag, Tagged,
+    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind,
+    Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -53,12 +53,19 @@ impl AsRef<[u8]> for Sequence<'_> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for Sequence<'a> {
-    type Error = Error;
+impl<'a> DecodeValue<'a> for Sequence<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
+    }
+}
 
-    fn try_from(any: Any<'a>) -> Result<Self> {
-        any.tag().assert_eq(Tag::Sequence)?;
-        Self::new(any.as_bytes())
+impl<'a> EncodeValue for Sequence<'a> {
+    fn value_len(&self) -> Result<Length> {
+        self.inner.value_len()
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        self.inner.encode_value(encoder)
     }
 }
 
@@ -68,13 +75,11 @@ impl<'a> From<Sequence<'a>> for Any<'a> {
     }
 }
 
-impl<'a> Encodable for Sequence<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
-    }
+impl<'a> TryFrom<Any<'a>> for Sequence<'a> {
+    type Error = Error;
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
+    fn try_from(any: Any<'a>) -> Result<Self> {
+        any.decode_into()
     }
 }
 

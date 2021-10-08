@@ -3,7 +3,7 @@
 use crate::{
     asn1::Any,
     datetime::{self, DateTime},
-    Encodable, Encoder, Error, Header, Length, Result, Tag, Tagged,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
 };
 use core::{convert::TryFrom, time::Duration};
 
@@ -70,6 +70,56 @@ impl UtcTime {
     }
 }
 
+impl DecodeValue<'_> for UtcTime {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        match *ByteSlice::decode_value(decoder, length)?.as_bytes() {
+            // RFC 5280 requires mandatory seconds and Z-normalized time zone
+            [year1, year2, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
+                let year = datetime::decode_decimal(Self::TAG, year1, year2)?;
+                let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
+                let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
+                let hour = datetime::decode_decimal(Self::TAG, hour1, hour2)?;
+                let minute = datetime::decode_decimal(Self::TAG, min1, min2)?;
+                let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
+
+                // RFC 5280 rules for interpreting the year
+                let year = if year >= 50 { year + 1900 } else { year + 2000 };
+
+                DateTime::new(year, month, day, hour, minute, second)
+                    .and_then(|dt| dt.unix_duration())
+                    .map_err(|_| Self::TAG.value_error())
+                    .and_then(Self::new)
+            }
+            _ => Err(Self::TAG.value_error()),
+        }
+    }
+}
+
+impl EncodeValue for UtcTime {
+    fn value_len(&self) -> Result<Length> {
+        Ok(Self::LENGTH)
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        let datetime = DateTime::from_unix_duration(self.0).map_err(|_| Self::TAG.value_error())?;
+        debug_assert!((1950..2050).contains(&datetime.year()));
+
+        let year = match datetime.year() {
+            y @ 1950..=1999 => y - 1900,
+            y @ 2000..=2049 => y - 2000,
+            _ => return Err(Self::TAG.value_error()),
+        };
+
+        datetime::encode_decimal(encoder, Self::TAG, year)?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.month())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.day())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.hour())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.minutes())?;
+        datetime::encode_decimal(encoder, Self::TAG, datetime.seconds())?;
+        encoder.byte(b'Z')
+    }
+}
+
 impl From<&UtcTime> for UtcTime {
     fn from(value: &UtcTime) -> UtcTime {
         *value
@@ -88,57 +138,7 @@ impl TryFrom<Any<'_>> for UtcTime {
     type Error = Error;
 
     fn try_from(any: Any<'_>) -> Result<UtcTime> {
-        any.tag().assert_eq(Self::TAG)?;
-
-        match *any.as_bytes() {
-            // RFC 5280 requires mandatory seconds and Z-normalized time zone
-            [year1, year2, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
-                let year = datetime::decode_decimal(Self::TAG, year1, year2)?;
-                let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
-                let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
-                let hour = datetime::decode_decimal(Self::TAG, hour1, hour2)?;
-                let minute = datetime::decode_decimal(Self::TAG, min1, min2)?;
-                let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
-
-                // RFC 5280 rules for interpreting the year
-                let year = if year >= 50 { year + 1900 } else { year + 2000 };
-
-                DateTime::new(year, month, day, hour, minute, second)
-                    .and_then(|dt| dt.unix_duration())
-                    .ok_or_else(|| Self::TAG.value_error())
-                    .and_then(Self::new)
-            }
-            _ => Err(Self::TAG.value_error()),
-        }
-    }
-}
-
-impl Encodable for UtcTime {
-    fn encoded_len(&self) -> Result<Length> {
-        Self::LENGTH.for_tlv()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(Self::TAG, Self::LENGTH)?.encode(encoder)?;
-
-        let datetime =
-            DateTime::from_unix_duration(self.0).ok_or_else(|| Self::TAG.value_error())?;
-
-        debug_assert!((1950..2050).contains(&datetime.year()));
-
-        let year = match datetime.year() {
-            y @ 1950..=1999 => y - 1900,
-            y @ 2000..=2049 => y - 2000,
-            _ => return Err(Self::TAG.value_error()),
-        };
-
-        datetime::encode_decimal(encoder, Self::TAG, year)?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.month())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.day())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.hour())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.minute())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.second())?;
-        encoder.byte(b'Z')
+        any.decode_into()
     }
 }
 

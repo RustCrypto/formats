@@ -1,7 +1,8 @@
 //! ASN.1 `NULL` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Encodable, Encoder, Error, ErrorKind, Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error, ErrorKind,
+    Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -9,17 +10,23 @@ use core::convert::TryFrom;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Null;
 
-impl TryFrom<Any<'_>> for Null {
-    type Error = Error;
-
-    fn try_from(any: Any<'_>) -> Result<Null> {
-        let tag = any.tag().assert_eq(Tag::Null)?;
-
-        if any.is_empty() {
+impl DecodeValue<'_> for Null {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        if length.is_zero() {
             Ok(Null)
         } else {
-            Err(ErrorKind::Length { tag }.into())
+            Err(decoder.error(ErrorKind::Length { tag: Self::TAG }))
         }
+    }
+}
+
+impl EncodeValue for Null {
+    fn value_len(&self) -> Result<Length> {
+        Ok(Length::ZERO)
+    }
+
+    fn encode_value(&self, _encoder: &mut Encoder<'_>) -> Result<()> {
+        Ok(())
     }
 }
 
@@ -29,31 +36,23 @@ impl<'a> From<Null> for Any<'a> {
     }
 }
 
-impl Encodable for Null {
-    fn encoded_len(&self) -> Result<Length> {
-        Any::from(*self).encoded_len()
-    }
+impl TryFrom<Any<'_>> for Null {
+    type Error = Error;
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(*self).encode(encoder)
+    fn try_from(any: Any<'_>) -> Result<Null> {
+        any.decode_into()
     }
 }
 
 impl Tagged for Null {
-    const TAG: Tag = Tag::Integer;
+    const TAG: Tag = Tag::Null;
 }
 
 impl TryFrom<Any<'_>> for () {
     type Error = Error;
 
     fn try_from(any: Any<'_>) -> Result<()> {
-        let tag = any.tag().assert_eq(Tag::Null)?;
-
-        if any.is_empty() {
-            Ok(())
-        } else {
-            Err(ErrorKind::Length { tag }.into())
-        }
+        Null::try_from(any).map(|_| ())
     }
 }
 
@@ -63,13 +62,20 @@ impl<'a> From<()> for Any<'a> {
     }
 }
 
+impl DecodeValue<'_> for () {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        Null::decode_value(decoder, length)?;
+        Ok(())
+    }
+}
+
 impl Encodable for () {
     fn encoded_len(&self) -> Result<Length> {
-        Any::from(()).encoded_len()
+        Null.encoded_len()
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Any::from(()).encode(encoder)
+        Null.encode(encoder)
     }
 }
 
@@ -84,7 +90,7 @@ mod tests {
 
     #[test]
     fn decode() {
-        assert!(Null::from_der(&[0x05, 0x00]).is_ok());
+        Null::from_der(&[0x05, 0x00]).unwrap();
     }
 
     #[test]

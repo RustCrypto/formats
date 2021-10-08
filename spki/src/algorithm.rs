@@ -3,7 +3,7 @@
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier},
-    Decodable, Encodable, Error, ErrorKind, Message, Result,
+    Decodable, Decoder, Encodable, Error, ErrorKind, Message, Result,
 };
 
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
@@ -75,19 +75,9 @@ impl<'a> AlgorithmIdentifier<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for AlgorithmIdentifier<'a> {
-    type Error = Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
-        Self::from_der(bytes)
-    }
-}
-
-impl<'a> TryFrom<Any<'a>> for AlgorithmIdentifier<'a> {
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<AlgorithmIdentifier<'a>> {
-        any.sequence(|decoder| {
+impl<'a> Decodable<'a> for AlgorithmIdentifier<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
+        decoder.sequence(|decoder| {
             let oid = decoder.decode()?;
             let parameters = decoder.decode()?;
             Ok(Self { oid, parameters })
@@ -101,5 +91,13 @@ impl<'a> Message<'a> for AlgorithmIdentifier<'a> {
         F: FnOnce(&[&dyn Encodable]) -> Result<T>,
     {
         f(&[&self.oid, &self.parameters])
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for AlgorithmIdentifier<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+        Self::from_der(bytes)
     }
 }

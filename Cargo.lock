@@ -266,7 +266,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.4.3"
+version = "0.5.0-pre"
 dependencies = [
  "const-oid",
  "crypto-bigint",
@@ -276,7 +276,7 @@ dependencies = [
 
 [[package]]
 name = "der_derive"
-version = "0.4.1"
+version = "0.5.0-pre"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -460,7 +460,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs1"
-version = "0.2.4"
+version = "0.3.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -470,7 +470,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.3.2"
+version = "0.4.0-pre"
 dependencies = [
  "aes",
  "block-modes",
@@ -487,7 +487,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.7.6"
+version = "0.8.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -496,6 +496,7 @@ dependencies = [
  "pkcs5",
  "rand_core",
  "spki",
+ "subtle",
  "zeroize",
 ]
 
@@ -538,9 +539,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3d0b9745dc2debf507c8422de05d7226cc1f0644216dfdfead988f9b1ab32a7"
+checksum = "38bc8cc6a5f2e3655e0899c1b848643b2562f853f114bfec7be120678e3ace05"
 dependencies = [
  "proc-macro2",
 ]
@@ -650,7 +651,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "der",
  "generic-array",
@@ -735,7 +736,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.4.1"
+version = "0.5.0-pre"
 dependencies = [
  "base64ct",
  "der",
@@ -751,9 +752,9 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
 name = "syn"
-version = "1.0.76"
+version = "1.0.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6f107db402c2c2055242dbf4d2af0e69197202e9faacbef9571bbe47f5a1b84"
+checksum = "d010a1623fbd906d51d650a9916aaefc05ffa0e4053ff7fe601167f3e715d194"
 dependencies = [
  "proc-macro2",
  "quote",

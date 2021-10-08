@@ -56,8 +56,9 @@
 //! following algorithms:
 //!
 //! - ECC (`id-ecPublicKey`)
-//! - Ed25519 (`Ed25519`)
-//! - RSA (`rsaEncryption`)
+//! - Ed25519 (`id-Ed25519`)
+//! - RSA (`id-rsaEncryption`)
+//! - X25519 (`id-X25519`)
 //!
 //! Please open an issue if you encounter trouble using it with other
 //! algorithms.
@@ -122,7 +123,6 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-mod attributes;
 mod error;
 mod private_key_info;
 mod traits;
@@ -135,7 +135,6 @@ mod document;
 pub(crate) mod encrypted_private_key_info;
 
 pub use crate::{
-    attributes::Attributes,
     error::{Error, Result},
     private_key_info::PrivateKeyInfo,
     traits::{FromPrivateKey, FromPublicKey},
