@@ -11,7 +11,7 @@ members = [
     "pkcs8",
     "sec1",
     "spki",
-    "tls_codec/tls_codec",
-    "tls_codec/tls_codec_derive",
+    "tls_codec",
+    "tls_codec/derive",
     "x509"
 ]
