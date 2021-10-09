@@ -23,8 +23,10 @@ mod rdn;
 mod time;
 mod validity;
 
-pub use crate::{attribute::AttributeTypeAndValue, rdn::RelativeDistinguishedName, time::Time,
-                validity::Validity};
+pub use crate::{
+    attribute::AttributeTypeAndValue, rdn::RelativeDistinguishedName, time::Time,
+    validity::Validity,
+};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
 

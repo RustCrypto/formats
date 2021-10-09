@@ -1,8 +1,8 @@
 //! Validity tests
-use hex_literal::hex;
-use x509::Validity;
 use core::convert::TryFrom;
 use der::Encodable;
+use hex_literal::hex;
+use x509::Validity;
 
 #[test]
 fn decode_validity() {
@@ -11,14 +11,20 @@ fn decode_validity() {
     // 104  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 119  13:       UTCTime 31/12/2030 08:30:00 GMT
     //        :       }
-    let val1 = Validity::try_from(&hex!("301E170D3130303130313038333030305A170D3330313233313038333030305A")[..]).unwrap();
+    let val1 = Validity::try_from(
+        &hex!("301E170D3130303130313038333030305A170D3330313233313038333030305A")[..],
+    )
+    .unwrap();
 
     // Decode Validity from InvalidEEnotAfterDateTest6EE.crt in NIST's PKITS certificate collection
     //  97  30:     SEQUENCE {
     //  99  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 114  13:       UTCTime 01/01/2011 08:30:00 GMT
     //        :       }
-    let val2 = Validity::try_from(&hex!("301E170D3130303130313038333030305A170D3131303130313038333030305A")[..]).unwrap();
+    let val2 = Validity::try_from(
+        &hex!("301E170D3130303130313038333030305A170D3131303130313038333030305A")[..],
+    )
+    .unwrap();
 
     // Compare to values from https://www.epochconverter.com/
     assert_eq!(val1.not_before.unix_duration().as_secs(), 1262334600);
@@ -39,7 +45,10 @@ fn decode_validity() {
     //  99  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 114  15:       GeneralizedTime 01/01/2050 12:01:00 GMT
     //        :       }
-    let val3 = Validity::try_from(&hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..]).unwrap();
+    let val3 = Validity::try_from(
+        &hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..],
+    )
+    .unwrap();
     assert_eq!(val3.not_before.unix_duration().as_secs(), 1262334600);
     assert_eq!(val3.not_after.unix_duration().as_secs(), 2524651260);
     assert_eq!(val3.not_before.unix_duration().as_millis(), 1262334600000);
@@ -53,7 +62,10 @@ fn decode_validity() {
     //  99  15:       GeneralizedTime 01/01/2002 12:01:00 GMT
     // 116  13:       UTCTime 31/12/2030 08:30:00 GMT
     //        :       }
-    let val4 = Validity::try_from(&hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..]).unwrap();
+    let val4 = Validity::try_from(
+        &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..],
+    )
+    .unwrap();
     assert_eq!(val4.not_before.unix_duration().as_secs(), 1009886460);
     assert_eq!(val4.not_after.unix_duration().as_secs(), 1924936200);
     assert_eq!(val4.not_before.unix_duration().as_millis(), 1009886460000);
@@ -70,25 +82,43 @@ fn encode_validity() {
     // 104  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 119  13:       UTCTime 31/12/2030 08:30:00 GMT
     //        :       }
-    let val1 = Validity::try_from(&hex!("301E170D3130303130313038333030305A170D3330313233313038333030305A")[..]).unwrap();
+    let val1 = Validity::try_from(
+        &hex!("301E170D3130303130313038333030305A170D3330313233313038333030305A")[..],
+    )
+    .unwrap();
     let b1 = val1.to_vec().unwrap();
-    assert_eq!(b1, &hex!("301E170D3130303130313038333030305A170D3330313233313038333030305A")[..]);
+    assert_eq!(
+        b1,
+        &hex!("301E170D3130303130313038333030305A170D3330313233313038333030305A")[..]
+    );
 
     // // Decode Validity from ValidGeneralizedTimenotAfterDateTest8EE.crt in NIST's PKITS certificate collection
     // //  97  32:     SEQUENCE {
     // //  99  13:       UTCTime 01/01/2010 08:30:00 GMT
     // // 114  15:       GeneralizedTime 01/01/2050 12:01:00 GMT
     // //        :       }
-    let val3 = Validity::try_from(&hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..]).unwrap();
+    let val3 = Validity::try_from(
+        &hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..],
+    )
+    .unwrap();
     let b3 = val3.to_vec().unwrap();
-    assert_eq!(b3, &hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..]);
+    assert_eq!(
+        b3,
+        &hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..]
+    );
 
     // // Decode Validity from ValidGeneralizedTimenotBeforeDateTest4EE.crt in NIST's PKITS certificate collection
     // //  97  32:     SEQUENCE {
     // //  99  15:       GeneralizedTime 01/01/2002 12:01:00 GMT
     // // 116  13:       UTCTime 31/12/2030 08:30:00 GMT
     // //        :       }
-    let val4 = Validity::try_from(&hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..]).unwrap();
+    let val4 = Validity::try_from(
+        &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..],
+    )
+    .unwrap();
     let b4 = val4.to_vec().unwrap();
-    assert_eq!(b4, &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..]);
+    assert_eq!(
+        b4,
+        &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..]
+    );
 }
