@@ -12,11 +12,11 @@ pub use self::kdf::{
     PBKDF2_OID, SCRYPT_OID,
 };
 
-use crate::{AlgorithmIdentifier, CryptoError};
+use crate::{AlgorithmIdentifier, Error, Result};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Length, Message,
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Message,
 };
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -78,10 +78,10 @@ impl<'a> Parameters<'a> {
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-128-CBC as the symmetric cipher.
     pub fn pbkdf2_sha256_aes128cbc(
-        pbkdf2_iterations: u16,
+        pbkdf2_iterations: u32,
         pbkdf2_salt: &'a [u8],
         aes_iv: &'a [u8; AES_BLOCK_SIZE],
-    ) -> Result<Self, CryptoError> {
+    ) -> Result<Self> {
         let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
         let encryption = EncryptionScheme::Aes128Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
@@ -90,10 +90,10 @@ impl<'a> Parameters<'a> {
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-256-CBC as the symmetric cipher.
     pub fn pbkdf2_sha256_aes256cbc(
-        pbkdf2_iterations: u16,
+        pbkdf2_iterations: u32,
         pbkdf2_salt: &'a [u8],
         aes_iv: &'a [u8; AES_BLOCK_SIZE],
-    ) -> Result<Self, CryptoError> {
+    ) -> Result<Self> {
         let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
         let encryption = EncryptionScheme::Aes256Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
@@ -110,7 +110,7 @@ impl<'a> Parameters<'a> {
         params: scrypt::Params,
         salt: &'a [u8],
         aes_iv: &'a [u8; AES_BLOCK_SIZE],
-    ) -> Result<Self, CryptoError> {
+    ) -> Result<Self> {
         let kdf = ScryptParams::from_params_and_salt(params, salt)?.into();
         let encryption = EncryptionScheme::Aes128Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
@@ -130,7 +130,7 @@ impl<'a> Parameters<'a> {
         params: scrypt::Params,
         salt: &'a [u8],
         aes_iv: &'a [u8; AES_BLOCK_SIZE],
-    ) -> Result<Self, CryptoError> {
+    ) -> Result<Self> {
         let kdf = ScryptParams::from_params_and_salt(params, salt)?.into();
         let encryption = EncryptionScheme::Aes256Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
@@ -141,11 +141,7 @@ impl<'a> Parameters<'a> {
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
-    pub fn decrypt(
-        &self,
-        password: impl AsRef<[u8]>,
-        ciphertext: &[u8],
-    ) -> Result<Vec<u8>, CryptoError> {
+    pub fn decrypt(&self, password: impl AsRef<[u8]>, ciphertext: &[u8]) -> Result<Vec<u8>> {
         let mut buffer = ciphertext.to_vec();
         let pt_len = self.decrypt_in_place(password, &mut buffer)?.len();
         buffer.truncate(pt_len);
@@ -164,7 +160,7 @@ impl<'a> Parameters<'a> {
         &self,
         password: impl AsRef<[u8]>,
         buffer: &'b mut [u8],
-    ) -> Result<&'b [u8], CryptoError> {
+    ) -> Result<&'b [u8]> {
         encryption::decrypt_in_place(self, password, buffer)
     }
 
@@ -173,11 +169,7 @@ impl<'a> Parameters<'a> {
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
-    pub fn encrypt(
-        &self,
-        password: impl AsRef<[u8]>,
-        plaintext: &[u8],
-    ) -> Result<Vec<u8>, CryptoError> {
+    pub fn encrypt(&self, password: impl AsRef<[u8]>, plaintext: &[u8]) -> Result<Vec<u8>> {
         // TODO(tarcieri): support non-AES ciphers?
         let mut buffer = Vec::with_capacity(plaintext.len() + AES_BLOCK_SIZE);
         buffer.extend_from_slice(plaintext);
@@ -201,7 +193,7 @@ impl<'a> Parameters<'a> {
         password: impl AsRef<[u8]>,
         buffer: &'b mut [u8],
         pos: usize,
-    ) -> Result<&'b [u8], CryptoError> {
+    ) -> Result<&'b [u8]> {
         encryption::encrypt_in_place(self, password, buffer, pos)
     }
 }
@@ -222,7 +214,7 @@ impl<'a> Message<'a> for Parameters<'a> {
 }
 
 impl<'a> TryFrom<Any<'a>> for Parameters<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(any: Any<'a>) -> der::Result<Self> {
         any.sequence(|params| {
@@ -300,6 +292,13 @@ impl<'a> EncryptionScheme<'a> {
             Self::DesEde3Cbc { .. } => DES_EDE3_CBC_OID,
         }
     }
+
+    /// Convenience function to turn the OID (see [`oid`](Self::oid))
+    /// of this [`EncryptionScheme`] into error case
+    /// [`Error::AlgorithmParametersInvalid`]
+    pub fn to_alg_params_invalid(&self) -> Error {
+        Error::AlgorithmParametersInvalid { oid: self.oid() }
+    }
 }
 
 impl<'a> Decodable<'a> for EncryptionScheme<'a> {
@@ -309,7 +308,7 @@ impl<'a> Decodable<'a> for EncryptionScheme<'a> {
 }
 
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         // TODO(tarcieri): support for non-AES algorithms?
@@ -349,7 +348,7 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
 }
 
 impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(scheme: EncryptionScheme<'a>) -> der::Result<Self> {
         let parameters = OctetString::new(match scheme {

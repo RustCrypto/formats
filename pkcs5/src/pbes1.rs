@@ -2,7 +2,7 @@
 //!
 //! [RFC 8018 Section 6.1]: https://tools.ietf.org/html/rfc8018#section-6.1
 
-use crate::{AlgorithmIdentifier, Error};
+use crate::AlgorithmIdentifier;
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{ObjectIdentifier, OctetString},
@@ -105,7 +105,7 @@ impl Tagged for Parameters {
 }
 
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Parameters {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         // Ensure that we have a supported PBES1 algorithm identifier
@@ -155,7 +155,7 @@ pub enum EncryptionScheme {
 }
 
 impl TryFrom<ObjectIdentifier> for EncryptionScheme {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(oid: ObjectIdentifier) -> der::Result<Self> {
         match oid {
