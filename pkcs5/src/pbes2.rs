@@ -12,9 +12,7 @@ pub use self::kdf::{
     PBKDF2_OID, SCRYPT_OID,
 };
 
-use crate::AlgorithmIdentifier;
-#[cfg(feature = "scrypt")]
-use crate::Result;
+use crate::{AlgorithmIdentifier, Error, Result};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
@@ -80,25 +78,25 @@ impl<'a> Parameters<'a> {
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-128-CBC as the symmetric cipher.
     pub fn pbkdf2_sha256_aes128cbc(
-        pbkdf2_iterations: u16,
+        pbkdf2_iterations: u32,
         pbkdf2_salt: &'a [u8],
         aes_iv: &'a [u8; AES_BLOCK_SIZE],
-    ) -> Self {
-        let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt).into();
+    ) -> Result<Self> {
+        let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
         let encryption = EncryptionScheme::Aes128Cbc { iv: aes_iv };
-        Self { kdf, encryption }
+        Ok(Self { kdf, encryption })
     }
 
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-256-CBC as the symmetric cipher.
     pub fn pbkdf2_sha256_aes256cbc(
-        pbkdf2_iterations: u16,
+        pbkdf2_iterations: u32,
         pbkdf2_salt: &'a [u8],
         aes_iv: &'a [u8; AES_BLOCK_SIZE],
-    ) -> Self {
-        let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt).into();
+    ) -> Result<Self> {
+        let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
         let encryption = EncryptionScheme::Aes256Cbc { iv: aes_iv };
-        Self { kdf, encryption }
+        Ok(Self { kdf, encryption })
     }
 
     /// Initialize PBES2 parameters using scrypt as the password-based
@@ -293,6 +291,13 @@ impl<'a> EncryptionScheme<'a> {
             #[cfg(feature = "3des")]
             Self::DesEde3Cbc { .. } => DES_EDE3_CBC_OID,
         }
+    }
+
+    /// Convenience function to turn the OID (see [`oid`](Self::oid))
+    /// of this [`EncryptionScheme`] into error case
+    /// [`Error::AlgorithmParametersInvalid`]
+    pub fn to_alg_params_invalid(&self) -> Error {
+        Error::AlgorithmParametersInvalid { oid: self.oid() }
     }
 }
 

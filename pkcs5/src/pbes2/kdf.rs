@@ -1,8 +1,6 @@
 //! Key derivation functions.
 
-use crate::AlgorithmIdentifier;
-#[cfg(feature = "scrypt")]
-use crate::{Error, Result};
+use crate::{AlgorithmIdentifier, Error, Result};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
@@ -88,6 +86,12 @@ impl<'a> Kdf<'a> {
     pub fn is_scrypt(&self) -> bool {
         self.scrypt().is_some()
     }
+
+    /// Convenience function to turn the OID (see [`oid`](Self::oid))
+    /// of this [`Kdf`] into error case [`Error::AlgorithmParametersInvalid`]
+    pub fn to_alg_params_invalid(&self) -> Error {
+        Error::AlgorithmParametersInvalid { oid: self.oid() }
+    }
 }
 
 impl<'a> Decodable<'a> for Kdf<'a> {
@@ -155,7 +159,7 @@ pub struct Pbkdf2Params<'a> {
     pub salt: &'a [u8],
 
     /// PBKDF2 iteration count
-    pub iteration_count: u16,
+    pub iteration_count: u32,
 
     /// PBKDF2 output length
     pub key_length: Option<u16>,
@@ -165,14 +169,30 @@ pub struct Pbkdf2Params<'a> {
 }
 
 impl<'a> Pbkdf2Params<'a> {
+    /// Implementation defined maximum iteration count of 100,000,000.
+    ///
+    /// > For especially critical keys, or
+    /// > for very powerful systems or systems where user-perceived
+    /// > performance is not critical, an iteration count of 10,000,000 may
+    /// > be appropriate.
+    ///
+    /// See [RFC 8018, §4.2](https://datatracker.ietf.org/doc/html/rfc8018#section-4.2)
+    /// and [RFC 8018, §A.2](https://datatracker.ietf.org/doc/html/rfc8018#appendix-A.2)
+    pub const MAX_ITERATION_COUNT: u32 = 100_000_000;
+
+    const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: PBKDF2_OID };
+
     /// Initialize PBKDF2-SHA256 with the given iteration count and salt
-    pub fn hmac_with_sha256(iteration_count: u16, salt: &'a [u8]) -> Self {
-        Self {
+    pub fn hmac_with_sha256(iteration_count: u32, salt: &'a [u8]) -> Result<Self> {
+        if iteration_count > Self::MAX_ITERATION_COUNT {
+            return Err(Self::INVALID_ERR);
+        }
+        Ok(Self {
             salt,
             iteration_count,
             key_length: None,
             prf: Pbkdf2Prf::HmacWithSha256,
-        }
+        })
     }
 }
 
