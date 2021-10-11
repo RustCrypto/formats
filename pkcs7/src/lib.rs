@@ -11,6 +11,12 @@
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
+mod content_info;
+mod content_type;
+mod data_content;
+
+pub use crate::{content_info::ContentInfo, content_type::ContentType, data_content::DataContent};
+
 use der::asn1::ObjectIdentifier;
 
 /// `pkcs-7` Object Identifier (OID).
