@@ -1,0 +1,21 @@
+[package]
+name = "pkcs7"
+version = "0.0.1-pre" # Also update html_root_url in lib.rs when bumping this
+description = """
+Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #7:
+PKCS #7: Cryptographic Message Syntax Version 1.5 (RFC 2315)
+"""
+authors = ["RustCrypto Developers"]
+license = "Apache-2.0 OR MIT"
+edition = "2018"
+repository = "https://github.com/RustCrypto/formats/tree/master/pkcs7"
+categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
+keywords = ["crypto", "pkcs"]
+readme = "README.md"
+
+[dependencies]
+der = { version = "=0.5.0-pre", features = ["oid"], path = "../der" }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

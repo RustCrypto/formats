@@ -486,6 +486,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "pkcs7"
+version = "0.0.1-pre"
+dependencies = [
+ "der",
+]
+
+[[package]]
 name = "pkcs8"
 version = "0.8.0-pre"
 dependencies = [
