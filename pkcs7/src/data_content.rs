@@ -2,6 +2,7 @@ use core::convert::{From, TryFrom};
 use der::{asn1::OctetString, DecodeValue, Decoder, EncodeValue, Encoder, Length, Tag, Tagged};
 
 /// The content that is just an octet string.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct DataContent<'a> {
     /// content bytes
     pub content: &'a [u8],
@@ -35,7 +36,7 @@ impl<'a> DecodeValue<'a> for DataContent<'a> {
 
 impl<'a> EncodeValue for DataContent<'a> {
     fn value_len(&self) -> der::Result<Length> {
-        Ok(Length::try_from(self.content.len())?)
+        Length::try_from(self.content.len())
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {

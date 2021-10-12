@@ -48,7 +48,7 @@ impl ContentType {
 impl<'a> DecodeValue<'a> for ContentType {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> der::Result<ContentType> {
         let oid = ObjectIdentifier::decode_value(decoder, length)?;
-        ContentType::from_oid(oid).ok_or_else(|| decoder.error(ErrorKind::UnknownOid { oid: oid }))
+        ContentType::from_oid(oid).ok_or_else(|| decoder.error(ErrorKind::UnknownOid { oid }))
     }
 }
 
