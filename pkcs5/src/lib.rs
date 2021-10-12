@@ -28,30 +28,20 @@
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 extern crate alloc;
 
+mod error;
+
 pub mod pbes1;
 pub mod pbes2;
 
-pub use der::{self, asn1::ObjectIdentifier, Error};
+pub use crate::error::{Error, Result};
+pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::AlgorithmIdentifier;
 
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
+use core::convert::{TryFrom, TryInto};
 use der::{Decodable, Decoder, Encodable, Encoder, Length};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
-
-/// Cryptographic errors
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct CryptoError;
-
-impl fmt::Display for CryptoError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("PKCS#5 cryptographic error")
-    }
-}
 
 /// Supported PKCS#5 password-based encryption schemes.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -75,14 +65,10 @@ impl<'a> EncryptionScheme<'a> {
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
-    pub fn decrypt(
-        &self,
-        password: impl AsRef<[u8]>,
-        ciphertext: &[u8],
-    ) -> Result<Vec<u8>, CryptoError> {
+    pub fn decrypt(&self, password: impl AsRef<[u8]>, ciphertext: &[u8]) -> Result<Vec<u8>> {
         match self {
             Self::Pbes2(params) => params.decrypt(password, ciphertext),
-            _ => Err(CryptoError),
+            Self::Pbes1(_) => Err(Error::NoPbes1CryptSupport),
         }
     }
 
@@ -98,10 +84,10 @@ impl<'a> EncryptionScheme<'a> {
         &self,
         password: impl AsRef<[u8]>,
         buffer: &'b mut [u8],
-    ) -> Result<&'b [u8], CryptoError> {
+    ) -> Result<&'b [u8]> {
         match self {
             Self::Pbes2(params) => params.decrypt_in_place(password, buffer),
-            _ => Err(CryptoError),
+            Self::Pbes1(_) => Err(Error::NoPbes1CryptSupport),
         }
     }
 
@@ -110,14 +96,10 @@ impl<'a> EncryptionScheme<'a> {
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
-    pub fn encrypt(
-        &self,
-        password: impl AsRef<[u8]>,
-        plaintext: &[u8],
-    ) -> Result<Vec<u8>, CryptoError> {
+    pub fn encrypt(&self, password: impl AsRef<[u8]>, plaintext: &[u8]) -> Result<Vec<u8>> {
         match self {
             Self::Pbes2(params) => params.encrypt(password, plaintext),
-            _ => Err(CryptoError),
+            Self::Pbes1(_) => Err(Error::NoPbes1CryptSupport),
         }
     }
 
@@ -130,10 +112,10 @@ impl<'a> EncryptionScheme<'a> {
         password: impl AsRef<[u8]>,
         buffer: &'b mut [u8],
         pos: usize,
-    ) -> Result<&'b [u8], CryptoError> {
+    ) -> Result<&'b [u8]> {
         match self {
             Self::Pbes2(params) => params.encrypt_in_place(password, buffer, pos),
-            _ => Err(CryptoError),
+            Self::Pbes1(_) => Err(Error::NoPbes1CryptSupport),
         }
     }
 
@@ -199,7 +181,7 @@ impl<'a> From<pbes2::Parameters<'a>> for EncryptionScheme<'a> {
 }
 
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<EncryptionScheme<'_>> {
         match alg.oid {
@@ -210,7 +192,7 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
 }
 
 impl<'a> TryFrom<&'a [u8]> for EncryptionScheme<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(bytes: &'a [u8]) -> der::Result<EncryptionScheme<'a>> {
         AlgorithmIdentifier::try_from(bytes).and_then(TryInto::try_into)

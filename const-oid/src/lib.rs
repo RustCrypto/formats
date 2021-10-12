@@ -77,7 +77,7 @@ pub use crate::{
     error::{Error, Result},
 };
 
-use crate::arcs::RootArcs;
+use crate::arcs::{RootArcs, ARC_MAX_BYTES, ARC_MAX_LAST_OCTET};
 use core::{convert::TryFrom, fmt, str::FromStr};
 
 /// Object identifier (OID).
@@ -179,12 +179,12 @@ impl ObjectIdentifier {
         while arc_offset < len {
             match ber_bytes.get(arc_offset + arc_bytes).cloned() {
                 Some(byte) => {
-                    arc_bytes += 1;
-
-                    if arc_bytes == 4 && byte & 0b11110000 != 0 {
+                    if (arc_bytes == ARC_MAX_BYTES) && (byte & ARC_MAX_LAST_OCTET != 0) {
                         // Overflowed `Arc` (u32)
                         return Err(Error);
                     }
+
+                    arc_bytes += 1;
 
                     if byte & 0b10000000 == 0 {
                         arc_offset += arc_bytes;

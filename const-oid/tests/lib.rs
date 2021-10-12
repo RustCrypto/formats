@@ -7,23 +7,20 @@ use const_oid::ObjectIdentifier;
 use hex_literal::hex;
 use std::string::ToString;
 
-/// Example OID value with a root arc of `1`
-const EXAMPLE_OID_1: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.2.1");
+/// Example OID value with a root arc of `0` (and large arc).
+const EXAMPLE_OID_0_STRING: &str = "0.9.2342.19200300.100.1.1";
+const EXAMPLE_OID_0_BER: &[u8] = &hex!("0992268993F22C640101");
+const EXAMPLE_OID_0: ObjectIdentifier = ObjectIdentifier::new(EXAMPLE_OID_0_STRING);
 
-/// Example OID value with a root arc of `2`
-const EXAMPLE_OID_2: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.42");
-
-/// Example OID 1 encoded as ASN.1 BER/DER
-const EXAMPLE_OID_1_BER: &[u8] = &hex!("2A8648CE3D0201");
-
-/// Example OID 2 encoded as ASN.1 BER/DER
-const EXAMPLE_OID_2_BER: &[u8] = &hex!("60864801650304012A");
-
-/// Example OID 1 as a string
+/// Example OID value with a root arc of `1`.
 const EXAMPLE_OID_1_STRING: &str = "1.2.840.10045.2.1";
+const EXAMPLE_OID_1_BER: &[u8] = &hex!("2A8648CE3D0201");
+const EXAMPLE_OID_1: ObjectIdentifier = ObjectIdentifier::new(EXAMPLE_OID_1_STRING);
 
-/// Example OID 2 as a string
+/// Example OID value with a root arc of `2`.
 const EXAMPLE_OID_2_STRING: &str = "2.16.840.1.101.3.4.1.42";
+const EXAMPLE_OID_2_BER: &[u8] = &hex!("60864801650304012A");
+const EXAMPLE_OID_2: ObjectIdentifier = ObjectIdentifier::new(EXAMPLE_OID_2_STRING);
 
 #[test]
 fn display() {
@@ -33,6 +30,11 @@ fn display() {
 
 #[test]
 fn from_bytes() {
+    let oid0 = ObjectIdentifier::from_bytes(EXAMPLE_OID_0_BER).unwrap();
+    assert_eq!(oid0.arc(0).unwrap(), 0);
+    assert_eq!(oid0.arc(1).unwrap(), 9);
+    assert_eq!(oid0, EXAMPLE_OID_0);
+
     let oid1 = ObjectIdentifier::from_bytes(EXAMPLE_OID_1_BER).unwrap();
     assert_eq!(oid1.arc(0).unwrap(), 1);
     assert_eq!(oid1.arc(1).unwrap(), 2);
@@ -53,6 +55,11 @@ fn from_bytes() {
 
 #[test]
 fn from_str() {
+    let oid0 = EXAMPLE_OID_0_STRING.parse::<ObjectIdentifier>().unwrap();
+    assert_eq!(oid0.arc(0).unwrap(), 0);
+    assert_eq!(oid0.arc(1).unwrap(), 9);
+    assert_eq!(oid0, EXAMPLE_OID_0);
+
     let oid1 = EXAMPLE_OID_1_STRING.parse::<ObjectIdentifier>().unwrap();
     assert_eq!(oid1.arc(0).unwrap(), 1);
     assert_eq!(oid1.arc(1).unwrap(), 2);
