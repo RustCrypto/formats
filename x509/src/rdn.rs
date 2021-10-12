@@ -1,7 +1,12 @@
 //! Relative Distinguished Names
 
-use crate::{AttributeTypeAndValue, Set};
+use crate::{AttributeTypeAndValue};
+use der::asn1::SetOfRef;
+
+// Name ::= CHOICE { rdnSequence  RDNSequence }
+// DistinguishedName ::=   RDNSequence
+// RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
+// RelativeDistinguishedName ::= SET SIZE (1..MAX) OF AttributeTypeAndValue
 
 /// Relative Distinguished Name
-#[derive(Clone, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
-pub struct RelativeDistinguishedName<'a>(Set<AttributeTypeAndValue<'a>>);
+pub type RelativeDistinguishedName<'a> = SetOfRef<'a, AttributeTypeAndValue<'a>>;

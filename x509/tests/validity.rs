@@ -1,6 +1,6 @@
 //! Validity tests
 use core::convert::TryFrom;
-use der::Encodable;
+use der::{Encodable, asn1::UtcTime, Decodable};
 use hex_literal::hex;
 use x509::Validity;
 
@@ -73,6 +73,12 @@ fn decode_validity() {
 
     assert_ne!(val4, val3);
     assert_eq!(val4, val4);
+
+    let val5 = UtcTime::from_der(
+        &hex!("170D3330313233313038333030305A")[..],
+    ).unwrap();
+    assert_eq!(val5.unix_duration().as_secs(), 1924936200);
+    assert_eq!(val5.unix_duration().as_millis(), 1924936200000);
 }
 
 #[test]

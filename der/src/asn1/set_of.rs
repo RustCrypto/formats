@@ -18,8 +18,7 @@ use {
 /// When encoded as DER, `SET OF` is lexicographically ordered. To implement
 /// that requirement, types `T` which are elements of [`SetOf`] MUST provide
 /// an impl of `Ord` which ensures that the corresponding DER encodings of
-/// a given type are ordffvkjnkjnlvceubbngtirurinkbvfditfnihengdigvl
-/// ered.
+/// a given type are ordered.
 pub trait SetOf<'a, 'b, T>: Decodable<'a> + Encodable
 where
     T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
