@@ -1,6 +1,6 @@
 //! Relative Distinguished Names
 
-use crate::{AttributeTypeAndValue};
+use crate::AttributeTypeAndValue;
 use der::asn1::SetOfRef;
 
 // Name ::= CHOICE { rdnSequence  RDNSequence }
