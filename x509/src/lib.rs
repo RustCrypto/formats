@@ -13,7 +13,9 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs, rust_2018_idioms)]
 
-extern crate alloc;
+// extern crate alloc and use alloc::collections::BTreeSet as Set are not presently used since
+// change in definition of RelativeDistinguishedName
+//extern crate alloc;
 
 #[cfg(feature = "std")]
 extern crate std;
@@ -30,4 +32,4 @@ pub use crate::{
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
 
-use alloc::collections::BTreeSet as Set;
+//use alloc::collections::BTreeSet as Set;
