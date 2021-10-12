@@ -1,6 +1,6 @@
 //! Key derivation functions.
 
-use crate::{AlgorithmIdentifier, CryptoError, Error};
+use crate::{AlgorithmIdentifier, Error, Result};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
@@ -45,6 +45,14 @@ pub enum Kdf<'a> {
 }
 
 impl<'a> Kdf<'a> {
+    /// Get derived key length, if defined
+    pub fn key_length(&self) -> Option<u16> {
+        match self {
+            Self::Pbkdf2(params) => params.key_length,
+            Self::Scrypt(params) => params.key_length,
+        }
+    }
+
     /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
     pub fn oid(&self) -> ObjectIdentifier {
         match self {
@@ -77,6 +85,12 @@ impl<'a> Kdf<'a> {
     /// Is the selected KDF scrypt?
     pub fn is_scrypt(&self) -> bool {
         self.scrypt().is_some()
+    }
+
+    /// Convenience function to turn the OID (see [`oid`](Self::oid))
+    /// of this [`Kdf`] into error case [`Error::AlgorithmParametersInvalid`]
+    pub fn to_alg_params_invalid(&self) -> Error {
+        Error::AlgorithmParametersInvalid { oid: self.oid() }
     }
 }
 
@@ -111,7 +125,7 @@ impl<'a> From<ScryptParams<'a>> for Kdf<'a> {
 }
 
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Kdf<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         match alg.oid {
@@ -145,7 +159,7 @@ pub struct Pbkdf2Params<'a> {
     pub salt: &'a [u8],
 
     /// PBKDF2 iteration count
-    pub iteration_count: u16,
+    pub iteration_count: u32,
 
     /// PBKDF2 output length
     pub key_length: Option<u16>,
@@ -155,8 +169,24 @@ pub struct Pbkdf2Params<'a> {
 }
 
 impl<'a> Pbkdf2Params<'a> {
+    /// Implementation defined maximum iteration count of 100,000,000.
+    ///
+    /// > For especially critical keys, or
+    /// > for very powerful systems or systems where user-perceived
+    /// > performance is not critical, an iteration count of 10,000,000 may
+    /// > be appropriate.
+    ///
+    /// See [RFC 8018, §4.2](https://datatracker.ietf.org/doc/html/rfc8018#section-4.2)
+    /// and [RFC 8018, §A.2](https://datatracker.ietf.org/doc/html/rfc8018#appendix-A.2)
+    pub const MAX_ITERATION_COUNT: u32 = 100_000_000;
+
+    const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: PBKDF2_OID };
+
     /// Initialize PBKDF2-SHA256 with the given iteration count and salt
-    pub fn hmac_with_sha256(iteration_count: u16, salt: &'a [u8]) -> Result<Self, CryptoError> {
+    pub fn hmac_with_sha256(iteration_count: u32, salt: &'a [u8]) -> Result<Self> {
+        if iteration_count > Self::MAX_ITERATION_COUNT {
+            return Err(Self::INVALID_ERR);
+        }
         Ok(Self {
             salt,
             iteration_count,
@@ -195,7 +225,7 @@ impl<'a> Message<'a> for Pbkdf2Params<'a> {
 }
 
 impl<'a> TryFrom<Any<'a>> for Pbkdf2Params<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(any: Any<'a>) -> der::Result<Self> {
         any.sequence(|params| {
@@ -263,7 +293,7 @@ impl Default for Pbkdf2Prf {
 }
 
 impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Pbkdf2Prf {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         if let Some(params) = alg.parameters {
@@ -341,19 +371,19 @@ pub struct ScryptParams<'a> {
 }
 
 impl<'a> ScryptParams<'a> {
+    #[cfg(feature = "scrypt")]
+    const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: SCRYPT_OID };
+
     /// Get the [`ScryptParams`] for the provided upstream [`scrypt::Params`]
     /// and a provided salt string.
     #[cfg(feature = "scrypt")]
     #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
-    pub fn from_params_and_salt(
-        params: scrypt::Params,
-        salt: &'a [u8],
-    ) -> Result<Self, CryptoError> {
+    pub fn from_params_and_salt(params: scrypt::Params, salt: &'a [u8]) -> Result<Self> {
         Ok(Self {
             salt,
             cost_parameter: 1 << params.log_n(),
-            block_size: params.r().try_into().map_err(|_| CryptoError)?,
-            parallelization: params.p().try_into().map_err(|_| CryptoError)?,
+            block_size: params.r().try_into().map_err(|_| Self::INVALID_ERR)?,
+            parallelization: params.p().try_into().map_err(|_| Self::INVALID_ERR)?,
             key_length: None,
         })
     }
@@ -381,7 +411,7 @@ impl<'a> Message<'a> for ScryptParams<'a> {
 }
 
 impl<'a> TryFrom<Any<'a>> for ScryptParams<'a> {
-    type Error = Error;
+    type Error = der::Error;
 
     fn try_from(any: Any<'a>) -> der::Result<Self> {
         any.sequence(|params| {
@@ -405,9 +435,9 @@ impl<'a> TryFrom<Any<'a>> for ScryptParams<'a> {
 #[cfg(feature = "scrypt")]
 #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
 impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
-    type Error = CryptoError;
+    type Error = Error;
 
-    fn try_from(params: ScryptParams<'a>) -> Result<scrypt::Params, CryptoError> {
+    fn try_from(params: ScryptParams<'a>) -> Result<scrypt::Params> {
         scrypt::Params::try_from(&params)
     }
 }
@@ -415,16 +445,16 @@ impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
 #[cfg(feature = "scrypt")]
 #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
 impl<'a> TryFrom<&ScryptParams<'a>> for scrypt::Params {
-    type Error = CryptoError;
+    type Error = Error;
 
-    fn try_from(params: &ScryptParams<'a>) -> Result<scrypt::Params, CryptoError> {
+    fn try_from(params: &ScryptParams<'a>) -> Result<scrypt::Params> {
         let n = params.cost_parameter;
 
         // Compute log2 and verify its correctness
         let log_n = ((8 * core::mem::size_of::<ScryptCost>() as u32) - n.leading_zeros() - 1) as u8;
 
         if 1 << log_n != n {
-            return Err(CryptoError);
+            return Err(ScryptParams::INVALID_ERR);
         }
 
         scrypt::Params::new(
@@ -432,6 +462,6 @@ impl<'a> TryFrom<&ScryptParams<'a>> for scrypt::Params {
             params.block_size.into(),
             params.parallelization.into(),
         )
-        .map_err(|_| CryptoError)
+        .map_err(|_| ScryptParams::INVALID_ERR)
     }
 }
