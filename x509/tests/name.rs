@@ -12,8 +12,8 @@ fn decode_rdn() {
     //   9   2:     PrintableString 'US'
     //        :     }
     //        :   }
-    let rdn1 = RelativeDistinguishedName::from_der(
-        &hex!("310B3009060355040613025553")[..]).unwrap();
+    let rdn1 =
+        RelativeDistinguishedName::from_der(&hex!("310B3009060355040613025553")[..]).unwrap();
     let i = rdn1.elements();
     for atav in i {
         let oid = atav.oid;
@@ -35,7 +35,9 @@ fn decode_rdn() {
     //        :     }
     //        :   }
     let rdn2 = RelativeDistinguishedName::from_der(
-        &hex!("311F301106035504030C0A4A4F484E20534D495448300A060355040A0C03313233")[..], ).unwrap();
+        &hex!("311F301106035504030C0A4A4F484E20534D495448300A060355040A0C03313233")[..],
+    )
+    .unwrap();
     let mut i = rdn2.elements();
     let atav1 = i.next().unwrap();
     let oid1 = atav1.oid;
@@ -62,15 +64,12 @@ fn encode_atav() {
     //   9   2:     PrintableString 'US'
     //        :     }
     //        :   }
-    let rdn1 = RelativeDistinguishedName::from_der(
-        &hex!("310B3009060355040613025553")[..]).unwrap();
+    let rdn1 =
+        RelativeDistinguishedName::from_der(&hex!("310B3009060355040613025553")[..]).unwrap();
 
     // Re-encode and compare to reference
     let b1 = rdn1.to_vec().unwrap();
-    assert_eq!(
-        b1,
-        &hex!("310B3009060355040613025553")[..]
-    );
+    assert_eq!(b1, &hex!("310B3009060355040613025553")[..]);
     let mut i = rdn1.elements();
     let atav1 = i.next().unwrap();
 
@@ -85,7 +84,9 @@ fn encode_atav() {
     //        :     }
     //        :   }
     let rdn2 = RelativeDistinguishedName::from_der(
-        &hex!("311F301106035504030C0A4A4F484E20534D495448300A060355040A0C03313233")[..], ).unwrap();
+        &hex!("311F301106035504030C0A4A4F484E20534D495448300A060355040A0C03313233")[..],
+    )
+    .unwrap();
 
     // Re-encode and compare to reference
     let b1 = rdn2.to_vec().unwrap();
@@ -100,11 +101,8 @@ fn encode_atav() {
     // Create new AttributeTypeAndValue with OID from second item above and value from first
     let atav3: AttributeTypeAndValue = AttributeTypeAndValue {
         oid: atav2.oid,
-        value: atav1.value
+        value: atav1.value,
     };
     let b3 = atav3.to_vec().unwrap();
-    assert_eq!(
-        b3,
-        &hex!("3009060355040313025553")[..]
-    );
+    assert_eq!(b3, &hex!("3009060355040313025553")[..]);
 }
