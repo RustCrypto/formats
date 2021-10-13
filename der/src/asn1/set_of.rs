@@ -7,10 +7,7 @@ use crate::{
 use core::{convert::TryFrom, marker::PhantomData};
 
 #[cfg(feature = "alloc")]
-use {
-    crate::Header,
-    alloc::collections::{btree_set, BTreeSet},
-};
+use alloc::collections::{btree_set, BTreeSet};
 
 /// ASN.1 `SET OF` denotes a collection of zero or more occurrences of a
 /// given type.
@@ -19,9 +16,9 @@ use {
 /// that requirement, types `T` which are elements of [`SetOf`] MUST provide
 /// an impl of `Ord` which ensures that the corresponding DER encodings of
 /// a given type are ordered.
-pub trait SetOf<'a, 'b, T>: Decodable<'a> + Encodable
+pub trait SetOf<'a, 'b, T>: Decodable<'a>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
+    T: Clone + Decodable<'a> + Ord,
 {
     /// Iterator over the elements of the set.
     ///
@@ -40,7 +37,7 @@ where
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct SetOfRef<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     /// DER-encoded byte slice
     inner: ByteSlice<'a>,
@@ -51,7 +48,7 @@ where
 
 impl<'a, T> SetOfRef<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     /// Create a new [`SetOfRef`] from a slice.
     pub fn new(slice: &'a [u8]) -> Result<Self> {
@@ -87,7 +84,7 @@ where
 
 impl<'a, T> AsRef<[u8]> for SetOfRef<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
@@ -96,7 +93,7 @@ where
 
 impl<'a, T> DecodeValue<'a> for SetOfRef<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
         Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
@@ -118,7 +115,7 @@ where
 
 impl<'a, T> From<SetOfRef<'a, T>> for Any<'a>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     fn from(set: SetOfRef<'a, T>) -> Any<'a> {
         Any::from_tag_and_value(Tag::Set, set.inner)
@@ -127,7 +124,7 @@ where
 
 impl<'a, T> TryFrom<Any<'a>> for SetOfRef<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     type Error = Error;
 
@@ -139,7 +136,7 @@ where
 
 impl<'a, 'b, T> SetOf<'a, 'b, T> for SetOfRef<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
+    T: Clone + Decodable<'a> + Ord,
 {
     type Iter = SetOfRefIter<'a, T>;
 
@@ -150,7 +147,7 @@ where
 
 impl<'a, T> Tagged for SetOfRef<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     const TAG: Tag = Tag::Set;
 }
@@ -158,7 +155,7 @@ where
 /// Iterator over the elements of an [`SetOfRef`].
 pub struct SetOfRefIter<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     /// Decoder which iterates over the elements of the message
     decoder: Decoder<'a>,
@@ -169,7 +166,7 @@ where
 
 impl<'a, T> SetOfRefIter<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     pub(crate) fn new(set: &SetOfRef<'a, T>) -> Self {
         Self {
@@ -181,7 +178,7 @@ where
 
 impl<'a, T> Iterator for SetOfRefIter<'a, T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     type Item = T;
 
@@ -202,7 +199,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> DecodeValue<'a> for BTreeSet<T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
         let end_pos = (decoder.position() + length)?;
@@ -238,17 +235,16 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, T> Encodable for BTreeSet<T>
+impl<'a, T> EncodeValue for BTreeSet<T>
 where
     T: Clone + Decodable<'a> + Encodable + Ord,
 {
-    fn encoded_len(&self) -> Result<Length> {
-        btreeset_inner_len(self)?.for_tlv()
+    fn value_len(&self) -> Result<Length> {
+        self.iter()
+            .fold(Ok(Length::ZERO), |acc, val| acc? + val.encoded_len()?)
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(Self::TAG, btreeset_inner_len(self)?)?.encode(encoder)?;
-
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         for value in self.iter() {
             encoder.encode(value)?;
         }
@@ -261,7 +257,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, 'b, T: 'b> SetOf<'a, 'b, T> for BTreeSet<T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord + Tagged,
+    T: Clone + Decodable<'a> + Ord,
 {
     type Iter = core::iter::Cloned<btree_set::Iter<'b, T>>;
 
@@ -274,7 +270,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> TryFrom<Any<'a>> for BTreeSet<T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     type Error = Error;
 
@@ -287,17 +283,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> Tagged for BTreeSet<T>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     const TAG: Tag = Tag::Set;
-}
-
-/// Get the encoded length of a [`BTreeSet`]
-#[cfg(feature = "alloc")]
-fn btreeset_inner_len<'a, T>(set: &BTreeSet<T>) -> Result<Length>
-where
-    T: Clone + Decodable<'a> + Encodable + Ord,
-{
-    set.iter()
-        .fold(Ok(Length::ZERO), |acc, val| acc? + val.encoded_len()?)
 }
