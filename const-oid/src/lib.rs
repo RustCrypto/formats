@@ -44,7 +44,7 @@
 //!
 //! # Minimum Supported Rust Version
 //!
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.55** at a minimum.
 //!
 //! Minimum supported Rust version may be changed in the future, but it will be
 //! accompanied with a minor version bump.

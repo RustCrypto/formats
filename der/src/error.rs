@@ -134,6 +134,9 @@ pub enum ErrorKind {
     /// Malformed OID
     MalformedOid,
 
+    /// Ordering error
+    Ordering,
+
     /// Integer overflow occurred (library bug!).
     Overflow,
 
@@ -228,6 +231,7 @@ impl fmt::Display for ErrorKind {
                 write!(f, "ASN.1 {} not canonically encoded as DER", tag)
             }
             ErrorKind::MalformedOid => write!(f, "malformed OID"),
+            ErrorKind::Ordering => write!(f, "ordering error"),
             ErrorKind::Overflow => write!(f, "integer overflow"),
             ErrorKind::Overlength => write!(f, "DER message is too long"),
             ErrorKind::TrailingData { decoded, remaining } => {

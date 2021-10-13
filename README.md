@@ -38,7 +38,7 @@ dual licensed as above, without any additional terms or conditions.
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 [deps-image]: https://deps.rs/repo/github/RustCrypto/formats/status.svg
 [deps-link]: https://deps.rs/repo/github/RustCrypto/formats
-[msrv-image]: https://img.shields.io/badge/rustc-1.51+-blue.svg
+[msrv-image]: https://img.shields.io/badge/rustc-1.55+-blue.svg
 
 [//]: # (links)
 

@@ -100,7 +100,7 @@
 //! [`pkcs1`] crate (e.g. `FromRsaPrivateKey`, `ToRsaPrivateKey`).
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.55** at a minimum.
 //!
 //! [RFC 5208]: https://tools.ietf.org/html/rfc5208
 //! [RFC 5958]: https://tools.ietf.org/html/rfc5958
