@@ -4,8 +4,8 @@ pub(super) mod iter;
 
 use self::iter::SequenceIter;
 use crate::{
-    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind,
-    Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
+    ErrorKind, Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -84,5 +84,55 @@ impl<'a> TryFrom<Any<'a>> for Sequence<'a> {
 }
 
 impl<'a> Tagged for Sequence<'a> {
+    const TAG: Tag = Tag::Sequence;
+}
+
+impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
+where
+    // TODO(tarcieri): remove `Copy` + `Default` bounds with `array::try_from_fn`
+    T: Copy + Decodable<'a> + Default,
+{
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        let end_pos = (decoder.position() + length)?;
+        let mut result = [Default::default(); N];
+
+        for elem in &mut result {
+            *elem = decoder.decode()?;
+
+            if decoder.position() > end_pos {
+                decoder.error(ErrorKind::Length { tag: Self::TAG });
+            }
+        }
+
+        if decoder.position() != end_pos {
+            decoder.error(ErrorKind::Length { tag: Self::TAG });
+        }
+
+        Ok(result)
+    }
+}
+
+impl<'a, T, const N: usize> EncodeValue for [T; N]
+where
+    T: Encodable,
+{
+    fn value_len(&self) -> Result<Length> {
+        self.iter()
+            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        for elem in self {
+            elem.encode(encoder)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl<'a, T, const N: usize> Tagged for [T; N]
+where
+    T: Decodable<'a>,
+{
     const TAG: Tag = Tag::Sequence;
 }

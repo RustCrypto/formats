@@ -31,6 +31,7 @@
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`
 //!   (see also [`Utf8String`]. `String` requires `alloc` feature)
+//! - `[T; N]`: ASN.1 `SEQUENCE OF`
 //! - [`BTreeSet`][`alloc::collections::BTreeSet`]: ASN.1 `SET OF` (requires `alloc` feature)
 //! - [`Option`]: ASN.1 `OPTIONAL`
 //! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime` (requires `std` feature)
