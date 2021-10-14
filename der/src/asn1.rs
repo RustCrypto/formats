@@ -14,6 +14,7 @@ mod octet_string;
 mod oid;
 mod optional;
 mod printable_string;
+mod sequence;
 mod sequence_of;
 mod set_of;
 mod utc_time;
@@ -30,6 +31,7 @@ pub use self::{
     null::Null,
     octet_string::OctetString,
     printable_string::PrintableString,
+    sequence::Sequence,
     sequence_of::{SequenceOf, SequenceOfIter},
     set_of::{SetOf, SetOfIter},
     utc_time::UtcTime,

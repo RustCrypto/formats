@@ -2,7 +2,7 @@
 
 use der::{
     asn1::{Any, ObjectIdentifier},
-    Message,
+    Sequence,
 };
 
 /// Attribute type/value pairs as defined in [RFC 5280 Section 4.1.2.4].
@@ -18,7 +18,7 @@ use der::{
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://tools.ietf.org/html/rfc5280#section-4.1.2.4
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Message)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence)]
 pub struct AttributeTypeAndValue<'a> {
     /// OID describing the type of the attribute
     pub oid: ObjectIdentifier,

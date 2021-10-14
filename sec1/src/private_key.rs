@@ -12,7 +12,7 @@ use crate::{EcParameters, Error};
 use core::{convert::TryFrom, fmt};
 use der::{
     asn1::{BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Message, TagMode, TagNumber,
+    Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
 };
 
 /// Type label for PEM-encoded private keys.
@@ -92,7 +92,7 @@ impl<'a> Decodable<'a> for EcPrivateKey<'a> {
     }
 }
 
-impl<'a> Message<'a> for EcPrivateKey<'a> {
+impl<'a> Sequence<'a> for EcPrivateKey<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,

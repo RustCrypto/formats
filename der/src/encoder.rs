@@ -1,8 +1,8 @@
 //! DER encoder.
 
 use crate::{
-    asn1::*, message, Encodable, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag,
-    TagMode, TagNumber, Tagged,
+    asn1::*, Encodable, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag, TagMode,
+    TagNumber, Tagged,
 };
 use core::convert::{TryFrom, TryInto};
 
@@ -109,20 +109,6 @@ impl<'a> Encoder<'a> {
             .try_into()
             .map_err(|_| self.value_error(Tag::Ia5String))
             .and_then(|value| self.encode(&value))
-    }
-
-    /// Encode a message with the provided [`Encodable`] fields as an
-    /// ASN.1 `SEQUENCE`.
-    pub fn message(&mut self, fields: &[&dyn Encodable]) -> Result<()> {
-        let length = message::encoded_len_inner(fields)?;
-
-        self.sequence(length, |nested_encoder| {
-            for field in fields {
-                field.encode(nested_encoder)?;
-            }
-
-            Ok(())
-        })
     }
 
     /// Encode an ASN.1 `NULL` value.
@@ -260,9 +246,11 @@ impl<'a> Encoder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::Encoder;
-    use crate::{asn1::BitString, Encodable, ErrorKind, Length, TagMode, TagNumber};
     use hex_literal::hex;
+
+    use crate::{asn1::BitString, Encodable, ErrorKind, Length, TagMode, TagNumber};
+
+    use super::Encoder;
 
     #[test]
     fn overlength_message() {

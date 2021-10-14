@@ -16,7 +16,7 @@ use crate::{AlgorithmIdentifier, Error, Result};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Message,
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence,
 };
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -204,7 +204,7 @@ impl<'a> Decodable<'a> for Parameters<'a> {
     }
 }
 
-impl<'a> Message<'a> for Parameters<'a> {
+impl<'a> Sequence<'a> for Parameters<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,

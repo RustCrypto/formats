@@ -4,7 +4,7 @@
 //! following way:
 //!
 //! - [`Choice`][`derive@Choice`]: map ASN.1 `CHOICE` to a Rust enum.
-//! - [`Message`][`derive@Message`]: map ASN.1 `SEQUENCE` to a Rust struct.
+//! - [`Sequence`][`derive@Sequence`]: map ASN.1 `SEQUENCE` to a Rust struct.
 //!
 //! Note that this crate shouldn't be used directly, but instead accessed
 //! by using the `derive` feature of the `der` crate.
@@ -61,10 +61,12 @@
 
 mod attributes;
 mod choice;
-mod message;
+mod sequence;
 mod types;
 
-use crate::{attributes::Asn1Attrs, choice::DeriveChoice, message::DeriveMessage, types::Asn1Type};
+use crate::{
+    attributes::Asn1Attrs, choice::DeriveChoice, sequence::DeriveSequence, types::Asn1Type,
+};
 use proc_macro2::TokenStream;
 use syn::{Generics, Lifetime};
 use synstructure::{decl_derive, Structure};
@@ -113,24 +115,24 @@ decl_derive!(
 );
 
 decl_derive!(
-    [Message, attributes(asn1)] =>
+    [Sequence, attributes(asn1)] =>
 
-    /// Derive the [`Message`][1] trait on a struct.
+    /// Derive the [`Sequence`][1] trait on a struct.
     ///
     /// This custom derive macro can be used to automatically impl the
-    /// `Message` trait for any struct representing a message which is
-    /// encoded as an ASN.1 `SEQUENCE`.
+    /// `Sequence` trait for any struct which can be decoded/encoded as an
+    /// ASN.1 `SEQUENCE`.
     ///
     /// # Usage
     ///
     /// ```ignore
     /// use der::{
     ///     asn1::{Any, ObjectIdentifier},
-    ///     Message
+    ///     Sequence
     /// };
     ///
     /// /// X.509 `AlgorithmIdentifier`
-    /// #[derive(Message)]
+    /// #[derive(Sequence)]
     /// pub struct AlgorithmIdentifier<'a> {
     ///     /// This field contains an ASN.1 `OBJECT IDENTIFIER`, a.k.a. OID.
     ///     pub algorithm: ObjectIdentifier,
@@ -146,9 +148,9 @@ decl_derive!(
     /// See [toplevel documentation for the `der_derive` crate][2] for more
     /// information about the `#[asn1]` attribute.
     ///
-    /// [1]: https://docs.rs/der/latest/der/trait.Message.html
+    /// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
     /// [2]: https://docs.rs/der_derive/
-    derive_message
+    derive_sequence
 );
 
 /// Custom derive for `der::Choice`
@@ -162,14 +164,14 @@ fn derive_choice(s: Structure<'_>) -> TokenStream {
     }
 }
 
-/// Custom derive for `der::Message`
-fn derive_message(s: Structure<'_>) -> TokenStream {
+/// Custom derive for `der::Sequence`
+fn derive_sequence(s: Structure<'_>) -> TokenStream {
     let ast = s.ast();
     let lifetime = parse_lifetime(&ast.generics);
 
     match &ast.data {
-        syn::Data::Struct(data) => DeriveMessage::derive(s, data, lifetime),
-        other => panic!("can't derive `Message` on: {:?}", other),
+        syn::Data::Struct(data) => DeriveSequence::derive(s, data, lifetime),
+        other => panic!("can't derive `Sequence` on: {:?}", other),
     }
 }
 

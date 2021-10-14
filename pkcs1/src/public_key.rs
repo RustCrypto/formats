@@ -2,7 +2,7 @@
 
 use crate::{Error, Result};
 use core::convert::TryFrom;
-use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Message};
+use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
 
 #[cfg(feature = "alloc")]
 use crate::RsaPublicKeyDocument;
@@ -77,7 +77,7 @@ impl<'a> Decodable<'a> for RsaPublicKey<'a> {
     }
 }
 
-impl<'a> Message<'a> for RsaPublicKey<'a> {
+impl<'a> Sequence<'a> for RsaPublicKey<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,

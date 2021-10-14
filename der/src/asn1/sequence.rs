@@ -1,19 +1,15 @@
-//! The [`Message`] trait simplifies writing decoders/encoders which map ASN.1
+//! The [`Sequence`] trait simplifies writing decoders/encoders which map ASN.1
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{Decodable, Encodable, EncodeValue, Encoder, Length, Result, Tag, Tagged};
 
-/// Messages encoded as an ASN.1 `SEQUENCE`.
-///
-/// The "message" pattern this trait provides is not an ASN.1 concept,
-/// but rather a pattern for writing ASN.1 DER decoders and encoders which
-/// map ASN.1 `SEQUENCE` types to Rust structs with a minimum of code.
+/// ASN.1 `SEQUENCE` trait.
 ///
 /// Types which impl this trait receive blanket impls for the [`Decodable`],
 /// [`Encodable`], and [`Tagged`] traits.
-pub trait Message<'a>: Decodable<'a> {
+pub trait Sequence<'a>: Decodable<'a> {
     /// Call the provided function with a slice of [`Encodable`] trait objects
-    /// representing the fields of this message.
+    /// representing the fields of this `SEQUENCE`.
     ///
     /// This method uses a callback because structs with fields which aren't
     /// directly [`Encodable`] may need to construct temporary values from
@@ -25,10 +21,14 @@ pub trait Message<'a>: Decodable<'a> {
 
 impl<'a, M> EncodeValue for M
 where
-    M: Message<'a>,
+    M: Sequence<'a>,
 {
     fn value_len(&self) -> Result<Length> {
-        self.fields(|fields| encoded_len_inner(fields))
+        self.fields(|fields| {
+            fields
+                .iter()
+                .fold(Ok(Length::ZERO), |len, field| len + field.encoded_len()?)
+        })
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
@@ -44,16 +44,7 @@ where
 
 impl<'a, M> Tagged for M
 where
-    M: Message<'a>,
+    M: Sequence<'a>,
 {
     const TAG: Tag = Tag::Sequence;
-}
-
-/// Obtain the length of an ASN.1 message `SEQUENCE` consisting of the given
-/// [`Encodable`] fields when serialized as ASN.1 DER, including the header
-/// (i.e. tag and length)
-pub(super) fn encoded_len_inner(fields: &[&dyn Encodable]) -> Result<Length> {
-    fields.iter().fold(Ok(Length::ZERO), |sum, encodable| {
-        sum + encodable.encoded_len()?
-    })
 }
