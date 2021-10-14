@@ -42,6 +42,9 @@ pub struct DateTime {
 
     /// Seconds (0-59)
     seconds: u16,
+
+    /// [`Duration`] since the Unix epoch.
+    unix_duration: Duration,
 }
 
 impl DateTime {
@@ -51,32 +54,65 @@ impl DateTime {
         month: u16,
         day: u16,
         hour: u16,
-        minute: u16,
-        second: u16,
+        minutes: u16,
+        seconds: u16,
     ) -> Result<Self> {
         // Basic validation of the components.
         if year < MIN_YEAR
             || !(1..=12).contains(&month)
             || !(1..=31).contains(&day)
             || !(0..=23).contains(&hour)
-            || !(0..=59).contains(&minute)
-            || !(0..=59).contains(&second)
+            || !(0..=59).contains(&minutes)
+            || !(0..=59).contains(&seconds)
         {
             return Err(ErrorKind::DateTime.into());
         }
 
-        let result = Self {
+        let leap_years =
+            ((year - 1) - 1968) / 4 - ((year - 1) - 1900) / 100 + ((year - 1) - 1600) / 400;
+
+        let is_leap_year = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+
+        let (mut ydays, mdays) = match month {
+            1 => (0, 31),
+            2 if is_leap_year => (31, 29),
+            2 => (31, 28),
+            3 => (59, 31),
+            4 => (90, 30),
+            5 => (120, 31),
+            6 => (151, 30),
+            7 => (181, 31),
+            8 => (212, 31),
+            9 => (243, 30),
+            10 => (273, 31),
+            11 => (304, 30),
+            12 => (334, 31),
+            _ => return Err(ErrorKind::DateTime.into()),
+        };
+
+        if day > mdays || day == 0 {
+            return Err(ErrorKind::DateTime.into());
+        }
+
+        ydays += day - 1;
+
+        if is_leap_year && month > 2 {
+            ydays += 1;
+        }
+
+        let days = (year - 1970) as u64 * 365 + leap_years as u64 + ydays as u64;
+        let time = seconds as u64 + (minutes as u64 * 60) + (hour as u64 * 3600);
+        let unix_duration = Duration::from_secs(time + days * 86400);
+
+        Ok(Self {
             year,
             month,
             day,
             hour,
-            minutes: minute,
-            seconds: second,
-        };
-
-        // Validate time maps to a Unix duration
-        result.unix_duration()?;
-        Ok(result)
+            minutes,
+            seconds,
+            unix_duration,
+        })
     }
 
     /// Compute a [`DateTime`] from the given [`Duration`] since the `UNIX_EPOCH`.
@@ -189,47 +225,8 @@ impl DateTime {
     }
 
     /// Compute [`Duration`] since `UNIX_EPOCH` from the given calendar date.
-    pub fn unix_duration(&self) -> Result<Duration> {
-        let leap_years = ((self.year - 1) - 1968) / 4 - ((self.year - 1) - 1900) / 100
-            + ((self.year - 1) - 1600) / 400;
-
-        let is_leap_year = self.is_leap_year();
-
-        let (mut ydays, mdays) = match self.month {
-            1 => (0, 31),
-            2 if is_leap_year => (31, 29),
-            2 => (31, 28),
-            3 => (59, 31),
-            4 => (90, 30),
-            5 => (120, 31),
-            6 => (151, 30),
-            7 => (181, 31),
-            8 => (212, 31),
-            9 => (243, 30),
-            10 => (273, 31),
-            11 => (304, 30),
-            12 => (334, 31),
-            _ => return Err(ErrorKind::DateTime.into()),
-        };
-
-        if self.day > mdays || self.day == 0 {
-            return Err(ErrorKind::DateTime.into());
-        }
-
-        ydays += self.day - 1;
-
-        if is_leap_year && self.month > 2 {
-            ydays += 1;
-        }
-
-        let days = (self.year - 1970) as u64 * 365 + leap_years as u64 + ydays as u64;
-        let time = self.seconds as u64 + (self.minutes as u64 * 60) + (self.hour as u64 * 3600);
-        Ok(Duration::from_secs(time + days * 86400))
-    }
-
-    /// Is the year a leap year?
-    fn is_leap_year(&self) -> bool {
-        self.year % 4 == 0 && (self.year % 100 != 0 || self.year % 400 == 0)
+    pub fn unix_duration(&self) -> Duration {
+        self.unix_duration
     }
 }
 
@@ -270,9 +267,7 @@ mod tests {
 
     /// Ensure a day is OK
     fn is_date_valid(year: u16, month: u16, day: u16, hour: u16, minute: u16, second: u16) -> bool {
-        DateTime::new(year, month, day, hour, minute, second)
-            .and_then(|dt| dt.unix_duration())
-            .is_ok()
+        DateTime::new(year, month, day, hour, minute, second).is_ok()
     }
 
     #[test]
@@ -299,7 +294,7 @@ mod tests {
                 for day in 1..=max_day {
                     for hour in 0..=23 {
                         let datetime1 = DateTime::new(year, month, day, hour, 0, 0).unwrap();
-                        let unix_duration = datetime1.unix_duration().unwrap();
+                        let unix_duration = datetime1.unix_duration();
                         let datetime2 = DateTime::from_unix_duration(unix_duration).unwrap();
                         assert_eq!(datetime1, datetime2);
                     }

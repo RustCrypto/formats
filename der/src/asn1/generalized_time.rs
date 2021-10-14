@@ -77,9 +77,8 @@ impl DecodeValue<'_> for GeneralizedTime {
                 let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
 
                 DateTime::new(year, month, day, hour, minute, second)
-                    .and_then(|dt| dt.unix_duration())
                     .map_err(|_| Self::TAG.value_error())
-                    .and_then(Self::new)
+                    .and_then(|dt| Self::new(dt.unix_duration()))
             }
             _ => Err(Self::TAG.value_error()),
         }
