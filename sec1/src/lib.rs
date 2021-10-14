@@ -4,7 +4,7 @@
 //! `Octet-String-to-Elliptic-Curve-Point` encoding algorithms.
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.55** at a minimum.
 //!
 //! [SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf
 //! [RFC5915]: https://datatracker.ietf.org/doc/html/rfc5915

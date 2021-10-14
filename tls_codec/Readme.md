@@ -3,6 +3,7 @@
 ![MIT licensed][license-image]
 [![Project Chat][chat-image]][chat-link]
 [![][tls_codec-ci]][tls_codec-ci-link]
+![Rust Version][rustc-image]
 
 |                                        | crates.io                                      | docs.rs                                                      |
 | -------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
@@ -49,3 +50,4 @@ serialization/deserialization
 [tls_codec_derive-link]: https://crates.io/crates/tls_codec_derive
 [tls_codec_derive_docs]: https://img.shields.io/docsrs/tls_codec_derive/latest?style=for-the-badge
 [tls_codec_derive_docs-link]: https://docs.rs/tls_codec_derive/
+[rustc-image]: https://img.shields.io/badge/rustc-1.55+-blue.svg?style=for-the-badge

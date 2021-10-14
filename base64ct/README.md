@@ -36,7 +36,7 @@ to practically extract RSA private keys from SGX enclaves.
 
 ## Minimum Supported Rust Version
 
-This crate requires **Rust 1.51** at a minimum.
+This crate requires **Rust 1.55** at a minimum.
 
 We may change the MSRV in the future, but it will be accompanied by a minor
 version bump.
@@ -65,7 +65,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/base64ct.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/base64ct.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.51+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.55+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 

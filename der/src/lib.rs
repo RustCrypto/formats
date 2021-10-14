@@ -11,7 +11,7 @@
 //! that allocate gated under the off-by-default `alloc` feature).
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.55** at a minimum.
 //!
 //! We may change the MSRV in the future, but it will be accompanied by a minor
 //! version bump.
@@ -31,6 +31,7 @@
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`
 //!   (see also [`Utf8String`]. `String` requires `alloc` feature)
+//! - `[T; N]`: ASN.1 `SEQUENCE OF`
 //! - [`BTreeSet`][`alloc::collections::BTreeSet`]: ASN.1 `SET OF` (requires `alloc` feature)
 //! - [`Option`]: ASN.1 `OPTIONAL`
 //! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime` (requires `std` feature)
@@ -345,6 +346,7 @@ extern crate std;
 
 pub mod asn1;
 
+mod arrayvec;
 mod byte_slice;
 mod datetime;
 mod decodable;
@@ -374,7 +376,7 @@ pub use crate::{
     value::{DecodeValue, EncodeValue},
 };
 
-pub(crate) use crate::byte_slice::ByteSlice;
+pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]

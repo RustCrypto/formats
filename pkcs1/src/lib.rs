@@ -19,7 +19,7 @@
 //! ```
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.55** at a minimum.
 //!
 //! [RFC 8017]: https://tools.ietf.org/html/rfc8017
 #![no_std]
