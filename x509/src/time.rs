@@ -6,6 +6,9 @@ use der::{
     Choice,
 };
 
+#[cfg(feature = "std")]
+use std::time::SystemTime;
+
 /// Validity [`Time`] as defined in [RFC 5280 Section 4.1.2.5].
 ///
 /// Schema definition from [RFC 5280 Appendix A]:
@@ -31,10 +34,20 @@ pub enum Time {
 
 impl Time {
     /// Get duration since `UNIX_EPOCH`.
-    pub fn unix_duration(self) -> Duration {
+    pub fn to_unix_duration(self) -> Duration {
         match self {
-            Time::UtcTime(t) => t.unix_duration(),
-            Time::GeneralTime(t) => t.unix_duration(),
+            Time::UtcTime(t) => t.to_unix_duration(),
+            Time::GeneralTime(t) => t.to_unix_duration(),
+        }
+    }
+
+    /// Convert to [`SystemTime`].
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn to_system_time(&self) -> SystemTime {
+        match self {
+            Time::UtcTime(t) => t.to_system_time(),
+            Time::GeneralTime(t) => t.to_system_time(),
         }
     }
 }
