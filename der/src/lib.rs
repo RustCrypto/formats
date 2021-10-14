@@ -25,17 +25,18 @@
 //!
 //! The traits are impl'd for the following Rust core types:
 //!
-//! - `()`: ASN.1 `NULL` (see also [`Null`])
-//! - [`bool`]: ASN.1 `BOOLEAN`
-//! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`
-//! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`
-//! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`
-//!   (see also [`Utf8String`]. `String` requires `alloc` feature)
-//! - [`BTreeSet`][`alloc::collections::BTreeSet`]: ASN.1 `SET OF` (requires `alloc` feature)
-//! - [`Option`]: ASN.1 `OPTIONAL`
-//! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime` (requires `std` feature)
-//! - [`Vec`][`alloc::vec::Vec`]: ASN.1 `SEQUENCE OF` (requires `alloc` feature)
-//! - `[T; N]`: ASN.1 `SEQUENCE OF`
+//! - `()`: ASN.1 `NULL`. See also [`Null`].
+//! - [`bool`]: ASN.1 `BOOLEAN`.
+//! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`.
+//! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`.
+//! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`.
+//!   `String` requires `alloc` feature. See also [`Utf8String`].
+//! - [`BTreeSet`][`alloc::collections::BTreeSet`]: ASN.1 `SET OF`.
+//!   Requires `alloc` feature. See also [`SetOf`].
+//! - [`Option`]: ASN.1 `OPTIONAL`.
+//! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime`. Requires `std` feature.
+//! - [`Vec`][`alloc::vec::Vec`]: ASN.1 `SEQUENCE OF`. Requires `alloc` feature.
+//! - `[T; N]`: ASN.1 `SEQUENCE OF`. See also [`SequenceOf`].
 //!
 //! The following ASN.1 types provided by this crate also impl these traits:
 //!
@@ -49,7 +50,7 @@
 //! - [`PrintableString`]: ASN.1 `PrintableString` (ASCII subset)
 //! - [`Sequence`]: ASN.1 `SEQUENCE`
 //! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`
-//! - [`SetOfArray`]: ASN.1 `SET OF`
+//! - [`SetOf`]: ASN.1 `SET OF`
 //! - [`UIntBytes`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes
 //! - [`UtcTime`]: ASN.1 `UTCTime`
 //! - [`Utf8String`]: ASN.1 `UTF8String`
@@ -328,7 +329,7 @@
 //! [`PrintableString`]: asn1::PrintableString
 //! [`Sequence`]: asn1::Sequence
 //! [`SequenceOf`]: asn1::SequenceOf
-//! [`SetOfArray`]: asn1::SetOfArray
+//! [`SetOf`]: asn1::SetOf
 //! [`UtcTime`]: asn1::UtcTime
 //! [`Utf8String`]: asn1::Utf8String
 
@@ -349,7 +350,7 @@ extern crate std;
 
 pub mod asn1;
 
-mod arrayvec;
+pub(crate) mod arrayvec;
 mod byte_slice;
 mod datetime;
 mod decodable;

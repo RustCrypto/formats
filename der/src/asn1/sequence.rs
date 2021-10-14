@@ -4,8 +4,8 @@ pub(super) mod iter;
 
 use self::iter::SequenceIter;
 use crate::{
-    asn1::Any, ArrayVec, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue,
-    Encoder, Error, ErrorKind, Length, Result, Tag, Tagged,
+    arrayvec, asn1::Any, ArrayVec, ByteSlice, Decodable, DecodeValue, Decoder, Encodable,
+    EncodeValue, Encoder, Error, ErrorKind, Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -120,8 +120,10 @@ impl<T, const N: usize> SequenceOf<T, N> {
     }
 
     /// Iterate over the elements in this [`SequenceOf`].
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
-        self.inner.iter()
+    pub fn iter(&self) -> SequenceOfIter<'_, T> {
+        SequenceOfIter {
+            inner: self.inner.iter(),
+        }
     }
 }
 
@@ -171,6 +173,21 @@ where
 
 impl<'a, T, const N: usize> Tagged for SequenceOf<T, N> {
     const TAG: Tag = Tag::Sequence;
+}
+
+/// Iterator over the elements of an [`SequenceOf`].
+#[derive(Clone, Debug)]
+pub struct SequenceOfIter<'a, T> {
+    /// Inner iterator.
+    inner: arrayvec::Iter<'a, T>,
+}
+
+impl<'a, T> Iterator for SequenceOfIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+        self.inner.next()
+    }
 }
 
 impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
