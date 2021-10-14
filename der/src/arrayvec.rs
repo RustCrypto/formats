@@ -39,11 +39,6 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    /// Borrow the elements of this [`ArrayVec`].
-    pub fn elements(&self) -> &[Option<T>; N] {
-        &self.elements
-    }
-
     /// Get an element from this [`ArrayVec`].
     pub fn get(&self, index: usize) -> Option<&T> {
         match self.elements.get(index) {
@@ -58,7 +53,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 
     /// Iterate over the elements in this [`ArrayVec`].
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub fn iter(&self) -> Iter<'_, T> {
         Iter::new(&self.elements)
     }
 
@@ -88,6 +83,7 @@ impl<T, const N: usize> Default for ArrayVec<T, N> {
 }
 
 /// Iterator over the elements of an [`ArrayVec`].
+#[derive(Clone, Debug)]
 pub struct Iter<'a, T> {
     /// Decoder which iterates over the elements of the message.
     elements: &'a [Option<T>],

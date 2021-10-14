@@ -1,40 +1,16 @@
 //! ASN.1 `SET OF` support.
 
 use crate::{
-    ArrayVec, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, ErrorKind, Length,
-    Result, Tag, Tagged,
+    arrayvec, ArrayVec, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder,
+    ErrorKind, Length, Result, Tag, Tagged,
 };
 
 #[cfg(feature = "alloc")]
 use {
     crate::{asn1::Any, Error},
-    alloc::collections::{btree_set, BTreeSet},
+    alloc::collections::BTreeSet,
     core::convert::TryFrom,
 };
-
-/// ASN.1 `SET OF` denotes a collection of zero or more occurrences of a
-/// given type.
-///
-/// When encoded as DER, `SET OF` is lexicographically ordered. To implement
-/// that requirement, types `T` which are elements of [`SetOf`] MUST provide
-/// an impl of `Ord` which ensures that the corresponding DER encodings of
-/// a given type are ordered.
-pub trait SetOf<'a, 'b, T: 'b>: Decodable<'a>
-where
-    T: Clone + Decodable<'a> + Ord,
-{
-    /// Iterator over the elements of the set.
-    ///
-    /// The iterator type MUST maintain the invariant that messages are
-    /// lexicographically ordered.
-    ///
-    /// See toplevel documentation about `Ord` trait requirements for
-    /// more information.
-    type Iter: Iterator<Item = &'b T>;
-
-    /// Iterate over the elements of the set.
-    fn elements(&'b self) -> Self::Iter;
-}
 
 /// ASN.1 `SET OF` backed by an array.
 ///
@@ -43,25 +19,25 @@ where
 // TODO(tarcieri): use `ArrayVec` when/if it's merged into `core`
 // See: https://github.com/rust-lang/rfcs/pull/2990
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct SetOfArray<T, const N: usize>
+pub struct SetOf<T, const N: usize>
 where
     T: Clone + Ord,
 {
     inner: ArrayVec<T, N>,
 }
 
-impl<T, const N: usize> SetOfArray<T, N>
+impl<T, const N: usize> SetOf<T, N>
 where
     T: Clone + Ord,
 {
-    /// Create a new [`SetOfArray`].
+    /// Create a new [`SetOf`].
     pub fn new() -> Self {
         Self {
             inner: ArrayVec::default(),
         }
     }
 
-    /// Add an element to this [`SetOfArray`].
+    /// Add an element to this [`SetOf`].
     ///
     /// Items MUST be added in lexicographical order according to the `Ord`
     /// impl on `T`.
@@ -76,13 +52,15 @@ where
         self.inner.add(element)
     }
 
-    /// Iterate over the elements of this [`SetOfArray`].
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
-        SetOfArrayIter::new(self.inner.elements())
+    /// Iterate over the elements of this [`SetOf`].
+    pub fn iter(&self) -> SetOfIter<'_, T> {
+        SetOfIter {
+            inner: self.inner.iter(),
+        }
     }
 }
 
-impl<T, const N: usize> Default for SetOfArray<T, N>
+impl<T, const N: usize> Default for SetOf<T, N>
 where
     T: Clone + Ord,
 {
@@ -91,7 +69,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> DecodeValue<'a> for SetOfArray<T, N>
+impl<'a, T, const N: usize> DecodeValue<'a> for SetOf<T, N>
 where
     T: Clone + Decodable<'a> + Ord,
 {
@@ -111,17 +89,17 @@ where
     }
 }
 
-impl<'a, T, const N: usize> EncodeValue for SetOfArray<T, N>
+impl<'a, T, const N: usize> EncodeValue for SetOf<T, N>
 where
     T: 'a + Clone + Decodable<'a> + Encodable + Ord,
 {
     fn value_len(&self) -> Result<Length> {
-        self.elements()
+        self.iter()
             .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        for elem in self.elements() {
+        for elem in self.iter() {
             elem.encode(encoder)?;
         }
 
@@ -129,52 +107,25 @@ where
     }
 }
 
-impl<'a, T, const N: usize> Tagged for SetOfArray<T, N>
+impl<'a, T, const N: usize> Tagged for SetOf<T, N>
 where
     T: Clone + Decodable<'a> + Ord,
 {
     const TAG: Tag = Tag::Set;
 }
 
-impl<'a, 'b, T: 'a + 'b, const N: usize> SetOf<'a, 'b, T> for SetOfArray<T, N>
-where
-    T: Clone + Decodable<'a> + Ord,
-{
-    type Iter = SetOfArrayIter<'b, T>;
-
-    fn elements(&'b self) -> Self::Iter {
-        SetOfArrayIter::new(self.inner.elements())
-    }
+/// Iterator over the elements of an [`SetOf`].
+#[derive(Clone, Debug)]
+pub struct SetOfIter<'a, T> {
+    /// Inner iterator.
+    inner: arrayvec::Iter<'a, T>,
 }
 
-/// Iterator over the elements of an [`SetOfArray`].
-pub struct SetOfArrayIter<'a, T> {
-    /// Decoder which iterates over the elements of the message.
-    elements: &'a [Option<T>],
-
-    /// Position within the iterator.
-    position: usize,
-}
-
-impl<'a, T> SetOfArrayIter<'a, T> {
-    pub(crate) fn new(elements: &'a [Option<T>]) -> Self {
-        Self {
-            elements,
-            position: 0,
-        }
-    }
-}
-
-impl<'a, T> Iterator for SetOfArrayIter<'a, T> {
+impl<'a, T> Iterator for SetOfIter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-        if let Some(Some(res)) = self.elements.get(self.position) {
-            self.position += 1;
-            Some(res)
-        } else {
-            None
-        }
+        self.inner.next()
     }
 }
 
@@ -232,19 +183,6 @@ where
         }
 
         Ok(())
-    }
-}
-
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, 'b, T: 'b> SetOf<'a, 'b, T> for BTreeSet<T>
-where
-    T: Clone + Decodable<'a> + Ord,
-{
-    type Iter = btree_set::Iter<'b, T>;
-
-    fn elements(&'b self) -> Self::Iter {
-        self.iter()
     }
 }
 
