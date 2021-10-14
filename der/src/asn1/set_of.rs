@@ -93,7 +93,7 @@ where
 
 impl<'a, T, const N: usize> DecodeValue<'a> for SetOfArray<T, N>
 where
-    T: Clone + for<'b> Decodable<'b> + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
         let end_pos = (decoder.position() + length)?;
@@ -111,9 +111,9 @@ where
     }
 }
 
-impl<T, const N: usize> EncodeValue for SetOfArray<T, N>
+impl<'a, T, const N: usize> EncodeValue for SetOfArray<T, N>
 where
-    T: Clone + for<'a> Decodable<'a> + Encodable + Ord,
+    T: 'a + Clone + Decodable<'a> + Encodable + Ord,
 {
     fn value_len(&self) -> Result<Length> {
         self.elements()
@@ -129,16 +129,16 @@ where
     }
 }
 
-impl<T, const N: usize> Tagged for SetOfArray<T, N>
+impl<'a, T, const N: usize> Tagged for SetOfArray<T, N>
 where
-    T: Clone + for<'a> Decodable<'a> + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     const TAG: Tag = Tag::Set;
 }
 
 impl<'a, 'b, T: 'a + 'b, const N: usize> SetOf<'a, 'b, T> for SetOfArray<T, N>
 where
-    T: Clone + for<'c> Decodable<'c> + Ord,
+    T: Clone + Decodable<'a> + Ord,
 {
     type Iter = SetOfArrayIter<'b, T>;
 
