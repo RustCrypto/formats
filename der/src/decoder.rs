@@ -205,10 +205,9 @@ impl<'a> Decoder<'a> {
     where
         F: FnOnce(&mut Decoder<'a>) -> Result<T>,
     {
-        Sequence::decode(self)?.decode_nested(f).map_err(|e| {
-            self.bytes.take();
-            e.nested(self.position)
-        })
+        Tag::try_from(self.byte()?)?.assert_eq(Tag::Sequence)?;
+        let len = Length::decode(self)?;
+        self.decode_nested(len, f)
     }
 
     /// Decode a single byte, updating the internal cursor.
@@ -237,6 +236,33 @@ impl<'a> Decoder<'a> {
 
         self.position = (self.position + len)?;
         Ok(result)
+    }
+
+    /// Create a nested decoder which operates over the provided [`Length`].
+    ///
+    /// The nested decoder is passed to the provided callback function which is
+    /// expected to decode a value of type `T` with it.
+    fn decode_nested<F, T>(&mut self, length: Length, f: F) -> Result<T>
+    where
+        F: FnOnce(&mut Self) -> Result<T>,
+    {
+        let start_pos = self.position();
+        let end_pos = (start_pos + length)?;
+        let bytes = match self.bytes {
+            Some(slice) => slice
+                .get(..end_pos.try_into()?)
+                .ok_or(ErrorKind::Truncated)?,
+            None => return Err(self.error(ErrorKind::Failed)),
+        };
+
+        let mut nested_decoder = Self {
+            bytes: Some(bytes),
+            position: start_pos,
+        };
+        self.position = end_pos;
+
+        let result = f(&mut nested_decoder)?;
+        nested_decoder.finish(result)
     }
 
     /// Obtain the remaining bytes in this decoder from the current cursor
