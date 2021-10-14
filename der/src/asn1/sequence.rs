@@ -9,6 +9,9 @@ use crate::{
 };
 use core::convert::TryFrom;
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 /// ASN.1 `SEQUENCE` type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Sequence<'a> {
@@ -200,6 +203,57 @@ where
 }
 
 impl<'a, T, const N: usize> Tagged for [T; N]
+where
+    T: Decodable<'a>,
+{
+    const TAG: Tag = Tag::Sequence;
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<'a, T> DecodeValue<'a> for Vec<T>
+where
+    T: Decodable<'a>,
+{
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        let end_pos = (decoder.position() + length)?;
+        let mut sequence_of = Self::new();
+
+        while decoder.position() < end_pos {
+            sequence_of.push(decoder.decode()?);
+        }
+
+        if decoder.position() != end_pos {
+            decoder.error(ErrorKind::Length { tag: Self::TAG });
+        }
+
+        Ok(sequence_of)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<'a, T> EncodeValue for Vec<T>
+where
+    T: Encodable,
+{
+    fn value_len(&self) -> Result<Length> {
+        self.iter()
+            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        for elem in self {
+            elem.encode(encoder)?;
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<'a, T> Tagged for Vec<T>
 where
     T: Decodable<'a>,
 {
