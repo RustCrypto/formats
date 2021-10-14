@@ -8,12 +8,20 @@
 use crate::{Encoder, Error, ErrorKind, Result, Tag};
 use core::{fmt, str::FromStr, time::Duration};
 
+#[cfg(feature = "std")]
+use std::{
+    convert::TryFrom,
+    time::{SystemTime, UNIX_EPOCH},
+};
+
 /// Minimum year allowed in [`DateTime`] values.
 const MIN_YEAR: u16 = 1970;
 
 /// Maximum duration since `UNIX_EPOCH` which can be represented as a
 /// [`DateTime`] (non-inclusive).
-const MAX_UNIX_DURATION: Duration = Duration::from_secs(253_402_300_800);
+///
+/// This corresponds to: 9999-12-31T23:59:59Z
+const MAX_UNIX_DURATION: Duration = Duration::from_secs(253_402_300_799);
 
 /// Date-and-time type shared by multiple ASN.1 types
 /// (e.g. `GeneralizedTime`, `UTCTime`).
@@ -21,7 +29,7 @@ const MAX_UNIX_DURATION: Duration = Duration::from_secs(253_402_300_800);
 /// Following conventions from RFC 5280, this type is always Z-normalized
 /// (i.e. represents a UTC time). However, it isn't named "UTC time" in order
 /// to prevent confusion with ASN.1 `UTCTime`.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct DateTime {
     /// Full year (e.g. 2000).
     ///
@@ -103,6 +111,10 @@ impl DateTime {
         let days = (year - 1970) as u64 * 365 + leap_years as u64 + ydays as u64;
         let time = seconds as u64 + (minutes as u64 * 60) + (hour as u64 * 3600);
         let unix_duration = Duration::from_secs(time + days * 86400);
+
+        if unix_duration > MAX_UNIX_DURATION {
+            return Err(ErrorKind::DateTime.into());
+        }
 
         Ok(Self {
             year,
@@ -228,6 +240,22 @@ impl DateTime {
     pub fn unix_duration(&self) -> Duration {
         self.unix_duration
     }
+
+    /// Instantiate from [`SystemTime`].
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn from_system_time(time: SystemTime) -> Result<Self> {
+        time.duration_since(UNIX_EPOCH)
+            .map_err(|_| ErrorKind::DateTime.into())
+            .and_then(Self::from_unix_duration)
+    }
+
+    /// Convert to [`SystemTime`].
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn to_system_time(&self) -> SystemTime {
+        UNIX_EPOCH + self.unix_duration()
+    }
 }
 
 impl FromStr for DateTime {
@@ -260,6 +288,42 @@ impl fmt::Display for DateTime {
             "{:02}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
             self.year, self.month, self.day, self.hour, self.minutes, self.seconds
         )
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl From<DateTime> for SystemTime {
+    fn from(time: DateTime) -> SystemTime {
+        time.to_system_time()
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl From<&DateTime> for SystemTime {
+    fn from(time: &DateTime) -> SystemTime {
+        time.to_system_time()
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl TryFrom<SystemTime> for DateTime {
+    type Error = Error;
+
+    fn try_from(time: SystemTime) -> Result<DateTime> {
+        DateTime::from_system_time(time)
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl TryFrom<&SystemTime> for DateTime {
+    type Error = Error;
+
+    fn try_from(time: &SystemTime) -> Result<DateTime> {
+        DateTime::from_system_time(*time)
     }
 }
 

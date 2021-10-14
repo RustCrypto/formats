@@ -30,10 +30,10 @@ pub enum Time {
 }
 
 impl Time {
-    fn unix_duration(self) -> Duration {
+    fn to_unix_duration(self) -> Duration {
         match self {
-            Time::UtcTime(t) => t.unix_duration(),
-            Time::GeneralTime(t) => t.unix_duration(),
+            Time::UtcTime(t) => t.to_unix_duration(),
+            Time::GeneralTime(t) => t.to_unix_duration(),
         }
     }
 }
@@ -44,10 +44,10 @@ const GENERAL_TIMESTAMP: &[u8] = &hex!("18 0f 31 39 39 31 30 35 30 36 32 33 34 3
 #[test]
 fn decode_enum_variants() {
     let utc_time = Time::from_der(UTC_TIMESTAMP).unwrap();
-    assert_eq!(utc_time.unix_duration().as_secs(), 673573540);
+    assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
 
     let general_time = Time::from_der(GENERAL_TIMESTAMP).unwrap();
-    assert_eq!(general_time.unix_duration().as_secs(), 673573540);
+    assert_eq!(general_time.to_unix_duration().as_secs(), 673573540);
 }
 
 #[test]
