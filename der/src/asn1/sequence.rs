@@ -89,12 +89,12 @@ impl<'a> Tagged for Sequence<'a> {
 
 impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
 where
-    // TODO(tarcieri): remove `Copy` + `Default` bounds with `array::try_from_fn`
-    T: Copy + Decodable<'a> + Default,
+    // TODO(tarcieri): remove `Default` bounds with `array::try_from_fn`
+    T: Decodable<'a> + Default,
 {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
         let end_pos = (decoder.position() + length)?;
-        let mut result = [Default::default(); N];
+        let mut result = [(); N].map(|_| Default::default());
 
         for elem in &mut result {
             *elem = decoder.decode()?;
