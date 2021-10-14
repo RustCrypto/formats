@@ -4,8 +4,8 @@ pub(super) mod iter;
 
 use self::iter::SequenceIter;
 use crate::{
-    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
-    ErrorKind, Length, Result, Tag, Tagged,
+    asn1::Any, ArrayVec, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue,
+    Encoder, Error, ErrorKind, Length, Result, Tag, Tagged,
 };
 use core::convert::TryFrom;
 
@@ -87,28 +87,97 @@ impl<'a> Tagged for Sequence<'a> {
     const TAG: Tag = Tag::Sequence;
 }
 
-impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
+/// ASN.1 `SEQUENCE OF` backed by an array.
+///
+/// This type implements an append-only `SEQUENCE OF` type which is stack-based
+/// and does not depend on `alloc` support.
+// TODO(tarcieri): use `ArrayVec` when/if it's merged into `core`
+// See: https://github.com/rust-lang/rfcs/pull/2990
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SequenceOf<T, const N: usize> {
+    inner: ArrayVec<T, N>,
+}
+
+impl<T, const N: usize> SequenceOf<T, N> {
+    /// Create a new [`SequenceOf`].
+    pub fn new() -> Self {
+        Self {
+            inner: ArrayVec::new(),
+        }
+    }
+
+    /// Add an element to this [`SequenceOf`].
+    pub fn add(&mut self, element: T) -> Result<()> {
+        self.inner.add(element)
+    }
+
+    /// Get an element of this [`SequenceOf`].
+    pub fn get(&self, index: usize) -> Option<&T> {
+        self.inner.get(index)
+    }
+
+    /// Iterate over the elements in this [`SequenceOf`].
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.inner.iter()
+    }
+}
+
+impl<T, const N: usize> Default for SequenceOf<T, N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'a, T, const N: usize> DecodeValue<'a> for SequenceOf<T, N>
 where
-    // TODO(tarcieri): remove `Default` bounds with `array::try_from_fn`
-    T: Decodable<'a> + Default,
+    T: Decodable<'a>,
 {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
         let end_pos = (decoder.position() + length)?;
-        let mut result = [(); N].map(|_| Default::default());
+        let mut sequence_of = Self::new();
 
-        for elem in &mut result {
-            *elem = decoder.decode()?;
-
-            if decoder.position() > end_pos {
-                decoder.error(ErrorKind::Length { tag: Self::TAG });
-            }
+        while decoder.position() < end_pos {
+            sequence_of.add(decoder.decode()?)?;
         }
 
         if decoder.position() != end_pos {
             decoder.error(ErrorKind::Length { tag: Self::TAG });
         }
 
-        Ok(result)
+        Ok(sequence_of)
+    }
+}
+
+impl<'a, T, const N: usize> EncodeValue for SequenceOf<T, N>
+where
+    T: Encodable,
+{
+    fn value_len(&self) -> Result<Length> {
+        self.iter()
+            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        for elem in self.iter() {
+            elem.encode(encoder)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl<'a, T, const N: usize> Tagged for SequenceOf<T, N> {
+    const TAG: Tag = Tag::Sequence;
+}
+
+impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
+where
+    T: Decodable<'a>,
+{
+    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+        SequenceOf::decode_value(decoder, length)?
+            .inner
+            .try_into_array()
     }
 }
 

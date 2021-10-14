@@ -30,7 +30,7 @@ pub use self::{
     null::Null,
     octet_string::OctetString,
     printable_string::PrintableString,
-    sequence::{iter::SequenceIter, Sequence},
+    sequence::{iter::SequenceIter, Sequence, SequenceOf},
     set_of::{SetOf, SetOfArray},
     utc_time::UtcTime,
     utf8_string::Utf8String,
