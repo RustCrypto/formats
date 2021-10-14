@@ -1,8 +1,8 @@
 //! ASN.1 `SET OF` support.
 
 use crate::{
-    Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, ErrorKind, Length, Result,
-    Tag, Tagged,
+    ArrayVec, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, ErrorKind, Length,
+    Result, Tag, Tagged,
 };
 
 #[cfg(feature = "alloc")]
@@ -45,24 +45,19 @@ where
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SetOfArray<T, const N: usize>
 where
-    T: Clone + for<'a> Decodable<'a> + Ord,
+    T: Clone + Ord,
 {
-    /// Elements of the set.
-    elements: [Option<T>; N],
-
-    /// Last populated element.
-    length: usize,
+    inner: ArrayVec<T, N>,
 }
 
 impl<T, const N: usize> SetOfArray<T, N>
 where
-    T: Clone + for<'a> Decodable<'a> + Ord,
+    T: Clone + Ord,
 {
     /// Create a new [`SetOfArray`].
     pub fn new() -> Self {
         Self {
-            elements: [(); N].map(|_| None),
-            length: 0,
+            inner: ArrayVec::default(),
         }
     }
 
@@ -72,35 +67,24 @@ where
     /// impl on `T`.
     pub fn add(&mut self, element: T) -> Result<()> {
         // Ensure set elements are lexicographically ordered
-        if let Some(Some(elem)) = self
-            .length
-            .checked_sub(1)
-            .and_then(|n| self.elements.get(n))
-        {
+        if let Some(elem) = self.inner.last() {
             if elem >= &element {
                 return Err(ErrorKind::Ordering.into());
             }
         }
 
-        match self.length.checked_add(1) {
-            Some(n) if n < N => {
-                self.elements[self.length] = Some(element);
-                self.length = n;
-                Ok(())
-            }
-            _ => Err(ErrorKind::Overlength.into()),
-        }
+        self.inner.add(element)
     }
 
     /// Iterate over the elements of this [`SetOfArray`].
     pub fn iter(&self) -> impl Iterator<Item = &T> {
-        SetOfArrayIter::new(&self.elements)
+        SetOfArrayIter::new(self.inner.elements())
     }
 }
 
 impl<T, const N: usize> Default for SetOfArray<T, N>
 where
-    T: Clone + for<'a> Decodable<'a> + Ord,
+    T: Clone + Ord,
 {
     fn default() -> Self {
         Self::new()
@@ -159,7 +143,7 @@ where
     type Iter = SetOfArrayIter<'b, T>;
 
     fn elements(&'b self) -> Self::Iter {
-        SetOfArrayIter::new(&self.elements)
+        SetOfArrayIter::new(self.inner.elements())
     }
 }
 

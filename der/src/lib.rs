@@ -346,6 +346,7 @@ extern crate std;
 
 pub mod asn1;
 
+mod arrayvec;
 mod byte_slice;
 mod datetime;
 mod decodable;
@@ -375,7 +376,7 @@ pub use crate::{
     value::{DecodeValue, EncodeValue},
 };
 
-pub(crate) use crate::byte_slice::ByteSlice;
+pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
