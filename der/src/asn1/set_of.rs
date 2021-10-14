@@ -42,7 +42,7 @@ where
 /// and does not depend on `alloc` support.
 // TODO(tarcieri): use `ArrayVec` when/if it's merged into `core`
 // See: https://github.com/rust-lang/rfcs/pull/2990
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct SetOfArray<T, const N: usize>
 where
     T: Clone + Ord,
