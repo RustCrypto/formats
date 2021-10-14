@@ -86,9 +86,8 @@ impl DecodeValue<'_> for UtcTime {
                 let year = if year >= 50 { year + 1900 } else { year + 2000 };
 
                 DateTime::new(year, month, day, hour, minute, second)
-                    .and_then(|dt| dt.unix_duration())
                     .map_err(|_| Self::TAG.value_error())
-                    .and_then(Self::new)
+                    .and_then(|dt| Self::new(dt.unix_duration()))
             }
             _ => Err(Self::TAG.value_error()),
         }
@@ -173,7 +172,7 @@ mod tests {
                 for day in 1..=max_day {
                     for hour in 0..=23 {
                         let datetime1 = DateTime::new(year, month, day, hour, 0, 0).unwrap();
-                        let utc_time1 = UtcTime::new(datetime1.unix_duration().unwrap()).unwrap();
+                        let utc_time1 = UtcTime::new(datetime1.unix_duration()).unwrap();
 
                         let mut buf = [0u8; 128];
                         let mut encoder = Encoder::new(&mut buf);
