@@ -1,7 +1,7 @@
 //! Relative Distinguished Names
 
 use crate::AttributeTypeAndValue;
-use der::asn1::Sequence;
+use der::asn1::{SetOfArray, SetOf};
 
 // Name ::= CHOICE { rdnSequence  RDNSequence }
 // DistinguishedName ::=   RDNSequence
@@ -9,6 +9,4 @@ use der::asn1::Sequence;
 // RelativeDistinguishedName ::= SET SIZE (1..MAX) OF AttributeTypeAndValue
 
 /// Relative Distinguished Name
-//pub type RelativeDistinguishedName<'a> = SetOfRef<'a, AttributeTypeAndValue<'a>>;
-// tmp definition
-pub type RelativeDistinguishedName<'a> = Sequence<'a>;
+pub type RelativeDistinguishedName<'a> = SetOfArray<AttributeTypeAndValue<'a>, 25>;
