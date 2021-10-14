@@ -31,7 +31,7 @@ pub use self::{
     octet_string::OctetString,
     printable_string::PrintableString,
     sequence::{iter::SequenceIter, Sequence},
-    set_of::{SetOf, SetOfRef, SetOfRefIter},
+    set_of::{SetOf, SetOfArray},
     utc_time::UtcTime,
     utf8_string::Utf8String,
 };

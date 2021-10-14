@@ -1,13 +1,16 @@
 //! ASN.1 `SET OF` support.
 
 use crate::{
-    asn1::Any, ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
-    ErrorKind, Length, Result, Tag, Tagged,
+    Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, ErrorKind, Length, Result,
+    Tag, Tagged,
 };
-use core::{convert::TryFrom, marker::PhantomData};
 
 #[cfg(feature = "alloc")]
-use alloc::collections::{btree_set, BTreeSet};
+use {
+    crate::{asn1::Any, Error},
+    alloc::collections::{btree_set, BTreeSet},
+    core::convert::TryFrom,
+};
 
 /// ASN.1 `SET OF` denotes a collection of zero or more occurrences of a
 /// given type.
@@ -16,7 +19,7 @@ use alloc::collections::{btree_set, BTreeSet};
 /// that requirement, types `T` which are elements of [`SetOf`] MUST provide
 /// an impl of `Ord` which ensures that the corresponding DER encodings of
 /// a given type are ordered.
-pub trait SetOf<'a, 'b, T>: Decodable<'a>
+pub trait SetOf<'a, 'b, T: 'b>: Decodable<'a>
 where
     T: Clone + Decodable<'a> + Ord,
 {
@@ -27,170 +30,166 @@ where
     ///
     /// See toplevel documentation about `Ord` trait requirements for
     /// more information.
-    type Iter: Iterator<Item = T>;
+    type Iter: Iterator<Item = &'b T>;
 
     /// Iterate over the elements of the set.
     fn elements(&'b self) -> Self::Iter;
 }
 
-/// ASN.1 `SET OF` backed by a byte slice containing serialized DER.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct SetOfRef<'a, T>
+/// ASN.1 `SET OF` backed by an array.
+///
+/// This type implements an append-only `SET OF` type which is stack-based
+/// and does not depend on `alloc` support.
+// TODO(tarcieri): use `ArrayVec` when/if it's merged into `core`
+// See: https://github.com/rust-lang/rfcs/pull/2990
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SetOfArray<T, const N: usize>
 where
-    T: Clone + Decodable<'a> + Ord,
+    T: Clone + for<'a> Decodable<'a> + Ord,
 {
-    /// DER-encoded byte slice
-    inner: ByteSlice<'a>,
+    /// Elements of the set.
+    elements: [Option<T>; N],
 
-    /// Set element type
-    element_type: PhantomData<T>,
+    /// Last populated element.
+    length: usize,
 }
 
-impl<'a, T> SetOfRef<'a, T>
+impl<T, const N: usize> SetOfArray<T, N>
 where
-    T: Clone + Decodable<'a> + Ord,
+    T: Clone + for<'a> Decodable<'a> + Ord,
 {
-    /// Create a new [`SetOfRef`] from a slice.
-    pub fn new(slice: &'a [u8]) -> Result<Self> {
-        let inner = ByteSlice::new(slice).map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
-        let mut decoder = Decoder::new(slice);
-        let mut last_value = None;
+    /// Create a new [`SetOfArray`].
+    pub fn new() -> Self {
+        Self {
+            elements: [(); N].map(|_| None),
+            length: 0,
+        }
+    }
 
-        // Validate that we can decode all elements in the slice, and that they
-        // are lexicographically ordered according to DER's rules
-        while !decoder.is_finished() {
-            let value: T = decoder.decode()?;
-
-            if let Some(last) = last_value.as_ref() {
-                if last >= &value {
-                    return Err(Self::TAG.non_canonical_error());
-                }
+    /// Add an element to this [`SetOfArray`].
+    ///
+    /// Items MUST be added in lexicographical order according to the `Ord`
+    /// impl on `T`.
+    pub fn add(&mut self, element: T) -> Result<()> {
+        // Ensure set elements are lexicographically ordered
+        if let Some(Some(elem)) = self
+            .length
+            .checked_sub(1)
+            .and_then(|n| self.elements.get(n))
+        {
+            if elem >= &element {
+                return Err(ErrorKind::Ordering.into());
             }
-
-            last_value = Some(value);
         }
 
-        Ok(Self {
-            inner,
-            element_type: PhantomData,
-        })
+        match self.length.checked_add(1) {
+            Some(n) if n < N => {
+                self.elements[self.length] = Some(element);
+                self.length = n;
+                Ok(())
+            }
+            _ => Err(ErrorKind::Overlength.into()),
+        }
     }
 
-    /// Borrow the inner byte sequence.
-    pub fn as_bytes(&self) -> &'a [u8] {
-        self.inner.as_bytes()
+    /// Iterate over the elements of this [`SetOfArray`].
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        SetOfArrayIter::new(&self.elements)
     }
 }
 
-impl<'a, T> AsRef<[u8]> for SetOfRef<'a, T>
+impl<T, const N: usize> Default for SetOfArray<T, N>
 where
-    T: Clone + Decodable<'a> + Ord,
+    T: Clone + for<'a> Decodable<'a> + Ord,
 {
-    fn as_ref(&self) -> &[u8] {
-        self.as_bytes()
+    fn default() -> Self {
+        Self::new()
     }
 }
 
-impl<'a, T> DecodeValue<'a> for SetOfRef<'a, T>
+impl<'a, T, const N: usize> DecodeValue<'a> for SetOfArray<T, N>
 where
-    T: Clone + Decodable<'a> + Ord,
+    T: Clone + for<'b> Decodable<'b> + Ord,
 {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
+        let end_pos = (decoder.position() + length)?;
+        let mut result = Self::new();
+
+        while decoder.position() < end_pos {
+            result.add(decoder.decode()?)?;
+        }
+
+        if decoder.position() != end_pos {
+            decoder.error(ErrorKind::Length { tag: Self::TAG });
+        }
+
+        Ok(result)
     }
 }
 
-impl<'a, T> EncodeValue for SetOfRef<'a, T>
+impl<T, const N: usize> EncodeValue for SetOfArray<T, N>
 where
-    T: Clone + Decodable<'a> + Encodable + Ord,
+    T: Clone + for<'a> Decodable<'a> + Encodable + Ord,
 {
     fn value_len(&self) -> Result<Length> {
-        self.inner.value_len()
+        self.elements()
+            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.inner.encode_value(encoder)
+        for elem in self.elements() {
+            elem.encode(encoder)?;
+        }
+
+        Ok(())
     }
 }
 
-impl<'a, T> From<SetOfRef<'a, T>> for Any<'a>
+impl<T, const N: usize> Tagged for SetOfArray<T, N>
 where
-    T: Clone + Decodable<'a> + Ord,
-{
-    fn from(set: SetOfRef<'a, T>) -> Any<'a> {
-        Any::from_tag_and_value(Tag::Set, set.inner)
-    }
-}
-
-impl<'a, T> TryFrom<Any<'a>> for SetOfRef<'a, T>
-where
-    T: Clone + Decodable<'a> + Ord,
-{
-    type Error = Error;
-
-    fn try_from(any: Any<'a>) -> Result<Self> {
-        any.tag().assert_eq(Tag::Set)?;
-        Self::new(any.value())
-    }
-}
-
-impl<'a, 'b, T> SetOf<'a, 'b, T> for SetOfRef<'a, T>
-where
-    T: Clone + Decodable<'a> + Ord,
-{
-    type Iter = SetOfRefIter<'a, T>;
-
-    fn elements(&'b self) -> Self::Iter {
-        SetOfRefIter::new(self)
-    }
-}
-
-impl<'a, T> Tagged for SetOfRef<'a, T>
-where
-    T: Clone + Decodable<'a> + Ord,
+    T: Clone + for<'a> Decodable<'a> + Ord,
 {
     const TAG: Tag = Tag::Set;
 }
 
-/// Iterator over the elements of an [`SetOfRef`].
-pub struct SetOfRefIter<'a, T>
+impl<'a, 'b, T: 'a + 'b, const N: usize> SetOf<'a, 'b, T> for SetOfArray<T, N>
 where
-    T: Clone + Decodable<'a> + Ord,
+    T: Clone + for<'c> Decodable<'c> + Ord,
 {
-    /// Decoder which iterates over the elements of the message
-    decoder: Decoder<'a>,
+    type Iter = SetOfArrayIter<'b, T>;
 
-    /// Element type
-    element_type: PhantomData<T>,
+    fn elements(&'b self) -> Self::Iter {
+        SetOfArrayIter::new(&self.elements)
+    }
 }
 
-impl<'a, T> SetOfRefIter<'a, T>
-where
-    T: Clone + Decodable<'a> + Ord,
-{
-    pub(crate) fn new(set: &SetOfRef<'a, T>) -> Self {
+/// Iterator over the elements of an [`SetOfArray`].
+pub struct SetOfArrayIter<'a, T> {
+    /// Decoder which iterates over the elements of the message.
+    elements: &'a [Option<T>],
+
+    /// Position within the iterator.
+    position: usize,
+}
+
+impl<'a, T> SetOfArrayIter<'a, T> {
+    pub(crate) fn new(elements: &'a [Option<T>]) -> Self {
         Self {
-            decoder: Decoder::new(set.as_bytes()),
-            element_type: PhantomData,
+            elements,
+            position: 0,
         }
     }
 }
 
-impl<'a, T> Iterator for SetOfRefIter<'a, T>
-where
-    T: Clone + Decodable<'a> + Ord,
-{
-    type Item = T;
+impl<'a, T> Iterator for SetOfArrayIter<'a, T> {
+    type Item = &'a T;
 
-    fn next(&mut self) -> Option<T> {
-        if self.decoder.is_finished() {
-            None
+    fn next(&mut self) -> Option<&'a T> {
+        if let Some(Some(res)) = self.elements.get(self.position) {
+            self.position += 1;
+            Some(res)
         } else {
-            Some(
-                self.decoder
-                    .decode()
-                    .expect("SetOfRef decodable invariant violated"),
-            )
+            None
         }
     }
 }
@@ -203,7 +202,6 @@ where
 {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
         let end_pos = (decoder.position() + length)?;
-
         let mut result = BTreeSet::new();
         let mut last_value = None;
 
@@ -259,10 +257,10 @@ impl<'a, 'b, T: 'b> SetOf<'a, 'b, T> for BTreeSet<T>
 where
     T: Clone + Decodable<'a> + Ord,
 {
-    type Iter = core::iter::Cloned<btree_set::Iter<'b, T>>;
+    type Iter = btree_set::Iter<'b, T>;
 
     fn elements(&'b self) -> Self::Iter {
-        self.iter().cloned()
+        self.iter()
     }
 }
 

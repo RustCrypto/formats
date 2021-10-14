@@ -50,4 +50,4 @@ serialization/deserialization
 [tls_codec_derive-link]: https://crates.io/crates/tls_codec_derive
 [tls_codec_derive_docs]: https://img.shields.io/docsrs/tls_codec_derive/latest?style=for-the-badge
 [tls_codec_derive_docs-link]: https://docs.rs/tls_codec_derive/
-[rustc-image]: https://img.shields.io/badge/rustc-1.51+-blue.svg?style=for-the-badge
+[rustc-image]: https://img.shields.io/badge/rustc-1.55+-blue.svg?style=for-the-badge
