@@ -2,7 +2,7 @@
 
 use crate::{Error, Result, RsaPublicKey, Version};
 use core::{convert::TryFrom, fmt};
-use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Message};
+use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
 
 #[cfg(feature = "alloc")]
 use crate::RsaPrivateKeyDocument;
@@ -119,7 +119,7 @@ impl<'a> Decodable<'a> for RsaPrivateKey<'a> {
     }
 }
 
-impl<'a> Message<'a> for RsaPrivateKey<'a> {
+impl<'a> Sequence<'a> for RsaPrivateKey<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,

@@ -1,4 +1,4 @@
-//! Support for deriving the `Message` trait on structs for the purposes of
+//! Support for deriving the `Sequence` trait on structs for the purposes of
 //! decoding/encoding ASN.1 `SEQUENCE` types as mapped to struct fields.
 
 use crate::{Asn1Attrs, Asn1Type};
@@ -7,8 +7,8 @@ use quote::{quote, ToTokens};
 use syn::{DataStruct, Field, Ident, Lifetime};
 use synstructure::Structure;
 
-/// Derive the `Message` trait for a struct
-pub(crate) struct DeriveMessage {
+/// Derive the `Sequence` trait for a struct
+pub(crate) struct DeriveSequence {
     /// Field decoders
     decode_fields: TokenStream,
 
@@ -19,7 +19,7 @@ pub(crate) struct DeriveMessage {
     encode_fields: TokenStream,
 }
 
-impl DeriveMessage {
+impl DeriveSequence {
     pub fn derive(s: Structure<'_>, data: &DataStruct, lifetime: Option<&Lifetime>) -> TokenStream {
         let mut state = Self {
             decode_fields: TokenStream::new(),
@@ -47,7 +47,7 @@ impl DeriveMessage {
         self.derive_field_encoder(&name, asn1_type);
     }
 
-    /// Derive code for decoding a field of a message
+    /// Derive code for decoding a field of a sequence
     fn derive_field_decoder(&mut self, name: &Ident, asn1_type: Option<Asn1Type>) {
         let field_decoder = match asn1_type {
             Some(Asn1Type::BitString) => quote! {
@@ -76,7 +76,7 @@ impl DeriveMessage {
         field_result.to_tokens(&mut self.decode_result);
     }
 
-    /// Derive code for encoding a field of a message
+    /// Derive code for encoding a field of a sequence
     fn derive_field_encoder(&mut self, name: &Ident, asn1_type: Option<Asn1Type>) {
         let binding = quote!(&self.#name);
         asn1_type
@@ -112,7 +112,7 @@ impl DeriveMessage {
                 }
             }
 
-            gen impl ::der::Message<#lifetime> for @Self {
+            gen impl ::der::Sequence<#lifetime> for @Self {
                 fn fields<F, T>(&self, f: F) -> ::der::Result<T>
                 where
                     F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,

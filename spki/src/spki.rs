@@ -2,7 +2,7 @@
 
 use crate::AlgorithmIdentifier;
 use core::convert::TryFrom;
-use der::{asn1::BitString, Decodable, Decoder, Encodable, Error, Message, Result};
+use der::{asn1::BitString, Decodable, Decoder, Encodable, Error, Result, Sequence};
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -62,7 +62,7 @@ impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
     }
 }
 
-impl<'a> Message<'a> for SubjectPublicKeyInfo<'a> {
+impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
     fn fields<F, T>(&self, f: F) -> Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> Result<T>,
