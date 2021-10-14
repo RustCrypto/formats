@@ -26,7 +26,6 @@
 //! The traits are impl'd for the following Rust core types:
 //!
 //! - `()`: ASN.1 `NULL` (see also [`Null`])
-//! - `[T; N]`: ASN.1 `SEQUENCE OF`
 //! - [`bool`]: ASN.1 `BOOLEAN`
 //! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`
@@ -35,6 +34,8 @@
 //! - [`BTreeSet`][`alloc::collections::BTreeSet`]: ASN.1 `SET OF` (requires `alloc` feature)
 //! - [`Option`]: ASN.1 `OPTIONAL`
 //! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime` (requires `std` feature)
+//! - [`Vec`][`alloc::vec::Vec`]: ASN.1 `SEQUENCE OF` (requires `alloc` feature)
+//! - `[T; N]`: ASN.1 `SEQUENCE OF`
 //!
 //! The following ASN.1 types provided by this crate also impl these traits:
 //!
