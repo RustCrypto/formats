@@ -5,8 +5,8 @@
 // Copyright (c) 2016 The humantime Developers
 // Released under the MIT OR Apache 2.0 licenses
 
-use crate::{Encoder, ErrorKind, Result, Tag};
-use core::{fmt, time::Duration};
+use crate::{Encoder, Error, ErrorKind, Result, Tag};
+use core::{fmt, str::FromStr, time::Duration};
 
 /// Minimum year allowed in [`DateTime`] values.
 const MIN_YEAR: u16 = 1970;
@@ -230,6 +230,29 @@ impl DateTime {
     }
 }
 
+impl FromStr for DateTime {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        match *s.as_bytes() {
+            [year1, year2, year3, year4, b'-', month1, month2, b'-', day1, day2, b'T', hour1, hour2, b':', min1, min2, b':', sec1, sec2, b'Z'] =>
+            {
+                let tag = Tag::GeneralizedTime;
+                let year = decode_decimal(tag, year1, year2).map_err(|_| ErrorKind::DateTime)?
+                    * 100
+                    + decode_decimal(tag, year3, year4).map_err(|_| ErrorKind::DateTime)?;
+                let month = decode_decimal(tag, month1, month2).map_err(|_| ErrorKind::DateTime)?;
+                let day = decode_decimal(tag, day1, day2).map_err(|_| ErrorKind::DateTime)?;
+                let hour = decode_decimal(tag, hour1, hour2).map_err(|_| ErrorKind::DateTime)?;
+                let minutes = decode_decimal(tag, min1, min2).map_err(|_| ErrorKind::DateTime)?;
+                let seconds = decode_decimal(tag, sec1, sec2).map_err(|_| ErrorKind::DateTime)?;
+                Self::new(year, month, day, hour, minutes, seconds)
+            }
+            _ => Err(ErrorKind::DateTime.into()),
+        }
+    }
+}
+
 impl fmt::Display for DateTime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -275,6 +298,17 @@ mod tests {
         assert!(is_date_valid(2000, 2, 29, 0, 0, 0));
         assert!(!is_date_valid(2001, 2, 29, 0, 0, 0));
         assert!(!is_date_valid(2100, 2, 29, 0, 0, 0));
+    }
+
+    #[test]
+    fn from_str() {
+        let datetime = "2001-01-02T12:13:14Z".parse::<DateTime>().unwrap();
+        assert_eq!(datetime.year(), 2001);
+        assert_eq!(datetime.month(), 1);
+        assert_eq!(datetime.day(), 2);
+        assert_eq!(datetime.hour(), 12);
+        assert_eq!(datetime.minutes(), 13);
+        assert_eq!(datetime.seconds(), 14);
     }
 
     #[cfg(feature = "alloc")]
