@@ -123,7 +123,10 @@ impl<'a> Any<'a> {
     where
         F: FnOnce(&mut Decoder<'a>) -> Result<T>,
     {
-        Sequence::try_from(self)?.decode_nested(f)
+        self.tag.assert_eq(Tag::Sequence)?;
+        let mut seq_decoder = Decoder::new(self.value.as_bytes());
+        let result = f(&mut seq_decoder)?;
+        seq_decoder.finish(result)
     }
 
     /// Attempt to decode an ASN.1 `UTCTime`.
