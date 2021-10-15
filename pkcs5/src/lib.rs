@@ -163,7 +163,13 @@ impl<'a> Encodable for EncryptionScheme<'a> {
     fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
         match self {
             Self::Pbes1(pbes1) => pbes1.encode(encoder),
-            Self::Pbes2(pbes2) => encoder.message(&[&pbes2::PBES2_OID, pbes2]),
+            Self::Pbes2(pbes2) => {
+                let seq_len = (pbes2::PBES2_OID.encoded_len()? + pbes2.encoded_len()?)?;
+                encoder.sequence(seq_len, |seq| {
+                    seq.encode(&pbes2::PBES2_OID)?;
+                    seq.encode(pbes2)
+                })
+            }
         }
     }
 }

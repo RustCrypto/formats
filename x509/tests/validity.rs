@@ -27,15 +27,21 @@ fn decode_validity() {
     .unwrap();
 
     // Compare to values from https://www.epochconverter.com/
-    assert_eq!(val1.not_before.unix_duration().as_secs(), 1262334600);
-    assert_eq!(val1.not_after.unix_duration().as_secs(), 1924936200);
-    assert_eq!(val1.not_before.unix_duration().as_millis(), 1262334600000);
-    assert_eq!(val1.not_after.unix_duration().as_millis(), 1924936200000);
+    assert_eq!(val1.not_before.to_unix_duration().as_secs(), 1262334600);
+    assert_eq!(val1.not_after.to_unix_duration().as_secs(), 1924936200);
+    assert_eq!(
+        val1.not_before.to_unix_duration().as_millis(),
+        1262334600000
+    );
+    assert_eq!(val1.not_after.to_unix_duration().as_millis(), 1924936200000);
 
-    assert_eq!(val2.not_before.unix_duration().as_secs(), 1262334600);
-    assert_eq!(val2.not_after.unix_duration().as_secs(), 1293870600);
-    assert_eq!(val2.not_before.unix_duration().as_millis(), 1262334600000);
-    assert_eq!(val2.not_after.unix_duration().as_millis(), 1293870600000);
+    assert_eq!(val2.not_before.to_unix_duration().as_secs(), 1262334600);
+    assert_eq!(val2.not_after.to_unix_duration().as_secs(), 1293870600);
+    assert_eq!(
+        val2.not_before.to_unix_duration().as_millis(),
+        1262334600000
+    );
+    assert_eq!(val2.not_after.to_unix_duration().as_millis(), 1293870600000);
 
     assert_ne!(val1, val2);
     assert_eq!(val1, val1);
@@ -49,10 +55,13 @@ fn decode_validity() {
         &hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..],
     )
     .unwrap();
-    assert_eq!(val3.not_before.unix_duration().as_secs(), 1262334600);
-    assert_eq!(val3.not_after.unix_duration().as_secs(), 2524651260);
-    assert_eq!(val3.not_before.unix_duration().as_millis(), 1262334600000);
-    assert_eq!(val3.not_after.unix_duration().as_millis(), 2524651260000);
+    assert_eq!(val3.not_before.to_unix_duration().as_secs(), 1262334600);
+    assert_eq!(val3.not_after.to_unix_duration().as_secs(), 2524651260);
+    assert_eq!(
+        val3.not_before.to_unix_duration().as_millis(),
+        1262334600000
+    );
+    assert_eq!(val3.not_after.to_unix_duration().as_millis(), 2524651260000);
 
     assert_ne!(val1, val3);
     assert_eq!(val3, val3);
@@ -66,10 +75,13 @@ fn decode_validity() {
         &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..],
     )
     .unwrap();
-    assert_eq!(val4.not_before.unix_duration().as_secs(), 1009886460);
-    assert_eq!(val4.not_after.unix_duration().as_secs(), 1924936200);
-    assert_eq!(val4.not_before.unix_duration().as_millis(), 1009886460000);
-    assert_eq!(val4.not_after.unix_duration().as_millis(), 1924936200000);
+    assert_eq!(val4.not_before.to_unix_duration().as_secs(), 1009886460);
+    assert_eq!(val4.not_after.to_unix_duration().as_secs(), 1924936200);
+    assert_eq!(
+        val4.not_before.to_unix_duration().as_millis(),
+        1009886460000
+    );
+    assert_eq!(val4.not_after.to_unix_duration().as_millis(), 1924936200000);
 
     assert_ne!(val4, val3);
     assert_eq!(val4, val4);

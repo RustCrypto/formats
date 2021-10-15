@@ -7,7 +7,7 @@
 ![Rust Version][rustc-image]
 [![Project Chat][chat-image]][chat-link]
 
-Custom derive support for the `der` crate's `Choice` and `Message` traits.
+Custom derive support for the `der` crate's `Choice` and `Sequence` traits.
 
 [Documentation][docs-link]
 

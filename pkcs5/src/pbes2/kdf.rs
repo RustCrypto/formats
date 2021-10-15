@@ -4,7 +4,7 @@ use crate::{AlgorithmIdentifier, Error, Result};
 use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Message,
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence,
 };
 
 /// Password-Based Key Derivation Function (PBKDF2) OID.
@@ -100,7 +100,7 @@ impl<'a> Decodable<'a> for Kdf<'a> {
     }
 }
 
-impl<'a> Message<'a> for Kdf<'a> {
+impl<'a> Sequence<'a> for Kdf<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
@@ -202,7 +202,7 @@ impl<'a> Decodable<'a> for Pbkdf2Params<'a> {
     }
 }
 
-impl<'a> Message<'a> for Pbkdf2Params<'a> {
+impl<'a> Sequence<'a> for Pbkdf2Params<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
@@ -395,7 +395,7 @@ impl<'a> Decodable<'a> for ScryptParams<'a> {
     }
 }
 
-impl<'a> Message<'a> for ScryptParams<'a> {
+impl<'a> Sequence<'a> for ScryptParams<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,

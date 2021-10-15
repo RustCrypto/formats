@@ -4,13 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.6.1 (2021-09-14)
+## 0.6.2 (2021-10-14)
+### Fixed
+- Off-by-one error parsing large BER arcs ([#84])
+
+[#84]: https://github.com/RustCrypto/formats/pull/84
+
+## 0.6.1 (2021-09-14) [YANKED]
 ### Changed
 - Moved to `formats` repo ([#2])
 
 [#2]: https://github.com/RustCrypto/formats/pull/2
 
-## 0.6.0 (2021-06-03)
+## 0.6.0 (2021-06-03) [YANKED]
 ### Changed
 - Modernize and remove deprecations; MSRV 1.51+
 

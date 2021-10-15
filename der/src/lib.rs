@@ -25,16 +25,18 @@
 //!
 //! The traits are impl'd for the following Rust core types:
 //!
-//! - `()`: ASN.1 `NULL` (see also [`Null`])
-//! - [`bool`]: ASN.1 `BOOLEAN`
-//! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`
-//! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`
-//! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`
-//!   (see also [`Utf8String`]. `String` requires `alloc` feature)
-//! - `[T; N]`: ASN.1 `SEQUENCE OF`
-//! - [`BTreeSet`][`alloc::collections::BTreeSet`]: ASN.1 `SET OF` (requires `alloc` feature)
-//! - [`Option`]: ASN.1 `OPTIONAL`
-//! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime` (requires `std` feature)
+//! - `()`: ASN.1 `NULL`. See also [`Null`].
+//! - [`bool`]: ASN.1 `BOOLEAN`.
+//! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`.
+//! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`.
+//! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`.
+//!   `String` requires `alloc` feature. See also [`Utf8String`].
+//! - [`BTreeSet`][`alloc::collections::BTreeSet`]: ASN.1 `SET OF`.
+//!   Requires `alloc` feature. See also [`SetOf`].
+//! - [`Option`]: ASN.1 `OPTIONAL`.
+//! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime`. Requires `std` feature.
+//! - [`Vec`][`alloc::vec::Vec`]: ASN.1 `SEQUENCE OF`. Requires `alloc` feature.
+//! - `[T; N]`: ASN.1 `SEQUENCE OF`. See also [`SequenceOf`].
 //!
 //! The following ASN.1 types provided by this crate also impl these traits:
 //!
@@ -46,8 +48,8 @@
 //! - [`ObjectIdentifier`]: ASN.1 `OBJECT IDENTIFIER`
 //! - [`OctetString`]: ASN.1 `OCTET STRING`
 //! - [`PrintableString`]: ASN.1 `PrintableString` (ASCII subset)
-//! - [`Sequence`]: ASN.1 `SEQUENCE`
-//! - [`SetOfRef`]: ASN.1 `SET OF`
+//! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`
+//! - [`SetOf`]: ASN.1 `SET OF`
 //! - [`UIntBytes`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes
 //! - [`UtcTime`]: ASN.1 `UTCTime`
 //! - [`Utf8String`]: ASN.1 `UTF8String`
@@ -65,18 +67,18 @@
 //! ```
 //!
 //! Structured ASN.1 messages are typically encoded as a `SEQUENCE`, which
-//! this crate maps to a Rust struct using the [`Message`] trait. This
+//! this crate maps to a Rust struct using the [`Sequence`] trait. This
 //! trait is bounded on the [`Decodable`] trait and provides a blanket impl
-//! of the [`Encodable`] trait, so any type which impls [`Message`] can be
+//! of the [`Encodable`] trait, so any type which impls [`Sequence`] can be
 //! used for both decoding and encoding.
 //!
 //! The [`Decoder`] and [`Encoder`] types provide the decoding/encoding API
 //! respectively, and are designed to work in conjunction with concrete ASN.1
 //! types which impl the [`Decodable`] and [`Encodable`] traits, including
-//! all types which impl the [`Message`] trait.
+//! all types which impl the [`Sequence`] trait.
 //!
 //! The following code example shows how to define a struct which maps to the
-//! above schema, as well as impl the [`Message`] trait for that struct:
+//! above schema, as well as impl the [`Sequence`] trait for that struct:
 //!
 //! ```
 //! # #[cfg(all(feature = "alloc", feature = "oid"))]
@@ -87,7 +89,7 @@
 //! use core::convert::{TryFrom, TryInto};
 //! use der::{
 //!     asn1::{Any, ObjectIdentifier},
-//!     Decodable, Decoder, Encodable, Message
+//!     Decodable, Decoder, Encodable, Sequence
 //! };
 //!
 //! /// X.509 `AlgorithmIdentifier`.
@@ -138,8 +140,8 @@
 //!     }
 //! }
 //!
-//! impl<'a> Message<'a> for AlgorithmIdentifier<'a> {
-//!     // The `Message::fields` method is used for encoding and functions as
+//! impl<'a> Sequence<'a> for AlgorithmIdentifier<'a> {
+//!     // The `Sequence::fields` method is used for encoding and functions as
 //!     // a visitor for all of the fields in a message.
 //!     //
 //!     // To implement it, you must define a slice containing `Encodable`
@@ -154,7 +156,7 @@
 //!     // impl the `Encodable` trait, but if they don't you must construct
 //!     // a temporary wrapper value which does.
 //!     //
-//!     // Types which impl the `Message` trait receive blanket impls of both
+//!     // Types which impl the `Sequence` trait receive blanket impls of both
 //!     // the `Encodable` and `Tagged` traits (where the latter is impl'd as
 //!     // `Tagged::TAG = der::Tag::Sequence`.
 //!     fn fields<F, T>(&self, field_encoder: F) -> der::Result<T>
@@ -176,7 +178,7 @@
 //! //
 //! // When the `alloc` feature of this crate is enabled, any type that impls
 //! // the `Encodable` trait including all ASN.1 built-in types and any type
-//! // which impls `Message` can be serialized by calling `Encodable::to_vec()`.
+//! // which impls `Sequence` can be serialized by calling `Encodable::to_vec()`.
 //! //
 //! // If you would prefer to avoid allocations, you can create a byte array
 //! // as backing storage instead, pass that to `der::Encoder::new`, and then
@@ -219,19 +221,19 @@
 //! derive macros are available:
 //!
 //! - [`Choice`]: derive for `CHOICE` enum (see [`der_derive::Choice`])
-//! - [`Message`]: derive for `SEQUENCE` struct (see [`der_derive::Message`])
+//! - [`Sequence`]: derive for `SEQUENCE` struct (see [`der_derive::Sequence`])
 //!
-//! ### Derive [`Message`] for `SEQUENCE` struct
-//! The following is a code example of how to use the [`Message`] custom derive:
+//! ### Derive [`Sequence`] for struct
+//! The following is a code example of how to use the [`Sequence`] custom derive:
 //!
 //! ```
 //! # #[cfg(all(feature = "alloc", feature = "derive", feature = "oid"))]
 //! # {
-//! use der::{asn1::{Any, ObjectIdentifier}, Encodable, Decodable, Message};
+//! use der::{asn1::{Any, ObjectIdentifier}, Encodable, Decodable, Sequence};
 //! use core::convert::TryInto;
 //!
 //! /// X.509 `AlgorithmIdentifier` (same as above)
-//! #[derive(Copy, Clone, Debug, Eq, PartialEq, Message)] // NOTE: added `Message`
+//! #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)] // NOTE: added `Sequence`
 //! pub struct AlgorithmIdentifier<'a> {
 //!     /// This field contains an ASN.1 `OBJECT IDENTIFIER`, a.k.a. OID.
 //!     pub algorithm: ObjectIdentifier,
@@ -281,15 +283,15 @@
 //! ```rust
 //! # #[cfg(all(feature = "alloc", feature = "derive", feature = "oid"))]
 //! # {
-//! # use der::{asn1::{Any, ObjectIdentifier}, Message};
+//! # use der::{asn1::{Any, ObjectIdentifier}, Sequence};
 //! #
-//! # #[derive(Copy, Clone, Debug, Eq, PartialEq, Message)]
+//! # #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
 //! # pub struct AlgorithmIdentifier<'a> {
 //! #     pub algorithm: ObjectIdentifier,
 //! #     pub parameters: Option<Any<'a>>
 //! # }
 //! /// X.509 `SubjectPublicKeyInfo` (SPKI)
-//! #[derive(Copy, Clone, Debug, Eq, PartialEq, Message)]
+//! #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
 //! pub struct SubjectPublicKeyInfo<'a> {
 //!     /// X.509 `AlgorithmIdentifier`
 //!     pub algorithm: AlgorithmIdentifier<'a>,
@@ -324,8 +326,8 @@
 //! [`ObjectIdentifier`]: asn1::ObjectIdentifier
 //! [`OctetString`]: asn1::OctetString
 //! [`PrintableString`]: asn1::PrintableString
-//! [`Sequence`]: asn1::Sequence
-//! [`SetOfRef`]: asn1::SetOfRef
+//! [`SequenceOf`]: asn1::SequenceOf
+//! [`SetOf`]: asn1::SetOf
 //! [`UtcTime`]: asn1::UtcTime
 //! [`Utf8String`]: asn1::Utf8String
 
@@ -334,7 +336,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/der/0.4.3"
+    html_root_url = "https://docs.rs/der/0.5.0-pre.1"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
@@ -346,7 +348,7 @@ extern crate std;
 
 pub mod asn1;
 
-mod arrayvec;
+pub(crate) mod arrayvec;
 mod byte_slice;
 mod datetime;
 mod decodable;
@@ -356,13 +358,12 @@ mod encoder;
 mod error;
 mod header;
 mod length;
-mod message;
 mod str_slice;
 mod tag;
 mod value;
 
 pub use crate::{
-    asn1::{Any, Choice},
+    asn1::{Any, Choice, Sequence},
     datetime::DateTime,
     decodable::Decodable,
     decoder::Decoder,
@@ -371,12 +372,9 @@ pub use crate::{
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
-    message::Message,
     tag::{Class, Tag, TagMode, TagNumber, Tagged},
     value::{DecodeValue, EncodeValue},
 };
-
-pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
@@ -384,4 +382,6 @@ pub use crypto_bigint as bigint;
 
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
-pub use der_derive::{Choice, Message};
+pub use der_derive::{Choice, Sequence};
+
+pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};

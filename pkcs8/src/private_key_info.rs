@@ -4,7 +4,7 @@ use crate::{AlgorithmIdentifier, Error, Result, Version};
 use core::{convert::TryFrom, fmt};
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Message, TagMode, TagNumber,
+    Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -202,7 +202,7 @@ impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> Message<'a> for PrivateKeyInfo<'a> {
+impl<'a> Sequence<'a> for PrivateKeyInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
