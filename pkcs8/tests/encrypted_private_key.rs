@@ -219,7 +219,7 @@ fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
     let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
     assert_eq!(
         ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE,
-        pk.to_der().as_ref()
+        pk.to_der().unwrap().as_ref()
     );
 }
 
@@ -227,7 +227,10 @@ fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
 #[cfg(feature = "pem")]
 fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_pem() {
     let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
-    assert_eq!(ED25519_PEM_AES256_PBKDF2_SHA256_EXAMPLE, &*pk.to_pem());
+    assert_eq!(
+        ED25519_PEM_AES256_PBKDF2_SHA256_EXAMPLE,
+        &*pk.to_pem().unwrap()
+    );
 }
 
 #[test]

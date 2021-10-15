@@ -127,7 +127,7 @@ fn encode_rsa_2048_der() {
 #[cfg(feature = "pem")]
 fn encode_ec_p256_pem() {
     let pk = SubjectPublicKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
-    let pk_encoded = PublicKeyDocument::from(pk).to_pem();
+    let pk_encoded = PublicKeyDocument::try_from(pk).unwrap().to_pem().unwrap();
     assert_eq!(EC_P256_PEM_EXAMPLE, pk_encoded);
 }
 
@@ -135,7 +135,7 @@ fn encode_ec_p256_pem() {
 #[cfg(feature = "pem")]
 fn encode_ed25519_pem() {
     let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
-    let pk_encoded = PublicKeyDocument::from(pk).to_pem();
+    let pk_encoded = PublicKeyDocument::try_from(pk).unwrap().to_pem().unwrap();
     assert_eq!(ED25519_PEM_EXAMPLE, pk_encoded);
 }
 
@@ -143,7 +143,7 @@ fn encode_ed25519_pem() {
 #[cfg(feature = "pem")]
 fn encode_rsa_2048_pem() {
     let pk = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
-    let pk_encoded = PublicKeyDocument::from(pk).to_pem();
+    let pk_encoded = PublicKeyDocument::try_from(pk).unwrap().to_pem().unwrap();
     assert_eq!(RSA_2048_PEM_EXAMPLE, pk_encoded);
 }
 

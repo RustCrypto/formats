@@ -1,6 +1,6 @@
 //! SPKI public key document.
 
-use crate::{error, Error, Result, SubjectPublicKeyInfo};
+use crate::{Error, Result, SubjectPublicKeyInfo};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{
     convert::{TryFrom, TryInto},
@@ -64,7 +64,7 @@ impl PublicKeyDocument {
     /// Serialize [`PublicKeyDocument`] as PEM-encoded PKCS#8 (SPKI) string.
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self) -> String {
+    pub fn to_pem(&self) -> Result<String> {
         self.to_pem_with_le(LineEnding::default())
     }
 
@@ -72,8 +72,8 @@ impl PublicKeyDocument {
     /// with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> String {
-        pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0).expect(error::PEM_ENCODING_MSG)
+    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> Result<String> {
+        pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0).map_err(|_| Error::Pem)
     }
 
     /// Load [`PublicKeyDocument`] from an ASN.1 DER-encoded file on the local
@@ -105,7 +105,7 @@ impl PublicKeyDocument {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn write_pem_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        fs::write(path, self.to_pem().as_bytes())?;
+        fs::write(path, self.to_pem()?.as_bytes())?;
         Ok(())
     }
 }
@@ -116,18 +116,19 @@ impl AsRef<[u8]> for PublicKeyDocument {
     }
 }
 
-impl From<SubjectPublicKeyInfo<'_>> for PublicKeyDocument {
-    fn from(spki: SubjectPublicKeyInfo<'_>) -> PublicKeyDocument {
-        PublicKeyDocument::from(&spki)
+impl TryFrom<SubjectPublicKeyInfo<'_>> for PublicKeyDocument {
+    type Error = Error;
+
+    fn try_from(spki: SubjectPublicKeyInfo<'_>) -> Result<PublicKeyDocument> {
+        PublicKeyDocument::try_from(&spki)
     }
 }
 
-impl From<&SubjectPublicKeyInfo<'_>> for PublicKeyDocument {
-    fn from(spki: &SubjectPublicKeyInfo<'_>) -> PublicKeyDocument {
-        spki.to_vec()
-            .ok()
-            .and_then(|buf| buf.try_into().ok())
-            .expect(error::DER_ENCODING_MSG)
+impl TryFrom<&SubjectPublicKeyInfo<'_>> for PublicKeyDocument {
+    type Error = Error;
+
+    fn try_from(spki: &SubjectPublicKeyInfo<'_>) -> Result<PublicKeyDocument> {
+        spki.to_vec()?.try_into()
     }
 }
 

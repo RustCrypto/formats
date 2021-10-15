@@ -1,6 +1,6 @@
 //! PKCS#8 private key document.
 
-use crate::{error, Error, PrivateKeyInfo, Result};
+use crate::{Error, PrivateKeyInfo, Result};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{
     convert::{TryFrom, TryInto},
@@ -68,7 +68,7 @@ impl PrivateKeyDocument {
     /// Serialize [`PrivateKeyDocument`] as self-zeroizing PEM-encoded PKCS#8 string.
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self) -> Zeroizing<String> {
+    pub fn to_pem(&self) -> Result<Zeroizing<String>> {
         self.to_pem_with_le(LineEnding::default())
     }
 
@@ -76,11 +76,10 @@ impl PrivateKeyDocument {
     /// with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> Zeroizing<String> {
-        Zeroizing::new(
-            pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0)
-                .expect(error::PEM_ENCODING_MSG),
-        )
+    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+        pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0)
+            .map(Zeroizing::new)
+            .map_err(|_| Error::Pem)
     }
 
     /// Load [`PrivateKeyDocument`] from an ASN.1 DER-encoded file on the local
@@ -111,7 +110,7 @@ impl PrivateKeyDocument {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn write_pem_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        write_secret_file(path, self.to_pem().as_bytes())
+        write_secret_file(path, self.to_pem()?.as_bytes())
     }
 
     /// Encrypt this private key using a symmetric encryption key derived
@@ -153,14 +152,14 @@ impl PrivateKeyDocument {
     ) -> Result<EncryptedPrivateKeyDocument> {
         pbes2_params
             .encrypt(password, self.as_ref())
-            .map(|encrypted_data| {
+            .map_err(|_| Error::Crypto)
+            .and_then(|encrypted_data| {
                 EncryptedPrivateKeyInfo {
                     encryption_algorithm: pbes2_params.into(),
                     encrypted_data: &encrypted_data,
                 }
-                .into()
+                .try_into()
             })
-            .map_err(|_| Error::Crypto)
     }
 }
 
@@ -170,19 +169,19 @@ impl AsRef<[u8]> for PrivateKeyDocument {
     }
 }
 
-impl From<PrivateKeyInfo<'_>> for PrivateKeyDocument {
-    fn from(private_key_info: PrivateKeyInfo<'_>) -> PrivateKeyDocument {
-        PrivateKeyDocument::from(&private_key_info)
+impl TryFrom<PrivateKeyInfo<'_>> for PrivateKeyDocument {
+    type Error = Error;
+
+    fn try_from(private_key_info: PrivateKeyInfo<'_>) -> Result<PrivateKeyDocument> {
+        PrivateKeyDocument::try_from(&private_key_info)
     }
 }
 
-impl From<&PrivateKeyInfo<'_>> for PrivateKeyDocument {
-    fn from(private_key_info: &PrivateKeyInfo<'_>) -> PrivateKeyDocument {
-        private_key_info
-            .to_vec()
-            .expect(error::DER_ENCODING_MSG)
-            .try_into()
-            .expect(error::DER_ENCODING_MSG)
+impl TryFrom<&PrivateKeyInfo<'_>> for PrivateKeyDocument {
+    type Error = Error;
+
+    fn try_from(private_key_info: &PrivateKeyInfo<'_>) -> Result<PrivateKeyDocument> {
+        private_key_info.to_vec()?.try_into()
     }
 }
 
