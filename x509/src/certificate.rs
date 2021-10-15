@@ -2,7 +2,7 @@
 
 use crate::{Extensions, RDNSequence, Validity};
 use der::asn1::{BitString, UIntBytes};
-use der::{Decodable, Decoder, TagMode, TagNumber};
+use der::{Decodable, Decoder, Sequence, TagMode, TagNumber};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 // only support v3 certificates
@@ -70,6 +70,7 @@ impl<'a> Decodable<'a> for TBSCertificate<'a> {
                 return Err(der::Tag::Integer.value_error());
             }
 
+            // TODO refactor unwrap if this implementation remains
             let serial_number = UIntBytes::decode(decoder).unwrap();
             let signature = AlgorithmIdentifier::decode(decoder).unwrap();
             let issuer = RDNSequence::decode(decoder).unwrap();
@@ -107,11 +108,33 @@ impl<'a> Decodable<'a> for TBSCertificate<'a> {
     }
 }
 
+impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
+    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    {
+        #[allow(unused_imports)]
+        use core::convert::TryFrom;
+        f(&[
+            &self.version,
+            &self.serial_number,
+            &self.signature,
+            &self.issuer,
+            &self.validity,
+            &self.subject,
+            &self.subject_public_key_info,
+            &self.issuer_unique_id,
+            &self.subject_unique_id,
+            &self.extensions,
+        ])
+    }
+}
+
 /// Certificate  ::=  SEQUENCE  {
 ///      tbsCertificate       TBSCertificate,
 ///      signatureAlgorithm   AlgorithmIdentifier,
 ///      signature            BIT STRING  }
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct Certificate<'a> {
     /// tbsCertificate       TBSCertificate,
     pub tbs_certificate: TBSCertificate<'a>,
@@ -119,19 +142,4 @@ pub struct Certificate<'a> {
     pub signature_algorithm: AlgorithmIdentifier<'a>,
     /// signature            BIT STRING
     pub signature: BitString<'a>,
-}
-
-impl<'a> Decodable<'a> for Certificate<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let tbs_certificate = TBSCertificate::decode(decoder).unwrap();
-            let signature_algorithm = AlgorithmIdentifier::decode(decoder).unwrap();
-            let signature = BitString::decode(decoder).unwrap();
-            Ok(Certificate {
-                tbs_certificate,
-                signature_algorithm,
-                signature,
-            })
-        })
-    }
 }
