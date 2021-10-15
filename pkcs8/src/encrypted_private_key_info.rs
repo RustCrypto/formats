@@ -70,21 +70,11 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
         self.try_into()
     }
 
-    /// Encode this [`EncryptedPrivateKeyInfo`] as PEM-encoded ASN.1 DER.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self) -> Result<Zeroizing<alloc::string::String>> {
-        self.to_pem_with_le(LineEnding::default())
-    }
-
     /// Encode this [`EncryptedPrivateKeyInfo`] as PEM-encoded ASN.1 DER with
     /// the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(
-        &self,
-        line_ending: LineEnding,
-    ) -> Result<Zeroizing<alloc::string::String>> {
+    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<alloc::string::String>> {
         pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der()?.as_ref())
             .map(Zeroizing::new)
             .map_err(|_| Error::Pem)

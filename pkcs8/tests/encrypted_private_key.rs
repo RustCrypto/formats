@@ -229,7 +229,7 @@ fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_pem() {
     let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
     assert_eq!(
         ED25519_PEM_AES256_PBKDF2_SHA256_EXAMPLE,
-        &*pk.to_pem().unwrap()
+        &*pk.to_pem(Default::default()).unwrap()
     );
 }
 

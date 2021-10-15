@@ -46,18 +46,11 @@ impl<'a> RsaPublicKey<'a> {
         self.into()
     }
 
-    /// Encode this [`RsaPublicKey`] as PEM-encoded ASN.1 DER.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(self) -> Result<String> {
-        self.to_pem_with_le(LineEnding::default())
-    }
-
     /// Encode this [`RsaPublicKey`] as PEM-encoded ASN.1 DER with the given
     /// [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(self, line_ending: LineEnding) -> Result<String> {
+    pub fn to_pem(self, line_ending: LineEnding) -> Result<String> {
         Ok(pem::encode_string(
             PEM_TYPE_LABEL,
             line_ending,

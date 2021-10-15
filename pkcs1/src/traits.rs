@@ -110,18 +110,11 @@ pub trait ToRsaPrivateKey {
     /// Serialize a [`RsaPrivateKeyDocument`] containing a PKCS#1-encoded private key.
     fn to_pkcs1_der(&self) -> Result<RsaPrivateKeyDocument>;
 
-    /// Serialize this private key as PEM-encoded PKCS#1.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem(&self) -> Result<Zeroizing<String>> {
-        self.to_pkcs1_pem_with_le(LineEnding::default())
-    }
-
     /// Serialize this private key as PEM-encoded PKCS#1 with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem_with_le(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        self.to_pkcs1_der()?.to_pkcs1_pem_with_le(line_ending)
+    fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+        self.to_pkcs1_der()?.to_pkcs1_pem(line_ending)
     }
 
     /// Write ASN.1 DER-encoded PKCS#1 private key to the given path.
@@ -135,8 +128,8 @@ pub trait ToRsaPrivateKey {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_pem_file(&self, path: &Path) -> Result<()> {
-        self.to_pkcs1_der()?.write_pkcs1_pem_file(path)
+    fn write_pkcs1_pem_file(&self, path: &Path, line_ending: LineEnding) -> Result<()> {
+        self.to_pkcs1_der()?.write_pkcs1_pem_file(path, line_ending)
     }
 }
 
@@ -147,18 +140,11 @@ pub trait ToRsaPublicKey {
     /// Serialize a [`RsaPublicKeyDocument`] containing a PKCS#1-encoded public key.
     fn to_pkcs1_der(&self) -> Result<RsaPublicKeyDocument>;
 
-    /// Serialize this public key as PEM-encoded PKCS#1.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem(&self) -> Result<String> {
-        self.to_pkcs1_pem_with_le(LineEnding::default())
-    }
-
     /// Serialize this public key as PEM-encoded PKCS#1 with the given line ending.
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem_with_le(&self, line_ending: LineEnding) -> Result<String> {
-        self.to_pkcs1_der()?.to_pkcs1_pem_with_le(line_ending)
+    fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<String> {
+        self.to_pkcs1_der()?.to_pkcs1_pem(line_ending)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path.
@@ -172,7 +158,7 @@ pub trait ToRsaPublicKey {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_pem_file(&self, path: &Path) -> Result<()> {
-        self.to_pkcs1_der()?.write_pkcs1_pem_file(path)
+    fn write_pkcs1_pem_file(&self, path: &Path, line_ending: LineEnding) -> Result<()> {
+        self.to_pkcs1_der()?.write_pkcs1_pem_file(path, line_ending)
     }
 }

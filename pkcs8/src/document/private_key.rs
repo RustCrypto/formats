@@ -65,18 +65,11 @@ impl PrivateKeyDocument {
         Self::from_der(&*der_bytes)
     }
 
-    /// Serialize [`PrivateKeyDocument`] as self-zeroizing PEM-encoded PKCS#8 string.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self) -> Result<Zeroizing<String>> {
-        self.to_pem_with_le(LineEnding::default())
-    }
-
     /// Serialize [`PrivateKeyDocument`] as self-zeroizing PEM-encoded PKCS#8 string
     /// with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
         pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0)
             .map(Zeroizing::new)
             .map_err(|_| Error::Pem)
@@ -109,8 +102,8 @@ impl PrivateKeyDocument {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    pub fn write_pem_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        write_secret_file(path, self.to_pem()?.as_bytes())
+    pub fn write_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
+        write_secret_file(path, self.to_pem(line_ending)?.as_bytes())
     }
 
     /// Encrypt this private key using a symmetric encryption key derived
