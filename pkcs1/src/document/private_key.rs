@@ -86,7 +86,7 @@ impl ToRsaPrivateKey for RsaPrivateKeyDocument {
 
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem_with_le(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+    fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
         let pem_doc = pem::encode_string(PEM_TYPE_LABEL, line_ending, self.as_der())?;
         Ok(Zeroizing::new(pem_doc))
     }
@@ -100,8 +100,8 @@ impl ToRsaPrivateKey for RsaPrivateKeyDocument {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_pem_file(&self, path: &Path) -> Result<()> {
-        let pem_doc = self.to_pkcs1_pem()?;
+    fn write_pkcs1_pem_file(&self, path: &Path, line_ending: LineEnding) -> Result<()> {
+        let pem_doc = self.to_pkcs1_pem(line_ending)?;
         write_secret_file(path, pem_doc.as_bytes())
     }
 }

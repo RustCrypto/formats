@@ -85,7 +85,7 @@ impl ToRsaPublicKey for RsaPublicKeyDocument {
 
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem_with_le(&self, line_ending: LineEnding) -> Result<String> {
+    fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<String> {
         Ok(pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0)?)
     }
 
@@ -99,8 +99,8 @@ impl ToRsaPublicKey for RsaPublicKeyDocument {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_pem_file(&self, path: &Path) -> Result<()> {
-        fs::write(path, self.to_pkcs1_pem()?.as_bytes())?;
+    fn write_pkcs1_pem_file(&self, path: &Path, line_ending: LineEnding) -> Result<()> {
+        fs::write(path, self.to_pkcs1_pem(line_ending)?.as_bytes())?;
         Ok(())
     }
 }

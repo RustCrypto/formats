@@ -175,18 +175,11 @@ pub trait ToPrivateKey {
         self.to_pkcs8_der()?.encrypt(rng, password)
     }
 
-    /// Serialize this private key as PEM-encoded PKCS#8.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs8_pem(&self) -> Result<Zeroizing<String>> {
-        self.to_pkcs8_pem_with_le(LineEnding::default())
-    }
-
     /// Serialize this private key as PEM-encoded PKCS#8 with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs8_pem_with_le(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        self.to_pkcs8_der()?.to_pem_with_le(line_ending)
+    fn to_pkcs8_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+        self.to_pkcs8_der()?.to_pem(line_ending)
     }
 
     /// Serialize this private key as an encrypted PEM-encoded PKCS#8 private
@@ -198,8 +191,10 @@ pub trait ToPrivateKey {
         &self,
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
+        line_ending: LineEnding,
     ) -> Result<Zeroizing<String>> {
-        self.to_pkcs8_encrypted_der(rng, password)?.to_pem()
+        self.to_pkcs8_encrypted_der(rng, password)?
+            .to_pem(line_ending)
     }
 
     /// Write ASN.1 DER-encoded PKCS#8 private key to the given path
@@ -213,8 +208,8 @@ pub trait ToPrivateKey {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs8_pem_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        self.to_pkcs8_der()?.write_pem_file(path)
+    fn write_pkcs8_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
+        self.to_pkcs8_der()?.write_pem_file(path, line_ending)
     }
 }
 
@@ -225,18 +220,11 @@ pub trait ToPublicKey {
     /// Serialize a [`PublicKeyDocument`] containing a SPKI-encoded public key.
     fn to_public_key_der(&self) -> Result<PublicKeyDocument>;
 
-    /// Serialize this public key as PEM-encoded SPKI.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_public_key_pem(&self) -> Result<String> {
-        self.to_public_key_pem_with_le(LineEnding::default())
-    }
-
     /// Serialize this public key as PEM-encoded SPKI with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_public_key_pem_with_le(&self, line_ending: LineEnding) -> Result<String> {
-        self.to_public_key_der()?.to_pem_with_le(line_ending)
+    fn to_public_key_pem(&self, line_ending: LineEnding) -> Result<String> {
+        self.to_public_key_der()?.to_pem(line_ending)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path
@@ -250,8 +238,12 @@ pub trait ToPublicKey {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_public_key_pem_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        self.to_public_key_der()?.write_pem_file(path)
+    fn write_public_key_pem_file(
+        &self,
+        path: impl AsRef<Path>,
+        line_ending: LineEnding,
+    ) -> Result<()> {
+        self.to_public_key_der()?.write_pem_file(path, line_ending)
     }
 }
 
