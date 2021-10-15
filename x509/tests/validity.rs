@@ -87,8 +87,8 @@ fn decode_validity() {
     assert_eq!(val4, val4);
 
     let val5 = UtcTime::from_der(&hex!("170D3330313233313038333030305A")[..]).unwrap();
-    assert_eq!(val5.unix_duration().as_secs(), 1924936200);
-    assert_eq!(val5.unix_duration().as_millis(), 1924936200000);
+    assert_eq!(val5.to_unix_duration().as_secs(), 1924936200);
+    assert_eq!(val5.to_unix_duration().as_millis(), 1924936200000);
 }
 
 #[test]
