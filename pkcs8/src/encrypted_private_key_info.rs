@@ -13,7 +13,7 @@ use core::convert::TryInto;
 
 #[cfg(feature = "pem")]
 use {
-    crate::{error, pem, LineEnding},
+    crate::{pem, LineEnding},
     zeroize::Zeroizing,
 };
 
@@ -66,14 +66,14 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     /// Encode this [`EncryptedPrivateKeyInfo`] as ASN.1 DER.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn to_der(&self) -> EncryptedPrivateKeyDocument {
-        self.into()
+    pub fn to_der(&self) -> Result<EncryptedPrivateKeyDocument> {
+        self.try_into()
     }
 
     /// Encode this [`EncryptedPrivateKeyInfo`] as PEM-encoded ASN.1 DER.
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self) -> Zeroizing<alloc::string::String> {
+    pub fn to_pem(&self) -> Result<Zeroizing<alloc::string::String>> {
         self.to_pem_with_le(LineEnding::default())
     }
 
@@ -81,11 +81,13 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     /// the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> Zeroizing<alloc::string::String> {
-        Zeroizing::new(
-            pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der().as_ref())
-                .expect(error::PEM_ENCODING_MSG),
-        )
+    pub fn to_pem_with_le(
+        &self,
+        line_ending: LineEnding,
+    ) -> Result<Zeroizing<alloc::string::String>> {
+        pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der()?.as_ref())
+            .map(Zeroizing::new)
+            .map_err(|_| Error::Pem)
     }
 }
 

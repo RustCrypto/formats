@@ -25,7 +25,7 @@ use std::path::Path;
 use zeroize::Zeroizing;
 
 #[cfg(all(feature = "alloc", feature = "pkcs1"))]
-use crate::AlgorithmIdentifier;
+use {crate::AlgorithmIdentifier, core::convert::TryInto};
 
 /// PKCS#1 RSA Algorithm [`ObjectIdentifier`].
 ///
@@ -186,7 +186,7 @@ pub trait ToPrivateKey {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_pkcs8_pem_with_le(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        Ok(self.to_pkcs8_der()?.to_pem_with_le(line_ending))
+        self.to_pkcs8_der()?.to_pem_with_le(line_ending)
     }
 
     /// Serialize this private key as an encrypted PEM-encoded PKCS#8 private
@@ -199,8 +199,7 @@ pub trait ToPrivateKey {
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<Zeroizing<String>> {
-        self.to_pkcs8_encrypted_der(rng, password)
-            .map(|key| key.to_pem())
+        self.to_pkcs8_encrypted_der(rng, password)?.to_pem()
     }
 
     /// Write ASN.1 DER-encoded PKCS#8 private key to the given path
@@ -237,7 +236,7 @@ pub trait ToPublicKey {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_public_key_pem_with_le(&self, line_ending: LineEnding) -> Result<String> {
-        Ok(self.to_public_key_der()?.to_pem_with_le(line_ending))
+        self.to_public_key_der()?.to_pem_with_le(line_ending)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path
@@ -298,7 +297,7 @@ impl<K: pkcs1::ToRsaPrivateKey> ToPrivateKey for K {
             parameters: Some(der::asn1::Null.into()),
         };
 
-        Ok(PrivateKeyInfo::new(algorithm, pkcs1_der.as_ref()).to_der())
+        PrivateKeyInfo::new(algorithm, pkcs1_der.as_ref()).to_der()
     }
 }
 
@@ -314,10 +313,10 @@ impl<K: pkcs1::ToRsaPublicKey> ToPublicKey for K {
             parameters: Some(der::asn1::Null.into()),
         };
 
-        Ok(SubjectPublicKeyInfo {
+        SubjectPublicKeyInfo {
             algorithm,
             subject_public_key: pkcs1_der.as_ref(),
         }
-        .into())
+        .try_into()
     }
 }
