@@ -63,20 +63,23 @@ pub struct TBSCertificate<'a> {
 impl<'a> Decodable<'a> for TBSCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
-            let version = decoder
-                .context_specific::<u8>(VERSION_TAG, TagMode::Explicit)?
-                .unwrap();
-            if version != VERSION {
-                return Err(der::Tag::Integer.value_error());
+            let mut version = 0;
+            if (0b10100000 | VERSION_TAG.value()) == decoder.peek().unwrap() {
+                version = decoder
+                    .context_specific::<u8>(VERSION_TAG, TagMode::Explicit)?
+                    .unwrap();
+                if version != VERSION {
+                    return Err(der::Tag::Integer.value_error());
+                }
             }
 
             // TODO refactor unwrap if this implementation remains
-            let serial_number = UIntBytes::decode(decoder).unwrap();
-            let signature = AlgorithmIdentifier::decode(decoder).unwrap();
-            let issuer = RDNSequence::decode(decoder).unwrap();
-            let validity = Validity::decode(decoder).unwrap();
-            let subject = RDNSequence::decode(decoder).unwrap();
-            let subject_public_key_info = SubjectPublicKeyInfo::decode(decoder).unwrap();
+            let serial_number = UIntBytes::decode(decoder)?;
+            let signature = AlgorithmIdentifier::decode(decoder)?;
+            let issuer = RDNSequence::decode(decoder)?;
+            let validity = Validity::decode(decoder)?;
+            let subject = RDNSequence::decode(decoder)?;
+            let subject_public_key_info = SubjectPublicKeyInfo::decode(decoder)?;
             let mut issuer_unique_id = Option::None;
             if (0b10000000 | ISSUER_UID_TAG.value()) == decoder.peek().unwrap() {
                 issuer_unique_id =
