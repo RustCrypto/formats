@@ -1,6 +1,6 @@
 //! SPKI public key document.
 
-use crate::{Error, Result, SubjectPublicKeyInfo};
+use crate::{Error, FromPublicKey, Result, SubjectPublicKeyInfo, ToPublicKey};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{
     convert::{TryFrom, TryInto},
@@ -9,7 +9,7 @@ use core::{
 use der::Encodable;
 
 #[cfg(feature = "std")]
-use std::{fs, path::Path, str};
+use std::{fs, path::Path};
 
 #[cfg(feature = "pem")]
 use {
@@ -36,69 +36,74 @@ impl PublicKeyDocument {
     pub fn spki(&self) -> SubjectPublicKeyInfo<'_> {
         SubjectPublicKeyInfo::try_from(self.0.as_slice()).expect("malformed PublicKeyDocument")
     }
+}
 
-    /// Parse [`PublicKeyDocument`] from ASN.1 DER.
-    pub fn from_der(bytes: &[u8]) -> Result<Self> {
-        bytes.try_into()
+impl FromPublicKey for PublicKeyDocument {
+    fn from_spki(spki: SubjectPublicKeyInfo<'_>) -> Result<Self> {
+        Ok(Self(spki.to_vec()?))
     }
 
-    /// Parse [`PublicKeyDocument`] from PEM.
-    ///
-    /// PEM-encoded public keys can be identified by the leading delimiter:
-    ///
-    /// ```text
-    /// -----BEGIN PUBLIC KEY-----
-    /// ```
+    fn from_public_key_der(bytes: &[u8]) -> Result<Self> {
+        // Ensure document is well-formed
+        SubjectPublicKeyInfo::try_from(bytes)?;
+        Ok(Self(bytes.to_owned()))
+    }
+
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn from_pem(s: &str) -> Result<Self> {
+    fn from_public_key_pem(s: &str) -> Result<Self> {
         let (label, der_bytes) = pem::decode_vec(s.as_bytes())?;
 
         if label != PEM_TYPE_LABEL {
             return Err(pem::Error::Label.into());
         }
 
-        Self::from_der(&*der_bytes)
+        // Ensure document is well-formed
+        SubjectPublicKeyInfo::try_from(der_bytes.as_slice())?;
+        Ok(Self(der_bytes))
     }
 
-    /// Serialize [`PublicKeyDocument`] as PEM-encoded PKCS#8 (SPKI) string
-    /// with the given [`LineEnding`].
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self, line_ending: LineEnding) -> Result<String> {
-        pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0).map_err(|_| Error::Pem)
-    }
-
-    /// Load [`PublicKeyDocument`] from an ASN.1 DER-encoded file on the local
-    /// filesystem (binary format).
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    pub fn read_der_file(path: impl AsRef<Path>) -> Result<Self> {
+    fn read_public_key_der_file(path: impl AsRef<Path>) -> Result<Self> {
         fs::read(path)?.try_into()
     }
 
-    /// Load [`PublicKeyDocument`] from a PEM-encoded file on the local filesystem.
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    pub fn read_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        Self::from_pem(&fs::read_to_string(path)?)
+    fn read_public_key_pem_file(path: impl AsRef<Path>) -> Result<Self> {
+        Self::from_public_key_pem(&fs::read_to_string(path)?)
+    }
+}
+
+impl ToPublicKey for PublicKeyDocument {
+    fn to_public_key_der(&self) -> Result<PublicKeyDocument> {
+        Ok(self.clone())
     }
 
-    /// Write ASN.1 DER-encoded public key to the given path
+    #[cfg(feature = "pem")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+    fn to_public_key_pem(&self, line_ending: LineEnding) -> Result<String> {
+        Ok(pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0)?)
+    }
+
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
+    fn write_public_key_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         fs::write(path, self.as_ref())?;
         Ok(())
     }
 
-    /// Write PEM-encoded public key to the given path
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    pub fn write_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
-        fs::write(path, self.to_pem(line_ending)?.as_bytes())?;
+    fn write_public_key_pem_file(
+        &self,
+        path: impl AsRef<Path>,
+        line_ending: LineEnding,
+    ) -> Result<()> {
+        fs::write(path, self.to_public_key_pem(line_ending)?.as_bytes())?;
         Ok(())
     }
 }
@@ -159,6 +164,6 @@ impl FromStr for PublicKeyDocument {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Self::from_pem(s)
+        Self::from_public_key_pem(s)
     }
 }
