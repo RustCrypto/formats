@@ -13,7 +13,7 @@ use {crate::LineEnding, alloc::string::String};
 use std::path::Path;
 
 #[cfg(any(feature = "pem", feature = "std"))]
-use zeroize::Zeroizing;
+use {der::Document, zeroize::Zeroizing};
 
 /// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
 pub trait FromRsaPrivateKey: Sized {
@@ -81,7 +81,7 @@ pub trait FromRsaPublicKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_pkcs1_pem(s: &str) -> Result<Self> {
         RsaPublicKeyDocument::from_pkcs1_pem(s)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.public_key()))
+            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
     }
 
     /// Load [`RsaPublicKey`] from an ASN.1 DER-encoded file on the local
@@ -90,7 +90,7 @@ pub trait FromRsaPublicKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_der_file(path: &Path) -> Result<Self> {
         RsaPublicKeyDocument::read_pkcs1_der_file(path)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.public_key()))
+            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
     }
 
     /// Load [`RsaPublicKey`] from a PEM-encoded file on the local filesystem.
@@ -99,7 +99,7 @@ pub trait FromRsaPublicKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_pem_file(path: &Path) -> Result<Self> {
         RsaPublicKeyDocument::read_pkcs1_pem_file(path)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.public_key()))
+            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
     }
 }
 

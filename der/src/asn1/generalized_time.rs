@@ -28,12 +28,12 @@ impl GeneralizedTime {
     /// Length of an RFC 5280-flavored ASN.1 DER-encoded [`GeneralizedTime`].
     pub const LENGTH: Length = Length::new(15);
 
-    /// Create a [`UtcTime`] from a [`DateTime`].
+    /// Create a [`GeneralizedTime`] from a [`DateTime`].
     pub fn from_date_time(datetime: DateTime) -> Self {
         Self(datetime)
     }
 
-    /// Convert this [`UtcTime`] into a [`DateTime`].
+    /// Convert this [`GeneralizedTime`] into a [`DateTime`].
     pub fn to_date_time(&self) -> DateTime {
         self.0
     }

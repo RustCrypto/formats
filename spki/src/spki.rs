@@ -4,14 +4,14 @@ use crate::AlgorithmIdentifier;
 use core::convert::TryFrom;
 use der::{asn1::BitString, Decodable, Decoder, Encodable, Error, Result, Sequence};
 
-#[cfg(feature = "alloc")]
-use alloc::string::String;
-
 #[cfg(feature = "fingerprint")]
 use sha2::{digest, Digest, Sha256};
 
-#[cfg(all(feature = "fingerprint", feature = "alloc"))]
-use base64ct::{Base64, Encoding};
+#[cfg(all(feature = "alloc", feature = "fingerprint"))]
+use {
+    alloc::string::String,
+    base64ct::{Base64, Encoding},
+};
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 Section 4.1.2.7].
 ///

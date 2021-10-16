@@ -238,6 +238,11 @@ impl<'a> Decoder<'a> {
         Ok(result)
     }
 
+    /// Get the number of bytes still remaining in the buffer.
+    pub(crate) fn remaining_len(&self) -> Result<Length> {
+        self.remaining()?.len().try_into()
+    }
+
     /// Create a nested decoder which operates over the provided [`Length`].
     ///
     /// The nested decoder is passed to the provided callback function which is
@@ -273,11 +278,6 @@ impl<'a> Decoder<'a> {
         self.bytes
             .and_then(|b| b.get(pos..))
             .ok_or_else(|| ErrorKind::Truncated.at(self.position))
-    }
-
-    /// Get the number of bytes still remaining in the buffer.
-    fn remaining_len(&self) -> Result<Length> {
-        self.remaining()?.len().try_into()
     }
 }
 

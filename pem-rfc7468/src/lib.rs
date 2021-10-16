@@ -143,3 +143,9 @@ const ENCAPSULATION_BOUNDARY_DELIMITER: &[u8] = b"-----";
 /// > boundary), and they MUST NOT emit extraneous whitespace.  Parsers MAY
 /// > handle other line sizes.
 const BASE64_WRAP_WIDTH: usize = 64;
+
+/// Marker trait for types with an associated PEM type label.
+pub trait PemLabel {
+    /// Expected PEM type label for a given document, e.g. `"PRIVATE KEY"`
+    const TYPE_LABEL: &'static str;
+}

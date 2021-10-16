@@ -25,8 +25,8 @@ hex-literal = "0.3"
 
 [features]
 alloc = ["der/alloc", "zeroize"]
-pem = ["alloc", "pem-rfc7468/alloc"]
-std = []
+pem = ["alloc", "der/pem", "pem-rfc7468/alloc"]
+std = ["der/std"]
 
 [package.metadata.docs.rs]
 all-features = true

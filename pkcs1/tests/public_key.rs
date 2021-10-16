@@ -5,7 +5,7 @@ use hex_literal::hex;
 use pkcs1::RsaPublicKey;
 
 #[cfg(feature = "pem")]
-use pkcs1::RsaPublicKeyDocument;
+use pkcs1::{der::Document, RsaPublicKeyDocument};
 
 /// RSA-2048 PKCS#1 public key encoded as ASN.1 DER.
 ///
@@ -52,10 +52,7 @@ fn decode_rsa_2048_pem() {
 
     // Ensure `RsaPublicKeyDocument` parses successfully
     let pk = RsaPublicKey::try_from(RSA_2048_DER_EXAMPLE).unwrap();
-    assert_eq!(
-        pkcs1_doc.public_key().modulus.as_bytes(),
-        pk.modulus.as_bytes()
-    );
+    assert_eq!(pkcs1_doc.decode().modulus.as_bytes(), pk.modulus.as_bytes());
 }
 
 #[test]
@@ -66,8 +63,5 @@ fn decode_rsa_4096_pem() {
 
     // Ensure `RsaPublicKeyDocument` parses successfully
     let pk = RsaPublicKey::try_from(RSA_4096_DER_EXAMPLE).unwrap();
-    assert_eq!(
-        pkcs1_doc.public_key().modulus.as_bytes(),
-        pk.modulus.as_bytes()
-    );
+    assert_eq!(pkcs1_doc.decode().modulus.as_bytes(), pk.modulus.as_bytes());
 }
