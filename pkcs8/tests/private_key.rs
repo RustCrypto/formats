@@ -7,6 +7,9 @@ use pkcs8::{PrivateKeyInfo, Version};
 #[cfg(any(feature = "pem", feature = "std"))]
 use pkcs8::PrivateKeyDocument;
 
+#[cfg(feature = "std")]
+use pkcs8::FromPrivateKey;
+
 /// Elliptic Curve (P-256) PKCS#8 private key encoded as ASN.1 DER
 const EC_P256_DER_EXAMPLE: &[u8] = include_bytes!("examples/p256-priv.der");
 
@@ -224,13 +227,15 @@ fn encode_rsa_2048_pem() {
 #[test]
 #[cfg(feature = "std")]
 fn read_der_file() {
-    let pkcs8_doc = PrivateKeyDocument::read_der_file("tests/examples/p256-priv.der").unwrap();
+    let pkcs8_doc =
+        PrivateKeyDocument::read_pkcs8_der_file("tests/examples/p256-priv.der").unwrap();
     assert_eq!(pkcs8_doc.as_ref(), EC_P256_DER_EXAMPLE);
 }
 
 #[test]
 #[cfg(all(feature = "pem", feature = "std"))]
 fn read_pem_file() {
-    let pkcs8_doc = PrivateKeyDocument::read_pem_file("tests/examples/p256-priv.pem").unwrap();
+    let pkcs8_doc =
+        PrivateKeyDocument::read_pkcs8_pem_file("tests/examples/p256-priv.pem").unwrap();
     assert_eq!(pkcs8_doc.as_ref(), EC_P256_DER_EXAMPLE);
 }
