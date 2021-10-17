@@ -137,21 +137,21 @@ pub(crate) mod encrypted_private_key_info;
 pub use crate::{
     error::{Error, Result},
     private_key_info::PrivateKeyInfo,
-    traits::{FromPrivateKey, FromPublicKey},
+    traits::FromPrivateKey,
     version::Version,
 };
 pub use der::{self, asn1::ObjectIdentifier};
-pub use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+pub use spki::{AlgorithmIdentifier, FromPublicKey, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
-pub use crate::{
-    document::{private_key::PrivateKeyDocument, public_key::PublicKeyDocument},
-    traits::{ToPrivateKey, ToPublicKey},
+pub use {
+    crate::{document::private_key::PrivateKeyDocument, traits::ToPrivateKey},
+    spki::{PublicKeyDocument, ToPublicKey},
 };
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use pem_rfc7468::LineEnding;
+pub use der::pem::{self, LineEnding};
 
 #[cfg(feature = "pkcs5")]
 pub use encrypted_private_key_info::EncryptedPrivateKeyInfo;
@@ -164,6 +164,3 @@ pub use pkcs5;
 
 #[cfg(all(feature = "alloc", feature = "pkcs5"))]
 pub use crate::document::encrypted_private_key::EncryptedPrivateKeyDocument;
-
-#[cfg(feature = "pem")]
-use pem_rfc7468 as pem;

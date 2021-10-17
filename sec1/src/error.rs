@@ -70,8 +70,8 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "pem")]
-impl From<pem_rfc7468::Error> for Error {
-    fn from(err: pem_rfc7468::Error) -> Error {
+impl From<pem::Error> for Error {
+    fn from(err: pem::Error) -> Error {
         Error::Pem(err)
     }
 }

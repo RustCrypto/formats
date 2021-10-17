@@ -35,17 +35,18 @@ pub struct SubjectPublicKeyInfo<'a> {
 }
 
 impl<'a> SubjectPublicKeyInfo<'a> {
+    /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`].
     #[cfg(feature = "fingerprint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo
     pub fn fingerprint(&self) -> Result<digest::Output<Sha256>> {
         let mut buf = [0u8; 4096];
         Ok(Sha256::digest(self.encode_to_slice(&mut buf)?))
     }
 
+    /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] and
+    /// encode it as a Base64 string.
     #[cfg(all(feature = "fingerprint", feature = "alloc"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "fingerprint", feature = "alloc"))))]
-    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo and encode it as a Base64 string
     pub fn fingerprint_base64(&self) -> Result<String> {
         Ok(Base64::encode_string(self.fingerprint()?.as_slice()))
     }

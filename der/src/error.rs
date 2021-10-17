@@ -9,7 +9,7 @@ use core::{convert::Infallible, fmt};
 use crate::asn1::ObjectIdentifier;
 
 #[cfg(feature = "pem")]
-use pem_rfc7468 as pem;
+use crate::pem;
 
 /// Result type.
 pub type Result<T> = core::result::Result<T, Error>;

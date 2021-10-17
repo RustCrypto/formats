@@ -2,6 +2,9 @@
 
 use core::fmt;
 
+#[cfg(feature = "pem")]
+use crate::pem;
+
 /// Result type
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -40,9 +43,8 @@ pub enum Error {
     ParametersMalformed,
 
     /// PEM encoding errors.
-    // TODO(tarcieri): propagate `pem_rfc7468::Error`
     #[cfg(feature = "pem")]
-    Pem,
+    Pem(pem::Error),
 
     /// Permission denied reading file.
     #[cfg(feature = "std")]
@@ -67,7 +69,7 @@ impl fmt::Display for Error {
             Error::Io => f.write_str("I/O error"),
             Error::ParametersMalformed => f.write_str("PKCS#8 algorithm parameters malformed"),
             #[cfg(feature = "pem")]
-            Error::Pem => f.write_str("PKCS#8 PEM error"),
+            Error::Pem(err) => write!(f, "PKCS8 {}", err),
             #[cfg(feature = "std")]
             Error::PermissionDenied => f.write_str("permission denied"),
             #[cfg(feature = "pkcs1")]
@@ -92,10 +94,9 @@ impl From<der::ErrorKind> for Error {
 }
 
 #[cfg(feature = "pem")]
-impl From<pem_rfc7468::Error> for Error {
-    fn from(_: pem_rfc7468::Error) -> Error {
-        // TODO(tarcieri): propagate `pem_rfc7468::Error`
-        Error::Pem
+impl From<pem::Error> for Error {
+    fn from(err: pem::Error) -> Error {
+        Error::Pem(err)
     }
 }
 

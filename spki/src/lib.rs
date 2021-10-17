@@ -39,11 +39,22 @@
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
-#[cfg(all(feature = "alloc", feature = "fingerprint"))]
+#[cfg(feature = "alloc")]
 extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
 mod algorithm;
 mod spki;
+mod traits;
 
-pub use crate::{algorithm::AlgorithmIdentifier, spki::SubjectPublicKeyInfo};
+#[cfg(feature = "alloc")]
+mod document;
+
+pub use crate::{
+    algorithm::AlgorithmIdentifier, spki::SubjectPublicKeyInfo, traits::FromPublicKey,
+};
 pub use der::{self, asn1::ObjectIdentifier};
+
+#[cfg(feature = "alloc")]
+pub use crate::{document::PublicKeyDocument, traits::ToPublicKey};

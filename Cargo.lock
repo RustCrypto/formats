@@ -465,7 +465,6 @@ version = "0.3.0-pre"
 dependencies = [
  "der",
  "hex-literal",
- "pem-rfc7468",
  "zeroize",
 ]
 
@@ -492,7 +491,6 @@ version = "0.8.0-pre"
 dependencies = [
  "der",
  "hex-literal",
- "pem-rfc7468",
  "pkcs1",
  "pkcs5",
  "rand_core",
@@ -657,7 +655,6 @@ dependencies = [
  "der",
  "generic-array",
  "hex-literal",
- "pem-rfc7468",
  "subtle",
  "zeroize",
 ]
