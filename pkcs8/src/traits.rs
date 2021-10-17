@@ -162,7 +162,7 @@ pub trait ToPrivateKey {
 
 #[cfg(feature = "pkcs1")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs1")))]
-impl<K: pkcs1::FromRsaPrivateKey> FromPrivateKey for K {
+impl<K: pkcs1::DecodeRsaPrivateKey> FromPrivateKey for K {
     fn from_pkcs8_private_key_info(pkcs8_key: PrivateKeyInfo<'_>) -> Result<Self> {
         pkcs8_key.algorithm.assert_algorithm_oid(PKCS1_OID)?;
 
@@ -178,7 +178,7 @@ impl<K: pkcs1::FromRsaPrivateKey> FromPrivateKey for K {
 #[cfg(all(feature = "alloc", feature = "pkcs1"))]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs1")))]
-impl<K: pkcs1::ToRsaPrivateKey> ToPrivateKey for K {
+impl<K: pkcs1::EncodeRsaPrivateKey> ToPrivateKey for K {
     fn to_pkcs8_der(&self) -> Result<PrivateKeyDocument> {
         let pkcs1_der = self.to_pkcs1_der()?;
 

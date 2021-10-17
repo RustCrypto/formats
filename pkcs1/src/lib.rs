@@ -53,7 +53,7 @@ pub use self::{
     error::{Error, Result},
     private_key::RsaPrivateKey,
     public_key::RsaPublicKey,
-    traits::{FromRsaPrivateKey, FromRsaPublicKey},
+    traits::{DecodeRsaPrivateKey, DecodeRsaPublicKey},
     version::Version,
 };
 
@@ -63,7 +63,7 @@ pub use crate::{
         document::RsaPrivateKeyDocument, other_prime_info::OtherPrimeInfo, OtherPrimeInfos,
     },
     public_key::document::RsaPublicKeyDocument,
-    traits::{ToRsaPrivateKey, ToRsaPublicKey},
+    traits::{EncodeRsaPrivateKey, EncodeRsaPublicKey},
 };
 
 #[cfg(feature = "pem")]
