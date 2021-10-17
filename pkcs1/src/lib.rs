@@ -43,9 +43,6 @@ mod public_key;
 mod traits;
 mod version;
 
-#[cfg(feature = "alloc")]
-mod document;
-
 pub use der::{self, asn1::UIntBytes};
 
 pub use self::{
@@ -62,7 +59,8 @@ pub use pem_rfc7468::LineEnding;
 
 #[cfg(feature = "alloc")]
 pub use crate::{
-    document::{private_key::RsaPrivateKeyDocument, public_key::RsaPublicKeyDocument},
+    private_key::document::RsaPrivateKeyDocument,
+    public_key::document::RsaPublicKeyDocument,
     traits::{ToRsaPrivateKey, ToRsaPublicKey},
 };
 

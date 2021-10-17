@@ -1,5 +1,8 @@
 //! PKCS#1 RSA Public Keys.
 
+#[cfg(feature = "alloc")]
+pub(crate) mod document;
+
 use crate::{Error, Result};
 use core::convert::TryFrom;
 use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
