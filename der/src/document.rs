@@ -98,7 +98,7 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     /// Write ASN.1 DER document to a file.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_der_file(&self, path: &Path) -> Result<()> {
+    fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         fs::write(path, self.as_ref())?;
         Ok(())
     }
@@ -106,7 +106,7 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     /// Write PEM-encoded ASN.1 DER document to a file.
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
-    fn write_pem_file(&self, path: &Path, line_ending: pem::LineEnding) -> Result<()>
+    fn write_pem_file(&self, path: impl AsRef<Path>, line_ending: pem::LineEnding) -> Result<()>
     where
         Self: pem::PemLabel,
     {

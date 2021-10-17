@@ -55,8 +55,7 @@ pub trait DecodePublicKey: Sized {
 
     /// Load public key object from a PEM-encoded file on the local filesystem.
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "pem", feature = "std")))]
     fn read_public_key_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         PublicKeyDocument::read_public_key_pem_file(path)
             .and_then(|doc| Self::from_public_key_doc(&doc))

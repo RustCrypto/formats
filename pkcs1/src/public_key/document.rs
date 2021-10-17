@@ -1,6 +1,6 @@
 //! PKCS#1 RSA public key document.
 
-use crate::{error, Error, FromRsaPublicKey, Result, RsaPublicKey, ToRsaPublicKey};
+use crate::{error, DecodeRsaPublicKey, EncodeRsaPublicKey, Error, Result, RsaPublicKey};
 use alloc::vec::Vec;
 use core::{
     convert::{TryFrom, TryInto},
@@ -31,7 +31,7 @@ impl<'a> Document<'a> for RsaPublicKeyDocument {
     type Message = RsaPublicKey<'a>;
 }
 
-impl FromRsaPublicKey for RsaPublicKeyDocument {
+impl DecodeRsaPublicKey for RsaPublicKeyDocument {
     fn from_pkcs1_public_key(public_key: RsaPublicKey<'_>) -> Result<Self> {
         Ok(Self::from_msg(&public_key)?)
     }
@@ -48,19 +48,19 @@ impl FromRsaPublicKey for RsaPublicKeyDocument {
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_pkcs1_der_file(path: &Path) -> Result<Self> {
+    fn read_pkcs1_der_file(path: impl AsRef<Path>) -> Result<Self> {
         Ok(Self::read_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_pkcs1_pem_file(path: &Path) -> Result<Self> {
+    fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         Ok(Self::read_pem_file(path)?)
     }
 }
 
-impl ToRsaPublicKey for RsaPublicKeyDocument {
+impl EncodeRsaPublicKey for RsaPublicKeyDocument {
     fn to_pkcs1_der(&self) -> Result<RsaPublicKeyDocument> {
         Ok(self.clone())
     }
@@ -73,14 +73,14 @@ impl ToRsaPublicKey for RsaPublicKeyDocument {
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_der_file(&self, path: &Path) -> Result<()> {
+    fn write_pkcs1_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         Ok(self.write_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_pem_file(&self, path: &Path, line_ending: LineEnding) -> Result<()> {
+    fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         Ok(self.write_pem_file(path, line_ending)?)
     }
 }
