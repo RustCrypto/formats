@@ -272,6 +272,7 @@ dependencies = [
  "crypto-bigint",
  "der_derive",
  "hex-literal",
+ "pem-rfc7468",
 ]
 
 [[package]]

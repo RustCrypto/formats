@@ -37,9 +37,12 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo build --target ${{ matrix.target }} --release
+      - run: cargo build --target ${{ matrix.target }} --release --features alloc
       - run: cargo build --target ${{ matrix.target }} --release --features bigint
+      - run: cargo build --target ${{ matrix.target }} --release --features derive
       - run: cargo build --target ${{ matrix.target }} --release --features oid
-      - run: cargo build --target ${{ matrix.target }} --release --features bigint,oid
+      - run: cargo build --target ${{ matrix.target }} --release --features pem
+      - run: cargo build --target ${{ matrix.target }} --release --features alloc,bigint,derive,oid,pem
 
   test:
     runs-on: ubuntu-latest

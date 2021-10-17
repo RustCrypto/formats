@@ -362,6 +362,9 @@ mod str_slice;
 mod tag;
 mod value;
 
+#[cfg(feature = "alloc")]
+mod document;
+
 pub use crate::{
     asn1::{Any, Choice, Sequence},
     datetime::DateTime,
@@ -375,6 +378,9 @@ pub use crate::{
     tag::{Class, Tag, TagMode, TagNumber, Tagged},
     value::{DecodeValue, EncodeValue},
 };
+
+#[cfg(feature = "alloc")]
+pub use document::Document;
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
