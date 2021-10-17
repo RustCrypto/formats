@@ -19,8 +19,7 @@ der = { version = "=0.5.0-pre.1", features = ["oid"], path = "../der" }
 generic-array = { version = "0.14", default-features = false }
 
 # optional dependencies
-pem-rfc7468 = { version = "0.2", optional = true, path = "../pem-rfc7468" }
-subtle = { version = ">=2, <2.5", optional = true, default-features = false }
+subtle = { version = "2", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false, features = ["alloc"] }
 
 [dev-dependencies]
@@ -28,8 +27,8 @@ hex-literal = "0.3"
 
 [features]
 alloc = ["der/alloc", "zeroize"]
-pem = ["alloc", "pem-rfc7468/alloc"]
-std = []
+pem = ["alloc", "der/pem"]
+std = ["der/std"]
 
 [package.metadata.docs.rs]
 all-features = true

@@ -57,10 +57,6 @@ pub use self::{
     version::Version,
 };
 
-#[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use pem_rfc7468::LineEnding;
-
 #[cfg(feature = "alloc")]
 pub use crate::{
     private_key::{
@@ -71,4 +67,5 @@ pub use crate::{
 };
 
 #[cfg(feature = "pem")]
-use pem_rfc7468 as pem;
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+pub use der::pem::{self, LineEnding};

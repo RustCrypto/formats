@@ -1,15 +1,24 @@
-//! SubjectPublicKeyInfo tests
+//! `SubjectPublicKeyInfo` tests.
+
 #[cfg(feature = "fingerprint")]
 use core::convert::TryFrom;
 #[cfg(feature = "fingerprint")]
 use hex_literal::hex;
+#[cfg(feature = "alloc")]
+use spki::der::Encodable;
 #[cfg(feature = "fingerprint")]
 use spki::SubjectPublicKeyInfo;
+#[cfg(feature = "pem")]
+use spki::{PublicKeyDocument, ToPublicKey};
 
 #[cfg(feature = "fingerprint")]
 // Taken from pkcs8/tests/public_key.rs
 /// Ed25519 `SubjectPublicKeyInfo` encoded as ASN.1 DER
 const ED25519_DER_EXAMPLE: &[u8] = include_bytes!("examples/ed25519-pub.der");
+
+/// Ed25519 public key encoded as PEM
+#[cfg(feature = "pem")]
+const ED25519_PEM_EXAMPLE: &str = include_str!("examples/ed25519-pub.pem");
 
 /// The SPKI fingerprint for `ED25519_SPKI_FINGERPRINT` as a Base64 string
 ///
@@ -62,4 +71,35 @@ fn decode_and_fingerprint_spki() {
         spki.fingerprint().unwrap().as_slice(),
         ED25519_SPKI_FINGERPRINT
     );
+}
+
+#[test]
+#[cfg(feature = "pem")]
+fn decode_ed25519_pem() {
+    let doc: PublicKeyDocument = ED25519_PEM_EXAMPLE.parse().unwrap();
+    assert_eq!(doc.as_ref(), ED25519_DER_EXAMPLE);
+
+    // Ensure `PublicKeyDocument` parses successfully
+    let spki = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
+    assert_eq!(doc.spki(), spki);
+}
+
+#[test]
+#[cfg(feature = "alloc")]
+fn encode_ed25519_der() {
+    let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
+    let pk_encoded = pk.to_vec().unwrap();
+    assert_eq!(ED25519_DER_EXAMPLE, pk_encoded.as_slice());
+}
+
+#[test]
+#[cfg(feature = "pem")]
+fn encode_ed25519_pem() {
+    let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
+    let pk_encoded = PublicKeyDocument::try_from(pk)
+        .unwrap()
+        .to_public_key_pem(Default::default())
+        .unwrap();
+
+    assert_eq!(ED25519_PEM_EXAMPLE, pk_encoded);
 }

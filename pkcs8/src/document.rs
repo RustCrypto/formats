@@ -4,4 +4,3 @@
 #[cfg(feature = "pkcs5")]
 pub(crate) mod encrypted_private_key;
 pub(crate) mod private_key;
-pub(crate) mod public_key;

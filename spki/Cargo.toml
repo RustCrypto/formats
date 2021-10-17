@@ -24,8 +24,9 @@ base64ct = { version = "1", path = "../base64ct", optional = true, default-featu
 hex-literal = "0.3"
 
 [features]
-alloc = ["base64ct/alloc"]
+alloc = ["base64ct/alloc", "der/alloc"]
 fingerprint = ["sha2"]
+pem = ["alloc", "der/pem"]
 std = ["der/std"]
 
 [package.metadata.docs.rs]

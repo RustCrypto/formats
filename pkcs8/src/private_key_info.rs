@@ -158,7 +158,7 @@ impl<'a> PrivateKeyInfo<'a> {
     pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
         pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der()?.as_ref())
             .map(Zeroizing::new)
-            .map_err(|_| Error::Pem)
+            .map_err(Error::Pem)
     }
 }
 

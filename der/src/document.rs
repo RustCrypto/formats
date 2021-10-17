@@ -5,7 +5,7 @@ use alloc::{boxed::Box, vec::Vec};
 use core::convert::{TryFrom, TryInto};
 
 #[cfg(feature = "pem")]
-use {alloc::string::String, pem_rfc7468 as pem};
+use {crate::pem, alloc::string::String};
 
 #[cfg(feature = "std")]
 use std::{fs, path::Path};

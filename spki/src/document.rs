@@ -1,21 +1,21 @@
 //! SPKI public key document.
 
-use crate::{Error, FromPublicKey, Result, SubjectPublicKeyInfo, ToPublicKey};
+use crate::{FromPublicKey, SubjectPublicKeyInfo, ToPublicKey};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{
     convert::{TryFrom, TryInto},
     fmt,
 };
-use der::Encodable;
+use der::{Encodable, Error, Result};
 
 #[cfg(feature = "std")]
 use std::{fs, path::Path};
 
 #[cfg(feature = "pem")]
 use {
-    crate::{pem, LineEnding},
     alloc::string::String,
     core::str::FromStr,
+    der::pem::{self, LineEnding},
 };
 
 /// Type label for PEM-encoded private keys.
@@ -166,4 +166,10 @@ impl FromStr for PublicKeyDocument {
     fn from_str(s: &str) -> Result<Self> {
         Self::from_public_key_pem(s)
     }
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl pem::PemLabel for PublicKeyDocument {
+    const TYPE_LABEL: &'static str = "PUBLIC KEY";
 }
