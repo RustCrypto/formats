@@ -18,9 +18,13 @@
 //! -----BEGIN RSA PUBLIC KEY-----
 //! ```
 //!
+//! Note that PEM-encoded keys must use the [RFC 7468] encoding, which does NOT
+//! permit "headers" alongside the data, as used by tools such as OpenSSL.
+//!
 //! # Minimum Supported Rust Version
 //! This crate requires **Rust 1.55** at a minimum.
 //!
+//! [RFC 7468]: https://tools.ietf.org/html/rfc7468
 //! [RFC 8017]: https://tools.ietf.org/html/rfc8017
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
