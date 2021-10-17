@@ -8,7 +8,7 @@ use pkcs8::{PrivateKeyInfo, Version};
 use pkcs8::PrivateKeyDocument;
 
 #[cfg(feature = "std")]
-use pkcs8::FromPrivateKey;
+use pkcs8::DecodePrivateKey;
 
 /// Elliptic Curve (P-256) PKCS#8 private key encoded as ASN.1 DER
 const EC_P256_DER_EXAMPLE: &[u8] = include_bytes!("examples/p256-priv.der");

@@ -31,7 +31,7 @@ use crate::AlgorithmIdentifier;
 const PKCS1_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.1.1");
 
 /// Parse a private key object from a PKCS#8 encoded document.
-pub trait FromPrivateKey: Sized {
+pub trait DecodePrivateKey: Sized {
     /// Parse the [`PrivateKeyInfo`] from a PKCS#8-encoded document.
     fn from_pkcs8_private_key_info(private_key_info: PrivateKeyInfo<'_>) -> Result<Self>;
 
@@ -108,7 +108,7 @@ pub trait FromPrivateKey: Sized {
 /// Serialize a private key object to a PKCS#8 encoded document.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub trait ToPrivateKey {
+pub trait EncodePrivateKey {
     /// Serialize a [`PrivateKeyDocument`] containing a PKCS#8-encoded private key.
     fn to_pkcs8_der(&self) -> Result<PrivateKeyDocument>;
 
@@ -162,7 +162,7 @@ pub trait ToPrivateKey {
 
 #[cfg(feature = "pkcs1")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs1")))]
-impl<K: pkcs1::DecodeRsaPrivateKey> FromPrivateKey for K {
+impl<K: pkcs1::DecodeRsaPrivateKey> DecodePrivateKey for K {
     fn from_pkcs8_private_key_info(pkcs8_key: PrivateKeyInfo<'_>) -> Result<Self> {
         pkcs8_key.algorithm.assert_algorithm_oid(PKCS1_OID)?;
 
@@ -178,7 +178,7 @@ impl<K: pkcs1::DecodeRsaPrivateKey> FromPrivateKey for K {
 #[cfg(all(feature = "alloc", feature = "pkcs1"))]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs1")))]
-impl<K: pkcs1::EncodeRsaPrivateKey> ToPrivateKey for K {
+impl<K: pkcs1::EncodeRsaPrivateKey> EncodePrivateKey for K {
     fn to_pkcs8_der(&self) -> Result<PrivateKeyDocument> {
         let pkcs1_der = self.to_pkcs1_der()?;
 

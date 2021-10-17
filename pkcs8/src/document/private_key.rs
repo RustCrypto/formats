@@ -1,6 +1,6 @@
 //! PKCS#8 private key document.
 
-use crate::{Error, FromPrivateKey, PrivateKeyInfo, Result, ToPrivateKey};
+use crate::{DecodePrivateKey, EncodePrivateKey, Error, PrivateKeyInfo, Result};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{convert::TryFrom, fmt};
 use der::Encodable;
@@ -91,7 +91,7 @@ impl PrivateKeyDocument {
     }
 }
 
-impl FromPrivateKey for PrivateKeyDocument {
+impl DecodePrivateKey for PrivateKeyDocument {
     fn from_pkcs8_private_key_info(private_key: PrivateKeyInfo<'_>) -> Result<Self> {
         Ok(Self(Zeroizing::new(private_key.to_vec()?)))
     }
@@ -130,7 +130,7 @@ impl FromPrivateKey for PrivateKeyDocument {
     }
 }
 
-impl ToPrivateKey for PrivateKeyDocument {
+impl EncodePrivateKey for PrivateKeyDocument {
     fn to_pkcs8_der(&self) -> Result<PrivateKeyDocument> {
         Ok(self.clone())
     }
