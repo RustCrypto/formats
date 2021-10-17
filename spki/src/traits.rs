@@ -14,7 +14,7 @@ use {alloc::string::String, der::pem::LineEnding};
 use std::path::Path;
 
 /// Parse a public key object from an encoded SPKI document.
-pub trait FromPublicKey: Sized {
+pub trait DecodePublicKey: Sized {
     /// Parse [`SubjectPublicKeyInfo`] into a public key object.
     fn from_spki(spki: SubjectPublicKeyInfo<'_>) -> Result<Self>;
 
@@ -66,7 +66,7 @@ pub trait FromPublicKey: Sized {
 /// Serialize a public key object to a SPKI-encoded document.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub trait ToPublicKey {
+pub trait EncodePublicKey {
     /// Serialize a [`PublicKeyDocument`] containing a SPKI-encoded public key.
     fn to_public_key_der(&self) -> Result<PublicKeyDocument>;
 

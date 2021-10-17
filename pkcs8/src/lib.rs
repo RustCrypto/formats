@@ -141,12 +141,12 @@ pub use crate::{
     version::Version,
 };
 pub use der::{self, asn1::ObjectIdentifier};
-pub use spki::{AlgorithmIdentifier, FromPublicKey, SubjectPublicKeyInfo};
+pub use spki::{AlgorithmIdentifier, DecodePublicKey, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
 pub use {
     crate::{document::private_key::PrivateKeyDocument, traits::ToPrivateKey},
-    spki::{PublicKeyDocument, ToPublicKey},
+    spki::{EncodePublicKey, PublicKeyDocument},
 };
 
 #[cfg(feature = "pem")]
