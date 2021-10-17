@@ -2,13 +2,15 @@
 
 #[cfg(feature = "alloc")]
 pub(crate) mod document;
+#[cfg(feature = "alloc")]
+pub(crate) mod other_prime_info;
 
 use crate::{Error, Result, RsaPublicKey, Version};
 use core::{convert::TryFrom, fmt};
-use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
+use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence, Tag};
 
 #[cfg(feature = "alloc")]
-use crate::RsaPrivateKeyDocument;
+use {self::other_prime_info::OtherPrimeInfo, crate::RsaPrivateKeyDocument, alloc::vec::Vec};
 
 #[cfg(feature = "pem")]
 use {
@@ -43,32 +45,36 @@ pub(crate) const PEM_TYPE_LABEL: &str = "RSA PRIVATE KEY";
 /// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
 #[derive(Clone)]
 pub struct RsaPrivateKey<'a> {
-    /// Version number: `two-prime` or `multi`
+    /// Version number: `two-prime` or `multi`.
     pub version: Version,
 
-    /// `n`: RSA modulus
+    /// `n`: RSA modulus.
     pub modulus: UIntBytes<'a>,
 
-    /// `e`: RSA public exponent
+    /// `e`: RSA public exponent.
     pub public_exponent: UIntBytes<'a>,
 
-    /// `d`: RSA private exponent
+    /// `d`: RSA private exponent.
     pub private_exponent: UIntBytes<'a>,
 
-    /// `p`: first prime factor of `n`
+    /// `p`: first prime factor of `n`.
     pub prime1: UIntBytes<'a>,
 
-    /// `q`: Second prime factor of `n`
+    /// `q`: Second prime factor of `n`.
     pub prime2: UIntBytes<'a>,
 
-    /// First exponent: `d mod (p-1)`
+    /// First exponent: `d mod (p-1)`.
     pub exponent1: UIntBytes<'a>,
 
-    /// Second exponent: `d mod (q-1)`
+    /// Second exponent: `d mod (q-1)`.
     pub exponent2: UIntBytes<'a>,
 
-    /// CRT coefficient: `(inverse of q) mod p`
+    /// CRT coefficient: `(inverse of q) mod p`.
     pub coefficient: UIntBytes<'a>,
+
+    /// Additional primes `r_3`, ..., `r_u`, in order, if this is a multi-prime
+    /// RSA key (i.e. `version` is `multi`).
+    pub other_prime_infos: Option<OtherPrimeInfos<'a>>,
 }
 
 impl<'a> RsaPrivateKey<'a> {
@@ -100,7 +106,7 @@ impl<'a> RsaPrivateKey<'a> {
 impl<'a> Decodable<'a> for RsaPrivateKey<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
-            Ok(Self {
+            let result = Self {
                 version: decoder.decode()?,
                 modulus: decoder.decode()?,
                 public_exponent: decoder.decode()?,
@@ -110,7 +116,15 @@ impl<'a> Decodable<'a> for RsaPrivateKey<'a> {
                 exponent1: decoder.decode()?,
                 exponent2: decoder.decode()?,
                 coefficient: decoder.decode()?,
-            })
+                other_prime_infos: decoder.decode()?,
+            };
+
+            // Ensure version is set correctly for two-prime vs multi-prime key.
+            if result.version.is_multi() != result.other_prime_infos.is_some() {
+                return Err(decoder.error(der::ErrorKind::Value { tag: Tag::Integer }));
+            }
+
+            Ok(result)
         })
     }
 }
@@ -130,6 +144,8 @@ impl<'a> Sequence<'a> for RsaPrivateKey<'a> {
             &self.exponent1,
             &self.exponent2,
             &self.coefficient,
+            #[cfg(feature = "alloc")]
+            &self.other_prime_infos,
         ])
     }
 }
@@ -169,3 +185,29 @@ impl<'a> fmt::Debug for RsaPrivateKey<'a> {
             .finish() // TODO: use `finish_non_exhaustive` when stable
     }
 }
+
+/// Placeholder struct for `OtherPrimeInfos` in the no-`alloc` case.
+#[cfg(not(feature = "alloc"))]
+#[derive(Clone)]
+#[non_exhaustive]
+pub struct OtherPrimeInfos<'a> {
+    _lifetime: core::marker::PhantomData<&'a ()>,
+}
+
+#[cfg(not(feature = "alloc"))]
+impl<'a> Decodable<'a> for OtherPrimeInfos<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        // Placeholder decoder that always returns an error.
+        // Use `Tag::Integer` to signal an unsupported version.
+        Err(decoder.error(der::ErrorKind::Value { tag: Tag::Integer }))
+    }
+}
+
+#[cfg(not(feature = "alloc"))]
+impl<'a> der::Tagged for OtherPrimeInfos<'a> {
+    const TAG: Tag = Tag::Sequence;
+}
+
+/// Additional RSA prime info in a multi-prime RSA key.
+#[cfg(feature = "alloc")]
+pub type OtherPrimeInfos<'a> = Vec<OtherPrimeInfo<'a>>;

@@ -59,7 +59,9 @@ pub use pem_rfc7468::LineEnding;
 
 #[cfg(feature = "alloc")]
 pub use crate::{
-    private_key::document::RsaPrivateKeyDocument,
+    private_key::{
+        document::RsaPrivateKeyDocument, other_prime_info::OtherPrimeInfo, OtherPrimeInfos,
+    },
     public_key::document::RsaPublicKeyDocument,
     traits::{ToRsaPrivateKey, ToRsaPublicKey},
 };
