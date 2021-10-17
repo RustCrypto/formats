@@ -8,10 +8,10 @@ use pkcs8::SubjectPublicKeyInfo;
 use der::Encodable;
 
 #[cfg(feature = "pem")]
-use pkcs8::ToPublicKey;
+use pkcs8::EncodePublicKey;
 
 #[cfg(feature = "std")]
-use pkcs8::FromPublicKey;
+use pkcs8::DecodePublicKey;
 
 #[cfg(any(feature = "pem", feature = "std"))]
 use pkcs8::PublicKeyDocument;

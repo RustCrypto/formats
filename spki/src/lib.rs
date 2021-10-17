@@ -52,9 +52,9 @@ mod traits;
 mod document;
 
 pub use crate::{
-    algorithm::AlgorithmIdentifier, spki::SubjectPublicKeyInfo, traits::FromPublicKey,
+    algorithm::AlgorithmIdentifier, spki::SubjectPublicKeyInfo, traits::DecodePublicKey,
 };
 pub use der::{self, asn1::ObjectIdentifier};
 
 #[cfg(feature = "alloc")]
-pub use crate::{document::PublicKeyDocument, traits::ToPublicKey};
+pub use crate::{document::PublicKeyDocument, traits::EncodePublicKey};

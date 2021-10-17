@@ -9,7 +9,7 @@ use spki::der::Encodable;
 #[cfg(feature = "fingerprint")]
 use spki::SubjectPublicKeyInfo;
 #[cfg(feature = "pem")]
-use spki::{PublicKeyDocument, ToPublicKey};
+use spki::{EncodePublicKey, PublicKeyDocument};
 
 #[cfg(feature = "fingerprint")]
 // Taken from pkcs8/tests/public_key.rs

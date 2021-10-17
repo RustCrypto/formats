@@ -1,6 +1,6 @@
 //! SPKI public key document.
 
-use crate::{FromPublicKey, SubjectPublicKeyInfo, ToPublicKey};
+use crate::{DecodePublicKey, EncodePublicKey, SubjectPublicKeyInfo};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{
     convert::{TryFrom, TryInto},
@@ -38,7 +38,7 @@ impl PublicKeyDocument {
     }
 }
 
-impl FromPublicKey for PublicKeyDocument {
+impl DecodePublicKey for PublicKeyDocument {
     fn from_spki(spki: SubjectPublicKeyInfo<'_>) -> Result<Self> {
         Ok(Self(spki.to_vec()?))
     }
@@ -77,7 +77,7 @@ impl FromPublicKey for PublicKeyDocument {
     }
 }
 
-impl ToPublicKey for PublicKeyDocument {
+impl EncodePublicKey for PublicKeyDocument {
     fn to_public_key_der(&self) -> Result<PublicKeyDocument> {
         Ok(self.clone())
     }
