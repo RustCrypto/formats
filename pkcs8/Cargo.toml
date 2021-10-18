@@ -20,9 +20,7 @@ spki = { version = "=0.5.0-pre", path = "../spki" }
 
 # optional dependencies
 rand_core = { version = "0.6", optional = true, default-features = false }
-pkcs1 = { version = "=0.3.0-pre", optional = true, features = ["alloc"], path = "../pkcs1" }
 pkcs5 = { version = "=0.4.0-pre", optional = true, path = "../pkcs5" }
-pem-rfc7468 = { version = "0.2", optional = true, path = "../pem-rfc7468" }
 subtle = { version = "2", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false, features = ["alloc"] }
 
@@ -30,13 +28,13 @@ zeroize = { version = "1", optional = true, default-features = false, features =
 hex-literal = "0.3"
 
 [features]
-alloc = ["der/alloc", "zeroize"]
+alloc = ["der/alloc", "spki/alloc", "zeroize"]
 3des = ["encryption", "pkcs5/3des"]
 des-insecure = ["encryption", "pkcs5/des-insecure"]
 encryption = ["alloc", "pkcs5/alloc", "pkcs5/pbes2", "rand_core"]
-pem = ["alloc", "pem-rfc7468/alloc"]
+pem = ["alloc", "der/pem", "spki/pem"]
 sha1 = ["encryption", "pkcs5/sha1"]
-std = ["alloc", "der/std"]
+std = ["alloc", "der/std", "spki/std"]
 
 [package.metadata.docs.rs]
 all-features = true

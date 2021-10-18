@@ -272,6 +272,7 @@ dependencies = [
  "crypto-bigint",
  "der_derive",
  "hex-literal",
+ "pem-rfc7468",
 ]
 
 [[package]]
@@ -453,7 +454,7 @@ dependencies = [
 
 [[package]]
 name = "pem-rfc7468"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "base64ct",
 ]
@@ -464,7 +465,6 @@ version = "0.3.0-pre"
 dependencies = [
  "der",
  "hex-literal",
- "pem-rfc7468",
  "zeroize",
 ]
 
@@ -491,8 +491,6 @@ version = "0.8.0-pre"
 dependencies = [
  "der",
  "hex-literal",
- "pem-rfc7468",
- "pkcs1",
  "pkcs5",
  "rand_core",
  "spki",
@@ -651,12 +649,11 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.2.0"
+version = "0.2.0-pre"
 dependencies = [
  "der",
  "generic-array",
  "hex-literal",
- "pem-rfc7468",
  "subtle",
  "zeroize",
 ]

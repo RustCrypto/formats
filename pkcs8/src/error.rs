@@ -2,13 +2,8 @@
 
 use core::fmt;
 
-/// Message to display when an `expect`-ed DER encoding error occurs
-#[cfg(feature = "alloc")]
-pub(crate) const DER_ENCODING_MSG: &str = "DER encoding error";
-
-/// Message to display when an `expect`-ed PEM encoding error occurs
 #[cfg(feature = "pem")]
-pub(crate) const PEM_ENCODING_MSG: &str = "PEM encoding error";
+use crate::pem;
 
 /// Result type
 pub type Result<T> = core::result::Result<T, Error>;
@@ -48,19 +43,13 @@ pub enum Error {
     ParametersMalformed,
 
     /// PEM encoding errors.
-    // TODO(tarcieri): propagate `pem_rfc7468::Error`
     #[cfg(feature = "pem")]
-    Pem,
+    Pem(pem::Error),
 
     /// Permission denied reading file.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     PermissionDenied,
-
-    /// PKCS#1 errors.
-    #[cfg(feature = "pkcs1")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pkcs1")))]
-    Pkcs1(pkcs1::Error),
 }
 
 impl fmt::Display for Error {
@@ -75,11 +64,9 @@ impl fmt::Display for Error {
             Error::Io => f.write_str("I/O error"),
             Error::ParametersMalformed => f.write_str("PKCS#8 algorithm parameters malformed"),
             #[cfg(feature = "pem")]
-            Error::Pem => f.write_str("PKCS#8 PEM error"),
+            Error::Pem(err) => write!(f, "PKCS8 {}", err),
             #[cfg(feature = "std")]
             Error::PermissionDenied => f.write_str("permission denied"),
-            #[cfg(feature = "pkcs1")]
-            Error::Pkcs1(err) => write!(f, "{}", err),
         }
     }
 }
@@ -100,17 +87,9 @@ impl From<der::ErrorKind> for Error {
 }
 
 #[cfg(feature = "pem")]
-impl From<pem_rfc7468::Error> for Error {
-    fn from(_: pem_rfc7468::Error) -> Error {
-        // TODO(tarcieri): propagate `pem_rfc7468::Error`
-        Error::Pem
-    }
-}
-
-#[cfg(feature = "pkcs1")]
-impl From<pkcs1::Error> for Error {
-    fn from(err: pkcs1::Error) -> Error {
-        Error::Pkcs1(err)
+impl From<pem::Error> for Error {
+    fn from(err: pem::Error) -> Error {
+        Error::Pem(err)
     }
 }
 

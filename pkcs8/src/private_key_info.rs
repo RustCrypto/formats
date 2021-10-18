@@ -8,7 +8,7 @@ use der::{
 };
 
 #[cfg(feature = "alloc")]
-use crate::PrivateKeyDocument;
+use {crate::PrivateKeyDocument, core::convert::TryInto};
 
 #[cfg(feature = "encryption")]
 use {
@@ -18,7 +18,7 @@ use {
 
 #[cfg(feature = "pem")]
 use {
-    crate::{error, pem, LineEnding},
+    crate::{pem, LineEnding},
     alloc::string::String,
     zeroize::Zeroizing,
 };
@@ -141,32 +141,24 @@ impl<'a> PrivateKeyInfo<'a> {
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<EncryptedPrivateKeyDocument> {
-        PrivateKeyDocument::from(self).encrypt(rng, password)
+        PrivateKeyDocument::try_from(self)?.encrypt(rng, password)
     }
 
     /// Encode this [`PrivateKeyInfo`] as ASN.1 DER.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn to_der(&self) -> PrivateKeyDocument {
-        self.into()
-    }
-
-    /// Encode this [`PrivateKeyInfo`] as PEM-encoded ASN.1 DER.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self) -> Zeroizing<String> {
-        self.to_pem_with_le(LineEnding::default())
+    pub fn to_der(&self) -> Result<PrivateKeyDocument> {
+        self.try_into()
     }
 
     /// Encode this [`PrivateKeyInfo`] as PEM-encoded ASN.1 DER with the given
     /// [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> Zeroizing<String> {
-        Zeroizing::new(
-            pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der().as_ref())
-                .expect(error::PEM_ENCODING_MSG),
-        )
+    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+        pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der()?.as_ref())
+            .map(Zeroizing::new)
+            .map_err(Error::Pem)
     }
 }
 

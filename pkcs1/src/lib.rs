@@ -18,9 +18,13 @@
 //! -----BEGIN RSA PUBLIC KEY-----
 //! ```
 //!
+//! Note that PEM-encoded keys must use the [RFC 7468] encoding, which does NOT
+//! permit "headers" alongside the data, as used by tools such as OpenSSL.
+//!
 //! # Minimum Supported Rust Version
 //! This crate requires **Rust 1.55** at a minimum.
 //!
+//! [RFC 7468]: https://tools.ietf.org/html/rfc7468
 //! [RFC 8017]: https://tools.ietf.org/html/rfc8017
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -43,28 +47,25 @@ mod public_key;
 mod traits;
 mod version;
 
-#[cfg(feature = "alloc")]
-mod document;
-
 pub use der::{self, asn1::UIntBytes};
 
 pub use self::{
     error::{Error, Result},
     private_key::RsaPrivateKey,
     public_key::RsaPublicKey,
-    traits::{FromRsaPrivateKey, FromRsaPublicKey},
+    traits::{DecodeRsaPrivateKey, DecodeRsaPublicKey},
     version::Version,
+};
+
+#[cfg(feature = "alloc")]
+pub use crate::{
+    private_key::{
+        document::RsaPrivateKeyDocument, other_prime_info::OtherPrimeInfo, OtherPrimeInfos,
+    },
+    public_key::document::RsaPublicKeyDocument,
+    traits::{EncodeRsaPrivateKey, EncodeRsaPublicKey},
 };
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use pem_rfc7468::LineEnding;
-
-#[cfg(feature = "alloc")]
-pub use crate::{
-    document::{private_key::RsaPrivateKeyDocument, public_key::RsaPublicKeyDocument},
-    traits::{ToRsaPrivateKey, ToRsaPublicKey},
-};
-
-#[cfg(feature = "pem")]
-use pem_rfc7468 as pem;
+pub use der::pem::{self, LineEnding};

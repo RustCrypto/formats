@@ -362,6 +362,9 @@ mod str_slice;
 mod tag;
 mod value;
 
+#[cfg(feature = "alloc")]
+mod document;
+
 pub use crate::{
     asn1::{Any, Choice, Sequence},
     datetime::DateTime,
@@ -376,6 +379,9 @@ pub use crate::{
     value::{DecodeValue, EncodeValue},
 };
 
+#[cfg(feature = "alloc")]
+pub use document::Document;
+
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
 pub use crypto_bigint as bigint;
@@ -383,5 +389,9 @@ pub use crypto_bigint as bigint;
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
 pub use der_derive::{Choice, Sequence};
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+pub use pem_rfc7468 as pem;
 
 pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};

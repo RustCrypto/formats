@@ -1,6 +1,6 @@
 //! PKCS#8 encrypted private key document.
 
-use crate::{error, EncryptedPrivateKeyInfo, Error, Result};
+use crate::{EncryptedPrivateKeyInfo, Error, Result};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{
     convert::{TryFrom, TryInto},
@@ -77,22 +77,13 @@ impl EncryptedPrivateKeyDocument {
     }
 
     /// Serialize [`EncryptedPrivateKeyDocument`] as self-zeroizing PEM-encoded
-    /// PKCS#8 string.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self) -> Zeroizing<String> {
-        self.to_pem_with_le(LineEnding::default())
-    }
-
-    /// Serialize [`EncryptedPrivateKeyDocument`] as self-zeroizing PEM-encoded
     /// PKCS#8 string with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> Zeroizing<String> {
-        Zeroizing::new(
-            pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0)
-                .expect(error::PEM_ENCODING_MSG),
-        )
+    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+        pem::encode_string(PEM_TYPE_LABEL, line_ending, &self.0)
+            .map(Zeroizing::new)
+            .map_err(Error::Pem)
     }
 
     /// Load [`EncryptedPrivateKeyDocument`] from an ASN.1 DER-encoded file on
@@ -123,8 +114,8 @@ impl EncryptedPrivateKeyDocument {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    pub fn write_pem_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        write_secret_file(path, self.to_pem().as_bytes())
+    pub fn write_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
+        write_secret_file(path, self.to_pem(line_ending)?.as_bytes())
     }
 }
 
@@ -134,18 +125,19 @@ impl AsRef<[u8]> for EncryptedPrivateKeyDocument {
     }
 }
 
-impl From<EncryptedPrivateKeyInfo<'_>> for EncryptedPrivateKeyDocument {
-    fn from(key: EncryptedPrivateKeyInfo<'_>) -> EncryptedPrivateKeyDocument {
-        EncryptedPrivateKeyDocument::from(&key)
+impl TryFrom<EncryptedPrivateKeyInfo<'_>> for EncryptedPrivateKeyDocument {
+    type Error = Error;
+
+    fn try_from(key: EncryptedPrivateKeyInfo<'_>) -> Result<EncryptedPrivateKeyDocument> {
+        EncryptedPrivateKeyDocument::try_from(&key)
     }
 }
 
-impl From<&EncryptedPrivateKeyInfo<'_>> for EncryptedPrivateKeyDocument {
-    fn from(key: &EncryptedPrivateKeyInfo<'_>) -> EncryptedPrivateKeyDocument {
-        key.to_vec()
-            .ok()
-            .and_then(|buf| buf.try_into().ok())
-            .expect(error::DER_ENCODING_MSG)
+impl TryFrom<&EncryptedPrivateKeyInfo<'_>> for EncryptedPrivateKeyDocument {
+    type Error = Error;
+
+    fn try_from(key: &EncryptedPrivateKeyInfo<'_>) -> Result<EncryptedPrivateKeyDocument> {
+        key.to_vec()?.try_into()
     }
 }
 

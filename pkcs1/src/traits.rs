@@ -13,10 +13,10 @@ use {crate::LineEnding, alloc::string::String};
 use std::path::Path;
 
 #[cfg(any(feature = "pem", feature = "std"))]
-use zeroize::Zeroizing;
+use {der::Document, zeroize::Zeroizing};
 
 /// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
-pub trait FromRsaPrivateKey: Sized {
+pub trait DecodeRsaPrivateKey: Sized {
     /// Parse the [`RsaPrivateKey`] from a PKCS#1-encoded document.
     fn from_pkcs1_private_key(private_key: RsaPrivateKey<'_>) -> Result<Self>;
 
@@ -44,7 +44,7 @@ pub trait FromRsaPrivateKey: Sized {
     /// filesystem (binary format).
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_pkcs1_der_file(path: &Path) -> Result<Self> {
+    fn read_pkcs1_der_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPrivateKeyDocument::read_pkcs1_der_file(path)
             .and_then(|doc| Self::from_pkcs1_private_key(doc.private_key()))
     }
@@ -53,14 +53,14 @@ pub trait FromRsaPrivateKey: Sized {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_pkcs1_pem_file(path: &Path) -> Result<Self> {
+    fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPrivateKeyDocument::read_pkcs1_pem_file(path)
             .and_then(|doc| Self::from_pkcs1_private_key(doc.private_key()))
     }
 }
 
 /// Parse a [`RsaPublicKey`] from a PKCS#1-encoded document.
-pub trait FromRsaPublicKey: Sized {
+pub trait DecodeRsaPublicKey: Sized {
     /// Parse [`RsaPublicKey`] into a [`RsaPublicKey`].
     fn from_pkcs1_public_key(public_key: RsaPublicKey<'_>) -> Result<Self>;
 
@@ -81,98 +81,82 @@ pub trait FromRsaPublicKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_pkcs1_pem(s: &str) -> Result<Self> {
         RsaPublicKeyDocument::from_pkcs1_pem(s)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.public_key()))
+            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
     }
 
     /// Load [`RsaPublicKey`] from an ASN.1 DER-encoded file on the local
     /// filesystem (binary format).
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_pkcs1_der_file(path: &Path) -> Result<Self> {
+    fn read_pkcs1_der_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPublicKeyDocument::read_pkcs1_der_file(path)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.public_key()))
+            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
     }
 
     /// Load [`RsaPublicKey`] from a PEM-encoded file on the local filesystem.
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_pkcs1_pem_file(path: &Path) -> Result<Self> {
+    fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPublicKeyDocument::read_pkcs1_pem_file(path)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.public_key()))
+            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
     }
 }
 
 /// Serialize a [`RsaPrivateKey`] to a PKCS#1 encoded document.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub trait ToRsaPrivateKey {
+pub trait EncodeRsaPrivateKey {
     /// Serialize a [`RsaPrivateKeyDocument`] containing a PKCS#1-encoded private key.
     fn to_pkcs1_der(&self) -> Result<RsaPrivateKeyDocument>;
-
-    /// Serialize this private key as PEM-encoded PKCS#1.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem(&self) -> Result<Zeroizing<String>> {
-        self.to_pkcs1_pem_with_le(LineEnding::default())
-    }
 
     /// Serialize this private key as PEM-encoded PKCS#1 with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem_with_le(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        self.to_pkcs1_der()?.to_pkcs1_pem_with_le(line_ending)
+    fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+        self.to_pkcs1_der()?.to_pkcs1_pem(line_ending)
     }
 
     /// Write ASN.1 DER-encoded PKCS#1 private key to the given path.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_der_file(&self, path: &Path) -> Result<()> {
+    fn write_pkcs1_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         self.to_pkcs1_der()?.write_pkcs1_der_file(path)
     }
 
     /// Write ASN.1 DER-encoded PKCS#1 private key to the given path.
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_pem_file(&self, path: &Path) -> Result<()> {
-        self.to_pkcs1_der()?.write_pkcs1_pem_file(path)
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
+    fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
+        self.to_pkcs1_der()?.write_pkcs1_pem_file(path, line_ending)
     }
 }
 
 /// Serialize a [`RsaPublicKey`] to a PKCS#1-encoded document.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub trait ToRsaPublicKey {
+pub trait EncodeRsaPublicKey {
     /// Serialize a [`RsaPublicKeyDocument`] containing a PKCS#1-encoded public key.
     fn to_pkcs1_der(&self) -> Result<RsaPublicKeyDocument>;
-
-    /// Serialize this public key as PEM-encoded PKCS#1.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem(&self) -> Result<String> {
-        self.to_pkcs1_pem_with_le(LineEnding::default())
-    }
 
     /// Serialize this public key as PEM-encoded PKCS#1 with the given line ending.
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pkcs1_pem_with_le(&self, line_ending: LineEnding) -> Result<String> {
-        self.to_pkcs1_der()?.to_pkcs1_pem_with_le(line_ending)
+    fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<String> {
+        self.to_pkcs1_der()?.to_pkcs1_pem(line_ending)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_der_file(&self, path: &Path) -> Result<()> {
+    fn write_pkcs1_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         self.to_pkcs1_der()?.write_pkcs1_der_file(path)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path.
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_pkcs1_pem_file(&self, path: &Path) -> Result<()> {
-        self.to_pkcs1_der()?.write_pkcs1_pem_file(path)
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
+    fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
+        self.to_pkcs1_der()?.write_pkcs1_pem_file(path, line_ending)
     }
 }

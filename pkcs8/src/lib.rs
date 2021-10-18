@@ -91,13 +91,8 @@
 //! ⚠️ WARNING ⚠️
 //!
 //! DES support is implemented to allow for decryption of legacy files.
-//!
-//! DES is considered insecure due to its short key size. New keys should use AES instead.
-//!
-//! # PKCS#1 support (optional)
-//! When the `pkcs1` feature of this crate is enabled, this crate provides
-//! a blanket impl of PKCS#8 support for types which impl the traits from the
-//! [`pkcs1`] crate (e.g. `FromRsaPrivateKey`, `ToRsaPrivateKey`).
+//! Such keys should be considered *INSECURE* due to their short key size.
+//! New keys should use AES instead.
 //!
 //! # Minimum Supported Rust Version
 //! This crate requires **Rust 1.55** at a minimum.
@@ -137,33 +132,24 @@ pub(crate) mod encrypted_private_key_info;
 pub use crate::{
     error::{Error, Result},
     private_key_info::PrivateKeyInfo,
-    traits::{FromPrivateKey, FromPublicKey},
+    traits::DecodePrivateKey,
     version::Version,
 };
 pub use der::{self, asn1::ObjectIdentifier};
-pub use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+pub use spki::{AlgorithmIdentifier, DecodePublicKey, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
-pub use crate::{
-    document::{private_key::PrivateKeyDocument, public_key::PublicKeyDocument},
-    traits::{ToPrivateKey, ToPublicKey},
+pub use {
+    crate::{document::private_key::PrivateKeyDocument, traits::EncodePrivateKey},
+    spki::{EncodePublicKey, PublicKeyDocument},
 };
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use pem_rfc7468::LineEnding;
+pub use der::pem::{self, LineEnding};
 
 #[cfg(feature = "pkcs5")]
-pub use encrypted_private_key_info::EncryptedPrivateKeyInfo;
-
-#[cfg(feature = "pkcs1")]
-pub use pkcs1;
-
-#[cfg(feature = "pkcs5")]
-pub use pkcs5;
+pub use {crate::encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
 
 #[cfg(all(feature = "alloc", feature = "pkcs5"))]
 pub use crate::document::encrypted_private_key::EncryptedPrivateKeyDocument;
-
-#[cfg(feature = "pem")]
-use pem_rfc7468 as pem;
