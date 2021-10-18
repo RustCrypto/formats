@@ -113,10 +113,14 @@ fn simple_enum() {
         credential: basic_credential.clone(),
     };
     let one = SimpleEnum::One(credential);
-    let _one_serialized: Vec<u8> = one.tls_serialize_detached().unwrap();
+    let _one_serialized: Vec<u8> = one
+        .tls_serialize_detached()
+        .expect("Error serializing simple enum");
 
     let two = SimpleEnum::Two(basic_credential);
-    let _two_serialized: Vec<u8> = two.tls_serialize_detached().unwrap();
+    let _two_serialized: Vec<u8> = two
+        .tls_serialize_detached()
+        .expect("Error serializing simple enum");
 }
 
 #[test]
