@@ -46,7 +46,7 @@ struct Enum {
     variants: Punctuated<Variant, Comma>,
 }
 
-const ENUM_TYPE_POSTFIX: &'static str = "Type";
+const ENUM_TYPE_POSTFIX: &str = "Type";
 
 #[derive(Clone)]
 enum TlsStruct {
