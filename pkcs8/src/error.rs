@@ -50,11 +50,6 @@ pub enum Error {
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     PermissionDenied,
-
-    /// PKCS#1 errors.
-    #[cfg(feature = "pkcs1")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pkcs1")))]
-    Pkcs1(pkcs1::Error),
 }
 
 impl fmt::Display for Error {
@@ -72,8 +67,6 @@ impl fmt::Display for Error {
             Error::Pem(err) => write!(f, "PKCS8 {}", err),
             #[cfg(feature = "std")]
             Error::PermissionDenied => f.write_str("permission denied"),
-            #[cfg(feature = "pkcs1")]
-            Error::Pkcs1(err) => write!(f, "{}", err),
         }
     }
 }
@@ -97,13 +90,6 @@ impl From<der::ErrorKind> for Error {
 impl From<pem::Error> for Error {
     fn from(err: pem::Error) -> Error {
         Error::Pem(err)
-    }
-}
-
-#[cfg(feature = "pkcs1")]
-impl From<pkcs1::Error> for Error {
-    fn from(err: pkcs1::Error) -> Error {
-        Error::Pkcs1(err)
     }
 }
 
