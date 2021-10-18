@@ -1,6 +1,6 @@
 [package]
 name = "sec1"
-version = "0.2.0" # Also update html_root_url in lib.rs when bumping this
+version = "0.2.0-pre" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of SEC1: Elliptic Curve Cryptography encoding formats
 including ASN.1 DER-serialized private keys as well as the

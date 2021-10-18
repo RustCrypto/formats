@@ -17,7 +17,7 @@ use std::path::Path;
 use zeroize::Zeroizing;
 
 /// Parse an [`EcPrivateKey`] from a SEC1-encoded document.
-pub trait FromEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> + Sized {
+pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> + Sized {
     /// Deserialize SEC1 private key from ASN.1 DER-encoded data
     /// (binary format).
     fn from_sec1_der(bytes: &[u8]) -> Result<Self> {
@@ -41,7 +41,7 @@ pub trait FromEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> + S
     /// filesystem (binary format).
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_sec1_der_file(path: &Path) -> Result<Self> {
+    fn read_sec1_der_file(path: impl AsRef<Path>) -> Result<Self> {
         EcPrivateKeyDocument::read_sec1_der_file(path)
             .and_then(|doc| Self::try_from(doc.private_key()))
     }
@@ -50,7 +50,7 @@ pub trait FromEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> + S
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_sec1_pem_file(path: &Path) -> Result<Self> {
+    fn read_sec1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         EcPrivateKeyDocument::read_sec1_pem_file(path)
             .and_then(|doc| Self::try_from(doc.private_key()))
     }
@@ -59,7 +59,7 @@ pub trait FromEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> + S
 /// Serialize a [`EcPrivateKey`] to a SEC1 encoded document.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub trait ToEcPrivateKey {
+pub trait EncodeEcPrivateKey {
     /// Serialize a [`EcPrivateKeyDocument`] containing a SEC1-encoded private key.
     fn to_sec1_der(&self) -> Result<EcPrivateKeyDocument>;
 
@@ -75,7 +75,7 @@ pub trait ToEcPrivateKey {
     /// Write ASN.1 DER-encoded SEC1 private key to the given path.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_sec1_der_file(&self, path: &Path) -> Result<()> {
+    fn write_sec1_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         self.to_sec1_der()?.write_sec1_der_file(path)
     }
 
@@ -83,7 +83,7 @@ pub trait ToEcPrivateKey {
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_sec1_pem_file(&self, path: &Path, line_ending: LineEnding) -> Result<()> {
+    fn write_sec1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         self.to_sec1_der()?.write_sec1_pem_file(path, line_ending)
     }
 }

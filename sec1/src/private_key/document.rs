@@ -1,6 +1,6 @@
 //! SEC1 EC private key document.
 
-use crate::{EcPrivateKey, Error, FromEcPrivateKey, Result, ToEcPrivateKey};
+use crate::{DecodeEcPrivateKey, EcPrivateKey, EncodeEcPrivateKey, Error, Result};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::{convert::TryFrom, fmt};
 use der::{Decodable, Encodable};
@@ -40,7 +40,7 @@ impl EcPrivateKeyDocument {
     }
 }
 
-impl FromEcPrivateKey for EcPrivateKeyDocument {
+impl DecodeEcPrivateKey for EcPrivateKeyDocument {
     fn from_sec1_der(bytes: &[u8]) -> Result<Self> {
         // Ensure document is well-formed
         EcPrivateKey::from_der(bytes)?;
@@ -63,19 +63,19 @@ impl FromEcPrivateKey for EcPrivateKeyDocument {
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_sec1_der_file(path: &Path) -> Result<Self> {
+    fn read_sec1_der_file(path: impl AsRef<Path>) -> Result<Self> {
         fs::read(path)?.try_into()
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_sec1_pem_file(path: &Path) -> Result<Self> {
+    fn read_sec1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         Self::from_sec1_pem(&Zeroizing::new(fs::read_to_string(path)?))
     }
 }
 
-impl ToEcPrivateKey for EcPrivateKeyDocument {
+impl EncodeEcPrivateKey for EcPrivateKeyDocument {
     fn to_sec1_der(&self) -> Result<EcPrivateKeyDocument> {
         Ok(self.clone())
     }
@@ -89,14 +89,14 @@ impl ToEcPrivateKey for EcPrivateKeyDocument {
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_sec1_der_file(&self, path: &Path) -> Result<()> {
+    fn write_sec1_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         write_secret_file(path, self.as_der())
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_sec1_pem_file(&self, path: &Path, line_ending: LineEnding) -> Result<()> {
+    fn write_sec1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         let pem_doc = self.to_sec1_pem(line_ending)?;
         write_secret_file(path, pem_doc.as_bytes())
     }
