@@ -12,23 +12,10 @@ use {
     rand_core::{CryptoRng, RngCore},
 };
 
-#[cfg(feature = "pem")]
-use {crate::LineEnding, alloc::string::String, zeroize::Zeroizing};
-
-#[cfg(feature = "pkcs1")]
-use crate::{Error, ObjectIdentifier};
-
 #[cfg(feature = "std")]
 use std::path::Path;
-
-#[cfg(all(feature = "alloc", feature = "pkcs1"))]
-use crate::AlgorithmIdentifier;
-
-/// PKCS#1 RSA Algorithm [`ObjectIdentifier`].
-///
-/// <http://oid-info.com/get/1.2.840.113549.1.1.1>
-#[cfg(feature = "pkcs1")]
-const PKCS1_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.1.1");
+#[cfg(feature = "pem")]
+use {crate::LineEnding, alloc::string::String, zeroize::Zeroizing};
 
 /// Parse a private key object from a PKCS#8 encoded document.
 pub trait DecodePrivateKey: Sized {
@@ -157,36 +144,5 @@ pub trait EncodePrivateKey {
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     fn write_pkcs8_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         self.to_pkcs8_der()?.write_pkcs8_pem_file(path, line_ending)
-    }
-}
-
-#[cfg(feature = "pkcs1")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pkcs1")))]
-impl<K: pkcs1::DecodeRsaPrivateKey> DecodePrivateKey for K {
-    fn from_pkcs8_private_key_info(pkcs8_key: PrivateKeyInfo<'_>) -> Result<Self> {
-        pkcs8_key.algorithm.assert_algorithm_oid(PKCS1_OID)?;
-
-        if pkcs8_key.algorithm.parameters != Some(der::asn1::Null.into()) {
-            return Err(Error::ParametersMalformed);
-        }
-
-        let pkcs1_key = pkcs1::RsaPrivateKey::try_from(pkcs8_key.private_key)?;
-        Ok(K::from_pkcs1_private_key(pkcs1_key)?)
-    }
-}
-
-#[cfg(all(feature = "alloc", feature = "pkcs1"))]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-#[cfg_attr(docsrs, doc(cfg(feature = "pkcs1")))]
-impl<K: pkcs1::EncodeRsaPrivateKey> EncodePrivateKey for K {
-    fn to_pkcs8_der(&self) -> Result<PrivateKeyDocument> {
-        let pkcs1_der = self.to_pkcs1_der()?;
-
-        let algorithm = AlgorithmIdentifier {
-            oid: PKCS1_OID,
-            parameters: Some(der::asn1::Null.into()),
-        };
-
-        PrivateKeyInfo::new(algorithm, pkcs1_der.as_ref()).to_der()
     }
 }

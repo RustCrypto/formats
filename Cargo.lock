@@ -491,7 +491,6 @@ version = "0.8.0-pre"
 dependencies = [
  "der",
  "hex-literal",
- "pkcs1",
  "pkcs5",
  "rand_core",
  "spki",

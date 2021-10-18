@@ -91,13 +91,8 @@
 //! ⚠️ WARNING ⚠️
 //!
 //! DES support is implemented to allow for decryption of legacy files.
-//!
-//! DES is considered insecure due to its short key size. New keys should use AES instead.
-//!
-//! # PKCS#1 support (optional)
-//! When the `pkcs1` feature of this crate is enabled, this crate provides
-//! a blanket impl of PKCS#8 support for types which impl the traits from the
-//! [`pkcs1`] crate (e.g. `FromRsaPrivateKey`, `ToRsaPrivateKey`).
+//! Such keys should be considered *INSECURE* due to their short key size.
+//! New keys should use AES instead.
 //!
 //! # Minimum Supported Rust Version
 //! This crate requires **Rust 1.55** at a minimum.
@@ -154,13 +149,7 @@ pub use {
 pub use der::pem::{self, LineEnding};
 
 #[cfg(feature = "pkcs5")]
-pub use encrypted_private_key_info::EncryptedPrivateKeyInfo;
-
-#[cfg(feature = "pkcs1")]
-pub use pkcs1;
-
-#[cfg(feature = "pkcs5")]
-pub use pkcs5;
+pub use {crate::encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
 
 #[cfg(all(feature = "alloc", feature = "pkcs5"))]
 pub use crate::document::encrypted_private_key::EncryptedPrivateKeyDocument;
