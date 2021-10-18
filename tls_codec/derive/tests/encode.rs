@@ -62,6 +62,38 @@ fn lifetime_struct() {
     );
 }
 
+#[derive(TlsSerialize, TlsSize, Clone, PartialEq)]
+struct CredentialType(u16);
+
+#[derive(TlsSerialize, TlsSize, Clone, PartialEq)]
+struct SignatureScheme(u16);
+
+#[derive(TlsSerialize, TlsSize, Clone, PartialEq)]
+struct BasicCredential {
+    identity: TlsVecU16<u8>,
+    signature_scheme: SignatureScheme,
+    signature_key: TlsVecU16<u8>,
+}
+
+#[derive(TlsSerialize, TlsSize, Clone, PartialEq, Debug)]
+#[repr(u8)]
+enum SimpleEnumType {
+    One = 1u8,
+    Two = 2u8,
+}
+
+#[derive(TlsSerialize, TlsSize, Clone, PartialEq)]
+enum SimpleEnum {
+    One(Credential),
+    Two(BasicCredential),
+}
+
+#[derive(TlsSerialize, TlsSize, Clone, PartialEq)]
+struct Credential {
+    credential_type: CredentialType,
+    credential: BasicCredential,
+}
+
 #[test]
 fn simple_enum() {
     let serialized = ExtensionType::KeyId.tls_serialize_detached().unwrap();
@@ -70,6 +102,21 @@ fn simple_enum() {
         .tls_serialize_detached()
         .unwrap();
     assert_eq!(vec![1, 244], serialized);
+
+    let basic_credential = BasicCredential {
+        identity: vec![].into(),
+        signature_scheme: SignatureScheme(0u16),
+        signature_key: vec![].into(),
+    };
+    let credential = Credential {
+        credential_type: CredentialType(0u16),
+        credential: basic_credential.clone(),
+    };
+    let one = SimpleEnum::One(credential);
+    let _one_serialized: Vec<u8> = one.tls_serialize_detached().unwrap();
+
+    let two = SimpleEnum::Two(basic_credential);
+    let _two_serialized: Vec<u8> = two.tls_serialize_detached().unwrap();
 }
 
 #[test]
