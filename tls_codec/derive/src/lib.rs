@@ -445,8 +445,6 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                         enum_value.tls_serialize(writer)
                     }
                 }
-                // This can probably be optimised such that we only have one
-                // `match` statement.
                 EnumStyle::TupleStruct => {
                     let type_mapping: Vec<TokenStream2> = variants
                         .iter()
