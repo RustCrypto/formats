@@ -167,11 +167,7 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
                 syn::Fields::Unnamed(ref fields_unnamed) => {
                     if fields_unnamed.unnamed.len() == 1 {
                         let field_type = fields_unnamed.unnamed.first().unwrap().ty.clone();
-                        if let syn::Type::Path(_) = field_type {
-                            false
-                        } else {
-                            true
-                        }
+                        !matches!(field_type, syn::Type::Path(_))
                     } else {
                         true
                     }
