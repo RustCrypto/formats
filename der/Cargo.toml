@@ -19,6 +19,7 @@ const-oid = { version = "0.6", optional = true, path = "../const-oid" }
 crypto-bigint = { version = "0.2", optional = true, features = ["generic-array"] }
 der_derive = { version = "=0.5.0-pre.1", optional = true, path = "derive" }
 pem-rfc7468 = { version = "0.2.3", optional = true, path = "../pem-rfc7468" }
+time = { version = "0.3", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"

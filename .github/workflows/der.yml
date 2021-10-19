@@ -42,7 +42,8 @@ jobs:
       - run: cargo build --target ${{ matrix.target }} --release --features derive
       - run: cargo build --target ${{ matrix.target }} --release --features oid
       - run: cargo build --target ${{ matrix.target }} --release --features pem
-      - run: cargo build --target ${{ matrix.target }} --release --features alloc,bigint,derive,oid,pem
+      - run: cargo build --target ${{ matrix.target }} --release --features time
+      - run: cargo build --target ${{ matrix.target }} --release --features alloc,bigint,derive,oid,pem,time
 
   test:
     strategy:
