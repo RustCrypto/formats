@@ -22,6 +22,7 @@ pem-rfc7468 = { version = "0.2.3", optional = true, path = "../pem-rfc7468" }
 
 [dev-dependencies]
 hex-literal = "0.3"
+proptest = "1"
 
 [features]
 alloc = []

@@ -382,22 +382,4 @@ mod tests {
         let datetime = DateTime::new(2001, 01, 02, 12, 13, 14).unwrap();
         assert_eq!(&datetime.to_string(), "2001-01-02T12:13:14Z");
     }
-
-    #[test]
-    fn round_trip() {
-        for year in 1970..=2100 {
-            for month in 1..=12 {
-                let max_day = if month == 2 { 28 } else { 30 };
-
-                for day in 1..=max_day {
-                    for hour in 0..=23 {
-                        let datetime1 = DateTime::new(year, month, day, hour, 0, 0).unwrap();
-                        let unix_duration = datetime1.unix_duration();
-                        let datetime2 = DateTime::from_unix_duration(unix_duration).unwrap();
-                        assert_eq!(datetime1, datetime2);
-                    }
-                }
-            }
-        }
-    }
 }
