@@ -29,6 +29,7 @@ pub struct RsaPublicKeyDocument(Vec<u8>);
 
 impl<'a> Document<'a> for RsaPublicKeyDocument {
     type Message = RsaPublicKey<'a>;
+    const SENSITIVE: bool = false;
 }
 
 impl DecodeRsaPublicKey for RsaPublicKeyDocument {
@@ -74,14 +75,13 @@ impl EncodeRsaPublicKey for RsaPublicKeyDocument {
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_pkcs1_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        Ok(self.write_der_file(path, false)?)
+        Ok(self.write_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
-        Ok(self.write_pem_file(path, false, line_ending)?)
+        Ok(self.write_pem_file(path, line_ending)?)
     }
 }
 
