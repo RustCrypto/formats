@@ -66,8 +66,21 @@ fn tuple_struct() {
     );
 }
 
+#[derive(TlsDeserialize, TlsSize, Clone, PartialEq, Debug)]
+#[repr(u8)]
+enum SimpleEnumType {
+    One = 1u8,
+    Two = 2u8,
+}
+
+#[derive(TlsDeserialize, TlsSize, Clone, PartialEq)]
+enum SimpleEnum {
+    One(Credential),
+    Two(BasicCredential),
+}
+
 #[test]
-fn simple_enum() {
+fn simple_enums() {
     let mut b = &[0u8, 5] as &[u8];
     let deserialized = ExtensionType::tls_deserialize(&mut b).unwrap();
     assert_eq!(ExtensionType::RatchetTree, deserialized);
@@ -82,6 +95,19 @@ fn simple_enum() {
         let deserialized = ExtensionType::tls_deserialize(&mut b).unwrap();
         assert_eq!(variant, &deserialized);
     }
+
+    let mut one_serialized = &[1u8, 0, 0, 0, 0, 0, 0, 0, 0] as &[u8];
+    let mut two_serialized = &[2u8, 0, 0, 0, 0, 0, 0] as &[u8];
+
+    let one = SimpleEnum::tls_deserialize(&mut one_serialized).expect("Error deserializing.");
+    let two = SimpleEnum::tls_deserialize(&mut two_serialized).expect("Error deserializing.");
+
+    if let SimpleEnum::Two(_) = one {
+        panic!("Enum wrongly deserialized.")
+    };
+    if let SimpleEnum::One(_) = two {
+        panic!("Enum wrongly deserialized.")
+    };
 }
 
 #[test]
