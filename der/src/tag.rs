@@ -63,6 +63,9 @@ pub enum Tag {
     /// `SET` and `SET OF` tag: `0x11`.
     Set,
 
+    /// `NumericString` tag: `0x12`.
+    NumericString,
+
     /// `PrintableString` tag: `0x13`.
     PrintableString,
 
@@ -167,6 +170,7 @@ impl Tag {
             Tag::Utf8String => 0x0C,
             Tag::Sequence => 0x10 | CONSTRUCTED_FLAG,
             Tag::Set => 0x11 | CONSTRUCTED_FLAG,
+            Tag::NumericString => 0x12,
             Tag::PrintableString => 0x13,
             Tag::Ia5String => 0x16,
             Tag::UtcTime => 0x17,
@@ -229,6 +233,7 @@ impl TryFrom<u8> for Tag {
             0x05 => Ok(Tag::Null),
             0x06 => Ok(Tag::ObjectIdentifier),
             0x0C => Ok(Tag::Utf8String),
+            0x12 => Ok(Tag::NumericString),
             0x13 => Ok(Tag::PrintableString),
             0x16 => Ok(Tag::Ia5String),
             0x17 => Ok(Tag::UtcTime),
@@ -293,6 +298,7 @@ impl fmt::Display for Tag {
             Tag::ObjectIdentifier => f.write_str("OBJECT IDENTIFIER"),
             Tag::Utf8String => f.write_str("UTF8String"),
             Tag::Set => f.write_str("SET"),
+            Tag::NumericString => f.write_str("NumericString"),
             Tag::PrintableString => f.write_str("PrintableString"),
             Tag::Ia5String => f.write_str("IA5String"),
             Tag::UtcTime => f.write_str("UTCTime"),
@@ -347,6 +353,7 @@ mod tests {
         assert_eq!(Tag::ObjectIdentifier.class(), Class::Universal);
         assert_eq!(Tag::Utf8String.class(), Class::Universal);
         assert_eq!(Tag::Set.class(), Class::Universal);
+        assert_eq!(Tag::NumericString.class(), Class::Universal);
         assert_eq!(Tag::PrintableString.class(), Class::Universal);
         assert_eq!(Tag::Ia5String.class(), Class::Universal);
         assert_eq!(Tag::UtcTime.class(), Class::Universal);
