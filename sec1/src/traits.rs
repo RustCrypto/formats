@@ -14,7 +14,7 @@ use {crate::LineEnding, alloc::string::String};
 use std::path::Path;
 
 #[cfg(any(feature = "pem", feature = "std"))]
-use zeroize::Zeroizing;
+use {der::Document, zeroize::Zeroizing};
 
 /// Parse an [`EcPrivateKey`] from a SEC1-encoded document.
 pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> + Sized {
@@ -34,7 +34,7 @@ pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> +
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_sec1_pem(s: &str) -> Result<Self> {
-        EcPrivateKeyDocument::from_sec1_pem(s).and_then(|doc| Self::try_from(doc.private_key()))
+        EcPrivateKeyDocument::from_sec1_pem(s).and_then(|doc| Self::try_from(doc.decode()))
     }
 
     /// Load SEC1 private key from an ASN.1 DER-encoded file on the local
@@ -42,8 +42,7 @@ pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> +
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_sec1_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        EcPrivateKeyDocument::read_sec1_der_file(path)
-            .and_then(|doc| Self::try_from(doc.private_key()))
+        EcPrivateKeyDocument::read_sec1_der_file(path).and_then(|doc| Self::try_from(doc.decode()))
     }
 
     /// Load SEC1 private key from a PEM-encoded file on the local filesystem.
@@ -51,8 +50,7 @@ pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> +
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_sec1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        EcPrivateKeyDocument::read_sec1_pem_file(path)
-            .and_then(|doc| Self::try_from(doc.private_key()))
+        EcPrivateKeyDocument::read_sec1_pem_file(path).and_then(|doc| Self::try_from(doc.decode()))
     }
 }
 

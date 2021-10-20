@@ -15,10 +15,6 @@ use der::{
     Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
 };
 
-/// Type label for PEM-encoded private keys.
-#[cfg(feature = "pem")]
-pub(crate) const PEM_TYPE_LABEL: &str = "EC PRIVATE KEY";
-
 /// `ECPrivateKey` version.
 ///
 /// From [RFC5913 Section 3]:

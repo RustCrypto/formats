@@ -17,7 +17,7 @@ use {
 };
 
 #[cfg(feature = "std")]
-use std::{fs, path::Path, str};
+use std::{path::Path, str};
 
 /// PKCS#1 `RSA PRIVATE KEY` document.
 ///
@@ -51,14 +51,14 @@ impl DecodeRsaPrivateKey for RsaPrivateKeyDocument {
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        Ok(fs::read(path)?.try_into()?)
+        Ok(Self::read_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        Self::from_pkcs1_pem(&Zeroizing::new(fs::read_to_string(path)?))
+        Ok(Self::read_pem_file(path)?)
     }
 }
 
@@ -93,6 +93,14 @@ impl AsRef<[u8]> for RsaPrivateKeyDocument {
     }
 }
 
+impl TryFrom<&[u8]> for RsaPrivateKeyDocument {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        RsaPrivateKeyDocument::from_pkcs1_der(bytes)
+    }
+}
+
 impl TryFrom<RsaPrivateKey<'_>> for RsaPrivateKeyDocument {
     type Error = Error;
 
@@ -106,14 +114,6 @@ impl TryFrom<&RsaPrivateKey<'_>> for RsaPrivateKeyDocument {
 
     fn try_from(private_key: &RsaPrivateKey<'_>) -> Result<RsaPrivateKeyDocument> {
         Ok(private_key.to_vec()?.try_into()?)
-    }
-}
-
-impl TryFrom<&[u8]> for RsaPrivateKeyDocument {
-    type Error = Error;
-
-    fn try_from(bytes: &[u8]) -> Result<Self> {
-        RsaPrivateKeyDocument::from_pkcs1_der(bytes)
     }
 }
 
