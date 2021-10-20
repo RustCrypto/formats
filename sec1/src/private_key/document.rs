@@ -90,7 +90,7 @@ impl TryFrom<&[u8]> for EcPrivateKeyDocument {
     type Error = Error;
 
     fn try_from(bytes: &[u8]) -> Result<Self> {
-        EcPrivateKeyDocument::from_sec1_der(bytes)
+        Ok(Self::from_der(bytes)?)
     }
 }
 
