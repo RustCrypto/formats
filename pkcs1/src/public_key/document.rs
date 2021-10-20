@@ -91,6 +91,14 @@ impl AsRef<[u8]> for RsaPublicKeyDocument {
     }
 }
 
+impl TryFrom<&[u8]> for RsaPublicKeyDocument {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Ok(Self::from_der(bytes)?)
+    }
+}
+
 impl From<RsaPublicKey<'_>> for RsaPublicKeyDocument {
     fn from(public_key: RsaPublicKey<'_>) -> RsaPublicKeyDocument {
         RsaPublicKeyDocument::from(&public_key)
@@ -104,14 +112,6 @@ impl From<&RsaPublicKey<'_>> for RsaPublicKeyDocument {
             .ok()
             .and_then(|buf| buf.try_into().ok())
             .expect(error::DER_ENCODING_MSG)
-    }
-}
-
-impl TryFrom<&[u8]> for RsaPublicKeyDocument {
-    type Error = Error;
-
-    fn try_from(bytes: &[u8]) -> Result<Self> {
-        RsaPublicKeyDocument::from_pkcs1_der(bytes)
     }
 }
 
