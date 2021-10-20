@@ -37,7 +37,7 @@ pub trait DecodeRsaPrivateKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_pkcs1_pem(s: &str) -> Result<Self> {
         RsaPrivateKeyDocument::from_pkcs1_pem(s)
-            .and_then(|doc| Self::from_pkcs1_private_key(doc.private_key()))
+            .and_then(|doc| Self::from_pkcs1_private_key(doc.decode()))
     }
 
     /// Load PKCS#1 private key from an ASN.1 DER-encoded file on the local
@@ -46,7 +46,7 @@ pub trait DecodeRsaPrivateKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_der_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPrivateKeyDocument::read_pkcs1_der_file(path)
-            .and_then(|doc| Self::from_pkcs1_private_key(doc.private_key()))
+            .and_then(|doc| Self::from_pkcs1_private_key(doc.decode()))
     }
 
     /// Load PKCS#1 private key from a PEM-encoded file on the local filesystem.
@@ -55,7 +55,7 @@ pub trait DecodeRsaPrivateKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPrivateKeyDocument::read_pkcs1_pem_file(path)
-            .and_then(|doc| Self::from_pkcs1_private_key(doc.private_key()))
+            .and_then(|doc| Self::from_pkcs1_private_key(doc.decode()))
     }
 }
 
