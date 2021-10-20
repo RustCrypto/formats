@@ -9,10 +9,13 @@ use crate::{Encoder, Error, ErrorKind, Result, Tag};
 use core::{fmt, str::FromStr, time::Duration};
 
 #[cfg(feature = "std")]
-use std::{
-    convert::TryFrom,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+#[cfg(feature = "time")]
+use {core::convert::TryInto, time::PrimitiveDateTime};
+
+#[cfg(any(feature = "std", feature = "time"))]
+use core::convert::TryFrom;
 
 /// Minimum year allowed in [`DateTime`] values.
 const MIN_YEAR: u16 = 1970;
@@ -324,6 +327,41 @@ impl TryFrom<&SystemTime> for DateTime {
 
     fn try_from(time: &SystemTime) -> Result<DateTime> {
         DateTime::from_system_time(*time)
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl TryFrom<DateTime> for PrimitiveDateTime {
+    type Error = Error;
+
+    fn try_from(time: DateTime) -> Result<PrimitiveDateTime> {
+        let month = (time.month() as u8).try_into()?;
+        let date = time::Date::from_calendar_date(time.year() as i32, month, time.day() as u8)?;
+        let time = time::Time::from_hms(
+            time.hour() as u8,
+            time.minutes() as u8,
+            time.seconds() as u8,
+        )?;
+
+        Ok(PrimitiveDateTime::new(date, time))
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl TryFrom<PrimitiveDateTime> for DateTime {
+    type Error = Error;
+
+    fn try_from(time: PrimitiveDateTime) -> Result<DateTime> {
+        DateTime::new(
+            time.year() as u16,
+            u8::from(time.month()) as u16,
+            time.day() as u16,
+            time.hour() as u16,
+            time.minute() as u16,
+            time.second() as u16,
+        )
     }
 }
 

@@ -10,6 +10,9 @@ use core::{convert::TryFrom, time::Duration};
 #[cfg(feature = "std")]
 use std::time::SystemTime;
 
+#[cfg(feature = "time")]
+use {core::convert::TryInto, time::PrimitiveDateTime};
+
 /// ASN.1 `GeneralizedTime` type.
 ///
 /// This type implements the validity requirements specified in
@@ -241,6 +244,62 @@ impl<'a> TryFrom<Any<'a>> for SystemTime {
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl Tagged for SystemTime {
+    const TAG: Tag = Tag::GeneralizedTime;
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl DecodeValue<'_> for PrimitiveDateTime {
+    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
+        GeneralizedTime::decode_value(decoder, length)?.try_into()
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl EncodeValue for PrimitiveDateTime {
+    fn value_len(&self) -> Result<Length> {
+        GeneralizedTime::try_from(self)?.value_len()
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        GeneralizedTime::try_from(self)?.encode_value(encoder)
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl TryFrom<PrimitiveDateTime> for GeneralizedTime {
+    type Error = Error;
+
+    fn try_from(time: PrimitiveDateTime) -> Result<GeneralizedTime> {
+        Ok(GeneralizedTime::from_date_time(DateTime::try_from(time)?))
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl TryFrom<&PrimitiveDateTime> for GeneralizedTime {
+    type Error = Error;
+
+    fn try_from(time: &PrimitiveDateTime) -> Result<GeneralizedTime> {
+        Self::try_from(*time)
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl TryFrom<GeneralizedTime> for PrimitiveDateTime {
+    type Error = Error;
+
+    fn try_from(time: GeneralizedTime) -> Result<PrimitiveDateTime> {
+        time.to_date_time().try_into()
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl Tagged for PrimitiveDateTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
 

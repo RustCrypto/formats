@@ -289,6 +289,7 @@ dependencies = [
  "hex-literal",
  "pem-rfc7468",
  "proptest",
+ "time",
 ]
 
 [[package]]
@@ -935,6 +936,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 dependencies = [
  "unicode-width",
+]
+
+[[package]]
+name = "time"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cde1cf55178e0293453ba2cca0d5f8392a922e52aa958aee9c28ed02becc6d03"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
