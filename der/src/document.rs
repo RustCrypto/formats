@@ -23,6 +23,11 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     /// ASN.1 message type this document decodes to.
     type Message: Decodable<'a> + Encodable + Sized;
 
+    /// Does this type contain potentially sensitive data?
+    ///
+    /// This enables hardened file permissions when persisting data to disk.
+    const SENSITIVE: bool;
+
     /// Borrow the inner serialized bytes of this document.
     fn as_der(&self) -> &[u8] {
         self.as_ref()
@@ -98,31 +103,26 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     /// Write ASN.1 DER document to a file.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_der_file(&self, path: impl AsRef<Path>, is_secret: bool) -> Result<()> {
-        write_file(path, self.as_ref(), is_secret)
+    fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
+        write_file(path, self.as_ref(), Self::SENSITIVE)
     }
 
     /// Write PEM-encoded ASN.1 DER document to a file.
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
-    fn write_pem_file(
-        &self,
-        path: impl AsRef<Path>,
-        is_secret: bool,
-        line_ending: pem::LineEnding,
-    ) -> Result<()>
+    fn write_pem_file(&self, path: impl AsRef<Path>, line_ending: pem::LineEnding) -> Result<()>
     where
         Self: pem::PemLabel,
     {
-        write_file(path, self.to_pem(line_ending)?.as_bytes(), is_secret)
+        write_file(path, self.to_pem(line_ending)?.as_bytes(), Self::SENSITIVE)
     }
 }
 
 /// Write a file to the filesystem, potentially using hardened permissions
 /// if the file contains secret data.
 #[cfg(feature = "std")]
-fn write_file(path: impl AsRef<Path>, data: &[u8], is_secret: bool) -> Result<()> {
-    if is_secret {
+fn write_file(path: impl AsRef<Path>, data: &[u8], sensitive: bool) -> Result<()> {
+    if sensitive {
         write_secret_file(path, data)
     } else {
         Ok(fs::write(path, data)?)
