@@ -1,5 +1,5 @@
 //! Validity tests
-use core::convert::TryFrom;
+
 use der::Encodable;
 use hex_literal::hex;
 use x509::Validity;

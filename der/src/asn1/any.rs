@@ -4,7 +4,6 @@ use crate::{
     asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder,
     Error, ErrorKind, Header, Length, Result, Tag, Tagged,
 };
-use core::convert::{TryFrom, TryInto};
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;

@@ -1,6 +1,5 @@
 //! Public key (`SubjectPublicKeyInfo`) tests
 
-use core::convert::TryFrom;
 use hex_literal::hex;
 use pkcs8::SubjectPublicKeyInfo;
 

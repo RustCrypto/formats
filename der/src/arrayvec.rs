@@ -3,7 +3,6 @@
 // See: https://github.com/rust-lang/rfcs/pull/2990
 
 use crate::{ErrorKind, Result};
-use core::convert::TryInto;
 
 /// Array-backed append-only vector type.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

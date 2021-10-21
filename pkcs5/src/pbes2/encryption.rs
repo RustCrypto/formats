@@ -1,10 +1,8 @@
-//! PBES2 encryption implementation
+//! PBES2 encryption.
 
 use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptParams};
 use crate::{Error, Result};
-use block_modes::block_padding::Pkcs7;
-use block_modes::{BlockMode, Cbc};
-use core::convert::TryInto;
+use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
 use hmac::{
     digest::{generic_array::ArrayLength, BlockInput, FixedOutput, Reset, Update},
     Hmac,
@@ -15,6 +13,7 @@ use scrypt::scrypt;
 type Aes128Cbc = Cbc<aes::Aes128, Pkcs7>;
 type Aes192Cbc = Cbc<aes::Aes192, Pkcs7>;
 type Aes256Cbc = Cbc<aes::Aes256, Pkcs7>;
+
 #[cfg(feature = "des-insecure")]
 type DesCbc = Cbc<des::Des, Pkcs7>;
 #[cfg(feature = "3des")]

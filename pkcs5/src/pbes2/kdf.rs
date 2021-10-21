@@ -1,7 +1,6 @@
 //! Key derivation functions.
 
 use crate::{AlgorithmIdentifier, Error, Result};
-use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
     Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence,

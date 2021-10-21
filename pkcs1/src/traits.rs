@@ -1,7 +1,6 @@
 //! Traits for parsing objects from PKCS#1 encoded documents
 
 use crate::{Result, RsaPrivateKey, RsaPublicKey};
-use core::convert::TryFrom;
 
 #[cfg(feature = "alloc")]
 use crate::{RsaPrivateKeyDocument, RsaPublicKeyDocument};

@@ -4,7 +4,6 @@
 pub(crate) mod document;
 
 use crate::{Error, Result};
-use core::convert::TryFrom;
 use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
 
 #[cfg(feature = "alloc")]

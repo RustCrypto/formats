@@ -2,7 +2,6 @@
 
 use super::is_highest_bit_set;
 use crate::{Encoder, ErrorKind, Length, Result};
-use core::convert::TryFrom;
 
 /// Decode an unsigned integer of the specified size.
 ///

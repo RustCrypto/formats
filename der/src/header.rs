@@ -1,7 +1,6 @@
 //! ASN.1 DER headers.
 
 use crate::{Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Result, Tag};
-use core::convert::TryInto;
 
 /// ASN.1 DER headers: tag + length component of TLV-encoded values
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

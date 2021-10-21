@@ -1,6 +1,5 @@
 //! PKCS#1 private key tests
 
-use core::convert::TryFrom;
 use hex_literal::hex;
 use pkcs1::{RsaPrivateKey, Version};
 

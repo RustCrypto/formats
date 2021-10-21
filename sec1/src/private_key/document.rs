@@ -2,7 +2,7 @@
 
 use crate::{DecodeEcPrivateKey, EcPrivateKey, EncodeEcPrivateKey, Error, Result};
 use alloc::vec::Vec;
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::{Decodable, Document, Encodable};
 use zeroize::{Zeroize, Zeroizing};
 

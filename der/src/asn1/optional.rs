@@ -1,7 +1,6 @@
 //! ASN.1 `OPTIONAL` as mapped to Rust's `Option` type
 
 use crate::{Choice, Decodable, Decoder, Encodable, Encoder, Length, Result, Tag};
-use core::convert::TryFrom;
 
 impl<'a, T> Decodable<'a> for Option<T>
 where

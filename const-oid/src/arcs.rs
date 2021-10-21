@@ -1,7 +1,7 @@
 //! Arcs are integer values which exist within an OID's hierarchy.
 
 use crate::{Error, ObjectIdentifier, Result};
-use core::{convert::TryFrom, mem};
+use core::mem;
 
 /// Type used to represent an "arc" (i.e. integer identifier value).
 pub type Arc = u32;

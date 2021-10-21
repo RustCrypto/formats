@@ -5,10 +5,7 @@ use crate::{
     datetime::{self, DateTime},
     ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
 };
-use core::{
-    convert::{TryFrom, TryInto},
-    time::Duration,
-};
+use core::time::Duration;
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;

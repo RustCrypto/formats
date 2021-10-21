@@ -4,7 +4,6 @@ use crate::{
     asn1::*, Choice, Decodable, DecodeValue, Error, ErrorKind, Length, Result, Tag, TagMode,
     TagNumber, Tagged,
 };
-use core::convert::{TryFrom, TryInto};
 
 /// DER decoder.
 #[derive(Debug)]

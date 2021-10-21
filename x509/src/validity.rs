@@ -1,7 +1,6 @@
 //! Validity [`Validity`] as defined in RFC 5280
 
 use crate::Time;
-use core::convert::TryFrom;
 use der::{Decodable, Error, Result, Sequence};
 
 /// X.509 `Validity` as defined in [RFC 5280 Section 4.1.2.5]

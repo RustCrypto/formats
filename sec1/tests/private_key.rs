@@ -1,6 +1,5 @@
 //! SEC1 private key tests
 
-use core::convert::TryFrom;
 use der::asn1::ObjectIdentifier;
 use hex_literal::hex;
 use sec1::{EcParameters, EcPrivateKey};

@@ -4,7 +4,7 @@ use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result,
     StrSlice, Tag, Tagged,
 };
-use core::{convert::TryFrom, fmt, str};
+use core::{fmt, str};
 
 /// ASN.1 `PrintableString` type.
 ///

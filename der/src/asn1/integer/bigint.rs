@@ -5,13 +5,9 @@ use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
     Result, Tag, Tagged,
 };
-use core::convert::TryFrom;
 
 #[cfg(feature = "bigint")]
-use {
-    core::convert::TryInto,
-    crypto_bigint::{generic_array::GenericArray, ArrayEncoding, UInt},
-};
+use crypto_bigint::{generic_array::GenericArray, ArrayEncoding, UInt};
 
 /// "Big" unsigned ASN.1 `INTEGER` type.
 ///
@@ -57,10 +53,10 @@ impl<'a> DecodeValue<'a> for UIntBytes<'a> {
         let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
         let result = Self::new(uint::decode_to_slice(bytes)?)?;
 
-        // Ensure we compute the same encoded length as the original any value
-        // if any.encoded_len()? != result.encoded_len()? {
-        //     return Err(Self::TAG.non_canonical_error());
-        // }
+        // Ensure we compute the same encoded length as the original any value.
+        if result.value_len()? != length {
+            return Err(Self::TAG.non_canonical_error());
+        }
 
         Ok(result)
     }
@@ -162,7 +158,6 @@ mod tests {
         asn1::{integer::tests::*, Any},
         Decodable, Encodable, Encoder, ErrorKind, Tag,
     };
-    use core::convert::TryFrom;
 
     #[test]
     fn decode_uint_bytes() {

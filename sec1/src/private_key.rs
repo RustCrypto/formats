@@ -9,7 +9,7 @@
 pub(crate) mod document;
 
 use crate::{EcParameters, Error};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::{
     asn1::{BitString, ContextSpecific, OctetString},
     Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,

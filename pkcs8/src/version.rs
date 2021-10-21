@@ -1,9 +1,7 @@
 //! PKCS#8 version identifier.
 
-use core::convert::TryFrom;
-use der::{Decodable, Decoder, Encodable, Encoder, Tag, Tagged};
-
 use crate::Error;
+use der::{Decodable, Decoder, Encodable, Encoder, Tag, Tagged};
 
 /// Version identifier for PKCS#8 documents.
 ///

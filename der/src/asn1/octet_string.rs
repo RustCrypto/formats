@@ -4,7 +4,6 @@ use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
     Result, Tag, Tagged,
 };
-use core::convert::TryFrom;
 
 /// ASN.1 `OCTET STRING` type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
