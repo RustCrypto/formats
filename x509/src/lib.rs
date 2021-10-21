@@ -28,8 +28,10 @@ mod time;
 mod validity;
 
 pub use crate::{
-    attribute::AttributeTypeAndValue, certificate::Certificate, certificate::TBSCertificate,
-    extensions::Extension, extensions::Extensions, rdn::RDNSequence,
+    attribute::AttributeTypeAndValue, certificate::Certificate, certificate::DeferCertificate,
+    certificate::TBSCertificate, extensions::AuthorityKeyIdentifier, extensions::BasicConstraints,
+    extensions::CertificatePolicies, extensions::Extension, extensions::Extensions,
+    extensions::KeyUsage, extensions::SubjectKeyIdentifier, rdn::RDNSequence,
     rdn::RelativeDistinguishedName, time::Time, validity::Validity,
 };
 pub use der::{self, asn1::ObjectIdentifier};

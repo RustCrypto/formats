@@ -2,7 +2,7 @@
 
 use crate::{Extensions, RDNSequence, Validity};
 use der::asn1::{BitString, UIntBytes};
-use der::{Decodable, Decoder, Sequence, TagMode, TagNumber};
+use der::{Decodable, Decoder, Sequence, TagMode, TagNumber, TBS};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 // only support v3 certificates
@@ -39,7 +39,7 @@ const EXTENSIONS_TAG: TagNumber = TagNumber::new(3);
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TBSCertificate<'a> {
     /// version         [0]  Version DEFAULT v1,
-    pub version: u8,
+    pub version: Option<u8>,
     /// serialNumber         CertificateSerialNumber,
     pub serial_number: UIntBytes<'a>,
     /// signature            AlgorithmIdentifier{SIGNATURE-ALGORITHM, {SignatureAlgorithms}},
@@ -60,41 +60,28 @@ pub struct TBSCertificate<'a> {
     pub extensions: Option<Extensions<'a>>,
 }
 
+// Custom Decodable to handle implicit context specific fields (this may move to derived later).
 impl<'a> Decodable<'a> for TBSCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
-            let mut version = 0;
-            if (0b10100000 | VERSION_TAG.value()) == decoder.peek().unwrap() {
-                version = decoder
-                    .context_specific::<u8>(VERSION_TAG, TagMode::Explicit)?
-                    .unwrap();
-                if version != VERSION {
+                let version = decoder
+                    .context_specific::<u8>(VERSION_TAG, TagMode::Explicit)?;
+                if version != Some(VERSION) {
                     return Err(der::Tag::Integer.value_error());
                 }
-            }
 
-            // TODO refactor unwrap if this implementation remains
             let serial_number = UIntBytes::decode(decoder)?;
             let signature = AlgorithmIdentifier::decode(decoder)?;
             let issuer = RDNSequence::decode(decoder)?;
             let validity = Validity::decode(decoder)?;
             let subject = RDNSequence::decode(decoder)?;
             let subject_public_key_info = SubjectPublicKeyInfo::decode(decoder)?;
-            let mut issuer_unique_id = Option::None;
-            if (0b10000000 | ISSUER_UID_TAG.value()) == decoder.peek().unwrap() {
-                issuer_unique_id =
-                    decoder.context_specific::<BitString<'_>>(ISSUER_UID_TAG, TagMode::Explicit)?;
-            }
-            let mut subject_unique_id = Option::None;
-            if (0b10000000 | SUBJECT_UID_TAG.value()) == decoder.peek().unwrap() {
-                subject_unique_id = decoder
-                    .context_specific::<BitString<'_>>(SUBJECT_UID_TAG, TagMode::Explicit)?;
-            }
-            let mut extensions = Option::None;
-            if (0b10100000 | EXTENSIONS_TAG.value()) == decoder.peek().unwrap() {
-                extensions = decoder
+            let issuer_unique_id =
+                    decoder.context_specific::<BitString<'_>>(ISSUER_UID_TAG, TagMode::Implicit)?;
+            let subject_unique_id = decoder
+                    .context_specific::<BitString<'_>>(SUBJECT_UID_TAG, TagMode::Implicit)?;
+            let extensions = decoder
                     .context_specific::<Extensions<'_>>(EXTENSIONS_TAG, TagMode::Explicit)?;
-            }
             Ok(TBSCertificate {
                 version,
                 serial_number,
@@ -137,7 +124,7 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
 ///      tbsCertificate       TBSCertificate,
 ///      signatureAlgorithm   AlgorithmIdentifier,
 ///      signature            BIT STRING  }
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, TBS)]
 pub struct Certificate<'a> {
     /// tbsCertificate       TBSCertificate,
     pub tbs_certificate: TBSCertificate<'a>,

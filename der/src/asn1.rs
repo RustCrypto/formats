@@ -17,6 +17,7 @@ mod printable_string;
 mod sequence;
 mod sequence_of;
 mod set_of;
+mod tbs;
 mod utc_time;
 mod utf8_string;
 
@@ -34,6 +35,7 @@ pub use self::{
     sequence::Sequence,
     sequence_of::{SequenceOf, SequenceOfIter},
     set_of::{SetOf, SetOfIter},
+    tbs::TBS,
     utc_time::UtcTime,
     utf8_string::Utf8String,
 };

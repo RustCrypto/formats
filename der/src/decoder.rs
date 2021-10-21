@@ -220,7 +220,7 @@ impl<'a> Decoder<'a> {
 
     /// Obtain a slice of bytes of the given length from the current cursor
     /// position, or return an error if we have insufficient data.
-    pub(crate) fn bytes(&mut self, len: impl TryInto<Length>) -> Result<&'a [u8]> {
+    pub fn bytes(&mut self, len: impl TryInto<Length>) -> Result<&'a [u8]> {
         if self.is_failed() {
             return Err(self.error(ErrorKind::Failed));
         }
@@ -236,6 +236,29 @@ impl<'a> Decoder<'a> {
 
         self.position = (self.position + len)?;
         Ok(result)
+    }
+
+    /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
+    pub fn tlv_slice(&mut self) -> Result<&'a [u8]> {
+        if self.is_failed() {
+            return Err(self.error(ErrorKind::Failed));
+        }
+
+        let pos = self.position();
+        let tag = Tag::decode(self)?;
+
+        let element_length = Length::decode(self).map_err(|e| {
+            if e.kind() == ErrorKind::Overlength {
+                ErrorKind::Length { tag }.into()
+            } else {
+                e
+            }
+        })?;
+        // length of full TLV production includes tag and length (captured via current pos - orig)
+        let length = ((self.position - pos)? + element_length)?;
+        // reset position before invoking bytes (which will advance to first byte beyond value)
+        self.position = pos;
+        self.bytes(length)
     }
 
     /// Get the number of bytes still remaining in the buffer.

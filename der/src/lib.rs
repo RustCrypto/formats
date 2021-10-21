@@ -366,7 +366,7 @@ mod value;
 mod document;
 
 pub use crate::{
-    asn1::{Any, Choice, Sequence},
+    asn1::{Any, Choice, Sequence, TBS},
     datetime::DateTime,
     decodable::Decodable,
     decoder::Decoder,
@@ -388,7 +388,7 @@ pub use crypto_bigint as bigint;
 
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
-pub use der_derive::{Choice, Sequence};
+pub use der_derive::{Choice, Sequence, TBS};
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
