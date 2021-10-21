@@ -1,13 +1,14 @@
 [package]
 name = "tls_codec_derive"
-version = "0.1.3"
+version = "0.2.0-pre"
 authors = ["RustCrypto Developers"]
-edition = "2018"
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/tls_codec_derive/"
 description = "Derive macros for the tls_codec trait"
 readme = "../README.md"
 repository = "https://github.com/RustCrypto/formats/tree/master/tls_codec/derive"
+edition = "2021"
+rust-version = "1.56"
 
 [lib]
 proc-macro = true

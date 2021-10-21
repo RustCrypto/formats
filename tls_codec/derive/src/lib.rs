@@ -231,7 +231,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
             field_paths,
         }) => {
             quote! {
-                impl#generics tls_codec::Size for #ident#generics {
+                impl #generics tls_codec::Size for #ident #generics {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         #(self.#field_idents.tls_serialized_len() + )*
@@ -239,7 +239,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl#generics tls_codec::Size for &#ident#generics {
+                impl #generics tls_codec::Size for &#ident #generics {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         #(self.#field_idents.tls_serialized_len() + )*
@@ -256,7 +256,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
             field_paths,
         }) => {
             quote! {
-                impl#generics tls_codec::Size for #ident#generics {
+                impl #generics tls_codec::Size for #ident #generics {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         #(self.#field_indices.tls_serialized_len() + )*
@@ -264,7 +264,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl#generics tls_codec::Size for &#ident#generics {
+                impl #generics tls_codec::Size for &#ident #generics {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         #(self.#field_indices.tls_serialized_len() + )*
@@ -283,14 +283,14 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
             matched,
         }) => {
             quote! {
-                impl#generics tls_codec::Size for #ident#generics {
+                impl #generics tls_codec::Size for #ident #generics {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         std::mem::size_of::<#repr>()
                     }
                 }
 
-                impl#generics tls_codec::Size for &#ident#generics {
+                impl #generics tls_codec::Size for &#ident #generics {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         std::mem::size_of::<#repr>()
@@ -312,7 +312,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
             field_paths,
         }) => {
             quote! {
-                impl#generics tls_codec::Serialize for #ident#generics {
+                impl #generics tls_codec::Serialize for #ident #generics {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         let mut written = 0usize;
                         #(
@@ -332,7 +332,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl#generics tls_codec::Serialize for &#ident#generics {
+                impl #generics tls_codec::Serialize for &#ident #generics {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         let mut written = 0usize;
                         #(written += self.#field_idents.tls_serialize(writer)?;)*
@@ -359,7 +359,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
             field_paths,
         }) => {
             quote! {
-                impl#generics tls_codec::Serialize for #ident#generics {
+                impl #generics tls_codec::Serialize for #ident #generics {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         let mut written = 0usize;
                         #(written += self.#field_indices.tls_serialize(writer)?;)*
@@ -377,7 +377,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl#generics tls_codec::Serialize for &#ident#generics {
+                impl #generics tls_codec::Serialize for &#ident #generics {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         let mut written = 0usize;
                         #(written += self.#field_indices.tls_serialize(writer)?;)*
@@ -406,7 +406,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
             matched,
         }) => {
             quote! {
-                impl#generics tls_codec::Serialize for #ident#generics {
+                impl #generics tls_codec::Serialize for #ident #generics {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         let enum_value: #repr = match self {
                             #(#parsed_variants)*
@@ -415,7 +415,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl#generics tls_codec::Serialize for &#ident#generics {
+                impl #generics tls_codec::Serialize for &#ident #generics {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         let enum_value: #repr = match self {
                             #(#parsed_variants)*

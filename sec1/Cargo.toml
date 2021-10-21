@@ -8,11 +8,12 @@ Elliptic-Curve-Point-to-Octet-String encoding
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-edition = "2018"
 repository = "https://github.com/RustCrypto/formats/tree/master/sec1"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "elliptic-curve", "secg"]
 readme = "README.md"
+edition = "2021"
+rust-version = "1.56"
 
 [dependencies]
 der = { version = "=0.5.0-pre.1", features = ["oid"], path = "../der" }

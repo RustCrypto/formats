@@ -7,18 +7,19 @@ associated AlgorithmIdentifiers (i.e. OIDs)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-edition = "2018"
 repository = "https://github.com/RustCrypto/formats/tree/master/spki"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "x509"]
 readme = "README.md"
+edition = "2021"
+rust-version = "1.56"
 
 [dependencies]
 der = { version = "=0.5.0-pre.1", features = ["oid"], path = "../der" }
 
 # Optional dependencies
 sha2 = { version = "0.9.8", optional = true, default-features = false }
-base64ct = { version = "1", path = "../base64ct", optional = true, default-features = false }
+base64ct = { version = "=1.2.0-pre", path = "../base64ct", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
