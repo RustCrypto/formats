@@ -33,14 +33,12 @@ impl DeriveTBS {
 
         // keep track of field index so first field can be handled differently (i.e., by deferring
         // decoding and returning bytes instead of a structure.
-        let mut field_count = 0;
-        for field in &data.fields {
+        for (field_count, field) in (&data.fields).into_iter().enumerate() {
             if 0 == field_count {
                 state.derive_field_defer(field);
             } else {
                 state.derive_field(field);
             }
-            field_count += 1;
         }
         state.derive_alt_struct(&s, data, lifetime);
         state.finish(&s, lifetime)
@@ -60,8 +58,7 @@ impl DeriveTBS {
 
         let mut fields = TokenStream::new();
 
-        let mut field_count = 0;
-        for field in &data.fields {
+        for (field_count, field) in (&data.fields).into_iter().enumerate() {
             let name = field
                 .ident
                 .as_ref()
@@ -82,8 +79,6 @@ impl DeriveTBS {
                 }
             };
             f.to_tokens(&mut fields);
-
-            field_count += 1;
         }
 
         let decode_fields = &self.decode_fields;
