@@ -64,11 +64,10 @@ pub struct TBSCertificate<'a> {
 impl<'a> Decodable<'a> for TBSCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
-                let version = decoder
-                    .context_specific::<u8>(VERSION_TAG, TagMode::Explicit)?;
-                if version != Some(VERSION) {
-                    return Err(der::Tag::Integer.value_error());
-                }
+            let version = decoder.context_specific::<u8>(VERSION_TAG, TagMode::Explicit)?;
+            if version != Some(VERSION) {
+                return Err(der::Tag::Integer.value_error());
+            }
 
             let serial_number = UIntBytes::decode(decoder)?;
             let signature = AlgorithmIdentifier::decode(decoder)?;
@@ -77,11 +76,11 @@ impl<'a> Decodable<'a> for TBSCertificate<'a> {
             let subject = RDNSequence::decode(decoder)?;
             let subject_public_key_info = SubjectPublicKeyInfo::decode(decoder)?;
             let issuer_unique_id =
-                    decoder.context_specific::<BitString<'_>>(ISSUER_UID_TAG, TagMode::Implicit)?;
-            let subject_unique_id = decoder
-                    .context_specific::<BitString<'_>>(SUBJECT_UID_TAG, TagMode::Implicit)?;
-            let extensions = decoder
-                    .context_specific::<Extensions<'_>>(EXTENSIONS_TAG, TagMode::Explicit)?;
+                decoder.context_specific::<BitString<'_>>(ISSUER_UID_TAG, TagMode::Implicit)?;
+            let subject_unique_id =
+                decoder.context_specific::<BitString<'_>>(SUBJECT_UID_TAG, TagMode::Implicit)?;
+            let extensions =
+                decoder.context_specific::<Extensions<'_>>(EXTENSIONS_TAG, TagMode::Explicit)?;
             Ok(TBSCertificate {
                 version,
                 serial_number,

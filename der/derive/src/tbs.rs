@@ -167,7 +167,6 @@ impl DeriveTBS {
 
     /// Finish deriving a struct
     fn finish(self, _s: &Structure<'_>, _lifetime: Option<&Lifetime>) -> TokenStream {
-        let alt_struct = self.alt_struct;
-        alt_struct
+        self.alt_struct
     }
 }
