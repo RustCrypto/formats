@@ -4,11 +4,9 @@
 //! Described in [RFC 5280 Section 4.1].
 //!
 //! # Minimum Supported Rust Version
-//!
-//! This crate requires **Rust 1.55** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! # Usage
-//!
 //! The following example demonstrates how to use an OID as the `parameters`
 //! of an [`AlgorithmIdentifier`].
 //!
@@ -34,7 +32,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/spki/0.4.1"
+    html_root_url = "https://docs.rs/spki/0.5.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]

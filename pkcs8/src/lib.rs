@@ -95,7 +95,7 @@
 //! New keys should use AES instead.
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.55** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! [RFC 5208]: https://tools.ietf.org/html/rfc5208
 //! [RFC 5958]: https://tools.ietf.org/html/rfc5958
@@ -108,7 +108,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pkcs8/0.7.6"
+    html_root_url = "https://docs.rs/pkcs8/0.8.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
