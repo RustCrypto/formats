@@ -5,7 +5,6 @@ use crate::{
     str_slice::StrSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
     Result,
 };
-use core::convert::TryFrom;
 
 /// Byte slice newtype which respects the `Length::max()` limit.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

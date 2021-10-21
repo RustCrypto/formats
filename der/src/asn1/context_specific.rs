@@ -4,7 +4,6 @@ use crate::{
     asn1::Any, Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
     Header, Length, Result, Tag, TagMode, TagNumber, Tagged,
 };
-use core::convert::{TryFrom, TryInto};
 
 /// Context-specific field.
 ///

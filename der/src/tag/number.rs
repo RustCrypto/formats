@@ -2,7 +2,7 @@
 
 use super::Tag;
 use crate::{Error, ErrorKind, Result};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 
 /// ASN.1 tag numbers (i.e. lower 5 bits of a [`Tag`]).
 ///

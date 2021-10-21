@@ -1,7 +1,6 @@
 //! Traits for parsing objects from SEC1 encoded documents
 
 use crate::{EcPrivateKey, Error, Result};
-use core::convert::TryFrom;
 use der::Decodable;
 
 #[cfg(feature = "alloc")]

@@ -7,7 +7,7 @@ mod number;
 pub use self::{class::Class, mode::TagMode, number::TagNumber};
 
 use crate::{Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Length, Result};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
 const CONSTRUCTED_FLAG: u8 = 0b100000;

@@ -2,10 +2,7 @@
 
 use crate::{error, DecodeRsaPublicKey, EncodeRsaPublicKey, Error, Result, RsaPublicKey};
 use alloc::vec::Vec;
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
+use core::fmt;
 use der::{Decodable, Document, Encodable};
 
 #[cfg(feature = "pem")]

@@ -5,13 +5,13 @@ use crate::{
     datetime::{self, DateTime},
     ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
 };
-use core::{convert::TryFrom, time::Duration};
+use core::time::Duration;
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
 
 #[cfg(feature = "time")]
-use {core::convert::TryInto, time::PrimitiveDateTime};
+use time::PrimitiveDateTime;
 
 /// ASN.1 `GeneralizedTime` type.
 ///

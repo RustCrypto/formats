@@ -2,7 +2,6 @@
 
 use crate::{Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Result};
 use core::{
-    convert::{TryFrom, TryInto},
     fmt,
     ops::{Add, Sub},
 };
@@ -255,7 +254,6 @@ impl fmt::Display for Length {
 mod tests {
     use super::Length;
     use crate::{Decodable, Encodable, ErrorKind};
-    use core::convert::TryFrom;
 
     #[test]
     fn decode() {

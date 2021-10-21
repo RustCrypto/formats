@@ -78,7 +78,7 @@ pub use crate::{
 };
 
 use crate::arcs::{RootArcs, ARC_MAX_BYTES, ARC_MAX_LAST_OCTET};
-use core::{convert::TryFrom, fmt, str::FromStr};
+use core::{fmt, str::FromStr};
 
 /// Object identifier (OID).
 ///

@@ -2,7 +2,6 @@
 
 use der::{asn1::UtcTime, DateTime, Decodable, Encodable};
 use proptest::prelude::*;
-use std::convert::TryFrom;
 
 proptest! {
     #[test]

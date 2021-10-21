@@ -1,6 +1,5 @@
 //! PKCS#8 private key tests
 
-use core::convert::TryFrom;
 use hex_literal::hex;
 use pkcs8::{PrivateKeyInfo, Version};
 

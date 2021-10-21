@@ -18,7 +18,7 @@ use crate::{
     PRE_ENCAPSULATION_BOUNDARY,
 };
 use base64ct::{Base64, Encoding};
-use core::{convert::TryFrom, str};
+use core::str;
 
 /// Decode a PEM document according to RFC 7468's "Strict" grammar.
 ///

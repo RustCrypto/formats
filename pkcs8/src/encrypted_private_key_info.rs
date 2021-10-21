@@ -1,15 +1,12 @@
 //! PKCS#8 `EncryptedPrivateKeyInfo`
 
 use crate::{Error, Result};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::{asn1::OctetString, Decodable, Decoder, Encodable, Sequence};
 use pkcs5::EncryptionScheme;
 
 #[cfg(feature = "alloc")]
 use crate::{EncryptedPrivateKeyDocument, PrivateKeyDocument};
-
-#[cfg(feature = "encryption")]
-use core::convert::TryInto;
 
 #[cfg(feature = "pem")]
 use {

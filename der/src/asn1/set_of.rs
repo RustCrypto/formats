@@ -9,7 +9,6 @@ use crate::{
 use {
     crate::{asn1::Any, Error},
     alloc::collections::BTreeSet,
-    core::convert::TryFrom,
 };
 
 /// ASN.1 `SET OF` backed by an array.

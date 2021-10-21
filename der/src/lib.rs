@@ -86,7 +86,6 @@
 //! // Note: the following example does not require the `std` feature at all.
 //! // It does leverage the `alloc` feature, but also provides instructions for
 //! // "heapless" usage when the `alloc` feature is disabled.
-//! use core::convert::{TryFrom, TryInto};
 //! use der::{
 //!     asn1::{Any, ObjectIdentifier},
 //!     Decodable, Decoder, Encodable, Sequence
@@ -230,7 +229,6 @@
 //! # #[cfg(all(feature = "alloc", feature = "derive", feature = "oid"))]
 //! # {
 //! use der::{asn1::{Any, ObjectIdentifier}, Encodable, Decodable, Sequence};
-//! use core::convert::TryInto;
 //!
 //! /// X.509 `AlgorithmIdentifier` (same as above)
 //! #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)] // NOTE: added `Sequence`

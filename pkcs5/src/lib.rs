@@ -37,7 +37,6 @@ pub use crate::error::{Error, Result};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::AlgorithmIdentifier;
 
-use core::convert::{TryFrom, TryInto};
 use der::{Decodable, Decoder, Encodable, Encoder, Length};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]

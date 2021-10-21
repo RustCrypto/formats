@@ -1,7 +1,6 @@
 //! X.509 `SubjectPublicKeyInfo`
 
 use crate::AlgorithmIdentifier;
-use core::convert::TryFrom;
 use der::{asn1::BitString, Decodable, Decoder, Encodable, Error, Result, Sequence};
 
 #[cfg(feature = "fingerprint")]

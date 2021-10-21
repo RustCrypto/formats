@@ -2,7 +2,6 @@
 
 use crate::{Decodable, Encodable, Error, Result};
 use alloc::{boxed::Box, vec::Vec};
-use core::convert::{TryFrom, TryInto};
 
 #[cfg(feature = "pem")]
 use {crate::pem, alloc::string::String};

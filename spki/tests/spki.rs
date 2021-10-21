@@ -4,7 +4,7 @@
 use spki::der::Encodable;
 
 #[cfg(feature = "fingerprint")]
-use {core::convert::TryFrom, hex_literal::hex, spki::SubjectPublicKeyInfo};
+use {hex_literal::hex, spki::SubjectPublicKeyInfo};
 
 #[cfg(feature = "pem")]
 use spki::{der::Document, EncodePublicKey, PublicKeyDocument};

@@ -12,10 +12,7 @@ use core::{fmt, str::FromStr, time::Duration};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[cfg(feature = "time")]
-use {core::convert::TryInto, time::PrimitiveDateTime};
-
-#[cfg(any(feature = "std", feature = "time"))]
-use core::convert::TryFrom;
+use time::PrimitiveDateTime;
 
 /// Minimum year allowed in [`DateTime`] values.
 const MIN_YEAR: u16 = 1970;

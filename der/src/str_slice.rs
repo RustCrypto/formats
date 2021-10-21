@@ -2,7 +2,7 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Length, Result};
-use core::{convert::TryFrom, str};
+use core::str;
 
 /// String slice newtype which respects the [`Length::max`] limit.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

@@ -2,7 +2,7 @@
 
 use crate::{DecodePublicKey, EncodePublicKey, SubjectPublicKeyInfo};
 use alloc::vec::Vec;
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::{Document, Error, Result};
 
 #[cfg(feature = "std")]
