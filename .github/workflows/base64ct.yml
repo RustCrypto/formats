@@ -55,3 +55,14 @@ jobs:
       - run: cargo test --release
       - run: cargo test --release --features alloc
       - run: cargo test --release --all-features
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2021-10-19 # Pinned to avoid nightly breakages. Bump if needed.
+          override: true
+      - run: cargo build --benches
