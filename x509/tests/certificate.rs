@@ -3,9 +3,11 @@ use der::asn1::UIntBytes;
 use der::{Decodable, Tag};
 use hex_literal::hex;
 use x509::{
-    BasicConstraints, Certificate, CertificatePolicies, DeferCertificate, KeyUsage,
+    BasicConstraints, Certificate, CertificatePolicies, DeferCertificate,
     SubjectKeyIdentifier,
 };
+#[cfg(feature = "alloc")]
+use x509::KeyUsage;
 
 ///   TBSCertificate  ::=  SEQUENCE  {
 ///       version         [0]  Version DEFAULT v1,
