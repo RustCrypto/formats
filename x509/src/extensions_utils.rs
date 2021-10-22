@@ -77,10 +77,8 @@ pub fn get_key_usage_values<'a>(ku: &BitString<'a>) -> Vec<KeyUsageValues> {
         retval.push(KeyUsageValues::EncipherOnly);
     }
 
-    if 2 == b.len() {
-        if 0x80 == 0x80 & b[1] {
-            retval.push(KeyUsageValues::DecipherOnly);
-        }
+    if 2 == b.len() && 0x80 == 0x80 & b[1] {
+        retval.push(KeyUsageValues::DecipherOnly);
     }
 
     retval
