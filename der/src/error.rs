@@ -118,6 +118,13 @@ impl From<std::io::Error> for Error {
     }
 }
 
+#[cfg(feature = "time")]
+impl From<time::error::ComponentRange> for Error {
+    fn from(_: time::error::ComponentRange) -> Error {
+        ErrorKind::DateTime.into()
+    }
+}
+
 #[cfg(feature = "std")]
 impl std::error::Error for ErrorKind {}
 

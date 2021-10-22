@@ -11,7 +11,7 @@
 //! that allocate gated under the off-by-default `alloc` feature).
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.55** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! We may change the MSRV in the future, but it will be accompanied by a minor
 //! version bump.
@@ -86,7 +86,6 @@
 //! // Note: the following example does not require the `std` feature at all.
 //! // It does leverage the `alloc` feature, but also provides instructions for
 //! // "heapless" usage when the `alloc` feature is disabled.
-//! use core::convert::{TryFrom, TryInto};
 //! use der::{
 //!     asn1::{Any, ObjectIdentifier},
 //!     Decodable, Decoder, Encodable, Sequence
@@ -230,7 +229,6 @@
 //! # #[cfg(all(feature = "alloc", feature = "derive", feature = "oid"))]
 //! # {
 //! use der::{asn1::{Any, ObjectIdentifier}, Encodable, Decodable, Sequence};
-//! use core::convert::TryInto;
 //!
 //! /// X.509 `AlgorithmIdentifier` (same as above)
 //! #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)] // NOTE: added `Sequence`
@@ -393,5 +391,9 @@ pub use der_derive::{Choice, Sequence, TBS};
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub use pem_rfc7468 as pem;
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+pub use time;
 
 pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};

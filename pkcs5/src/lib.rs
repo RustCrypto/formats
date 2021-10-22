@@ -4,7 +4,7 @@
 //!
 //! # Minimum Supported Rust Version
 //!
-//! This crate requires **Rust 1.55** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! # Usage
 //!
@@ -20,7 +20,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pkcs5/0.3.2"
+    html_root_url = "https://docs.rs/pkcs5/0.4.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
@@ -37,7 +37,6 @@ pub use crate::error::{Error, Result};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::AlgorithmIdentifier;
 
-use core::convert::{TryFrom, TryInto};
 use der::{Decodable, Decoder, Encodable, Encoder, Length};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]

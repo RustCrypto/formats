@@ -1,15 +1,13 @@
 //! `SubjectPublicKeyInfo` tests.
 
-#[cfg(feature = "fingerprint")]
-use core::convert::TryFrom;
-#[cfg(feature = "fingerprint")]
-use hex_literal::hex;
 #[cfg(feature = "alloc")]
 use spki::der::Encodable;
+
 #[cfg(feature = "fingerprint")]
-use spki::SubjectPublicKeyInfo;
+use {hex_literal::hex, spki::SubjectPublicKeyInfo};
+
 #[cfg(feature = "pem")]
-use spki::{EncodePublicKey, PublicKeyDocument};
+use spki::{der::Document, EncodePublicKey, PublicKeyDocument};
 
 #[cfg(feature = "fingerprint")]
 // Taken from pkcs8/tests/public_key.rs
@@ -81,7 +79,7 @@ fn decode_ed25519_pem() {
 
     // Ensure `PublicKeyDocument` parses successfully
     let spki = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
-    assert_eq!(doc.spki(), spki);
+    assert_eq!(doc.decode(), spki);
 }
 
 #[test]

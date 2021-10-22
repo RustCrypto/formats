@@ -22,7 +22,7 @@
 //! permit "headers" alongside the data, as used by tools such as OpenSSL.
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.55** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! [RFC 7468]: https://tools.ietf.org/html/rfc7468
 //! [RFC 8017]: https://tools.ietf.org/html/rfc8017
@@ -31,7 +31,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pkcs1/0.2.4"
+    html_root_url = "https://docs.rs/pkcs1/0.3.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]

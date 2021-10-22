@@ -1,11 +1,10 @@
 //! Traits for encoding/decoding SPKI public keys.
 
 use crate::SubjectPublicKeyInfo;
-use core::convert::TryFrom;
 use der::Result;
 
 #[cfg(feature = "alloc")]
-use crate::PublicKeyDocument;
+use {crate::PublicKeyDocument, der::Document};
 
 #[cfg(feature = "pem")]
 use {alloc::string::String, der::pem::LineEnding};
@@ -28,7 +27,7 @@ pub trait DecodePublicKey: Sized {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn from_public_key_doc(doc: &PublicKeyDocument) -> Result<Self> {
-        Self::from_spki(doc.spki())
+        Self::from_spki(doc.decode())
     }
 
     /// Deserialize PEM-encoded [`SubjectPublicKeyInfo`].

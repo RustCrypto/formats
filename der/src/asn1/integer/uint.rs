@@ -1,7 +1,6 @@
 //! Unsigned integer decoders/encoders.
 
 use crate::{Encoder, Length, Result, Tag};
-use core::convert::TryFrom;
 
 /// Decode an unsigned integer into a big endian byte slice with all leading
 /// zeroes removed.

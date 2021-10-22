@@ -1,11 +1,10 @@
 //! PKCS#1 private key tests
 
-use core::convert::TryFrom;
 use hex_literal::hex;
 use pkcs1::{RsaPrivateKey, Version};
 
 #[cfg(feature = "pem")]
-use pkcs1::RsaPrivateKeyDocument;
+use pkcs1::{der::Document, RsaPrivateKeyDocument};
 
 /// RSA-2048 PKCS#1 private key encoded as ASN.1 DER.
 ///
@@ -102,10 +101,7 @@ fn decode_rsa_2048_pem() {
 
     // Ensure `RsaPrivateKeyDocument` parses successfully
     let pk = RsaPrivateKey::try_from(RSA_2048_DER_EXAMPLE).unwrap();
-    assert_eq!(
-        pkcs1_doc.private_key().modulus.as_bytes(),
-        pk.modulus.as_bytes()
-    );
+    assert_eq!(pkcs1_doc.decode().modulus.as_bytes(), pk.modulus.as_bytes());
 }
 
 #[cfg(feature = "pem")]
@@ -116,10 +112,7 @@ fn decode_rsa_4096_pem() {
 
     // Ensure `RsaPrivateKeyDocument` parses successfully
     let pk = RsaPrivateKey::try_from(RSA_4096_DER_EXAMPLE).unwrap();
-    assert_eq!(
-        pkcs1_doc.private_key().modulus.as_bytes(),
-        pk.modulus.as_bytes()
-    );
+    assert_eq!(pkcs1_doc.decode().modulus.as_bytes(), pk.modulus.as_bytes());
 }
 
 #[test]

@@ -4,7 +4,6 @@ use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
     Result, Tag, Tagged,
 };
-use core::convert::TryFrom;
 
 /// ASN.1 `BIT STRING` type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -100,7 +99,6 @@ impl<'a> Tagged for BitString<'a> {
 mod tests {
     use super::{BitString, Result, Tag};
     use crate::asn1::Any;
-    use core::convert::TryInto;
 
     /// Parse a `BitString` from an ASN.1 `Any` value to test decoding behaviors.
     fn parse_bitstring_from_any(bytes: &[u8]) -> Result<BitString<'_>> {

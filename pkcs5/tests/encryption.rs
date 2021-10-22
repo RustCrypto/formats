@@ -2,7 +2,6 @@
 
 #![cfg(feature = "pbes2")]
 
-use core::convert::TryFrom;
 use hex_literal::hex;
 
 /// PBES2 + PBKDF2-SHA256 + AES-256-CBC `AlgorithmIdentifier` example.

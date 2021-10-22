@@ -1,7 +1,6 @@
 //! Traits for parsing objects from PKCS#8 encoded documents
 
 use crate::{PrivateKeyInfo, Result};
-use core::convert::TryFrom;
 
 #[cfg(feature = "alloc")]
 use crate::PrivateKeyDocument;

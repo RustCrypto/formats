@@ -2,10 +2,7 @@
 
 use crate::{error, DecodeRsaPublicKey, EncodeRsaPublicKey, Error, Result, RsaPublicKey};
 use alloc::vec::Vec;
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
+use core::fmt;
 use der::{Decodable, Document, Encodable};
 
 #[cfg(feature = "pem")]
@@ -29,6 +26,7 @@ pub struct RsaPublicKeyDocument(Vec<u8>);
 
 impl<'a> Document<'a> for RsaPublicKeyDocument {
     type Message = RsaPublicKey<'a>;
+    const SENSITIVE: bool = false;
 }
 
 impl DecodeRsaPublicKey for RsaPublicKeyDocument {
@@ -78,8 +76,7 @@ impl EncodeRsaPublicKey for RsaPublicKeyDocument {
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         Ok(self.write_pem_file(path, line_ending)?)
     }
@@ -88,6 +85,14 @@ impl EncodeRsaPublicKey for RsaPublicKeyDocument {
 impl AsRef<[u8]> for RsaPublicKeyDocument {
     fn as_ref(&self) -> &[u8] {
         self.0.as_ref()
+    }
+}
+
+impl TryFrom<&[u8]> for RsaPublicKeyDocument {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Ok(Self::from_der(bytes)?)
     }
 }
 
@@ -104,14 +109,6 @@ impl From<&RsaPublicKey<'_>> for RsaPublicKeyDocument {
             .ok()
             .and_then(|buf| buf.try_into().ok())
             .expect(error::DER_ENCODING_MSG)
-    }
-}
-
-impl TryFrom<&[u8]> for RsaPublicKeyDocument {
-    type Error = Error;
-
-    fn try_from(bytes: &[u8]) -> Result<Self> {
-        RsaPublicKeyDocument::from_pkcs1_der(bytes)
     }
 }
 

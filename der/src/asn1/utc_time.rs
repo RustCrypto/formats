@@ -5,10 +5,7 @@ use crate::{
     datetime::{self, DateTime},
     ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
 };
-use core::{
-    convert::{TryFrom, TryInto},
-    time::Duration,
-};
+use core::time::Duration;
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -182,7 +179,7 @@ impl Tagged for UtcTime {
 
 #[cfg(test)]
 mod tests {
-    use super::{DateTime, UtcTime};
+    use super::UtcTime;
     use crate::{Decodable, Encodable, Encoder};
     use hex_literal::hex;
 
@@ -196,30 +193,5 @@ mod tests {
         let mut encoder = Encoder::new(&mut buf);
         utc_time.encode(&mut encoder).unwrap();
         assert_eq!(example_bytes, encoder.finish().unwrap());
-    }
-
-    #[test]
-    fn round_trip_examples() {
-        for year in 1970..=2049 {
-            for month in 1..=12 {
-                let max_day = if month == 2 { 28 } else { 30 };
-
-                for day in 1..=max_day {
-                    for hour in 0..=23 {
-                        let datetime1 = DateTime::new(year, month, day, hour, 0, 0).unwrap();
-                        let utc_time1 =
-                            UtcTime::from_unix_duration(datetime1.unix_duration()).unwrap();
-
-                        let mut buf = [0u8; 128];
-                        let mut encoder = Encoder::new(&mut buf);
-                        utc_time1.encode(&mut encoder).unwrap();
-                        let der_bytes = encoder.finish().unwrap();
-
-                        let utc_time2 = UtcTime::from_der(der_bytes).unwrap();
-                        assert_eq!(utc_time1, utc_time2);
-                    }
-                }
-            }
-        }
     }
 }

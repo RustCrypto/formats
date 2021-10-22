@@ -19,7 +19,7 @@
 //!
 //! # Minimum Supported Rust Version
 //!
-//! This crate requires **Rust 1.55** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! We may change the MSRV in the future, but it will be accompanied by a minor
 //! version bump.
@@ -84,7 +84,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/base64ct/1.1.1"
+    html_root_url = "https://docs.rs/base64ct/1.2.0-pre"
 )]
 #![warn(missing_docs, rust_2018_idioms)]
 

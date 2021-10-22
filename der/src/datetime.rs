@@ -9,10 +9,10 @@ use crate::{Encoder, Error, ErrorKind, Result, Tag};
 use core::{fmt, str::FromStr, time::Duration};
 
 #[cfg(feature = "std")]
-use std::{
-    convert::TryFrom,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+#[cfg(feature = "time")]
+use time::PrimitiveDateTime;
 
 /// Minimum year allowed in [`DateTime`] values.
 const MIN_YEAR: u16 = 1970;
@@ -327,6 +327,41 @@ impl TryFrom<&SystemTime> for DateTime {
     }
 }
 
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl TryFrom<DateTime> for PrimitiveDateTime {
+    type Error = Error;
+
+    fn try_from(time: DateTime) -> Result<PrimitiveDateTime> {
+        let month = (time.month() as u8).try_into()?;
+        let date = time::Date::from_calendar_date(time.year() as i32, month, time.day() as u8)?;
+        let time = time::Time::from_hms(
+            time.hour() as u8,
+            time.minutes() as u8,
+            time.seconds() as u8,
+        )?;
+
+        Ok(PrimitiveDateTime::new(date, time))
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl TryFrom<PrimitiveDateTime> for DateTime {
+    type Error = Error;
+
+    fn try_from(time: PrimitiveDateTime) -> Result<DateTime> {
+        DateTime::new(
+            time.year() as u16,
+            u8::from(time.month()) as u16,
+            time.day() as u16,
+            time.hour() as u16,
+            time.minute() as u16,
+            time.second() as u16,
+        )
+    }
+}
+
 /// Decode 2-digit decimal value
 pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u16> {
     if (b'0'..=b'9').contains(&hi) && (b'0'..=b'9').contains(&lo) {
@@ -381,23 +416,5 @@ mod tests {
         use alloc::string::ToString;
         let datetime = DateTime::new(2001, 01, 02, 12, 13, 14).unwrap();
         assert_eq!(&datetime.to_string(), "2001-01-02T12:13:14Z");
-    }
-
-    #[test]
-    fn round_trip() {
-        for year in 1970..=2100 {
-            for month in 1..=12 {
-                let max_day = if month == 2 { 28 } else { 30 };
-
-                for day in 1..=max_day {
-                    for hour in 0..=23 {
-                        let datetime1 = DateTime::new(year, month, day, hour, 0, 0).unwrap();
-                        let unix_duration = datetime1.unix_duration();
-                        let datetime2 = DateTime::from_unix_duration(unix_duration).unwrap();
-                        assert_eq!(datetime1, datetime2);
-                    }
-                }
-            }
-        }
     }
 }

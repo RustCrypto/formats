@@ -2,7 +2,6 @@
 
 #![cfg(feature = "pkcs5")]
 
-use core::convert::TryFrom;
 use hex_literal::hex;
 use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfo};
 

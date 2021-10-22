@@ -6,22 +6,18 @@ pub(crate) mod document;
 pub(crate) mod other_prime_info;
 
 use crate::{Error, Result, RsaPublicKey, Version};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence, Tag};
 
 #[cfg(feature = "alloc")]
-use {self::other_prime_info::OtherPrimeInfo, crate::RsaPrivateKeyDocument, alloc::vec::Vec};
-
-#[cfg(feature = "pem")]
 use {
-    crate::{pem, LineEnding},
-    alloc::string::String,
-    zeroize::Zeroizing,
+    self::other_prime_info::OtherPrimeInfo,
+    crate::{EncodeRsaPrivateKey, RsaPrivateKeyDocument},
+    alloc::vec::Vec,
 };
 
-/// Type label for PEM-encoded private keys.
 #[cfg(feature = "pem")]
-pub(crate) const PEM_TYPE_LABEL: &str = "RSA PRIVATE KEY";
+use {crate::LineEnding, alloc::string::String, zeroize::Zeroizing};
 
 /// PKCS#1 RSA Private Keys as defined in [RFC 8017 Appendix 1.2].
 ///
@@ -89,8 +85,8 @@ impl<'a> RsaPrivateKey<'a> {
     /// Encode this [`RsaPrivateKey`] as ASN.1 DER.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn to_der(&self) -> RsaPrivateKeyDocument {
-        self.into()
+    pub fn to_der(&self) -> Result<RsaPrivateKeyDocument> {
+        self.try_into()
     }
 
     /// Encode this [`RsaPrivateKey`] as PEM-encoded ASN.1 DER using the given
@@ -98,8 +94,7 @@ impl<'a> RsaPrivateKey<'a> {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        let pem_doc = pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der().as_ref())?;
-        Ok(Zeroizing::new(pem_doc))
+        RsaPrivateKeyDocument::try_from(self)?.to_pkcs1_pem(line_ending)
     }
 }
 

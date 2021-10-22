@@ -102,9 +102,6 @@ impl DeriveSequence {
         s.gen_impl(quote! {
             gen impl ::der::Decodable<#lifetime> for @Self {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
-                    #[allow(unused_imports)]
-                    use core::convert::TryInto;
-
                     decoder.sequence(|decoder| {
                         #decode_fields
                         Ok(Self { #decode_result })
@@ -117,9 +114,6 @@ impl DeriveSequence {
                 where
                     F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
                 {
-                    #[allow(unused_imports)]
-                    use core::convert::TryFrom;
-
                     f(&[#encode_fields])
                 }
             }

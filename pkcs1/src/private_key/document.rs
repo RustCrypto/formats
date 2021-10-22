@@ -1,23 +1,20 @@
 //! PKCS#1 RSA private key document.
 
-use crate::{error, DecodeRsaPrivateKey, EncodeRsaPrivateKey, Error, Result, RsaPrivateKey};
-use alloc::{borrow::ToOwned, vec::Vec};
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
-use der::Encodable;
+use crate::{DecodeRsaPrivateKey, EncodeRsaPrivateKey, Error, Result, RsaPrivateKey};
+use alloc::vec::Vec;
+use core::fmt;
+use der::{Decodable, Document, Encodable};
 use zeroize::{Zeroize, Zeroizing};
 
 #[cfg(feature = "pem")]
 use {
-    crate::{pem, private_key::PEM_TYPE_LABEL, LineEnding},
+    crate::{pem, LineEnding},
     alloc::string::String,
     core::str::FromStr,
 };
 
 #[cfg(feature = "std")]
-use std::{fs, path::Path, str};
+use std::{path::Path, str};
 
 /// PKCS#1 `RSA PRIVATE KEY` document.
 ///
@@ -28,54 +25,37 @@ use std::{fs, path::Path, str};
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub struct RsaPrivateKeyDocument(Zeroizing<Vec<u8>>);
 
-impl RsaPrivateKeyDocument {
-    /// Parse the [`RsaPrivateKey`] contained in this [`RsaPrivateKeyDocument`]
-    pub fn private_key(&self) -> RsaPrivateKey<'_> {
-        RsaPrivateKey::try_from(self.0.as_ref()).expect("malformed PrivateKeyDocument")
-    }
-
-    /// Borrow the inner DER encoded bytes.
-    pub fn as_der(&self) -> &[u8] {
-        self.0.as_ref()
-    }
+impl<'a> Document<'a> for RsaPrivateKeyDocument {
+    type Message = RsaPrivateKey<'a>;
+    const SENSITIVE: bool = true;
 }
 
 impl DecodeRsaPrivateKey for RsaPrivateKeyDocument {
     fn from_pkcs1_private_key(private_key: RsaPrivateKey<'_>) -> Result<Self> {
-        Ok(Self(Zeroizing::new(private_key.to_vec()?)))
+        Ok(Self::from_msg(&private_key)?)
     }
 
     fn from_pkcs1_der(bytes: &[u8]) -> Result<Self> {
-        // Ensure document is well-formed
-        RsaPrivateKey::try_from(bytes)?;
-        Ok(Self(Zeroizing::new(bytes.to_owned())))
+        Ok(Self::from_der(bytes)?)
     }
 
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_pkcs1_pem(s: &str) -> Result<Self> {
-        let (label, der_bytes) = pem::decode_vec(s.as_bytes())?;
-
-        if label != PEM_TYPE_LABEL {
-            return Err(pem::Error::Label.into());
-        }
-
-        // Ensure document is well-formed
-        RsaPrivateKey::try_from(der_bytes.as_slice())?;
-        Ok(Self(Zeroizing::new(der_bytes)))
+        Ok(Self::from_pem(s)?)
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        fs::read(path)?.try_into()
+        Ok(Self::read_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        Self::from_pkcs1_pem(&Zeroizing::new(fs::read_to_string(path)?))
+        Ok(Self::read_pem_file(path)?)
     }
 }
 
@@ -87,44 +67,26 @@ impl EncodeRsaPrivateKey for RsaPrivateKeyDocument {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        let pem_doc = pem::encode_string(PEM_TYPE_LABEL, line_ending, self.as_der())?;
-        Ok(Zeroizing::new(pem_doc))
+        Ok(Zeroizing::new(self.to_pem(line_ending)?))
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_pkcs1_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        write_secret_file(path, self.as_der())
+        Ok(self.write_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
-        let pem_doc = self.to_pkcs1_pem(line_ending)?;
-        write_secret_file(path, pem_doc.as_bytes())
+        Ok(self.write_pem_file(path, line_ending)?)
     }
 }
 
 impl AsRef<[u8]> for RsaPrivateKeyDocument {
     fn as_ref(&self) -> &[u8] {
-        self.as_der()
-    }
-}
-
-impl From<RsaPrivateKey<'_>> for RsaPrivateKeyDocument {
-    fn from(private_key: RsaPrivateKey<'_>) -> RsaPrivateKeyDocument {
-        RsaPrivateKeyDocument::from(&private_key)
-    }
-}
-
-impl From<&RsaPrivateKey<'_>> for RsaPrivateKeyDocument {
-    fn from(private_key: &RsaPrivateKey<'_>) -> RsaPrivateKeyDocument {
-        private_key
-            .to_vec()
-            .ok()
-            .and_then(|buf| buf.try_into().ok())
-            .expect(error::DER_ENCODING_MSG)
+        self.0.as_ref()
     }
 }
 
@@ -136,12 +98,28 @@ impl TryFrom<&[u8]> for RsaPrivateKeyDocument {
     }
 }
 
-impl TryFrom<Vec<u8>> for RsaPrivateKeyDocument {
+impl TryFrom<RsaPrivateKey<'_>> for RsaPrivateKeyDocument {
     type Error = Error;
 
-    fn try_from(mut bytes: Vec<u8>) -> Result<Self> {
+    fn try_from(private_key: RsaPrivateKey<'_>) -> Result<RsaPrivateKeyDocument> {
+        RsaPrivateKeyDocument::try_from(&private_key)
+    }
+}
+
+impl TryFrom<&RsaPrivateKey<'_>> for RsaPrivateKeyDocument {
+    type Error = Error;
+
+    fn try_from(private_key: &RsaPrivateKey<'_>) -> Result<RsaPrivateKeyDocument> {
+        Ok(private_key.to_vec()?.try_into()?)
+    }
+}
+
+impl TryFrom<Vec<u8>> for RsaPrivateKeyDocument {
+    type Error = der::Error;
+
+    fn try_from(mut bytes: Vec<u8>) -> der::Result<Self> {
         // Ensure document is well-formed
-        if let Err(err) = RsaPrivateKey::try_from(bytes.as_slice()) {
+        if let Err(err) = RsaPrivateKey::from_der(bytes.as_slice()) {
             bytes.zeroize();
             return Err(err);
         }
@@ -153,7 +131,7 @@ impl TryFrom<Vec<u8>> for RsaPrivateKeyDocument {
 impl fmt::Debug for RsaPrivateKeyDocument {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_tuple("RsaPrivateKeyDocument")
-            .field(&self.private_key())
+            .field(&self.decode())
             .finish()
     }
 }
@@ -168,31 +146,8 @@ impl FromStr for RsaPrivateKeyDocument {
     }
 }
 
-/// Write a file containing secret data to the filesystem, restricting the
-/// file permissions so it's only readable by the owner
-#[cfg(all(unix, feature = "std"))]
-pub(super) fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<()> {
-    use std::{io::Write, os::unix::fs::OpenOptionsExt};
-
-    /// File permissions for secret data
-    #[cfg(unix)]
-    const SECRET_FILE_PERMS: u32 = 0o600;
-
-    fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .mode(SECRET_FILE_PERMS)
-        .open(path)
-        .and_then(|mut file| file.write_all(data))?;
-
-    Ok(())
-}
-
-/// Write a file containing secret data to the filesystem
-// TODO(tarcieri): permissions hardening on Windows
-#[cfg(all(not(unix), feature = "std"))]
-pub(super) fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<()> {
-    fs::write(path, data)?;
-    Ok(())
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl pem::PemLabel for RsaPrivateKeyDocument {
+    const TYPE_LABEL: &'static str = "RSA PRIVATE KEY";
 }

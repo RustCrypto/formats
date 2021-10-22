@@ -1,14 +1,14 @@
 //! PKCS#8 `PrivateKeyInfo`.
 
 use crate::{AlgorithmIdentifier, Error, Result, Version};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
     Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
-use {crate::PrivateKeyDocument, core::convert::TryInto};
+use crate::PrivateKeyDocument;
 
 #[cfg(feature = "encryption")]
 use {

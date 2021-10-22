@@ -1,7 +1,6 @@
 //! PKCS#1 version identifier.
 
 use crate::Error;
-use core::convert::TryFrom;
 use der::{Decodable, Decoder, Encodable, Encoder, Tag, Tagged};
 
 /// Version identifier for PKCS#1 documents as defined in

@@ -44,7 +44,7 @@
 //!
 //! # Minimum Supported Rust Version
 //!
-//! This crate requires **Rust 1.55** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! Minimum supported Rust version may be changed in the future, but it will be
 //! accompanied with a minor version bump.
@@ -56,7 +56,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/const-oid/0.6.2"
+    html_root_url = "https://docs.rs/const-oid/0.7.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms)]
@@ -78,7 +78,7 @@ pub use crate::{
 };
 
 use crate::arcs::{RootArcs, ARC_MAX_BYTES, ARC_MAX_LAST_OCTET};
-use core::{convert::TryFrom, fmt, str::FromStr};
+use core::{fmt, str::FromStr};
 
 /// Object identifier (OID).
 ///

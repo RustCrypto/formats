@@ -2,7 +2,6 @@
 
 use crate::{Decodable, Encodable, Error, Result};
 use alloc::{boxed::Box, vec::Vec};
-use core::convert::{TryFrom, TryInto};
 
 #[cfg(feature = "pem")]
 use {crate::pem, alloc::string::String};
@@ -22,6 +21,11 @@ use std::{fs, path::Path};
 pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     /// ASN.1 message type this document decodes to.
     type Message: Decodable<'a> + Encodable + Sized;
+
+    /// Does this type contain potentially sensitive data?
+    ///
+    /// This enables hardened file permissions when persisting data to disk.
+    const SENSITIVE: bool;
 
     /// Borrow the inner serialized bytes of this document.
     fn as_der(&self) -> &[u8] {
@@ -99,8 +103,7 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        fs::write(path, self.as_ref())?;
-        Ok(())
+        write_file(path, self.as_ref(), Self::SENSITIVE)
     }
 
     /// Write PEM-encoded ASN.1 DER document to a file.
@@ -110,7 +113,46 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     where
         Self: pem::PemLabel,
     {
-        fs::write(path, self.to_pem(line_ending)?.as_bytes())?;
-        Ok(())
+        write_file(path, self.to_pem(line_ending)?.as_bytes(), Self::SENSITIVE)
     }
+}
+
+/// Write a file to the filesystem, potentially using hardened permissions
+/// if the file contains secret data.
+#[cfg(feature = "std")]
+fn write_file(path: impl AsRef<Path>, data: &[u8], sensitive: bool) -> Result<()> {
+    if sensitive {
+        write_secret_file(path, data)
+    } else {
+        Ok(fs::write(path, data)?)
+    }
+}
+
+/// Write a file containing secret data to the filesystem, restricting the
+/// file permissions so it's only readable by the owner
+#[cfg(all(unix, feature = "std"))]
+fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<()> {
+    use std::{io::Write, os::unix::fs::OpenOptionsExt};
+
+    /// File permissions for secret data
+    #[cfg(unix)]
+    const SECRET_FILE_PERMS: u32 = 0o600;
+
+    fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .mode(SECRET_FILE_PERMS)
+        .open(path)
+        .and_then(|mut file| file.write_all(data))?;
+
+    Ok(())
+}
+
+/// Write a file containing secret data to the filesystem
+// TODO(tarcieri): permissions hardening on Windows
+#[cfg(all(not(unix), feature = "std"))]
+fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<()> {
+    fs::write(path, data)?;
+    Ok(())
 }

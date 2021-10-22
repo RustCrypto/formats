@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.51.0 # MSRV
+          - 1.56.0 # MSRV
           - stable
         target:
           - thumbv7em-none-eabi
@@ -43,7 +43,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.51.0 # MSRV
+          - 1.56.0 # MSRV
           - stable
     steps:
       - uses: actions/checkout@v1
@@ -55,3 +55,14 @@ jobs:
       - run: cargo test --release
       - run: cargo test --release --features alloc
       - run: cargo test --release --all-features
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2021-10-19 # Pinned to avoid nightly breakages. Bump if needed.
+          override: true
+      - run: cargo build --benches

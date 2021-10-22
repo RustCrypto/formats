@@ -8,20 +8,23 @@ full support for heapless no_std targets
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-edition = "2018"
 repository = "https://github.com/RustCrypto/formats/tree/master/der"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parsing"]
 keywords = ["asn1", "crypto", "itu", "pkcs"]
 readme = "README.md"
+edition = "2021"
+rust-version = "1.56"
 
 [dependencies]
-const-oid = { version = "0.6", optional = true, path = "../const-oid" }
+const-oid = { version = "=0.7.0-pre", optional = true, path = "../const-oid" }
 crypto-bigint = { version = "0.2", optional = true, features = ["generic-array"] }
 der_derive = { version = "=0.5.0-pre.1", optional = true, path = "derive" }
-pem-rfc7468 = { version = "0.2.3", optional = true, path = "../pem-rfc7468" }
+pem-rfc7468 = { version = "=0.3.0-pre", optional = true, path = "../pem-rfc7468" }
+time = { version = "0.3", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
+proptest = "1"
 
 [features]
 alloc = []

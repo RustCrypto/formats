@@ -1,12 +1,11 @@
 //! SEC1 private key tests
 
-use core::convert::TryFrom;
 use der::asn1::ObjectIdentifier;
 use hex_literal::hex;
 use sec1::{EcParameters, EcPrivateKey};
 
 #[cfg(feature = "pem")]
-use sec1::EcPrivateKeyDocument;
+use sec1::{der::Document, EcPrivateKeyDocument};
 
 /// NIST P-256 SEC1 private key encoded as ASN.1 DER.
 ///
@@ -45,5 +44,5 @@ fn decode_p256_pem() {
 
     // Ensure `EcPrivateKeyDocument` parses successfully
     let pk = EcPrivateKey::try_from(P256_DER_EXAMPLE).unwrap();
-    assert_eq!(sec1_doc.private_key().private_key, pk.private_key);
+    assert_eq!(sec1_doc.decode().private_key, pk.private_key);
 }

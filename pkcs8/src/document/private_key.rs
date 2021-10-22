@@ -2,7 +2,7 @@
 
 use crate::{DecodePrivateKey, EncodePrivateKey, Error, PrivateKeyInfo, Result};
 use alloc::{borrow::ToOwned, vec::Vec};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::Encodable;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -22,9 +22,6 @@ use {
 
 #[cfg(feature = "std")]
 use std::{fs, path::Path};
-
-#[cfg(any(feature = "encryption", feature = "std"))]
-use core::convert::TryInto;
 
 /// PKCS#8 private key document.
 ///

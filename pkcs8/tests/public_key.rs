@@ -1,6 +1,5 @@
 //! Public key (`SubjectPublicKeyInfo`) tests
 
-use core::convert::TryFrom;
 use hex_literal::hex;
 use pkcs8::SubjectPublicKeyInfo;
 
@@ -8,7 +7,7 @@ use pkcs8::SubjectPublicKeyInfo;
 use der::Encodable;
 
 #[cfg(feature = "pem")]
-use pkcs8::EncodePublicKey;
+use pkcs8::{der::Document, EncodePublicKey};
 
 #[cfg(feature = "std")]
 use pkcs8::DecodePublicKey;
@@ -80,7 +79,7 @@ fn decode_ec_p256_pem() {
 
     // Ensure `PublicKeyDocument` parses successfully
     let spki = SubjectPublicKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
-    assert_eq!(doc.spki(), spki);
+    assert_eq!(doc.decode(), spki);
 }
 
 #[test]
@@ -91,7 +90,7 @@ fn decode_ed25519_pem() {
 
     // Ensure `PublicKeyDocument` parses successfully
     let spki = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
-    assert_eq!(doc.spki(), spki);
+    assert_eq!(doc.decode(), spki);
 }
 
 #[test]
@@ -102,7 +101,7 @@ fn decode_rsa_2048_pem() {
 
     // Ensure `PublicKeyDocument` parses successfully
     let spki = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
-    assert_eq!(doc.spki(), spki);
+    assert_eq!(doc.decode(), spki);
 }
 
 #[test]
