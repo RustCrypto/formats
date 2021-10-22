@@ -151,5 +151,8 @@ pub use der::pem::{self, LineEnding};
 #[cfg(feature = "pkcs5")]
 pub use {crate::encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
 
+#[cfg(feature = "rand_core")]
+pub use rand_core;
+
 #[cfg(all(feature = "alloc", feature = "pkcs5"))]
 pub use crate::document::encrypted_private_key::EncryptedPrivateKeyDocument;

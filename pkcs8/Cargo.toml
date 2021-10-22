@@ -34,6 +34,7 @@ alloc = ["der/alloc", "spki/alloc", "zeroize"]
 des-insecure = ["encryption", "pkcs5/des-insecure"]
 encryption = ["alloc", "pkcs5/alloc", "pkcs5/pbes2", "rand_core"]
 pem = ["alloc", "der/pem", "spki/pem"]
+rand = ["rand_core/std"]
 sha1 = ["encryption", "pkcs5/sha1"]
 std = ["alloc", "der/std", "spki/std"]
 

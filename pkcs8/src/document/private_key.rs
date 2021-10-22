@@ -1,9 +1,9 @@
 //! PKCS#8 private key document.
 
 use crate::{DecodePrivateKey, EncodePrivateKey, Error, PrivateKeyInfo, Result};
-use alloc::{borrow::ToOwned, vec::Vec};
+use alloc::vec::Vec;
 use core::fmt;
-use der::Encodable;
+use der::{Decodable, Document};
 use zeroize::{Zeroize, Zeroizing};
 
 #[cfg(feature = "encryption")]
@@ -15,13 +15,13 @@ use {
 
 #[cfg(feature = "pem")]
 use {
-    crate::{pem, private_key_info::PEM_TYPE_LABEL, LineEnding},
+    crate::{pem, LineEnding},
     alloc::string::String,
     core::str::FromStr,
 };
 
 #[cfg(feature = "std")]
-use std::{fs, path::Path};
+use std::path::Path;
 
 /// PKCS#8 private key document.
 ///
@@ -32,12 +32,12 @@ use std::{fs, path::Path};
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub struct PrivateKeyDocument(Zeroizing<Vec<u8>>);
 
-impl PrivateKeyDocument {
-    /// Parse the [`PrivateKeyInfo`] contained in this [`PrivateKeyDocument`]
-    pub fn private_key_info(&self) -> PrivateKeyInfo<'_> {
-        PrivateKeyInfo::try_from(self.0.as_ref()).expect("malformed PrivateKeyDocument")
-    }
+impl<'a> Document<'a> for PrivateKeyDocument {
+    type Message = PrivateKeyInfo<'a>;
+    const SENSITIVE: bool = true;
+}
 
+impl PrivateKeyDocument {
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password.
     ///
@@ -90,40 +90,30 @@ impl PrivateKeyDocument {
 
 impl DecodePrivateKey for PrivateKeyDocument {
     fn from_pkcs8_private_key_info(private_key: PrivateKeyInfo<'_>) -> Result<Self> {
-        Ok(Self(Zeroizing::new(private_key.to_vec()?)))
+        Ok(Self::from_msg(&private_key)?)
     }
 
     fn from_pkcs8_der(bytes: &[u8]) -> Result<Self> {
-        // Ensure document is well-formed
-        PrivateKeyInfo::try_from(bytes)?;
-        Ok(Self(Zeroizing::new(bytes.to_owned())))
+        Ok(Self::from_der(bytes)?)
     }
 
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_pkcs8_pem(s: &str) -> Result<Self> {
-        let (label, der_bytes) = pem::decode_vec(s.as_bytes())?;
-
-        if label != PEM_TYPE_LABEL {
-            return Err(pem::Error::Label.into());
-        }
-
-        // Ensure document is well-formed
-        PrivateKeyInfo::try_from(der_bytes.as_slice())?;
-        Ok(Self(Zeroizing::new(der_bytes)))
+        Ok(Self::from_pem(s)?)
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs8_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        fs::read(path)?.try_into()
+        Ok(Self::read_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs8_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        Self::from_pkcs8_pem(&Zeroizing::new(fs::read_to_string(path)?))
+        Ok(Self::read_pem_file(path)?)
     }
 }
 
@@ -135,22 +125,20 @@ impl EncodePrivateKey for PrivateKeyDocument {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_pkcs8_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        let pem_doc = pem::encode_string(PEM_TYPE_LABEL, line_ending, self.as_ref())?;
-        Ok(Zeroizing::new(pem_doc))
+        Ok(Zeroizing::new(self.to_pem(line_ending)?))
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_pkcs8_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        write_secret_file(path, self.as_ref())
+        Ok(self.write_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_pkcs8_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
-        let pem_doc = self.to_pkcs8_pem(line_ending)?;
-        write_secret_file(path, pem_doc.as_bytes())
+        Ok(self.write_pem_file(path, line_ending)?)
     }
 }
 
@@ -185,11 +173,11 @@ impl TryFrom<&[u8]> for PrivateKeyDocument {
 }
 
 impl TryFrom<Vec<u8>> for PrivateKeyDocument {
-    type Error = Error;
+    type Error = der::Error;
 
-    fn try_from(mut bytes: Vec<u8>) -> Result<Self> {
+    fn try_from(mut bytes: Vec<u8>) -> der::Result<Self> {
         // Ensure document is well-formed
-        if let Err(err) = PrivateKeyInfo::try_from(bytes.as_slice()) {
+        if let Err(err) = PrivateKeyInfo::from_der(bytes.as_slice()) {
             bytes.zeroize();
             return Err(err);
         }
@@ -201,7 +189,7 @@ impl TryFrom<Vec<u8>> for PrivateKeyDocument {
 impl fmt::Debug for PrivateKeyDocument {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_tuple("PrivateKeyDocument")
-            .field(&self.private_key_info())
+            .field(&self.decode())
             .finish()
     }
 }
@@ -216,31 +204,8 @@ impl FromStr for PrivateKeyDocument {
     }
 }
 
-/// Write a file containing secret data to the filesystem, restricting the
-/// file permissions so it's only readable by the owner
-#[cfg(all(unix, feature = "std"))]
-pub(super) fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<()> {
-    use std::{io::Write, os::unix::fs::OpenOptionsExt};
-
-    /// File permissions for secret data
-    #[cfg(unix)]
-    const SECRET_FILE_PERMS: u32 = 0o600;
-
-    fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .mode(SECRET_FILE_PERMS)
-        .open(path)
-        .and_then(|mut file| file.write_all(data))?;
-
-    Ok(())
-}
-
-/// Write a file containing secret data to the filesystem
-// TODO(tarcieri): permissions hardening on Windows
-#[cfg(all(not(unix), feature = "std"))]
-pub(super) fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<()> {
-    fs::write(path, data)?;
-    Ok(())
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl pem::PemLabel for PrivateKeyDocument {
+    const TYPE_LABEL: &'static str = "PRIVATE KEY";
 }
