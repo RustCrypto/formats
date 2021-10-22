@@ -17,21 +17,13 @@ use {
 };
 
 #[cfg(feature = "pem")]
-use {
-    crate::{pem, LineEnding},
-    alloc::string::String,
-    zeroize::Zeroizing,
-};
+use {crate::LineEnding, alloc::string::String, der::Document, zeroize::Zeroizing};
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
 /// Context-specific tag number for the public key.
 const PUBLIC_KEY_TAG: TagNumber = TagNumber::new(1);
-
-/// Type label for PEM-encoded private keys.
-#[cfg(feature = "pem")]
-pub(crate) const PEM_TYPE_LABEL: &str = "PRIVATE KEY";
 
 /// PKCS#8 `PrivateKeyInfo`.
 ///
@@ -156,9 +148,9 @@ impl<'a> PrivateKeyInfo<'a> {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der()?.as_ref())
-            .map(Zeroizing::new)
-            .map_err(Error::Pem)
+        Ok(PrivateKeyDocument::try_from(self)?
+            .to_pem(line_ending)
+            .map(Zeroizing::new)?)
     }
 }
 
