@@ -16,6 +16,8 @@
 // extern crate alloc and use alloc::collections::BTreeSet as Set are not presently used since
 // change in definition of RelativeDistinguishedName
 // extern crate alloc;
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 #[cfg(feature = "std")]
 extern crate std;
@@ -36,5 +38,7 @@ pub use crate::{
 };
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
+
+pub mod extensions_utils;
 
 //use alloc::collections::BTreeSet as Set;

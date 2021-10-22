@@ -22,7 +22,8 @@ spki = { version = "=0.5.0-pre", path = "../spki" }
 hex-literal = "0.3"
 
 [features]
-std = ["der/std"]
+alloc = ["der/alloc"]
+std = ["der/std", "alloc"]
 
 [package.metadata.docs.rs]
 all-features = true

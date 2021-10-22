@@ -3,7 +3,8 @@ use der::asn1::UIntBytes;
 use der::{Decodable, Tag};
 use hex_literal::hex;
 use x509::{
-    BasicConstraints, Certificate, CertificatePolicies, DeferCertificate, SubjectKeyIdentifier,
+    BasicConstraints, Certificate, CertificatePolicies, DeferCertificate, KeyUsage,
+    SubjectKeyIdentifier,
 };
 
 ///   TBSCertificate  ::=  SEQUENCE  {
@@ -177,7 +178,23 @@ fn decode_cert() {
         } else if 2 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.15");
             assert_eq!(ext.critical, Option::Some(true));
-            //let ku = KeyUsage::from_der(ext.extn_value.as_bytes()).unwrap();
+            #[cfg(feature = "alloc")]
+            {
+                use x509::extensions_utils::KeyUsageValues;
+                let ku = KeyUsage::from_der(ext.extn_value.as_bytes()).unwrap();
+                let kuv = x509::extensions_utils::get_key_usage_values(&ku);
+                let mut count = 0;
+                for v in kuv {
+                    if 0 == count {
+                        assert_eq!(v, KeyUsageValues::KeyCertSign);
+                    } else if 1 == count {
+                        assert_eq!(v, KeyUsageValues::CRLSign);
+                    } else {
+                        panic!("Should not occur");
+                    }
+                    count += 1;
+                }
+            }
         } else if 3 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.32");
             assert_eq!(ext.critical, Option::None);

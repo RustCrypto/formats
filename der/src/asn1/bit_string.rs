@@ -51,9 +51,10 @@ impl<'a> DecodeValue<'a> for BitString<'a> {
         // contained in the final byte of the BIT STRING.
         //
         // In DER this value is always `0`.
-        if decoder.byte()? != 0 {
-            return Err(Tag::BitString.non_canonical_error());
-        }
+        // if decoder.byte()? != 0 {
+        //     return Err(Tag::BitString.non_canonical_error());
+        // }
+        let _unused_bits = decoder.byte();
 
         let inner = ByteSlice::decode_value(decoder, (encoded_len - Length::ONE)?)?;
         Ok(Self { inner, encoded_len })
