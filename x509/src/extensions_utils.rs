@@ -49,7 +49,7 @@ impl fmt::Display for KeyUsageValues {
 #[cfg(feature = "alloc")]
 /// Takes a BitString that contains one or two bytes and returns a Vec containing
 /// enum values representing the KeyUsage values that were set in the BitString
-pub fn get_key_usage_values<'a>(ku: &BitString<'a>) -> Vec<KeyUsageValues> {
+pub fn get_key_usage_values(ku: &BitString<'_>) -> Vec<KeyUsageValues> {
     let mut retval: Vec<KeyUsageValues> = Vec::new();
     let b = ku.as_bytes();
     if 0x80 == 0x80 & b[0] {
