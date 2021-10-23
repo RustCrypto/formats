@@ -51,7 +51,7 @@ impl fmt::Display for KeyUsageValues {
 /// enum values representing the KeyUsage values that were set in the BitString
 pub fn get_key_usage_values(ku: &BitString<'_>) -> Vec<KeyUsageValues> {
     let mut retval: Vec<KeyUsageValues> = Vec::new();
-    let b = ku.as_bytes();
+    let b = ku.raw_bytes();
     if 0x80 == 0x80 & b[0] {
         retval.push(KeyUsageValues::DigitalSignature);
     }
