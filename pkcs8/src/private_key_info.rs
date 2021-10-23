@@ -163,7 +163,11 @@ impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
             let private_key = decoder.octet_string()?.into();
             let public_key = decoder
                 .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Implicit)?
-                .map(|bs| bs.as_bytes());
+                .map(|bs| {
+                    bs.as_bytes()
+                        .ok_or_else(|| der::Tag::BitString.value_error())
+                })
+                .transpose()?;
 
             if version.has_public_key() != public_key.is_some() {
                 return Err(decoder.value_error(der::Tag::ContextSpecific {
@@ -198,7 +202,7 @@ impl<'a> Sequence<'a> for PrivateKeyInfo<'a> {
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::new(pk).map(|value| ContextSpecific {
+                    BitString::from_bytes(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
                         tag_mode: TagMode::Implicit,
                         value,

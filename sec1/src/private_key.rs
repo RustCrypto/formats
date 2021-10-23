@@ -12,7 +12,7 @@ use crate::{EcParameters, Error};
 use core::fmt;
 use der::{
     asn1::{BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
+    Decodable, Decoder, Encodable, Sequence, Tag, TagMode, TagNumber,
 };
 
 /// `ECPrivateKey` version.
@@ -77,7 +77,8 @@ impl<'a> Decodable<'a> for EcPrivateKey<'a> {
             let parameters = decoder.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
             let public_key = decoder
                 .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?
-                .map(|bs| bs.as_bytes());
+                .map(|bs| bs.as_bytes().ok_or_else(|| Tag::BitString.value_error()))
+                .transpose()?;
 
             Ok(EcPrivateKey {
                 private_key,
@@ -104,7 +105,7 @@ impl<'a> Sequence<'a> for EcPrivateKey<'a> {
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::new(pk).map(|value| ContextSpecific {
+                    BitString::from_bytes(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
                         tag_mode: TagMode::Explicit,
                         value,

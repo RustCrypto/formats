@@ -1,4 +1,5 @@
-//! ASN.1 built-in types.
+//! Module containing all of the various ASN.1 built-in types supported by
+//! this library.
 
 mod any;
 mod bit_string;
@@ -22,7 +23,7 @@ mod utf8_string;
 
 pub use self::{
     any::Any,
-    bit_string::BitString,
+    bit_string::{BitString, BitStringIter},
     choice::Choice,
     context_specific::ContextSpecific,
     generalized_time::GeneralizedTime,
