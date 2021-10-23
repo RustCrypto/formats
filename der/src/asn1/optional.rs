@@ -7,7 +7,7 @@ where
     T: Choice<'a>, // NOTE: all `Decodable + Tagged` types receive a blanket `Choice` impl
 {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Option<T>> {
-        if let Some(byte) = decoder.peek() {
+        if let Some(byte) = decoder.peek_byte() {
             if T::can_decode(Tag::try_from(byte)?) {
                 return T::decode(decoder).map(Some);
             }
