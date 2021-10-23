@@ -117,21 +117,25 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Parameters {
         let encryption = EncryptionScheme::try_from(alg.oid)
             .map_err(|_| der::Tag::ObjectIdentifier.value_error())?;
 
-        alg.parameters_any()?.sequence(|params| {
-            let salt = params
-                .octet_string()?
-                .as_bytes()
-                .try_into()
-                .map_err(|_| der::Tag::OctetString.value_error())?;
+        if let Some(any) = alg.parameters {
+            any.sequence(|params| {
+                let salt = params
+                    .octet_string()?
+                    .as_bytes()
+                    .try_into()
+                    .map_err(|_| der::Tag::OctetString.value_error())?;
 
-            let iteration_count = params.decode()?;
+                let iteration_count = params.decode()?;
 
-            Ok(Self {
-                encryption,
-                salt,
-                iteration_count,
+                Ok(Self {
+                    encryption,
+                    salt,
+                    iteration_count,
+                })
             })
-        })
+        } else {
+            Err(Tag::OctetString.value_error())
+        }
     }
 }
 
@@ -170,7 +174,7 @@ impl TryFrom<ObjectIdentifier> for EncryptionScheme {
             PBE_WITH_MD5_AND_RC2_CBC_OID => Ok(Self::PbeWithMd5AndRc2Cbc),
             PBE_WITH_SHA1_AND_DES_CBC_OID => Ok(Self::PbeWithSha1AndDesCbc),
             PBE_WITH_SHA1_AND_RC2_CBC_OID => Ok(Self::PbeWithSha1AndRc2Cbc),
-            _ => Err(ErrorKind::UnknownOid { oid }.into()),
+            _ => Err(ErrorKind::OidUnknown { oid }.into()),
         }
     }
 }

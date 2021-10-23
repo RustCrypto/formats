@@ -1,7 +1,6 @@
 //! Traits for encoding/decoding SPKI public keys.
 
-use crate::SubjectPublicKeyInfo;
-use der::Result;
+use crate::{Result, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
 use {crate::PublicKeyDocument, der::Document};

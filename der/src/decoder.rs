@@ -16,15 +16,19 @@ pub struct Decoder<'a> {
 
     /// Position within the decoded slice.
     position: Length,
+
+    /// Length of the input buffer.
+    length: Length,
 }
 
 impl<'a> Decoder<'a> {
     /// Create a new decoder for the given byte slice.
-    pub fn new(bytes: &'a [u8]) -> Self {
-        Self {
+    pub fn new(bytes: &'a [u8]) -> Result<Self> {
+        Ok(Self {
             bytes: Some(bytes),
             position: Length::ZERO,
-        }
+            length: Length::try_from(bytes.len())?,
+        })
     }
 
     /// Decode a value which impls the [`Decodable`] trait.
@@ -73,7 +77,14 @@ impl<'a> Decoder<'a> {
     ///
     /// Does not modify the decoder's state.
     pub fn peek_tag(&self) -> Result<Tag> {
-        self.peek_byte().ok_or(ErrorKind::Truncated)?.try_into()
+        match self.peek_byte() {
+            Some(byte) => byte.try_into(),
+            None => Err(ErrorKind::Incomplete {
+                expected_len: (self.length + Length::ONE)?,
+                actual_len: self.length,
+            }
+            .into()),
+        }
     }
 
     /// Peek forward in the decoder, attempting to decode a [`Header`] from
@@ -229,7 +240,10 @@ impl<'a> Decoder<'a> {
     pub(crate) fn byte(&mut self) -> Result<u8> {
         match self.bytes(1u8)? {
             [byte] => Ok(*byte),
-            _ => Err(self.error(ErrorKind::Truncated)),
+            _ => Err(self.error(ErrorKind::Incomplete {
+                expected_len: (self.length + Length::ONE)?,
+                actual_len: self.length,
+            })),
         }
     }
 
@@ -244,13 +258,16 @@ impl<'a> Decoder<'a> {
             .try_into()
             .map_err(|_| self.error(ErrorKind::Overflow))?;
 
-        let result = self
-            .remaining()?
-            .get(..len.try_into()?)
-            .ok_or_else(|| self.error(ErrorKind::Truncated))?;
-
-        self.position = (self.position + len)?;
-        Ok(result)
+        match self.remaining()?.get(..len.try_into()?) {
+            Some(result) => {
+                self.position = (self.position + len)?;
+                Ok(result)
+            }
+            None => Err(self.error(ErrorKind::Incomplete {
+                expected_len: (self.length + len)?,
+                actual_len: self.length,
+            })),
+        }
     }
 
     /// Get the number of bytes still remaining in the buffer.
@@ -271,16 +288,20 @@ impl<'a> Decoder<'a> {
         let bytes = match self.bytes {
             Some(slice) => slice
                 .get(..end_pos.try_into()?)
-                .ok_or(ErrorKind::Truncated)?,
+                .ok_or(ErrorKind::Incomplete {
+                    expected_len: end_pos,
+                    actual_len: self.length,
+                })?,
             None => return Err(self.error(ErrorKind::Failed)),
         };
 
         let mut nested_decoder = Self {
             bytes: Some(bytes),
             position: start_pos,
+            length: end_pos,
         };
-        self.position = end_pos;
 
+        self.position = end_pos;
         let result = f(&mut nested_decoder)?;
         nested_decoder.finish(result)
     }
@@ -290,15 +311,14 @@ impl<'a> Decoder<'a> {
     fn remaining(&self) -> Result<&'a [u8]> {
         let pos = usize::try_from(self.position)?;
 
-        self.bytes
-            .and_then(|b| b.get(pos..))
-            .ok_or_else(|| ErrorKind::Truncated.at(self.position))
-    }
-}
-
-impl<'a> From<&'a [u8]> for Decoder<'a> {
-    fn from(bytes: &'a [u8]) -> Decoder<'a> {
-        Decoder::new(bytes)
+        match self.bytes.and_then(|b| b.get(pos..)) {
+            Some(result) => Ok(result),
+            None => Err(ErrorKind::Incomplete {
+                expected_len: (self.length + Length::ONE)?,
+                actual_len: self.length,
+            }
+            .at(self.position)),
+        }
     }
 }
 
@@ -312,28 +332,50 @@ mod tests {
     const EXAMPLE_MSG: &[u8] = &hex!("02012A00");
 
     #[test]
-    fn truncated_message() {
-        let mut decoder = Decoder::new(&[]);
+    fn empty_message() {
+        let mut decoder = Decoder::new(&[]).unwrap();
         let err = bool::decode(&mut decoder).err().unwrap();
-        assert_eq!(ErrorKind::Truncated, err.kind());
         assert_eq!(Some(Length::ZERO), err.position());
+
+        match err.kind() {
+            ErrorKind::Incomplete {
+                expected_len,
+                actual_len,
+            } => {
+                assert_eq!(expected_len, 1u8.into());
+                assert_eq!(actual_len, 0u8.into());
+            }
+            other => panic!("unexpected error kind: {:?}", other),
+        }
     }
 
     #[test]
     fn invalid_field_length() {
-        let mut decoder = Decoder::new(&EXAMPLE_MSG[..2]);
+        let mut decoder = Decoder::new(&EXAMPLE_MSG[..2]).unwrap();
         let err = i8::decode(&mut decoder).err().unwrap();
-        assert_eq!(ErrorKind::Truncated, err.kind());
         assert_eq!(Some(Length::from(2u8)), err.position());
+
+        match err.kind() {
+            ErrorKind::Incomplete {
+                expected_len,
+                actual_len,
+            } => {
+                assert_eq!(expected_len, 3u8.into());
+                assert_eq!(actual_len, 2u8.into());
+            }
+            other => panic!("unexpected error kind: {:?}", other),
+        }
     }
 
     #[test]
     fn trailing_data() {
-        let mut decoder = Decoder::new(EXAMPLE_MSG);
+        let mut decoder = Decoder::new(EXAMPLE_MSG).unwrap();
         let x = decoder.decode().unwrap();
         assert_eq!(42i8, x);
 
         let err = decoder.finish(x).err().unwrap();
+        assert_eq!(Some(Length::from(3u8)), err.position());
+
         assert_eq!(
             ErrorKind::TrailingData {
                 decoded: 3u8.into(),
@@ -341,12 +383,11 @@ mod tests {
             },
             err.kind()
         );
-        assert_eq!(Some(Length::from(3u8)), err.position());
     }
 
     #[test]
     fn peek_tag() {
-        let decoder = Decoder::new(EXAMPLE_MSG);
+        let decoder = Decoder::new(EXAMPLE_MSG).unwrap();
         assert_eq!(decoder.position(), Length::ZERO);
         assert_eq!(decoder.peek_tag().unwrap(), Tag::Integer);
         assert_eq!(decoder.position(), Length::ZERO); // Position unchanged
@@ -354,7 +395,7 @@ mod tests {
 
     #[test]
     fn peek_header() {
-        let decoder = Decoder::new(EXAMPLE_MSG);
+        let decoder = Decoder::new(EXAMPLE_MSG).unwrap();
         assert_eq!(decoder.position(), Length::ZERO);
 
         let header = decoder.peek_header().unwrap();

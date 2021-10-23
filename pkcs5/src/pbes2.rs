@@ -15,7 +15,7 @@ pub use self::kdf::{
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence,
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence, Tag,
 };
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -311,7 +311,10 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         // TODO(tarcieri): support for non-AES algorithms?
-        let iv = alg.parameters_any()?.octet_string()?.as_bytes();
+        let iv = match alg.parameters {
+            Some(params) => params.octet_string()?.as_bytes(),
+            None => return Err(Tag::OctetString.value_error()),
+        };
 
         match alg.oid {
             AES_128_CBC_OID => Ok(Self::Aes128Cbc {
@@ -341,7 +344,7 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
                     .try_into()
                     .map_err(|_| der::Tag::OctetString.value_error())?,
             }),
-            oid => Err(ErrorKind::UnknownOid { oid }.into()),
+            oid => Err(ErrorKind::OidUnknown { oid }.into()),
         }
     }
 }

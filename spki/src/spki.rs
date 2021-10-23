@@ -1,7 +1,7 @@
 //! X.509 `SubjectPublicKeyInfo`
 
-use crate::AlgorithmIdentifier;
-use der::{asn1::BitString, Decodable, Decoder, Encodable, Error, Result, Sequence};
+use crate::{AlgorithmIdentifier, Error, Result};
+use der::{asn1::BitString, Decodable, Decoder, Encodable, Sequence};
 
 #[cfg(feature = "fingerprint")]
 use sha2::{digest, Digest, Sha256};
@@ -52,7 +52,7 @@ impl<'a> SubjectPublicKeyInfo<'a> {
 }
 
 impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
             let algorithm = decoder.decode()?;
             let subject_public_key = decoder
@@ -69,9 +69,9 @@ impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
 }
 
 impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
-    fn fields<F, T>(&self, f: F) -> Result<T>
+    fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> Result<T>,
+        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
     {
         f(&[
             &self.algorithm,
@@ -84,6 +84,6 @@ impl<'a> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a> {
     type Error = Error;
 
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
-        Self::from_der(bytes)
+        Ok(Self::from_der(bytes)?)
     }
 }
