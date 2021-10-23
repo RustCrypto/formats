@@ -272,7 +272,7 @@ mod tests {
             &hex!("81210019BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
 
         let tag_number = TagNumber::new(1);
-        let bit_string = BitString::new(&EXPECTED_BYTES[3..]).unwrap();
+        let bit_string = BitString::from_bytes(&EXPECTED_BYTES[3..]).unwrap();
 
         let mut buf = [0u8; EXPECTED_BYTES.len()];
         let mut encoder = Encoder::new(&mut buf);

@@ -54,9 +54,15 @@ impl<'a> SubjectPublicKeyInfo<'a> {
 impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
         decoder.sequence(|decoder| {
+            let algorithm = decoder.decode()?;
+            let subject_public_key = decoder
+                .bit_string()?
+                .as_bytes()
+                .ok_or_else(|| der::Tag::BitString.value_error())?;
+
             Ok(Self {
-                algorithm: decoder.decode()?,
-                subject_public_key: decoder.bit_string()?.as_bytes(),
+                algorithm,
+                subject_public_key,
             })
         })
     }
@@ -67,7 +73,10 @@ impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
     where
         F: FnOnce(&[&dyn Encodable]) -> Result<T>,
     {
-        f(&[&self.algorithm, &BitString::new(self.subject_public_key)?])
+        f(&[
+            &self.algorithm,
+            &BitString::from_bytes(self.subject_public_key)?,
+        ])
     }
 }
 
