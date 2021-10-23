@@ -3,7 +3,7 @@
 use crate::{PrivateKeyInfo, Result};
 
 #[cfg(feature = "alloc")]
-use crate::PrivateKeyDocument;
+use {crate::PrivateKeyDocument, der::Document};
 
 #[cfg(feature = "encryption")]
 use {
@@ -41,7 +41,7 @@ pub trait DecodePrivateKey: Sized {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn from_pkcs8_doc(doc: &PrivateKeyDocument) -> Result<Self> {
-        Self::from_pkcs8_private_key_info(doc.private_key_info())
+        Self::from_pkcs8_private_key_info(doc.decode())
     }
 
     /// Deserialize PKCS#8-encoded private key from PEM.
@@ -66,8 +66,7 @@ pub trait DecodePrivateKey: Sized {
     /// -----BEGIN ENCRYPTED PRIVATE KEY-----
     /// ```
     #[cfg(all(feature = "encryption", feature = "pem"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "encryption", feature = "pem"))))]
     fn from_pkcs8_encrypted_pem(s: &str, password: impl AsRef<[u8]>) -> Result<Self> {
         EncryptedPrivateKeyDocument::from_pem(s)?
             .decrypt(password)
@@ -127,8 +126,10 @@ pub trait EncodePrivateKey {
         password: impl AsRef<[u8]>,
         line_ending: LineEnding,
     ) -> Result<Zeroizing<String>> {
-        self.to_pkcs8_encrypted_der(rng, password)?
-            .to_pem(line_ending)
+        Ok(Zeroizing::new(
+            self.to_pkcs8_encrypted_der(rng, password)?
+                .to_pem(line_ending)?,
+        ))
     }
 
     /// Write ASN.1 DER-encoded PKCS#8 private key to the given path

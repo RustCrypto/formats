@@ -11,6 +11,9 @@ use pkcs8::PrivateKeyDocument;
 #[cfg(feature = "pem")]
 use pkcs8::EncryptedPrivateKeyDocument;
 
+#[cfg(feature = "std")]
+use der::Document;
+
 /// Ed25519 PKCS#8 private key plaintext encoded as ASN.1 DER
 #[cfg(feature = "encryption")]
 const ED25519_DER_PLAINTEXT_EXAMPLE: &[u8] = include_bytes!("examples/ed25519-priv-pkcs8v1.der");

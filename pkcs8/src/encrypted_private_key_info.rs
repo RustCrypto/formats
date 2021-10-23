@@ -9,14 +9,7 @@ use pkcs5::EncryptionScheme;
 use crate::{EncryptedPrivateKeyDocument, PrivateKeyDocument};
 
 #[cfg(feature = "pem")]
-use {
-    crate::{pem, LineEnding},
-    zeroize::Zeroizing,
-};
-
-/// Type label for PEM-encoded private keys.
-#[cfg(feature = "pem")]
-pub(crate) const PEM_TYPE_LABEL: &str = "ENCRYPTED PRIVATE KEY";
+use {crate::LineEnding, alloc::string::String, der::Document, zeroize::Zeroizing};
 
 /// PKCS#8 `EncryptedPrivateKeyInfo`.
 ///
@@ -54,10 +47,11 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     #[cfg(feature = "encryption")]
     #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>) -> Result<PrivateKeyDocument> {
-        self.encryption_algorithm
+        Ok(self
+            .encryption_algorithm
             .decrypt(password, self.encrypted_data)
-            .map_err(|_| Error::Crypto)
-            .and_then(TryInto::try_into)
+            .map_err(|_| Error::Crypto)?
+            .try_into()?)
     }
 
     /// Encode this [`EncryptedPrivateKeyInfo`] as ASN.1 DER.
@@ -71,10 +65,10 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     /// the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<alloc::string::String>> {
-        pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der()?.as_ref())
-            .map(Zeroizing::new)
-            .map_err(Error::Pem)
+    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+        Ok(Zeroizing::new(
+            EncryptedPrivateKeyDocument::try_from(self)?.to_pem(line_ending)?,
+        ))
     }
 }
 
