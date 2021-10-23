@@ -91,16 +91,11 @@
 //! ⚠️ WARNING ⚠️
 //!
 //! DES support is implemented to allow for decryption of legacy files.
-//!
-//! DES is considered insecure due to its short key size. New keys should use AES instead.
-//!
-//! # PKCS#1 support (optional)
-//! When the `pkcs1` feature of this crate is enabled, this crate provides
-//! a blanket impl of PKCS#8 support for types which impl the traits from the
-//! [`pkcs1`] crate (e.g. `FromRsaPrivateKey`, `ToRsaPrivateKey`).
+//! Such keys should be considered *INSECURE* due to their short key size.
+//! New keys should use AES instead.
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! [RFC 5208]: https://tools.ietf.org/html/rfc5208
 //! [RFC 5958]: https://tools.ietf.org/html/rfc5958
@@ -113,7 +108,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pkcs8/0.7.6"
+    html_root_url = "https://docs.rs/pkcs8/0.8.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
@@ -137,33 +132,27 @@ pub(crate) mod encrypted_private_key_info;
 pub use crate::{
     error::{Error, Result},
     private_key_info::PrivateKeyInfo,
-    traits::{FromPrivateKey, FromPublicKey},
+    traits::DecodePrivateKey,
     version::Version,
 };
 pub use der::{self, asn1::ObjectIdentifier};
-pub use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+pub use spki::{AlgorithmIdentifier, DecodePublicKey, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
-pub use crate::{
-    document::{private_key::PrivateKeyDocument, public_key::PublicKeyDocument},
-    traits::{ToPrivateKey, ToPublicKey},
+pub use {
+    crate::{document::private_key::PrivateKeyDocument, traits::EncodePrivateKey},
+    spki::{EncodePublicKey, PublicKeyDocument},
 };
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use pem_rfc7468::LineEnding;
+pub use der::pem::{self, LineEnding};
 
 #[cfg(feature = "pkcs5")]
-pub use encrypted_private_key_info::EncryptedPrivateKeyInfo;
+pub use {crate::encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
 
-#[cfg(feature = "pkcs1")]
-pub use pkcs1;
-
-#[cfg(feature = "pkcs5")]
-pub use pkcs5;
+#[cfg(feature = "rand_core")]
+pub use rand_core;
 
 #[cfg(all(feature = "alloc", feature = "pkcs5"))]
 pub use crate::document::encrypted_private_key::EncryptedPrivateKeyDocument;
-
-#[cfg(feature = "pem")]
-use pem_rfc7468 as pem;

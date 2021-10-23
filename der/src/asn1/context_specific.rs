@@ -4,7 +4,6 @@ use crate::{
     asn1::Any, Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
     Header, Length, Result, Tag, TagMode, TagNumber, Tagged,
 };
-use core::convert::{TryFrom, TryInto};
 
 /// Context-specific field.
 ///
@@ -96,7 +95,7 @@ impl<T> ContextSpecific<T> {
     where
         F: FnOnce(&mut Decoder<'a>) -> Result<Self>,
     {
-        while let Some(octet) = decoder.peek() {
+        while let Some(octet) = decoder.peek_byte() {
             let tag = Tag::try_from(octet)?;
 
             if !tag.is_context_specific() || tag.number() > tag_number {
@@ -214,7 +213,10 @@ mod tests {
     fn round_trip() {
         let field = ContextSpecific::<BitString<'_>>::from_der(EXAMPLE_BYTES).unwrap();
         assert_eq!(field.tag_number.value(), 1);
-        assert_eq!(field.value, BitString::new(&EXAMPLE_BYTES[5..]).unwrap());
+        assert_eq!(
+            field.value,
+            BitString::from_bytes(&EXAMPLE_BYTES[5..]).unwrap()
+        );
 
         let mut buf = [0u8; 128];
         let encoded = field.encode_to_slice(&mut buf).unwrap();
@@ -271,7 +273,7 @@ mod tests {
         assert_eq!(field.tag_number, tag_number);
         assert_eq!(field.tag_mode, TagMode::Implicit);
         assert_eq!(
-            field.value.as_bytes(),
+            field.value.as_bytes().unwrap(),
             &context_specific_implicit_bytes[3..]
         );
     }

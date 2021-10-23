@@ -9,15 +9,11 @@
 pub(crate) mod document;
 
 use crate::{EcParameters, Error};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::{
     asn1::{BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Message, TagMode, TagNumber,
+    Decodable, Decoder, Encodable, Sequence, Tag, TagMode, TagNumber,
 };
-
-/// Type label for PEM-encoded private keys.
-#[cfg(feature = "pem")]
-pub(crate) const PEM_TYPE_LABEL: &str = "EC PRIVATE KEY";
 
 /// `ECPrivateKey` version.
 ///
@@ -81,7 +77,8 @@ impl<'a> Decodable<'a> for EcPrivateKey<'a> {
             let parameters = decoder.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
             let public_key = decoder
                 .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?
-                .map(|bs| bs.as_bytes());
+                .map(|bs| bs.as_bytes().ok_or_else(|| Tag::BitString.value_error()))
+                .transpose()?;
 
             Ok(EcPrivateKey {
                 private_key,
@@ -92,7 +89,7 @@ impl<'a> Decodable<'a> for EcPrivateKey<'a> {
     }
 }
 
-impl<'a> Message<'a> for EcPrivateKey<'a> {
+impl<'a> Sequence<'a> for EcPrivateKey<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
@@ -108,7 +105,7 @@ impl<'a> Message<'a> for EcPrivateKey<'a> {
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::new(pk).map(|value| ContextSpecific {
+                    BitString::from_bytes(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
                         tag_mode: TagMode::Explicit,
                         value,

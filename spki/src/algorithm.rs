@@ -1,9 +1,8 @@
 //! X.509 `AlgorithmIdentifier`
 
-use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{Any, ObjectIdentifier},
-    Decodable, Decoder, Encodable, Error, ErrorKind, Message, Result,
+    Decodable, Decoder, Encodable, Error, ErrorKind, Result, Sequence,
 };
 
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
@@ -85,7 +84,7 @@ impl<'a> Decodable<'a> for AlgorithmIdentifier<'a> {
     }
 }
 
-impl<'a> Message<'a> for AlgorithmIdentifier<'a> {
+impl<'a> Sequence<'a> for AlgorithmIdentifier<'a> {
     fn fields<F, T>(&self, f: F) -> Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> Result<T>,

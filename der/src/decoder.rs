@@ -1,13 +1,12 @@
 //! DER decoder.
 
 use crate::{
-    asn1::*, Choice, Decodable, DecodeValue, Error, ErrorKind, Length, Result, Tag, TagMode,
-    TagNumber, Tagged,
+    asn1::*, Choice, Decodable, DecodeValue, Error, ErrorKind, Header, Length, Result, Tag,
+    TagMode, TagNumber, Tagged,
 };
-use core::convert::{TryFrom, TryInto};
 
 /// DER decoder.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Decoder<'a> {
     /// Byte slice being decoded.
     ///
@@ -63,10 +62,26 @@ impl<'a> Decoder<'a> {
     }
 
     /// Peek at the next byte in the decoder without modifying the cursor.
-    pub fn peek(&self) -> Option<u8> {
+    pub fn peek_byte(&self) -> Option<u8> {
         self.remaining()
             .ok()
             .and_then(|bytes| bytes.get(0).cloned())
+    }
+
+    /// Peek at the next byte in the decoder and attempt to decode it as a
+    /// [`Tag`] value.
+    ///
+    /// Does not modify the decoder's state.
+    pub fn peek_tag(&self) -> Result<Tag> {
+        self.peek_byte().ok_or(ErrorKind::Truncated)?.try_into()
+    }
+
+    /// Peek forward in the decoder, attempting to decode a [`Header`] from
+    /// the data at the current position in the decoder.
+    ///
+    /// Does not modify the decoder's state.
+    pub fn peek_header(&self) -> Result<Header> {
+        Header::decode(&mut self.clone())
     }
 
     /// Finish decoding, returning the given value if there is no
@@ -205,10 +220,9 @@ impl<'a> Decoder<'a> {
     where
         F: FnOnce(&mut Decoder<'a>) -> Result<T>,
     {
-        Sequence::decode(self)?.decode_nested(f).map_err(|e| {
-            self.bytes.take();
-            e.nested(self.position)
-        })
+        Tag::try_from(self.byte()?)?.assert_eq(Tag::Sequence)?;
+        let len = Length::decode(self)?;
+        self.decode_nested(len, f)
     }
 
     /// Decode a single byte, updating the internal cursor.
@@ -239,6 +253,38 @@ impl<'a> Decoder<'a> {
         Ok(result)
     }
 
+    /// Get the number of bytes still remaining in the buffer.
+    pub(crate) fn remaining_len(&self) -> Result<Length> {
+        self.remaining()?.len().try_into()
+    }
+
+    /// Create a nested decoder which operates over the provided [`Length`].
+    ///
+    /// The nested decoder is passed to the provided callback function which is
+    /// expected to decode a value of type `T` with it.
+    fn decode_nested<F, T>(&mut self, length: Length, f: F) -> Result<T>
+    where
+        F: FnOnce(&mut Self) -> Result<T>,
+    {
+        let start_pos = self.position();
+        let end_pos = (start_pos + length)?;
+        let bytes = match self.bytes {
+            Some(slice) => slice
+                .get(..end_pos.try_into()?)
+                .ok_or(ErrorKind::Truncated)?,
+            None => return Err(self.error(ErrorKind::Failed)),
+        };
+
+        let mut nested_decoder = Self {
+            bytes: Some(bytes),
+            position: start_pos,
+        };
+        self.position = end_pos;
+
+        let result = f(&mut nested_decoder)?;
+        nested_decoder.finish(result)
+    }
+
     /// Obtain the remaining bytes in this decoder from the current cursor
     /// position.
     fn remaining(&self) -> Result<&'a [u8]> {
@@ -247,11 +293,6 @@ impl<'a> Decoder<'a> {
         self.bytes
             .and_then(|b| b.get(pos..))
             .ok_or_else(|| ErrorKind::Truncated.at(self.position))
-    }
-
-    /// Get the number of bytes still remaining in the buffer.
-    fn remaining_len(&self) -> Result<Length> {
-        self.remaining()?.len().try_into()
     }
 }
 
@@ -264,7 +305,11 @@ impl<'a> From<&'a [u8]> for Decoder<'a> {
 #[cfg(test)]
 mod tests {
     use super::Decoder;
-    use crate::{Decodable, ErrorKind, Length};
+    use crate::{Decodable, ErrorKind, Length, Tag};
+    use hex_literal::hex;
+
+    // INTEGER: 42
+    const EXAMPLE_MSG: &[u8] = &hex!("02012A00");
 
     #[test]
     fn truncated_message() {
@@ -276,7 +321,7 @@ mod tests {
 
     #[test]
     fn invalid_field_length() {
-        let mut decoder = Decoder::new(&[0x02, 0x01]);
+        let mut decoder = Decoder::new(&EXAMPLE_MSG[..2]);
         let err = i8::decode(&mut decoder).err().unwrap();
         assert_eq!(ErrorKind::Truncated, err.kind());
         assert_eq!(Some(Length::from(2u8)), err.position());
@@ -284,7 +329,7 @@ mod tests {
 
     #[test]
     fn trailing_data() {
-        let mut decoder = Decoder::new(&[0x02, 0x01, 0x2A, 0x00]);
+        let mut decoder = Decoder::new(EXAMPLE_MSG);
         let x = decoder.decode().unwrap();
         assert_eq!(42i8, x);
 
@@ -297,5 +342,24 @@ mod tests {
             err.kind()
         );
         assert_eq!(Some(Length::from(3u8)), err.position());
+    }
+
+    #[test]
+    fn peek_tag() {
+        let decoder = Decoder::new(EXAMPLE_MSG);
+        assert_eq!(decoder.position(), Length::ZERO);
+        assert_eq!(decoder.peek_tag().unwrap(), Tag::Integer);
+        assert_eq!(decoder.position(), Length::ZERO); // Position unchanged
+    }
+
+    #[test]
+    fn peek_header() {
+        let decoder = Decoder::new(EXAMPLE_MSG);
+        assert_eq!(decoder.position(), Length::ZERO);
+
+        let header = decoder.peek_header().unwrap();
+        assert_eq!(header.tag, Tag::Integer);
+        assert_eq!(header.length, Length::ONE);
+        assert_eq!(decoder.position(), Length::ZERO); // Position unchanged
     }
 }

@@ -3,14 +3,7 @@
 use crate::{EncodeValue, Encoder, Header, Length, Result, Tagged};
 
 #[cfg(feature = "alloc")]
-use {
-    crate::ErrorKind,
-    alloc::vec::Vec,
-    core::{
-        convert::{TryFrom, TryInto},
-        iter,
-    },
-};
+use {crate::ErrorKind, alloc::vec::Vec, core::iter};
 
 /// Encoding trait.
 pub trait Encodable {

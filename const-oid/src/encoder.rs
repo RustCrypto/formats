@@ -1,7 +1,7 @@
 //! OID encoder with `const` support.
 
 use crate::{
-    arcs::{FIRST_ARC_MAX, SECOND_ARC_MAX},
+    arcs::{ARC_MAX_FIRST, ARC_MAX_SECOND},
     Arc, Error, ObjectIdentifier, Result,
 };
 
@@ -43,14 +43,14 @@ impl Encoder {
     pub(crate) const fn encode(mut self, arc: Arc) -> Self {
         match self.state {
             State::Initial => {
-                const_assert!(arc <= FIRST_ARC_MAX, "invalid first arc (must be 0-2)");
+                const_assert!(arc <= ARC_MAX_FIRST, "invalid first arc (must be 0-2)");
                 self.state = State::FirstArc(arc);
                 self
             }
             State::FirstArc(first_arc) => {
-                const_assert!(arc <= SECOND_ARC_MAX, "invalid second arc (must be 0-39)");
+                const_assert!(arc <= ARC_MAX_SECOND, "invalid second arc (must be 0-39)");
                 self.state = State::Body;
-                self.bytes[0] = (first_arc * (SECOND_ARC_MAX + 1)) as u8 + arc as u8;
+                self.bytes[0] = (first_arc * (ARC_MAX_SECOND + 1)) as u8 + arc as u8;
                 self.cursor = 1;
                 self
             }

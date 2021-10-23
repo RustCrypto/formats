@@ -1,17 +1,16 @@
 //! X.509 `SubjectPublicKeyInfo`
 
 use crate::AlgorithmIdentifier;
-use core::convert::TryFrom;
-use der::{asn1::BitString, Decodable, Decoder, Encodable, Error, Message, Result};
-
-#[cfg(feature = "alloc")]
-use alloc::string::String;
+use der::{asn1::BitString, Decodable, Decoder, Encodable, Error, Result, Sequence};
 
 #[cfg(feature = "fingerprint")]
 use sha2::{digest, Digest, Sha256};
 
-#[cfg(all(feature = "fingerprint", feature = "alloc"))]
-use base64ct::{Base64, Encoding};
+#[cfg(all(feature = "alloc", feature = "fingerprint"))]
+use {
+    alloc::string::String,
+    base64ct::{Base64, Encoding},
+};
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 Section 4.1.2.7].
 ///
@@ -35,17 +34,18 @@ pub struct SubjectPublicKeyInfo<'a> {
 }
 
 impl<'a> SubjectPublicKeyInfo<'a> {
+    /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`].
     #[cfg(feature = "fingerprint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo
     pub fn fingerprint(&self) -> Result<digest::Output<Sha256>> {
         let mut buf = [0u8; 4096];
         Ok(Sha256::digest(self.encode_to_slice(&mut buf)?))
     }
 
+    /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] and
+    /// encode it as a Base64 string.
     #[cfg(all(feature = "fingerprint", feature = "alloc"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "fingerprint", feature = "alloc"))))]
-    /// Calculate the SHA-256 fingerprint of this SubjectPublicKeyInfo and encode it as a Base64 string
     pub fn fingerprint_base64(&self) -> Result<String> {
         Ok(Base64::encode_string(self.fingerprint()?.as_slice()))
     }
@@ -54,20 +54,29 @@ impl<'a> SubjectPublicKeyInfo<'a> {
 impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
         decoder.sequence(|decoder| {
+            let algorithm = decoder.decode()?;
+            let subject_public_key = decoder
+                .bit_string()?
+                .as_bytes()
+                .ok_or_else(|| der::Tag::BitString.value_error())?;
+
             Ok(Self {
-                algorithm: decoder.decode()?,
-                subject_public_key: decoder.bit_string()?.as_bytes(),
+                algorithm,
+                subject_public_key,
             })
         })
     }
 }
 
-impl<'a> Message<'a> for SubjectPublicKeyInfo<'a> {
+impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
     fn fields<F, T>(&self, f: F) -> Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> Result<T>,
     {
-        f(&[&self.algorithm, &BitString::new(self.subject_public_key)?])
+        f(&[
+            &self.algorithm,
+            &BitString::from_bytes(self.subject_public_key)?,
+        ])
     }
 }
 

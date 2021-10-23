@@ -5,7 +5,6 @@ use crate::{
     Tagged,
 };
 use const_oid::ObjectIdentifier;
-use core::convert::{TryFrom, TryInto};
 
 impl DecodeValue<'_> for ObjectIdentifier {
     fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
@@ -56,7 +55,6 @@ impl<'a> Tagged for ObjectIdentifier {
 mod tests {
     use super::ObjectIdentifier;
     use crate::{Decodable, Encodable, Length};
-    use core::convert::TryInto;
 
     const EXAMPLE_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549");
     const EXAMPLE_OID_BYTES: &[u8; 8] = &[0x06, 0x06, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d];

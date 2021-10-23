@@ -1,8 +1,10 @@
 //! PKCS#1 RSA Public Keys.
 
+#[cfg(feature = "alloc")]
+pub(crate) mod document;
+
 use crate::{Error, Result};
-use core::convert::TryFrom;
-use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Message};
+use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
 
 #[cfg(feature = "alloc")]
 use crate::RsaPublicKeyDocument;
@@ -46,18 +48,11 @@ impl<'a> RsaPublicKey<'a> {
         self.into()
     }
 
-    /// Encode this [`RsaPublicKey`] as PEM-encoded ASN.1 DER.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(self) -> Result<String> {
-        self.to_pem_with_le(LineEnding::default())
-    }
-
     /// Encode this [`RsaPublicKey`] as PEM-encoded ASN.1 DER with the given
     /// [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(self, line_ending: LineEnding) -> Result<String> {
+    pub fn to_pem(self, line_ending: LineEnding) -> Result<String> {
         Ok(pem::encode_string(
             PEM_TYPE_LABEL,
             line_ending,
@@ -77,7 +72,7 @@ impl<'a> Decodable<'a> for RsaPublicKey<'a> {
     }
 }
 
-impl<'a> Message<'a> for RsaPublicKey<'a> {
+impl<'a> Sequence<'a> for RsaPublicKey<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,

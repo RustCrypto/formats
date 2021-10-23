@@ -8,6 +8,9 @@ use core::{convert::Infallible, fmt};
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
 
+#[cfg(feature = "pem")]
+use crate::pem;
+
 /// Result type.
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -96,6 +99,32 @@ impl From<const_oid::Error> for Error {
     }
 }
 
+#[cfg(feature = "pem")]
+impl From<pem::Error> for Error {
+    fn from(err: pem::Error) -> Error {
+        ErrorKind::Pem(err).into()
+    }
+}
+
+#[cfg(feature = "std")]
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Error {
+        match err.kind() {
+            std::io::ErrorKind::NotFound => ErrorKind::FileNotFound,
+            std::io::ErrorKind::PermissionDenied => ErrorKind::PermissionDenied,
+            other => ErrorKind::Io(other),
+        }
+        .into()
+    }
+}
+
+#[cfg(feature = "time")]
+impl From<time::error::ComponentRange> for Error {
+    fn from(_: time::error::ComponentRange) -> Error {
+        ErrorKind::DateTime.into()
+    }
+}
+
 #[cfg(feature = "std")]
 impl std::error::Error for ErrorKind {}
 
@@ -119,6 +148,16 @@ pub enum ErrorKind {
     /// subsequently resumed.
     Failed,
 
+    /// File not found error.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    FileNotFound,
+
+    /// I/O errors.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    Io(std::io::ErrorKind),
+
     /// Incorrect length for a given field.
     Length {
         /// Tag of the value being decoded.
@@ -134,11 +173,24 @@ pub enum ErrorKind {
     /// Malformed OID
     MalformedOid,
 
+    /// Ordering error
+    Ordering,
+
     /// Integer overflow occurred (library bug!).
     Overflow,
 
     /// Message is longer than this library's internal limits support.
     Overlength,
+
+    /// PEM encoding errors.
+    #[cfg(feature = "pem")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+    Pem(pem::Error),
+
+    /// Permission denied reading file.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    PermissionDenied,
 
     /// Undecoded trailing data at end of message.
     TrailingData {
@@ -223,13 +275,22 @@ impl fmt::Display for ErrorKind {
             ErrorKind::DateTime => write!(f, "date/time error"),
             ErrorKind::DuplicateField { tag } => write!(f, "duplicate field for {}", tag),
             ErrorKind::Failed => write!(f, "operation failed"),
+            #[cfg(feature = "std")]
+            ErrorKind::FileNotFound => f.write_str("file not found"),
+            #[cfg(feature = "std")]
+            ErrorKind::Io(err) => write!(f, "I/O error: {:?}", err),
             ErrorKind::Length { tag } => write!(f, "incorrect length for {}", tag),
             ErrorKind::Noncanonical { tag } => {
                 write!(f, "ASN.1 {} not canonically encoded as DER", tag)
             }
             ErrorKind::MalformedOid => write!(f, "malformed OID"),
+            ErrorKind::Ordering => write!(f, "ordering error"),
             ErrorKind::Overflow => write!(f, "integer overflow"),
             ErrorKind::Overlength => write!(f, "DER message is too long"),
+            #[cfg(feature = "pem")]
+            ErrorKind::Pem(e) => write!(f, "PEM error: {}", e),
+            #[cfg(feature = "std")]
+            ErrorKind::PermissionDenied => f.write_str("permission denied"),
             ErrorKind::TrailingData { decoded, remaining } => {
                 write!(
                     f,

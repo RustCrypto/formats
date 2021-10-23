@@ -2,7 +2,6 @@
 
 #![cfg(feature = "pkcs5")]
 
-use core::convert::TryFrom;
 use hex_literal::hex;
 use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfo};
 
@@ -11,6 +10,9 @@ use pkcs8::PrivateKeyDocument;
 
 #[cfg(feature = "pem")]
 use pkcs8::EncryptedPrivateKeyDocument;
+
+#[cfg(feature = "std")]
+use der::Document;
 
 /// Ed25519 PKCS#8 private key plaintext encoded as ASN.1 DER
 #[cfg(feature = "encryption")]
@@ -219,7 +221,7 @@ fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
     let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
     assert_eq!(
         ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE,
-        pk.to_der().as_ref()
+        pk.to_der().unwrap().as_ref()
     );
 }
 
@@ -227,7 +229,10 @@ fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
 #[cfg(feature = "pem")]
 fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_pem() {
     let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
-    assert_eq!(ED25519_PEM_AES256_PBKDF2_SHA256_EXAMPLE, &*pk.to_pem());
+    assert_eq!(
+        ED25519_PEM_AES256_PBKDF2_SHA256_EXAMPLE,
+        &*pk.to_pem(Default::default()).unwrap()
+    );
 }
 
 #[test]

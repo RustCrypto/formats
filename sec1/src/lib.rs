@@ -4,7 +4,7 @@
 //! `Octet-String-to-Elliptic-Curve-Point` encoding algorithms.
 //!
 //! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! [SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf
 //! [RFC5915]: https://datatracker.ietf.org/doc/html/rfc5915
@@ -13,7 +13,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/sec1/0.1.0"
+    html_root_url = "https://docs.rs/sec1/0.2.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
@@ -37,17 +37,14 @@ pub use self::{
     parameters::EcParameters,
     point::EncodedPoint,
     private_key::EcPrivateKey,
-    traits::FromEcPrivateKey,
+    traits::DecodeEcPrivateKey,
 };
 
 pub use generic_array::typenum::consts;
 
+#[cfg(feature = "alloc")]
+pub use crate::{private_key::document::EcPrivateKeyDocument, traits::EncodeEcPrivateKey};
+
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use pem_rfc7468::LineEnding;
-
-#[cfg(feature = "alloc")]
-pub use crate::{private_key::document::EcPrivateKeyDocument, traits::ToEcPrivateKey};
-
-#[cfg(feature = "pem")]
-use pem_rfc7468 as pem;
+pub use der::pem::{self, LineEnding};

@@ -5,16 +5,13 @@ use crate::{
     datetime::{self, DateTime},
     ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
 };
-use core::{convert::TryFrom, time::Duration};
+use core::time::Duration;
 
 #[cfg(feature = "std")]
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
-/// Maximum duration since `UNIX_EPOCH` which can be represented as a `UTCTime`
-/// (non-inclusive) according to RFC 5280 rules.
-///
-/// This corresponds to the RFC3339 date: `2050-01-01T00:00:00Z`
-const MAX_UNIX_DURATION: Duration = Duration::from_secs(2_524_608_000);
+/// Maximum year that can be represented as a `UTCTime`.
+pub const MAX_YEAR: u16 = 2049;
 
 /// ASN.1 `UTCTime` type.
 ///
@@ -32,41 +29,51 @@ const MAX_UNIX_DURATION: Duration = Duration::from_secs(2_524_608_000);
 ///
 /// [1]: https://tools.ietf.org/html/rfc5280#section-4.1.2.5.1
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct UtcTime(Duration);
+pub struct UtcTime(DateTime);
 
 impl UtcTime {
     /// Length of an RFC 5280-flavored ASN.1 DER-encoded [`UtcTime`].
     pub const LENGTH: Length = Length::new(13);
 
-    /// Create a new [`UtcTime`] given a [`Duration`] since `UNIX_EPOCH`
-    /// (a.k.a. "Unix time")
-    pub fn new(unix_duration: Duration) -> Result<Self> {
-        if unix_duration < MAX_UNIX_DURATION {
-            Ok(Self(unix_duration))
+    /// Create a [`UtcTime`] from a [`DateTime`].
+    pub fn from_date_time(datetime: DateTime) -> Result<Self> {
+        if datetime.year() <= MAX_YEAR {
+            Ok(Self(datetime))
         } else {
             Err(Self::TAG.value_error())
         }
     }
 
-    /// Get the duration of this timestamp since `UNIX_EPOCH`.
-    pub fn unix_duration(&self) -> Duration {
+    /// Convert this [`UtcTime`] into a [`DateTime`].
+    pub fn to_date_time(&self) -> DateTime {
         self.0
+    }
+
+    /// Create a new [`UtcTime`] given a [`Duration`] since `UNIX_EPOCH`
+    /// (a.k.a. "Unix time")
+    pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
+        DateTime::from_unix_duration(unix_duration)?.try_into()
+    }
+
+    /// Get the duration of this timestamp since `UNIX_EPOCH`.
+    pub fn to_unix_duration(&self) -> Duration {
+        self.0.unix_duration()
     }
 
     /// Instantiate from [`SystemTime`].
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
-        time.duration_since(UNIX_EPOCH)
-            .map_err(|_| Self::TAG.value_error())
-            .and_then(Self::new)
+        DateTime::try_from(time)
+            .map_err(|_| Self::TAG.value_error())?
+            .try_into()
     }
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn to_system_time(&self) -> SystemTime {
-        UNIX_EPOCH + self.unix_duration()
+        self.0.to_system_time()
     }
 }
 
@@ -86,9 +93,8 @@ impl DecodeValue<'_> for UtcTime {
                 let year = if year >= 50 { year + 1900 } else { year + 2000 };
 
                 DateTime::new(year, month, day, hour, minute, second)
-                    .and_then(|dt| dt.unix_duration())
                     .map_err(|_| Self::TAG.value_error())
-                    .and_then(Self::new)
+                    .and_then(|dt| Self::from_unix_duration(dt.unix_duration()))
             }
             _ => Err(Self::TAG.value_error()),
         }
@@ -101,21 +107,18 @@ impl EncodeValue for UtcTime {
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        let datetime = DateTime::from_unix_duration(self.0).map_err(|_| Self::TAG.value_error())?;
-        debug_assert!((1950..2050).contains(&datetime.year()));
-
-        let year = match datetime.year() {
+        let year = match self.0.year() {
             y @ 1950..=1999 => y - 1900,
             y @ 2000..=2049 => y - 2000,
             _ => return Err(Self::TAG.value_error()),
         };
 
         datetime::encode_decimal(encoder, Self::TAG, year)?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.month())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.day())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.hour())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.minutes())?;
-        datetime::encode_decimal(encoder, Self::TAG, datetime.seconds())?;
+        datetime::encode_decimal(encoder, Self::TAG, self.0.month())?;
+        datetime::encode_decimal(encoder, Self::TAG, self.0.day())?;
+        datetime::encode_decimal(encoder, Self::TAG, self.0.hour())?;
+        datetime::encode_decimal(encoder, Self::TAG, self.0.minutes())?;
+        datetime::encode_decimal(encoder, Self::TAG, self.0.seconds())?;
         encoder.byte(b'Z')
     }
 }
@@ -123,6 +126,34 @@ impl EncodeValue for UtcTime {
 impl From<&UtcTime> for UtcTime {
     fn from(value: &UtcTime) -> UtcTime {
         *value
+    }
+}
+
+impl From<UtcTime> for DateTime {
+    fn from(utc_time: UtcTime) -> DateTime {
+        utc_time.0
+    }
+}
+
+impl From<&UtcTime> for DateTime {
+    fn from(utc_time: &UtcTime) -> DateTime {
+        utc_time.0
+    }
+}
+
+impl TryFrom<DateTime> for UtcTime {
+    type Error = Error;
+
+    fn try_from(datetime: DateTime) -> Result<Self> {
+        Self::from_date_time(datetime)
+    }
+}
+
+impl TryFrom<&DateTime> for UtcTime {
+    type Error = Error;
+
+    fn try_from(datetime: &DateTime) -> Result<Self> {
+        Self::from_date_time(*datetime)
     }
 }
 
@@ -148,7 +179,7 @@ impl Tagged for UtcTime {
 
 #[cfg(test)]
 mod tests {
-    use super::{DateTime, UtcTime};
+    use super::UtcTime;
     use crate::{Decodable, Encodable, Encoder};
     use hex_literal::hex;
 
@@ -156,35 +187,11 @@ mod tests {
     fn round_trip_vector() {
         let example_bytes = hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a");
         let utc_time = UtcTime::from_der(&example_bytes).unwrap();
-        assert_eq!(utc_time.unix_duration().as_secs(), 673573540);
+        assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
 
         let mut buf = [0u8; 128];
         let mut encoder = Encoder::new(&mut buf);
         utc_time.encode(&mut encoder).unwrap();
         assert_eq!(example_bytes, encoder.finish().unwrap());
-    }
-
-    #[test]
-    fn round_trip_examples() {
-        for year in 1970..=2049 {
-            for month in 1..=12 {
-                let max_day = if month == 2 { 28 } else { 30 };
-
-                for day in 1..=max_day {
-                    for hour in 0..=23 {
-                        let datetime1 = DateTime::new(year, month, day, hour, 0, 0).unwrap();
-                        let utc_time1 = UtcTime::new(datetime1.unix_duration().unwrap()).unwrap();
-
-                        let mut buf = [0u8; 128];
-                        let mut encoder = Encoder::new(&mut buf);
-                        utc_time1.encode(&mut encoder).unwrap();
-                        let der_bytes = encoder.finish().unwrap();
-
-                        let utc_time2 = UtcTime::from_der(der_bytes).unwrap();
-                        assert_eq!(utc_time1, utc_time2);
-                    }
-                }
-            }
-        }
     }
 }

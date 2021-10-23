@@ -3,7 +3,6 @@
 //! [RFC 8018 Section 6.1]: https://tools.ietf.org/html/rfc8018#section-6.1
 
 use crate::AlgorithmIdentifier;
-use core::convert::{TryFrom, TryInto};
 use der::{
     asn1::{ObjectIdentifier, OctetString},
     Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Tag, Tagged,
@@ -95,7 +94,13 @@ impl Encodable for Parameters {
     fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
         encoder.sequence(self.inner_len()?, |encoder| {
             encoder.oid(self.encryption.oid())?;
-            encoder.message(&[&self.salt_string()?, &self.iteration_count])
+
+            let salt_string = self.salt_string()?;
+            let seq_len = (salt_string.encoded_len()? + self.iteration_count.encoded_len()?)?;
+            encoder.sequence(seq_len, |seq| {
+                seq.encode(&salt_string)?;
+                seq.encode(&self.iteration_count)
+            })
         })
     }
 }

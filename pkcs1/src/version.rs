@@ -1,7 +1,6 @@
 //! PKCS#1 version identifier.
 
 use crate::Error;
-use core::convert::TryFrom;
 use der::{Decodable, Decoder, Encodable, Encoder, Tag, Tagged};
 
 /// Version identifier for PKCS#1 documents as defined in
@@ -18,13 +17,21 @@ use der::{Decodable, Decoder, Encodable, Encoder, Tag, Tagged};
 /// ```
 ///
 /// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
-#[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u8)]
 pub enum Version {
     /// Denotes a `two-prime` key
     TwoPrime = 0,
 
     /// Denotes a `multi` (i.e. multi-prime) key
     Multi = 1,
+}
+
+impl Version {
+    /// Is this a multi-prime RSA key?
+    pub fn is_multi(self) -> bool {
+        self == Self::Multi
+    }
 }
 
 impl From<Version> for u8 {

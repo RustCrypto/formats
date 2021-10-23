@@ -1,10 +1,10 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue,
-    Encoder, Error, Length, Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error, Length,
+    Result, StrSlice, Tag, Tagged,
 };
-use core::{convert::TryFrom, fmt, str};
+use core::{fmt, str};
 
 #[cfg(feature = "alloc")]
 use alloc::{borrow::ToOwned, string::String};

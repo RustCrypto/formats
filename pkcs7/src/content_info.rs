@@ -1,7 +1,7 @@
 use crate::{ContentType, DataContent};
 
 use der::{
-    asn1::ContextSpecific, Decodable, Decoder, Encodable, ErrorKind, Message, TagMode, TagNumber,
+    asn1::ContextSpecific, Decodable, Decoder, Encodable, ErrorKind, Sequence, TagMode, TagNumber,
 };
 
 const CONTENT_TAG: TagNumber = TagNumber::new(0);
@@ -45,7 +45,7 @@ impl<'a> Decodable<'a> for ContentInfo<'a> {
     }
 }
 
-impl<'a> Message<'a> for ContentInfo<'a> {
+impl<'a> Sequence<'a> for ContentInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,

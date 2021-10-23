@@ -174,16 +174,7 @@ impl DeriveChoice {
 
             gen impl ::der::Decodable<#lifetime> for @Self {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
-                    #[allow(unused_imports)]
-                    use core::convert::{TryFrom, TryInto};
-
-                    let octet = decoder.peek().ok_or_else(|| {
-                        decoder.error(::der::ErrorKind::Truncated)
-                    })?;
-
-                    let tag = ::der::Tag::try_from(octet).map_err(|e| decoder.error(e.kind()))?;
-
-                    match tag {
+                    match decoder.peek_tag()? {
                         #decode_body
                         actual => Err(der::ErrorKind::UnexpectedTag {
                             expected: None,
@@ -196,9 +187,6 @@ impl DeriveChoice {
 
             gen impl ::der::Encodable for @Self {
                 fn encode(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
-                    #[allow(unused_imports)]
-                    use core::convert::TryFrom;
-
                     match self {
                         #encode_body
                     }

@@ -1,6 +1,5 @@
 //! Password-Based Encryption Scheme 2 tests
 
-use core::convert::TryFrom;
 use der::Encodable;
 use hex_literal::hex;
 use pkcs5::pbes2;

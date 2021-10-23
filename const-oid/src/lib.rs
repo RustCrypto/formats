@@ -44,7 +44,7 @@
 //!
 //! # Minimum Supported Rust Version
 //!
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! Minimum supported Rust version may be changed in the future, but it will be
 //! accompanied with a minor version bump.
@@ -56,7 +56,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/const-oid/0.6.1"
+    html_root_url = "https://docs.rs/const-oid/0.7.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms)]
@@ -77,8 +77,8 @@ pub use crate::{
     error::{Error, Result},
 };
 
-use crate::arcs::RootArcs;
-use core::{convert::TryFrom, fmt, str::FromStr};
+use crate::arcs::{RootArcs, ARC_MAX_BYTES, ARC_MAX_LAST_OCTET};
+use core::{fmt, str::FromStr};
 
 /// Object identifier (OID).
 ///
@@ -179,12 +179,12 @@ impl ObjectIdentifier {
         while arc_offset < len {
             match ber_bytes.get(arc_offset + arc_bytes).cloned() {
                 Some(byte) => {
-                    arc_bytes += 1;
-
-                    if arc_bytes == 4 && byte & 0b11110000 != 0 {
+                    if (arc_bytes == ARC_MAX_BYTES) && (byte & ARC_MAX_LAST_OCTET != 0) {
                         // Overflowed `Arc` (u32)
                         return Err(Error);
                     }
+
+                    arc_bytes += 1;
 
                     if byte & 0b10000000 == 0 {
                         arc_offset += arc_bytes;

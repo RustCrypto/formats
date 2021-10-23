@@ -8,7 +8,6 @@ use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag,
     Tagged,
 };
-use core::convert::TryFrom;
 
 macro_rules! impl_int_encoding {
     ($($int:ty => $uint:ty),+) => {

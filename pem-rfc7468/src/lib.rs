@@ -48,7 +48,7 @@
 //!
 //! # Minimum Supported Rust Version
 //!
-//! This crate requires **Rust 1.51** at a minimum.
+//! This crate requires **Rust 1.56** at a minimum.
 //!
 //! # Usage
 //!
@@ -95,7 +95,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pem-rfc7468/0.2.2"
+    html_root_url = "https://docs.rs/pem-rfc7468/0.3.0-pre"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
@@ -143,3 +143,9 @@ const ENCAPSULATION_BOUNDARY_DELIMITER: &[u8] = b"-----";
 /// > boundary), and they MUST NOT emit extraneous whitespace.  Parsers MAY
 /// > handle other line sizes.
 const BASE64_WRAP_WIDTH: usize = 64;
+
+/// Marker trait for types with an associated PEM type label.
+pub trait PemLabel {
+    /// Expected PEM type label for a given document, e.g. `"PRIVATE KEY"`
+    const TYPE_LABEL: &'static str;
+}

@@ -1,10 +1,10 @@
 //! PKCS#8 `PrivateKeyInfo`.
 
 use crate::{AlgorithmIdentifier, Error, Result, Version};
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Message, TagMode, TagNumber,
+    Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -17,21 +17,13 @@ use {
 };
 
 #[cfg(feature = "pem")]
-use {
-    crate::{error, pem, LineEnding},
-    alloc::string::String,
-    zeroize::Zeroizing,
-};
+use {crate::LineEnding, alloc::string::String, der::Document, zeroize::Zeroizing};
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
 /// Context-specific tag number for the public key.
 const PUBLIC_KEY_TAG: TagNumber = TagNumber::new(1);
-
-/// Type label for PEM-encoded private keys.
-#[cfg(feature = "pem")]
-pub(crate) const PEM_TYPE_LABEL: &str = "PRIVATE KEY";
 
 /// PKCS#8 `PrivateKeyInfo`.
 ///
@@ -141,32 +133,24 @@ impl<'a> PrivateKeyInfo<'a> {
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<EncryptedPrivateKeyDocument> {
-        PrivateKeyDocument::from(self).encrypt(rng, password)
+        PrivateKeyDocument::try_from(self)?.encrypt(rng, password)
     }
 
     /// Encode this [`PrivateKeyInfo`] as ASN.1 DER.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn to_der(&self) -> PrivateKeyDocument {
-        self.into()
-    }
-
-    /// Encode this [`PrivateKeyInfo`] as PEM-encoded ASN.1 DER.
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self) -> Zeroizing<String> {
-        self.to_pem_with_le(LineEnding::default())
+    pub fn to_der(&self) -> Result<PrivateKeyDocument> {
+        self.try_into()
     }
 
     /// Encode this [`PrivateKeyInfo`] as PEM-encoded ASN.1 DER with the given
     /// [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem_with_le(&self, line_ending: LineEnding) -> Zeroizing<String> {
-        Zeroizing::new(
-            pem::encode_string(PEM_TYPE_LABEL, line_ending, self.to_der().as_ref())
-                .expect(error::PEM_ENCODING_MSG),
-        )
+    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
+        Ok(PrivateKeyDocument::try_from(self)?
+            .to_pem(line_ending)
+            .map(Zeroizing::new)?)
     }
 }
 
@@ -179,7 +163,11 @@ impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
             let private_key = decoder.octet_string()?.into();
             let public_key = decoder
                 .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Implicit)?
-                .map(|bs| bs.as_bytes());
+                .map(|bs| {
+                    bs.as_bytes()
+                        .ok_or_else(|| der::Tag::BitString.value_error())
+                })
+                .transpose()?;
 
             if version.has_public_key() != public_key.is_some() {
                 return Err(decoder.value_error(der::Tag::ContextSpecific {
@@ -202,7 +190,7 @@ impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> Message<'a> for PrivateKeyInfo<'a> {
+impl<'a> Sequence<'a> for PrivateKeyInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
@@ -214,7 +202,7 @@ impl<'a> Message<'a> for PrivateKeyInfo<'a> {
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::new(pk).map(|value| ContextSpecific {
+                    BitString::from_bytes(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
                         tag_mode: TagMode::Implicit,
                         value,

@@ -2,7 +2,6 @@
 
 use crate::{Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Result};
 use core::{
-    convert::{TryFrom, TryInto},
     fmt,
     ops::{Add, Sub},
 };
@@ -166,6 +165,12 @@ impl TryFrom<u32> for Length {
     }
 }
 
+impl From<Length> for u32 {
+    fn from(length: Length) -> u32 {
+        length.0
+    }
+}
+
 impl TryFrom<usize> for Length {
     type Error = Error;
 
@@ -255,7 +260,6 @@ impl fmt::Display for Length {
 mod tests {
     use super::Length;
     use crate::{Decodable, Encodable, ErrorKind};
-    use core::convert::TryFrom;
 
     #[test]
     fn decode() {

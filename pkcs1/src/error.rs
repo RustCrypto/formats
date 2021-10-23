@@ -68,21 +68,21 @@ impl fmt::Display for Error {
     }
 }
 
+impl From<der::Error> for Error {
+    fn from(err: der::Error) -> Error {
+        Error::Asn1(err)
+    }
+}
+
 #[cfg(feature = "pem")]
-impl From<pem_rfc7468::Error> for Error {
-    fn from(err: pem_rfc7468::Error) -> Error {
+impl From<pem::Error> for Error {
+    fn from(err: pem::Error) -> Error {
         Error::Pem(err)
     }
 }
 
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
-
-impl From<der::Error> for Error {
-    fn from(err: der::Error) -> Error {
-        Error::Asn1(err)
-    }
-}
 
 #[cfg(feature = "std")]
 impl From<std::io::Error> for Error {

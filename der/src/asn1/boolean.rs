@@ -4,7 +4,6 @@ use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
     Result, Tag, Tagged,
 };
-use core::convert::{TryFrom, TryInto};
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
 ///

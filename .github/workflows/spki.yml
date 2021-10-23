@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.51.0 # MSRV
+          - 1.56.0 # MSRV
           - stable
         target:
           - thumbv7em-none-eabi
@@ -39,13 +39,17 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo build --release --target ${{ matrix.target }}
+      - run: cargo build --release --target ${{ matrix.target }} --features alloc
+      - run: cargo build --release --target ${{ matrix.target }} --features fingerprint
+      - run: cargo build --release --target ${{ matrix.target }} --features pem
+      - run: cargo build --release --target ${{ matrix.target }} --features alloc,fingerprint,pem
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         rust:
-          - 1.51.0 # MSRV
+          - 1.56.0 # MSRV
           - stable
     steps:
       - uses: actions/checkout@v1
@@ -55,6 +59,4 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
       - run: cargo test --release
-      - run: cargo test --release --features fingerprint
-      - run: cargo test --release --features fingerprint,alloc
       - run: cargo test --release --all-features
