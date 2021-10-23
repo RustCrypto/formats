@@ -228,21 +228,21 @@ mod tests {
         let tag_number = TagNumber::new(0);
 
         // Empty message
-        let mut decoder = Decoder::new(&[]);
+        let mut decoder = Decoder::new(&[]).unwrap();
         assert_eq!(
             ContextSpecific::<u8>::decode_explicit(&mut decoder, tag_number).unwrap(),
             None
         );
 
         // Message containing a non-context-specific type
-        let mut decoder = Decoder::new(&hex!("020100"));
+        let mut decoder = Decoder::new(&hex!("020100")).unwrap();
         assert_eq!(
             ContextSpecific::<u8>::decode_explicit(&mut decoder, tag_number).unwrap(),
             None
         );
 
         // Message containing an EXPLICIT context-specific field
-        let mut decoder = Decoder::new(&hex!("A003020100"));
+        let mut decoder = Decoder::new(&hex!("A003020100")).unwrap();
         let field = ContextSpecific::<u8>::decode_explicit(&mut decoder, tag_number)
             .unwrap()
             .unwrap();
@@ -265,7 +265,7 @@ mod tests {
 
         let tag_number = TagNumber::new(1);
 
-        let mut decoder = Decoder::new(&context_specific_implicit_bytes);
+        let mut decoder = Decoder::new(&context_specific_implicit_bytes).unwrap();
         let field = ContextSpecific::<BitString<'_>>::decode_implicit(&mut decoder, tag_number)
             .unwrap()
             .unwrap();
@@ -281,7 +281,7 @@ mod tests {
     #[test]
     fn context_specific_skipping_unknown_field() {
         let tag = TagNumber::new(1);
-        let mut decoder = Decoder::new(&hex!("A003020100A103020101"));
+        let mut decoder = Decoder::new(&hex!("A003020100A103020101")).unwrap();
         let field = ContextSpecific::<u8>::decode_explicit(&mut decoder, tag)
             .unwrap()
             .unwrap();
@@ -291,7 +291,7 @@ mod tests {
     #[test]
     fn context_specific_returns_none_on_greater_tag_number() {
         let tag = TagNumber::new(0);
-        let mut decoder = Decoder::new(&hex!("A103020101"));
+        let mut decoder = Decoder::new(&hex!("A103020101")).unwrap();
         assert_eq!(
             ContextSpecific::<u8>::decode_explicit(&mut decoder, tag).unwrap(),
             None

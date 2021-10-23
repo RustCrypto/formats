@@ -2,8 +2,7 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    str_slice::StrSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
-    Result,
+    str_slice::StrSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result,
 };
 
 /// Byte slice newtype which respects the `Length::max()` limit.
@@ -50,10 +49,7 @@ impl AsRef<[u8]> for ByteSlice<'_> {
 
 impl<'a> DecodeValue<'a> for ByteSlice<'a> {
     fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-        decoder
-            .bytes(length)
-            .map_err(|_| decoder.error(ErrorKind::Truncated))
-            .and_then(Self::new)
+        decoder.bytes(length).and_then(Self::new)
     }
 }
 

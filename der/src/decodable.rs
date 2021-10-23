@@ -18,7 +18,7 @@ pub trait Decodable<'a>: Sized {
 
     /// Parse `Self` from the provided DER-encoded byte slice.
     fn from_der(bytes: &'a [u8]) -> Result<Self> {
-        let mut decoder = Decoder::new(bytes);
+        let mut decoder = Decoder::new(bytes)?;
         let result = Self::decode(&mut decoder)?;
         decoder.finish(result)
     }

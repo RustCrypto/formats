@@ -7,10 +7,23 @@ use crate::{Encoder, ErrorKind, Length, Result};
 ///
 /// Returns a byte array of the requested size containing a big endian integer.
 pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
-    let offset = N.checked_sub(bytes.len()).ok_or(ErrorKind::Truncated)?;
-    let mut output = [0xFFu8; N];
-    output[offset..].copy_from_slice(bytes);
-    Ok(output)
+    match N.checked_sub(bytes.len()) {
+        Some(offset) => {
+            let mut output = [0xFFu8; N];
+            output[offset..].copy_from_slice(bytes);
+            Ok(output)
+        }
+        None => {
+            let expected_len = Length::try_from(N)?;
+            let actual_len = Length::try_from(bytes.len())?;
+
+            Err(ErrorKind::Incomplete {
+                expected_len,
+                actual_len,
+            }
+            .into())
+        }
+    }
 }
 
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.

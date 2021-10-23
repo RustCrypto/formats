@@ -43,6 +43,7 @@ extern crate alloc;
 extern crate std;
 
 mod algorithm;
+mod error;
 mod spki;
 mod traits;
 
@@ -50,7 +51,10 @@ mod traits;
 mod document;
 
 pub use crate::{
-    algorithm::AlgorithmIdentifier, spki::SubjectPublicKeyInfo, traits::DecodePublicKey,
+    algorithm::AlgorithmIdentifier,
+    error::{Error, Result},
+    spki::SubjectPublicKeyInfo,
+    traits::DecodePublicKey,
 };
 pub use der::{self, asn1::ObjectIdentifier};
 

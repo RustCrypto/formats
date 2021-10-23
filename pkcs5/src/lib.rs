@@ -37,7 +37,7 @@ pub use crate::error::{Error, Result};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::AlgorithmIdentifier;
 
-use der::{Decodable, Decoder, Encodable, Encoder, Length};
+use der::{Decodable, Decoder, Encodable, Encoder, Length, Tag};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
@@ -189,9 +189,14 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
     type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<EncryptionScheme<'_>> {
-        match alg.oid {
-            pbes2::PBES2_OID => pbes2::Parameters::try_from(alg.parameters_any()?).map(Into::into),
-            _ => pbes1::Parameters::try_from(alg).map(Into::into),
+        if alg.oid == pbes2::PBES2_OID {
+            if let Some(params) = alg.parameters {
+                pbes2::Parameters::try_from(params).map(Into::into)
+            } else {
+                Err(Tag::OctetString.value_error())
+            }
+        } else {
+            pbes1::Parameters::try_from(alg).map(Into::into)
         }
     }
 }
@@ -200,6 +205,6 @@ impl<'a> TryFrom<&'a [u8]> for EncryptionScheme<'a> {
     type Error = der::Error;
 
     fn try_from(bytes: &'a [u8]) -> der::Result<EncryptionScheme<'a>> {
-        AlgorithmIdentifier::try_from(bytes).and_then(TryInto::try_into)
+        AlgorithmIdentifier::from_der(bytes)?.try_into()
     }
 }
