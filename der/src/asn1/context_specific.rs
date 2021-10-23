@@ -95,7 +95,7 @@ impl<T> ContextSpecific<T> {
     where
         F: FnOnce(&mut Decoder<'a>) -> Result<Self>,
     {
-        while let Some(octet) = decoder.peek() {
+        while let Some(octet) = decoder.peek_byte() {
             let tag = Tag::try_from(octet)?;
 
             if !tag.is_context_specific() || tag.number() > tag_number {
