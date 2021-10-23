@@ -1,8 +1,8 @@
 //! DER decoder.
 
 use crate::{
-    asn1::*, Choice, Decodable, DecodeValue, Error, ErrorKind, Header, Length, Result, Tag,
-    TagMode, TagNumber, Tagged,
+    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Error, ErrorKind, Header, Length, Result,
+    Tag, TagMode, TagNumber, Tagged,
 };
 
 /// DER decoder.
@@ -12,22 +12,18 @@ pub struct Decoder<'a> {
     ///
     /// In the event an error was previously encountered this will be set to
     /// `None` to prevent further decoding while in a bad state.
-    bytes: Option<&'a [u8]>,
+    bytes: Option<ByteSlice<'a>>,
 
     /// Position within the decoded slice.
     position: Length,
-
-    /// Length of the input buffer.
-    length: Length,
 }
 
 impl<'a> Decoder<'a> {
     /// Create a new decoder for the given byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
         Ok(Self {
-            bytes: Some(bytes),
+            bytes: Some(ByteSlice::new(bytes)?),
             position: Length::ZERO,
-            length: Length::try_from(bytes.len())?,
         })
     }
 
@@ -79,11 +75,15 @@ impl<'a> Decoder<'a> {
     pub fn peek_tag(&self) -> Result<Tag> {
         match self.peek_byte() {
             Some(byte) => byte.try_into(),
-            None => Err(ErrorKind::Incomplete {
-                expected_len: (self.length + Length::ONE)?,
-                actual_len: self.length,
+            None => {
+                let actual_len = self.input_len()?;
+                let expected_len = (actual_len + Length::ONE)?;
+                Err(ErrorKind::Incomplete {
+                    expected_len,
+                    actual_len,
+                }
+                .into())
             }
-            .into()),
         }
     }
 
@@ -240,10 +240,14 @@ impl<'a> Decoder<'a> {
     pub(crate) fn byte(&mut self) -> Result<u8> {
         match self.bytes(1u8)? {
             [byte] => Ok(*byte),
-            _ => Err(self.error(ErrorKind::Incomplete {
-                expected_len: (self.length + Length::ONE)?,
-                actual_len: self.length,
-            })),
+            _ => {
+                let actual_len = self.input_len()?;
+                let expected_len = (actual_len + Length::ONE)?;
+                Err(self.error(ErrorKind::Incomplete {
+                    expected_len,
+                    actual_len,
+                }))
+            }
         }
     }
 
@@ -263,11 +267,20 @@ impl<'a> Decoder<'a> {
                 self.position = (self.position + len)?;
                 Ok(result)
             }
-            None => Err(self.error(ErrorKind::Incomplete {
-                expected_len: (self.length + len)?,
-                actual_len: self.length,
-            })),
+            None => {
+                let actual_len = self.input_len()?;
+                let expected_len = (actual_len + len)?;
+                Err(self.error(ErrorKind::Incomplete {
+                    expected_len,
+                    actual_len,
+                }))
+            }
         }
+    }
+
+    /// Get the length of the input, if decoding hasn't failed.
+    pub(crate) fn input_len(&self) -> Result<Length> {
+        Ok(self.bytes.ok_or(ErrorKind::Failed)?.len())
     }
 
     /// Get the number of bytes still remaining in the buffer.
@@ -286,19 +299,21 @@ impl<'a> Decoder<'a> {
         let start_pos = self.position();
         let end_pos = (start_pos + length)?;
         let bytes = match self.bytes {
-            Some(slice) => slice
-                .get(..end_pos.try_into()?)
-                .ok_or(ErrorKind::Incomplete {
-                    expected_len: end_pos,
-                    actual_len: self.length,
-                })?,
+            Some(slice) => {
+                slice
+                    .as_bytes()
+                    .get(..end_pos.try_into()?)
+                    .ok_or(ErrorKind::Incomplete {
+                        expected_len: end_pos,
+                        actual_len: self.input_len()?,
+                    })?
+            }
             None => return Err(self.error(ErrorKind::Failed)),
         };
 
         let mut nested_decoder = Self {
-            bytes: Some(bytes),
+            bytes: Some(ByteSlice::new(bytes)?),
             position: start_pos,
-            length: end_pos,
         };
 
         self.position = end_pos;
@@ -311,13 +326,17 @@ impl<'a> Decoder<'a> {
     fn remaining(&self) -> Result<&'a [u8]> {
         let pos = usize::try_from(self.position)?;
 
-        match self.bytes.and_then(|b| b.get(pos..)) {
+        match self.bytes.and_then(|slice| slice.as_bytes().get(pos..)) {
             Some(result) => Ok(result),
-            None => Err(ErrorKind::Incomplete {
-                expected_len: (self.length + Length::ONE)?,
-                actual_len: self.length,
+            None => {
+                let actual_len = self.input_len()?;
+                let expected_len = (actual_len + Length::ONE)?;
+                Err(ErrorKind::Incomplete {
+                    expected_len,
+                    actual_len,
+                }
+                .at(self.position))
             }
-            .at(self.position)),
         }
     }
 }
