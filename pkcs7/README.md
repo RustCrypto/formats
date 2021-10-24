@@ -34,7 +34,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/pkcs7/badge.svg
 [docs-link]: https://docs.rs/pkcs7/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.51+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 [build-image]: https://github.com/RustCrypto/formats/workflows/pkcs7/badge.svg?branch=master&event=push
