@@ -37,19 +37,19 @@ pub struct DateTime {
     year: u16,
 
     /// Month (1-12)
-    month: u16,
+    month: u8,
 
     /// Day of the month (1-31)
-    day: u16,
+    day: u8,
 
     /// Hour (0-23)
-    hour: u16,
+    hour: u8,
 
     /// Minutes (0-59)
-    minutes: u16,
+    minutes: u8,
 
     /// Seconds (0-59)
-    seconds: u16,
+    seconds: u8,
 
     /// [`Duration`] since the Unix epoch.
     unix_duration: Duration,
@@ -57,14 +57,7 @@ pub struct DateTime {
 
 impl DateTime {
     /// Create a new [`DateTime`] from the given UTC time components.
-    pub fn new(
-        year: u16,
-        month: u16,
-        day: u16,
-        hour: u16,
-        minutes: u16,
-        seconds: u16,
-    ) -> Result<Self> {
+    pub fn new(year: u16, month: u8, day: u8, hour: u8, minutes: u8, seconds: u8) -> Result<Self> {
         // Basic validation of the components.
         if year < MIN_YEAR
             || !(1..=12).contains(&month)
@@ -81,7 +74,7 @@ impl DateTime {
 
         let is_leap_year = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 
-        let (mut ydays, mdays) = match month {
+        let (mut ydays, mdays): (u16, u8) = match month {
             1 => (0, 31),
             2 if is_leap_year => (31, 29),
             2 => (31, 28),
@@ -102,7 +95,7 @@ impl DateTime {
             return Err(ErrorKind::DateTime.into());
         }
 
-        ydays += day - 1;
+        ydays += day as u16 - 1;
 
         if is_leap_year && month > 2 {
             ydays += 1;
@@ -199,10 +192,10 @@ impl DateTime {
         Self::new(
             year as u16,
             mon,
-            mday as u16,
-            hour as u16,
-            minute as u16,
-            second as u16,
+            mday as u8,
+            hour as u8,
+            minute as u8,
+            second as u8,
         )
     }
 
@@ -212,27 +205,27 @@ impl DateTime {
     }
 
     /// Get the month.
-    pub fn month(&self) -> u16 {
+    pub fn month(&self) -> u8 {
         self.month
     }
 
     /// Get the day.
-    pub fn day(&self) -> u16 {
+    pub fn day(&self) -> u8 {
         self.day
     }
 
     /// Get the hour.
-    pub fn hour(&self) -> u16 {
+    pub fn hour(&self) -> u8 {
         self.hour
     }
 
     /// Get the minutes.
-    pub fn minutes(&self) -> u16 {
+    pub fn minutes(&self) -> u8 {
         self.minutes
     }
 
     /// Get the seconds.
-    pub fn seconds(&self) -> u16 {
+    pub fn seconds(&self) -> u8 {
         self.seconds
     }
 
@@ -267,8 +260,9 @@ impl FromStr for DateTime {
             {
                 let tag = Tag::GeneralizedTime;
                 let year = decode_decimal(tag, year1, year2).map_err(|_| ErrorKind::DateTime)?
+                    as u16
                     * 100
-                    + decode_decimal(tag, year3, year4).map_err(|_| ErrorKind::DateTime)?;
+                    + decode_decimal(tag, year3, year4).map_err(|_| ErrorKind::DateTime)? as u16;
                 let month = decode_decimal(tag, month1, month2).map_err(|_| ErrorKind::DateTime)?;
                 let day = decode_decimal(tag, day1, day2).map_err(|_| ErrorKind::DateTime)?;
                 let hour = decode_decimal(tag, hour1, hour2).map_err(|_| ErrorKind::DateTime)?;
@@ -334,12 +328,8 @@ impl TryFrom<DateTime> for PrimitiveDateTime {
 
     fn try_from(time: DateTime) -> Result<PrimitiveDateTime> {
         let month = (time.month() as u8).try_into()?;
-        let date = time::Date::from_calendar_date(time.year() as i32, month, time.day() as u8)?;
-        let time = time::Time::from_hms(
-            time.hour() as u8,
-            time.minutes() as u8,
-            time.seconds() as u8,
-        )?;
+        let date = time::Date::from_calendar_date(time.year() as i32, month, time.day())?;
+        let time = time::Time::from_hms(time.hour(), time.minutes(), time.seconds())?;
 
         Ok(PrimitiveDateTime::new(date, time))
     }
@@ -353,34 +343,34 @@ impl TryFrom<PrimitiveDateTime> for DateTime {
     fn try_from(time: PrimitiveDateTime) -> Result<DateTime> {
         DateTime::new(
             time.year() as u16,
-            u8::from(time.month()) as u16,
-            time.day() as u16,
-            time.hour() as u16,
-            time.minute() as u16,
-            time.second() as u16,
+            time.month().into(),
+            time.day(),
+            time.hour(),
+            time.minute(),
+            time.second(),
         )
     }
 }
 
 /// Decode 2-digit decimal value
-pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u16> {
+pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u8> {
     if (b'0'..=b'9').contains(&hi) && (b'0'..=b'9').contains(&lo) {
-        Ok((hi - b'0') as u16 * 10 + (lo - b'0') as u16)
+        Ok((hi - b'0') * 10 + (lo - b'0'))
     } else {
         Err(tag.value_error())
     }
 }
 
 /// Encode 2-digit decimal value
-pub(crate) fn encode_decimal(encoder: &mut Encoder<'_>, tag: Tag, value: u16) -> Result<()> {
+pub(crate) fn encode_decimal(encoder: &mut Encoder<'_>, tag: Tag, value: u8) -> Result<()> {
     let hi_val = value / 10;
 
     if hi_val >= 10 {
         return Err(tag.value_error());
     }
 
-    encoder.byte(hi_val as u8 + b'0')?;
-    encoder.byte((value % 10) as u8 + b'0')
+    encoder.byte(hi_val + b'0')?;
+    encoder.byte((value % 10) + b'0')
 }
 
 #[cfg(test)]
@@ -388,7 +378,7 @@ mod tests {
     use super::DateTime;
 
     /// Ensure a day is OK
-    fn is_date_valid(year: u16, month: u16, day: u16, hour: u16, minute: u16, second: u16) -> bool {
+    fn is_date_valid(year: u16, month: u8, day: u8, hour: u8, minute: u8, second: u8) -> bool {
         DateTime::new(year, month, day, hour, minute, second).is_ok()
     }
 

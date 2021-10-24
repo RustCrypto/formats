@@ -3,7 +3,7 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence,
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence, Tag,
 };
 
 /// Password-Based Key Derivation Function (PBKDF2) OID.
@@ -127,10 +127,14 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Kdf<'a> {
     type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
-        match alg.oid {
-            PBKDF2_OID => alg.parameters_any()?.try_into().map(Self::Pbkdf2),
-            SCRYPT_OID => alg.parameters_any()?.try_into().map(Self::Scrypt),
-            oid => Err(ErrorKind::UnknownOid { oid }.into()),
+        if let Some(params) = alg.parameters {
+            match alg.oid {
+                PBKDF2_OID => params.try_into().map(Self::Pbkdf2),
+                SCRYPT_OID => params.try_into().map(Self::Scrypt),
+                oid => Err(ErrorKind::OidUnknown { oid }.into()),
+            }
+        } else {
+            Err(Tag::OctetString.value_error())
         }
     }
 }
@@ -302,7 +306,7 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Pbkdf2Prf {
             }
         } else {
             // TODO(tarcieri): support OPTIONAL parameters?
-            return Err(ErrorKind::Truncated.into());
+            return Err(Tag::Null.value_error());
         }
 
         match alg.oid {
@@ -311,7 +315,7 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Pbkdf2Prf {
             HMAC_WITH_SHA256_OID => Ok(Self::HmacWithSha256),
             HMAC_WITH_SHA384_OID => Ok(Self::HmacWithSha384),
             HMAC_WITH_SHA512_OID => Ok(Self::HmacWithSha512),
-            oid => Err(ErrorKind::UnknownOid { oid }.into()),
+            oid => Err(ErrorKind::OidUnknown { oid }.into()),
         }
     }
 }

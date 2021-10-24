@@ -63,7 +63,9 @@ impl<'a> Encoder<'a> {
         let range = ..usize::try_from(self.position)?;
 
         match self.bytes {
-            Some(bytes) => bytes.get(range).ok_or_else(|| ErrorKind::Truncated.at(pos)),
+            Some(bytes) => bytes
+                .get(range)
+                .ok_or_else(|| ErrorKind::Overlength.at(pos)),
             None => Err(ErrorKind::Failed.at(pos)),
         }
     }
@@ -213,7 +215,7 @@ impl<'a> Encoder<'a> {
                 *b = byte;
                 Ok(())
             }
-            None => self.error(ErrorKind::Truncated),
+            None => self.error(ErrorKind::Overlength),
         }
     }
 
@@ -238,7 +240,7 @@ impl<'a> Encoder<'a> {
 
         buffer_len
             .checked_sub(self.position.try_into()?)
-            .ok_or_else(|| ErrorKind::Truncated.at(self.position))
+            .ok_or_else(|| ErrorKind::Overlength.at(self.position))
             .and_then(TryInto::try_into)
     }
 }

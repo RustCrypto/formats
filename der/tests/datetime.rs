@@ -7,11 +7,11 @@ proptest! {
     #[test]
     fn roundtrip_datetime(
         year in 1970u16..=9999,
-        month in 1u16..=12,
-        day in 1u16..=31,
-        hour in 0u16..=23,
-        min in 0u16..=59,
-        sec in 0u16..=59,
+        month in 1u8..=12,
+        day in 1u8..=31,
+        hour in 0u8..=23,
+        min in 0u8..=59,
+        sec in 0u8..=59,
     ) {
         let datetime1 = make_datetime(year, month, day, hour, min, sec);
         let datetime2 = DateTime::from_unix_duration(datetime1.unix_duration()).unwrap();
@@ -21,11 +21,11 @@ proptest! {
     #[test]
     fn roundtrip_utctime(
         year in 1970u16..=2049,
-        month in 1u16..=12,
-        day in 1u16..=31,
-        hour in 0u16..=23,
-        min in 0u16..=59,
-        sec in 0u16..=59,
+        month in 1u8..=12,
+        day in 1u8..=31,
+        hour in 0u8..=23,
+        min in 0u8..=59,
+        sec in 0u8..=59,
     ) {
         let datetime = make_datetime(year, month, day, hour, min, sec);
         let utc_time1 = UtcTime::try_from(datetime).unwrap();
@@ -40,7 +40,7 @@ proptest! {
     }
 }
 
-fn make_datetime(year: u16, month: u16, day: u16, hour: u16, min: u16, sec: u16) -> DateTime {
+fn make_datetime(year: u16, month: u8, day: u8, hour: u8, min: u8, sec: u8) -> DateTime {
     let max_day = if month == 2 {
         let is_leap_year = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 
