@@ -524,6 +524,8 @@ name = "pkcs7"
 version = "0.0.1-pre"
 dependencies = [
  "der",
+ "hex-literal",
+ "spki",
 ]
 
 [[package]]

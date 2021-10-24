@@ -1,15 +1,33 @@
-use crate::{ContentType, DataContent};
+use crate::{data_content::DataContent, encrypted_data_content::EncryptedDataContent, ContentType};
 
 use der::{
-    asn1::ContextSpecific, Decodable, Decoder, Encodable, ErrorKind, Sequence, TagMode, TagNumber,
+    asn1::{ContextSpecific, OctetString},
+    Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
 };
 
 const CONTENT_TAG: TagNumber = TagNumber::new(0);
 
-/// Content exchanged between entities
+/// Content exchanged between entities [RFC 2315 § 7](https://datatracker.ietf.org/doc/html/rfc2315#section-7)
+///
+/// ```text
+/// ContentInfo ::= SEQUENCE {
+///   contentType ContentType,
+///   content
+///     [0] EXPLICIT ANY DEFINED BY contentType OPTIONAL }
+/// ```
 pub enum ContentInfo<'a> {
-    /// Content type `data`
+    /// Content type `data` [RFC 2315 § 8](https://datatracker.ietf.org/doc/html/rfc2315#section-8)
     Data(Option<DataContent<'a>>),
+
+    /// Content type `encrypted-data` [RFC 2315 § 13](https://datatracker.ietf.org/doc/html/rfc2315#section-13)
+    EncryptedData(Option<EncryptedDataContent<'a>>),
+
+    /// Catch-all case for content types that are not explicitly supported
+    ///   - signed-data
+    ///   - enveloped-data
+    ///   - signed-and-enveloped-data
+    ///   - digested-data
+    Other((ContentType, Option<OctetString<'a>>)),
 }
 
 impl<'a> ContentInfo<'a> {
@@ -17,6 +35,8 @@ impl<'a> ContentInfo<'a> {
     pub fn content_type(&self) -> ContentType {
         match self {
             Self::Data(_) => ContentType::Data,
+            Self::EncryptedData(_) => ContentType::EncryptedData,
+            Self::Other((content_type, _)) => *content_type,
         }
     }
 }
@@ -25,6 +45,23 @@ impl<'a> ContentInfo<'a> {
     /// new ContentInfo of `data` content type
     pub fn new_data(content: &'a [u8]) -> Self {
         ContentInfo::Data(Some(content.into()))
+    }
+
+    /// new ContentInfo of given content type with empty content
+    pub fn new_empty(content_type: ContentType) -> Self {
+        match content_type {
+            ContentType::Data => ContentInfo::Data(None),
+            ContentType::EncryptedData => ContentInfo::EncryptedData(None),
+            _ => ContentInfo::Other((content_type, None)),
+        }
+    }
+
+    /// new Content info of given content type with given raw content
+    pub fn new_raw(content_type: ContentType, content: &'a [u8]) -> der::Result<Self> {
+        Ok(ContentInfo::Other((
+            content_type,
+            Some(OctetString::new(content)?),
+        )))
     }
 }
 
@@ -36,10 +73,14 @@ impl<'a> Decodable<'a> for ContentInfo<'a> {
                 ContentType::Data => Ok(ContentInfo::Data(
                     decoder.context_specific::<DataContent<'_>>(CONTENT_TAG, TagMode::Explicit)?,
                 )),
-                _ => {
-                    // TODO: support remaining content types
-                    Err(decoder.error(ErrorKind::Failed))
-                }
+                ContentType::EncryptedData => Ok(ContentInfo::EncryptedData(
+                    ContextSpecific::decode_explicit(decoder, CONTENT_TAG)?
+                        .map(|field| field.value),
+                )),
+                _ => Ok(ContentInfo::Other((
+                    content_type,
+                    decoder.context_specific::<OctetString<'_>>(CONTENT_TAG, TagMode::Explicit)?,
+                ))),
             }
         })
     }
@@ -54,6 +95,22 @@ impl<'a> Sequence<'a> for ContentInfo<'a> {
             Self::Data(data) => f(&[
                 &self.content_type(),
                 &data.as_ref().map(|d| ContextSpecific {
+                    tag_number: CONTENT_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value: *d,
+                }),
+            ]),
+            Self::EncryptedData(data) => f(&[
+                &self.content_type(),
+                &data.as_ref().map(|d| ContextSpecific {
+                    tag_number: CONTENT_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value: *d,
+                }),
+            ]),
+            Self::Other((content_type, opt_oct_str)) => f(&[
+                content_type,
+                &opt_oct_str.as_ref().map(|d| ContextSpecific {
                     tag_number: CONTENT_TAG,
                     tag_mode: TagMode::Explicit,
                     value: *d,
@@ -82,6 +139,30 @@ mod tests {
         let info = ContentInfo::from_der(encoded_der)?;
         match info {
             ContentInfo::Data(None) => (),
+            _ => panic!("unexpected case"),
+        }
+
+        let mut out_buf = [0u8; 32];
+        let encoded_der2 = info.encode_to_slice(&mut out_buf)?;
+
+        assert_eq!(encoded_der, encoded_der2);
+
+        Ok(())
+    }
+
+    #[test]
+    fn empty_encrypted_data() -> der::Result<()> {
+        let mut in_buf = [0u8; 32];
+
+        let mut encoder = Encoder::new(&mut in_buf);
+        encoder.sequence(crate::PKCS_7_ENCRYPTED_DATA_OID.encoded_len()?, |encoder| {
+            encoder.oid(crate::PKCS_7_ENCRYPTED_DATA_OID)
+        })?;
+        let encoded_der = encoder.finish().expect("encoding success");
+
+        let info = ContentInfo::from_der(encoded_der)?;
+        match info {
+            ContentInfo::EncryptedData(None) => (),
             _ => panic!("unexpected case"),
         }
 

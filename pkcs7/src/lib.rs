@@ -13,9 +13,12 @@
 
 mod content_info;
 mod content_type;
-mod data_content;
 
-pub use crate::{content_info::ContentInfo, content_type::ContentType, data_content::DataContent};
+pub use crate::{content_info::ContentInfo, content_type::ContentType};
+
+pub mod data_content;
+pub mod encrypted_data_content;
+pub mod enveloped_data_content;
 
 use der::asn1::ObjectIdentifier;
 
