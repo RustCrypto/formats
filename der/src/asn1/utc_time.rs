@@ -90,7 +90,11 @@ impl DecodeValue<'_> for UtcTime {
                 let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
 
                 // RFC 5280 rules for interpreting the year
-                let year = if year >= 50 { year + 1900 } else { year + 2000 };
+                let year = if year >= 50 {
+                    year as u16 + 1900
+                } else {
+                    year as u16 + 2000
+                };
 
                 DateTime::new(year, month, day, hour, minute, second)
                     .map_err(|_| Self::TAG.value_error())
@@ -111,7 +115,7 @@ impl EncodeValue for UtcTime {
             y @ 1950..=1999 => y - 1900,
             y @ 2000..=2049 => y - 2000,
             _ => return Err(Self::TAG.value_error()),
-        };
+        } as u8;
 
         datetime::encode_decimal(encoder, Self::TAG, year)?;
         datetime::encode_decimal(encoder, Self::TAG, self.0.month())?;

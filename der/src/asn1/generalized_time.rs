@@ -76,8 +76,8 @@ impl DecodeValue<'_> for GeneralizedTime {
         match *ByteSlice::decode_value(decoder, length)?.as_bytes() {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
-                let year = datetime::decode_decimal(Self::TAG, y1, y2)? * 100
-                    + datetime::decode_decimal(Self::TAG, y3, y4)?;
+                let year = datetime::decode_decimal(Self::TAG, y1, y2)? as u16 * 100
+                    + datetime::decode_decimal(Self::TAG, y3, y4)? as u16;
                 let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
                 let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
                 let hour = datetime::decode_decimal(Self::TAG, hour1, hour2)?;
@@ -99,8 +99,8 @@ impl EncodeValue for GeneralizedTime {
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        let year_hi = self.0.year() / 100;
-        let year_lo = self.0.year() % 100;
+        let year_hi = (self.0.year() / 100) as u8;
+        let year_lo = (self.0.year() % 100) as u8;
 
         datetime::encode_decimal(encoder, Self::TAG, year_hi)?;
         datetime::encode_decimal(encoder, Self::TAG, year_lo)?;

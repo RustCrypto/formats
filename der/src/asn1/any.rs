@@ -54,7 +54,7 @@ impl<'a> Any<'a> {
         T: DecodeValue<'a> + Tagged,
     {
         self.tag.assert_eq(T::TAG)?;
-        let mut decoder = Decoder::new(self.value());
+        let mut decoder = Decoder::new(self.value())?;
         let result = T::decode_value(&mut decoder, self.value.len())?;
         decoder.finish(result)
     }
@@ -123,7 +123,7 @@ impl<'a> Any<'a> {
         F: FnOnce(&mut Decoder<'a>) -> Result<T>,
     {
         self.tag.assert_eq(Tag::Sequence)?;
-        let mut seq_decoder = Decoder::new(self.value.as_bytes());
+        let mut seq_decoder = Decoder::new(self.value.as_bytes())?;
         let result = f(&mut seq_decoder)?;
         seq_decoder.finish(result)
     }

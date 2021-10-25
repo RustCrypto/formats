@@ -33,6 +33,11 @@ impl Error {
         }
     }
 
+    /// If the error's `kind` is an [`ErrorKind::Incomplete`], return the `expected_len`.
+    pub fn incomplete(self) -> Option<usize> {
+        self.kind().incomplete()
+    }
+
     /// Get the [`ErrorKind`] which occurred.
     pub fn kind(self) -> ErrorKind {
         self.kind
@@ -45,7 +50,7 @@ impl Error {
 
     /// For errors occurring inside of a nested message, extend the position
     /// count by the location where the nested message occurs.
-    pub fn nested(self, nested_position: Length) -> Self {
+    pub(crate) fn nested(self, nested_position: Length) -> Self {
         // TODO(tarcieri): better handle length overflows occurring in this calculation?
         let position = (nested_position + self.position.unwrap_or_default()).ok();
 
@@ -55,6 +60,9 @@ impl Error {
         }
     }
 }
+
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -95,7 +103,7 @@ impl From<Utf8Error> for Error {
 #[cfg(feature = "oid")]
 impl From<const_oid::Error> for Error {
     fn from(_: const_oid::Error) -> Error {
-        ErrorKind::MalformedOid.into()
+        ErrorKind::OidMalformed.into()
     }
 }
 
@@ -124,10 +132,6 @@ impl From<time::error::ComponentRange> for Error {
         ErrorKind::DateTime.into()
     }
 }
-
-#[cfg(feature = "std")]
-impl std::error::Error for ErrorKind {}
-
 /// Error type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
@@ -153,6 +157,21 @@ pub enum ErrorKind {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     FileNotFound,
 
+    /// Message is incomplete and does not contain all of the expected data.
+    Incomplete {
+        /// Expected message length.
+        ///
+        /// Note that this length represents a *minimum* lower bound on how
+        /// much additional data is needed to continue parsing the message.
+        ///
+        /// It's possible upon subsequent message parsing that the parser will
+        /// discover even more data is needed.
+        expected_len: Length,
+
+        /// Actual length of the message buffer currently being processed.
+        actual_len: Length,
+    },
+
     /// I/O errors.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
@@ -170,8 +189,23 @@ pub enum ErrorKind {
         tag: Tag,
     },
 
-    /// Malformed OID
-    MalformedOid,
+    /// OID is improperly encoded.
+    OidMalformed,
+
+    /// Unknown OID.
+    ///
+    /// This error is intended to be used by libraries which parse DER-based
+    /// formats which encounter unknown or unsupported OID libraries.
+    ///
+    /// It enables passing back the OID value to the caller, which allows them
+    /// to determine which OID(s) are causing the error (and then potentially
+    /// contribute upstream support for algorithms they care about).
+    #[cfg(feature = "oid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
+    OidUnknown {
+        /// OID value that was unrecognized by a parser for a DER-based format.
+        oid: ObjectIdentifier,
+    },
 
     /// Ordering error
     Ordering,
@@ -201,9 +235,6 @@ pub enum ErrorKind {
         remaining: Length,
     },
 
-    /// Unexpected end-of-message/nested field when decoding.
-    Truncated,
-
     /// Encoded message is shorter than the expected length.
     ///
     /// (i.e. an `Encodable` impl on a particular type has a buggy `encoded_len`)
@@ -225,21 +256,6 @@ pub enum ErrorKind {
 
         /// Actual tag encountered in the message.
         actual: Tag,
-    },
-
-    /// Unknown OID.
-    ///
-    /// This error is intended to be used by libraries which parse DER-based
-    /// formats which encounter unknown or unsupported OID libraries.
-    ///
-    /// It enables passing back the OID value to the caller, which allows them
-    /// to determine which OID(s) are causing the error (and then potentially
-    /// contribute upstream support for algorithms they care about).
-    #[cfg(feature = "oid")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
-    UnknownOid {
-        /// OID value that was unrecognized by a parser for a DER-based format.
-        oid: ObjectIdentifier,
     },
 
     /// Unknown/unsupported tag.
@@ -267,6 +283,14 @@ impl ErrorKind {
     pub fn at(self, position: Length) -> Error {
         Error::new(self, position)
     }
+
+    /// If this is an [`ErrorKind::Incomplete`], return the `expected_len`.
+    pub fn incomplete(self) -> Option<usize> {
+        match self {
+            ErrorKind::Incomplete { expected_len, .. } => usize::try_from(expected_len).ok(),
+            _ => None,
+        }
+    }
 }
 
 impl fmt::Display for ErrorKind {
@@ -277,16 +301,28 @@ impl fmt::Display for ErrorKind {
             ErrorKind::Failed => write!(f, "operation failed"),
             #[cfg(feature = "std")]
             ErrorKind::FileNotFound => f.write_str("file not found"),
+            ErrorKind::Incomplete {
+                expected_len,
+                actual_len,
+            } => write!(
+                f,
+                "ASN.1 DER message is incomplete: expected {}, actual {}",
+                expected_len, actual_len
+            ),
             #[cfg(feature = "std")]
             ErrorKind::Io(err) => write!(f, "I/O error: {:?}", err),
             ErrorKind::Length { tag } => write!(f, "incorrect length for {}", tag),
             ErrorKind::Noncanonical { tag } => {
                 write!(f, "ASN.1 {} not canonically encoded as DER", tag)
             }
-            ErrorKind::MalformedOid => write!(f, "malformed OID"),
+            ErrorKind::OidMalformed => write!(f, "malformed OID"),
+            #[cfg(feature = "oid")]
+            ErrorKind::OidUnknown { oid } => {
+                write!(f, "unknown/unsupported OID: {}", oid)
+            }
             ErrorKind::Ordering => write!(f, "ordering error"),
             ErrorKind::Overflow => write!(f, "integer overflow"),
-            ErrorKind::Overlength => write!(f, "DER message is too long"),
+            ErrorKind::Overlength => write!(f, "ASN.1 DER message is too long"),
             #[cfg(feature = "pem")]
             ErrorKind::Pem(e) => write!(f, "PEM error: {}", e),
             #[cfg(feature = "std")]
@@ -298,7 +334,6 @@ impl fmt::Display for ErrorKind {
                     decoded, remaining
                 )
             }
-            ErrorKind::Truncated => write!(f, "DER message is truncated"),
             ErrorKind::Underlength { expected, actual } => write!(
                 f,
                 "DER message too short: expected {}, got {}",
@@ -312,10 +347,6 @@ impl fmt::Display for ErrorKind {
                 }
 
                 write!(f, "got {}", actual)
-            }
-            #[cfg(feature = "oid")]
-            ErrorKind::UnknownOid { oid } => {
-                write!(f, "unknown/unsupported OID: {}", oid)
             }
             ErrorKind::UnknownTag { byte } => {
                 write!(f, "unknown/unsupported ASN.1 DER tag: 0x{:02x}", byte)

@@ -1,9 +1,9 @@
 //! SPKI public key document.
 
-use crate::{DecodePublicKey, EncodePublicKey, SubjectPublicKeyInfo};
+use crate::{DecodePublicKey, EncodePublicKey, Error, Result, SubjectPublicKeyInfo};
 use alloc::vec::Vec;
 use core::fmt;
-use der::{Document, Error, Result};
+use der::{Decodable, Document};
 
 #[cfg(feature = "std")]
 use std::path::Path;
@@ -31,29 +31,29 @@ impl<'a> Document<'a> for PublicKeyDocument {
 
 impl DecodePublicKey for PublicKeyDocument {
     fn from_spki(spki: SubjectPublicKeyInfo<'_>) -> Result<Self> {
-        Self::from_msg(&spki)
+        Ok(Self::from_msg(&spki)?)
     }
 
     fn from_public_key_der(bytes: &[u8]) -> Result<Self> {
-        Self::from_der(bytes)
+        Ok(Self::from_der(bytes)?)
     }
 
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_public_key_pem(s: &str) -> Result<Self> {
-        Self::from_pem(s)
+        Ok(Self::from_pem(s)?)
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_public_key_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        Self::read_der_file(path)
+        Ok(Self::read_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     fn read_public_key_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        Self::read_pem_file(path)
+        Ok(Self::read_pem_file(path)?)
     }
 }
 
@@ -65,13 +65,13 @@ impl EncodePublicKey for PublicKeyDocument {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_public_key_pem(&self, line_ending: LineEnding) -> Result<String> {
-        self.to_pem(line_ending)
+        Ok(self.to_pem(line_ending)?)
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_public_key_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        self.write_der_file(path)
+        Ok(self.write_der_file(path)?)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
@@ -81,7 +81,7 @@ impl EncodePublicKey for PublicKeyDocument {
         path: impl AsRef<Path>,
         line_ending: LineEnding,
     ) -> Result<()> {
-        self.write_pem_file(path, line_ending)
+        Ok(self.write_pem_file(path, line_ending)?)
     }
 }
 
@@ -95,7 +95,7 @@ impl TryFrom<&[u8]> for PublicKeyDocument {
     type Error = Error;
 
     fn try_from(bytes: &[u8]) -> Result<Self> {
-        Self::from_der(bytes)
+        Ok(Self::from_der(bytes)?)
     }
 }
 
@@ -116,11 +116,11 @@ impl TryFrom<&SubjectPublicKeyInfo<'_>> for PublicKeyDocument {
 }
 
 impl TryFrom<Vec<u8>> for PublicKeyDocument {
-    type Error = Error;
+    type Error = der::Error;
 
-    fn try_from(bytes: Vec<u8>) -> Result<Self> {
+    fn try_from(bytes: Vec<u8>) -> der::Result<Self> {
         // Ensure document is well-formed
-        SubjectPublicKeyInfo::try_from(bytes.as_slice())?;
+        SubjectPublicKeyInfo::from_der(bytes.as_slice())?;
         Ok(Self(bytes))
     }
 }
