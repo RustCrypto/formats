@@ -1,7 +1,7 @@
 //! Support for deriving the `Sequence` trait on structs for the purposes of
 //! decoding/encoding ASN.1 `SEQUENCE` types as mapped to struct fields.
 
-use crate::{Asn1Attrs, Asn1Type};
+use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{DataStruct, Field, Ident, Lifetime};
@@ -9,6 +9,9 @@ use synstructure::Structure;
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
+    /// `asn1` attributes defined at the type level.
+    type_attrs: TypeAttrs,
+
     /// Field decoders
     decode_fields: TokenStream,
 
@@ -22,6 +25,7 @@ pub(crate) struct DeriveSequence {
 impl DeriveSequence {
     pub fn derive(s: Structure<'_>, data: &DataStruct, lifetime: Option<&Lifetime>) -> TokenStream {
         let mut state = Self {
+            type_attrs: TypeAttrs::parse(&s.ast().attrs),
             decode_fields: TokenStream::new(),
             decode_result: TokenStream::new(),
             encode_fields: TokenStream::new(),
@@ -42,46 +46,40 @@ impl DeriveSequence {
             .cloned()
             .expect("no name on struct field i.e. tuple structs unsupported");
 
-        let asn1_type = Asn1Attrs::new(&field.attrs).asn1_type;
-        self.derive_field_decoder(&name, asn1_type);
-        self.derive_field_encoder(&name, asn1_type);
+        let field_attrs = FieldAttrs::parse(&field.attrs);
+        self.derive_field_decoder(&name, &field_attrs);
+        self.derive_field_encoder(&name, &field_attrs);
     }
 
     /// Derive code for decoding a field of a sequence
-    fn derive_field_decoder(&mut self, name: &Ident, asn1_type: Option<Asn1Type>) {
-        let field_decoder = match asn1_type {
-            Some(Asn1Type::BitString) => quote! {
-                let #name = decoder.bit_string()?.try_into()?;
-            },
-            Some(Asn1Type::GeneralizedTime) => quote! {
-                let #name = decoder.generalized_time()?.try_into()?;
-            },
-            Some(Asn1Type::OctetString) => quote! {
-                let #name = decoder.octet_string()?.try_into()?;
-            },
-            Some(Asn1Type::PrintableString) => quote! {
-                let #name = decoder.printable_string()?.try_into()?;
-            },
-            Some(Asn1Type::UtcTime) => quote! {
-                let #name = decoder.utc_time()?.try_into()?;
-            },
-            Some(Asn1Type::Utf8String) => quote! {
-                let #name = decoder.utf8_string()?.try_into()?;
-            },
-            None => quote! { let #name = decoder.decode()?; },
+    fn derive_field_decoder(&mut self, name: &Ident, field_attrs: &FieldAttrs) {
+        let field_binding = if field_attrs.asn1_type.is_some() {
+            let field_decoder = field_attrs.decoder(&self.type_attrs);
+            quote! { let #name = #field_decoder?.try_into()?; }
+        } else {
+            // TODO(tarcieri): IMPLICIT support
+            if self.type_attrs.tag_mode == TagMode::Implicit {
+                panic!(
+                    "IMPLICIT tagging not presently supported in this context: {}",
+                    name
+                );
+            }
+
+            quote! { let #name = decoder.decode()?; }
         };
-        field_decoder.to_tokens(&mut self.decode_fields);
+        field_binding.to_tokens(&mut self.decode_fields);
 
         let field_result = quote!(#name,);
         field_result.to_tokens(&mut self.decode_result);
     }
 
     /// Derive code for encoding a field of a sequence
-    fn derive_field_encoder(&mut self, name: &Ident, asn1_type: Option<Asn1Type>) {
+    fn derive_field_encoder(&mut self, name: &Ident, field_attrs: &FieldAttrs) {
         let binding = quote!(&self.#name);
-        asn1_type
+        field_attrs
+            .asn1_type
             .map(|ty| {
-                let encoder = ty.encoder(binding.clone());
+                let encoder = ty.encoder(&binding);
                 quote!(&#encoder?,)
             })
             .unwrap_or_else(|| quote!(#binding,))
