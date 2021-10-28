@@ -25,13 +25,40 @@
 //! code size. At least for now, the `der` crate is optimizing for leveraging
 //! as many abstractions as it can to minimize code size.
 //!
-//! # `#[asn1(type = "...")]` attribute
+//! # Toplevel attributes
+//!
+//! The following attributes can be added to an `enum` or `struct` when
+//! deriving either [`Choice`] or [`Sequence`] respectively:
+//!
+//! ## `#[asn1(tag_mode = "...")` attribute: `EXPLICIT` vs `IMPLICIT`
+//!
+//! This attribute can be used to declare the tagging mode used by a particular
+//! ASN.1 module.
+//!
+//! It's used when parsing `CONTEXT-SENSITIVE` fields.
+//!
+//! The default is `EXPLICIT`, so the attribute only needs to be added when
+//! a particular module is declared `IMPLICIT`.
+//!
+//! # Field-level attributes
+//!
+//! The following attributes can be added to either the fields of a particular
+//! `struct` or the variants of a particular `enum`:
+//!
+//! ## `#[asn1(context_specific = "...")]` attribute: `CONTEXT-SPECIFIC` support
+//!
+//! This attribute can be added to associate a particular `CONTEXT-SPECIFIC`
+//! tag number with a given enum variant or struct field.
+//!
+//! The value must be quoted and contain a number, e.g. `#[asn1(context_specific = "42"]`.
+//!
+//! ## `#[asn1(type = "...")]` attribute: ASN.1 type declaration
 //!
 //! This attribute can be used to specify the ASN.1 type for a particular
-//! enum variant or struct field.
+//! `enum` variant or `struct` field.
 //!
-//! It's presently mandatory for all enum variants, even when using one of the
-//! ASN.1 types defined by this crate.
+//! It's presently mandatory for all `enum` variants, even when using one of
+//! the ASN.1 types defined by this crate.
 //!
 //! For structs, placing this attribute on a field makes it possible to
 //! decode/encode types which don't directly implement the `Decode`/`Encode`
@@ -39,6 +66,7 @@
 //! listed below (use the ASN.1 type keywords as the `type`):
 //!
 //! - `BIT STRING`: performs an intermediate conversion to [`der::asn1::BitString`]
+//! - `IA5String`: performs an intermediate conversion to [`der::asn1::IA5String`]
 //! - `GeneralizedTime`: performs an intermediate conversion to [`der::asn1::GeneralizedTime`]
 //! - `OCTET STRING`: performs an intermediate conversion to [`der::asn1::OctetString`]
 //! - `PrintableString`: performs an intermediate conversion to [`der::asn1::PrintableString`]
@@ -49,7 +77,10 @@
 //! for additional ASN.1 types.
 //!
 //! [`der`]: https://docs.rs/der/
+//! [`Choice`]: derive@Choice
+//! [`Sequence`]: derive@Sequence
 //! [`der::asn1::BitString`]: https://docs.rs/der/latest/der/asn1/struct.BitString.html
+//! [`der::asn1::Ia5String`]: https://docs.rs/der/latest/der/asn1/struct.Ia5String.html
 //! [`der::asn1::GeneralizedTime`]: https://docs.rs/der/latest/der/asn1/struct.GeneralizedTime.html
 //! [`der::asn1::OctetString`]: https://docs.rs/der/latest/der/asn1/struct.OctetString.html
 //! [`der::asn1::PrintableString`]: https://docs.rs/der/latest/der/asn1/struct.PrintableString.html
@@ -62,16 +93,24 @@
 mod attributes;
 mod choice;
 mod sequence;
+mod tag;
 mod tbs;
 mod types;
 
 use crate::{
-    attributes::Asn1Attrs, choice::DeriveChoice, sequence::DeriveSequence, tbs::DeriveTBS,
+    attributes::{FieldAttrs, TypeAttrs},
+    choice::DeriveChoice,
+    sequence::DeriveSequence,
+    tag::TagMode,
+    tbs::DeriveTBS,
     types::Asn1Type,
 };
 use proc_macro2::TokenStream;
 use syn::{Generics, Lifetime};
 use synstructure::{decl_derive, Structure};
+
+/// Tag number.
+pub(crate) type TagNumber = u8;
 
 decl_derive!(
     [Choice, attributes(asn1)] =>

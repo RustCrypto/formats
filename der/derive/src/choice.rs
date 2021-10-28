@@ -2,7 +2,7 @@
 //! the purposes of decoding/encoding ASN.1 `CHOICE` types as mapped to
 //! enum variants.
 
-use crate::{Asn1Attrs, Asn1Type};
+use crate::{Asn1Type, FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{DataEnum, Fields, FieldsUnnamed, Ident, Lifetime, Type, Variant};
@@ -13,6 +13,9 @@ type Alternatives = std::collections::BTreeMap<Asn1Type, Alternative>;
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
+    /// `asn1` attributes defined at the type level.
+    type_attrs: TypeAttrs,
+
     /// `CHOICE` alternatives for this enum.
     alternatives: Alternatives,
 
@@ -39,6 +42,7 @@ impl DeriveChoice {
         );
 
         let mut state = Self {
+            type_attrs: TypeAttrs::parse(&s.ast().attrs),
             alternatives: Default::default(),
             choice_body: TokenStream::new(),
             decode_body: TokenStream::new(),
@@ -47,21 +51,23 @@ impl DeriveChoice {
         };
 
         for (variant_info, variant) in s.variants().iter().zip(&data.variants) {
-            let asn1_type = Asn1Attrs::new(&variant.attrs).asn1_type.unwrap_or_else(|| {
+            let field_attrs = FieldAttrs::parse(&variant.attrs);
+            let asn1_type = field_attrs.asn1_type.unwrap_or_else(|| {
                 panic!(
                     "no #[asn1(type=...)] specified for enum variant: {}",
                     variant.ident
                 )
             });
+            let tag = asn1_type.tag();
 
             Alternative::register(&mut state.alternatives, asn1_type, variant);
-            state.derive_variant_choice(asn1_type);
-            state.derive_variant_decoder(asn1_type);
+            state.derive_variant_choice(&tag);
+            state.derive_variant_decoder(&tag, &field_attrs);
 
             match variant_info.bindings().len() {
                 // TODO(tarcieri): handle 0 bindings for ASN.1 NULL
                 1 => {
-                    state.derive_variant_encoder(variant_info, asn1_type);
+                    state.derive_variant_encoder(variant_info, &field_attrs);
                     state.derive_variant_encoded_len(variant_info);
                 }
                 other => panic!(
@@ -75,11 +81,9 @@ impl DeriveChoice {
     }
 
     /// Derive the body of `Choice::can_decode
-    fn derive_variant_choice(&mut self, asn1_type: Asn1Type) {
-        let tag = asn1_type.tag();
-
+    fn derive_variant_choice(&mut self, tag: &TokenStream) {
         if self.choice_body.is_empty() {
-            tag
+            tag.clone()
         } else {
             quote!(| #tag)
         }
@@ -87,23 +91,13 @@ impl DeriveChoice {
     }
 
     /// Derive a match arm of the impl body for `TryFrom<der::asn1::Any<'_>>`.
-    fn derive_variant_decoder(&mut self, asn1_type: Asn1Type) {
-        let tag = asn1_type.tag();
-
-        let decoder = match asn1_type {
-            Asn1Type::BitString => quote!(decoder.bit_string()),
-            Asn1Type::GeneralizedTime => quote!(decoder.generalized_time()),
-            Asn1Type::OctetString => quote!(decoder.octet_string()),
-            Asn1Type::PrintableString => quote!(decoder.printable_string()),
-            Asn1Type::UtcTime => quote!(decoder.utc_time()),
-            Asn1Type::Utf8String => quote!(decoder.utf8_string()),
-        };
-
+    fn derive_variant_decoder(&mut self, tag: &TokenStream, field_attrs: &FieldAttrs) {
+        let decoder = field_attrs.decoder(&self.type_attrs);
         { quote!(#tag => Ok(#decoder?.try_into()?),) }.to_tokens(&mut self.decode_body);
     }
 
     /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn derive_variant_encoder(&mut self, variant: &VariantInfo<'_>, asn1_type: Asn1Type) {
+    fn derive_variant_encoder(&mut self, variant: &VariantInfo<'_>, field_attrs: &FieldAttrs) {
         assert_eq!(
             variant.bindings().len(),
             1,
@@ -113,7 +107,7 @@ impl DeriveChoice {
         variant
             .each(|bi| {
                 let binding = &bi.binding;
-                let encoder_obj = asn1_type.encoder(quote!(#binding));
+                let encoder_obj = field_attrs.encoder(&quote!(#binding), &self.type_attrs);
                 quote!(#encoder_obj?.encode(encoder))
             })
             .to_tokens(&mut self.encode_body);
