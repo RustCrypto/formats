@@ -120,19 +120,15 @@ pub struct ReasonFlagsValues {
 /// enum values representing the KeyUsage values that were set in the BitString
 pub fn get_reason_flags_values(ku: &BitString<'_>) -> ReasonFlagsValues {
     let b = ku.raw_bytes();
-    let unused = if 0x80 == 0x80 & b[0] { true } else { false };
-    let key_compromise = if 0x40 == 0x40 & b[0] { true } else { false };
-    let ca_compromise = if 0x20 == 0x20 & b[0] { true } else { false };
-    let affiliation_changed = if 0x10 == 0x10 & b[0] { true } else { false };
-    let superseded = if 0x08 == 0x08 & b[0] { true } else { false };
-    let cessation_of_operation = if 0x04 == 0x04 & b[0] { true } else { false };
-    let certificate_hold = if 0x02 == 0x02 & b[0] { true } else { false };
-    let remove_from_crl = if 0x01 == 0x01 & b[0] { true } else { false };
-    let aa_compromise = if 2 == b.len() && 0x80 == 0x80 & b[1] {
-        true
-    } else {
-        false
-    };
+    let unused = 0x80 == 0x80 & b[0];
+    let key_compromise = 0x40 == 0x40 & b[0];
+    let ca_compromise = 0x20 == 0x20 & b[0];
+    let affiliation_changed = 0x10 == 0x10 & b[0];
+    let superseded = 0x08 == 0x08 & b[0];
+    let cessation_of_operation = 0x04 == 0x04 & b[0];
+    let certificate_hold = 0x02 == 0x02 & b[0];
+    let remove_from_crl = 0x01 == 0x01 & b[0];
+    let aa_compromise = 2 == b.len() && 0x80 == 0x80 & b[1];
 
     let retval: ReasonFlagsValues = ReasonFlagsValues {
         unused,
