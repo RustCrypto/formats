@@ -16,7 +16,6 @@
 // extern crate alloc and use alloc::collections::BTreeSet as Set are not presently used since
 // change in definition of RelativeDistinguishedName
 // extern crate alloc;
-#[cfg(feature = "alloc")]
 extern crate alloc;
 
 #[cfg(feature = "std")]
@@ -24,21 +23,19 @@ extern crate std;
 
 mod attribute;
 mod certificate;
+mod crl;
 mod extensions;
+pub mod extensions_utils;
+mod pkix_oids;
 mod rdn;
 mod time;
 mod validity;
 
 pub use crate::{
     attribute::AttributeTypeAndValue, certificate::Certificate, certificate::DeferCertificate,
-    certificate::TBSCertificate, extensions::AuthorityKeyIdentifier, extensions::BasicConstraints,
-    extensions::CertificatePolicies, extensions::Extension, extensions::Extensions,
-    extensions::KeyUsage, extensions::SubjectKeyIdentifier, rdn::RDNSequence,
+    certificate::TBSCertificate, crl::CertificateList, crl::CrlEntries, crl::CrlEntry,
+    crl::DeferCertificateList, crl::TBSCertList, extensions::*, pkix_oids::*, rdn::Name,
     rdn::RelativeDistinguishedName, time::Time, validity::Validity,
 };
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
-
-pub mod extensions_utils;
-
-//use alloc::collections::BTreeSet as Set;

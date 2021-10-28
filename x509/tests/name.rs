@@ -2,7 +2,7 @@
 //use der::asn1::{SetOf, SequenceOfIter, SequenceOf};
 use der::{Decodable, Tag}; //, Encodable};
 use hex_literal::hex;
-use x509::{RDNSequence, RelativeDistinguishedName}; //, AttributeTypeAndValue;
+use x509::{Name, RelativeDistinguishedName}; //, AttributeTypeAndValue;
 
 #[test]
 fn decode_name() {
@@ -27,7 +27,7 @@ fn decode_name() {
     //        :         }
     //        :       }
     let rdn1 =
-        RDNSequence::from_der(&hex!("3040310B3009060355040613025553311F301D060355040A1316546573742043657274696669636174657320323031313110300E06035504031307476F6F64204341")[..]);
+        Name::from_der(&hex!("3040310B3009060355040613025553311F301D060355040A1316546573742043657274696669636174657320323031313110300E06035504031307476F6F64204341")[..]);
     let rdn1a = rdn1.unwrap();
 
     let mut counter = 0;

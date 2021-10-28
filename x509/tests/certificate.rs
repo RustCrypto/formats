@@ -1,11 +1,13 @@
 //! Certificate tests
-use der::asn1::UIntBytes;
+use der::asn1::{UIntBytes, Utf8String};
 use der::{Decodable, Tag};
 use hex_literal::hex;
 #[cfg(feature = "alloc")]
 use x509::KeyUsage;
+use x509::*;
 use x509::{
-    BasicConstraints, Certificate, CertificatePolicies, DeferCertificate, SubjectKeyIdentifier,
+    BasicConstraints, Certificate, CertificatePolicies, DeferCertificate, GeneralName, OtherName,
+    SubjectKeyIdentifier,
 };
 
 ///   TBSCertificate  ::=  SEQUENCE  {
@@ -32,6 +34,66 @@ use x509::{
 
 #[test]
 fn decode_cert() {
+    let o2parse = ObjectIdentifier::from_der(&hex!("0603550406")).unwrap();
+    let o2str = o2parse.to_string();
+    assert_eq!("2.5.4.6", o2str);
+
+    let o1parse = ObjectIdentifier::from_der(&hex!(
+        "06252B060104018237150885C8B86B87AFF00383A99F3C96C34081ADE6494D82B0E91D85B2873D"
+    ))
+    .unwrap();
+    let o1str = o1parse.to_string();
+    assert_eq!(
+        o1str,
+        "1.3.6.1.4.1.311.21.8.11672683.15464451.6967228.369088.2847561.77.4994205.11305917"
+    );
+    let o1 = ObjectIdentifier::new(
+        "1.3.6.1.4.1.311.21.8.11672683.15464451.6967228.369088.2847561.77.4994205.11305917",
+    );
+    assert_eq!(
+        o1.to_string(),
+        "1.3.6.1.4.1.311.21.8.11672683.15464451.6967228.369088.2847561.77.4994205.11305917"
+    );
+
+    let dns_name = GeneralName::from_der(&hex!("820C616D617A6F6E2E636F2E756B")[..]).unwrap();
+    match dns_name {
+        GeneralName::DnsName(dns_name) => assert_eq!(dns_name.to_string(), "amazon.co.uk"),
+        _ => panic!("No good"),
+    }
+
+    let rfc822 = GeneralName::from_der(
+        &hex!("811B456D61696C5F38303837323037343440746D612E6F73642E6D696C")[..],
+    )
+    .unwrap();
+    match rfc822 {
+        GeneralName::Rfc822Name(rfc822) => {
+            assert_eq!(rfc822.to_string(), "Email_808720744@tma.osd.mil")
+        }
+        _ => panic!("No good"),
+    }
+
+    println!("{}", PKIX_AD_CA_ISSUERS);
+
+    let on = OtherName::from_der(
+        &hex!("3021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
+    )
+    .unwrap();
+
+    let onval = Utf8String::from_der(on.value.value()).unwrap();
+    assert_eq!(onval.to_string(), "Upn_214950130@mil");
+
+    let other_name = GeneralName::from_der(
+        &hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
+    )
+    .unwrap();
+    match other_name {
+        GeneralName::OtherName(other_name) => {
+            let onval = Utf8String::from_der(other_name.value.value()).unwrap();
+            assert_eq!(onval.to_string(), "Upn_214950130@mil");
+        }
+        _ => panic!("No good"),
+    }
+
     let der_encoded_cert = include_bytes!("examples/GoodCACert.crt");
     let result2 = DeferCertificate::from_der(der_encoded_cert);
     let cert2 = result2.unwrap();

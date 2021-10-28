@@ -1,13 +1,13 @@
 //! Certificate [`Certificate`] as defined in RFC 5280
 
-use crate::{Extensions, RDNSequence, Validity};
+use crate::{Extensions, Name, Validity};
 use der::asn1::{BitString, UIntBytes};
 use der::{Decodable, Decoder, Sequence, TagMode, TagNumber, TBS};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 // only support v3 certificates
 // Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
-const VERSION: u8 = 2;
+pub const X509_CERT_VERSION: u8 = 2;
 
 // Context specific tags for TBSCertificate
 const VERSION_TAG: TagNumber = TagNumber::new(0);
@@ -45,11 +45,11 @@ pub struct TBSCertificate<'a> {
     /// signature            AlgorithmIdentifier{SIGNATURE-ALGORITHM, {SignatureAlgorithms}},
     pub signature: AlgorithmIdentifier<'a>,
     /// issuer               Name,
-    pub issuer: RDNSequence<'a>,
+    pub issuer: Name<'a>,
     /// validity             Validity,
     pub validity: Validity,
     /// subject              Name,
-    pub subject: RDNSequence<'a>,
+    pub subject: Name<'a>,
     /// subjectPublicKeyInfo SubjectPublicKeyInfo,
     pub subject_public_key_info: SubjectPublicKeyInfo<'a>,
     /// issuerUniqueID  [1]  IMPLICIT UniqueIdentifier OPTIONAL,
@@ -65,15 +65,15 @@ impl<'a> Decodable<'a> for TBSCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
             let version = decoder.context_specific::<u8>(VERSION_TAG, TagMode::Explicit)?;
-            if version != Some(VERSION) {
+            if version != Some(X509_CERT_VERSION) {
                 return Err(der::Tag::Integer.value_error());
             }
 
             let serial_number = UIntBytes::decode(decoder)?;
             let signature = AlgorithmIdentifier::decode(decoder)?;
-            let issuer = RDNSequence::decode(decoder)?;
+            let issuer = Name::decode(decoder)?;
             let validity = Validity::decode(decoder)?;
-            let subject = RDNSequence::decode(decoder)?;
+            let subject = Name::decode(decoder)?;
             let subject_public_key_info = SubjectPublicKeyInfo::decode(decoder)?;
             let issuer_unique_id =
                 decoder.context_specific::<BitString<'_>>(ISSUER_UID_TAG, TagMode::Implicit)?;
