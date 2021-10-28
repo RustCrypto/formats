@@ -4,6 +4,7 @@
 
 use crate::Name;
 use crate::RelativeDistinguishedName;
+use alloc::prelude::v1::Box;
 use core::fmt;
 use der::asn1::{
     Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, ObjectIdentifier, OctetString,
@@ -574,7 +575,7 @@ pub enum DistributionPointName<'a> {
     FullName(GeneralNames<'a>),
 
     /// nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
-    NameRelativeToCRLIssuer(RelativeDistinguishedName<'a>),
+    NameRelativeToCRLIssuer(Box<RelativeDistinguishedName<'a>>),
 }
 
 const FULL_NAME_TAG: TagNumber = TagNumber::new(0);
@@ -596,7 +597,10 @@ impl<'a> DecodeValue<'a> for DistributionPointName<'a> {
                     NAME_RELATIVE_TO_ISSUER_TAG,
                     TagMode::Implicit,
                 )?;
-                Ok(DistributionPointName::NameRelativeToCRLIssuer(on.unwrap()))
+                //TODO review unwraps
+                Ok(DistributionPointName::NameRelativeToCRLIssuer(Box::new(
+                    on.unwrap(),
+                )))
             }
             _ => {
                 panic!("TODO");
