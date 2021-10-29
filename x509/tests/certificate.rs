@@ -220,10 +220,10 @@ fn decode_cert() {
 
             let mut cp_counter = 0;
             for cp in cps {
+                assert_eq!(ids[cp_counter], cp.policy_identifier.to_string());
                 if 18 == cp_counter {
                     assert!(cp.policy_qualifiers.is_some());
                     let pq = cp.policy_qualifiers.unwrap();
-                    assert_eq!(ids[cp_counter], cp.policy_identifier.to_string());
                     let mut counter_pq = 0;
                     for pqi in pq.iter() {
                         if 0 == counter_pq {
