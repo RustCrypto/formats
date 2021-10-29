@@ -1,10 +1,7 @@
 //! Utility functions and enums related to X.509 extensions
 
-use core::fmt;
-
-#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
-
+use core::fmt;
 use der::asn1::BitString;
 
 /// Enum representing values from the KeyUsage structure
@@ -46,7 +43,6 @@ impl fmt::Display for KeyUsageValues {
     }
 }
 
-#[cfg(feature = "alloc")]
 /// Takes a BitString that contains one or two bytes and returns a Vec containing
 /// enum values representing the KeyUsage values that were set in the BitString
 pub fn get_key_usage_values(ku: &BitString<'_>) -> Vec<KeyUsageValues> {

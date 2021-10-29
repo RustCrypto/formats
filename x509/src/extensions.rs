@@ -1,6 +1,7 @@
 //! Extensions [`Extensions`] as defined in RFC 5280
 
 //TODO refactor static sized SEQUENCE OF
+//TODO handle all DEFAULT FALSE fields to return Some(false) vs None
 
 use crate::Name;
 use crate::RelativeDistinguishedName;
@@ -223,15 +224,18 @@ pub struct UserNotice<'a> {
 }
 
 /// PolicyMappings ::= SEQUENCE SIZE (1..MAX) OF SEQUENCE {
-//      issuerDomainPolicy      CertPolicyId,
-//      subjectDomainPolicy     CertPolicyId }
+pub type PolicyMappings<'a> = alloc::vec::Vec<PolicyMapping>;
+
+/// PolicyMappings ::= SEQUENCE SIZE (1..MAX) OF SEQUENCE {
+///      issuerDomainPolicy      CertPolicyId,
+///      subjectDomainPolicy     CertPolicyId }
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct PolicyMappings {
+pub struct PolicyMapping {
     /// issuerDomainPolicy      CertPolicyId,
-    issuer_domain_policy: ObjectIdentifier,
+    pub issuer_domain_policy: ObjectIdentifier,
 
     /// subjectDomainPolicy     CertPolicyId }
-    subject_domain_policy: ObjectIdentifier,
+    pub subject_domain_policy: ObjectIdentifier,
 }
 
 /// NameConstraints ::= SEQUENCE {
@@ -503,7 +507,7 @@ impl<'a> ::der::Sequence<'a> for GeneralName<'a> {
 ///       authorityCertSerialNumber [2] CertificateSerialNumber OPTIONAL  }
 ///
 ///    KeyIdentifier ::= OCTET STRING
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AuthorityKeyIdentifier<'a> {
     /// keyIdentifier             [0] KeyIdentifier           OPTIONAL,
     pub key_identifier: Option<OctetString<'a>>,
@@ -513,6 +517,39 @@ pub struct AuthorityKeyIdentifier<'a> {
 
     /// authorityCertSerialNumber [2] CertificateSerialNumber OPTIONAL  }
     pub authority_cert_serial_number: Option<UIntBytes<'a>>,
+}
+
+const KEUY_IDENTIFIER_TAG: TagNumber = TagNumber::new(0);
+const AUTHORITY_CERT_ISSUER_TAG: TagNumber = TagNumber::new(1);
+const AUTHORITY_CERT_SERIAL_NUMBER_TAG: TagNumber = TagNumber::new(2);
+
+impl<'a> DecodeValue<'a> for AuthorityKeyIdentifier<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
+        let key_identifier =
+            decoder.context_specific::<OctetString<'_>>(KEUY_IDENTIFIER_TAG, TagMode::Implicit)?;
+        let authority_cert_issuer = decoder
+            .context_specific::<GeneralNames<'_>>(AUTHORITY_CERT_ISSUER_TAG, TagMode::Implicit)?;
+        let authority_cert_serial_number = decoder.context_specific::<UIntBytes<'_>>(
+            AUTHORITY_CERT_SERIAL_NUMBER_TAG,
+            TagMode::Implicit,
+        )?;
+        Ok(AuthorityKeyIdentifier {
+            key_identifier,
+            authority_cert_issuer,
+            authority_cert_serial_number,
+        })
+    }
+}
+
+impl<'a> ::der::Sequence<'a> for AuthorityKeyIdentifier<'a> {
+    fn fields<F, T>(&self, _f: F) -> ::der::Result<T>
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    {
+        #[allow(unused_imports)]
+        use core::convert::TryFrom;
+        unimplemented!();
+    }
 }
 
 /// CRLDistributionPoints ::= SEQUENCE SIZE (1..MAX) OF DistributionPoint

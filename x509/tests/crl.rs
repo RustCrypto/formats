@@ -1,7 +1,8 @@
 //! CertificateList tests
-use der::{Decodable, Tag};
+use der::{Decodable, ErrorKind, Tag, TagNumber};
 use hex_literal::hex;
 use x509::extensions_utils::*;
+use x509::DistributionPoint;
 use x509::*;
 
 #[test]
@@ -185,6 +186,41 @@ fn decode_idp() {
     assert!(dp.crl_issuer.is_none());
     assert!(dp.reasons.is_none());
 
+    //   0 103: SEQUENCE {
+    //   2  96:   [0] {
+    //   4  94:     [0] {
+    //   6  92:       [4] {
+    //   8  90:         SEQUENCE {
+    //  10  11:           SET {
+    //  12   9:             SEQUENCE {
+    //  14   3:               OBJECT IDENTIFIER countryName (2 5 4 6)
+    //  19   2:               PrintableString 'US'
+    //        :               }
+    //        :             }
+    //  23  31:           SET {
+    //  25  29:             SEQUENCE {
+    //  27   3:               OBJECT IDENTIFIER organizationName (2 5 4 10)
+    //  32  22:               PrintableString 'Test Certificates 2017'
+    //        :               }
+    //        :             }
+    //  56  28:           SET {
+    //  58  26:             SEQUENCE {
+    //  60   3:               OBJECT IDENTIFIER organizationalUnitName (2 5 4 11)
+    //  65  19:               PrintableString 'onlySomeReasons CA3'
+    //        :               }
+    //        :             }
+    //  86  12:           SET {
+    //  88  10:             SEQUENCE {
+    //  90   3:               OBJECT IDENTIFIER commonName (2 5 4 3)
+    //  95   3:               PrintableString 'CRL'
+    //        :               }
+    //        :             }
+    //        :           }
+    //        :         }
+    //        :       }
+    //        :     }
+    // 100   3:   [3] 07 9F 80
+    //        :   }
     // IDP from 54B0D2A6F6AA4780771CC4F9F076F623CEB0F57E.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp =
         IssuingDistributionPoint::from_der(&hex!("3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8303079F80")).unwrap();
@@ -205,23 +241,244 @@ fn decode_idp() {
     assert_eq!(true, rfv.certificate_hold);
     assert_eq!(true, rfv.remove_from_crl);
     assert_eq!(true, rfv.aa_compromise);
+
+    //  930  360:             SEQUENCE {
+    //  934  353:               [0] {
+    //  938  349:                 [0] {
+    //  942  117:                   [4] {
+    //  944  115:                     SEQUENCE {
+    //  946   11:                       SET {
+    //  948    9:                         SEQUENCE {
+    //  950    3:                           OBJECT IDENTIFIER countryName (2 5 4 6)
+    //  955    2:                           PrintableString 'US'
+    //          :                           }
+    //          :                         }
+    //  959   31:                       SET {
+    //  961   29:                         SEQUENCE {
+    //  963    3:                           OBJECT IDENTIFIER
+    //          :                             organizationName (2 5 4 10)
+    //  968   22:                           PrintableString 'Test Certificates 2017'
+    //          :                           }
+    //          :                         }
+    //  992   24:                       SET {
+    //  994   22:                         SEQUENCE {
+    //  996    3:                           OBJECT IDENTIFIER
+    //          :                             organizationalUnitName (2 5 4 11)
+    // 1001   15:                           PrintableString 'indirectCRL CA5'
+    //          :                           }
+    //          :                         }
+    // 1018   41:                       SET {
+    // 1020   39:                         SEQUENCE {
+    // 1022    3:                           OBJECT IDENTIFIER commonName (2 5 4 3)
+    // 1027   32:                           PrintableString 'indirect CRL for indirectCRL CA6'
+    //          :                           }
+    //          :                         }
+    //          :                       }
+    //          :                     }
+    // 1061  117:                   [4] {
+    // 1063  115:                     SEQUENCE {
+    // 1065   11:                       SET {
+    // 1067    9:                         SEQUENCE {
+    // 1069    3:                           OBJECT IDENTIFIER countryName (2 5 4 6)
+    // 1074    2:                           PrintableString 'US'
+    //          :                           }
+    //          :                         }
+    // 1078   31:                       SET {
+    // 1080   29:                         SEQUENCE {
+    // 1082    3:                           OBJECT IDENTIFIER
+    //          :                             organizationName (2 5 4 10)
+    // 1087   22:                           PrintableString 'Test Certificates 2017'
+    //          :                           }
+    //          :                         }
+    // 1111   24:                       SET {
+    // 1113   22:                         SEQUENCE {
+    // 1115    3:                           OBJECT IDENTIFIER
+    //          :                             organizationalUnitName (2 5 4 11)
+    // 1120   15:                           PrintableString 'indirectCRL CA5'
+    //          :                           }
+    //          :                         }
+    // 1137   41:                       SET {
+    // 1139   39:                         SEQUENCE {
+    // 1141    3:                           OBJECT IDENTIFIER commonName (2 5 4 3)
+    // 1146   32:                           PrintableString 'indirect CRL for indirectCRL CA7'
+    //          :                           }
+    //          :                         }
+    //          :                       }
+    //          :                     }
+    // 1180  109:                   [4] {
+    // 1182  107:                     SEQUENCE {
+    // 1184   11:                       SET {
+    // 1186    9:                         SEQUENCE {
+    // 1188    3:                           OBJECT IDENTIFIER countryName (2 5 4 6)
+    // 1193    2:                           PrintableString 'US'
+    //          :                           }
+    //          :                         }
+    // 1197   31:                       SET {
+    // 1199   29:                         SEQUENCE {
+    // 1201    3:                           OBJECT IDENTIFIER
+    //          :                             organizationName (2 5 4 10)
+    // 1206   22:                           PrintableString 'Test Certificates 2017'
+    //          :                           }
+    //          :                         }
+    // 1230   24:                       SET {
+    // 1232   22:                         SEQUENCE {
+    // 1234    3:                           OBJECT IDENTIFIER
+    //          :                             organizationalUnitName (2 5 4 11)
+    // 1239   15:                           PrintableString 'indirectCRL CA5'
+    //          :                           }
+    //          :                         }
+    // 1256   33:                       SET {
+    // 1258   31:                         SEQUENCE {
+    // 1260    3:                           OBJECT IDENTIFIER commonName (2 5 4 3)
+    // 1265   24:                           PrintableString 'CRL1 for indirectCRL CA5'
+    //          :                           }
+    //          :                         }
+    //          :                       }
+    //          :                     }
+    //          :                   }
+    //          :                 }
+    // 1291    1:               [4] FF
+    //          :               }
+    //          :             }
+    //          :           }
+    // IDP from 959528526E54B646AF895E2362D3AD20F4B3284D.crl in PKITS 2048 in ficam-scvp-testing repo
+    let idp =
+        IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358401FF")).unwrap();
+    assert_eq!(idp.only_contains_cacerts, Some(false));
+    assert_eq!(idp.only_contains_attribute_certs, Some(false));
+    assert_eq!(idp.only_contains_user_certs, Some(false));
+    assert_eq!(idp.indirect_crl, Some(true));
+    assert!(idp.only_some_reasons.is_none());
+    assert!(idp.distribution_point.is_some());
+    let dp = idp.distribution_point.unwrap();
+    match dp {
+        DistributionPointName::FullName(dp) => {
+            assert_eq!(3, dp.len());
+            for gn in dp {
+                match gn {
+                    GeneralName::DirectoryName(gn) => {
+                        assert_eq!(4, gn.len());
+                    }
+                    _ => {
+                        panic!("Expected DirectoryName")
+                    }
+                }
+            }
+        }
+        _ => {
+            panic!("Expected FullName")
+        }
+    }
+
+    //---------------------------------
+    // Negative tests
+    //---------------------------------
+    // Value contains more than length value indicates
+    let reason_flags = ReasonFlags::from_der(&hex!("0302079F80"));
+    let err = reason_flags.err().unwrap();
+    assert_eq!(
+        ErrorKind::TrailingData {
+            decoded: 4u8.into(),
+            remaining: 1u8.into()
+        },
+        err.kind()
+    );
+
+    // Value incomplete relative to length value
+    let reason_flags = ReasonFlags::from_der(&hex!("0304079F80"));
+    let err = reason_flags.err().unwrap();
+    assert_eq!(
+        ErrorKind::Incomplete {
+            expected_len: 3u8.into(),
+            actual_len: 2u8.into()
+        },
+        err.kind()
+    );
+
+    // Value incomplete relative to length value
+    let idp =
+        IssuingDistributionPoint::from_der(&hex!("3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8304079F80"));
+    let err = idp.err().unwrap();
+    assert_eq!(
+        ErrorKind::Incomplete {
+            expected_len: 3u8.into(),
+            actual_len: 2u8.into()
+        },
+        err.kind()
+    );
+
+    // Truncated
+    let reason_flags = ReasonFlags::from_der(&hex!("0303079F"));
+    let err = reason_flags.err().unwrap();
+    assert_eq!(
+        ErrorKind::Incomplete {
+            expected_len: 2u8.into(),
+            actual_len: 1u8.into()
+        },
+        err.kind()
+    );
+
+    // Nonsensical tag where BIT STRING tag should be
+    let reason_flags = ReasonFlags::from_der(&hex!("FF03079F80"));
+    let err = reason_flags.err().unwrap();
+    assert_eq!(ErrorKind::UnknownTag { byte: 31u8.into() }, err.kind());
+
+    // INTEGER tag where BIT STRING expected
+    let reason_flags = ReasonFlags::from_der(&hex!("0203079F80"));
+    let err = reason_flags.err().unwrap();
+    assert_eq!(
+        ErrorKind::UnexpectedTag {
+            expected: Some(Tag::BitString),
+            actual: Tag::Integer
+        },
+        err.kind()
+    );
+
+    // Context specific tag that should be primitive is constructed
+    let idp = IssuingDistributionPoint::from_der(&hex!("3003A201FF"));
+    let err = idp.err().unwrap();
+    assert_eq!(
+        ErrorKind::Noncanonical {
+            tag: Tag::ContextSpecific {
+                constructed: true,
+                number: TagNumber::new(2)
+            }
+        },
+        err.kind()
+    );
+
+    // Boolean value is two bytes long
+    let idp =
+        IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358402FFFF"));
+    let err = idp.err().unwrap();
+    assert_eq!(ErrorKind::Length { tag: Tag::Boolean }, err.kind());
+
+    // Boolean value is neither 0x00 nor 0xFF
+    let idp =
+        IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C20434135840175"));
+    let err = idp.err().unwrap();
+    assert_eq!(ErrorKind::Noncanonical { tag: Tag::Boolean }, err.kind());
+
+    // Tag on second RDN in first name is TeletexString (20) instead of PrintableString (19) (and TeletexString is not supported)
+    let idp =
+        IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A14165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358401FF"));
+    let err = idp.err().unwrap();
+    assert_eq!(ErrorKind::UnknownTag { byte: 20u8.into() }, err.kind());
+
+    // Length on second RDN in first name indicates more bytes than are present
+    let idp =
+        IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13995465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358401FF"));
+    let err = idp.err().unwrap();
+    assert_eq!(
+        ErrorKind::Length {
+            tag: Tag::PrintableString
+        },
+        err.kind()
+    );
 }
 
 #[test]
 fn decode_crl_entry_extensions() {
-    // ReasonFlags from IDP from 54B0D2A6F6AA4780771CC4F9F076F623CEB0F57E.crl in PKITS 2048 in ficam-scvp-testing repo
-    let reason_flags = ReasonFlags::from_der(&hex!("0303079F80")).unwrap();
-    let rfv = get_reason_flags_values(&reason_flags);
-    assert_eq!(true, rfv.unused);
-    assert_eq!(false, rfv.key_compromise);
-    assert_eq!(false, rfv.ca_compromise);
-    assert_eq!(true, rfv.affiliation_changed);
-    assert_eq!(true, rfv.superseded);
-    assert_eq!(true, rfv.cessation_of_operation);
-    assert_eq!(true, rfv.certificate_hold);
-    assert_eq!(true, rfv.remove_from_crl);
-    assert_eq!(true, rfv.aa_compromise);
-
     // CRL entry from TS-Mobile-QCA.crl in MF PKI artifact collection in ficam-scvp-testing repo
     //   6931     51:       SEQUENCE {
     //   6933     20:         INTEGER

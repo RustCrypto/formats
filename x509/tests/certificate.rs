@@ -1,6 +1,6 @@
 //! Certificate tests
 use der::asn1::{UIntBytes, Utf8String};
-use der::{Decodable, Tag};
+use der::{Decodable, Length, Tag};
 use hex_literal::hex;
 #[cfg(feature = "alloc")]
 use x509::KeyUsage;
@@ -72,8 +72,6 @@ fn decode_cert() {
         _ => panic!("No good"),
     }
 
-    println!("{}", PKIX_AD_CA_ISSUERS);
-
     let on = OtherName::from_der(
         &hex!("3021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
     )
@@ -92,6 +90,296 @@ fn decode_cert() {
             assert_eq!(onval.to_string(), "Upn_214950130@mil");
         }
         _ => panic!("No good"),
+    }
+
+    // cloned cert with variety of interesting bits, including subject DN encoded backwards, large
+    // policy mapping set, large policy set (including one with qualifiers), fairly typical set of
+    // extensions otherwise
+    let der_encoded_cert =
+        include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
+    let result = Certificate::from_der(der_encoded_cert);
+    let cert: Certificate = result.unwrap();
+    let exts = cert.tbs_certificate.extensions.unwrap();
+    let i = exts.iter();
+    let mut counter = 0;
+    for ext in i {
+        // TODO - parse and compare extension values
+        if 0 == counter {
+            assert_eq!(ext.extn_id.to_string(), "2.5.29.15");
+            assert_eq!(ext.critical, Option::Some(true));
+
+            use x509::extensions_utils::KeyUsageValues;
+            let ku = KeyUsage::from_der(ext.extn_value.as_bytes()).unwrap();
+            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
+            let mut count = 0;
+            for v in kuv {
+                if 0 == count {
+                    assert_eq!(v, KeyUsageValues::KeyCertSign);
+                } else if 1 == count {
+                    assert_eq!(v, KeyUsageValues::CRLSign);
+                } else {
+                    panic!("Should not occur");
+                }
+                count += 1;
+            }
+        } else if 1 == counter {
+            assert_eq!(ext.extn_id.to_string(), "2.5.29.19");
+            assert_eq!(ext.critical, Option::Some(true));
+            let bc = BasicConstraints::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(true, bc.ca.unwrap());
+            assert!(bc.path_len_constraint.is_none());
+        } else if 2 == counter {
+            assert_eq!(ext.extn_id.to_string(), "2.5.29.33");
+            assert_eq!(ext.critical, None);
+            let pm = PolicyMappings::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(19, pm.len());
+
+            let subject_domain_policy: [&str; 19] = [
+                "2.16.840.1.101.3.2.1.48.2",
+                "2.16.840.1.101.3.2.1.48.2",
+                "2.16.840.1.101.3.2.1.48.3",
+                "2.16.840.1.101.3.2.1.48.3",
+                "2.16.840.1.101.3.2.1.48.5",
+                "2.16.840.1.101.3.2.1.48.5",
+                "2.16.840.1.101.3.2.1.48.4",
+                "2.16.840.1.101.3.2.1.48.4",
+                "2.16.840.1.101.3.2.1.48.6",
+                "2.16.840.1.101.3.2.1.48.6",
+                "2.16.840.1.101.3.2.1.48.78",
+                "2.16.840.1.101.3.2.1.48.78",
+                "2.16.840.1.101.3.2.1.48.78",
+                "2.16.840.1.101.3.2.1.48.79",
+                "2.16.840.1.101.3.2.1.48.80",
+                "2.16.840.1.101.3.2.1.48.99",
+                "2.16.840.1.101.3.2.1.48.99",
+                "2.16.840.1.101.3.2.1.48.100",
+                "2.16.840.1.101.3.2.1.48.100",
+            ];
+
+            let issuer_domain_policy: [&str; 19] = [
+                "2.16.840.1.113839.0.100.2.1",
+                "2.16.840.1.113839.0.100.2.2",
+                "2.16.840.1.113839.0.100.3.1",
+                "2.16.840.1.113839.0.100.3.2",
+                "2.16.840.1.113839.0.100.14.1",
+                "2.16.840.1.113839.0.100.14.2",
+                "2.16.840.1.113839.0.100.12.1",
+                "2.16.840.1.113839.0.100.12.2",
+                "2.16.840.1.113839.0.100.15.1",
+                "2.16.840.1.113839.0.100.15.2",
+                "2.16.840.1.113839.0.100.18.0",
+                "2.16.840.1.113839.0.100.18.1",
+                "2.16.840.1.113839.0.100.18.2",
+                "2.16.840.1.113839.0.100.19.1",
+                "2.16.840.1.113839.0.100.20.1",
+                "2.16.840.1.113839.0.100.37.1",
+                "2.16.840.1.113839.0.100.37.2",
+                "2.16.840.1.113839.0.100.38.1",
+                "2.16.840.1.113839.0.100.38.2",
+            ];
+
+            let mut counter_pm = 0;
+            for mapping in pm {
+                assert_eq!(
+                    issuer_domain_policy[counter_pm],
+                    mapping.issuer_domain_policy.to_string()
+                );
+                assert_eq!(
+                    subject_domain_policy[counter_pm],
+                    mapping.subject_domain_policy.to_string()
+                );
+                counter_pm += 1;
+            }
+        } else if 3 == counter {
+            assert_eq!(ext.extn_id.to_string(), "2.5.29.32");
+            assert_eq!(ext.critical, None);
+            let cps = CertificatePolicies::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(19, cps.len());
+
+            let ids: [&str; 19] = [
+                "2.16.840.1.113839.0.100.2.1",
+                "2.16.840.1.113839.0.100.2.2",
+                "2.16.840.1.113839.0.100.3.1",
+                "2.16.840.1.113839.0.100.3.2",
+                "2.16.840.1.113839.0.100.14.1",
+                "2.16.840.1.113839.0.100.14.2",
+                "2.16.840.1.113839.0.100.12.1",
+                "2.16.840.1.113839.0.100.12.2",
+                "2.16.840.1.113839.0.100.15.1",
+                "2.16.840.1.113839.0.100.15.2",
+                "2.16.840.1.113839.0.100.18.0",
+                "2.16.840.1.113839.0.100.18.1",
+                "2.16.840.1.113839.0.100.18.2",
+                "2.16.840.1.113839.0.100.19.1",
+                "2.16.840.1.113839.0.100.20.1",
+                "2.16.840.1.113839.0.100.37.1",
+                "2.16.840.1.113839.0.100.37.2",
+                "2.16.840.1.113839.0.100.38.1",
+                "2.16.840.1.113839.0.100.38.2",
+            ];
+
+            let mut cp_counter = 0;
+            for cp in cps {
+                if 18 == cp_counter {
+                    assert!(cp.policy_qualifiers.is_some());
+                    let pq = cp.policy_qualifiers.unwrap();
+                    assert_eq!(ids[cp_counter], cp.policy_identifier.to_string());
+                    let mut counter_pq = 0;
+                    for pqi in pq.iter() {
+                        if 0 == counter_pq {
+                            assert_eq!("1.3.6.1.5.5.7.2.1", pqi.policy_qualifier_id.to_string());
+                            let cpsval = pqi.qualifier.unwrap().ia5_string().unwrap();
+                            assert_eq!(
+                                "https://secure.identrust.com/certificates/policy/IGC/index.html",
+                                cpsval.to_string()
+                            );
+                        } else if 1 == counter_pq {
+                            assert_eq!("1.3.6.1.5.5.7.2.2", pqi.policy_qualifier_id.to_string());
+                            // TODO VisibleString
+                        }
+                        counter_pq += 1;
+                    }
+                } else {
+                    assert!(cp.policy_qualifiers.is_none())
+                }
+
+                cp_counter += 1;
+            }
+        } else if 4 == counter {
+            assert_eq!(ext.extn_id.to_string(), "2.5.29.14");
+            assert_eq!(ext.critical, None);
+            let skid = SubjectKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(Length::new(21), skid.len());
+            assert_eq!(
+                &hex!("DBD3DEBF0D7B615B32803BC0206CD7AADD39B8ACFF"),
+                skid.as_bytes()
+            );
+        } else if 5 == counter {
+            assert_eq!(ext.extn_id.to_string(), "2.5.29.31");
+            assert_eq!(ext.critical, None);
+            let crl_dps = CRLDistributionPoints::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(2, crl_dps.len());
+            let mut crldp_counter = 0;
+            for crldp in crl_dps {
+                let dpn = crldp.distribution_point.unwrap();
+                if 0 == crldp_counter {
+                    match dpn {
+                        DistributionPointName::FullName(gns) => {
+                            assert_eq!(1, gns.len());
+                            let gn = gns.get(0).unwrap();
+                            match gn {
+                                GeneralName::UniformResourceIdentifier(uri) => {
+                                    assert_eq!(
+                                        "http://crl-pte.identrust.com.test/crl/IGCRootca1.crl",
+                                        uri.to_string()
+                                    );
+                                }
+                                _ => {
+                                    panic!("Expected UniformResourceIdentifier");
+                                }
+                            }
+                        }
+                        _ => {
+                            panic!("Expected FullName");
+                        }
+                    }
+                } else if 1 == crldp_counter {
+                    match dpn {
+                        DistributionPointName::FullName(gns) => {
+                            assert_eq!(1, gns.len());
+                            let gn = gns.get(0).unwrap();
+                            match gn {
+                                GeneralName::UniformResourceIdentifier(uri) => {
+                                    assert_eq!("ldap://ldap-pte.identrust.com.test/cn%3DIGC%20Root%20CA1%2Co%3DIdenTrust%2Cc%3DUS%3FcertificateRevocationList%3Bbinary", uri.to_string());
+                                }
+                                _ => {
+                                    panic!("Expected UniformResourceIdentifier");
+                                }
+                            }
+                        }
+                        _ => {
+                            panic!("Expected UniformResourceIdentifier");
+                        }
+                    }
+                }
+
+                crldp_counter += 1;
+            }
+        } else if 6 == counter {
+            assert_eq!(ext.extn_id.to_string(), "1.3.6.1.5.5.7.1.11");
+            assert_eq!(ext.critical, None);
+            let sias = SubjectInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(1, sias.len());
+            for sia in sias {
+                assert_eq!("1.3.6.1.5.5.7.48.5", sia.access_method.to_string());
+                let gn = sia.access_location;
+                match gn {
+                    GeneralName::UniformResourceIdentifier(gn) => {
+                        assert_eq!(
+                            "http://http.cite.fpki-lab.gov.test/bridge/caCertsIssuedBytestFBCA.p7c",
+                            gn.to_string()
+                        );
+                    }
+                    _ => {
+                        panic!("Expected UniformResourceIdentifier");
+                    }
+                }
+            }
+        } else if 7 == counter {
+            assert_eq!(ext.extn_id.to_string(), "1.3.6.1.5.5.7.1.1");
+            assert_eq!(ext.critical, None);
+            let aias = AuthorityInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(2, aias.len());
+            let mut aia_counter = 0;
+            for aia in aias {
+                if 0 == aia_counter {
+                    assert_eq!("1.3.6.1.5.5.7.48.2", aia.access_method.to_string());
+                    let gn = aia.access_location;
+                    match gn {
+                        GeneralName::UniformResourceIdentifier(gn) => {
+                            assert_eq!(
+                                "http://apps-stg.identrust.com.test/roots/IGCRootca1.p7c",
+                                gn.to_string()
+                            );
+                        }
+                        _ => {
+                            panic!("Expected UniformResourceIdentifier");
+                        }
+                    }
+                } else if 1 == aia_counter {
+                    assert_eq!("1.3.6.1.5.5.7.48.1", aia.access_method.to_string());
+                    let gn = aia.access_location;
+                    match gn {
+                        GeneralName::UniformResourceIdentifier(gn) => {
+                            assert_eq!(
+                                "http://igcrootpte.ocsp.identrust.com.test:8125",
+                                gn.to_string()
+                            );
+                        }
+                        _ => {
+                            panic!("Expected UniformResourceIdentifier");
+                        }
+                    }
+                }
+
+                aia_counter += 1;
+            }
+        } else if 8 == counter {
+            assert_eq!(ext.extn_id.to_string(), "2.5.29.54");
+            assert_eq!(ext.critical, None);
+            let iap = InhibitAnyPolicy::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(0, iap);
+        } else if 9 == counter {
+            assert_eq!(ext.extn_id.to_string(), "2.5.29.35");
+            assert_eq!(ext.critical, None);
+            let akid = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
+            assert_eq!(
+                &hex!("7C4C863AB80BD589870BEDB7E11BBD2A08BB3D23FF"),
+                akid.key_identifier.unwrap().as_bytes()
+            );
+        }
+
+        counter += 1;
     }
 
     let der_encoded_cert = include_bytes!("examples/GoodCACert.crt");
