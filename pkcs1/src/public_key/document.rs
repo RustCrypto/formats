@@ -1,6 +1,6 @@
 //! PKCS#1 RSA public key document.
 
-use crate::{error, DecodeRsaPublicKey, EncodeRsaPublicKey, Error, Result, RsaPublicKey};
+use crate::{DecodeRsaPublicKey, EncodeRsaPublicKey, Error, Result, RsaPublicKey};
 use alloc::vec::Vec;
 use core::fmt;
 use der::{Decodable, Document, Encodable};
@@ -96,19 +96,19 @@ impl TryFrom<&[u8]> for RsaPublicKeyDocument {
     }
 }
 
-impl From<RsaPublicKey<'_>> for RsaPublicKeyDocument {
-    fn from(public_key: RsaPublicKey<'_>) -> RsaPublicKeyDocument {
-        RsaPublicKeyDocument::from(&public_key)
+impl TryFrom<RsaPublicKey<'_>> for RsaPublicKeyDocument {
+    type Error = Error;
+
+    fn try_from(public_key: RsaPublicKey<'_>) -> Result<RsaPublicKeyDocument> {
+        RsaPublicKeyDocument::try_from(&public_key)
     }
 }
 
-impl From<&RsaPublicKey<'_>> for RsaPublicKeyDocument {
-    fn from(public_key: &RsaPublicKey<'_>) -> RsaPublicKeyDocument {
-        public_key
-            .to_vec()
-            .ok()
-            .and_then(|buf| buf.try_into().ok())
-            .expect(error::DER_ENCODING_MSG)
+impl TryFrom<&RsaPublicKey<'_>> for RsaPublicKeyDocument {
+    type Error = Error;
+
+    fn try_from(public_key: &RsaPublicKey<'_>) -> Result<RsaPublicKeyDocument> {
+        Ok(public_key.to_vec()?.try_into()?)
     }
 }
 

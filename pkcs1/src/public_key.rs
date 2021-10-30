@@ -10,14 +10,7 @@ use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
 use crate::RsaPublicKeyDocument;
 
 #[cfg(feature = "pem")]
-use {
-    crate::{pem, LineEnding},
-    alloc::string::String,
-};
-
-/// Type label for PEM-encoded public keys.
-#[cfg(feature = "pem")]
-pub(crate) const PEM_TYPE_LABEL: &str = "RSA PUBLIC KEY";
+use {crate::LineEnding, alloc::string::String, der::Document};
 
 /// PKCS#1 RSA Public Keys as defined in [RFC 8017 Appendix 1.1].
 ///
@@ -44,8 +37,8 @@ impl<'a> RsaPublicKey<'a> {
     /// Encode this [`RsaPublicKey`] as ASN.1 DER.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn to_der(self) -> RsaPublicKeyDocument {
-        self.into()
+    pub fn to_der(self) -> Result<RsaPublicKeyDocument> {
+        self.try_into()
     }
 
     /// Encode this [`RsaPublicKey`] as PEM-encoded ASN.1 DER with the given
@@ -53,11 +46,7 @@ impl<'a> RsaPublicKey<'a> {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn to_pem(self, line_ending: LineEnding) -> Result<String> {
-        Ok(pem::encode_string(
-            PEM_TYPE_LABEL,
-            line_ending,
-            self.to_der().as_ref(),
-        )?)
+        Ok(self.to_der()?.to_pem(line_ending)?)
     }
 }
 
