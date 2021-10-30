@@ -35,9 +35,9 @@ pub trait Encodable {
         let actual_len = encoder.finish()?.len();
 
         if expected_len != actual_len {
-            return Err(ErrorKind::Underlength {
-                expected: expected_len.try_into()?,
-                actual: actual_len.try_into()?,
+            return Err(ErrorKind::Incomplete {
+                expected_len: expected_len.try_into()?,
+                actual_len: actual_len.try_into()?,
             }
             .into());
         }

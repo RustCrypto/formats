@@ -263,17 +263,6 @@ pub enum ErrorKind {
         remaining: Length,
     },
 
-    /// Encoded message is shorter than the expected length.
-    ///
-    /// (i.e. an `Encodable` impl on a particular type has a buggy `encoded_len`)
-    Underlength {
-        /// Expected length
-        expected: Length,
-
-        /// Actual length
-        actual: Length,
-    },
-
     /// UTF-8 errors.
     Utf8(Utf8Error),
 
@@ -355,11 +344,6 @@ impl fmt::Display for ErrorKind {
                     decoded, remaining
                 )
             }
-            ErrorKind::Underlength { expected, actual } => write!(
-                f,
-                "DER message too short: expected {}, got {}",
-                expected, actual
-            ),
             ErrorKind::Utf8(e) => write!(f, "{}", e),
             ErrorKind::Value { tag } => write!(f, "malformed ASN.1 DER value for {}", tag),
         }
