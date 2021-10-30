@@ -54,6 +54,9 @@ pub enum Tag {
     /// `OBJECT IDENTIFIER` tag: `0x06`.
     ObjectIdentifier,
 
+    /// `ENUMERATED` tag: `0x0A`.
+    Enumerated,
+
     /// `UTF8String` tag: `0x0C`.
     Utf8String,
 
@@ -167,6 +170,7 @@ impl Tag {
             Tag::OctetString => 0x04,
             Tag::Null => 0x05,
             Tag::ObjectIdentifier => 0x06,
+            Tag::Enumerated => 0x0A,
             Tag::Utf8String => 0x0C,
             Tag::Sequence => 0x10 | CONSTRUCTED_FLAG,
             Tag::Set => 0x11 | CONSTRUCTED_FLAG,
@@ -232,6 +236,7 @@ impl TryFrom<u8> for Tag {
             0x04 => Ok(Tag::OctetString),
             0x05 => Ok(Tag::Null),
             0x06 => Ok(Tag::ObjectIdentifier),
+            0x0A => Ok(Tag::Enumerated),
             0x0C => Ok(Tag::Utf8String),
             0x12 => Ok(Tag::NumericString),
             0x13 => Ok(Tag::PrintableString),
@@ -296,6 +301,7 @@ impl fmt::Display for Tag {
             Tag::OctetString => f.write_str("OCTET STRING"),
             Tag::Null => f.write_str("NULL"),
             Tag::ObjectIdentifier => f.write_str("OBJECT IDENTIFIER"),
+            Tag::Enumerated => f.write_str("ENUMERATED"),
             Tag::Utf8String => f.write_str("UTF8String"),
             Tag::Set => f.write_str("SET"),
             Tag::NumericString => f.write_str("NumericString"),
@@ -351,6 +357,7 @@ mod tests {
         assert_eq!(Tag::OctetString.class(), Class::Universal);
         assert_eq!(Tag::Null.class(), Class::Universal);
         assert_eq!(Tag::ObjectIdentifier.class(), Class::Universal);
+        assert_eq!(Tag::Enumerated.class(), Class::Universal);
         assert_eq!(Tag::Utf8String.class(), Class::Universal);
         assert_eq!(Tag::Set.class(), Class::Universal);
         assert_eq!(Tag::NumericString.class(), Class::Universal);
