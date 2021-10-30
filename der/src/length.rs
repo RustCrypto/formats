@@ -123,9 +123,9 @@ impl Sub for Length {
         self.0
             .checked_sub(other.0)
             .ok_or_else(|| {
-                ErrorKind::Underlength {
-                    expected: other,
-                    actual: self,
+                ErrorKind::Incomplete {
+                    expected_len: other,
+                    actual_len: self,
                 }
                 .into()
             })
