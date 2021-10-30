@@ -226,6 +226,27 @@ pub enum ErrorKind {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     PermissionDenied,
 
+    /// Unknown tag mode.
+    TagModeUnknown,
+
+    /// Unexpected tag.
+    TagUnexpected {
+        /// Tag the decoder was expecting (if there is a single such tag).
+        ///
+        /// `None` if multiple tags are expected/allowed, but the `actual` tag
+        /// does not match any of them.
+        expected: Option<Tag>,
+
+        /// Actual tag encountered in the message.
+        actual: Tag,
+    },
+
+    /// Unknown/unsupported tag.
+    TagUnknown {
+        /// Raw byte value of the tag.
+        byte: u8,
+    },
+
     /// Undecoded trailing data at end of message.
     TrailingData {
         /// Length of the decoded data.
@@ -245,27 +266,6 @@ pub enum ErrorKind {
         /// Actual length
         actual: Length,
     },
-
-    /// Unexpected tag.
-    UnexpectedTag {
-        /// Tag the decoder was expecting (if there is a single such tag).
-        ///
-        /// `None` if multiple tags are expected/allowed, but the `actual` tag
-        /// does not match any of them.
-        expected: Option<Tag>,
-
-        /// Actual tag encountered in the message.
-        actual: Tag,
-    },
-
-    /// Unknown/unsupported tag.
-    UnknownTag {
-        /// Raw byte value of the tag.
-        byte: u8,
-    },
-
-    /// Unknown tag mode.
-    UnknownTagMode,
 
     /// UTF-8 errors.
     Utf8(Utf8Error),
@@ -327,6 +327,19 @@ impl fmt::Display for ErrorKind {
             ErrorKind::Pem(e) => write!(f, "PEM error: {}", e),
             #[cfg(feature = "std")]
             ErrorKind::PermissionDenied => f.write_str("permission denied"),
+            ErrorKind::TagModeUnknown => write!(f, "unknown tag mode"),
+            ErrorKind::TagUnexpected { expected, actual } => {
+                write!(f, "unexpected ASN.1 DER tag: ")?;
+
+                if let Some(tag) = expected {
+                    write!(f, "expected {}, ", tag)?;
+                }
+
+                write!(f, "got {}", actual)
+            }
+            ErrorKind::TagUnknown { byte } => {
+                write!(f, "unknown/unsupported ASN.1 DER tag: 0x{:02x}", byte)
+            }
             ErrorKind::TrailingData { decoded, remaining } => {
                 write!(
                     f,
@@ -339,19 +352,6 @@ impl fmt::Display for ErrorKind {
                 "DER message too short: expected {}, got {}",
                 expected, actual
             ),
-            ErrorKind::UnexpectedTag { expected, actual } => {
-                write!(f, "unexpected ASN.1 DER tag: ")?;
-
-                if let Some(tag) = expected {
-                    write!(f, "expected {}, ", tag)?;
-                }
-
-                write!(f, "got {}", actual)
-            }
-            ErrorKind::UnknownTag { byte } => {
-                write!(f, "unknown/unsupported ASN.1 DER tag: 0x{:02x}", byte)
-            }
-            ErrorKind::UnknownTagMode => write!(f, "unknown tag mode"),
             ErrorKind::Utf8(e) => write!(f, "{}", e),
             ErrorKind::Value { tag } => write!(f, "malformed ASN.1 DER value for {}", tag),
         }

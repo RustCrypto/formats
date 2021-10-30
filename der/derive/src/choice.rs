@@ -170,7 +170,7 @@ impl DeriveChoice {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     match decoder.peek_tag()? {
                         #decode_body
-                        actual => Err(der::ErrorKind::UnexpectedTag {
+                        actual => Err(der::ErrorKind::TagUnexpected {
                             expected: None,
                             actual
                         }

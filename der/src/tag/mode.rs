@@ -30,7 +30,7 @@ impl FromStr for TagMode {
         match s {
             "EXPLICIT" | "explicit" => Ok(TagMode::Explicit),
             "IMPLICIT" | "implicit" => Ok(TagMode::Implicit),
-            _ => Err(ErrorKind::UnknownTagMode.into()),
+            _ => Err(ErrorKind::TagModeUnknown.into()),
         }
     }
 }

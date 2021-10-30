@@ -112,7 +112,7 @@ pub enum Tag {
 impl Tag {
     /// Assert that this [`Tag`] matches the provided expected tag.
     ///
-    /// On mismatch, returns an [`Error`] with [`ErrorKind::UnexpectedTag`].
+    /// On mismatch, returns an [`Error`] with [`ErrorKind::TagUnexpected`].
     pub fn assert_eq(self, expected: Tag) -> Result<Tag> {
         if self == expected {
             Ok(self)
@@ -208,7 +208,7 @@ impl Tag {
     /// Create an [`Error`] because the current tag was unexpected, with an
     /// optional expected tag.
     pub fn unexpected_error(self, expected: Option<Self>) -> Error {
-        ErrorKind::UnexpectedTag {
+        ErrorKind::TagUnexpected {
             expected,
             actual: self,
         }
@@ -257,7 +257,7 @@ impl TryFrom<u8> for Tag {
                 constructed,
                 number,
             }),
-            _ => Err(ErrorKind::UnknownTag { byte }.into()),
+            _ => Err(ErrorKind::TagUnknown { byte }.into()),
         }
     }
 }
