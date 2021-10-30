@@ -229,6 +229,13 @@ pub enum ErrorKind {
     /// Unknown tag mode.
     TagModeUnknown,
 
+    /// Invalid tag number.
+    ///
+    /// The "tag number" is the lower 5-bits of a tag's octet.
+    /// This error occurs in the case that all 5-bits are set to `1`,
+    /// which indicates a multi-byte tag which is unsupported by this library.
+    TagNumberInvalid,
+
     /// Unexpected tag.
     TagUnexpected {
         /// Tag the decoder was expecting (if there is a single such tag).
@@ -328,6 +335,7 @@ impl fmt::Display for ErrorKind {
             #[cfg(feature = "std")]
             ErrorKind::PermissionDenied => f.write_str("permission denied"),
             ErrorKind::TagModeUnknown => write!(f, "unknown tag mode"),
+            ErrorKind::TagNumberInvalid => write!(f, "invalid tag number"),
             ErrorKind::TagUnexpected { expected, actual } => {
                 write!(f, "unexpected ASN.1 DER tag: ")?;
 
