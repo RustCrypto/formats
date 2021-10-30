@@ -156,7 +156,7 @@ impl<'a> Encoder<'a> {
         let mut nested_encoder = Encoder::new(self.reserve(length)?);
         f(&mut nested_encoder)?;
 
-        if nested_encoder.finish()?.len() == length.try_into()? {
+        if nested_encoder.finish()?.len() == usize::try_from(length)? {
             Ok(())
         } else {
             self.error(ErrorKind::Length { tag: Tag::Sequence })
