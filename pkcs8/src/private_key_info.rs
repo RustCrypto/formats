@@ -17,7 +17,11 @@ use {
 };
 
 #[cfg(feature = "pem")]
-use {crate::LineEnding, alloc::string::String, der::Document, zeroize::Zeroizing};
+use {
+    crate::{EncodePrivateKey, LineEnding},
+    alloc::string::String,
+    zeroize::Zeroizing,
+};
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
@@ -133,7 +137,7 @@ impl<'a> PrivateKeyInfo<'a> {
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<EncryptedPrivateKeyDocument> {
-        PrivateKeyDocument::try_from(self)?.encrypt(rng, password)
+        self.to_der()?.encrypt(rng, password)
     }
 
     /// Encode this [`PrivateKeyInfo`] as ASN.1 DER.
@@ -148,9 +152,7 @@ impl<'a> PrivateKeyInfo<'a> {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        Ok(PrivateKeyDocument::try_from(self)?
-            .to_pem(line_ending)
-            .map(Zeroizing::new)?)
+        self.to_der()?.to_pkcs8_pem(line_ending)
     }
 }
 

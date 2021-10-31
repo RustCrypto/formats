@@ -61,9 +61,9 @@ impl<T, const N: usize> ArrayVec<T, N> {
     /// Returns `None` if the [`ArrayVec`] does not contain `N` elements.
     pub fn try_into_array(self) -> Result<[T; N]> {
         if self.length != N {
-            return Err(ErrorKind::Underlength {
-                expected: N.try_into()?,
-                actual: self.length.try_into()?,
+            return Err(ErrorKind::Incomplete {
+                expected_len: N.try_into()?,
+                actual_len: self.length.try_into()?,
             }
             .into());
         }

@@ -36,50 +36,56 @@ pub trait Tagged {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Tag {
-    /// `BOOLEAN` tag: `0x01`.
+    /// `BOOLEAN` tag: `1`.
     Boolean,
 
-    /// `INTEGER` tag: `0x02`.
+    /// `INTEGER` tag: `2`.
     Integer,
 
-    /// `BIT STRING` tag: `0x03`.
+    /// `BIT STRING` tag: `3`.
     BitString,
 
-    /// `OCTET STRING` tag: `0x04`.
+    /// `OCTET STRING` tag: `4`.
     OctetString,
 
-    /// `ENUMERATED` tag: `0x0A`
-    Enumerated,
-
-    /// `NULL` tag: `0x05`.
+    /// `NULL` tag: `5`.
     Null,
 
-    /// `OBJECT IDENTIFIER` tag: `0x06`.
+    /// `OBJECT IDENTIFIER` tag: `6`.
     ObjectIdentifier,
 
-    /// `UTF8String` tag: `0x0C`.
+    /// `ENUMERATED` tag: `10`.
+    Enumerated,
+
+    /// `UTF8String` tag: `12`.
     Utf8String,
 
-    /// `SEQUENCE` tag: `0x10`.
+    /// `SEQUENCE` tag: `16`.
     Sequence,
 
-    /// `SET` and `SET OF` tag: `0x11`.
+    /// `SET` and `SET OF` tag: `17`.
     Set,
 
-    /// `NumericString` tag: `0x12`.
+    /// `NumericString` tag: `18`.
     NumericString,
 
-    /// `PrintableString` tag: `0x13`.
+    /// `PrintableString` tag: `19`.
     PrintableString,
 
-    /// `IA5String` tag: `0x16`.
+    /// `IA5String` tag: `22`.
     Ia5String,
 
-    /// `UTCTime` tag: `0x17`.
+    /// `UTCTime` tag: `23`.
     UtcTime,
 
-    /// `GeneralizedTime` tag: `0x18`.
+    /// `GeneralizedTime` tag: `24`.
     GeneralizedTime,
+
+    /// `VisibleString` tag: `26`.
+    VisibleString,
+
+    /// `BMPString` tag: `30`.
+    BmpString,
 
     /// Application tag.
     Application {
@@ -112,7 +118,7 @@ pub enum Tag {
 impl Tag {
     /// Assert that this [`Tag`] matches the provided expected tag.
     ///
-    /// On mismatch, returns an [`Error`] with [`ErrorKind::UnexpectedTag`].
+    /// On mismatch, returns an [`Error`] with [`ErrorKind::TagUnexpected`].
     pub fn assert_eq(self, expected: Tag) -> Result<Tag> {
         if self == expected {
             Ok(self)
@@ -179,6 +185,8 @@ impl Tag {
             Tag::Ia5String => 0x16,
             Tag::UtcTime => 0x17,
             Tag::GeneralizedTime => 0x18,
+            Tag::VisibleString => 0x1A,
+            Tag::BmpString => 0x1D,
             Tag::Application {
                 constructed,
                 number,
@@ -208,7 +216,7 @@ impl Tag {
     /// Create an [`Error`] because the current tag was unexpected, with an
     /// optional expected tag.
     pub fn unexpected_error(self, expected: Option<Self>) -> Error {
-        ErrorKind::UnexpectedTag {
+        ErrorKind::TagUnexpected {
             expected,
             actual: self,
         }
@@ -243,6 +251,8 @@ impl TryFrom<u8> for Tag {
             0x16 => Ok(Tag::Ia5String),
             0x17 => Ok(Tag::UtcTime),
             0x18 => Ok(Tag::GeneralizedTime),
+            0x1A => Ok(Tag::VisibleString),
+            0x1d => Ok(Tag::BmpString),
             0x30 => Ok(Tag::Sequence), // constructed
             0x31 => Ok(Tag::Set),      // constructed
             0x40..=0x7E => Ok(Tag::Application {
@@ -257,7 +267,7 @@ impl TryFrom<u8> for Tag {
                 constructed,
                 number,
             }),
-            _ => Err(ErrorKind::UnknownTag { byte }.into()),
+            _ => Err(ErrorKind::TagUnknown { byte }.into()),
         }
     }
 }
@@ -294,7 +304,7 @@ impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         const FIELD_TYPE: [&str; 2] = ["primitive", "constructed"];
 
-        match self {
+        match *self {
             Tag::Boolean => f.write_str("BOOLEAN"),
             Tag::Integer => f.write_str("INTEGER"),
             Tag::BitString => f.write_str("BIT STRING"),
@@ -309,6 +319,8 @@ impl fmt::Display for Tag {
             Tag::Ia5String => f.write_str("IA5String"),
             Tag::UtcTime => f.write_str("UTCTime"),
             Tag::GeneralizedTime => f.write_str("GeneralizedTime"),
+            Tag::VisibleString => f.write_str("VisibleString"),
+            Tag::BmpString => f.write_str("BMPString"),
             Tag::Sequence => f.write_str("SEQUENCE"),
             Tag::Application {
                 constructed,
@@ -316,7 +328,7 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "APPLICATION [{}] ({})",
-                number, FIELD_TYPE[*constructed as usize]
+                number, FIELD_TYPE[constructed as usize]
             ),
             Tag::ContextSpecific {
                 constructed,
@@ -324,7 +336,7 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "CONTEXT-SPECIFIC [{}] ({})",
-                number, FIELD_TYPE[*constructed as usize]
+                number, FIELD_TYPE[constructed as usize]
             ),
             Tag::Private {
                 constructed,
@@ -332,7 +344,7 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "PRIVATE [{}] ({})",
-                number, FIELD_TYPE[*constructed as usize]
+                number, FIELD_TYPE[constructed as usize]
             ),
         }
     }

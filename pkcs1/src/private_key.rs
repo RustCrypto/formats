@@ -94,7 +94,7 @@ impl<'a> RsaPrivateKey<'a> {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        RsaPrivateKeyDocument::try_from(self)?.to_pkcs1_pem(line_ending)
+        self.to_der()?.to_pkcs1_pem(line_ending)
     }
 }
 

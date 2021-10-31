@@ -75,7 +75,7 @@ impl TryFrom<u8> for TagNumber {
     fn try_from(byte: u8) -> Result<Self> {
         match byte {
             0..=Self::MAX => Ok(Self(byte)),
-            _ => Err(ErrorKind::UnknownTag { byte }.into()),
+            _ => Err(ErrorKind::TagNumberInvalid.into()),
         }
     }
 }

@@ -421,13 +421,13 @@ fn decode_idp() {
     // Nonsensical tag where BIT STRING tag should be
     let reason_flags = ReasonFlags::from_der(&hex!("FF03079F80"));
     let err = reason_flags.err().unwrap();
-    assert_eq!(ErrorKind::UnknownTag { byte: 31u8.into() }, err.kind());
+    assert_eq!(ErrorKind::TagNumberInvalid, err.kind());
 
     // INTEGER tag where BIT STRING expected
     let reason_flags = ReasonFlags::from_der(&hex!("0203079F80"));
     let err = reason_flags.err().unwrap();
     assert_eq!(
-        ErrorKind::UnexpectedTag {
+        ErrorKind::TagUnexpected {
             expected: Some(Tag::BitString),
             actual: Tag::Integer
         },
@@ -463,7 +463,7 @@ fn decode_idp() {
     let idp =
         IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A14165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358401FF"));
     let err = idp.err().unwrap();
-    assert_eq!(ErrorKind::UnknownTag { byte: 20u8.into() }, err.kind());
+    assert_eq!(ErrorKind::TagUnknown { byte: 20u8.into() }, err.kind());
 
     // Length on second RDN in first name indicates more bytes than are present
     let idp =
