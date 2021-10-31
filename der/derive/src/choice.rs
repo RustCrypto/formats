@@ -58,7 +58,12 @@ impl DeriveChoice {
                     variant.ident
                 )
             });
-            let tag = asn1_type.tag();
+            let tag = field_attrs.tag(&state.type_attrs).unwrap_or_else(|| {
+                panic!(
+                    "no #[asn1(type=...)] specified for enum variant: {}",
+                    variant.ident
+                )
+            });
 
             Alternative::register(&mut state.alternatives, asn1_type, variant);
             state.derive_variant_choice(&tag);
@@ -114,8 +119,7 @@ impl DeriveChoice {
         variant
             .each(|bi| {
                 let binding = &bi.binding;
-                let encoder_obj = field_attrs.encoder(&quote!(#binding), &self.type_attrs);
-                quote!(#encoder_obj?.encode(encoder))
+                field_attrs.encoder(&quote!(#binding), &self.type_attrs)
             })
             .to_tokens(&mut self.encode_body);
     }
