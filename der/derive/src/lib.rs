@@ -194,10 +194,16 @@ fn derive_choice(s: Structure<'_>) -> TokenStream {
     let ast = s.ast();
     let lifetime = parse_lifetime(&ast.generics);
 
-    match &ast.data {
-        syn::Data::Enum(data) => DeriveChoice::derive(s, data, lifetime),
-        other => panic!("can't derive `Choice` on: {:?}", other),
-    }
+    let data_label = match &ast.data {
+        syn::Data::Enum(data) => return DeriveChoice::derive(s, data, lifetime),
+        syn::Data::Struct(_) => "struct",
+        syn::Data::Union(_) => "union",
+    };
+
+    panic!(
+        "can't derive `Choice` on `{}`: only `enum` types are allowed",
+        data_label
+    )
 }
 
 /// Custom derive for `der::Sequence`
@@ -205,10 +211,16 @@ fn derive_sequence(s: Structure<'_>) -> TokenStream {
     let ast = s.ast();
     let lifetime = parse_lifetime(&ast.generics);
 
-    match &ast.data {
-        syn::Data::Struct(data) => DeriveSequence::derive(s, data, lifetime),
-        other => panic!("can't derive `Sequence` on: {:?}", other),
-    }
+    let data_label = match &ast.data {
+        syn::Data::Enum(_) => "enum",
+        syn::Data::Struct(data) => return DeriveSequence::derive(s, data, lifetime),
+        syn::Data::Union(_) => "union",
+    };
+
+    panic!(
+        "can't derive `Sequence` on `{}`: only `struct` types are allowed",
+        data_label
+    )
 }
 
 /// Parse the first lifetime of the "self" type of the custom derive
