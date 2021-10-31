@@ -100,15 +100,12 @@ use crate::{
     attributes::{FieldAttrs, TypeAttrs},
     choice::DeriveChoice,
     sequence::DeriveSequence,
-    tag::TagMode,
+    tag::{TagMode, TagNumber},
     types::Asn1Type,
 };
 use proc_macro2::TokenStream;
 use syn::{Generics, Lifetime};
 use synstructure::{decl_derive, Structure};
-
-/// Tag number.
-pub(crate) type TagNumber = u8;
 
 decl_derive!(
     [Choice, attributes(asn1)] =>

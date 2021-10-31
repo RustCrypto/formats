@@ -1,9 +1,14 @@
 //! Tag-related functionality.
 
+use proc_macro2::TokenStream;
+use quote::quote;
 use std::{
     fmt::{self, Display},
     str::FromStr,
 };
+
+/// Tag number.
+pub type TagNumber = u8;
 
 /// Tagging modes: `EXPLICIT` versus `IMPLICIT`.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -17,6 +22,17 @@ pub(crate) enum TagMode {
     ///
     /// Tag replaces the existing tag of the inner type.
     Implicit,
+}
+
+impl TagMode {
+    /// Get a [`TokenStream`] identifying the `der` crate's corresponding
+    /// enum variant for this tag mode.
+    pub fn tokens(self) -> TokenStream {
+        match self {
+            TagMode::Explicit => quote!(::der::TagMode::Explicit),
+            TagMode::Implicit => quote!(::der::TagMode::Implicit),
+        }
+    }
 }
 
 impl FromStr for TagMode {

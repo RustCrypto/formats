@@ -55,7 +55,7 @@ impl DeriveSequence {
     fn derive_field_decoder(&mut self, name: &Ident, field_attrs: &FieldAttrs) {
         let field_binding = if field_attrs.asn1_type.is_some() {
             let field_decoder = field_attrs.decoder(&self.type_attrs);
-            quote! { let #name = #field_decoder?.try_into()?; }
+            quote! { let #name = #field_decoder.try_into()?; }
         } else {
             // TODO(tarcieri): IMPLICIT support
             if self.type_attrs.tag_mode == TagMode::Implicit {
