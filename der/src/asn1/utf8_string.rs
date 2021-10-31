@@ -1,8 +1,8 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error, Length,
-    Result, StrSlice, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result,
+    StrSlice, Tag, Tagged,
 };
 use core::{fmt, str};
 
@@ -135,18 +135,26 @@ impl<'a> TryFrom<Any<'a>> for &'a str {
     }
 }
 
-impl Encodable for str {
-    fn encoded_len(&self) -> Result<Length> {
-        Utf8String::new(self)?.encoded_len()
+impl EncodeValue for str {
+    fn value_len(&self) -> Result<Length> {
+        Utf8String::new(self)?.value_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Utf8String::new(self)?.encode(encoder)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        Utf8String::new(self)?.encode_value(encoder)
     }
 }
 
 impl Tagged for str {
     const TAG: Tag = Tag::Utf8String;
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<'a> From<Utf8String<'a>> for String {
+    fn from(s: Utf8String<'a>) -> String {
+        s.as_str().to_owned()
+    }
 }
 
 #[cfg(feature = "alloc")]
@@ -161,13 +169,13 @@ impl<'a> TryFrom<Any<'a>> for String {
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl Encodable for String {
-    fn encoded_len(&self) -> Result<Length> {
-        Utf8String::new(self)?.encoded_len()
+impl EncodeValue for String {
+    fn value_len(&self) -> Result<Length> {
+        Utf8String::new(self)?.value_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Utf8String::new(self)?.encode(encoder)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        Utf8String::new(self)?.encode_value(encoder)
     }
 }
 

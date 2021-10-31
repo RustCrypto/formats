@@ -12,13 +12,13 @@
 #![cfg(feature = "derive")]
 
 use der::{
-    asn1::{GeneralizedTime, UtcTime},
+    asn1::{BitString, GeneralizedTime, UtcTime},
     Choice, Decodable, Encodable, Encoder,
 };
 use hex_literal::hex;
 use std::time::Duration;
 
-/// Custom derive test case for the `Choice` mcaro.
+/// Custom derive test case for the `Choice` macro.
 ///
 /// Based on `Time` as defined in RFC 5280:
 /// <https://tools.ietf.org/html/rfc5280#page-117>
@@ -50,7 +50,7 @@ const UTC_TIMESTAMP: &[u8] = &hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a
 const GENERAL_TIMESTAMP: &[u8] = &hex!("18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
 
 #[test]
-fn decode_enum_variants() {
+fn decode_time_variants() {
     let utc_time = Time::from_der(UTC_TIMESTAMP).unwrap();
     assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
 
@@ -59,7 +59,7 @@ fn decode_enum_variants() {
 }
 
 #[test]
-fn encode_enum_variants() {
+fn encode_time_variants() {
     let mut buf = [0u8; 128];
 
     let utc_time = Time::from_der(UTC_TIMESTAMP).unwrap();
@@ -71,4 +71,18 @@ fn encode_enum_variants() {
     let mut encoder = Encoder::new(&mut buf);
     general_time.encode(&mut encoder).unwrap();
     assert_eq!(GENERAL_TIMESTAMP, encoder.finish().unwrap());
+}
+
+/// `Choice` macro test case for `IMPLICIT` tagging.
+#[derive(Choice)]
+#[asn1(tag_mode = "IMPLICIT")]
+pub enum ImplicitChoice<'a> {
+    #[asn1(context_specific = "0", type = "BIT STRING")]
+    BitString(BitString<'a>),
+
+    #[asn1(context_specific = "1", type = "GeneralizedTime")]
+    Time(GeneralizedTime),
+
+    #[asn1(context_specific = "2", type = "UTF8String")]
+    Utf8String(String),
 }
