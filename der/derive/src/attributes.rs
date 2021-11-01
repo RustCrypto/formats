@@ -12,9 +12,6 @@ const ATTR_NAME: &str = "asn1";
 /// Parsing error message.
 const PARSE_ERR_MSG: &str = "error parsing `asn1` attribute";
 
-/// Maximum tag number supported (inclusive).
-pub const TAG_NUMBER_MAX: TagNumber = 30;
-
 /// Attributes on a `struct` or `enum` type.
 #[derive(Clone, Debug)]
 pub(crate) struct TypeAttrs {
@@ -84,13 +81,6 @@ impl FieldAttrs {
                     );
                 }
 
-                if tag_number > TAG_NUMBER_MAX {
-                    panic!(
-                        "error parsing `context_specific` tag number (too big): {}",
-                        tag_number
-                    );
-                }
-
                 context_specific = Some(tag_number);
             // `type = "..."` attribute
             } else if let Some(ty) = attr.parse_value("type") {
@@ -114,11 +104,34 @@ impl FieldAttrs {
         }
     }
 
+    /// Get the expected `der::Tag` for this field.
+    pub fn tag(&self, type_attrs: &TypeAttrs) -> Option<TokenStream> {
+        match type_attrs.tag_mode {
+            TagMode::Explicit => self.asn1_type.map(|ty| ty.tag()),
+            TagMode::Implicit => match self.context_specific {
+                Some(tag_number) => {
+                    let tag_number = tag_number.to_tokens();
+
+                    // TODO(tarcieri): handle constructed inner types
+                    let constructed = quote!(false);
+
+                    Some(quote! {
+                        ::der::Tag::ContextSpecific {
+                            number: #tag_number,
+                            constructed: #constructed
+                        }
+                    })
+                }
+                None => panic!("implicit tagging requires an associated `tag_number`"),
+            },
+        }
+    }
+
     /// Get a `der::Decoder` object which respects these field attributes.
     pub fn decoder(&self, type_attrs: &TypeAttrs) -> TokenStream {
         if let Some(tag_number) = self.context_specific {
             let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
-            let tag_number = quote!(::der::TagNumber::new(#tag_number));
+            let tag_number = tag_number.to_tokens();
 
             let context_specific = match type_attrs.tag_mode {
                 TagMode::Explicit => {
@@ -148,12 +161,15 @@ impl FieldAttrs {
     /// Get a `der::Encoder` object which respects these field attributes.
     pub fn encoder(&self, binding: &TokenStream, type_attrs: &TypeAttrs) -> TokenStream {
         if let Some(tag_number) = self.context_specific {
-            let tag_number = quote!(::der::TagNumber::new(#tag_number));
+            let tag_number = tag_number.to_tokens();
             let tag_mode = type_attrs.tag_mode.tokens();
             quote!(encoder.context_specific(#tag_number, #tag_mode, #binding))
         } else {
             self.asn1_type
-                .map(|ty| ty.encoder(binding))
+                .map(|ty| {
+                    let encoder_obj = ty.encoder(binding);
+                    quote!(#encoder_obj?.encode(encoder))
+                })
                 .unwrap_or_else(|| quote!(encoder.encode(#binding)?))
         }
     }

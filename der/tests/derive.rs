@@ -38,6 +38,11 @@ pub enum Time {
 }
 
 impl Time {
+    const UTC_TIMESTAMP_BYTES: &'static [u8] =
+        &hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a");
+    const GENERAL_TIMESTAMP_BYTES: &'static [u8] =
+        &hex!("18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
+
     fn to_unix_duration(self) -> Duration {
         match self {
             Time::UtcTime(t) => t.to_unix_duration(),
@@ -46,35 +51,8 @@ impl Time {
     }
 }
 
-const UTC_TIMESTAMP: &[u8] = &hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a");
-const GENERAL_TIMESTAMP: &[u8] = &hex!("18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
-
-#[test]
-fn decode_time_variants() {
-    let utc_time = Time::from_der(UTC_TIMESTAMP).unwrap();
-    assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
-
-    let general_time = Time::from_der(GENERAL_TIMESTAMP).unwrap();
-    assert_eq!(general_time.to_unix_duration().as_secs(), 673573540);
-}
-
-#[test]
-fn encode_time_variants() {
-    let mut buf = [0u8; 128];
-
-    let utc_time = Time::from_der(UTC_TIMESTAMP).unwrap();
-    let mut encoder = Encoder::new(&mut buf);
-    utc_time.encode(&mut encoder).unwrap();
-    assert_eq!(UTC_TIMESTAMP, encoder.finish().unwrap());
-
-    let general_time = Time::from_der(GENERAL_TIMESTAMP).unwrap();
-    let mut encoder = Encoder::new(&mut buf);
-    general_time.encode(&mut encoder).unwrap();
-    assert_eq!(GENERAL_TIMESTAMP, encoder.finish().unwrap());
-}
-
 /// `Choice` macro test case for `IMPLICIT` tagging.
-#[derive(Choice)]
+#[derive(Choice, Debug, Eq, PartialEq)]
 #[asn1(tag_mode = "IMPLICIT")]
 pub enum ImplicitChoice<'a> {
     #[asn1(context_specific = "0", type = "BIT STRING")]
@@ -85,4 +63,77 @@ pub enum ImplicitChoice<'a> {
 
     #[asn1(context_specific = "2", type = "UTF8String")]
     Utf8String(String),
+}
+
+impl<'a> ImplicitChoice<'a> {
+    const BITSTRING_BYTES: &'static [u8] = &hex!("80 04 00 01 02 03");
+    const TIME_BYTES: &'static [u8] = &hex!("81 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
+
+    pub fn bit_string(&self) -> Option<BitString<'a>> {
+        match self {
+            Self::BitString(bs) => Some(*bs),
+            _ => None,
+        }
+    }
+
+    pub fn time(&self) -> Option<GeneralizedTime> {
+        match self {
+            Self::Time(time) => Some(*time),
+            _ => None,
+        }
+    }
+}
+
+#[test]
+fn decode_time_variants() {
+    let utc_time = Time::from_der(Time::UTC_TIMESTAMP_BYTES).unwrap();
+    assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
+
+    let general_time = Time::from_der(Time::GENERAL_TIMESTAMP_BYTES).unwrap();
+    assert_eq!(general_time.to_unix_duration().as_secs(), 673573540);
+}
+
+#[test]
+fn encode_time_variants() {
+    let mut buf = [0u8; 128];
+
+    let utc_time = Time::from_der(Time::UTC_TIMESTAMP_BYTES).unwrap();
+    let mut encoder = Encoder::new(&mut buf);
+    utc_time.encode(&mut encoder).unwrap();
+    assert_eq!(Time::UTC_TIMESTAMP_BYTES, encoder.finish().unwrap());
+
+    let general_time = Time::from_der(Time::GENERAL_TIMESTAMP_BYTES).unwrap();
+    let mut encoder = Encoder::new(&mut buf);
+    general_time.encode(&mut encoder).unwrap();
+    assert_eq!(Time::GENERAL_TIMESTAMP_BYTES, encoder.finish().unwrap());
+}
+
+#[test]
+fn decode_implicit_choice() {
+    let cs_bit_string = ImplicitChoice::from_der(ImplicitChoice::BITSTRING_BYTES).unwrap();
+    assert_eq!(
+        cs_bit_string.bit_string().unwrap().as_bytes().unwrap(),
+        &[1, 2, 3]
+    );
+
+    let cs_time = ImplicitChoice::from_der(ImplicitChoice::TIME_BYTES).unwrap();
+    assert_eq!(
+        cs_time.time().unwrap().to_unix_duration().as_secs(),
+        673573540
+    );
+}
+
+#[test]
+fn encode_implicit_choice() {
+    let mut buf = [0u8; 128];
+
+    let cs_bit_string = ImplicitChoice::from_der(ImplicitChoice::BITSTRING_BYTES).unwrap();
+    let mut encoder = Encoder::new(&mut buf);
+    cs_bit_string.encode(&mut encoder).unwrap();
+    assert_eq!(ImplicitChoice::BITSTRING_BYTES, encoder.finish().unwrap());
+
+    let cs_time = ImplicitChoice::from_der(ImplicitChoice::TIME_BYTES).unwrap();
+    let mut encoder = Encoder::new(&mut buf);
+    cs_time.encode(&mut encoder).unwrap();
+    assert_eq!(ImplicitChoice::TIME_BYTES, encoder.finish().unwrap());
 }
