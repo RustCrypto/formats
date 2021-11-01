@@ -242,16 +242,15 @@
 //! }
 //!
 //! // Example parameters value: OID for the NIST P-256 elliptic curve.
-//! let parameters = "1.2.840.10045.3.1.7".parse::<ObjectIdentifier>().unwrap();
-//! let der_encoded_parameters = parameters.to_vec().unwrap();
+//! let parameters_oid = "1.2.840.10045.3.1.7".parse::<ObjectIdentifier>().unwrap();
 //!
 //! let algorithm_identifier = AlgorithmIdentifier {
 //!     // OID for `id-ecPublicKey`, if you're curious
 //!     algorithm: "1.2.840.10045.2.1".parse().unwrap(),
 //!
-//!     // `Any<'a>` impls `TryFrom<&'a [u8]>`, which parses the provided
+//!     // `Any<'a>` impls `From<&'a ObjectIdentifier>`, which parses the provided
 //!     // slice as an ASN.1 DER-encoded message.
-//!     parameters: Some(der_encoded_parameters.as_slice().try_into().unwrap())
+//!     parameters: Some(Any::from(&parameters_oid))
 //! };
 //!
 //! // Encode
