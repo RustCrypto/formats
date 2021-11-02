@@ -2,22 +2,16 @@
 //! the purposes of decoding/encoding ASN.1 `CHOICE` types as mapped to
 //! enum variants.
 
-use crate::{Asn1Type, FieldAttrs, TypeAttrs};
+use crate::{FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{DataEnum, Fields, FieldsUnnamed, Ident, Lifetime, Type, Variant};
+use syn::{DataEnum, Lifetime, Variant};
 use synstructure::{Structure, VariantInfo};
-
-/// Registry of `CHOICE` alternatives for a given enum
-type Alternatives = std::collections::BTreeMap<Asn1Type, Alternative>;
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
     /// `asn1` attributes defined at the type level.
     type_attrs: TypeAttrs,
-
-    /// `CHOICE` alternatives for this enum.
-    alternatives: Alternatives,
 
     /// Tags included in the impl body for `der::Choice`.
     choice_body: TokenStream,
@@ -43,7 +37,6 @@ impl DeriveChoice {
 
         let mut state = Self {
             type_attrs: TypeAttrs::parse(&s.ast().attrs),
-            alternatives: Default::default(),
             choice_body: TokenStream::new(),
             decode_body: TokenStream::new(),
             encode_body: TokenStream::new(),
@@ -52,12 +45,6 @@ impl DeriveChoice {
 
         for (variant_info, variant) in s.variants().iter().zip(&data.variants) {
             let field_attrs = FieldAttrs::parse(&variant.attrs);
-            let asn1_type = field_attrs.asn1_type.unwrap_or_else(|| {
-                panic!(
-                    "no #[asn1(type=...)] specified for enum variant: {}",
-                    variant.ident
-                )
-            });
             let tag = field_attrs.tag(&state.type_attrs).unwrap_or_else(|| {
                 panic!(
                     "no #[asn1(type=...)] specified for enum variant: {}",
@@ -65,7 +52,6 @@ impl DeriveChoice {
                 )
             });
 
-            Alternative::register(&mut state.alternatives, asn1_type, variant);
             state.derive_variant_choice(&tag);
             state.derive_variant_decoder(variant, &tag, &field_attrs);
 
@@ -77,7 +63,7 @@ impl DeriveChoice {
                 }
                 other => panic!(
                     "unsupported number of ASN.1 variant bindings for {}: {}",
-                    asn1_type, other
+                    &variant.ident, other
                 ),
             }
         }
@@ -155,21 +141,6 @@ impl DeriveChoice {
             ..
         } = self;
 
-        let mut variant_conversions = TokenStream::new();
-
-        for variant in self.alternatives.values() {
-            let variant_ident = &variant.ident;
-            let variant_type = &variant.field_type;
-
-            variant_conversions.extend(s.gen_impl(quote! {
-                gen impl From<#variant_type> for @Self {
-                    fn from(field: #variant_type) -> Self {
-                        Self::#variant_ident(field)
-                    }
-                }
-            }));
-        }
-
         s.gen_impl(quote! {
             gen impl ::der::Choice<#lifetime> for @Self {
                 fn can_decode(tag: ::der::Tag) -> bool {
@@ -203,43 +174,6 @@ impl DeriveChoice {
                     }
                 }
             }
-
-            #variant_conversions
         })
-    }
-}
-
-/// ASN.1 `CHOICE` alternative: one of the ASN.1 types comprising the `CHOICE`
-/// which maps to an enum variant.
-struct Alternative {
-    /// [`Ident`] for the corresponding enum variant.
-    pub ident: Ident,
-
-    /// Type of the inner field (i.e. of the variant's 1-tuple)
-    pub field_type: Type,
-}
-
-impl Alternative {
-    /// Register a `CHOICE` alternative for a variant
-    pub fn register(alternatives: &mut Alternatives, asn1_type: Asn1Type, variant: &Variant) {
-        let field_type = match &variant.fields {
-            Fields::Unnamed(FieldsUnnamed { unnamed, .. }) if unnamed.len() == 1 => {
-                let field = unnamed.first().unwrap();
-                field.ty.clone()
-            }
-            _ => panic!("can only derive `Choice` for enums with 1-tuple variants"),
-        };
-
-        let alternative = Self {
-            ident: variant.ident.clone(),
-            field_type,
-        };
-
-        if let Some(duplicate) = alternatives.insert(asn1_type, alternative) {
-            panic!(
-                "duplicate ASN.1 type `{}` for enum variants `{}` and `{}`",
-                asn1_type, duplicate.ident, variant.ident
-            );
-        }
     }
 }

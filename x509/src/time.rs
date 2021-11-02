@@ -51,3 +51,41 @@ impl Time {
         }
     }
 }
+
+impl From<UtcTime> for Time {
+    fn from(time: UtcTime) -> Time {
+        Time::UtcTime(time)
+    }
+}
+
+impl From<GeneralizedTime> for Time {
+    fn from(time: GeneralizedTime) -> Time {
+        Time::GeneralTime(time)
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl From<Time> for SystemTime {
+    fn from(time: Time) -> SystemTime {
+        time.to_system_time()
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl From<&Time> for SystemTime {
+    fn from(time: &Time) -> SystemTime {
+        time.to_system_time()
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl TryFrom<SystemTime> for Time {
+    type Error = der::Error;
+
+    fn try_from(time: SystemTime) -> der::Result<Time> {
+        Ok(GeneralizedTime::try_from(time)?.into())
+    }
+}
