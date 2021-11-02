@@ -7,7 +7,7 @@ use std::{fmt::Debug, str::FromStr};
 use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path};
 
 /// Attribute name.
-const ATTR_NAME: &str = "asn1";
+pub(crate) const ATTR_NAME: &str = "asn1";
 
 /// Parsing error message.
 const PARSE_ERR_MSG: &str = "error parsing `asn1` attribute";
@@ -26,6 +26,7 @@ impl TypeAttrs {
     /// Parse attributes from a struct field or enum variant.
     pub fn parse(attrs: &[Attribute]) -> Self {
         let mut tag_mode = None;
+
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
 
