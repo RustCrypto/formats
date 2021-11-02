@@ -92,13 +92,15 @@
 
 mod attributes;
 mod choice;
+mod enumerated;
 mod sequence;
 mod tag;
 mod types;
 
 use crate::{
-    attributes::{FieldAttrs, TypeAttrs},
+    attributes::{FieldAttrs, TypeAttrs, ATTR_NAME},
     choice::DeriveChoice,
+    enumerated::DeriveEnumerated,
     sequence::DeriveSequence,
     tag::{TagMode, TagNumber},
     types::Asn1Type,
@@ -151,6 +153,40 @@ decl_derive!(
 );
 
 decl_derive!(
+    [Enumerated, attributes(asn1)] =>
+
+    /// Derive decoders and encoders for ASN.1 [`Enumerated`] types.
+    ///
+    /// # Usage
+    ///
+    /// The `Enumerated` proc macro requires a C-like enum which impls `Copy`
+    /// and has a `#[repr]` of `u8`, `u16`, or `u32`:
+    ///
+    /// ```ignore
+    /// use der::Enumerated;
+    ///
+    /// #[derive(Enumerated, Copy, Clone, Debug, Eq, PartialEq)]
+    /// #[repr(u32)]
+    /// pub enum CrlReason {
+    ///     Unspecified = 0,
+    ///     KeyCompromise = 1,
+    ///     CaCompromise = 2,
+    ///     AffiliationChanged = 3,
+    ///     Superseded = 4,
+    ///     CessationOfOperation = 5,
+    ///     CertificateHold = 6,
+    ///     RemoveFromCrl = 8,
+    ///     PrivilegeWithdrawn = 9,
+    ///     AaCompromised = 10
+    /// }
+    /// ```
+    ///
+    /// Note that the derive macro will write a `TryFrom<...>` impl for the
+    /// provided `#[repr]`, which is used by the decoder.
+    derive_enumerated
+);
+
+decl_derive!(
     [Sequence, attributes(asn1)] =>
 
     /// Derive the [`Sequence`][1] trait on a struct.
@@ -189,7 +225,7 @@ decl_derive!(
     derive_sequence
 );
 
-/// Custom derive for `der::Choice`
+/// Custom derive for `der::Choice`.
 fn derive_choice(s: Structure<'_>) -> TokenStream {
     let ast = s.ast();
     let lifetime = parse_lifetime(&ast.generics);
@@ -206,7 +242,27 @@ fn derive_choice(s: Structure<'_>) -> TokenStream {
     )
 }
 
-/// Custom derive for `der::Sequence`
+/// Custom derive for `der::Enumerated`.
+fn derive_enumerated(s: Structure<'_>) -> TokenStream {
+    let ast = s.ast();
+
+    if let Some(lifetime) = parse_lifetime(&ast.generics) {
+        panic!("lifetimes not allowed on `Enumerated` types: {}", lifetime);
+    }
+
+    let data_label = match &ast.data {
+        syn::Data::Enum(data) => return DeriveEnumerated::derive(s, data),
+        syn::Data::Struct(_) => "struct",
+        syn::Data::Union(_) => "union",
+    };
+
+    panic!(
+        "can't derive `Enumerated` on `{}`: only `enum` types are allowed",
+        data_label
+    )
+}
+
+/// Custom derive for `der::Sequence`.
 fn derive_sequence(s: Structure<'_>) -> TokenStream {
     let ast = s.ast();
     let lifetime = parse_lifetime(&ast.generics);

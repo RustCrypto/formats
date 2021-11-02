@@ -42,11 +42,6 @@ mod choice {
         }
 
         impl Time {
-            const UTC_TIMESTAMP_DER: &'static [u8] =
-                &hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a");
-            const GENERAL_TIMESTAMP_DER: &'static [u8] =
-                &hex!("18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
-
             fn to_unix_duration(self) -> Duration {
                 match self {
                     Time::UtcTime(t) => t.to_unix_duration(),
@@ -55,12 +50,17 @@ mod choice {
             }
         }
 
+        const UTC_TIMESTAMP_DER: &'static [u8] =
+            &hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a");
+        const GENERAL_TIMESTAMP_DER: &'static [u8] =
+            &hex!("18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
+
         #[test]
         fn decode() {
-            let utc_time = Time::from_der(Time::UTC_TIMESTAMP_DER).unwrap();
+            let utc_time = Time::from_der(UTC_TIMESTAMP_DER).unwrap();
             assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
 
-            let general_time = Time::from_der(Time::GENERAL_TIMESTAMP_DER).unwrap();
+            let general_time = Time::from_der(GENERAL_TIMESTAMP_DER).unwrap();
             assert_eq!(general_time.to_unix_duration().as_secs(), 673573540);
         }
 
@@ -68,15 +68,15 @@ mod choice {
         fn encode() {
             let mut buf = [0u8; 128];
 
-            let utc_time = Time::from_der(Time::UTC_TIMESTAMP_DER).unwrap();
+            let utc_time = Time::from_der(UTC_TIMESTAMP_DER).unwrap();
             let mut encoder = Encoder::new(&mut buf);
             utc_time.encode(&mut encoder).unwrap();
-            assert_eq!(Time::UTC_TIMESTAMP_DER, encoder.finish().unwrap());
+            assert_eq!(UTC_TIMESTAMP_DER, encoder.finish().unwrap());
 
-            let general_time = Time::from_der(Time::GENERAL_TIMESTAMP_DER).unwrap();
+            let general_time = Time::from_der(GENERAL_TIMESTAMP_DER).unwrap();
             let mut encoder = Encoder::new(&mut buf);
             general_time.encode(&mut encoder).unwrap();
-            assert_eq!(Time::GENERAL_TIMESTAMP_DER, encoder.finish().unwrap());
+            assert_eq!(GENERAL_TIMESTAMP_DER, encoder.finish().unwrap());
         }
     }
 
@@ -103,10 +103,6 @@ mod choice {
         }
 
         impl<'a> ImplicitChoice<'a> {
-            const BITSTRING_DER: &'static [u8] = &hex!("80 04 00 01 02 03");
-            const TIME_DER: &'static [u8] =
-                &hex!("81 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
-
             pub fn bit_string(&self) -> Option<BitString<'a>> {
                 match self {
                     Self::BitString(bs) => Some(*bs),
@@ -122,15 +118,18 @@ mod choice {
             }
         }
 
+        const BITSTRING_DER: &'static [u8] = &hex!("80 04 00 01 02 03");
+        const TIME_DER: &'static [u8] = &hex!("81 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
+
         #[test]
         fn decode() {
-            let cs_bit_string = ImplicitChoice::from_der(ImplicitChoice::BITSTRING_DER).unwrap();
+            let cs_bit_string = ImplicitChoice::from_der(BITSTRING_DER).unwrap();
             assert_eq!(
                 cs_bit_string.bit_string().unwrap().as_bytes().unwrap(),
                 &[1, 2, 3]
             );
 
-            let cs_time = ImplicitChoice::from_der(ImplicitChoice::TIME_DER).unwrap();
+            let cs_time = ImplicitChoice::from_der(TIME_DER).unwrap();
             assert_eq!(
                 cs_time.time().unwrap().to_unix_duration().as_secs(),
                 673573540
@@ -141,16 +140,63 @@ mod choice {
         fn encode() {
             let mut buf = [0u8; 128];
 
-            let cs_bit_string = ImplicitChoice::from_der(ImplicitChoice::BITSTRING_DER).unwrap();
+            let cs_bit_string = ImplicitChoice::from_der(BITSTRING_DER).unwrap();
             let mut encoder = Encoder::new(&mut buf);
             cs_bit_string.encode(&mut encoder).unwrap();
-            assert_eq!(ImplicitChoice::BITSTRING_DER, encoder.finish().unwrap());
+            assert_eq!(BITSTRING_DER, encoder.finish().unwrap());
 
-            let cs_time = ImplicitChoice::from_der(ImplicitChoice::TIME_DER).unwrap();
+            let cs_time = ImplicitChoice::from_der(TIME_DER).unwrap();
             let mut encoder = Encoder::new(&mut buf);
             cs_time.encode(&mut encoder).unwrap();
-            assert_eq!(ImplicitChoice::TIME_DER, encoder.finish().unwrap());
+            assert_eq!(TIME_DER, encoder.finish().unwrap());
         }
+    }
+}
+
+/// Custom derive test cases for the `Enumerated` macro.
+mod enumerated {
+    use der::{Decodable, Encodable, Encoder, Enumerated};
+    use hex_literal::hex;
+
+    /// X.509 `CRLReason`.
+    #[derive(Enumerated, Copy, Clone, Debug, Eq, PartialEq)]
+    #[repr(u32)]
+    pub enum CrlReason {
+        Unspecified = 0,
+        KeyCompromise = 1,
+        CaCompromise = 2,
+        AffiliationChanged = 3,
+        Superseded = 4,
+        CessationOfOperation = 5,
+        CertificateHold = 6,
+        RemoveFromCrl = 8,
+        PrivilegeWithdrawn = 9,
+        AaCompromised = 10,
+    }
+
+    const UNSPECIFIED_DER: &[u8] = &hex!("0a 01 00");
+    const KEY_COMPROMISE_DER: &[u8] = &hex!("0a 01 01");
+
+    #[test]
+    fn decode() {
+        let unspecified = CrlReason::from_der(UNSPECIFIED_DER).unwrap();
+        assert_eq!(CrlReason::Unspecified, unspecified);
+
+        let key_compromise = CrlReason::from_der(KEY_COMPROMISE_DER).unwrap();
+        assert_eq!(CrlReason::KeyCompromise, key_compromise);
+    }
+
+    #[test]
+    fn encode() {
+        let mut buf = [0u8; 128];
+
+        let mut encoder = Encoder::new(&mut buf);
+        CrlReason::Unspecified.encode(&mut encoder).unwrap();
+        assert_eq!(UNSPECIFIED_DER, encoder.finish().unwrap());
+
+        let mut encoder = Encoder::new(&mut buf);
+        CrlReason::KeyCompromise.encode(&mut encoder).unwrap();
+        assert_eq!(KEY_COMPROMISE_DER, encoder.finish().unwrap());
     }
 }
 
