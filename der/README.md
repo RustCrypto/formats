@@ -15,11 +15,21 @@ for Abstract Syntax Notation One (ASN.1) as described in ITU X.690.
 # About
 
 This crate provides a `no_std`-friendly implementation of a subset of ASN.1 DER
-necessary  for decoding/encoding various cryptography-related formats
-implemented as part of the [RustCrypto] project, e.g. the [`pkcs8`] crate.
+necessary for decoding/encoding the following cryptography-related formats
+implemented as crates maintained by the [RustCrypto] project:
+
+- [`pkcs1`]: RSA Cryptography Specifications
+- [`pkcs5`]: Password-Based Cryptography Specification
+- [`pkcs7`]: Cryptographic Message Syntax
+- [`pkcs8`]: Private-Key Information Syntax Specification
+- [`sec1`]: Elliptic Curve Cryptography
+- [`spki`]: X.509 Subject Public Key Info
 
 The core implementation avoids any heap usage (with convenience methods
 that allocate gated under the off-by-default `alloc` feature).
+
+The DER decoder attempts to ensure that the input document is in canonical
+form, and will return errors if non-canonical productions are encountered.
 
 ## Minimum Supported Rust Version
 
@@ -59,4 +69,9 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[`pkcs8`]: https://docs.rs/pkcs8/
+[`pkcs1`]: https://github.com/RustCrypto/formats/tree/master/pkcs1
+[`pkcs5`]: https://github.com/RustCrypto/formats/tree/master/pkcs5
+[`pkcs7`]: https://github.com/RustCrypto/formats/tree/master/pkcs7
+[`pkcs8`]: https://github.com/RustCrypto/formats/tree/master/pkcs8
+[`sec1`]: https://github.com/RustCrypto/formats/tree/master/sec1
+[`spki`]: https://github.com/RustCrypto/formats/tree/master/spki
