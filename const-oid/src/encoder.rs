@@ -11,7 +11,7 @@ pub(crate) struct Encoder {
     state: State,
 
     /// Bytes of the OID being encoded in-progress
-    bytes: [u8; ObjectIdentifier::MAX_LENGTH],
+    bytes: [u8; ObjectIdentifier::MAX_SIZE],
 
     /// Current position within the byte buffer
     cursor: usize,
@@ -34,7 +34,7 @@ impl Encoder {
     pub(crate) const fn new() -> Self {
         Self {
             state: State::Initial,
-            bytes: [0u8; ObjectIdentifier::MAX_LENGTH],
+            bytes: [0u8; ObjectIdentifier::MAX_SIZE],
             cursor: 0,
         }
     }
@@ -59,7 +59,7 @@ impl Encoder {
                 let nbytes = base128_len(arc);
 
                 const_assert!(
-                    self.cursor + nbytes + 1 < ObjectIdentifier::MAX_LENGTH,
+                    self.cursor + nbytes + 1 < ObjectIdentifier::MAX_SIZE,
                     "OID too long (exceeded max DER bytes)"
                 );
 

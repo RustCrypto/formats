@@ -42,11 +42,11 @@ use core::{fmt, str::FromStr};
 /// - The first arc MUST be within the range 0-2
 /// - The second arc MUST be within the range 0-39
 /// - The BER/DER encoding of the OID MUST be shorter than
-///   [`ObjectIdentifier::MAX_LENGTH`]
+///   [`ObjectIdentifier::MAX_SIZE`]
 #[derive(Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct ObjectIdentifier {
     /// Array containing BER/DER-serialized bytes (no header)
-    bytes: [u8; Self::MAX_LENGTH],
+    bytes: [u8; Self::MAX_SIZE],
 
     /// Length in bytes
     length: u8,
@@ -54,8 +54,8 @@ pub struct ObjectIdentifier {
 
 #[allow(clippy::len_without_is_empty)]
 impl ObjectIdentifier {
-    /// Maximum length of a BER/DER-encoded OID in bytes.
-    pub const MAX_LENGTH: usize = 23; // 24-bytes total w\ 1-byte length
+    /// Maximum size of a BER/DER-encoded OID in bytes.
+    pub const MAX_SIZE: usize = 31; // 24-bytes total w\ 1-byte length
 
     /// Parse an [`ObjectIdentifier`] from the dot-delimited string form, e.g.:
     ///
@@ -85,7 +85,7 @@ impl ObjectIdentifier {
 
     /// Parse an OID from a slice of [`Arc`] values (i.e. integers).
     pub fn from_arcs(arcs: &[Arc]) -> Result<Self> {
-        let mut bytes = [0u8; Self::MAX_LENGTH];
+        let mut bytes = [0u8; Self::MAX_SIZE];
 
         bytes[0] = match *arcs {
             [first, second, _, ..] => RootArcs::new(first, second)?.into(),
@@ -108,7 +108,7 @@ impl ObjectIdentifier {
     pub fn from_bytes(ber_bytes: &[u8]) -> Result<Self> {
         let len = ber_bytes.len();
 
-        if !(2..=Self::MAX_LENGTH).contains(&len) {
+        if !(2..=Self::MAX_SIZE).contains(&len) {
             return Err(Error);
         }
 
@@ -143,7 +143,7 @@ impl ObjectIdentifier {
             }
         }
 
-        let mut bytes = [0u8; Self::MAX_LENGTH];
+        let mut bytes = [0u8; Self::MAX_SIZE];
         bytes[..len].copy_from_slice(ber_bytes);
 
         Ok(Self {
@@ -188,7 +188,7 @@ impl FromStr for ObjectIdentifier {
         let first_arc = split.next().and_then(|s| s.parse().ok()).ok_or(Error)?;
         let second_arc = split.next().and_then(|s| s.parse().ok()).ok_or(Error)?;
 
-        let mut bytes = [0u8; Self::MAX_LENGTH];
+        let mut bytes = [0u8; Self::MAX_SIZE];
         bytes[0] = RootArcs::new(first_arc, second_arc)?.into();
 
         let mut offset = 1;
