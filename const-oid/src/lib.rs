@@ -45,11 +45,11 @@ use core::{fmt, str::FromStr};
 ///   [`ObjectIdentifier::MAX_SIZE`]
 #[derive(Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct ObjectIdentifier {
-    /// Array containing BER/DER-serialized bytes (no header)
-    bytes: [u8; Self::MAX_SIZE],
-
     /// Length in bytes
     length: u8,
+
+    /// Array containing BER/DER-serialized bytes (no header)
+    bytes: [u8; Self::MAX_SIZE],
 }
 
 #[allow(clippy::len_without_is_empty)]
