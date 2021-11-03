@@ -7,10 +7,10 @@
 ![Rust Version][rustc-image]
 [![Project Chat][chat-image]][chat-link]
 
-X.509 Subject Public Key Info types describing public keys as well as their
+[X.509] Subject Public Key Info types describing public keys as well as their
 associated AlgorithmIdentifiers (i.e. OIDs).
 
-Specified in [RFC 5280] (Section 4.1).
+Specified in [RFC 5280 § 4.1].
 
 [Documentation][docs-link]
 
@@ -52,4 +52,5 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 5280]: https://tools.ietf.org/html/rfc5280#section-4.1
+[X.509]: https://en.wikipedia.org/wiki/X.509
+[RFC 5280 § 4.1]: https://tools.ietf.org/html/rfc5280#section-4.1
