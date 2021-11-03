@@ -23,9 +23,9 @@ macro_rules! impl_int_encoding {
                     };
 
                     // Ensure we compute the same encoded length as the original any value
-                    // if any.encoded_len()? != result.encoded_len()? {
-                    //     return Err(Self::TAG.non_canonical_error());
-                    // }
+                    if length != result.value_len()? {
+                        return Err(Self::TAG.non_canonical_error());
+                    }
 
                     Ok(result)
                 }
@@ -73,9 +73,9 @@ macro_rules! impl_uint_encoding {
                     let result = Self::from_be_bytes(uint::decode_to_array(bytes)?);
 
                     // Ensure we compute the same encoded length as the original any value
-                    // if any.encoded_len()? != result.encoded_len()? {
-                    //     return Err(Self::TAG.non_canonical_error());
-                    // }
+                    if length != result.value_len()? {
+                        return Err(Self::TAG.non_canonical_error());
+                    }
 
                     Ok(result)
                 }

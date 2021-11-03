@@ -220,6 +220,7 @@
 //! derive macros are available:
 //!
 //! - [`Choice`]: derive for `CHOICE` enum (see [`der_derive::Choice`])
+//! - [`Enumerated`]: derive for `ENUMERATED` enum (see [`der_derive::Enumerated`])
 //! - [`Sequence`]: derive for `SEQUENCE` struct (see [`der_derive::Sequence`])
 //!
 //! ### Derive [`Sequence`] for struct
@@ -242,16 +243,15 @@
 //! }
 //!
 //! // Example parameters value: OID for the NIST P-256 elliptic curve.
-//! let parameters = "1.2.840.10045.3.1.7".parse::<ObjectIdentifier>().unwrap();
-//! let der_encoded_parameters = parameters.to_vec().unwrap();
+//! let parameters_oid = "1.2.840.10045.3.1.7".parse::<ObjectIdentifier>().unwrap();
 //!
 //! let algorithm_identifier = AlgorithmIdentifier {
 //!     // OID for `id-ecPublicKey`, if you're curious
 //!     algorithm: "1.2.840.10045.2.1".parse().unwrap(),
 //!
-//!     // `Any<'a>` impls `TryFrom<&'a [u8]>`, which parses the provided
+//!     // `Any<'a>` impls `From<&'a ObjectIdentifier>`, which parses the provided
 //!     // slice as an ASN.1 DER-encoded message.
-//!     parameters: Some(der_encoded_parameters.as_slice().try_into().unwrap())
+//!     parameters: Some(Any::from(&parameters_oid))
 //! };
 //!
 //! // Encode
@@ -386,7 +386,7 @@ pub use crypto_bigint as bigint;
 
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
-pub use der_derive::{Choice, Sequence, TBS};
+pub use der_derive::{Choice, Enumerated, Sequence, TBS};
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
