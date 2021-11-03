@@ -3,7 +3,7 @@ name = "pkcs7"
 version = "0.0.0" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #7:
-PKCS #7: Cryptographic Message Syntax Version 1.5 (RFC 2315)
+PKCS #7: Cryptographic Message Syntax Version 1.5 (RFC 5652)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"

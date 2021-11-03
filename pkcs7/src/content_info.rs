@@ -7,7 +7,7 @@ use der::{
 
 const CONTENT_TAG: TagNumber = TagNumber::new(0);
 
-/// Content exchanged between entities [RFC 2315 § 7](https://datatracker.ietf.org/doc/html/rfc2315#section-7)
+/// Content exchanged between entities [RFC 5652 § 3](https://datatracker.ietf.org/doc/html/rfc5652#section-3)
 ///
 /// ```text
 /// ContentInfo ::= SEQUENCE {
@@ -16,10 +16,10 @@ const CONTENT_TAG: TagNumber = TagNumber::new(0);
 ///     [0] EXPLICIT ANY DEFINED BY contentType OPTIONAL }
 /// ```
 pub enum ContentInfo<'a> {
-    /// Content type `data` [RFC 2315 § 8](https://datatracker.ietf.org/doc/html/rfc2315#section-8)
+    /// Content type `data`
     Data(Option<DataContent<'a>>),
 
-    /// Content type `encrypted-data` [RFC 2315 § 13](https://datatracker.ietf.org/doc/html/rfc2315#section-13)
+    /// Content type `encrypted-data`
     EncryptedData(Option<EncryptedDataContent<'a>>),
 
     /// Catch-all case for content types that are not explicitly supported

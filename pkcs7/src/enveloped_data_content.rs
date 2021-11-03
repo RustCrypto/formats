@@ -1,4 +1,4 @@
-//! `enveloped-data` content type [RFC 2315 § 10](https://datatracker.ietf.org/doc/html/rfc2315#section-10)
+//! `enveloped-data` content type [RFC 5652 § 6](https://datatracker.ietf.org/doc/html/rfc5652#section-6)
 
 use crate::ContentType;
 
@@ -12,7 +12,7 @@ type ContentEncryptionAlgorithmIdentifier<'a> = AlgorithmIdentifier<'a>;
 
 const ENCRYPTED_CONTENT_TAG: TagNumber = TagNumber::new(0);
 
-/// Encrypted content information [RFC 2315 § 10.1](https://datatracker.ietf.org/doc/html/rfc2315#section-10.1)
+/// Encrypted content information [RFC 5652 § 6](https://datatracker.ietf.org/doc/html/rfc5652#section-6)
 ///
 /// ```text
 /// EncryptedContentInfo ::= SEQUENCE {
@@ -33,8 +33,6 @@ const ENCRYPTED_CONTENT_TAG: TagNumber = TagNumber::new(0);
 ///   - [`content_encryption_algorithm`](EncryptedContentInfo::content_encryption_algorithm)
 ///     identifies the content-encryption algorithm (and any associated parameters) under
 ///     which the content is encrypted.
-///     The content-encryption process is described in
-///     [RFC 2315 § 10.3](https://datatracker.ietf.org/doc/html/rfc2315#section-10.3).
 ///     This algorithm is the same for all recipients.
 ///   - [`encrypted_content`](EncryptedContentInfo::encrypted_content) is the result of
 ///     encrypting the content. The field is optional, and if the field is not present,
