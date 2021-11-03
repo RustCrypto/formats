@@ -435,7 +435,7 @@ fn decode_idp() {
     );
 
     // Context specific tag that should be primitive is constructed
-    // TODO - see why this no longer fails
+    // TODO - restore this test when constructed/primitive enforcement is restored in context specific
     // let idp = IssuingDistributionPoint::from_der(&hex!("3003A201FF"));
     // let err = idp.err().unwrap();
     // assert_eq!(

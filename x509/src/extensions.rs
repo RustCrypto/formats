@@ -8,8 +8,8 @@ use crate::RelativeDistinguishedName;
 use alloc::prelude::v1::Box;
 use core::fmt;
 use der::asn1::{
-    Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, ObjectIdentifier, OctetString,
-    SequenceOf, UIntBytes, Utf8String,
+    Any, BitString, GeneralizedTime, Ia5String, ObjectIdentifier, OctetString, SequenceOf,
+    UIntBytes, Utf8String,
 };
 use der::{
     Decodable, DecodeValue, Decoder, Header, Length, Sequence, Tag, TagMode, TagNumber, Tagged,
@@ -241,13 +241,35 @@ pub struct PolicyMapping {
 /// NameConstraints ::= SEQUENCE {
 ///      permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
 ///      excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NameConstraints<'a> {
     /// permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
     permitted_subtrees: Option<GeneralSubtrees<'a>>,
 
     /// excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
     excluded_subtrees: Option<GeneralSubtrees<'a>>,
+}
+
+const PERMITTED_SUBTREES_TAG: TagNumber = TagNumber::new(0);
+const EXCLUDED_SUBTREES_TAG: TagNumber = TagNumber::new(1);
+
+impl<'a> Decodable<'a> for NameConstraints<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.sequence(|decoder| {
+            let permitted_subtrees = decoder.context_specific::<GeneralSubtrees<'a>>(
+                PERMITTED_SUBTREES_TAG,
+                TagMode::Implicit,
+            )?;
+            let excluded_subtrees = decoder.context_specific::<GeneralSubtrees<'a>>(
+                EXCLUDED_SUBTREES_TAG,
+                TagMode::Implicit,
+            )?;
+            Ok(NameConstraints {
+                permitted_subtrees,
+                excluded_subtrees,
+            })
+        })
+    }
 }
 
 /// GeneralSubtrees ::= SEQUENCE SIZE (1..MAX) OF GeneralSubtree
@@ -257,28 +279,72 @@ pub type GeneralSubtrees<'a> = alloc::vec::Vec<GeneralSubtree<'a>>;
 ///      base                    GeneralName,
 ///      minimum         [0]     BaseDistance DEFAULT 0,
 ///      maximum         [1]     BaseDistance OPTIONAL }
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct GeneralSubtree<'a> {
     /// base                    GeneralName,
     base: GeneralName<'a>,
 
     /// minimum         [0]     BaseDistance DEFAULT 0,
-    minimum: u32,
+    minimum: Option<u32>,
 
     /// maximum         [1]     BaseDistance OPTIONAL }
-    maximum: u32,
+    maximum: Option<u32>,
+}
+
+impl<'a> ::der::Decodable<'a> for GeneralSubtree<'a> {
+    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
+        decoder.sequence(|decoder| {
+            let base = decoder.decode()?;
+            let mut minimum: Option<u32> = decoder.decode()?;
+            if minimum.is_none() {
+                minimum = Some(0);
+            }
+            let maximum = decoder.decode()?;
+            Ok(Self {
+                base,
+                minimum,
+                maximum,
+            })
+        })
+    }
+}
+impl<'a> ::der::Sequence<'a> for GeneralSubtree<'a> {
+    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    {
+        f(&[&self.base, &self.minimum, &self.maximum])
+    }
 }
 
 /// PolicyConstraints ::= SEQUENCE {
 ///      requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
 ///      inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolicyConstraints {
     /// requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
-    require_explicit_policy: ContextSpecific<u32>,
+    require_explicit_policy: Option<u32>,
 
     /// inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
-    inhibit_policy_mapping: ContextSpecific<u32>,
+    inhibit_policy_mapping: Option<u32>,
+}
+
+const REQUIRE_EXPLICIT_POLICY_TAG: TagNumber = TagNumber::new(0);
+const INHIBIT_EXPLICIT_MAPPING_TAG: TagNumber = TagNumber::new(1);
+
+impl<'a> Decodable<'a> for PolicyConstraints {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.sequence(|decoder| {
+            let require_explicit_policy =
+                decoder.context_specific::<u32>(REQUIRE_EXPLICIT_POLICY_TAG, TagMode::Implicit)?;
+            let inhibit_policy_mapping =
+                decoder.context_specific::<u32>(INHIBIT_EXPLICIT_MAPPING_TAG, TagMode::Implicit)?;
+            Ok(PolicyConstraints {
+                require_explicit_policy,
+                inhibit_policy_mapping,
+            })
+        })
+    }
 }
 
 /// ReasonFlags ::= BIT STRING {
