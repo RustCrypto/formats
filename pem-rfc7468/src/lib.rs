@@ -62,7 +62,7 @@ mod error;
 mod grammar;
 
 pub use crate::{
-    decoder::{decode, decode_label},
+    decoder::{decode, decode_label, Decoder},
     encoder::{encode, encoded_len, LineEnding},
     error::{Error, Result},
 };
