@@ -1,15 +1,6 @@
-//! Pure Rust implementation of [SEC1: Elliptic Curve Cryptography] encoding
-//! formats including ASN.1 DER-serialized private keys (also described in
-//! [RFC5915]) as well as the `Elliptic-Curve-Point-to-Octet-String` and
-//! `Octet-String-to-Elliptic-Curve-Point` encoding algorithms.
-//!
-//! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.56** at a minimum.
-//!
-//! [SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf
-//! [RFC5915]: https://datatracker.ietf.org/doc/html/rfc5915
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",

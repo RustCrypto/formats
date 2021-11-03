@@ -1,55 +1,5 @@
-//! Pure Rust implementation of PEM Encoding ([RFC 7468]) for PKIX, PKCS, and
-//! CMS Structures, a strict subset of the original Privacy-Enhanced Mail encoding
-//! intended  specifically for use with cryptographic keys, certificates, and other
-//! messages.
-//!
-//! Provides a `no_std`-friendly, constant-time implementation suitable for use with
-//! cryptographic private keys.
-//!
-//! # About
-//!
-//! Many cryptography-related document formats, such as certificates (PKIX),
-//! private and public keys/keypairs (PKCS), and other cryptographic messages (CMS)
-//! provide an ASCII encoding which can be traced back to Privacy-Enhanced Mail
-//! (PEM) as defined in [RFC 1421], which look like the following:
-//!
-//! ```text
-//! -----BEGIN PRIVATE KEY-----
-//! MC4CAQAwBQYDK2VwBCIEIBftnHPp22SewYmmEoMcX8VwI4IHwaqd+9LFPj/15eqF
-//! -----END PRIVATE KEY-----
-//! ```
-//!
-//! However, all of these formats actually implement a text-based encoding that is
-//! similar to, but *not* identical with, the legacy PEM encoding as described in
-//! [RFC 1421].
-//!
-//! For this reason, [RFC 7468] was created to describe a stricter form of
-//! "PEM encoding" for use in these applications which codifies the previously
-//! de facto rules that most implementations operate by, and makes recommendations
-//! to promote interoperability.
-//!
-//! This crate attempts to implement a strict interpretation of the [RFC 7468]
-//! rules, implementing all of the MUSTs and SHOULDs while avoiding the MAYs,
-//! and targeting the "ABNF (Strict)" subset of the grammar as described in
-//! [RFC 7468 Section 3 Figure 3 (p6)][RFC 7468 p6].
-//!
-//! # Implementation notes
-//!
-//! - Core PEM implementation is `no_std`-friendly and requires no heap allocations.
-//! - Avoids use of copies and temporary buffers.
-//! - Uses the [`base64ct`] crate to decode/encode Base64 in constant-time.
-//! - PEM parser avoids branching on potentially secret data as much as
-//!   possible. In the happy path, only 1-byte of secret data is potentially
-//!   branched upon.
-//!
-//! The paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Util::Lookup]
-//! demonstrates how the leakage from non-constant-time PEM parsers can be used
-//! to practically extract RSA private keys from SGX enclaves.
-//!
-//! # Minimum Supported Rust Version
-//!
-//! This crate requires **Rust 1.56** at a minimum.
-//!
+#![doc = include_str!("../README.md")]
+
 //! # Usage
 //!
 //! ```

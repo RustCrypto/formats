@@ -19,13 +19,18 @@ Supports `no_std` environments and avoids heap allocations in the core API
 
 ## About
 
-This is a Base64 library designed for sidechannel resistance, aimed at purposes
-like encoding/decoding the "PEM" format used to store things like cryptographic
-private keys.
+This crate implements several Base64 variants in constant-time for sidechannel
+resistance, aimed at purposes like encoding/decoding the "PEM" format used to
+store things like cryptographic private keys.
 
 The paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Util::Lookup]
 demonstrates how the leakage from non-constant-time Base64 parsers can be used
 to practically extract RSA private keys from SGX enclaves.
+
+The padded variants require (`=`) padding. Unpadded variants expressly
+reject such padding.
+
+Whitespace is expressly disallowed.
 
 ## Supported Base64 variants
 
