@@ -89,6 +89,8 @@ pub struct Extension<'a> {
 //pub type Extensions<'a> = SequenceOf<Extension<'a>, 10>;
 pub type Extensions<'a> = alloc::vec::Vec<Extension<'a>>;
 
+pub type ExtendedKeyUsage<'a> = alloc::vec::Vec<ObjectIdentifier>;
+
 ///    BasicConstraints ::= SEQUENCE {
 ///         cA                      BOOLEAN DEFAULT FALSE,
 ///         pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
