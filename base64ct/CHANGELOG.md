@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.0 (2021-11-03)
+### Changed
+- Rust 2021 edition upgrade; MSRV 1.56 ([#136])
+
+### Fixed
+- Benchmarks ([#135])
+
+[#135]: https://github.com/RustCrypto/formats/pull/135
+[#136]: https://github.com/RustCrypto/formats/pull/136
+
 ## 1.1.1 (2021-10-14)
 ### Changed
 - Update `Util::Lookup` paper references ([#32])
