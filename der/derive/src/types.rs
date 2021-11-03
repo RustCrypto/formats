@@ -47,13 +47,13 @@ impl Asn1Type {
     /// Get a `der::Decoder` object for a particular ASN.1 type
     pub fn decoder(self) -> TokenStream {
         match self {
-            Asn1Type::BitString => quote!(decoder.bit_string()),
-            Asn1Type::Ia5String => quote!(decoder.ia5_string()),
-            Asn1Type::GeneralizedTime => quote!(decoder.generalized_time()),
-            Asn1Type::OctetString => quote!(decoder.octet_string()),
-            Asn1Type::PrintableString => quote!(decoder.printable_string()),
-            Asn1Type::UtcTime => quote!(decoder.utc_time()),
-            Asn1Type::Utf8String => quote!(decoder.utf8_string()),
+            Asn1Type::BitString => quote!(decoder.bit_string()?),
+            Asn1Type::Ia5String => quote!(decoder.ia5_string()?),
+            Asn1Type::GeneralizedTime => quote!(decoder.generalized_time()?),
+            Asn1Type::OctetString => quote!(decoder.octet_string()?),
+            Asn1Type::PrintableString => quote!(decoder.printable_string()?),
+            Asn1Type::UtcTime => quote!(decoder.utc_time()?),
+            Asn1Type::Utf8String => quote!(decoder.utf8_string()?),
         }
     }
 

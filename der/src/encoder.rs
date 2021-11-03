@@ -83,17 +83,32 @@ impl<'a> Encoder<'a> {
         &mut self,
         tag_number: TagNumber,
         tag_mode: TagMode,
-        value: T,
+        value: &T,
     ) -> Result<()>
     where
         T: EncodeValue + Tagged,
     {
-        ContextSpecific {
-            tag_number,
-            tag_mode,
-            value,
+        let constructed = match tag_mode {
+            TagMode::Explicit => true,
+            TagMode::Implicit => T::TAG.is_constructed(),
+        };
+
+        let tag = Tag::ContextSpecific {
+            number: tag_number,
+            constructed,
+        };
+
+        let value_len = match tag_mode {
+            TagMode::Explicit => value.encoded_len(),
+            TagMode::Implicit => value.value_len(),
+        }?;
+
+        Header::new(tag, value_len)?.encode(self)?;
+
+        match tag_mode {
+            TagMode::Explicit => value.encode(self),
+            TagMode::Implicit => value.encode_value(self),
         }
-        .encode(self)
     }
 
     /// Encode the provided value as an ASN.1 `GeneralizedTime`
@@ -279,7 +294,7 @@ mod tests {
         let mut buf = [0u8; EXPECTED_BYTES.len()];
         let mut encoder = Encoder::new(&mut buf);
         encoder
-            .context_specific(tag_number, TagMode::Implicit, bit_string)
+            .context_specific(tag_number, TagMode::Implicit, &bit_string)
             .unwrap();
 
         assert_eq!(EXPECTED_BYTES, encoder.finish().unwrap());

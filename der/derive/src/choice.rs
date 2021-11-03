@@ -62,7 +62,7 @@ impl DeriveChoice {
 
             Alternative::register(&mut state.alternatives, asn1_type, variant);
             state.derive_variant_choice(&tag);
-            state.derive_variant_decoder(&tag, &field_attrs);
+            state.derive_variant_decoder(variant, &tag, &field_attrs);
 
             match variant_info.bindings().len() {
                 // TODO(tarcieri): handle 0 bindings for ASN.1 NULL
@@ -91,9 +91,16 @@ impl DeriveChoice {
     }
 
     /// Derive a match arm of the impl body for `TryFrom<der::asn1::Any<'_>>`.
-    fn derive_variant_decoder(&mut self, tag: &TokenStream, field_attrs: &FieldAttrs) {
+    fn derive_variant_decoder(
+        &mut self,
+        variant: &Variant,
+        tag: &TokenStream,
+        field_attrs: &FieldAttrs,
+    ) {
+        let variant_ident = &variant.ident;
         let decoder = field_attrs.decoder(&self.type_attrs);
-        { quote!(#tag => Ok(#decoder?.try_into()?),) }.to_tokens(&mut self.decode_body);
+        { quote!(#tag => Ok(Self::#variant_ident(#decoder.try_into()?)),) }
+            .to_tokens(&mut self.decode_body);
     }
 
     /// Derive a match arm for the impl body for `der::Encodable::encode`.

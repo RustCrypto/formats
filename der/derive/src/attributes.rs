@@ -29,8 +29,10 @@ impl TypeAttrs {
     /// Parse attributes from a struct field or enum variant.
     pub fn parse(attrs: &[Attribute]) -> Self {
         let mut tag_mode = None;
+        let mut parsed_attrs = Vec::new();
+        AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
 
-        for attr in attrs.iter().map(AttrNameValue::new).flatten() {
+        for attr in parsed_attrs {
             // `tag_mode = "..."` attribute
             if let Some(mode) = attr.parse_value("tag_mode") {
                 if tag_mode.is_some() {
@@ -59,10 +61,7 @@ pub(crate) struct FieldAttrs {
     /// Value of the `#[asn1(type = "...")]` attribute if provided.
     pub asn1_type: Option<Asn1Type>,
 
-    /// Indicate that this field is a context-specific field with the given
-    /// context-specific tag number.
-    // TODO(tarcieri): backend support
-    #[allow(dead_code)]
+    /// Value of the `#[asn1(context_specific = "...")] attribute if provided.
     pub context_specific: Option<TagNumber>,
 }
 
@@ -72,7 +71,10 @@ impl FieldAttrs {
         let mut asn1_type = None;
         let mut context_specific = None;
 
-        for attr in attrs.iter().map(AttrNameValue::new).flatten() {
+        let mut parsed_attrs = Vec::new();
+        AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
+
+        for attr in parsed_attrs {
             // `context_specific = "..."` attribute
             if let Some(tag_number) = attr.parse_value("context_specific") {
                 if context_specific.is_some() {
@@ -113,17 +115,47 @@ impl FieldAttrs {
     }
 
     /// Get a `der::Decoder` object which respects these field attributes.
-    pub fn decoder(&self, _type_attrs: &TypeAttrs) -> TokenStream {
-        self.asn1_type
-            .map(|ty| ty.decoder())
-            .unwrap_or_else(|| quote!(decoder.decode()))
+    pub fn decoder(&self, type_attrs: &TypeAttrs) -> TokenStream {
+        if let Some(tag_number) = self.context_specific {
+            let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
+            let tag_number = quote!(::der::TagNumber::new(#tag_number));
+
+            let context_specific = match type_attrs.tag_mode {
+                TagMode::Explicit => {
+                    quote!(::der::asn1::ContextSpecific::<#type_params>::decode_explicit(decoder, #tag_number)?)
+                }
+                TagMode::Implicit => {
+                    quote!(::der::asn1::ContextSpecific::<#type_params>::decode_implicit(decoder, #tag_number)?)
+                }
+            };
+
+            // TODO(tarcieri): better error handling?
+            quote! {
+                #context_specific.ok_or_else(|| {
+                    der::Tag::ContextSpecific {
+                        number: #tag_number,
+                        constructed: false
+                    }.value_error()
+                })?.value
+            }
+        } else {
+            self.asn1_type
+                .map(|ty| ty.decoder())
+                .unwrap_or_else(|| quote!(decoder.decode()?))
+        }
     }
 
     /// Get a `der::Encoder` object which respects these field attributes.
-    pub fn encoder(&self, binding: &TokenStream, _type_attrs: &TypeAttrs) -> TokenStream {
-        self.asn1_type
-            .map(|ty| ty.encoder(binding))
-            .unwrap_or_else(|| quote!(encoder.encode(#binding)))
+    pub fn encoder(&self, binding: &TokenStream, type_attrs: &TypeAttrs) -> TokenStream {
+        if let Some(tag_number) = self.context_specific {
+            let tag_number = quote!(::der::TagNumber::new(#tag_number));
+            let tag_mode = type_attrs.tag_mode.tokens();
+            quote!(encoder.context_specific(#tag_number, #tag_mode, #binding))
+        } else {
+            self.asn1_type
+                .map(|ty| ty.encoder(binding))
+                .unwrap_or_else(|| quote!(encoder.encode(#binding)?))
+        }
     }
 }
 
@@ -137,31 +169,31 @@ struct AttrNameValue {
 }
 
 impl AttrNameValue {
-    /// Parse a given attribute.
-    ///
-    /// Returns `None` if the attribute name is anything other than `asn1`.
-    ///
-    /// Expects the value is a string literal.
-    pub fn new(attr: &Attribute) -> Option<Self> {
-        if !attr.path.is_ident(ATTR_NAME) {
-            return None;
-        }
+    /// Parse a slice of attributes.
+    pub fn from_attributes(attrs: &[Attribute], out: &mut Vec<Self>) {
+        for attr in attrs {
+            if !attr.path.is_ident(ATTR_NAME) {
+                continue;
+            }
 
-        let nested = match attr.parse_meta().expect(PARSE_ERR_MSG) {
-            Meta::List(MetaList { nested, .. }) if nested.len() == 1 => nested,
-            other => panic!("malformed `asn1` attribute: {:?}", other),
-        };
+            let nested = match attr.parse_meta().expect(PARSE_ERR_MSG) {
+                Meta::List(MetaList { nested, .. }) => nested,
+                other => panic!("malformed `asn1` attribute: {:?}", other),
+            };
 
-        match nested.first() {
-            Some(NestedMeta::Meta(Meta::NameValue(MetaNameValue {
-                path,
-                lit: Lit::Str(lit_str),
-                ..
-            }))) => Some(Self {
-                name: path.clone(),
-                value: lit_str.value(),
-            }),
-            _ => panic!("malformed `asn1` attribute: {:?}", nested),
+            for meta in &nested {
+                match meta {
+                    NestedMeta::Meta(Meta::NameValue(MetaNameValue {
+                        path,
+                        lit: Lit::Str(lit_str),
+                        ..
+                    })) => out.push(Self {
+                        name: path.clone(),
+                        value: lit_str.value(),
+                    }),
+                    _ => panic!("malformed `asn1` attribute: {:?}", nested),
+                }
+            }
         }
     }
 

@@ -92,6 +92,14 @@ fn decode_cert() {
         _ => panic!("No good"),
     }
 
+    //TODO remove temp junk
+    // let der_encoded_cert =
+    //     include_bytes!("/Users/cwallace/Public/old/PKITS_data/certs/nameConstraintsDN3subCA1Cert.crt");
+    // // let der_encoded_cert =
+    // //     include_bytes!("/Users/cwallace/Public/old/PKITS_data/certs/requireExplicitPolicy5CACert.crt");
+    // let result = Certificate::from_der(der_encoded_cert);
+    // let cert: Certificate = result.unwrap();
+
     // cloned cert with variety of interesting bits, including subject DN encoded backwards, large
     // policy mapping set, large policy set (including one with qualifiers), fairly typical set of
     // extensions otherwise

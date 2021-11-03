@@ -67,15 +67,12 @@ impl<T> ContextSpecific<T> {
         tag_number: TagNumber,
     ) -> Result<Option<Self>>
     where
-        T: DecodeValue<'a> + Tagged,
+        T: DecodeValue<'a>,
     {
         Self::decode_with(decoder, tag_number, |decoder| {
             let header = Header::decode(decoder)?;
 
-            if header.tag.is_constructed() != T::TAG.is_constructed() {
-                return Err(header.tag.non_canonical_error());
-            }
-
+            // TODO(tarcieri): check header.tag constructed bit is canonical for `T`
             let value = T::decode_value(decoder, header.length)?;
 
             Ok(Self {

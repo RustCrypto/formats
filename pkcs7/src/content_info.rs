@@ -199,7 +199,7 @@ mod tests {
             encoder.context_specific(
                 TagNumber::new(0),
                 TagMode::Explicit,
-                OctetString::new(hello)?,
+                &OctetString::new(hello)?,
             )
         })?;
         let encoded_der = encoder.finish().expect("encoding success");

@@ -139,12 +139,6 @@ pub enum ErrorKind {
     /// Date-and-time related errors.
     DateTime,
 
-    /// Indicates a field which is duplicated when only one is expected.
-    DuplicateField {
-        /// Tag of the duplicated field.
-        tag: Tag,
-    },
-
     /// This error indicates a previous DER parsing operation resulted in
     /// an error and tainted the state of a `Decoder` or `Encoder`.
     ///
@@ -207,7 +201,7 @@ pub enum ErrorKind {
         oid: ObjectIdentifier,
     },
 
-    /// Ordering error
+    /// Ordering error.
     Ordering,
 
     /// Integer overflow occurred (library bug!).
@@ -293,7 +287,6 @@ impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ErrorKind::DateTime => write!(f, "date/time error"),
-            ErrorKind::DuplicateField { tag } => write!(f, "duplicate field for {}", tag),
             ErrorKind::Failed => write!(f, "operation failed"),
             #[cfg(feature = "std")]
             ErrorKind::FileNotFound => f.write_str("file not found"),
