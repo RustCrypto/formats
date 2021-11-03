@@ -1,4 +1,4 @@
-# RustCrypto: PKCS#8 (Private Keys)
+# [RustCrypto]: PKCS#8 (Private Keys)
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
@@ -89,5 +89,6 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (links)
 
+[RustCrypto]: https://github.com/rustcrypto
 [RFC 5208]: https://tools.ietf.org/html/rfc5208
 [scrypt]: https://en.wikipedia.org/wiki/Scrypt
