@@ -1,5 +1,5 @@
 //! CertificateList tests
-use der::{Decodable, ErrorKind, Tag, TagNumber};
+use der::{Decodable, ErrorKind, Tag};
 use hex_literal::hex;
 use x509::extensions_utils::*;
 use x509::DistributionPoint;
