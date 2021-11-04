@@ -1,7 +1,6 @@
 //! Extensions [`Extensions`] as defined in RFC 5280
 
 //TODO refactor static sized SEQUENCE OF
-//TODO handle all DEFAULT FALSE fields to return Some(false) vs None
 
 use crate::AttributeTypeAndValue;
 use crate::Name;
@@ -105,8 +104,8 @@ impl<'a> Decodable<'a> for Extension<'a> {
 }
 impl<'a> ::der::Sequence<'a> for Extension<'a> {
     fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-        where
-            F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
         f(&[&self.extn_id, &self.critical, &self.extn_value])
     }
