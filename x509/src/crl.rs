@@ -1,4 +1,4 @@
-//! Certificate [`Certificate`] as defined in RFC 5280
+//! CertificateList [`CertificateList`], TBSCertList [`TBSCertList`] and supporting structures as defined in RFC 5280
 
 use crate::{Extensions, Name, Time};
 use der::asn1::{BitString, UIntBytes};
@@ -9,13 +9,17 @@ const CRL_EXTENSIONS_TAG: TagNumber = TagNumber::new(0);
 pub const X509_CRL_VERSION: u8 = 1;
 
 /// CrlEntry represents the inner most part of the inline definition from the
-/// revokedCertificates field in TBSCertList.
+/// revokedCertificates field in TBSCertList as defined in [RFC 5280 Section 5.1.2.6].
+///
+/// ```text
 /// SEQUENCE  {
 ///           userCertificate         CertificateSerialNumber,
 ///           revocationDate          Time,
 ///           crlEntryExtensions      Extensions OPTIONAL
 ///                                    -- if present, version MUST be v2
+/// ```
 ///
+/// [RFC 5280 Section 5.1.2.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1.2.6
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct CrlEntry<'a> {
     /// serialNumber         CertificateSerialNumber,
@@ -26,36 +30,45 @@ pub struct CrlEntry<'a> {
     pub crl_entry_extensions: Option<Extensions<'a>>,
 }
 
-/// CrlEntry represents the outer most part of the inline definition from the
-/// revokedCertificates field in TBSCertList.
+/// CrlEntries represents the outer most part of the inline definition from the
+/// revokedCertificates field in TBSCertList as defined in [RFC 5280 Section 5.1.2.6].
+///
+/// ```text
 /// SEQUENCE OF SEQUENCE  {
 ///           userCertificate         CertificateSerialNumber,
 ///           revocationDate          Time,
 ///           crlEntryExtensions      Extensions OPTIONAL
 ///                                    -- if present, version MUST be v2
 ///                                }
+/// ```
+///
+/// [RFC 5280 Section 5.1.2.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1.2.6
 //pub type CrlEntries<'a> = SequenceOf<CrlEntry<'a>, 10>;
 pub type CrlEntries<'a> = alloc::vec::Vec<CrlEntry<'a>>;
 
-/// X.509 `TBSCertList` as defined in [RFC 5280 Section 4.1.2.5]
+/// X.509 `TBSCertList` as defined in [RFC 5280 Section 5.1.2]
+///
+/// ASN.1 structure containing the name of the issuer, issue date, issue date of the next
+/// list, the optional list of revoked certificates, and optional CRL extensions.
 ///
 /// ```text
 ///   TBSCertList  ::=  SEQUENCE  {
-//      version                 Version OPTIONAL,
-//                                    -- if present, MUST be v2
-//      signature               AlgorithmIdentifier,
-//      issuer                  Name,
-//      thisUpdate              Time,
-//      nextUpdate              Time OPTIONAL,
-//      revokedCertificates     SEQUENCE OF SEQUENCE  {
-//           userCertificate         CertificateSerialNumber,
-//           revocationDate          Time,
-//           crlEntryExtensions      Extensions OPTIONAL
-//                                    -- if present, version MUST be v2
-//                                }  OPTIONAL,
-//      crlExtensions           [0] Extensions OPTIONAL }
-//                                    -- if present, version MUST be v2
+///      version                 Version OPTIONAL,
+///                                    -- if present, MUST be v2
+///      signature               AlgorithmIdentifier,
+///      issuer                  Name,
+///      thisUpdate              Time,
+///      nextUpdate              Time OPTIONAL,
+///      revokedCertificates     SEQUENCE OF SEQUENCE  {
+///           userCertificate         CertificateSerialNumber,
+///           revocationDate          Time,
+///           crlEntryExtensions      Extensions OPTIONAL
+///                                    -- if present, version MUST be v2
+///                                }  OPTIONAL,
+///      crlExtensions           [0] Extensions OPTIONAL }
+///                                    -- if present, version MUST be v2
 /// ```
+///
 /// [RFC 5280 Section 5.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1.2
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TBSCertList<'a> {
@@ -126,10 +139,18 @@ impl<'a> ::der::Sequence<'a> for TBSCertList<'a> {
     }
 }
 
+/// X.509 CRL as defined in [RFC 5280 Section 5.1.1].
+///
+/// ASN.1 structure containing a certificate revocation list (CRL).
+///
+/// ```text
 /// CertificateList  ::=  SEQUENCE  {
 ///      tbsCertList          TBSCertList,
 ///      signatureAlgorithm   AlgorithmIdentifier,
 ///      signature            BIT STRING  }
+/// ```
+///
+/// [RFC 5280 Section 5.1.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, TBS)]
 pub struct CertificateList<'a> {
     /// tbsCertificate       TBSCertList,

@@ -15,11 +15,19 @@ use der::{
     Decodable, DecodeValue, Decoder, Header, Length, Sequence, Tag, TagMode, TagNumber, Tagged,
 };
 
+/// DisplayText as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
+///
+/// ASN.1 structure for DisplayText is below. At present, only the ia5String and utf8String options are supported.
+///
+/// ```text
 ///    DisplayText ::= CHOICE {
 ///         ia5String        IA5String      (SIZE (1..200)),
 ///         visibleString    VisibleString  (SIZE (1..200)),
 ///         bmpString        BMPString      (SIZE (1..200)),
 ///         utf8String       UTF8String     (SIZE (1..200)) }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DisplayText<'a> {
     /// ia5String        IA5String      (SIZE (1..200))
@@ -65,6 +73,11 @@ impl<'a> ::der::Sequence<'a> for DisplayText<'a> {
     }
 }
 
+/// Extension as defined in [RFC 5280 Section 4.1.2.9].
+///
+/// The ASN.1 definition for Extension objects is below. The extnValue type may be further parsed using a decoder corresponding to the extnID value.
+///
+/// ```text
 ///    Extension  ::=  SEQUENCE  {
 ///         extnID      OBJECT IDENTIFIER,
 ///         critical    BOOLEAN DEFAULT FALSE,
@@ -73,6 +86,9 @@ impl<'a> ::der::Sequence<'a> for DisplayText<'a> {
 ///                     -- corresponding to the extension type identified
 ///                     -- by extnID
 ///         }
+/// ```
+///
+/// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Extension<'a> {
     /// extnID      OBJECT IDENTIFIER,
@@ -111,31 +127,78 @@ impl<'a> ::der::Sequence<'a> for Extension<'a> {
     }
 }
 
+/// Extensions as defined in [RFC 5280 Section 4.1.2.9].
+///
+/// ```text
 ///    Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension
+/// ```
+///
+/// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
 //pub type Extensions<'a> = SequenceOf<Extension<'a>, 10>;
 pub type Extensions<'a> = alloc::vec::Vec<Extension<'a>>;
 
+/// Extended key usage extension as defined in [RFC 5280 Section 4.2.1.12] and as identified by the [`PKIX_CE_EXTKEYUSAGE`](constant.PKIX_CE_EXTKEYUSAGE.html) OID.
+///
+/// Many extended key usage values include:
+/// - [`PKIX_CE_ANYEXTENDEDKEYUSAGE`](constant.PKIX_CE_ANYEXTENDEDKEYUSAGE.html),
+/// - [`PKIX_KP_SERVERAUTH`](constant.PKIX_KP_SERVERAUTH.html),
+/// - [`PKIX_KP_CLIENTAUTH`](constant.PKIX_KP_CLIENTAUTH.html),
+/// - [`PKIX_KP_CODESIGNING`](constant.PKIX_KP_CODESIGNING.html),
+/// - [`PKIX_KP_EMAILPROTECTION`](constant.PKIX_KP_EMAILPROTECTION.html),
+/// - [`PKIX_KP_TIMESTAMPING`](constant.PKIX_KP_TIMESTAMPING.html),
+///
+/// ```text
 /// ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
 pub type ExtendedKeyUsage<'a> = alloc::vec::Vec<ObjectIdentifier>;
 
+/// Subject alternative name extension as defined in [RFC 5280 Section 4.2.1.6] and as identified by the [`PKIX_CE_SUBJECT_ALT_NAME`](constant.PKIX_CE_SUBJECT_ALT_NAME.html) OID.
+///
+/// ```text
 /// SubjectAltName ::= GeneralNames
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 pub type SubjectAltName<'a> = GeneralNames<'a>;
 
+/// Issuer alternative name extension as defined in [RFC 5280 Section 4.2.1.7] and as identified by the [`PKIX_CE_ISSUER_ALT_NAME`](constant.PKIX_CE_ISSUER_ALT_NAME.html) OID.
+///
+/// ```text
 /// IssuerAltName ::= GeneralNames
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.7]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.7
 pub type IssuerAltName<'a> = GeneralNames<'a>;
 
-/// OCSP noCheck
+/// OCSP noCheck extension as defined in [RFC 6960 Section 4.2.2.2.1] and as idenfied by the [`PKIX_OCSP_NOCHECK`](constant.PKIX_OCSP_NOCHECK.html) OID.
+///
+/// ```text
+/// OcspNoCheck ::= NULL
+/// ```
+///
+/// [RFC 6960 Section 4.2.2.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.2.2.1
 pub type OcspNoCheck = Null;
 
+/// Subject directory attributes extension as defined in [RFC 5280 Section 4.2.1.8] and as identified by the [`PKIX_CE_SUBJECT_DIRECTORY_ATTRIBUTES`](constant.PKIX_CE_SUBJECT_DIRECTORY_ATTRIBUTES.html) OID.
+///
+/// ```text
 /// SubjectDirectoryAttributes ::= SEQUENCE SIZE (1..MAX) OF AttributeSet
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.8]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.8
 pub type SubjectDirectoryAttributes<'a> = alloc::vec::Vec<AttributeTypeAndValue<'a>>;
 
-/// PIV NACI indicator extension
-pub type PivNaciIndicator = bool;
-
+/// Basic constraints extension as defined in [RFC 5280 Section 4.2.1.9] and as identified by the [`PKIX_CE_BASIC_CONSTRAINTS`](constant.PKIX_CE_BASIC_CONSTRAINTS.html) OID.
+///
+/// ```text
 ///    BasicConstraints ::= SEQUENCE {
 ///         cA                      BOOLEAN DEFAULT FALSE,
 ///         pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.9
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct BasicConstraints {
     /// cA                      BOOLEAN DEFAULT FALSE,
@@ -145,9 +208,15 @@ pub struct BasicConstraints {
     pub path_len_constraint: Option<u8>,
 }
 
+/// OtherName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
+///
+/// ```text
 ///    OtherName ::= SEQUENCE {
-//         type-id    OBJECT IDENTIFIER,
-//         value      [0] EXPLICIT ANY DEFINED BY type-id }
+///         type-id    OBJECT IDENTIFIER,
+///         value      [0] EXPLICIT ANY DEFINED BY type-id }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OtherName<'a> {
     /// type-id    OBJECT IDENTIFIER,
@@ -164,15 +233,6 @@ impl<'a> DecodeValue<'a> for OtherName<'a> {
     }
 }
 
-// impl<'a> Decodable<'a> for OtherName<'a> {
-//     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-//         decoder.sequence(|decoder| {
-//             let type_id = decoder.decode()?;
-//             let value = decoder.decode()?;
-//             Ok(Self { type_id, value })
-//         })
-//     }
-// }
 impl<'a> Sequence<'a> for OtherName<'a> {
     fn fields<F, T>(&self, f: F) -> ::der::Result<T>
     where
@@ -182,9 +242,18 @@ impl<'a> Sequence<'a> for OtherName<'a> {
     }
 }
 
-/// Typedef for SubjectKeyIdentifier values
+/// Subject key identifier extension as defined in [RFC 5280 Section 4.2.1.2] and as identified by the [`PKIX_CE_SUBJECT_KEY_IDENTIFIER`](constant.PKIX_CE_SUBJECT_KEY_IDENTIFIER.html) OID.
+///
+/// ```text
+/// SubjectKeyIdentifier ::= KeyIdentifier
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
 pub type SubjectKeyIdentifier<'a> = OctetString<'a>;
 
+/// Key usage extension as defined in [RFC 5280 Section 4.2.1.3] and as identified by the [`PKIX_CE_KEY_USAGE`](constant.PKIX_CE_KEY_USAGE.html) OID.
+///
+/// ```text
 /// KeyUsage ::= BIT STRING {
 ///      digitalSignature        (0),
 ///      nonRepudiation          (1),  -- recent editions of X.509 have
@@ -196,18 +265,32 @@ pub type SubjectKeyIdentifier<'a> = OctetString<'a>;
 ///      cRLSign                 (6),
 ///      encipherOnly            (7),
 ///      decipherOnly            (8) }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
 pub type KeyUsage<'a> = BitString<'a>;
 
+/// Certificate policies extension as defined in [RFC 5280 Section 4.2.1.4] and as identified by the [`PKIX_CE_CERTIFICATE_POLICIES`](constant.PKIX_CE_CERTIFICATE_POLICIES.html) OID.
+///
+/// ```text
 ///CertificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 //pub type CertificatePolicies<'a> = SequenceOf<PolicyInformation<'a>, 10>;
 pub type CertificatePolicies<'a> = alloc::vec::Vec<PolicyInformation<'a>>;
 
+/// PolicyInformation as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
+///
+/// ```text
 /// PolicyInformation ::= SEQUENCE {
 ///      policyIdentifier   CertPolicyId,
 ///      policyQualifiers   SEQUENCE SIZE (1..MAX) OF
 ///              PolicyQualifierInfo OPTIONAL }
 ///
 /// CertPolicyId ::= OBJECT IDENTIFIER
+///
+/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct PolicyInformation<'a> {
     /// policyIdentifier   CertPolicyId,
@@ -218,9 +301,15 @@ pub struct PolicyInformation<'a> {
     // TODO make dynamic
 }
 
+/// PolicyQualifierInfo as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
+///
+/// ```text
 /// PolicyQualifierInfo ::= SEQUENCE {
 ///      policyQualifierId  PolicyQualifierId,
 ///      qualifier          ANY DEFINED BY policyQualifierId }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct PolicyQualifierInfo<'a> {
     /// policyQualifierId  PolicyQualifierId,
@@ -230,10 +319,18 @@ pub struct PolicyQualifierInfo<'a> {
     pub qualifier: Option<Any<'a>>,
 }
 
+/// Private key usage extension as defined in [RFC 3280 Section 4.2.1.4] and as identified by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
+///
+/// RFC 5280 states "use of this ISO standard extension is neither deprecated nor recommended for use in the Internet PKI."
+///
+/// ```text
 /// PrivateKeyUsagePeriod ::= SEQUENCE {
-//      notBefore       [0]     GeneralizedTime OPTIONAL,
-//      notAfter        [1]     GeneralizedTime OPTIONAL }
-//      -- either notBefore or notAfter MUST be present
+///      notBefore       [0]     GeneralizedTime OPTIONAL,
+///      notAfter        [1]     GeneralizedTime OPTIONAL }
+///      -- either notBefore or notAfter MUST be present
+/// ```
+///
+/// [RFC 3280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc3280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PrivateKeyUsagePeriod {
     /// notBefore       [0]     GeneralizedTime OPTIONAL,
@@ -261,9 +358,15 @@ impl<'a> Decodable<'a> for PrivateKeyUsagePeriod {
     }
 }
 
+/// NoticeReference as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
+///
+/// ```text
 /// NoticeReference ::= SEQUENCE {
-//      organization     DisplayText,
-//      noticeNumbers    SEQUENCE OF INTEGER }
+///      organization     DisplayText,
+///      noticeNumbers    SEQUENCE OF INTEGER }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct NoticeReference<'a> {
     /// organization     DisplayText,
@@ -273,9 +376,15 @@ pub struct NoticeReference<'a> {
     notice_numbers: SequenceOf<UIntBytes<'a>, 10>,
 }
 
+/// UserNotice as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
+///
+/// ```text
 /// UserNotice ::= SEQUENCE {
-//      noticeRef        NoticeReference OPTIONAL,
-//      explicitText     DisplayText OPTIONAL }
+///      noticeRef        NoticeReference OPTIONAL,
+///      explicitText     DisplayText OPTIONAL }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct UserNotice<'a> {
     /// noticeRef        NoticeReference OPTIONAL,
@@ -285,12 +394,24 @@ pub struct UserNotice<'a> {
     explicit_text: Option<DisplayText<'a>>,
 }
 
+/// Policy mappings extension as defined in [RFC 5280 Section 4.2.1.5] and as identified by the [`PKIX_CE_POLICY_MAPPINGS`](constant.PKIX_CE_POLICY_MAPPINGS.html) OID.
+///
+/// ```text
 /// PolicyMappings ::= SEQUENCE SIZE (1..MAX) OF SEQUENCE {
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.5
 pub type PolicyMappings<'a> = alloc::vec::Vec<PolicyMapping>;
 
-/// PolicyMappings ::= SEQUENCE SIZE (1..MAX) OF SEQUENCE {
+/// PolicyMapping represents the inner portion of the PolicyMapping definition in [RFC 5280 Section 4.2.1.5].
+///
+/// ```text
+/// PolicyMapping ::= SEQUENCE {
 ///      issuerDomainPolicy      CertPolicyId,
 ///      subjectDomainPolicy     CertPolicyId }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.5
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct PolicyMapping {
     /// issuerDomainPolicy      CertPolicyId,
@@ -300,9 +421,15 @@ pub struct PolicyMapping {
     pub subject_domain_policy: ObjectIdentifier,
 }
 
+/// Name constraints extension as defined in [RFC 5280 Section 4.2.1.10] and as identified by the [`PKIX_CE_NAME_CONSTRAINTS`](constant.PKIX_CE_NAME_CONSTRAINTS.html) OID.
+///
+/// ```text
 /// NameConstraints ::= SEQUENCE {
 ///      permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
 ///      excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NameConstraints<'a> {
     /// permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
@@ -334,13 +461,25 @@ impl<'a> Decodable<'a> for NameConstraints<'a> {
     }
 }
 
+/// GeneralSubtrees as defined in [RFC 5280 Section 4.2.1.10] in support of the Name Constraints extension.
+///
+/// ```text
 /// GeneralSubtrees ::= SEQUENCE SIZE (1..MAX) OF GeneralSubtree
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
 pub type GeneralSubtrees<'a> = alloc::vec::Vec<GeneralSubtree<'a>>;
 
+/// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10] in support of the Name Constraints extension.
+///
+/// ```text
 /// GeneralSubtree ::= SEQUENCE {
 ///      base                    GeneralName,
 ///      minimum         [0]     BaseDistance DEFAULT 0,
 ///      maximum         [1]     BaseDistance OPTIONAL }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct GeneralSubtree<'a> {
     /// base                    GeneralName,
@@ -379,9 +518,15 @@ impl<'a> ::der::Sequence<'a> for GeneralSubtree<'a> {
     }
 }
 
+/// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11] and as identified by the [`PKIX_CE_POLICY_CONSTRAINTS`](constant.PKIX_CE_POLICY_CONSTRAINTS.html) OID.
+///
+/// ```text
 /// PolicyConstraints ::= SEQUENCE {
 ///      requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
 ///      inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.11]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.11
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolicyConstraints {
     /// requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
@@ -409,28 +554,34 @@ impl<'a> Decodable<'a> for PolicyConstraints {
     }
 }
 
-/// ReasonFlags ::= BIT STRING {
-///      unused                  (0),
-///      keyCompromise           (1),
-///      cACompromise            (2),
-///      affiliationChanged      (3),
-///      superseded              (4),
-///      cessationOfOperation    (5),
-///      certificateHold         (6),
-///      privilegeWithdrawn      (7),
-///      aACompromise            (8) }
-pub type ReasonFlags<'a> = BitString<'a>;
-
+/// Inhibit any policy extension as defined in [RFC 5280 Section 4.2.1.14] and as identified by the [`PKIX_CE_INHIBIT_ANY_POLICY`](constant.PKIX_CE_INHIBIT_ANY_POLICY.html) OID.
+///
+/// ```text
 /// InhibitAnyPolicy ::= SkipCerts
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.14]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.14
 pub type InhibitAnyPolicy = u32;
 
+/// Authority information access extension as defined in [RFC 5280 Section 4.2.2.1] and as identified by the [`PKIX_PE_AUTHORITYINFOACCESS`](constant.PKIX_PE_AUTHORITYINFOACCESS.html) OID.
+///
+/// ```text
 /// AuthorityInfoAccessSyntax  ::=
 ///         SEQUENCE SIZE (1..MAX) OF AccessDescription
+/// ```
+///
+/// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
 pub type AuthorityInfoAccessSyntax<'a> = alloc::vec::Vec<AccessDescription<'a>>;
 
+/// AccessDescription as defined in [RFC 5280 Section 4.2.2.1] in support of the Authority Information Access extension (and referenced by Subject Information Access extension).
+///
+/// ```text
 /// AccessDescription  ::=  SEQUENCE {
 ///         accessMethod          OBJECT IDENTIFIER,
 ///         accessLocation        GeneralName  }
+/// ```
+///
+/// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct AccessDescription<'a> {
     /// accessMethod          OBJECT IDENTIFIER,
@@ -440,16 +591,37 @@ pub struct AccessDescription<'a> {
     pub access_location: GeneralName<'a>,
 }
 
+/// Subject information access extension as defined in [RFC 5280 Section 4.2.2.2] and as identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
+///
+/// ```text
 /// SubjectInfoAccessSyntax  ::=
 ///         SEQUENCE SIZE (1..MAX) OF AccessDescription
+/// ```
+///
+/// [RFC 5280 Section 4.2.2.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.2
 pub type SubjectInfoAccessSyntax<'a> = alloc::vec::Vec<AccessDescription<'a>>;
 
+/// CRL number extension as defined in [RFC 5280 Section 5.2.3] and as identified by the [`PKIX_CE_CRLNUMBER`](constant.PKIX_CE_CRLNUMBER.html) OID.
+///
+/// ```text
 /// CRLNumber ::= INTEGER (0..MAX)
+/// ```
+///
+/// [RFC 5280 Section 5.2.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.3
 pub type CRLNumber<'a> = UIntBytes<'a>;
 
+/// Delta CRL indicator extension as defined in [RFC 5280 Section 5.2.4] and as identified by the [`PKIX_CE_DELTACRLINDICATOR`](constant.PKIX_CE_DELTACRLINDICATOR.html) OID.
+///
+/// ```text
 /// BaseCRLNumber ::= CRLNumber
+/// ```
+///
+/// [RFC 5280 Section 5.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.4
 pub type BaseCRLNumber<'a> = CRLNumber<'a>;
 
+/// Reason code extension as defined in [RFC 5280 Section 5.3.1] and as identified by the [`PKIX_CE_CRLREASONS`](constant.PKIX_CE_CRLREASONS.html) OID.
+///
+/// ```text
 /// CRLReason ::= ENUMERATED {
 ///      unspecified             (0),
 ///      keyCompromise           (1),
@@ -461,6 +633,9 @@ pub type BaseCRLNumber<'a> = CRLNumber<'a>;
 ///      removeFromCRL           (8),
 ///      privilegeWithdrawn      (9),
 ///      aACompromise           (10) }
+/// ```
+///
+/// [RFC 5280 Section 5.3.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.3.1
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CRLReason {
     /// unspecified             (0),
@@ -528,9 +703,18 @@ impl fmt::Display for CRLReason {
     }
 }
 
+/// GeneralNames as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
+///
+/// ```text
 /// GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
 
+/// GeneralName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
+///
+/// ```text
 ///    GeneralName ::= CHOICE {
 ///         otherName                       [0]     OtherName,
 ///         rfc822Name                      [1]     IA5String,
@@ -541,6 +725,9 @@ pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
 ///         uniformResourceIdentifier       [6]     IA5String,
 ///         iPAddress                       [7]     OCTET STRING,
 ///         registeredID                    [8]     OBJECT IDENTIFIER }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum GeneralName<'a> {
     /// otherName                       [0]     OtherName,
@@ -629,12 +816,18 @@ impl<'a> ::der::Sequence<'a> for GeneralName<'a> {
     }
 }
 
+/// Authority key identifier extension as defined in [RFC 5280 Section 4.2.1.1] and as identified by the [`PKIX_CE_AUTHORITY_KEY_IDENTIFIER`](constant.PKIX_CE_AUTHORITY_KEY_IDENTIFIER.html) OID.
+///
+/// ```text
 ///   AuthorityKeyIdentifier ::= SEQUENCE {
 ///       keyIdentifier             [0] KeyIdentifier           OPTIONAL,
 ///       authorityCertIssuer       [1] GeneralNames            OPTIONAL,
 ///       authorityCertSerialNumber [2] CertificateSerialNumber OPTIONAL  }
 ///
 ///    KeyIdentifier ::= OCTET STRING
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AuthorityKeyIdentifier<'a> {
     /// keyIdentifier             [0] KeyIdentifier           OPTIONAL,
@@ -647,14 +840,14 @@ pub struct AuthorityKeyIdentifier<'a> {
     pub authority_cert_serial_number: Option<UIntBytes<'a>>,
 }
 
-const KEUY_IDENTIFIER_TAG: TagNumber = TagNumber::new(0);
+const KEY_IDENTIFIER_TAG: TagNumber = TagNumber::new(0);
 const AUTHORITY_CERT_ISSUER_TAG: TagNumber = TagNumber::new(1);
 const AUTHORITY_CERT_SERIAL_NUMBER_TAG: TagNumber = TagNumber::new(2);
 
 impl<'a> DecodeValue<'a> for AuthorityKeyIdentifier<'a> {
     fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
         let key_identifier =
-            decoder.context_specific::<OctetString<'_>>(KEUY_IDENTIFIER_TAG, TagMode::Implicit)?;
+            decoder.context_specific::<OctetString<'_>>(KEY_IDENTIFIER_TAG, TagMode::Implicit)?;
         let authority_cert_issuer = decoder
             .context_specific::<GeneralNames<'_>>(AUTHORITY_CERT_ISSUER_TAG, TagMode::Implicit)?;
         let authority_cert_serial_number = decoder.context_specific::<UIntBytes<'_>>(
@@ -680,13 +873,43 @@ impl<'a> ::der::Sequence<'a> for AuthorityKeyIdentifier<'a> {
     }
 }
 
+/// ReasonFlags as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
+///
+/// ```text
+/// ReasonFlags ::= BIT STRING {
+///      unused                  (0),
+///      keyCompromise           (1),
+///      cACompromise            (2),
+///      affiliationChanged      (3),
+///      superseded              (4),
+///      cessationOfOperation    (5),
+///      certificateHold         (6),
+///      privilegeWithdrawn      (7),
+///      aACompromise            (8) }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+pub type ReasonFlags<'a> = BitString<'a>;
+
+/// CRL distribution points extension as defined in [RFC 5280 Section 4.2.1.13] and as identified by the [`PKIX_CE_CRL_DISTRIBUTION_POINTS`](constant.PKIX_CE_CRL_DISTRIBUTION_POINTS.html) OID.
+///
+/// ```text
 /// CRLDistributionPoints ::= SEQUENCE SIZE (1..MAX) OF DistributionPoint
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 pub type CRLDistributionPoints<'a> = alloc::vec::Vec<DistributionPoint<'a>>;
 
+/// DistributionPoint as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
+///
+/// ```text
 /// DistributionPoint ::= SEQUENCE {
 ///      distributionPoint       [0]     DistributionPointName OPTIONAL,
 ///      reasons                 [1]     ReasonFlags OPTIONAL,
 ///      cRLIssuer               [2]     GeneralNames OPTIONAL }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 //#[derive(Sequence)]
 pub struct DistributionPoint<'a> {
     /// distributionPoint       [0]     DistributionPointName OPTIONAL,
@@ -732,9 +955,15 @@ impl<'a> ::der::Sequence<'a> for DistributionPoint<'a> {
     }
 }
 
+/// DistributionPointName as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
+///
+/// ```text
 /// DistributionPointName ::= CHOICE {
 ///      fullName                [0]     GeneralNames,
 ///      nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 pub enum DistributionPointName<'a> {
     /// fullName                [0]     GeneralNames,
     FullName(GeneralNames<'a>),
@@ -785,9 +1014,18 @@ impl<'a> ::der::Sequence<'a> for DistributionPointName<'a> {
     }
 }
 
+/// Freshest CRL extension as defined in [RFC 5280 Section 5.2.6] and as identified by the [`PKIX_CE_FRESHEST_CRL`](constant.PKIX_CE_FRESHEST_CRL.html) OID.
+///
+/// ```text
 /// FreshestCRL ::= CRLDistributionPoints
+/// ```
+///
+/// [RFC 5280 Section 5.2.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.6
 pub type FreshestCRL<'a> = CRLDistributionPoints<'a>;
 
+/// Issuing distribution point extension as defined in [RFC 5280 Section 5.2.5] and as identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
+///
+/// ```text
 /// IssuingDistributionPoint ::= SEQUENCE {
 ///      distributionPoint          [0] DistributionPointName OPTIONAL,
 ///      onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
@@ -797,7 +1035,9 @@ pub type FreshestCRL<'a> = CRLDistributionPoints<'a>;
 ///      onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE }
 ///      -- at most one of onlyContainsUserCerts, onlyContainsCACerts,
 ///      -- and onlyContainsAttributeCerts may be set to TRUE.
-//TODO enable derive bits here and for DistributionPointName and friends
+/// ```
+///
+/// [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
 //#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct IssuingDistributionPoint<'a> {
     /// distributionPoint          [0] DistributionPointName OPTIONAL,
@@ -872,3 +1112,12 @@ impl<'a> Decodable<'a> for IssuingDistributionPoint<'a> {
         })
     }
 }
+
+/// The PIV NACI extension is defined in [FIPS 201-2 Appendix B] and is identified by the [`PIV_NACI_INDICATOR`](constant.PIV_NACI_INDICATOR.html) OID.
+///
+/// ```text
+/// NACI-indicator ::= BOOLEAN
+/// ```
+///
+/// [FIPS 201-2 Appendix B]: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.201-2.pdf
+pub type PivNaciIndicator = bool;

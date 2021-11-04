@@ -1,4 +1,4 @@
-//! Certificate [`Certificate`] as defined in RFC 5280
+//! Certificate [`Certificate`] and TBSCertificate [`TBSCertificate`] as defined in RFC 5280
 
 use crate::{Extensions, Name, Validity};
 use der::asn1::{BitString, UIntBytes};
@@ -16,6 +16,9 @@ const SUBJECT_UID_TAG: TagNumber = TagNumber::new(2);
 const EXTENSIONS_TAG: TagNumber = TagNumber::new(3);
 
 /// X.509 `TBSCertificate` as defined in [RFC 5280 Section 4.1.2.5]
+///
+/// ASN.1 structure containing the names of the subject and issuer, a public key associated
+/// with the subject, a validity period, and other associated information.
 ///
 /// ```text
 ///   TBSCertificate  ::=  SEQUENCE  {
@@ -35,6 +38,7 @@ const EXTENSIONS_TAG: TagNumber = TagNumber::new(3);
 ///       extensions      [3]  Extensions{{CertExtensions}} OPTIONAL
 ///       ]], ... }
 /// ```
+///
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TBSCertificate<'a> {
@@ -119,10 +123,18 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
     }
 }
 
+/// X.509 certificates are defined in [RFC 5280 Section 4.1].
+///
+/// ASN.1 structure for an X.509 certificate:
+///
+/// ```text
 /// Certificate  ::=  SEQUENCE  {
 ///      tbsCertificate       TBSCertificate,
 ///      signatureAlgorithm   AlgorithmIdentifier,
 ///      signature            BIT STRING  }
+/// ```
+///
+/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, TBS)]
 pub struct Certificate<'a> {
     /// tbsCertificate       TBSCertificate,
