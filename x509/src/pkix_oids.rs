@@ -183,5 +183,5 @@ pub const PKIX_CE_INHIBIT_ANY_POLICY: ObjectIdentifier = ObjectIdentifier::new("
 /// OID for ocspNoCheck extension:  1.3.6.1.5.5.7.48.1.5. See [`OcspNoCheck`](type.OcspNoCheck.html).
 pub const PKIX_OCSP_NOCHECK: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.5.5.7.48.1.5");
 
-/// OID for ocspNoCheck extension: 2.16.840.1.101.3.6.9.1. See [`PivNaciIndicator`](type.PivNaciIndicator.html).
+/// OID for PIV NACI extension: 2.16.840.1.101.3.6.9.1. See [`PivNaciIndicator`](type.PivNaciIndicator.html).
 pub const PIV_NACI_INDICATOR: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.6.9.1");
