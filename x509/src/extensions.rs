@@ -3,14 +3,12 @@
 //TODO refactor static sized SEQUENCE OF
 //TODO handle all DEFAULT FALSE fields to return Some(false) vs None
 
+use crate::AttributeTypeAndValue;
 use crate::Name;
 use crate::RelativeDistinguishedName;
 use alloc::prelude::v1::Box;
 use core::fmt;
-use der::asn1::{
-    Any, BitString, GeneralizedTime, Ia5String, ObjectIdentifier, OctetString, SequenceOf,
-    UIntBytes, Utf8String,
-};
+use der::asn1::{Any, BitString, GeneralizedTime, Ia5String, Null, ObjectIdentifier, OctetString, SequenceOf, UIntBytes, Utf8String};
 use der::{
     Decodable, DecodeValue, Decoder, Header, Length, Sequence, Tag, TagMode, TagNumber, Tagged,
 };
@@ -89,7 +87,23 @@ pub struct Extension<'a> {
 //pub type Extensions<'a> = SequenceOf<Extension<'a>, 10>;
 pub type Extensions<'a> = alloc::vec::Vec<Extension<'a>>;
 
+/// ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
 pub type ExtendedKeyUsage<'a> = alloc::vec::Vec<ObjectIdentifier>;
+
+/// SubjectAltName ::= GeneralNames
+pub type SubjectAltName<'a> = GeneralNames<'a>;
+
+/// IssuerAltName ::= GeneralNames
+pub type IssuerAltName<'a> = GeneralNames<'a>;
+
+/// OCSP noCheck
+pub type OcspNoCheck = Null;
+
+/// SubjectDirectoryAttributes ::= SEQUENCE SIZE (1..MAX) OF AttributeSet
+pub type SubjectDirectoryAttributes<'a> = alloc::vec::Vec<AttributeTypeAndValue<'a>>;
+
+/// PIV NACI indicator extension
+pub type PivNaciIndicator = bool;
 
 ///    BasicConstraints ::= SEQUENCE {
 ///         cA                      BOOLEAN DEFAULT FALSE,
@@ -192,13 +206,35 @@ pub struct PolicyQualifierInfo<'a> {
 //      notBefore       [0]     GeneralizedTime OPTIONAL,
 //      notAfter        [1]     GeneralizedTime OPTIONAL }
 //      -- either notBefore or notAfter MUST be present
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PrivateKeyUsagePeriod {
     /// notBefore       [0]     GeneralizedTime OPTIONAL,
     not_before: Option<GeneralizedTime>,
 
     /// notAfter        [1]     GeneralizedTime OPTIONAL
     not_after: Option<GeneralizedTime>,
+}
+
+const NOT_BEFORE_TAG: TagNumber = TagNumber::new(0);
+const NOT_AFTER_TAG: TagNumber = TagNumber::new(1);
+
+impl<'a> Decodable<'a> for PrivateKeyUsagePeriod {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.sequence(|decoder| {
+            let not_before = decoder.context_specific::<GeneralizedTime>(
+                NOT_BEFORE_TAG,
+                TagMode::Implicit,
+            )?;
+            let not_after = decoder.context_specific::<GeneralizedTime>(
+                NOT_AFTER_TAG,
+                TagMode::Implicit,
+            )?;
+            Ok(PrivateKeyUsagePeriod {
+                not_before,
+                not_after,
+            })
+        })
+    }
 }
 
 /// NoticeReference ::= SEQUENCE {
