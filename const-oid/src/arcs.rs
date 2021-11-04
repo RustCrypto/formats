@@ -62,7 +62,7 @@ impl<'a> Iterator for Arcs<'a> {
                         Some(byte) => {
                             arc_bytes += 1;
                             debug_assert!(
-                                arc_bytes < ARC_MAX_BYTES || byte & ARC_MAX_LAST_OCTET == 0,
+                                arc_bytes <= ARC_MAX_BYTES || byte & ARC_MAX_LAST_OCTET == 0,
                                 "OID arc overflowed"
                             );
                             result = result << 7 | (byte & 0b1111111) as Arc;
