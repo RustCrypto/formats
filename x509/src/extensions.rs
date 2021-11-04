@@ -74,7 +74,7 @@ impl<'a> ::der::Sequence<'a> for DisplayText<'a> {
 ///                     -- corresponding to the extension type identified
 ///                     -- by extnID
 ///         }
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Extension<'a> {
     /// extnID      OBJECT IDENTIFIER,
     pub extn_id: ObjectIdentifier,
@@ -84,6 +84,32 @@ pub struct Extension<'a> {
 
     /// extnValue   OCTET STRING
     pub extn_value: OctetString<'a>,
+}
+
+impl<'a> Decodable<'a> for Extension<'a> {
+    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+        decoder.sequence(|decoder| {
+            let extn_id = decoder.decode()?;
+            let mut critical = decoder.decode()?;
+            if None == critical {
+                critical = Some(false);
+            }
+            let extn_value = decoder.decode()?;
+            Ok(Extension {
+                extn_id,
+                critical,
+                extn_value,
+            })
+        })
+    }
+}
+impl<'a> ::der::Sequence<'a> for Extension<'a> {
+    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
+        where
+            F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    {
+        f(&[&self.extn_id, &self.critical, &self.extn_value])
+    }
 }
 
 ///    Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension

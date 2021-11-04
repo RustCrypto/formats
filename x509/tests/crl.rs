@@ -1,4 +1,6 @@
 //! CertificateList tests
+use crate::AttributeTypeAndValue;
+use der::asn1::SetOf;
 use der::{Decodable, ErrorKind, Tag};
 use hex_literal::hex;
 use x509::extensions_utils::*;
@@ -74,12 +76,12 @@ fn decode_crl() {
         // TODO - parse and compare extension values
         if 0 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.35");
-            assert_eq!(ext.critical, Option::None);
+            assert_eq!(ext.critical, Option::Some(false));
             //let akid = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
             //assert_eq!(akid.keyIdentifier.unwrap().as_bytes(), &hex!("580184241BBC2B52944A3DA510721451F5AF3AC9")[..]);
         } else if 1 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.20");
-            assert_eq!(ext.critical, Option::None);
+            assert_eq!(ext.critical, Option::Some(false));
         }
         counter += 1;
     }
@@ -118,6 +120,9 @@ fn decode_cert_extensions() {
 
 #[test]
 fn decode_idp() {
+    // let rdnr = SetOf::<AttributeTypeAndValue<'_>, 3>::from_der(&hex!("3139301906035504030C12546573742055736572393031353734333830301C060A0992268993F22C640101130E3437303031303030303134373333"));
+    // let rnd = rdnr.unwrap();
+
     // IDP from 04A8739769B3C090A11DCDFABA3CF33F4BEF21F3.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp = IssuingDistributionPoint::from_der(&hex!("30038201FF")).unwrap();
     assert_eq!(idp.only_contains_cacerts, Some(true));
@@ -508,7 +513,7 @@ fn decode_crl_entry_extensions() {
         // TODO - parse and compare extension values
         if 0 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.21");
-            assert_eq!(ext.critical, Option::None);
+            assert_eq!(ext.critical, Option::Some(false));
             let crl_reason = CRLReason::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(CRLReason::Superseded, crl_reason);
         }

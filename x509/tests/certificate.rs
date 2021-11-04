@@ -138,7 +138,7 @@ fn decode_cert() {
             assert!(bc.path_len_constraint.is_none());
         } else if 2 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.33");
-            assert_eq!(ext.critical, None);
+            assert_eq!(ext.critical, Option::Some(false));
             let pm = PolicyMappings::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(19, pm.len());
 
@@ -200,7 +200,7 @@ fn decode_cert() {
             }
         } else if 3 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.32");
-            assert_eq!(ext.critical, None);
+            assert_eq!(ext.critical, Option::Some(false));
             let cps = CertificatePolicies::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(19, cps.len());
 
@@ -255,7 +255,7 @@ fn decode_cert() {
             }
         } else if 4 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.14");
-            assert_eq!(ext.critical, None);
+            assert_eq!(ext.critical, Option::Some(false));
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(Length::new(21), skid.len());
             assert_eq!(
@@ -264,7 +264,7 @@ fn decode_cert() {
             );
         } else if 5 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.31");
-            assert_eq!(ext.critical, None);
+            assert_eq!(ext.critical, Option::Some(false));
             let crl_dps = CRLDistributionPoints::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(2, crl_dps.len());
             let mut crldp_counter = 0;
@@ -315,7 +315,7 @@ fn decode_cert() {
             }
         } else if 6 == counter {
             assert_eq!(ext.extn_id.to_string(), "1.3.6.1.5.5.7.1.11");
-            assert_eq!(ext.critical, None);
+            assert_eq!(ext.critical, Option::Some(false));
             let sias = SubjectInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(1, sias.len());
             for sia in sias {
@@ -335,7 +335,7 @@ fn decode_cert() {
             }
         } else if 7 == counter {
             assert_eq!(ext.extn_id.to_string(), "1.3.6.1.5.5.7.1.1");
-            assert_eq!(ext.critical, None);
+            assert_eq!(ext.critical, Option::Some(false));
             let aias = AuthorityInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(2, aias.len());
             let mut aia_counter = 0;
@@ -374,12 +374,12 @@ fn decode_cert() {
             }
         } else if 8 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.54");
-            assert_eq!(ext.critical, None);
+            assert_eq!(ext.critical, Option::Some(false));
             let iap = InhibitAnyPolicy::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(0, iap);
         } else if 9 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.35");
-            assert_eq!(ext.critical, None);
+            assert_eq!(ext.critical, Option::Some(false));
             let akid = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(
                 &hex!("7C4C863AB80BD589870BEDB7E11BBD2A08BB3D23FF"),
@@ -523,12 +523,12 @@ fn decode_cert() {
         // TODO - parse and compare extension values
         if 0 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.35");
-            assert_eq!(ext.critical, Option::None);
+            assert_eq!(ext.critical, Option::Some(false));
             //let akid = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
             //assert_eq!(akid.keyIdentifier.unwrap().as_bytes(), &hex!("580184241BBC2B52944A3DA510721451F5AF3AC9")[..]);
         } else if 1 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.14");
-            assert_eq!(ext.critical, Option::None);
+            assert_eq!(ext.critical, Option::Some(false));
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(
                 skid.as_bytes(),
@@ -556,7 +556,7 @@ fn decode_cert() {
             }
         } else if 3 == counter {
             assert_eq!(ext.extn_id.to_string(), "2.5.29.32");
-            assert_eq!(ext.critical, Option::None);
+            assert_eq!(ext.critical, Option::Some(false));
             let r = CertificatePolicies::from_der(ext.extn_value.as_bytes());
             let cp = r.unwrap();
             let i = cp.iter();
