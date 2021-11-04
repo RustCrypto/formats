@@ -8,7 +8,10 @@ use crate::Name;
 use crate::RelativeDistinguishedName;
 use alloc::prelude::v1::Box;
 use core::fmt;
-use der::asn1::{Any, BitString, GeneralizedTime, Ia5String, Null, ObjectIdentifier, OctetString, SequenceOf, UIntBytes, Utf8String};
+use der::asn1::{
+    Any, BitString, GeneralizedTime, Ia5String, Null, ObjectIdentifier, OctetString, SequenceOf,
+    UIntBytes, Utf8String,
+};
 use der::{
     Decodable, DecodeValue, Decoder, Header, Length, Sequence, Tag, TagMode, TagNumber, Tagged,
 };
@@ -221,14 +224,10 @@ const NOT_AFTER_TAG: TagNumber = TagNumber::new(1);
 impl<'a> Decodable<'a> for PrivateKeyUsagePeriod {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
-            let not_before = decoder.context_specific::<GeneralizedTime>(
-                NOT_BEFORE_TAG,
-                TagMode::Implicit,
-            )?;
-            let not_after = decoder.context_specific::<GeneralizedTime>(
-                NOT_AFTER_TAG,
-                TagMode::Implicit,
-            )?;
+            let not_before =
+                decoder.context_specific::<GeneralizedTime>(NOT_BEFORE_TAG, TagMode::Implicit)?;
+            let not_after =
+                decoder.context_specific::<GeneralizedTime>(NOT_AFTER_TAG, TagMode::Implicit)?;
             Ok(PrivateKeyUsagePeriod {
                 not_before,
                 not_after,
