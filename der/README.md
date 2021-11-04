@@ -12,7 +12,7 @@ for Abstract Syntax Notation One (ASN.1) as described in ITU X.690.
 
 [Documentation][docs-link]
 
-# About
+## About
 
 This crate provides a `no_std`-friendly implementation of a subset of ASN.1 DER
 necessary for decoding/encoding the following cryptography-related formats
@@ -30,6 +30,18 @@ that allocate gated under the off-by-default `alloc` feature).
 
 The DER decoder attempts to ensure that the input document is in canonical
 form, and will return errors if non-canonical productions are encountered.
+
+### Features
+
+- Rich support for ASN.1 types used by PKCS/PKIX documents
+- Performs DER canonicalization checks at decoding time
+- `no_std` friendly: supports "heapless" usage or optionally supports the
+  `alloc` crate if desired
+- No hard dependencies! Self-contained implementation with optional
+  integrations with the following crates, all of which are `no_std` friendly:
+  - `const-oid`: const-friendly OID implementation
+  - `crypto-bigint`: constant-time bignum library
+  - `time` crate: date/time library
 
 ## Minimum Supported Rust Version
 

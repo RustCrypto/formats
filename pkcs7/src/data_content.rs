@@ -1,4 +1,4 @@
-//! `data` content type [RFC 2315 § 8](https://datatracker.ietf.org/doc/html/rfc2315#section-8)
+//! `data` content type [RFC 5652 § 4](https://datatracker.ietf.org/doc/html/rfc5652#section-4)
 
 use core::convert::{From, TryFrom};
 use der::{asn1::OctetString, DecodeValue, Decoder, EncodeValue, Encoder, Length, Tag, Tagged};

@@ -1,4 +1,4 @@
-//! `encrypted-data` content type [RFC 2315 § 13](https://datatracker.ietf.org/doc/html/rfc2315#section-13)
+//! `encrypted-data` content type [RFC 5652 § 8](https://datatracker.ietf.org/doc/html/rfc5652#section-8)
 
 use crate::enveloped_data_content::EncryptedContentInfo;
 use der::{
@@ -11,8 +11,8 @@ use der::{
 /// Version ::= Integer
 /// ```
 ///
-/// The only supported version is 0.
-/// See [RFC 2315 § 13](https://datatracker.ietf.org/doc/html/rfc2315#section-13).
+/// The only version supported by this library is `0`.
+/// See [RFC 5652 § 8](https://datatracker.ietf.org/doc/html/rfc5652#section-8).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Version {
     /// syntax version 0 for [EncryptedDataContent].
@@ -55,7 +55,7 @@ impl EncodeValue for Version {
     }
 }
 
-/// Encrypted-data content type [RFC 2315 § 13](https://datatracker.ietf.org/doc/html/rfc2315#section-13)
+/// Encrypted-data content type [RFC 5652 § 8](https://datatracker.ietf.org/doc/html/rfc5652#section-8)
 ///
 /// ```text
 /// EncryptedData ::= SEQUENCE {

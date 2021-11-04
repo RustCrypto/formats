@@ -1,21 +1,5 @@
-//! Pure Rust embedded-friendly implementation of the Distinguished Encoding Rules (DER)
-//! for Abstract Syntax Notation One (ASN.1) as described in ITU [X.690].
-//!
-//! # About
-//! This crate provides a `no_std`-friendly implementation of a subset of ASN.1
-//! DER necessary for decoding/encoding various cryptography-related formats
-//! implemented as part of the [RustCrypto] project, e.g. the [`pkcs5`] and
-//! [`pkcs8`] crates.
-//!
-//! The core implementation avoids any heap usage (with convenience methods
-//! that allocate gated under the off-by-default `alloc` feature).
-//!
-//! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.56** at a minimum.
-//!
-//! We may change the MSRV in the future, but it will be accompanied by a minor
-//! version bump.
-//!
+#![doc = include_str!("../README.md")]
+
 //! # Usage
 //! ## [`Decodable`] and [`Encodable`] traits
 //!
@@ -249,8 +233,8 @@
 //!     // OID for `id-ecPublicKey`, if you're curious
 //!     algorithm: "1.2.840.10045.2.1".parse().unwrap(),
 //!
-//!     // `Any<'a>` impls `From<&'a ObjectIdentifier>`, which parses the provided
-//!     // slice as an ASN.1 DER-encoded message.
+//!     // `Any<'a>` impls `From<&'a ObjectIdentifier>`, allowing OID constants to
+//!     // be directly converted to an `Any` type for this use case.
 //!     parameters: Some(Any::from(&parameters_oid))
 //! };
 //!
@@ -307,10 +291,6 @@
 //! - [A Layman's Guide to a Subset of ASN.1, BER, and DER] (RSA Laboratories)
 //! - [A Warm Welcome to ASN.1 and DER] (Let's Encrypt)
 //!
-//! [X.690]: https://www.itu.int/rec/T-REC-X.690/
-//! [RustCrypto]: https://github.com/rustcrypto
-//! [`pkcs5`]: https://docs.rs/pkcs5/
-//! [`pkcs8`]: https://docs.rs/pkcs8/
 //! [RFC 5280 Section 4.1.1.2]: https://tools.ietf.org/html/rfc5280#section-4.1.1.2
 //! [A Layman's Guide to a Subset of ASN.1, BER, and DER]: https://luca.ntop.org/Teaching/Appunti/asn1.html
 //! [A Warm Welcome to ASN.1 and DER]: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/

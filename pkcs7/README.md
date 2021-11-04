@@ -1,4 +1,4 @@
-# RustCrypto: PKCS#7 (Cryptographic Message)
+# [RustCrypto]: PKCS#7 (Cryptographic Messages)
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
@@ -8,7 +8,7 @@
 [![Project Chat][chat-image]][chat-link]
 
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #7:
-Cryptographic Message Syntax v1.5 ([RFC 2315]).
+Cryptographic Message Syntax v1.5 ([RFC 5652] and [RFC 8933]).
 
 [Documentation][docs-link]
 
@@ -42,4 +42,6 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (links)
 
-[RFC 2315]: https://tools.ietf.org/html/rfc2315
+[RustCrypto]: https://github.com/rustcrypto
+[RFC 5652]: https://datatracker.ietf.org/doc/html/rfc5652
+[RFC 8933]: https://datatracker.ietf.org/doc/html/rfc8933

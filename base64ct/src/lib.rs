@@ -1,29 +1,5 @@
-//! Pure Rust implementation of Base64 encoding ([RFC 4648, section 4])
-//! with a constant-time `no_std`-friendly implementation.
-//!
-//! # About
-//!
-//! This crate implements several Base64 variants in constant-time for
-//! sidechannel resistance, aimed at purposes like encoding/decoding the
-//! "PEM" format used to store things like cryptographic
-//! private keys.
-//!
-//! The paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Util::Lookup]
-//! demonstrates how the leakage from non-constant-time Base64 parsers can be used
-//! to practically extract RSA private keys from SGX enclaves.
-//!
-//! The padded variants require (`=`) padding. Unpadded variants expressly
-//! reject such padding.
-//!
-//! Whitespace is expressly disallowed.
-//!
-//! # Minimum Supported Rust Version
-//!
-//! This crate requires **Rust 1.56** at a minimum.
-//!
-//! We may change the MSRV in the future, but it will be accompanied by a minor
-//! version bump.
-//!
+#![doc = include_str!("../README.md")]
+
 //! # Usage
 //!
 //! ## Allocating (enable `alloc` crate feature)
@@ -84,7 +60,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/base64ct/1.2.0-pre"
+    html_root_url = "https://docs.rs/base64ct/1.2.0"
 )]
 #![warn(missing_docs, rust_2018_idioms)]
 

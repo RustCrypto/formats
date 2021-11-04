@@ -42,7 +42,7 @@ to promote interoperability.
 This crate attempts to implement a strict interpretation of the [RFC 7468]
 rules, implementing all of the MUSTs and SHOULDs while avoiding the MAYs,
 and targeting the "ABNF (Strict)" subset of the grammar as described in
-Section 3 Figure 3.
+[RFC 7468 Section 3 Figure 3 (p6)][RFC 7468 p6].
 
 ## Implementation notes
 
@@ -97,5 +97,6 @@ dual licensed as above, without any additional terms or conditions.
 [RustCrypto]: https://github.com/rustcrypto
 [RFC 1421]: https://datatracker.ietf.org/doc/html/rfc1421
 [RFC 7468]: https://datatracker.ietf.org/doc/html/rfc7468
+[RFC 7468 p6]: https://datatracker.ietf.org/doc/html/rfc7468#page-6
 [`base64ct`]: https://github.com/RustCrypto/formats/tree/master/base64ct
 [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf

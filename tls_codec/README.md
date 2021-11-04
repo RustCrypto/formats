@@ -1,4 +1,4 @@
-# TLS Codec
+# [RustCrypto]: TLS Codec
 
 ![MIT licensed][license-image]
 [![Project Chat][chat-image]][chat-link]
@@ -66,6 +66,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (links)
 
+[RustCrypto]: https://github.com/rustcrypto
 [rfc 8446]: https://tools.ietf.org/html/rfc8446
 [mls]: https://messaginglayersecurity.rocks/mls-protocol/draft-ietf-mls-protocol.html
 [tls_codec-ci]: https://img.shields.io/github/workflow/status/RustCrypto/formats/tls_codec?style=for-the-badge

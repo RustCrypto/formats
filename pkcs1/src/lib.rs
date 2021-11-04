@@ -1,33 +1,6 @@
-//! Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #1:
-//!
-//! RSA Cryptography Specifications Version 2.2 ([RFC 8017])
-//!
-//! ## About
-//! This crate supports encoding and decoding RSA private and public keys
-//! in either PKCS#1 DER (binary) or PEM (text) formats.
-//!
-//! PEM encoded RSA private keys begin with:
-//!
-//! ```text
-//! -----BEGIN RSA PRIVATE KEY-----
-//! ```
-//!
-//! PEM encoded RSA public keys begin with:
-//!
-//! ```text
-//! -----BEGIN RSA PUBLIC KEY-----
-//! ```
-//!
-//! Note that PEM-encoded keys must use the [RFC 7468] encoding, which does NOT
-//! permit "headers" alongside the data, as used by tools such as OpenSSL.
-//!
-//! # Minimum Supported Rust Version
-//! This crate requires **Rust 1.56** at a minimum.
-//!
-//! [RFC 7468]: https://tools.ietf.org/html/rfc7468
-//! [RFC 8017]: https://tools.ietf.org/html/rfc8017
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",

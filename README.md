@@ -12,6 +12,7 @@ Cryptography-related format encoders/decoders: PKCS, PKIX.
 | `pem‑rfc7468` | [![crates.io](https://img.shields.io/crates/v/pem-rfc7468.svg)](https://crates.io/crates/pem-rfc7468) | [![Documentation](https://docs.rs/pem-rfc7468/badge.svg)](https://docs.rs/pem-rfc7468) | Strict PEM encoding for PKIX/PKCS/CMS objects |
 | `pkcs1` | [![crates.io](https://img.shields.io/crates/v/pkcs1.svg)](https://crates.io/crates/pkcs1) | [![Documentation](https://docs.rs/pkcs1/badge.svg)](https://docs.rs/pkcs1) | Implementation of PKCS#1: RSA Cryptography Specifications Version 2.2 ([RFC 8017]) |
 | `pkcs5` | [![crates.io](https://img.shields.io/crates/v/pkcs5.svg)](https://crates.io/crates/pkcs5) | [![Documentation](https://docs.rs/pkcs5/badge.svg)](https://docs.rs/pkcs5) | Implementation of PKCS#5: Password-Based Cryptography Specification Version 2.1 ([RFC 8018]) |
+| `pkcs7` | [![crates.io](https://img.shields.io/crates/v/pkcs7.svg)](https://crates.io/crates/pkcs7) | [![Documentation](https://docs.rs/pkcs7/badge.svg)](https://docs.rs/pkcs7) | Implementation of PKCS#7: Cryptographic Message Syntax v1.5 ([RFC 5652] and [RFC 8933]) |
 | `pkcs8` | [![crates.io](https://img.shields.io/crates/v/pkcs8.svg)](https://crates.io/crates/pkcs8) | [![Documentation](https://docs.rs/pkcs8/badge.svg)](https://docs.rs/pkcs8) | Implementation of PKCS#8(v2): Private-Key Information Syntax Specification ([RFC 5208]) and asymmetric key packages ([RFC 5958]) |
 | `sec1` | [![crates.io](https://img.shields.io/crates/v/sec1.svg)](https://crates.io/crates/sec1) | [![Documentation](https://docs.rs/sec1/badge.svg)](https://docs.rs/sec1) | [SEC1: Elliptic Curve Cryptography] encoding formats |
 | `spki` | [![crates.io](https://img.shields.io/crates/v/spki.svg)](https://crates.io/crates/spki) | [![Documentation](https://docs.rs/spki/badge.svg)](https://docs.rs/spki) | X.509 Subject Public Key Info ([RFC 5280 Section 4.1]) describing public keys as well as their associated AlgorithmIdentifiers (i.e. OIDs) |
@@ -46,7 +47,9 @@ dual licensed as above, without any additional terms or conditions.
 [RFC 5208]: https://datatracker.ietf.org/doc/html/rfc5208
 [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
 [RFC 5280]: https://datatracker.ietf.org/doc/html/rfc5280
+[RFC 5652]: https://datatracker.ietf.org/doc/html/rfc5652
 [RFC 5958]: https://datatracker.ietf.org/doc/html/rfc5958
 [RFC 8017]: https://datatracker.ietf.org/doc/html/rfc8017
 [RFC 8018]: https://datatracker.ietf.org/doc/html/rfc8018
+[RFC 8933]: https://datatracker.ietf.org/doc/html/rfc8933
 [SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf
