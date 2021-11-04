@@ -1,3 +1,6 @@
+#![doc = include_str!("../README.md")]
+
+//! ## About
 //! Custom derive support for the [`der`] crate.
 //!
 //! This crate contains custom derive macros intended to be used in the
@@ -9,8 +12,7 @@
 //! Note that this crate shouldn't be used directly, but instead accessed
 //! by using the `derive` feature of the `der` crate.
 //!
-//! # Why not `serde`?
-//!
+//! ## Why not `serde`?
 //! The `der` crate is designed to be easily usable in embedded environments,
 //! including ones where code size comes at a premium.
 //!
@@ -25,12 +27,12 @@
 //! code size. At least for now, the `der` crate is optimizing for leveraging
 //! as many abstractions as it can to minimize code size.
 //!
-//! # Toplevel attributes
+//! ## Toplevel attributes
 //!
 //! The following attributes can be added to an `enum` or `struct` when
 //! deriving either [`Choice`] or [`Sequence`] respectively:
 //!
-//! ## `#[asn1(tag_mode = "...")` attribute: `EXPLICIT` vs `IMPLICIT`
+//! ### `#[asn1(tag_mode = "...")` attribute: `EXPLICIT` vs `IMPLICIT`
 //!
 //! This attribute can be used to declare the tagging mode used by a particular
 //! ASN.1 module.
@@ -40,19 +42,19 @@
 //! The default is `EXPLICIT`, so the attribute only needs to be added when
 //! a particular module is declared `IMPLICIT`.
 //!
-//! # Field-level attributes
+//! ## Field-level attributes
 //!
 //! The following attributes can be added to either the fields of a particular
 //! `struct` or the variants of a particular `enum`:
 //!
-//! ## `#[asn1(context_specific = "...")]` attribute: `CONTEXT-SPECIFIC` support
+//! ### `#[asn1(context_specific = "...")]` attribute: `CONTEXT-SPECIFIC` support
 //!
 //! This attribute can be added to associate a particular `CONTEXT-SPECIFIC`
 //! tag number with a given enum variant or struct field.
 //!
 //! The value must be quoted and contain a number, e.g. `#[asn1(context_specific = "42"]`.
 //!
-//! ## `#[asn1(type = "...")]` attribute: ASN.1 type declaration
+//! ### `#[asn1(type = "...")]` attribute: ASN.1 type declaration
 //!
 //! This attribute can be used to specify the ASN.1 type for a particular
 //! `enum` variant or `struct` field.
