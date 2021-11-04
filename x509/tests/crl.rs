@@ -1,6 +1,6 @@
 //! CertificateList tests
-use crate::AttributeTypeAndValue;
-use der::asn1::SetOf;
+// use crate::AttributeTypeAndValue;
+// use der::asn1::SetOf;
 use der::{Decodable, ErrorKind, Tag};
 use hex_literal::hex;
 use x509::extensions_utils::*;
