@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 4.0.0 (2021-11-04)
+### Changed
+- Upgrade to Rust 2021 edition; MSRV 1.56+
+- Moved to `RustCrypto/utils` repository ([#182])
+- Rename `TAI64` => `Tai64`; `TAI64N` => `Tai64N` ([#183])
+- Make constants inherent ([#184])
+  - `TAI64_LEN` => `Tai64::BYTE_SIZE`
+  - `TAI64N_LEN` => `Tai64N::BYTE_SIZE`
+  - `UNIX_EPOCH_TAI64` => `Tai64::UNIX_EPOCH`
+  - `UNIX_EPOCH_TAI64N` => `Tai64N::UNIX_EPOCH`
+
+### Removed
+- `chrono` support
+
+[#182]: https://github.com/RustCrypto/formats/pull/182
+[#183]: https://github.com/RustCrypto/formats/pull/183
+[#184]: https://github.com/RustCrypto/formats/pull/184
+
 ## 3.1.0 (2019-10-25)
 - Add `TryFrom` impls for slices
 - Add (optional) `serde` support
