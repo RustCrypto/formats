@@ -366,7 +366,7 @@ pub use crypto_bigint as bigint;
 
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
-pub use der_derive::{Choice, Enumerated, Sequence, TBS};
+pub use der_derive::{Choice, Defer, Enumerated, Sequence, TBS};
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]

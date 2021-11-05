@@ -61,6 +61,9 @@ pub(crate) struct FieldAttrs {
 
     /// Value of the `#[asn1(context_specific = "...")] attribute if provided.
     pub context_specific: Option<TagNumber>,
+
+    /// Indicates if decoding should be deferred
+    pub defer: Option<bool>,
 }
 
 impl FieldAttrs {
@@ -68,6 +71,7 @@ impl FieldAttrs {
     pub fn parse(attrs: &[Attribute]) -> Self {
         let mut asn1_type = None;
         let mut context_specific = None;
+        let mut defer = None;
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
@@ -90,6 +94,12 @@ impl FieldAttrs {
                 }
 
                 asn1_type = Some(ty);
+            } else if let Some(ty) = attr.parse_value("defer") {
+                if defer.is_some() {
+                    panic!("duplicate ASN.1 `defer` attribute: {}", attr.value);
+                }
+
+                defer = Some(ty);
             } else {
                 panic!(
                     "unknown field-level `asn1` attribute: {:?} \
@@ -102,6 +112,7 @@ impl FieldAttrs {
         Self {
             asn1_type,
             context_specific,
+            defer,
         }
     }
 

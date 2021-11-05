@@ -94,6 +94,7 @@
 
 mod attributes;
 mod choice;
+mod defer;
 mod enumerated;
 mod sequence;
 mod tag;
@@ -103,6 +104,7 @@ mod types;
 use crate::{
     attributes::{FieldAttrs, TypeAttrs, ATTR_NAME},
     choice::DeriveChoice,
+    defer::DeriveDefer,
     enumerated::DeriveEnumerated,
     sequence::DeriveSequence,
     tag::{TagMode, TagNumber},
@@ -232,10 +234,10 @@ decl_derive!(
 decl_derive!(
     [TBS, attributes(asn1)] =>
 
-    /// Support for deriving the `to be signed` trait on structs for the purposes of
-    /// verifying ASN.1 `SEQUENCE` types that follow the to be signed/algorithm/signature pattern.
-    /// In some ASN.1 modules, the `to be signed` pattern is denoted by the SIGNED{} macro. For example,
-    /// RFC 5912 features the following definition for an X.509 Certificate structure:
+    /// Support for deriving structs for which decoding of the first field of the struct is deferred
+    /// in support of verifying ASN.1 `SEQUENCE` types that follow the to be signed/algorithm/signature
+    /// pattern. In some ASN.1 modules, the `to be signed` pattern is denoted by the SIGNED{} macro.
+    /// For example, RFC 5912 features the following definition for an X.509 Certificate structure:
     ///
     /// Certificate  ::=  SIGNED{TBSCertificate}
     ///
@@ -282,6 +284,63 @@ decl_derive!(
     /// }
     derive_tbs
 );
+
+decl_derive!(
+    [Defer, attributes(asn1)] =>
+
+    /// Support for deriving structs that feature deferred decoding for arbitrary fields, such as in support of
+    /// verifying ASN.1 `SEQUENCE` types that follow the to be signed/algorithm/signature pattern.
+    /// In some ASN.1 modules, the `to be signed` pattern is denoted by the SIGNED{} macro. For example,
+    /// RFC 5912 features the following definition for an X.509 Certificate structure:
+    ///
+    /// Certificate  ::=  SIGNED{TBSCertificate}
+    ///
+    /// It defines the SIGNED{} macro as follows:
+    ///
+    /// SIGNED{ToBeSigned} ::= SEQUENCE {
+    ///      toBeSigned           ToBeSigned,
+    ///      algorithmIdentifier  SEQUENCE {
+    ///          algorithm        SIGNATURE-ALGORITHM.
+    ///                             &id({SignatureAlgorithms}),
+    ///          parameters       SIGNATURE-ALGORITHM.
+    ///                             &Params({SignatureAlgorithms}
+    ///                               {@algorithmIdentifier.algorithm}) OPTIONAL
+    ///      },
+    ///      signature BIT STRING (CONTAINING SIGNATURE-ALGORITHM.&Value(
+    ///                               {SignatureAlgorithms}
+    ///                               {@algorithmIdentifier.algorithm}))
+    ///   }
+    ///
+    /// Where the Defer derive macro is used, the first field can be defined with a #[asn1(defer="true")]
+    /// attribute so the first field is not decoded and is instead served as bytes containing the entire
+    /// encoded TLV production of that field. The second and third fields are decoded to feature an
+    /// AlgorithmIdentifier and a BIT STRING, as indicated above.
+    ///
+    /// Sample usage of the TBS macro is below.
+    ///
+    /// #[derive(Clone, Debug, Eq, PartialEq, Sequence, Defer)]
+    /// pub struct Certificate<'a> {
+    ///     /// tbsCertificate       TBSCertificate,
+    ///     #[asn1(defer="true")]
+    ///     pub tbs_certificate: TBSCertificate<'a>,
+    ///     /// signatureAlgorithm   AlgorithmIdentifier,
+    ///     pub signature_algorithm: AlgorithmIdentifier<'a>,
+    ///     /// signature            BIT STRING
+    ///     pub signature: BitString<'a>,
+    /// }
+    ///
+    /// This definition will cause encoders and decoders to be generated for the Certificate structure
+    /// (via the Sequence macro) enabling access to fully decoded contents along with a new structure
+    /// named DeferCertificate and corresponding decoder.
+    ///
+    /// pub struct DeferCertificate<'a> {
+    ///     pub tbs_certificate: &'a [u8],
+    ///     pub signature_algorithm: AlgorithmIdentifier<'a>,
+    ///     pub signature: BitString<'a>,
+    /// }
+    derive_defer
+);
+
 /// Custom derive for `der::Choice`.
 fn derive_choice(s: Structure<'_>) -> TokenStream {
     let ast = s.ast();
@@ -344,6 +403,17 @@ fn derive_tbs(s: Structure<'_>) -> TokenStream {
     match &ast.data {
         syn::Data::Struct(data) => DeriveTBS::derive(s, data, lifetime),
         other => panic!("can't derive `TBS` on: {:?}", other),
+    }
+}
+
+/// Custom derive for `der::Defer`
+fn derive_defer(s: Structure<'_>) -> TokenStream {
+    let ast = s.ast();
+    let lifetime = parse_lifetime(&ast.generics);
+
+    match &ast.data {
+        syn::Data::Struct(data) => DeriveDefer::derive(s, data, lifetime),
+        other => panic!("can't derive `Defer` on: {:?}", other),
     }
 }
 

@@ -1,6 +1,6 @@
 //! Certificate tests
-use der::asn1::{UIntBytes, Utf8String};
-use der::{Decodable, Length, Tag};
+use der::asn1::{BitString, UIntBytes, Utf8String};
+use der::{Decodable, Decoder, Defer, Encodable, Length, Tag};
 use hex_literal::hex;
 #[cfg(feature = "alloc")]
 use x509::KeyUsage;
@@ -9,6 +9,17 @@ use x509::{
     BasicConstraints, Certificate, CertificatePolicies, DeferCertificate, GeneralName, OtherName,
     SubjectKeyIdentifier,
 };
+
+#[derive(Clone, Debug, Eq, PartialEq, Defer)]
+pub struct SigAlgDeferCertificate<'a> {
+    /// tbsCertificate       TBSCertificate,
+    pub tbs_certificate: TBSCertificate<'a>,
+    /// signatureAlgorithm   AlgorithmIdentifier,
+    #[asn1(defer = "true")]
+    pub signature_algorithm: AlgorithmIdentifier<'a>,
+    /// signature            BIT STRING
+    pub signature: BitString<'a>,
+}
 
 ///   TBSCertificate  ::=  SEQUENCE  {
 ///       version         [0]  Version DEFAULT v1,
@@ -91,14 +102,6 @@ fn decode_cert() {
         }
         _ => panic!("No good"),
     }
-
-    //TODO remove temp junk
-    // let der_encoded_cert =
-    //     include_bytes!("/Users/cwallace/Public/old/PKITS_data/certs/nameConstraintsDN3subCA1Cert.crt");
-    // // let der_encoded_cert =
-    // //     include_bytes!("/Users/cwallace/Public/old/PKITS_data/certs/requireExplicitPolicy5CACert.crt");
-    // let result = Certificate::from_der(der_encoded_cert);
-    // let cert: Certificate = result.unwrap();
 
     // cloned cert with variety of interesting bits, including subject DN encoded backwards, large
     // policy mapping set, large policy set (including one with qualifiers), fairly typical set of
@@ -398,8 +401,20 @@ fn decode_cert() {
         &hex!("30820264A003020102020102300D06092A864886F70D01010B05003045310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303131311530130603550403130C547275737420416E63686F72301E170D3130303130313038333030305A170D3330313233313038333030305A3040310B3009060355040613025553311F301D060355040A1316546573742043657274696669636174657320323031313110300E06035504031307476F6F6420434130820122300D06092A864886F70D01010105000382010F003082010A028201010090589A47628DFB5DF6FBA0948F7BE5AF7D3973206DB5590ECCC8C6C6B4AFE6F267A30B347A73E7FFA498441FF39C0D232C5EAF21E645DA046A962BEBD2C03FCFCE9E4E606A6D5E618F72D843B40C25ADA7E418E4B81AA209F3E93D5C62ACFAF4145C92AC3A4E3B46ECC3E8F66EA6AE2CD7AC5A2D5A986D40B6E94718D3C1A99E82CD1C9652FC4997C35659DDDE18663365A48A5614D1E750699D88629750F5FFF47D1F563200690C239C601BA60C82BA65A0CC8C0FA57F84945394AF7CFB06856714A8485F37BE566406496C59C6F58350DF74525D2D2C4A4B824DCE571501E15506B9FD793893A9828D7189B20D3E65ADD7855D6B637DCAB34A96824664DA8B0203010001A37C307A301F0603551D23041830168014E47D5FD15C9586082C05AEBE75B665A7D95DA866301D0603551D0E04160414580184241BBC2B52944A3DA510721451F5AF3AC9300E0603551D0F0101FF04040302010630170603551D200410300E300C060A60864801650302013001300F0603551D130101FF040530030101FF")[..]
     );
 
+    let result3 = Defer2SigAlgDeferCertificate::from_der(der_encoded_cert);
+    let cert3 = result3.unwrap();
+
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
+
+    let reencoded_sig_alg = cert.signature_algorithm.to_vec().unwrap();
+    assert_eq!(cert3.signature_algorithm, reencoded_sig_alg);
+
+    // let reencoded_tbs_certificate = cert.tbs_certificate.to_vec().unwrap();
+    // assert_eq!(
+    //     cert2.tbs_certificate,
+    //     reencoded_tbs_certificate
+    // );
 
     assert_eq!(cert.tbs_certificate.version, Some(2));
     let target_serial: [u8; 1] = [2];
