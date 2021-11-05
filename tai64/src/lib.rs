@@ -328,7 +328,6 @@ impl std::error::Error for Error {}
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
-    use quickcheck::{quickcheck, Arbitrary, Gen};
 
     #[test]
     fn before_epoch() {
@@ -349,41 +348,5 @@ mod tests {
         let t1 = tai64n.to_system_time();
 
         assert_eq!(t, t1);
-    }
-
-    impl Arbitrary for Tai64N {
-        fn arbitrary(g: &mut Gen) -> Self {
-            let s = u64::arbitrary(g);
-            let n = u32::arbitrary(g) % NANOS_PER_SECOND;
-            Tai64N(Tai64(s), n)
-        }
-    }
-
-    quickcheck! {
-        fn duration_add_sub(x: Tai64N, y: Tai64N) -> bool {
-            match x.duration_since(&y) {
-                Ok(d) => {
-                    assert_eq!(x, y + d);
-                    assert_eq!(y, x - d);
-                }
-                Err(d) => {
-                    assert_eq!(y, x + d);
-                    assert_eq!(x, y - d);
-                }
-            }
-            true
-        }
-
-        fn to_from_system_time(before_epoch: bool, d: Duration) -> bool {
-            let st = if before_epoch {
-                UNIX_EPOCH + d
-            } else {
-                UNIX_EPOCH - d
-            };
-
-            let st1 = Tai64N::from_system_time(&st).to_system_time();
-
-            st == st1
-        }
     }
 }
