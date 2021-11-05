@@ -1,18 +1,13 @@
 #![no_std]
 #![doc = include_str!("../README.md")]
 #![doc(html_root_url = "https://docs.rs/tai64/3.1.0")]
-#![allow(clippy::upper_case_acronyms)]
 #![forbid(unsafe_code)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
 #[cfg(feature = "std")]
 extern crate std;
 
-use core::{
-    convert::{TryFrom, TryInto},
-    fmt, ops,
-    time::Duration,
-};
+use core::{fmt, ops, time::Duration};
 
 #[cfg(feature = "serde")]
 use serde::{de, ser, Deserialize, Serialize};
@@ -24,10 +19,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use zeroize::Zeroize;
 
 /// Unix epoch in TAI64: 1970-01-01 00:00:10 TAI.
-pub const UNIX_EPOCH_TAI64: TAI64 = TAI64(10 + (1 << 62));
+pub const UNIX_EPOCH_TAI64: Tai64 = Tai64(10 + (1 << 62));
 
 /// Unix EPOCH in TAI64N: 1970-01-01 00:00:10 TAI.
-pub const UNIX_EPOCH_TAI64N: TAI64N = TAI64N(UNIX_EPOCH_TAI64, 0);
+pub const UNIX_EPOCH_TAI64N: Tai64N = Tai64N(UNIX_EPOCH_TAI64, 0);
 
 /// Length of serialized TAI64
 const TAI64_LEN: usize = 8;
@@ -40,20 +35,20 @@ const NANOS_PER_SECOND: u32 = 1_000_000_000;
 
 /// A `TAI64` label.
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
-pub struct TAI64(pub u64);
+pub struct Tai64(pub u64);
 
 #[cfg(feature = "zeroize")]
-impl Zeroize for TAI64 {
+impl Zeroize for Tai64 {
     fn zeroize(&mut self) {
         self.0.zeroize();
     }
 }
 
-impl TAI64 {
+impl Tai64 {
     /// Get `TAI64N` timestamp according to system clock.
     #[cfg(feature = "std")]
     pub fn now() -> Self {
-        TAI64N::now().into()
+        Tai64N::now().into()
     }
 
     /// Parse TAI64 from a byte slice
@@ -68,7 +63,7 @@ impl TAI64 {
 
     /// Convert Unix timestamp to `TAI64`.
     pub fn from_unix(secs: i64) -> Self {
-        TAI64((secs + 10 + (1 << 62)) as u64)
+        Tai64((secs + 10 + (1 << 62)) as u64)
     }
 
     /// Convert `TAI64` to unix timestamp.
@@ -77,21 +72,21 @@ impl TAI64 {
     }
 }
 
-impl From<TAI64N> for TAI64 {
+impl From<Tai64N> for Tai64 {
     /// Remove the nanosecond component from a TAI64N value
-    fn from(other: TAI64N) -> Self {
+    fn from(other: Tai64N) -> Self {
         other.0
     }
 }
 
-impl From<[u8; TAI64_LEN]> for TAI64 {
+impl From<[u8; TAI64_LEN]> for Tai64 {
     /// Parse TAI64 from external representation
     fn from(bytes: [u8; TAI64_LEN]) -> Self {
-        TAI64(u64::from_be_bytes(bytes))
+        Tai64(u64::from_be_bytes(bytes))
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for TAI64 {
+impl<'a> TryFrom<&'a [u8]> for Tai64 {
     type Error = Error;
 
     fn try_from(slice: &'a [u8]) -> Result<Self, Error> {
@@ -100,38 +95,38 @@ impl<'a> TryFrom<&'a [u8]> for TAI64 {
     }
 }
 
-impl From<TAI64> for [u8; 8] {
+impl From<Tai64> for [u8; 8] {
     /// Serialize TAI64 to external representation
-    fn from(tai: TAI64) -> [u8; 8] {
+    fn from(tai: Tai64) -> [u8; 8] {
         tai.0.to_be_bytes()
     }
 }
 
-impl ops::Add<u64> for TAI64 {
+impl ops::Add<u64> for Tai64 {
     type Output = Self;
 
     fn add(self, x: u64) -> Self {
-        TAI64(self.0 + x)
+        Tai64(self.0 + x)
     }
 }
 
-impl ops::Sub<u64> for TAI64 {
+impl ops::Sub<u64> for Tai64 {
     type Output = Self;
 
     fn sub(self, x: u64) -> Self {
-        TAI64(self.0 - x)
+        Tai64(self.0 - x)
     }
 }
 
 #[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for TAI64 {
+impl<'de> Deserialize<'de> for Tai64 {
     fn deserialize<D: de::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Ok(<[u8; TAI64_LEN]>::deserialize(deserializer)?.into())
     }
 }
 
 #[cfg(feature = "serde")]
-impl Serialize for TAI64 {
+impl Serialize for Tai64 {
     fn serialize<S: ser::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.to_bytes().serialize(serializer)
     }
@@ -141,21 +136,21 @@ impl Serialize for TAI64 {
 ///
 /// Invariant: The nanosecond part <= 999999999.
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
-pub struct TAI64N(pub TAI64, pub u32);
+pub struct Tai64N(pub Tai64, pub u32);
 
 #[cfg(feature = "zeroize")]
-impl Zeroize for TAI64N {
+impl Zeroize for Tai64N {
     fn zeroize(&mut self) {
         self.0.zeroize();
         self.1.zeroize();
     }
 }
 
-impl TAI64N {
+impl Tai64N {
     /// Get `TAI64N` timestamp according to system clock.
     #[cfg(feature = "std")]
     pub fn now() -> Self {
-        TAI64N::from_system_time(&SystemTime::now())
+        Tai64N::from_system_time(&SystemTime::now())
     }
 
     /// Parse TAI64N from a byte slice
@@ -207,33 +202,33 @@ impl TAI64N {
     }
 }
 
-impl From<TAI64> for TAI64N {
+impl From<Tai64> for Tai64N {
     /// Remove the nanosecond component from a TAI64N value
-    fn from(other: TAI64) -> Self {
-        TAI64N(other, 0)
+    fn from(other: Tai64) -> Self {
+        Tai64N(other, 0)
     }
 }
 
-impl TryFrom<[u8; TAI64N_LEN]> for TAI64N {
+impl TryFrom<[u8; TAI64N_LEN]> for Tai64N {
     type Error = Error;
 
     /// Parse TAI64 from external representation
     fn try_from(bytes: [u8; TAI64N_LEN]) -> Result<Self, Error> {
-        let secs = TAI64::from_slice(&bytes[..TAI64_LEN])?;
+        let secs = Tai64::from_slice(&bytes[..TAI64_LEN])?;
 
         let mut nano_bytes = [0u8; 4];
         nano_bytes.copy_from_slice(&bytes[TAI64_LEN..]);
         let nanos = u32::from_be_bytes(nano_bytes);
 
         if nanos < NANOS_PER_SECOND {
-            Ok(TAI64N(secs, nanos))
+            Ok(Tai64N(secs, nanos))
         } else {
             Err(Error::NanosInvalid)
         }
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for TAI64N {
+impl<'a> TryFrom<&'a [u8]> for Tai64N {
     type Error = Error;
 
     fn try_from(slice: &'a [u8]) -> Result<Self, Error> {
@@ -242,9 +237,9 @@ impl<'a> TryFrom<&'a [u8]> for TAI64N {
     }
 }
 
-impl From<TAI64N> for [u8; TAI64N_LEN] {
+impl From<Tai64N> for [u8; TAI64N_LEN] {
     /// Serialize TAI64 to external representation
-    fn from(tai: TAI64N) -> [u8; TAI64N_LEN] {
+    fn from(tai: Tai64N) -> [u8; TAI64N_LEN] {
         let mut result = [0u8; TAI64N_LEN];
         result[..TAI64_LEN].copy_from_slice(&tai.0.to_bytes());
         result[TAI64_LEN..].copy_from_slice(&tai.1.to_be_bytes());
@@ -253,14 +248,14 @@ impl From<TAI64N> for [u8; TAI64N_LEN] {
 }
 
 #[cfg(feature = "std")]
-impl From<SystemTime> for TAI64N {
+impl From<SystemTime> for Tai64N {
     fn from(t: SystemTime) -> Self {
-        TAI64N::from_system_time(&t)
+        Tai64N::from_system_time(&t)
     }
 }
 
 #[allow(clippy::suspicious_arithmetic_impl)]
-impl ops::Add<Duration> for TAI64N {
+impl ops::Add<Duration> for Tai64N {
     type Output = Self;
 
     fn add(self, d: Duration) -> Self {
@@ -272,11 +267,11 @@ impl ops::Add<Duration> for TAI64N {
             (0, n)
         };
 
-        TAI64N(self.0 + d.as_secs() + carry, n)
+        Tai64N(self.0 + d.as_secs() + carry, n)
     }
 }
 
-impl ops::Sub<Duration> for TAI64N {
+impl ops::Sub<Duration> for Tai64N {
     type Output = Self;
 
     fn sub(self, d: Duration) -> Self {
@@ -285,12 +280,12 @@ impl ops::Sub<Duration> for TAI64N {
         } else {
             (1, NANOS_PER_SECOND + self.1 - d.subsec_nanos())
         };
-        TAI64N(self.0 - carry - d.as_secs(), n)
+        Tai64N(self.0 - carry - d.as_secs(), n)
     }
 }
 
 #[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for TAI64N {
+impl<'de> Deserialize<'de> for Tai64N {
     fn deserialize<D: de::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         use de::Error;
         <[u8; TAI64N_LEN]>::deserialize(deserializer)?
@@ -300,7 +295,7 @@ impl<'de> Deserialize<'de> for TAI64N {
 }
 
 #[cfg(feature = "serde")]
-impl Serialize for TAI64N {
+impl Serialize for Tai64N {
     fn serialize<S: ser::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.to_bytes().serialize(serializer)
     }
@@ -338,34 +333,34 @@ mod tests {
     #[test]
     fn before_epoch() {
         let t = UNIX_EPOCH - Duration::new(0, 1);
-        let tai64n = TAI64N::from_system_time(&t);
+        let tai64n = Tai64N::from_system_time(&t);
         let t1 = tai64n.to_system_time();
 
         assert_eq!(t, t1);
 
         let t = UNIX_EPOCH - Duration::new(488294802189, 999999999);
-        let tai64n = TAI64N::from_system_time(&t);
+        let tai64n = Tai64N::from_system_time(&t);
         let t1 = tai64n.to_system_time();
 
         assert_eq!(t, t1);
 
         let t = UNIX_EPOCH - Duration::new(73234, 68416841);
-        let tai64n = TAI64N::from_system_time(&t);
+        let tai64n = Tai64N::from_system_time(&t);
         let t1 = tai64n.to_system_time();
 
         assert_eq!(t, t1);
     }
 
-    impl Arbitrary for TAI64N {
+    impl Arbitrary for Tai64N {
         fn arbitrary(g: &mut Gen) -> Self {
             let s = u64::arbitrary(g);
             let n = u32::arbitrary(g) % NANOS_PER_SECOND;
-            TAI64N(TAI64(s), n)
+            Tai64N(Tai64(s), n)
         }
     }
 
     quickcheck! {
-        fn duration_add_sub(x: TAI64N, y: TAI64N) -> bool {
+        fn duration_add_sub(x: Tai64N, y: Tai64N) -> bool {
             match x.duration_since(&y) {
                 Ok(d) => {
                     assert_eq!(x, y + d);
@@ -386,7 +381,7 @@ mod tests {
                 UNIX_EPOCH - d
             };
 
-            let st1 = TAI64N::from_system_time(&st).to_system_time();
+            let st1 = Tai64N::from_system_time(&st).to_system_time();
 
             st == st1
         }
