@@ -18,18 +18,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
 
-/// Unix epoch in TAI64: 1970-01-01 00:00:10 TAI.
-pub const UNIX_EPOCH_TAI64: Tai64 = Tai64(10 + (1 << 62));
-
-/// Unix EPOCH in TAI64N: 1970-01-01 00:00:10 TAI.
-pub const UNIX_EPOCH_TAI64N: Tai64N = Tai64N(UNIX_EPOCH_TAI64, 0);
-
-/// Length of serialized TAI64
-const TAI64_LEN: usize = 8;
-
-/// Length of serialized TAI64N
-const TAI64N_LEN: usize = 12;
-
 /// Number of nanoseconds in a second
 const NANOS_PER_SECOND: u32 = 1_000_000_000;
 
@@ -37,27 +25,26 @@ const NANOS_PER_SECOND: u32 = 1_000_000_000;
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Tai64(pub u64);
 
-#[cfg(feature = "zeroize")]
-impl Zeroize for Tai64 {
-    fn zeroize(&mut self) {
-        self.0.zeroize();
-    }
-}
-
 impl Tai64 {
+    /// Unix epoch in `TAI64`: 1970-01-01 00:00:10 TAI.
+    pub const UNIX_EPOCH: Self = Self(10 + (1 << 62));
+
+    /// Length of serialized `TAI64` timestamp in bytes.
+    pub const BYTE_SIZE: usize = 8;
+
     /// Get `TAI64N` timestamp according to system clock.
     #[cfg(feature = "std")]
     pub fn now() -> Self {
         Tai64N::now().into()
     }
 
-    /// Parse TAI64 from a byte slice
+    /// Parse `TAI64` from a byte slice
     pub fn from_slice(slice: &[u8]) -> Result<Self, Error> {
         slice.try_into()
     }
 
     /// Serialize TAI64 as bytes
-    pub fn to_bytes(self) -> [u8; TAI64_LEN] {
+    pub fn to_bytes(self) -> [u8; Self::BYTE_SIZE] {
         self.into()
     }
 
@@ -79,9 +66,9 @@ impl From<Tai64N> for Tai64 {
     }
 }
 
-impl From<[u8; TAI64_LEN]> for Tai64 {
+impl From<[u8; Tai64::BYTE_SIZE]> for Tai64 {
     /// Parse TAI64 from external representation
-    fn from(bytes: [u8; TAI64_LEN]) -> Self {
+    fn from(bytes: [u8; Tai64::BYTE_SIZE]) -> Self {
         Tai64(u64::from_be_bytes(bytes))
     }
 }
@@ -90,7 +77,7 @@ impl<'a> TryFrom<&'a [u8]> for Tai64 {
     type Error = Error;
 
     fn try_from(slice: &'a [u8]) -> Result<Self, Error> {
-        let bytes: [u8; TAI64_LEN] = slice.try_into().map_err(|_| Error::LengthInvalid)?;
+        let bytes: [u8; Tai64::BYTE_SIZE] = slice.try_into().map_err(|_| Error::LengthInvalid)?;
         Ok(bytes.into())
     }
 }
@@ -121,7 +108,7 @@ impl ops::Sub<u64> for Tai64 {
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for Tai64 {
     fn deserialize<D: de::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Ok(<[u8; TAI64_LEN]>::deserialize(deserializer)?.into())
+        Ok(<[u8; Tai64::BYTE_SIZE]>::deserialize(deserializer)?.into())
     }
 }
 
@@ -129,6 +116,13 @@ impl<'de> Deserialize<'de> for Tai64 {
 impl Serialize for Tai64 {
     fn serialize<S: ser::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.to_bytes().serialize(serializer)
+    }
+}
+
+#[cfg(feature = "zeroize")]
+impl Zeroize for Tai64 {
+    fn zeroize(&mut self) {
+        self.0.zeroize();
     }
 }
 
@@ -147,10 +141,16 @@ impl Zeroize for Tai64N {
 }
 
 impl Tai64N {
+    /// Unix epoch in `TAI64N`: 1970-01-01 00:00:10 TAI.
+    pub const UNIX_EPOCH: Self = Self(Tai64::UNIX_EPOCH, 0);
+
+    /// Length of serialized `TAI64N` timestamp.
+    pub const BYTE_SIZE: usize = 12;
+
     /// Get `TAI64N` timestamp according to system clock.
     #[cfg(feature = "std")]
     pub fn now() -> Self {
-        Tai64N::from_system_time(&SystemTime::now())
+        Self::from_system_time(&SystemTime::now())
     }
 
     /// Parse TAI64N from a byte slice
@@ -159,7 +159,7 @@ impl Tai64N {
     }
 
     /// Serialize TAI64N as bytes
-    pub fn to_bytes(self) -> [u8; TAI64N_LEN] {
+    pub fn to_bytes(self) -> [u8; Tai64N::BYTE_SIZE] {
         self.into()
     }
 
@@ -187,15 +187,15 @@ impl Tai64N {
     #[cfg(feature = "std")]
     pub fn from_system_time(t: &SystemTime) -> Self {
         match t.duration_since(UNIX_EPOCH) {
-            Ok(d) => UNIX_EPOCH_TAI64N + d,
-            Err(e) => UNIX_EPOCH_TAI64N - e.duration(),
+            Ok(d) => Self::UNIX_EPOCH + d,
+            Err(e) => Self::UNIX_EPOCH - e.duration(),
         }
     }
 
     /// Convert `TAI64N`to `SystemTime`.
     #[cfg(feature = "std")]
     pub fn to_system_time(self) -> SystemTime {
-        match self.duration_since(&UNIX_EPOCH_TAI64N) {
+        match self.duration_since(&Self::UNIX_EPOCH) {
             Ok(d) => UNIX_EPOCH + d,
             Err(d) => UNIX_EPOCH - d,
         }
@@ -209,15 +209,15 @@ impl From<Tai64> for Tai64N {
     }
 }
 
-impl TryFrom<[u8; TAI64N_LEN]> for Tai64N {
+impl TryFrom<[u8; Self::BYTE_SIZE]> for Tai64N {
     type Error = Error;
 
     /// Parse TAI64 from external representation
-    fn try_from(bytes: [u8; TAI64N_LEN]) -> Result<Self, Error> {
-        let secs = Tai64::from_slice(&bytes[..TAI64_LEN])?;
+    fn try_from(bytes: [u8; Tai64N::BYTE_SIZE]) -> Result<Self, Error> {
+        let secs = Tai64::from_slice(&bytes[..Tai64::BYTE_SIZE])?;
 
         let mut nano_bytes = [0u8; 4];
-        nano_bytes.copy_from_slice(&bytes[TAI64_LEN..]);
+        nano_bytes.copy_from_slice(&bytes[Tai64::BYTE_SIZE..]);
         let nanos = u32::from_be_bytes(nano_bytes);
 
         if nanos < NANOS_PER_SECOND {
@@ -232,17 +232,17 @@ impl<'a> TryFrom<&'a [u8]> for Tai64N {
     type Error = Error;
 
     fn try_from(slice: &'a [u8]) -> Result<Self, Error> {
-        let bytes: [u8; TAI64N_LEN] = slice.try_into().map_err(|_| Error::LengthInvalid)?;
+        let bytes: [u8; Tai64N::BYTE_SIZE] = slice.try_into().map_err(|_| Error::LengthInvalid)?;
         bytes.try_into()
     }
 }
 
-impl From<Tai64N> for [u8; TAI64N_LEN] {
+impl From<Tai64N> for [u8; Tai64N::BYTE_SIZE] {
     /// Serialize TAI64 to external representation
-    fn from(tai: Tai64N) -> [u8; TAI64N_LEN] {
-        let mut result = [0u8; TAI64N_LEN];
-        result[..TAI64_LEN].copy_from_slice(&tai.0.to_bytes());
-        result[TAI64_LEN..].copy_from_slice(&tai.1.to_be_bytes());
+    fn from(tai: Tai64N) -> [u8; Tai64N::BYTE_SIZE] {
+        let mut result = [0u8; Tai64N::BYTE_SIZE];
+        result[..Tai64::BYTE_SIZE].copy_from_slice(&tai.0.to_bytes());
+        result[Tai64::BYTE_SIZE..].copy_from_slice(&tai.1.to_be_bytes());
         result
     }
 }
@@ -288,7 +288,7 @@ impl ops::Sub<Duration> for Tai64N {
 impl<'de> Deserialize<'de> for Tai64N {
     fn deserialize<D: de::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         use de::Error;
-        <[u8; TAI64N_LEN]>::deserialize(deserializer)?
+        <[u8; Tai64N::BYTE_SIZE]>::deserialize(deserializer)?
             .try_into()
             .map_err(D::Error::custom)
     }
@@ -301,7 +301,7 @@ impl Serialize for Tai64N {
     }
 }
 
-/// TAI64 errors
+/// TAI64 errors.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Error {
     /// Invalid length
