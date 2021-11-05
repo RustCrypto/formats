@@ -1,7 +1,7 @@
 //! Certificate [`Certificate`] and TBSCertificate [`TBSCertificate`] as defined in RFC 5280
 
 use crate::{Extensions, Name, Validity};
-use der::asn1::{BitString, UIntBytes};
+use der::asn1::{BitString, ContextSpecific, UIntBytes};
 use der::{Decodable, Decoder, Sequence, TagMode, TagNumber, TBS};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
@@ -109,7 +109,11 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
         #[allow(unused_imports)]
         use core::convert::TryFrom;
         f(&[
-            &self.version,
+            &self.version.as_ref().map(|version| ContextSpecific {
+                tag_number: VERSION_TAG,
+                tag_mode: TagMode::Explicit,
+                value: *version,
+            }),
             &self.serial_number,
             &self.signature,
             &self.issuer,
@@ -118,7 +122,11 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
             &self.subject_public_key_info,
             &self.issuer_unique_id,
             &self.subject_unique_id,
-            &self.extensions,
+            &self.extensions.as_ref().map(|exts| ContextSpecific {
+                tag_number: EXTENSIONS_TAG,
+                tag_mode: TagMode::Explicit,
+                value: exts.clone(),
+            }),
         ])
     }
 }

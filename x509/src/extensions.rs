@@ -123,7 +123,12 @@ impl<'a> ::der::Sequence<'a> for Extension<'a> {
     where
         F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
-        f(&[&self.extn_id, &self.critical, &self.extn_value])
+        if Some(true) == self.critical {
+            f(&[&self.extn_id, &self.critical, &self.extn_value])
+        }
+        else {
+            f(&[&self.extn_id, &self.extn_value])
+        }
     }
 }
 
