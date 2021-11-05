@@ -62,6 +62,7 @@ impl DeriveTBS {
 
         let mut fields = TokenStream::new();
 
+        let mut comment: String = String::new();
         for (field_count, field) in (&data.fields).into_iter().enumerate() {
             let name = field
                 .ident
@@ -72,6 +73,10 @@ impl DeriveTBS {
             let ty = field.ty.clone();
 
             let f = if 0 == field_count {
+                comment = format!(
+                    "Structure supporting deferred decoding of {} field in the {} SEQUENCE",
+                    name, ident
+                );
                 quote! {
                      /// Defer decoded field
                      pub #name: &#lifetime [u8],
@@ -89,7 +94,7 @@ impl DeriveTBS {
         let decode_result = &self.decode_result;
 
         let struct_def = quote! {
-            /// Structure supporting deferred decoding of first field in SEQUENCE
+            #[doc = #comment]
             pub struct #sname <#lifetime> {
                 #fields
             }
