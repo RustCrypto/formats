@@ -125,8 +125,7 @@ impl<'a> ::der::Sequence<'a> for Extension<'a> {
     {
         if Some(true) == self.critical {
             f(&[&self.extn_id, &self.critical, &self.extn_value])
-        }
-        else {
+        } else {
             f(&[&self.extn_id, &self.extn_value])
         }
     }
