@@ -12,6 +12,7 @@ members = [
     "pkcs8",
     "sec1",
     "spki",
+    "tai64",
     "tls_codec",
     "tls_codec/derive",
     "x509"

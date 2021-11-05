@@ -925,6 +925,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "tai64"
+version = "4.0.0"
+dependencies = [
+ "serde",
+ "zeroize",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

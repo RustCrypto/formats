@@ -51,6 +51,11 @@ where
         self.inner.add(element)
     }
 
+    /// Get the nth element from this [`SetOf`].
+    pub fn get(&self, index: usize) -> Option<&T> {
+        self.inner.get(index)
+    }
+
     /// Iterate over the elements of this [`SetOf`].
     pub fn iter(&self) -> SetOfIter<'_, T> {
         SetOfIter {
