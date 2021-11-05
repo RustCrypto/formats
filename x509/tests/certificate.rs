@@ -82,10 +82,7 @@ fn reencode_cert() {
     let reencoded_tbs_certificate = cert.tbs_certificate.to_vec().unwrap();
     println!("old: {:X?}", cert2.tbs_certificate);
     println!("new: {:X?}", reencoded_tbs_certificate);
-    assert_eq!(
-        cert2.tbs_certificate,
-        reencoded_tbs_certificate
-    );
+    assert_eq!(cert2.tbs_certificate, reencoded_tbs_certificate);
 }
 
 #[test]
