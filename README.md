@@ -16,6 +16,7 @@ Cryptography-related format encoders/decoders: PKCS, PKIX.
 | `pkcs8` | [![crates.io](https://img.shields.io/crates/v/pkcs8.svg)](https://crates.io/crates/pkcs8) | [![Documentation](https://docs.rs/pkcs8/badge.svg)](https://docs.rs/pkcs8) | Implementation of PKCS#8(v2): Private-Key Information Syntax Specification ([RFC 5208]) and asymmetric key packages ([RFC 5958]) |
 | `sec1` | [![crates.io](https://img.shields.io/crates/v/sec1.svg)](https://crates.io/crates/sec1) | [![Documentation](https://docs.rs/sec1/badge.svg)](https://docs.rs/sec1) | [SEC1: Elliptic Curve Cryptography] encoding formats |
 | `spki` | [![crates.io](https://img.shields.io/crates/v/spki.svg)](https://crates.io/crates/spki) | [![Documentation](https://docs.rs/spki/badge.svg)](https://docs.rs/spki) | X.509 Subject Public Key Info ([RFC 5280 Section 4.1]) describing public keys as well as their associated AlgorithmIdentifiers (i.e. OIDs) |
+| `tai64` | [![crates.io](https://img.shields.io/crates/v/tai64.svg)](https://crates.io/crates/tai64) | [![Documentation](https://docs.rs/tai64/badge.svg)](https://docs.rs/tai64) | TAI64(N) Timestamps |
 | `x509` | [![crates.io](https://img.shields.io/crates/v/x509.svg)](https://crates.io/crates/x509) | [![Documentation](https://docs.rs/x509/badge.svg)](https://docs.rs/x509) | Implementation of the X.509 Public Key Infrastructure Certificate format as described in [RFC 5280] |
 
 ## License
