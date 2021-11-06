@@ -2,7 +2,8 @@
 
 use crate::enveloped_data_content::EncryptedContentInfo;
 use der::{
-    Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Length, Sequence, Tag, Tagged,
+    Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, FixedTag, Length, Sequence,
+    Tag,
 };
 
 /// Syntax version of the `encrypted-data` content type.
@@ -19,7 +20,7 @@ pub enum Version {
     V0 = 0,
 }
 
-impl Tagged for Version {
+impl FixedTag for Version {
     const TAG: Tag = Tag::Integer;
 }
 

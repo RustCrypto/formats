@@ -1,8 +1,8 @@
 //! DER decoder.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Error, ErrorKind, Header, Length, Result,
-    Tag, TagMode, TagNumber, Tagged,
+    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Error, ErrorKind, FixedTag, Header, Length,
+    Result, Tag, TagMode, TagNumber,
 };
 
 /// DER decoder.
@@ -169,7 +169,7 @@ impl<'a> Decoder<'a> {
         tag_mode: TagMode,
     ) -> Result<Option<T>>
     where
-        T: DecodeValue<'a> + Tagged,
+        T: DecodeValue<'a> + FixedTag,
     {
         Ok(match tag_mode {
             TagMode::Explicit => ContextSpecific::<T>::decode_explicit(self, tag_number)?,

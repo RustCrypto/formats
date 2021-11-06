@@ -2,7 +2,7 @@
 
 use crate::{
     arrayvec, ArrayVec, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder,
-    ErrorKind, Length, Result, Tag, Tagged,
+    ErrorKind, FixedTag, Length, Result, Tag,
 };
 
 #[cfg(feature = "alloc")]
@@ -111,7 +111,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> Tagged for SetOf<T, N>
+impl<'a, T, const N: usize> FixedTag for SetOf<T, N>
 where
     T: Clone + Decodable<'a> + Ord,
 {
@@ -205,7 +205,7 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, T> Tagged for BTreeSet<T>
+impl<'a, T> FixedTag for BTreeSet<T>
 where
     T: Clone + Decodable<'a> + Ord,
 {

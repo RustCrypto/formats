@@ -1,8 +1,8 @@
 //! ASN.1 `OBJECT IDENTIFIER`
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag,
-    Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
+    Result, Tag, Tagged,
 };
 use const_oid::ObjectIdentifier;
 
@@ -47,7 +47,7 @@ impl TryFrom<Any<'_>> for ObjectIdentifier {
     }
 }
 
-impl<'a> Tagged for ObjectIdentifier {
+impl<'a> FixedTag for ObjectIdentifier {
     const TAG: Tag = Tag::ObjectIdentifier;
 }
 

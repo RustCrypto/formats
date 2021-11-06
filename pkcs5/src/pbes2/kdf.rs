@@ -3,7 +3,7 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence, Tag,
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence, Tag, Tagged,
 };
 
 /// Password-Based Key Derivation Function (PBKDF2) OID.

@@ -212,7 +212,7 @@ impl<'a> Decodable<'a> for OtherPrimeInfos<'a> {
 }
 
 #[cfg(not(feature = "alloc"))]
-impl<'a> der::Tagged for OtherPrimeInfos<'a> {
+impl<'a> der::FixedTag for OtherPrimeInfos<'a> {
     const TAG: Tag = Tag::Sequence;
 }
 

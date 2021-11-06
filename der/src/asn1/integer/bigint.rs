@@ -2,8 +2,8 @@
 
 use super::uint;
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
-    Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
+    Length, Result, Tag,
 };
 
 #[cfg(feature = "bigint")]
@@ -91,7 +91,7 @@ impl<'a> TryFrom<Any<'a>> for UIntBytes<'a> {
     }
 }
 
-impl<'a> Tagged for UIntBytes<'a> {
+impl<'a> FixedTag for UIntBytes<'a> {
     const TAG: Tag = Tag::Integer;
 }
 
@@ -144,7 +144,7 @@ where
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
-impl<'a, const LIMBS: usize> Tagged for UInt<LIMBS>
+impl<'a, const LIMBS: usize> FixedTag for UInt<LIMBS>
 where
     UInt<LIMBS>: ArrayEncoding,
 {

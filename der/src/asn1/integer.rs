@@ -5,8 +5,8 @@ mod int;
 mod uint;
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag,
-    Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
+    Result, Tag,
 };
 
 macro_rules! impl_int_encoding {
@@ -49,7 +49,7 @@ macro_rules! impl_int_encoding {
                 }
             }
 
-            impl Tagged for $int {
+            impl FixedTag for $int {
                 const TAG: Tag = Tag::Integer;
             }
 
@@ -91,7 +91,7 @@ macro_rules! impl_uint_encoding {
                 }
             }
 
-            impl Tagged for $uint {
+            impl FixedTag for $uint {
                 const TAG: Tag = Tag::Integer;
             }
 

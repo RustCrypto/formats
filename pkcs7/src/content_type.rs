@@ -1,5 +1,5 @@
 use der::asn1::ObjectIdentifier;
-use der::{DecodeValue, Decoder, EncodeValue, Encoder, ErrorKind, Length, Tag, Tagged};
+use der::{DecodeValue, Decoder, EncodeValue, Encoder, ErrorKind, FixedTag, Length, Tag};
 
 /// Indicates the type of content.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -62,6 +62,6 @@ impl EncodeValue for ContentType {
     }
 }
 
-impl Tagged for ContentType {
+impl FixedTag for ContentType {
     const TAG: Tag = Tag::ObjectIdentifier;
 }

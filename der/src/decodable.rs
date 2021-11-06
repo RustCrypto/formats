@@ -1,6 +1,6 @@
 //! Trait definition for [`Decodable`].
 
-use crate::{DecodeValue, Decoder, Header, Result, Tagged};
+use crate::{DecodeValue, Decoder, FixedTag, Header, Result};
 
 /// Decoding trait.
 ///
@@ -26,7 +26,7 @@ pub trait Decodable<'a>: Sized {
 
 impl<'a, T> Decodable<'a> for T
 where
-    T: DecodeValue<'a> + Tagged,
+    T: DecodeValue<'a> + FixedTag,
 {
     fn decode(decoder: &mut Decoder<'a>) -> Result<T> {
         let header = Header::decode(decoder)?;

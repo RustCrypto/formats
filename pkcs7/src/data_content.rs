@@ -1,7 +1,7 @@
 //! `data` content type [RFC 5652 § 4](https://datatracker.ietf.org/doc/html/rfc5652#section-4)
 
 use core::convert::{From, TryFrom};
-use der::{asn1::OctetString, DecodeValue, Decoder, EncodeValue, Encoder, Length, Tag, Tagged};
+use der::{asn1::OctetString, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Length, Tag};
 
 /// The content that is just an octet string.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -46,6 +46,6 @@ impl<'a> EncodeValue for DataContent<'a> {
     }
 }
 
-impl<'a> Tagged for DataContent<'a> {
+impl<'a> FixedTag for DataContent<'a> {
     const TAG: Tag = Tag::OctetString;
 }

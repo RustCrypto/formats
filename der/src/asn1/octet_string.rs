@@ -1,8 +1,8 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
-    Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
+    Length, Result, Tag,
 };
 
 /// ASN.1 `OCTET STRING` type.
@@ -86,6 +86,6 @@ impl<'a> From<OctetString<'a>> for &'a [u8] {
     }
 }
 
-impl<'a> Tagged for OctetString<'a> {
+impl<'a> FixedTag for OctetString<'a> {
     const TAG: Tag = Tag::OctetString;
 }
