@@ -3,7 +3,7 @@
 use crate::{
     asn1::Any,
     datetime::{self, DateTime},
-    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length, Result, Tag,
 };
 use core::time::Duration;
 
@@ -177,7 +177,7 @@ impl TryFrom<Any<'_>> for UtcTime {
     }
 }
 
-impl Tagged for UtcTime {
+impl FixedTag for UtcTime {
     const TAG: Tag = Tag::UtcTime;
 }
 

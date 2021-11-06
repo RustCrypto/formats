@@ -118,7 +118,7 @@ impl DeriveEnumerated {
                 }
             }
 
-            gen impl ::der::Tagged for @Self {
+            gen impl ::der::FixedTag for @Self {
                 const TAG: ::der::Tag = ::der::Tag::Enumerated;
             }
 

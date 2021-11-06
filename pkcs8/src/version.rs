@@ -1,7 +1,7 @@
 //! PKCS#8 version identifier.
 
 use crate::Error;
-use der::{Decodable, Decoder, Encodable, Encoder, Tag, Tagged};
+use der::{Decodable, Decoder, Encodable, Encoder, FixedTag, Tag};
 
 /// Version identifier for PKCS#8 documents.
 ///
@@ -58,6 +58,6 @@ impl TryFrom<u8> for Version {
     }
 }
 
-impl Tagged for Version {
+impl FixedTag for Version {
     const TAG: Tag = Tag::Integer;
 }

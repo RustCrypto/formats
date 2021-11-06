@@ -2,7 +2,7 @@
 
 use crate::{
     arrayvec, ArrayVec, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder,
-    ErrorKind, Length, Result, Tag, Tagged,
+    ErrorKind, FixedTag, Length, Result, Tag,
 };
 
 #[cfg(feature = "alloc")]
@@ -89,7 +89,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> Tagged for SequenceOf<T, N> {
+impl<'a, T, const N: usize> FixedTag for SequenceOf<T, N> {
     const TAG: Tag = Tag::Sequence;
 }
 
@@ -137,10 +137,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> Tagged for [T; N]
-where
-    T: Decodable<'a>,
-{
+impl<'a, T, const N: usize> FixedTag for [T; N] {
     const TAG: Tag = Tag::Sequence;
 }
 
@@ -188,9 +185,6 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, T> Tagged for Vec<T>
-where
-    T: Decodable<'a>,
-{
+impl<'a, T> FixedTag for Vec<T> {
     const TAG: Tag = Tag::Sequence;
 }

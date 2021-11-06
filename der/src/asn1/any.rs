@@ -1,8 +1,8 @@
 //! ASN.1 `ANY` type.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder,
-    Error, ErrorKind, Header, Length, Result, Tag, Tagged,
+    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, EncodeValue, Encoder, Error,
+    ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged,
 };
 
 #[cfg(feature = "oid")]
@@ -38,11 +38,6 @@ impl<'a> Any<'a> {
         Self { tag, value }
     }
 
-    /// Get the tag for this [`Any`] type.
-    pub fn tag(self) -> Tag {
-        self.tag
-    }
-
     /// Get the raw value for this [`Any`] type as a byte slice.
     pub fn value(self) -> &'a [u8] {
         self.value.as_bytes()
@@ -51,7 +46,7 @@ impl<'a> Any<'a> {
     /// Attempt to decode this [`Any`] type into the inner value.
     pub fn decode_into<T>(self) -> Result<T>
     where
-        T: DecodeValue<'a> + Tagged,
+        T: DecodeValue<'a> + FixedTag,
     {
         self.tag.assert_eq(T::TAG)?;
         let mut decoder = Decoder::new(self.value())?;
@@ -154,24 +149,19 @@ impl<'a> Decodable<'a> for Any<'a> {
     }
 }
 
-impl<'a> Encodable for Any<'a> {
-    fn encoded_len(&self) -> Result<Length> {
-        self.value.len().for_tlv()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(self.tag, self.value.len())?.encode(encoder)?;
-        self.encode_value(encoder)
-    }
-}
-
-impl<'a> EncodeValue for Any<'a> {
+impl EncodeValue for Any<'_> {
     fn value_len(&self) -> Result<Length> {
         Ok(self.value.len())
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         encoder.bytes(self.value())
+    }
+}
+
+impl Tagged for Any<'_> {
+    fn tag(&self) -> Tag {
+        self.tag
     }
 }
 

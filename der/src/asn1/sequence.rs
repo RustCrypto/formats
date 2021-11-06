@@ -1,7 +1,7 @@
 //! The [`Sequence`] trait simplifies writing decoders/encoders which map ASN.1
 //! `SEQUENCE`s to Rust structs.
 
-use crate::{Decodable, Encodable, EncodeValue, Encoder, Length, Result, Tag, Tagged};
+use crate::{Decodable, Encodable, EncodeValue, Encoder, FixedTag, Length, Result, Tag};
 
 /// ASN.1 `SEQUENCE` trait.
 ///
@@ -42,7 +42,7 @@ where
     }
 }
 
-impl<'a, M> Tagged for M
+impl<'a, M> FixedTag for M
 where
     M: Sequence<'a>,
 {

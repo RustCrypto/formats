@@ -1,8 +1,8 @@
 //! ASN.1 `IA5String` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result,
-    StrSlice, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
+    Result, StrSlice, Tag,
 };
 use core::{fmt, str};
 
@@ -115,7 +115,7 @@ impl<'a> From<Ia5String<'a>> for &'a [u8] {
     }
 }
 
-impl<'a> Tagged for Ia5String<'a> {
+impl<'a> FixedTag for Ia5String<'a> {
     const TAG: Tag = Tag::Ia5String;
 }
 

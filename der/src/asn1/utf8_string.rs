@@ -1,8 +1,8 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result,
-    StrSlice, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
+    Result, StrSlice, Tag,
 };
 use core::{fmt, str};
 
@@ -111,7 +111,7 @@ impl<'a> From<Utf8String<'a>> for &'a [u8] {
     }
 }
 
-impl<'a> Tagged for Utf8String<'a> {
+impl<'a> FixedTag for Utf8String<'a> {
     const TAG: Tag = Tag::Utf8String;
 }
 
@@ -145,7 +145,7 @@ impl EncodeValue for str {
     }
 }
 
-impl Tagged for str {
+impl FixedTag for str {
     const TAG: Tag = Tag::Utf8String;
 }
 
@@ -181,7 +181,7 @@ impl EncodeValue for String {
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl Tagged for String {
+impl FixedTag for String {
     const TAG: Tag = Tag::Utf8String;
 }
 

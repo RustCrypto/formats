@@ -1,6 +1,6 @@
 use der::{
     asn1::{Any, ObjectIdentifier},
-    DecodeValue, Decoder, EncodeValue, Encoder, Length, Tag, Tagged,
+    DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Length, Tag,
 };
 
 /// Elliptic curve parameters as described in
@@ -70,6 +70,6 @@ impl From<ObjectIdentifier> for EcParameters {
     }
 }
 
-impl Tagged for EcParameters {
+impl FixedTag for EcParameters {
     const TAG: Tag = Tag::ObjectIdentifier;
 }

@@ -1,8 +1,8 @@
 //! ASN.1 `BOOLEAN` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
-    Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
+    Length, Result, Tag,
 };
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
@@ -38,7 +38,7 @@ impl EncodeValue for bool {
     }
 }
 
-impl Tagged for bool {
+impl FixedTag for bool {
     const TAG: Tag = Tag::Boolean;
 }
 

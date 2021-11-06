@@ -1,6 +1,6 @@
 //! Trait definition for [`Encodable`].
 
-use crate::{EncodeValue, Encoder, Header, Length, Result, Tagged};
+use crate::{EncodeValue, Encoder, Length, Result, Tagged};
 
 #[cfg(feature = "alloc")]
 use {crate::ErrorKind, alloc::vec::Vec, core::iter};
@@ -66,7 +66,7 @@ where
 
     /// Encode this value as ASN.1 DER using the provided [`Encoder`].
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(T::TAG, self.value_len()?)?.encode(encoder)?;
+        self.header()?.encode(encoder)?;
         self.encode_value(encoder)
     }
 }

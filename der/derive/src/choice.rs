@@ -24,6 +24,9 @@ pub(crate) struct DeriveChoice {
 
     /// Enum match arms for the impl body for `der::Encodable::encoded_len`.
     encoded_len_body: TokenStream,
+
+    /// Enum match arms for the impl body for `der::Tagged::tag`.
+    tagged_body: TokenStream,
 }
 
 impl DeriveChoice {
@@ -41,6 +44,7 @@ impl DeriveChoice {
             decode_body: TokenStream::new(),
             encode_body: TokenStream::new(),
             encoded_len_body: TokenStream::new(),
+            tagged_body: TokenStream::new(),
         };
 
         for (variant_info, variant) in s.variants().iter().zip(&data.variants) {
@@ -60,6 +64,7 @@ impl DeriveChoice {
                 1 => {
                     state.derive_variant_encoder(variant_info, &field_attrs);
                     state.derive_variant_encoded_len(variant_info);
+                    state.derive_variant_tagged(variant, &tag);
                 }
                 other => panic!(
                     "unsupported number of ASN.1 variant bindings for {}: {}",
@@ -126,6 +131,12 @@ impl DeriveChoice {
             .to_tokens(&mut self.encoded_len_body);
     }
 
+    /// Derive a match arm for the impl body for `der::Encodable::encode`.
+    fn derive_variant_tagged(&mut self, variant: &Variant, tag: &TokenStream) {
+        let variant_ident = &variant.ident;
+        { quote!(Self::#variant_ident(_) => #tag,) }.to_tokens(&mut self.tagged_body);
+    }
+
     /// Finish deriving an enum
     fn finish(self, s: Structure<'_>, lifetime: Option<&Lifetime>) -> TokenStream {
         let lifetime = match lifetime {
@@ -138,6 +149,7 @@ impl DeriveChoice {
             decode_body,
             encode_body,
             encoded_len_body,
+            tagged_body,
             ..
         } = self;
 
@@ -171,6 +183,14 @@ impl DeriveChoice {
                 fn encoded_len(&self) -> ::der::Result<::der::Length> {
                     match self {
                         #encoded_len_body
+                    }
+                }
+            }
+
+            gen impl ::der::Tagged for @Self {
+                fn tag(&self) -> ::der::Tag {
+                    match self {
+                        #tagged_body
                     }
                 }
             }

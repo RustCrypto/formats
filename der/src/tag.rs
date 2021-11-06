@@ -12,10 +12,23 @@ use core::fmt;
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
 const CONSTRUCTED_FLAG: u8 = 0b100000;
 
-/// Types with an associated ASN.1 [`Tag`].
-pub trait Tagged {
+/// Types which have a constant ASN.1 [`Tag`].
+pub trait FixedTag {
     /// ASN.1 tag
     const TAG: Tag;
+}
+
+/// Types which have an ASN.1 [`Tag`].
+pub trait Tagged {
+    /// Get the ASN.1 tag that this type is encoded with.
+    fn tag(&self) -> Tag;
+}
+
+/// Types which are [`FixedTag`] always have a known [`Tag`] type.
+impl<T: FixedTag> Tagged for T {
+    fn tag(&self) -> Tag {
+        T::TAG
+    }
 }
 
 /// ASN.1 tags.

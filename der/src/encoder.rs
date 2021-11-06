@@ -90,7 +90,7 @@ impl<'a> Encoder<'a> {
     {
         let constructed = match tag_mode {
             TagMode::Explicit => true,
-            TagMode::Implicit => T::TAG.is_constructed(),
+            TagMode::Implicit => value.tag().is_constructed(),
         };
 
         let tag = Tag::ContextSpecific {

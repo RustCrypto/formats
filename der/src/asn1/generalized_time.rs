@@ -3,7 +3,7 @@
 use crate::{
     asn1::Any,
     datetime::{self, DateTime},
-    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result, Tag, Tagged,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length, Result, Tag,
 };
 use core::time::Duration;
 
@@ -151,7 +151,7 @@ impl TryFrom<Any<'_>> for GeneralizedTime {
     }
 }
 
-impl Tagged for GeneralizedTime {
+impl FixedTag for GeneralizedTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
 
@@ -171,7 +171,7 @@ impl EncodeValue for DateTime {
     }
 }
 
-impl Tagged for DateTime {
+impl FixedTag for DateTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
 
@@ -243,7 +243,7 @@ impl<'a> TryFrom<Any<'a>> for SystemTime {
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl Tagged for SystemTime {
+impl FixedTag for SystemTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
 
@@ -299,7 +299,7 @@ impl TryFrom<GeneralizedTime> for PrimitiveDateTime {
 
 #[cfg(feature = "time")]
 #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
-impl Tagged for PrimitiveDateTime {
+impl FixedTag for PrimitiveDateTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
 
