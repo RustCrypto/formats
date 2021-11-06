@@ -29,7 +29,7 @@ const RSA_4096_PEM_EXAMPLE: &str = include_str!("examples/rsa4096-priv.pem");
 #[test]
 fn decode_rsa2048_der() {
     let key = RsaPrivateKey::try_from(RSA_2048_DER_EXAMPLE).unwrap();
-    assert_eq!(key.version, Version::TwoPrime);
+    assert_eq!(key.version(), Version::TwoPrime);
 
     // Extracted using:
     // $ openssl asn1parse -in tests/examples/rsa2048-priv.pem
@@ -47,7 +47,7 @@ fn decode_rsa2048_der() {
 #[test]
 fn decode_rsa4096_der() {
     let key = RsaPrivateKey::try_from(RSA_4096_DER_EXAMPLE).unwrap();
-    assert_eq!(key.version, Version::TwoPrime);
+    assert_eq!(key.version(), Version::TwoPrime);
 
     // Extracted using:
     // $ openssl asn1parse -in tests/examples/rsa4096-priv.pem
@@ -73,7 +73,7 @@ fn decode_rsa2048_multi_prime_der() {
 #[test]
 fn decode_rsa2048_multi_prime_der() {
     let key = RsaPrivateKey::try_from(RSA_2048_MULTI_PRIME_DER_EXAMPLE).unwrap();
-    assert_eq!(key.version, Version::Multi);
+    assert_eq!(key.version(), Version::Multi);
 
     // Extracted using:
     // $ openssl asn1parse -in tests/examples/rsa2048-priv-3prime.pem

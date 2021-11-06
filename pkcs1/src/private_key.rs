@@ -38,12 +38,12 @@ use {crate::LineEnding, alloc::string::String, zeroize::Zeroizing};
 /// }
 /// ```
 ///
+/// Note: the `version` field is selected automatically based on the absence or
+/// presence of the `other_prime_infos` field.
+///
 /// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
 #[derive(Clone)]
 pub struct RsaPrivateKey<'a> {
-    /// Version number: `two-prime` or `multi`.
-    pub version: Version,
-
     /// `n`: RSA modulus.
     pub modulus: UIntBytes<'a>,
 
@@ -82,6 +82,18 @@ impl<'a> RsaPrivateKey<'a> {
         }
     }
 
+    /// Get the [`Version`] for this key.
+    ///
+    /// Determined by the presence or absence of the
+    /// [`RsaPrivateKey::other_prime_infos`] field.
+    pub fn version(&self) -> Version {
+        if self.other_prime_infos.is_some() {
+            Version::Multi
+        } else {
+            Version::TwoPrime
+        }
+    }
+
     /// Encode this [`RsaPrivateKey`] as ASN.1 DER.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
@@ -101,8 +113,9 @@ impl<'a> RsaPrivateKey<'a> {
 impl<'a> Decodable<'a> for RsaPrivateKey<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
+            let version = Version::decode(decoder)?;
+
             let result = Self {
-                version: decoder.decode()?,
                 modulus: decoder.decode()?,
                 public_exponent: decoder.decode()?,
                 private_exponent: decoder.decode()?,
@@ -115,7 +128,7 @@ impl<'a> Decodable<'a> for RsaPrivateKey<'a> {
             };
 
             // Ensure version is set correctly for two-prime vs multi-prime key.
-            if result.version.is_multi() != result.other_prime_infos.is_some() {
+            if version.is_multi() != result.other_prime_infos.is_some() {
                 return Err(decoder.error(der::ErrorKind::Value { tag: Tag::Integer }));
             }
 
@@ -130,7 +143,7 @@ impl<'a> Sequence<'a> for RsaPrivateKey<'a> {
         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
     {
         f(&[
-            &self.version,
+            &self.version(),
             &self.modulus,
             &self.public_exponent,
             &self.private_exponent,
@@ -168,7 +181,7 @@ impl<'a> TryFrom<&'a [u8]> for RsaPrivateKey<'a> {
 impl<'a> fmt::Debug for RsaPrivateKey<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RsaPrivateKey")
-            .field("version", &self.version)
+            .field("version", &self.version())
             .field("modulus", &self.modulus)
             .field("public_exponent", &self.public_exponent)
             .field("private_exponent", &"...")
