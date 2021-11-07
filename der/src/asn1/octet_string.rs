@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
-    Length, Result, Tag,
+    Length, OrdIsValueOrd, Result, Tag,
 };
 
 /// ASN.1 `OCTET STRING` type.
@@ -50,7 +50,7 @@ impl<'a> DecodeValue<'a> for OctetString<'a> {
     }
 }
 
-impl<'a> EncodeValue for OctetString<'a> {
+impl EncodeValue for OctetString<'_> {
     fn value_len(&self) -> Result<Length> {
         self.inner.value_len()
     }
@@ -59,6 +59,12 @@ impl<'a> EncodeValue for OctetString<'a> {
         self.inner.encode_value(encoder)
     }
 }
+
+impl FixedTag for OctetString<'_> {
+    const TAG: Tag = Tag::OctetString;
+}
+
+impl OrdIsValueOrd for OctetString<'_> {}
 
 impl<'a> From<&OctetString<'a>> for OctetString<'a> {
     fn from(value: &OctetString<'a>) -> OctetString<'a> {
@@ -84,8 +90,4 @@ impl<'a> From<OctetString<'a>> for &'a [u8] {
     fn from(octet_string: OctetString<'a>) -> &'a [u8] {
         octet_string.as_bytes()
     }
-}
-
-impl<'a> FixedTag for OctetString<'a> {
-    const TAG: Tag = Tag::OctetString;
 }

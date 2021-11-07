@@ -3,7 +3,8 @@
 use crate::{
     asn1::Any,
     datetime::{self, DateTime},
-    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length, Result, Tag,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length, OrdIsValueOrd,
+    Result, Tag,
 };
 use core::time::Duration;
 
@@ -113,6 +114,12 @@ impl EncodeValue for GeneralizedTime {
     }
 }
 
+impl FixedTag for GeneralizedTime {
+    const TAG: Tag = Tag::GeneralizedTime;
+}
+
+impl OrdIsValueOrd for GeneralizedTime {}
+
 impl From<&GeneralizedTime> for GeneralizedTime {
     fn from(value: &GeneralizedTime) -> GeneralizedTime {
         *value
@@ -151,10 +158,6 @@ impl TryFrom<Any<'_>> for GeneralizedTime {
     }
 }
 
-impl FixedTag for GeneralizedTime {
-    const TAG: Tag = Tag::GeneralizedTime;
-}
-
 impl DecodeValue<'_> for DateTime {
     fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
         Ok(GeneralizedTime::decode_value(decoder, length)?.into())
@@ -174,6 +177,8 @@ impl EncodeValue for DateTime {
 impl FixedTag for DateTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
+
+impl OrdIsValueOrd for DateTime {}
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
@@ -247,6 +252,10 @@ impl FixedTag for SystemTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
 
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl OrdIsValueOrd for SystemTime {}
+
 #[cfg(feature = "time")]
 #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl DecodeValue<'_> for PrimitiveDateTime {
@@ -266,6 +275,16 @@ impl EncodeValue for PrimitiveDateTime {
         GeneralizedTime::try_from(self)?.encode_value(encoder)
     }
 }
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl FixedTag for PrimitiveDateTime {
+    const TAG: Tag = Tag::GeneralizedTime;
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+impl OrdIsValueOrd for PrimitiveDateTime {}
 
 #[cfg(feature = "time")]
 #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
@@ -295,12 +314,6 @@ impl TryFrom<GeneralizedTime> for PrimitiveDateTime {
     fn try_from(time: GeneralizedTime) -> Result<PrimitiveDateTime> {
         time.to_date_time().try_into()
     }
-}
-
-#[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
-impl FixedTag for PrimitiveDateTime {
-    const TAG: Tag = Tag::GeneralizedTime;
 }
 
 #[cfg(test)]

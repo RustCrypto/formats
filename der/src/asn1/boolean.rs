@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
-    Length, Result, Tag,
+    Length, OrdIsValueOrd, Result, Tag,
 };
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
@@ -41,6 +41,8 @@ impl EncodeValue for bool {
 impl FixedTag for bool {
     const TAG: Tag = Tag::Boolean;
 }
+
+impl OrdIsValueOrd for bool {}
 
 impl From<bool> for Any<'static> {
     fn from(value: bool) -> Any<'static> {

@@ -3,7 +3,8 @@
 use crate::{
     asn1::Any,
     datetime::{self, DateTime},
-    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length, Result, Tag,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length, OrdIsValueOrd,
+    Result, Tag,
 };
 use core::time::Duration;
 
@@ -127,6 +128,12 @@ impl EncodeValue for UtcTime {
     }
 }
 
+impl FixedTag for UtcTime {
+    const TAG: Tag = Tag::UtcTime;
+}
+
+impl OrdIsValueOrd for UtcTime {}
+
 impl From<&UtcTime> for UtcTime {
     fn from(value: &UtcTime) -> UtcTime {
         *value
@@ -175,10 +182,6 @@ impl TryFrom<Any<'_>> for UtcTime {
     fn try_from(any: Any<'_>) -> Result<UtcTime> {
         any.decode_into()
     }
-}
-
-impl FixedTag for UtcTime {
-    const TAG: Tag = Tag::UtcTime;
 }
 
 #[cfg(test)]

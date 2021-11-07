@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
-    Result, Tag, Tagged,
+    OrdIsValueOrd, Result, Tag, Tagged,
 };
 use const_oid::ObjectIdentifier;
 
@@ -22,6 +22,12 @@ impl EncodeValue for ObjectIdentifier {
         encoder.bytes(self.as_bytes())
     }
 }
+
+impl FixedTag for ObjectIdentifier {
+    const TAG: Tag = Tag::ObjectIdentifier;
+}
+
+impl OrdIsValueOrd for ObjectIdentifier {}
 
 impl<'a> From<&'a ObjectIdentifier> for Any<'a> {
     fn from(oid: &'a ObjectIdentifier) -> Any<'a> {
@@ -45,10 +51,6 @@ impl TryFrom<Any<'_>> for ObjectIdentifier {
         any.tag().assert_eq(Tag::ObjectIdentifier)?;
         Ok(ObjectIdentifier::from_bytes(any.value())?)
     }
-}
-
-impl<'a> FixedTag for ObjectIdentifier {
-    const TAG: Tag = Tag::ObjectIdentifier;
 }
 
 #[cfg(test)]

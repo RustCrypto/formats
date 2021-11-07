@@ -1,6 +1,7 @@
 //! ASN.1 `OPTIONAL` as mapped to Rust's `Option` type
 
-use crate::{Choice, Decodable, Decoder, Encodable, Encoder, Length, Result, Tag};
+use crate::{Choice, Decodable, Decoder, DerOrd, Encodable, Encoder, Length, Result, Tag};
+use core::cmp::Ordering;
 
 impl<'a, T> Decodable<'a> for Option<T>
 where
@@ -34,6 +35,23 @@ where
             encodable.encode(encoder)
         } else {
             Ok(())
+        }
+    }
+}
+
+impl<T> DerOrd for Option<T>
+where
+    T: DerOrd,
+{
+    fn der_cmp(&self, other: &Self) -> Result<Ordering> {
+        if let Some(a) = self {
+            if let Some(b) = other {
+                a.der_cmp(b)
+            } else {
+                Ok(Ordering::Greater)
+            }
+        } else {
+            Ok(Ordering::Less)
         }
     }
 }

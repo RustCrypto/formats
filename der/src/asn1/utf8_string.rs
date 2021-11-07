@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
-    Result, StrSlice, Tag,
+    OrdIsValueOrd, Result, StrSlice, Tag,
 };
 use core::{fmt, str};
 
@@ -75,7 +75,7 @@ impl<'a> DecodeValue<'a> for Utf8String<'a> {
     }
 }
 
-impl<'a> EncodeValue for Utf8String<'a> {
+impl EncodeValue for Utf8String<'_> {
     fn value_len(&self) -> Result<Length> {
         self.inner.value_len()
     }
@@ -84,6 +84,12 @@ impl<'a> EncodeValue for Utf8String<'a> {
         self.inner.encode_value(encoder)
     }
 }
+
+impl FixedTag for Utf8String<'_> {
+    const TAG: Tag = Tag::Utf8String;
+}
+
+impl OrdIsValueOrd for Utf8String<'_> {}
 
 impl<'a> From<&Utf8String<'a>> for Utf8String<'a> {
     fn from(value: &Utf8String<'a>) -> Utf8String<'a> {
@@ -109,10 +115,6 @@ impl<'a> From<Utf8String<'a>> for &'a [u8] {
     fn from(utf8_string: Utf8String<'a>) -> &'a [u8] {
         utf8_string.as_bytes()
     }
-}
-
-impl<'a> FixedTag for Utf8String<'a> {
-    const TAG: Tag = Tag::Utf8String;
 }
 
 impl<'a> fmt::Display for Utf8String<'a> {
@@ -149,6 +151,8 @@ impl FixedTag for str {
     const TAG: Tag = Tag::Utf8String;
 }
 
+impl OrdIsValueOrd for str {}
+
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a> From<Utf8String<'a>> for String {
@@ -184,6 +188,10 @@ impl EncodeValue for String {
 impl FixedTag for String {
     const TAG: Tag = Tag::Utf8String;
 }
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl OrdIsValueOrd for String {}
 
 #[cfg(test)]
 mod tests {
