@@ -12,7 +12,7 @@ use der::asn1::{
     UIntBytes, Utf8String,
 };
 use der::{
-    Decodable, DecodeValue, Decoder, Header, Length, Sequence, Tag, TagMode, TagNumber, FixedTag
+    Decodable, DecodeValue, Decoder, FixedTag, Header, Length, Sequence, Tag, TagMode, TagNumber,
 };
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
