@@ -6,8 +6,9 @@ mod uint;
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
-    Result, Tag,
+    Result, Tag, ValueOrd,
 };
+use core::{cmp::Ordering, mem};
 
 macro_rules! impl_int_encoding {
     ($($int:ty => $uint:ty),+) => {
@@ -53,6 +54,12 @@ macro_rules! impl_int_encoding {
                 const TAG: Tag = Tag::Integer;
             }
 
+            impl ValueOrd for $int {
+                fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+                    value_cmp(*self, *other)
+                }
+            }
+
             impl TryFrom<Any<'_>> for $int {
                 type Error = Error;
 
@@ -95,6 +102,12 @@ macro_rules! impl_uint_encoding {
                 const TAG: Tag = Tag::Integer;
             }
 
+            impl ValueOrd for $uint {
+                fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+                    value_cmp(*self, *other)
+                }
+            }
+
             impl TryFrom<Any<'_>> for $uint {
                 type Error = Error;
 
@@ -116,6 +129,25 @@ fn is_highest_bit_set(bytes: &[u8]) -> bool {
         .get(0)
         .map(|byte| byte & 0b10000000 != 0)
         .unwrap_or(false)
+}
+
+/// Compare two integer values
+fn value_cmp<T>(a: T, b: T) -> Result<Ordering>
+where
+    T: Copy + EncodeValue + Sized,
+{
+    const MAX_INT_SIZE: usize = 16;
+    debug_assert!(mem::size_of::<T>() <= MAX_INT_SIZE);
+
+    let mut buf1 = [0u8; MAX_INT_SIZE];
+    let mut encoder1 = Encoder::new(&mut buf1);
+    a.encode_value(&mut encoder1)?;
+
+    let mut buf2 = [0u8; MAX_INT_SIZE];
+    let mut encoder2 = Encoder::new(&mut buf2);
+    b.encode_value(&mut encoder2)?;
+
+    Ok(encoder1.finish()?.cmp(encoder2.finish()?))
 }
 
 #[cfg(test)]

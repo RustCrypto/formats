@@ -1,9 +1,10 @@
 //! ASN.1 `ANY` type.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged,
+    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder,
+    Error, ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd,
 };
+use core::cmp::Ordering;
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
@@ -162,6 +163,12 @@ impl EncodeValue for Any<'_> {
 impl Tagged for Any<'_> {
     fn tag(&self) -> Tag {
         self.tag
+    }
+}
+
+impl ValueOrd for Any<'_> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        self.value.der_cmp(&other.value)
     }
 }
 

@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error, ErrorKind,
-    FixedTag, Length, Result, Tag,
+    FixedTag, Length, OrdIsValueOrd, Result, Tag,
 };
 
 /// ASN.1 `NULL` type.
@@ -29,6 +29,12 @@ impl EncodeValue for Null {
     }
 }
 
+impl FixedTag for Null {
+    const TAG: Tag = Tag::Null;
+}
+
+impl OrdIsValueOrd for Null {}
+
 impl<'a> From<Null> for Any<'a> {
     fn from(_: Null) -> Any<'a> {
         Any::from_tag_and_value(Tag::Null, ByteSlice::default())
@@ -41,10 +47,6 @@ impl TryFrom<Any<'_>> for Null {
     fn try_from(any: Any<'_>) -> Result<Null> {
         any.decode_into()
     }
-}
-
-impl FixedTag for Null {
-    const TAG: Tag = Tag::Null;
 }
 
 impl TryFrom<Any<'_>> for () {

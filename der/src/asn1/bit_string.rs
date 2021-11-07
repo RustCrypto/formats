@@ -1,10 +1,10 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
-    Length, Result, Tag,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, ErrorKind,
+    FixedTag, Length, Result, Tag, ValueOrd,
 };
-use core::iter::FusedIterator;
+use core::{cmp::Ordering, iter::FusedIterator};
 
 /// ASN.1 `BIT STRING` type.
 ///
@@ -123,7 +123,7 @@ impl<'a> DecodeValue<'a> for BitString<'a> {
     }
 }
 
-impl<'a> EncodeValue for BitString<'a> {
+impl EncodeValue for BitString<'_> {
     fn value_len(&self) -> Result<Length> {
         self.byte_len() + Length::ONE
     }
@@ -131,6 +131,15 @@ impl<'a> EncodeValue for BitString<'a> {
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         encoder.byte(self.unused_bits)?;
         encoder.bytes(self.raw_bytes())
+    }
+}
+
+impl ValueOrd for BitString<'_> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        match self.unused_bits.cmp(&other.unused_bits) {
+            Ordering::Equal => self.inner.der_cmp(&other.inner),
+            ordering => Ok(ordering),
+        }
     }
 }
 

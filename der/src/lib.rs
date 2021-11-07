@@ -336,6 +336,7 @@ mod encoder;
 mod error;
 mod header;
 mod length;
+mod ord;
 mod str_slice;
 mod tag;
 mod value;
@@ -353,6 +354,7 @@ pub use crate::{
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
+    ord::{DerOrd, OrdIsValueOrd, ValueOrd},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     value::{DecodeValue, EncodeValue},
 };

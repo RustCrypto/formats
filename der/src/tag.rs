@@ -6,8 +6,8 @@ mod number;
 
 pub use self::{class::Class, mode::TagMode, number::TagNumber};
 
-use crate::{Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Length, Result};
-use core::fmt;
+use crate::{Decodable, Decoder, DerOrd, Encodable, Encoder, Error, ErrorKind, Length, Result};
+use core::{cmp::Ordering, fmt};
 
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
 const CONSTRUCTED_FLAG: u8 = 0b100000;
@@ -310,6 +310,12 @@ impl Encodable for Tag {
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         encoder.byte(self.into())
+    }
+}
+
+impl DerOrd for Tag {
+    fn der_cmp(&self, other: &Self) -> Result<Ordering> {
+        Ok(self.octet().cmp(&other.octet()))
     }
 }
 

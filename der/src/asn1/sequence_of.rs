@@ -1,9 +1,10 @@
 //! ASN.1 `SEQUENCE OF` support.
 
 use crate::{
-    arrayvec, ArrayVec, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder,
-    ErrorKind, FixedTag, Length, Result, Tag,
+    arrayvec, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable, EncodeValue, Encoder,
+    ErrorKind, FixedTag, Length, Result, Tag, ValueOrd,
 };
+use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
@@ -71,7 +72,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> EncodeValue for SequenceOf<T, N>
+impl<T, const N: usize> EncodeValue for SequenceOf<T, N>
 where
     T: Encodable,
 {
@@ -89,8 +90,17 @@ where
     }
 }
 
-impl<'a, T, const N: usize> FixedTag for SequenceOf<T, N> {
+impl<T, const N: usize> FixedTag for SequenceOf<T, N> {
     const TAG: Tag = Tag::Sequence;
+}
+
+impl<T, const N: usize> ValueOrd for SequenceOf<T, N>
+where
+    T: DerOrd,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        value_cmp(self.iter(), other.iter())
+    }
 }
 
 /// Iterator over the elements of an [`SequenceOf`].
@@ -137,8 +147,17 @@ where
     }
 }
 
-impl<'a, T, const N: usize> FixedTag for [T; N] {
+impl<T, const N: usize> FixedTag for [T; N] {
     const TAG: Tag = Tag::Sequence;
+}
+
+impl<T, const N: usize> ValueOrd for [T; N]
+where
+    T: DerOrd,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        value_cmp(self.iter(), other.iter())
+    }
 }
 
 #[cfg(feature = "alloc")]
@@ -185,6 +204,33 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, T> FixedTag for Vec<T> {
+impl<T> FixedTag for Vec<T> {
     const TAG: Tag = Tag::Sequence;
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<T> ValueOrd for Vec<T>
+where
+    T: DerOrd,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        value_cmp(self.iter(), other.iter())
+    }
+}
+
+/// Compare two `SEQUENCE OF`s by value.
+fn value_cmp<'a, I, T: 'a>(a: I, b: I) -> Result<Ordering>
+where
+    I: Iterator<Item = &'a T>,
+    T: DerOrd,
+{
+    for (value1, value2) in a.zip(b) {
+        match value1.der_cmp(value2)? {
+            Ordering::Equal => (),
+            other => return Ok(other),
+        }
+    }
+
+    Ok(Ordering::Equal)
 }

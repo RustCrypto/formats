@@ -1,7 +1,8 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decodable, Decoder, Encodable, Encoder, Error, ErrorKind, Result};
+use crate::{Decodable, Decoder, DerOrd, Encodable, Encoder, Error, ErrorKind, Result};
 use core::{
+    cmp::Ordering,
     fmt,
     ops::{Add, Sub},
 };
@@ -59,7 +60,8 @@ impl Length {
         match self.0 {
             0x80..=0xFF => Some(0x81),
             0x100..=0xFFFF => Some(0x82),
-            0x10000..=MAX_U32 => Some(0x83),
+            0x10000..=0xFFFFFF => Some(0x83),
+            0x1000000..=MAX_U32 => Some(0x84),
             _ => None,
         }
     }
@@ -229,7 +231,8 @@ impl Encodable for Length {
             0..=0x7F => Ok(Length(1)),
             0x80..=0xFF => Ok(Length(2)),
             0x100..=0xFFFF => Ok(Length(3)),
-            0x10000..=MAX_U32 => Ok(Length(4)),
+            0x10000..=0xFFFFFF => Ok(Length(4)),
+            0x1000000..=MAX_U32 => Ok(Length(5)),
             _ => Err(ErrorKind::Overflow.into()),
         }
     }
@@ -238,15 +241,31 @@ impl Encodable for Length {
         if let Some(tag_byte) = self.initial_octet() {
             encoder.byte(tag_byte)?;
 
+            // Strip leading zeroes
             match self.0.to_be_bytes() {
                 [0, 0, 0, byte] => encoder.byte(byte),
                 [0, 0, bytes @ ..] => encoder.bytes(&bytes),
                 [0, bytes @ ..] => encoder.bytes(&bytes),
-                _ => Err(ErrorKind::Overlength.into()),
+                bytes => encoder.bytes(&bytes),
             }
         } else {
             encoder.byte(self.0 as u8)
         }
+    }
+}
+
+impl DerOrd for Length {
+    fn der_cmp(&self, other: &Self) -> Result<Ordering> {
+        let mut buf1 = [0u8; 5];
+        let mut buf2 = [0u8; 5];
+
+        let mut encoder1 = Encoder::new(&mut buf1);
+        encoder1.encode(self)?;
+
+        let mut encoder2 = Encoder::new(&mut buf2);
+        encoder2.encode(other)?;
+
+        Ok(encoder1.finish()?.cmp(encoder2.finish()?))
     }
 }
 
@@ -259,7 +278,8 @@ impl fmt::Display for Length {
 #[cfg(test)]
 mod tests {
     use super::Length;
-    use crate::{Decodable, Encodable, ErrorKind};
+    use crate::{Decodable, DerOrd, Encodable, ErrorKind};
+    use core::cmp::Ordering;
 
     #[test]
     fn decode() {
@@ -335,5 +355,10 @@ mod tests {
             result.err().map(|err| err.kind()),
             Some(ErrorKind::Overflow)
         );
+    }
+
+    #[test]
+    fn der_ord() {
+        assert_eq!(Length::ONE.der_cmp(&Length::MAX).unwrap(), Ordering::Less);
     }
 }

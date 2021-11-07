@@ -1,6 +1,7 @@
 //! ASN.1 DER headers.
 
-use crate::{Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Result, Tag};
+use crate::{Decodable, Decoder, DerOrd, Encodable, Encoder, ErrorKind, Length, Result, Tag};
+use core::cmp::Ordering;
 
 /// ASN.1 DER headers: tag + length component of TLV-encoded values
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -46,5 +47,14 @@ impl Encodable for Header {
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         self.tag.encode(encoder)?;
         self.length.encode(encoder)
+    }
+}
+
+impl DerOrd for Header {
+    fn der_cmp(&self, other: &Self) -> Result<Ordering> {
+        match self.tag.der_cmp(&other.tag)? {
+            Ordering::Equal => self.length.der_cmp(&other.length),
+            ordering => Ok(ordering),
+        }
     }
 }
