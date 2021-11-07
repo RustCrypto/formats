@@ -1,8 +1,8 @@
 //! ASN.1 `PrintableString` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result,
-    StrSlice, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
+    Result, StrSlice, Tag,
 };
 use core::{fmt, str};
 
@@ -148,7 +148,7 @@ impl<'a> From<PrintableString<'a>> for &'a [u8] {
     }
 }
 
-impl<'a> Tagged for PrintableString<'a> {
+impl<'a> FixedTag for PrintableString<'a> {
     const TAG: Tag = Tag::PrintableString;
 }
 

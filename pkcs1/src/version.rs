@@ -1,7 +1,7 @@
 //! PKCS#1 version identifier.
 
 use crate::Error;
-use der::{Decodable, Decoder, Encodable, Encoder, Tag, Tagged};
+use der::{Decodable, Decoder, Encodable, Encoder, FixedTag, Tag};
 
 /// Version identifier for PKCS#1 documents as defined in
 /// [RFC 8017 Appendix 1.2].
@@ -67,6 +67,6 @@ impl Encodable for Version {
     }
 }
 
-impl Tagged for Version {
+impl FixedTag for Version {
     const TAG: Tag = Tag::Integer;
 }

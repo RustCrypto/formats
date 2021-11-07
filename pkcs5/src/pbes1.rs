@@ -5,7 +5,7 @@
 use crate::AlgorithmIdentifier;
 use der::{
     asn1::{ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Tag, Tagged,
+    Decodable, Decoder, Encodable, Encoder, ErrorKind, FixedTag, Length, Tag,
 };
 
 /// `pbeWithMD2AndDES-CBC` Object Identifier (OID).
@@ -105,7 +105,7 @@ impl Encodable for Parameters {
     }
 }
 
-impl Tagged for Parameters {
+impl FixedTag for Parameters {
     const TAG: Tag = Tag::Sequence;
 }
 

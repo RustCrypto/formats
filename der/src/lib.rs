@@ -353,7 +353,7 @@ pub use crate::{
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
-    tag::{Class, Tag, TagMode, TagNumber, Tagged},
+    tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     value::{DecodeValue, EncodeValue},
 };
 

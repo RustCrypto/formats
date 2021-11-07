@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error, ErrorKind,
-    Length, Result, Tag, Tagged,
+    FixedTag, Length, Result, Tag,
 };
 
 /// ASN.1 `NULL` type.
@@ -43,7 +43,7 @@ impl TryFrom<Any<'_>> for Null {
     }
 }
 
-impl Tagged for Null {
+impl FixedTag for Null {
     const TAG: Tag = Tag::Null;
 }
 
@@ -78,7 +78,7 @@ impl Encodable for () {
     }
 }
 
-impl Tagged for () {
+impl FixedTag for () {
     const TAG: Tag = Tag::Null;
 }
 

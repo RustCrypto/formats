@@ -106,27 +106,11 @@ impl<T> ContextSpecific<T> {
 
         Ok(None)
     }
-
-    /// Get the tag for this field.
-    pub fn tag(&self) -> Tag
-    where
-        T: Tagged,
-    {
-        let constructed = match self.tag_mode {
-            TagMode::Explicit => true,
-            TagMode::Implicit => T::TAG.is_constructed(),
-        };
-
-        Tag::ContextSpecific {
-            number: self.tag_number,
-            constructed,
-        }
-    }
 }
 
 impl<'a, T> Choice<'a> for ContextSpecific<T>
 where
-    T: Decodable<'a> + Encodable,
+    T: Decodable<'a> + Tagged,
 {
     fn can_decode(tag: Tag) -> bool {
         tag.is_context_specific()
@@ -139,20 +123,6 @@ where
 {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
         Any::decode(decoder)?.try_into()
-    }
-}
-
-impl<T> Encodable for ContextSpecific<T>
-where
-    T: EncodeValue + Tagged,
-{
-    fn encoded_len(&self) -> Result<Length> {
-        self.value_len()?.for_tlv()
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        Header::new(self.tag(), self.value_len()?)?.encode(encoder)?;
-        self.encode_value(encoder)
     }
 }
 
@@ -171,6 +141,23 @@ where
         match self.tag_mode {
             TagMode::Explicit => self.value.encode(encoder),
             TagMode::Implicit => self.value.encode_value(encoder),
+        }
+    }
+}
+
+impl<T> Tagged for ContextSpecific<T>
+where
+    T: Tagged,
+{
+    fn tag(&self) -> Tag {
+        let constructed = match self.tag_mode {
+            TagMode::Explicit => true,
+            TagMode::Implicit => self.value.tag().is_constructed(),
+        };
+
+        Tag::ContextSpecific {
+            number: self.tag_number,
+            constructed,
         }
     }
 }

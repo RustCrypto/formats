@@ -1,8 +1,8 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, Length,
-    Result, Tag, Tagged,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
+    Length, Result, Tag,
 };
 use core::iter::FusedIterator;
 
@@ -171,7 +171,7 @@ impl<'a> From<BitString<'a>> for &'a [u8] {
     }
 }
 
-impl<'a> Tagged for BitString<'a> {
+impl<'a> FixedTag for BitString<'a> {
     const TAG: Tag = Tag::BitString;
 }
 
