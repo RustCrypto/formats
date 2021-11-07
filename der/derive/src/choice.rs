@@ -5,13 +5,18 @@
 use crate::{FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{DataEnum, Lifetime, Variant};
-use synstructure::{Structure, VariantInfo};
+use syn::{Attribute, DataEnum, Fields, Ident, Lifetime, Variant};
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
+    /// Name of the enum type.
+    ident: Ident,
+
     /// `asn1` attributes defined at the type level.
     type_attrs: TypeAttrs,
+
+    /// Lifetime of the type.
+    lifetime: Option<Lifetime>,
 
     /// Tags included in the impl body for `der::Choice`.
     choice_body: TokenStream,
@@ -31,15 +36,16 @@ pub(crate) struct DeriveChoice {
 
 impl DeriveChoice {
     /// Derive `Decodable` on an enum.
-    pub fn derive(s: Structure<'_>, data: &DataEnum, lifetime: Option<&Lifetime>) -> TokenStream {
-        assert_eq!(
-            s.variants().len(),
-            data.variants.len(),
-            "enum variant count mismatch"
-        );
-
+    pub fn derive(
+        ident: Ident,
+        data: DataEnum,
+        attrs: &[Attribute],
+        lifetime: Option<Lifetime>,
+    ) -> TokenStream {
         let mut state = Self {
-            type_attrs: TypeAttrs::parse(&s.ast().attrs),
+            ident,
+            type_attrs: TypeAttrs::parse(attrs),
+            lifetime,
             choice_body: TokenStream::new(),
             decode_body: TokenStream::new(),
             encode_body: TokenStream::new(),
@@ -47,7 +53,7 @@ impl DeriveChoice {
             tagged_body: TokenStream::new(),
         };
 
-        for (variant_info, variant) in s.variants().iter().zip(&data.variants) {
+        for variant in &data.variants {
             let field_attrs = FieldAttrs::parse(&variant.attrs);
             let tag = field_attrs.tag(&state.type_attrs).unwrap_or_else(|| {
                 panic!(
@@ -59,21 +65,21 @@ impl DeriveChoice {
             state.derive_variant_choice(&tag);
             state.derive_variant_decoder(variant, &tag, &field_attrs);
 
-            match variant_info.bindings().len() {
+            match &variant.fields {
                 // TODO(tarcieri): handle 0 bindings for ASN.1 NULL
-                1 => {
-                    state.derive_variant_encoder(variant_info, &field_attrs);
-                    state.derive_variant_encoded_len(variant_info);
+                Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
+                    state.derive_variant_encoder(variant, &field_attrs);
+                    state.derive_variant_encoded_len(variant);
                     state.derive_variant_tagged(variant, &tag);
                 }
-                other => panic!(
-                    "unsupported number of ASN.1 variant bindings for {}: {}",
-                    &variant.ident, other
+                _ => panic!(
+                    "enum variant `{}` must be a 1-element tuple struct",
+                    &variant.ident
                 ),
             }
         }
 
-        state.finish(s, lifetime)
+        state.to_tokens()
     }
 
     /// Derive the body of `Choice::can_decode
@@ -100,34 +106,17 @@ impl DeriveChoice {
     }
 
     /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn derive_variant_encoder(&mut self, variant: &VariantInfo<'_>, field_attrs: &FieldAttrs) {
-        assert_eq!(
-            variant.bindings().len(),
-            1,
-            "unexpected number of variant bindings"
-        );
-
-        variant
-            .each(|bi| {
-                let binding = &bi.binding;
-                field_attrs.encoder(&quote!(#binding), &self.type_attrs)
-            })
-            .to_tokens(&mut self.encode_body);
+    fn derive_variant_encoder(&mut self, variant: &Variant, field_attrs: &FieldAttrs) {
+        let variant_ident = &variant.ident;
+        let binding = quote!(variant);
+        let encoder = field_attrs.encoder(&binding, &self.type_attrs);
+        { quote!(Self::#variant_ident(#binding) => #encoder,) }.to_tokens(&mut self.encode_body);
     }
 
     /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn derive_variant_encoded_len(&mut self, variant: &VariantInfo<'_>) {
-        assert_eq!(
-            variant.bindings().len(),
-            1,
-            "unexpected number of variant bindings"
-        );
-
-        variant
-            .each(|bi| {
-                let binding = &bi.binding;
-                quote!(#binding.encoded_len())
-            })
+    fn derive_variant_encoded_len(&mut self, variant: &Variant) {
+        let variant_ident = &variant.ident;
+        { quote!(Self::#variant_ident(variant) => variant.encoded_len(),) }
             .to_tokens(&mut self.encoded_len_body);
     }
 
@@ -137,14 +126,21 @@ impl DeriveChoice {
         { quote!(Self::#variant_ident(_) => #tag,) }.to_tokens(&mut self.tagged_body);
     }
 
-    /// Finish deriving an enum
-    fn finish(self, s: Structure<'_>, lifetime: Option<&Lifetime>) -> TokenStream {
-        let lifetime = match lifetime {
-            Some(lifetime) => quote!(#lifetime),
+    /// Lower the derived output into a [`TokenStream`].
+    fn to_tokens(&self) -> TokenStream {
+        let lifetime = match self.lifetime {
+            Some(ref lifetime) => quote!(#lifetime),
             None => quote!('_),
         };
 
+        let lt_param = self
+            .lifetime
+            .as_ref()
+            .map(|_| lifetime.clone())
+            .unwrap_or_default();
+
         let Self {
+            ident,
             choice_body,
             decode_body,
             encode_body,
@@ -153,14 +149,14 @@ impl DeriveChoice {
             ..
         } = self;
 
-        s.gen_impl(quote! {
-            gen impl ::der::Choice<#lifetime> for @Self {
+        quote! {
+            impl<#lt_param> ::der::Choice<#lifetime> for #ident<#lt_param> {
                 fn can_decode(tag: ::der::Tag) -> bool {
                     matches!(tag, #choice_body)
                 }
             }
 
-            gen impl ::der::Decodable<#lifetime> for @Self {
+            impl<#lt_param> ::der::Decodable<#lifetime> for #ident<#lt_param> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     match decoder.peek_tag()? {
                         #decode_body
@@ -173,7 +169,7 @@ impl DeriveChoice {
                 }
             }
 
-            gen impl ::der::Encodable for @Self {
+            impl<#lt_param> ::der::Encodable for #ident<#lt_param> {
                 fn encode(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
                     match self {
                         #encode_body
@@ -187,13 +183,13 @@ impl DeriveChoice {
                 }
             }
 
-            gen impl ::der::Tagged for @Self {
+            impl<#lt_param> ::der::Tagged for #ident<#lt_param> {
                 fn tag(&self) -> ::der::Tag {
                     match self {
                         #tagged_body
                     }
                 }
             }
-        })
+        }
     }
 }

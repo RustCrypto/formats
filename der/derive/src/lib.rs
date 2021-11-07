@@ -107,133 +107,55 @@ use crate::{
     tag::{TagMode, TagNumber},
     types::Asn1Type,
 };
-use proc_macro2::TokenStream;
-use syn::{Generics, Lifetime};
-use synstructure::{decl_derive, Structure};
+use proc_macro::TokenStream;
+use syn::{parse_macro_input, DeriveInput, Generics, Lifetime};
 
-decl_derive!(
-    [Choice, attributes(asn1)] =>
+/// Derive the [`Choice`][1] trait on an enum.
+///
+/// This custom derive macro can be used to automatically impl the
+/// [`Decodable`][2] and [`Encodable`][3] traits along with the
+/// [`Choice`][1] supertrait for any enum representing an ASN.1 `CHOICE`.
+///
+/// The enum must consist entirely of 1-tuple variants wrapping inner
+/// types which must also impl the [`Decodable`][2] and [`Encodable`][3]
+/// traits. It will will also generate [`From`] impls for each of the
+/// inner types of the variants into the enum that wraps them.
+///
+/// # Usage
+///
+/// ```ignore
+/// // NOTE: requires the `derive` feature of `der`
+/// use der::Choice;
+///
+/// /// `Time` as defined in RFC 5280
+/// #[derive(Choice)]
+/// pub enum Time {
+///     #[asn1(type = "UTCTime")]
+///     UtcTime(UtcTime),
+///
+///     #[asn1(type = "GeneralizedTime")]
+///     GeneralTime(GeneralizedTime),
+/// }
+/// ```
+///
+/// # `#[asn1(type = "...")]` attribute
+///
+/// See [toplevel documentation for the `der_derive` crate][4] for more
+/// information about the `#[asn1]` attribute.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.Choice.html
+/// [2]: https://docs.rs/der/latest/der/trait.Decodable.html
+/// [3]: https://docs.rs/der/latest/der/trait.Encodable.html
+/// [4]: https://docs.rs/der_derive/
+#[proc_macro_derive(Choice, attributes(asn1))]
+pub fn derive_choice(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let lifetime = parse_lifetime(&input.generics);
 
-    /// Derive the [`Choice`][1] trait on an enum.
-    ///
-    /// This custom derive macro can be used to automatically impl the
-    /// [`Decodable`][2] and [`Encodable`][3] traits along with the
-    /// [`Choice`][1] supertrait for any enum representing an ASN.1 `CHOICE`.
-    ///
-    /// The enum must consist entirely of 1-tuple variants wrapping inner
-    /// types which must also impl the [`Decodable`][2] and [`Encodable`][3]
-    /// traits. It will will also generate [`From`] impls for each of the
-    /// inner types of the variants into the enum that wraps them.
-    ///
-    /// # Usage
-    ///
-    /// ```ignore
-    /// // NOTE: requires the `derive` feature of `der`
-    /// use der::Choice;
-    ///
-    /// /// `Time` as defined in RFC 5280
-    /// #[derive(Choice)]
-    /// pub enum Time {
-    ///     #[asn1(type = "UTCTime")]
-    ///     UtcTime(UtcTime),
-    ///
-    ///     #[asn1(type = "GeneralizedTime")]
-    ///     GeneralTime(GeneralizedTime),
-    /// }
-    /// ```
-    ///
-    /// # `#[asn1(type = "...")]` attribute
-    ///
-    /// See [toplevel documentation for the `der_derive` crate][4] for more
-    /// information about the `#[asn1]` attribute.
-    ///
-    /// [1]: https://docs.rs/der/latest/der/trait.Choice.html
-    /// [2]: https://docs.rs/der/latest/der/trait.Decodable.html
-    /// [3]: https://docs.rs/der/latest/der/trait.Encodable.html
-    /// [4]: https://docs.rs/der_derive/
-    derive_choice
-);
-
-decl_derive!(
-    [Enumerated, attributes(asn1)] =>
-
-    /// Derive decoders and encoders for ASN.1 [`Enumerated`] types.
-    ///
-    /// # Usage
-    ///
-    /// The `Enumerated` proc macro requires a C-like enum which impls `Copy`
-    /// and has a `#[repr]` of `u8`, `u16`, or `u32`:
-    ///
-    /// ```ignore
-    /// use der::Enumerated;
-    ///
-    /// #[derive(Enumerated, Copy, Clone, Debug, Eq, PartialEq)]
-    /// #[repr(u32)]
-    /// pub enum CrlReason {
-    ///     Unspecified = 0,
-    ///     KeyCompromise = 1,
-    ///     CaCompromise = 2,
-    ///     AffiliationChanged = 3,
-    ///     Superseded = 4,
-    ///     CessationOfOperation = 5,
-    ///     CertificateHold = 6,
-    ///     RemoveFromCrl = 8,
-    ///     PrivilegeWithdrawn = 9,
-    ///     AaCompromised = 10
-    /// }
-    /// ```
-    ///
-    /// Note that the derive macro will write a `TryFrom<...>` impl for the
-    /// provided `#[repr]`, which is used by the decoder.
-    derive_enumerated
-);
-
-decl_derive!(
-    [Sequence, attributes(asn1)] =>
-
-    /// Derive the [`Sequence`][1] trait on a struct.
-    ///
-    /// This custom derive macro can be used to automatically impl the
-    /// `Sequence` trait for any struct which can be decoded/encoded as an
-    /// ASN.1 `SEQUENCE`.
-    ///
-    /// # Usage
-    ///
-    /// ```ignore
-    /// use der::{
-    ///     asn1::{Any, ObjectIdentifier},
-    ///     Sequence
-    /// };
-    ///
-    /// /// X.509 `AlgorithmIdentifier`
-    /// #[derive(Sequence)]
-    /// pub struct AlgorithmIdentifier<'a> {
-    ///     /// This field contains an ASN.1 `OBJECT IDENTIFIER`, a.k.a. OID.
-    ///     pub algorithm: ObjectIdentifier,
-    ///
-    ///     /// This field is `OPTIONAL` and contains the ASN.1 `ANY` type, which
-    ///     /// in this example allows arbitrary algorithm-defined parameters.
-    ///     pub parameters: Option<Any<'a>>
-    /// }
-    /// ```
-    ///
-    /// # `#[asn1(type = "...")]` attribute
-    ///
-    /// See [toplevel documentation for the `der_derive` crate][2] for more
-    /// information about the `#[asn1]` attribute.
-    ///
-    /// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
-    /// [2]: https://docs.rs/der_derive/
-    derive_sequence
-);
-
-/// Custom derive for `der::Choice`.
-fn derive_choice(s: Structure<'_>) -> TokenStream {
-    let ast = s.ast();
-    let lifetime = parse_lifetime(&ast.generics);
-
-    let data_label = match &ast.data {
-        syn::Data::Enum(data) => return DeriveChoice::derive(s, data, lifetime),
+    let data_label = match input.data {
+        syn::Data::Enum(data) => {
+            return DeriveChoice::derive(input.ident, data, &input.attrs, lifetime).into()
+        }
         syn::Data::Struct(_) => "struct",
         syn::Data::Union(_) => "union",
     };
@@ -244,16 +166,46 @@ fn derive_choice(s: Structure<'_>) -> TokenStream {
     )
 }
 
-/// Custom derive for `der::Enumerated`.
-fn derive_enumerated(s: Structure<'_>) -> TokenStream {
-    let ast = s.ast();
+/// Derive decoders and encoders for ASN.1 [`Enumerated`] types.
+///
+/// # Usage
+///
+/// The `Enumerated` proc macro requires a C-like enum which impls `Copy`
+/// and has a `#[repr]` of `u8`, `u16`, or `u32`:
+///
+/// ```ignore
+/// use der::Enumerated;
+///
+/// #[derive(Enumerated, Copy, Clone, Debug, Eq, PartialEq)]
+/// #[repr(u32)]
+/// pub enum CrlReason {
+///     Unspecified = 0,
+///     KeyCompromise = 1,
+///     CaCompromise = 2,
+///     AffiliationChanged = 3,
+///     Superseded = 4,
+///     CessationOfOperation = 5,
+///     CertificateHold = 6,
+///     RemoveFromCrl = 8,
+///     PrivilegeWithdrawn = 9,
+///     AaCompromised = 10
+/// }
+/// ```
+///
+/// Note that the derive macro will write a `TryFrom<...>` impl for the
+/// provided `#[repr]`, which is used by the decoder.
+#[proc_macro_derive(Enumerated)]
+pub fn derive_enumerated(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
 
-    if let Some(lifetime) = parse_lifetime(&ast.generics) {
+    if let Some(lifetime) = parse_lifetime(&input.generics) {
         panic!("lifetimes not allowed on `Enumerated` types: {}", lifetime);
     }
 
-    let data_label = match &ast.data {
-        syn::Data::Enum(data) => return DeriveEnumerated::derive(s, data),
+    let data_label = match input.data {
+        syn::Data::Enum(data) => {
+            return DeriveEnumerated::derive(input.ident, data, &input.attrs).into()
+        }
         syn::Data::Struct(_) => "struct",
         syn::Data::Union(_) => "union",
     };
@@ -264,14 +216,49 @@ fn derive_enumerated(s: Structure<'_>) -> TokenStream {
     )
 }
 
-/// Custom derive for `der::Sequence`.
-fn derive_sequence(s: Structure<'_>) -> TokenStream {
-    let ast = s.ast();
-    let lifetime = parse_lifetime(&ast.generics);
+/// Derive the [`Sequence`][1] trait on a struct.
+///
+/// This custom derive macro can be used to automatically impl the
+/// `Sequence` trait for any struct which can be decoded/encoded as an
+/// ASN.1 `SEQUENCE`.
+///
+/// # Usage
+///
+/// ```ignore
+/// use der::{
+///     asn1::{Any, ObjectIdentifier},
+///     Sequence
+/// };
+///
+/// /// X.509 `AlgorithmIdentifier`
+/// #[derive(Sequence)]
+/// pub struct AlgorithmIdentifier<'a> {
+///     /// This field contains an ASN.1 `OBJECT IDENTIFIER`, a.k.a. OID.
+///     pub algorithm: ObjectIdentifier,
+///
+///     /// This field is `OPTIONAL` and contains the ASN.1 `ANY` type, which
+///     /// in this example allows arbitrary algorithm-defined parameters.
+///     pub parameters: Option<Any<'a>>
+/// }
+/// ```
+///
+/// # `#[asn1(type = "...")]` attribute
+///
+/// See [toplevel documentation for the `der_derive` crate][2] for more
+/// information about the `#[asn1]` attribute.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
+/// [2]: https://docs.rs/der_derive/
+#[proc_macro_derive(Sequence, attributes(asn1))]
+pub fn derive_sequence(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let lifetime = parse_lifetime(&input.generics);
 
-    let data_label = match &ast.data {
+    let data_label = match input.data {
         syn::Data::Enum(_) => "enum",
-        syn::Data::Struct(data) => return DeriveSequence::derive(s, data, lifetime),
+        syn::Data::Struct(data) => {
+            return DeriveSequence::derive(input.ident, data, &input.attrs, lifetime).into()
+        }
         syn::Data::Union(_) => "union",
     };
 
@@ -284,6 +271,6 @@ fn derive_sequence(s: Structure<'_>) -> TokenStream {
 /// Parse the first lifetime of the "self" type of the custom derive
 ///
 /// Returns `None` if there is no first lifetime.
-fn parse_lifetime(generics: &Generics) -> Option<&Lifetime> {
-    generics.lifetimes().next().map(|lt_ref| &lt_ref.lifetime)
+fn parse_lifetime(generics: &Generics) -> Option<Lifetime> {
+    generics.lifetimes().next().map(|lt| lt.lifetime.clone())
 }
