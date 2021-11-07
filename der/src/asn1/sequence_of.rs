@@ -129,7 +129,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> EncodeValue for [T; N]
+impl<T, const N: usize> EncodeValue for [T; N]
 where
     T: Encodable,
 {
@@ -184,7 +184,7 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, T> EncodeValue for Vec<T>
+impl<T> EncodeValue for Vec<T>
 where
     T: Encodable,
 {
