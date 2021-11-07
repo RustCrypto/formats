@@ -12,7 +12,7 @@ use der::asn1::{
     UIntBytes, Utf8String,
 };
 use der::{
-    Decodable, DecodeValue, Decoder, Header, Length, Sequence, Tag, TagMode, TagNumber, Tagged,
+    Decodable, DecodeValue, Decoder, Header, Length, Sequence, Tag, TagMode, TagNumber, FixedTag
 };
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
@@ -686,7 +686,7 @@ impl Decodable<'_> for CRLReason {
     }
 }
 
-impl<'a> Tagged for CRLReason {
+impl<'a> FixedTag for CRLReason {
     const TAG: Tag = Tag::Enumerated;
 }
 

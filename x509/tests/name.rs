@@ -1,6 +1,6 @@
 //! Name tests
 //use der::asn1::{SetOf, SequenceOfIter, SequenceOf};
-use der::{Decodable, Tag}; //, Encodable};
+use der::{Decodable, Tag, Tagged}; //, Encodable};
 use hex_literal::hex;
 use x509::{Name, RelativeDistinguishedName}; //, AttributeTypeAndValue;
 

@@ -1,6 +1,6 @@
 //! Certificate tests
 use der::asn1::{BitString, UIntBytes, Utf8String};
-use der::{Decodable, Decoder, Defer, Encodable, Length, Tag};
+use der::{Decodable, Decoder, Defer, Encodable, Length, Tag, Tagged};
 use hex_literal::hex;
 #[cfg(feature = "alloc")]
 use x509::KeyUsage;
