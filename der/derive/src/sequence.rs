@@ -3,6 +3,7 @@
 
 use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
+use proc_macro_error::abort;
 use quote::{quote, ToTokens};
 use syn::{Attribute, DataStruct, Field, Ident, Lifetime};
 
@@ -71,9 +72,9 @@ impl DeriveSequence {
         } else {
             // TODO(tarcieri): IMPLICIT support
             if self.type_attrs.tag_mode == TagMode::Implicit {
-                panic!(
-                    "IMPLICIT tagging not presently supported in this context: {}",
-                    name
+                abort!(
+                    name,
+                    "IMPLICIT tagging not presently supported for `Sequence`"
                 );
             }
 

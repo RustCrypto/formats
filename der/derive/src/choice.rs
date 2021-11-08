@@ -4,6 +4,7 @@
 
 use crate::{FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
+use proc_macro_error::abort;
 use quote::{quote, ToTokens};
 use syn::{Attribute, DataEnum, Fields, Ident, Lifetime, Variant};
 
@@ -56,9 +57,9 @@ impl DeriveChoice {
         for variant in &data.variants {
             let field_attrs = FieldAttrs::parse(&variant.attrs);
             let tag = field_attrs.tag(&state.type_attrs).unwrap_or_else(|| {
-                panic!(
-                    "no #[asn1(type=...)] specified for enum variant: {}",
-                    variant.ident
+                abort!(
+                    &variant.ident,
+                    "no #[asn1(type=...)] specified for enum variant",
                 )
             });
 
@@ -72,9 +73,9 @@ impl DeriveChoice {
                     state.derive_variant_encoded_len(variant);
                     state.derive_variant_tagged(variant, &tag);
                 }
-                _ => panic!(
-                    "enum variant `{}` must be a 1-element tuple struct",
-                    &variant.ident
+                _ => abort!(
+                    &variant.ident,
+                    "enum variant must be a 1-element tuple struct"
                 ),
             }
         }
