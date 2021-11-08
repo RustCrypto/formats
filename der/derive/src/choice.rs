@@ -13,9 +13,6 @@ pub(crate) struct DeriveChoice {
     /// Name of the enum type.
     ident: Ident,
 
-    /// `asn1` attributes defined at the type level.
-    type_attrs: TypeAttrs,
-
     /// Lifetime of the type.
     lifetime: Option<Lifetime>,
 
@@ -38,12 +35,6 @@ pub(crate) struct DeriveChoice {
 impl DeriveChoice {
     /// Parse [`DeriveInput`].
     pub fn new(input: DeriveInput) -> Self {
-        let lifetime = input
-            .generics
-            .lifetimes()
-            .next()
-            .map(|lt| lt.lifetime.clone());
-
         let data = match input.data {
             syn::Data::Enum(data) => data,
             _ => abort!(
@@ -52,9 +43,17 @@ impl DeriveChoice {
             ),
         };
 
+        // TODO(tarcieri): properly handle multiple lifetimes
+        let lifetime = input
+            .generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone());
+
+        let type_attrs = TypeAttrs::parse(&input.attrs);
+
         let mut state = Self {
             ident: input.ident,
-            type_attrs: TypeAttrs::parse(&input.attrs),
             lifetime,
             choice_body: TokenStream::new(),
             decode_body: TokenStream::new(),
@@ -64,8 +63,8 @@ impl DeriveChoice {
         };
 
         for variant in &data.variants {
-            let field_attrs = FieldAttrs::parse(&variant.attrs);
-            let tag = field_attrs.tag(&state.type_attrs).unwrap_or_else(|| {
+            let field_attrs = FieldAttrs::parse(&variant.attrs, &type_attrs);
+            let tag = field_attrs.tag().unwrap_or_else(|| {
                 abort!(
                     &variant.ident,
                     "no #[asn1(type=...)] specified for enum variant",
@@ -110,7 +109,7 @@ impl DeriveChoice {
         field_attrs: &FieldAttrs,
     ) {
         let variant_ident = &variant.ident;
-        let decoder = field_attrs.decoder(&self.type_attrs);
+        let decoder = field_attrs.decoder();
         { quote!(#tag => Ok(Self::#variant_ident(#decoder.try_into()?)),) }
             .to_tokens(&mut self.decode_body);
     }
@@ -119,7 +118,7 @@ impl DeriveChoice {
     fn derive_variant_encoder(&mut self, variant: &Variant, field_attrs: &FieldAttrs) {
         let variant_ident = &variant.ident;
         let binding = quote!(variant);
-        let encoder = field_attrs.encoder(&binding, &self.type_attrs);
+        let encoder = field_attrs.encoder(&binding);
         { quote!(Self::#variant_ident(#binding) => #encoder,) }.to_tokens(&mut self.encode_body);
     }
 
