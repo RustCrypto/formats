@@ -16,8 +16,8 @@ const PARSE_ERR_MSG: &str = "error parsing `asn1` attribute";
 /// Attributes on a `struct` or `enum` type.
 #[derive(Clone, Debug)]
 pub(crate) struct TypeAttrs {
-    /// Tagging mode for this type's ASN.1 module: `EXPLICIT` or `IMPLICIT`,
-    /// supplied as `#[asn1(tag_mode = "...")]`.
+    /// Tagging mode for this type: `EXPLICIT` or `IMPLICIT`, supplied as
+    /// `#[asn1(tag_mode = "...")]`.
     ///
     /// The default value is `EXPLICIT`.
     pub tag_mode: TagMode,
@@ -61,13 +61,21 @@ pub(crate) struct FieldAttrs {
 
     /// Value of the `#[asn1(context_specific = "...")] attribute if provided.
     pub context_specific: Option<TagNumber>,
+
+    /// Tagging mode for this type: `EXPLICIT` or `IMPLICIT`, supplied as
+    /// `#[asn1(tag_mode = "...")]`.
+    ///
+    /// Inherits from the type-level tagging mode if specified, or otherwise
+    /// defaults to `EXPLICIT`.
+    pub tag_mode: TagMode,
 }
 
 impl FieldAttrs {
     /// Parse attributes from a struct field or enum variant.
-    pub fn parse(attrs: &[Attribute]) -> Self {
+    pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
         let mut asn1_type = None;
         let mut context_specific = None;
+        let mut tag_mode = None;
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
@@ -87,6 +95,12 @@ impl FieldAttrs {
                 }
 
                 asn1_type = Some(ty);
+            } else if let Some(mode) = attr.parse_value("tag_mode") {
+                if tag_mode.is_some() {
+                    abort!(attr.value, "duplicate ASN.1 `tag_mode` attribute");
+                }
+
+                tag_mode = Some(mode);
             } else {
                 abort!(
                     attr.name,
@@ -99,12 +113,13 @@ impl FieldAttrs {
         Self {
             asn1_type,
             context_specific,
+            tag_mode: tag_mode.unwrap_or(type_attrs.tag_mode),
         }
     }
 
     /// Get the expected `der::Tag` for this field.
-    pub fn tag(&self, type_attrs: &TypeAttrs) -> Option<TokenStream> {
-        match type_attrs.tag_mode {
+    pub fn tag(&self) -> Option<TokenStream> {
+        match self.tag_mode {
             TagMode::Explicit => self.asn1_type.map(|ty| ty.tag()),
             TagMode::Implicit => match self.context_specific {
                 Some(tag_number) => {
@@ -126,12 +141,12 @@ impl FieldAttrs {
     }
 
     /// Get a `der::Decoder` object which respects these field attributes.
-    pub fn decoder(&self, type_attrs: &TypeAttrs) -> TokenStream {
+    pub fn decoder(&self) -> TokenStream {
         if let Some(tag_number) = self.context_specific {
             let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
             let tag_number = tag_number.to_tokens();
 
-            let context_specific = match type_attrs.tag_mode {
+            let context_specific = match self.tag_mode {
                 TagMode::Explicit => {
                     quote!(::der::asn1::ContextSpecific::<#type_params>::decode_explicit(decoder, #tag_number)?)
                 }
@@ -157,10 +172,10 @@ impl FieldAttrs {
     }
 
     /// Get a `der::Encoder` object which respects these field attributes.
-    pub fn encoder(&self, binding: &TokenStream, type_attrs: &TypeAttrs) -> TokenStream {
+    pub fn encoder(&self, binding: &TokenStream) -> TokenStream {
         if let Some(tag_number) = self.context_specific {
             let tag_number = tag_number.to_tokens();
-            let tag_mode = type_attrs.tag_mode.tokens();
+            let tag_mode = self.tag_mode.to_tokens();
             quote!(encoder.context_specific(#tag_number, #tag_mode, #binding))
         } else {
             self.asn1_type
