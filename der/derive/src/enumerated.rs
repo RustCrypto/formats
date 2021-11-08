@@ -4,6 +4,7 @@
 
 use crate::ATTR_NAME;
 use proc_macro2::TokenStream;
+use proc_macro_error::abort;
 use quote::{quote, ToTokens};
 use syn::{Attribute, DataEnum, Expr, ExprLit, Ident, Lit, LitInt};
 
@@ -29,22 +30,29 @@ impl DeriveEnumerated {
         let mut repr: Option<Ident> = None;
         for attr in attrs {
             if attr.path.is_ident(ATTR_NAME) {
-                panic!("`asn1` attribute is not allowed on `Enumerated` types");
+                abort!(
+                    attr.path,
+                    "`asn1` attribute is not allowed on `Enumerated` types"
+                );
             } else if attr.path.is_ident("repr") {
-                if let Some(r) = repr {
-                    panic!(
-                        "multiple `#[repr]` attributes encountered on `Enumerated`: {}",
-                        r.to_string()
+                if repr.is_some() {
+                    abort!(
+                        attr,
+                        "multiple `#[repr]` attributes encountered on `Enumerated`",
                     );
                 }
 
                 let r = attr
                     .parse_args::<Ident>()
-                    .expect("error parsing `#[repr]` attribute");
+                    .unwrap_or_else(|_| abort!(attr, "error parsing `#[repr]` attribute"));
 
                 // Validate
                 if !REPR_TYPES.contains(&r.to_string().as_str()) {
-                    panic!("invalid `#[repr]` type: allowed types are {:?}", REPR_TYPES);
+                    abort!(
+                        attr,
+                        "invalid `#[repr]` type: allowed types are {:?}",
+                        REPR_TYPES
+                    );
                 }
 
                 repr = Some(r);
@@ -56,7 +64,10 @@ impl DeriveEnumerated {
         for variant in &data.variants {
             for attr in &variant.attrs {
                 if attr.path.is_ident(ATTR_NAME) {
-                    panic!("`asn1` attribute is not allowed on fields of `Enumerated` types");
+                    abort!(
+                        attr,
+                        "`asn1` attribute is not allowed on fields of `Enumerated` types"
+                    );
                 }
             }
 
@@ -68,19 +79,22 @@ impl DeriveEnumerated {
                         ..
                     }),
                 )) => variants.push((variant.ident.clone(), discriminant.clone())),
-                Some((_, other)) => panic!("invalid discriminant for `Enumerated`: {:#?}", other),
-                None => panic!("`Enumerated` variant has no discriminant"),
+                Some((_, other)) => abort!(other, "invalid discriminant for `Enumerated`"),
+                None => abort!(variant, "`Enumerated` variant has no discriminant"),
             }
         }
 
+        let repr = repr.unwrap_or_else(|| {
+            abort!(
+                &ident,
+                "no `#[repr]` attribute on enum: must be one of {:?}",
+                REPR_TYPES
+            )
+        });
+
         Self {
             ident,
-            repr: repr.unwrap_or_else(|| {
-                panic!(
-                    "no `#[repr]` attribute on enum: must be one of {:?}",
-                    REPR_TYPES
-                )
-            }),
+            repr,
             variants,
         }
         .to_tokens()
