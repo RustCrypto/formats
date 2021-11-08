@@ -98,7 +98,6 @@ mod defer;
 mod enumerated;
 mod sequence;
 mod tag;
-mod tbs;
 mod types;
 
 use crate::{
@@ -108,318 +107,204 @@ use crate::{
     enumerated::DeriveEnumerated,
     sequence::DeriveSequence,
     tag::{TagMode, TagNumber},
-    tbs::DeriveTBS,
     types::Asn1Type,
 };
-use proc_macro2::TokenStream;
-use syn::{Generics, Lifetime};
-use synstructure::{decl_derive, Structure};
+use proc_macro::TokenStream;
+use proc_macro_error::{abort, proc_macro_error};
+use syn::{parse_macro_input, DeriveInput, Generics, Lifetime};
 
-decl_derive!(
-    [Choice, attributes(asn1)] =>
+/// Derive the [`Choice`][1] trait on an enum.
+///
+/// This custom derive macro can be used to automatically impl the
+/// [`Decodable`][2] and [`Encodable`][3] traits along with the
+/// [`Choice`][1] supertrait for any enum representing an ASN.1 `CHOICE`.
+///
+/// The enum must consist entirely of 1-tuple variants wrapping inner
+/// types which must also impl the [`Decodable`][2] and [`Encodable`][3]
+/// traits. It will will also generate [`From`] impls for each of the
+/// inner types of the variants into the enum that wraps them.
+///
+/// # Usage
+///
+/// ```ignore
+/// // NOTE: requires the `derive` feature of `der`
+/// use der::Choice;
+///
+/// /// `Time` as defined in RFC 5280
+/// #[derive(Choice)]
+/// pub enum Time {
+///     #[asn1(type = "UTCTime")]
+///     UtcTime(UtcTime),
+///
+///     #[asn1(type = "GeneralizedTime")]
+///     GeneralTime(GeneralizedTime),
+/// }
+/// ```
+///
+/// # `#[asn1(type = "...")]` attribute
+///
+/// See [toplevel documentation for the `der_derive` crate][4] for more
+/// information about the `#[asn1]` attribute.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.Choice.html
+/// [2]: https://docs.rs/der/latest/der/trait.Decodable.html
+/// [3]: https://docs.rs/der/latest/der/trait.Encodable.html
+/// [4]: https://docs.rs/der_derive/
+#[proc_macro_derive(Choice, attributes(asn1))]
+#[proc_macro_error]
+pub fn derive_choice(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let lifetime = parse_lifetime(&input.generics);
 
-    /// Derive the [`Choice`][1] trait on an enum.
-    ///
-    /// This custom derive macro can be used to automatically impl the
-    /// [`Decodable`][2] and [`Encodable`][3] traits along with the
-    /// [`Choice`][1] supertrait for any enum representing an ASN.1 `CHOICE`.
-    ///
-    /// The enum must consist entirely of 1-tuple variants wrapping inner
-    /// types which must also impl the [`Decodable`][2] and [`Encodable`][3]
-    /// traits. It will will also generate [`From`] impls for each of the
-    /// inner types of the variants into the enum that wraps them.
-    ///
-    /// # Usage
-    ///
-    /// ```ignore
-    /// // NOTE: requires the `derive` feature of `der`
-    /// use der::Choice;
-    ///
-    /// /// `Time` as defined in RFC 5280
-    /// #[derive(Choice)]
-    /// pub enum Time {
-    ///     #[asn1(type = "UTCTime")]
-    ///     UtcTime(UtcTime),
-    ///
-    ///     #[asn1(type = "GeneralizedTime")]
-    ///     GeneralTime(GeneralizedTime),
-    /// }
-    /// ```
-    ///
-    /// # `#[asn1(type = "...")]` attribute
-    ///
-    /// See [toplevel documentation for the `der_derive` crate][4] for more
-    /// information about the `#[asn1]` attribute.
-    ///
-    /// [1]: https://docs.rs/der/latest/der/trait.Choice.html
-    /// [2]: https://docs.rs/der/latest/der/trait.Decodable.html
-    /// [3]: https://docs.rs/der/latest/der/trait.Encodable.html
-    /// [4]: https://docs.rs/der_derive/
-    derive_choice
-);
-
-decl_derive!(
-    [Enumerated, attributes(asn1)] =>
-
-    /// Derive decoders and encoders for ASN.1 [`Enumerated`] types.
-    ///
-    /// # Usage
-    ///
-    /// The `Enumerated` proc macro requires a C-like enum which impls `Copy`
-    /// and has a `#[repr]` of `u8`, `u16`, or `u32`:
-    ///
-    /// ```ignore
-    /// use der::Enumerated;
-    ///
-    /// #[derive(Enumerated, Copy, Clone, Debug, Eq, PartialEq)]
-    /// #[repr(u32)]
-    /// pub enum CrlReason {
-    ///     Unspecified = 0,
-    ///     KeyCompromise = 1,
-    ///     CaCompromise = 2,
-    ///     AffiliationChanged = 3,
-    ///     Superseded = 4,
-    ///     CessationOfOperation = 5,
-    ///     CertificateHold = 6,
-    ///     RemoveFromCrl = 8,
-    ///     PrivilegeWithdrawn = 9,
-    ///     AaCompromised = 10
-    /// }
-    /// ```
-    ///
-    /// Note that the derive macro will write a `TryFrom<...>` impl for the
-    /// provided `#[repr]`, which is used by the decoder.
-    derive_enumerated
-);
-
-decl_derive!(
-    [Sequence, attributes(asn1)] =>
-
-    /// Derive the [`Sequence`][1] trait on a struct.
-    ///
-    /// This custom derive macro can be used to automatically impl the
-    /// `Sequence` trait for any struct which can be decoded/encoded as an
-    /// ASN.1 `SEQUENCE`.
-    ///
-    /// # Usage
-    ///
-    /// ```ignore
-    /// use der::{
-    ///     asn1::{Any, ObjectIdentifier},
-    ///     Sequence
-    /// };
-    ///
-    /// /// X.509 `AlgorithmIdentifier`
-    /// #[derive(Sequence)]
-    /// pub struct AlgorithmIdentifier<'a> {
-    ///     /// This field contains an ASN.1 `OBJECT IDENTIFIER`, a.k.a. OID.
-    ///     pub algorithm: ObjectIdentifier,
-    ///
-    ///     /// This field is `OPTIONAL` and contains the ASN.1 `ANY` type, which
-    ///     /// in this example allows arbitrary algorithm-defined parameters.
-    ///     pub parameters: Option<Any<'a>>
-    /// }
-    /// ```
-    ///
-    /// # `#[asn1(type = "...")]` attribute
-    ///
-    /// See [toplevel documentation for the `der_derive` crate][2] for more
-    /// information about the `#[asn1]` attribute.
-    ///
-    /// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
-    /// [2]: https://docs.rs/der_derive/
-    derive_sequence
-);
-
-decl_derive!(
-    [TBS, attributes(asn1)] =>
-
-    /// Support for deriving structs for which decoding of the first field of the struct is deferred
-    /// in support of verifying ASN.1 `SEQUENCE` types that follow the to be signed/algorithm/signature
-    /// pattern. In some ASN.1 modules, the `to be signed` pattern is denoted by the SIGNED{} macro.
-    /// For example, RFC 5912 features the following definition for an X.509 Certificate structure:
-    ///
-    /// Certificate  ::=  SIGNED{TBSCertificate}
-    ///
-    /// It defines the SIGNED{} macro as follows:
-    ///
-    /// SIGNED{ToBeSigned} ::= SEQUENCE {
-    ///      toBeSigned           ToBeSigned,
-    ///      algorithmIdentifier  SEQUENCE {
-    ///          algorithm        SIGNATURE-ALGORITHM.
-    ///                             &id({SignatureAlgorithms}),
-    ///          parameters       SIGNATURE-ALGORITHM.
-    ///                             &Params({SignatureAlgorithms}
-    ///                               {@algorithmIdentifier.algorithm}) OPTIONAL
-    ///      },
-    ///      signature BIT STRING (CONTAINING SIGNATURE-ALGORITHM.&Value(
-    ///                               {SignatureAlgorithms}
-    ///                               {@algorithmIdentifier.algorithm}))
-    ///   }
-    ///
-    /// Where the TBS derive macro is used, the first field is not decoded and is instead served as
-    /// bytes containing the entire encoded TLV production of that field. The second and third fields
-    /// are decoded to feature an AlgorithmIdentifier and a BIT STRING, as indicated above.
-    ///
-    /// Sample usage of the TBS macro is below.
-    ///
-    /// #[derive(Clone, Debug, Eq, PartialEq, Sequence, TBS)]
-    /// pub struct Certificate<'a> {
-    ///     /// tbsCertificate       TBSCertificate,
-    ///     pub tbs_certificate: TBSCertificate<'a>,
-    ///     /// signatureAlgorithm   AlgorithmIdentifier,
-    ///     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    ///     /// signature            BIT STRING
-    ///     pub signature: BitString<'a>,
-    /// }
-    ///
-    /// This definition will cause encoders and decoders to be generated for the Certificate structure
-    /// (via the Sequence macro) enabling access to fully decoded contents along with a new structure
-    /// named DeferCertificate and corresponding decoder.
-    ///
-    /// pub struct DeferCertificate<'a> {
-    ///     pub tbs_certificate: &'a [u8],
-    ///     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    ///     pub signature: BitString<'a>,
-    /// }
-    derive_tbs
-);
-
-decl_derive!(
-    [Defer, attributes(asn1)] =>
-
-    /// Support for deriving structs that feature deferred decoding for arbitrary fields, such as in support of
-    /// verifying ASN.1 `SEQUENCE` types that follow the to be signed/algorithm/signature pattern.
-    /// In some ASN.1 modules, the `to be signed` pattern is denoted by the SIGNED{} macro. For example,
-    /// RFC 5912 features the following definition for an X.509 Certificate structure:
-    ///
-    /// Certificate  ::=  SIGNED{TBSCertificate}
-    ///
-    /// It defines the SIGNED{} macro as follows:
-    ///
-    /// SIGNED{ToBeSigned} ::= SEQUENCE {
-    ///      toBeSigned           ToBeSigned,
-    ///      algorithmIdentifier  SEQUENCE {
-    ///          algorithm        SIGNATURE-ALGORITHM.
-    ///                             &id({SignatureAlgorithms}),
-    ///          parameters       SIGNATURE-ALGORITHM.
-    ///                             &Params({SignatureAlgorithms}
-    ///                               {@algorithmIdentifier.algorithm}) OPTIONAL
-    ///      },
-    ///      signature BIT STRING (CONTAINING SIGNATURE-ALGORITHM.&Value(
-    ///                               {SignatureAlgorithms}
-    ///                               {@algorithmIdentifier.algorithm}))
-    ///   }
-    ///
-    /// Where the Defer derive macro is used, the first field can be defined with a #[asn1(defer="true")]
-    /// attribute so the first field is not decoded and is instead served as bytes containing the entire
-    /// encoded TLV production of that field. The second and third fields are decoded to feature an
-    /// AlgorithmIdentifier and a BIT STRING, as indicated above.
-    ///
-    /// Sample usage of the TBS macro is below.
-    ///
-    /// #[derive(Clone, Debug, Eq, PartialEq, Sequence, Defer)]
-    /// pub struct Certificate<'a> {
-    ///     /// tbsCertificate       TBSCertificate,
-    ///     #[asn1(defer="true")]
-    ///     pub tbs_certificate: TBSCertificate<'a>,
-    ///     /// signatureAlgorithm   AlgorithmIdentifier,
-    ///     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    ///     /// signature            BIT STRING
-    ///     pub signature: BitString<'a>,
-    /// }
-    ///
-    /// This definition will cause encoders and decoders to be generated for the Certificate structure
-    /// (via the Sequence macro) enabling access to fully decoded contents along with a new structure
-    /// named DeferCertificate and corresponding decoder.
-    ///
-    /// pub struct DeferCertificate<'a> {
-    ///     pub tbs_certificate: &'a [u8],
-    ///     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    ///     pub signature: BitString<'a>,
-    /// }
-    derive_defer
-);
-
-/// Custom derive for `der::Choice`.
-fn derive_choice(s: Structure<'_>) -> TokenStream {
-    let ast = s.ast();
-    let lifetime = parse_lifetime(&ast.generics);
-
-    let data_label = match &ast.data {
-        syn::Data::Enum(data) => return DeriveChoice::derive(s, data, lifetime),
+    let data_label = match input.data {
+        syn::Data::Enum(data) => {
+            return DeriveChoice::derive(input.ident, data, &input.attrs, lifetime).into()
+        }
         syn::Data::Struct(_) => "struct",
         syn::Data::Union(_) => "union",
     };
 
-    panic!(
+    abort!(
+        input.ident,
         "can't derive `Choice` on `{}`: only `enum` types are allowed",
         data_label
     )
 }
 
-/// Custom derive for `der::Enumerated`.
-fn derive_enumerated(s: Structure<'_>) -> TokenStream {
-    let ast = s.ast();
+/// Derive decoders and encoders for ASN.1 [`Enumerated`] types.
+///
+/// # Usage
+///
+/// The `Enumerated` proc macro requires a C-like enum which impls `Copy`
+/// and has a `#[repr]` of `u8`, `u16`, or `u32`:
+///
+/// ```ignore
+/// use der::Enumerated;
+///
+/// #[derive(Enumerated, Copy, Clone, Debug, Eq, PartialEq)]
+/// #[repr(u32)]
+/// pub enum CrlReason {
+///     Unspecified = 0,
+///     KeyCompromise = 1,
+///     CaCompromise = 2,
+///     AffiliationChanged = 3,
+///     Superseded = 4,
+///     CessationOfOperation = 5,
+///     CertificateHold = 6,
+///     RemoveFromCrl = 8,
+///     PrivilegeWithdrawn = 9,
+///     AaCompromised = 10
+/// }
+/// ```
+///
+/// Note that the derive macro will write a `TryFrom<...>` impl for the
+/// provided `#[repr]`, which is used by the decoder.
+#[proc_macro_derive(Enumerated)]
+#[proc_macro_error]
+pub fn derive_enumerated(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
 
-    if let Some(lifetime) = parse_lifetime(&ast.generics) {
-        panic!("lifetimes not allowed on `Enumerated` types: {}", lifetime);
+    if let Some(lifetime) = parse_lifetime(&input.generics) {
+        abort!(
+            lifetime,
+            "lifetimes not allowed on `Enumerated` types: {}",
+            lifetime
+        );
     }
 
-    let data_label = match &ast.data {
-        syn::Data::Enum(data) => return DeriveEnumerated::derive(s, data),
+    let data_label = match input.data {
+        syn::Data::Enum(data) => {
+            return DeriveEnumerated::derive(input.ident, data, &input.attrs).into()
+        }
         syn::Data::Struct(_) => "struct",
         syn::Data::Union(_) => "union",
     };
 
-    panic!(
+    abort!(
+        input.ident,
         "can't derive `Enumerated` on `{}`: only `enum` types are allowed",
         data_label
     )
 }
 
-/// Custom derive for `der::Sequence`.
-fn derive_sequence(s: Structure<'_>) -> TokenStream {
-    let ast = s.ast();
-    let lifetime = parse_lifetime(&ast.generics);
+/// Derive the [`Sequence`][1] trait on a struct.
+///
+/// This custom derive macro can be used to automatically impl the
+/// `Sequence` trait for any struct which can be decoded/encoded as an
+/// ASN.1 `SEQUENCE`.
+///
+/// # Usage
+///
+/// ```ignore
+/// use der::{
+///     asn1::{Any, ObjectIdentifier},
+///     Sequence
+/// };
+///
+/// /// X.509 `AlgorithmIdentifier`
+/// #[derive(Sequence)]
+/// pub struct AlgorithmIdentifier<'a> {
+///     /// This field contains an ASN.1 `OBJECT IDENTIFIER`, a.k.a. OID.
+///     pub algorithm: ObjectIdentifier,
+///
+///     /// This field is `OPTIONAL` and contains the ASN.1 `ANY` type, which
+///     /// in this example allows arbitrary algorithm-defined parameters.
+///     pub parameters: Option<Any<'a>>
+/// }
+/// ```
+///
+/// # `#[asn1(type = "...")]` attribute
+///
+/// See [toplevel documentation for the `der_derive` crate][2] for more
+/// information about the `#[asn1]` attribute.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
+/// [2]: https://docs.rs/der_derive/
+#[proc_macro_derive(Sequence, attributes(asn1))]
+#[proc_macro_error]
+pub fn derive_sequence(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let lifetime = parse_lifetime(&input.generics);
 
-    let data_label = match &ast.data {
+    let data_label = match input.data {
         syn::Data::Enum(_) => "enum",
-        syn::Data::Struct(data) => return DeriveSequence::derive(s, data, lifetime),
+        syn::Data::Struct(data) => {
+            return DeriveSequence::derive(input.ident, data, &input.attrs, lifetime).into()
+        }
         syn::Data::Union(_) => "union",
     };
 
-    panic!(
+    abort!(
+        input.ident,
         "can't derive `Sequence` on `{}`: only `struct` types are allowed",
         data_label
     )
 }
 
-/// Custom derive for `der::TBS`
-fn derive_tbs(s: Structure<'_>) -> TokenStream {
-    let ast = s.ast();
-    let lifetime = parse_lifetime(&ast.generics);
+#[proc_macro_derive(Defer, attributes(asn1))]
+#[proc_macro_error]
+pub fn derive_defer(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let lifetime = parse_lifetime(&input.generics);
 
-    match &ast.data {
-        syn::Data::Struct(data) => DeriveTBS::derive(s, data, lifetime),
-        other => panic!("can't derive `TBS` on: {:?}", other),
-    }
-}
+    let data_label = match input.data {
+        syn::Data::Enum(_) => "enum",
+        syn::Data::Struct(data) => {
+            return DeriveDefer::derive(input.ident, data, &input.attrs, lifetime).into()
+        }
+        syn::Data::Union(_) => "union",
+    };
 
-/// Custom derive for `der::Defer`
-fn derive_defer(s: Structure<'_>) -> TokenStream {
-    let ast = s.ast();
-    let lifetime = parse_lifetime(&ast.generics);
-
-    match &ast.data {
-        syn::Data::Struct(data) => DeriveDefer::derive(s, data, lifetime),
-        other => panic!("can't derive `Defer` on: {:?}", other),
-    }
+    abort!(
+        input.ident,
+        "can't derive `Sequence` on `{}`: only `struct` types are allowed",
+        data_label
+    )
 }
 
 /// Parse the first lifetime of the "self" type of the custom derive
 ///
 /// Returns `None` if there is no first lifetime.
-fn parse_lifetime(generics: &Generics) -> Option<&Lifetime> {
-    generics.lifetimes().next().map(|lt_ref| &lt_ref.lifetime)
+fn parse_lifetime(generics: &Generics) -> Option<Lifetime> {
+    generics.lifetimes().next().map(|lt| lt.lifetime.clone())
 }

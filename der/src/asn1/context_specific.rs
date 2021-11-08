@@ -1,9 +1,10 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::Any, Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, Error,
-    Header, Length, Result, Tag, TagMode, TagNumber, Tagged,
+    asn1::Any, Choice, Decodable, DecodeValue, Decoder, DerOrd, Encodable, EncodeValue, Encoder,
+    Error, Header, Length, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd,
 };
+use core::cmp::Ordering;
 
 /// Context-specific field.
 ///
@@ -95,7 +96,7 @@ impl<T> ContextSpecific<T> {
         while let Some(octet) = decoder.peek_byte() {
             let tag = Tag::try_from(octet)?;
 
-            if !tag.is_context_specific() || tag.number() > tag_number {
+            if !tag.is_context_specific() || (tag.number() > tag_number) {
                 break;
             } else if tag.number() == tag_number {
                 return Some(f(decoder)).transpose();
@@ -158,6 +159,18 @@ where
         Tag::ContextSpecific {
             number: self.tag_number,
             constructed,
+        }
+    }
+}
+
+impl<T> ValueOrd for ContextSpecific<T>
+where
+    T: EncodeValue + ValueOrd + Tagged,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        match self.tag_mode {
+            TagMode::Explicit => self.der_cmp(other),
+            TagMode::Implicit => self.value_cmp(other),
         }
     }
 }

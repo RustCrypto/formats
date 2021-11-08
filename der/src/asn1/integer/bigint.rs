@@ -126,7 +126,7 @@ where
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
-impl<'a, const LIMBS: usize> EncodeValue for UInt<LIMBS>
+impl<const LIMBS: usize> EncodeValue for UInt<LIMBS>
 where
     UInt<LIMBS>: ArrayEncoding,
 {
@@ -144,7 +144,7 @@ where
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
-impl<'a, const LIMBS: usize> FixedTag for UInt<LIMBS>
+impl<const LIMBS: usize> FixedTag for UInt<LIMBS>
 where
     UInt<LIMBS>: ArrayEncoding,
 {

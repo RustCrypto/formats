@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
-    Result, StrSlice, Tag,
+    OrdIsValueOrd, Result, StrSlice, Tag,
 };
 use core::{fmt, str};
 
@@ -122,6 +122,12 @@ impl<'a> EncodeValue for PrintableString<'a> {
     }
 }
 
+impl FixedTag for PrintableString<'_> {
+    const TAG: Tag = Tag::PrintableString;
+}
+
+impl OrdIsValueOrd for PrintableString<'_> {}
+
 impl<'a> From<&PrintableString<'a>> for PrintableString<'a> {
     fn from(value: &PrintableString<'a>) -> PrintableString<'a> {
         *value
@@ -146,10 +152,6 @@ impl<'a> From<PrintableString<'a>> for &'a [u8] {
     fn from(printable_string: PrintableString<'a>) -> &'a [u8] {
         printable_string.as_bytes()
     }
-}
-
-impl<'a> FixedTag for PrintableString<'a> {
-    const TAG: Tag = Tag::PrintableString;
 }
 
 impl<'a> fmt::Display for PrintableString<'a> {

@@ -2,6 +2,7 @@
 
 use crate::{Asn1Type, TagMode, TagNumber};
 use proc_macro2::TokenStream;
+use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
 use std::{fmt::Debug, str::FromStr};
 use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path};
@@ -34,15 +35,14 @@ impl TypeAttrs {
             // `tag_mode = "..."` attribute
             if let Some(mode) = attr.parse_value("tag_mode") {
                 if tag_mode.is_some() {
-                    panic!("duplicate ASN.1 `tag_mode` attribute: {}", attr.value);
+                    abort!(attr.value, "duplicate ASN.1 `tag_mode` attribute");
                 }
 
                 tag_mode = Some(mode);
             } else {
-                panic!(
-                    "unknown field-level `asn1` attribute: {:?} \
-                    (valid options are `tag_mode`)",
-                    attr.name
+                abort!(
+                    attr.name,
+                    "invalid `asn1` attribute (valid options are `tag_mode`)",
                 );
             }
         }
@@ -80,17 +80,14 @@ impl FieldAttrs {
             // `context_specific = "..."` attribute
             if let Some(tag_number) = attr.parse_value("context_specific") {
                 if context_specific.is_some() {
-                    panic!(
-                        "duplicate ASN.1 `context_specific` attribute: {}",
-                        tag_number
-                    );
+                    abort!(attr.name, "duplicate ASN.1 `context_specific` attribute");
                 }
 
                 context_specific = Some(tag_number);
             // `type = "..."` attribute
             } else if let Some(ty) = attr.parse_value("type") {
                 if asn1_type.is_some() {
-                    panic!("duplicate ASN.1 `type` attribute: {}", attr.value);
+                    abort!(attr.value, "duplicate ASN.1 `type` attribute: {}");
                 }
 
                 asn1_type = Some(ty);
@@ -101,10 +98,10 @@ impl FieldAttrs {
 
                 defer = Some(ty);
             } else {
-                panic!(
-                    "unknown field-level `asn1` attribute: {:?} \
+                abort!(
+                    attr.name,
+                    "unknown field-level `asn1` attribute \
                     (valid options are `context_specific`, `type`)",
-                    attr.name
                 );
             }
         }
@@ -134,7 +131,7 @@ impl FieldAttrs {
                         }
                     })
                 }
-                None => panic!("implicit tagging requires an associated `tag_number`"),
+                None => abort_call_site!("implicit tagging requires an associated `tag_number`"),
             },
         }
     }
@@ -206,7 +203,7 @@ impl AttrNameValue {
 
             let nested = match attr.parse_meta().expect(PARSE_ERR_MSG) {
                 Meta::List(MetaList { nested, .. }) => nested,
-                other => panic!("malformed `asn1` attribute: {:?}", other),
+                other => abort!(other, "malformed `asn1` attribute"),
             };
 
             for meta in &nested {
@@ -219,7 +216,7 @@ impl AttrNameValue {
                         name: path.clone(),
                         value: lit_str.value(),
                     }),
-                    _ => panic!("malformed `asn1` attribute: {:?}", nested),
+                    _ => abort!(nested, "malformed `asn1` attribute"),
                 }
             }
         }
@@ -235,7 +232,7 @@ impl AttrNameValue {
             Some(
                 self.value
                     .parse()
-                    .unwrap_or_else(|_| panic!("error parsing `{}` attribute", name)),
+                    .unwrap_or_else(|_| abort!(self.name, "error parsing `{}` attribute")),
             )
         } else {
             None

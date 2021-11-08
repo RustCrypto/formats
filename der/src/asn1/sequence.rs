@@ -6,7 +6,7 @@ use crate::{Decodable, Encodable, EncodeValue, Encoder, FixedTag, Length, Result
 /// ASN.1 `SEQUENCE` trait.
 ///
 /// Types which impl this trait receive blanket impls for the [`Decodable`],
-/// [`Encodable`], and [`Tagged`] traits.
+/// [`Encodable`], and [`FixedTag`] traits.
 pub trait Sequence<'a>: Decodable<'a> {
     /// Call the provided function with a slice of [`Encodable`] trait objects
     /// representing the fields of this `SEQUENCE`.

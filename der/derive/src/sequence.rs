@@ -3,14 +3,20 @@
 
 use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
+use proc_macro_error::abort;
 use quote::{quote, ToTokens};
-use syn::{DataStruct, Field, Ident, Lifetime};
-use synstructure::Structure;
+use syn::{Attribute, DataStruct, Field, Ident, Lifetime};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
+    /// Name of the enum type.
+    ident: Ident,
+
     /// `asn1` attributes defined at the type level.
     type_attrs: TypeAttrs,
+
+    /// Lifetime of the type.
+    lifetime: Option<Lifetime>,
 
     /// Field decoders
     decode_fields: TokenStream,
@@ -23,9 +29,16 @@ pub(crate) struct DeriveSequence {
 }
 
 impl DeriveSequence {
-    pub fn derive(s: Structure<'_>, data: &DataStruct, lifetime: Option<&Lifetime>) -> TokenStream {
+    pub fn derive(
+        ident: Ident,
+        data: DataStruct,
+        attrs: &[Attribute],
+        lifetime: Option<Lifetime>,
+    ) -> TokenStream {
         let mut state = Self {
-            type_attrs: TypeAttrs::parse(&s.ast().attrs),
+            ident,
+            type_attrs: TypeAttrs::parse(attrs),
+            lifetime,
             decode_fields: TokenStream::new(),
             decode_result: TokenStream::new(),
             encode_fields: TokenStream::new(),
@@ -35,7 +48,7 @@ impl DeriveSequence {
             state.derive_field(field);
         }
 
-        state.finish(&s, lifetime)
+        state.to_tokens()
     }
 
     /// Derive handling for a particular `#[field(...)]`
@@ -59,9 +72,9 @@ impl DeriveSequence {
         } else {
             // TODO(tarcieri): IMPLICIT support
             if self.type_attrs.tag_mode == TagMode::Implicit {
-                panic!(
-                    "IMPLICIT tagging not presently supported in this context: {}",
-                    name
+                abort!(
+                    name,
+                    "IMPLICIT tagging not presently supported for `Sequence`"
                 );
             }
 
@@ -86,19 +99,29 @@ impl DeriveSequence {
             .to_tokens(&mut self.encode_fields);
     }
 
-    /// Finish deriving a struct
-    fn finish(self, s: &Structure<'_>, lifetime: Option<&Lifetime>) -> TokenStream {
-        let lifetime = match lifetime {
-            Some(lifetime) => quote!(#lifetime),
+    /// Lower the derived output into a [`TokenStream`].
+    fn to_tokens(&self) -> TokenStream {
+        let lifetime = match self.lifetime {
+            Some(ref lifetime) => quote!(#lifetime),
             None => quote!('_),
         };
 
-        let decode_fields = self.decode_fields;
-        let decode_result = self.decode_result;
-        let encode_fields = self.encode_fields;
+        let lt_param = self
+            .lifetime
+            .as_ref()
+            .map(|_| lifetime.clone())
+            .unwrap_or_default();
 
-        s.gen_impl(quote! {
-            gen impl ::der::Decodable<#lifetime> for @Self {
+        let Self {
+            ident,
+            decode_fields,
+            decode_result,
+            encode_fields,
+            ..
+        } = self;
+
+        quote! {
+            impl<#lt_param> ::der::Decodable<#lifetime> for #ident<#lt_param> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     decoder.sequence(|decoder| {
                         #decode_fields
@@ -107,7 +130,7 @@ impl DeriveSequence {
                 }
             }
 
-            gen impl ::der::Sequence<#lifetime> for @Self {
+            impl<#lt_param> ::der::Sequence<#lifetime> for #ident<#lt_param> {
                 fn fields<F, T>(&self, f: F) -> ::der::Result<T>
                 where
                     F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
@@ -115,6 +138,6 @@ impl DeriveSequence {
                     f(&[#encode_fields])
                 }
             }
-        })
+        }
     }
 }

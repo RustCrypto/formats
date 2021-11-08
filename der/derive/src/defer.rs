@@ -4,13 +4,18 @@
 use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{DataStruct, Field, Ident, Lifetime};
-use synstructure::Structure;
+use syn::{Attribute, DataStruct, Field, Ident, Lifetime};
 
-/// Derive a `to be signed` struct for a given struct
+/// Derive a `Sequence` struct for a given struct with Defer'ed decoding of designated fields
 pub(crate) struct DeriveDefer {
+    /// Name of the enum type.
+    ident: Ident,
+
     /// `asn1` attributes defined at the type level.
     type_attrs: TypeAttrs,
+
+    /// Lifetime of the type.
+    lifetime: Option<Lifetime>,
 
     /// Field decoders
     decode_fields: TokenStream,
@@ -26,9 +31,16 @@ pub(crate) struct DeriveDefer {
 }
 
 impl DeriveDefer {
-    pub fn derive(s: Structure<'_>, data: &DataStruct, lifetime: Option<&Lifetime>) -> TokenStream {
+    pub fn derive(
+        ident: Ident,
+        data: DataStruct,
+        attrs: &[Attribute],
+        lifetime: Option<Lifetime>,
+    ) -> TokenStream {
         let mut state = Self {
-            type_attrs: TypeAttrs::parse(&s.ast().attrs),
+            ident,
+            type_attrs: TypeAttrs::parse(attrs),
+            lifetime,
             decode_fields: TokenStream::new(),
             decode_result: TokenStream::new(),
             alt_struct: TokenStream::new(),
@@ -45,21 +57,25 @@ impl DeriveDefer {
                 state.derive_field(field);
             }
         }
-        state.derive_alt_struct(&s, data, lifetime);
-        state.finish(&s, lifetime)
+
+        state.derive_alt_struct(&data);
+        state.to_tokens()
     }
 
     /// Derive code for a structure based on a given structure but with Defer prepended to the name
     /// and the first field served up as undecoded bytes instead of as a parsed structure.
     fn derive_alt_struct(
         &mut self,
-        s: &Structure<'_>,
         data: &DataStruct,
-        lifetime: Option<&Lifetime>,
     ) {
-        let ident = &s.ast().ident;
-        self.alt_struct_name = format!("Defer2{}", ident);
-        let sname = syn::Ident::new(&self.alt_struct_name, ident.span());
+        self.alt_struct_name = format!("Defer{}", self.ident);
+        let sname = syn::Ident::new(&self.alt_struct_name, self.ident.span());
+
+        let lifetime2 = match self.lifetime {
+            Some(ref lifetime) => quote!(#lifetime),
+            None => quote!('_),
+        };
+
 
         let mut fields = TokenStream::new();
 
@@ -76,11 +92,11 @@ impl DeriveDefer {
             let f = if Some(true) == field_attrs.defer {
                 comment = format!(
                     "Structure supporting deferred decoding of {} field in the {} SEQUENCE",
-                    name, ident
+                    name, self.ident
                 );
                 quote! {
                      /// Defer decoded field
-                     pub #name: &#lifetime [u8],
+                     pub #name: &#lifetime2 [u8],
                 }
             } else {
                 quote! {
@@ -96,12 +112,12 @@ impl DeriveDefer {
 
         let struct_def = quote! {
             #[doc = #comment]
-            pub struct #sname <#lifetime> {
+            pub struct #sname <#lifetime2> {
                 #fields
             }
 
-            impl<#lifetime> Decodable<#lifetime> for #sname<#lifetime> {
-                fn decode(decoder: &mut Decoder<#lifetime>) -> der::Result<#sname<#lifetime>> {
+            impl<#lifetime2> Decodable<#lifetime2> for #sname<#lifetime2> {
+                fn decode(decoder: &mut Decoder<#lifetime2>) -> der::Result<#sname<#lifetime2>> {
                     decoder.sequence(|decoder| {
                         #decode_fields
                         Ok(Self { #decode_result })
@@ -164,7 +180,7 @@ impl DeriveDefer {
     }
 
     /// Finish deriving a struct
-    fn finish(self, _s: &Structure<'_>, _lifetime: Option<&Lifetime>) -> TokenStream {
-        self.alt_struct
+    fn to_tokens(&self) -> TokenStream {
+        self.alt_struct.to_token_stream()
     }
 }

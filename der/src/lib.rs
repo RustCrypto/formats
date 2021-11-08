@@ -317,7 +317,12 @@
     html_root_url = "https://docs.rs/der/0.5.0-pre.1"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -336,6 +341,7 @@ mod encoder;
 mod error;
 mod header;
 mod length;
+mod ord;
 mod str_slice;
 mod tag;
 mod value;
@@ -344,7 +350,7 @@ mod value;
 mod document;
 
 pub use crate::{
-    asn1::{Any, Choice, Sequence, TBS},
+    asn1::{Any, Choice, Sequence},
     datetime::DateTime,
     decodable::Decodable,
     decoder::Decoder,
@@ -353,6 +359,7 @@ pub use crate::{
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
+    ord::{DerOrd, OrdIsValueOrd, ValueOrd},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     value::{DecodeValue, EncodeValue},
 };
@@ -366,7 +373,7 @@ pub use crypto_bigint as bigint;
 
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
-pub use der_derive::{Choice, Defer, Enumerated, Sequence, TBS};
+pub use der_derive::{Choice, Defer, Enumerated, Sequence};
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]

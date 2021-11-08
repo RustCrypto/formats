@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
-    Result, StrSlice, Tag,
+    OrdIsValueOrd, Result, StrSlice, Tag,
 };
 use core::{fmt, str};
 
@@ -79,7 +79,7 @@ impl<'a> DecodeValue<'a> for Ia5String<'a> {
     }
 }
 
-impl<'a> EncodeValue for Ia5String<'a> {
+impl EncodeValue for Ia5String<'_> {
     fn value_len(&self) -> Result<Length> {
         self.inner.value_len()
     }
@@ -88,6 +88,12 @@ impl<'a> EncodeValue for Ia5String<'a> {
         self.inner.encode_value(encoder)
     }
 }
+
+impl<'a> FixedTag for Ia5String<'a> {
+    const TAG: Tag = Tag::Ia5String;
+}
+
+impl OrdIsValueOrd for Ia5String<'_> {}
 
 impl<'a> From<&Ia5String<'a>> for Ia5String<'a> {
     fn from(value: &Ia5String<'a>) -> Ia5String<'a> {
@@ -113,10 +119,6 @@ impl<'a> From<Ia5String<'a>> for &'a [u8] {
     fn from(printable_string: Ia5String<'a>) -> &'a [u8] {
         printable_string.as_bytes()
     }
-}
-
-impl<'a> FixedTag for Ia5String<'a> {
-    const TAG: Tag = Tag::Ia5String;
 }
 
 impl<'a> fmt::Display for Ia5String<'a> {

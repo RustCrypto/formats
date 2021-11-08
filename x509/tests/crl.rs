@@ -10,6 +10,7 @@ use x509::*;
 #[test]
 fn decode_crl() {
     let der_encoded_crl = include_bytes!("examples/GoodCACRL.crl");
+
     let defer_crl = DeferCertificateList::from_der(der_encoded_crl).unwrap();
     assert_eq!(
         defer_crl.tbs_cert_list,

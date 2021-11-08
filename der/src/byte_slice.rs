@@ -2,17 +2,18 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    str_slice::StrSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, Length, Result,
+    str_slice::StrSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, Length, Result,
 };
+use core::cmp::Ordering;
 
 /// Byte slice newtype which respects the `Length::max()` limit.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub(crate) struct ByteSlice<'a> {
-    /// Inner value
-    inner: &'a [u8],
-
     /// Precomputed `Length` (avoids possible panicking conversions)
     length: Length,
+
+    /// Inner value
+    inner: &'a [u8],
 }
 
 impl<'a> ByteSlice<'a> {
@@ -20,8 +21,8 @@ impl<'a> ByteSlice<'a> {
     /// is shorter than `Length::max()`.
     pub fn new(slice: &'a [u8]) -> Result<Self> {
         Ok(Self {
-            inner: slice,
             length: Length::try_from(slice.len())?,
+            inner: slice,
         })
     }
 
@@ -53,7 +54,7 @@ impl<'a> DecodeValue<'a> for ByteSlice<'a> {
     }
 }
 
-impl<'a> EncodeValue for ByteSlice<'a> {
+impl EncodeValue for ByteSlice<'_> {
     fn value_len(&self) -> Result<Length> {
         Ok(self.length)
     }
@@ -66,17 +67,23 @@ impl<'a> EncodeValue for ByteSlice<'a> {
 impl Default for ByteSlice<'_> {
     fn default() -> Self {
         Self {
-            inner: &[],
             length: Length::ZERO,
+            inner: &[],
         }
+    }
+}
+
+impl DerOrd for ByteSlice<'_> {
+    fn der_cmp(&self, other: &Self) -> Result<Ordering> {
+        Ok(self.as_bytes().cmp(other.as_bytes()))
     }
 }
 
 impl<'a> From<&'a [u8; 1]> for ByteSlice<'a> {
     fn from(byte: &'a [u8; 1]) -> ByteSlice<'a> {
         Self {
-            inner: byte,
             length: Length::ONE,
+            inner: byte,
         }
     }
 }

@@ -2,7 +2,7 @@
 
 use crate::{Extensions, Name, Time};
 use der::asn1::{BitString, UIntBytes};
-use der::{Decodable, Decoder, Sequence, Tag, TagMode, TagNumber, TBS};
+use der::{Decodable, Decoder, Defer, Sequence, Tag, TagMode, TagNumber};
 use spki::AlgorithmIdentifier;
 
 const CRL_EXTENSIONS_TAG: TagNumber = TagNumber::new(0);
@@ -151,9 +151,10 @@ impl<'a> ::der::Sequence<'a> for TBSCertList<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 5.1.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence, TBS)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, Defer)]
 pub struct CertificateList<'a> {
     /// tbsCertificate       TBSCertList,
+    #[asn1(defer = "true")]
     pub tbs_cert_list: TBSCertList<'a>,
     /// signatureAlgorithm   AlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,

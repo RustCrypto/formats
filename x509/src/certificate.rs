@@ -2,7 +2,7 @@
 
 use crate::{Extensions, Name, Validity};
 use der::asn1::{BitString, ContextSpecific, UIntBytes};
-use der::{Decodable, Decoder, Sequence, TagMode, TagNumber, TBS};
+use der::{Decodable, Decoder, Defer, Sequence, TagMode, TagNumber};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 // only support v3 certificates
@@ -143,9 +143,10 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence, TBS)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, Defer)]
 pub struct Certificate<'a> {
     /// tbsCertificate       TBSCertificate,
+    #[asn1(defer = "true")]
     pub tbs_certificate: TBSCertificate<'a>,
     /// signatureAlgorithm   AlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
