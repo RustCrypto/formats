@@ -64,10 +64,7 @@ impl DeriveDefer {
 
     /// Derive code for a structure based on a given structure but with Defer prepended to the name
     /// and the first field served up as undecoded bytes instead of as a parsed structure.
-    fn derive_alt_struct(
-        &mut self,
-        data: &DataStruct,
-    ) {
+    fn derive_alt_struct(&mut self, data: &DataStruct) {
         self.alt_struct_name = format!("Defer{}", self.ident);
         let sname = syn::Ident::new(&self.alt_struct_name, self.ident.span());
 
@@ -75,7 +72,6 @@ impl DeriveDefer {
             Some(ref lifetime) => quote!(#lifetime),
             None => quote!('_),
         };
-
 
         let mut fields = TokenStream::new();
 
