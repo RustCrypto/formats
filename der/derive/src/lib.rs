@@ -108,6 +108,7 @@ use crate::{
     types::Asn1Type,
 };
 use proc_macro::TokenStream;
+use proc_macro_error::{abort, proc_macro_error};
 use syn::{parse_macro_input, DeriveInput, Generics, Lifetime};
 
 /// Derive the [`Choice`][1] trait on an enum.
@@ -148,6 +149,7 @@ use syn::{parse_macro_input, DeriveInput, Generics, Lifetime};
 /// [3]: https://docs.rs/der/latest/der/trait.Encodable.html
 /// [4]: https://docs.rs/der_derive/
 #[proc_macro_derive(Choice, attributes(asn1))]
+#[proc_macro_error]
 pub fn derive_choice(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let lifetime = parse_lifetime(&input.generics);
@@ -160,7 +162,8 @@ pub fn derive_choice(input: TokenStream) -> TokenStream {
         syn::Data::Union(_) => "union",
     };
 
-    panic!(
+    abort!(
+        input.ident,
         "can't derive `Choice` on `{}`: only `enum` types are allowed",
         data_label
     )
@@ -195,11 +198,16 @@ pub fn derive_choice(input: TokenStream) -> TokenStream {
 /// Note that the derive macro will write a `TryFrom<...>` impl for the
 /// provided `#[repr]`, which is used by the decoder.
 #[proc_macro_derive(Enumerated)]
+#[proc_macro_error]
 pub fn derive_enumerated(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     if let Some(lifetime) = parse_lifetime(&input.generics) {
-        panic!("lifetimes not allowed on `Enumerated` types: {}", lifetime);
+        abort!(
+            lifetime,
+            "lifetimes not allowed on `Enumerated` types: {}",
+            lifetime
+        );
     }
 
     let data_label = match input.data {
@@ -210,7 +218,8 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
         syn::Data::Union(_) => "union",
     };
 
-    panic!(
+    abort!(
+        input.ident,
         "can't derive `Enumerated` on `{}`: only `enum` types are allowed",
         data_label
     )
@@ -250,6 +259,7 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
 /// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
 /// [2]: https://docs.rs/der_derive/
 #[proc_macro_derive(Sequence, attributes(asn1))]
+#[proc_macro_error]
 pub fn derive_sequence(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let lifetime = parse_lifetime(&input.generics);
@@ -262,7 +272,8 @@ pub fn derive_sequence(input: TokenStream) -> TokenStream {
         syn::Data::Union(_) => "union",
     };
 
-    panic!(
+    abort!(
+        input.ident,
         "can't derive `Sequence` on `{}`: only `struct` types are allowed",
         data_label
     )
