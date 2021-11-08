@@ -108,8 +108,8 @@ use crate::{
     types::Asn1Type,
 };
 use proc_macro::TokenStream;
-use proc_macro_error::{abort, proc_macro_error};
-use syn::{parse_macro_input, DeriveInput, Generics, Lifetime};
+use proc_macro_error::proc_macro_error;
+use syn::{parse_macro_input, DeriveInput};
 
 /// Derive the [`Choice`][1] trait on an enum.
 ///
@@ -152,21 +152,7 @@ use syn::{parse_macro_input, DeriveInput, Generics, Lifetime};
 #[proc_macro_error]
 pub fn derive_choice(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let lifetime = parse_lifetime(&input.generics);
-
-    let data_label = match input.data {
-        syn::Data::Enum(data) => {
-            return DeriveChoice::derive(input.ident, data, &input.attrs, lifetime).into()
-        }
-        syn::Data::Struct(_) => "struct",
-        syn::Data::Union(_) => "union",
-    };
-
-    abort!(
-        input.ident,
-        "can't derive `Choice` on `{}`: only `enum` types are allowed",
-        data_label
-    )
+    DeriveChoice::new(input).to_tokens().into()
 }
 
 /// Derive decoders and encoders for ASN.1 [`Enumerated`] types.
@@ -201,28 +187,7 @@ pub fn derive_choice(input: TokenStream) -> TokenStream {
 #[proc_macro_error]
 pub fn derive_enumerated(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-
-    if let Some(lifetime) = parse_lifetime(&input.generics) {
-        abort!(
-            lifetime,
-            "lifetimes not allowed on `Enumerated` types: {}",
-            lifetime
-        );
-    }
-
-    let data_label = match input.data {
-        syn::Data::Enum(data) => {
-            return DeriveEnumerated::derive(input.ident, data, &input.attrs).into()
-        }
-        syn::Data::Struct(_) => "struct",
-        syn::Data::Union(_) => "union",
-    };
-
-    abort!(
-        input.ident,
-        "can't derive `Enumerated` on `{}`: only `enum` types are allowed",
-        data_label
-    )
+    DeriveEnumerated::new(input).to_tokens().into()
 }
 
 /// Derive the [`Sequence`][1] trait on a struct.
@@ -262,26 +227,5 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
 #[proc_macro_error]
 pub fn derive_sequence(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let lifetime = parse_lifetime(&input.generics);
-
-    let data_label = match input.data {
-        syn::Data::Enum(_) => "enum",
-        syn::Data::Struct(data) => {
-            return DeriveSequence::derive(input.ident, data, &input.attrs, lifetime).into()
-        }
-        syn::Data::Union(_) => "union",
-    };
-
-    abort!(
-        input.ident,
-        "can't derive `Sequence` on `{}`: only `struct` types are allowed",
-        data_label
-    )
-}
-
-/// Parse the first lifetime of the "self" type of the custom derive
-///
-/// Returns `None` if there is no first lifetime.
-fn parse_lifetime(generics: &Generics) -> Option<Lifetime> {
-    generics.lifetimes().next().map(|lt| lt.lifetime.clone())
+    DeriveSequence::new(input).to_tokens().into()
 }
