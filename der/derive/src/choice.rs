@@ -6,7 +6,7 @@ use crate::{FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, ToTokens};
-use syn::{Attribute, DataEnum, Fields, Ident, Lifetime, Variant};
+use syn::{DeriveInput, Fields, Ident, Lifetime, Variant};
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
@@ -36,16 +36,25 @@ pub(crate) struct DeriveChoice {
 }
 
 impl DeriveChoice {
-    /// Derive `Decodable` on an enum.
-    pub fn derive(
-        ident: Ident,
-        data: DataEnum,
-        attrs: &[Attribute],
-        lifetime: Option<Lifetime>,
-    ) -> TokenStream {
+    /// Parse [`DeriveInput`].
+    pub fn new(input: DeriveInput) -> Self {
+        let lifetime = input
+            .generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone());
+
+        let data = match input.data {
+            syn::Data::Enum(data) => data,
+            _ => abort!(
+                input.ident,
+                "can't derive `Choice` on this type: only `enum` types are allowed",
+            ),
+        };
+
         let mut state = Self {
-            ident,
-            type_attrs: TypeAttrs::parse(attrs),
+            ident: input.ident,
+            type_attrs: TypeAttrs::parse(&input.attrs),
             lifetime,
             choice_body: TokenStream::new(),
             decode_body: TokenStream::new(),
@@ -80,7 +89,7 @@ impl DeriveChoice {
             }
         }
 
-        state.to_tokens()
+        state
     }
 
     /// Derive the body of `Choice::can_decode
@@ -128,7 +137,7 @@ impl DeriveChoice {
     }
 
     /// Lower the derived output into a [`TokenStream`].
-    fn to_tokens(&self) -> TokenStream {
+    pub fn to_tokens(&self) -> TokenStream {
         let lifetime = match self.lifetime {
             Some(ref lifetime) => quote!(#lifetime),
             None => quote!('_),

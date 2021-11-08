@@ -5,7 +5,7 @@ use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, ToTokens};
-use syn::{Attribute, DataStruct, Field, Ident, Lifetime};
+use syn::{DeriveInput, Field, Ident, Lifetime};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
@@ -29,15 +29,25 @@ pub(crate) struct DeriveSequence {
 }
 
 impl DeriveSequence {
-    pub fn derive(
-        ident: Ident,
-        data: DataStruct,
-        attrs: &[Attribute],
-        lifetime: Option<Lifetime>,
-    ) -> TokenStream {
+    /// Parse [`DeriveInput`].
+    pub fn new(input: DeriveInput) -> Self {
+        let lifetime = input
+            .generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone());
+
+        let data = match input.data {
+            syn::Data::Struct(data) => data,
+            _ => abort!(
+                input.ident,
+                "can't derive `Sequence` on this type: only `struct` types are allowed",
+            ),
+        };
+
         let mut state = Self {
-            ident,
-            type_attrs: TypeAttrs::parse(attrs),
+            ident: input.ident,
+            type_attrs: TypeAttrs::parse(&input.attrs),
             lifetime,
             decode_fields: TokenStream::new(),
             decode_result: TokenStream::new(),
@@ -48,7 +58,7 @@ impl DeriveSequence {
             state.derive_field(field);
         }
 
-        state.to_tokens()
+        state
     }
 
     /// Derive handling for a particular `#[field(...)]`
@@ -100,7 +110,7 @@ impl DeriveSequence {
     }
 
     /// Lower the derived output into a [`TokenStream`].
-    fn to_tokens(&self) -> TokenStream {
+    pub fn to_tokens(&self) -> TokenStream {
         let lifetime = match self.lifetime {
             Some(ref lifetime) => quote!(#lifetime),
             None => quote!('_),
