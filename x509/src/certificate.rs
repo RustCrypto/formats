@@ -2,11 +2,11 @@
 
 use crate::{Extensions, Name, Validity};
 use der::asn1::{BitString, ContextSpecific, UIntBytes};
-use der::{Decodable, Decoder, Defer, Sequence, TagMode, TagNumber};
+use der::{Coverage, Decodable, Decoder, Defer, Encodable, Sequence, TagMode, TagNumber};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
-// only support v3 certificates
-// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
+/// only support v3 certificates
+/// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
 pub const X509_CERT_VERSION: u8 = 2;
 
 // Context specific tags for TBSCertificate
@@ -40,7 +40,7 @@ const EXTENSIONS_TAG: TagNumber = TagNumber::new(3);
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Coverage)]
 pub struct TBSCertificate<'a> {
     /// version         [0]  Version DEFAULT v1,
     pub version: Option<u8>,
@@ -143,7 +143,7 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence, Defer)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, Defer, Coverage)]
 pub struct Certificate<'a> {
     /// tbsCertificate       TBSCertificate,
     #[asn1(defer = "true")]

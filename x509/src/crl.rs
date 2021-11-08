@@ -6,6 +6,9 @@ use der::{Decodable, Decoder, Defer, Sequence, Tag, TagMode, TagNumber};
 use spki::AlgorithmIdentifier;
 
 const CRL_EXTENSIONS_TAG: TagNumber = TagNumber::new(0);
+
+/// only support v2 CRLs
+/// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
 pub const X509_CRL_VERSION: u8 = 1;
 
 /// CrlEntry represents the inner most part of the inline definition from the

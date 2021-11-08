@@ -94,6 +94,7 @@
 
 mod attributes;
 mod choice;
+mod coverage;
 mod defer;
 mod enumerated;
 mod sequence;
@@ -103,6 +104,7 @@ mod types;
 use crate::{
     attributes::{FieldAttrs, TypeAttrs, ATTR_NAME},
     choice::DeriveChoice,
+    coverage::DeriveCoverage,
     defer::DeriveDefer,
     enumerated::DeriveEnumerated,
     sequence::DeriveSequence,
@@ -291,6 +293,27 @@ pub fn derive_defer(input: TokenStream) -> TokenStream {
         syn::Data::Enum(_) => "enum",
         syn::Data::Struct(data) => {
             return DeriveDefer::derive(input.ident, data, &input.attrs, lifetime).into()
+        }
+        syn::Data::Union(_) => "union",
+    };
+
+    abort!(
+        input.ident,
+        "can't derive `Sequence` on `{}`: only `struct` types are allowed",
+        data_label
+    )
+}
+
+#[proc_macro_derive(Coverage, attributes(asn1))]
+#[proc_macro_error]
+pub fn derive_coverage(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let lifetime = parse_lifetime(&input.generics);
+
+    let data_label = match input.data {
+        syn::Data::Enum(_) => "enum",
+        syn::Data::Struct(data) => {
+            return DeriveCoverage::derive(input.ident, data, &input.attrs, lifetime).into()
         }
         syn::Data::Union(_) => "union",
     };

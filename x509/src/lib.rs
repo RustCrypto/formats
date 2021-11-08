@@ -28,10 +28,8 @@ mod time;
 mod validity;
 
 pub use crate::{
-    attribute::AttributeTypeAndValue, certificate::Certificate, certificate::DeferCertificate,
-    certificate::TBSCertificate, crl::CertificateList, crl::CrlEntries, crl::CrlEntry,
-    crl::DeferCertificateList, extensions::*, pkix_oids::*, rdn::Name,
-    rdn::RelativeDistinguishedName, time::Time, validity::Validity,
+    attribute::AttributeTypeAndValue, certificate::*, crl::*, extensions::*, pkix_oids::*, rdn::*,
+    time::Time, validity::Validity,
 };
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
