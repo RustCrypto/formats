@@ -92,20 +92,20 @@
 #![crate_type = "proc-macro"]
 #![warn(rust_2018_idioms, trivial_casts, unused_qualifications)]
 
+mod asn1_type;
 mod attributes;
 mod choice;
 mod enumerated;
 mod sequence;
 mod tag;
-mod types;
 
 use crate::{
+    asn1_type::Asn1Type,
     attributes::{FieldAttrs, TypeAttrs, ATTR_NAME},
     choice::DeriveChoice,
     enumerated::DeriveEnumerated,
     sequence::DeriveSequence,
-    tag::{TagMode, TagNumber},
-    types::Asn1Type,
+    tag::{Tag, TagMode, TagNumber},
 };
 use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;

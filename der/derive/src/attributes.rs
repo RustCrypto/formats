@@ -1,6 +1,6 @@
 //! Attribute-related types used by the proc macro
 
-use crate::{Asn1Type, TagMode, TagNumber};
+use crate::{Asn1Type, Tag, TagMode, TagNumber};
 use proc_macro2::TokenStream;
 use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
@@ -117,26 +117,22 @@ impl FieldAttrs {
         }
     }
 
-    /// Get the expected `der::Tag` for this field.
-    pub fn tag(&self) -> Option<TokenStream> {
+    /// Get the expected [`Tag`] for this field.
+    pub fn tag(&self) -> Option<Tag> {
         match self.tag_mode {
-            TagMode::Explicit => self.asn1_type.map(|ty| ty.tag()),
-            TagMode::Implicit => match self.context_specific {
-                Some(tag_number) => {
-                    let tag_number = tag_number.to_tokens();
-
-                    // TODO(tarcieri): handle constructed inner types
-                    let constructed = quote!(false);
-
-                    Some(quote! {
-                        ::der::Tag::ContextSpecific {
-                            number: #tag_number,
-                            constructed: #constructed
-                        }
+            TagMode::Explicit => self.asn1_type.map(Tag::Universal),
+            TagMode::Implicit => self
+                .context_specific
+                .map(|tag_number| {
+                    Some(Tag::ContextSpecific {
+                        // TODO(tarcieri): handle constructed inner types
+                        constructed: false,
+                        number: tag_number,
                     })
-                }
-                None => abort_call_site!("implicit tagging requires an associated `tag_number`"),
-            },
+                })
+                .unwrap_or_else(|| {
+                    abort_call_site!("implicit tagging requires an associated `tag_number`")
+                }),
         }
     }
 
