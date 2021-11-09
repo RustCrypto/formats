@@ -25,7 +25,7 @@ pub use self::{
     any::Any,
     bit_string::{BitString, BitStringIter},
     choice::Choice,
-    context_specific::ContextSpecific,
+    context_specific::{ContextSpecific, ContextSpecificRef},
     generalized_time::GeneralizedTime,
     ia5_string::Ia5String,
     integer::bigint::UIntBytes,

@@ -6,9 +6,9 @@ use crate::{
 };
 use core::cmp::Ordering;
 
-/// Context-specific field.
+/// Context-specific field which wraps an owned inner value.
 ///
-/// This type encodes a field which is specific to a particular context,
+/// This type decodes/encodes a field which is specific to a particular context
 /// and is identified by a [`TagNumber`].
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct ContextSpecific<T> {
@@ -68,13 +68,15 @@ impl<T> ContextSpecific<T> {
         tag_number: TagNumber,
     ) -> Result<Option<Self>>
     where
-        T: DecodeValue<'a>,
+        T: DecodeValue<'a> + Tagged,
     {
         Self::decode_with(decoder, tag_number, |decoder| {
             let header = Header::decode(decoder)?;
-
-            // TODO(tarcieri): check header.tag constructed bit is canonical for `T`
             let value = T::decode_value(decoder, header.length)?;
+
+            if header.tag.is_constructed() != value.tag().is_constructed() {
+                return Err(header.tag.non_canonical_error());
+            }
 
             Ok(Self {
                 tag_number,
@@ -84,7 +86,8 @@ impl<T> ContextSpecific<T> {
         })
     }
 
-    /// Attempt to decode a context-specific field as an [`Any`] type.
+    /// Attempt to decode a context-specific field with the given
+    /// helper callback.
     fn decode_with<'a, F>(
         decoder: &mut Decoder<'a>,
         tag_number: TagNumber,
@@ -106,6 +109,15 @@ impl<T> ContextSpecific<T> {
         }
 
         Ok(None)
+    }
+
+    /// Get a [`ContextSpecificRef`] for this field.
+    pub fn to_ref(&self) -> ContextSpecificRef<'_, T> {
+        ContextSpecificRef {
+            tag_number: self.tag_number,
+            tag_mode: self.tag_mode,
+            value: &self.value,
+        }
     }
 }
 
@@ -132,17 +144,11 @@ where
     T: EncodeValue + Tagged,
 {
     fn value_len(&self) -> Result<Length> {
-        match self.tag_mode {
-            TagMode::Explicit => self.value.encoded_len(),
-            TagMode::Implicit => self.value.value_len(),
-        }
+        self.to_ref().value_len()
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        match self.tag_mode {
-            TagMode::Explicit => self.value.encode(encoder),
-            TagMode::Implicit => self.value.encode_value(encoder),
-        }
+        self.to_ref().encode_value(encoder)
     }
 }
 
@@ -151,15 +157,7 @@ where
     T: Tagged,
 {
     fn tag(&self) -> Tag {
-        let constructed = match self.tag_mode {
-            TagMode::Explicit => true,
-            TagMode::Implicit => self.value.tag().is_constructed(),
-        };
-
-        Tag::ContextSpecific {
-            number: self.tag_number,
-            constructed,
-        }
+        self.to_ref().tag()
     }
 }
 
@@ -168,10 +166,7 @@ where
     T: EncodeValue + ValueOrd + Tagged,
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-        match self.tag_mode {
-            TagMode::Explicit => self.der_cmp(other),
-            TagMode::Implicit => self.value_cmp(other),
-        }
+        self.to_ref().value_cmp(&other.to_ref())
     }
 }
 
@@ -192,6 +187,71 @@ where
                 value: T::from_der(any.value())?,
             }),
             tag => Err(tag.unexpected_error(None)),
+        }
+    }
+}
+
+/// Context-specific field reference.
+///
+/// This type encodes a field which is specific to a particular context
+/// and is identified by a [`TagNumber`].
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct ContextSpecificRef<'a, T> {
+    /// Context-specific tag number sans the leading `0b10000000` class
+    /// identifier bit and `0b100000` constructed flag.
+    pub tag_number: TagNumber,
+
+    /// Tag mode: `EXPLICIT` VS `IMPLICIT`.
+    pub tag_mode: TagMode,
+
+    /// Value of the field.
+    pub value: &'a T,
+}
+
+impl<T> EncodeValue for ContextSpecificRef<'_, T>
+where
+    T: EncodeValue + Tagged,
+{
+    fn value_len(&self) -> Result<Length> {
+        match self.tag_mode {
+            TagMode::Explicit => self.value.encoded_len(),
+            TagMode::Implicit => self.value.value_len(),
+        }
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        match self.tag_mode {
+            TagMode::Explicit => self.value.encode(encoder),
+            TagMode::Implicit => self.value.encode_value(encoder),
+        }
+    }
+}
+
+impl<T> Tagged for ContextSpecificRef<'_, T>
+where
+    T: Tagged,
+{
+    fn tag(&self) -> Tag {
+        let constructed = match self.tag_mode {
+            TagMode::Explicit => true,
+            TagMode::Implicit => self.value.tag().is_constructed(),
+        };
+
+        Tag::ContextSpecific {
+            number: self.tag_number,
+            constructed,
+        }
+    }
+}
+
+impl<T> ValueOrd for ContextSpecificRef<'_, T>
+where
+    T: EncodeValue + ValueOrd + Tagged,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        match self.tag_mode {
+            TagMode::Explicit => self.der_cmp(other),
+            TagMode::Implicit => self.value_cmp(other),
         }
     }
 }
