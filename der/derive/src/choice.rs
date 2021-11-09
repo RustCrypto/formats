@@ -2,7 +2,7 @@
 //! the purposes of decoding/encoding ASN.1 `CHOICE` types as mapped to
 //! enum variants.
 
-use crate::{FieldAttrs, TypeAttrs};
+use crate::{FieldAttrs, Tag, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, ToTokens};
@@ -16,20 +16,8 @@ pub(crate) struct DeriveChoice {
     /// Lifetime of the type.
     lifetime: Option<Lifetime>,
 
-    /// Tags included in the impl body for `der::Choice`.
-    choice_body: TokenStream,
-
-    /// Enum match arms for the impl body for `TryFrom<der::asn1::Any<'_>>`.
-    decode_body: TokenStream,
-
-    /// Enum match arms for the impl body for `der::Encodable::encode`.
-    encode_body: TokenStream,
-
-    /// Enum match arms for the impl body for `der::Encodable::encoded_len`.
-    encoded_len_body: TokenStream,
-
-    /// Enum match arms for the impl body for `der::Tagged::tag`.
-    tagged_body: TokenStream,
+    /// Variants of this `Choice`.
+    variants: Vec<ChoiceVariant>,
 }
 
 impl DeriveChoice {
@@ -51,121 +39,59 @@ impl DeriveChoice {
             .map(|lt| lt.lifetime.clone());
 
         let type_attrs = TypeAttrs::parse(&input.attrs);
+        let variants = data
+            .variants
+            .iter()
+            .map(|variant| ChoiceVariant::new(variant, &type_attrs))
+            .collect();
 
-        let mut state = Self {
+        Self {
             ident: input.ident,
             lifetime,
-            choice_body: TokenStream::new(),
-            decode_body: TokenStream::new(),
-            encode_body: TokenStream::new(),
-            encoded_len_body: TokenStream::new(),
-            tagged_body: TokenStream::new(),
-        };
-
-        for variant in &data.variants {
-            let field_attrs = FieldAttrs::parse(&variant.attrs, &type_attrs);
-            let tag = field_attrs.tag().unwrap_or_else(|| {
-                abort!(
-                    &variant.ident,
-                    "no #[asn1(type=...)] specified for enum variant",
-                )
-            });
-
-            state.derive_variant_choice(&tag);
-            state.derive_variant_decoder(variant, &tag, &field_attrs);
-
-            match &variant.fields {
-                // TODO(tarcieri): handle 0 bindings for ASN.1 NULL
-                Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
-                    state.derive_variant_encoder(variant, &field_attrs);
-                    state.derive_variant_encoded_len(variant);
-                    state.derive_variant_tagged(variant, &tag);
-                }
-                _ => abort!(
-                    &variant.ident,
-                    "enum variant must be a 1-element tuple struct"
-                ),
-            }
+            variants,
         }
-
-        state
-    }
-
-    /// Derive the body of `Choice::can_decode
-    fn derive_variant_choice(&mut self, tag: &TokenStream) {
-        if self.choice_body.is_empty() {
-            tag.clone()
-        } else {
-            quote!(| #tag)
-        }
-        .to_tokens(&mut self.choice_body);
-    }
-
-    /// Derive a match arm of the impl body for `TryFrom<der::asn1::Any<'_>>`.
-    fn derive_variant_decoder(
-        &mut self,
-        variant: &Variant,
-        tag: &TokenStream,
-        field_attrs: &FieldAttrs,
-    ) {
-        let variant_ident = &variant.ident;
-        let decoder = field_attrs.decoder();
-        { quote!(#tag => Ok(Self::#variant_ident(#decoder.try_into()?)),) }
-            .to_tokens(&mut self.decode_body);
-    }
-
-    /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn derive_variant_encoder(&mut self, variant: &Variant, field_attrs: &FieldAttrs) {
-        let variant_ident = &variant.ident;
-        let binding = quote!(variant);
-        let encoder = field_attrs.encoder(&binding);
-        { quote!(Self::#variant_ident(#binding) => #encoder,) }.to_tokens(&mut self.encode_body);
-    }
-
-    /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn derive_variant_encoded_len(&mut self, variant: &Variant) {
-        let variant_ident = &variant.ident;
-        { quote!(Self::#variant_ident(variant) => variant.encoded_len(),) }
-            .to_tokens(&mut self.encoded_len_body);
-    }
-
-    /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn derive_variant_tagged(&mut self, variant: &Variant, tag: &TokenStream) {
-        let variant_ident = &variant.ident;
-        { quote!(Self::#variant_ident(_) => #tag,) }.to_tokens(&mut self.tagged_body);
     }
 
     /// Lower the derived output into a [`TokenStream`].
     pub fn to_tokens(&self) -> TokenStream {
+        let ident = &self.ident;
+
+        // Explicit lifetime or `'_`
         let lifetime = match self.lifetime {
             Some(ref lifetime) => quote!(#lifetime),
             None => quote!('_),
         };
 
-        let lt_param = self
+        // Lifetime parameters
+        // TODO(tarcieri): support multiple lifetimes
+        let lt_params = self
             .lifetime
             .as_ref()
             .map(|_| lifetime.clone())
             .unwrap_or_default();
 
-        let Self {
-            ident,
-            choice_body,
-            decode_body,
-            encode_body,
-            encoded_len_body,
-            tagged_body,
-            ..
-        } = self;
+        let mut can_decode_body = TokenStream::new();
+        let mut decode_body = TokenStream::new();
+        let mut encode_body = TokenStream::new();
+        let mut encoded_len_body = TokenStream::new();
+        let mut tagged_body = TokenStream::new();
+
+        for variant in &self.variants {
+            variant.write_can_decode_tokens(&mut can_decode_body);
+            variant.write_decoder_tokens(&mut decode_body);
+            variant.write_encoder_tokens(&mut encode_body);
+            variant.write_encoded_len_tokens(&mut encoded_len_body);
+            variant.write_tagged_tokens(&mut tagged_body);
+        }
 
         quote! {
-            impl<#lt_param> ::der::Choice<#lifetime> for #ident<#lt_param> {
+            impl<#lt_params> ::der::Choice<#lifetime> for #ident<#lt_params> {
                 fn can_decode(tag: ::der::Tag) -> bool {
-                    matches!(tag, #choice_body)
+                    matches!(tag, #can_decode_body)
                 }
             }
 
-            impl<#lt_param> ::der::Decodable<#lifetime> for #ident<#lt_param> {
+            impl<#lt_params> ::der::Decodable<#lifetime> for #ident<#lt_params> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     match decoder.peek_tag()? {
                         #decode_body
@@ -178,7 +104,7 @@ impl DeriveChoice {
                 }
             }
 
-            impl<#lt_param> ::der::Encodable for #ident<#lt_param> {
+            impl<#lt_params> ::der::Encodable for #ident<#lt_params> {
                 fn encode(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
                     match self {
                         #encode_body
@@ -192,7 +118,7 @@ impl DeriveChoice {
                 }
             }
 
-            impl<#lt_param> ::der::Tagged for #ident<#lt_param> {
+            impl<#lt_params> ::der::Tagged for #ident<#lt_params> {
                 fn tag(&self) -> ::der::Tag {
                     match self {
                         #tagged_body
@@ -200,5 +126,191 @@ impl DeriveChoice {
                 }
             }
         }
+    }
+}
+
+/// "IR" for a variant of a derived `Choice`.
+pub struct ChoiceVariant {
+    /// Variant name.
+    ident: Ident,
+
+    /// "Field" (in this case variant)-level attributes.
+    attrs: FieldAttrs,
+
+    /// Tag for the ASN.1 type.
+    tag: Tag,
+}
+
+impl ChoiceVariant {
+    /// Create a new [`ChoiceVariant`] from the input [`Variant`].
+    fn new(input: &Variant, type_attrs: &TypeAttrs) -> Self {
+        let ident = input.ident.clone();
+        let attrs = FieldAttrs::parse(&input.attrs, type_attrs);
+
+        // Validate that variant is a 1-element tuple struct
+        match &input.fields {
+            // TODO(tarcieri): handle 0 bindings for ASN.1 NULL
+            Fields::Unnamed(fields) if fields.unnamed.len() == 1 => (),
+            _ => abort!(&ident, "enum variant must be a 1-element tuple struct"),
+        }
+
+        let tag = attrs
+            .tag()
+            .unwrap_or_else(|| abort!(&ident, "no #[asn1(type=...)] specified for enum variant",));
+
+        Self { ident, attrs, tag }
+    }
+
+    /// Lower to the method body for `Choice::can_decode`.
+    fn write_can_decode_tokens(&self, body: &mut TokenStream) {
+        let tag = self.tag.to_tokens();
+        if body.is_empty() { tag } else { quote!(| #tag) }.to_tokens(body);
+    }
+
+    /// Derive a match arm of the impl body for `TryFrom<der::asn1::Any<'_>>`.
+    fn write_decoder_tokens(&self, body: &mut TokenStream) {
+        let tag = self.tag.to_tokens();
+        let ident = &self.ident;
+        let decoder = self.attrs.decoder();
+        { quote!(#tag => Ok(Self::#ident(#decoder.try_into()?)),) }.to_tokens(body);
+    }
+
+    /// Derive a match arm for the impl body for `der::Encodable::encode`.
+    fn write_encoder_tokens(&self, body: &mut TokenStream) {
+        let ident = &self.ident;
+        let binding = quote!(variant);
+        let encoder = self.attrs.encoder(&binding);
+        { quote!(Self::#ident(#binding) => #encoder,) }.to_tokens(body);
+    }
+
+    /// Derive a match arm for the impl body for `der::Encodable::encode`.
+    fn write_encoded_len_tokens(&self, body: &mut TokenStream) {
+        let ident = &self.ident;
+        { quote!(Self::#ident(variant) => variant.encoded_len(),) }.to_tokens(body);
+    }
+
+    /// Derive a match arm for the impl body for `der::Tagged::tag`.
+    fn write_tagged_tokens(&self, body: &mut TokenStream) {
+        let ident = &self.ident;
+        let tag = self.tag.to_tokens();
+        { quote!(Self::#ident(_) => #tag,) }.to_tokens(body);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DeriveChoice;
+    use crate::{Asn1Type, Tag, TagMode};
+    use syn::parse_quote;
+
+    /// Based on `Time` as defined in RFC 5280:
+    /// <https://tools.ietf.org/html/rfc5280#page-117>
+    ///
+    /// ```text
+    /// Time ::= CHOICE {
+    ///      utcTime        UTCTime,
+    ///      generalTime    GeneralizedTime }
+    /// ```
+    #[test]
+    fn time_example() {
+        let input = parse_quote! {
+            pub enum Time {
+                #[asn1(type = "UTCTime")]
+                UtcTime(UtcTime),
+
+                #[asn1(type = "GeneralizedTime")]
+                GeneralTime(GeneralizedTime),
+            }
+        };
+
+        let ir = DeriveChoice::new(input);
+        assert_eq!(ir.ident, "Time");
+        assert_eq!(ir.lifetime, None);
+        assert_eq!(ir.variants.len(), 2);
+
+        let utc_time = &ir.variants[0];
+        assert_eq!(utc_time.ident, "UtcTime");
+        assert_eq!(utc_time.attrs.asn1_type, Some(Asn1Type::UtcTime));
+        assert_eq!(utc_time.attrs.context_specific, None);
+        assert_eq!(utc_time.attrs.tag_mode, TagMode::Explicit);
+        assert_eq!(utc_time.tag, Tag::Universal(Asn1Type::UtcTime));
+
+        let general_time = &ir.variants[1];
+        assert_eq!(general_time.ident, "GeneralTime");
+        assert_eq!(
+            general_time.attrs.asn1_type,
+            Some(Asn1Type::GeneralizedTime)
+        );
+        assert_eq!(general_time.attrs.context_specific, None);
+        assert_eq!(general_time.attrs.tag_mode, TagMode::Explicit);
+        assert_eq!(general_time.tag, Tag::Universal(Asn1Type::GeneralizedTime));
+    }
+
+    /// `IMPLICIT` tagged example
+    #[test]
+    fn implicit_example() {
+        let input = parse_quote! {
+            #[asn1(tag_mode = "IMPLICIT")]
+            pub enum ImplicitChoice<'a> {
+                #[asn1(context_specific = "0", type = "BIT STRING")]
+                BitString(BitString<'a>),
+
+                #[asn1(context_specific = "1", type = "GeneralizedTime")]
+                Time(GeneralizedTime),
+
+                #[asn1(context_specific = "2", type = "UTF8String")]
+                Utf8String(String),
+            }
+        };
+
+        let ir = DeriveChoice::new(input);
+        assert_eq!(ir.ident, "ImplicitChoice");
+        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(ir.variants.len(), 3);
+
+        let bit_string = &ir.variants[0];
+        assert_eq!(bit_string.ident, "BitString");
+        assert_eq!(bit_string.attrs.asn1_type, Some(Asn1Type::BitString));
+        assert_eq!(
+            bit_string.attrs.context_specific,
+            Some("0".parse().unwrap())
+        );
+        assert_eq!(bit_string.attrs.tag_mode, TagMode::Implicit);
+        assert_eq!(
+            bit_string.tag,
+            Tag::ContextSpecific {
+                constructed: false,
+                number: "0".parse().unwrap()
+            }
+        );
+
+        let time = &ir.variants[1];
+        assert_eq!(time.ident, "Time");
+        assert_eq!(time.attrs.asn1_type, Some(Asn1Type::GeneralizedTime));
+        assert_eq!(time.attrs.context_specific, Some("1".parse().unwrap()));
+        assert_eq!(time.attrs.tag_mode, TagMode::Implicit);
+        assert_eq!(
+            time.tag,
+            Tag::ContextSpecific {
+                constructed: false,
+                number: "1".parse().unwrap()
+            }
+        );
+
+        let utf8_string = &ir.variants[2];
+        assert_eq!(utf8_string.ident, "Utf8String");
+        assert_eq!(utf8_string.attrs.asn1_type, Some(Asn1Type::Utf8String));
+        assert_eq!(
+            utf8_string.attrs.context_specific,
+            Some("2".parse().unwrap())
+        );
+        assert_eq!(utf8_string.attrs.tag_mode, TagMode::Implicit);
+        assert_eq!(
+            utf8_string.tag,
+            Tag::ContextSpecific {
+                constructed: false,
+                number: "2".parse().unwrap()
+            }
+        );
     }
 }
