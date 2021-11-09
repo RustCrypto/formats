@@ -3,16 +3,14 @@
 
 use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
+use proc_macro_error::abort;
 use quote::{quote, ToTokens};
-use syn::{Attribute, DataStruct, Field, Ident, Lifetime};
+use syn::{DataStruct, DeriveInput, Field, Ident, Lifetime};
 
 /// Derive a `Sequence` struct for a given struct with Defer'ed decoding of designated fields
 pub(crate) struct DeriveDefer {
     /// Name of the enum type.
     ident: Ident,
-
-    /// `asn1` attributes defined at the type level.
-    type_attrs: TypeAttrs,
 
     /// Lifetime of the type.
     lifetime: Option<Lifetime>,
@@ -31,15 +29,24 @@ pub(crate) struct DeriveDefer {
 }
 
 impl DeriveDefer {
-    pub fn derive(
-        ident: Ident,
-        data: DataStruct,
-        attrs: &[Attribute],
-        lifetime: Option<Lifetime>,
-    ) -> TokenStream {
+    pub fn new(input: DeriveInput) -> Self {
+        let data = match input.data {
+            syn::Data::Struct(data) => data,
+            _ => abort!(
+                input.ident,
+                "can't derive `Sequence` on this type: only `struct` types are allowed",
+            ),
+        };
+
+        // TODO(tarcieri): properly handle multiple lifetimes
+        let lifetime = input
+            .generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone());
+
         let mut state = Self {
-            ident,
-            type_attrs: TypeAttrs::parse(attrs),
+            ident: input.ident,
             lifetime,
             decode_fields: TokenStream::new(),
             decode_result: TokenStream::new(),
@@ -47,24 +54,26 @@ impl DeriveDefer {
             alt_struct_name: String::new(),
         };
 
+        let type_attrs = TypeAttrs::parse(&input.attrs);
+
         // keep track of field index so first field can be handled differently (i.e., by deferring
         // decoding and returning bytes instead of a structure.
         for (_field_count, field) in (&data.fields).into_iter().enumerate() {
-            let field_attrs = FieldAttrs::parse(&field.attrs);
+            let field_attrs = FieldAttrs::parse(&field.attrs, &type_attrs);
             if Some(true) == field_attrs.defer {
                 state.derive_field_defer(field);
             } else {
-                state.derive_field(field);
+                state.derive_field(field, &type_attrs);
             }
         }
 
-        state.derive_alt_struct(&data);
-        state.to_tokens()
+        state.derive_alt_struct(&data, &type_attrs);
+        state
     }
 
     /// Derive code for a structure based on a given structure but with Defer prepended to the name
     /// and the first field served up as undecoded bytes instead of as a parsed structure.
-    fn derive_alt_struct(&mut self, data: &DataStruct) {
+    fn derive_alt_struct(&mut self, data: &DataStruct, type_attrs: &TypeAttrs) {
         self.alt_struct_name = format!("Defer{}", self.ident);
         let sname = syn::Ident::new(&self.alt_struct_name, self.ident.span());
 
@@ -84,7 +93,7 @@ impl DeriveDefer {
                 .expect("no name on struct field i.e. tuple structs unsupported");
 
             let ty = field.ty.clone();
-            let field_attrs = FieldAttrs::parse(&field.attrs);
+            let field_attrs = FieldAttrs::parse(&field.attrs, type_attrs);
             let f = if Some(true) == field_attrs.defer {
                 comment = format!(
                     "Structure supporting deferred decoding of {} field in the {} SEQUENCE",
@@ -125,15 +134,15 @@ impl DeriveDefer {
     }
 
     /// Derive handling for a particular `#[field(...)]`
-    fn derive_field(&mut self, field: &Field) {
+    fn derive_field(&mut self, field: &Field, type_attrs: &TypeAttrs) {
         let name = field
             .ident
             .as_ref()
             .cloned()
             .expect("no name on struct field i.e. tuple structs unsupported");
 
-        let field_attrs = FieldAttrs::parse(&field.attrs);
-        self.derive_field_decoder(&name, &field_attrs);
+        let field_attrs = FieldAttrs::parse(&field.attrs, type_attrs);
+        self.derive_field_decoder(&name, &field_attrs, type_attrs);
     }
 
     /// Derive code for deferring decoding of a field of a sequence
@@ -154,13 +163,18 @@ impl DeriveDefer {
     }
 
     /// Derive code for decoding a field of a sequence
-    fn derive_field_decoder(&mut self, name: &Ident, field_attrs: &FieldAttrs) {
+    fn derive_field_decoder(
+        &mut self,
+        name: &Ident,
+        field_attrs: &FieldAttrs,
+        type_attrs: &TypeAttrs,
+    ) {
         let field_binding = if field_attrs.asn1_type.is_some() {
-            let field_decoder = field_attrs.decoder(&self.type_attrs);
+            let field_decoder = field_attrs.decoder();
             quote! { let #name = #field_decoder?.try_into()?; }
         } else {
             // TODO(tarcieri): IMPLICIT support
-            if self.type_attrs.tag_mode == TagMode::Implicit {
+            if type_attrs.tag_mode == TagMode::Implicit {
                 panic!(
                     "IMPLICIT tagging not presently supported in this context: {}",
                     name
@@ -176,7 +190,7 @@ impl DeriveDefer {
     }
 
     /// Finish deriving a struct
-    fn to_tokens(&self) -> TokenStream {
+    pub fn to_tokens(&self) -> TokenStream {
         self.alt_struct.to_token_stream()
     }
 }

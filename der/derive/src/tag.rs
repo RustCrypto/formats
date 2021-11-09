@@ -22,9 +22,9 @@ pub(crate) enum TagMode {
 }
 
 impl TagMode {
-    /// Get a [`TokenStream`] identifying the `der` crate's corresponding
-    /// enum variant for this tag mode.
-    pub fn tokens(self) -> TokenStream {
+    /// Lower this [`TagMode`] to a [`TokenStream`] with the `der`
+    /// crate's corresponding enum variant for this tag mode.
+    pub fn to_tokens(self) -> TokenStream {
         match self {
             TagMode::Explicit => quote!(::der::TagMode::Explicit),
             TagMode::Implicit => quote!(::der::TagMode::Implicit),

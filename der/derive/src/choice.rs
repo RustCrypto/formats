@@ -6,15 +6,12 @@ use crate::{FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, ToTokens};
-use syn::{Attribute, DataEnum, Fields, Ident, Lifetime, Variant};
+use syn::{DeriveInput, Fields, Ident, Lifetime, Variant};
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
     /// Name of the enum type.
     ident: Ident,
-
-    /// `asn1` attributes defined at the type level.
-    type_attrs: TypeAttrs,
 
     /// Lifetime of the type.
     lifetime: Option<Lifetime>,
@@ -36,16 +33,27 @@ pub(crate) struct DeriveChoice {
 }
 
 impl DeriveChoice {
-    /// Derive `Decodable` on an enum.
-    pub fn derive(
-        ident: Ident,
-        data: DataEnum,
-        attrs: &[Attribute],
-        lifetime: Option<Lifetime>,
-    ) -> TokenStream {
+    /// Parse [`DeriveInput`].
+    pub fn new(input: DeriveInput) -> Self {
+        let data = match input.data {
+            syn::Data::Enum(data) => data,
+            _ => abort!(
+                input.ident,
+                "can't derive `Choice` on this type: only `enum` types are allowed",
+            ),
+        };
+
+        // TODO(tarcieri): properly handle multiple lifetimes
+        let lifetime = input
+            .generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone());
+
+        let type_attrs = TypeAttrs::parse(&input.attrs);
+
         let mut state = Self {
-            ident,
-            type_attrs: TypeAttrs::parse(attrs),
+            ident: input.ident,
             lifetime,
             choice_body: TokenStream::new(),
             decode_body: TokenStream::new(),
@@ -55,8 +63,8 @@ impl DeriveChoice {
         };
 
         for variant in &data.variants {
-            let field_attrs = FieldAttrs::parse(&variant.attrs);
-            let tag = field_attrs.tag(&state.type_attrs).unwrap_or_else(|| {
+            let field_attrs = FieldAttrs::parse(&variant.attrs, &type_attrs);
+            let tag = field_attrs.tag().unwrap_or_else(|| {
                 abort!(
                     &variant.ident,
                     "no #[asn1(type=...)] specified for enum variant",
@@ -80,7 +88,7 @@ impl DeriveChoice {
             }
         }
 
-        state.to_tokens()
+        state
     }
 
     /// Derive the body of `Choice::can_decode
@@ -101,7 +109,7 @@ impl DeriveChoice {
         field_attrs: &FieldAttrs,
     ) {
         let variant_ident = &variant.ident;
-        let decoder = field_attrs.decoder(&self.type_attrs);
+        let decoder = field_attrs.decoder();
         { quote!(#tag => Ok(Self::#variant_ident(#decoder.try_into()?)),) }
             .to_tokens(&mut self.decode_body);
     }
@@ -110,7 +118,7 @@ impl DeriveChoice {
     fn derive_variant_encoder(&mut self, variant: &Variant, field_attrs: &FieldAttrs) {
         let variant_ident = &variant.ident;
         let binding = quote!(variant);
-        let encoder = field_attrs.encoder(&binding, &self.type_attrs);
+        let encoder = field_attrs.encoder(&binding);
         { quote!(Self::#variant_ident(#binding) => #encoder,) }.to_tokens(&mut self.encode_body);
     }
 
@@ -128,7 +136,7 @@ impl DeriveChoice {
     }
 
     /// Lower the derived output into a [`TokenStream`].
-    fn to_tokens(&self) -> TokenStream {
+    pub fn to_tokens(&self) -> TokenStream {
         let lifetime = match self.lifetime {
             Some(ref lifetime) => quote!(#lifetime),
             None => quote!('_),

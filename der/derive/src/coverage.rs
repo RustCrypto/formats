@@ -3,16 +3,14 @@
 
 use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
+use proc_macro_error::abort;
 use quote::{quote, ToTokens};
-use syn::{Attribute, DataStruct, Field, Ident, Lifetime};
+use syn::{DataStruct, DeriveInput, Field, Ident, Lifetime};
 
 /// Derive a `Sequence` struct for a given struct with Defer'ed decoding of designated fields
 pub(crate) struct DeriveCoverage {
     /// Name of the enum type.
     ident: Ident,
-
-    /// `asn1` attributes defined at the type level.
-    type_attrs: TypeAttrs,
 
     /// Lifetime of the type.
     lifetime: Option<Lifetime>,
@@ -25,19 +23,31 @@ pub(crate) struct DeriveCoverage {
 }
 
 impl DeriveCoverage {
-    pub fn derive(
-        ident: Ident,
-        data: DataStruct,
-        attrs: &[Attribute],
-        lifetime: Option<Lifetime>,
-    ) -> TokenStream {
+    /// Parse [`DeriveInput`].
+    pub fn new(input: DeriveInput) -> Self {
+        let data = match input.data {
+            syn::Data::Struct(data) => data,
+            _ => abort!(
+                input.ident,
+                "can't derive `Sequence` on this type: only `struct` types are allowed",
+            ),
+        };
+
+        // TODO(tarcieri): properly handle multiple lifetimes
+        let lifetime = input
+            .generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone());
+
         let mut state = Self {
-            ident,
-            type_attrs: TypeAttrs::parse(attrs),
+            ident: input.ident,
             lifetime,
             alt_struct: TokenStream::new(),
             field_count: 0,
         };
+
+        let type_attrs = TypeAttrs::parse(&input.attrs);
 
         // keep track of field index so first field can be handled differently (i.e., by deferring
         // decoding and returning bytes instead of a structure.
@@ -49,7 +59,7 @@ impl DeriveCoverage {
                 if field_count_in == field_count_out {
                     state.derive_field_defer(field, &mut decode_fields, &mut decode_result);
                 } else {
-                    state.derive_field(field, &mut decode_fields, &mut decode_result);
+                    state.derive_field(field, &mut decode_fields, &mut decode_result, &type_attrs);
                 }
             }
             state.derive_alt_struct(&data, field_count_out, &decode_fields, &decode_result);
@@ -59,7 +69,7 @@ impl DeriveCoverage {
                 state.field_count += 1;
             }
         }
-        state.to_tokens()
+        state
     }
 
     /// Derive code for a structure based on a given structure but with Defer prepended to the name
@@ -151,6 +161,7 @@ impl DeriveCoverage {
         field: &Field,
         decode_fields: &mut TokenStream,
         decode_result: &mut TokenStream,
+        type_attrs: &TypeAttrs,
     ) {
         let name = field
             .ident
@@ -158,8 +169,14 @@ impl DeriveCoverage {
             .cloned()
             .expect("no name on struct field i.e. tuple structs unsupported");
 
-        let field_attrs = FieldAttrs::parse(&field.attrs);
-        self.derive_field_decoder(&name, &field_attrs, decode_fields, decode_result);
+        let field_attrs = FieldAttrs::parse(&field.attrs, type_attrs);
+        self.derive_field_decoder(
+            &name,
+            &field_attrs,
+            decode_fields,
+            decode_result,
+            type_attrs,
+        );
     }
 
     /// Derive code for deferring decoding of a field of a sequence
@@ -191,13 +208,14 @@ impl DeriveCoverage {
         field_attrs: &FieldAttrs,
         decode_fields: &mut TokenStream,
         decode_result: &mut TokenStream,
+        type_attrs: &TypeAttrs,
     ) {
         let field_binding = if field_attrs.asn1_type.is_some() {
-            let field_decoder = field_attrs.decoder(&self.type_attrs);
+            let field_decoder = field_attrs.decoder();
             quote! { let #name = #field_decoder?.try_into()?; }
         } else {
             // TODO(tarcieri): IMPLICIT support
-            if self.type_attrs.tag_mode == TagMode::Implicit {
+            if type_attrs.tag_mode == TagMode::Implicit {
                 panic!(
                     "IMPLICIT tagging not presently supported in this context: {}",
                     name
@@ -213,7 +231,7 @@ impl DeriveCoverage {
     }
 
     /// Finish deriving a struct
-    fn to_tokens(&self) -> TokenStream {
+    pub fn to_tokens(&self) -> TokenStream {
         self.alt_struct.to_token_stream()
     }
 }
