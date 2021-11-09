@@ -69,6 +69,33 @@ impl DeriveCoverage {
                 state.field_count += 1;
             }
         }
+
+        let mut func_invokes = TokenStream::new();
+        for (field_count_out, _field_out) in (&data.fields).into_iter().enumerate() {
+            let alt_func_name = format!("coverage{}_{}", field_count_out, state.ident);
+            let fname = syn::Ident::new(&alt_func_name.to_lowercase(), state.ident.span());
+            let f2 = quote! {
+                #fname(der_encoded);
+            };
+            f2.to_tokens(&mut func_invokes);
+        }
+
+        let compound_func_name = format!("coverage_{}", state.ident);
+        let cfname = syn::Ident::new(&compound_func_name.to_lowercase(), state.ident.span());
+
+        let comment = format!(
+            "Structure supporting deferred decode/reencode test for each field the {} SEQUENCE",
+            state.ident
+        );
+
+        let f1 = quote! {
+            #[doc = #comment]
+            pub fn #cfname(der_encoded: &[u8]) {
+                #func_invokes
+            }
+        };
+        f1.to_tokens(&mut state.alt_struct);
+
         state
     }
 
@@ -96,9 +123,11 @@ impl DeriveCoverage {
 
         let mut fields = TokenStream::new();
 
+        self.field_count = 0;
         let mut comment: String = String::new();
         let mut defer_name = proc_macro2::Ident::new(&alt_struct_name, self.ident.span());
         for (field_count, field) in (&data.fields).into_iter().enumerate() {
+            self.field_count += 1;
             let name = field
                 .ident
                 .as_ref()
@@ -141,11 +170,11 @@ impl DeriveCoverage {
             }
 
             /// coverage test for defer decoded field
-            pub fn #fname(der_encoded_cert: &[u8]) {
-                let defer_result = #sname::from_der(der_encoded_cert);
+            pub fn #fname(der_encoded: &[u8]) {
+                let defer_result = #sname::from_der(der_encoded);
                 let defer = defer_result.unwrap();
 
-                let full_result = #oname::from_der(der_encoded_cert);
+                let full_result = #oname::from_der(der_encoded);
                 let full = full_result.unwrap();
                 let reencoded = full.#defer_name.to_vec().unwrap();
                 assert_eq!(defer.#defer_name, reencoded);
