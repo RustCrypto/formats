@@ -4,7 +4,7 @@
 use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{DeriveInput, Field, Ident, Lifetime};
 
 /// Derive the `Sequence` trait for a struct
@@ -70,21 +70,25 @@ impl DeriveSequence {
             .map(|_| lifetime.clone())
             .unwrap_or_default();
 
-        let mut decode_fields = TokenStream::new();
-        let mut decode_result = TokenStream::new();
-        let mut encode_fields = TokenStream::new();
+        let mut decode_body = Vec::new();
+        let mut decode_result = Vec::new();
+        let mut encode_body = Vec::new();
 
         for field in &self.fields {
-            field.write_decode_tokens(&mut decode_fields, &mut decode_result);
-            field.write_encode_tokens(&mut encode_fields);
+            decode_body.push(field.to_decode_tokens());
+            decode_result.push(&field.ident);
+            encode_body.push(field.to_encode_tokens());
         }
 
         quote! {
             impl<#lt_params> ::der::Decodable<#lifetime> for #ident<#lt_params> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     decoder.sequence(|decoder| {
-                        #decode_fields
-                        Ok(Self { #decode_result })
+                        #(#decode_body)*
+
+                        Ok(Self {
+                            #(#decode_result),*
+                        })
                     })
                 }
             }
@@ -94,7 +98,9 @@ impl DeriveSequence {
                 where
                     F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
                 {
-                    f(&[#encode_fields])
+                    f(&[
+                        #(#encode_body),*
+                    ])
                 }
             }
         }
@@ -130,32 +136,27 @@ impl SequenceField {
     }
 
     /// Derive code for decoding a field of a sequence.
-    fn write_decode_tokens(&self, fields_body: &mut TokenStream, result_body: &mut TokenStream) {
+    fn to_decode_tokens(&self) -> TokenStream {
         let ident = &self.ident;
-        let field_binding = if self.attrs.asn1_type.is_some() {
+        if self.attrs.asn1_type.is_some() {
             let field_decoder = self.attrs.decoder();
             quote! { let #ident = #field_decoder.try_into()?; }
         } else {
             quote! { let #ident = decoder.decode()?; }
-        };
-        field_binding.to_tokens(fields_body);
-
-        let field_result = quote!(#ident,);
-        field_result.to_tokens(result_body);
+        }
     }
 
     /// Derive code for encoding a field of a sequence.
-    fn write_encode_tokens(&self, body: &mut TokenStream) {
+    fn to_encode_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         let binding = quote!(&self.#ident);
-        self.attrs
-            .asn1_type
-            .map(|ty| {
+        match self.attrs.asn1_type {
+            Some(ty) => {
                 let encoder = ty.encoder(&binding);
-                quote!(&#encoder?,)
-            })
-            .unwrap_or_else(|| quote!(#binding,))
-            .to_tokens(body);
+                quote!(&#encoder?)
+            }
+            None => quote!(#binding),
+        }
     }
 }
 

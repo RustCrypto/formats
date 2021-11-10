@@ -5,7 +5,7 @@
 use crate::ATTR_NAME;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, Variant};
 
 /// Valid options for the `#[repr]` attribute on `Enumerated` types.
@@ -89,9 +89,9 @@ impl DeriveEnumerated {
         let ident = &self.ident;
         let repr = &self.repr;
 
-        let mut try_from_body = TokenStream::new();
+        let mut try_from_body = Vec::new();
         for variant in &self.variants {
-            variant.write_try_from_tokens(&mut try_from_body);
+            try_from_body.push(variant.to_try_from_tokens());
         }
 
         quote! {
@@ -123,7 +123,7 @@ impl DeriveEnumerated {
 
                 fn try_from(n: #repr) -> ::der::Result<Self> {
                     match n {
-                        #try_from_body
+                        #(#try_from_body)*
                         _ => Err(der::Tag::Enumerated.value_error())
                     }
                 }
@@ -170,10 +170,12 @@ impl EnumeratedVariant {
     }
 
     /// Write the body for the derived [`TryFrom`] impl.
-    pub fn write_try_from_tokens(&self, body: &mut TokenStream) {
+    pub fn to_try_from_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         let discriminant = &self.discriminant;
-        { quote!(#discriminant => Ok(Self::#ident),) }.to_tokens(body);
+        quote! {
+            #discriminant => Ok(Self::#ident),
+        }
     }
 }
 

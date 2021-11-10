@@ -5,7 +5,7 @@
 use crate::{FieldAttrs, Tag, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{DeriveInput, Fields, Ident, Lifetime, Variant};
 
 /// Derive the `Choice` trait for an enum.
@@ -70,31 +70,31 @@ impl DeriveChoice {
             .map(|_| lifetime.clone())
             .unwrap_or_default();
 
-        let mut can_decode_body = TokenStream::new();
-        let mut decode_body = TokenStream::new();
-        let mut encode_body = TokenStream::new();
-        let mut encoded_len_body = TokenStream::new();
-        let mut tagged_body = TokenStream::new();
+        let mut can_decode_body = Vec::new();
+        let mut decode_body = Vec::new();
+        let mut encode_body = Vec::new();
+        let mut encoded_len_body = Vec::new();
+        let mut tagged_body = Vec::new();
 
         for variant in &self.variants {
-            variant.write_can_decode_tokens(&mut can_decode_body);
-            variant.write_decoder_tokens(&mut decode_body);
-            variant.write_encoder_tokens(&mut encode_body);
-            variant.write_encoded_len_tokens(&mut encoded_len_body);
-            variant.write_tagged_tokens(&mut tagged_body);
+            can_decode_body.push(variant.tag.to_tokens());
+            decode_body.push(variant.to_decode_tokens());
+            encode_body.push(variant.to_encode_tokens());
+            encoded_len_body.push(variant.to_encoded_len_tokens());
+            tagged_body.push(variant.to_tagged_tokens());
         }
 
         quote! {
             impl<#lt_params> ::der::Choice<#lifetime> for #ident<#lt_params> {
                 fn can_decode(tag: ::der::Tag) -> bool {
-                    matches!(tag, #can_decode_body)
+                    matches!(tag, #(#can_decode_body)|*)
                 }
             }
 
             impl<#lt_params> ::der::Decodable<#lifetime> for #ident<#lt_params> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     match decoder.peek_tag()? {
-                        #decode_body
+                        #(#decode_body)*
                         actual => Err(der::ErrorKind::TagUnexpected {
                             expected: None,
                             actual
@@ -107,13 +107,13 @@ impl DeriveChoice {
             impl<#lt_params> ::der::Encodable for #ident<#lt_params> {
                 fn encode(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
                     match self {
-                        #encode_body
+                        #(#encode_body)*
                     }
                 }
 
                 fn encoded_len(&self) -> ::der::Result<::der::Length> {
                     match self {
-                        #encoded_len_body
+                        #(#encoded_len_body)*
                     }
                 }
             }
@@ -121,7 +121,7 @@ impl DeriveChoice {
             impl<#lt_params> ::der::Tagged for #ident<#lt_params> {
                 fn tag(&self) -> ::der::Tag {
                     match self {
-                        #tagged_body
+                        #(#tagged_body)*
                     }
                 }
             }
@@ -161,39 +161,41 @@ impl ChoiceVariant {
         Self { ident, attrs, tag }
     }
 
-    /// Lower to the method body for `Choice::can_decode`.
-    fn write_can_decode_tokens(&self, body: &mut TokenStream) {
-        let tag = self.tag.to_tokens();
-        if body.is_empty() { tag } else { quote!(| #tag) }.to_tokens(body);
-    }
-
     /// Derive a match arm of the impl body for `TryFrom<der::asn1::Any<'_>>`.
-    fn write_decoder_tokens(&self, body: &mut TokenStream) {
+    fn to_decode_tokens(&self) -> TokenStream {
         let tag = self.tag.to_tokens();
         let ident = &self.ident;
         let decoder = self.attrs.decoder();
-        { quote!(#tag => Ok(Self::#ident(#decoder.try_into()?)),) }.to_tokens(body);
+        quote! {
+            #tag => Ok(Self::#ident(#decoder.try_into()?)),
+        }
     }
 
     /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn write_encoder_tokens(&self, body: &mut TokenStream) {
+    fn to_encode_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         let binding = quote!(variant);
         let encoder = self.attrs.encoder(&binding);
-        { quote!(Self::#ident(#binding) => #encoder,) }.to_tokens(body);
+        quote! {
+            Self::#ident(#binding) => #encoder,
+        }
     }
 
     /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn write_encoded_len_tokens(&self, body: &mut TokenStream) {
+    fn to_encoded_len_tokens(&self) -> TokenStream {
         let ident = &self.ident;
-        { quote!(Self::#ident(variant) => variant.encoded_len(),) }.to_tokens(body);
+        quote! {
+            Self::#ident(variant) => variant.encoded_len(),
+        }
     }
 
     /// Derive a match arm for the impl body for `der::Tagged::tag`.
-    fn write_tagged_tokens(&self, body: &mut TokenStream) {
+    fn to_tagged_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         let tag = self.tag.to_tokens();
-        { quote!(Self::#ident(_) => #tag,) }.to_tokens(body);
+        quote! {
+            Self::#ident(_) => #tag,
+        }
     }
 }
 
