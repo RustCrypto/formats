@@ -88,27 +88,12 @@ impl<'a> Encoder<'a> {
     where
         T: EncodeValue + Tagged,
     {
-        let constructed = match tag_mode {
-            TagMode::Explicit => true,
-            TagMode::Implicit => value.tag().is_constructed(),
-        };
-
-        let tag = Tag::ContextSpecific {
-            number: tag_number,
-            constructed,
-        };
-
-        let value_len = match tag_mode {
-            TagMode::Explicit => value.encoded_len(),
-            TagMode::Implicit => value.value_len(),
-        }?;
-
-        Header::new(tag, value_len)?.encode(self)?;
-
-        match tag_mode {
-            TagMode::Explicit => value.encode(self),
-            TagMode::Implicit => value.encode_value(self),
+        ContextSpecificRef {
+            tag_number,
+            tag_mode,
+            value,
         }
+        .encode(self)
     }
 
     /// Encode the provided value as an ASN.1 `GeneralizedTime`

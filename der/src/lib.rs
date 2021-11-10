@@ -2,13 +2,11 @@
 
 //! # Usage
 //! ## [`Decodable`] and [`Encodable`] traits
-//!
 //! The [`Decodable`] and [`Encodable`] traits are the core abstractions on
 //! which this crate is built and control what types can be (de)serialized
 //! as ASN.1 DER.
 //!
 //! The traits are impl'd for the following Rust core types:
-//!
 //! - `()`: ASN.1 `NULL`. See also [`Null`].
 //! - [`bool`]: ASN.1 `BOOLEAN`.
 //! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`.
@@ -23,7 +21,6 @@
 //! - `[T; N]`: ASN.1 `SEQUENCE OF`. See also [`SequenceOf`].
 //!
 //! The following ASN.1 types provided by this crate also impl these traits:
-//!
 //! - [`Any`]: ASN.1 `ANY`
 //! - [`BitString`]: ASN.1 `BIT STRING`
 //! - [`GeneralizedTime`]: ASN.1 `GeneralizedTime`
@@ -37,6 +34,10 @@
 //! - [`UIntBytes`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes
 //! - [`UtcTime`]: ASN.1 `UTCTime`
 //! - [`Utf8String`]: ASN.1 `UTF8String`
+//!
+//! Context specific fields can be modeled using these generic types:
+//! - [`ContextSpecific`]: decoder/encoder for owned context-specific fields
+//! - [`ContextSpecificRef`]: encode-only type for references to context-specific fields
 //!
 //! ## Example
 //! The following example implements X.509's `AlgorithmIdentifier` message type
@@ -296,7 +297,8 @@
 //! [A Warm Welcome to ASN.1 and DER]: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/
 //!
 //! [`Any`]: asn1::Any
-//! [`UIntBytes`]: asn1::UIntBytes
+//! [`ContextSpecific`]: asn1::ContextSpecific
+//! [`ContextSpecificRef`]: asn1::ContextSpecificRef
 //! [`BitString`]: asn1::BitString
 //! [`GeneralizedTime`]: asn1::GeneralizedTime
 //! [`Ia5String`]: asn1::Ia5String
@@ -306,6 +308,7 @@
 //! [`PrintableString`]: asn1::PrintableString
 //! [`SequenceOf`]: asn1::SequenceOf
 //! [`SetOf`]: asn1::SetOf
+//! [`UIntBytes`]: asn1::UIntBytes
 //! [`UtcTime`]: asn1::UtcTime
 //! [`Utf8String`]: asn1::Utf8String
 
