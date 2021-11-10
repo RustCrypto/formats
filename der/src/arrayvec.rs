@@ -46,14 +46,24 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    /// Get the last item from this [`ArrayVec`].
-    pub fn last(&self) -> Option<&T> {
-        self.length.checked_sub(1).and_then(|n| self.get(n))
-    }
-
     /// Iterate over the elements in this [`ArrayVec`].
     pub fn iter(&self) -> Iter<'_, T> {
         Iter::new(&self.elements)
+    }
+
+    /// Is this [`ArrayVec`] empty?
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
+    }
+
+    /// Get the number of elements in this [`ArrayVec`].
+    pub fn len(&self) -> usize {
+        self.length
+    }
+
+    /// Get the last item from this [`ArrayVec`].
+    pub fn last(&self) -> Option<&T> {
+        self.length.checked_sub(1).and_then(|n| self.get(n))
     }
 
     /// Try to convert this [`ArrayVec`] into a `[T; N]`.
