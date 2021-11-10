@@ -201,8 +201,8 @@ pub enum ErrorKind {
         oid: ObjectIdentifier,
     },
 
-    /// Ordering error.
-    Ordering,
+    /// `SET` ordering error: items not in canonical order.
+    SetOrdering,
 
     /// Integer overflow occurred (library bug!).
     Overflow,
@@ -309,7 +309,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::OidUnknown { oid } => {
                 write!(f, "unknown/unsupported OID: {}", oid)
             }
-            ErrorKind::Ordering => write!(f, "ordering error"),
+            ErrorKind::SetOrdering => write!(f, "ordering error"),
             ErrorKind::Overflow => write!(f, "integer overflow"),
             ErrorKind::Overlength => write!(f, "ASN.1 DER message is too long"),
             #[cfg(feature = "pem")]

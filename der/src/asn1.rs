@@ -39,6 +39,10 @@ pub use self::{
     utf8_string::Utf8String,
 };
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub use self::set_of::SetOfVec;
+
 #[cfg(feature = "oid")]
 #[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
 pub use const_oid::ObjectIdentifier;
