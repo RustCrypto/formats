@@ -6,7 +6,7 @@ use crate::ATTR_NAME;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, ToTokens};
-use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt};
+use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, Variant};
 
 /// Valid options for the `#[repr]` attribute on `Enumerated` types.
 const REPR_TYPES: &[&str] = &["u8", "u16", "u32"];
@@ -20,7 +20,7 @@ pub(crate) struct DeriveEnumerated {
     repr: Ident,
 
     /// Variants of this enum.
-    variants: Vec<(Ident, LitInt)>,
+    variants: Vec<EnumeratedVariant>,
 }
 
 impl DeriveEnumerated {
@@ -69,53 +69,30 @@ impl DeriveEnumerated {
         }
 
         // Parse enum variants
-        let mut variants = Vec::new();
-        for variant in &data.variants {
-            for attr in &variant.attrs {
-                if attr.path.is_ident(ATTR_NAME) {
-                    abort!(
-                        attr,
-                        "`asn1` attribute is not allowed on fields of `Enumerated` types"
-                    );
-                }
-            }
-
-            match &variant.discriminant {
-                Some((
-                    _,
-                    Expr::Lit(ExprLit {
-                        lit: Lit::Int(discriminant),
-                        ..
-                    }),
-                )) => variants.push((variant.ident.clone(), discriminant.clone())),
-                Some((_, other)) => abort!(other, "invalid discriminant for `Enumerated`"),
-                None => abort!(variant, "`Enumerated` variant has no discriminant"),
-            }
-        }
-
-        let repr = repr.unwrap_or_else(|| {
-            abort!(
-                &input.ident,
-                "no `#[repr]` attribute on enum: must be one of {:?}",
-                REPR_TYPES
-            )
-        });
+        let variants = data.variants.iter().map(EnumeratedVariant::new).collect();
 
         Self {
-            ident: input.ident,
-            repr,
+            ident: input.ident.clone(),
+            repr: repr.unwrap_or_else(|| {
+                abort!(
+                    &input.ident,
+                    "no `#[repr]` attribute on enum: must be one of {:?}",
+                    REPR_TYPES
+                )
+            }),
             variants,
         }
     }
 
     /// Lower the derived output into a [`TokenStream`].
     pub fn to_tokens(&self) -> TokenStream {
-        let mut try_from_body = TokenStream::new();
-        for (ident, discriminant) in &self.variants {
-            { quote!(#discriminant => Ok(Self::#ident),) }.to_tokens(&mut try_from_body);
-        }
+        let ident = &self.ident;
+        let repr = &self.repr;
 
-        let Self { ident, repr, .. } = self;
+        let mut try_from_body = TokenStream::new();
+        for variant in &self.variants {
+            variant.write_try_from_tokens(&mut try_from_body);
+        }
 
         quote! {
             impl ::der::DecodeValue<'static> for #ident {
@@ -152,5 +129,93 @@ impl DeriveEnumerated {
                 }
             }
         }
+    }
+}
+
+/// "IR" for a variant of a derived `Enumerated`.
+pub struct EnumeratedVariant {
+    /// Variant name.
+    ident: Ident,
+
+    /// Integer value that this variant corresponds to.
+    discriminant: LitInt,
+}
+
+impl EnumeratedVariant {
+    /// Create a new [`ChoiceVariant`] from the input [`Variant`].
+    fn new(input: &Variant) -> Self {
+        for attr in &input.attrs {
+            if attr.path.is_ident(ATTR_NAME) {
+                abort!(
+                    attr,
+                    "`asn1` attribute is not allowed on fields of `Enumerated` types"
+                );
+            }
+        }
+
+        match &input.discriminant {
+            Some((
+                _,
+                Expr::Lit(ExprLit {
+                    lit: Lit::Int(discriminant),
+                    ..
+                }),
+            )) => Self {
+                ident: input.ident.clone(),
+                discriminant: discriminant.clone(),
+            },
+            Some((_, other)) => abort!(other, "invalid discriminant for `Enumerated`"),
+            None => abort!(input, "`Enumerated` variant has no discriminant"),
+        }
+    }
+
+    /// Write the body for the derived [`TryFrom`] impl.
+    pub fn write_try_from_tokens(&self, body: &mut TokenStream) {
+        let ident = &self.ident;
+        let discriminant = &self.discriminant;
+        { quote!(#discriminant => Ok(Self::#ident),) }.to_tokens(body);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DeriveEnumerated;
+    use syn::parse_quote;
+
+    /// X.509 `CRLReason`.
+    #[test]
+    fn crlreason_example() {
+        let input = parse_quote! {
+            #[repr(u32)]
+            pub enum CrlReason {
+                Unspecified = 0,
+                KeyCompromise = 1,
+                CaCompromise = 2,
+                AffiliationChanged = 3,
+                Superseded = 4,
+                CessationOfOperation = 5,
+                CertificateHold = 6,
+                RemoveFromCrl = 8,
+                PrivilegeWithdrawn = 9,
+                AaCompromised = 10,
+            }
+        };
+
+        let ir = DeriveEnumerated::new(input);
+        assert_eq!(ir.ident, "CrlReason");
+        assert_eq!(ir.repr, "u32");
+        assert_eq!(ir.variants.len(), 10);
+
+        let unspecified = &ir.variants[0];
+        assert_eq!(unspecified.ident, "Unspecified");
+        assert_eq!(unspecified.discriminant.to_string(), "0");
+
+        let key_compromise = &ir.variants[1];
+        assert_eq!(key_compromise.ident, "KeyCompromise");
+        assert_eq!(key_compromise.discriminant.to_string(), "1");
+
+        let key_compromise = &ir.variants[2];
+        assert_eq!(key_compromise.ident, "CaCompromise");
+        assert_eq!(key_compromise.discriminant.to_string(), "2");
     }
 }

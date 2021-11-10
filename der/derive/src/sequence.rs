@@ -9,20 +9,14 @@ use syn::{DeriveInput, Field, Ident, Lifetime};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
-    /// Name of the enum type.
+    /// Name of the sequence struct.
     ident: Ident,
 
-    /// Lifetime of the type.
+    /// Lifetime of the struct.
     lifetime: Option<Lifetime>,
 
-    /// Field decoders
-    decode_fields: TokenStream,
-
-    /// Bound fields of a struct to be returned
-    decode_result: TokenStream,
-
-    /// Fields of a struct to be serialized
-    encode_fields: TokenStream,
+    /// Fields of the struct.
+    fields: Vec<SequenceField>,
 }
 
 impl DeriveSequence {
@@ -45,89 +39,48 @@ impl DeriveSequence {
 
         let type_attrs = TypeAttrs::parse(&input.attrs);
 
-        let mut state = Self {
+        let fields = data
+            .fields
+            .iter()
+            .map(|field| SequenceField::new(field, &type_attrs))
+            .collect();
+
+        Self {
             ident: input.ident,
             lifetime,
-            decode_fields: TokenStream::new(),
-            decode_result: TokenStream::new(),
-            encode_fields: TokenStream::new(),
-        };
-
-        for field in &data.fields {
-            state.derive_field(field, &type_attrs);
+            fields,
         }
-
-        state
-    }
-
-    /// Derive handling for a particular `#[field(...)]`
-    fn derive_field(&mut self, field: &Field, type_attrs: &TypeAttrs) {
-        let name = field
-            .ident
-            .as_ref()
-            .cloned()
-            .expect("no name on struct field i.e. tuple structs unsupported");
-
-        let field_attrs = FieldAttrs::parse(&field.attrs, type_attrs);
-
-        if field_attrs.tag_mode == TagMode::Implicit {
-            abort!(name, "IMPLICIT tagging not supported for `Sequence`");
-        }
-
-        self.derive_field_decoder(&name, &field_attrs);
-        self.derive_field_encoder(&name, &field_attrs);
-    }
-
-    /// Derive code for decoding a field of a sequence
-    fn derive_field_decoder(&mut self, name: &Ident, field_attrs: &FieldAttrs) {
-        let field_binding = if field_attrs.asn1_type.is_some() {
-            let field_decoder = field_attrs.decoder();
-            quote! { let #name = #field_decoder.try_into()?; }
-        } else {
-            quote! { let #name = decoder.decode()?; }
-        };
-        field_binding.to_tokens(&mut self.decode_fields);
-
-        let field_result = quote!(#name,);
-        field_result.to_tokens(&mut self.decode_result);
-    }
-
-    /// Derive code for encoding a field of a sequence
-    fn derive_field_encoder(&mut self, name: &Ident, field_attrs: &FieldAttrs) {
-        let binding = quote!(&self.#name);
-        field_attrs
-            .asn1_type
-            .map(|ty| {
-                let encoder = ty.encoder(&binding);
-                quote!(&#encoder?,)
-            })
-            .unwrap_or_else(|| quote!(#binding,))
-            .to_tokens(&mut self.encode_fields);
     }
 
     /// Lower the derived output into a [`TokenStream`].
     pub fn to_tokens(&self) -> TokenStream {
+        let ident = &self.ident;
+
+        // Explicit lifetime or `'_`
         let lifetime = match self.lifetime {
             Some(ref lifetime) => quote!(#lifetime),
             None => quote!('_),
         };
 
-        let lt_param = self
+        // Lifetime parameters
+        // TODO(tarcieri): support multiple lifetimes
+        let lt_params = self
             .lifetime
             .as_ref()
             .map(|_| lifetime.clone())
             .unwrap_or_default();
 
-        let Self {
-            ident,
-            decode_fields,
-            decode_result,
-            encode_fields,
-            ..
-        } = self;
+        let mut decode_fields = TokenStream::new();
+        let mut decode_result = TokenStream::new();
+        let mut encode_fields = TokenStream::new();
+
+        for field in &self.fields {
+            field.write_decode_tokens(&mut decode_fields, &mut decode_result);
+            field.write_encode_tokens(&mut encode_fields);
+        }
 
         quote! {
-            impl<#lt_param> ::der::Decodable<#lifetime> for #ident<#lt_param> {
+            impl<#lt_params> ::der::Decodable<#lifetime> for #ident<#lt_params> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     decoder.sequence(|decoder| {
                         #decode_fields
@@ -136,7 +89,7 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lt_param> ::der::Sequence<#lifetime> for #ident<#lt_param> {
+            impl<#lt_params> ::der::Sequence<#lifetime> for #ident<#lt_params> {
                 fn fields<F, T>(&self, f: F) -> ::der::Result<T>
                 where
                     F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
@@ -145,5 +98,131 @@ impl DeriveSequence {
                 }
             }
         }
+    }
+}
+
+/// "IR" for a field of a derived `Sequence`.
+pub struct SequenceField {
+    /// Variant name.
+    ident: Ident,
+
+    /// Field-level attributes.
+    attrs: FieldAttrs,
+}
+
+impl SequenceField {
+    /// Create a new [`SequenceField`] from the input [`Field`].
+    fn new(field: &Field, type_attrs: &TypeAttrs) -> Self {
+        let ident = field.ident.as_ref().cloned().unwrap_or_else(|| {
+            abort!(
+                field,
+                "no name on struct field i.e. tuple structs unsupported"
+            )
+        });
+
+        let attrs = FieldAttrs::parse(&field.attrs, type_attrs);
+
+        if attrs.tag_mode == TagMode::Implicit {
+            abort!(ident, "IMPLICIT tagging not supported for `Sequence`");
+        }
+
+        Self { ident, attrs }
+    }
+
+    /// Derive code for decoding a field of a sequence.
+    fn write_decode_tokens(&self, fields_body: &mut TokenStream, result_body: &mut TokenStream) {
+        let ident = &self.ident;
+        let field_binding = if self.attrs.asn1_type.is_some() {
+            let field_decoder = self.attrs.decoder();
+            quote! { let #ident = #field_decoder.try_into()?; }
+        } else {
+            quote! { let #ident = decoder.decode()?; }
+        };
+        field_binding.to_tokens(fields_body);
+
+        let field_result = quote!(#ident,);
+        field_result.to_tokens(result_body);
+    }
+
+    /// Derive code for encoding a field of a sequence.
+    fn write_encode_tokens(&self, body: &mut TokenStream) {
+        let ident = &self.ident;
+        let binding = quote!(&self.#ident);
+        self.attrs
+            .asn1_type
+            .map(|ty| {
+                let encoder = ty.encoder(&binding);
+                quote!(&#encoder?,)
+            })
+            .unwrap_or_else(|| quote!(#binding,))
+            .to_tokens(body);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DeriveSequence;
+    use crate::{Asn1Type, TagMode};
+    use syn::parse_quote;
+
+    /// X.509 SPKI `AlgorithmIdentifier`.
+    #[test]
+    fn algorithm_identifier_example() {
+        let input = parse_quote! {
+            pub struct AlgorithmIdentifier<'a> {
+                pub algorithm: ObjectIdentifier,
+                pub parameters: Option<Any<'a>>,
+            }
+        };
+
+        let ir = DeriveSequence::new(input);
+        assert_eq!(ir.ident, "AlgorithmIdentifier");
+        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(ir.fields.len(), 2);
+
+        let algorithm_field = &ir.fields[0];
+        assert_eq!(algorithm_field.ident, "algorithm");
+        assert_eq!(algorithm_field.attrs.asn1_type, None);
+        assert_eq!(algorithm_field.attrs.context_specific, None);
+        assert_eq!(algorithm_field.attrs.tag_mode, TagMode::Explicit);
+
+        let parameters_field = &ir.fields[1];
+        assert_eq!(parameters_field.ident, "parameters");
+        assert_eq!(parameters_field.attrs.asn1_type, None);
+        assert_eq!(parameters_field.attrs.context_specific, None);
+        assert_eq!(parameters_field.attrs.tag_mode, TagMode::Explicit);
+    }
+
+    /// X.509 `SubjectPublicKeyInfo`.
+    #[test]
+    fn spki_example() {
+        let input = parse_quote! {
+            pub struct SubjectPublicKeyInfo<'a> {
+                pub algorithm: AlgorithmIdentifier<'a>,
+
+                #[asn1(type = "BIT STRING")]
+                pub subject_public_key: &'a [u8],
+            }
+        };
+
+        let ir = DeriveSequence::new(input);
+        assert_eq!(ir.ident, "SubjectPublicKeyInfo");
+        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(ir.fields.len(), 2);
+
+        let algorithm_field = &ir.fields[0];
+        assert_eq!(algorithm_field.ident, "algorithm");
+        assert_eq!(algorithm_field.attrs.asn1_type, None);
+        assert_eq!(algorithm_field.attrs.context_specific, None);
+        assert_eq!(algorithm_field.attrs.tag_mode, TagMode::Explicit);
+
+        let subject_public_key_field = &ir.fields[1];
+        assert_eq!(subject_public_key_field.ident, "subject_public_key");
+        assert_eq!(
+            subject_public_key_field.attrs.asn1_type,
+            Some(Asn1Type::BitString)
+        );
+        assert_eq!(subject_public_key_field.attrs.context_specific, None);
+        assert_eq!(subject_public_key_field.attrs.tag_mode, TagMode::Explicit);
     }
 }

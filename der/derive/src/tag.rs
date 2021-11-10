@@ -1,11 +1,56 @@
 //! Tag-related functionality.
 
+use crate::Asn1Type;
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::{
     fmt::{self, Display},
     str::FromStr,
 };
+
+/// Tag "IR" type.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub(crate) enum Tag {
+    /// Universal tags with an associated [`Asn1Type`].
+    Universal(Asn1Type),
+
+    /// Context-specific tags with an associated [`TagNumber`].
+    ContextSpecific {
+        /// Is the inner ASN.1 type constructed?
+        constructed: bool,
+
+        /// Context-specific tag number
+        number: TagNumber,
+    },
+}
+
+impl Tag {
+    /// Lower this [`Tag`] to a [`TokenStream`].
+    pub fn to_tokens(self) -> TokenStream {
+        match self {
+            Tag::Universal(ty) => ty.tag(),
+            Tag::ContextSpecific {
+                constructed,
+                number,
+            } => {
+                let constructed = if constructed {
+                    quote!(true)
+                } else {
+                    quote!(false)
+                };
+
+                let number = number.to_tokens();
+
+                quote! {
+                    ::der::Tag::ContextSpecific {
+                        constructed: #constructed,
+                        number: #number,
+                    }
+                }
+            }
+        }
+    }
+}
 
 /// Tagging modes: `EXPLICIT` versus `IMPLICIT`.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
