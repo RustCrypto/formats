@@ -266,7 +266,7 @@
 //! ```rust
 //! # #[cfg(all(feature = "alloc", feature = "derive", feature = "oid"))]
 //! # {
-//! # use der::{asn1::{Any, ObjectIdentifier}, Sequence};
+//! # use der::{asn1::{Any, BitString, ObjectIdentifier}, Sequence};
 //! #
 //! # #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
 //! # pub struct AlgorithmIdentifier<'a> {
@@ -280,8 +280,7 @@
 //!     pub algorithm: AlgorithmIdentifier<'a>,
 //!
 //!     /// Public key data
-//!     #[asn1(type = "BIT STRING")]
-//!     pub subject_public_key: &'a [u8],
+//!     pub subject_public_key: BitString<'a>,
 //! }
 //! # }
 //! ```

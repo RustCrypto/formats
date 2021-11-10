@@ -73,6 +73,11 @@ impl<'a> ::der::Sequence<'a> for DisplayText<'a> {
     }
 }
 
+/// returns false in support of boolean DEFAULT fields
+pub fn default_false() -> bool {
+    false
+}
+
 /// Extension as defined in [RFC 5280 Section 4.1.2.9].
 ///
 /// The ASN.1 definition for Extension objects is below. The extnValue type may be further parsed using a decoder corresponding to the extnID value.
@@ -89,46 +94,17 @@ impl<'a> ::der::Sequence<'a> for DisplayText<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct Extension<'a> {
     /// extnID      OBJECT IDENTIFIER,
     pub extn_id: ObjectIdentifier,
 
     /// critical    BOOLEAN DEFAULT FALSE,
+    #[asn1(default = "default_false")]
     pub critical: Option<bool>,
 
     /// extnValue   OCTET STRING
     pub extn_value: OctetString<'a>,
-}
-
-impl<'a> Decodable<'a> for Extension<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let extn_id = decoder.decode()?;
-            let mut critical = decoder.decode()?;
-            if None == critical {
-                critical = Some(false);
-            }
-            let extn_value = decoder.decode()?;
-            Ok(Extension {
-                extn_id,
-                critical,
-                extn_value,
-            })
-        })
-    }
-}
-impl<'a> ::der::Sequence<'a> for Extension<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        if Some(true) == self.critical {
-            f(&[&self.extn_id, &self.critical, &self.extn_value])
-        } else {
-            f(&[&self.extn_id, &self.extn_value])
-        }
-    }
 }
 
 /// Extensions as defined in [RFC 5280 Section 4.1.2.9].
