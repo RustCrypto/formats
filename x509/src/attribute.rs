@@ -2,7 +2,7 @@
 
 use der::{
     asn1::{Any, ObjectIdentifier},
-    Sequence,
+    OrdIsValueOrd, Sequence,
 };
 
 /// Attribute type/value pairs as defined in [RFC 5280 Section 4.1.2.4].
@@ -26,3 +26,5 @@ pub struct AttributeTypeAndValue<'a> {
     /// Value of the attribute
     pub value: Any<'a>,
 }
+
+impl OrdIsValueOrd for AttributeTypeAndValue<'_> {}

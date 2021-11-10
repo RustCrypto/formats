@@ -44,6 +44,16 @@ impl<T, const N: usize> SequenceOf<T, N> {
             inner: self.inner.iter(),
         }
     }
+
+    /// Is this [`SequenceOf`] empty?
+    pub fn is_empty(&self) -> bool {
+        self.inner.is_empty()
+    }
+
+    /// Number of elements in this [`SequenceOf`].
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
 }
 
 impl<T, const N: usize> Default for SequenceOf<T, N> {

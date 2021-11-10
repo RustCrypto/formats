@@ -2,9 +2,10 @@
 
 #![cfg(all(feature = "derive", feature = "oid"))]
 
+use core::cmp::Ordering;
 use der::{
     asn1::{Any, ObjectIdentifier, SetOf},
-    Decodable, Sequence,
+    Decodable, Result, Sequence, ValueOrd,
 };
 use hex_literal::hex;
 
@@ -18,6 +19,15 @@ pub struct AttributeTypeAndValue<'a> {
 
     /// Value of the attribute
     pub value: Any<'a>,
+}
+
+impl ValueOrd for AttributeTypeAndValue<'_> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        match self.oid.value_cmp(&other.oid)? {
+            Ordering::Equal => self.value.value_cmp(&other.value),
+            other => Ok(other),
+        }
+    }
 }
 
 /// Test to ensure ordering is handled correctly.

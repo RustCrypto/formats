@@ -13,7 +13,6 @@
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`.
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`.
 //!   `String` requires `alloc` feature. See also [`Utf8String`].
-//! - [`BTreeSet`][`alloc::collections::BTreeSet`]: ASN.1 `SET OF`.
 //!   Requires `alloc` feature. See also [`SetOf`].
 //! - [`Option`]: ASN.1 `OPTIONAL`.
 //! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime`. Requires `std` feature.
@@ -30,7 +29,7 @@
 //! - [`OctetString`]: ASN.1 `OCTET STRING`
 //! - [`PrintableString`]: ASN.1 `PrintableString` (ASCII subset)
 //! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`
-//! - [`SetOf`]: ASN.1 `SET OF`
+//! - [`SetOf`], [`SetOfVec`]: ASN.1 `SET OF`
 //! - [`UIntBytes`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes
 //! - [`UtcTime`]: ASN.1 `UTCTime`
 //! - [`Utf8String`]: ASN.1 `UTF8String`
@@ -307,6 +306,7 @@
 //! [`PrintableString`]: asn1::PrintableString
 //! [`SequenceOf`]: asn1::SequenceOf
 //! [`SetOf`]: asn1::SetOf
+//! [`SetOfVec`]: asn1::SetOfVec
 //! [`UIntBytes`]: asn1::UIntBytes
 //! [`UtcTime`]: asn1::UtcTime
 //! [`Utf8String`]: asn1::Utf8String
