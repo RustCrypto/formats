@@ -5,7 +5,7 @@ use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, ToTokens};
-use syn::{DeriveInput, Field, Ident, Lifetime};
+use syn::{DeriveInput, Field, Ident, Lifetime, Type};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
@@ -70,21 +70,14 @@ impl DeriveSequence {
             .map(|_| lifetime.clone())
             .unwrap_or_default();
 
-        let count = self.fields.len();
         let mut decode_fields = TokenStream::new();
         let mut decode_result = TokenStream::new();
-        let mut encode_fields = quote! {
-            let placeholder = false;
-            let mut index = 0;
-            let mut a: [&dyn der::Encodable; #count] = [&placeholder;#count];
-        };
+        let mut encode_fields = TokenStream::new();
 
         for field in &self.fields {
             field.write_decode_tokens(&mut decode_fields, &mut decode_result);
             field.write_encode_tokens(&mut encode_fields);
         }
-
-        quote!(f(&a[..index])).to_tokens(&mut encode_fields);
 
         quote! {
             impl<#lt_params> ::der::Decodable<#lifetime> for #ident<#lt_params> {
@@ -101,7 +94,7 @@ impl DeriveSequence {
                 where
                     F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
                 {
-                    #encode_fields
+                    f(&[#encode_fields])
                 }
             }
         }
@@ -115,6 +108,9 @@ pub struct SequenceField {
 
     /// Field-level attributes.
     attrs: FieldAttrs,
+
+    /// Field type
+    field_type: Type,
 }
 
 impl SequenceField {
@@ -128,33 +124,31 @@ impl SequenceField {
         });
 
         let attrs = FieldAttrs::parse(&field.attrs, type_attrs);
+        let field_type = field.ty.clone();
 
         if attrs.tag_mode == TagMode::Implicit {
             abort!(ident, "IMPLICIT tagging not supported for `Sequence`");
         }
 
-        Self { ident, attrs }
+        Self {
+            ident,
+            attrs,
+            field_type,
+        }
     }
 
     /// Derive code for decoding a field of a sequence.
     fn write_decode_tokens(&self, fields_body: &mut TokenStream, result_body: &mut TokenStream) {
         let ident = &self.ident;
-        let mut field_binding = if self.attrs.asn1_type.is_some() {
-            let field_decoder = self.attrs.decoder();
-            quote! { let mut #ident = #field_decoder.try_into()?; }
-        } else {
-            quote! { let mut #ident = decoder.decode()?; }
-        };
+        let ty = self.field_type.clone();
+        let mut field_binding = TokenStream::new();
         if None != self.attrs.default {
             let fname = syn::Ident::new(&self.attrs.default.clone().unwrap(), self.ident.span());
-            quote!(
-                if None == #ident {
-                    #ident = Some(#fname());
-                }
-            )
-            .to_tokens(&mut field_binding);
+            quote!(let mut #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(|| #fname()));)
+                .to_tokens(&mut field_binding);
+        } else {
+            quote!(let mut #ident = decoder.decode()?;).to_tokens(&mut field_binding);
         }
-
         field_binding.to_tokens(fields_body);
 
         let field_result = quote!(#ident,);
@@ -165,30 +159,13 @@ impl SequenceField {
     fn write_encode_tokens(&self, body: &mut TokenStream) {
         let ident = &self.ident;
         let binding = quote!(&self.#ident);
-        // self.attrs
-        //     .asn1_type
-        //     .map(|ty| {
-        //         let encoder = ty.encoder(&binding);
-        //         quote!(&#encoder?,)
-        //     })
-        //     .unwrap_or_else(|| quote!(#binding,))
-        //     .to_tokens(body);
-        //TODO - do we need the asn1_type support on SEQUENCEs?
+        let binding_noref = quote!(self.#ident);
         if None != self.attrs.default {
             let fname = syn::Ident::new(&self.attrs.default.clone().unwrap(), self.ident.span());
-            let ts = quote!(
-                if &Some(#fname()) != #binding {
-                    a[index] = #binding;
-                    index += 1;
-                }
-            );
-            ts.to_tokens(body);
+            quote!(&if #binding_noref == Some(#fname()) {None} else {Some(#binding_noref)},)
+                .to_tokens(body);
         } else {
-            let ts = quote!(
-                a[index] = #binding;
-                index += 1;
-            );
-            ts.to_tokens(body);
+            quote!(#binding,).to_tokens(body);
         }
     }
 }
