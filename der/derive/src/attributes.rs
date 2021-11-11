@@ -244,7 +244,7 @@ impl AttrNameValue {
                     })) => out.push(Self {
                         name: path.clone(),
                         value: lit_str.value(),
-                        lit_str: lit_str.clone()
+                        lit_str: lit_str.clone(),
                     }),
                     _ => abort!(nested, "malformed `asn1` attribute"),
                 }
