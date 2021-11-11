@@ -174,9 +174,13 @@ impl<'a> TryFrom<&&'a [u8]> for BitString<'a> {
     }
 }
 
-impl<'a> From<BitString<'a>> for &'a [u8] {
-    fn from(bit_string: BitString<'a>) -> &'a [u8] {
-        bit_string.raw_bytes()
+impl<'a> TryFrom<BitString<'a>> for &'a [u8] {
+    type Error = Error;
+
+    fn try_from(bit_string: BitString<'a>) -> Result<&'a [u8]> {
+        bit_string
+            .as_bytes()
+            .ok_or_else(|| Tag::BitString.value_error())
     }
 }
 
