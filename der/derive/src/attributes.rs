@@ -1,11 +1,12 @@
 //! Attribute-related types used by the proc macro
 
 use crate::{Asn1Type, Tag, TagMode, TagNumber};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
 use std::{fmt::Debug, str::FromStr};
 use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path};
+use syn::spanned::Spanned;
 
 /// Attribute name.
 pub(crate) const ATTR_NAME: &str = "asn1";
@@ -74,7 +75,7 @@ pub(crate) struct FieldAttrs {
 
     /// Indicates name of function that supplies the default value, which will be used in cases
     /// where encoding is omitted per DER and to omit the encoding per DER
-    pub default: Option<String>,
+    pub default: Option<Ident>,
 }
 
 impl FieldAttrs {
@@ -92,6 +93,7 @@ impl FieldAttrs {
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
 
+        let mut counter = 0;
         for attr in parsed_attrs {
             // `context_specific = "..."` attribute
             if let Some(tag_number) = attr.parse_value("context_specific") {
@@ -119,12 +121,12 @@ impl FieldAttrs {
                 }
 
                 tag_mode = Some(mode);
-            } else if let Some(default_attr) = attr.parse_value("default") {
+            } else if let Some(default_attr_str) = attr.parse_value::<String>("default") {
                 if default.is_some() {
                     abort!(attr.value, "duplicate ASN.1 `tag_mode` attribute");
                 }
 
-                default = Some(default_attr);
+                default = Some(Ident::new(&default_attr_str, attrs[counter].span()));
             } else {
                 abort!(
                     attr.name,
@@ -132,6 +134,7 @@ impl FieldAttrs {
                     (valid options are `context_specific`, `type`)",
                 );
             }
+            counter += 1;
         }
 
         Self {
