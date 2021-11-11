@@ -149,9 +149,9 @@ impl SequenceField {
         let ty = self.field_type.clone();
         if None != self.attrs.default {
             let fname = syn::Ident::new(&self.attrs.default.clone().unwrap(), self.ident.span());
-            quote!(let mut #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(|| #fname()));)
+            quote!(let #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(|| #fname()));)
         } else {
-            quote!(let mut #ident = decoder.decode()?;)
+            quote!(let #ident = decoder.decode()?;)
         }
     }
 

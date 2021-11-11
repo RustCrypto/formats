@@ -182,6 +182,7 @@ pub type SubjectDirectoryAttributes<'a> = alloc::vec::Vec<AttributeTypeAndValue<
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct BasicConstraints {
     /// cA                      BOOLEAN DEFAULT FALSE,
+    #[asn1(default = "default_false")]
     pub ca: Option<bool>,
 
     /// pathLenConstraint       INTEGER (0..MAX) OPTIONAL
