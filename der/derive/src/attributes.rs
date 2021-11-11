@@ -1,12 +1,11 @@
 //! Attribute-related types used by the proc macro
 
 use crate::{Asn1Type, Tag, TagMode, TagNumber};
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::TokenStream;
 use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
 use std::{fmt::Debug, str::FromStr};
-use syn::spanned::Spanned;
-use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path};
+use syn::{Attribute, Lit, LitStr, Meta, MetaList, MetaNameValue, NestedMeta, Path};
 
 /// Attribute name.
 pub(crate) const ATTR_NAME: &str = "asn1";
@@ -75,7 +74,7 @@ pub(crate) struct FieldAttrs {
 
     /// Indicates name of function that supplies the default value, which will be used in cases
     /// where encoding is omitted per DER and to omit the encoding per DER
-    pub default: Option<Ident>,
+    pub default: Option<Path>,
 }
 
 impl FieldAttrs {
@@ -93,7 +92,7 @@ impl FieldAttrs {
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
 
-        for (counter, attr) in parsed_attrs.into_iter().enumerate() {
+        for attr in parsed_attrs {
             // `context_specific = "..."` attribute
             if let Some(tag_number) = attr.parse_value("context_specific") {
                 if context_specific.is_some() {
@@ -120,12 +119,12 @@ impl FieldAttrs {
                 }
 
                 tag_mode = Some(mode);
-            } else if let Some(default_attr_str) = attr.parse_value::<String>("default") {
+            } else if let Some(_default_attr_str) = attr.parse_value::<String>("default") {
                 if default.is_some() {
                     abort!(attr.value, "duplicate ASN.1 `tag_mode` attribute");
                 }
 
-                default = Some(Ident::new(&default_attr_str, attrs[counter].span()));
+                default = Some(attr.lit_str.parse::<Path>().unwrap());
             } else {
                 abort!(
                     attr.name,
@@ -218,6 +217,9 @@ struct AttrNameValue {
 
     /// Attribute value.
     pub value: String,
+
+    /// Attribute value.
+    pub lit_str: LitStr,
 }
 
 impl AttrNameValue {
@@ -242,6 +244,7 @@ impl AttrNameValue {
                     })) => out.push(Self {
                         name: path.clone(),
                         value: lit_str.value(),
+                        lit_str: lit_str.clone()
                     }),
                     _ => abort!(nested, "malformed `asn1` attribute"),
                 }
