@@ -93,8 +93,7 @@ impl FieldAttrs {
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
 
-        let mut counter = 0;
-        for attr in parsed_attrs {
+        for (counter, attr) in parsed_attrs.into_iter().enumerate() {
             // `context_specific = "..."` attribute
             if let Some(tag_number) = attr.parse_value("context_specific") {
                 if context_specific.is_some() {
@@ -134,7 +133,6 @@ impl FieldAttrs {
                     (valid options are `context_specific`, `type`)",
                 );
             }
-            counter += 1;
         }
 
         Self {
