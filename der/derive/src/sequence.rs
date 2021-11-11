@@ -148,7 +148,7 @@ impl SequenceField {
         let ident = &self.ident;
         let ty = self.field_type.clone();
         if let Some(default) = &self.attrs.default {
-            quote!(let #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(|| #default()));)
+            quote!(let mut #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(#default));)
         } else {
             quote!(let #ident = decoder.decode()?;)
         }
