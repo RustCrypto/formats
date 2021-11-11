@@ -31,6 +31,7 @@ pub use self::{
     integer::bigint::UIntBytes,
     null::Null,
     octet_string::OctetString,
+    optional::OptionalRef,
     printable_string::PrintableString,
     sequence::Sequence,
     sequence_of::{SequenceOf, SequenceOfIter},

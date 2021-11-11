@@ -201,7 +201,7 @@ mod enumerated {
 /// Custom derive test cases for the `Sequence` macro.
 mod sequence {
     use der::{
-        asn1::{Any, BitString, ObjectIdentifier},
+        asn1::{Any, ObjectIdentifier},
         Decodable, Encodable, Sequence,
     };
     use hex_literal::hex;
@@ -217,8 +217,24 @@ mod sequence {
     #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
     pub struct SubjectPublicKeyInfo<'a> {
         pub algorithm: AlgorithmIdentifier<'a>,
+        #[asn1(type = "BIT STRING")]
+        pub subject_public_key: &'a [u8],
+    }
 
-        pub subject_public_key: BitString<'a>,
+    /// X.509 extension
+    // TODO(tarcieri): tests for code derived with the `default` attribute
+    #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+    pub struct Extension<'a> {
+        extn_id: ObjectIdentifier,
+        #[asn1(default = "critical_default")]
+        critical: bool,
+        #[asn1(type = "OCTET STRING")]
+        extn_value: &'a [u8],
+    }
+
+    /// Default value of the `critical` bit
+    fn critical_default() -> bool {
+        false
     }
 
     const ID_EC_PUBLIC_KEY_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.2.1");

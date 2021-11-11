@@ -55,3 +55,27 @@ where
         }
     }
 }
+
+/// A reference to an ASN.1 `OPTIONAL` type, used for encoding only.
+pub struct OptionalRef<'a, T>(pub Option<&'a T>);
+
+impl<'a, T> Encodable for OptionalRef<'a, T>
+where
+    T: Encodable,
+{
+    fn encoded_len(&self) -> Result<Length> {
+        if let Some(encodable) = self.0 {
+            encodable.encoded_len()
+        } else {
+            Ok(0u8.into())
+        }
+    }
+
+    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        if let Some(encodable) = self.0 {
+            encodable.encode(encoder)
+        } else {
+            Ok(())
+        }
+    }
+}
