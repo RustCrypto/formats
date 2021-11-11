@@ -5,8 +5,8 @@ use proc_macro2::{Ident, TokenStream};
 use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
 use std::{fmt::Debug, str::FromStr};
-use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path};
 use syn::spanned::Spanned;
+use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path};
 
 /// Attribute name.
 pub(crate) const ATTR_NAME: &str = "asn1";
