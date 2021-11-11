@@ -5,7 +5,7 @@ use crate::{FieldAttrs, TagMode, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{DeriveInput, Field, Ident, Lifetime};
+use syn::{DeriveInput, Field, Ident, Lifetime, Type};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
@@ -114,6 +114,9 @@ pub struct SequenceField {
 
     /// Field-level attributes.
     attrs: FieldAttrs,
+
+    /// Field type
+    field_type: Type,
 }
 
 impl SequenceField {
@@ -127,22 +130,27 @@ impl SequenceField {
         });
 
         let attrs = FieldAttrs::parse(&field.attrs, type_attrs);
+        let field_type = field.ty.clone();
 
         if attrs.tag_mode == TagMode::Implicit {
             abort!(ident, "IMPLICIT tagging not supported for `Sequence`");
         }
 
-        Self { ident, attrs }
+        Self {
+            ident,
+            attrs,
+            field_type,
+        }
     }
 
     /// Derive code for decoding a field of a sequence.
     fn to_decode_tokens(&self) -> TokenStream {
         let ident = &self.ident;
-        if self.attrs.asn1_type.is_some() {
-            let field_decoder = self.attrs.decoder();
-            quote! { let #ident = #field_decoder.try_into()?; }
+        let ty = self.field_type.clone();
+        if let Some(default) = &self.attrs.default {
+            quote!(let mut #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(#default));)
         } else {
-            quote! { let #ident = decoder.decode()?; }
+            quote!(let #ident = decoder.decode()?;)
         }
     }
 
@@ -150,12 +158,11 @@ impl SequenceField {
     fn to_encode_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         let binding = quote!(&self.#ident);
-        match self.attrs.asn1_type {
-            Some(ty) => {
-                let encoder = ty.encoder(&binding);
-                quote!(&#encoder?)
-            }
-            None => quote!(#binding),
+        let binding_noref = quote!(self.#ident);
+        if let Some(default) = &self.attrs.default {
+            quote!(&if #binding_noref == Some(#default()) {None} else {Some(#binding_noref)})
+        } else {
+            quote!(#binding)
         }
     }
 }
