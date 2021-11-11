@@ -68,6 +68,10 @@ pub(crate) struct FieldAttrs {
     /// Inherits from the type-level tagging mode if specified, or otherwise
     /// defaults to `EXPLICIT`.
     pub tag_mode: TagMode,
+
+    /// Indicates name of function that supplies the default value, which will be used in cases
+    /// where encoding is omitted per DER and to omit the encoding per DER
+    pub default: Option<String>,
 }
 
 impl FieldAttrs {
@@ -75,7 +79,10 @@ impl FieldAttrs {
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
         let mut asn1_type = None;
         let mut context_specific = None;
+
         let mut tag_mode = None;
+
+        let mut default = None;
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
@@ -101,6 +108,12 @@ impl FieldAttrs {
                 }
 
                 tag_mode = Some(mode);
+            } else if let Some(default_attr) = attr.parse_value("default") {
+                if default.is_some() {
+                    abort!(attr.value, "duplicate ASN.1 `tag_mode` attribute");
+                }
+
+                default = Some(default_attr);
             } else {
                 abort!(
                     attr.name,
@@ -113,6 +126,7 @@ impl FieldAttrs {
         Self {
             asn1_type,
             context_specific,
+            default,
             tag_mode: tag_mode.unwrap_or(type_attrs.tag_mode),
         }
     }

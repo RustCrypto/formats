@@ -201,7 +201,7 @@ mod enumerated {
 /// Custom derive test cases for the `Sequence` macro.
 mod sequence {
     use der::{
-        asn1::{Any, ObjectIdentifier},
+        asn1::{Any, BitString, ObjectIdentifier},
         Decodable, Encodable, Sequence,
     };
     use hex_literal::hex;
@@ -218,8 +218,7 @@ mod sequence {
     pub struct SubjectPublicKeyInfo<'a> {
         pub algorithm: AlgorithmIdentifier<'a>,
 
-        #[asn1(type = "BIT STRING")]
-        pub subject_public_key: &'a [u8],
+        pub subject_public_key: BitString<'a>,
     }
 
     const ID_EC_PUBLIC_KEY_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.2.1");
