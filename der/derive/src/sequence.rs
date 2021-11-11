@@ -136,6 +136,13 @@ impl SequenceField {
             abort!(ident, "IMPLICIT tagging not supported for `Sequence`");
         }
 
+        if attrs.asn1_type.is_some() && attrs.default.is_some() {
+            abort!(
+                ident,
+                "ASN.1 `type` and `default` options cannot be combined"
+            );
+        }
+
         Self {
             ident,
             attrs,
@@ -145,22 +152,49 @@ impl SequenceField {
 
     /// Derive code for decoding a field of a sequence.
     fn to_decode_tokens(&self) -> TokenStream {
+        // NOTE: `type` and `default` are mutually exclusive
+        // This is checked above in `SequenceField::new`
+        debug_assert!(self.attrs.asn1_type.is_none() || self.attrs.default.is_none());
+
         let ident = &self.ident;
-        let ty = self.field_type.clone();
-        if let Some(default) = &self.attrs.default {
-            quote!(let mut #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(#default));)
+        let ty = &self.field_type;
+
+        if self.attrs.asn1_type.is_some() {
+            let dec = self.attrs.decoder();
+            quote! {
+                let #ident = #dec.try_into()?;
+            }
+        } else if let Some(default) = &self.attrs.default {
+            quote! {
+                let #ident = decoder.decode::<Option<#ty>>()?.unwrap_or_else(#default);
+            }
         } else {
-            quote!(let #ident = decoder.decode()?;)
+            quote! {
+                let #ident = decoder.decode()?;
+            }
         }
     }
 
     /// Derive code for encoding a field of a sequence.
     fn to_encode_tokens(&self) -> TokenStream {
+        // NOTE: `type` and `default` are mutually exclusive
+        // This is checked above in `SequenceField::new`
+        debug_assert!(self.attrs.asn1_type.is_none() || self.attrs.default.is_none());
+
         let ident = &self.ident;
         let binding = quote!(&self.#ident);
-        let binding_noref = quote!(self.#ident);
-        if let Some(default) = &self.attrs.default {
-            quote!(&if #binding_noref == Some(#default()) {None} else {Some(#binding_noref)})
+
+        if let Some(ty) = &self.attrs.asn1_type {
+            let encoder = ty.encoder(&binding);
+            quote!(&#encoder?)
+        } else if let Some(default) = &self.attrs.default {
+            quote! {
+                &::der::asn1::OptionalRef(if #binding == &#default() {
+                    None
+                } else {
+                    Some(#binding)
+                })
+            }
         } else {
             quote!(#binding)
         }

@@ -35,7 +35,7 @@ impl TypeAttrs {
             // `tag_mode = "..."` attribute
             if let Some(mode) = attr.parse_value("tag_mode") {
                 if tag_mode.is_some() {
-                    abort!(attr.value, "duplicate ASN.1 `tag_mode` attribute");
+                    abort!(attr.name, "duplicate ASN.1 `tag_mode` attribute");
                 }
 
                 tag_mode = Some(mode);
@@ -79,9 +79,7 @@ impl FieldAttrs {
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
         let mut asn1_type = None;
         let mut context_specific = None;
-
         let mut tag_mode = None;
-
         let mut default = None;
 
         let mut parsed_attrs = Vec::new();
@@ -98,22 +96,24 @@ impl FieldAttrs {
             // `type = "..."` attribute
             } else if let Some(ty) = attr.parse_value("type") {
                 if asn1_type.is_some() {
-                    abort!(attr.value, "duplicate ASN.1 `type` attribute: {}");
+                    abort!(attr.name, "duplicate ASN.1 `type` attribute: {}");
                 }
 
                 asn1_type = Some(ty);
             } else if let Some(mode) = attr.parse_value("tag_mode") {
                 if tag_mode.is_some() {
-                    abort!(attr.value, "duplicate ASN.1 `tag_mode` attribute");
+                    abort!(attr.name, "duplicate ASN.1 `tag_mode` attribute");
                 }
 
                 tag_mode = Some(mode);
             } else if attr.parse_value::<String>("default").is_some() {
                 if default.is_some() {
-                    abort!(attr.value, "duplicate ASN.1 `default` attribute");
+                    abort!(attr.name, "duplicate ASN.1 `default` attribute");
                 }
 
-                default = Some(attr.lit_str.parse::<Path>().unwrap());
+                default = Some(attr.value.parse().unwrap_or_else(|e| {
+                    abort!(attr.value, "error parsing ASN.1 `default` attribute: {}", e)
+                }));
             } else {
                 abort!(
                     attr.name,
@@ -204,10 +204,7 @@ struct AttrNameValue {
     pub name: Path,
 
     /// Attribute value.
-    pub value: String,
-
-    /// Attribute value.
-    pub lit_str: LitStr,
+    pub value: LitStr,
 }
 
 impl AttrNameValue {
@@ -231,8 +228,7 @@ impl AttrNameValue {
                         ..
                     })) => out.push(Self {
                         name: path.clone(),
-                        value: lit_str.value(),
-                        lit_str: lit_str.clone(),
+                        value: lit_str.clone(),
                     }),
                     _ => abort!(nested, "malformed `asn1` attribute"),
                 }
@@ -249,6 +245,7 @@ impl AttrNameValue {
         if self.name.is_ident(name) {
             Some(
                 self.value
+                    .value()
                     .parse()
                     .unwrap_or_else(|_| abort!(self.name, "error parsing `{}` attribute")),
             )
