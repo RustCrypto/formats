@@ -5,8 +5,8 @@ use proc_macro2::{Ident, TokenStream};
 use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
 use std::{fmt::Debug, str::FromStr};
-use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path};
 use syn::spanned::Spanned;
+use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path};
 
 /// Attribute name.
 pub(crate) const ATTR_NAME: &str = "asn1";
@@ -88,8 +88,7 @@ impl FieldAttrs {
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
 
-        let mut counter = 0;
-        for attr in parsed_attrs {
+        for (counter, attr) in parsed_attrs.into_iter().enumerate() {
             // `context_specific = "..."` attribute
             if let Some(tag_number) = attr.parse_value("context_specific") {
                 if context_specific.is_some() {
@@ -123,7 +122,6 @@ impl FieldAttrs {
                     (valid options are `context_specific`, `type`)",
                 );
             }
-            counter += 1;
         }
 
         Self {
