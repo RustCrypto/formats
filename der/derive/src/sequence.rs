@@ -147,9 +147,8 @@ impl SequenceField {
     fn to_decode_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         let ty = self.field_type.clone();
-        if None != self.attrs.default {
-            let fname = syn::Ident::new(&self.attrs.default.clone().unwrap(), self.ident.span());
-            quote!(let #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(|| #fname()));)
+        if let Some(default) = &self.attrs.default {
+            quote!(let mut #ident = Some(decoder.decode::<#ty>()?.unwrap_or_else(|| #default()));)
         } else {
             quote!(let #ident = decoder.decode()?;)
         }
@@ -160,9 +159,8 @@ impl SequenceField {
         let ident = &self.ident;
         let binding = quote!(&self.#ident);
         let binding_noref = quote!(self.#ident);
-        if None != self.attrs.default {
-            let fname = syn::Ident::new(&self.attrs.default.clone().unwrap(), self.ident.span());
-            quote!(&if #binding_noref == Some(#fname()) {None} else {Some(#binding_noref)})
+        if let Some(default) = &self.attrs.default {
+            quote!(&if #binding_noref == Some(#default()) {None} else {Some(#binding_noref)})
         } else {
             quote!(#binding)
         }
