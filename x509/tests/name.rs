@@ -1,6 +1,6 @@
 //! Name tests
 //use der::asn1::{SetOf, SequenceOfIter, SequenceOf};
-use der::{Decodable, Tag, Tagged}; //, Encodable};
+use der::{Decodable, Encodable, Tag, Tagged}; //, Encodable};
 use hex_literal::hex;
 use x509::{Name, RelativeDistinguishedName}; //, AttributeTypeAndValue;
 
@@ -87,27 +87,47 @@ fn decode_rdn() {
     //        :     }
     //        :   }
 
-    // TODO - restore
-    // let rdn2 = RelativeDistinguishedName::from_der(
-    //     &hex!("311F301106035504030C0A4A4F484E20534D495448300A060355040A0C03313233")[..],
-    // )
-    // .unwrap();
-    // let mut i = rdn2.iter();
-    // let atav1 = i.next().unwrap();
-    // let oid1 = atav1.oid;
-    // assert_eq!(oid1.to_string(), "2.5.4.3");
-    // let value1 = atav1.value;
-    // assert_eq!(value1.tag(), Tag::Utf8String);
-    // let utf8a = value1.utf8_string().unwrap();
-    // assert_eq!(utf8a.to_string(), "JOHN SMITH");
-    //
-    // let atav2 = i.next().unwrap();
-    // let oid2 = atav2.oid;
-    // assert_eq!(oid2.to_string(), "2.5.4.10");
-    // let value2 = atav2.value;
-    // assert_eq!(value2.tag(), Tag::Utf8String);
-    // let utf8b = value2.utf8_string().unwrap();
-    // assert_eq!(utf8b.to_string(), "123");
+    // reordered the encoding so second element above appears first so parsing can succeed
+    let rdn2a = RelativeDistinguishedName::from_der(
+        &hex!("311F300A060355040A0C03313233301106035504030C0A4A4F484E20534D495448")[..],
+    )
+    .unwrap();
+    let mut i = rdn2a.iter();
+    let atav1a = i.next().unwrap();
+    let oid2 = atav1a.oid;
+    assert_eq!(oid2.to_string(), "2.5.4.10");
+    let value2 = atav1a.value;
+    assert_eq!(value2.tag(), Tag::Utf8String);
+    let utf8b = value2.utf8_string().unwrap();
+    assert_eq!(utf8b.to_string(), "123");
+
+    let atav2a = i.next().unwrap();
+    let oid1 = atav2a.oid;
+    assert_eq!(oid1.to_string(), "2.5.4.3");
+    let value1 = atav2a.value;
+    assert_eq!(value1.tag(), Tag::Utf8String);
+    let utf8a = value1.utf8_string().unwrap();
+    assert_eq!(utf8a.to_string(), "JOHN SMITH");
+
+    let mut from_scratch = RelativeDistinguishedName::new();
+    assert!(from_scratch.add(*atav1a).is_ok());
+    assert!(from_scratch.add(*atav2a).is_ok());
+    let reencoded = from_scratch.to_vec().unwrap();
+    assert_eq!(
+        reencoded,
+        &hex!("311F300A060355040A0C03313233301106035504030C0A4A4F484E20534D495448")
+    );
+
+    let mut from_scratch2 = RelativeDistinguishedName::new();
+    assert!(from_scratch2.add(*atav2a).is_ok());
+    // fails when caller adds items not in DER lexicographical order
+    assert!(from_scratch2.add(*atav1a).is_err());
+
+    //parsing fails due to incorrect order
+    assert!(RelativeDistinguishedName::from_der(
+        &hex!("311F301106035504030C0A4A4F484E20534D495448300A060355040A0C03313233")[..],
+    )
+    .is_err());
 }
 
 // #[test]
