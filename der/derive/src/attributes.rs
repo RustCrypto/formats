@@ -108,7 +108,7 @@ impl FieldAttrs {
                 }
 
                 tag_mode = Some(mode);
-            } else if let Some(_default_attr_str) = attr.parse_value::<String>("default") {
+            } else if attr.parse_value::<String>("default").is_some() {
                 if default.is_some() {
                     abort!(attr.value, "duplicate ASN.1 `default` attribute");
                 }
