@@ -202,19 +202,19 @@ mod enumerated {
 mod sequence {
     use der::{
         asn1::{Any, ObjectIdentifier},
-        Decodable, Encodable, Sequence,
+        Decodable, Encodable, Sequence, ValueOrd,
     };
     use hex_literal::hex;
 
     /// X.509 `AlgorithmIdentifier`
-    #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
+    #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
     pub struct AlgorithmIdentifier<'a> {
         pub algorithm: ObjectIdentifier,
         pub parameters: Option<Any<'a>>,
     }
 
     /// X.509 `SubjectPublicKeyInfo` (SPKI)
-    #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
+    #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
     pub struct SubjectPublicKeyInfo<'a> {
         pub algorithm: AlgorithmIdentifier<'a>,
         #[asn1(type = "BIT STRING")]
@@ -223,7 +223,7 @@ mod sequence {
 
     /// X.509 extension
     // TODO(tarcieri): tests for code derived with the `default` attribute
-    #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+    #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
     pub struct Extension<'a> {
         extn_id: ObjectIdentifier,
         #[asn1(default = "critical_default")]

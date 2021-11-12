@@ -7,10 +7,13 @@
 //! following way:
 //!
 //! - [`Choice`][`derive@Choice`]: map ASN.1 `CHOICE` to a Rust enum.
+//! - [`Enumerated`][`derive@Enumerated`]: map ASN.1 `ENUMERATED` to a C-like Rust enum.
 //! - [`Sequence`][`derive@Sequence`]: map ASN.1 `SEQUENCE` to a Rust struct.
+//! - [`ValueOrd`][`derive@ValueOrd`]: determine DER ordering for ASN.1 `SET OF`.
 //!
 //! Note that this crate shouldn't be used directly, but instead accessed
-//! by using the `derive` feature of the `der` crate.
+//! by using the `derive` feature of the `der` crate, which re-exports the
+//! above macros from the toplevel.
 //!
 //! ## Why not `serde`?
 //! The `der` crate is designed to be easily usable in embedded environments,
@@ -99,6 +102,7 @@ mod choice;
 mod enumerated;
 mod sequence;
 mod tag;
+mod value_ord;
 
 use crate::{
     asn1_type::Asn1Type,
@@ -107,12 +111,13 @@ use crate::{
     enumerated::DeriveEnumerated,
     sequence::DeriveSequence,
     tag::{Tag, TagMode, TagNumber},
+    value_ord::DeriveValueOrd,
 };
 use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;
 use syn::{parse_macro_input, DeriveInput};
 
-/// Derive the [`Choice`][1] trait on an enum.
+/// Derive the [`Choice`][1] trait on an `enum`.
 ///
 /// This custom derive macro can be used to automatically impl the
 /// [`Decodable`][2] and [`Encodable`][3] traits along with the
@@ -156,7 +161,8 @@ pub fn derive_choice(input: TokenStream) -> TokenStream {
     DeriveChoice::new(input).to_tokens().into()
 }
 
-/// Derive decoders and encoders for ASN.1 [`Enumerated`] types.
+/// Derive decoders and encoders for ASN.1 [`Enumerated`] types on a
+/// C-like `enum` type.
 ///
 /// # Usage
 ///
@@ -191,7 +197,7 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
     DeriveEnumerated::new(input).to_tokens().into()
 }
 
-/// Derive the [`Sequence`][1] trait on a struct.
+/// Derive the [`Sequence`][1] trait on a `struct`.
 ///
 /// This custom derive macro can be used to automatically impl the
 /// `Sequence` trait for any struct which can be decoded/encoded as an
@@ -229,4 +235,17 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
 pub fn derive_sequence(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     DeriveSequence::new(input).to_tokens().into()
+}
+
+/// Derive the [`ValueOrd`][1] trait on a `struct`.
+///
+/// This trait is used in conjunction with ASN.1 `SET OF` types to determine
+/// the lexicographical order of their DER encodings.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.ValueOrd.html
+#[proc_macro_derive(ValueOrd, attributes(asn1))]
+#[proc_macro_error]
+pub fn derive_value_ord(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    DeriveValueOrd::new(input).to_tokens().into()
 }

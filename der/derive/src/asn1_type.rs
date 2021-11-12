@@ -65,8 +65,8 @@ impl Asn1Type {
             Asn1Type::Ia5String
             | Asn1Type::OctetString
             | Asn1Type::PrintableString
-            | Asn1Type::Utf8String => quote!(#type_path::new(#binding)),
-            _ => quote!(#type_path::try_from(#binding)),
+            | Asn1Type::Utf8String => quote!(#type_path::new(#binding)?),
+            _ => quote!(#type_path::try_from(#binding)?),
         }
     }
 

@@ -191,7 +191,7 @@ impl FieldAttrs {
             self.asn1_type
                 .map(|ty| {
                     let encoder_obj = ty.encoder(binding);
-                    quote!(#encoder_obj?.encode(encoder))
+                    quote!(#encoder_obj.encode(encoder))
                 })
                 .unwrap_or_else(|| quote!(encoder.encode(#binding)?))
         }

@@ -108,7 +108,7 @@ impl DeriveSequence {
 }
 
 /// "IR" for a field of a derived `Sequence`.
-pub struct SequenceField {
+struct SequenceField {
     /// Variant name.
     ident: Ident,
 
@@ -186,7 +186,7 @@ impl SequenceField {
 
         if let Some(ty) = &self.attrs.asn1_type {
             let encoder = ty.encoder(&binding);
-            quote!(&#encoder?)
+            quote!(&#encoder)
         } else if let Some(default) = &self.attrs.default {
             quote! {
                 &::der::asn1::OptionalRef(if #binding == &#default() {

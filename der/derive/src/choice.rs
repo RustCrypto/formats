@@ -130,7 +130,7 @@ impl DeriveChoice {
 }
 
 /// "IR" for a variant of a derived `Choice`.
-pub struct ChoiceVariant {
+struct ChoiceVariant {
     /// Variant name.
     ident: Ident,
 
