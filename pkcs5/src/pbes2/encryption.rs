@@ -2,7 +2,7 @@
 
 use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptParams};
 use crate::{Error, Result};
-use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
+use block_modes::{block_padding::Pkcs7, BlockMode, Cbc, Ecb};
 use hmac::{
     digest::{
         block_buffer::Eager,
@@ -16,8 +16,14 @@ use pbkdf2::pbkdf2;
 use scrypt::scrypt;
 
 type Aes128Cbc = Cbc<aes::Aes128, Pkcs7>;
+#[cfg(feature = "ecb")]
+type Aes128Ecb = Ecb<aes::Aes128, Pkcs7>;
 type Aes192Cbc = Cbc<aes::Aes192, Pkcs7>;
+#[cfg(feature = "ecb")]
+type Aes192Ecb = Ecb<aes::Aes192, Pkcs7>;
 type Aes256Cbc = Cbc<aes::Aes256, Pkcs7>;
+#[cfg(feature = "ecb")]
+type Aes256Ecb = Ecb<aes::Aes256, Pkcs7>;
 
 #[cfg(feature = "des-insecure")]
 type DesCbc = Cbc<des::Des, Pkcs7>;
@@ -49,6 +55,14 @@ pub fn encrypt_in_place<'b>(
                 .encrypt(buffer, pos)
                 .map_err(|_| Error::EncryptFailed)
         }
+        #[cfg(feature = "ecb")]
+        EncryptionScheme::Aes128Ecb => {
+            let cipher = Aes128Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
+                .map_err(|_| es.to_alg_params_invalid())?;
+            cipher
+                .encrypt(buffer, pos)
+                .map_err(|_| Error::EncryptFailed)
+        }
         EncryptionScheme::Aes192Cbc { iv } => {
             let cipher = Aes192Cbc::new_from_slices(encryption_key.as_slice(), iv)
                 .map_err(|_| es.to_alg_params_invalid())?;
@@ -56,8 +70,24 @@ pub fn encrypt_in_place<'b>(
                 .encrypt(buffer, pos)
                 .map_err(|_| Error::EncryptFailed)
         }
+        #[cfg(feature = "ecb")]
+        EncryptionScheme::Aes192Ecb => {
+            let cipher = Aes192Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
+                .map_err(|_| es.to_alg_params_invalid())?;
+            cipher
+                .encrypt(buffer, pos)
+                .map_err(|_| Error::EncryptFailed)
+        }
         EncryptionScheme::Aes256Cbc { iv } => {
             let cipher = Aes256Cbc::new_from_slices(encryption_key.as_slice(), iv)
+                .map_err(|_| es.to_alg_params_invalid())?;
+            cipher
+                .encrypt(buffer, pos)
+                .map_err(|_| Error::EncryptFailed)
+        }
+        #[cfg(feature = "ecb")]
+        EncryptionScheme::Aes256Ecb => {
+            let cipher = Aes256Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
                 .map_err(|_| es.to_alg_params_invalid())?;
             cipher
                 .encrypt(buffer, pos)
@@ -94,13 +124,31 @@ pub fn decrypt_in_place<'a>(
                 .map_err(|_| es.to_alg_params_invalid())?;
             cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
         }
+        #[cfg(feature = "ecb")]
+        EncryptionScheme::Aes128Ecb => {
+            let cipher = Aes128Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
+                .map_err(|_| es.to_alg_params_invalid())?;
+            cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
+        }
         EncryptionScheme::Aes192Cbc { iv } => {
             let cipher = Aes192Cbc::new_from_slices(encryption_key.as_slice(), iv)
                 .map_err(|_| es.to_alg_params_invalid())?;
             cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
         }
+        #[cfg(feature = "ecb")]
+        EncryptionScheme::Aes192Ecb => {
+            let cipher = Aes192Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
+                .map_err(|_| es.to_alg_params_invalid())?;
+            cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
+        }
         EncryptionScheme::Aes256Cbc { iv } => {
             let cipher = Aes256Cbc::new_from_slices(encryption_key.as_slice(), iv)
+                .map_err(|_| es.to_alg_params_invalid())?;
+            cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
+        }
+        #[cfg(feature = "ecb")]
+        EncryptionScheme::Aes256Ecb => {
+            let cipher = Aes256Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
                 .map_err(|_| es.to_alg_params_invalid())?;
             cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
         }

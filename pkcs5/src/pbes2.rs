@@ -25,13 +25,28 @@ use alloc::vec::Vec;
 /// Chaining (CBC) mode of operation.
 pub const AES_128_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.2");
 
+/// 128-bit Advanced Encryption Standard (AES) algorithm with Electronic Code
+/// Book (ECB) mode of operation.
+#[cfg(feature = "ecb")]
+pub const AES_128_ECB_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.1");
+
 /// 192-bit Advanced Encryption Standard (AES) algorithm with Cipher-Block
 /// Chaining (CBC) mode of operation.
 pub const AES_192_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.22");
 
+/// 192-bit Advanced Encryption Standard (AES) algorithm with Electronic Code
+/// Book (ECB) mode of operation.
+#[cfg(feature = "ecb")]
+pub const AES_192_ECB_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.21");
+
 /// 256-bit Advanced Encryption Standard (AES) algorithm with Cipher-Block
 /// Chaining (CBC) mode of operation.
 pub const AES_256_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.42");
+
+/// 256-bit Advanced Encryption Standard (AES) algorithm with Electronic Code Book
+/// (ECB) mode of operation.
+#[cfg(feature = "ecb")]
+pub const AES_256_ECB_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.41");
 
 /// DES operating in CBC mode
 #[cfg(feature = "des-insecure")]
@@ -238,17 +253,29 @@ pub enum EncryptionScheme<'a> {
         iv: &'a [u8; AES_BLOCK_SIZE],
     },
 
+    /// AES-128 in ECB mode
+    #[cfg(feature = "ecb")]
+    Aes128Ecb,
+
     /// AES-192 in CBC mode
     Aes192Cbc {
         /// Initialization vector
         iv: &'a [u8; AES_BLOCK_SIZE],
     },
 
+    /// AES-192 in ECB mode
+    #[cfg(feature = "ecb")]
+    Aes192Ecb,
+
     /// AES-256 in CBC mode
     Aes256Cbc {
         /// Initialization vector
         iv: &'a [u8; AES_BLOCK_SIZE],
     },
+
+    /// AES-256 in ECB mode
+    #[cfg(feature = "ecb")]
+    Aes256Ecb,
 
     /// 3-Key Triple DES in CBC mode
     #[cfg(feature = "3des")]
@@ -270,8 +297,14 @@ impl<'a> EncryptionScheme<'a> {
     pub fn key_size(&self) -> usize {
         match self {
             Self::Aes128Cbc { .. } => 16,
+            #[cfg(feature = "ecb")]
+            Self::Aes128Ecb => 16,
             Self::Aes192Cbc { .. } => 24,
+            #[cfg(feature = "ecb")]
+            Self::Aes192Ecb => 24,
             Self::Aes256Cbc { .. } => 32,
+            #[cfg(feature = "ecb")]
+            Self::Aes256Ecb => 32,
             #[cfg(feature = "des-insecure")]
             Self::DesCbc { .. } => 8,
             #[cfg(feature = "3des")]
@@ -283,8 +316,14 @@ impl<'a> EncryptionScheme<'a> {
     pub fn oid(&self) -> ObjectIdentifier {
         match self {
             Self::Aes128Cbc { .. } => AES_128_CBC_OID,
+            #[cfg(feature = "ecb")]
+            Self::Aes128Ecb => AES_128_ECB_OID,
             Self::Aes192Cbc { .. } => AES_192_CBC_OID,
+            #[cfg(feature = "ecb")]
+            Self::Aes192Ecb => AES_192_ECB_OID,
             Self::Aes256Cbc { .. } => AES_256_CBC_OID,
+            #[cfg(feature = "ecb")]
+            Self::Aes256Ecb => AES_256_ECB_OID,
             #[cfg(feature = "des-insecure")]
             Self::DesCbc { .. } => DES_CBC_OID,
             #[cfg(feature = "3des")]
@@ -311,6 +350,15 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         // TODO(tarcieri): support for non-AES algorithms?
+
+        #[cfg(feature = "ecb")]
+        match alg.oid {
+            AES_128_ECB_OID => return Ok(Self::Aes128Ecb),
+            AES_192_ECB_OID => return Ok(Self::Aes192Ecb),
+            AES_256_ECB_OID => return Ok(Self::Aes256Ecb),
+            _ => (),
+        }
+
         let iv = match alg.parameters {
             Some(params) => params.octet_string()?.as_bytes(),
             None => return Err(Tag::OctetString.value_error()),
@@ -353,19 +401,27 @@ impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
     type Error = der::Error;
 
     fn try_from(scheme: EncryptionScheme<'a>) -> der::Result<Self> {
-        let parameters = OctetString::new(match scheme {
-            EncryptionScheme::Aes128Cbc { iv } => iv,
-            EncryptionScheme::Aes192Cbc { iv } => iv,
-            EncryptionScheme::Aes256Cbc { iv } => iv,
+        let parameters = match scheme {
+            EncryptionScheme::Aes128Cbc { iv } => Some(iv),
+            #[cfg(feature = "ecb")]
+            EncryptionScheme::Aes128Ecb => None,
+            EncryptionScheme::Aes192Cbc { iv } => Some(iv),
+            #[cfg(feature = "ecb")]
+            EncryptionScheme::Aes192Ecb => None,
+            EncryptionScheme::Aes256Cbc { iv } => Some(iv),
+            #[cfg(feature = "ecb")]
+            EncryptionScheme::Aes256Ecb => None,
             #[cfg(feature = "des-insecure")]
-            EncryptionScheme::DesCbc { iv } => iv,
+            EncryptionScheme::DesCbc { iv } => Some(iv),
             #[cfg(feature = "3des")]
-            EncryptionScheme::DesEde3Cbc { iv } => iv,
-        })?;
+            EncryptionScheme::DesEde3Cbc { iv } => Some(iv),
+        }
+        .map(|iv| OctetString::new(iv).map(Into::into))
+        .transpose()?;
 
         Ok(AlgorithmIdentifier {
             oid: scheme.oid(),
-            parameters: Some(parameters.into()),
+            parameters,
         })
     }
 }

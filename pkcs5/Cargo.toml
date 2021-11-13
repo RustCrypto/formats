@@ -34,7 +34,8 @@ hex-literal = "0.3"
 [features]
 alloc = []
 3des = ["pbes2", "des"]
-des-insecure = ["pbes2", "des"]
+des-insecure = ["pbes2", "des", "ecb"]
+ecb = ["block-modes"]
 pbes2 = ["aes", "block-modes", "hmac", "pbkdf2", "scrypt", "sha2"]
 sha1 = ["pbes2", "sha-1"]
 
