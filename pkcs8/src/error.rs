@@ -14,7 +14,7 @@ pub enum Error {
 
     /// Errors relating to PKCS#5-encrypted keys.
     #[cfg(feature = "pkcs5")]
-    EncryptedKey(pkcs5::Error),
+    EncryptedPrivateKey(pkcs5::Error),
 
     /// Malformed cryptographic key contained in a PKCS#8 document.
     ///
@@ -36,7 +36,7 @@ impl fmt::Display for Error {
         match self {
             Error::Asn1(err) => write!(f, "PKCS#8 ASN.1 error: {}", err),
             #[cfg(feature = "pkcs5")]
-            Error::EncryptedKey(err) => write!(f, "{}", err),
+            Error::EncryptedPrivateKey(err) => write!(f, "{}", err),
             Error::KeyMalformed => f.write_str("PKCS#8 cryptographic key data malformed"),
             Error::ParametersMalformed => f.write_str("PKCS#8 algorithm parameters malformed"),
             Error::PublicKey(err) => write!(f, "public key error: {}", err),
@@ -62,7 +62,7 @@ impl From<der::ErrorKind> for Error {
 #[cfg(feature = "pkcs5")]
 impl From<pkcs5::Error> for Error {
     fn from(err: pkcs5::Error) -> Error {
-        Error::EncryptedKey(err)
+        Error::EncryptedPrivateKey(err)
     }
 }
 
