@@ -243,7 +243,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d174cafe51590ef0e0a6e540b9ffc8b35a1ff47fb3adda3ab272bcc9f5bfc86c"
 dependencies = [
  "generic-array",
- "rand_core",
  "subtle",
 ]
 
