@@ -49,8 +49,7 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     pub fn decrypt(&self, password: impl AsRef<[u8]>) -> Result<PrivateKeyDocument> {
         Ok(self
             .encryption_algorithm
-            .decrypt(password, self.encrypted_data)
-            .map_err(|_| Error::Crypto)?
+            .decrypt(password, self.encrypted_data)?
             .try_into()?)
     }
 
