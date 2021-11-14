@@ -31,7 +31,7 @@ impl<'a> AlgorithmIdentifier<'a> {
         if self.oid == expected_oid {
             Ok(expected_oid)
         } else {
-            Err(Error::UnknownOid { oid: expected_oid })
+            Err(Error::OidUnknown { oid: expected_oid })
         }
     }
 
@@ -45,7 +45,7 @@ impl<'a> AlgorithmIdentifier<'a> {
         if actual_oid == expected_oid {
             Ok(actual_oid)
         } else {
-            Err(Error::UnknownOid { oid: expected_oid })
+            Err(Error::OidUnknown { oid: expected_oid })
         }
     }
 

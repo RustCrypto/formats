@@ -17,7 +17,7 @@ pub enum Error {
     Asn1(der::Error),
 
     /// Unknown algorithm OID.
-    UnknownOid {
+    OidUnknown {
         /// Unrecognized OID value found in e.g. a SPKI `AlgorithmIdentifier`.
         oid: ObjectIdentifier,
     },
@@ -30,7 +30,7 @@ impl fmt::Display for Error {
                 f.write_str("AlgorithmIdentifier parameters missing")
             }
             Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
-            Error::UnknownOid { oid } => {
+            Error::OidUnknown { oid } => {
                 write!(f, "unknown/unsupported algorithm OID: {}", oid)
             }
         }
@@ -39,7 +39,11 @@ impl fmt::Display for Error {
 
 impl From<der::Error> for Error {
     fn from(err: der::Error) -> Error {
-        Error::Asn1(err)
+        if let der::ErrorKind::OidUnknown { oid } = err.kind() {
+            Error::OidUnknown { oid }
+        } else {
+            Error::Asn1(err)
+        }
     }
 }
 

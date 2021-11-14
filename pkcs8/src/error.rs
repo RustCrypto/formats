@@ -28,6 +28,9 @@ pub enum Error {
     /// [`AlgorithmIdentifier::parameters`][`crate::AlgorithmIdentifier::parameters`]
     /// is malformed or otherwise encoded in an unexpected manner.
     ParametersMalformed,
+
+    /// Public key errors propagated from the [`spki::Error`] type.
+    PublicKey(spki::Error),
 }
 
 impl fmt::Display for Error {
@@ -37,6 +40,7 @@ impl fmt::Display for Error {
             Error::Crypto => f.write_str("PKCS#8 cryptographic error"),
             Error::KeyMalformed => f.write_str("PKCS#8 cryptographic key data malformed"),
             Error::ParametersMalformed => f.write_str("PKCS#8 algorithm parameters malformed"),
+            Error::PublicKey(err) => write!(f, "public key error: {}", err),
         }
     }
 }
@@ -53,5 +57,11 @@ impl From<der::Error> for Error {
 impl From<der::ErrorKind> for Error {
     fn from(err: der::ErrorKind) -> Error {
         Error::Asn1(err.into())
+    }
+}
+
+impl From<spki::Error> for Error {
+    fn from(err: spki::Error) -> Error {
+        Error::PublicKey(err)
     }
 }
