@@ -12,11 +12,9 @@ pub enum Error {
     /// ASN.1 DER-related errors.
     Asn1(der::Error),
 
-    /// Cryptographic errors.
-    ///
-    /// This is primarily used for relaying PKCS#5-related errors for
-    /// PKCS#8 documents which have been encrypted under a password.
-    Crypto,
+    /// Errors relating to PKCS#5-encrypted keys.
+    #[cfg(feature = "pkcs5")]
+    EncryptedKey(pkcs5::Error),
 
     /// Malformed cryptographic key contained in a PKCS#8 document.
     ///
@@ -37,7 +35,8 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Asn1(err) => write!(f, "PKCS#8 ASN.1 error: {}", err),
-            Error::Crypto => f.write_str("PKCS#8 cryptographic error"),
+            #[cfg(feature = "pkcs5")]
+            Error::EncryptedKey(err) => write!(f, "{}", err),
             Error::KeyMalformed => f.write_str("PKCS#8 cryptographic key data malformed"),
             Error::ParametersMalformed => f.write_str("PKCS#8 algorithm parameters malformed"),
             Error::PublicKey(err) => write!(f, "public key error: {}", err),
@@ -57,6 +56,13 @@ impl From<der::Error> for Error {
 impl From<der::ErrorKind> for Error {
     fn from(err: der::ErrorKind) -> Error {
         Error::Asn1(err.into())
+    }
+}
+
+#[cfg(feature = "pkcs5")]
+impl From<pkcs5::Error> for Error {
+    fn from(err: pkcs5::Error) -> Error {
+        Error::EncryptedKey(err)
     }
 }
 

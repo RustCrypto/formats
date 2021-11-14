@@ -60,9 +60,7 @@ impl PrivateKeyDocument {
         let mut iv = [0u8; 16];
         rng.fill_bytes(&mut iv);
 
-        let pbes2_params = pbes2::Parameters::scrypt_aes256cbc(Default::default(), &salt, &iv)
-            .map_err(|_| Error::Crypto)?;
-
+        let pbes2_params = pbes2::Parameters::scrypt_aes256cbc(Default::default(), &salt, &iv)?;
         self.encrypt_with_params(pbes2_params, password)
     }
 
@@ -75,16 +73,13 @@ impl PrivateKeyDocument {
         pbes2_params: pbes2::Parameters<'_>,
         password: impl AsRef<[u8]>,
     ) -> Result<EncryptedPrivateKeyDocument> {
-        pbes2_params
-            .encrypt(password, self.as_ref())
-            .map_err(|_| Error::Crypto)
-            .and_then(|encrypted_data| {
-                EncryptedPrivateKeyInfo {
-                    encryption_algorithm: pbes2_params.into(),
-                    encrypted_data: &encrypted_data,
-                }
-                .try_into()
-            })
+        let encrypted_data = pbes2_params.encrypt(password, self.as_ref())?;
+
+        EncryptedPrivateKeyInfo {
+            encryption_algorithm: pbes2_params.into(),
+            encrypted_data: &encrypted_data,
+        }
+        .try_into()
     }
 }
 
