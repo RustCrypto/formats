@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 (2021-11-14)
+### Changed
+- Rust 2021 edition upgrade; MSRV 1.56 ([#136])
+- Rename `MAX_LENGTH` to `MAX_SIZE`; bump to `31` ([#174])
+- Make `length` the first field of `ObjectIdentifier` ([#178])
+
+### Fixed
+- `debug_assert!` false positive on large arc ([#180])
+
+[#136]: https://github.com/RustCrypto/formats/pull/136
+[#174]: https://github.com/RustCrypto/formats/pull/174
+[#178]: https://github.com/RustCrypto/formats/pull/178
+[#180]: https://github.com/RustCrypto/formats/pull/180
+
 ## 0.6.2 (2021-10-14)
 ### Fixed
 - Off-by-one error parsing large BER arcs ([#84])
