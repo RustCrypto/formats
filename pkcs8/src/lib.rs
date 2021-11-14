@@ -107,7 +107,7 @@ pub use {
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use der::pem::{self, LineEnding};
+pub use der::pem::LineEnding;
 
 #[cfg(feature = "pkcs5")]
 pub use {crate::encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
