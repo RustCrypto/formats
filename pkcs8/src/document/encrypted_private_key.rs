@@ -10,7 +10,7 @@ use zeroize::{Zeroize, Zeroizing};
 use crate::PrivateKeyDocument;
 
 #[cfg(feature = "pem")]
-use {crate::pem, core::str::FromStr};
+use {core::str::FromStr, der::pem};
 
 /// Encrypted PKCS#8 private key document.
 ///

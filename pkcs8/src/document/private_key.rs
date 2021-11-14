@@ -15,9 +15,9 @@ use {
 
 #[cfg(feature = "pem")]
 use {
-    crate::{pem, LineEnding},
     alloc::string::String,
     core::str::FromStr,
+    der::pem::{self, LineEnding},
 };
 
 #[cfg(feature = "std")]
