@@ -19,7 +19,7 @@ rust-version = "1.56"
 const-oid = { version = "0.7", optional = true, path = "../const-oid" }
 crypto-bigint = { version = "0.3", optional = true, default-features = false, features = ["generic-array"] }
 der_derive = { version = "=0.5.0-pre.1", optional = true, path = "derive" }
-pem-rfc7468 = { version = "=0.3.0-pre", optional = true, path = "../pem-rfc7468" }
+pem-rfc7468 = { version = "0.3", optional = true, path = "../pem-rfc7468" }
 time = { version = "0.3", optional = true, default-features = false }
 
 [dev-dependencies]
