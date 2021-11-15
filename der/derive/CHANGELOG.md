@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.0 (2021-11-15)
+### Added
+- `asn1(tag_mode = "...")` derive attribute ([#150])
+- `asn1(context_specific = "...")` derive attribute ([#150])
+- `Enumerated` custom derive macro ([#171])
+- `asn1(tag_mode = "...")` attribute ([#197])
+- Support for handling `DEFAULT` values of `SEQUENCE`s ([#202])
+- `ValueOrd` custom derive macro ([#206])
+- `CONTEXT-SPECIFIC` support for `Sequence` custom derive ([#220])
+
+### Changed
+- Rename `Message` trait to `Sequence` ([#99])
+- Rust 2021 edition upgrade; MSRV 1.56 ([#136])
+
+### Removed
+- Don't automatically derive `From` impls for `Choice` ([#168])
+
+[#99]: https://github.com/RustCrypto/formats/pull/99
+[#136]: https://github.com/RustCrypto/formats/pull/136
+[#150]: https://github.com/RustCrypto/formats/pull/150
+[#168]: https://github.com/RustCrypto/formats/pull/150
+[#171]: https://github.com/RustCrypto/formats/pull/171
+[#197]: https://github.com/RustCrypto/formats/pull/197
+[#202]: https://github.com/RustCrypto/formats/pull/202
+[#206]: https://github.com/RustCrypto/formats/pull/206
+[#220]: https://github.com/RustCrypto/formats/pull/220
+
 ## 0.4.1 (2021-09-14)
 ### Changed
 - Moved to `formats` repo ([#2])
