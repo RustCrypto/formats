@@ -62,16 +62,22 @@ pub(crate) struct FieldAttrs {
     /// Value of the `#[asn1(context_specific = "...")] attribute if provided.
     pub context_specific: Option<TagNumber>,
 
+    /// Indicates name of function that supplies the default value, which will be used in cases
+    /// where encoding is omitted per DER and to omit the encoding per DER
+    pub default: Option<Path>,
+
+    /// Is this field "extensible", i.e. preceded by the `...` extensibility marker?
+    pub extensible: bool,
+
+    /// Is this field `OPTIONAL`?
+    pub optional: bool,
+
     /// Tagging mode for this type: `EXPLICIT` or `IMPLICIT`, supplied as
     /// `#[asn1(tag_mode = "...")]`.
     ///
     /// Inherits from the type-level tagging mode if specified, or otherwise
     /// defaults to `EXPLICIT`.
     pub tag_mode: TagMode,
-
-    /// Indicates name of function that supplies the default value, which will be used in cases
-    /// where encoding is omitted per DER and to omit the encoding per DER
-    pub default: Option<Path>,
 }
 
 impl FieldAttrs {
@@ -79,8 +85,10 @@ impl FieldAttrs {
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
         let mut asn1_type = None;
         let mut context_specific = None;
-        let mut tag_mode = None;
         let mut default = None;
+        let mut extensible = None;
+        let mut optional = None;
+        let mut tag_mode = None;
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
@@ -93,19 +101,7 @@ impl FieldAttrs {
                 }
 
                 context_specific = Some(tag_number);
-            // `type = "..."` attribute
-            } else if let Some(ty) = attr.parse_value("type") {
-                if asn1_type.is_some() {
-                    abort!(attr.name, "duplicate ASN.1 `type` attribute: {}");
-                }
-
-                asn1_type = Some(ty);
-            } else if let Some(mode) = attr.parse_value("tag_mode") {
-                if tag_mode.is_some() {
-                    abort!(attr.name, "duplicate ASN.1 `tag_mode` attribute");
-                }
-
-                tag_mode = Some(mode);
+            // `default` attribute
             } else if attr.parse_value::<String>("default").is_some() {
                 if default.is_some() {
                     abort!(attr.name, "duplicate ASN.1 `default` attribute");
@@ -114,6 +110,34 @@ impl FieldAttrs {
                 default = Some(attr.value.parse().unwrap_or_else(|e| {
                     abort!(attr.value, "error parsing ASN.1 `default` attribute: {}", e)
                 }));
+            // `extensible` attribute
+            } else if let Some(ext) = attr.parse_value("extensible") {
+                if extensible.is_some() {
+                    abort!(attr.name, "duplicate ASN.1 `extensible` attribute");
+                }
+
+                extensible = Some(ext);
+            // `optional` attribute
+            } else if let Some(opt) = attr.parse_value("optional") {
+                if optional.is_some() {
+                    abort!(attr.name, "duplicate ASN.1 `optional` attribute");
+                }
+
+                optional = Some(opt);
+            // `tag_mode` attribute
+            } else if let Some(mode) = attr.parse_value("tag_mode") {
+                if tag_mode.is_some() {
+                    abort!(attr.name, "duplicate ASN.1 `tag_mode` attribute");
+                }
+
+                tag_mode = Some(mode);
+            // `type = "..."` attribute
+            } else if let Some(ty) = attr.parse_value("type") {
+                if asn1_type.is_some() {
+                    abort!(attr.name, "duplicate ASN.1 `type` attribute: {}");
+                }
+
+                asn1_type = Some(ty);
             } else {
                 abort!(
                     attr.name,
@@ -127,6 +151,8 @@ impl FieldAttrs {
             asn1_type,
             context_specific,
             default,
+            extensible: extensible.unwrap_or_default(),
+            optional: optional.unwrap_or_default(),
             tag_mode: tag_mode.unwrap_or(type_attrs.tag_mode),
         }
     }
@@ -158,21 +184,44 @@ impl FieldAttrs {
 
             let context_specific = match self.tag_mode {
                 TagMode::Explicit => {
-                    quote!(::der::asn1::ContextSpecific::<#type_params>::decode_explicit(decoder, #tag_number)?)
+                    if self.extensible || self.optional {
+                        quote! {
+                            ::der::asn1::ContextSpecific::<#type_params>::decode_explicit(
+                                decoder,
+                                #tag_number
+                            )?
+                        }
+                    } else {
+                        quote! {
+                            match ::der::asn1::ContextSpecific::<#type_params>::decode(decoder)? {
+                                field if field.tag_number == #tag_number => Some(field),
+                                _ => None
+                            }
+                        }
+                    }
                 }
                 TagMode::Implicit => {
-                    quote!(::der::asn1::ContextSpecific::<#type_params>::decode_implicit(decoder, #tag_number)?)
+                    quote! {
+                        ::der::asn1::ContextSpecific::<#type_params>::decode_implicit(
+                            decoder,
+                            #tag_number
+                        )?
+                    }
                 }
             };
 
-            // TODO(tarcieri): better error handling?
-            quote! {
-                #context_specific.ok_or_else(|| {
-                    der::Tag::ContextSpecific {
-                        number: #tag_number,
-                        constructed: false
-                    }.value_error()
-                })?.value
+            if self.optional {
+                quote!(#context_specific.map(|cs| cs.value))
+            } else {
+                // TODO(tarcieri): better error handling?
+                quote! {
+                    #context_specific.ok_or_else(|| {
+                        der::Tag::ContextSpecific {
+                            number: #tag_number,
+                            constructed: false
+                        }.value_error()
+                    })?.value
+                }
             }
         } else {
             self.asn1_type

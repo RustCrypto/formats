@@ -57,6 +57,21 @@
 //!
 //! The value must be quoted and contain a number, e.g. `#[asn1(context_specific = "42"]`.
 //!
+//! ### `#[asn1(default = "...")` attribute: `DEFAULT` support
+//!
+//! This behaves like `serde_derive`'s `default` attribute, allowing you to
+//! specify the path to a function which returns a default value.
+//!
+//! ### `#[asn1(extensible = "true")` attribute: support for `...` extensibility operator
+//!
+//! This attribute can be applied to the fields of `struct` types, and will
+//! skip over unrecognized lower-numbered `CONTEXT-SPECIFIC` fields when
+//! looking for a particular field of a struct.
+//!
+//! ### `#[asn1(optional = "true")` attribute: support for `OPTIONAL` fields
+//!
+//! This attribute explicitly annotates a field as `OPTIONAL`.
+//!
 //! ### `#[asn1(type = "...")]` attribute: ASN.1 type declaration
 //!
 //! This attribute can be used to specify the ASN.1 type for a particular

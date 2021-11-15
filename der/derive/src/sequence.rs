@@ -1,7 +1,7 @@
 //! Support for deriving the `Sequence` trait on structs for the purposes of
 //! decoding/encoding ASN.1 `SEQUENCE` types as mapped to struct fields.
 
-use crate::{FieldAttrs, TagMode, TypeAttrs};
+use crate::{FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
@@ -130,11 +130,6 @@ impl SequenceField {
         });
 
         let attrs = FieldAttrs::parse(&field.attrs, type_attrs);
-        let field_type = field.ty.clone();
-
-        if attrs.tag_mode == TagMode::Implicit {
-            abort!(ident, "IMPLICIT tagging not supported for `Sequence`");
-        }
 
         if attrs.asn1_type.is_some() && attrs.default.is_some() {
             abort!(
@@ -146,7 +141,7 @@ impl SequenceField {
         Self {
             ident,
             attrs,
-            field_type,
+            field_type: field.ty.clone(),
         }
     }
 
@@ -158,11 +153,17 @@ impl SequenceField {
 
         let ident = &self.ident;
         let ty = &self.field_type;
+        let decoder = self.attrs.decoder();
 
         if self.attrs.asn1_type.is_some() {
-            let dec = self.attrs.decoder();
-            quote! {
-                let #ident = #dec.try_into()?;
+            if self.attrs.optional {
+                quote! {
+                    let #ident = #decoder.map(TryInto::try_into).transpose()?;
+                }
+            } else {
+                quote! {
+                    let #ident = #decoder.try_into()?;
+                }
             }
         } else if let Some(default) = &self.attrs.default {
             quote! {
@@ -170,7 +171,7 @@ impl SequenceField {
             }
         } else {
             quote! {
-                let #ident = decoder.decode()?;
+                let #ident = #decoder;
             }
         }
     }
@@ -185,8 +186,21 @@ impl SequenceField {
         let binding = quote!(&self.#ident);
 
         if let Some(ty) = &self.attrs.asn1_type {
-            let encoder = ty.encoder(&binding);
-            quote!(&#encoder)
+            if self.attrs.optional {
+                let map_arg = quote!(field);
+                let encoder = ty.encoder(&map_arg);
+
+                // TODO(tarcieri): refactor this to get rid of `Result` type annotation
+                quote! {
+                    #binding.as_ref().map(|#map_arg| {
+                        let res: der::Result<_> = Ok(#encoder);
+                        res
+                    }).transpose()?
+                }
+            } else {
+                let encoder = ty.encoder(&binding);
+                quote!(&#encoder)
+            }
         } else if let Some(default) = &self.attrs.default {
             quote! {
                 &::der::asn1::OptionalRef(if #binding == &#default() {
@@ -211,6 +225,7 @@ mod tests {
     #[test]
     fn algorithm_identifier_example() {
         let input = parse_quote! {
+            #[derive(Sequence)]
             pub struct AlgorithmIdentifier<'a> {
                 pub algorithm: ObjectIdentifier,
                 pub parameters: Option<Any<'a>>,
@@ -239,6 +254,7 @@ mod tests {
     #[test]
     fn spki_example() {
         let input = parse_quote! {
+            #[derive(Sequence)]
             pub struct SubjectPublicKeyInfo<'a> {
                 pub algorithm: AlgorithmIdentifier<'a>,
 
@@ -266,5 +282,104 @@ mod tests {
         );
         assert_eq!(subject_public_key_field.attrs.context_specific, None);
         assert_eq!(subject_public_key_field.attrs.tag_mode, TagMode::Explicit);
+    }
+
+    /// PKCS#8v2 `OneAsymmetricKey`.
+    ///
+    /// ```text
+    /// OneAsymmetricKey ::= SEQUENCE {
+    ///     version                   Version,
+    ///     privateKeyAlgorithm       PrivateKeyAlgorithmIdentifier,
+    ///     privateKey                PrivateKey,
+    ///     attributes            [0] Attributes OPTIONAL,
+    ///     ...,
+    ///     [[2: publicKey        [1] PublicKey OPTIONAL ]],
+    ///     ...
+    ///   }
+    ///
+    /// Version ::= INTEGER { v1(0), v2(1) } (v1, ..., v2)
+    ///
+    /// PrivateKeyAlgorithmIdentifier ::= AlgorithmIdentifier
+    ///
+    /// PrivateKey ::= OCTET STRING
+    ///
+    /// Attributes ::= SET OF Attribute
+    ///
+    /// PublicKey ::= BIT STRING
+    /// ```
+    #[test]
+    fn pkcs8_example() {
+        let input = parse_quote! {
+            #[derive(Sequence)]
+            pub struct OneAsymmetricKey<'a> {
+                pub version: u8,
+                pub private_key_algorithm: AlgorithmIdentifier<'a>,
+                #[asn1(type = "OCTET STRING")]
+                pub private_key: &'a [u8],
+                #[asn1(context_specific = "0", extensible = "true", optional = "true")]
+                pub attributes: Option<SetOf<Any<'a>, 1>>,
+                #[asn1(
+                    context_specific = "1",
+                    extensible = "true",
+                    optional = "true",
+                    type = "BIT STRING"
+                )]
+                pub public_key: Option<&'a [u8]>,
+            }
+        };
+
+        let ir = DeriveSequence::new(input);
+        assert_eq!(ir.ident, "OneAsymmetricKey");
+        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(ir.fields.len(), 5);
+
+        let version_field = &ir.fields[0];
+        assert_eq!(version_field.ident, "version");
+        assert_eq!(version_field.attrs.asn1_type, None);
+        assert_eq!(version_field.attrs.context_specific, None);
+        assert_eq!(version_field.attrs.extensible, false);
+        assert_eq!(version_field.attrs.optional, false);
+        assert_eq!(version_field.attrs.tag_mode, TagMode::Explicit);
+
+        let algorithm_field = &ir.fields[1];
+        assert_eq!(algorithm_field.ident, "private_key_algorithm");
+        assert_eq!(algorithm_field.attrs.asn1_type, None);
+        assert_eq!(algorithm_field.attrs.context_specific, None);
+        assert_eq!(algorithm_field.attrs.extensible, false);
+        assert_eq!(algorithm_field.attrs.optional, false);
+        assert_eq!(algorithm_field.attrs.tag_mode, TagMode::Explicit);
+
+        let private_key_field = &ir.fields[2];
+        assert_eq!(private_key_field.ident, "private_key");
+        assert_eq!(
+            private_key_field.attrs.asn1_type,
+            Some(Asn1Type::OctetString)
+        );
+        assert_eq!(private_key_field.attrs.context_specific, None);
+        assert_eq!(private_key_field.attrs.extensible, false);
+        assert_eq!(private_key_field.attrs.optional, false);
+        assert_eq!(private_key_field.attrs.tag_mode, TagMode::Explicit);
+
+        let attributes_field = &ir.fields[3];
+        assert_eq!(attributes_field.ident, "attributes");
+        assert_eq!(attributes_field.attrs.asn1_type, None);
+        assert_eq!(
+            attributes_field.attrs.context_specific,
+            Some("0".parse().unwrap())
+        );
+        assert_eq!(attributes_field.attrs.extensible, true);
+        assert_eq!(attributes_field.attrs.optional, true);
+        assert_eq!(attributes_field.attrs.tag_mode, TagMode::Explicit);
+
+        let public_key_field = &ir.fields[4];
+        assert_eq!(public_key_field.ident, "public_key");
+        assert_eq!(public_key_field.attrs.asn1_type, Some(Asn1Type::BitString));
+        assert_eq!(
+            public_key_field.attrs.context_specific,
+            Some("1".parse().unwrap())
+        );
+        assert_eq!(public_key_field.attrs.extensible, true);
+        assert_eq!(public_key_field.attrs.optional, true);
+        assert_eq!(public_key_field.attrs.tag_mode, TagMode::Explicit);
     }
 }

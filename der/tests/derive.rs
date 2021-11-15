@@ -201,7 +201,7 @@ mod enumerated {
 /// Custom derive test cases for the `Sequence` macro.
 mod sequence {
     use der::{
-        asn1::{Any, ObjectIdentifier},
+        asn1::{Any, ObjectIdentifier, SetOf},
         Decodable, Encodable, Sequence, ValueOrd,
     };
     use hex_literal::hex;
@@ -219,6 +219,24 @@ mod sequence {
         pub algorithm: AlgorithmIdentifier<'a>,
         #[asn1(type = "BIT STRING")]
         pub subject_public_key: &'a [u8],
+    }
+
+    /// PKCS#8v2 `OneAsymmetricKey`
+    #[derive(Sequence)]
+    pub struct OneAsymmetricKey<'a> {
+        pub version: u8,
+        pub private_key_algorithm: AlgorithmIdentifier<'a>,
+        #[asn1(type = "OCTET STRING")]
+        pub private_key: &'a [u8],
+        #[asn1(context_specific = "0", extensible = "true", optional = "true")]
+        pub attributes: Option<SetOf<Any<'a>, 1>>,
+        #[asn1(
+            context_specific = "1",
+            extensible = "true",
+            optional = "true",
+            type = "BIT STRING"
+        )]
+        pub public_key: Option<&'a [u8]>,
     }
 
     /// X.509 extension
