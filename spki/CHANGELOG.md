@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.0 (2021-11-15)
+### Added
+- SPKI fingerprint support ([#36])
+- `PublicKeyDocument` type originally from `pkcs8` crate ([#118])
+- `Error` type ([#143])
+
+### Changed
+- Rename `From/ToPublicKey` => `DecodePublicKey`/`EncodePublicKey` ([#119])
+- Use `der::Document` to impl `PublicKeyDocument` ([#134])
+- Rust 2021 edition upgrade; MSRV 1.56 ([#136])
+- Bump `der` dependency to v0.5 ([#222])
+
+[#36]: https://github.com/RustCrypto/formats/pull/36
+[#118]: https://github.com/RustCrypto/formats/pull/118
+[#119]: https://github.com/RustCrypto/formats/pull/119
+[#134]: https://github.com/RustCrypto/formats/pull/134
+[#136]: https://github.com/RustCrypto/formats/pull/136
+[#143]: https://github.com/RustCrypto/formats/pull/143
+[#222]: https://github.com/RustCrypto/formats/pull/222
+
 ## 0.4.1 (2021-09-14)
 ### Changed
 - Moved to `formats` repo ([#2])
