@@ -147,6 +147,10 @@ impl ChoiceVariant {
         let ident = input.ident.clone();
         let attrs = FieldAttrs::parse(&input.attrs, type_attrs);
 
+        if attrs.extensible {
+            abort!(&ident, "`extensible` is not allowed on CHOICE");
+        }
+
         // Validate that variant is a 1-element tuple struct
         match &input.fields {
             // TODO(tarcieri): handle 0 bindings for ASN.1 NULL
