@@ -55,9 +55,17 @@ impl<'a> Any<'a> {
         decoder.finish(result)
     }
 
-    /// Is this value an ASN.1 NULL value?
+    /// Is this value an ASN.1 `NULL` value?
     pub fn is_null(self) -> bool {
-        Null::try_from(self).is_ok()
+        self == Any::null()
+    }
+
+    /// Create an [`Any`] value representing ASN.1 `NULL`.
+    pub const fn null() -> Self {
+        Any {
+            tag: Tag::Null,
+            value: ByteSlice::empty(),
+        }
     }
 
     /// Attempt to decode an ASN.1 `BIT STRING`.
