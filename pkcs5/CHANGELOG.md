@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.4.0 (2021-11-15)
+### Changed
+- Introduce `Error` enum with new error cases ([#26])
+- Introduce specialized `Result` type for crate ([#26])
+- Rust 2021 edition upgrade; MSRV 1.56 ([#136])
+- Bump `der` dependency to v0.5 ([#222])
+- Bump `spki` dependency to v0.5 ([#223])
+
+### Removed
+- Legacy DES encryption support ([#25])
+
+[#25]: https://github.com/RustCrypto/formats/pull/25
+[#26]: https://github.com/RustCrypto/formats/pull/26
+[#136]: https://github.com/RustCrypto/formats/pull/136
+[#222]: https://github.com/RustCrypto/formats/pull/222
+[#223]: https://github.com/RustCrypto/formats/pull/223
+
 ## 0.3.2 (2021-09-14)
 ### Added
 - `3des` and `des-insecure` features
