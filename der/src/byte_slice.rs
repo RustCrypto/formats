@@ -40,6 +40,14 @@ impl<'a> ByteSlice<'a> {
     pub fn is_empty(self) -> bool {
         self.len() == Length::ZERO
     }
+
+    /// Create an empty [`ByteSlice`].
+    pub const fn empty() -> Self {
+        Self {
+            length: Length::ZERO,
+            inner: &[],
+        }
+    }
 }
 
 impl AsRef<[u8]> for ByteSlice<'_> {
