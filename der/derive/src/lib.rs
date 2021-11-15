@@ -35,7 +35,7 @@
 //! The following attributes can be added to an `enum` or `struct` when
 //! deriving either [`Choice`] or [`Sequence`] respectively:
 //!
-//! ### `#[asn1(tag_mode = "...")` attribute: `EXPLICIT` vs `IMPLICIT`
+//! ### `#[asn1(tag_mode = "...")]` attribute: `EXPLICIT` vs `IMPLICIT`
 //!
 //! This attribute can be used to declare the tagging mode used by a particular
 //! ASN.1 module.
@@ -57,18 +57,18 @@
 //!
 //! The value must be quoted and contain a number, e.g. `#[asn1(context_specific = "42"]`.
 //!
-//! ### `#[asn1(default = "...")` attribute: `DEFAULT` support
+//! ### `#[asn1(default = "...")]` attribute: `DEFAULT` support
 //!
 //! This behaves like `serde_derive`'s `default` attribute, allowing you to
 //! specify the path to a function which returns a default value.
 //!
-//! ### `#[asn1(extensible = "true")` attribute: support for `...` extensibility operator
+//! ### `#[asn1(extensible = "true")]` attribute: support for `...` extensibility operator
 //!
 //! This attribute can be applied to the fields of `struct` types, and will
 //! skip over unrecognized lower-numbered `CONTEXT-SPECIFIC` fields when
 //! looking for a particular field of a struct.
 //!
-//! ### `#[asn1(optional = "true")` attribute: support for `OPTIONAL` fields
+//! ### `#[asn1(optional = "true")]` attribute: support for `OPTIONAL` fields
 //!
 //! This attribute explicitly annotates a field as `OPTIONAL`.
 //!
