@@ -8,11 +8,17 @@ use crate::{RsaPrivateKeyDocument, RsaPublicKeyDocument};
 #[cfg(feature = "pem")]
 use {crate::LineEnding, alloc::string::String};
 
+#[cfg(feature = "pkcs8")]
+use crate::{ALGORITHM_ID, ALGORITHM_OID};
+
 #[cfg(feature = "std")]
 use std::path::Path;
 
+#[cfg(all(feature = "alloc", feature = "pkcs8"))]
+use der::Document;
+
 #[cfg(any(feature = "pem", feature = "std"))]
-use {der::Document, zeroize::Zeroizing};
+use zeroize::Zeroizing;
 
 /// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
 pub trait DecodeRsaPrivateKey: Sized {
@@ -145,5 +151,53 @@ pub trait EncodeRsaPublicKey {
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         self.to_pkcs1_der()?.write_pkcs1_pem_file(path, line_ending)
+    }
+}
+
+#[cfg(feature = "pkcs8")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
+impl<T: pkcs8::DecodePrivateKey> DecodeRsaPrivateKey for T {
+    fn from_pkcs1_der(private_key: &[u8]) -> Result<Self> {
+        let algorithm = pkcs8::AlgorithmIdentifier {
+            oid: ALGORITHM_OID,
+            parameters: Some(der::asn1::Null.into()),
+        };
+
+        Ok(Self::try_from(pkcs8::PrivateKeyInfo {
+            algorithm,
+            private_key,
+            public_key: None,
+        })?)
+    }
+}
+
+#[cfg(feature = "pkcs8")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
+impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T {
+    fn from_pkcs1_der(public_key: &[u8]) -> Result<Self> {
+        Ok(Self::try_from(pkcs8::SubjectPublicKeyInfo {
+            algorithm: ALGORITHM_ID,
+            subject_public_key: public_key,
+        })?)
+    }
+}
+
+#[cfg(all(feature = "alloc", feature = "pkcs8"))]
+#[cfg_attr(docsrs, doc(all(feature = "alloc", feature = "pkcs8")))]
+impl<T: pkcs8::EncodePrivateKey> EncodeRsaPrivateKey for T {
+    fn to_pkcs1_der(&self) -> Result<RsaPrivateKeyDocument> {
+        let doc = self.to_pkcs8_der()?;
+        Ok(RsaPrivateKeyDocument::from_der(doc.decode().private_key)?)
+    }
+}
+
+#[cfg(all(feature = "alloc", feature = "pkcs8"))]
+#[cfg_attr(docsrs, doc(all(feature = "alloc", feature = "pkcs8")))]
+impl<T: pkcs8::EncodePublicKey> EncodeRsaPublicKey for T {
+    fn to_pkcs1_der(&self) -> Result<RsaPublicKeyDocument> {
+        let doc = self.to_public_key_der()?;
+        Ok(RsaPublicKeyDocument::from_der(
+            doc.decode().subject_public_key,
+        )?)
     }
 }
