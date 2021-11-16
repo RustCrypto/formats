@@ -29,7 +29,7 @@ hex-literal = "0.3"
 
 [features]
 alloc = ["der/alloc", "pkcs8/alloc", "zeroize/alloc"]
-pem = ["alloc", "der/pem"]
+pem = ["alloc", "der/pem", "pkcs8/pem"]
 std = ["der/std"]
 
 [package.metadata.docs.rs]
