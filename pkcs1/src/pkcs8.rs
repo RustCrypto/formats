@@ -27,7 +27,7 @@ impl<T: DecodePrivateKey> DecodeRsaPrivateKey for T {
             parameters: Some(Null.into()),
         };
 
-        Ok(Self::from_pkcs8_private_key_info(PrivateKeyInfo {
+        Ok(Self::try_from(PrivateKeyInfo {
             algorithm,
             private_key,
             public_key: None,

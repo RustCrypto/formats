@@ -28,7 +28,7 @@ impl<T: DecodePrivateKey> DecodeEcPrivateKey for T {
             parameters: params_oid.as_ref().map(Into::into),
         };
 
-        Ok(Self::from_pkcs8_private_key_info(PrivateKeyInfo {
+        Ok(Self::try_from(PrivateKeyInfo {
             algorithm,
             private_key,
             public_key: None,
