@@ -1,16 +1,16 @@
 //! Blanket impl of PKCS#1 support for types with PKCS#8 support.
 
-use crate::{
-    DecodeRsaPrivateKey, DecodeRsaPublicKey, EncodeRsaPrivateKey, EncodeRsaPublicKey, Result,
-    RsaPrivateKeyDocument, RsaPublicKeyDocument,
-};
+use crate::{DecodeRsaPrivateKey, DecodeRsaPublicKey, Result};
 use pkcs8::{
     der::asn1::{Any, Null},
     AlgorithmIdentifier, ObjectIdentifier,
 };
 
 #[cfg(feature = "alloc")]
-use der::Document;
+use {
+    crate::{EncodeRsaPrivateKey, EncodeRsaPublicKey, RsaPrivateKeyDocument, RsaPublicKeyDocument},
+    der::Document,
+};
 
 /// `rsaEncryption` Object Identifier (OID)
 pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.1.1");
