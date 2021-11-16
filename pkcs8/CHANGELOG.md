@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 (2021-11-16)
+### Added
+- Re-export `spki` crate ([#210])
+
+### Changed
+- Replace usages of `expect` with fallible methods ([#108])
+- Impl `From*Key`/`To*Key` traits on `Document` types ([#110])
+- Rename `From/ToPrivateKey` => `DecodePrivateKey`/`EncodePrivateKey` ([#121])
+- Rust 2021 edition upgrade; MSRV 1.56 ([#136])
+- Use `der::Document` to impl `*PrivateKeyDocument` ([#140])
+- Rename `Error::Crypto` => `Error::EncryptedPrivateKey` ([#213], [#214])
+- Bump `der` dependency to v0.5 ([#222])
+- Bump `spki` dependency to v0.5 ([#223])
+- Bump `pkcs5` dependency to v0.4 ([#224])
+- Replace `from_pkcs8_private_key_info` with `TryFrom` ([#230])
+
+### Removed
+- `*_with_le` PEM encoding methods ([#109])
+- PKCS#1 support; moved to `pkcs1` crate ([#124])
+- I/O related errors from key format crates ([#158])
+- `der::pem` export ([#211])
+
+[#108]: https://github.com/RustCrypto/formats/pull/108
+[#109]: https://github.com/RustCrypto/formats/pull/109
+[#110]: https://github.com/RustCrypto/formats/pull/110
+[#121]: https://github.com/RustCrypto/formats/pull/121
+[#124]: https://github.com/RustCrypto/formats/pull/124
+[#136]: https://github.com/RustCrypto/formats/pull/136
+[#140]: https://github.com/RustCrypto/formats/pull/140
+[#158]: https://github.com/RustCrypto/formats/pull/158
+[#210]: https://github.com/RustCrypto/formats/pull/210
+[#211]: https://github.com/RustCrypto/formats/pull/211
+[#213]: https://github.com/RustCrypto/formats/pull/213
+[#214]: https://github.com/RustCrypto/formats/pull/214
+[#222]: https://github.com/RustCrypto/formats/pull/222
+[#223]: https://github.com/RustCrypto/formats/pull/223
+[#224]: https://github.com/RustCrypto/formats/pull/224
+[#230]: https://github.com/RustCrypto/formats/pull/230
+
 ## 0.7.6 (2021-09-14)
 ### Added
 - `3des` and `des-insecure` features
