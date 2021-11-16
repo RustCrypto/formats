@@ -20,6 +20,10 @@ mod public_key;
 mod traits;
 mod version;
 
+#[cfg(feature = "pkcs8")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
+mod pkcs8;
+
 pub use der::{self, asn1::UIntBytes};
 
 pub use self::{

@@ -1,6 +1,6 @@
 //! Traits for parsing objects from PKCS#1 encoded documents
 
-use crate::{Result, RsaPrivateKey, RsaPublicKey};
+use crate::Result;
 
 #[cfg(feature = "alloc")]
 use crate::{RsaPrivateKeyDocument, RsaPublicKeyDocument};
@@ -16,14 +16,9 @@ use {der::Document, zeroize::Zeroizing};
 
 /// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
 pub trait DecodeRsaPrivateKey: Sized {
-    /// Parse the [`RsaPrivateKey`] from a PKCS#1-encoded document.
-    fn from_pkcs1_private_key(private_key: RsaPrivateKey<'_>) -> Result<Self>;
-
     /// Deserialize PKCS#1 private key from ASN.1 DER-encoded data
     /// (binary format).
-    fn from_pkcs1_der(bytes: &[u8]) -> Result<Self> {
-        Self::from_pkcs1_private_key(RsaPrivateKey::try_from(bytes)?)
-    }
+    fn from_pkcs1_der(bytes: &[u8]) -> Result<Self>;
 
     /// Deserialize PKCS#1-encoded private key from PEM.
     ///
@@ -35,8 +30,7 @@ pub trait DecodeRsaPrivateKey: Sized {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_pkcs1_pem(s: &str) -> Result<Self> {
-        RsaPrivateKeyDocument::from_pkcs1_pem(s)
-            .and_then(|doc| Self::from_pkcs1_private_key(doc.decode()))
+        RsaPrivateKeyDocument::from_pkcs1_pem(s).and_then(|doc| Self::from_pkcs1_der(doc.as_der()))
     }
 
     /// Load PKCS#1 private key from an ASN.1 DER-encoded file on the local
@@ -45,7 +39,7 @@ pub trait DecodeRsaPrivateKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_der_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPrivateKeyDocument::read_pkcs1_der_file(path)
-            .and_then(|doc| Self::from_pkcs1_private_key(doc.decode()))
+            .and_then(|doc| Self::from_pkcs1_der(doc.as_der()))
     }
 
     /// Load PKCS#1 private key from a PEM-encoded file on the local filesystem.
@@ -54,20 +48,15 @@ pub trait DecodeRsaPrivateKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPrivateKeyDocument::read_pkcs1_pem_file(path)
-            .and_then(|doc| Self::from_pkcs1_private_key(doc.decode()))
+            .and_then(|doc| Self::from_pkcs1_der(doc.as_der()))
     }
 }
 
 /// Parse a [`RsaPublicKey`] from a PKCS#1-encoded document.
 pub trait DecodeRsaPublicKey: Sized {
-    /// Parse [`RsaPublicKey`] into a [`RsaPublicKey`].
-    fn from_pkcs1_public_key(public_key: RsaPublicKey<'_>) -> Result<Self>;
-
     /// Deserialize object from ASN.1 DER-encoded [`RsaPublicKey`]
     /// (binary format).
-    fn from_pkcs1_der(bytes: &[u8]) -> Result<Self> {
-        Self::from_pkcs1_public_key(RsaPublicKey::try_from(bytes)?)
-    }
+    fn from_pkcs1_der(bytes: &[u8]) -> Result<Self>;
 
     /// Deserialize PEM-encoded [`RsaPublicKey`].
     ///
@@ -79,8 +68,7 @@ pub trait DecodeRsaPublicKey: Sized {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_pkcs1_pem(s: &str) -> Result<Self> {
-        RsaPublicKeyDocument::from_pkcs1_pem(s)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
+        RsaPublicKeyDocument::from_pkcs1_pem(s).and_then(|doc| Self::from_pkcs1_der(doc.as_der()))
     }
 
     /// Load [`RsaPublicKey`] from an ASN.1 DER-encoded file on the local
@@ -89,7 +77,7 @@ pub trait DecodeRsaPublicKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_der_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPublicKeyDocument::read_pkcs1_der_file(path)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
+            .and_then(|doc| Self::from_pkcs1_der(doc.as_der()))
     }
 
     /// Load [`RsaPublicKey`] from a PEM-encoded file on the local filesystem.
@@ -98,7 +86,7 @@ pub trait DecodeRsaPublicKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         RsaPublicKeyDocument::read_pkcs1_pem_file(path)
-            .and_then(|doc| Self::from_pkcs1_public_key(doc.decode()))
+            .and_then(|doc| Self::from_pkcs1_der(doc.as_der()))
     }
 }
 

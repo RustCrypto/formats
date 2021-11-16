@@ -31,10 +31,6 @@ impl<'a> Document<'a> for RsaPrivateKeyDocument {
 }
 
 impl DecodeRsaPrivateKey for RsaPrivateKeyDocument {
-    fn from_pkcs1_private_key(private_key: RsaPrivateKey<'_>) -> Result<Self> {
-        Ok(Self::from_msg(&private_key)?)
-    }
-
     fn from_pkcs1_der(bytes: &[u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }

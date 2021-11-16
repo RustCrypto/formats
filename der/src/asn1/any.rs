@@ -28,6 +28,12 @@ pub struct Any<'a> {
 }
 
 impl<'a> Any<'a> {
+    /// [`Any`] representation of the ASN.1 `NULL` type.
+    pub const NULL: Self = Self {
+        tag: Tag::Null,
+        value: ByteSlice::EMPTY,
+    };
+
     /// Create a new [`Any`] from the provided [`Tag`] and byte slice.
     pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self> {
         let value = ByteSlice::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
@@ -57,15 +63,7 @@ impl<'a> Any<'a> {
 
     /// Is this value an ASN.1 `NULL` value?
     pub fn is_null(self) -> bool {
-        self == Any::null()
-    }
-
-    /// Create an [`Any`] value representing ASN.1 `NULL`.
-    pub const fn null() -> Self {
-        Any {
-            tag: Tag::Null,
-            value: ByteSlice::empty(),
-        }
+        self == Self::NULL
     }
 
     /// Attempt to decode an ASN.1 `BIT STRING`.
