@@ -20,11 +20,10 @@ mod public_key;
 mod traits;
 mod version;
 
-#[cfg(feature = "pkcs8")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-pub mod pkcs8;
-
-pub use der::{self, asn1::UIntBytes};
+pub use der::{
+    self,
+    asn1::{ObjectIdentifier, UIntBytes},
+};
 
 pub use self::{
     error::{Error, Result},
@@ -46,3 +45,16 @@ pub use crate::{
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub use der::pem::{self, LineEnding};
+
+/// `rsaEncryption` Object Identifier (OID)
+#[cfg(feature = "pkcs8")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
+pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.1.1");
+
+/// `AlgorithmIdentifier` for RSA.
+#[cfg(feature = "pkcs8")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
+pub const ALGORITHM_ID: pkcs8::AlgorithmIdentifier<'static> = pkcs8::AlgorithmIdentifier {
+    oid: ALGORITHM_OID,
+    parameters: Some(der::asn1::Any::NULL),
+};

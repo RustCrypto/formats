@@ -8,11 +8,20 @@ use crate::EcPrivateKeyDocument;
 #[cfg(feature = "pem")]
 use {crate::LineEnding, alloc::string::String};
 
+#[cfg(feature = "pkcs8")]
+use {
+    crate::{EcPrivateKey, ALGORITHM_OID},
+    der::Decodable,
+};
+
+#[cfg(all(feature = "alloc", feature = "pkcs8"))]
+use der::Document;
+
 #[cfg(feature = "std")]
 use std::path::Path;
 
 #[cfg(any(feature = "pem", feature = "std"))]
-use {der::Document, zeroize::Zeroizing};
+use zeroize::Zeroizing;
 
 /// Parse an [`EcPrivateKey`] from a SEC1-encoded document.
 pub trait DecodeEcPrivateKey: Sized {
@@ -81,5 +90,38 @@ pub trait EncodeEcPrivateKey {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_sec1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         self.to_sec1_der()?.write_sec1_pem_file(path, line_ending)
+    }
+}
+
+#[cfg(feature = "pkcs8")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
+impl<T: pkcs8::DecodePrivateKey> DecodeEcPrivateKey for T {
+    fn from_sec1_der(private_key: &[u8]) -> Result<Self> {
+        let params_oid = EcPrivateKey::from_der(private_key)?
+            .parameters
+            .and_then(|params| params.named_curve());
+
+        let algorithm = pkcs8::AlgorithmIdentifier {
+            oid: ALGORITHM_OID,
+            parameters: params_oid.as_ref().map(Into::into),
+        };
+
+        Ok(Self::try_from(pkcs8::PrivateKeyInfo {
+            algorithm,
+            private_key,
+            public_key: None,
+        })?)
+    }
+}
+
+#[cfg(all(feature = "alloc", feature = "pkcs8"))]
+#[cfg_attr(docsrs, doc(all(feature = "alloc", feature = "pkcs8")))]
+impl<T: pkcs8::EncodePrivateKey> EncodeEcPrivateKey for T {
+    fn to_sec1_der(&self) -> Result<EcPrivateKeyDocument> {
+        let doc = self.to_pkcs8_der()?;
+        let pkcs8_key = pkcs8::PrivateKeyInfo::from_der(doc.as_der())?;
+        let mut pkcs1_key = EcPrivateKey::from_der(pkcs8_key.private_key)?;
+        pkcs1_key.parameters = Some(pkcs8_key.algorithm.parameters_oid()?.into());
+        pkcs1_key.try_into()
     }
 }
