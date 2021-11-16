@@ -19,13 +19,13 @@ der = { version = "0.5", features = ["bigint", "oid"], path = "../der" }
 
 # optional dependencies
 pkcs8 = { version = "=0.8.0-pre", optional = true, default-features = false, path = "../pkcs8" }
-zeroize = { version = "1", optional = true, default-features = false, features = ["alloc"] }
+zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
 
 [features]
-alloc = ["der/alloc", "pkcs8/alloc", "zeroize"]
+alloc = ["der/alloc", "pkcs8/alloc", "zeroize/alloc"]
 pem = ["alloc", "der/pem"]
 std = ["der/std"]
 

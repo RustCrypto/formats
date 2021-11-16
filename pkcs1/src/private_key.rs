@@ -10,14 +10,14 @@ use core::fmt;
 use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence, Tag};
 
 #[cfg(feature = "alloc")]
-use {
-    self::other_prime_info::OtherPrimeInfo,
-    crate::{EncodeRsaPrivateKey, RsaPrivateKeyDocument},
-    alloc::vec::Vec,
-};
+use {self::other_prime_info::OtherPrimeInfo, crate::RsaPrivateKeyDocument, alloc::vec::Vec};
 
 #[cfg(feature = "pem")]
-use {crate::LineEnding, alloc::string::String, zeroize::Zeroizing};
+use {
+    crate::{EncodeRsaPrivateKey, LineEnding},
+    alloc::string::String,
+    zeroize::Zeroizing,
+};
 
 /// PKCS#1 RSA Private Keys as defined in [RFC 8017 Appendix 1.2].
 ///
