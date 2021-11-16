@@ -30,10 +30,6 @@ impl<'a> Document<'a> for RsaPublicKeyDocument {
 }
 
 impl DecodeRsaPublicKey for RsaPublicKeyDocument {
-    fn from_pkcs1_public_key(public_key: RsaPublicKey<'_>) -> Result<Self> {
-        Ok(Self::from_msg(&public_key)?)
-    }
-
     fn from_pkcs1_der(bytes: &[u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }

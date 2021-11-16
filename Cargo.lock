@@ -498,6 +498,7 @@ version = "0.3.0-pre"
 dependencies = [
  "der",
  "hex-literal",
+ "pkcs8",
  "zeroize",
 ]
 

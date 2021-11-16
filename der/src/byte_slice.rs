@@ -17,6 +17,12 @@ pub(crate) struct ByteSlice<'a> {
 }
 
 impl<'a> ByteSlice<'a> {
+    /// Constant value representing an empty byte slice.
+    pub const EMPTY: Self = Self {
+        length: Length::ZERO,
+        inner: &[],
+    };
+
     /// Create a new [`ByteSlice`], ensuring that the provided `slice` value
     /// is shorter than `Length::max()`.
     pub fn new(slice: &'a [u8]) -> Result<Self> {
@@ -39,14 +45,6 @@ impl<'a> ByteSlice<'a> {
     /// Is this [`ByteSlice`] empty?
     pub fn is_empty(self) -> bool {
         self.len() == Length::ZERO
-    }
-
-    /// Create an empty [`ByteSlice`].
-    pub const fn empty() -> Self {
-        Self {
-            length: Length::ZERO,
-            inner: &[],
-        }
     }
 }
 
