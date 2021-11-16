@@ -1,6 +1,6 @@
 //! Traits for encoding/decoding SPKI public keys.
 
-use crate::{Result, SubjectPublicKeyInfo};
+use crate::{Error, Result, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
 use {crate::PublicKeyDocument, der::Document};
@@ -12,21 +12,20 @@ use {alloc::string::String, der::pem::LineEnding};
 use std::path::Path;
 
 /// Parse a public key object from an encoded SPKI document.
-pub trait DecodePublicKey: Sized {
-    /// Parse [`SubjectPublicKeyInfo`] into a public key object.
-    fn from_spki(spki: SubjectPublicKeyInfo<'_>) -> Result<Self>;
-
+pub trait DecodePublicKey:
+    for<'a> TryFrom<SubjectPublicKeyInfo<'a>, Error = Error> + Sized
+{
     /// Deserialize object from ASN.1 DER-encoded [`SubjectPublicKeyInfo`]
     /// (binary format).
     fn from_public_key_der(bytes: &[u8]) -> Result<Self> {
-        Self::from_spki(SubjectPublicKeyInfo::try_from(bytes)?)
+        Self::try_from(SubjectPublicKeyInfo::try_from(bytes)?)
     }
 
     /// Deserialize SPKI public key from a [`PublicKeyDocument`].
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn from_public_key_doc(doc: &PublicKeyDocument) -> Result<Self> {
-        Self::from_spki(doc.decode())
+        Self::try_from(doc.decode())
     }
 
     /// Deserialize PEM-encoded [`SubjectPublicKeyInfo`].

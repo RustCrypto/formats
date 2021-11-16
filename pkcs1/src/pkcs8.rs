@@ -37,7 +37,7 @@ impl<T: DecodePrivateKey> DecodeRsaPrivateKey for T {
 
 impl<T: DecodePublicKey> DecodeRsaPublicKey for T {
     fn from_pkcs1_der(public_key: &[u8]) -> Result<Self> {
-        Ok(Self::from_spki(SubjectPublicKeyInfo {
+        Ok(Self::try_from(SubjectPublicKeyInfo {
             algorithm: ALGORITHM_ID,
             subject_public_key: public_key,
         })?)
