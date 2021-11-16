@@ -22,7 +22,7 @@ mod version;
 
 #[cfg(feature = "pkcs8")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-mod pkcs8;
+pub mod pkcs8;
 
 pub use der::{self, asn1::UIntBytes};
 

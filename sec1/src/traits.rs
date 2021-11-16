@@ -1,7 +1,6 @@
 //! Traits for parsing objects from SEC1 encoded documents
 
-use crate::{EcPrivateKey, Error, Result};
-use der::Decodable;
+use crate::Result;
 
 #[cfg(feature = "alloc")]
 use crate::EcPrivateKeyDocument;
@@ -16,12 +15,10 @@ use std::path::Path;
 use {der::Document, zeroize::Zeroizing};
 
 /// Parse an [`EcPrivateKey`] from a SEC1-encoded document.
-pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> + Sized {
+pub trait DecodeEcPrivateKey: Sized {
     /// Deserialize SEC1 private key from ASN.1 DER-encoded data
     /// (binary format).
-    fn from_sec1_der(bytes: &[u8]) -> Result<Self> {
-        Self::try_from(EcPrivateKey::from_der(bytes)?)
-    }
+    fn from_sec1_der(bytes: &[u8]) -> Result<Self>;
 
     /// Deserialize SEC1-encoded private key from PEM.
     ///
@@ -33,7 +30,7 @@ pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> +
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_sec1_pem(s: &str) -> Result<Self> {
-        EcPrivateKeyDocument::from_sec1_pem(s).and_then(|doc| Self::try_from(doc.decode()))
+        EcPrivateKeyDocument::from_sec1_pem(s).and_then(|doc| Self::from_sec1_der(doc.as_der()))
     }
 
     /// Load SEC1 private key from an ASN.1 DER-encoded file on the local
@@ -41,7 +38,8 @@ pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> +
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_sec1_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        EcPrivateKeyDocument::read_sec1_der_file(path).and_then(|doc| Self::try_from(doc.decode()))
+        EcPrivateKeyDocument::read_sec1_der_file(path)
+            .and_then(|doc| Self::from_sec1_der(doc.as_der()))
     }
 
     /// Load SEC1 private key from a PEM-encoded file on the local filesystem.
@@ -49,7 +47,8 @@ pub trait DecodeEcPrivateKey: for<'a> TryFrom<EcPrivateKey<'a>, Error = Error> +
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_sec1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        EcPrivateKeyDocument::read_sec1_pem_file(path).and_then(|doc| Self::try_from(doc.decode()))
+        EcPrivateKeyDocument::read_sec1_pem_file(path)
+            .and_then(|doc| Self::from_sec1_der(doc.as_der()))
     }
 }
 

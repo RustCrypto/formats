@@ -1,10 +1,9 @@
 //! Blanket impl of PKCS#1 support for types with PKCS#8 support.
 
+pub use pkcs8::*;
+
 use crate::{DecodeRsaPrivateKey, DecodeRsaPublicKey, Result};
-use pkcs8::{
-    der::asn1::{Any, Null},
-    AlgorithmIdentifier, ObjectIdentifier,
-};
+use der::asn1::{Any, Null};
 
 #[cfg(feature = "alloc")]
 use {
@@ -21,14 +20,14 @@ pub const ALGORITHM_ID: AlgorithmIdentifier<'static> = AlgorithmIdentifier {
     parameters: Some(Any::NULL),
 };
 
-impl<T: pkcs8::DecodePrivateKey> DecodeRsaPrivateKey for T {
+impl<T: DecodePrivateKey> DecodeRsaPrivateKey for T {
     fn from_pkcs1_der(private_key: &[u8]) -> Result<Self> {
         let algorithm = AlgorithmIdentifier {
             oid: ALGORITHM_OID,
             parameters: Some(Null.into()),
         };
 
-        Ok(Self::from_pkcs8_private_key_info(pkcs8::PrivateKeyInfo {
+        Ok(Self::from_pkcs8_private_key_info(PrivateKeyInfo {
             algorithm,
             private_key,
             public_key: None,
@@ -36,9 +35,9 @@ impl<T: pkcs8::DecodePrivateKey> DecodeRsaPrivateKey for T {
     }
 }
 
-impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T {
+impl<T: DecodePublicKey> DecodeRsaPublicKey for T {
     fn from_pkcs1_der(public_key: &[u8]) -> Result<Self> {
-        Ok(Self::from_spki(pkcs8::SubjectPublicKeyInfo {
+        Ok(Self::from_spki(SubjectPublicKeyInfo {
             algorithm: ALGORITHM_ID,
             subject_public_key: public_key,
         })?)
@@ -47,7 +46,7 @@ impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T {
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<T: pkcs8::EncodePrivateKey> EncodeRsaPrivateKey for T {
+impl<T: EncodePrivateKey> EncodeRsaPrivateKey for T {
     fn to_pkcs1_der(&self) -> Result<RsaPrivateKeyDocument> {
         let doc = self.to_pkcs8_der()?;
         Ok(RsaPrivateKeyDocument::from_der(doc.decode().private_key)?)
@@ -56,7 +55,7 @@ impl<T: pkcs8::EncodePrivateKey> EncodeRsaPrivateKey for T {
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<T: pkcs8::EncodePublicKey> EncodeRsaPublicKey for T {
+impl<T: EncodePublicKey> EncodeRsaPublicKey for T {
     fn to_pkcs1_der(&self) -> Result<RsaPublicKeyDocument> {
         let doc = self.to_public_key_der()?;
         Ok(RsaPublicKeyDocument::from_der(
