@@ -42,9 +42,10 @@ jobs:
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features pem
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features pkcs8
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features subtle
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features zeroize
-      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc,pem,subtle,zeroize
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc,pem,pkcs8,subtle,zeroize
 
   test:
     runs-on: ubuntu-latest

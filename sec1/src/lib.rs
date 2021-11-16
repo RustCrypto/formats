@@ -21,6 +21,10 @@ mod parameters;
 mod private_key;
 mod traits;
 
+#[cfg(feature = "pkcs8")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
+pub mod pkcs8;
+
 pub use der;
 
 pub use self::{
