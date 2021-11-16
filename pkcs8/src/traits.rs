@@ -1,6 +1,6 @@
 //! Traits for parsing objects from PKCS#8 encoded documents
 
-use crate::{PrivateKeyInfo, Result};
+use crate::{Error, PrivateKeyInfo, Result};
 
 #[cfg(feature = "alloc")]
 use {crate::PrivateKeyDocument, der::Document};
@@ -17,14 +17,11 @@ use std::path::Path;
 use {crate::LineEnding, alloc::string::String, zeroize::Zeroizing};
 
 /// Parse a private key object from a PKCS#8 encoded document.
-pub trait DecodePrivateKey: Sized {
-    /// Parse the [`PrivateKeyInfo`] from a PKCS#8-encoded document.
-    fn from_pkcs8_private_key_info(private_key_info: PrivateKeyInfo<'_>) -> Result<Self>;
-
+pub trait DecodePrivateKey: for<'a> TryFrom<PrivateKeyInfo<'a>, Error = Error> + Sized {
     /// Deserialize PKCS#8 private key from ASN.1 DER-encoded data
     /// (binary format).
     fn from_pkcs8_der(bytes: &[u8]) -> Result<Self> {
-        Self::from_pkcs8_private_key_info(PrivateKeyInfo::try_from(bytes)?)
+        Self::try_from(PrivateKeyInfo::try_from(bytes)?)
     }
 
     /// Deserialize encrypted PKCS#8 private key from ASN.1 DER-encoded data
@@ -41,7 +38,7 @@ pub trait DecodePrivateKey: Sized {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn from_pkcs8_doc(doc: &PrivateKeyDocument) -> Result<Self> {
-        Self::from_pkcs8_private_key_info(doc.decode())
+        Self::try_from(doc.decode())
     }
 
     /// Deserialize PKCS#8-encoded private key from PEM.

@@ -84,10 +84,6 @@ impl PrivateKeyDocument {
 }
 
 impl DecodePrivateKey for PrivateKeyDocument {
-    fn from_pkcs8_private_key_info(private_key: PrivateKeyInfo<'_>) -> Result<Self> {
-        Ok(Self::from_msg(&private_key)?)
-    }
-
     fn from_pkcs8_der(bytes: &[u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }
@@ -147,7 +143,7 @@ impl TryFrom<PrivateKeyInfo<'_>> for PrivateKeyDocument {
     type Error = Error;
 
     fn try_from(private_key_info: PrivateKeyInfo<'_>) -> Result<PrivateKeyDocument> {
-        PrivateKeyDocument::from_pkcs8_private_key_info(private_key_info)
+        Self::try_from(&private_key_info)
     }
 }
 
@@ -155,7 +151,7 @@ impl TryFrom<&PrivateKeyInfo<'_>> for PrivateKeyDocument {
     type Error = Error;
 
     fn try_from(private_key_info: &PrivateKeyInfo<'_>) -> Result<PrivateKeyDocument> {
-        PrivateKeyDocument::from_pkcs8_private_key_info(private_key_info.clone())
+        Ok(Self::from_msg(private_key_info)?)
     }
 }
 
