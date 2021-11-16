@@ -30,10 +30,6 @@ impl<'a> Document<'a> for PublicKeyDocument {
 }
 
 impl DecodePublicKey for PublicKeyDocument {
-    fn from_spki(spki: SubjectPublicKeyInfo<'_>) -> Result<Self> {
-        Ok(Self::from_msg(&spki)?)
-    }
-
     fn from_public_key_der(bytes: &[u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }
@@ -103,7 +99,7 @@ impl TryFrom<SubjectPublicKeyInfo<'_>> for PublicKeyDocument {
     type Error = Error;
 
     fn try_from(spki: SubjectPublicKeyInfo<'_>) -> Result<PublicKeyDocument> {
-        Self::from_spki(spki)
+        Self::try_from(&spki)
     }
 }
 
@@ -111,7 +107,7 @@ impl TryFrom<&SubjectPublicKeyInfo<'_>> for PublicKeyDocument {
     type Error = Error;
 
     fn try_from(spki: &SubjectPublicKeyInfo<'_>) -> Result<PublicKeyDocument> {
-        Self::from_spki(*spki)
+        Ok(Self::from_msg(spki)?)
     }
 }
 
