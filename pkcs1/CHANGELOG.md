@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `der::Document` to impl `RsaPrivateKeyDocument` ([#131])
 - Rust 2021 edition upgrade; MSRV 1.56 ([#136])
 - Make `RsaPrivateKey::version` implicit ([#188])
-- Bump `der` dependency to v0.5 ([#222])
+- Bump `der` crate dependency to v0.5 ([#222])
 - Activate `pkcs8/pem` when `pem` feature is enabled ([#232])
 
 ### Removed
