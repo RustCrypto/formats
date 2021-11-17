@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.0 (2021-11-17)
+### Added
+- Support for multi-prime RSA keys ([#115])
+- `pkcs8` feature ([#227], [#233])
+
+### Changed
+- Rename `From/ToRsa*Key` => `DecodeRsa*Key`/`EncodeRsa*Key` ([#120])
+- Use `der::Document` to impl `RsaPrivateKeyDocument` ([#131])
+- Rust 2021 edition upgrade; MSRV 1.56 ([#136])
+- Make `RsaPrivateKey::version` implicit ([#188])
+- Bump `der` dependency to v0.5 ([#222])
+- Activate `pkcs8/pem` when `pem` feature is enabled ([#232])
+
+### Removed
+- `*_with_le` PEM encoding methods ([#109])
+- I/O related errors ([#158])
+
+[#109]: https://github.com/RustCrypto/formats/pull/109
+[#115]: https://github.com/RustCrypto/formats/pull/115
+[#120]: https://github.com/RustCrypto/formats/pull/120
+[#131]: https://github.com/RustCrypto/formats/pull/131
+[#136]: https://github.com/RustCrypto/formats/pull/136
+[#158]: https://github.com/RustCrypto/formats/pull/158
+[#188]: https://github.com/RustCrypto/formats/pull/188
+[#222]: https://github.com/RustCrypto/formats/pull/222
+[#227]: https://github.com/RustCrypto/formats/pull/227
+[#232]: https://github.com/RustCrypto/formats/pull/232
+[#233]: https://github.com/RustCrypto/formats/pull/233
+
 ## 0.2.4 (2021-09-14)
 ### Changed
 - Moved to `formats` repo ([#2])
