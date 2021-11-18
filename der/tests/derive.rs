@@ -206,6 +206,84 @@ mod sequence {
     };
     use hex_literal::hex;
 
+    pub fn default_false_example() -> bool {
+        false
+    }
+
+    // Issuing distribution point extension as defined in [RFC 5280 Section 5.2.5] and as identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
+    //
+    // ```text
+    // IssuingDistributionPoint ::= SEQUENCE {
+    //      distributionPoint          [0] DistributionPointName OPTIONAL,
+    //      onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+    //      onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
+    //      onlySomeReasons            [3] ReasonFlags OPTIONAL,
+    //      indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+    //      onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE }
+    //      -- at most one of onlyContainsUserCerts, onlyContainsCACerts,
+    //      -- and onlyContainsAttributeCerts may be set to TRUE.
+    // ```
+    //
+    // [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
+    #[derive(Sequence)]
+    pub struct IssuingDistributionPointExample {
+        // Omit distributionPoint and only_some_reasons because corresponding structs are not
+        // available here and are not germane to the example
+        // distributionPoint          [0] DistributionPointName OPTIONAL,
+        //#[asn1(context_specific="0", optional="true", tag_mode="IMPLICIT")]
+        //pub distribution_point: Option<DistributionPointName<'a>>,
+
+        /// onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+        #[asn1(context_specific="1", default="default_false_example", tag_mode="IMPLICIT")]
+        pub only_contains_user_certs: bool,
+
+        /// onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
+        #[asn1(context_specific="2", default="default_false_example", tag_mode="IMPLICIT")]
+        pub only_contains_cacerts: bool,
+
+        // onlySomeReasons            [3] ReasonFlags OPTIONAL,
+        //#[asn1(context_specific="3", optional="true", tag_mode="IMPLICIT")]
+        //pub only_some_reasons: Option<ReasonFlags<'a>>,
+
+        /// indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+        #[asn1(context_specific="4", default="default_false_example", tag_mode="IMPLICIT")]
+        pub indirect_crl: bool,
+
+        /// onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+        #[asn1(context_specific="5", default="default_false_example", tag_mode="IMPLICIT")]
+        pub only_contains_attribute_certs: bool,
+    }
+
+    // Extension as defined in [RFC 5280 Section 4.1.2.9].
+    //
+    // The ASN.1 definition for Extension objects is below. The extnValue type may be further parsed using a decoder corresponding to the extnID value.
+    //
+    // ```text
+    //    Extension  ::=  SEQUENCE  {
+    //         extnID      OBJECT IDENTIFIER,
+    //         critical    BOOLEAN DEFAULT FALSE,
+    //         extnValue   OCTET STRING
+    //                     -- contains the DER encoding of an ASN.1 value
+    //                     -- corresponding to the extension type identified
+    //                     -- by extnID
+    //         }
+    // ```
+    //
+    // [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
+    #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+    pub struct ExtensionExample<'a> {
+        /// extnID      OBJECT IDENTIFIER,
+        pub extn_id: ObjectIdentifier,
+
+        /// critical    BOOLEAN DEFAULT FALSE,
+        #[asn1(default = "default_false_example")]
+        pub critical: bool,
+
+        /// extnValue   OCTET STRING
+        #[asn1(type = "OCTET STRING")]
+        pub extn_value: &'a [u8],
+    }
+
     /// X.509 `AlgorithmIdentifier`
     #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
     pub struct AlgorithmIdentifier<'a> {
@@ -260,6 +338,60 @@ mod sequence {
 
     const ALGORITHM_IDENTIFIER_DER: &[u8] =
         &hex!("30 13 06 07 2a 86 48 ce 3d 02 01 06 08 2a 86 48 ce 3d 03 01 07");
+
+    #[test]
+    fn idp_test() {
+        let idp = IssuingDistributionPointExample::from_der(&hex!("30038101FF")).unwrap();
+        assert_eq!(idp.only_contains_user_certs, true);
+        assert_eq!(idp.only_contains_cacerts, false);
+        assert_eq!(idp.indirect_crl, false);
+        assert_eq!(idp.only_contains_attribute_certs, false);
+
+        let idp = IssuingDistributionPointExample::from_der(&hex!("30038201FF")).unwrap();
+        assert_eq!(idp.only_contains_user_certs, false);
+        assert_eq!(idp.only_contains_cacerts, true);
+        assert_eq!(idp.indirect_crl, false);
+        assert_eq!(idp.only_contains_attribute_certs, false);
+
+        let idp = IssuingDistributionPointExample::from_der(&hex!("30038401FF")).unwrap();
+        assert_eq!(idp.only_contains_user_certs, false);
+        assert_eq!(idp.only_contains_cacerts, false);
+        assert_eq!(idp.indirect_crl, true);
+        assert_eq!(idp.only_contains_attribute_certs, false);
+
+        let idp = IssuingDistributionPointExample::from_der(&hex!("30038501FF")).unwrap();
+        assert_eq!(idp.only_contains_user_certs, false);
+        assert_eq!(idp.only_contains_cacerts, false);
+        assert_eq!(idp.indirect_crl, false);
+        assert_eq!(idp.only_contains_attribute_certs, true);
+    }
+
+    // demonstrates default field that is not context specific
+    #[test]
+    fn extension_test() {
+        //  0  15: SEQUENCE {
+        //   2   3:   OBJECT IDENTIFIER basicConstraints (2 5 29 19)
+        //   7   1:   BOOLEAN TRUE
+        //  10   5:   OCTET STRING, encapsulates {
+        //  12   3:     SEQUENCE {
+        //  14   1:       BOOLEAN TRUE
+        //        :       }
+        //        :     }
+        //        :   }
+        let ext1 = ExtensionExample::from_der(&hex!("300F0603551D130101FF040530030101FF")).unwrap();
+        assert_eq!(ext1.critical, true);
+
+        //   0  31: SEQUENCE {
+        //   2   3:   OBJECT IDENTIFIER authorityKeyIdentifier (2 5 29 35)
+        //   7  24:   OCTET STRING, encapsulates {
+        //   9  22:     SEQUENCE {
+        //  11  20:       [0] E4 7D 5F D1 5C 95 86 08 2C 05 AE BE 75 B6 65 A7 D9 5D A8 66
+        //        :       }
+        //        :     }
+        //        :   }
+        let ext2 = ExtensionExample::from_der(&hex!("301F0603551D23041830168014E47D5FD15C9586082C05AEBE75B665A7D95DA866")).unwrap();
+        assert_eq!(ext2.critical, false);
+    }
 
     #[test]
     fn decode() {

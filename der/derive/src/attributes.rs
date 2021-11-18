@@ -62,6 +62,9 @@ pub(crate) struct FieldAttrs {
     /// Value of the `#[asn1(context_specific = "...")] attribute if provided.
     pub context_specific: Option<TagNumber>,
 
+    /// Indicates if decoding should be deferred
+    pub defer: Option<bool>,
+
     /// Indicates name of function that supplies the default value, which will be used in cases
     /// where encoding is omitted per DER and to omit the encoding per DER
     pub default: Option<Path>,
@@ -85,6 +88,8 @@ impl FieldAttrs {
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
         let mut asn1_type = None;
         let mut context_specific = None;
+
+        let mut defer = None;
         let mut default = None;
         let mut extensible = None;
         let mut optional = None;
@@ -111,6 +116,12 @@ impl FieldAttrs {
                     abort!(attr.value, "error parsing ASN.1 `default` attribute: {}", e)
                 }));
             // `extensible` attribute
+            } else if let Some(defer_attr) = attr.parse_value("defer") {
+                if defer.is_some() {
+                    panic!("duplicate ASN.1 `defer` attribute");
+                }
+
+                defer = Some(defer_attr);
             } else if let Some(ext) = attr.parse_value("extensible") {
                 if extensible.is_some() {
                     abort!(attr.name, "duplicate ASN.1 `extensible` attribute");
@@ -150,6 +161,7 @@ impl FieldAttrs {
         Self {
             asn1_type,
             context_specific,
+            defer,
             default,
             extensible: extensible.unwrap_or_default(),
             optional: optional.unwrap_or_default(),
@@ -184,7 +196,7 @@ impl FieldAttrs {
 
             let context_specific = match self.tag_mode {
                 TagMode::Explicit => {
-                    if self.extensible || self.optional {
+                    if self.extensible || self.optional || self.default.is_some() {
                         quote! {
                             ::der::asn1::ContextSpecific::<#type_params>::decode_explicit(
                                 decoder,
@@ -210,8 +222,12 @@ impl FieldAttrs {
                 }
             };
 
-            if self.optional {
-                quote!(#context_specific.map(|cs| cs.value))
+            if self.optional || self.default.is_some() {
+                if let Some(default) = &self.default {
+                    quote!(#context_specific.map(|cs| cs.value).unwrap_or_else(#default))
+                } else {
+                    quote!(#context_specific.map(|cs| cs.value))
+                }
             } else {
                 // TODO(tarcieri): better error handling?
                 quote! {
@@ -224,9 +240,17 @@ impl FieldAttrs {
                 }
             }
         } else {
-            self.asn1_type
-                .map(|ty| ty.decoder())
-                .unwrap_or_else(|| quote!(decoder.decode()?))
+            if let Some(default) = &self.default {
+                let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
+                self.asn1_type
+                    .map(|ty| ty.decoder())
+                    .unwrap_or_else(|| quote!(decoder.decode::<Option<#type_params>>()?.unwrap_or_else(#default)))
+            }
+            else {
+                self.asn1_type
+                    .map(|ty| ty.decoder())
+                    .unwrap_or_else(|| quote!(decoder.decode()?))
+            }
         }
     }
 

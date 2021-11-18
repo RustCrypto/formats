@@ -165,10 +165,11 @@ impl SequenceField {
                     let #ident = #decoder.try_into()?;
                 }
             }
-        } else if let Some(default) = &self.attrs.default {
-            quote! {
-                let #ident = decoder.decode::<Option<#ty>>()?.unwrap_or_else(#default);
-            }
+        } else if self.attrs.context_specific.is_none() && self.attrs.default.is_some() {
+            let default = &self.attrs.default;
+                quote! {
+                    let #ident = decoder.decode::<Option<#ty>>()?.unwrap_or_else(#default);
+                }
         } else {
             quote! {
                 let #ident = #decoder;
