@@ -10,15 +10,18 @@ use core::{
     cmp::Ordering,
     fmt::{self, Debug},
     ops::Add,
+    str,
 };
 use generic_array::{
-    typenum::U1,
-    typenum::{U28, U32, U48, U66},
+    typenum::{U1, U28, U32, U48, U66},
     ArrayLength, GenericArray,
 };
 
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
+
+#[cfg(feature = "serde")]
+use serde::{de, ser, Deserialize, Serialize};
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConditionallySelectable};
@@ -309,6 +312,17 @@ where
     }
 }
 
+impl<Size: ModulusSize> TryFrom<&[u8]> for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Self::from_bytes(bytes)
+    }
+}
+
 #[cfg(feature = "zeroize")]
 impl<Size> Zeroize for EncodedPoint<Size>
 where
@@ -317,6 +331,149 @@ where
     fn zeroize(&mut self) {
         self.bytes.zeroize();
         *self = Self::identity();
+    }
+}
+
+impl<Size> fmt::Display for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:X}", self)
+    }
+}
+
+impl<Size> fmt::LowerHex for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for byte in self.as_bytes() {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
+    }
+}
+
+impl<Size> fmt::UpperHex for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for byte in self.as_bytes() {
+            write!(f, "{:02X}", byte)?;
+        }
+        Ok(())
+    }
+}
+
+/// Decode a SEC1-encoded point from hexadecimal.
+///
+/// Upper and lower case hexadecimal are both accepted, however mixed case is
+/// rejected.
+impl<Size> str::FromStr for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    type Err = Error;
+
+    fn from_str(hex: &str) -> Result<Self> {
+        let mut buffer = GenericArray::<u8, Size::UncompressedPointSize>::default();
+        let decoded_len = hex.as_bytes().len() / 2;
+
+        if hex.as_bytes().len() % 2 != 0 || decoded_len > buffer.len() {
+            return Err(Error::PointEncoding);
+        }
+
+        let mut upper_case = None;
+
+        // Ensure all characters are valid and case is not mixed
+        for &byte in hex.as_bytes() {
+            match byte {
+                b'0'..=b'9' => (),
+                b'a'..=b'z' => match upper_case {
+                    Some(true) => return Err(Error::PointEncoding),
+                    Some(false) => (),
+                    None => upper_case = Some(false),
+                },
+                b'A'..=b'Z' => match upper_case {
+                    Some(true) => (),
+                    Some(false) => return Err(Error::PointEncoding),
+                    None => upper_case = Some(true),
+                },
+                _ => return Err(Error::PointEncoding),
+            }
+        }
+
+        for (digit, byte) in hex.as_bytes().chunks_exact(2).zip(buffer.iter_mut()) {
+            *byte = str::from_utf8(digit)
+                .ok()
+                .and_then(|s| u8::from_str_radix(s, 16).ok())
+                .ok_or(Error::PointEncoding)?;
+        }
+
+        Self::from_bytes(&buffer[..decoded_len])
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl<Size> Serialize for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    #[cfg(not(feature = "alloc"))]
+    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        self.as_bytes().serialize(serializer)
+    }
+
+    #[cfg(feature = "alloc")]
+    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        use alloc::string::ToString;
+        if serializer.is_human_readable() {
+            self.to_string().serialize(serializer)
+        } else {
+            self.as_bytes().serialize(serializer)
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl<'de, Size> Deserialize<'de> for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    #[cfg(not(feature = "alloc"))]
+    fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        use de::Error;
+        <&[u8]>::deserialize(deserializer)
+            .and_then(|slice| Self::from_bytes(slice).map_err(D::Error::custom))
+    }
+
+    #[cfg(feature = "alloc")]
+    fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        use de::Error;
+        if deserializer.is_human_readable() {
+            <&str>::deserialize(deserializer)?
+                .parse()
+                .map_err(D::Error::custom)
+        } else {
+            <&[u8]>::deserialize(deserializer)
+                .and_then(|bytes| Self::from_bytes(bytes).map_err(D::Error::custom))
+        }
     }
 }
 
@@ -450,8 +607,12 @@ impl From<Tag> for u8 {
 #[cfg(test)]
 mod tests {
     use super::{Coordinates, Tag};
+    use core::str::FromStr;
     use generic_array::{typenum::U32, GenericArray};
     use hex_literal::hex;
+
+    #[cfg(feature = "alloc")]
+    use alloc::string::ToString;
 
     #[cfg(feature = "subtle")]
     use subtle::ConditionallySelectable;
@@ -640,10 +801,29 @@ mod tests {
         assert_eq!(identity_point, EncodedPoint::default());
     }
 
+    #[test]
+    fn decode_hex() {
+        let point = EncodedPoint::from_str(
+            "021111111111111111111111111111111111111111111111111111111111111111",
+        )
+        .unwrap();
+        assert_eq!(point.as_bytes(), COMPRESSED_BYTES);
+    }
+
     #[cfg(feature = "alloc")]
     #[test]
     fn to_bytes() {
         let uncompressed_point = EncodedPoint::from_bytes(&UNCOMPRESSED_BYTES[..]).unwrap();
         assert_eq!(&*uncompressed_point.to_bytes(), &UNCOMPRESSED_BYTES[..]);
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn to_string() {
+        let point = EncodedPoint::from_bytes(&COMPRESSED_BYTES[..]).unwrap();
+        assert_eq!(
+            point.to_string(),
+            "021111111111111111111111111111111111111111111111111111111111111111"
+        );
     }
 }

@@ -833,6 +833,7 @@ dependencies = [
  "generic-array",
  "hex-literal",
  "pkcs8",
+ "serde",
  "subtle",
  "zeroize",
 ]
