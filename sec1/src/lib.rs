@@ -44,11 +44,13 @@ pub use der::pem::{self, LineEnding};
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
 pub use pkcs8;
 
+#[cfg(feature = "pkcs8")]
+use pkcs8::ObjectIdentifier;
+
 /// Algorithm [`ObjectIdentifier`] for elliptic curve public key cryptography
 /// (`id-ecPublicKey`).
 ///
 /// <http://oid-info.com/get/1.2.840.10045.2.1>
 #[cfg(feature = "pkcs8")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-pub const ALGORITHM_OID: pkcs8::ObjectIdentifier =
-    pkcs8::ObjectIdentifier::new("1.2.840.10045.2.1");
+pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.2.1");
