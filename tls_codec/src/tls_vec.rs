@@ -854,8 +854,9 @@ macro_rules! impl_tls_byte_slice {
         pub struct $name<'a>(pub &'a [u8]);
 
         impl<'a> $name<'a> {
+            /// Get the raw slice.
             #[inline(always)]
-            fn as_slice(&self) -> &[u8] {
+            pub fn as_slice(&self) -> &[u8] {
                 &self.0
             }
         }
@@ -902,8 +903,9 @@ macro_rules! impl_tls_slice {
         pub struct $name<'a, T: Size + Serialize>(pub &'a [T]);
 
         impl<'a, T: Size + Serialize> $name<'a, T> {
+            /// Get the raw slice.
             #[inline(always)]
-            fn as_slice(&self) -> &[T] {
+            pub fn as_slice(&self) -> &[T] {
                 &self.0
             }
         }
