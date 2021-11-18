@@ -857,7 +857,7 @@ macro_rules! impl_tls_byte_slice {
             /// Get the raw slice.
             #[inline(always)]
             pub fn as_slice(&self) -> &[u8] {
-                &self.0
+                self.0
             }
         }
 
@@ -906,7 +906,7 @@ macro_rules! impl_tls_slice {
             /// Get the raw slice.
             #[inline(always)]
             pub fn as_slice(&self) -> &[T] {
-                &self.0
+                self.0
             }
         }
 
