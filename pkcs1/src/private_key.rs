@@ -184,13 +184,7 @@ impl<'a> fmt::Debug for RsaPrivateKey<'a> {
             .field("version", &self.version())
             .field("modulus", &self.modulus)
             .field("public_exponent", &self.public_exponent)
-            .field("private_exponent", &"...")
-            .field("prime1", &"...")
-            .field("prime2", &"...")
-            .field("exponent1", &"...")
-            .field("exponent2", &"...")
-            .field("coefficient", &"...")
-            .finish() // TODO: use `finish_non_exhaustive` when stable
+            .finish_non_exhaustive()
     }
 }
 
