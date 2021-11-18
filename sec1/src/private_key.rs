@@ -129,6 +129,6 @@ impl<'a> fmt::Debug for EcPrivateKey<'a> {
         f.debug_struct("EcPrivateKey")
             .field("parameters", &self.parameters)
             .field("public_key", &self.public_key)
-            .finish() // TODO: use `finish_non_exhaustive` when stable
+            .finish_non_exhaustive()
     }
 }

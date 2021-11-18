@@ -106,6 +106,6 @@ impl<'a> fmt::Debug for EncryptedPrivateKeyInfo<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EncryptedPrivateKeyInfo")
             .field("encryption_algorithm", &self.encryption_algorithm)
-            .finish() // TODO(tarcieri): use `finish_non_exhaustive` when stable
+            .finish_non_exhaustive()
     }
 }

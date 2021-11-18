@@ -229,7 +229,7 @@ impl<'a> fmt::Debug for PrivateKeyInfo<'a> {
             .field("version", &self.version())
             .field("algorithm", &self.algorithm)
             .field("public_key", &self.public_key)
-            .finish() // TODO: use `finish_non_exhaustive` when stable
+            .finish_non_exhaustive()
     }
 }
 
