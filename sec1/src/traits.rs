@@ -115,7 +115,7 @@ impl<T: pkcs8::DecodePrivateKey> DecodeEcPrivateKey for T {
 }
 
 #[cfg(all(feature = "alloc", feature = "pkcs8"))]
-#[cfg_attr(docsrs, doc(all(feature = "alloc", feature = "pkcs8")))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "pkcs8"))))]
 impl<T: pkcs8::EncodePrivateKey> EncodeEcPrivateKey for T {
     fn to_sec1_der(&self) -> Result<EcPrivateKeyDocument> {
         let doc = self.to_pkcs8_der()?;
