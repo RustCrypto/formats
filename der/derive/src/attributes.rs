@@ -81,6 +81,12 @@ pub(crate) struct FieldAttrs {
 }
 
 impl FieldAttrs {
+    /// is_optional return true when either an optional or default ASN.1 attribute is associated
+    /// with a field. Default signifies optionality due to omission of default values in DER encodings.
+    fn is_optional(&self) -> bool {
+        return self.optional || self.default.is_some();
+    }
+
     /// Parse attributes from a struct field or enum variant.
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
         let mut asn1_type = None;
@@ -185,7 +191,7 @@ impl FieldAttrs {
 
             let context_specific = match self.tag_mode {
                 TagMode::Explicit => {
-                    if self.extensible || self.optional || self.default.is_some() {
+                    if self.extensible || self.is_optional() {
                         quote! {
                             ::der::asn1::ContextSpecific::<#type_params>::decode_explicit(
                                 decoder,
@@ -211,7 +217,7 @@ impl FieldAttrs {
                 }
             };
 
-            if self.optional || self.default.is_some() {
+            if self.is_optional() {
                 if let Some(default) = &self.default {
                     quote!(#context_specific.map(|cs| cs.value).unwrap_or_else(#default))
                 } else {
