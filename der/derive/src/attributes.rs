@@ -84,7 +84,7 @@ impl FieldAttrs {
     /// is_optional return true when either an optional or default ASN.1 attribute is associated
     /// with a field. Default signifies optionality due to omission of default values in DER encodings.
     fn is_optional(&self) -> bool {
-        return self.optional || self.default.is_some();
+        self.optional || self.default.is_some()
     }
 
     /// Parse attributes from a struct field or enum variant.
