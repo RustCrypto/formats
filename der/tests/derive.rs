@@ -232,25 +232,39 @@ mod sequence {
         // distributionPoint          [0] DistributionPointName OPTIONAL,
         //#[asn1(context_specific="0", optional="true", tag_mode="IMPLICIT")]
         //pub distribution_point: Option<DistributionPointName<'a>>,
-
         /// onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
-        #[asn1(context_specific="1", default="default_false_example", tag_mode="IMPLICIT")]
+        #[asn1(
+            context_specific = "1",
+            default = "default_false_example",
+            tag_mode = "IMPLICIT"
+        )]
         pub only_contains_user_certs: bool,
 
         /// onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
-        #[asn1(context_specific="2", default="default_false_example", tag_mode="IMPLICIT")]
+        #[asn1(
+            context_specific = "2",
+            default = "default_false_example",
+            tag_mode = "IMPLICIT"
+        )]
         pub only_contains_cacerts: bool,
 
         // onlySomeReasons            [3] ReasonFlags OPTIONAL,
         //#[asn1(context_specific="3", optional="true", tag_mode="IMPLICIT")]
         //pub only_some_reasons: Option<ReasonFlags<'a>>,
-
         /// indirectCRL                [4] BOOLEAN DEFAULT FALSE,
-        #[asn1(context_specific="4", default="default_false_example", tag_mode="IMPLICIT")]
+        #[asn1(
+            context_specific = "4",
+            default = "default_false_example",
+            tag_mode = "IMPLICIT"
+        )]
         pub indirect_crl: bool,
 
         /// onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
-        #[asn1(context_specific="5", default="default_false_example", tag_mode="IMPLICIT")]
+        #[asn1(
+            context_specific = "5",
+            default = "default_false_example",
+            tag_mode = "IMPLICIT"
+        )]
         pub only_contains_attribute_certs: bool,
     }
 
@@ -389,7 +403,10 @@ mod sequence {
         //        :       }
         //        :     }
         //        :   }
-        let ext2 = ExtensionExample::from_der(&hex!("301F0603551D23041830168014E47D5FD15C9586082C05AEBE75B665A7D95DA866")).unwrap();
+        let ext2 = ExtensionExample::from_der(&hex!(
+            "301F0603551D23041830168014E47D5FD15C9586082C05AEBE75B665A7D95DA866"
+        ))
+        .unwrap();
         assert_eq!(ext2.critical, false);
     }
 
