@@ -81,10 +81,17 @@ pub(crate) struct FieldAttrs {
 }
 
 impl FieldAttrs {
+    /// is_optional return true when either an optional or default ASN.1 attribute is associated
+    /// with a field. Default signifies optionality due to omission of default values in DER encodings.
+    fn is_optional(&self) -> bool {
+        self.optional || self.default.is_some()
+    }
+
     /// Parse attributes from a struct field or enum variant.
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
         let mut asn1_type = None;
         let mut context_specific = None;
+
         let mut default = None;
         let mut extensible = None;
         let mut optional = None;
@@ -184,7 +191,7 @@ impl FieldAttrs {
 
             let context_specific = match self.tag_mode {
                 TagMode::Explicit => {
-                    if self.extensible || self.optional {
+                    if self.extensible || self.is_optional() {
                         quote! {
                             ::der::asn1::ContextSpecific::<#type_params>::decode_explicit(
                                 decoder,
@@ -210,8 +217,12 @@ impl FieldAttrs {
                 }
             };
 
-            if self.optional {
-                quote!(#context_specific.map(|cs| cs.value))
+            if self.is_optional() {
+                if let Some(default) = &self.default {
+                    quote!(#context_specific.map(|cs| cs.value).unwrap_or_else(#default))
+                } else {
+                    quote!(#context_specific.map(|cs| cs.value))
+                }
             } else {
                 // TODO(tarcieri): better error handling?
                 quote! {
@@ -223,6 +234,11 @@ impl FieldAttrs {
                     })?.value
                 }
             }
+        } else if let Some(default) = &self.default {
+            let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
+            self.asn1_type.map(|ty| ty.decoder()).unwrap_or_else(
+                || quote!(decoder.decode::<Option<#type_params>>()?.unwrap_or_else(#default)),
+            )
         } else {
             self.asn1_type
                 .map(|ty| ty.decoder())
