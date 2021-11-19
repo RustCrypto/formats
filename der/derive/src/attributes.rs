@@ -234,17 +234,15 @@ impl FieldAttrs {
                     })?.value
                 }
             }
+        } else if let Some(default) = &self.default {
+            let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
+            self.asn1_type.map(|ty| ty.decoder()).unwrap_or_else(
+                || quote!(decoder.decode::<Option<#type_params>>()?.unwrap_or_else(#default)),
+            )
         } else {
-            if let Some(default) = &self.default {
-                let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
-                self.asn1_type.map(|ty| ty.decoder()).unwrap_or_else(
-                    || quote!(decoder.decode::<Option<#type_params>>()?.unwrap_or_else(#default)),
-                )
-            } else {
-                self.asn1_type
-                    .map(|ty| ty.decoder())
-                    .unwrap_or_else(|| quote!(decoder.decode()?))
-            }
+            self.asn1_type
+                .map(|ty| ty.decoder())
+                .unwrap_or_else(|| quote!(decoder.decode()?))
         }
     }
 

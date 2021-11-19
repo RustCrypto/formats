@@ -383,14 +383,17 @@ mod sequence {
     // demonstrates default field that is not context specific
     #[test]
     fn extension_test() {
-        let ext1 = ExtensionExample::from_der(&hex!("
+        let ext1 = ExtensionExample::from_der(&hex!(
+            "
         300F        //  0  15: SEQUENCE {
         0603551D13  //  2   3:   OBJECT IDENTIFIER basicConstraints (2 5 29 19)
         0101FF      //  7   1:   BOOLEAN TRUE
         0405        //  10   5:   OCTET STRING, encapsulates {
         3003        //  12   3:     SEQUENCE {
         0101FF      //  14   1:       BOOLEAN TRUE
-        ")).unwrap();
+        "
+        ))
+        .unwrap();
         assert_eq!(ext1.critical, true);
 
         let ext2 = ExtensionExample::from_der(&hex!("
