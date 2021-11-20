@@ -21,9 +21,6 @@ pub struct ExtensionStruct {
 }
 
 #[derive(TlsSerialize, TlsSize, Debug)]
-pub struct TupleStruct1(ExtensionStruct);
-
-#[derive(TlsSerialize, TlsSize, Debug)]
 pub struct TupleStruct(ExtensionStruct, u8);
 
 #[derive(TlsSerialize, TlsSize, Debug)]
@@ -84,6 +81,18 @@ fn simple_struct() {
 }
 
 #[test]
+fn tuple_struct() {
+    let ext = ExtensionStruct {
+        extension_type: ExtensionType::KeyId,
+        extension_data: TlsVecU32::from_slice(&[1, 2, 3, 4, 5]),
+        additional_data: None,
+    };
+    let x = TupleStruct(ext, 6);
+    let serialized = x.tls_serialize_detached().unwrap();
+    assert_eq!(vec![0, 3, 0, 0, 0, 5, 1, 2, 3, 4, 5, 0, 6], serialized);
+}
+
+#[test]
 fn byte_arrays() {
     let x = [0u8, 1, 2, 3];
     let serialized = x.tls_serialize_detached().unwrap();
@@ -102,4 +111,34 @@ fn lifetimes() {
     }
     let serialized = do_some_serializing(&s);
     assert_eq!(vec![0, 4, 1, 2, 3, 4], serialized);
+}
+
+#[derive(TlsSerialize, TlsSize)]
+struct Custom {
+    #[tls_codec(with = "custom")]
+    values: Vec<u8>,
+    a: u8,
+}
+
+mod custom {
+    use std::io::Write;
+    use tls_codec::{Serialize, Size, TlsByteSliceU32};
+
+    pub fn tls_serialized_len(v: &[u8]) -> usize {
+        TlsByteSliceU32(v).tls_serialized_len()
+    }
+
+    pub fn tls_serialize<W: Write>(v: &[u8], writer: &mut W) -> Result<usize, tls_codec::Error> {
+        TlsByteSliceU32(v).tls_serialize(writer)
+    }
+}
+
+#[test]
+fn custom() {
+    let x = Custom {
+        values: vec![0, 1, 2],
+        a: 3,
+    };
+    let serialized = x.tls_serialize_detached().unwrap();
+    assert_eq!(vec![0, 0, 0, 3, 0, 1, 2, 3], serialized);
 }
