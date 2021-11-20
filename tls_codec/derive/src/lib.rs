@@ -1,3 +1,42 @@
+//! Derive macros for traits in `tls_codec`
+//!
+//! The following attribute is available:
+//!
+//! ```text
+//! #[tls_codec(with = "module")]
+//! ```
+//! This attribute may be applied to a struct field. It indicates that deriving any of the
+//! `tls_codec` traits for the containing struct uses the following functions defined in the
+//! module `module`:
+//! - `tls_deserialize` when deriving `Deserialize`
+//! - `tls_serialize` when deriving `Serialize`
+//! - `tls_serialized_len` when deriving `Size`
+//!
+//! Their expected signatures match the corresponding methods in the traits.
+//!
+//! ```
+//! use tls_codec_derive::{TlsSerialize, TlsSize};
+//!
+//! #[derive(TlsSerialize, TlsSize)]
+//! struct Bytes {
+//!     #[tls_codec(with = "bytes")]
+//!     values: Vec<u8>,
+//! }
+//!
+//! mod bytes {
+//!     use std::io::Write;
+//!     use tls_codec::{Serialize, Size, TlsByteSliceU32};
+//!
+//!     pub fn tls_serialized_len(v: &[u8]) -> usize {
+//!         TlsByteSliceU32(v).tls_serialized_len()
+//!     }
+//!
+//!     pub fn tls_serialize<W: Write>(v: &[u8], writer: &mut W) -> Result<usize, tls_codec::Error> {
+//!         TlsByteSliceU32(v).tls_serialize(writer)
+//!     }
+//! }
+//! ```
+
 extern crate proc_macro;
 extern crate proc_macro2;
 
