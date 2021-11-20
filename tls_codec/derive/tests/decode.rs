@@ -1,4 +1,4 @@
-use tls_codec::{Deserialize, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8};
+use tls_codec::{Deserialize, Serialize, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8};
 use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 
 #[derive(TlsDeserialize, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize)]
