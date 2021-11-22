@@ -1002,7 +1002,7 @@ dependencies = [
 
 [[package]]
 name = "tls_codec"
-version = "0.2.0-pre"
+version = "0.2.0-pre.1"
 dependencies = [
  "criterion",
  "serde",
@@ -1012,7 +1012,7 @@ dependencies = [
 
 [[package]]
 name = "tls_codec_derive"
-version = "0.2.0-pre"
+version = "0.2.0-pre.1"
 dependencies = [
  "proc-macro2",
  "quote",
