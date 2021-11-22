@@ -1,4 +1,4 @@
-//! Derive macros for traits in `tls_codec`
+//! # Derive macros for traits in `tls_codec`
 //!
 //! The following attribute is available:
 //!
@@ -50,8 +50,12 @@ use syn::{
     Member, Meta, NestedMeta, Type,
 };
 
+/// Attribute name to identify attributes to be processed by derive-macros in this crate.
 const ATTR_IDENT: &str = "tls_codec";
 
+/// Prefix to add to `tls_codec` functions
+///
+/// This is either `<Type as Trait>` or a custom module containing the functions.
 #[derive(Clone)]
 enum Prefix {
     Type(Type),
@@ -59,6 +63,7 @@ enum Prefix {
 }
 
 impl Prefix {
+    /// Returns the path prefix to use for functions from the given trait.
     fn for_trait(&self, trait_name: &str) -> TokenStream2 {
         let trait_name = Ident::new(trait_name, Span::call_site());
         match self {
@@ -103,6 +108,7 @@ enum TlsStruct {
     Enum(Enum),
 }
 
+/// Attributes supported by derive-macros in this crate
 #[derive(Clone)]
 enum TlsAttr {
     With(ExprPath),
@@ -151,6 +157,8 @@ impl TlsAttr {
     }
 }
 
+/// Gets the [`Prefix`] for a field, i.e. the type itself or a module containing the `tls_codec`
+/// functions.
 fn function_prefix(field: &Field) -> Result<Prefix> {
     let prefix = field
         .attrs
