@@ -14,6 +14,13 @@ impl<T: Size> Size for Option<T> {
     }
 }
 
+impl<T: Size> Size for &Option<T> {
+    #[inline]
+    fn tls_serialized_len(&self) -> usize {
+        (*self).tls_serialized_len()
+    }
+}
+
 impl<T: Serialize> Serialize for Option<T> {
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         match self {
@@ -27,6 +34,12 @@ impl<T: Serialize> Serialize for Option<T> {
                 Ok(1)
             }
         }
+    }
+}
+
+impl<T: Serialize> Serialize for &Option<T> {
+    fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
+        (*self).tls_serialize(writer)
     }
 }
 
