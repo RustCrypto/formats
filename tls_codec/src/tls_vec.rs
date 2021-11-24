@@ -180,49 +180,39 @@ macro_rules! impl_byte_serialize {
 }
 
 macro_rules! impl_tls_vec_codec_generic {
-    ($size:ty, $name:ident, $len_len: literal, $($bounds:ident),*) => {
-        impl<T: $($bounds + )*> Serialize
-            for $name<T>
-        {
+    ($size:ty, $name:ident, $len_len: literal $(, $bounds:ident)*) => {
+        impl<T: $($bounds + )* Serialize> Serialize for $name<T> {
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
         }
 
-        impl<T: $($bounds + )*> Size
-            for $name<T>
-        {
+        impl<T: $($bounds + )* Size> Size for $name<T> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
             }
         }
 
-        impl<T: $($bounds + )*> Serialize
-            for &$name<T>
-        {
+        impl<T: $($bounds + )* Serialize> Serialize for &$name<T> {
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
         }
 
-        impl<T: $($bounds + )*> Size
-            for &$name<T>
-        {
+        impl<T: $($bounds + )* Size> Size for &$name<T> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
             }
         }
 
-        impl<T: $($bounds + )*> Deserialize
-            for $name<T>
-        {
+        impl<T: $($bounds + )* Deserialize> Deserialize for $name<T> {
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
                 Self::deserialize(bytes)
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_tls_vec_codec_bytes {
@@ -353,13 +343,13 @@ macro_rules! impl_vec_members {
 }
 
 macro_rules! impl_tls_vec_generic {
-    ($size:ty, $name:ident, $len_len: literal, $($bounds:ident),*) => {
+    ($size:ty, $name:ident, $len_len: literal $(, $bounds:ident)*) => {
         #[derive(Eq, Debug)]
         pub struct $name<T: $($bounds + )*> {
             vec: Vec<T>,
         }
 
-        impl<T: Clone + $($bounds + )*> Clone for $name<T> {
+        impl<T: $($bounds + )* Clone> Clone for $name<T> {
             fn clone(&self) -> Self {
                 Self::new(self.vec.clone())
             }
@@ -369,7 +359,7 @@ macro_rules! impl_tls_vec_generic {
             impl_vec_members!(T, $len_len);
         }
 
-        impl<T: std::hash::Hash + $($bounds + )*> std::hash::Hash for $name<T> {
+        impl<T: $($bounds + )* std::hash::Hash> std::hash::Hash for $name<T> {
             #[inline]
             fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
                 self.vec.hash(state)
@@ -385,7 +375,7 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        impl<T: std::cmp::PartialEq + $($bounds + )*> std::cmp::PartialEq for $name<T> {
+        impl<T: $($bounds + )* std::cmp::PartialEq> std::cmp::PartialEq for $name<T> {
             fn eq(&self, other: &Self) -> bool {
                 self.vec.eq(&other.vec)
             }
@@ -405,46 +395,39 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        impl<T: $($bounds + )*> std::iter::FromIterator<T> for  $name<T>  {
+        impl<T: $($bounds + )*> std::iter::FromIterator<T> for $name<T> {
             #[inline]
             fn from_iter<I>(iter: I) -> Self
             where
-                I: IntoIterator<Item = T>, {
+                I: IntoIterator<Item = T>,
+            {
                 let vec = Vec::<T>::from_iter(iter);
-                Self{vec}
+                Self { vec }
             }
         }
 
-        impl<T: $($bounds + )*> From<Vec<T>>
-            for $name<T>
-        {
+        impl<T: $($bounds + )*> From<Vec<T>> for $name<T> {
             #[inline]
             fn from(v: Vec<T>) -> Self {
                 Self::new(v)
             }
         }
 
-        impl<T: Clone + $($bounds + )*> From<&[T]>
-            for $name<T>
-        {
+        impl<T: $($bounds + )* Clone> From<&[T]> for $name<T> {
             #[inline]
             fn from(v: &[T]) -> Self {
                 Self::from_slice(v)
             }
         }
 
-        impl<T: $($bounds + )*> From<$name<T>>
-            for Vec<T>
-        {
+        impl<T: $($bounds + )*> From<$name<T>> for Vec<T> {
             #[inline]
             fn from(mut v: $name<T>) -> Self {
                 std::mem::take(&mut v.vec)
             }
         }
 
-        impl<T: $($bounds + )*> Default
-            for $name<T>
-        {
+        impl<T: $($bounds + )*> Default for $name<T> {
             #[inline]
             fn default() -> Self {
                 Self { vec: Vec::new() }
@@ -469,11 +452,7 @@ macro_rules! impl_tls_vec_generic {
         #[cfg(feature = "serde_serialize")]
         impl<'de, T> serde::de::Deserialize<'de> for $name<T>
         where
-            T: Serialize
-                + Deserialize
-                + Size
-                + $($bounds + )*
-                serde::de::Deserialize<'de>,
+            T: $($bounds + )* serde::de::Deserialize<'de>,
         {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
@@ -521,11 +500,7 @@ macro_rules! impl_tls_vec_generic {
 
                 impl<'de, T> serde::de::Visitor<'de> for TlsVecVisitor<T>
                 where
-                    T: Serialize
-                        + Deserialize
-                        + Size
-                        + $($bounds + )*
-                        serde::de::Deserialize<'de>,
+                    T: $($bounds + )* serde::de::Deserialize<'de>,
                 {
                     type Value = $name<T>;
                     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -762,39 +737,28 @@ macro_rules! impl_tls_vec {
 
 macro_rules! impl_secret_tls_vec {
     ($size:ty, $name:ident, $len_len: literal) => {
-        impl_tls_vec_generic!(
-            $size,
-            $name,
-            $len_len,
-            Serialize,
-            Deserialize,
-            Size,
-            Zeroize
-        );
-        impl_tls_vec_codec_generic!(
-            $size,
-            $name,
-            $len_len,
-            Serialize,
-            Deserialize,
-            Size,
-            Zeroize
-        );
+        impl_tls_vec_generic!($size, $name, $len_len, Zeroize);
+        impl_tls_vec_codec_generic!($size, $name, $len_len, Zeroize);
 
-        impl<T: Serialize + Deserialize + Size + Zeroize> $name<T> {
-            // This implements serialize and size for all versions
+        impl<T: Serialize + Zeroize> $name<T> {
             impl_serialize!(self, $size, $name, $len_len);
+        }
+
+        impl<T: Size + Zeroize> $name<T> {
             impl_size!(self, $size, $name, $len_len);
+        }
+
+        impl<T: Deserialize + Zeroize> $name<T> {
             impl_deserialize!(self, $size, $name, $len_len);
         }
 
-        impl<T: Serialize + Deserialize + Size + Zeroize> Zeroize for $name<T> {
+        impl<T: Zeroize> Zeroize for $name<T> {
             fn zeroize(&mut self) {
                 self.vec.zeroize()
             }
         }
 
-        impl<T: Serialize + Deserialize + Size + Zeroize> Drop for $name<T> {
+        impl<T: Zeroize> Drop for $name<T> {
             fn drop(&mut self) {
                 self.zeroize()
             }
@@ -804,14 +768,19 @@ macro_rules! impl_secret_tls_vec {
 
 macro_rules! impl_public_tls_vec {
     ($size:ty, $name:ident, $len_len: literal) => {
-        impl_tls_vec_generic!($size, $name, $len_len, Serialize, Deserialize, Size);
+        impl_tls_vec_generic!($size, $name, $len_len);
 
-        impl_tls_vec_codec_generic!($size, $name, $len_len, Serialize, Deserialize, Size);
+        impl_tls_vec_codec_generic!($size, $name, $len_len);
 
-        impl<T: Serialize + Deserialize + Size> $name<T> {
-            // This implements serialize and size for all versions
+        impl<T: Serialize> $name<T> {
             impl_serialize!(self, $size, $name, $len_len);
+        }
+
+        impl<T: Size> $name<T> {
             impl_size!(self, $size, $name, $len_len);
+        }
+
+        impl<T: Deserialize> $name<T> {
             impl_deserialize!(self, $size, $name, $len_len);
         }
     };
@@ -900,9 +869,9 @@ impl_tls_byte_slice!(u32, TlsByteSliceU32, 4);
 
 macro_rules! impl_tls_slice {
     ($size:ty, $name:ident, $len_len: literal) => {
-        pub struct $name<'a, T: Size + Serialize>(pub &'a [T]);
+        pub struct $name<'a, T>(pub &'a [T]);
 
-        impl<'a, T: Size + Serialize> $name<'a, T> {
+        impl<'a, T> $name<'a, T> {
             /// Get the raw slice.
             #[inline(always)]
             pub fn as_slice(&self) -> &[T] {
@@ -910,31 +879,34 @@ macro_rules! impl_tls_slice {
             }
         }
 
-        impl<'a, T: Size + Serialize> $name<'a, T> {
-            impl_serialize!(self, $size, $name, $len_len);
+        impl<'a, T: Size> $name<'a, T> {
             impl_size!(self, $size, $name, $len_len);
         }
 
-        impl<'a, T: Size + Serialize> Serialize for &$name<'a, T> {
+        impl<'a, T: Serialize> $name<'a, T> {
+            impl_serialize!(self, $size, $name, $len_len);
+        }
+
+        impl<'a, T: Serialize> Serialize for &$name<'a, T> {
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
         }
 
-        impl<'a, T: Size + Serialize> Serialize for $name<'a, T> {
+        impl<'a, T: Serialize> Serialize for $name<'a, T> {
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
         }
 
-        impl<'a, T: Size + Serialize> Size for &$name<'a, T> {
+        impl<'a, T: Size> Size for &$name<'a, T> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
             }
         }
 
-        impl<'a, T: Size + Serialize> Size for $name<'a, T> {
+        impl<'a, T: Size> Size for $name<'a, T> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
