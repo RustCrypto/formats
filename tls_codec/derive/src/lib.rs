@@ -46,8 +46,8 @@ use quote::quote;
 use syn::{
     self, parenthesized,
     parse::{ParseStream, Parser, Result},
-    parse_macro_input, Attribute, Data, DeriveInput, ExprPath, Field, Generics, Ident, Index, Lit,
-    Member, Meta, NestedMeta, Type,
+    parse_macro_input, Attribute, Data, DeriveInput, ExprPath, Field, Generics, Ident, Lit, Member,
+    Meta, NestedMeta, Type,
 };
 
 /// Attribute name to identify attributes to be processed by derive-macros in this crate.
@@ -80,15 +80,6 @@ struct Struct {
     generics: Generics,
     members: Vec<Member>,
     member_prefixes: Vec<Prefix>,
-}
-
-#[derive(Clone)]
-struct TupleStruct {
-    call_site: Span,
-    ident: Ident,
-    generics: Generics,
-    field_indices: Vec<Index>,
-    field_paths: Vec<TokenStream2>,
 }
 
 #[derive(Clone)]
