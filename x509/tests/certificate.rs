@@ -170,6 +170,7 @@ fn decode_cert() {
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
+    println!("{:?}", cert);
     let exts = cert.tbs_certificate.extensions.unwrap();
     let i = exts.iter();
     let mut counter = 0;

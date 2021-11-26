@@ -49,7 +49,7 @@ pub const X509_CERT_VERSION: u8 = 2;
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct TBSCertificate<'a> {
     /// version         [0]  Version DEFAULT v1,
     //#[asn1(context_specific = "0", default = "default_zero_u8")]
@@ -142,6 +142,33 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
                 value: exts.clone(),
             }),
         ])
+    }
+}
+
+impl<'a> ::core::fmt::Debug for TBSCertificate<'a> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.write_fmt(format_args!("\n\tVersion: {:02X?}\n", self.version))?;
+        f.write_fmt(format_args!("\tSerial Number: 0x"))?;
+        for b in self.serial_number.as_bytes() {
+            f.write_fmt(format_args!("{:02X?}", b))?;
+        }
+        f.write_fmt(format_args!("\n"))?;
+        f.write_fmt(format_args!("\tSignature: {:?}\n", self.signature))?;
+        f.write_fmt(format_args!("\tIssuer: {:?}\n", self.issuer))?;
+        f.write_fmt(format_args!("\tValidity: {:?}\n", self.validity))?;
+        f.write_fmt(format_args!("\tSubject: {:?}\n", self.subject))?;
+        f.write_fmt(format_args!("\tSubject Public Key Info: {:?}\n", self.subject_public_key_info))?;
+        f.write_fmt(format_args!("\tIssuer Unique ID: {:?}\n", self.issuer_unique_id))?;
+        f.write_fmt(format_args!("\tSubject Unique ID: {:?}\n", self.subject_unique_id))?;
+        if let Some(exts) = self.extensions.as_ref() {
+            for (i, e) in exts.iter().enumerate() {
+                f.write_fmt(format_args!("\tExtension #{}: {:?}\n", i, e));
+            }
+        }
+        else {
+            f.write_fmt(format_args!("\tExtensions: None\n"))?;
+        }
+        Ok(())
     }
 }
 
