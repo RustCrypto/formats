@@ -11,8 +11,8 @@
 
 ## About
 
-Pure Rust implementation of SSH key file formats as described in [RFC4251]
-and [RFC4253] as well as OpenSSH's [PROTOCOL.key] format specification.
+Pure Rust implementation of SSH key file formats as described in [RFC4716]
+as well as OpenSSH's [PROTOCOL.key] format specification.
 
 ## Minimum Supported Rust Version
 
@@ -52,6 +52,5 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC4251]: https://datatracker.ietf.org/doc/html/rfc4251
-[RFC4253]: https://datatracker.ietf.org/doc/html/rfc4253
+[RFC4716]: https://datatracker.ietf.org/doc/html/rfc4716
 [PROTOCOL.key]: https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.key
