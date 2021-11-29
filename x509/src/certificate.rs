@@ -157,15 +157,23 @@ impl<'a> ::core::fmt::Debug for TBSCertificate<'a> {
         f.write_fmt(format_args!("\tIssuer: {:?}\n", self.issuer))?;
         f.write_fmt(format_args!("\tValidity: {:?}\n", self.validity))?;
         f.write_fmt(format_args!("\tSubject: {:?}\n", self.subject))?;
-        f.write_fmt(format_args!("\tSubject Public Key Info: {:?}\n", self.subject_public_key_info))?;
-        f.write_fmt(format_args!("\tIssuer Unique ID: {:?}\n", self.issuer_unique_id))?;
-        f.write_fmt(format_args!("\tSubject Unique ID: {:?}\n", self.subject_unique_id))?;
+        f.write_fmt(format_args!(
+            "\tSubject Public Key Info: {:?}\n",
+            self.subject_public_key_info
+        ))?;
+        f.write_fmt(format_args!(
+            "\tIssuer Unique ID: {:?}\n",
+            self.issuer_unique_id
+        ))?;
+        f.write_fmt(format_args!(
+            "\tSubject Unique ID: {:?}\n",
+            self.subject_unique_id
+        ))?;
         if let Some(exts) = self.extensions.as_ref() {
             for (i, e) in exts.iter().enumerate() {
-                f.write_fmt(format_args!("\tExtension #{}: {:?}\n", i, e));
+                f.write_fmt(format_args!("\tExtension #{}: {:?}\n", i, e))?;
             }
-        }
-        else {
+        } else {
             f.write_fmt(format_args!("\tExtensions: None\n"))?;
         }
         Ok(())
