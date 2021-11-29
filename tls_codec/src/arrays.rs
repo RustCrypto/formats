@@ -4,6 +4,7 @@ use super::{Deserialize, Error, Serialize, Size};
 use std::io::{Read, Write};
 
 impl<const LEN: usize> Serialize for [u8; LEN] {
+    #[inline]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let written = writer.write(self)?;
         if written == LEN {
@@ -18,6 +19,7 @@ impl<const LEN: usize> Serialize for [u8; LEN] {
 }
 
 impl<const LEN: usize> Deserialize for [u8; LEN] {
+    #[inline]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
         let mut out = [0u8; LEN];
         bytes.read_exact(&mut out)?;

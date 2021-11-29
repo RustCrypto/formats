@@ -14,6 +14,13 @@ impl<T: Size> Size for Option<T> {
     }
 }
 
+impl<T: Size> Size for &Option<T> {
+    #[inline]
+    fn tls_serialized_len(&self) -> usize {
+        (*self).tls_serialized_len()
+    }
+}
+
 impl<T: Serialize> Serialize for Option<T> {
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         match self {
@@ -30,7 +37,14 @@ impl<T: Serialize> Serialize for Option<T> {
     }
 }
 
+impl<T: Serialize> Serialize for &Option<T> {
+    fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
+        (*self).tls_serialize(writer)
+    }
+}
+
 impl<T: Deserialize> Deserialize for Option<T> {
+    #[inline]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
         let mut some_or_none = [0u8; 1];
         bytes.read_exact(&mut some_or_none)?;
@@ -50,6 +64,7 @@ impl<T: Deserialize> Deserialize for Option<T> {
 macro_rules! impl_unsigned {
     ($t:ty, $bytes:literal) => {
         impl Deserialize for $t {
+            #[inline]
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
                 let mut x = (0 as $t).to_be_bytes();
                 bytes.read_exact(&mut x)?;
@@ -58,9 +73,17 @@ macro_rules! impl_unsigned {
         }
 
         impl Serialize for $t {
+            #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 let written = writer.write(&self.to_be_bytes())?;
                 Ok(written)
+            }
+        }
+
+        impl Serialize for &$t {
+            #[inline]
+            fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
+                (*self).tls_serialize(writer)
             }
         }
 
@@ -68,6 +91,13 @@ macro_rules! impl_unsigned {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 $bytes
+            }
+        }
+
+        impl Size for &$t {
+            #[inline]
+            fn tls_serialized_len(&self) -> usize {
+                (*self).tls_serialized_len()
             }
         }
     };

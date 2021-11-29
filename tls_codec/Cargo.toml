@@ -1,6 +1,6 @@
 [package]
 name = "tls_codec"
-version = "0.2.0-pre"
+version = "0.2.0-pre.2"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/tls_codec/"
@@ -15,7 +15,7 @@ zeroize = { version = "1", features = ["zeroize_derive"] }
 
 # optional dependencies
 serde = { version = "1.0", features = ["derive"], optional = true }
-tls_codec_derive = { version = "=0.2.0-pre", path = "derive", optional = true }
+tls_codec_derive = { version = "=0.2.0-pre.2", path = "derive", optional = true }
 
 [dev-dependencies]
 criterion = "0.3"

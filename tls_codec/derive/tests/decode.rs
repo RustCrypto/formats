@@ -1,4 +1,4 @@
-use tls_codec::{Deserialize, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8};
+use tls_codec::{Deserialize, Serialize, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8};
 use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 
 #[derive(TlsDeserialize, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize)]
@@ -219,4 +219,39 @@ fn kat_mls_key_package() {
         key_package_bytes as &[u8],
         serialized_key_package.as_slice()
     );
+}
+
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+struct Custom {
+    #[tls_codec(with = "custom")]
+    values: Vec<u8>,
+    a: u8,
+}
+
+mod custom {
+    use std::io::{Read, Write};
+    use tls_codec::{Deserialize, Serialize, Size, TlsByteSliceU32, TlsByteVecU32};
+
+    pub fn tls_serialized_len(v: &[u8]) -> usize {
+        TlsByteSliceU32(v).tls_serialized_len()
+    }
+
+    pub fn tls_serialize<W: Write>(v: &[u8], writer: &mut W) -> Result<usize, tls_codec::Error> {
+        TlsByteSliceU32(v).tls_serialize(writer)
+    }
+
+    pub fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Vec<u8>, tls_codec::Error> {
+        Ok(TlsByteVecU32::tls_deserialize(bytes)?.into_vec())
+    }
+}
+
+#[test]
+fn custom() {
+    let x = Custom {
+        values: vec![0, 1, 2],
+        a: 3,
+    };
+    let serialized = x.tls_serialize_detached().unwrap();
+    let deserialized = Custom::tls_deserialize(&mut &*serialized).unwrap();
+    assert_eq!(x, deserialized);
 }

@@ -1,6 +1,6 @@
 use tls_codec::{
     Deserialize, Serialize, Size, TlsByteSliceU16, TlsByteVecU16, TlsByteVecU8, TlsSliceU16,
-    TlsVecU16, TlsVecU8,
+    TlsVecU16, TlsVecU32, TlsVecU8,
 };
 
 #[test]
@@ -75,4 +75,31 @@ fn deserialize_tls_byte_vec() {
     );
     assert_eq!(long_vector.len(), deserialized_long_vec.len());
     assert_eq!(long_vector.as_slice(), deserialized_long_vec.as_slice());
+}
+
+#[test]
+fn deserialize_tuples() {
+    let t = (
+        TlsVecU16::from(vec![1u8, 2, 3]),
+        TlsVecU32::from(vec![1u16, 2, 3]),
+    );
+    let t1 = TlsVecU16::from(vec![1u8, 2, 3]);
+    let t2 = TlsVecU32::from(vec![1u16, 2, 3]);
+    let t_borrowed = (&t1, &t2);
+
+    let mut bytes = Vec::new();
+    let serialized_len = t
+        .tls_serialize(&mut bytes)
+        .expect("Error serializing tuple");
+    assert_eq!(serialized_len, 2 + 3 + 4 + 6);
+
+    let mut bytes2 = Vec::new();
+    let serialized_len = t_borrowed
+        .tls_serialize(&mut bytes2)
+        .expect("Error serializing borrow tuple");
+    assert_eq!(serialized_len, 2 + 3 + 4 + 6);
+
+    let deserialized = <(TlsVecU16<u8>, TlsVecU32<u16>)>::tls_deserialize(&mut bytes.as_slice())
+        .expect("Error deserializing tuple.");
+    assert_eq!(deserialized, t);
 }
