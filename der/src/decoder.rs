@@ -284,7 +284,7 @@ impl<'a> Decoder<'a> {
     }
 
     /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
-    pub fn tlv_slice(&mut self) -> Result<&'a [u8]> {
+    pub fn tlv_bytes(&mut self) -> Result<&'a [u8]> {
         let header = self.peek_header()?;
         let header_len = header.encoded_len()?;
         self.bytes((header_len + header.length)?)

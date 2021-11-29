@@ -18,9 +18,9 @@ pub struct DeferDecodeCertificate<'a> {
 impl<'a> Decodable<'a> for DeferDecodeCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<DeferDecodeCertificate<'a>> {
         decoder.sequence(|decoder| {
-            let tbs_certificate = decoder.tlv_slice()?;
-            let signature_algorithm = decoder.tlv_slice()?;
-            let signature = decoder.tlv_slice()?;
+            let tbs_certificate = decoder.tlv_bytes()?;
+            let signature_algorithm = decoder.tlv_bytes()?;
+            let signature = decoder.tlv_bytes()?;
             Ok(Self {
                 tbs_certificate,
                 signature_algorithm,
@@ -61,15 +61,15 @@ impl<'a> Decodable<'a> for DeferDecodeTBSCertificate<'a> {
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value)
                     .unwrap_or_else(default_zero_u8);
-            let serial_number = decoder.tlv_slice()?;
-            let signature = decoder.tlv_slice()?;
-            let issuer = decoder.tlv_slice()?;
-            let validity = decoder.tlv_slice()?;
-            let subject = decoder.tlv_slice()?;
-            let subject_public_key_info = decoder.tlv_slice()?;
+            let serial_number = decoder.tlv_bytes()?;
+            let signature = decoder.tlv_bytes()?;
+            let issuer = decoder.tlv_bytes()?;
+            let validity = decoder.tlv_bytes()?;
+            let subject = decoder.tlv_bytes()?;
+            let subject_public_key_info = decoder.tlv_bytes()?;
             let issuer_unique_id = decoder.decode()?;
             let subject_unique_id = decoder.decode()?;
-            let extensions = decoder.tlv_slice()?;
+            let extensions = decoder.tlv_bytes()?;
             Ok(Self {
                 version,
                 serial_number,
