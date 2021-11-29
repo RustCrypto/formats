@@ -162,3 +162,64 @@ fn optional_member() {
     let serialized = x.tls_serialize_detached().unwrap();
     assert_eq!(vec![1, 0, 0, 0, 6, 0, 0, 6, 0, 1, 0, 2, 0, 3], serialized);
 }
+
+#[derive(TlsSerialize, TlsSize)]
+#[repr(u8)]
+enum EnumWithTupleVariant {
+    A(u8, u32),
+}
+
+#[test]
+fn enum_with_tuple_variant() {
+    let x = EnumWithTupleVariant::A(3, 4);
+    let serialized = x.tls_serialize_detached().unwrap();
+    assert_eq!(vec![0, 3, 0, 0, 0, 4], serialized);
+}
+
+#[derive(TlsSerialize, TlsSize)]
+#[repr(u8)]
+enum EnumWithStructVariant {
+    A { foo: u8, bar: u32 },
+}
+
+#[test]
+fn enum_with_struct_variant() {
+    let x = EnumWithStructVariant::A { foo: 3, bar: 4 };
+    let serialized = x.tls_serialize_detached().unwrap();
+    assert_eq!(vec![0, 3, 0, 0, 0, 4], serialized);
+}
+
+#[derive(TlsSerialize, TlsSize)]
+#[repr(u16)]
+enum EnumWithDataAndDiscriminant {
+    #[tls_codec(discriminant = 3)]
+    A(u8),
+    B,
+}
+
+#[test]
+fn enum_with_data_and_discriminant() {
+    let x = EnumWithDataAndDiscriminant::A(4);
+    let serialized = x.tls_serialize_detached().unwrap();
+    assert_eq!(vec![0, 3, 4], serialized);
+}
+
+#[test]
+fn discriminant_is_incremented_implicitly() {
+    let x = EnumWithDataAndDiscriminant::B;
+    let serialized = x.tls_serialize_detached().unwrap();
+    assert_eq!(vec![0, 4], serialized);
+}
+
+#[derive(TlsSerialize, TlsSize)]
+#[repr(u8)]
+enum EnumWithCustomSerializedField {
+    A(#[tls_codec(with = "custom")] Vec<u8>),
+}
+
+#[test]
+fn enum_with_custom_serialized_field() {
+    let x = EnumWithCustomSerializedField::A(vec![1, 2, 3]);
+    let serialized = x.tls_serialize_detached().unwrap();
+    assert_eq!(vec![0, 0, 0, 0, 3, 1, 2, 3], serialized);
+}

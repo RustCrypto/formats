@@ -46,8 +46,11 @@ use quote::quote;
 use syn::{
     self, parenthesized,
     parse::{ParseStream, Parser, Result},
-    parse_macro_input, Attribute, Data, DeriveInput, ExprPath, Field, Generics, Ident, Index, Lit,
-    Member, Meta, NestedMeta, Type,
+    parse_macro_input,
+    punctuated::Punctuated,
+    token::Comma,
+    Attribute, Data, DeriveInput, ExprPath, Field, Generics, Ident, Index, Lit, Member, Meta,
+    NestedMeta, Type,
 };
 
 /// Attribute name to identify attributes to be processed by derive-macros in this crate.
@@ -97,9 +100,15 @@ struct Enum {
     ident: Ident,
     generics: Generics,
     repr: Ident,
-    parsed_variants: Vec<TokenStream2>,
-    discriminants: Vec<TokenStream2>,
-    matched: Vec<TokenStream2>,
+    variants: Vec<Variant>,
+    discriminant_constants: TokenStream2,
+}
+
+#[derive(Clone)]
+struct Variant {
+    ident: Ident,
+    members: Vec<Member>,
+    member_prefixes: Vec<Prefix>,
 }
 
 #[derive(Clone)]
@@ -112,9 +121,17 @@ enum TlsStruct {
 #[derive(Clone)]
 enum TlsAttr {
     With(ExprPath),
+    Discriminant(u32),
 }
 
 impl TlsAttr {
+    fn name(&self) -> &'static str {
+        match self {
+            TlsAttr::With(_) => "with",
+            TlsAttr::Discriminant(_) => "discriminant",
+        }
+    }
+
     /// Parses attributes of the form:
     /// ```text
     /// #[tls_codec(with = "module")]
@@ -134,18 +151,25 @@ impl TlsAttr {
                     .path
                     .get_ident()
                     .map(|ident| {
-                        if ident == "with" {
-                            match &kv.lit {
+                        let ident_str = ident.to_string();
+                        match &*ident_str {
+                            "discriminant" => match &kv.lit {
+                                Lit::Int(i) => i.base10_parse::<u32>().map(TlsAttr::Discriminant),
+                                _ => Err(syn::Error::new_spanned(
+                                    &kv.lit,
+                                    "Expected integer literal",
+                                )),
+                            },
+                            "with" => match &kv.lit {
                                 Lit::Str(s) => s.parse::<ExprPath>().map(TlsAttr::With),
                                 _ => {
                                     Err(syn::Error::new_spanned(&kv.lit, "Expected string literal"))
                                 }
-                            }
-                        } else {
-                            Err(syn::Error::new_spanned(
+                            },
+                            _ => Err(syn::Error::new_spanned(
                                 ident,
                                 format!("Unexpected identifier {}", ident),
-                            ))
+                            )),
                         }
                     })
                     .unwrap_or_else(|| {
@@ -155,37 +179,67 @@ impl TlsAttr {
             })
             .collect()
     }
+
+    fn parse_multi(attrs: &[Attribute]) -> Result<Vec<TlsAttr>> {
+        attrs.iter().try_fold(Vec::new(), |mut acc, attr| {
+            acc.extend(TlsAttr::parse(attr)?);
+            Ok(acc)
+        })
+    }
 }
 
 /// Gets the [`Prefix`] for a field, i.e. the type itself or a module containing the `tls_codec`
 /// functions.
 fn function_prefix(field: &Field) -> Result<Prefix> {
-    let prefix = field
-        .attrs
-        .iter()
-        .flat_map(|attr| {
-            let (known_attrs, error) = match TlsAttr::parse(attr) {
-                Ok(attrs) => (attrs, None),
-                Err(e) => (Vec::new(), Some(Err(e))),
-            };
-            known_attrs
-                .into_iter()
-                .map(|TlsAttr::With(p)| Ok(p))
-                .chain(error)
-        })
-        .try_fold(None, |path, p| {
-            let p = p?;
-            match path {
-                None => Ok(Some(p)),
-                Some(_) => Err(syn::Error::new_spanned(
-                    p,
-                    "Attribute `with` specified more than once",
-                )),
-            }
+    let prefix = TlsAttr::parse_multi(&field.attrs)?
+        .into_iter()
+        .try_fold(None, |path, attr| match (path, attr) {
+            (None, TlsAttr::With(p)) => Ok(Some(p)),
+            (Some(_), TlsAttr::With(p)) => Err(syn::Error::new_spanned(
+                p,
+                "Attribute `with` specified more than once",
+            )),
+            (_, attr) => Err(syn::Error::new(
+                Span::call_site(),
+                format!("Unrecognized field attribute `{}`", attr.name()),
+            )),
         })?
         .map(Prefix::Custom)
         .unwrap_or_else(|| Prefix::Type(field.ty.clone()));
     Ok(prefix)
+}
+
+fn discriminant_value(attrs: &[Attribute]) -> Result<Option<u32>> {
+    TlsAttr::parse_multi(attrs)?
+        .into_iter()
+        .try_fold(None, |discriminant, attr| match (discriminant, attr) {
+            (None, TlsAttr::Discriminant(d)) => Ok(Some(d)),
+            (Some(_), TlsAttr::Discriminant(_)) => Err(syn::Error::new(
+                Span::call_site(),
+                "Attribute `discriminant` specified more than once",
+            )),
+            (_, attr) => Err(syn::Error::new(
+                Span::call_site(),
+                format!("Unrecognized variant attribute `{}`", attr.name()),
+            )),
+        })
+}
+
+fn fields_to_members(fields: &syn::Fields) -> Vec<Member> {
+    fields
+        .iter()
+        .enumerate()
+        .map(|(i, field)| {
+            field
+                .ident
+                .clone()
+                .map_or_else(|| Member::Unnamed(syn::Index::from(i)), Member::Named)
+        })
+        .collect()
+}
+
+fn fields_to_member_prefixes(fields: &syn::Fields) -> Result<Vec<Prefix>> {
+    fields.iter().map(function_prefix).collect()
 }
 
 fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
@@ -194,22 +248,8 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
     let generics = ast.generics.clone();
     match ast.data {
         Data::Struct(st) => {
-            let members = st
-                .fields
-                .iter()
-                .enumerate()
-                .map(|(i, field)| {
-                    field
-                        .ident
-                        .clone()
-                        .map_or_else(|| Member::Unnamed(syn::Index::from(i)), Member::Named)
-                })
-                .collect();
-            let member_prefixes = st
-                .fields
-                .iter()
-                .map(function_prefix)
-                .collect::<std::result::Result<Vec<_>, _>>()?;
+            let members = fields_to_members(&st.fields);
+            let member_prefixes = fields_to_member_prefixes(&st.fields)?;
             Ok(TlsStruct::Struct(Struct {
                 call_site,
                 ident,
@@ -236,44 +276,25 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
             }
             let repr =
                 repr.ok_or_else(|| syn::Error::new(call_site, "missing #[repr(...)] attribute"))?;
-            let parsed_variants: Vec<TokenStream2> = variants
-                .iter()
+            let discriminant_constants = define_discriminant_constants(&ident, &repr, &variants)?;
+            let variants = variants
+                .into_iter()
                 .map(|variant| {
-                    let variant = &variant.ident;
-                    quote! {
-                        #ident::#variant => #ident::#variant as #repr,
-                    }
+                    Ok(Variant {
+                        ident: variant.ident,
+                        members: fields_to_members(&variant.fields),
+                        member_prefixes: fields_to_member_prefixes(&variant.fields)?,
+                    })
                 })
-                .collect();
-
-            let discriminants: Vec<TokenStream2> = variants
-                .iter()
-                .map(|variant| {
-                    let variant = &variant.ident;
-                    quote! {
-                        const #variant: #repr = #ident::#variant as #repr;
-                    }
-                })
-                .collect();
-
-            let matched: Vec<TokenStream2> = variants
-                .iter()
-                .map(|variant| {
-                    let variant = &variant.ident;
-                    quote! {
-                        #variant => core::result::Result::Ok(#ident::#variant),
-                    }
-                })
-                .collect();
+                .collect::<Result<Vec<_>>>()?;
 
             Ok(TlsStruct::Enum(Enum {
                 call_site,
                 ident,
                 generics,
                 repr,
-                parsed_variants,
-                discriminants,
-                matched,
+                variants,
+                discriminant_constants,
             }))
         }
         Data::Union(_) => unimplemented!(),
@@ -299,6 +320,51 @@ pub fn deserialize_macro_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let parsed_ast = parse_ast(ast).unwrap();
     impl_deserialize(parsed_ast).into()
+}
+
+fn make_n_ids(n: usize) -> Vec<Ident> {
+    (0..n)
+        .map(|i| Ident::new(&format!("__arg{}", i), Span::call_site()))
+        .collect()
+}
+
+fn discriminant_id(variant: &Ident) -> Ident {
+    Ident::new(&format!("__TLS_CODEC_{}", variant), Span::call_site())
+}
+
+fn define_discriminant_constants(
+    enum_ident: &Ident,
+    repr: &Ident,
+    variants: &Punctuated<syn::Variant, Comma>,
+) -> Result<TokenStream2> {
+    let all_variants_are_unit = variants
+        .iter()
+        .all(|variant| matches!(variant.fields, syn::Fields::Unit));
+    let discriminant_constants = if all_variants_are_unit {
+        variants
+            .iter()
+            .map(|variant| {
+                let variant_id = &variant.ident;
+                let constant_id = discriminant_id(variant_id);
+                quote! {
+                    const #constant_id: #repr = #enum_ident::#variant_id as #repr;
+                }
+            })
+            .collect::<Vec<_>>()
+    } else {
+        variants
+            .iter()
+            .try_fold((0, Vec::new()), |(next, mut acc), variant| {
+                let constant_id = discriminant_id(&variant.ident);
+                let value = discriminant_value(&variant.attrs)?.unwrap_or(next);
+                acc.push(quote! {
+                    const #constant_id: #repr = #value as #repr;
+                });
+                Ok::<_, syn::Error>((value + 1, acc))
+            })?
+            .1
+    };
+    Ok(quote! { #(#discriminant_constants)* })
 }
 
 #[allow(unused_variables)]
@@ -337,22 +403,36 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
             ident,
             generics,
             repr,
-            parsed_variants,
-            discriminants,
-            matched,
+            variants,
+            ..
         }) => {
+            let field_arms = variants
+                .iter()
+                .map(|variant| {
+                    let variant_id = &variant.ident;
+                    let members = &variant.members;
+                    let bindings = make_n_ids(members.len());
+                    let prefixes = variant.member_prefixes.iter().map(|p| p.for_trait("Size")).collect::<Vec<_>>();
+                    quote! {
+                        #ident::#variant_id { #(#members: #bindings,)* } => 0 #(+ #prefixes::tls_serialized_len(#bindings))*,
+                    }
+                })
+                .collect::<Vec<_>>();
             quote! {
                 impl #generics tls_codec::Size for #ident #generics {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
-                        std::mem::size_of::<#repr>()
+                        let field_len = match self {
+                            #(#field_arms)*
+                        };
+                        std::mem::size_of::<#repr>() + field_len
                     }
                 }
 
                 impl #generics tls_codec::Size for &#ident #generics {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
-                        std::mem::size_of::<#repr>()
+                        tls_codec::Size::tls_serialized_len(*self)
                     }
                 }
             }
@@ -407,26 +487,42 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
             ident,
             generics,
             repr,
-            parsed_variants,
-            discriminants,
-            matched,
+            variants,
+            discriminant_constants,
         }) => {
+            let arms = variants
+                .iter()
+                .map(|variant| {
+                    let variant_id = &variant.ident;
+                    let discriminant = discriminant_id(variant_id);
+                    let members = &variant.members;
+                    let bindings = make_n_ids(members.len());
+                    let prefixes = variant
+                        .member_prefixes
+                        .iter()
+                        .map(|p| p.for_trait("Serialize"))
+                        .collect::<Vec<_>>();
+                    quote! {
+                        #ident::#variant_id { #(#members: #bindings,)* } => Ok(
+                            tls_codec::Serialize::tls_serialize(&#discriminant, writer)?
+                            #(+ #prefixes::tls_serialize(#bindings, writer)?)*
+                        ),
+                    }
+                })
+                .collect::<Vec<_>>();
             quote! {
                 impl #generics tls_codec::Serialize for #ident #generics {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                        let enum_value: #repr = match self {
-                            #(#parsed_variants)*
-                        };
-                        enum_value.tls_serialize(writer)
+                        #discriminant_constants
+                        match self {
+                            #(#arms)*
+                        }
                     }
                 }
 
                 impl #generics tls_codec::Serialize for &#ident #generics {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                        let enum_value: #repr = match self {
-                            #(#parsed_variants)*
-                        };
-                        enum_value.tls_serialize(writer)
+                        tls_codec::Serialize::tls_serialize(*self, writer)
                     }
                 }
             }
@@ -463,22 +559,37 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             ident,
             generics,
             repr,
-            parsed_variants,
-            discriminants,
-            matched,
+            variants,
+            discriminant_constants,
         }) => {
+            let arms = variants
+                .iter()
+                .map(|variant| {
+                    let variant_id = &variant.ident;
+                    let discriminant = discriminant_id(variant_id);
+                    let members = &variant.members;
+                    let prefixes = variant
+                        .member_prefixes
+                        .iter()
+                        .map(|p| p.for_trait("Deserialize"))
+                        .collect::<Vec<_>>();
+                    quote! {
+                        #discriminant => Ok(#ident::#variant_id {
+                            #(#members: #prefixes::tls_deserialize(bytes)?,)*
+                        }),
+                    }
+                })
+                .collect::<Vec<_>>();
             quote! {
                 impl tls_codec::Deserialize for #ident {
                     #[allow(non_upper_case_globals)]
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
-                        #(#discriminants)*
-
-                        let value = #repr::tls_deserialize(bytes)?;
-                        match value {
-                            #(#matched)*
-                            // XXX: This assumes non-exhaustive matches only.
+                        #discriminant_constants
+                        let discriminant = <#repr as tls_codec::Deserialize>::tls_deserialize(bytes)?;
+                        match discriminant {
+                            #(#arms)*
                             _ => {
-                                Err(tls_codec::Error::DecodingError(format!("Unmatched value {:?} in tls_deserialize", value)))
+                                Err(tls_codec::Error::DecodingError(format!("Unmatched discriminant {:?} in tls_deserialize", discriminant)))
                             },
                         }
                     }
