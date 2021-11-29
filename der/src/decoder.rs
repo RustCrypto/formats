@@ -1,8 +1,8 @@
 //! DER decoder.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Error, ErrorKind, FixedTag, Header, Length,
-    Result, Tag, TagMode, TagNumber,
+    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Encodable, Error, ErrorKind, FixedTag,
+    Header, Length, Result, Tag, TagMode, TagNumber,
 };
 
 /// DER decoder.
@@ -281,6 +281,13 @@ impl<'a> Decoder<'a> {
     /// Get the length of the input, if decoding hasn't failed.
     pub(crate) fn input_len(&self) -> Result<Length> {
         Ok(self.bytes.ok_or(ErrorKind::Failed)?.len())
+    }
+
+    /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
+    pub fn tlv_bytes(&mut self) -> Result<&'a [u8]> {
+        let header = self.peek_header()?;
+        let header_len = header.encoded_len()?;
+        self.bytes((header_len + header.length)?)
     }
 
     /// Get the number of bytes still remaining in the buffer.

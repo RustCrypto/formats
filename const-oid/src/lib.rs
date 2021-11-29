@@ -55,7 +55,7 @@ pub struct ObjectIdentifier {
 #[allow(clippy::len_without_is_empty)]
 impl ObjectIdentifier {
     /// Maximum size of a BER/DER-encoded OID in bytes.
-    pub const MAX_SIZE: usize = 31; // 24-bytes total w\ 1-byte length
+    pub const MAX_SIZE: usize = 39; // 32-bytes total w\ 1-byte length
 
     /// Parse an [`ObjectIdentifier`] from the dot-delimited string form, e.g.:
     ///
