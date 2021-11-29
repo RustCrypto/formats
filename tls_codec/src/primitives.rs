@@ -190,3 +190,23 @@ where
         self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
     }
 }
+
+impl Size for () {
+    #[inline(always)]
+    fn tls_serialized_len(&self) -> usize {
+        0
+    }
+}
+
+impl Deserialize for () {
+    #[inline(always)]
+    fn tls_deserialize<R: Read>(_: &mut R) -> Result<(), Error> {
+        Ok(())
+    }
+}
+
+impl Serialize for () {
+    fn tls_serialize<W: Write>(&self, _: &mut W) -> Result<usize, Error> {
+        Ok(0)
+    }
+}
