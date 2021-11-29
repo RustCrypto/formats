@@ -1,8 +1,8 @@
 //! DER decoder.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Error, ErrorKind, FixedTag, Header, Length,
-    Result, Tag, TagMode, TagNumber,
+    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Encodable, Error, ErrorKind, FixedTag,
+    Header, Length, Result, Tag, TagMode, TagNumber,
 };
 
 /// DER decoder.
@@ -285,25 +285,9 @@ impl<'a> Decoder<'a> {
 
     /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
     pub fn tlv_slice(&mut self) -> Result<&'a [u8]> {
-        if self.is_failed() {
-            return Err(self.error(ErrorKind::Failed));
-        }
-
-        let pos = self.position();
-        let tag = Tag::decode(self)?;
-
-        let element_length = Length::decode(self).map_err(|e| {
-            if e.kind() == ErrorKind::Overlength {
-                ErrorKind::Length { tag }.into()
-            } else {
-                e
-            }
-        })?;
-        // length of full TLV production includes tag and length (captured via current pos - orig)
-        let length = ((self.position - pos)? + element_length)?;
-        // reset position before invoking bytes (which will advance to first byte beyond value)
-        self.position = pos;
-        self.bytes(length)
+        let header = self.peek_header()?;
+        let header_len = self.peek_header()?.encoded_len()?;
+        self.bytes((header_len + header.length)?)
     }
 
     /// Get the number of bytes still remaining in the buffer.
