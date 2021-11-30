@@ -3,6 +3,8 @@ name: ssh-key
 on:
   pull_request:
     paths:
+      - "base64ct/**"
+      - "sec1/**"
       - "ssh-key/**"
       - "Cargo.*"
   push:
@@ -36,6 +38,9 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features sec1
+      - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc,sec1
 
   test:
     runs-on: ubuntu-latest
