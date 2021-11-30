@@ -1,16 +1,18 @@
 //! # Derive macros for traits in `tls_codec`
 //!
-//! The following attribute is available:
+//! ## Available attributes
+//! ### `with`
 //!
 //! ```text
-//! #[tls_codec(with = "module")]
+//! #[tls_codec(with = "prefix")]
 //! ```
 //! This attribute may be applied to a struct field. It indicates that deriving any of the
-//! `tls_codec` traits for the containing struct uses the following functions defined in the
-//! module `module`:
-//! - `tls_deserialize` when deriving `Deserialize`
-//! - `tls_serialize` when deriving `Serialize`
-//! - `tls_serialized_len` when deriving `Size`
+//! `tls_codec` traits for the containing struct calls the following functions:
+//! - `prefix::tls_deserialize` when deriving `Deserialize`
+//! - `prefix::tls_serialize` when deriving `Serialize`
+//! - `prefix::tls_serialized_len` when deriving `Size`
+//!
+//! `prefix` can be a path to a module, type or trait where the functions are defined.
 //!
 //! Their expected signatures match the corresponding methods in the traits.
 //!
@@ -36,6 +38,32 @@
 //!     }
 //! }
 //! ```
+//!
+//! ### `discriminant`
+//!
+//! ```text
+//! #[tls_codec(discriminant = 123)]
+//! ```
+//! This attribute may be applied to an enum variant to specify the discriminant to use when
+//! serializing it. If all variants are units (e.g. they do not have any data), this attribute
+//! must not be used and the desired discriminants should be assigned to the variants using
+//! standard Rust syntax (`Variant = Discriminant`).
+//!
+//! For enumerations with non-unit variants, if no variant has this attribute, the serialization
+//! discriminants will start from zero. If this attribute is used on a variant and the following
+//! variant does not have it, its discriminant will be equal to the previous variant discriminant
+//! plus 1.
+//!
+//! ```
+//! use tls_codec_derive::{TlsSerialize, TlsSize};
+//!
+//! #[derive(TlsSerialize, TlsSize)]
+//! #[repr(u8)]
+//! enum Token {
+//!     #[tls_codec(discriminant = 5)]
+//!     Int(u32),
+//!     Bytes([u8; 16]),
+//! }
 
 extern crate proc_macro;
 extern crate proc_macro2;
@@ -120,7 +148,9 @@ enum TlsStruct {
 /// Attributes supported by derive-macros in this crate
 #[derive(Clone)]
 enum TlsAttr {
+    /// Prefix for custom serialization functions
     With(ExprPath),
+    /// Custom discriminant for an enum variant
     Discriminant(u32),
 }
 
@@ -180,6 +210,10 @@ impl TlsAttr {
             .collect()
     }
 
+    /// Parses attributes of the form:
+    /// ```text
+    /// #[tls_codec(with = "module", ...)]
+    /// ```
     fn parse_multi(attrs: &[Attribute]) -> Result<Vec<TlsAttr>> {
         attrs.iter().try_fold(Vec::new(), |mut acc, attr| {
             acc.extend(TlsAttr::parse(attr)?);
@@ -188,8 +222,8 @@ impl TlsAttr {
     }
 }
 
-/// Gets the [`Prefix`] for a field, i.e. the type itself or a module containing the `tls_codec`
-/// functions.
+/// Gets the [`Prefix`] for a field, i.e. the type itself or a path to prepend to the `tls_codec`
+/// functions (e.g. a module or type).
 fn function_prefix(field: &Field) -> Result<Prefix> {
     let prefix = TlsAttr::parse_multi(&field.attrs)?
         .into_iter()
@@ -209,6 +243,7 @@ fn function_prefix(field: &Field) -> Result<Prefix> {
     Ok(prefix)
 }
 
+/// Gets the serialization discriminant if specified.
 fn discriminant_value(attrs: &[Attribute]) -> Result<Option<u32>> {
     TlsAttr::parse_multi(attrs)?
         .into_iter()
@@ -238,6 +273,8 @@ fn fields_to_members(fields: &syn::Fields) -> Vec<Member> {
         .collect()
 }
 
+/// Gets the [`Prefix`]es for all fields, i.e. the types themselves or paths to prepend to the
+/// `tls_codec` functions (e.g. a module or type).
 fn fields_to_member_prefixes(fields: &syn::Fields) -> Result<Vec<Prefix>> {
     fields.iter().map(function_prefix).collect()
 }
@@ -322,16 +359,19 @@ pub fn deserialize_macro_derive(input: TokenStream) -> TokenStream {
     impl_deserialize(parsed_ast).into()
 }
 
+/// Returns identifiers to use as bindings in generated code
 fn make_n_ids(n: usize) -> Vec<Ident> {
     (0..n)
         .map(|i| Ident::new(&format!("__arg{}", i), Span::call_site()))
         .collect()
 }
 
+/// Returns identifier to define a constant equal to the discriminant of a variant
 fn discriminant_id(variant: &Ident) -> Ident {
     Ident::new(&format!("__TLS_CODEC_{}", variant), Span::call_site())
 }
 
+/// Returns definitions of constants equal to the discriminants of each variant
 fn define_discriminant_constants(
     enum_ident: &Ident,
     repr: &Ident,
@@ -346,11 +386,20 @@ fn define_discriminant_constants(
             .map(|variant| {
                 let variant_id = &variant.ident;
                 let constant_id = discriminant_id(variant_id);
-                quote! {
-                    const #constant_id: #repr = #enum_ident::#variant_id as #repr;
+                if discriminant_value(&variant.attrs)?.is_some() {
+                    Err(syn::Error::new(
+                        Span::call_site(),
+                        "The tls_codec discriminant attribute must only be used in enumerations \
+                        with at least one non-unit variant. When all variants are units, \
+                        discriminants can be assigned to variants directly.",
+                    ))
+                } else {
+                    Ok(quote! {
+                        const #constant_id: #repr = #enum_ident::#variant_id as #repr;
+                    })
                 }
             })
-            .collect::<Vec<_>>()
+            .collect::<Result<Vec<_>>>()?
     } else {
         variants
             .iter()
