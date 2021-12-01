@@ -79,14 +79,14 @@ pub enum GeneralName<'a> {
     /// dNSName                         [2]     IA5String,
     DnsName(Ia5String<'a>),
 
-    /// x400Address                     [3]     ORAddress,
-    /// Not supporting x400Address
+    // x400Address                     [3]     ORAddress,
+    // Not supporting x400Address
 
     /// directoryName                   [4]     Name,
     DirectoryName(Name<'a>),
 
-    /// ediPartyName                    [5]     EDIPartyName,
-    /// Not supporting ediPartyName
+    // ediPartyName                    [5]     EDIPartyName,
+    // Not supporting ediPartyName
 
     /// uniformResourceIdentifier       [6]     IA5String,
     UniformResourceIdentifier(Ia5String<'a>),
@@ -94,18 +94,19 @@ pub enum GeneralName<'a> {
     /// iPAddress                       [7]     OCTET STRING,
     IpAddress(OctetString<'a>),
 
-    /// registeredID                    [8]     OBJECT IDENTIFIER
-    RegisteredId(ObjectIdentifier),
+    // registeredID                    [8]     OBJECT IDENTIFIER
+    // Not supporting registeredID
 }
 
 const OTHER_NAME_TAG: TagNumber = TagNumber::new(0);
 const RFC822_NAME_TAG: TagNumber = TagNumber::new(1);
 const DNS_NAME_TAG: TagNumber = TagNumber::new(2);
+//const X400_ADDRESS_TAG: TagNumber = TagNumber::new(3);
 const DIRECTORY_NAME_TAG: TagNumber = TagNumber::new(4);
+//const EDIPI_PARTY_NAME_TAG: TagNumber = TagNumber::new(5);
 const URI_TAG: TagNumber = TagNumber::new(6);
-//TODO - implement these
 const IP_ADDRESS_TAG: TagNumber = TagNumber::new(7);
-const REGISTERED_ID_TAG: TagNumber = TagNumber::new(8);
+//const REGISTERED_ID_TAG: TagNumber = TagNumber::new(8);
 
 // Custom Decodable to handle implicit context specific fields (this may move to derived later).
 impl<'a> Decodable<'a> for GeneralName<'a> {
@@ -129,6 +130,8 @@ impl<'a> Decodable<'a> for GeneralName<'a> {
             }
             0xA3 => unimplemented!(),
             0xA4 => {
+                // Explicit is used because Name is also a CHOICE. Nested CHOICEs are essentially
+                // EXPLICIT tags. See section 31.2.7 in X.680.
                 let ia5 =
                     decoder.context_specific::<Name<'_>>(DIRECTORY_NAME_TAG, TagMode::Explicit)?;
                 Ok(GeneralName::DirectoryName(ia5.unwrap()))
@@ -138,8 +141,10 @@ impl<'a> Decodable<'a> for GeneralName<'a> {
                 let ia5 = decoder.context_specific::<Ia5String<'_>>(URI_TAG, TagMode::Implicit)?;
                 Ok(GeneralName::UniformResourceIdentifier(ia5.unwrap()))
             }
-            0x87 => unimplemented!(),
-            0x88 => unimplemented!(),
+            0x87 => {
+                let os = decoder.context_specific::<OctetString<'_>>(URI_TAG, TagMode::Implicit)?;
+                Ok(GeneralName::IpAddress(os.unwrap()))
+            },
             _ => unimplemented!(),
         }
     }
@@ -148,7 +153,6 @@ impl<'a> Decodable<'a> for GeneralName<'a> {
 impl<'a> ::der::Encodable for GeneralName<'a> {
     fn encode(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
         match self {
-            //Self::OtherName(variant) => unimplemented!(),
             Self::OtherName(variant) => {
                 ContextSpecific {
                     tag_number: OTHER_NAME_TAG,
@@ -170,14 +174,14 @@ impl<'a> ::der::Encodable for GeneralName<'a> {
                     value: ::der::asn1::Ia5String::new(variant)?
                 }.encode(encoder)
             },
-            //Self::DirectoryName(variant) => unimplemented!(),
+            // Explicit is used because Name is also a CHOICE. Nested CHOICEs are essentially
+            // EXPLICIT tags. See section 31.2.7 in X.680.
             Self::DirectoryName(variant) => {
-                let cs = ContextSpecific {
+                ContextSpecific {
                     tag_number: DIRECTORY_NAME_TAG,
                     tag_mode: TagMode::Explicit,
                     value: variant.clone()
-                };
-                cs.encode(encoder)
+                }.encode(encoder)
             },
             Self::UniformResourceIdentifier(variant) => {
                 ContextSpecific {
@@ -186,42 +190,66 @@ impl<'a> ::der::Encodable for GeneralName<'a> {
                     value: ::der::asn1::Ia5String::new(variant)?
                 }.encode(encoder)
             },
-            Self::IpAddress(variant) => unimplemented!(),
-            Self::RegisteredId(variant) => unimplemented!(),
+            Self::IpAddress(variant) => {
+                ContextSpecific {
+                    tag_number: IP_ADDRESS_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value: ::der::asn1::OctetString::new(variant.as_bytes())?
+                }.encode(encoder)},
         }
     }
     fn encoded_len(&self) -> ::der::Result<::der::Length> {
         match self {
-            Self::OtherName(variant) => variant.encoded_len(),
-            Self::Rfc822Name(variant) => variant.encoded_len(),
-            Self::DnsName(variant) => variant.encoded_len(),
-            Self::DirectoryName(variant) => variant.encoded_len(),
-            Self::UniformResourceIdentifier(variant) => variant.encoded_len(),
-            Self::IpAddress(variant) => variant.encoded_len(),
-            Self::RegisteredId(variant) => variant.encoded_len(),
+            Self::OtherName(variant) => { ContextSpecific {
+                tag_number: OTHER_NAME_TAG,
+                tag_mode: TagMode::Implicit,
+                value:variant.clone()
+            }.encoded_len()},
+            Self::Rfc822Name(variant) => {ContextSpecific {
+                tag_number: RFC822_NAME_TAG,
+                tag_mode: TagMode::Implicit,
+                value: ::der::asn1::Ia5String::new(variant)?
+            }.encoded_len()},
+            Self::DnsName(variant) => {ContextSpecific {
+                tag_number: DNS_NAME_TAG,
+                tag_mode: TagMode::Implicit,
+                value: ::der::asn1::Ia5String::new(variant)?
+            }.encoded_len()},
+            // Explicit is used because Name is also a CHOICE. Nested CHOICEs are essentially
+            // EXPLICIT tags. See section 31.2.7 in X.680.
+            Self::DirectoryName(variant) => { ContextSpecific {
+                tag_number: DIRECTORY_NAME_TAG,
+                tag_mode: TagMode::Explicit,
+                value: variant.clone()
+            }.encoded_len()},
+            Self::UniformResourceIdentifier(variant) => {ContextSpecific {
+                tag_number: URI_TAG,
+                tag_mode: TagMode::Implicit,
+                value: ::der::asn1::Ia5String::new(variant)?
+            }.encoded_len()},
+            Self::IpAddress(variant) => {variant.encoded_len()},
         }
     }
 }
 impl<'a> ::der::Tagged for GeneralName<'a> {
     fn tag(&self) -> ::der::Tag {
         match self {
-            Self::OtherName(variant) => unimplemented!(),
+            Self::OtherName(_) => ::der::Tag::Sequence,
             Self::Rfc822Name(_) => ::der::Tag::Ia5String,
             Self::DnsName(_) => ::der::Tag::Ia5String,
-            Self::DirectoryName(variant) => unimplemented!(),
+            Self::DirectoryName(_) => ::der::Tag::Sequence,
             Self::UniformResourceIdentifier(_) => ::der::Tag::Ia5String,
-            Self::IpAddress(variant) => unimplemented!(),
-            Self::RegisteredId(variant) => unimplemented!(),
+            Self::IpAddress(_) => ::der::Tag::OctetString,
         }
     }
 }
 
 #[test]
 fn reencode_cert() {
-    use der::asn1::{ContextSpecific, Ia5String};
-    use der::{TagMode, TagNumber};
     use hex_literal::hex;
     use der::Encodable;
+    use crate::AttributeTypeAndValue;
+    use crate::RelativeDistinguishedName;
 
     // RFC822Name
     let der_encoded_gn =
@@ -230,59 +258,59 @@ fn reencode_cert() {
     )).unwrap();
     let reencoded_gn = der_encoded_gn.to_vec().unwrap();
     assert_eq!(&hex!("8117456D61696C5F353238343037373733406468732E676F76"), reencoded_gn.as_slice());
-    //
-    // let der_encoded_gns =
-    //     GeneralNames::from_der(&hex!(
-    //     "30198117456D61696C5F353238343037373733406468732E676F76"
-    // )).unwrap();
-    // let reencoded_gns = der_encoded_gns.to_vec().unwrap();
-    // assert_eq!(&hex!("30198117456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
-    //
-    // // DNSName
-    // let der_encoded_gn =
-    //     GeneralName::from_der(&hex!(
-    //     "8217456D61696C5F353238343037373733406468732E676F76"
-    // )).unwrap();
-    // let reencoded_gn = der_encoded_gn.to_vec().unwrap();
-    // assert_eq!(&hex!("8217456D61696C5F353238343037373733406468732E676F76"), reencoded_gn.as_slice());
-    //
-    // let der_encoded_gns =
-    //     GeneralNames::from_der(&hex!(
-    //     "30198217456D61696C5F353238343037373733406468732E676F76"
-    // )).unwrap();
-    // let reencoded_gns = der_encoded_gns.to_vec().unwrap();
-    // assert_eq!(&hex!("30198217456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
-    //
-    // // DNSName
-    // let der_encoded_gn =
-    //     GeneralName::from_der(&hex!(
-    //     "8617456D61696C5F353238343037373733406468732E676F76"
-    // )).unwrap();
-    // let reencoded_gn = der_encoded_gn.to_vec().unwrap();
-    // assert_eq!(&hex!("8617456D61696C5F353238343037373733406468732E676F76"), reencoded_gn.as_slice());
-    //
-    // let der_encoded_gns =
-    //     GeneralNames::from_der(&hex!(
-    //     "30198617456D61696C5F353238343037373733406468732E676F76"
-    // )).unwrap();
-    // let reencoded_gns = der_encoded_gns.to_vec().unwrap();
-    // assert_eq!(&hex!("30198617456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
-    //
-    // // ATAV
-    // let der_encoded_atav =
-    //     AttributeTypeAndValue::from_der(&hex!(
-    //     "30110603550403130A5447562D452D31323930"
-    // )).unwrap();
-    // let reencoded_atav = der_encoded_atav.to_vec().unwrap();
-    // assert_eq!(&hex!("30110603550403130A5447562D452D31323930"), reencoded_atav.as_slice());
-    //
-    // // RDN
-    // let der_encoded_rdn =
-    //     RelativeDistinguishedName::from_der(&hex!(
-    //     "311330110603550403130A5447562D452D31323930"
-    // )).unwrap();
-    // let reencoded_rdn = der_encoded_rdn.to_vec().unwrap();
-    // assert_eq!(&hex!("311330110603550403130A5447562D452D31323930"), reencoded_rdn.as_slice());
+
+    let der_encoded_gns =
+        GeneralNames::from_der(&hex!(
+        "30198117456D61696C5F353238343037373733406468732E676F76"
+    )).unwrap();
+    let reencoded_gns = der_encoded_gns.to_vec().unwrap();
+    assert_eq!(&hex!("30198117456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
+
+    // DNSName
+    let der_encoded_gn =
+        GeneralName::from_der(&hex!(
+        "8217456D61696C5F353238343037373733406468732E676F76"
+    )).unwrap();
+    let reencoded_gn = der_encoded_gn.to_vec().unwrap();
+    assert_eq!(&hex!("8217456D61696C5F353238343037373733406468732E676F76"), reencoded_gn.as_slice());
+
+    let der_encoded_gns =
+        GeneralNames::from_der(&hex!(
+        "30198217456D61696C5F353238343037373733406468732E676F76"
+    )).unwrap();
+    let reencoded_gns = der_encoded_gns.to_vec().unwrap();
+    assert_eq!(&hex!("30198217456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
+
+    // DNSName
+    let der_encoded_gn =
+        GeneralName::from_der(&hex!(
+        "8617456D61696C5F353238343037373733406468732E676F76"
+    )).unwrap();
+    let reencoded_gn = der_encoded_gn.to_vec().unwrap();
+    assert_eq!(&hex!("8617456D61696C5F353238343037373733406468732E676F76"), reencoded_gn.as_slice());
+
+    let der_encoded_gns =
+        GeneralNames::from_der(&hex!(
+        "30198617456D61696C5F353238343037373733406468732E676F76"
+    )).unwrap();
+    let reencoded_gns = der_encoded_gns.to_vec().unwrap();
+    assert_eq!(&hex!("30198617456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
+
+    // ATAV
+    let der_encoded_atav =
+        AttributeTypeAndValue::from_der(&hex!(
+        "30110603550403130A5447562D452D31323930"
+    )).unwrap();
+    let reencoded_atav = der_encoded_atav.to_vec().unwrap();
+    assert_eq!(&hex!("30110603550403130A5447562D452D31323930"), reencoded_atav.as_slice());
+
+    // RDN
+    let der_encoded_rdn =
+        RelativeDistinguishedName::from_der(&hex!(
+        "311330110603550403130A5447562D452D31323930"
+    )).unwrap();
+    let reencoded_rdn = der_encoded_rdn.to_vec().unwrap();
+    assert_eq!(&hex!("311330110603550403130A5447562D452D31323930"), reencoded_rdn.as_slice());
 
     // Name
     let der_encoded_gn =
