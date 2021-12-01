@@ -70,11 +70,13 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+mod decoder;
 mod encoding;
 mod errors;
 mod variant;
 
 pub use crate::{
+    decoder::Decoder,
     encoding::Encoding,
     errors::{Error, InvalidEncodingError, InvalidLengthError},
     variant::{
