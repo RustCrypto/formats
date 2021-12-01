@@ -16,6 +16,10 @@ readme = "README.md"
 edition = "2021"
 rust-version = "1.56"
 
+[dev-dependencies]
+base64 = "0.13"
+proptest = "1"
+
 [features]
 alloc = []
 std = ["alloc"]
