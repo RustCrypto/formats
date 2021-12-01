@@ -92,6 +92,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#217]: https://github.com/RustCrypto/formats/pull/217
 [#221]: https://github.com/RustCrypto/formats/pull/221
 
+## 0.4.5 (2021-12-01)
+### Fixed
+- Backport [#147] type hint fix for WASM platforms to 0.4.x
+
 ## 0.4.4 (2021-10-06)
 ### Removed
 - Accidentally checked-in `target/` directory ([#66])
