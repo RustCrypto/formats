@@ -1,7 +1,7 @@
 /// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
 use crate::Name;
 use der::asn1::{
-    Any, Ia5String, ObjectIdentifier,
+    Any, ContextSpecific, Ia5String, ObjectIdentifier, OctetString,
 };
 use der::{
     Decodable, DecodeValue, Decoder, Length, Sequence, TagMode, TagNumber,
@@ -50,7 +50,7 @@ impl<'a> Sequence<'a> for OtherName<'a> {
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 //TODO - restore
-//pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
+pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
 
 /// GeneralName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
 ///
@@ -91,12 +91,11 @@ pub enum GeneralName<'a> {
     /// uniformResourceIdentifier       [6]     IA5String,
     UniformResourceIdentifier(Ia5String<'a>),
 
-    //TODO - implement IP and OID
-    // iPAddress                       [7]     OCTET STRING,
-    //IpAddress(OctetString<'a>),
+    /// iPAddress                       [7]     OCTET STRING,
+    IpAddress(OctetString<'a>),
 
-    // registeredID                    [8]     OBJECT IDENTIFIER
-    //RegisteredId(ObjectIdentifier),
+    /// registeredID                    [8]     OBJECT IDENTIFIER
+    RegisteredId(ObjectIdentifier),
 }
 
 const OTHER_NAME_TAG: TagNumber = TagNumber::new(0);
@@ -105,8 +104,8 @@ const DNS_NAME_TAG: TagNumber = TagNumber::new(2);
 const DIRECTORY_NAME_TAG: TagNumber = TagNumber::new(4);
 const URI_TAG: TagNumber = TagNumber::new(6);
 //TODO - implement these
-//const IP_ADDRESS_TAG: TagNumber = TagNumber::new(7);
-//const REGISTERED_ID_TAG: TagNumber = TagNumber::new(8);
+const IP_ADDRESS_TAG: TagNumber = TagNumber::new(7);
+const REGISTERED_ID_TAG: TagNumber = TagNumber::new(8);
 
 // Custom Decodable to handle implicit context specific fields (this may move to derived later).
 impl<'a> Decodable<'a> for GeneralName<'a> {
@@ -146,13 +145,157 @@ impl<'a> Decodable<'a> for GeneralName<'a> {
     }
 }
 
-// This stub is required to satisfy use of this type in context-specific fields, i.e., in the
-// definition of AuthorityKeyIdentifier
-impl<'a> ::der::Sequence<'a> for GeneralName<'a> {
-    fn fields<F, T>(&self, _f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        unimplemented!()
+impl<'a> ::der::Encodable for GeneralName<'a> {
+    fn encode(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
+        match self {
+            //Self::OtherName(variant) => unimplemented!(),
+            Self::OtherName(variant) => {
+                ContextSpecific {
+                    tag_number: OTHER_NAME_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value:variant.clone()
+                }.encode(encoder)
+            },
+            Self::Rfc822Name(variant) => {
+                ContextSpecific {
+                    tag_number: RFC822_NAME_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value: ::der::asn1::Ia5String::new(variant)?
+                }.encode(encoder)
+            },
+            Self::DnsName(variant) => {
+                ContextSpecific {
+                    tag_number: DNS_NAME_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value: ::der::asn1::Ia5String::new(variant)?
+                }.encode(encoder)
+            },
+            //Self::DirectoryName(variant) => unimplemented!(),
+            Self::DirectoryName(variant) => {
+                let cs = ContextSpecific {
+                    tag_number: DIRECTORY_NAME_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value: variant.clone()
+                };
+                cs.encode(encoder)
+            },
+            Self::UniformResourceIdentifier(variant) => {
+                ContextSpecific {
+                    tag_number: URI_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value: ::der::asn1::Ia5String::new(variant)?
+                }.encode(encoder)
+            },
+            Self::IpAddress(variant) => unimplemented!(),
+            Self::RegisteredId(variant) => unimplemented!(),
+        }
     }
+    fn encoded_len(&self) -> ::der::Result<::der::Length> {
+        match self {
+            Self::OtherName(variant) => variant.encoded_len(),
+            Self::Rfc822Name(variant) => variant.encoded_len(),
+            Self::DnsName(variant) => variant.encoded_len(),
+            Self::DirectoryName(variant) => variant.encoded_len(),
+            Self::UniformResourceIdentifier(variant) => variant.encoded_len(),
+            Self::IpAddress(variant) => variant.encoded_len(),
+            Self::RegisteredId(variant) => variant.encoded_len(),
+        }
+    }
+}
+impl<'a> ::der::Tagged for GeneralName<'a> {
+    fn tag(&self) -> ::der::Tag {
+        match self {
+            Self::OtherName(variant) => unimplemented!(),
+            Self::Rfc822Name(_) => ::der::Tag::Ia5String,
+            Self::DnsName(_) => ::der::Tag::Ia5String,
+            Self::DirectoryName(variant) => unimplemented!(),
+            Self::UniformResourceIdentifier(_) => ::der::Tag::Ia5String,
+            Self::IpAddress(variant) => unimplemented!(),
+            Self::RegisteredId(variant) => unimplemented!(),
+        }
+    }
+}
+
+#[test]
+fn reencode_cert() {
+    use der::asn1::{ContextSpecific, Ia5String};
+    use der::{TagMode, TagNumber};
+    use hex_literal::hex;
+    use der::Encodable;
+
+    // RFC822Name
+    let der_encoded_gn =
+        GeneralName::from_der(&hex!(
+        "8117456D61696C5F353238343037373733406468732E676F76"
+    )).unwrap();
+    let reencoded_gn = der_encoded_gn.to_vec().unwrap();
+    assert_eq!(&hex!("8117456D61696C5F353238343037373733406468732E676F76"), reencoded_gn.as_slice());
+    //
+    // let der_encoded_gns =
+    //     GeneralNames::from_der(&hex!(
+    //     "30198117456D61696C5F353238343037373733406468732E676F76"
+    // )).unwrap();
+    // let reencoded_gns = der_encoded_gns.to_vec().unwrap();
+    // assert_eq!(&hex!("30198117456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
+    //
+    // // DNSName
+    // let der_encoded_gn =
+    //     GeneralName::from_der(&hex!(
+    //     "8217456D61696C5F353238343037373733406468732E676F76"
+    // )).unwrap();
+    // let reencoded_gn = der_encoded_gn.to_vec().unwrap();
+    // assert_eq!(&hex!("8217456D61696C5F353238343037373733406468732E676F76"), reencoded_gn.as_slice());
+    //
+    // let der_encoded_gns =
+    //     GeneralNames::from_der(&hex!(
+    //     "30198217456D61696C5F353238343037373733406468732E676F76"
+    // )).unwrap();
+    // let reencoded_gns = der_encoded_gns.to_vec().unwrap();
+    // assert_eq!(&hex!("30198217456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
+    //
+    // // DNSName
+    // let der_encoded_gn =
+    //     GeneralName::from_der(&hex!(
+    //     "8617456D61696C5F353238343037373733406468732E676F76"
+    // )).unwrap();
+    // let reencoded_gn = der_encoded_gn.to_vec().unwrap();
+    // assert_eq!(&hex!("8617456D61696C5F353238343037373733406468732E676F76"), reencoded_gn.as_slice());
+    //
+    // let der_encoded_gns =
+    //     GeneralNames::from_der(&hex!(
+    //     "30198617456D61696C5F353238343037373733406468732E676F76"
+    // )).unwrap();
+    // let reencoded_gns = der_encoded_gns.to_vec().unwrap();
+    // assert_eq!(&hex!("30198617456D61696C5F353238343037373733406468732E676F76"), reencoded_gns.as_slice());
+    //
+    // // ATAV
+    // let der_encoded_atav =
+    //     AttributeTypeAndValue::from_der(&hex!(
+    //     "30110603550403130A5447562D452D31323930"
+    // )).unwrap();
+    // let reencoded_atav = der_encoded_atav.to_vec().unwrap();
+    // assert_eq!(&hex!("30110603550403130A5447562D452D31323930"), reencoded_atav.as_slice());
+    //
+    // // RDN
+    // let der_encoded_rdn =
+    //     RelativeDistinguishedName::from_der(&hex!(
+    //     "311330110603550403130A5447562D452D31323930"
+    // )).unwrap();
+    // let reencoded_rdn = der_encoded_rdn.to_vec().unwrap();
+    // assert_eq!(&hex!("311330110603550403130A5447562D452D31323930"), reencoded_rdn.as_slice());
+
+    // Name
+    let der_encoded_gn =
+        GeneralName::from_der(&hex!(
+        "A4173015311330110603550403130A5447562D452D31323930"
+    )).unwrap();
+    let reencoded_gn = der_encoded_gn.to_vec().unwrap();
+    assert_eq!(&hex!("A4173015311330110603550403130A5447562D452D31323930"), reencoded_gn.as_slice());
+
+    let der_encoded_gns =
+        GeneralNames::from_der(&hex!(
+        "3019A4173015311330110603550403130A5447562D452D31323930"
+    )).unwrap();
+    let reencoded_gns = der_encoded_gns.to_vec().unwrap();
+    assert_eq!(&hex!("3019A4173015311330110603550403130A5447562D452D31323930"), reencoded_gns.as_slice());
 }
