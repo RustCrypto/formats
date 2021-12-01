@@ -16,6 +16,7 @@ extern crate std;
 
 mod attribute;
 mod certificate;
+mod general_name;
 mod rdn;
 mod time;
 mod validity;

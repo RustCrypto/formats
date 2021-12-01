@@ -1,16 +1,10 @@
 /// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
-
-use crate::certificate::default_false;
-use crate::AttributeTypeAndValue;
 use crate::Name;
-use crate::RelativeDistinguishedName;
-use alloc::prelude::v1::Box;
 use der::asn1::{
-    Any, BitString, GeneralizedTime, Ia5String, Null, ObjectIdentifier, OctetString, SequenceOf,
-    UIntBytes, Utf8String,
+    Any, Ia5String, ObjectIdentifier,
 };
 use der::{
-    Choice, Decodable, DecodeValue, Decoder, Enumerated, Length, Sequence, TagMode, TagNumber,
+    Decodable, DecodeValue, Decoder, Length, Sequence, TagMode, TagNumber,
 };
 
 /// OtherName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
@@ -41,8 +35,8 @@ impl<'a> DecodeValue<'a> for OtherName<'a> {
 
 impl<'a> Sequence<'a> for OtherName<'a> {
     fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-        where
-            F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
         f(&[&self.type_id, &self.value])
     }
@@ -55,7 +49,8 @@ impl<'a> Sequence<'a> for OtherName<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
-pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
+//TODO - restore
+//pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
 
 /// GeneralName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
 ///
@@ -96,11 +91,12 @@ pub enum GeneralName<'a> {
     /// uniformResourceIdentifier       [6]     IA5String,
     UniformResourceIdentifier(Ia5String<'a>),
 
-    /// iPAddress                       [7]     OCTET STRING,
-    IpAddress(OctetString<'a>),
+    //TODO - implement IP and OID
+    // iPAddress                       [7]     OCTET STRING,
+    //IpAddress(OctetString<'a>),
 
-    /// registeredID                    [8]     OBJECT IDENTIFIER
-    RegisteredId(ObjectIdentifier),
+    // registeredID                    [8]     OBJECT IDENTIFIER
+    //RegisteredId(ObjectIdentifier),
 }
 
 const OTHER_NAME_TAG: TagNumber = TagNumber::new(0);
@@ -154,8 +150,8 @@ impl<'a> Decodable<'a> for GeneralName<'a> {
 // definition of AuthorityKeyIdentifier
 impl<'a> ::der::Sequence<'a> for GeneralName<'a> {
     fn fields<F, T>(&self, _f: F) -> ::der::Result<T>
-        where
-            F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
         unimplemented!()
     }
