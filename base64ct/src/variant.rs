@@ -9,6 +9,11 @@ pub mod url;
 
 /// Core encoder/decoder functions for a particular Base64 variant
 pub trait Variant {
+    /// Unpadded equivalent of this variant.
+    ///
+    /// For variants that are unpadded to begin with, this should be `Self`.
+    type Unpadded: Variant;
+
     /// Is this encoding padded?
     const PADDED: bool;
 

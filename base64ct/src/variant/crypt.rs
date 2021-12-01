@@ -11,6 +11,7 @@ use super::{Decode, Encode, Variant};
 pub struct Base64Crypt;
 
 impl Variant for Base64Crypt {
+    type Unpadded = Self;
     const PADDED: bool = false;
     const BASE: u8 = b'.';
 
