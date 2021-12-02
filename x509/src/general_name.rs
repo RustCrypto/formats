@@ -1,5 +1,5 @@
-use crate::alloc::string::ToString;
 /// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
+use crate::alloc::string::ToString;
 use crate::Name;
 use der::asn1::{Any, ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
 use der::{Decodable, DecodeValue, Decoder, Length, Sequence, TagMode, TagNumber};
