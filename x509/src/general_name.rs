@@ -1,5 +1,5 @@
-/// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
 use crate::alloc::string::ToString;
+/// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
 use crate::Name;
 use der::asn1::{Any, ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
 use der::{Decodable, DecodeValue, Decoder, Length, Sequence, TagMode, TagNumber};
@@ -381,7 +381,7 @@ fn reencode_gn() {
     let gns_uri = GeneralNames::from_der(&hex!(
         "302C862A687474703A2F2F63726C2E71756F7661646973676C6F62616C2E636F6D2F71767263613267332E63726C"
     ))
-    .unwrap();
+        .unwrap();
     let reencoded_gns_uri = gns_uri.to_vec().unwrap();
     assert_eq!(
         &hex!("302C862A687474703A2F2F63726C2E71756F7661646973676C6F62616C2E636F6D2F71767263613267332E63726C"),
