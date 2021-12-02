@@ -33,10 +33,8 @@ proptest! {
 
         for chunk in bytes.chunks(chunk_size) {
             prop_assert!(!decoder.is_finished());
-            match decoder.decode_partial(&mut buffer[..chunk_size]) {
-                Ok(Some(decoded)) => prop_assert_eq!(chunk, decoded),
-                other => panic!("decode failed: {:?}", other),
-            }
+            let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
+            prop_assert_eq!(chunk, decoded);
         }
 
         prop_assert!(decoder.is_finished());
