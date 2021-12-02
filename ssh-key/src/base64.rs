@@ -28,7 +28,7 @@ impl<'i> Decoder<'i> {
     /// - `Ok(bytes)` if the expected amount of data was read
     /// - `Err(Error::Length)` if the exact amount of data couldn't be read
     pub(crate) fn decode_into<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
-        Ok(self.inner.decode_exact(out)?)
+        Ok(self.inner.decode(out)?)
     }
 
     /// Decodes a `uint32` as described in [RFC4251 § 5]:

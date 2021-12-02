@@ -20,12 +20,13 @@ use crate::{Base64, Base64Unpadded};
 /// detail of this crate, and leverages a [blanket impl] of [`Encoding`].
 ///
 /// [blanket impl]: ./trait.Encoding.html#impl-Encoding
+#[derive(Clone)]
 pub struct Decoder<'i, E: Variant> {
     /// Remaining data in the input buffer.
     remaining: &'i [u8],
 
     /// Block buffer used for non-block-aligned data.
-    buffer: Option<BlockBuffer>,
+    buffer: BlockBuffer,
 
     /// Phantom parameter for the Base64 encoding in use.
     encoding: PhantomData<E>,
@@ -49,45 +50,33 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
         Ok(Self {
             remaining,
-            buffer: None,
+            buffer: BlockBuffer::default(),
             encoding: PhantomData,
         })
     }
 
-    /// Write as many bytes of decoded data as possible into the provided
-    /// buffer.
+    /// Fill the provided buffer with data decoded from Base64.
     ///
-    /// If there is not sufficient input data to completely fill the buffer,
-    /// it returns a partial result.
+    /// Enough Base64 input data must remain to fill the entire buffer.
     ///
     /// # Returns
-    /// - `Ok(Some(bytes))` if there was data available
-    /// - `Ok(None)` if there is no remaining data
-    /// - `Err(err)` if there was a Base64 decoding error
-    pub fn decode_partial<'o>(&mut self, out: &'o mut [u8]) -> Result<Option<&'o [u8]>, Error> {
+    /// - `Ok(bytes)` if the expected amount of data was read
+    /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read
+    pub fn decode<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8], Error> {
         if self.is_finished() {
-            return Ok(None);
+            return Err(Error::InvalidLength);
         }
 
-        let mut out_offset = 0;
+        let mut out_off = 0;
 
-        let take_buffer = self
-            .buffer
-            .as_mut()
-            .map(|buf| {
-                let bytes = buf.take(out.len());
-                out[..bytes.len()].copy_from_slice(bytes);
-                out_offset += bytes.len();
-                buf.is_empty()
-            })
-            .unwrap_or_default();
-
-        if take_buffer {
-            self.buffer = None;
+        if !self.buffer.is_empty() {
+            let bytes = self.buffer.take(out.len());
+            out[..bytes.len()].copy_from_slice(bytes);
+            out_off += bytes.len();
         }
 
-        let out_len = out.len().checked_sub(out_offset).ok_or(InvalidLength)?;
-        let out_aligned = out_len.checked_sub(out_len % 3).ok_or(InvalidLength)?;
+        let out_rem = out.len().checked_sub(out_off).ok_or(InvalidLength)?;
+        let out_aligned = out_rem.checked_sub(out_rem % 3).ok_or(InvalidLength)?;
 
         let mut in_len = out_aligned
             .checked_mul(4)
@@ -95,11 +84,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
             .ok_or(InvalidLength)?;
 
         if in_len > self.remaining.len() {
-            in_len = self
-                .remaining
-                .len()
-                .checked_sub(self.remaining.len() % 4)
-                .ok_or(InvalidLength)?;
+            return Err(Error::InvalidLength);
         }
 
         if in_len < 4 {
@@ -110,61 +95,40 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
         if in_len != 0 {
             let decoded_len =
-                E::Unpadded::decode(aligned, &mut out[out_offset..][..out_aligned])?.len();
+                E::Unpadded::decode(aligned, &mut out[out_off..][..out_aligned])?.len();
 
-            out_offset = out_offset.checked_add(decoded_len).ok_or(InvalidLength)?;
+            out_off = out_off.checked_add(decoded_len).ok_or(InvalidLength)?;
             self.remaining = rest;
         }
 
-        if out_offset < out.len() && !self.remaining.is_empty() {
+        if out_off < out.len() && !self.remaining.is_empty() {
             let (block, rest) = if self.remaining.len() < 4 {
                 (self.remaining, [].as_ref())
             } else {
                 self.remaining.split_at(4)
             };
 
-            let mut buf = BlockBuffer::new::<E::Unpadded>(block)?;
+            self.buffer.fill::<E::Unpadded>(block)?;
             self.remaining = rest;
 
-            let bytes = buf.take(out.len().checked_sub(out_offset).ok_or(InvalidLength)?);
-            out[out_offset..][..bytes.len()].copy_from_slice(bytes);
-            out_offset = out_offset.checked_add(bytes.len()).ok_or(InvalidLength)?;
+            let bytes = self
+                .buffer
+                .take(out.len().checked_sub(out_off).ok_or(InvalidLength)?);
 
-            debug_assert!(self.buffer.is_none());
-
-            if !buf.is_empty() {
-                self.buffer = Some(buf);
-            }
+            out[out_off..][..bytes.len()].copy_from_slice(bytes);
+            out_off = out_off.checked_add(bytes.len()).ok_or(InvalidLength)?;
         }
 
-        Ok(Some(&out[..out_offset]))
-    }
-
-    /// Write an exact amount of data to a buffer.
-    ///
-    /// # Returns
-    /// - `Ok(bytes)` if the expected amount of data was read
-    /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read
-    pub fn decode_exact<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8], Error> {
-        let expected_len = out.len();
-
-        if let Some(slice) = self.decode_partial(out)? {
-            if slice.len() == expected_len {
-                return Ok(slice);
-            }
+        if out.len() == out_off {
+            Ok(out)
+        } else {
+            Err(InvalidLength)
         }
-
-        Err(InvalidLength)
     }
 
     /// Has all of the input data been decoded?
     pub fn is_finished(&self) -> bool {
-        self.remaining.is_empty()
-            && self
-                .buffer
-                .as_ref()
-                .map(|buf| buf.is_empty())
-                .unwrap_or(true)
+        self.remaining.is_empty() && self.buffer.is_empty()
     }
 }
 
@@ -172,6 +136,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
 ///
 /// This handles a partially decoded block of data, i.e. data which has been
 /// decoded but not read.
+#[derive(Clone, Default)]
 struct BlockBuffer {
     /// 3 decoded bytes from a 4-byte Base64-encoded input.
     decoded: [u8; 3],
@@ -184,18 +149,13 @@ struct BlockBuffer {
 }
 
 impl BlockBuffer {
-    /// Decode the provided input as Base64.
-    fn new<E: Variant>(input: &[u8]) -> Result<Self, Error> {
-        debug_assert!(input.len() <= 4);
-
-        let mut decoded = [0u8; 3];
-        let length = E::decode(input, &mut decoded)?.len();
-
-        Ok(Self {
-            decoded,
-            length,
-            position: 0,
-        })
+    /// Fill the buffer by decoding up to 4 bytes of Base64 input
+    fn fill<E: Variant>(&mut self, base64_input: &[u8]) -> Result<(), Error> {
+        debug_assert!(self.is_empty());
+        debug_assert!(base64_input.len() <= 4);
+        self.length = E::decode(base64_input, &mut self.decoded)?.len();
+        self.position = 0;
+        Ok(())
     }
 
     /// Take a specified number of bytes from the buffer.
@@ -253,10 +213,8 @@ mod tests {
 
             for chunk in PADDED_BIN.chunks(chunk_size) {
                 assert!(!decoder.is_finished());
-                match decoder.decode_partial(&mut buffer[..chunk_size]) {
-                    Ok(Some(decoded)) => assert_eq!(chunk, decoded),
-                    other => panic!("decode failed: {:?}", other),
-                }
+                let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
+                assert_eq!(chunk, decoded);
             }
 
             assert!(decoder.is_finished());
@@ -271,10 +229,8 @@ mod tests {
 
             for chunk in UNPADDED_BIN.chunks(chunk_size) {
                 assert!(!decoder.is_finished());
-                match decoder.decode_partial(&mut buffer[..chunk_size]) {
-                    Ok(Some(decoded)) => assert_eq!(chunk, decoded),
-                    other => panic!("decode failed: {:?}", other),
-                }
+                let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
+                assert_eq!(chunk, decoded);
             }
 
             assert!(decoder.is_finished());
