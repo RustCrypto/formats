@@ -144,7 +144,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
     ///
     /// # Returns
     /// - `Ok(bytes)` if the expected amount of data was read
-    /// - `Err(Error::Length)` if the exact amount of data couldn't be read
+    /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read
     pub fn decode_exact<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8], Error> {
         let expected_len = out.len();
 
