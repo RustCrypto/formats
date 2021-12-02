@@ -1,8 +1,10 @@
-/// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
-use crate::alloc::string::ToString;
+//! GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
+
 use crate::Name;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 use der::asn1::{Any, ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
-use der::{Decodable, DecodeValue, Decoder, Length, Sequence, TagMode, TagNumber};
+use der::{Decodable, DecodeValue, Decoder, ErrorKind, Length, Sequence, TagMode, TagNumber};
 
 /// OtherName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
 ///
@@ -46,7 +48,7 @@ impl<'a> Sequence<'a> for OtherName<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
-pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
+pub type GeneralNames<'a> = Vec<GeneralName<'a>>;
 
 /// GeneralName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
 ///
@@ -122,7 +124,7 @@ impl<'a> Decodable<'a> for GeneralName<'a> {
                     decoder.context_specific::<Ia5String<'_>>(DNS_NAME_TAG, TagMode::Implicit)?;
                 Ok(GeneralName::DnsName(ia5.unwrap()))
             }
-            0xA3 => unimplemented!(),
+            //0xA3 => Not supporting x400Address,
             0xA4 => {
                 // Explicit is used because Name is also a CHOICE. Nested CHOICEs are essentially
                 // EXPLICIT tags. See section 31.2.7 in X.680.
@@ -130,7 +132,7 @@ impl<'a> Decodable<'a> for GeneralName<'a> {
                     decoder.context_specific::<Name<'_>>(DIRECTORY_NAME_TAG, TagMode::Explicit)?;
                 Ok(GeneralName::DirectoryName(ia5.unwrap()))
             }
-            0xA5 => unimplemented!(),
+            //0xA5 => Not supporting ediPartyName,
             0x86 => {
                 let ia5 = decoder.context_specific::<Ia5String<'_>>(URI_TAG, TagMode::Implicit)?;
                 Ok(GeneralName::UniformResourceIdentifier(ia5.unwrap()))
@@ -145,7 +147,7 @@ impl<'a> Decodable<'a> for GeneralName<'a> {
                     .context_specific::<ObjectIdentifier>(REGISTERED_ID_TAG, TagMode::Implicit)?;
                 Ok(GeneralName::RegisteredId(os.unwrap()))
             }
-            _ => unimplemented!(),
+            _ => Err(ErrorKind::TagUnknown { byte: t.octet() }.into()),
         }
     }
 }
