@@ -1,10 +1,10 @@
 //! Extensions [`Extensions`] as defined in RFC 5280
 
-use crate::certificate::default_false;
 use crate::general_name::GeneralName;
 use crate::general_name::GeneralNames;
 use crate::RelativeDistinguishedName;
 use crate::{default_zero, AttributeTypeAndValue};
+use alloc::vec::Vec;
 use der::asn1::{
     Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier,
     OctetString, UIntBytes, Utf8String,
@@ -59,7 +59,7 @@ pub enum DisplayText<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
-pub type ExtendedKeyUsage<'a> = alloc::vec::Vec<ObjectIdentifier>;
+pub type ExtendedKeyUsage<'a> = Vec<ObjectIdentifier>;
 
 /// Subject alternative name extension as defined in [RFC 5280 Section 4.2.1.6] and as identified by the [`PKIX_CE_SUBJECT_ALT_NAME`](constant.PKIX_CE_SUBJECT_ALT_NAME.html) OID.
 ///
@@ -95,7 +95,7 @@ pub type OcspNoCheck = Null;
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.8]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.8
-pub type SubjectDirectoryAttributes<'a> = alloc::vec::Vec<AttributeTypeAndValue<'a>>;
+pub type SubjectDirectoryAttributes<'a> = Vec<AttributeTypeAndValue<'a>>;
 
 /// Basic constraints extension as defined in [RFC 5280 Section 4.2.1.9] and as identified by the [`PKIX_CE_BASIC_CONSTRAINTS`](constant.PKIX_CE_BASIC_CONSTRAINTS.html) OID.
 ///
@@ -109,7 +109,7 @@ pub type SubjectDirectoryAttributes<'a> = alloc::vec::Vec<AttributeTypeAndValue<
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct BasicConstraints {
     /// cA                      BOOLEAN DEFAULT FALSE,
-    #[asn1(default = "default_false")]
+    #[asn1(default = "Default::default")]
     pub ca: bool,
 
     /// pathLenConstraint       INTEGER (0..MAX) OPTIONAL
@@ -151,7 +151,7 @@ pub type KeyUsage<'a> = BitString<'a>;
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-pub type CertificatePolicies<'a> = alloc::vec::Vec<PolicyInformation<'a>>;
+pub type CertificatePolicies<'a> = Vec<PolicyInformation<'a>>;
 
 /// PolicyInformation as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
 ///
@@ -170,7 +170,7 @@ pub struct PolicyInformation<'a> {
     pub policy_identifier: ObjectIdentifier,
 
     /// policyQualifiers   SEQUENCE SIZE (1..MAX) OF PolicyQualifierInfo OPTIONAL
-    pub policy_qualifiers: Option<alloc::vec::Vec<PolicyQualifierInfo<'a>>>,
+    pub policy_qualifiers: Option<Vec<PolicyQualifierInfo<'a>>>,
 }
 
 /// PolicyQualifierInfo as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
@@ -267,7 +267,7 @@ pub struct NoticeReference<'a> {
     organization: DisplayText<'a>,
 
     /// noticeNumbers    SEQUENCE OF INTEGER
-    notice_numbers: Option<alloc::vec::Vec<UIntBytes<'a>>>,
+    notice_numbers: Option<Vec<UIntBytes<'a>>>,
 }
 
 /// UserNotice as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
@@ -295,7 +295,7 @@ pub struct UserNotice<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.5
-pub type PolicyMappings<'a> = alloc::vec::Vec<PolicyMapping>;
+pub type PolicyMappings<'a> = Vec<PolicyMapping>;
 
 /// PolicyMapping represents the inner portion of the PolicyMapping definition in [RFC 5280 Section 4.2.1.5].
 ///
@@ -385,7 +385,7 @@ impl<'a> ::der::Sequence<'a> for NameConstraints<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
-pub type GeneralSubtrees<'a> = alloc::vec::Vec<GeneralSubtree<'a>>;
+pub type GeneralSubtrees<'a> = Vec<GeneralSubtree<'a>>;
 
 /// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10] in support of the Name Constraints extension.
 ///
@@ -542,7 +542,7 @@ pub type InhibitAnyPolicy = u32;
 /// ```
 ///
 /// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
-pub type AuthorityInfoAccessSyntax<'a> = alloc::vec::Vec<AccessDescription<'a>>;
+pub type AuthorityInfoAccessSyntax<'a> = Vec<AccessDescription<'a>>;
 
 /// AccessDescription as defined in [RFC 5280 Section 4.2.2.1] in support of the Authority Information Access extension (and referenced by Subject Information Access extension).
 ///
@@ -592,7 +592,7 @@ impl<'a> ::der::Sequence<'a> for AccessDescription<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.2.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.2
-pub type SubjectInfoAccessSyntax<'a> = alloc::vec::Vec<AccessDescription<'a>>;
+pub type SubjectInfoAccessSyntax<'a> = Vec<AccessDescription<'a>>;
 
 /// CRL number extension as defined in [RFC 5280 Section 5.2.3] and as identified by the [`PKIX_CE_CRLNUMBER`](constant.PKIX_CE_CRLNUMBER.html) OID.
 ///
@@ -762,7 +762,7 @@ pub type ReasonFlags<'a> = BitString<'a>;
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-pub type CRLDistributionPoints<'a> = alloc::vec::Vec<DistributionPoint<'a>>;
+pub type CRLDistributionPoints<'a> = Vec<DistributionPoint<'a>>;
 
 /// DistributionPoint as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
 ///

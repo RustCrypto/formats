@@ -5,7 +5,7 @@ use core::fmt;
 use der::asn1::BitString;
 
 /// Enum representing values from the KeyUsage structure
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum KeyUsageValues {
     /// DigitalSignature
     DigitalSignature = 0,
@@ -27,19 +27,25 @@ pub enum KeyUsageValues {
     DecipherOnly = 8,
 }
 
+impl KeyUsageValues {
+    fn as_str(self) -> &'static str {
+        match self {
+            KeyUsageValues::DigitalSignature => "DigitalSignature",
+            KeyUsageValues::NonRepudiation => "NonRepudiation",
+            KeyUsageValues::KeyEncipherment => "KeyEncipherment",
+            KeyUsageValues::DataEncipherment => "DataEncipherment",
+            KeyUsageValues::KeyAgreement => "KeyAgreement",
+            KeyUsageValues::KeyCertSign => "KeyCertSign",
+            KeyUsageValues::CRLSign => "CRLSign",
+            KeyUsageValues::EncipherOnly => "EncipherOnly",
+            KeyUsageValues::DecipherOnly => "DecipherOnly",
+        }
+    }
+}
+
 impl fmt::Display for KeyUsageValues {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match *self {
-            KeyUsageValues::DigitalSignature => write!(f, "DigitalSignature"),
-            KeyUsageValues::NonRepudiation => write!(f, "NonRepudiation"),
-            KeyUsageValues::KeyEncipherment => write!(f, "KeyEncipherment"),
-            KeyUsageValues::DataEncipherment => write!(f, "DataEncipherment"),
-            KeyUsageValues::KeyAgreement => write!(f, "KeyAgreement"),
-            KeyUsageValues::KeyCertSign => write!(f, "KeyCertSign"),
-            KeyUsageValues::CRLSign => write!(f, "CRLSign"),
-            KeyUsageValues::EncipherOnly => write!(f, "EncipherOnly"),
-            KeyUsageValues::DecipherOnly => write!(f, "DecipherOnly"),
-        }
+        f.write_str(self.as_str())
     }
 }
 
