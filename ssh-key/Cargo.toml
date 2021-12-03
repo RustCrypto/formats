@@ -16,7 +16,7 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-base64ct = { version = "1", path = "../base64ct" } # TODO: bump to 1.3.0 before release
+base64ct = { version = "1.3", path = "../base64ct" }
 
 # optional dependencies
 sec1 = { version = "0.2", optional = true, default-features = false, path = "../sec1" }
