@@ -21,7 +21,7 @@ spki = { version = "0.5", path = "../spki" }
 # optional dependencies
 aes = { version = "0.7", optional = true }
 block-modes = { version = "0.8", optional = true, default-features = false }
-hmac = { version = "0.11", optional = true, default-features = false }
+hmac = { version = "0.12", optional = true, default-features = false }
 pbkdf2 = { version = "0.9", optional = true, default-features = false }
 scrypt = { version = "0.8", optional = true, default-features = false }
 sha-1 = { version = "0.9.8", optional = true, default-features = false }
