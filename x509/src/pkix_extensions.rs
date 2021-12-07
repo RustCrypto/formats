@@ -206,10 +206,10 @@ pub struct PolicyQualifierInfo<'a> {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PrivateKeyUsagePeriod {
     /// notBefore       [0]     GeneralizedTime OPTIONAL,
-    not_before: Option<GeneralizedTime>,
+    pub not_before: Option<GeneralizedTime>,
 
     /// notAfter        [1]     GeneralizedTime OPTIONAL
-    not_after: Option<GeneralizedTime>,
+    pub not_after: Option<GeneralizedTime>,
 }
 
 impl<'a> ::der::Decodable<'a> for PrivateKeyUsagePeriod {
@@ -264,10 +264,10 @@ impl<'a> ::der::Sequence<'a> for PrivateKeyUsagePeriod {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct NoticeReference<'a> {
     /// organization     DisplayText,
-    organization: DisplayText<'a>,
+    pub organization: DisplayText<'a>,
 
     /// noticeNumbers    SEQUENCE OF INTEGER
-    notice_numbers: Option<Vec<UIntBytes<'a>>>,
+    pub notice_numbers: Option<Vec<UIntBytes<'a>>>,
 }
 
 /// UserNotice as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
@@ -282,10 +282,10 @@ pub struct NoticeReference<'a> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct UserNotice<'a> {
     /// noticeRef        NoticeReference OPTIONAL,
-    notice_ref: Option<GeneralizedTime>,
+    pub notice_ref: Option<GeneralizedTime>,
 
     /// explicitText     DisplayText OPTIONAL }
-    explicit_text: Option<DisplayText<'a>>,
+    pub explicit_text: Option<DisplayText<'a>>,
 }
 
 /// Policy mappings extension as defined in [RFC 5280 Section 4.2.1.5] and as identified by the [`PKIX_CE_POLICY_MAPPINGS`](constant.PKIX_CE_POLICY_MAPPINGS.html) OID.
@@ -328,30 +328,32 @@ pub struct PolicyMapping {
 pub struct NameConstraints<'a> {
     /// permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
     //#[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
-    permitted_subtrees: Option<GeneralSubtrees<'a>>,
+    pub permitted_subtrees: Option<GeneralSubtrees<'a>>,
 
     /// excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
     //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
-    excluded_subtrees: Option<GeneralSubtrees<'a>>,
+    pub excluded_subtrees: Option<GeneralSubtrees<'a>>,
 }
 
 const PERMITTED_SUBTREES_TAG: TagNumber = TagNumber::new(0);
 const EXCLUDED_SUBTREES_TAG: TagNumber = TagNumber::new(1);
 
-impl<'a> ::der::Decodable<'a> for NameConstraints<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let permitted_subtrees =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let excluded_subtrees =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                permitted_subtrees,
-                excluded_subtrees,
-            })
+// impl<'a> ::der::Decodable<'a> for NameConstraints<'a> {
+//     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
+//         decoder.sequence(|decoder| {
+impl<'a> DecodeValue<'a> for NameConstraints<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
+        let permitted_subtrees =
+            ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
+                .map(|cs| cs.value);
+        let excluded_subtrees =
+            ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
+                .map(|cs| cs.value);
+        Ok(Self {
+            permitted_subtrees,
+            excluded_subtrees,
         })
+        // })
     }
 }
 
@@ -400,13 +402,13 @@ pub type GeneralSubtrees<'a> = Vec<GeneralSubtree<'a>>;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct GeneralSubtree<'a> {
     /// base                    GeneralName,
-    base: GeneralName<'a>,
+    pub base: GeneralName<'a>,
 
     /// minimum         [0]     BaseDistance DEFAULT 0,
-    minimum: u32,
+    pub minimum: u32,
 
     /// maximum         [1]     BaseDistance OPTIONAL }
-    maximum: Option<u32>,
+    pub maximum: Option<u32>,
 }
 
 impl<'a> ::der::Decodable<'a> for GeneralSubtree<'a> {
@@ -473,10 +475,10 @@ impl<'a> ::der::Sequence<'a> for GeneralSubtree<'a> {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolicyConstraints {
     /// requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
-    require_explicit_policy: Option<u32>,
+    pub require_explicit_policy: Option<u32>,
 
     /// inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
-    inhibit_policy_mapping: Option<u32>,
+    pub inhibit_policy_mapping: Option<u32>,
 }
 
 impl<'a> ::der::Decodable<'a> for PolicyConstraints {
