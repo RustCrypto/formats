@@ -1,5 +1,13 @@
 //! # Derive macros for traits in `tls_codec`
 //!
+//! ## Warning
+//! The derive macros support deriving the `tls_codec` traits for enumerations and the resulting
+//! serialized format complies with [the "variants" section of the TLS RFC](https://datatracker.ietf.org/doc/html/rfc8446#section-3.8).
+//! However support is limited to enumerations that are serialized with their discriminant
+//! immediately followed by the variant data. If this is not appropriate (e.g. the format requires
+//! other fields between the discriminant and variant data), the `tls_codec` traits can be
+//! implemented manually.
+//!
 //! ## Available attributes
 //! ### `with`
 //!
