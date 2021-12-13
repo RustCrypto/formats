@@ -11,6 +11,7 @@ use super::{Decode, Encode, Variant};
 pub struct Base64;
 
 impl Variant for Base64 {
+    type Unpadded = Base64Unpadded;
     const PADDED: bool = true;
     const BASE: u8 = b'A';
     const DECODER: &'static [Decode] = DECODER;
@@ -26,6 +27,7 @@ impl Variant for Base64 {
 pub struct Base64Unpadded;
 
 impl Variant for Base64Unpadded {
+    type Unpadded = Self;
     const PADDED: bool = false;
     const BASE: u8 = b'A';
     const DECODER: &'static [Decode] = DECODER;

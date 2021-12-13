@@ -268,8 +268,8 @@ impl<'a> Decoder<'a> {
                 Ok(result)
             }
             None => {
-                let actual_len = self.input_len()?;
-                let expected_len = (actual_len + len)?;
+                let actual_len = (self.input_len()? - self.position)?;
+                let expected_len = len;
                 Err(self.error(ErrorKind::Incomplete {
                     expected_len,
                     actual_len,
@@ -386,8 +386,8 @@ mod tests {
                 expected_len,
                 actual_len,
             } => {
-                assert_eq!(expected_len, 3u8.into());
-                assert_eq!(actual_len, 2u8.into());
+                assert_eq!(expected_len, 1u8.into());
+                assert_eq!(actual_len, 0u8.into());
             }
             other => panic!("unexpected error kind: {:?}", other),
         }

@@ -234,20 +234,6 @@ impl<T: Variant> Encoding for T {
     }
 }
 
-/// Get the length of the output from decoding the provided *unpadded*
-/// Base64-encoded input (use [`unpadded_len_ct`] to compute this value for
-/// a padded input)
-///
-/// Note that this function does not fully validate the Base64 is well-formed
-/// and may return incorrect results for malformed Base64.
-#[inline(always)]
-fn decoded_len(input_len: usize) -> usize {
-    // overflow-proof computation of `(3*n)/4`
-    let k = input_len / 4;
-    let l = input_len - 4 * k;
-    3 * k + (3 * l) / 4
-}
-
 /// Validate padding is of the expected length compute unpadded length.
 ///
 /// Note that this method does not explicitly check that the padded data
@@ -258,7 +244,7 @@ fn decoded_len(input_len: usize) -> usize {
 /// errors (i.e. malformed padding bytes) as `i16` to be combined with other
 /// encoding-related errors prior to branching.
 #[inline(always)]
-fn decode_padding(input: &[u8]) -> Result<(usize, i16), InvalidEncodingError> {
+pub(crate) fn decode_padding(input: &[u8]) -> Result<(usize, i16), InvalidEncodingError> {
     if input.len() % 4 != 0 {
         return Err(InvalidEncodingError);
     }
@@ -315,6 +301,7 @@ fn validate_padding<T: Variant>(encoded: &[u8], decoded: &[u8]) -> Result<(), Er
     T::encode(decoded, &mut buf)?;
 
     // Non-short-circuiting comparison of padding
+    // TODO(tarcieri): better constant-time mechanisms?
     if padding
         .iter()
         .zip(buf.iter())
@@ -325,6 +312,20 @@ fn validate_padding<T: Variant>(encoded: &[u8], decoded: &[u8]) -> Result<(), Er
     } else {
         Err(Error::InvalidEncoding)
     }
+}
+
+/// Get the length of the output from decoding the provided *unpadded*
+/// Base64-encoded input (use [`unpadded_len_ct`] to compute this value for
+/// a padded input)
+///
+/// Note that this function does not fully validate the Base64 is well-formed
+/// and may return incorrect results for malformed Base64.
+#[inline(always)]
+fn decoded_len(input_len: usize) -> usize {
+    // overflow-proof computation of `(3*n)/4`
+    let k = input_len / 4;
+    let l = input_len - 4 * k;
+    3 * k + (3 * l) / 4
 }
 
 /// Branchless match that a given byte is the `PAD` character

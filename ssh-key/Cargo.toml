@@ -1,7 +1,11 @@
 [package]
 name = "ssh-key"
-version = "0.0.0" # Also update html_root_url in lib.rs when bumping this
-description = "Pure Rust implementation of SSH key file formats as described in RFC4716"
+version = "0.1.0" # Also update html_root_url in lib.rs when bumping this
+description = """
+Pure Rust implementation of SSH key file format decoders/encoders as described
+in RFC4253 and RFC4716 as well as the OpenSSH key formats. Supports "heapless"
+`no_std` embedded targets with an optional `alloc` feature (Ed25519 and ECDSA only)
+"""
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/ssh-key"
@@ -12,6 +16,18 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
+base64ct = { version = "1.3", path = "../base64ct" }
+
+# optional dependencies
+sec1 = { version = "0.2", optional = true, default-features = false, path = "../sec1" }
+
+[dev-dependencies]
+hex-literal = "0.3"
+
+[features]
+default = ["alloc", "sec1"]
+alloc = []
+std = ["alloc", "base64ct/std"]
 
 [package.metadata.docs.rs]
 all-features = true

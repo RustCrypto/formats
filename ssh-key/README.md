@@ -11,8 +11,11 @@
 
 ## About
 
-Pure Rust implementation of SSH key file formats as described in [RFC4716]
-as well as OpenSSH's [PROTOCOL.key] format specification.
+Pure Rust implementation of SSH key file format decoders/encoders as described
+in [RFC4253] and [RFC4716] as well as OpenSSH's [PROTOCOL.key] format specification.
+
+Supports "heapless" `no_std` embedded targets with an optional `alloc` feature
+(Ed25519 and ECDSA only).
 
 ## Minimum Supported Rust Version
 
@@ -52,5 +55,6 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
+[RFC4253]: https://datatracker.ietf.org/doc/html/rfc4253
 [RFC4716]: https://datatracker.ietf.org/doc/html/rfc4716
 [PROTOCOL.key]: https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.key
