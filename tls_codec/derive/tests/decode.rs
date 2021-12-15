@@ -255,3 +255,65 @@ fn custom() {
     let deserialized = Custom::tls_deserialize(&mut &*serialized).unwrap();
     assert_eq!(x, deserialized);
 }
+
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+#[repr(u8)]
+enum EnumWithTupleVariant {
+    A(u8, u32),
+}
+
+#[test]
+fn enum_with_tuple_variant() {
+    let x = EnumWithTupleVariant::A(3, 4);
+    let serialized = x.tls_serialize_detached().unwrap();
+    let deserialized = EnumWithTupleVariant::tls_deserialize(&mut &*serialized).unwrap();
+    assert_eq!(deserialized, x);
+}
+
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+#[repr(u8)]
+enum EnumWithStructVariant {
+    A { foo: u8, bar: u32 },
+}
+
+#[test]
+fn enum_with_struct_variant() {
+    let x = EnumWithStructVariant::A { foo: 3, bar: 4 };
+    let serialized = x.tls_serialize_detached().unwrap();
+    let deserialized = EnumWithStructVariant::tls_deserialize(&mut &*serialized).unwrap();
+    assert_eq!(deserialized, x);
+}
+
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+#[repr(u16)]
+enum EnumWithDataAndDiscriminant {
+    #[tls_codec(discriminant = 3)]
+    A(u8),
+    B,
+}
+
+#[test]
+fn enum_with_data_and_discriminant() {
+    for x in [
+        EnumWithDataAndDiscriminant::A(4),
+        EnumWithDataAndDiscriminant::B,
+    ] {
+        let serialized = x.tls_serialize_detached().unwrap();
+        let deserialized = EnumWithDataAndDiscriminant::tls_deserialize(&mut &*serialized).unwrap();
+        assert_eq!(deserialized, x);
+    }
+}
+
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+#[repr(u8)]
+enum EnumWithCustomSerializedField {
+    A(#[tls_codec(with = "custom")] Vec<u8>),
+}
+
+#[test]
+fn enum_with_custom_serialized_field() {
+    let x = EnumWithCustomSerializedField::A(vec![1, 2, 3]);
+    let serialized = x.tls_serialize_detached().unwrap();
+    let deserialized = EnumWithCustomSerializedField::tls_deserialize(&mut &*serialized).unwrap();
+    assert_eq!(deserialized, x);
+}
