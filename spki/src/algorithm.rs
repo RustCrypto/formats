@@ -1,9 +1,10 @@
 //! X.509 `AlgorithmIdentifier`
 
 use crate::{Error, Result};
+use core::cmp::Ordering;
 use der::{
     asn1::{Any, ObjectIdentifier},
-    Decodable, Decoder, Encodable, Sequence,
+    Decodable, Decoder, DerOrd, Encodable, Sequence, ValueOrd,
 };
 
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
@@ -99,5 +100,14 @@ impl<'a> TryFrom<&'a [u8]> for AlgorithmIdentifier<'a> {
 
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
+    }
+}
+
+impl ValueOrd for AlgorithmIdentifier<'_> {
+    fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
+        match self.oid.der_cmp(&other.oid)? {
+            Ordering::Equal => self.parameters.der_cmp(&other.parameters),
+            other => Ok(other),
+        }
     }
 }
