@@ -1,9 +1,15 @@
 //! Implement the TLS codec for some byte arrays.
 
-use super::{Deserialize, Error, Serialize, Size};
-use std::io::{Read, Write};
+use crate::{Deserialize, Serialize, Size};
+
+#[cfg(feature = "std")]
+use {
+    crate::Error,
+    std::io::{Read, Write},
+};
 
 impl<const LEN: usize> Serialize for [u8; LEN] {
+    #[cfg(feature = "std")]
     #[inline]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let written = writer.write(self)?;
@@ -19,6 +25,7 @@ impl<const LEN: usize> Serialize for [u8; LEN] {
 }
 
 impl<const LEN: usize> Deserialize for [u8; LEN] {
+    #[cfg(feature = "std")]
     #[inline]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
         let mut out = [0u8; LEN];
