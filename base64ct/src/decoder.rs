@@ -6,10 +6,16 @@ use crate::{
     Encoding,
     Error::{self, InvalidLength},
 };
-use core::marker::PhantomData;
+use core::{cmp, marker::PhantomData};
 
 #[cfg(docsrs)]
 use crate::{Base64, Base64Unpadded};
+
+/// Carriage return
+const CHAR_CR: u8 = 0x0d;
+
+/// Line feed
+const CHAR_LF: u8 = 0x0a;
 
 /// Stateful Base64 decoder with support for buffered, incremental decoding.
 ///
@@ -22,11 +28,14 @@ use crate::{Base64, Base64Unpadded};
 /// [blanket impl]: ./trait.Encoding.html#impl-Encoding
 #[derive(Clone)]
 pub struct Decoder<'i, E: Variant> {
-    /// Remaining data in the input buffer.
-    remaining: &'i [u8],
+    /// Current line being processed.
+    line: Line<'i>,
+
+    /// Base64 input data reader.
+    line_reader: LineReader<'i>,
 
     /// Block buffer used for non-block-aligned data.
-    buffer: BlockBuffer,
+    block_buffer: BlockBuffer,
 
     /// Phantom parameter for the Base64 encoding in use.
     encoding: PhantomData<E>,
@@ -36,7 +45,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// Create a new decoder for a byte slice containing contiguous
     /// (non-newline-delimited) Base64-encoded data.
     pub fn new(input: &'i [u8]) -> Result<Self, Error> {
-        let remaining = if E::PADDED {
+        let unpadded_input = if E::PADDED {
             // TODO(tarcieri): validate that padding is well-formed with `validate_padding`
             let (unpadded_len, err) = decode_padding(input)?;
             if err != 0 {
@@ -49,8 +58,20 @@ impl<'i, E: Variant> Decoder<'i, E> {
         };
 
         Ok(Self {
-            remaining,
-            buffer: BlockBuffer::default(),
+            line: Line::new(unpadded_input),
+            line_reader: LineReader::default(),
+            block_buffer: BlockBuffer::default(),
+            encoding: PhantomData,
+        })
+    }
+
+    /// Create a new decoder for a byte slice containing Base64 which
+    /// line wraps at the given line length.
+    pub fn new_linewrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
+        Ok(Self {
+            line: Line::default(),
+            line_reader: LineReader::new(input, line_width)?,
+            block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
         })
     }
@@ -69,66 +90,86 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
         let mut out_off = 0;
 
-        if !self.buffer.is_empty() {
-            let bytes = self.buffer.take(out.len());
-            out[..bytes.len()].copy_from_slice(bytes);
-            out_off += bytes.len();
+        while out_off < out.len() {
+            // If there's data in the block buffer, use it
+            if !self.block_buffer.is_empty() {
+                let out_rem = out.len().checked_sub(out_off).ok_or(InvalidLength)?;
+                let bytes = self.block_buffer.take(out_rem);
+                out[out_off..][..bytes.len()].copy_from_slice(bytes);
+                out_off = out_off.checked_add(bytes.len()).ok_or(InvalidLength)?;
+            }
+
+            // Advance the line reader if necessary
+            if self.line.is_empty() && !self.line_reader.is_empty() {
+                self.advance_line()?;
+            }
+
+            // Attempt to decode a stride of block-aligned data
+            let in_blocks = self.line.len() / 4;
+            let out_rem = out.len().checked_sub(out_off).ok_or(InvalidLength)?;
+            let out_blocks = out_rem / 3;
+            let blocks = cmp::min(in_blocks, out_blocks);
+            let in_aligned = self.line.take(blocks * 4);
+
+            if !in_aligned.is_empty() {
+                let out_buf = &mut out[out_off..][..(blocks * 3)];
+                let decoded_len = E::Unpadded::decode(in_aligned, out_buf)?.len();
+                out_off = out_off.checked_add(decoded_len).ok_or(InvalidLength)?;
+            }
+
+            if out_off < out.len() {
+                // If we still haven't filled the output slice, we're in a
+                // situation where either the input or output isn't
+                // block-aligned, so fill the internal block buffer
+                self.fill_block_buffer()?;
+            }
         }
 
-        let out_rem = out.len().checked_sub(out_off).ok_or(InvalidLength)?;
-        let out_aligned = out_rem.checked_sub(out_rem % 3).ok_or(InvalidLength)?;
-
-        let mut in_len = out_aligned
-            .checked_mul(4)
-            .and_then(|n| n.checked_div(3))
-            .ok_or(InvalidLength)?;
-
-        if in_len > self.remaining.len() {
-            return Err(Error::InvalidLength);
-        }
-
-        if in_len < 4 {
-            in_len = 0;
-        }
-
-        let (aligned, rest) = self.remaining.split_at(in_len);
-
-        if in_len != 0 {
-            let decoded_len =
-                E::Unpadded::decode(aligned, &mut out[out_off..][..out_aligned])?.len();
-
-            out_off = out_off.checked_add(decoded_len).ok_or(InvalidLength)?;
-            self.remaining = rest;
-        }
-
-        if out_off < out.len() && !self.remaining.is_empty() {
-            let (block, rest) = if self.remaining.len() < 4 {
-                (self.remaining, [].as_ref())
-            } else {
-                self.remaining.split_at(4)
-            };
-
-            self.buffer.fill::<E::Unpadded>(block)?;
-            self.remaining = rest;
-
-            let bytes = self
-                .buffer
-                .take(out.len().checked_sub(out_off).ok_or(InvalidLength)?);
-
-            out[out_off..][..bytes.len()].copy_from_slice(bytes);
-            out_off = out_off.checked_add(bytes.len()).ok_or(InvalidLength)?;
-        }
-
-        if out.len() == out_off {
-            Ok(out)
-        } else {
-            Err(InvalidLength)
-        }
+        Ok(out)
     }
 
     /// Has all of the input data been decoded?
     pub fn is_finished(&self) -> bool {
-        self.remaining.is_empty() && self.buffer.is_empty()
+        self.line.is_empty() && self.line_reader.is_empty() && self.block_buffer.is_empty()
+    }
+
+    /// Fill the block buffer with data.
+    fn fill_block_buffer(&mut self) -> Result<(), Error> {
+        if self.line.len() < 4 && !self.line_reader.is_empty() {
+            // Handle input block which is split across lines
+            let mut tmp = [0u8; 4];
+
+            // Copy remaining data in the line into tmp
+            let line_end = self.line.take(4);
+            tmp[..line_end.len()].copy_from_slice(line_end);
+
+            // Advance the line and attempt to fill tmp
+            self.advance_line()?;
+            let line_begin = self.line.take(4 - line_end.len());
+            tmp[line_end.len()..][..line_begin.len()].copy_from_slice(line_begin);
+
+            let tmp_len = line_begin
+                .len()
+                .checked_add(line_end.len())
+                .ok_or(InvalidLength)?;
+
+            self.block_buffer.fill::<E::Unpadded>(&tmp[..tmp_len])
+        } else {
+            let block = self.line.take(4);
+            self.block_buffer.fill::<E::Unpadded>(block)
+        }
+    }
+
+    /// Advance the internal buffer to the next line.
+    fn advance_line(&mut self) -> Result<(), Error> {
+        debug_assert!(self.line.is_empty(), "expected line buffer to be empty");
+
+        if let Some(line) = self.line_reader.next().transpose()? {
+            self.line = line;
+            Ok(())
+        } else {
+            Err(Error::InvalidLength)
+        }
     }
 }
 
@@ -176,8 +217,109 @@ impl BlockBuffer {
     }
 
     /// Have all of the bytes in this buffer been consumed?
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.position == self.length
+    }
+}
+
+/// A single line of linewrapped data, providing a read buffer.
+#[derive(Clone)]
+pub struct Line<'i> {
+    /// Remaining data in the line
+    remaining: &'i [u8],
+}
+
+impl<'i> Default for Line<'i> {
+    fn default() -> Self {
+        Self::new(&[])
+    }
+}
+
+impl<'i> Line<'i> {
+    /// Create a new line which wraps the given input data
+    pub fn new(bytes: &'i [u8]) -> Self {
+        Self { remaining: bytes }
+    }
+
+    /// Take up to `nbytes` from this line buffer.
+    fn take(&mut self, nbytes: usize) -> &'i [u8] {
+        let (bytes, rest) = if nbytes < self.remaining.len() {
+            self.remaining.split_at(nbytes)
+        } else {
+            (self.remaining, [].as_ref())
+        };
+
+        self.remaining = rest;
+        bytes
+    }
+
+    /// Get the number of bytes remaining in this line.
+    fn len(&self) -> usize {
+        self.remaining.len()
+    }
+
+    /// Is the buffer for this line empty?
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+/// Iterator over multi-line Base64 input.
+#[derive(Clone, Default)]
+struct LineReader<'i> {
+    /// Remaining linewrapped data to be processed.
+    remaining: &'i [u8],
+
+    /// Line width.
+    line_width: Option<usize>,
+}
+
+impl<'i> LineReader<'i> {
+    /// Create a new reader which operates over linewrapped data.
+    fn new(bytes: &'i [u8], line_width: usize) -> Result<Self, Error> {
+        if line_width == 0 {
+            return Err(Error::InvalidLength);
+        }
+
+        Ok(Self {
+            remaining: bytes,
+            line_width: Some(line_width),
+        })
+    }
+
+    /// Is this line reader empty?
+    fn is_empty(&self) -> bool {
+        self.remaining.is_empty()
+    }
+}
+
+impl<'i> Iterator for LineReader<'i> {
+    type Item = Result<Line<'i>, Error>;
+
+    fn next(&mut self) -> Option<Result<Line<'i>, Error>> {
+        if let Some(line_width) = self.line_width {
+            let rest = match self.remaining.get(line_width..) {
+                None => {
+                    if self.remaining.is_empty() {
+                        return None;
+                    } else {
+                        let line = Line::new(self.remaining);
+                        self.remaining = &[];
+                        return Some(Ok(line));
+                    }
+                }
+                Some([CHAR_CR, CHAR_LF, rest @ ..]) => rest,
+                Some([CHAR_CR, rest @ ..]) => rest,
+                Some([CHAR_LF, rest @ ..]) => rest,
+                _ => return Some(Err(Error::InvalidEncoding)),
+            };
+
+            let line = Line::new(&self.remaining[..line_width]);
+            self.remaining = rest;
+            Some(Ok(line))
+        } else {
+            None
+        }
     }
 }
 
@@ -205,6 +347,34 @@ mod tests {
         244, 62, 209, 67, 39, 245, 197, 74, 171, 98,
     ];
 
+    /// Multi-line Base64 example (from the `ssh-key` crate's `id_ecdsa_p256`).
+    const MULTILINE_BASE64: &str =
+        "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAaAAAABNlY2RzYS\n\
+         1zaGEyLW5pc3RwMjU2AAAACG5pc3RwMjU2AAAAQQR8H9hzDOU0V76NkkCY7DZIgw+Sqooj\n\
+         Y6xlb91FIfpjE+UR8YkbTp5ar44ULQatFaZqQlfz8FHYTooOL5G6gHBHAAAAsB8RBhUfEQ\n\
+         YVAAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBHwf2HMM5TRXvo2S\n\
+         QJjsNkiDD5KqiiNjrGVv3UUh+mMT5RHxiRtOnlqvjhQtBq0VpmpCV/PwUdhOig4vkbqAcE\n\
+         cAAAAhAMp4pkd0v643EjIkk38DmJYBiXB6ygqGRc60NZxCO6B5AAAAEHVzZXJAZXhhbXBs\n\
+         ZS5jb20BAgMEBQYH";
+    const MULTILINE_BIN: &[u8] = &[
+        111, 112, 101, 110, 115, 115, 104, 45, 107, 101, 121, 45, 118, 49, 0, 0, 0, 0, 4, 110, 111,
+        110, 101, 0, 0, 0, 4, 110, 111, 110, 101, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 104, 0, 0, 0,
+        19, 101, 99, 100, 115, 97, 45, 115, 104, 97, 50, 45, 110, 105, 115, 116, 112, 50, 53, 54,
+        0, 0, 0, 8, 110, 105, 115, 116, 112, 50, 53, 54, 0, 0, 0, 65, 4, 124, 31, 216, 115, 12,
+        229, 52, 87, 190, 141, 146, 64, 152, 236, 54, 72, 131, 15, 146, 170, 138, 35, 99, 172, 101,
+        111, 221, 69, 33, 250, 99, 19, 229, 17, 241, 137, 27, 78, 158, 90, 175, 142, 20, 45, 6,
+        173, 21, 166, 106, 66, 87, 243, 240, 81, 216, 78, 138, 14, 47, 145, 186, 128, 112, 71, 0,
+        0, 0, 176, 31, 17, 6, 21, 31, 17, 6, 21, 0, 0, 0, 19, 101, 99, 100, 115, 97, 45, 115, 104,
+        97, 50, 45, 110, 105, 115, 116, 112, 50, 53, 54, 0, 0, 0, 8, 110, 105, 115, 116, 112, 50,
+        53, 54, 0, 0, 0, 65, 4, 124, 31, 216, 115, 12, 229, 52, 87, 190, 141, 146, 64, 152, 236,
+        54, 72, 131, 15, 146, 170, 138, 35, 99, 172, 101, 111, 221, 69, 33, 250, 99, 19, 229, 17,
+        241, 137, 27, 78, 158, 90, 175, 142, 20, 45, 6, 173, 21, 166, 106, 66, 87, 243, 240, 81,
+        216, 78, 138, 14, 47, 145, 186, 128, 112, 71, 0, 0, 0, 33, 0, 202, 120, 166, 71, 116, 191,
+        174, 55, 18, 50, 36, 147, 127, 3, 152, 150, 1, 137, 112, 122, 202, 10, 134, 69, 206, 180,
+        53, 156, 66, 59, 160, 121, 0, 0, 0, 16, 117, 115, 101, 114, 64, 101, 120, 97, 109, 112,
+        108, 101, 46, 99, 111, 109, 1, 2, 3, 4, 5, 6, 7,
+    ];
+
     #[test]
     fn decode_padded() {
         for chunk_size in 1..PADDED_BIN.len() {
@@ -228,6 +398,24 @@ mod tests {
             let mut buffer = [0u8; 64];
 
             for chunk in UNPADDED_BIN.chunks(chunk_size) {
+                assert!(!decoder.is_finished());
+                let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
+                assert_eq!(chunk, decoded);
+            }
+
+            assert!(decoder.is_finished());
+        }
+    }
+
+    #[test]
+    fn decode_multiline() {
+        for chunk_size in 1..MULTILINE_BIN.len() {
+            let mut decoder =
+                Decoder::<Base64>::new_linewrapped(MULTILINE_BASE64.as_bytes(), 70).unwrap();
+
+            let mut buffer = [0u8; 368];
+
+            for chunk in MULTILINE_BIN.chunks(chunk_size) {
                 assert!(!decoder.is_finished());
                 let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
                 assert_eq!(chunk, decoded);
