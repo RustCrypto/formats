@@ -11,7 +11,7 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-zeroize = { version = "1", features = ["zeroize_derive"] }
+zeroize = { version = "1", default-features = false, features = ["alloc", "zeroize_derive"] }
 
 # optional dependencies
 serde = { version = "1.0", features = ["derive"], optional = true }
@@ -21,9 +21,15 @@ tls_codec_derive = { version = "=0.2.0-pre.3", path = "derive", optional = true 
 criterion = "0.3"
 
 [features]
-derive = [ "tls_codec_derive" ]
+default = [ "std" ]
+derive = [ "std", "tls_codec_derive" ]
 serde_serialize = [ "serde" ]
+std = []
 
 [[bench]]
 name = "tls_vec"
 harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
