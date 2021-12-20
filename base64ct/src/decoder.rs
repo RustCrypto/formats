@@ -45,20 +45,8 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// Create a new decoder for a byte slice containing contiguous
     /// (non-newline-delimited) Base64-encoded data.
     pub fn new(input: &'i [u8]) -> Result<Self, Error> {
-        let unpadded_input = if E::PADDED {
-            // TODO(tarcieri): validate that padding is well-formed with `validate_padding`
-            let (unpadded_len, err) = decode_padding(input)?;
-            if err != 0 {
-                return Err(Error::InvalidEncoding);
-            }
-
-            &input[..unpadded_len]
-        } else {
-            input
-        };
-
         Ok(Self {
-            line: Line::new(unpadded_input),
+            line: Line::new(Self::unpad_input(input)?),
             line_reader: LineReader::default(),
             block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
@@ -67,10 +55,12 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
     /// Create a new decoder for a byte slice containing Base64 which
     /// line wraps at the given line length.
+    ///
+    /// Trailing newlines are not supported and must be removed in advance.
     pub fn new_linewrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
         Ok(Self {
             line: Line::default(),
-            line_reader: LineReader::new(input, line_width)?,
+            line_reader: LineReader::new(Self::unpad_input(input)?, line_width)?,
             block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
         })
@@ -169,6 +159,25 @@ impl<'i, E: Variant> Decoder<'i, E> {
             Ok(())
         } else {
             Err(Error::InvalidLength)
+        }
+    }
+
+    /// Remove padding from an input buffer.
+    // TODO(tarcieri): instead of this, process the last Base64 block as padded?
+    // This approach may not cover all cases with linewrapped Base64
+    fn unpad_input(input: &[u8]) -> Result<&[u8], Error> {
+        if E::PADDED {
+            // TODO(tarcieri): validate that padding is well-formed with `validate_padding`
+            // ...or switch to processing the last block as padded, leaning on
+            // the existing padding validation code
+            let (unpadded_len, err) = decode_padding(input)?;
+            if err != 0 {
+                return Err(Error::InvalidEncoding);
+            }
+
+            Ok(&input[..unpadded_len])
+        } else {
+            Ok(input)
         }
     }
 }
@@ -325,7 +334,7 @@ impl<'i> Iterator for LineReader<'i> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Base64, Base64Unpadded, Decoder};
+    use crate::{variant::Variant, Base64, Base64Unpadded, Decoder};
 
     /// Padded Base64-encoded example
     const PADDED_BASE64: &str =
@@ -347,8 +356,30 @@ mod tests {
         244, 62, 209, 67, 39, 245, 197, 74, 171, 98,
     ];
 
-    /// Multi-line Base64 example (from the `ssh-key` crate's `id_ecdsa_p256`).
-    const MULTILINE_BASE64: &str =
+    /// Padded multi-line Base64 example (from the `ssh-key` crate's `id_ed25519`)
+    const MULTILINE_PADDED_BASE64: &str =
+        "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n\
+         QyNTUxOQAAACCzPq7zfqLffKoBDe/eo04kH2XxtSmk9D7RQyf1xUqrYgAAAJgAIAxdACAM\n\
+         XQAAAAtzc2gtZWQyNTUxOQAAACCzPq7zfqLffKoBDe/eo04kH2XxtSmk9D7RQyf1xUqrYg\n\
+         AAAEC2BsIi0QwW2uFscKTUUXNHLsYX4FxlaSDSblbAj7WR7bM+rvN+ot98qgEN796jTiQf\n\
+         ZfG1KaT0PtFDJ/XFSqtiAAAAEHVzZXJAZXhhbXBsZS5jb20BAgMEBQ==";
+    const MULTILINE_PADDED_BIN: &[u8] = &[
+        111, 112, 101, 110, 115, 115, 104, 45, 107, 101, 121, 45, 118, 49, 0, 0, 0, 0, 4, 110, 111,
+        110, 101, 0, 0, 0, 4, 110, 111, 110, 101, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 51, 0, 0, 0, 11,
+        115, 115, 104, 45, 101, 100, 50, 53, 53, 49, 57, 0, 0, 0, 32, 179, 62, 174, 243, 126, 162,
+        223, 124, 170, 1, 13, 239, 222, 163, 78, 36, 31, 101, 241, 181, 41, 164, 244, 62, 209, 67,
+        39, 245, 197, 74, 171, 98, 0, 0, 0, 152, 0, 32, 12, 93, 0, 32, 12, 93, 0, 0, 0, 11, 115,
+        115, 104, 45, 101, 100, 50, 53, 53, 49, 57, 0, 0, 0, 32, 179, 62, 174, 243, 126, 162, 223,
+        124, 170, 1, 13, 239, 222, 163, 78, 36, 31, 101, 241, 181, 41, 164, 244, 62, 209, 67, 39,
+        245, 197, 74, 171, 98, 0, 0, 0, 64, 182, 6, 194, 34, 209, 12, 22, 218, 225, 108, 112, 164,
+        212, 81, 115, 71, 46, 198, 23, 224, 92, 101, 105, 32, 210, 110, 86, 192, 143, 181, 145,
+        237, 179, 62, 174, 243, 126, 162, 223, 124, 170, 1, 13, 239, 222, 163, 78, 36, 31, 101,
+        241, 181, 41, 164, 244, 62, 209, 67, 39, 245, 197, 74, 171, 98, 0, 0, 0, 16, 117, 115, 101,
+        114, 64, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 1, 2, 3, 4, 5,
+    ];
+
+    /// Unpadded multi-line Base64 example (from the `ssh-key` crate's `id_ecdsa_p256`).
+    const MULTILINE_UNPADDED_BASE64: &str =
         "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAaAAAABNlY2RzYS\n\
          1zaGEyLW5pc3RwMjU2AAAACG5pc3RwMjU2AAAAQQR8H9hzDOU0V76NkkCY7DZIgw+Sqooj\n\
          Y6xlb91FIfpjE+UR8YkbTp5ar44ULQatFaZqQlfz8FHYTooOL5G6gHBHAAAAsB8RBhUfEQ\n\
@@ -356,7 +387,7 @@ mod tests {
          QJjsNkiDD5KqiiNjrGVv3UUh+mMT5RHxiRtOnlqvjhQtBq0VpmpCV/PwUdhOig4vkbqAcE\n\
          cAAAAhAMp4pkd0v643EjIkk38DmJYBiXB6ygqGRc60NZxCO6B5AAAAEHVzZXJAZXhhbXBs\n\
          ZS5jb20BAgMEBQYH";
-    const MULTILINE_BIN: &[u8] = &[
+    const MULTILINE_UNPADDED_BIN: &[u8] = &[
         111, 112, 101, 110, 115, 115, 104, 45, 107, 101, 121, 45, 118, 49, 0, 0, 0, 0, 4, 110, 111,
         110, 101, 0, 0, 0, 4, 110, 111, 110, 101, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 104, 0, 0, 0,
         19, 101, 99, 100, 115, 97, 45, 115, 104, 97, 50, 45, 110, 105, 115, 116, 112, 50, 53, 54,
@@ -377,45 +408,44 @@ mod tests {
 
     #[test]
     fn decode_padded() {
-        for chunk_size in 1..PADDED_BIN.len() {
-            let mut decoder = Decoder::<Base64>::new(PADDED_BASE64.as_bytes()).unwrap();
-            let mut buffer = [0u8; 128];
-
-            for chunk in PADDED_BIN.chunks(chunk_size) {
-                assert!(!decoder.is_finished());
-                let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
-                assert_eq!(chunk, decoded);
-            }
-
-            assert!(decoder.is_finished());
-        }
+        decode_test(PADDED_BIN, || {
+            Decoder::<Base64>::new(PADDED_BASE64.as_bytes()).unwrap()
+        })
     }
 
     #[test]
     fn decode_unpadded() {
-        for chunk_size in 1..UNPADDED_BIN.len() {
-            let mut decoder = Decoder::<Base64Unpadded>::new(UNPADDED_BASE64.as_bytes()).unwrap();
-            let mut buffer = [0u8; 64];
-
-            for chunk in UNPADDED_BIN.chunks(chunk_size) {
-                assert!(!decoder.is_finished());
-                let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
-                assert_eq!(chunk, decoded);
-            }
-
-            assert!(decoder.is_finished());
-        }
+        decode_test(UNPADDED_BIN, || {
+            Decoder::<Base64Unpadded>::new(UNPADDED_BASE64.as_bytes()).unwrap()
+        })
     }
 
     #[test]
-    fn decode_multiline() {
-        for chunk_size in 1..MULTILINE_BIN.len() {
-            let mut decoder =
-                Decoder::<Base64>::new_linewrapped(MULTILINE_BASE64.as_bytes(), 70).unwrap();
+    fn decode_multiline_padded() {
+        decode_test(MULTILINE_PADDED_BIN, || {
+            Decoder::<Base64>::new_linewrapped(MULTILINE_PADDED_BASE64.as_bytes(), 70).unwrap()
+        })
+    }
 
-            let mut buffer = [0u8; 368];
+    #[test]
+    fn decode_multiline_unpadded() {
+        decode_test(MULTILINE_UNPADDED_BIN, || {
+            Decoder::<Base64Unpadded>::new_linewrapped(MULTILINE_UNPADDED_BASE64.as_bytes(), 70)
+                .unwrap()
+        })
+    }
 
-            for chunk in MULTILINE_BIN.chunks(chunk_size) {
+    /// Core functionality of a decoding test
+    fn decode_test<'a, F, V>(expected: &[u8], f: F)
+    where
+        F: Fn() -> Decoder<'a, V>,
+        V: Variant,
+    {
+        for chunk_size in 1..expected.len() {
+            let mut decoder = f();
+            let mut buffer = [0u8; 1024];
+
+            for chunk in expected.chunks(chunk_size) {
                 assert!(!decoder.is_finished());
                 let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
                 assert_eq!(chunk, decoded);
