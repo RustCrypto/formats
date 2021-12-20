@@ -57,7 +57,22 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// line wraps at the given line length.
     ///
     /// Trailing newlines are not supported and must be removed in advance.
-    pub fn new_linewrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
+    ///
+    /// Newlines are handled according to what are roughly [RFC7468] conventions:
+    ///
+    /// ```text
+    /// [parsers] MUST handle different newline conventions
+    /// ```
+    ///
+    /// RFC7468 allows any of the following as newlines, and allows a mixture
+    /// of different types of newlines:
+    ///
+    /// ```text
+    /// eol        = CRLF / CR / LF
+    /// ```
+    ///
+    /// [RFC7468]: https://datatracker.ietf.org/doc/html/rfc7468
+    pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
         Ok(Self {
             line: Line::default(),
             line_reader: LineReader::new(Self::unpad_input(input)?, line_width)?,
@@ -423,14 +438,14 @@ mod tests {
     #[test]
     fn decode_multiline_padded() {
         decode_test(MULTILINE_PADDED_BIN, || {
-            Decoder::<Base64>::new_linewrapped(MULTILINE_PADDED_BASE64.as_bytes(), 70).unwrap()
+            Decoder::<Base64>::new_wrapped(MULTILINE_PADDED_BASE64.as_bytes(), 70).unwrap()
         })
     }
 
     #[test]
     fn decode_multiline_unpadded() {
         decode_test(MULTILINE_UNPADDED_BIN, || {
-            Decoder::<Base64Unpadded>::new_linewrapped(MULTILINE_UNPADDED_BASE64.as_bytes(), 70)
+            Decoder::<Base64Unpadded>::new_wrapped(MULTILINE_UNPADDED_BASE64.as_bytes(), 70)
                 .unwrap()
         })
     }
