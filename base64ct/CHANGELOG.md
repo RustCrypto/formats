@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.1 (2021-12-20)
+### Added
+- `Decoder::new_wrapped` with support for line-wrapped Base64 ([#292], [#293], [#294])
+
+[#292]: https://github.com/RustCrypto/formats/pull/292
+[#293]: https://github.com/RustCrypto/formats/pull/292
+[#294]: https://github.com/RustCrypto/formats/pull/294
+
 ## 1.3.0 (2021-12-02)
 ### Added
 - Stateful `Decoder` type ([#266])
