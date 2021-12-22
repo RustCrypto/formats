@@ -1,3 +1,12 @@
+#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![forbid(unsafe_code, clippy::unwrap_used)]
+#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_root_url = "https://docs.rs/ssh-key/0.1.0"
+)]
 #![doc = include_str!("../README.md")]
 
 //! ## Usage
@@ -18,7 +27,7 @@
 //! assert_eq!(key.comment, "foo@bar.com");
 //!
 //! // Key data
-//! if let Some(ed25519_key) = key.data.ed25519() {
+//! if let Some(ed25519_key) = key.key_data.ed25519() {
 //!     assert_eq!(
 //!         ed25519_key.as_ref(),
 //!         [
@@ -33,22 +42,13 @@
 //! # }
 //! ```
 
-#![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/ssh-key/0.1.0"
-)]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
-
 #[cfg(feature = "alloc")]
 #[macro_use]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+pub mod private;
 pub mod public;
 
 mod algorithm;
@@ -59,8 +59,9 @@ mod error;
 mod mpint;
 
 pub use crate::{
-    algorithm::{Algorithm, EcdsaCurve},
+    algorithm::{Algorithm, CipherAlg, EcdsaCurve, KdfAlg, KdfOptions},
     error::{Error, Result},
+    private::PrivateKey,
     public::PublicKey,
 };
 

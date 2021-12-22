@@ -7,7 +7,7 @@ use crate::{Error, Result};
 use core::str;
 
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
 
 /// Stateful Base64 decoder.
 pub(crate) struct Decoder<'i> {
@@ -18,8 +18,17 @@ impl<'i> Decoder<'i> {
     /// Create a new decoder for a byte slice containing contiguous
     /// (non-newline-delimited) Base64-encoded data.
     pub(crate) fn new(input: &'i [u8]) -> Result<Self> {
-        let inner = base64ct::Decoder::new(input)?;
-        Ok(Self { inner })
+        Ok(Self {
+            inner: base64ct::Decoder::new(input)?,
+        })
+    }
+
+    /// Create a new decoder for a byte slice containing Base64 which
+    /// line wraps at the given line length.
+    pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self> {
+        Ok(Self {
+            inner: base64ct::Decoder::new_wrapped(input, line_width)?,
+        })
     }
 
     /// Decode as much Base64 as is needed to exactly fill `out`.
@@ -100,6 +109,12 @@ impl<'i> Decoder<'i> {
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     pub(crate) fn decode_str<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o str> {
         Ok(str::from_utf8(self.decode_byte_slice(buf)?)?)
+    }
+
+    /// Decodes heap allocated `String`: owned equivalent of [`Decoder::decode_str`].
+    #[cfg(feature = "alloc")]
+    pub(crate) fn decode_string(&mut self) -> Result<String> {
+        String::from_utf8(self.decode_byte_vec()?).map_err(|_| Error::CharacterEncoding)
     }
 
     /// Has all of the input data been decoded?

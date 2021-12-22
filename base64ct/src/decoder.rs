@@ -93,15 +93,15 @@ impl<'i, E: Variant> Decoder<'i, E> {
             return Err(Error::InvalidLength);
         }
 
-        let mut out_off = 0;
+        let mut out_pos = 0;
 
-        while out_off < out.len() {
+        while out_pos < out.len() {
             // If there's data in the block buffer, use it
             if !self.block_buffer.is_empty() {
-                let out_rem = out.len().checked_sub(out_off).ok_or(InvalidLength)?;
+                let out_rem = out.len().checked_sub(out_pos).ok_or(InvalidLength)?;
                 let bytes = self.block_buffer.take(out_rem);
-                out[out_off..][..bytes.len()].copy_from_slice(bytes);
-                out_off = out_off.checked_add(bytes.len()).ok_or(InvalidLength)?;
+                out[out_pos..][..bytes.len()].copy_from_slice(bytes);
+                out_pos = out_pos.checked_add(bytes.len()).ok_or(InvalidLength)?;
             }
 
             // Advance the line reader if necessary
@@ -111,18 +111,18 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
             // Attempt to decode a stride of block-aligned data
             let in_blocks = self.line.len() / 4;
-            let out_rem = out.len().checked_sub(out_off).ok_or(InvalidLength)?;
+            let out_rem = out.len().checked_sub(out_pos).ok_or(InvalidLength)?;
             let out_blocks = out_rem / 3;
             let blocks = cmp::min(in_blocks, out_blocks);
             let in_aligned = self.line.take(blocks * 4);
 
             if !in_aligned.is_empty() {
-                let out_buf = &mut out[out_off..][..(blocks * 3)];
+                let out_buf = &mut out[out_pos..][..(blocks * 3)];
                 let decoded_len = E::Unpadded::decode(in_aligned, out_buf)?.len();
-                out_off = out_off.checked_add(decoded_len).ok_or(InvalidLength)?;
+                out_pos = out_pos.checked_add(decoded_len).ok_or(InvalidLength)?;
             }
 
-            if out_off < out.len() {
+            if out_pos < out.len() {
                 // If we still haven't filled the output slice, we're in a
                 // situation where either the input or output isn't
                 // block-aligned, so fill the internal block buffer

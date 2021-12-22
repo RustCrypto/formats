@@ -36,129 +36,137 @@ const OSSH_RSA_4096_EXAMPLE: &str = include_str!("examples/id_rsa_4096.pub");
 #[cfg(feature = "alloc")]
 #[test]
 fn decode_dsa_openssh() {
-    let key = PublicKey::from_openssh(OSSH_DSA_EXAMPLE).unwrap();
-    assert_eq!(key.data.algorithm(), Algorithm::Dsa);
+    let ossh_key = PublicKey::from_openssh(OSSH_DSA_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Dsa, ossh_key.key_data.algorithm());
 
-    let dsa_key = key.data.dsa().unwrap();
+    let dsa_key = ossh_key.key_data.dsa().unwrap();
     assert_eq!(
-        dsa_key.p.as_bytes(),
         &hex!(
             "00dc3d89250ed9462114cb2c8d4816e3a511aaff1b06b0e01de17c1cb04e581bcab97176471d89fd7ca1817
              e3c48e2ccbafd2170f69e8e5c8b6ab69b9c5f45d95e1d9293e965227eee5b879b1123371c21b1db60f14b5e
              5c05a4782ceb43a32f449647703063621e7a286bec95b16726c18b5e52383d00b297a6b03489b06068a5"
-        )
+        ),
+        dsa_key.p.as_bytes(),
     );
     assert_eq!(
+        &hex!("00891815378597fe42d3fd261fe76df365845bbb87"),
         dsa_key.q.as_bytes(),
-        &hex!("00891815378597fe42d3fd261fe76df365845bbb87")
     );
     assert_eq!(
-        dsa_key.g.as_bytes(),
         &hex!(
             "4739b3908a8415466dc7b156fb98ecb71552a170ba0b3b7aa81bd81391de0a7ae7a1b45002dfeadc9225fbc
              520a713fe4104a74bed53fd5915da736365afd3f09777bbccfbadf7ac2b087b7f4d95fabe47d72a46e95088
              f9cd2a9fbf236b58a6982647f3c00430ad7352d47a25ebbe9477f0c3127da86ad7448644b76de5875c"
-        )
+        ),
+        dsa_key.g.as_bytes(),
     );
     assert_eq!(
-        dsa_key.y.as_bytes(),
         &hex!(
             "6042a6b3fd861344cb21ccccd8719e25aa0be0980e79cbabf4877f5ef071f6039770352eac3d4c368f29daf
              a57b475c78d44989f16577527e598334be6aae4abd750c36af80489d392697c1f32f3cf3c9a8b99bcddb53d
              7a37e1a28fd53d4934131cf41c437c6734d1e04004adcd925b84b3956c30c3a3904eecb31400b0df48"
-        )
+        ),
+        dsa_key.y.as_bytes(),
     );
 
-    assert_eq!(key.comment, "user@example.com");
+    assert_eq!("user@example.com", ossh_key.comment);
 }
 
 #[cfg(feature = "sec1")]
 #[test]
 fn decode_ecdsa_p256_openssh() {
-    let key = PublicKey::from_openssh(OSSH_ECDSA_P256_EXAMPLE).unwrap();
-    assert_eq!(key.data.algorithm(), Algorithm::Ecdsa(EcdsaCurve::NistP256));
-
-    let ecdsa_key = key.data.ecdsa().unwrap();
-    assert_eq!(ecdsa_key.curve(), EcdsaCurve::NistP256);
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P256_EXAMPLE).unwrap();
     assert_eq!(
-        ecdsa_key.as_ref(),
+        Algorithm::Ecdsa(EcdsaCurve::NistP256),
+        ossh_key.key_data.algorithm(),
+    );
+
+    let ecdsa_key = ossh_key.key_data.ecdsa().unwrap();
+    assert_eq!(EcdsaCurve::NistP256, ecdsa_key.curve(),);
+    assert_eq!(
         &hex!(
             "047c1fd8730ce53457be8d924098ec3648830f92aa8a2363ac656fdd4521fa6313e511f1891b4e9e5aaf8e1
              42d06ad15a66a4257f3f051d84e8a0e2f91ba807047"
-        )
+        ),
+        ecdsa_key.as_ref(),
     );
 
     #[cfg(feature = "alloc")]
-    assert_eq!(key.comment, "user@example.com");
+    assert_eq!("user@example.com", ossh_key.comment);
 }
 
 #[cfg(feature = "sec1")]
 #[test]
 fn decode_ecdsa_p384_openssh() {
-    let key = PublicKey::from_openssh(OSSH_ECDSA_P384_EXAMPLE).unwrap();
-    assert_eq!(key.data.algorithm(), Algorithm::Ecdsa(EcdsaCurve::NistP384));
-
-    let ecdsa_key = key.data.ecdsa().unwrap();
-    assert_eq!(ecdsa_key.curve(), EcdsaCurve::NistP384);
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P384_EXAMPLE).unwrap();
     assert_eq!(
-        ecdsa_key.as_ref(),
+        Algorithm::Ecdsa(EcdsaCurve::NistP384),
+        ossh_key.key_data.algorithm(),
+    );
+
+    let ecdsa_key = ossh_key.key_data.ecdsa().unwrap();
+    assert_eq!(EcdsaCurve::NistP384, ecdsa_key.curve(),);
+    assert_eq!(
         &hex!(
             "042e6e82dc5407f104a11117c7c05b1993c3ceb3db25fae68ba169502a4ff9395d9ad36b543e8014ff15d70
              8e21f09f585aa6dfad575b79b943418b86198d9bcd9b07fff9399b15d43d34efaeb2e56b7b33cff880b242b
              3e0b58af96c75841ec41"
-        )
+        ),
+        ecdsa_key.as_ref(),
     );
 
     #[cfg(feature = "alloc")]
-    assert_eq!(key.comment, "user@example.com");
+    assert_eq!("user@example.com", ossh_key.comment);
 }
 
 #[cfg(feature = "sec1")]
 #[test]
 fn decode_ecdsa_p521_openssh() {
-    let key = PublicKey::from_openssh(OSSH_ECDSA_P521_EXAMPLE).unwrap();
-    assert_eq!(key.data.algorithm(), Algorithm::Ecdsa(EcdsaCurve::NistP521));
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P521_EXAMPLE).unwrap();
+    assert_eq!(
+        Algorithm::Ecdsa(EcdsaCurve::NistP521),
+        ossh_key.key_data.algorithm(),
+    );
 
-    let ecdsa_key = key.data.ecdsa().unwrap();
+    let ecdsa_key = ossh_key.key_data.ecdsa().unwrap();
     assert_eq!(ecdsa_key.curve(), EcdsaCurve::NistP521);
     assert_eq!(
-        ecdsa_key.as_ref(),
         &hex!(
             "04016136934f192b23d961fbf44c8184166002cea2c7d18b20ad018d046ef068d3e8250fd4e9f17ca6693a8
              554c3269a6d9f5762a2f9a2cb8797d4b201de421d3dcc580103cb947a858bb7783df863f82951d96f91a792
              5d7e2baad26e47e3f2fa5b07c8272848a4423b750d7ad2b8b692d66ddecaec5385086b1fd1b682ca291c88d
              63762"
-        )
+        ),
+        ecdsa_key.as_ref(),
     );
 
     #[cfg(feature = "alloc")]
-    assert_eq!(key.comment, "user@example.com");
+    assert_eq!("user@example.com", ossh_key.comment);
 }
 
 #[test]
 fn decode_ed25519_openssh() {
-    let key = PublicKey::from_openssh(OSSH_ED25519_EXAMPLE).unwrap();
+    let ossh_key = PublicKey::from_openssh(OSSH_ED25519_EXAMPLE).unwrap();
 
-    assert_eq!(key.data.algorithm(), Algorithm::Ed25519);
+    assert_eq!(Algorithm::Ed25519, ossh_key.key_data.algorithm());
     assert_eq!(
-        key.data.ed25519().unwrap().as_ref(),
-        &hex!("b33eaef37ea2df7caa010defdea34e241f65f1b529a4f43ed14327f5c54aab62")
+        &hex!("b33eaef37ea2df7caa010defdea34e241f65f1b529a4f43ed14327f5c54aab62"),
+        ossh_key.key_data.ed25519().unwrap().as_ref(),
     );
 
     #[cfg(feature = "alloc")]
-    assert_eq!(key.comment, "user@example.com");
+    assert_eq!("user@example.com", ossh_key.comment);
 }
 
 #[cfg(feature = "alloc")]
 #[test]
 fn decode_rsa_3072_openssh() {
-    let key = PublicKey::from_openssh(OSSH_RSA_3072_EXAMPLE).unwrap();
-    assert_eq!(key.data.algorithm(), Algorithm::Rsa);
+    let ossh_key = PublicKey::from_openssh(OSSH_RSA_3072_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Rsa, ossh_key.key_data.algorithm());
 
-    let rsa_key = key.data.rsa().unwrap();
-    assert_eq!(rsa_key.e.as_bytes(), &hex!("010001"));
+    let rsa_key = ossh_key.key_data.rsa().unwrap();
+    assert_eq!(&hex!("010001"), rsa_key.e.as_bytes());
     assert_eq!(
-        rsa_key.n.as_bytes(),
         &hex!(
             "00a68e478c9bc93726436b7f5e9e6f9a46e1b73bec1e8cb7754de2c6a5b6c455f2f012a7259afcf94181d69
              e95d39a349e4d2b482a5372b28943731db75c73ce7bd9eec85010c94bfae56960118922f86a8b3655b357d2
@@ -169,22 +177,22 @@ fn decode_rsa_3072_openssh() {
              8ee183e7e906fee489e8e1e57fce7a1c6df8fbaef39bbd1955dbd5ad1abffbe126f50205cb884af080ff3d7
              0549d3174b85bd7f6624c3753cf235b650d0e4228f32be7b54a590d869fb7786559bb7a4d66f9d3a69c085e
              fdf083a915d47a1d9161a08756b263b06e739d99f2890362abc96ade42cce8f939a40daff9"
-        )
+        ),
+        rsa_key.n.as_bytes(),
     );
 
-    assert_eq!(key.comment, "user@example.com");
+    assert_eq!("user@example.com", ossh_key.comment);
 }
 
 #[cfg(feature = "alloc")]
 #[test]
 fn decode_rsa_4096_openssh() {
-    let key = PublicKey::from_openssh(OSSH_RSA_4096_EXAMPLE).unwrap();
-    assert_eq!(key.data.algorithm(), Algorithm::Rsa);
+    let ossh_key = PublicKey::from_openssh(OSSH_RSA_4096_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Rsa, ossh_key.key_data.algorithm());
 
-    let rsa_key = key.data.rsa().unwrap();
-    assert_eq!(rsa_key.e.as_bytes(), &hex!("010001"));
+    let rsa_key = ossh_key.key_data.rsa().unwrap();
+    assert_eq!(&hex!("010001"), rsa_key.e.as_bytes());
     assert_eq!(
-        rsa_key.n.as_bytes(),
         &hex!(
             "00b45911edc6ec5e7d2261a48c46ab889b1858306271123e6f02dc914cf3c0352492e8a6b7a7925added527
              e547dcebff6d0c19c0bc9153975199f47f4964ed20f5aceed4e82556b228a0c1fbfaa85e6339ba2ff4094d9
@@ -198,8 +206,9 @@ fn decode_rsa_4096_openssh() {
              3c336bf86563ef03a15bc49b0ba6fe73201f64f0413ddb4d0cc5f6cf43389907e1df29e0cc388040e3371d0
              4814140f75cac08079431043222fb91f075d76be55cbe138e3b99a605c561c49dea50e253c8306c4f4f77d9
              96f898db64c5d8a0a15c6efa28b0934bf0b6f2b01950d877230fe4401078420fd6dd3"
-        )
+        ),
+        rsa_key.n.as_bytes(),
     );
 
-    assert_eq!(key.comment, "user@example.com");
+    assert_eq!("user@example.com", ossh_key.comment);
 }
