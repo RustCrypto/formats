@@ -23,11 +23,17 @@ pub enum Error {
     #[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
     Ecdsa(sec1::Error),
 
+    /// Other format encoding errors.
+    FormatEncoding,
+
     /// Invalid length.
     Length,
 
     /// Overflow errors.
     Overflow,
+
+    /// PEM encoding errors.
+    Pem,
 }
 
 impl fmt::Display for Error {
@@ -38,8 +44,10 @@ impl fmt::Display for Error {
             Error::CharacterEncoding => f.write_str("character encoding invalid"),
             #[cfg(feature = "sec1")]
             Error::Ecdsa(err) => write!(f, "ECDSA encoding error: {}", err),
+            Error::FormatEncoding => f.write_str("format encoding error"),
             Error::Length => f.write_str("length invalid"),
             Error::Overflow => f.write_str("internal overflow error"),
+            Error::Pem => f.write_str("PEM encoding error"),
         }
     }
 }
@@ -55,6 +63,12 @@ impl From<base64ct::Error> for Error {
 
 impl From<base64ct::InvalidLengthError> for Error {
     fn from(_: base64ct::InvalidLengthError) -> Error {
+        Error::Length
+    }
+}
+
+impl From<core::array::TryFromSliceError> for Error {
+    fn from(_: core::array::TryFromSliceError) -> Error {
         Error::Length
     }
 }

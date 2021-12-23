@@ -933,11 +933,12 @@ dependencies = [
 
 [[package]]
 name = "ssh-key"
-version = "0.1.0"
+version = "0.2.0-pre"
 dependencies = [
  "base64ct",
  "hex-literal",
  "sec1",
+ "zeroize",
 ]
 
 [[package]]
