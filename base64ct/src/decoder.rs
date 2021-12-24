@@ -1,7 +1,6 @@
 //! Stateful Base64 decoder.
 
 use crate::{
-    encoding::decode_padding,
     variant::Variant,
     Encoding,
     Error::{self, InvalidLength},
@@ -46,7 +45,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// (non-newline-delimited) Base64-encoded data.
     pub fn new(input: &'i [u8]) -> Result<Self, Error> {
         Ok(Self {
-            line: Line::new(Self::unpad_input(input)?),
+            line: Line::new(input),
             line_reader: LineReader::default(),
             block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
@@ -75,7 +74,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
     pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
         Ok(Self {
             line: Line::default(),
-            line_reader: LineReader::new(Self::unpad_input(input)?, line_width)?,
+            line_reader: LineReader::new(input, line_width)?,
             block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
         })
@@ -118,7 +117,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
             if !in_aligned.is_empty() {
                 let out_buf = &mut out[out_pos..][..(blocks * 3)];
-                let decoded_len = E::Unpadded::decode(in_aligned, out_buf)?.len();
+                let decoded_len = self.perform_decode(in_aligned, out_buf)?.len();
                 out_pos = out_pos.checked_add(decoded_len).ok_or(InvalidLength)?;
             }
 
@@ -140,7 +139,9 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
     /// Fill the block buffer with data.
     fn fill_block_buffer(&mut self) -> Result<(), Error> {
-        if self.line.len() < 4 && !self.line_reader.is_empty() {
+        let mut buf = [0u8; BlockBuffer::SIZE];
+
+        let decoded = if self.line.len() < 4 && !self.line_reader.is_empty() {
             // Handle input block which is split across lines
             let mut tmp = [0u8; 4];
 
@@ -158,11 +159,13 @@ impl<'i, E: Variant> Decoder<'i, E> {
                 .checked_add(line_end.len())
                 .ok_or(InvalidLength)?;
 
-            self.block_buffer.fill::<E::Unpadded>(&tmp[..tmp_len])
+            self.perform_decode(&tmp[..tmp_len], &mut buf)
         } else {
             let block = self.line.take(4);
-            self.block_buffer.fill::<E::Unpadded>(block)
-        }
+            self.perform_decode(block, &mut buf)
+        }?;
+
+        self.block_buffer.fill(decoded)
     }
 
     /// Advance the internal buffer to the next line.
@@ -177,22 +180,12 @@ impl<'i, E: Variant> Decoder<'i, E> {
         }
     }
 
-    /// Remove padding from an input buffer.
-    // TODO(tarcieri): instead of this, process the last Base64 block as padded?
-    // This approach may not cover all cases with linewrapped Base64
-    fn unpad_input(input: &[u8]) -> Result<&[u8], Error> {
-        if E::PADDED {
-            // TODO(tarcieri): validate that padding is well-formed with `validate_padding`
-            // ...or switch to processing the last block as padded, leaning on
-            // the existing padding validation code
-            let (unpadded_len, err) = decode_padding(input)?;
-            if err != 0 {
-                return Err(Error::InvalidEncoding);
-            }
-
-            Ok(&input[..unpadded_len])
+    /// Perform Base64 decoding operation.
+    fn perform_decode<'o>(&self, src: &[u8], dst: &'o mut [u8]) -> Result<&'o [u8], Error> {
+        if self.is_finished() {
+            E::decode(src, dst)
         } else {
-            Ok(input)
+            E::Unpadded::decode(src, dst)
         }
     }
 }
@@ -204,7 +197,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
 #[derive(Clone, Default)]
 struct BlockBuffer {
     /// 3 decoded bytes from a 4-byte Base64-encoded input.
-    decoded: [u8; 3],
+    decoded: [u8; Self::SIZE],
 
     /// Length of the buffer.
     length: usize,
@@ -214,12 +207,20 @@ struct BlockBuffer {
 }
 
 impl BlockBuffer {
-    /// Fill the buffer by decoding up to 4 bytes of Base64 input
-    fn fill<E: Variant>(&mut self, base64_input: &[u8]) -> Result<(), Error> {
+    /// Size of the buffer in bytes.
+    const SIZE: usize = 3;
+
+    /// Fill the buffer by decoding up to 3 bytes of decoded Base64 input.
+    fn fill(&mut self, decoded_input: &[u8]) -> Result<(), Error> {
         debug_assert!(self.is_empty());
-        debug_assert!(base64_input.len() <= 4);
-        self.length = E::decode(base64_input, &mut self.decoded)?.len();
+
+        if decoded_input.len() > Self::SIZE {
+            return Err(Error::InvalidLength);
+        }
+
         self.position = 0;
+        self.length = decoded_input.len();
+        self.decoded[..decoded_input.len()].copy_from_slice(decoded_input);
         Ok(())
     }
 
