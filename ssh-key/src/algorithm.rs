@@ -2,7 +2,7 @@
 
 #[cfg(feature = "alloc")]
 pub(crate) mod dsa;
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 pub(crate) mod ecdsa;
 pub(crate) mod ed25519;
 #[cfg(feature = "alloc")]
@@ -193,7 +193,7 @@ pub enum EcdsaCurve {
 
 impl EcdsaCurve {
     /// Maximum size of a curve identifier known to this crate in bytes.
-    #[cfg(feature = "sec1")]
+    #[cfg(feature = "ecdsa")]
     const MAX_SIZE: usize = 8;
 
     /// Decode elliptic curve from the given string identifier.
@@ -222,7 +222,7 @@ impl EcdsaCurve {
     }
 
     /// Decode ECDSA curve type using the supplied Base64 decoder.
-    #[cfg(feature = "sec1")]
+    #[cfg(feature = "ecdsa")]
     pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)

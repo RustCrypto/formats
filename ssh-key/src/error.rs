@@ -19,8 +19,8 @@ pub enum Error {
     CharacterEncoding,
 
     /// ECDSA key encoding errors.
-    #[cfg(feature = "sec1")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
+    #[cfg(feature = "ecdsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
     Ecdsa(sec1::Error),
 
     /// Other format encoding errors.
@@ -42,7 +42,7 @@ impl fmt::Display for Error {
             Error::Algorithm => f.write_str("unknown or unsupported algorithm"),
             Error::Base64(err) => write!(f, "Base64 encoding error: {}", err),
             Error::CharacterEncoding => f.write_str("character encoding invalid"),
-            #[cfg(feature = "sec1")]
+            #[cfg(feature = "ecdsa")]
             Error::Ecdsa(err) => write!(f, "ECDSA encoding error: {}", err),
             Error::FormatEncoding => f.write_str("format encoding error"),
             Error::Length => f.write_str("length invalid"),
@@ -85,8 +85,8 @@ impl From<core::str::Utf8Error> for Error {
     }
 }
 
-#[cfg(feature = "sec1")]
-#[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 impl From<sec1::Error> for Error {
     fn from(err: sec1::Error) -> Error {
         Error::Ecdsa(err)

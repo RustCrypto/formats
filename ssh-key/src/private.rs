@@ -6,6 +6,8 @@
 
 mod openssh;
 
+#[cfg(feature = "ecdsa")]
+pub use crate::algorithm::ecdsa::{EcdsaKeypair, EcdsaPrivateKey};
 pub use crate::algorithm::ed25519::{Ed25519Keypair, Ed25519PrivateKey};
 
 use crate::{base64, public, Algorithm, CipherAlg, Error, KdfAlg, KdfOptions, Result};
@@ -26,7 +28,7 @@ pub struct PrivateKey {
     pub kdf_options: KdfOptions,
 
     /// Key data.
-    pub key_data: KeyData,
+    pub key_data: KeypairData,
 
     /// Comment on the key (e.g. email address).
     #[cfg(feature = "alloc")]
@@ -87,7 +89,7 @@ impl PrivateKey {
             return Err(Error::FormatEncoding);
         }
 
-        let key_data = KeyData::decode(&mut decoder)?;
+        let key_data = KeypairData::decode(&mut decoder)?;
 
         #[cfg(feature = "alloc")]
         let comment = decoder.decode_string()?;
@@ -112,16 +114,33 @@ impl PrivateKey {
 /// Private key data.
 #[derive(Clone, Debug)]
 #[non_exhaustive]
-pub enum KeyData {
-    /// Ed25519 private key data.
+pub enum KeypairData {
+    /// ECDSA keypair.
+    #[cfg(feature = "ecdsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+    Ecdsa(EcdsaKeypair),
+
+    /// Ed25519 keypair.
     Ed25519(Ed25519Keypair),
 }
 
-impl KeyData {
+impl KeypairData {
     /// Get the [`Algorithm`] for this private key.
     pub fn algorithm(&self) -> Algorithm {
         match self {
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(key) => key.algorithm(),
             Self::Ed25519(_) => Algorithm::Ed25519,
+        }
+    }
+
+    /// Get ECDSA private key if this key is the correct type.
+    #[cfg(feature = "ecdsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+    pub fn ecdsa(&self) -> Option<&EcdsaKeypair> {
+        match self {
+            Self::Ecdsa(keypair) => Some(keypair),
+            _ => None,
         }
     }
 
@@ -142,6 +161,11 @@ impl KeyData {
     /// Decode data using the provided Base64 decoder.
     fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         match Algorithm::decode(decoder)? {
+            #[cfg(feature = "ecdsa")]
+            Algorithm::Ecdsa(curve) => match EcdsaKeypair::decode(decoder)? {
+                keypair if keypair.curve() == curve => Ok(Self::Ecdsa(keypair)),
+                _ => Err(Error::Algorithm),
+            },
             Algorithm::Ed25519 => Ed25519Keypair::decode(decoder).map(Self::Ed25519),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),

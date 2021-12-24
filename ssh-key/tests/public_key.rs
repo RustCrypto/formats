@@ -3,7 +3,7 @@
 use hex_literal::hex;
 use ssh_key::{Algorithm, PublicKey};
 
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 use ssh_key::EcdsaCurve;
 
 /// DSA OpenSSH-formatted public key
@@ -11,15 +11,15 @@ use ssh_key::EcdsaCurve;
 const OSSH_DSA_EXAMPLE: &str = include_str!("examples/id_dsa_1024.pub");
 
 /// ECDSA/P-256 OpenSSH-formatted public key
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 const OSSH_ECDSA_P256_EXAMPLE: &str = include_str!("examples/id_ecdsa_p256.pub");
 
 /// ECDSA/P-384 OpenSSH-formatted public key
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 const OSSH_ECDSA_P384_EXAMPLE: &str = include_str!("examples/id_ecdsa_p384.pub");
 
 /// ECDSA/P-521 OpenSSH-formatted public key
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 const OSSH_ECDSA_P521_EXAMPLE: &str = include_str!("examples/id_ecdsa_p521.pub");
 
 /// Ed25519 OpenSSH-formatted public key
@@ -72,7 +72,7 @@ fn decode_dsa_openssh() {
     assert_eq!("user@example.com", ossh_key.comment);
 }
 
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 #[test]
 fn decode_ecdsa_p256_openssh() {
     let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P256_EXAMPLE).unwrap();
@@ -82,7 +82,7 @@ fn decode_ecdsa_p256_openssh() {
     );
 
     let ecdsa_key = ossh_key.key_data.ecdsa().unwrap();
-    assert_eq!(EcdsaCurve::NistP256, ecdsa_key.curve(),);
+    assert_eq!(EcdsaCurve::NistP256, ecdsa_key.curve());
     assert_eq!(
         &hex!(
             "047c1fd8730ce53457be8d924098ec3648830f92aa8a2363ac656fdd4521fa6313e511f1891b4e9e5aaf8e1
@@ -95,7 +95,7 @@ fn decode_ecdsa_p256_openssh() {
     assert_eq!("user@example.com", ossh_key.comment);
 }
 
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 #[test]
 fn decode_ecdsa_p384_openssh() {
     let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P384_EXAMPLE).unwrap();
@@ -105,7 +105,7 @@ fn decode_ecdsa_p384_openssh() {
     );
 
     let ecdsa_key = ossh_key.key_data.ecdsa().unwrap();
-    assert_eq!(EcdsaCurve::NistP384, ecdsa_key.curve(),);
+    assert_eq!(EcdsaCurve::NistP384, ecdsa_key.curve());
     assert_eq!(
         &hex!(
             "042e6e82dc5407f104a11117c7c05b1993c3ceb3db25fae68ba169502a4ff9395d9ad36b543e8014ff15d70
@@ -119,7 +119,7 @@ fn decode_ecdsa_p384_openssh() {
     assert_eq!("user@example.com", ossh_key.comment);
 }
 
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 #[test]
 fn decode_ecdsa_p521_openssh() {
     let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P521_EXAMPLE).unwrap();

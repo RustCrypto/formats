@@ -68,6 +68,6 @@ pub use crate::{
 #[cfg(feature = "alloc")]
 pub use crate::mpint::MPInt;
 
-#[cfg(feature = "sec1")]
-#[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 pub use sec1;
