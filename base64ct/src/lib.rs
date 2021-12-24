@@ -1,3 +1,11 @@
+#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![warn(missing_docs, rust_2018_idioms)]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_root_url = "https://docs.rs/base64ct/1.3.1"
+)]
 #![doc = include_str!("../README.md")]
 
 //! # Usage
@@ -54,15 +62,6 @@
 //!
 //! [RFC 4648, section 4]: https://tools.ietf.org/html/rfc4648#section-4
 //! [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf
-
-#![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/base64ct/1.3.1"
-)]
-#![warn(missing_docs, rust_2018_idioms)]
 
 #[cfg(feature = "alloc")]
 #[macro_use]
