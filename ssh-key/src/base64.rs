@@ -40,6 +40,14 @@ impl<'i> Decoder<'i> {
         Ok(self.inner.decode(out)?)
     }
 
+    /// Decodes a single byte.
+    #[cfg(feature = "ecdsa")]
+    pub(crate) fn decode_u8(&mut self) -> Result<u8> {
+        let mut buf = [0];
+        self.decode_into(&mut buf)?;
+        Ok(buf[0])
+    }
+
     /// Decodes a `uint32` as described in [RFC4251 § 5]:
     ///
     /// > Represents a 32-bit unsigned integer.  Stored as four bytes in the

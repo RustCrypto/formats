@@ -7,7 +7,7 @@ mod openssh;
 pub use crate::algorithm::ed25519::Ed25519PublicKey;
 #[cfg(feature = "alloc")]
 pub use crate::algorithm::{dsa::DsaPublicKey, rsa::RsaPublicKey};
-#[cfg(feature = "sec1")]
+#[cfg(feature = "ecdsa")]
 pub use crate::{algorithm::ecdsa::EcdsaPublicKey, EcdsaCurve};
 
 use crate::{base64, Algorithm, Error, Result};
@@ -72,8 +72,8 @@ pub enum KeyData {
     Dsa(DsaPublicKey),
 
     /// Elliptic Curve Digital Signature Algorithm (ECDSA) public key data.
-    #[cfg(feature = "sec1")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
+    #[cfg(feature = "ecdsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
     Ecdsa(EcdsaPublicKey),
 
     /// Ed25519 public key data.
@@ -91,7 +91,7 @@ impl KeyData {
         match self {
             #[cfg(feature = "alloc")]
             Self::Dsa(_) => Algorithm::Dsa,
-            #[cfg(feature = "sec1")]
+            #[cfg(feature = "ecdsa")]
             Self::Ecdsa(key) => key.algorithm(),
             Self::Ed25519(_) => Algorithm::Ed25519,
             #[cfg(feature = "alloc")]
@@ -110,8 +110,8 @@ impl KeyData {
     }
 
     /// Get ECDSA public key if this key is the correct type.
-    #[cfg(feature = "sec1")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
+    #[cfg(feature = "ecdsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
     pub fn ecdsa(&self) -> Option<&EcdsaPublicKey> {
         match self {
             Self::Ecdsa(key) => Some(key),
@@ -146,8 +146,8 @@ impl KeyData {
     }
 
     /// Is this key an ECDSA key?
-    #[cfg(feature = "sec1")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
+    #[cfg(feature = "ecdsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
     pub fn is_ecdsa(&self) -> bool {
         matches!(self, Self::Ecdsa(_))
     }
@@ -169,7 +169,7 @@ impl KeyData {
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaPublicKey::decode(decoder).map(Self::Dsa),
-            #[cfg(feature = "sec1")]
+            #[cfg(feature = "ecdsa")]
             Algorithm::Ecdsa(curve) => match EcdsaPublicKey::decode(decoder)? {
                 key if key.curve() == curve => Ok(Self::Ecdsa(key)),
                 _ => Err(Error::Algorithm),

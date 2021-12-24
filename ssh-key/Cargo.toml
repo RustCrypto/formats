@@ -26,8 +26,9 @@ sec1 = { version = "0.2", optional = true, default-features = false, path = "../
 hex-literal = "0.3"
 
 [features]
-default = ["alloc", "sec1"]
+default = ["alloc", "ecdsa"]
 alloc = []
+ecdsa = ["sec1"]
 std = ["alloc", "base64ct/std"]
 
 [package.metadata.docs.rs]

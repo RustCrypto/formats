@@ -58,17 +58,28 @@ impl fmt::UpperHex for Ed25519PublicKey {
 
 /// Ed25519 private key.
 // TODO(tarcieri): use `ed25519::PrivateKey`? (doesn't exist yet)
-#[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
-pub struct Ed25519PrivateKey(pub [u8; Self::BYTE_SIZE]);
+#[derive(Clone)]
+pub struct Ed25519PrivateKey([u8; Self::BYTE_SIZE]);
 
 impl Ed25519PrivateKey {
     /// Size of an Ed25519 private key in bytes.
     pub const BYTE_SIZE: usize = 32;
+
+    /// Convert to the inner byte array.
+    pub fn into_bytes(self) -> [u8; Self::BYTE_SIZE] {
+        self.0
+    }
 }
 
 impl AsRef<[u8; Self::BYTE_SIZE]> for Ed25519PrivateKey {
     fn as_ref(&self) -> &[u8; Self::BYTE_SIZE] {
         &self.0
+    }
+}
+
+impl fmt::Debug for Ed25519PrivateKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Ed25519PrivateKey").finish_non_exhaustive()
     }
 }
 
