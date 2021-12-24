@@ -194,7 +194,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
 ///
 /// This handles a partially decoded block of data, i.e. data which has been
 /// decoded but not read.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 struct BlockBuffer {
     /// 3 decoded bytes from a 4-byte Base64-encoded input.
     decoded: [u8; Self::SIZE],
@@ -248,7 +248,7 @@ impl BlockBuffer {
 }
 
 /// A single line of linewrapped data, providing a read buffer.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Line<'i> {
     /// Remaining data in the line
     remaining: &'i [u8],
@@ -324,7 +324,7 @@ impl<'i> Iterator for LineReader<'i> {
     fn next(&mut self) -> Option<Result<Line<'i>, Error>> {
         if let Some(line_width) = self.line_width {
             let rest = match self.remaining.get(line_width..) {
-                None => {
+                None | Some([]) => {
                     if self.remaining.is_empty() {
                         return None;
                     } else {
@@ -336,7 +336,10 @@ impl<'i> Iterator for LineReader<'i> {
                 Some([CHAR_CR, CHAR_LF, rest @ ..]) => rest,
                 Some([CHAR_CR, rest @ ..]) => rest,
                 Some([CHAR_LF, rest @ ..]) => rest,
-                _ => return Some(Err(Error::InvalidEncoding)),
+                _ => {
+                    // Expected a leading newline
+                    return Some(Err(Error::InvalidEncoding));
+                }
             };
 
             let line = Line::new(&self.remaining[..line_width]);
