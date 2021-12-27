@@ -10,7 +10,10 @@ mod openssh;
 pub use crate::algorithm::ecdsa::{EcdsaKeypair, EcdsaPrivateKey};
 pub use crate::algorithm::ed25519::{Ed25519Keypair, Ed25519PrivateKey};
 
-use crate::{base64, public, Algorithm, CipherAlg, Error, KdfAlg, KdfOptions, Result};
+use crate::{
+    base64::{self, Decode},
+    public, Algorithm, CipherAlg, Error, KdfAlg, KdfOptions, Result,
+};
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -157,8 +160,9 @@ impl KeypairData {
     pub fn is_ed25519(&self) -> bool {
         matches!(self, Self::Ed25519(_))
     }
+}
 
-    /// Decode data using the provided Base64 decoder.
+impl Decode for KeypairData {
     fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "ecdsa")]

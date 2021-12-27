@@ -1,6 +1,9 @@
 //! Digital Signature Algorithm (DSA).
 
-use crate::{base64, MPInt, Result};
+use crate::{
+    base64::{self, Decode},
+    MPInt, Result,
+};
 
 /// Digital Signature Algorithm (DSA) public key.
 ///
@@ -23,9 +26,9 @@ pub struct DsaPublicKey {
     pub y: MPInt,
 }
 
-impl DsaPublicKey {
+impl Decode for DsaPublicKey {
     /// Decode DSA public key using the provided Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let p = MPInt::decode(decoder)?;
         let q = MPInt::decode(decoder)?;
         let g = MPInt::decode(decoder)?;

@@ -1,6 +1,9 @@
 //! Multiple precision integer
 
-use crate::{base64, Error, Result};
+use crate::{
+    base64::{self, Decode},
+    Error, Result,
+};
 use alloc::vec::Vec;
 use core::fmt;
 
@@ -51,16 +54,17 @@ impl MPInt {
     pub fn as_bytes(&self) -> &[u8] {
         self.inner.as_ref()
     }
-
-    /// Decode multiple-precision integer using the supplied Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
-        decoder.decode_byte_vec()?.try_into()
-    }
 }
 
 impl AsRef<[u8]> for MPInt {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
+    }
+}
+
+impl Decode for MPInt {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+        decoder.decode_byte_vec()?.try_into()
     }
 }
 

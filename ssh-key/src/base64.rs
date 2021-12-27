@@ -9,6 +9,12 @@ use core::str;
 #[cfg(feature = "alloc")]
 use alloc::{string::String, vec::Vec};
 
+/// Decoder trait.
+pub(crate) trait Decode: Sized {
+    /// Attempt to decode a value of this type using the provided [`Decoder`].
+    fn decode(decoder: &mut Decoder<'_>) -> Result<Self>;
+}
+
 /// Stateful Base64 decoder.
 pub(crate) struct Decoder<'i> {
     inner: base64ct::Decoder<'i, base64ct::Base64>,
