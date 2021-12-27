@@ -10,7 +10,10 @@ pub use crate::algorithm::{dsa::DsaPublicKey, rsa::RsaPublicKey};
 #[cfg(feature = "ecdsa")]
 pub use crate::{algorithm::ecdsa::EcdsaPublicKey, EcdsaCurve};
 
-use crate::{base64, Algorithm, Error, Result};
+use crate::{
+    base64::{self, Decode},
+    Algorithm, Error, Result,
+};
 
 #[cfg(feature = "alloc")]
 use alloc::{borrow::ToOwned, string::String};
@@ -163,9 +166,10 @@ impl KeyData {
     pub fn is_rsa(&self) -> bool {
         matches!(self, Self::Rsa(_))
     }
+}
 
-    /// Decode data using the provided Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for KeyData {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaPublicKey::decode(decoder).map(Self::Dsa),

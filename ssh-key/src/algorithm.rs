@@ -8,7 +8,10 @@ pub(crate) mod ed25519;
 #[cfg(feature = "alloc")]
 pub(crate) mod rsa;
 
-use crate::{base64, Error, Result};
+use crate::{
+    base64::{self, Decode},
+    Error, Result,
+};
 use core::{fmt, str};
 
 /// ECDSA with SHA-256 + NIST P-256
@@ -105,9 +108,10 @@ impl Algorithm {
     pub fn is_rsa(self) -> bool {
         self == Algorithm::Rsa
     }
+}
 
-    /// Decode algorithm using the supplied Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for Algorithm {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -156,9 +160,10 @@ impl CipherAlg {
             CipherAlg::None => "none",
         }
     }
+}
 
-    /// Decode cipher algorithm using the supplied Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for CipherAlg {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -193,7 +198,6 @@ pub enum EcdsaCurve {
 
 impl EcdsaCurve {
     /// Maximum size of a curve identifier known to this crate in bytes.
-    #[cfg(feature = "ecdsa")]
     const MAX_SIZE: usize = 8;
 
     /// Decode elliptic curve from the given string identifier.
@@ -220,10 +224,10 @@ impl EcdsaCurve {
             EcdsaCurve::NistP521 => "nistp521",
         }
     }
+}
 
-    /// Decode ECDSA curve type using the supplied Base64 decoder.
-    #[cfg(feature = "ecdsa")]
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for EcdsaCurve {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -272,9 +276,10 @@ impl KdfAlg {
             KdfAlg::None => "none",
         }
     }
+}
 
-    /// Decode KDF algorithm using the supplied Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for KdfAlg {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -310,9 +315,10 @@ impl KdfOptions {
             Err(Error::Algorithm)
         }
     }
+}
 
-    /// Decode KDF options using the supplied Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for KdfOptions {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; 0];
         Self::new(decoder.decode_str(&mut buf)?)
     }

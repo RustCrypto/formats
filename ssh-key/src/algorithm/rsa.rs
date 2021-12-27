@@ -1,6 +1,9 @@
 //! Rivest–Shamir–Adleman (RSA).
 
-use crate::{base64, MPInt, Result};
+use crate::{
+    base64::{self, Decode},
+    MPInt, Result,
+};
 
 /// RSA public key.
 ///
@@ -15,9 +18,8 @@ pub struct RsaPublicKey {
     pub n: MPInt,
 }
 
-impl RsaPublicKey {
-    /// Decode RSA public key using the provided Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for RsaPublicKey {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let e = MPInt::decode(decoder)?;
         let n = MPInt::decode(decoder)?;
         Ok(Self { e, n })

@@ -1,6 +1,9 @@
 //! Ed25519: Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
-use crate::{base64, Error, Result};
+use crate::{
+    base64::{self, Decode},
+    Error, Result,
+};
 use core::fmt;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -12,9 +15,16 @@ pub struct Ed25519PublicKey(pub [u8; Self::BYTE_SIZE]);
 impl Ed25519PublicKey {
     /// Size of an Ed25519 public key in bytes.
     pub const BYTE_SIZE: usize = 32;
+}
 
-    /// Decode Ed25519 public key using the provided Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl AsRef<[u8; Self::BYTE_SIZE]> for Ed25519PublicKey {
+    fn as_ref(&self) -> &[u8; Self::BYTE_SIZE] {
+        &self.0
+    }
+}
+
+impl Decode for Ed25519PublicKey {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         // Validate length prefix
         if decoder.decode_usize()? != Self::BYTE_SIZE {
             return Err(Error::Length);
@@ -23,12 +33,6 @@ impl Ed25519PublicKey {
         let mut bytes = [0u8; Self::BYTE_SIZE];
         decoder.decode_into(&mut bytes)?;
         Ok(Self(bytes))
-    }
-}
-
-impl AsRef<[u8; Self::BYTE_SIZE]> for Ed25519PublicKey {
-    fn as_ref(&self) -> &[u8; Self::BYTE_SIZE] {
-        &self.0
     }
 }
 
@@ -120,9 +124,10 @@ pub struct Ed25519Keypair {
 impl Ed25519Keypair {
     /// Size of an Ed25519 keypair in bytes.
     pub const BYTE_SIZE: usize = 64;
+}
 
-    /// Decode Ed25519 private key using the provided Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for Ed25519Keypair {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         // Decode private key
         let public = Ed25519PublicKey::decode(decoder)?;
 
