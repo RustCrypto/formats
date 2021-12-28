@@ -142,7 +142,7 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
         self.bytes
     }
 
-    /// Decode Ecdsa private key using the provided Base64 decoder.
+    /// Decode ECDSA private key using the provided Base64 decoder.
     fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let len = decoder.decode_usize()?;
 

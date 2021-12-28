@@ -21,6 +21,9 @@ pub(crate) struct Decoder<'i> {
 }
 
 impl<'i> Decoder<'i> {
+    /// Maximum size of a `usize` this library will accept.
+    const MAX_SIZE: usize = 0xFFFFF;
+
     /// Create a new decoder for a byte slice containing contiguous
     /// (non-newline-delimited) Base64-encoded data.
     pub(crate) fn new(input: &'i [u8]) -> Result<Self> {
@@ -57,8 +60,8 @@ impl<'i> Decoder<'i> {
     /// Decodes a `uint32` as described in [RFC4251 § 5]:
     ///
     /// > Represents a 32-bit unsigned integer.  Stored as four bytes in the
-    /// > order of decreasing significance (network byte order).  For
-    /// > example: the value 699921578 (0x29b7f4aa) is stored as 29 b7 f4 aa.
+    /// > order of decreasing significance (network byte order).
+    /// > For example: the value 699921578 (0x29b7f4aa) is stored as 29 b7 f4 aa.
     ///
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     pub(crate) fn decode_u32(&mut self) -> Result<u32> {
@@ -72,7 +75,13 @@ impl<'i> Decoder<'i> {
     /// Uses [`Decoder::decode_u32`] and then converts to a `usize`, handling
     /// potential overflow if `usize` is smaller than `u32`.
     pub(crate) fn decode_usize(&mut self) -> Result<usize> {
-        Ok(self.decode_u32()?.try_into()?)
+        let result = usize::try_from(self.decode_u32()?)?;
+
+        if result <= Self::MAX_SIZE {
+            Ok(result)
+        } else {
+            Err(Error::Length)
+        }
     }
 
     /// Decodes `[u8]` from `byte[n]` as described in [RFC4251 § 5]:

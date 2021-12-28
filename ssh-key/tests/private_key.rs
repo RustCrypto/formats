@@ -6,6 +6,10 @@ use ssh_key::{Algorithm, PrivateKey};
 #[cfg(feature = "ecdsa")]
 use ssh_key::EcdsaCurve;
 
+/// DSA OpenSSH-formatted public key
+#[cfg(feature = "alloc")]
+const OSSH_DSA_EXAMPLE: &str = include_str!("examples/id_dsa_1024");
+
 /// Ed25519 OpenSSH-formatted private key
 const OSSH_ED25519_EXAMPLE: &str = include_str!("examples/id_ed25519");
 
@@ -20,6 +24,49 @@ const OSSH_ECDSA_P384_EXAMPLE: &str = include_str!("examples/id_ecdsa_p384");
 /// ECDSA/P-521 OpenSSH-formatted public key
 #[cfg(feature = "ecdsa")]
 const OSSH_ECDSA_P521_EXAMPLE: &str = include_str!("examples/id_ecdsa_p521");
+
+#[cfg(feature = "alloc")]
+#[test]
+fn decode_dsa_openssh() {
+    let ossh_key = PrivateKey::from_openssh(OSSH_DSA_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Dsa, ossh_key.key_data.algorithm());
+
+    let dsa_keypair = ossh_key.key_data.dsa().unwrap();
+    assert_eq!(
+        &hex!(
+            "00dc3d89250ed9462114cb2c8d4816e3a511aaff1b06b0e01de17c1cb04e581bcab97176471d89fd7ca1817
+             e3c48e2ccbafd2170f69e8e5c8b6ab69b9c5f45d95e1d9293e965227eee5b879b1123371c21b1db60f14b5e
+             5c05a4782ceb43a32f449647703063621e7a286bec95b16726c18b5e52383d00b297a6b03489b06068a5"
+        ),
+        dsa_keypair.public.p.as_bytes(),
+    );
+    assert_eq!(
+        &hex!("00891815378597fe42d3fd261fe76df365845bbb87"),
+        dsa_keypair.public.q.as_bytes(),
+    );
+    assert_eq!(
+        &hex!(
+            "4739b3908a8415466dc7b156fb98ecb71552a170ba0b3b7aa81bd81391de0a7ae7a1b45002dfeadc9225fbc
+             520a713fe4104a74bed53fd5915da736365afd3f09777bbccfbadf7ac2b087b7f4d95fabe47d72a46e95088
+             f9cd2a9fbf236b58a6982647f3c00430ad7352d47a25ebbe9477f0c3127da86ad7448644b76de5875c"
+        ),
+        dsa_keypair.public.g.as_bytes(),
+    );
+    assert_eq!(
+        &hex!(
+            "6042a6b3fd861344cb21ccccd8719e25aa0be0980e79cbabf4877f5ef071f6039770352eac3d4c368f29daf
+             a57b475c78d44989f16577527e598334be6aae4abd750c36af80489d392697c1f32f3cf3c9a8b99bcddb53d
+             7a37e1a28fd53d4934131cf41c437c6734d1e04004adcd925b84b3956c30c3a3904eecb31400b0df48"
+        ),
+        dsa_keypair.public.y.as_bytes(),
+    );
+    assert_eq!(
+        &hex!("0c377ac449e770d89a3557743cbd050396114b62"),
+        dsa_keypair.private.as_bytes()
+    );
+
+    assert_eq!("user@example.com", ossh_key.comment);
+}
 
 #[cfg(feature = "ecdsa")]
 #[test]

@@ -6,6 +6,8 @@
 
 mod openssh;
 
+#[cfg(feature = "alloc")]
+pub use crate::algorithm::dsa::{DsaKeypair, DsaPrivateKey};
 #[cfg(feature = "ecdsa")]
 pub use crate::algorithm::ecdsa::{EcdsaKeypair, EcdsaPrivateKey};
 pub use crate::algorithm::ed25519::{Ed25519Keypair, Ed25519PrivateKey};
@@ -118,6 +120,11 @@ impl PrivateKey {
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum KeypairData {
+    /// Digital Signature Algorithm (DSA) public key data.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    Dsa(DsaKeypair),
+
     /// ECDSA keypair.
     #[cfg(feature = "ecdsa")]
     #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
@@ -131,9 +138,21 @@ impl KeypairData {
     /// Get the [`Algorithm`] for this private key.
     pub fn algorithm(&self) -> Algorithm {
         match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(_) => Algorithm::Dsa,
             #[cfg(feature = "ecdsa")]
             Self::Ecdsa(key) => key.algorithm(),
             Self::Ed25519(_) => Algorithm::Ed25519,
+        }
+    }
+
+    /// Get DSA keypair if this key is the correct type.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn dsa(&self) -> Option<&DsaKeypair> {
+        match self {
+            Self::Dsa(key) => Some(key),
+            _ => None,
         }
     }
 
@@ -156,6 +175,20 @@ impl KeypairData {
         }
     }
 
+    /// Is this key a DSA key?
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn is_dsa(&self) -> bool {
+        matches!(self, Self::Dsa(_))
+    }
+
+    /// Is this key an ECDSA key?
+    #[cfg(feature = "ecdsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+    pub fn is_ecdsa(&self) -> bool {
+        matches!(self, Self::Ecdsa(_))
+    }
+
     /// Is this key an Ed25519 key?
     pub fn is_ed25519(&self) -> bool {
         matches!(self, Self::Ed25519(_))
@@ -165,6 +198,8 @@ impl KeypairData {
 impl Decode for KeypairData {
     fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         match Algorithm::decode(decoder)? {
+            #[cfg(feature = "alloc")]
+            Algorithm::Dsa => DsaKeypair::decode(decoder).map(Self::Dsa),
             #[cfg(feature = "ecdsa")]
             Algorithm::Ecdsa(curve) => match EcdsaKeypair::decode(decoder)? {
                 keypair if keypair.curve() == curve => Ok(Self::Ecdsa(keypair)),

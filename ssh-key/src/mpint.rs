@@ -6,6 +6,7 @@ use crate::{
 };
 use alloc::vec::Vec;
 use core::fmt;
+use zeroize::Zeroize;
 
 /// Multiple precision integer, a.k.a. "mpint".
 ///
@@ -74,6 +75,12 @@ impl TryFrom<Vec<u8>> for MPInt {
     fn try_from(bytes: Vec<u8>) -> Result<Self> {
         // TODO(tarcieri): check for unnecessary leading zero bytes
         Ok(Self { inner: bytes })
+    }
+}
+
+impl Zeroize for MPInt {
+    fn zeroize(&mut self) {
+        self.inner.zeroize();
     }
 }
 
