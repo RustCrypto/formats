@@ -4,13 +4,18 @@
 //!
 //! <https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.key>
 
+#[cfg(feature = "alloc")]
+mod dsa;
+#[cfg(feature = "ecdsa")]
+mod ecdsa;
+mod ed25519;
 mod openssh;
 
 #[cfg(feature = "alloc")]
-pub use crate::algorithm::dsa::{DsaKeypair, DsaPrivateKey};
+pub use self::dsa::{DsaKeypair, DsaPrivateKey};
 #[cfg(feature = "ecdsa")]
-pub use crate::algorithm::ecdsa::{EcdsaKeypair, EcdsaPrivateKey};
-pub use crate::algorithm::ed25519::{Ed25519Keypair, Ed25519PrivateKey};
+pub use self::ecdsa::{EcdsaKeypair, EcdsaPrivateKey};
+pub use self::ed25519::{Ed25519Keypair, Ed25519PrivateKey};
 
 use crate::{
     base64::{self, Decode},

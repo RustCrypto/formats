@@ -1,13 +1,5 @@
 //! Algorithm support.
 
-#[cfg(feature = "alloc")]
-pub(crate) mod dsa;
-#[cfg(feature = "ecdsa")]
-pub(crate) mod ecdsa;
-pub(crate) mod ed25519;
-#[cfg(feature = "alloc")]
-pub(crate) mod rsa;
-
 use crate::{
     base64::{self, Decode},
     Error, Result,

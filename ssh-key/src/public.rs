@@ -2,13 +2,22 @@
 //!
 //! Support for decoding SSH public keys from the OpenSSH file format.
 
-mod openssh;
-
-pub use crate::algorithm::ed25519::Ed25519PublicKey;
 #[cfg(feature = "alloc")]
-pub use crate::algorithm::{dsa::DsaPublicKey, rsa::RsaPublicKey};
+mod dsa;
 #[cfg(feature = "ecdsa")]
-pub use crate::{algorithm::ecdsa::EcdsaPublicKey, EcdsaCurve};
+mod ecdsa;
+mod ed25519;
+mod openssh;
+#[cfg(feature = "alloc")]
+mod rsa;
+
+#[cfg(feature = "alloc")]
+pub use self::dsa::DsaPublicKey;
+#[cfg(feature = "ecdsa")]
+pub use self::ecdsa::EcdsaPublicKey;
+pub use self::ed25519::Ed25519PublicKey;
+#[cfg(feature = "alloc")]
+pub use self::rsa::RsaPublicKey;
 
 use crate::{
     base64::{self, Decode},
