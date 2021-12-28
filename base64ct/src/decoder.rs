@@ -122,10 +122,17 @@ impl<'i, E: Variant> Decoder<'i, E> {
             }
 
             if out_pos < out.len() {
-                // If we still haven't filled the output slice, we're in a
-                // situation where either the input or output isn't
-                // block-aligned, so fill the internal block buffer
-                self.fill_block_buffer()?;
+                if self.is_finished() {
+                    // If we're out of input then we've been requested to decode
+                    // more data than is actually available.
+                    return Err(InvalidLength);
+                } else {
+                    // If we still have data available but haven't completely
+                    // filled the output slice, we're in a situation where
+                    // either the input or output isn't block-aligned, so fill
+                    // the internal block buffer.
+                    self.fill_block_buffer()?;
+                }
             }
         }
 
