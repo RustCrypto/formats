@@ -102,7 +102,7 @@ impl KeyData {
         }
     }
 
-    /// Get ECDSA public key if this key is the correct type.
+    /// Get DSA public key if this key is the correct type.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn dsa(&self) -> Option<&DsaPublicKey> {
