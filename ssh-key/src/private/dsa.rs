@@ -1,4 +1,4 @@
-//! Digital Signature Algorithm (DSA).
+//! Digital Signature Algorithm (DSA) private keys.
 
 use crate::{
     base64::{self, Decode},
@@ -9,6 +9,9 @@ use core::fmt;
 use zeroize::Zeroize;
 
 /// Digital Signature Algorithm (DSA) private key.
+///
+/// Uniformly random integer `x`, such that `0 < x < q`, i.e. `x` is in the
+/// range `[1, q–1]`.
 ///
 /// Described in [FIPS 186-4 § 4.1](https://csrc.nist.gov/publications/detail/fips/186/4/final).
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
@@ -50,7 +53,7 @@ impl Drop for DsaPrivateKey {
     }
 }
 
-/// Dsa keypairs.
+/// Digital Signature Algorithm (DSA) private/public keypair.
 #[derive(Clone)]
 pub struct DsaKeypair {
     /// Public key.

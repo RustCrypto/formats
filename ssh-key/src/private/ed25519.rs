@@ -1,4 +1,6 @@
-//! Ed25519: Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
+//! Ed25519 private keys.
+//!
+//! Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
 use crate::{
     base64::{self, Decode},
@@ -59,7 +61,7 @@ impl Drop for Ed25519PrivateKey {
     }
 }
 
-/// Ed25519 keypairs.
+/// Ed25519 private/public keypair.
 #[derive(Clone)]
 pub struct Ed25519Keypair {
     /// Public key.
@@ -72,6 +74,14 @@ pub struct Ed25519Keypair {
 impl Ed25519Keypair {
     /// Size of an Ed25519 keypair in bytes.
     pub const BYTE_SIZE: usize = 64;
+
+    /// Serialize an Ed25519 keypair as bytes.
+    pub fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+        let mut result = [0u8; Self::BYTE_SIZE];
+        result[..(Self::BYTE_SIZE / 2)].copy_from_slice(self.private.as_ref());
+        result[(Self::BYTE_SIZE / 2)..].copy_from_slice(self.public.as_ref());
+        result
+    }
 }
 
 impl Decode for Ed25519Keypair {

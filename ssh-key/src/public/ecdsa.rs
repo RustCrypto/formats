@@ -1,4 +1,4 @@
-//! Elliptic Curve Digital Signature Algorithm (ECDSA).
+//! Elliptic Curve Digital Signature Algorithm (ECDSA) public keys.
 
 use crate::{
     base64::{self, Decode},
