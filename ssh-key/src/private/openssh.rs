@@ -33,17 +33,16 @@ impl<'a> Encapsulation<'a> {
     /// Parse the given PEM-encapsulated data.
     pub(super) fn decode(input: &'a [u8]) -> Result<Self> {
         // Parse pre-encapsulation boundary (including label)
-        let input = input
+        let input = strip_leading_eol(input)
+            .unwrap_or(input)
             .strip_prefix(PRE_ENCAPSULATION_BOUNDARY)
             .ok_or(Error::Pem)
             .and_then(strip_leading_eol)?;
 
         // Parse post-encapsulation boundary and optional trailing newline
         let base64_data = strip_trailing_eol(input)
-            .unwrap_or(input)
             .strip_suffix(POST_ENCAPSULATION_BOUNDARY)
-            .ok_or(Error::Pem)
-            .and_then(strip_trailing_eol)?;
+            .ok_or(Error::Pem)?;
 
         Ok(Self { base64_data })
     }
@@ -62,15 +61,14 @@ pub(crate) fn strip_leading_eol(bytes: &[u8]) -> Result<&[u8]> {
     }
 }
 
-/// Strip a newline (`eol`) from the end of the provided byte slice.
+/// Strip a newline (`eol`) from the end of the provided byte slice if present.
 ///
-/// The newline is considered mandatory and a decoding error will occur if it
-/// is not present.
-pub(crate) fn strip_trailing_eol(bytes: &[u8]) -> Result<&[u8]> {
+/// Returns the original slice if there is no newline.
+pub(crate) fn strip_trailing_eol(bytes: &[u8]) -> &[u8] {
     match bytes {
-        [head @ .., CHAR_CR, CHAR_LF] => Ok(head),
-        [head @ .., CHAR_LF] => Ok(head),
-        [head @ .., CHAR_CR] => Ok(head),
-        _ => Err(Error::Pem),
+        [head @ .., CHAR_CR, CHAR_LF] => head,
+        [head @ .., CHAR_LF] => head,
+        [head @ .., CHAR_CR] => head,
+        _ => bytes,
     }
 }
