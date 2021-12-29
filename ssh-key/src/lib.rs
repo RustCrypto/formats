@@ -5,7 +5,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/ssh-key/0.1.0"
+    html_root_url = "https://docs.rs/ssh-key/0.2.0"
 )]
 #![doc = include_str!("../README.md")]
 
