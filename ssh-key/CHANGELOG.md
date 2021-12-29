@@ -4,5 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.0 (2021-12-29)
+### Added
+- OpenSSH private key decoder ([#297], [#301], [#307], [#311])
+- `MPInt::as_positive_bytes` ([#312])
+
+### Changed
+- `MPInt` validates the correct number of leading zeroes are used ([#312])
+
+[#297]: https://github.com/RustCrypto/formats/pull/297
+[#301]: https://github.com/RustCrypto/formats/pull/301
+[#307]: https://github.com/RustCrypto/formats/pull/307
+[#311]: https://github.com/RustCrypto/formats/pull/311
+[#312]: https://github.com/RustCrypto/formats/pull/312
+
 ## 0.1.0 (2021-12-02)
 - Initial release
