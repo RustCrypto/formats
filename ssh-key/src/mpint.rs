@@ -38,7 +38,7 @@ use zeroize::Zeroize;
 /// | -deadbeef       | `00 00 00 05 ff 21 52 41 11`
 // TODO(tarcieri): support for heapless platforms, constant time comparisons
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct MPInt {
     /// Inner big endian-serialized integer value
     inner: Vec<u8>,
@@ -47,13 +47,33 @@ pub struct MPInt {
 impl MPInt {
     /// Create a new multiple precision integer from the given
     /// big endian-encoded byte slice.
+    ///
+    /// Note that this method expects a leading zero on positive integers whose
+    /// MSB is set, but does *NOT* expect a 4-byte length prefix.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        Vec::from(bytes).try_into()
+        bytes.try_into()
     }
 
     /// Get the big integer data encoded as big endian bytes.
+    ///
+    /// This slice will contain a leading zero if the value is positive but the
+    /// MSB is also set. Use [`MPInt::as_positive_bytes`] to ensure the number
+    /// is positive and strip the leading zero byte if it exists.
     pub fn as_bytes(&self) -> &[u8] {
-        self.inner.as_ref()
+        &self.inner
+    }
+
+    /// Get the bytes of a positive integer.
+    ///
+    /// # Returns
+    /// - `Some(bytes)` if the number is positive. The leading zero byte will be stripped.
+    /// - `None` if the value is negative
+    pub fn as_positive_bytes(&self) -> Option<&[u8]> {
+        match self.as_bytes() {
+            [0x00, rest @ ..] => Some(rest),
+            [byte, ..] if *byte < 0x80 => Some(self.as_bytes()),
+            _ => None,
+        }
     }
 }
 
@@ -69,18 +89,37 @@ impl Decode for MPInt {
     }
 }
 
+impl TryFrom<&[u8]> for MPInt {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Vec::from(bytes).try_into()
+    }
+}
+
 impl TryFrom<Vec<u8>> for MPInt {
     type Error = Error;
 
     fn try_from(bytes: Vec<u8>) -> Result<Self> {
-        // TODO(tarcieri): check for unnecessary leading zero bytes
-        Ok(Self { inner: bytes })
+        match bytes.as_slice() {
+            // Unnecessary leading 0
+            [0x00] => Err(Error::FormatEncoding),
+            // Unnecessary leading 0
+            [0x00, n, ..] if *n < 0x80 => Err(Error::FormatEncoding),
+            _ => Ok(Self { inner: bytes }),
+        }
     }
 }
 
 impl Zeroize for MPInt {
     fn zeroize(&mut self) {
         self.inner.zeroize();
+    }
+}
+
+impl fmt::Debug for MPInt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "MPInt({:X})", self)
     }
 }
 
@@ -115,28 +154,41 @@ mod tests {
 
     #[test]
     fn decode_0() {
-        assert!(MPInt::from_bytes(&hex!("00 00 00 00")).is_ok());
+        let n = MPInt::from_bytes(b"").unwrap();
+        assert_eq!(b"", n.as_bytes())
+    }
+
+    #[test]
+    fn reject_extra_leading_zeroes() {
+        assert!(MPInt::from_bytes(&hex!("00")).is_err());
+        assert!(MPInt::from_bytes(&hex!("00 00")).is_err());
+        assert!(MPInt::from_bytes(&hex!("00 01")).is_err());
     }
 
     #[test]
     fn decode_9a378f9b2e332a7() {
-        assert!(MPInt::from_bytes(&hex!("00 00 00 08 09 a3 78 f9 b2 e3 32 a7")).is_ok());
+        assert!(MPInt::from_bytes(&hex!("09 a3 78 f9 b2 e3 32 a7")).is_ok());
     }
 
     #[test]
     fn decode_80() {
-        assert!(MPInt::from_bytes(&hex!("00 00 00 02 00 80")).is_ok());
+        let n = MPInt::from_bytes(&hex!("00 80")).unwrap();
+
+        // Leading zero stripped
+        assert_eq!(&hex!("80"), n.as_positive_bytes().unwrap())
     }
 
     // TODO(tarcieri): drop support for negative numbers?
     #[test]
     fn decode_neg_1234() {
-        assert!(MPInt::from_bytes(&hex!("00 00 00 02 ed cc")).is_ok());
+        let n = MPInt::from_bytes(&hex!("ed cc")).unwrap();
+        assert!(n.as_positive_bytes().is_none());
     }
 
     // TODO(tarcieri): drop support for negative numbers?
     #[test]
     fn decode_neg_deadbeef() {
-        assert!(MPInt::from_bytes(&hex!("00 00 00 05 ff 21 52 41 11")).is_ok());
+        let n = MPInt::from_bytes(&hex!("ff 21 52 41 11")).unwrap();
+        assert!(n.as_positive_bytes().is_none());
     }
 }
