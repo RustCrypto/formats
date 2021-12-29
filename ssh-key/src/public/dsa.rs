@@ -1,4 +1,4 @@
-//! Digital Signature Algorithm (DSA).
+//! Digital Signature Algorithm (DSA) public keys.
 
 use crate::{
     base64::{self, Decode},

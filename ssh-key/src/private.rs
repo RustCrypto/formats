@@ -10,12 +10,17 @@ mod dsa;
 mod ecdsa;
 mod ed25519;
 mod openssh;
-
 #[cfg(feature = "alloc")]
-pub use self::dsa::{DsaKeypair, DsaPrivateKey};
+mod rsa;
+
 #[cfg(feature = "ecdsa")]
 pub use self::ecdsa::{EcdsaKeypair, EcdsaPrivateKey};
 pub use self::ed25519::{Ed25519Keypair, Ed25519PrivateKey};
+#[cfg(feature = "alloc")]
+pub use self::{
+    dsa::{DsaKeypair, DsaPrivateKey},
+    rsa::RsaKeypair,
+};
 
 use crate::{
     base64::{self, Decode},
@@ -125,7 +130,7 @@ impl PrivateKey {
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum KeypairData {
-    /// Digital Signature Algorithm (DSA) public key data.
+    /// Digital Signature Algorithm (DSA) keypair.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     Dsa(DsaKeypair),
@@ -137,6 +142,11 @@ pub enum KeypairData {
 
     /// Ed25519 keypair.
     Ed25519(Ed25519Keypair),
+
+    /// RSA keypair.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    Rsa(RsaKeypair),
 }
 
 impl KeypairData {
@@ -148,6 +158,8 @@ impl KeypairData {
             #[cfg(feature = "ecdsa")]
             Self::Ecdsa(key) => key.algorithm(),
             Self::Ed25519(_) => Algorithm::Ed25519,
+            #[cfg(feature = "alloc")]
+            Self::Rsa(_) => Algorithm::Rsa,
         }
     }
 
@@ -180,6 +192,16 @@ impl KeypairData {
         }
     }
 
+    /// Get RSA keypair if this key is the correct type.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn rsa(&self) -> Option<&RsaKeypair> {
+        match self {
+            Self::Rsa(key) => Some(key),
+            _ => None,
+        }
+    }
+
     /// Is this key a DSA key?
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
@@ -198,6 +220,13 @@ impl KeypairData {
     pub fn is_ed25519(&self) -> bool {
         matches!(self, Self::Ed25519(_))
     }
+
+    /// Is this key an RSA key?
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn is_rsa(&self) -> bool {
+        matches!(self, Self::Rsa(_))
+    }
 }
 
 impl Decode for KeypairData {
@@ -211,6 +240,8 @@ impl Decode for KeypairData {
                 _ => Err(Error::Algorithm),
             },
             Algorithm::Ed25519 => Ed25519Keypair::decode(decoder).map(Self::Ed25519),
+            #[cfg(feature = "alloc")]
+            Algorithm::Rsa => RsaKeypair::decode(decoder).map(Self::Rsa),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
         }

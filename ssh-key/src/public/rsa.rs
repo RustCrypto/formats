@@ -1,4 +1,4 @@
-//! Rivest–Shamir–Adleman (RSA).
+//! Rivest–Shamir–Adleman (RSA) public keys.
 
 use crate::{
     base64::{self, Decode},
@@ -11,10 +11,10 @@ use crate::{
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct RsaPublicKey {
-    /// Public exponent
+    /// RSA public exponent.
     pub e: MPInt,
 
-    /// Modulus
+    /// RSA modulus.
     pub n: MPInt,
 }
 

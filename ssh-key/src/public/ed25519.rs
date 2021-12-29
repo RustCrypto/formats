@@ -1,4 +1,6 @@
-//! Ed25519: Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
+//! Ed25519 public keys.
+//!
+//! Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
 use crate::{
     base64::{self, Decode},

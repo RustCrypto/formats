@@ -25,6 +25,14 @@ const OSSH_ECDSA_P384_EXAMPLE: &str = include_str!("examples/id_ecdsa_p384");
 #[cfg(feature = "ecdsa")]
 const OSSH_ECDSA_P521_EXAMPLE: &str = include_str!("examples/id_ecdsa_p521");
 
+/// RSA (3072-bit) OpenSSH-formatted public key
+#[cfg(feature = "alloc")]
+const OSSH_RSA_3072_EXAMPLE: &str = include_str!("examples/id_rsa_3072");
+
+// /// RSA (4096-bit) OpenSSH-formatted public key
+// #[cfg(feature = "alloc")]
+// const OSSH_RSA_4096_EXAMPLE: &str = include_str!("examples/id_rsa_4096");
+
 #[cfg(feature = "alloc")]
 #[test]
 fn decode_dsa_openssh() {
@@ -64,7 +72,6 @@ fn decode_dsa_openssh() {
         &hex!("0c377ac449e770d89a3557743cbd050396114b62"),
         dsa_keypair.private.as_bytes()
     );
-
     assert_eq!("user@example.com", ossh_key.comment);
 }
 
@@ -175,4 +182,73 @@ fn decode_ed25519_openssh() {
 
     #[cfg(feature = "alloc")]
     assert_eq!(ossh_key.comment, "user@example.com");
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn decode_rsa_3072_openssh() {
+    let ossh_key = PrivateKey::from_openssh(OSSH_RSA_3072_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Rsa, ossh_key.key_data.algorithm());
+
+    let rsa_keypair = ossh_key.key_data.rsa().unwrap();
+    assert_eq!(&hex!("010001"), rsa_keypair.public.e.as_bytes());
+    assert_eq!(
+        &hex!(
+            "00a68e478c9bc93726436b7f5e9e6f9a46e1b73bec1e8cb7754de2c6a5b6c455f2f012a7259afcf94181d69
+             e95d39a349e4d2b482a5372b28943731db75c73ce7bd9eec85010c94bfae56960118922f86a8b3655b357d2
+             4e7a679cd8a7d9bf6eae66f7f9a56fe3d090d0632218a682960d8aad93c01898780ead2dbefd70fb4703471
+             7e412e4fdae685292ec891e2423f7fe43df2f54329ab0a5d7561e582e42e86ebaee0c1e9eaf603d7ce70850
+             5d0ee090912e1fc3735eb5804ddf42b6133107a76e9a59cdfc6b65f43c6302cfbca8e7aa6f97457fa96d3b5
+             a26e8f41204d2cd42be119c684b0f02370899a71ae3c1e71331543cc3fb2b4268780011ae4ea934c0ff0770
+             8ee183e7e906fee489e8e1e57fce7a1c6df8fbaef39bbd1955dbd5ad1abffbe126f50205cb884af080ff3d7
+             0549d3174b85bd7f6624c3753cf235b650d0e4228f32be7b54a590d869fb7786559bb7a4d66f9d3a69c085e
+             fdf083a915d47a1d9161a08756b263b06e739d99f2890362abc96ade42cce8f939a40daff9"
+        ),
+        rsa_keypair.public.n.as_bytes(),
+    );
+    assert_eq!(
+        &hex!(
+            "6b630b10c6950ac0d9f16273103626c392dec07cf2098a73d09ee9b388ceb817e5e030f2d7264a538932669
+             775925460c8a2a269dfd9f0f0fd932852c4024adca1dc0a3d4d456c7ebd119f064f6443c4f633373865e44c
+             0331f0f7e3e94a3b43a952331d0eb2551439b7e11101b2eaaa9a8265e41237a418da61c765c345d03875cb1
+             a9b70177c2ef9268fe9ac8c62c08fa9152a7fe00ccade72a3acf6f004e5b617424a8027922dbc175f228626
+             29e4727198ca940b3bc24c9268e3ab5f5e5965b8387e1470679b3ea680965f81593cb141310d4c41569e25b
+             376a2dc4ed92f9149b75e970e8224730946cc20f351f8115b1bbfcbb38f6bd06c620472b76d641d35802ade
+             f15220ab9b2a57e35918fe27e138119cca56a98ccf3c0fc683a19f2721a8766ecdd9c57677662656f3d3e05
+             325f3fb37326623dbbec63b3d984830b2dd27bebb6bd2ed5345dfff18df1806adebceda9845804968930681
+             ac3e523138c5216cb135997e3e143a7816acc3d8741eacec7e15f53da0f0810691708d9d"
+        ),
+        rsa_keypair.private.d.as_bytes()
+    );
+    assert_eq!(
+        &hex!(
+            "54405aa663ae9e080035a71002f4c351d7d002c35200725e6dc0ff6d901a304b103a2ea016507996d319358
+             b5bea4feb4098f530528f12b98c50c7ddfc85fc4af9257baf9aa7235cdf4677349b77e52a40a5e2f44122d1
+             8ce40941914e99169c48b708898d29869656607b7e2eb63541e0bbd568e4f774bec3137d02a591c8c77b2e1
+             88dd6f72eef5cff1927cde573a4ca0d43c2b6c6a95721445122e1cf6aa5f05b65cb9c86124f9f79fa29f05e
+             3f06f3b83edca9941f571650e0fb468aae4c"
+        ),
+        rsa_keypair.private.iqmp.as_bytes()
+    );
+    assert_eq!(
+        &hex!(
+            "00d11e7ae248640d3b20293691886544cdfe0779a9aab56c8f9626bf1e6648bfd988bdb0ac7d11a73e34056
+             336d4ad3900ff7184ee404b84baeb11a2a302f982d94eefb757030ec6d77d9115eaef80ab5749a0f5b590b2
+             99ffde94f9930dedbab2af333095b08a504b9b30f1112dce51f37ed00d043343d420d2e2fb88bd7f881b7c8
+             990e48b93fd1d284fcc8c1c07fbefc04d02925b2f159a9a9f567073e1c94fdc6e472f48963be16c5c545385
+             6ad2bf7916e42c36e75a5018910d8dad038d73"
+        ),
+        rsa_keypair.private.p.as_bytes()
+    );
+    assert_eq!(
+        &hex!(
+            "00cbe50e7ecdf5e2c86e76ca94be8b0c05b09041d2bcddeeb4672e7120eacc8380e5d6b77c85583c508f8ee
+             8d557cabcb6dfae8c72385f0f69345ebc15a5dfec949c0770d02d7945dd3592562da7388662e053c5454d26
+             90de2a63cc555e1a010e2da0ae307d1c11f852a9c7568e02f93d49b2a8f927b79943b2920cad321aa208410
+             9d136d085c1d05c39f4c36cf89fdc3c66a755e63f446e16302b13599400f0a83321a2e6b9153df02f03de31
+             8ea09039282853f2011e0905d1157667caf1e3"
+        ),
+        rsa_keypair.private.q.as_bytes()
+    );
+    assert_eq!("user@example.com", ossh_key.comment);
 }

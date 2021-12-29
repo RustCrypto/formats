@@ -11,13 +11,11 @@ mod openssh;
 #[cfg(feature = "alloc")]
 mod rsa;
 
-#[cfg(feature = "alloc")]
-pub use self::dsa::DsaPublicKey;
 #[cfg(feature = "ecdsa")]
 pub use self::ecdsa::EcdsaPublicKey;
 pub use self::ed25519::Ed25519PublicKey;
 #[cfg(feature = "alloc")]
-pub use self::rsa::RsaPublicKey;
+pub use self::{dsa::DsaPublicKey, rsa::RsaPublicKey};
 
 use crate::{
     base64::{self, Decode},

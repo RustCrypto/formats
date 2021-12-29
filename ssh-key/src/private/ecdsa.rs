@@ -1,4 +1,4 @@
-//! Elliptic Curve Digital Signature Algorithm (ECDSA).
+//! Elliptic Curve Digital Signature Algorithm (ECDSA) private keys.
 
 use crate::{
     base64::{self, Decode},
@@ -9,7 +9,7 @@ use core::fmt;
 use sec1::consts::{U32, U48, U66};
 use zeroize::Zeroize;
 
-/// ECDSA private key.
+/// Elliptic Curve Digital Signature Algorithm (ECDSA) private key.
 #[derive(Clone)]
 pub struct EcdsaPrivateKey<const SIZE: usize> {
     /// Byte array containing serialized big endian private scalar.
@@ -76,7 +76,7 @@ impl<const SIZE: usize> Drop for EcdsaPrivateKey<SIZE> {
     }
 }
 
-/// ECDSA keypairs.
+/// Elliptic Curve Digital Signature Algorithm (ECDSA) private/public keypair.
 #[derive(Clone, Debug)]
 pub enum EcdsaKeypair {
     /// NIST P-256 ECDSA keypair.
