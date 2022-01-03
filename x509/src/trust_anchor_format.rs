@@ -14,8 +14,8 @@ use spki::SubjectPublicKeyInfo;
 ///       keyId     KeyIdentifier,
 ///       taTitle   TrustAnchorTitle OPTIONAL,
 ///       certPath  CertPathControls OPTIONAL,
-///       exts      [1] EXPLICIT Extensions   OPTIONAL,
-///       taTitleLangTag   [2] UTF8String OPTIONAL }
+///       exts      \[1\] EXPLICIT Extensions   OPTIONAL,
+///       taTitleLangTag   \[2\] UTF8String OPTIONAL }
 ///
 /// TrustAnchorInfoVersion ::= INTEGER { v1(1) }
 ///
@@ -37,10 +37,10 @@ pub struct TrustAnchorInfo<'a> {
     /// certPath  CertPathControls OPTIONAL,
     pub cert_path: Option<CertPathControls<'a>>,
 
-    /// exts      [1] EXPLICIT Extensions   OPTIONAL,
+    /// exts      \[1\] EXPLICIT Extensions   OPTIONAL,
     pub extensions: Option<Extensions<'a>>,
 
-    /// taTitleLangTag   [2] UTF8String OPTIONAL }
+    /// taTitleLangTag   \[2\] UTF8String OPTIONAL }
     pub ta_title_lang_tag: Option<Utf8String<'a>>,
 }
 // impl<'a> ::der::Decodable<'a> for TrustAnchorInfo<'a> {
@@ -133,29 +133,29 @@ impl<'a> ::core::fmt::Debug for TrustAnchorInfo<'a> {
 
 /// CertPathControls ::= SEQUENCE {
 ///  taName           Name,
-///  certificate      [0] Certificate OPTIONAL,
-///  policySet        [1] CertificatePolicies OPTIONAL,
-///  policyFlags      [2] CertPolicyFlags OPTIONAL,
-///  nameConstr       [3] NameConstraints OPTIONAL,
-///  pathLenConstraint[4] INTEGER (0..MAX) OPTIONAL}
+///  certificate      \[0\] Certificate OPTIONAL,
+///  policySet        \[1\] CertificatePolicies OPTIONAL,
+///  policyFlags      \[2\] CertPolicyFlags OPTIONAL,
+///  nameConstr       \[3\] NameConstraints OPTIONAL,
+///  pathLenConstraint\[4\] INTEGER (0..MAX) OPTIONAL}
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CertPathControls<'a> {
     /// taName               Name,
     pub ta_name: Name<'a>,
 
-    /// certificate      [0] Certificate OPTIONAL,
+    /// certificate      \[0\] Certificate OPTIONAL,
     pub certificate: Option<Certificate<'a>>,
 
-    /// policySet        [1] CertificatePolicies OPTIONAL,
+    /// policySet        \[1\] CertificatePolicies OPTIONAL,
     pub policy_set: Option<CertificatePolicies<'a>>,
 
-    /// policyFlags      [2] CertPolicyFlags OPTIONAL,
+    /// policyFlags      \[2\] CertPolicyFlags OPTIONAL,
     pub policy_flags: Option<CertPolicyFlags<'a>>,
 
-    /// nameConstr       [3] NameConstraints OPTIONAL,
+    /// nameConstr       \[3\] NameConstraints OPTIONAL,
     pub name_constr: Option<NameConstraints<'a>>,
 
-    /// pathLenConstraint[4] INTEGER (0..MAX) OPTIONAL}
+    /// pathLenConstraint\[4\] INTEGER (0..MAX) OPTIONAL}
     pub path_len_constraint: Option<u32>,
 }
 impl<'a> ::der::Decodable<'a> for CertPathControls<'a> {
@@ -244,16 +244,16 @@ pub type CertPolicyFlags<'a> = BitString<'a>;
 
 /// TrustAnchorChoice ::= CHOICE {
 ///   certificate  Certificate,
-///   tbsCert      [1] EXPLICIT TBSCertificate,
-///   taInfo       [2] EXPLICIT TrustAnchorInfo }
+///   tbsCert      \[1\] EXPLICIT TBSCertificate,
+///   taInfo       \[2\] EXPLICIT TrustAnchorInfo }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TrustAnchorChoice<'a> {
     ///   certificate  Certificate,
     Certificate(Certificate<'a>),
     // Not supporting TBSCertificate option
-    //   tbsCert      [1] EXPLICIT TBSCertificate,
+    //   tbsCert      \[1\] EXPLICIT TBSCertificate,
     //TbsCertificate(TBSCertificate<'a>),
-    ///   taInfo       [2] EXPLICIT TrustAnchorInfo }
+    ///   taInfo       \[2\] EXPLICIT TrustAnchorInfo }
     TaInfo(TrustAnchorInfo<'a>),
 }
 

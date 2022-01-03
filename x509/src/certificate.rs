@@ -31,7 +31,7 @@ pub const X509_CERT_VERSION: u8 = 2;
 ///
 /// ```text
 ///   TBSCertificate  ::=  SEQUENCE  {
-///       version         [0]  Version DEFAULT v1,
+///       version         \[0\]  Version DEFAULT v1,
 ///       serialNumber         CertificateSerialNumber,
 ///       signature            AlgorithmIdentifier{SIGNATURE-ALGORITHM, {SignatureAlgorithms}},
 ///       issuer               Name,
@@ -40,18 +40,18 @@ pub const X509_CERT_VERSION: u8 = 2;
 ///       subjectPublicKeyInfo SubjectPublicKeyInfo,
 ///       ... ,
 ///       [[2:               -- If present, version MUST be v2
-///       issuerUniqueID  [1]  IMPLICIT UniqueIdentifier OPTIONAL,
-///       subjectUniqueID [2]  IMPLICIT UniqueIdentifier OPTIONAL
+///       issuerUniqueID  \[1\]  IMPLICIT UniqueIdentifier OPTIONAL,
+///       subjectUniqueID \[2\]  IMPLICIT UniqueIdentifier OPTIONAL
 ///       ]],
 ///       [[3:               -- If present, version MUST be v3 --
-///       extensions      [3]  Extensions{{CertExtensions}} OPTIONAL
+///       extensions      \[3\]  Extensions{{CertExtensions}} OPTIONAL
 ///       ]], ... }
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
 #[derive(Clone, Eq, PartialEq)]
 pub struct TBSCertificate<'a> {
-    /// version         [0]  Version DEFAULT v1,
+    /// version         \[0\]  Version DEFAULT v1,
     //#[asn1(context_specific = "0", default = "default_zero_u8")]
     pub version: u8,
     /// serialNumber         CertificateSerialNumber,
@@ -66,13 +66,13 @@ pub struct TBSCertificate<'a> {
     pub subject: Name<'a>,
     /// subjectPublicKeyInfo SubjectPublicKeyInfo,
     pub subject_public_key_info: SubjectPublicKeyInfo<'a>,
-    /// issuerUniqueID  [1]  IMPLICIT UniqueIdentifier OPTIONAL,
+    /// issuerUniqueID  \[1\]  IMPLICIT UniqueIdentifier OPTIONAL,
     //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub issuer_unique_id: Option<BitString<'a>>,
-    /// subjectUniqueID [2]  IMPLICIT UniqueIdentifier OPTIONAL
+    /// subjectUniqueID \[2\]  IMPLICIT UniqueIdentifier OPTIONAL
     //#[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
     pub subject_unique_id: Option<BitString<'a>>,
-    /// extensions      [3]  Extensions{{CertExtensions}} OPTIONAL
+    /// extensions      \[3\]  Extensions{{CertExtensions}} OPTIONAL
     //#[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
     pub extensions: Option<Extensions<'a>>,
 }

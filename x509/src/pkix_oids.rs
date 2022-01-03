@@ -74,7 +74,7 @@ pub const PKIX_DOMAINCOMPONENT: ObjectIdentifier =
 /// OID for emailAddress attribute: 1.2.840.113549.1.9.1
 pub const PKIX_EMAILADDRESS: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.9.1");
 
-/// OID for anyPolicy extension: 2.5.29.32.0
+/// OID for anyPolicy value: 2.5.29.32.0
 pub const PKIX_CE_ANYPOLICY: ObjectIdentifier = ObjectIdentifier::new("2.5.29.32.0");
 
 /// OID for extKeyUsage extension: 2.5.29.37. See [`ExtendedKeyUsage`](type.ExtendedKeyUsage.html).
