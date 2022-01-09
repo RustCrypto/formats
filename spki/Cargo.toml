@@ -28,7 +28,7 @@ hex-literal = "0.3"
 alloc = ["base64ct/alloc", "der/alloc"]
 fingerprint = ["sha2"]
 pem = ["alloc", "der/pem"]
-std = ["der/std"]
+std = ["der/std", "alloc"]
 
 [package.metadata.docs.rs]
 all-features = true
