@@ -73,6 +73,7 @@ fn decode_and_fingerprint_spki() {
 
 #[test]
 #[cfg(feature = "pem")]
+#[cfg(feature = "fingerprint")]
 fn decode_ed25519_pem() {
     let doc: PublicKeyDocument = ED25519_PEM_EXAMPLE.parse().unwrap();
     assert_eq!(doc.as_ref(), ED25519_DER_EXAMPLE);
@@ -84,6 +85,7 @@ fn decode_ed25519_pem() {
 
 #[test]
 #[cfg(feature = "alloc")]
+#[cfg(feature = "fingerprint")]
 fn encode_ed25519_der() {
     let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_vec().unwrap();
@@ -92,6 +94,7 @@ fn encode_ed25519_der() {
 
 #[test]
 #[cfg(feature = "pem")]
+#[cfg(feature = "fingerprint")]
 fn encode_ed25519_pem() {
     let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
     let pk_encoded = PublicKeyDocument::try_from(pk)
