@@ -47,7 +47,7 @@
 //!
 //! # Implementation
 //!
-//! Implemented using bitwise arithmetic alone without any lookup tables or
+//! Implemented using integer arithmetic alone without any lookup tables or
 //! data-dependent branches, thereby providing portable "best effort"
 //! constant-time operation.
 //!
@@ -59,9 +59,6 @@
 //!
 //! Copyright (c) 2014 Steve "Sc00bz" Thomas (steve at tobtu dot com).
 //! Derived code is dual licensed MIT + Apache 2 (with permission from Sc00bz).
-//!
-//! [RFC 4648, section 4]: https://tools.ietf.org/html/rfc4648#section-4
-//! [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf
 
 #[cfg(feature = "alloc")]
 #[macro_use]
