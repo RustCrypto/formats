@@ -3,7 +3,7 @@
 use core::fmt;
 
 const INVALID_ENCODING_MSG: &str = "invalid Base64 encoding";
-const INVALID_LENGTH_MSG: &str = "insufficient output buffer length";
+const INVALID_LENGTH_MSG: &str = "invalid Base64 length";
 
 /// Insufficient output buffer length.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
