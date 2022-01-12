@@ -82,8 +82,6 @@ pub fn decoded_len(bytes: &[u8]) -> Result<usize, Error> {
 }
 
 /// Get the length of Base16 (hex) produced by encoding the given bytes.
-///
-/// WARNING: this function will return `0` for lengths greater than `usize::MAX/2`!
 #[inline(always)]
 pub fn encoded_len(bytes: &[u8]) -> usize {
     bytes.len() * 2
