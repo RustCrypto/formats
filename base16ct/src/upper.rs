@@ -1,6 +1,6 @@
 use crate::{decode_inner, encoded_len, Error};
 #[cfg(feature = "alloc")]
-use crate::{String, Vec};
+use crate::{decoded_len, String, Vec};
 
 /// Decode an upper Base16 (hex) string into the provided destination buffer.
 pub fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error> {
@@ -45,7 +45,7 @@ pub fn encode_str<'a>(src: &[u8], dst: &'a mut [u8]) -> Result<&'a str, Error> {
 pub fn encode_string(input: &[u8]) -> String {
     let elen = encoded_len(input);
     let mut dst = vec![0u8; elen];
-    let res = encode(input, &mut dst).expect("encoding error");
+    let res = encode(input, &mut dst).expect("dst length is correct");
 
     debug_assert_eq!(elen, res.len());
     unsafe { crate::String::from_utf8_unchecked(dst) }

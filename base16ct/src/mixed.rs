@@ -1,25 +1,10 @@
+use crate::{decode_inner, Error};
 #[cfg(feature = "alloc")]
-use crate::Vec;
-use crate::{decoded_len, Error};
+use crate::{decoded_len, Vec};
 
 /// Decode a mixed Base16 (hex) string into the provided destination buffer.
 pub fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error> {
-    let src = src.as_ref();
-    let dst = dst
-        .get_mut(..decoded_len(src)?)
-        .ok_or(Error::InvalidLength)?;
-
-    let mut err: u16 = 0;
-    for (src, dst) in src.chunks_exact(2).zip(dst.iter_mut()) {
-        let byte = (decode_nibble(src[0]) << 4) | decode_nibble(src[1]);
-        err |= byte >> 8;
-        *dst = byte as u8;
-    }
-
-    match err {
-        0 => Ok(dst),
-        _ => Err(Error::InvalidEncoding),
-    }
+    decode_inner(src.as_ref(), dst, decode_nibble)
 }
 
 /// Decode a mixed Base16 (hex) string into a byte vector.

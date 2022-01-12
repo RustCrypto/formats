@@ -1,25 +1,10 @@
-use crate::{decoded_len, encoded_len, Error};
+use crate::{decode_inner, encoded_len, Error};
 #[cfg(feature = "alloc")]
-use crate::{String, Vec};
+use crate::{decoded_len, String, Vec};
 
 /// Decode a lower Base16 (hex) string into the provided destination buffer.
 pub fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error> {
-    let src = src.as_ref();
-    let dst = dst
-        .get_mut(..decoded_len(src)?)
-        .ok_or(Error::InvalidLength)?;
-
-    let mut err: u16 = 0;
-    for (src, dst) in src.chunks_exact(2).zip(dst.iter_mut()) {
-        let byte = (decode_nibble(src[0]) << 4) | decode_nibble(src[1]);
-        err |= byte >> 8;
-        *dst = byte as u8;
-    }
-
-    match err {
-        0 => Ok(dst),
-        _ => Err(Error::InvalidEncoding),
-    }
+    decode_inner(src.as_ref(), dst, decode_nibble)
 }
 
 /// Decode a lower Base16 (hex) string into a byte vector.
@@ -60,7 +45,7 @@ pub fn encode_str<'a>(src: &[u8], dst: &'a mut [u8]) -> Result<&'a str, Error> {
 pub fn encode_string(input: &[u8]) -> String {
     let elen = encoded_len(input);
     let mut dst = vec![0u8; elen];
-    let res = encode(input, &mut dst).expect("encoding error");
+    let res = encode(input, &mut dst).expect("dst length is correct");
 
     debug_assert_eq!(elen, res.len());
     unsafe { String::from_utf8_unchecked(dst) }
