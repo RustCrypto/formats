@@ -50,7 +50,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
-    html_root_url = "https://docs.rs/base16ct/0.0.0"
+    html_root_url = "https://docs.rs/base16ct/0.1.0"
 )]
 
 #[cfg(feature = "alloc")]
