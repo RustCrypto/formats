@@ -4,7 +4,15 @@ use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptPa
 use crate::{Error, Result};
 use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
 use hmac::{
-    digest::{generic_array::ArrayLength, BlockInput, FixedOutput, Reset, Update},
+    digest::{
+        block_buffer::Eager,
+        core_api::{
+            BlockSizeUser, BufferKindUser, CoreProxy,
+            FixedOutputCore, UpdateCore,
+        },
+        generic_array::typenum::{IsLess, Le, NonZero, U256},
+        HashMarker,
+    },
     Hmac,
 };
 use pbkdf2::pbkdf2;
@@ -178,9 +186,17 @@ impl EncryptionKey {
 
     /// Derive key using PBKDF2.
     fn derive_with_pbkdf2<D>(password: &[u8], params: &Pbkdf2Params<'_>, length: usize) -> Self
-    where
-        D: Update + BlockInput + FixedOutput + Reset + Default + Clone + Sync,
-        D::BlockSize: ArrayLength<u8>,
+        where
+            D: CoreProxy,
+            D::Core: HashMarker
+                + UpdateCore
+                + FixedOutputCore
+                + BufferKindUser<BufferKind = Eager>
+                + Default
+                + Clone
+                + Sync,
+            <D::Core as BlockSizeUser>::BlockSize: IsLess<U256>,
+            Le<<D::Core as BlockSizeUser>::BlockSize, U256>: NonZero,
     {
         let mut buffer = [0u8; MAX_KEY_LEN];
         pbkdf2::<Hmac<D>>(
