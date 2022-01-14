@@ -220,6 +220,13 @@ pub enum ErrorKind {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     PermissionDenied,
 
+    /// Real related error: base is not DER compliant (base encoded in enum)
+    RealBaseInvalid(u8),
+    /// Real related error: encoded exponent cannot be represented on an IEEE-754 double
+    RealExponentTooLong,
+    /// Real related error: encoding not supported or malformed
+    RealISO6093Error,
+
     /// Unknown tag mode.
     TagModeUnknown,
 
@@ -339,6 +346,30 @@ impl fmt::Display for ErrorKind {
             }
             ErrorKind::Utf8(e) => write!(f, "{}", e),
             ErrorKind::Value { tag } => write!(f, "malformed ASN.1 DER value for {}", tag),
+            ErrorKind::RealBaseInvalid(base) => match base {
+                1 => write!(
+                    f,
+                    "DER only supports REAL type in base 2 (provided a base {} REAL)",
+                    base
+                ),
+                2 => write!(
+                    f,
+                    "DER only supports REAL type in base 2 (provided a base {} REAL)",
+                    base
+                ),
+                3 => write!(
+                    f,
+                    "reserved for further editions of this Recommendation | International Standard"
+                ),
+                _ => unreachable!(),
+            },
+            ErrorKind::RealExponentTooLong => write!(
+                f,
+                "exponent encoded on more than 2 bytes, but that cannot be represented on an IEEE-754",
+            ),
+            ErrorKind::RealISO6093Error => {
+                write!(f, "provided ISO 6093 encoding not supported or malformed")
+            }
         }
     }
 }

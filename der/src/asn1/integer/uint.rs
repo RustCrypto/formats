@@ -6,7 +6,7 @@ use crate::{Encoder, Length, Result, Tag};
 /// zeroes removed.
 ///
 /// Returns a byte array of the requested size containing a big endian integer.
-pub(super) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
+pub(crate) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
     // The `INTEGER` type always encodes a signed value, so for unsigned
     // values the leading `0x00` byte may need to be removed.
     //
@@ -35,7 +35,7 @@ pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
 }
 
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.
-pub(super) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
+pub(crate) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
     let bytes = strip_leading_zeroes(bytes);
 
     if needs_leading_zero(bytes) {
@@ -47,7 +47,7 @@ pub(super) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()
 
 /// Get the encoded length for the given unsigned integer serialized as bytes.
 #[inline]
-pub(super) fn encoded_len(bytes: &[u8]) -> Result<Length> {
+pub(crate) fn encoded_len(bytes: &[u8]) -> Result<Length> {
     let bytes = strip_leading_zeroes(bytes);
     Length::try_from(bytes.len())? + needs_leading_zero(bytes) as u8
 }

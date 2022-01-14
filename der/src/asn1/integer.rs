@@ -1,8 +1,8 @@
 //! ASN.1 `INTEGER` support.
 
 pub(super) mod bigint;
-mod int;
-mod uint;
+pub(super) mod int;
+pub(super) mod uint;
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
