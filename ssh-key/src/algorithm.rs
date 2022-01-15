@@ -1,6 +1,9 @@
-//! Algorithm registry
+//! Algorithm support.
 
-use crate::{base64, Error, Result};
+use crate::{
+    base64::{self, Decode},
+    Error, Result,
+};
 use core::{fmt, str};
 
 /// ECDSA with SHA-256 + NIST P-256
@@ -48,7 +51,6 @@ impl Algorithm {
     /// Decode algorithm from the given string identifier.
     ///
     /// # Supported algorithms
-    ///
     /// - `ecdsa-sha2-nistp256`
     /// - `ecdsa-sha2-nistp384`
     /// - `ecdsa-sha2-nistp521`
@@ -98,9 +100,10 @@ impl Algorithm {
     pub fn is_rsa(self) -> bool {
         self == Algorithm::Rsa
     }
+}
 
-    /// Decode algorithm using the supplied Base64 decoder.
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for Algorithm {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -116,7 +119,59 @@ impl str::FromStr for Algorithm {
     type Err = Error;
 
     fn from_str(id: &str) -> Result<Self> {
-        Algorithm::new(id)
+        Self::new(id)
+    }
+}
+
+/// Cipher algorithms.
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[non_exhaustive]
+pub enum CipherAlg {
+    /// None.
+    None,
+}
+
+impl CipherAlg {
+    /// Maximum size of cipher algorithms known to this crate in bytes.
+    const MAX_SIZE: usize = 4;
+
+    /// Decode cipher algorithm from the given `ciphername`.
+    ///
+    /// # Supported ciphernames
+    /// - `none`
+    pub fn new(ciphername: &str) -> Result<Self> {
+        match ciphername {
+            "none" => Ok(CipherAlg::None),
+            _ => Err(Error::Algorithm),
+        }
+    }
+
+    /// Get the string identifier which corresponds to this algorithm.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            CipherAlg::None => "none",
+        }
+    }
+}
+
+impl Decode for CipherAlg {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+        let mut buf = [0u8; Self::MAX_SIZE];
+        Self::new(decoder.decode_str(&mut buf)?)
+    }
+}
+
+impl fmt::Display for CipherAlg {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl str::FromStr for CipherAlg {
+    type Err = Error;
+
+    fn from_str(id: &str) -> Result<Self> {
+        Self::new(id)
     }
 }
 
@@ -135,7 +190,6 @@ pub enum EcdsaCurve {
 
 impl EcdsaCurve {
     /// Maximum size of a curve identifier known to this crate in bytes.
-    #[cfg(feature = "sec1")]
     const MAX_SIZE: usize = 8;
 
     /// Decode elliptic curve from the given string identifier.
@@ -162,10 +216,10 @@ impl EcdsaCurve {
             EcdsaCurve::NistP521 => "nistp521",
         }
     }
+}
 
-    /// Decode ECDSA curve type using the supplied Base64 decoder.
-    #[cfg(feature = "sec1")]
-    pub(crate) fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+impl Decode for EcdsaCurve {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -182,5 +236,82 @@ impl str::FromStr for EcdsaCurve {
 
     fn from_str(id: &str) -> Result<Self> {
         EcdsaCurve::new(id)
+    }
+}
+
+/// Key Derivation Function (KDF) algorithms.
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[non_exhaustive]
+pub enum KdfAlg {
+    /// None.
+    None,
+}
+
+impl KdfAlg {
+    /// Maximum size of KDF algorithms known to this crate in bytes.
+    const MAX_SIZE: usize = 4;
+
+    /// Decode KDF algorithm from the given `kdfname`.
+    ///
+    /// # Supported kdfnames
+    /// - `none`
+    pub fn new(kdfname: &str) -> Result<Self> {
+        match kdfname {
+            "none" => Ok(KdfAlg::None),
+            _ => Err(Error::Algorithm),
+        }
+    }
+
+    /// Get the string identifier which corresponds to this algorithm.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            KdfAlg::None => "none",
+        }
+    }
+}
+
+impl Decode for KdfAlg {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+        let mut buf = [0u8; Self::MAX_SIZE];
+        Self::new(decoder.decode_str(&mut buf)?)
+    }
+}
+
+impl fmt::Display for KdfAlg {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl str::FromStr for KdfAlg {
+    type Err = Error;
+
+    fn from_str(id: &str) -> Result<Self> {
+        Self::new(id)
+    }
+}
+
+/// Key Derivation Function (KDF) options.
+// TODO(tarcieri): stub!
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
+pub struct KdfOptions {}
+
+impl KdfOptions {
+    /// Create new KDF options.
+    pub(crate) fn new(kdfoptions: &str) -> Result<Self> {
+        // TODO(tarcieri): support for KDF options
+        if kdfoptions.is_empty() {
+            Ok(Self {})
+        } else {
+            Err(Error::Algorithm)
+        }
+    }
+}
+
+impl Decode for KdfOptions {
+    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+        let mut buf = [0u8; 0];
+        Self::new(decoder.decode_str(&mut buf)?)
     }
 }

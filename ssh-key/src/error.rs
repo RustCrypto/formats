@@ -19,15 +19,21 @@ pub enum Error {
     CharacterEncoding,
 
     /// ECDSA key encoding errors.
-    #[cfg(feature = "sec1")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
+    #[cfg(feature = "ecdsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
     Ecdsa(sec1::Error),
+
+    /// Other format encoding errors.
+    FormatEncoding,
 
     /// Invalid length.
     Length,
 
     /// Overflow errors.
     Overflow,
+
+    /// PEM encoding errors.
+    Pem,
 }
 
 impl fmt::Display for Error {
@@ -36,10 +42,12 @@ impl fmt::Display for Error {
             Error::Algorithm => f.write_str("unknown or unsupported algorithm"),
             Error::Base64(err) => write!(f, "Base64 encoding error: {}", err),
             Error::CharacterEncoding => f.write_str("character encoding invalid"),
-            #[cfg(feature = "sec1")]
+            #[cfg(feature = "ecdsa")]
             Error::Ecdsa(err) => write!(f, "ECDSA encoding error: {}", err),
+            Error::FormatEncoding => f.write_str("format encoding error"),
             Error::Length => f.write_str("length invalid"),
             Error::Overflow => f.write_str("internal overflow error"),
+            Error::Pem => f.write_str("PEM encoding error"),
         }
     }
 }
@@ -59,6 +67,12 @@ impl From<base64ct::InvalidLengthError> for Error {
     }
 }
 
+impl From<core::array::TryFromSliceError> for Error {
+    fn from(_: core::array::TryFromSliceError) -> Error {
+        Error::Length
+    }
+}
+
 impl From<core::num::TryFromIntError> for Error {
     fn from(_: core::num::TryFromIntError) -> Error {
         Error::Overflow
@@ -71,8 +85,8 @@ impl From<core::str::Utf8Error> for Error {
     }
 }
 
-#[cfg(feature = "sec1")]
-#[cfg_attr(docsrs, doc(cfg(feature = "sec1")))]
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 impl From<sec1::Error> for Error {
     fn from(err: sec1::Error) -> Error {
         Error::Ecdsa(err)

@@ -4,13 +4,13 @@
 // TODO: #2 share code between the different implementations. There's too much
 //       duplicate code in here.
 
-use std::{
-    io::{Read, Write},
-    ops::Drop,
-};
+use alloc::vec::Vec;
+use core::ops::Drop;
 
 #[cfg(feature = "serde_serialize")]
 use serde::ser::SerializeStruct;
+#[cfg(feature = "std")]
+use std::io::{Read, Write};
 use zeroize::Zeroize;
 
 use crate::{Deserialize, Error, Serialize, Size};
@@ -39,6 +39,7 @@ macro_rules! impl_byte_size {
 
 macro_rules! impl_byte_deserialize {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg(feature = "std")]
         #[inline(always)]
         fn deserialize_bytes<R: Read>(bytes: &mut R) -> Result<Self, Error> {
             let len = <$size>::tls_deserialize(bytes)? as usize;
@@ -79,6 +80,7 @@ macro_rules! impl_byte_deserialize {
 
 macro_rules! impl_deserialize {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg(feature = "std")]
         #[inline(always)]
         fn deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
             let mut result = Self { vec: Vec::new() };
@@ -97,6 +99,7 @@ macro_rules! impl_deserialize {
 
 macro_rules! impl_serialize {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg(feature = "std")]
         #[inline(always)]
         fn serialize<W: Write>(&$self, writer: &mut W) -> Result<usize, Error> {
             // Get the byte length of the content, make sure it's not too
@@ -140,6 +143,7 @@ macro_rules! impl_serialize {
 
 macro_rules! impl_byte_serialize {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg(feature = "std")]
         #[inline(always)]
         fn serialize_bytes<W: Write>(&$self, writer: &mut W) -> Result<usize, Error> {
             // Get the byte length of the content, make sure it's not too
@@ -182,6 +186,7 @@ macro_rules! impl_byte_serialize {
 macro_rules! impl_tls_vec_codec_generic {
     ($size:ty, $name:ident, $len_len: literal $(, $bounds:ident)*) => {
         impl<T: $($bounds + )* Serialize> Serialize for $name<T> {
+            #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
@@ -195,6 +200,7 @@ macro_rules! impl_tls_vec_codec_generic {
         }
 
         impl<T: $($bounds + )* Serialize> Serialize for &$name<T> {
+            #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
@@ -208,6 +214,7 @@ macro_rules! impl_tls_vec_codec_generic {
         }
 
         impl<T: $($bounds + )* Deserialize> Deserialize for $name<T> {
+            #[cfg(feature = "std")]
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
                 Self::deserialize(bytes)
             }
@@ -218,6 +225,7 @@ macro_rules! impl_tls_vec_codec_generic {
 macro_rules! impl_tls_vec_codec_bytes {
     ($size:ty, $name:ident, $len_len: literal) => {
         impl Serialize for $name {
+            #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize_bytes(writer)
             }
@@ -231,6 +239,7 @@ macro_rules! impl_tls_vec_codec_bytes {
         }
 
         impl Serialize for &$name {
+            #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize_bytes(writer)
             }
@@ -244,6 +253,7 @@ macro_rules! impl_tls_vec_codec_bytes {
         }
 
         impl Deserialize for $name {
+            #[cfg(feature = "std")]
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
                 Self::deserialize_bytes(bytes)
             }
@@ -291,7 +301,7 @@ macro_rules! impl_vec_members {
         /// Get the underlying vector and consume this.
         #[inline]
         pub fn into_vec(mut self) -> Vec<$element_type> {
-            std::mem::take(&mut self.vec)
+            core::mem::take(&mut self.vec)
         }
 
         /// Add an element to this.
@@ -321,7 +331,7 @@ macro_rules! impl_vec_members {
 
         /// Returns an iterator over the slice.
         #[inline]
-        pub fn iter(&self) -> std::slice::Iter<'_, $element_type> {
+        pub fn iter(&self) -> core::slice::Iter<'_, $element_type> {
             self.vec.iter()
         }
 
@@ -359,14 +369,14 @@ macro_rules! impl_tls_vec_generic {
             impl_vec_members!(T, $len_len);
         }
 
-        impl<T: $($bounds + )* std::hash::Hash> std::hash::Hash for $name<T> {
+        impl<T: $($bounds + )* core::hash::Hash> core::hash::Hash for $name<T> {
             #[inline]
-            fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
                 self.vec.hash(state)
             }
         }
 
-        impl<T: $($bounds + )*> std::ops::Index<usize> for $name<T> {
+        impl<T: $($bounds + )*> core::ops::Index<usize> for $name<T> {
             type Output = T;
 
             #[inline]
@@ -375,27 +385,27 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        impl<T: $($bounds + )* std::cmp::PartialEq> std::cmp::PartialEq for $name<T> {
+        impl<T: $($bounds + )* core::cmp::PartialEq> core::cmp::PartialEq for $name<T> {
             fn eq(&self, other: &Self) -> bool {
                 self.vec.eq(&other.vec)
             }
         }
 
-        impl<T: $($bounds + )*> std::ops::IndexMut<usize> for $name<T> {
+        impl<T: $($bounds + )*> core::ops::IndexMut<usize> for $name<T> {
             #[inline]
             fn index_mut(&mut self, i: usize) -> &mut Self::Output {
                 self.vec.index_mut(i)
             }
         }
 
-        impl<T: $($bounds + )*> std::borrow::Borrow<[T]> for $name<T> {
+        impl<T: $($bounds + )*> core::borrow::Borrow<[T]> for $name<T> {
             #[inline]
             fn borrow(&self) -> &[T] {
                 &self.vec
             }
         }
 
-        impl<T: $($bounds + )*> std::iter::FromIterator<T> for $name<T> {
+        impl<T: $($bounds + )*> core::iter::FromIterator<T> for $name<T> {
             #[inline]
             fn from_iter<I>(iter: I) -> Self
             where
@@ -423,7 +433,7 @@ macro_rules! impl_tls_vec_generic {
         impl<T: $($bounds + )*> From<$name<T>> for Vec<T> {
             #[inline]
             fn from(mut v: $name<T>) -> Self {
-                std::mem::take(&mut v.vec)
+                core::mem::take(&mut v.vec)
             }
         }
 
@@ -474,8 +484,8 @@ macro_rules! impl_tls_vec_generic {
 
                             fn expecting(
                                 &self,
-                                formatter: &mut std::fmt::Formatter,
-                            ) -> std::fmt::Result {
+                                formatter: &mut core::fmt::Formatter,
+                            ) -> core::fmt::Result {
                                 formatter.write_str("`vec`")
                             }
 
@@ -495,7 +505,7 @@ macro_rules! impl_tls_vec_generic {
                 }
 
                 struct TlsVecVisitor<T> {
-                    data: std::marker::PhantomData<T>,
+                    data: core::marker::PhantomData<T>,
                 }
 
                 impl<'de, T> serde::de::Visitor<'de> for TlsVecVisitor<T>
@@ -503,7 +513,7 @@ macro_rules! impl_tls_vec_generic {
                     T: $($bounds + )* serde::de::Deserialize<'de>,
                 {
                     type Value = $name<T>;
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                    fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
                         formatter.write_fmt(format_args!("struct {}<T>", stringify!($name)))
                     }
                     fn visit_seq<V>(self, mut seq: V) -> Result<$name<T>, V::Error>
@@ -538,7 +548,7 @@ macro_rules! impl_tls_vec_generic {
                     stringify!($name),
                     &["vec"],
                     TlsVecVisitor {
-                        data: std::marker::PhantomData,
+                        data: core::marker::PhantomData,
                     },
                 )
             }
@@ -557,14 +567,14 @@ macro_rules! impl_tls_vec {
             impl_vec_members!(u8, 1);
         }
 
-        impl std::hash::Hash for $name {
+        impl core::hash::Hash for $name {
             #[inline]
-            fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
                 self.vec.hash(state)
             }
         }
 
-        impl std::ops::Index<usize> for $name {
+        impl core::ops::Index<usize> for $name {
             type Output = u8;
 
             #[inline]
@@ -573,27 +583,27 @@ macro_rules! impl_tls_vec {
             }
         }
 
-        impl std::cmp::PartialEq for $name {
+        impl core::cmp::PartialEq for $name {
             fn eq(&self, other: &Self) -> bool {
                 self.vec.eq(&other.vec)
             }
         }
 
-        impl std::ops::IndexMut<usize> for $name {
+        impl core::ops::IndexMut<usize> for $name {
             #[inline]
             fn index_mut(&mut self, i: usize) -> &mut Self::Output {
                 self.vec.index_mut(i)
             }
         }
 
-        impl std::borrow::Borrow<[u8]> for $name {
+        impl core::borrow::Borrow<[u8]> for $name {
             #[inline]
             fn borrow(&self) -> &[u8] {
                 &self.vec
             }
         }
 
-        impl std::iter::FromIterator<u8> for $name {
+        impl core::iter::FromIterator<u8> for $name {
             #[inline]
             fn from_iter<I>(iter: I) -> Self
             where
@@ -621,7 +631,7 @@ macro_rules! impl_tls_vec {
         impl From<$name> for Vec<u8> {
             #[inline]
             fn from(mut v: $name) -> Self {
-                std::mem::take(&mut v.vec)
+                core::mem::take(&mut v.vec)
             }
         }
 
@@ -666,8 +676,8 @@ macro_rules! impl_tls_vec {
 
                             fn expecting(
                                 &self,
-                                formatter: &mut std::fmt::Formatter,
-                            ) -> std::fmt::Result {
+                                formatter: &mut core::fmt::Formatter,
+                            ) -> core::fmt::Result {
                                 formatter.write_str("`vec`")
                             }
 
@@ -687,12 +697,12 @@ macro_rules! impl_tls_vec {
                 }
 
                 struct TlsVecVisitor {
-                    data: std::marker::PhantomData<u8>,
+                    data: core::marker::PhantomData<u8>,
                 }
 
                 impl<'de> serde::de::Visitor<'de> for TlsVecVisitor {
                     type Value = $name;
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                    fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
                         formatter.write_fmt(format_args!("struct {}", stringify!($name)))
                     }
                     fn visit_seq<V>(self, mut seq: V) -> Result<$name, V::Error>
@@ -727,7 +737,7 @@ macro_rules! impl_tls_vec {
                     stringify!($name),
                     &["vec"],
                     TlsVecVisitor {
-                        data: std::marker::PhantomData,
+                        data: core::marker::PhantomData,
                     },
                 )
             }
@@ -836,12 +846,14 @@ macro_rules! impl_tls_byte_slice {
         }
 
         impl<'a> Serialize for &$name<'a> {
+            #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize_bytes(writer)
             }
         }
 
         impl<'a> Serialize for $name<'a> {
+            #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize_bytes(writer)
             }
@@ -888,12 +900,14 @@ macro_rules! impl_tls_slice {
         }
 
         impl<'a, T: Serialize> Serialize for &$name<'a, T> {
+            #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
         }
 
         impl<'a, T: Serialize> Serialize for $name<'a, T> {
+            #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
@@ -919,14 +933,14 @@ impl_tls_slice!(u8, TlsSliceU8, 1);
 impl_tls_slice!(u16, TlsSliceU16, 2);
 impl_tls_slice!(u32, TlsSliceU32, 4);
 
-impl From<std::num::TryFromIntError> for Error {
-    fn from(_e: std::num::TryFromIntError) -> Self {
+impl From<core::num::TryFromIntError> for Error {
+    fn from(_e: core::num::TryFromIntError) -> Self {
         Self::InvalidVectorLength
     }
 }
 
-impl From<std::convert::Infallible> for Error {
-    fn from(_e: std::convert::Infallible) -> Self {
+impl From<core::convert::Infallible> for Error {
+    fn from(_e: core::convert::Infallible) -> Self {
         Self::InvalidVectorLength
     }
 }

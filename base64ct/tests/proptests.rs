@@ -14,8 +14,8 @@ proptest! {
     #[test]
     fn decode_equiv(bytes in bytes_regex(".{0,256}").unwrap()) {
         let encoded = base64::encode(&bytes);
-        let decoded = Base64ct::decode_vec(&encoded).unwrap();
-        prop_assert_eq!(bytes, decoded);
+        let decoded = Base64ct::decode_vec(&encoded);
+        prop_assert_eq!(Ok(bytes), decoded);
     }
 
     /// Ensure that `base64ct`'s incremental decoder is able to decode randomly
@@ -33,11 +33,56 @@ proptest! {
 
         for chunk in bytes.chunks(chunk_size) {
             prop_assert!(!decoder.is_finished());
-            let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
-            prop_assert_eq!(chunk, decoded);
+
+            let decoded = decoder.decode(&mut buffer[..chunk.len()]);
+            prop_assert_eq!(Ok(chunk), decoded);
         }
 
         prop_assert!(decoder.is_finished());
+    }
+
+    #[test]
+    fn decode_incremental_wrapped(
+        bytes in bytes_regex(".{1,256}").unwrap(),
+        line_width in 4..128usize,
+        chunk_size in 1..256usize
+    ) {
+        for line_ending in ["\n"] { //["\r", "\n", "\r\n"] {
+            let encoded = base64::encode(&bytes);
+
+            let mut encoded_wrapped = Vec::new();
+            let mut lines = encoded.as_bytes().chunks_exact(line_width);
+
+            for line in &mut lines {
+                encoded_wrapped.extend_from_slice(line);
+                encoded_wrapped.extend_from_slice(line_ending.as_bytes());
+            }
+
+            let last = lines.remainder();
+
+            if last.is_empty() {
+                encoded_wrapped.truncate(encoded_wrapped.len() - line_ending.len());
+            } else {
+                encoded_wrapped.extend_from_slice(last);
+            }
+
+            let chunk_size = match chunk_size % bytes.len() {
+                0 => 1,
+                n => n
+            };
+
+            let mut buffer = [0u8; 384];
+            let mut decoder = Decoder::new_wrapped(&encoded_wrapped, line_width).unwrap();
+
+            for chunk in bytes.chunks(chunk_size) {
+                prop_assert!(!decoder.is_finished());
+
+                let decoded = decoder.decode(&mut buffer[..chunk.len()]);
+                prop_assert_eq!(Ok(chunk), decoded);
+            }
+
+            prop_assert!(decoder.is_finished());
+        }
     }
 
     /// Ensure `base64ct` and `base64` ref crate decode randomly generated

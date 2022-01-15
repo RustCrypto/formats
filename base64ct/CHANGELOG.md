@@ -4,7 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.3.0 (2021-12-02)
+## 1.3.3 (2021-12-28)
+### Fixed
+- Potential infinite loop in `Decoder::decode` ([#305])
+
+[#305]: https://github.com/RustCrypto/formats/pull/305
+
+## 1.3.2 (2021-12-26) [YANKED]
+### Fixed
+- `Decoder` unpadding ([#299])
+- Edge case when using `Decoder::new_wrapped` ([#300])
+
+[#299]: https://github.com/RustCrypto/formats/pull/299
+[#300]: https://github.com/RustCrypto/formats/pull/300
+
+## 1.3.1 (2021-12-20) [YANKED]
+### Added
+- `Decoder::new_wrapped` with support for line-wrapped Base64 ([#292], [#293], [#294])
+
+[#292]: https://github.com/RustCrypto/formats/pull/292
+[#293]: https://github.com/RustCrypto/formats/pull/292
+[#294]: https://github.com/RustCrypto/formats/pull/294
+
+## 1.3.0 (2021-12-02) [YANKED]
 ### Added
 - Stateful `Decoder` type ([#266])
 

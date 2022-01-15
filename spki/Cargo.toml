@@ -1,6 +1,6 @@
 [package]
 name = "spki"
-version = "0.5.2" # Also update html_root_url in lib.rs when bumping this
+version = "0.5.4" # Also update html_root_url in lib.rs when bumping this
 description = """
 X.509 Subject Public Key Info (RFC5280) describing public keys as well as their
 associated AlgorithmIdentifiers (i.e. OIDs)
@@ -18,7 +18,7 @@ rust-version = "1.56"
 der = { version = "0.5", features = ["oid"], path = "../der" }
 
 # Optional dependencies
-sha2 = { version = "0.9.8", optional = true, default-features = false }
+sha2 = { version = "0.10", optional = true, default-features = false }
 base64ct = { version = "1", path = "../base64ct", optional = true, default-features = false }
 
 [dev-dependencies]

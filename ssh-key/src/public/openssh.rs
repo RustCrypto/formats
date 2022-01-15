@@ -1,4 +1,4 @@
-//! Support for OpenSSH-formatted public keys
+//! Support for OpenSSH-formatted public keys.
 //!
 //! These keys have the form:
 //!
@@ -15,7 +15,7 @@
 use crate::{Error, Result};
 use core::str;
 
-/// OpenSSH public key encapsulation.
+/// OpenSSH public key encapsulation parser.
 pub(crate) struct Encapsulation<'a> {
     /// Algorithm identifier
     pub(super) algorithm_id: &'a str,
@@ -30,9 +30,8 @@ pub(crate) struct Encapsulation<'a> {
 
 impl<'a> Encapsulation<'a> {
     /// Parse the given binary data.
-    pub(super) fn parse(mut bytes: &'a [u8]) -> Result<Self> {
-        let algorithm_id =
-            str::from_utf8(parse_segment(&mut bytes)?).map_err(|_| Error::CharacterEncoding)?;
+    pub(super) fn decode(mut bytes: &'a [u8]) -> Result<Self> {
+        let algorithm_id = parse_segment_str(&mut bytes)?;
         let base64_data = parse_segment(&mut bytes)?;
         let comment = str::from_utf8(bytes)
             .map_err(|_| Error::CharacterEncoding)?
@@ -81,6 +80,11 @@ fn parse_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
     }
 }
 
+/// Parse a segment of the public key as a `&str`.
+fn parse_segment_str<'a>(bytes: &mut &'a [u8]) -> Result<&'a str> {
+    str::from_utf8(parse_segment(bytes)?).map_err(|_| Error::CharacterEncoding)
+}
+
 #[cfg(test)]
 mod tests {
     use super::Encapsulation;
@@ -89,7 +93,7 @@ mod tests {
 
     #[test]
     fn decode() {
-        let encapsulation = Encapsulation::parse(EXAMPLE_KEY.as_bytes()).unwrap();
+        let encapsulation = Encapsulation::decode(EXAMPLE_KEY.as_bytes()).unwrap();
         assert_eq!(encapsulation.algorithm_id, "ssh-ed25519");
         assert_eq!(
             encapsulation.base64_data,

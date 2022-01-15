@@ -1,3 +1,11 @@
+#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![warn(missing_docs, rust_2018_idioms)]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_root_url = "https://docs.rs/base64ct/1.3.3"
+)]
 #![doc = include_str!("../README.md")]
 
 //! # Usage
@@ -39,7 +47,7 @@
 //!
 //! # Implementation
 //!
-//! Implemented using bitwise arithmetic alone without any lookup tables or
+//! Implemented using integer arithmetic alone without any lookup tables or
 //! data-dependent branches, thereby providing portable "best effort"
 //! constant-time operation.
 //!
@@ -51,18 +59,6 @@
 //!
 //! Copyright (c) 2014 Steve "Sc00bz" Thomas (steve at tobtu dot com).
 //! Derived code is dual licensed MIT + Apache 2 (with permission from Sc00bz).
-//!
-//! [RFC 4648, section 4]: https://tools.ietf.org/html/rfc4648#section-4
-//! [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf
-
-#![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/base64ct/1.3.0"
-)]
-#![warn(missing_docs, rust_2018_idioms)]
 
 #[cfg(feature = "alloc")]
 #[macro_use]

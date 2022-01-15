@@ -7,7 +7,13 @@ use crate::{Error, Result};
 use core::str;
 
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
+
+/// Decoder trait.
+pub(crate) trait Decode: Sized {
+    /// Attempt to decode a value of this type using the provided [`Decoder`].
+    fn decode(decoder: &mut Decoder<'_>) -> Result<Self>;
+}
 
 /// Stateful Base64 decoder.
 pub(crate) struct Decoder<'i> {
@@ -15,11 +21,23 @@ pub(crate) struct Decoder<'i> {
 }
 
 impl<'i> Decoder<'i> {
+    /// Maximum size of a `usize` this library will accept.
+    const MAX_SIZE: usize = 0xFFFFF;
+
     /// Create a new decoder for a byte slice containing contiguous
     /// (non-newline-delimited) Base64-encoded data.
     pub(crate) fn new(input: &'i [u8]) -> Result<Self> {
-        let inner = base64ct::Decoder::new(input)?;
-        Ok(Self { inner })
+        Ok(Self {
+            inner: base64ct::Decoder::new(input)?,
+        })
+    }
+
+    /// Create a new decoder for a byte slice containing Base64 which
+    /// line wraps at the given line length.
+    pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self> {
+        Ok(Self {
+            inner: base64ct::Decoder::new_wrapped(input, line_width)?,
+        })
     }
 
     /// Decode as much Base64 as is needed to exactly fill `out`.
@@ -31,11 +49,19 @@ impl<'i> Decoder<'i> {
         Ok(self.inner.decode(out)?)
     }
 
+    /// Decodes a single byte.
+    #[cfg(feature = "ecdsa")]
+    pub(crate) fn decode_u8(&mut self) -> Result<u8> {
+        let mut buf = [0];
+        self.decode_into(&mut buf)?;
+        Ok(buf[0])
+    }
+
     /// Decodes a `uint32` as described in [RFC4251 § 5]:
     ///
     /// > Represents a 32-bit unsigned integer.  Stored as four bytes in the
-    /// > order of decreasing significance (network byte order).  For
-    /// > example: the value 699921578 (0x29b7f4aa) is stored as 29 b7 f4 aa.
+    /// > order of decreasing significance (network byte order).
+    /// > For example: the value 699921578 (0x29b7f4aa) is stored as 29 b7 f4 aa.
     ///
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     pub(crate) fn decode_u32(&mut self) -> Result<u32> {
@@ -49,7 +75,13 @@ impl<'i> Decoder<'i> {
     /// Uses [`Decoder::decode_u32`] and then converts to a `usize`, handling
     /// potential overflow if `usize` is smaller than `u32`.
     pub(crate) fn decode_usize(&mut self) -> Result<usize> {
-        Ok(self.decode_u32()?.try_into()?)
+        let result = usize::try_from(self.decode_u32()?)?;
+
+        if result <= Self::MAX_SIZE {
+            Ok(result)
+        } else {
+            Err(Error::Length)
+        }
     }
 
     /// Decodes `[u8]` from `byte[n]` as described in [RFC4251 § 5]:
@@ -100,6 +132,12 @@ impl<'i> Decoder<'i> {
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     pub(crate) fn decode_str<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o str> {
         Ok(str::from_utf8(self.decode_byte_slice(buf)?)?)
+    }
+
+    /// Decodes heap allocated `String`: owned equivalent of [`Decoder::decode_str`].
+    #[cfg(feature = "alloc")]
+    pub(crate) fn decode_string(&mut self) -> Result<String> {
+        String::from_utf8(self.decode_byte_vec()?).map_err(|_| Error::CharacterEncoding)
     }
 
     /// Has all of the input data been decoded?

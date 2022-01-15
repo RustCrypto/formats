@@ -40,6 +40,25 @@ jobs:
       - run: cargo build --target ${{ matrix.target }} --release --features serde_serialize
       - run: cargo build --target ${{ matrix.target }} --release --all-features
 
+  no_std:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - 1.56.0 # MSRV
+          - stable
+        target:
+          - thumbv7em-none-eabi
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+      - run: cargo build --target ${{ matrix.target }} --no-default-features --release
+
   test:
     runs-on: ubuntu-latest
     strategy:
