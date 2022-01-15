@@ -59,21 +59,29 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-use core::fmt;
+/// Function for decoding and encoding lower Base16 (hex)
+pub mod lower;
+/// Function for decoding mixed Base16 (hex)
+pub mod mixed;
+/// Function for decoding and encoding upper Base16 (hex)
+pub mod upper;
+
+/// Display formatter for hex.
+mod display;
+/// Error types.
+mod error;
+
+pub use crate::{
+    display::HexDisplay,
+    error::{Error, Result},
+};
 
 #[cfg(feature = "alloc")]
 use alloc::{string::String, vec::Vec};
 
-/// Fucntion for decoding and encoding lower Base16 (hex)
-pub mod lower;
-/// Fucntion for decoding mixed Base16 (hex)
-pub mod mixed;
-/// Fucntion for decoding and encoding upper Base16 (hex)
-pub mod upper;
-
 /// Compute decoded length of the given hex-encoded input.
 #[inline(always)]
-pub fn decoded_len(bytes: &[u8]) -> Result<usize, Error> {
+pub fn decoded_len(bytes: &[u8]) -> Result<usize> {
     if bytes.len() & 1 == 0 {
         Ok(bytes.len() / 2)
     } else {
@@ -91,7 +99,7 @@ fn decode_inner<'a>(
     src: &[u8],
     dst: &'a mut [u8],
     decode_nibble: impl Fn(u8) -> u16,
-) -> Result<&'a [u8], Error> {
+) -> Result<&'a [u8]> {
     let dst = dst
         .get_mut(..decoded_len(src)?)
         .ok_or(Error::InvalidLength)?;
@@ -108,25 +116,3 @@ fn decode_inner<'a>(
         _ => Err(Error::InvalidEncoding),
     }
 }
-
-/// Error type
-#[derive(Clone, Eq, PartialEq, Debug)]
-pub enum Error {
-    /// Invalid encoding of provided Base16 string.
-    InvalidEncoding,
-
-    /// Insufficient output buffer length.
-    InvalidLength,
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::InvalidEncoding => f.write_str("invalid Base16 encoding"),
-            Error::InvalidLength => f.write_str("invalid Base16 length"),
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
