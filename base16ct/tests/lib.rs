@@ -145,3 +145,19 @@ fn encode_and_decode_various_lengths() {
         assert_eq!(decoded.as_slice(), &data[..i]);
     }
 }
+
+#[test]
+fn hex_display_upper() {
+    for vector in HEX_TEST_VECTORS {
+        let hex = format!("{:X}", base16ct::HexDisplay(vector.raw));
+        assert_eq!(hex.as_bytes(), vector.upper_hex);
+    }
+}
+
+#[test]
+fn hex_display_lower() {
+    for vector in HEX_TEST_VECTORS {
+        let hex = format!("{:x}", base16ct::HexDisplay(vector.raw));
+        assert_eq!(hex.as_bytes(), vector.lower_hex);
+    }
+}
