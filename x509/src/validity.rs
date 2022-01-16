@@ -11,7 +11,7 @@ use der::{Decodable, Error, Result, Sequence};
 ///     notAfter       Time  }
 /// ```
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, PartialOrd, Ord)]
 pub struct Validity {
     /// notBefore value
     pub not_before: Time,

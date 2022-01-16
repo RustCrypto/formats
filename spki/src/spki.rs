@@ -24,7 +24,7 @@ use {
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct SubjectPublicKeyInfo<'a> {
     /// X.509 [`AlgorithmIdentifier`] for the public key type
     pub algorithm: AlgorithmIdentifier<'a>,

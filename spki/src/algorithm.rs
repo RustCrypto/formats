@@ -16,7 +16,7 @@ use der::{
 /// ```
 ///
 /// [RFC 5280 Section 4.1.1.2]: https://tools.ietf.org/html/rfc5280#section-4.1.1.2
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct AlgorithmIdentifier<'a> {
     /// Algorithm OID, i.e. the `algorithm` field in the `AlgorithmIdentifier`
     /// ASN.1 schema.

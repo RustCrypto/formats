@@ -21,7 +21,7 @@ use std::time::SystemTime;
 ///
 /// [RFC 5280 Section 4.1.2.5]: https://tools.ietf.org/html/rfc5280#section-4.1.2.5
 /// [RFC 5280 Appendix A]: https://tools.ietf.org/html/rfc5280#page-117
-#[derive(Choice, Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Choice, Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Time {
     /// Legacy UTC time (has 2-digit year, valid only through 2050).
     #[asn1(type = "UTCTime")]

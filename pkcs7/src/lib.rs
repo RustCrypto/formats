@@ -17,8 +17,11 @@ pub use crate::{content_info::ContentInfo, content_type::ContentType};
 pub mod data_content;
 pub mod encrypted_data_content;
 pub mod enveloped_data_content;
+pub mod CryptographicMessageSyntax2004;
 
 use der::asn1::ObjectIdentifier;
+
+extern crate alloc;
 
 /// `pkcs-7` Object Identifier (OID).
 pub const PKCS_7_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.7");

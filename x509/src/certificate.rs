@@ -24,6 +24,8 @@ pub fn default_zero() -> u32 {
 /// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
 pub const X509_CERT_VERSION: u8 = 2;
 
+use der::OrdIsValueOrd;
+
 /// X.509 `TBSCertificate` as defined in [RFC 5280 Section 4.1.2.5]
 ///
 /// ASN.1 structure containing the names of the subject and issuer, a public key associated
@@ -49,7 +51,7 @@ pub const X509_CERT_VERSION: u8 = 2;
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct TBSCertificate<'a> {
     /// version         \[0\]  Version DEFAULT v1,
     //#[asn1(context_specific = "0", default = "default_zero_u8")]
@@ -192,7 +194,7 @@ impl<'a> ::core::fmt::Debug for TBSCertificate<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Certificate<'a> {
     /// tbsCertificate       TBSCertificate,
     pub tbs_certificate: TBSCertificate<'a>,
@@ -201,6 +203,7 @@ pub struct Certificate<'a> {
     /// signature            BIT STRING
     pub signature: BitString<'a>,
 }
+impl OrdIsValueOrd for Certificate<'_> {}
 
 // impl<'a> ::der::Decodable<'a> for Certificate<'a> {
 //     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
@@ -248,7 +251,7 @@ impl<'a> ::der::Sequence<'a> for Certificate<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, PartialOrd, Ord)]
 pub struct Extension<'a> {
     /// extnID      OBJECT IDENTIFIER,
     pub extn_id: ObjectIdentifier,

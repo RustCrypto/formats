@@ -16,7 +16,7 @@ use crypto_bigint::{generic_array::GenericArray, ArrayEncoding, UInt};
 ///
 /// Intended for use cases like very large integers that are used in
 /// cryptographic applications (e.g. keys, signatures).
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct UIntBytes<'a> {
     /// Inner value
     inner: ByteSlice<'a>,
