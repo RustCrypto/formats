@@ -1,20 +1,22 @@
 //! Selected structures from RFC5652
 
-use x509::{AttributeTypeAndValue, Certificate, Name, SubjectKeyIdentifier};
-use der::asn1::{BitString, ContextSpecific, OctetString, SetOf, UIntBytes, Utf8String};
+use der::asn1::{BitString, ContextSpecific, SetOf, UIntBytes};
 use der::{
-    Any, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Length, Tag, TagMode,
+    Any, DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Length, Tag, TagMode,
     TagNumber,
 };
-use spki::{AlgorithmIdentifier, ObjectIdentifier};
 use der::{OrdIsValueOrd, Sequence};
+use spki::{AlgorithmIdentifier, ObjectIdentifier};
+use x509::{AttributeTypeAndValue, Name, SubjectKeyIdentifier};
 
-// ContentInfo ::= SEQUENCE {
-//   contentType ContentType,
-//   content [0] EXPLICIT ANY DEFINED BY contentType }
+/// ContentInfo ::= SEQUENCE {
+///   contentType ContentType,
+///   content [0] EXPLICIT ANY DEFINED BY contentType }
 #[derive(Clone, Eq, PartialEq)]
 pub struct ContentInfo2004<'a> {
-    pub contentType: ObjectIdentifier,
+    ///   contentType ContentType,
+    pub content_type: ObjectIdentifier,
+    ///   content [0] EXPLICIT ANY DEFINED BY contentType }
     pub content: Option<Any<'a>>,
 }
 
@@ -23,12 +25,13 @@ const CONTENT_TAG: TagNumber = TagNumber::new(0);
 impl<'a> ::der::Decodable<'a> for ContentInfo2004<'a> {
     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
         decoder.sequence(|decoder| {
-            let contentType = decoder.decode()?;
+            let content_type = decoder.decode()?;
             //let content = decoder.decode()?;
-            let content = ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
-                .map(|cs| cs.value);
+            let content =
+                ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
+                    .map(|cs| cs.value);
             Ok(Self {
-                contentType,
+                content_type,
                 content,
             })
         })
@@ -36,40 +39,47 @@ impl<'a> ::der::Decodable<'a> for ContentInfo2004<'a> {
 }
 impl<'a> ::der::Sequence<'a> for ContentInfo2004<'a> {
     fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-        where
-            F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
-        f(&[&self.contentType,
+        f(&[
+            &self.content_type,
             &self.content.as_ref().map(|content| ContextSpecific {
                 tag_number: CONTENT_TAG,
                 tag_mode: TagMode::Explicit,
-                value: content.clone(),
+                value: *content,
             }),
         ])
     }
 }
 
-// ContentType ::= OBJECT IDENTIFIER
+/// ContentType ::= OBJECT IDENTIFIER
 pub type ContentType = ObjectIdentifier;
 
-// SignedData ::= SEQUENCE {
-//   version CMSVersion,
-//   digestAlgorithms DigestAlgorithmIdentifiers,
-//   encapContentInfo EncapsulatedContentInfo,
-//   certificates [0] IMPLICIT CertificateSet OPTIONAL,
-//   crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
-//   signerInfos SignerInfos }
+/// SignedData ::= SEQUENCE {
+///   version CMSVersion,
+///   digestAlgorithms DigestAlgorithmIdentifiers,
+///   encapContentInfo EncapsulatedContentInfo,
+///   certificates [0] IMPLICIT CertificateSet OPTIONAL,
+///   crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+///   signerInfos SignerInfos }
 #[derive(Clone, Eq, PartialEq)]
 pub struct SignedData<'a> {
+    ///   version CMSVersion,
     pub version: u8,
+    ///   digestAlgorithms DigestAlgorithmIdentifiers,
     pub digest_algorithms: DigestAlgorithmIdentifiers<'a>,
+    ///   encapContentInfo EncapsulatedContentInfo,
     pub encap_content_info: EncapsulatedContentInfo<'a>,
     // Using Any as a means of deferring most of the decoding of the certificates (will still need
     // to call to_vec on the resulting Any to restore tag and length values).
-    pub certificates: Option<alloc::vec::Vec< Any<'a>>>,
+    ///   certificates [0] IMPLICIT CertificateSet OPTIONAL,
+    pub certificates: Option<alloc::vec::Vec<Any<'a>>>,
     // TODO support CRLs
+    //   crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
     //pub crls: SetOf<RevocationInfoChoices<'a>, 10>,
-    pub signer_infos: SetOf<SignerInfo<'a>, 10>
+    ///   signerInfos SignerInfos }
+    pub signer_infos: SetOf<SignerInfo<'a>, 10>,
 }
 const CERTIFICATES_TAG: TagNumber = TagNumber::new(0);
 
@@ -80,8 +90,9 @@ impl<'a> ::der::Decodable<'a> for SignedData<'a> {
             let digest_algorithms = decoder.decode()?;
             let encap_content_info = decoder.decode()?;
             //let certificates = decoder.decode()?;
-            let certificates = ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                .map(|cs| cs.value);
+            let certificates =
+                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
+                    .map(|cs| cs.value);
             let signer_infos = decoder.decode()?;
             Ok(Self {
                 version,
@@ -96,25 +107,27 @@ impl<'a> ::der::Decodable<'a> for SignedData<'a> {
 
 impl<'a> ::der::Sequence<'a> for SignedData<'a> {
     fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-        where
-            F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
         f(&[
             &self.version,
             &self.digest_algorithms,
             &self.encap_content_info,
-            &self.certificates.as_ref().map(|certificates| ContextSpecific {
-                tag_number: CERTIFICATES_TAG,
-                tag_mode: TagMode::Implicit,
-                value: certificates.clone(),
-            }),
+            &self
+                .certificates
+                .as_ref()
+                .map(|certificates| ContextSpecific {
+                    tag_number: CERTIFICATES_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value: certificates.clone(),
+                }),
             &self.signer_infos,
         ])
     }
 }
 
-
-// DigestAlgorithmIdentifiers ::= SET OF DigestAlgorithmIdentifier
+/// DigestAlgorithmIdentifiers ::= SET OF DigestAlgorithmIdentifier
 pub type DigestAlgorithmIdentifiers<'a> = SetOf<ObjectIdentifier, 3>;
 // TODO - make dynamic
 
@@ -122,12 +135,14 @@ pub type DigestAlgorithmIdentifiers<'a> = SetOf<ObjectIdentifier, 3>;
    SignerInfos ::= SET OF SignerInfo
 */
 
-// EncapsulatedContentInfo ::= SEQUENCE {
-//   eContentType ContentType,
-//   eContent [0] EXPLICIT OCTET STRING OPTIONAL }
+/// EncapsulatedContentInfo ::= SEQUENCE {
+///   eContentType ContentType,
+///   eContent [0] EXPLICIT OCTET STRING OPTIONAL }
 #[derive(Clone, Eq, PartialEq)]
 pub struct EncapsulatedContentInfo<'a> {
+    ///   eContentType ContentType,
     pub econtent_type: ObjectIdentifier,
+    ///   eContent [0] EXPLICIT OCTET STRING OPTIONAL }
     pub econtent: Option<Any<'a>>,
 }
 const ECONTENT_TAG: TagNumber = TagNumber::new(0);
@@ -137,8 +152,9 @@ impl<'a> ::der::Decodable<'a> for EncapsulatedContentInfo<'a> {
         decoder.sequence(|decoder| {
             let econtent_type = decoder.decode()?;
             // let econtent = decoder.decode()?;
-            let econtent = ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
-                .map(|cs| cs.value);
+            let econtent =
+                ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
+                    .map(|cs| cs.value);
             Ok(Self {
                 econtent_type,
                 econtent,
@@ -148,47 +164,55 @@ impl<'a> ::der::Decodable<'a> for EncapsulatedContentInfo<'a> {
 }
 impl<'a> ::der::Sequence<'a> for EncapsulatedContentInfo<'a> {
     fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-        where
-            F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
         f(&[
             &self.econtent_type,
             &self.econtent.as_ref().map(|econtent| ContextSpecific {
                 tag_number: ECONTENT_TAG,
                 tag_mode: TagMode::Explicit,
-                value: econtent.clone(),
+                value: *econtent,
             }),
         ])
     }
 }
 
-// SignerInfo ::= SEQUENCE {
-//   version CMSVersion,
-//   sid SignerIdentifier,
-//   digestAlgorithm DigestAlgorithmIdentifier,
-//   signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
-//   signatureAlgorithm SignatureAlgorithmIdentifier,
-//   signature SignatureValue,
-//   unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
+/// SignerInfo ::= SEQUENCE {
+///   version CMSVersion,
+///   sid SignerIdentifier,
+///   digestAlgorithm DigestAlgorithmIdentifier,
+///   signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
+///   signatureAlgorithm SignatureAlgorithmIdentifier,
+///   signature SignatureValue,
+///   unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Sequence)]
 pub struct SignerInfo<'a> {
+    ///   version CMSVersion,
     pub version: u8,
+    ///   sid SignerIdentifier,
     pub sid: SignerIdentifier<'a>,
-    //TODO make attrs dynamic
+    ///   digestAlgorithm DigestAlgorithmIdentifier,
+    pub digest_algorithm: AlgorithmIdentifier<'a>,
+    ///   signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
     pub signed_attrs: SignedAttributes<'a>,
+    ///   signatureAlgorithm SignatureAlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
+    ///   signature SignatureValue,
     pub signature: BitString<'a>,
-    //TODO make attrs dynamic
+    ///   unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
     pub unsigned_attrs: UnsignedAttributes<'a>,
 }
 impl OrdIsValueOrd for SignerInfo<'_> {}
 
-// SignerIdentifier ::= CHOICE {
-//   issuerAndSerialNumber IssuerAndSerialNumber,
-//   subjectKeyIdentifier [0] SubjectKeyIdentifier }
+/// SignerIdentifier ::= CHOICE {
+///   issuerAndSerialNumber IssuerAndSerialNumber,
+///   subjectKeyIdentifier [0] SubjectKeyIdentifier }
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum SignerIdentifier<'a> {
+    ///   issuerAndSerialNumber IssuerAndSerialNumber,
     IssuerAndSerialNumber(IssuerAndSerialNumber<'a>),
+    ///   subjectKeyIdentifier [0] SubjectKeyIdentifier }
     SubjectKeyIdentifier(SubjectKeyIdentifier<'a>),
 }
 
@@ -211,10 +235,8 @@ impl<'a> DecodeValue<'a> for SignerIdentifier<'a> {
             //     }
             // }
             0xA0 => {
-                let on = decoder.context_specific::<SubjectKeyIdentifier<'a>>(
-                    SKID_TAG,
-                    TagMode::Implicit,
-                )?;
+                let on = decoder
+                    .context_specific::<SubjectKeyIdentifier<'a>>(SKID_TAG, TagMode::Implicit)?;
                 match on {
                     Some(on) => Ok(SignerIdentifier::SubjectKeyIdentifier(on)),
                     _ => Err(ErrorKind::Failed.into()),
@@ -233,13 +255,13 @@ impl<'a> EncodeValue for SignerIdentifier<'a> {
                 tag_mode: TagMode::Implicit,
                 value: variant.clone(),
             }
-                .encode(encoder),
+            .encode(encoder),
             Self::SubjectKeyIdentifier(variant) => ContextSpecific {
                 tag_number: SKID_TAG,
                 tag_mode: TagMode::Implicit,
-                value: (*variant).clone(),
+                value: *variant,
             }
-                .encode(encoder),
+            .encode(encoder),
         }
     }
     fn value_len(&self) -> ::der::Result<::der::Length> {
@@ -249,13 +271,13 @@ impl<'a> EncodeValue for SignerIdentifier<'a> {
                 tag_mode: TagMode::Implicit,
                 value: variant.clone(),
             }
-                .encoded_len(),
+            .encoded_len(),
             Self::SubjectKeyIdentifier(variant) => ContextSpecific {
                 tag_number: SKID_TAG,
                 tag_mode: TagMode::Implicit,
-                value: variant.clone(),
+                value: *variant,
             }
-                .encoded_len(),
+            .encoded_len(),
         }
     }
 }
@@ -265,10 +287,10 @@ impl<'a> FixedTag for SignerIdentifier<'a> {
     const TAG: Tag = ::der::Tag::Sequence;
 }
 
-// SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+/// SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 pub type SignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
-// UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+/// UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
 /*
@@ -444,91 +466,92 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
    CertificateSet ::= SET OF CertificateChoices
 */
 
-   // IssuerAndSerialNumber ::= SEQUENCE {
-   //   issuer Name,
-   //   serialNumber CertificateSerialNumber }
-   #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Sequence)]
-   pub struct IssuerAndSerialNumber<'a> {
-       pub issuer: Name<'a>,
-       pub serialNumber: UIntBytes<'a>,
-   }
-
+/// IssuerAndSerialNumber ::= SEQUENCE {
+///   issuer Name,
+///   serialNumber CertificateSerialNumber }
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Sequence)]
+pub struct IssuerAndSerialNumber<'a> {
+    ///   issuer Name,
+    pub issuer: Name<'a>,
+    ///   serialNumber CertificateSerialNumber }
+    pub serial_number: UIntBytes<'a>,
+}
 
 /*
-   CMSVersion ::= INTEGER  { v0(0), v1(1), v2(2), v3(3), v4(4), v5(5) }
+  CMSVersion ::= INTEGER  { v0(0), v1(1), v2(2), v3(3), v4(4), v5(5) }
 
-   UserKeyingMaterial ::= OCTET STRING
+  UserKeyingMaterial ::= OCTET STRING
 
-   OtherKeyAttribute ::= SEQUENCE {
-     keyAttrId OBJECT IDENTIFIER,
-     keyAttr ANY DEFINED BY keyAttrId OPTIONAL }
+  OtherKeyAttribute ::= SEQUENCE {
+    keyAttrId OBJECT IDENTIFIER,
+    keyAttr ANY DEFINED BY keyAttrId OPTIONAL }
 
-   -- Content Type Object Identifiers
+  -- Content Type Object Identifiers
 
-   id-ct-contentInfo OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-ct(1) 6 }
+  id-ct-contentInfo OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-ct(1) 6 }
 
-   id-data OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs7(7) 1 }
+  id-data OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs7(7) 1 }
 
-   id-signedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs7(7) 2 }
+  id-signedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs7(7) 2 }
 
-   id-envelopedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs7(7) 3 }
+  id-envelopedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs7(7) 3 }
 
-   id-digestedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs7(7) 5 }
+  id-digestedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs7(7) 5 }
 
-   id-encryptedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs7(7) 6 }
+  id-encryptedData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs7(7) 6 }
 
-   id-ct-authData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-ct(1) 2 }
+  id-ct-authData OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-ct(1) 2 }
 
-   -- The CMS Attributes
+  -- The CMS Attributes
 
-   MessageDigest ::= OCTET STRING
+  MessageDigest ::= OCTET STRING
 
-   SigningTime  ::= Time
+  SigningTime  ::= Time
 
-   Time ::= CHOICE {
-     utcTime UTCTime,
-     generalTime GeneralizedTime }
+  Time ::= CHOICE {
+    utcTime UTCTime,
+    generalTime GeneralizedTime }
 
-   Countersignature ::= SignerInfo
+  Countersignature ::= SignerInfo
 
-   -- Attribute Object Identifiers
+  -- Attribute Object Identifiers
 
-   id-contentType OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs-9(9) 3 }
+  id-contentType OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs-9(9) 3 }
 
-   id-messageDigest OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs-9(9) 4 }
+  id-messageDigest OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs-9(9) 4 }
 
-   id-signingTime OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs-9(9) 5 }
+  id-signingTime OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs-9(9) 5 }
 
-   id-countersignature OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-       us(840) rsadsi(113549) pkcs(1) pkcs-9(9) 6 }
+  id-countersignature OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+      us(840) rsadsi(113549) pkcs(1) pkcs-9(9) 6 }
 
-   -- Obsolete Extended Certificate syntax from PKCS #6
+  -- Obsolete Extended Certificate syntax from PKCS #6
 
-   ExtendedCertificateOrCertificate ::= CHOICE {
-     certificate Certificate,
-     extendedCertificate [0] IMPLICIT ExtendedCertificate }
+  ExtendedCertificateOrCertificate ::= CHOICE {
+    certificate Certificate,
+    extendedCertificate [0] IMPLICIT ExtendedCertificate }
 
-   ExtendedCertificate ::= SEQUENCE {
-     extendedCertificateInfo ExtendedCertificateInfo,
-     signatureAlgorithm SignatureAlgorithmIdentifier,
-     signature Signature }
+  ExtendedCertificate ::= SEQUENCE {
+    extendedCertificateInfo ExtendedCertificateInfo,
+    signatureAlgorithm SignatureAlgorithmIdentifier,
+    signature Signature }
 
-   ExtendedCertificateInfo ::= SEQUENCE {
-     version CMSVersion,
-     certificate Certificate,
-     attributes UnauthAttributes }
+  ExtendedCertificateInfo ::= SEQUENCE {
+    version CMSVersion,
+    certificate Certificate,
+    attributes UnauthAttributes }
 
-   Signature ::= BIT STRING
+  Signature ::= BIT STRING
 
-   END -- of CryptographicMessageSyntax2004
- */
+  END -- of CryptographicMessageSyntax2004
+*/

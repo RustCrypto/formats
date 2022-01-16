@@ -7,17 +7,17 @@
     html_root_url = "https://docs.rs/pkcs7/0.3.0"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
+#![warn(missing_docs, rust_2018_idioms)]
 
 mod content_info;
 mod content_type;
 
 pub use crate::{content_info::ContentInfo, content_type::ContentType};
 
+pub mod cryptographic_message_syntax2004;
 pub mod data_content;
 pub mod encrypted_data_content;
 pub mod enveloped_data_content;
-pub mod CryptographicMessageSyntax2004;
 
 use der::asn1::ObjectIdentifier;
 

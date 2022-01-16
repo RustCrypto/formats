@@ -97,11 +97,14 @@ impl<'a> ::der::Sequence<'a> for TrustAnchorInfo<'a> {
                 tag_mode: TagMode::Explicit,
                 value: exts.clone(),
             }),
-            &self.ta_title_lang_tag.as_ref().map(|exts| ContextSpecific {
-                tag_number: TA_TITLE_LANG_TAG,
-                tag_mode: TagMode::Implicit,
-                value: exts.clone(),
-            }),
+            &self
+                .ta_title_lang_tag
+                .as_ref()
+                .map(|ta_title_lang_tag| ContextSpecific {
+                    tag_number: TA_TITLE_LANG_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value: *ta_title_lang_tag,
+                }),
         ])
     }
 }
@@ -214,11 +217,14 @@ impl<'a> ::der::Sequence<'a> for CertPathControls<'a> {
                 tag_mode: TagMode::Implicit,
                 value: exts.clone(),
             }),
-            &self.policy_flags.as_ref().map(|exts| ContextSpecific {
-                tag_number: CPC_POLICY_FLAGS_TAG,
-                tag_mode: TagMode::Implicit,
-                value: exts.clone(),
-            }),
+            &self
+                .policy_flags
+                .as_ref()
+                .map(|policy_flags| ContextSpecific {
+                    tag_number: CPC_POLICY_FLAGS_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value: *policy_flags,
+                }),
             &self.name_constr.as_ref().map(|exts| ContextSpecific {
                 tag_number: CPC_NAME_CONSTRAINTS_TAG,
                 tag_mode: TagMode::Implicit,
@@ -227,10 +233,10 @@ impl<'a> ::der::Sequence<'a> for CertPathControls<'a> {
             &self
                 .path_len_constraint
                 .as_ref()
-                .map(|exts| ContextSpecific {
+                .map(|path_len_constraint| ContextSpecific {
                     tag_number: CPC_PATH_LEN_CONSTRAINT_TAG,
                     tag_mode: TagMode::Implicit,
-                    value: exts.clone(),
+                    value: *path_len_constraint,
                 }),
         ])
     }
@@ -247,6 +253,7 @@ pub type CertPolicyFlags<'a> = BitString<'a>;
 ///   tbsCert      \[1\] EXPLICIT TBSCertificate,
 ///   taInfo       \[2\] EXPLICIT TrustAnchorInfo }
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[allow(clippy::large_enum_variant)]
 pub enum TrustAnchorChoice<'a> {
     ///   certificate  Certificate,
     Certificate(Certificate<'a>),
