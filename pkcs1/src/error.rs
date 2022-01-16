@@ -65,6 +65,16 @@ impl From<pkcs8::Error> for Error {
 }
 
 #[cfg(feature = "pkcs8")]
+impl From<Error> for pkcs8::spki::Error {
+    fn from(err: Error) -> pkcs8::spki::Error {
+        match err {
+            Error::Asn1(e) => pkcs8::spki::Error::Asn1(e),
+            _ => pkcs8::spki::Error::KeyMalformed,
+        }
+    }
+}
+
+#[cfg(feature = "pkcs8")]
 impl From<pkcs8::spki::Error> for Error {
     fn from(err: pkcs8::spki::Error) -> Error {
         Error::Pkcs8(pkcs8::Error::PublicKey(err))
