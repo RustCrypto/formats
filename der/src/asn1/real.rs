@@ -36,7 +36,7 @@ impl DecodeValue<'_> for f64 {
         // the nth bit function is zero indexed
         if is_nth_bit_one::<7>(bytes) {
             // Binary encoding from section 8.5.7 applies
-            let sign_bit: u64 = if is_nth_bit_one::<6>(bytes) { 1 } else { 0 };
+            let sign: u64 = if is_nth_bit_one::<6>(bytes) { 1 } else { 0 };
             // Section 8.5.7.2: Check the base -- the DER specs say that only base 2 should be supported in DER, but here we allow decoding of BER, just not encoding of BER
             match mnth_bits_to_u8::<5, 4>(bytes) {
                 0 => (),
@@ -83,23 +83,35 @@ impl DecodeValue<'_> for f64 {
             // Section 8.5.7.5: Read the remaining bytes for the mantissa
             // XXX: Is this correct? I'm afraid this will not correctly pad things
             let n = u64::from_be_bytes(bytes[remaining_bytes..].try_into().unwrap());
-            let mantissa = n * 2_u64.pow(scaling_factor.into());
+            // Multiply byt 2^F corresponds to just a left shift
+            let mantissa = n << scaling_factor;
             let m_bytes = mantissa.to_be_bytes();
             if m_bytes[0] > 0x0 || m_bytes[1] > 0x0f {
                 // Only 52 bits can be stored
                 unimplemented!("Mantissa too large to be represented as IEEE 754");
             }
-
+            let exponent_bits: u64 = (exponent + 1032).try_into().unwrap();
             // Create the f64
-            // TODO: Instead of doing the math, just build it from the bits: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
-            let mantissa_f = mantissa as f64;
-            let exponent_f = 2.0_f64.powf(f64::from(exponent));
-
-            return Ok(sign * mantissa_f * exponent_f);
+            let bits = sign << 63 | exponent_bits << 52 | mantissa;
+            return Ok(f64::from_bits(bits));
         } else if is_nth_bit_one::<6>(bytes) {
-            // This either a special value, or it's the value minus zero is encoded
+            // This either a special value, or it's the value minus zero is encoded, section 8.5.9 applies
+            return match mnth_bits_to_u8::<1, 0>(bytes) {
+                0 => Ok(f64::INFINITY),
+                1 => Ok(f64::NEG_INFINITY),
+                2 => Ok(f64::NAN),
+                3 => Ok(-0.0_f64),
+                _ => unreachable!(),
+            };
         } else {
             // Decimal encoding from section 8.5.8 applies (both bit 8 and 7 are one)
+            match mnth_bits_to_u8::<1, 0>(bytes) {
+                0 => unimplemented!("Malformed decimal real"),
+                1 => unimplemented!("DER only supports REAL type in NR3 encoded (NR1 provided)"),
+                2 => unimplemented!("DER only supports REAL type in NR3 encoded (NR2 provided)"),
+                3 => (),
+                _ => unreachable!(),
+            };
         }
 
         if length.is_zero() {
