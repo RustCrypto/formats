@@ -13,7 +13,7 @@ rust-version = "1.56"
 
 [dependencies]
 serde = { version = "1", optional = true, default-features = false }
-zeroize = { version = "1.4", optional = true, default-features = false }
+zeroize = { version = "1.5", optional = true, default-features = false }
 
 [features]
 default = ["std"]
