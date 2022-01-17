@@ -2,11 +2,14 @@
 //! the purposes of decoding/encoding ASN.1 `CHOICE` types as mapped to
 //! enum variants.
 
-use crate::{FieldAttrs, Tag, TypeAttrs};
+mod variant;
+
+use self::variant::ChoiceVariant;
+use crate::TypeAttrs;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{DeriveInput, Fields, Ident, Lifetime, Variant};
+use syn::{DeriveInput, Ident, Lifetime};
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
@@ -125,80 +128,6 @@ impl DeriveChoice {
                     }
                 }
             }
-        }
-    }
-}
-
-/// "IR" for a variant of a derived `Choice`.
-struct ChoiceVariant {
-    /// Variant name.
-    ident: Ident,
-
-    /// "Field" (in this case variant)-level attributes.
-    attrs: FieldAttrs,
-
-    /// Tag for the ASN.1 type.
-    tag: Tag,
-}
-
-impl ChoiceVariant {
-    /// Create a new [`ChoiceVariant`] from the input [`Variant`].
-    fn new(input: &Variant, type_attrs: &TypeAttrs) -> Self {
-        let ident = input.ident.clone();
-        let attrs = FieldAttrs::parse(&input.attrs, type_attrs);
-
-        if attrs.extensible {
-            abort!(&ident, "`extensible` is not allowed on CHOICE");
-        }
-
-        // Validate that variant is a 1-element tuple struct
-        match &input.fields {
-            // TODO(tarcieri): handle 0 bindings for ASN.1 NULL
-            Fields::Unnamed(fields) if fields.unnamed.len() == 1 => (),
-            _ => abort!(&ident, "enum variant must be a 1-element tuple struct"),
-        }
-
-        let tag = attrs
-            .tag()
-            .unwrap_or_else(|| abort!(&ident, "no #[asn1(type=...)] specified for enum variant",));
-
-        Self { ident, attrs, tag }
-    }
-
-    /// Derive a match arm of the impl body for `TryFrom<der::asn1::Any<'_>>`.
-    fn to_decode_tokens(&self) -> TokenStream {
-        let tag = self.tag.to_tokens();
-        let ident = &self.ident;
-        let decoder = self.attrs.decoder();
-        quote! {
-            #tag => Ok(Self::#ident(#decoder.try_into()?)),
-        }
-    }
-
-    /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn to_encode_tokens(&self) -> TokenStream {
-        let ident = &self.ident;
-        let binding = quote!(variant);
-        let encoder = self.attrs.encoder(&binding);
-        quote! {
-            Self::#ident(#binding) => #encoder,
-        }
-    }
-
-    /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    fn to_encoded_len_tokens(&self) -> TokenStream {
-        let ident = &self.ident;
-        quote! {
-            Self::#ident(variant) => variant.encoded_len(),
-        }
-    }
-
-    /// Derive a match arm for the impl body for `der::Tagged::tag`.
-    fn to_tagged_tokens(&self) -> TokenStream {
-        let ident = &self.ident;
-        let tag = self.tag.to_tokens();
-        quote! {
-            Self::#ident(_) => #tag,
         }
     }
 }
