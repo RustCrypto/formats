@@ -1,11 +1,14 @@
 //! Support for deriving the `Sequence` trait on structs for the purposes of
 //! decoding/encoding ASN.1 `SEQUENCE` types as mapped to struct fields.
 
-use crate::{FieldAttrs, TypeAttrs};
+mod field;
+
+use crate::TypeAttrs;
+use field::SequenceField;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{DeriveInput, Field, Ident, Lifetime, Path, Type};
+use syn::{DeriveInput, Ident, Lifetime};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
@@ -103,153 +106,6 @@ impl DeriveSequence {
                     ])
                 }
             }
-        }
-    }
-}
-
-/// "IR" for a field of a derived `Sequence`.
-struct SequenceField {
-    /// Variant name.
-    ident: Ident,
-
-    /// Field-level attributes.
-    attrs: FieldAttrs,
-
-    /// Field type
-    field_type: Type,
-}
-
-impl SequenceField {
-    /// Create a new [`SequenceField`] from the input [`Field`].
-    fn new(field: &Field, type_attrs: &TypeAttrs) -> Self {
-        let ident = field.ident.as_ref().cloned().unwrap_or_else(|| {
-            abort!(
-                field,
-                "no name on struct field i.e. tuple structs unsupported"
-            )
-        });
-
-        let attrs = FieldAttrs::parse(&field.attrs, type_attrs);
-
-        if attrs.asn1_type.is_some() && attrs.default.is_some() {
-            abort!(
-                ident,
-                "ASN.1 `type` and `default` options cannot be combined"
-            );
-        }
-
-        Self {
-            ident,
-            attrs,
-            field_type: field.ty.clone(),
-        }
-    }
-
-    /// Derive code for decoding a field of a sequence.
-    fn to_decode_tokens(&self) -> TokenStream {
-        LowerFieldDecoder::new(&self.attrs, &self.field_type).to_tokens(&self.ident)
-    }
-
-    /// Derive code for encoding a field of a sequence.
-    fn to_encode_tokens(&self) -> TokenStream {
-        // NOTE: `type` and `default` are mutually exclusive
-        // This is checked above in `SequenceField::new`
-        debug_assert!(self.attrs.asn1_type.is_none() || self.attrs.default.is_none());
-
-        let ident = &self.ident;
-        let binding = quote!(&self.#ident);
-
-        if let Some(ty) = &self.attrs.asn1_type {
-            if self.attrs.optional {
-                let map_arg = quote!(field);
-                let encoder = ty.encoder(&map_arg);
-
-                // TODO(tarcieri): refactor this to get rid of `Result` type annotation
-                quote! {
-                    #binding.as_ref().map(|#map_arg| {
-                        let res: der::Result<_> = Ok(#encoder);
-                        res
-                    }).transpose()?
-                }
-            } else {
-                let encoder = ty.encoder(&binding);
-                quote!(&#encoder)
-            }
-        } else if let Some(default) = &self.attrs.default {
-            quote! {
-                &::der::asn1::OptionalRef(if #binding == &#default() {
-                    None
-                } else {
-                    Some(#binding)
-                })
-            }
-        } else {
-            quote!(#binding)
-        }
-    }
-}
-
-/// AST generator for field decoders.
-struct LowerFieldDecoder {
-    /// Decoder-in-progress.
-    decoder: TokenStream,
-}
-
-impl LowerFieldDecoder {
-    /// Create a new field decoder.
-    pub(crate) fn new(attrs: &FieldAttrs, field_type: &Type) -> Self {
-        let mut lowerer = Self {
-            decoder: attrs.decoder(),
-        };
-
-        if attrs.asn1_type.is_some() {
-            lowerer.apply_asn1_type(attrs.optional);
-        }
-
-        if let Some(default) = &attrs.default {
-            // TODO(tarcieri): default in conjunction with ASN.1 types?
-            debug_assert!(
-                attrs.asn1_type.is_none(),
-                "`type` and `default` are mutually exclusive"
-            );
-
-            // TODO(tarcieri): support for context-specific fields with defaults?
-            if attrs.context_specific.is_none() {
-                lowerer.apply_default(default, field_type);
-            }
-        }
-
-        lowerer
-    }
-
-    /// Lower the field decoder to tokens.
-    pub(crate) fn to_tokens(&self, ident: &Ident) -> TokenStream {
-        let decoder = &self.decoder;
-
-        quote! {
-            let #ident = #decoder;
-        }
-    }
-
-    /// Apply the ASN.1 type (if defined).
-    fn apply_asn1_type(&mut self, optional: bool) {
-        let decoder = &self.decoder;
-
-        self.decoder = if optional {
-            quote! {
-                #decoder.map(TryInto::try_into).transpose()?
-            }
-        } else {
-            quote! {
-                #decoder.try_into()?
-            }
-        }
-    }
-
-    /// Handle default value for a type.
-    fn apply_default(&mut self, default: &Path, field_type: &Type) {
-        self.decoder = quote! {
-            decoder.decode::<Option<#field_type>>()?.unwrap_or_else(#default);
         }
     }
 }
