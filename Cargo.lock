@@ -252,9 +252,8 @@ dependencies = [
 
 [[package]]
 name = "crypto-bigint"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03c6a1d5fa1de37e071642dfa44ec552ca5b299adb128fab16138e24b548fd21"
+version = "0.4.0-pre"
+source = "git+https://github.com/RustCrypto/crypto-bigint.git#085a8857f9437f3726c507d1622be4a200360494"
 dependencies = [
  "generic-array",
  "subtle",
@@ -293,7 +292,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.5.1"
+version = "0.6.0-pre"
 dependencies = [
  "const-oid",
  "crypto-bigint",
@@ -533,7 +532,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs1"
-version = "0.3.3"
+version = "0.4.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -543,7 +542,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.4.0"
+version = "0.5.0-pre"
 dependencies = [
  "aes",
  "block-modes",
@@ -560,7 +559,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs7"
-version = "0.3.0"
+version = "0.4.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -569,7 +568,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.8.0"
+version = "0.9.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -856,7 +855,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.2.1"
+version = "0.3.0-pre"
 dependencies = [
  "der",
  "generic-array",
@@ -938,7 +937,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.5.4"
+version = "0.6.0-pre"
 dependencies = [
  "base64ct",
  "der",
@@ -948,7 +947,7 @@ dependencies = [
 
 [[package]]
 name = "ssh-key"
-version = "0.2.0"
+version = "0.3.0-pre"
 dependencies = [
  "base64ct",
  "hex-literal",

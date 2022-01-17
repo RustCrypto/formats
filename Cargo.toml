@@ -19,3 +19,6 @@ members = [
     "tls_codec/derive",
     "x509"
 ]
+
+[patch.crates-io]
+crypto-bigint = { git = "https://github.com/RustCrypto/crypto-bigint.git" }
