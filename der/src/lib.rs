@@ -1,4 +1,18 @@
+#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_root_url = "https://docs.rs/der/0.6.0-pre"
+)]
+#![forbid(unsafe_code, clippy::unwrap_used)]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 //! # Usage
 //! ## [`Decodable`] and [`Encodable`] traits
@@ -310,21 +324,6 @@
 //! [`UIntBytes`]: asn1::UIntBytes
 //! [`UtcTime`]: asn1::UtcTime
 //! [`Utf8String`]: asn1::Utf8String
-
-#![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/der/0.5.1"
-)]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(
-    missing_docs,
-    rust_2018_idioms,
-    unused_lifetimes,
-    unused_qualifications
-)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
