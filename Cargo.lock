@@ -251,15 +251,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crypto-bigint"
-version = "0.4.0-pre"
-source = "git+https://github.com/RustCrypto/crypto-bigint.git#085a8857f9437f3726c507d1622be4a200360494"
-dependencies = [
- "generic-array",
- "subtle",
-]
-
-[[package]]
 name = "crypto-common"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -295,7 +286,6 @@ name = "der"
 version = "0.6.0-pre"
 dependencies = [
  "const-oid",
- "crypto-bigint",
  "der_derive",
  "hex-literal",
  "pem-rfc7468",
