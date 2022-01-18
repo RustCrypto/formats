@@ -17,8 +17,8 @@ impl Parser {
     /// Parse an OID from a dot-delimited string e.g. `1.2.840.113549.1.1.1`
     pub(crate) const fn parse(s: &str) -> Self {
         let bytes = s.as_bytes();
-        const_assert!(!bytes.is_empty(), "OID string is empty");
-        const_assert!(
+        assert!(!bytes.is_empty(), "OID string is empty");
+        assert!(
             matches!(bytes[0], b'0'..=b'9'),
             "OID must start with a digit"
         );
@@ -50,18 +50,18 @@ impl Parser {
                 self.parse_bytes(remaining)
             }
             [b'.', remaining @ ..] => {
-                const_assert!(!remaining.is_empty(), "invalid trailing '.' in OID");
+                assert!(!remaining.is_empty(), "invalid trailing '.' in OID");
                 self.encoder = self.encoder.encode(self.current_arc);
                 self.current_arc = 0;
                 self.parse_bytes(remaining)
             }
             [byte, ..] => {
-                const_assert!(
+                assert!(
                     matches!(byte, b'0'..=b'9' | b'.'),
                     "invalid character in OID"
                 );
 
-                // Unreachable (checked by above `const_assert!`)
+                // Unreachable (checked by above `assert!`)
                 // Needed for match exhaustiveness and matching types
                 self
             }

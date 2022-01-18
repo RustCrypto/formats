@@ -43,12 +43,12 @@ impl Encoder {
     pub(crate) const fn encode(mut self, arc: Arc) -> Self {
         match self.state {
             State::Initial => {
-                const_assert!(arc <= ARC_MAX_FIRST, "invalid first arc (must be 0-2)");
+                assert!(arc <= ARC_MAX_FIRST, "invalid first arc (must be 0-2)");
                 self.state = State::FirstArc(arc);
                 self
             }
             State::FirstArc(first_arc) => {
-                const_assert!(arc <= ARC_MAX_SECOND, "invalid second arc (must be 0-39)");
+                assert!(arc <= ARC_MAX_SECOND, "invalid second arc (must be 0-39)");
                 self.state = State::Body;
                 self.bytes[0] = (first_arc * (ARC_MAX_SECOND + 1)) as u8 + arc as u8;
                 self.cursor = 1;
@@ -58,7 +58,7 @@ impl Encoder {
                 // Total number of bytes in encoded arc - 1
                 let nbytes = base128_len(arc);
 
-                const_assert!(
+                assert!(
                     self.cursor + nbytes + 1 < ObjectIdentifier::MAX_SIZE,
                     "OID too long (exceeded max DER bytes)"
                 );
@@ -73,7 +73,7 @@ impl Encoder {
 
     /// Finish encoding an OID
     pub(crate) const fn finish(self) -> ObjectIdentifier {
-        const_assert!(self.cursor >= 2, "OID too short (minimum 3 arcs)");
+        assert!(self.cursor >= 2, "OID too short (minimum 3 arcs)");
         ObjectIdentifier {
             bytes: self.bytes,
             length: self.cursor as u8,
@@ -88,7 +88,7 @@ impl Encoder {
             self.bytes[self.cursor + i] = (n & 0b1111111) as u8 | mask;
             n >>= 7;
 
-            const_assert!(i > 0, "Base 128 offset miscalculation");
+            assert!(i > 0, "Base 128 offset miscalculation");
             self.encode_base128_byte(n, i.saturating_sub(1), true)
         } else {
             self.bytes[self.cursor] = n as u8 | mask;

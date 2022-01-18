@@ -1,6 +1,6 @@
 [package]
 name = "const-oid"
-version = "0.7.1"
+version = "0.8.0-pre"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -14,7 +14,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-i
 keywords = ["iso", "iec", "itu", "oid"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.57"
 
 [dev-dependencies]
 hex-literal = "0.3"
