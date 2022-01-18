@@ -38,12 +38,11 @@ jobs:
           override: true
       - run: cargo build --target ${{ matrix.target }} --release
       - run: cargo build --target ${{ matrix.target }} --release --features alloc
-      - run: cargo build --target ${{ matrix.target }} --release --features bigint
       - run: cargo build --target ${{ matrix.target }} --release --features derive
       - run: cargo build --target ${{ matrix.target }} --release --features oid
       - run: cargo build --target ${{ matrix.target }} --release --features pem
       - run: cargo build --target ${{ matrix.target }} --release --features time
-      - run: cargo build --target ${{ matrix.target }} --release --features alloc,bigint,derive,oid,pem,time
+      - run: cargo build --target ${{ matrix.target }} --release --features alloc,derive,oid,pem,time
 
   test:
     strategy:
@@ -85,7 +84,6 @@ jobs:
           override: true
       - run: ${{ matrix.deps }}
       - run: cargo test --target ${{ matrix.target }} --release
-      - run: cargo test --target ${{ matrix.target }} --release --features bigint
       - run: cargo test --target ${{ matrix.target }} --release --features oid
       - run: cargo test --target ${{ matrix.target }} --release --features pem
       - run: cargo test --target ${{ matrix.target }} --release --all-features
