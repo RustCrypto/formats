@@ -164,8 +164,7 @@ impl ObjectIdentifier {
 
     /// Iterate over the arcs (a.k.a. nodes) of an [`ObjectIdentifier`].
     ///
-    /// Returns [`Arcs`], an iterator over `Arc` values representing the value
-    /// of each arc/node.
+    /// Returns [`Arcs`], an iterator over [`Arc`] values.
     pub fn arcs(&self) -> Arcs<'_> {
         Arcs::new(self)
     }
