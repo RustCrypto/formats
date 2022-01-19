@@ -35,7 +35,7 @@ pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
 }
 
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.
-pub(super) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
+pub(crate) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
     let bytes = strip_leading_zeroes(bytes);
 
     if needs_leading_zero(bytes) {

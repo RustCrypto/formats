@@ -224,8 +224,8 @@ pub enum ErrorKind {
     RealBaseInvalid(u8),
     /// Real related error: encoded exponent cannot be represented on an IEEE-754 double
     RealExponentTooLong,
-    /// Real related error: encoding not supported (only NR3 is supported if the std feature is enabled)
-    RealISO6093EncodingNotSupported,
+    /// Real related error: encoding not supported or malformed
+    RealISO6093Error,
 
     /// Unknown tag mode.
     TagModeUnknown,
@@ -367,8 +367,8 @@ impl fmt::Display for ErrorKind {
                 f,
                 "exponent encoded on more than 2 bytes, but that cannot be represented on an IEEE-754",
             ),
-            ErrorKind::RealISO6093EncodingNotSupported => {
-                write!(f, "provided ISO 6093 encoding not supported")
+            ErrorKind::RealISO6093Error => {
+                write!(f, "provided ISO 6093 encoding not supported or malformed")
             }
         }
     }
