@@ -47,16 +47,16 @@ impl DecodeValue<'_> for f64 {
             // Multiply byt 2^F corresponds to just a left shift
             let mantissa = n << scaling_factor;
             // Create the f64
-            return Ok(integer_encode_f64(sign, exponent, mantissa));
+            Ok(integer_encode_f64(sign, exponent, mantissa))
         } else if is_nth_bit_one::<6>(bytes) {
             // This either a special value, or it's the value minus zero is encoded, section 8.5.9 applies
-            return match mnth_bits_to_u8::<1, 0>(bytes) {
+            match mnth_bits_to_u8::<1, 0>(bytes) {
                 0 => Ok(f64::INFINITY),
                 1 => Ok(f64::NEG_INFINITY),
                 2 => Ok(f64::NAN),
                 3 => Ok(-0.0_f64),
                 _ => unreachable!(),
-            };
+            }
         } else {
             let astr = StrSlice::from_bytes(&bytes[3..])?;
             match astr.inner.parse::<f64>() {
