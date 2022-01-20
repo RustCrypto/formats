@@ -11,12 +11,12 @@ use x509::{AttributeTypeAndValue, Name, SubjectKeyIdentifier};
 
 /// ContentInfo ::= SEQUENCE {
 ///   contentType ContentType,
-///   content [0] EXPLICIT ANY DEFINED BY contentType }
+///   content \[0\] EXPLICIT ANY DEFINED BY contentType }
 #[derive(Clone, Eq, PartialEq)]
 pub struct ContentInfo2004<'a> {
     ///   contentType ContentType,
     pub content_type: ObjectIdentifier,
-    ///   content [0] EXPLICIT ANY DEFINED BY contentType }
+    ///   content \[0\] EXPLICIT ANY DEFINED BY contentType }
     pub content: Option<Any<'a>>,
 }
 
@@ -60,8 +60,8 @@ pub type ContentType = ObjectIdentifier;
 ///   version CMSVersion,
 ///   digestAlgorithms DigestAlgorithmIdentifiers,
 ///   encapContentInfo EncapsulatedContentInfo,
-///   certificates [0] IMPLICIT CertificateSet OPTIONAL,
-///   crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+///   certificates \[0\] IMPLICIT CertificateSet OPTIONAL,
+///   crls \[1\] IMPLICIT RevocationInfoChoices OPTIONAL,
 ///   signerInfos SignerInfos }
 #[derive(Clone, Eq, PartialEq)]
 pub struct SignedData<'a> {
@@ -73,15 +73,17 @@ pub struct SignedData<'a> {
     pub encap_content_info: EncapsulatedContentInfo<'a>,
     // Using Any as a means of deferring most of the decoding of the certificates (will still need
     // to call to_vec on the resulting Any to restore tag and length values).
-    ///   certificates [0] IMPLICIT CertificateSet OPTIONAL,
+    ///   certificates \[0\] IMPLICIT CertificateSet OPTIONAL,
     pub certificates: Option<alloc::vec::Vec<Any<'a>>>,
-    // TODO support CRLs
-    //   crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+    // TODO support CRLs - placeholder to placate zero length SETs
+    //   crls \[1\] IMPLICIT RevocationInfoChoices OPTIONAL,
     //pub crls: SetOf<RevocationInfoChoices<'a>, 10>,
     ///   signerInfos SignerInfos }
+    pub crls: Option<alloc::vec::Vec<Any<'a>>>,
     pub signer_infos: SetOf<SignerInfo<'a>, 10>,
 }
 const CERTIFICATES_TAG: TagNumber = TagNumber::new(0);
+const CRLS_TAG: TagNumber = TagNumber::new(1);
 
 impl<'a> ::der::Decodable<'a> for SignedData<'a> {
     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
@@ -93,12 +95,16 @@ impl<'a> ::der::Decodable<'a> for SignedData<'a> {
             let certificates =
                 ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value);
+            let crls =
+                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
+                    .map(|cs| cs.value);
             let signer_infos = decoder.decode()?;
             Ok(Self {
                 version,
                 digest_algorithms,
                 encap_content_info,
                 certificates,
+                crls,
                 signer_infos,
             })
         })
@@ -122,6 +128,14 @@ impl<'a> ::der::Sequence<'a> for SignedData<'a> {
                     tag_mode: TagMode::Implicit,
                     value: certificates.clone(),
                 }),
+            &self
+                .crls
+                .as_ref()
+                .map(|certificates| ContextSpecific {
+                    tag_number: CRLS_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value: certificates.clone(),
+                }),
             &self.signer_infos,
         ])
     }
@@ -137,12 +151,12 @@ pub type DigestAlgorithmIdentifiers<'a> = SetOf<ObjectIdentifier, 3>;
 
 /// EncapsulatedContentInfo ::= SEQUENCE {
 ///   eContentType ContentType,
-///   eContent [0] EXPLICIT OCTET STRING OPTIONAL }
+///   eContent \[0\] EXPLICIT OCTET STRING OPTIONAL }
 #[derive(Clone, Eq, PartialEq)]
 pub struct EncapsulatedContentInfo<'a> {
     ///   eContentType ContentType,
     pub econtent_type: ObjectIdentifier,
-    ///   eContent [0] EXPLICIT OCTET STRING OPTIONAL }
+    ///   eContent \[0\] EXPLICIT OCTET STRING OPTIONAL }
     pub econtent: Option<Any<'a>>,
 }
 const ECONTENT_TAG: TagNumber = TagNumber::new(0);
@@ -182,10 +196,10 @@ impl<'a> ::der::Sequence<'a> for EncapsulatedContentInfo<'a> {
 ///   version CMSVersion,
 ///   sid SignerIdentifier,
 ///   digestAlgorithm DigestAlgorithmIdentifier,
-///   signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
+///   signedAttrs \[0\] IMPLICIT SignedAttributes OPTIONAL,
 ///   signatureAlgorithm SignatureAlgorithmIdentifier,
 ///   signature SignatureValue,
-///   unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
+///   unsignedAttrs \[1\] IMPLICIT UnsignedAttributes OPTIONAL }
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Sequence)]
 pub struct SignerInfo<'a> {
     ///   version CMSVersion,
@@ -194,25 +208,25 @@ pub struct SignerInfo<'a> {
     pub sid: SignerIdentifier<'a>,
     ///   digestAlgorithm DigestAlgorithmIdentifier,
     pub digest_algorithm: AlgorithmIdentifier<'a>,
-    ///   signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
+    ///   signedAttrs \[0\] IMPLICIT SignedAttributes OPTIONAL,
     pub signed_attrs: SignedAttributes<'a>,
     ///   signatureAlgorithm SignatureAlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
     ///   signature SignatureValue,
     pub signature: BitString<'a>,
-    ///   unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
+    ///   unsignedAttrs \[1\] IMPLICIT UnsignedAttributes OPTIONAL }
     pub unsigned_attrs: UnsignedAttributes<'a>,
 }
 impl OrdIsValueOrd for SignerInfo<'_> {}
 
 /// SignerIdentifier ::= CHOICE {
 ///   issuerAndSerialNumber IssuerAndSerialNumber,
-///   subjectKeyIdentifier [0] SubjectKeyIdentifier }
+///   subjectKeyIdentifier \[0\] SubjectKeyIdentifier }
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum SignerIdentifier<'a> {
     ///   issuerAndSerialNumber IssuerAndSerialNumber,
     IssuerAndSerialNumber(IssuerAndSerialNumber<'a>),
-    ///   subjectKeyIdentifier [0] SubjectKeyIdentifier }
+    ///   subjectKeyIdentifier \[0\] SubjectKeyIdentifier }
     SubjectKeyIdentifier(SubjectKeyIdentifier<'a>),
 }
 
@@ -304,21 +318,21 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
    EnvelopedData ::= SEQUENCE {
      version CMSVersion,
-     originatorInfo [0] IMPLICIT OriginatorInfo OPTIONAL,
+     originatorInfo \[0\] IMPLICIT OriginatorInfo OPTIONAL,
      recipientInfos RecipientInfos,
      encryptedContentInfo EncryptedContentInfo,
-     unprotectedAttrs [1] IMPLICIT UnprotectedAttributes OPTIONAL }
+     unprotectedAttrs \[1\] IMPLICIT UnprotectedAttributes OPTIONAL }
 
    OriginatorInfo ::= SEQUENCE {
-     certs [0] IMPLICIT CertificateSet OPTIONAL,
-     crls [1] IMPLICIT RevocationInfoChoices OPTIONAL }
+     certs \[0\] IMPLICIT CertificateSet OPTIONAL,
+     crls \[1\] IMPLICIT RevocationInfoChoices OPTIONAL }
 
    RecipientInfos ::= SET SIZE (1..MAX) OF RecipientInfo
 
    EncryptedContentInfo ::= SEQUENCE {
      contentType ContentType,
      contentEncryptionAlgorithm ContentEncryptionAlgorithmIdentifier,
-     encryptedContent [0] IMPLICIT EncryptedContent OPTIONAL }
+     encryptedContent \[0\] IMPLICIT EncryptedContent OPTIONAL }
 
    EncryptedContent ::= OCTET STRING
 
@@ -326,10 +340,10 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
    RecipientInfo ::= CHOICE {
      ktri KeyTransRecipientInfo,
-     kari [1] KeyAgreeRecipientInfo,
-     kekri [2] KEKRecipientInfo,
-     pwri [3] PasswordRecipientInfo,
-     ori [4] OtherRecipientInfo }
+     kari \[1\] KeyAgreeRecipientInfo,
+     kekri \[2\] KEKRecipientInfo,
+     pwri \[3\] PasswordRecipientInfo,
+     ori \[4\] OtherRecipientInfo }
 
    EncryptedKey ::= OCTET STRING
 
@@ -341,19 +355,19 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
    RecipientIdentifier ::= CHOICE {
      issuerAndSerialNumber IssuerAndSerialNumber,
-     subjectKeyIdentifier [0] SubjectKeyIdentifier }
+     subjectKeyIdentifier \[0\] SubjectKeyIdentifier }
 
    KeyAgreeRecipientInfo ::= SEQUENCE {
      version CMSVersion,  -- always set to 3
-     originator [0] EXPLICIT OriginatorIdentifierOrKey,
-     ukm [1] EXPLICIT UserKeyingMaterial OPTIONAL,
+     originator \[0\] EXPLICIT OriginatorIdentifierOrKey,
+     ukm \[1\] EXPLICIT UserKeyingMaterial OPTIONAL,
      keyEncryptionAlgorithm KeyEncryptionAlgorithmIdentifier,
      recipientEncryptedKeys RecipientEncryptedKeys }
 
    OriginatorIdentifierOrKey ::= CHOICE {
      issuerAndSerialNumber IssuerAndSerialNumber,
-     subjectKeyIdentifier [0] SubjectKeyIdentifier,
-     originatorKey [1] OriginatorPublicKey }
+     subjectKeyIdentifier \[0\] SubjectKeyIdentifier,
+     originatorKey \[1\] OriginatorPublicKey }
 
    OriginatorPublicKey ::= SEQUENCE {
      algorithm AlgorithmIdentifier,
@@ -367,7 +381,7 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
    KeyAgreeRecipientIdentifier ::= CHOICE {
      issuerAndSerialNumber IssuerAndSerialNumber,
-     rKeyId [0] IMPLICIT RecipientKeyIdentifier }
+     rKeyId \[0\] IMPLICIT RecipientKeyIdentifier }
 
    RecipientKeyIdentifier ::= SEQUENCE {
      subjectKeyIdentifier SubjectKeyIdentifier,
@@ -389,7 +403,7 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
    PasswordRecipientInfo ::= SEQUENCE {
      version CMSVersion,   -- always set to 0
-     keyDerivationAlgorithm [0] KeyDerivationAlgorithmIdentifier
+     keyDerivationAlgorithm \[0\] KeyDerivationAlgorithmIdentifier
                                 OPTIONAL,
      keyEncryptionAlgorithm KeyEncryptionAlgorithmIdentifier,
      encryptedKey EncryptedKey }
@@ -409,18 +423,18 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
    EncryptedData ::= SEQUENCE {
      version CMSVersion,
      encryptedContentInfo EncryptedContentInfo,
-     unprotectedAttrs [1] IMPLICIT UnprotectedAttributes OPTIONAL }
+     unprotectedAttrs \[1\] IMPLICIT UnprotectedAttributes OPTIONAL }
 
    AuthenticatedData ::= SEQUENCE {
      version CMSVersion,
-     originatorInfo [0] IMPLICIT OriginatorInfo OPTIONAL,
+     originatorInfo \[0\] IMPLICIT OriginatorInfo OPTIONAL,
      recipientInfos RecipientInfos,
      macAlgorithm MessageAuthenticationCodeAlgorithm,
-     digestAlgorithm [1] DigestAlgorithmIdentifier OPTIONAL,
+     digestAlgorithm \[1\] DigestAlgorithmIdentifier OPTIONAL,
      encapContentInfo EncapsulatedContentInfo,
-     authAttrs [2] IMPLICIT AuthAttributes OPTIONAL,
+     authAttrs \[2\] IMPLICIT AuthAttributes OPTIONAL,
      mac MessageAuthenticationCode,
-     unauthAttrs [3] IMPLICIT UnauthAttributes OPTIONAL }
+     unauthAttrs \[3\] IMPLICIT UnauthAttributes OPTIONAL }
 
    AuthAttributes ::= SET SIZE (1..MAX) OF Attribute
 
@@ -444,7 +458,7 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
    RevocationInfoChoice ::= CHOICE {
      crl CertificateList,
-     other [1] IMPLICIT OtherRevocationInfoFormat }
+     other \[1\] IMPLICIT OtherRevocationInfoFormat }
 
    OtherRevocationInfoFormat ::= SEQUENCE {
      otherRevInfoFormat OBJECT IDENTIFIER,
@@ -452,10 +466,10 @@ pub type UnsignedAttributes<'a> = SetOf<AttributeTypeAndValue<'a>, 10>;
 
    CertificateChoices ::= CHOICE {
      certificate Certificate,
-     extendedCertificate [0] IMPLICIT ExtendedCertificate,  -- Obsolete
-     v1AttrCert [1] IMPLICIT AttributeCertificateV1,        -- Obsolete
-     v2AttrCert [2] IMPLICIT AttributeCertificateV2,
-     other [3] IMPLICIT OtherCertificateFormat }
+     extendedCertificate \[0\] IMPLICIT ExtendedCertificate,  -- Obsolete
+     v1AttrCert \[1\] IMPLICIT AttributeCertificateV1,        -- Obsolete
+     v2AttrCert \[2\] IMPLICIT AttributeCertificateV2,
+     other \[3\] IMPLICIT OtherCertificateFormat }
 
    AttributeCertificateV2 ::= AttributeCertificate
 
@@ -539,7 +553,7 @@ pub struct IssuerAndSerialNumber<'a> {
 
   ExtendedCertificateOrCertificate ::= CHOICE {
     certificate Certificate,
-    extendedCertificate [0] IMPLICIT ExtendedCertificate }
+    extendedCertificate \[0\] IMPLICIT ExtendedCertificate }
 
   ExtendedCertificate ::= SEQUENCE {
     extendedCertificateInfo ExtendedCertificateInfo,
