@@ -83,8 +83,9 @@ impl ChoiceVariant {
 #[cfg(test)]
 mod tests {
     use super::ChoiceVariant;
-    use crate::{Asn1Type, FieldAttrs, Tag};
+    use crate::{Asn1Type, FieldAttrs, Tag, TagNumber};
     use proc_macro2::Span;
+    use quote::quote;
     use syn::Ident;
 
     #[test]
@@ -97,25 +98,91 @@ mod tests {
             tag: Tag::Universal(Asn1Type::Utf8String),
         };
 
-        // TODO(tarcieri): better comparison, possibly using `quote!`
         assert_eq!(
             variant.to_decode_tokens().to_string(),
-            ":: der :: Tag :: Utf8String => Ok (Self :: ExampleVariant (decoder . decode () ? . try_into () ?)) ,"
+            quote! {
+                ::der::Tag::Utf8String => Ok(Self::ExampleVariant(
+                    decoder.decode()?
+                    .try_into()?
+                )),
+            }
+            .to_string()
         );
 
         assert_eq!(
             variant.to_encode_tokens().to_string(),
-            "Self :: ExampleVariant (variant) => encoder . encode (variant) ? ,"
+            quote! {
+                Self::ExampleVariant(variant) => encoder.encode(variant)?,
+            }
+            .to_string()
         );
 
         assert_eq!(
             variant.to_encoded_len_tokens().to_string(),
-            "Self :: ExampleVariant (variant) => variant . encoded_len () ,"
+            quote! {
+                Self::ExampleVariant(variant) => variant.encoded_len(),
+            }
+            .to_string()
         );
 
         assert_eq!(
             variant.to_tagged_tokens().to_string(),
-            "Self :: ExampleVariant (_) => :: der :: Tag :: Utf8String ,"
+            quote! {
+                Self::ExampleVariant(_) => ::der::Tag::Utf8String,
+            }
+            .to_string()
+        )
+    }
+
+    #[test]
+    fn implicit() {
+        let span = Span::call_site();
+
+        let variant = ChoiceVariant {
+            ident: Ident::new("ImplicitVariant", span),
+            attrs: FieldAttrs::default(),
+            tag: Tag::ContextSpecific {
+                constructed: false,
+                number: TagNumber(0),
+            },
+        };
+
+        assert_eq!(
+            variant.to_decode_tokens().to_string(),
+            quote! {
+                ::der::Tag::ContextSpecific {
+                    constructed: false,
+                    number: ::der::TagNumber::N0,
+                } => Ok(Self::ImplicitVariant(decoder.decode()?.try_into()?)),
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            variant.to_encode_tokens().to_string(),
+            quote! {
+                Self::ImplicitVariant(variant) => encoder.encode(variant)?,
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            variant.to_encoded_len_tokens().to_string(),
+            quote! {
+                Self::ImplicitVariant(variant) => variant.encoded_len(),
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            variant.to_tagged_tokens().to_string(),
+            quote! {
+                Self::ImplicitVariant(_) => ::der::Tag::ContextSpecific {
+                    constructed: false,
+                    number: ::der::TagNumber::N0,
+                },
+            }
+            .to_string()
         )
     }
 }

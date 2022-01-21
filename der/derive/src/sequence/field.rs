@@ -1,6 +1,6 @@
 //! Sequence field IR and lowerings
 
-use crate::{Asn1Type, FieldAttrs, TypeAttrs};
+use crate::{Asn1Type, FieldAttrs, TagMode, TagNumber, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
@@ -34,6 +34,13 @@ impl SequenceField {
             abort!(
                 ident,
                 "ASN.1 `type` and `default` options cannot be combined"
+            );
+        }
+
+        if attrs.default.is_some() && attrs.optional {
+            abort!(
+                ident,
+                "`optional` and `default` field qualifiers are mutually exclusive"
             );
         }
 
@@ -71,19 +78,27 @@ impl SequenceField {
     /// Derive code for encoding a field of a sequence.
     pub(super) fn to_encode_tokens(&self) -> TokenStream {
         let mut lowerer = LowerFieldEncoder::new(&self.ident);
+        let attrs = &self.attrs;
 
-        if let Some(ty) = &self.attrs.asn1_type {
-            lowerer.apply_asn1_type(ty, self.attrs.optional);
-        }
-
-        if let Some(default) = &self.attrs.default {
+        if let Some(ty) = &attrs.asn1_type {
             // TODO(tarcieri): default in conjunction with ASN.1 types?
             debug_assert!(
-                self.attrs.asn1_type.is_none(),
+                attrs.default.is_none(),
                 "`type` and `default` are mutually exclusive"
             );
+            lowerer.apply_asn1_type(ty, attrs.optional);
+        }
 
-            lowerer.apply_default(default);
+        if let Some(tag_number) = &attrs.context_specific {
+            lowerer.apply_context_specific(tag_number, &attrs.tag_mode, attrs.optional);
+        }
+
+        if let Some(default) = &attrs.default {
+            debug_assert!(
+                !attrs.optional,
+                "`default`, and `optional` are mutually exclusive"
+            );
+            lowerer.apply_default(&self.ident, default, attrs.context_specific.is_none());
         }
 
         lowerer.into_tokens()
@@ -146,13 +161,14 @@ impl LowerFieldEncoder {
     /// Create a new field encoder lowerer.
     fn new(ident: &Ident) -> Self {
         Self {
-            encoder: quote!(&self.#ident),
+            encoder: quote!(self.#ident),
         }
     }
 
     ///  the field encoder to tokens.
     fn into_tokens(self) -> TokenStream {
-        self.encoder
+        let encoder = self.encoder;
+        quote! { &#encoder }
     }
 
     /// Apply the ASN.1 type (if defined).
@@ -163,38 +179,76 @@ impl LowerFieldEncoder {
             let map_arg = quote!(field);
             let encoder = asn1_type.encoder(&map_arg);
 
-            // TODO(tarcieri): refactor this to get rid of `Result` type annotation
             quote! {
                 #binding.as_ref().map(|#map_arg| {
-                    let res: der::Result<_> = Ok(#encoder);
-                    res
+                    der::Result::Ok(#encoder)
                 }).transpose()?
             }
         } else {
             let encoder = asn1_type.encoder(binding);
-            quote!(&#encoder)
+            quote!(#encoder)
         };
     }
 
     /// Handle default value for a type.
-    fn apply_default(&mut self, default: &Path) {
-        let encoder = &self.encoder;
+    fn apply_default(&mut self, ident: &Ident, default: &Path, is_bare: bool) {
+        let mut encoder = &self.encoder;
 
         self.encoder = quote! {
-            &::der::asn1::OptionalRef(if #encoder == &#default() {
+            if &self.#ident == &#default() {
                 None
             } else {
                 Some(#encoder)
-            })
+            }
         };
+
+        if is_bare {
+            encoder = &self.encoder;
+            self.encoder = quote! {
+                ::der::asn1::OptionalRef(#encoder.as_ref())
+            };
+        }
+    }
+
+    /// Make this field context-specific.
+    fn apply_context_specific(
+        &mut self,
+        tag_number: &TagNumber,
+        tag_mode: &TagMode,
+        optional: bool,
+    ) {
+        let encoder = &self.encoder;
+        let number_tokens = tag_number.to_tokens();
+        let mode_tokens = tag_mode.to_tokens();
+
+        if optional {
+            self.encoder = quote! {
+                #encoder.as_ref().map(|field| {
+                    ::der::asn1::ContextSpecificRef {
+                        tag_number: #number_tokens,
+                        tag_mode: #mode_tokens,
+                        value: field,
+                    }
+                })
+            };
+        } else {
+            self.encoder = quote! {
+                ::der::asn1::ContextSpecificRef {
+                    tag_number: #number_tokens,
+                    tag_mode: #mode_tokens,
+                    value: &#encoder,
+                }
+            };
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::SequenceField;
-    use crate::{FieldAttrs, TagMode};
+    use crate::{FieldAttrs, TagMode, TagNumber};
     use proc_macro2::Span;
+    use quote::quote;
     use syn::{punctuated::Punctuated, Ident, Path, PathSegment, Type, TypePath};
 
     /// Create a [`Type::Path`].
@@ -236,15 +290,74 @@ mod tests {
             field_type: type_path(field_type),
         };
 
-        // TODO(tarcieri): better comparison, possibly using `quote!`
         assert_eq!(
             field.to_decode_tokens().to_string(),
-            "let example_field = decoder . decode () ? ;"
+            quote! {
+                let example_field = decoder.decode()?;
+            }
+            .to_string()
         );
 
         assert_eq!(
             field.to_encode_tokens().to_string(),
-            "& self . example_field"
+            quote! {
+                &self.example_field
+            }
+            .to_string()
+        );
+    }
+
+    #[test]
+    fn implicit() {
+        let span = Span::call_site();
+        let ident = Ident::new("implicit_field", span);
+
+        let attrs = FieldAttrs {
+            asn1_type: None,
+            context_specific: Some(TagNumber(0)),
+            default: None,
+            extensible: false,
+            optional: false,
+            tag_mode: TagMode::Implicit,
+        };
+
+        let field_type = Ident::new("String", span);
+
+        let field = SequenceField {
+            ident,
+            attrs,
+            field_type: type_path(field_type),
+        };
+
+        assert_eq!(
+            field.to_decode_tokens().to_string(),
+            quote! {
+                let implicit_field = ::der::asn1::ContextSpecific::<>::decode_implicit(
+                        decoder,
+                        ::der::TagNumber::N0
+                    )?
+                    .ok_or_else(|| {
+                        der::Tag::ContextSpecific {
+                            number: ::der::TagNumber::N0,
+                            constructed: false
+                        }
+                        .value_error()
+                    })?
+                    .value;
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            field.to_encode_tokens().to_string(),
+            quote! {
+                &::der::asn1::ContextSpecificRef {
+                    tag_number: ::der::TagNumber::N0,
+                    tag_mode: ::der::TagMode::Implicit,
+                    value: &self.implicit_field,
+                }
+            }
+            .to_string()
         );
     }
 }

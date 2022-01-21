@@ -106,7 +106,7 @@ impl Display for TagMode {
 
 /// ASN.1 tag numbers (i.e. lower 5 bits of a [`Tag`]).
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub(crate) struct TagNumber(u8);
+pub(crate) struct TagNumber(pub u8);
 
 impl TagNumber {
     /// Maximum tag number supported (inclusive).
