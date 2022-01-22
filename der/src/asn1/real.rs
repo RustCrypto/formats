@@ -118,7 +118,14 @@ impl EncodeValue for f64 {
                 first_byte |= 0b0100_0000;
             }
 
-            let (_sign, exponent, mantissa) = integer_decode_f64(*self);
+            let (_sign, exponent, mut mantissa) = integer_decode_f64(*self);
+            // Check that the mantissa is either zero or odd
+            if mantissa % 2 == 0 && mantissa != 0 {
+                // Shift by one, store that as scaling factor
+                mantissa >>= 1;
+                first_byte |= 0b0000_0100;
+                assert!((mantissa % 2 == 0 && mantissa != 0) || (mantissa % 2 == 1));
+            }
             // Encode the exponent as two's complement on 16 bits
             let exponent_bytes = (exponent as i16).to_be_bytes();
             // If the exponent is encoded only on two bytes, add that info
@@ -338,7 +345,7 @@ mod tests {
     fn encdec_irrationals() {
         {
             let val = core::f64::consts::PI;
-            let expected = &[9, 10, 129, 4, 0, 9, 33, 251, 84, 68, 45, 24];
+            let expected = &[9, 10, 133, 4, 0, 4, 144, 253, 170, 34, 22, 140];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -386,7 +393,7 @@ mod tests {
         // Tests the encoding and decoding of reals with some arbitrary numbers
         {
             let val = 3221417.1584163485;
-            let expected = &[9, 10, 129, 4, 20, 8, 147, 212, 148, 70, 252, 166];
+            let expected = &[9, 10, 133, 4, 20, 4, 73, 234, 74, 35, 126, 83];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -401,7 +408,7 @@ mod tests {
 
         {
             let val = 13364022.365665454;
-            let expected = &[9, 10, 129, 4, 22, 9, 125, 102, 203, 179, 136, 10];
+            let expected = &[9, 10, 133, 4, 22, 4, 190, 179, 101, 217, 196, 5];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -416,7 +423,7 @@ mod tests {
 
         {
             let val = -32343.132588105735;
-            let expected = &[9, 10, 193, 4, 13, 15, 149, 200, 124, 82, 210, 126];
+            let expected = &[9, 10, 197, 4, 13, 7, 202, 228, 62, 41, 105, 63];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -446,7 +453,7 @@ mod tests {
 
         {
             let val = -252.28566647111404;
-            let expected = &[9, 10, 193, 4, 6, 15, 137, 36, 46, 2, 223, 244];
+            let expected = &[9, 10, 197, 4, 6, 7, 196, 146, 23, 1, 111, 250];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -476,7 +483,7 @@ mod tests {
 
         {
             let val = -0.08340570261832964;
-            let expected = &[9, 10, 193, 3, 251, 5, 90, 19, 125, 11, 174, 60];
+            let expected = &[9, 10, 197, 3, 251, 2, 173, 9, 190, 133, 215, 30];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -491,7 +498,7 @@ mod tests {
 
         {
             let val = 0.00536851453803701;
-            let expected = &[9, 10, 129, 3, 247, 5, 253, 75, 165, 231, 76, 146];
+            let expected = &[9, 10, 133, 3, 247, 2, 254, 165, 210, 243, 166, 73];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -506,7 +513,7 @@ mod tests {
 
         {
             let val = 0.00045183525648866433;
-            let expected = &[9, 10, 129, 3, 243, 13, 156, 137, 166, 89, 51, 56];
+            let expected = &[9, 10, 133, 3, 243, 6, 206, 68, 211, 44, 153, 156];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -551,7 +558,7 @@ mod tests {
 
         {
             let val = 0.00000005549514041997082;
-            let expected = &[9, 10, 129, 3, 230, 13, 203, 49, 171, 110, 184, 214];
+            let expected = &[9, 10, 133, 3, 230, 6, 229, 152, 213, 183, 92, 107];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
@@ -566,7 +573,7 @@ mod tests {
 
         {
             let val = 0.0000000012707044685547803;
-            let expected = &[9, 10, 129, 3, 225, 5, 212, 158, 10, 242, 255, 30];
+            let expected = &[9, 10, 133, 3, 225, 2, 234, 79, 5, 121, 127, 143];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
