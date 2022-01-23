@@ -76,10 +76,10 @@ pub struct SignedData<'a> {
     ///   certificates \[0\] IMPLICIT CertificateSet OPTIONAL,
     pub certificates: Option<alloc::vec::Vec<Any<'a>>>,
     // TODO support CRLs - placeholder to placate zero length SETs
-    //   crls \[1\] IMPLICIT RevocationInfoChoices OPTIONAL,
     //pub crls: SetOf<RevocationInfoChoices<'a>, 10>,
-    ///   signerInfos SignerInfos }
+    ///   crls \[1\] IMPLICIT RevocationInfoChoices OPTIONAL,
     pub crls: Option<alloc::vec::Vec<Any<'a>>>,
+    ///   signerInfos SignerInfos }
     pub signer_infos: SetOf<SignerInfo<'a>, 10>,
 }
 const CERTIFICATES_TAG: TagNumber = TagNumber::new(0);
