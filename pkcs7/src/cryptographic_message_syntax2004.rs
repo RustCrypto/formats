@@ -128,14 +128,11 @@ impl<'a> ::der::Sequence<'a> for SignedData<'a> {
                     tag_mode: TagMode::Implicit,
                     value: certificates.clone(),
                 }),
-            &self
-                .crls
-                .as_ref()
-                .map(|certificates| ContextSpecific {
-                    tag_number: CRLS_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: certificates.clone(),
-                }),
+            &self.crls.as_ref().map(|certificates| ContextSpecific {
+                tag_number: CRLS_TAG,
+                tag_mode: TagMode::Implicit,
+                value: certificates.clone(),
+            }),
             &self.signer_infos,
         ])
     }

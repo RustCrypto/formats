@@ -1,12 +1,12 @@
 //! Validity [`Time`] as defined in RFC 5280
 
 use alloc::string::ToString;
+use core::fmt;
 use core::time::Duration;
 use der::{
     asn1::{GeneralizedTime, UtcTime},
     Choice,
 };
-use core::fmt;
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -60,7 +60,6 @@ impl fmt::Display for Time {
             Time::UtcTime(t) => f.write_str(t.to_date_time().to_string().as_str()),
             Time::GeneralTime(t) => f.write_str(t.to_date_time().to_string().as_str()),
         }
-
     }
 }
 
