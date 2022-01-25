@@ -277,4 +277,51 @@ mod tests {
         assert_eq!(public_key_field.attrs.optional, true);
         assert_eq!(public_key_field.attrs.tag_mode, TagMode::Explicit);
     }
+
+    /// `IMPLICIT` tagged example
+    #[test]
+    fn implicit_example() {
+        let input = parse_quote! {
+            #[asn1(tag_mode = "IMPLICIT")]
+            pub struct ImplicitSequence<'a> {
+                #[asn1(context_specific = "0", type = "BIT STRING")]
+                bit_string: BitString<'a>,
+
+                #[asn1(context_specific = "1", type = "GeneralizedTime")]
+                time: GeneralizedTime,
+
+                #[asn1(context_specific = "2", type = "UTF8String")]
+                utf8_string: String,
+            }
+        };
+
+        let ir = DeriveSequence::new(input);
+        assert_eq!(ir.ident, "ImplicitSequence");
+        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(ir.fields.len(), 3);
+
+        let bit_string = &ir.fields[0];
+        assert_eq!(bit_string.ident, "bit_string");
+        assert_eq!(bit_string.attrs.asn1_type, Some(Asn1Type::BitString));
+        assert_eq!(
+            bit_string.attrs.context_specific,
+            Some("0".parse().unwrap())
+        );
+        assert_eq!(bit_string.attrs.tag_mode, TagMode::Implicit);
+
+        let time = &ir.fields[1];
+        assert_eq!(time.ident, "time");
+        assert_eq!(time.attrs.asn1_type, Some(Asn1Type::GeneralizedTime));
+        assert_eq!(time.attrs.context_specific, Some("1".parse().unwrap()));
+        assert_eq!(time.attrs.tag_mode, TagMode::Implicit);
+
+        let utf8_string = &ir.fields[2];
+        assert_eq!(utf8_string.ident, "utf8_string");
+        assert_eq!(utf8_string.attrs.asn1_type, Some(Asn1Type::Utf8String));
+        assert_eq!(
+            utf8_string.attrs.context_specific,
+            Some("2".parse().unwrap())
+        );
+        assert_eq!(utf8_string.attrs.tag_mode, TagMode::Implicit);
+    }
 }
