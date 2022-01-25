@@ -1,6 +1,6 @@
 [package]
 name = "ssh-key"
-version = "0.2.0" # Also update html_root_url in lib.rs when bumping this
+version = "0.3.0-pre" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of SSH key file format decoders/encoders as described
 in RFC4253 and RFC4716 as well as the OpenSSH key formats. Supports "heapless"
@@ -13,14 +13,14 @@ categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-i
 keywords = ["crypto", "key", "openssh", "ssh"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.57"
 
 [dependencies]
 base64ct = { version = "1.3.3", path = "../base64ct" }
 zeroize = { version = "1", default-features = false }
 
 # optional dependencies
-sec1 = { version = "0.2", optional = true, default-features = false, path = "../sec1" }
+sec1 = { version = "=0.3.0-pre", optional = true, default-features = false, path = "../sec1" }
 
 [dev-dependencies]
 hex-literal = "0.3"

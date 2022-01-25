@@ -4,16 +4,13 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/const-oid/0.7.1"
+    html_root_url = "https://docs.rs/const-oid/0.8.0"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms)]
 
 #[cfg(feature = "std")]
 extern crate std;
-
-#[macro_use]
-mod macros;
 
 mod arcs;
 mod encoder;
@@ -167,8 +164,7 @@ impl ObjectIdentifier {
 
     /// Iterate over the arcs (a.k.a. nodes) of an [`ObjectIdentifier`].
     ///
-    /// Returns [`Arcs`], an iterator over `Arc` values representing the value
-    /// of each arc/node.
+    /// Returns [`Arcs`], an iterator over [`Arc`] values.
     pub fn arcs(&self) -> Arcs<'_> {
         Arcs::new(self)
     }

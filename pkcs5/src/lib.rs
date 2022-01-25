@@ -1,4 +1,13 @@
+#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_root_url = "https://docs.rs/pkcs5/0.5.0-pre"
+)]
+#![forbid(unsafe_code, clippy::unwrap_used)]
+#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
 //! # Usage
 //!
@@ -8,16 +17,6 @@
 //! [`AlgorithmIdentifier`] fields.
 //!
 //! [RFC 8018]: https://tools.ietf.org/html/rfc8018
-
-#![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pkcs5/0.4.0"
-)]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 extern crate alloc;

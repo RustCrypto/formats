@@ -1,6 +1,6 @@
 [package]
 name = "der"
-version = "0.5.1" # Also update html_root_url in lib.rs when bumping this
+version = "0.6.0-pre.0" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust embedded-friendly implementation of the Distinguished Encoding Rules
 (DER) for Abstract Syntax Notation One (ASN.1) as described in ITU X.690 with
@@ -13,12 +13,11 @@ categories = ["cryptography", "data-structures", "encoding", "no-std", "parsing"
 keywords = ["asn1", "crypto", "itu", "pkcs"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.57"
 
 [dependencies]
-const-oid = { version = "0.7", optional = true, path = "../const-oid" }
-crypto-bigint = { version = "0.3", optional = true, default-features = false, features = ["generic-array"] }
-der_derive = { version = "0.5", optional = true, path = "derive" }
+const-oid = { version = "0.8", optional = true, path = "../const-oid" }
+der_derive = { version = "=0.6.0-pre.0", optional = true, path = "derive" }
 pem-rfc7468 = { version = "0.3", optional = true, path = "../pem-rfc7468" }
 time = { version = "0.3", optional = true, default-features = false }
 
@@ -29,7 +28,6 @@ proptest = "1"
 [features]
 alloc = []
 derive = ["der_derive"]
-bigint = ["crypto-bigint"]
 oid = ["const-oid"]
 pem = ["alloc", "pem-rfc7468/alloc"]
 std = ["alloc"]

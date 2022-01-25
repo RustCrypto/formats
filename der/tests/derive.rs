@@ -353,6 +353,28 @@ mod sequence {
     const ALGORITHM_IDENTIFIER_DER: &[u8] =
         &hex!("30 13 06 07 2a 86 48 ce 3d 02 01 06 08 2a 86 48 ce 3d 03 01 07");
 
+    #[derive(Sequence)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    pub struct TypeCheckExpandedSequenceFieldAttributeCombinations<'a> {
+        pub simple: bool,
+        #[asn1(type = "BIT STRING")]
+        pub typed: &'a [u8],
+        #[asn1(context_specific = "0")]
+        pub context_specific: bool,
+        #[asn1(optional = "true")]
+        pub optional: Option<bool>,
+        #[asn1(default = "default_false_example")]
+        pub default: bool,
+        #[asn1(type = "BIT STRING", context_specific = "1")]
+        pub typed_context_specific: &'a [u8],
+        #[asn1(context_specific = "2", optional = "true")]
+        pub context_specific_optional: Option<bool>,
+        #[asn1(context_specific = "3", default = "default_false_example")]
+        pub context_specific_default: bool,
+        #[asn1(type = "BIT STRING", context_specific = "4", optional = "true")]
+        pub typed_context_specific_optional: Option<&'a [u8]>,
+    }
+
     #[test]
     fn idp_test() {
         let idp = IssuingDistributionPointExample::from_der(&hex!("30038101FF")).unwrap();

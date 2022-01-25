@@ -71,3 +71,13 @@ impl From<spki::Error> for Error {
         Error::PublicKey(err)
     }
 }
+
+impl From<Error> for spki::Error {
+    fn from(err: Error) -> spki::Error {
+        match err {
+            Error::Asn1(e) => spki::Error::Asn1(e),
+            Error::PublicKey(e) => e,
+            _ => spki::Error::KeyMalformed,
+        }
+    }
+}
