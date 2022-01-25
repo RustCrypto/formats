@@ -156,7 +156,7 @@ dependencies = [
 
 [[package]]
 name = "const-oid"
-version = "0.7.1"
+version = "0.8.0"
 dependencies = [
  "hex-literal",
 ]
@@ -251,16 +251,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crypto-bigint"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03c6a1d5fa1de37e071642dfa44ec552ca5b299adb128fab16138e24b548fd21"
-dependencies = [
- "generic-array",
- "subtle",
-]
-
-[[package]]
 name = "crypto-common"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -293,10 +283,9 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.5.1"
+version = "0.6.0-pre.0"
 dependencies = [
  "const-oid",
- "crypto-bigint",
  "der_derive",
  "hex-literal",
  "pem-rfc7468",
@@ -306,7 +295,7 @@ dependencies = [
 
 [[package]]
 name = "der_derive"
-version = "0.5.0"
+version = "0.6.0-pre.0"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -533,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs1"
-version = "0.3.1"
+version = "0.4.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -543,7 +532,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.4.0"
+version = "0.5.0-pre"
 dependencies = [
  "aes",
  "block-modes",
@@ -560,7 +549,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs7"
-version = "0.3.0"
+version = "0.4.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -570,7 +559,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.8.0"
+version = "0.9.0-pre"
 dependencies = [
  "der",
  "hex-literal",
@@ -857,7 +846,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.2.1"
+version = "0.3.0-pre"
 dependencies = [
  "der",
  "generic-array",
@@ -939,7 +928,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.5.4"
+version = "0.6.0-pre"
 dependencies = [
  "base64ct",
  "der",
@@ -949,7 +938,7 @@ dependencies = [
 
 [[package]]
 name = "ssh-key"
-version = "0.2.0"
+version = "0.3.0-pre"
 dependencies = [
  "base64ct",
  "hex-literal",

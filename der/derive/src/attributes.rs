@@ -14,7 +14,7 @@ pub(crate) const ATTR_NAME: &str = "asn1";
 const PARSE_ERR_MSG: &str = "error parsing `asn1` attribute";
 
 /// Attributes on a `struct` or `enum` type.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct TypeAttrs {
     /// Tagging mode for this type: `EXPLICIT` or `IMPLICIT`, supplied as
     /// `#[asn1(tag_mode = "...")]`.
@@ -54,7 +54,7 @@ impl TypeAttrs {
 }
 
 /// Field-level attributes.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct FieldAttrs {
     /// Value of the `#[asn1(type = "...")]` attribute if provided.
     pub asn1_type: Option<Asn1Type>,
@@ -81,8 +81,9 @@ pub(crate) struct FieldAttrs {
 }
 
 impl FieldAttrs {
-    /// is_optional return true when either an optional or default ASN.1 attribute is associated
-    /// with a field. Default signifies optionality due to omission of default values in DER encodings.
+    /// Return true when either an optional or default ASN.1 attribute is associated
+    /// with a field. Default signifies optionality due to omission of default values in
+    /// DER encodings.
     fn is_optional(&self) -> bool {
         self.optional || self.default.is_some()
     }

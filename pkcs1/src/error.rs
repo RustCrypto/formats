@@ -47,9 +47,30 @@ impl From<der::Error> for Error {
 }
 
 #[cfg(feature = "pkcs8")]
+impl From<Error> for pkcs8::Error {
+    fn from(err: Error) -> pkcs8::Error {
+        match err {
+            Error::Asn1(e) => pkcs8::Error::Asn1(e),
+            Error::Crypto | Error::Version => pkcs8::Error::KeyMalformed,
+            Error::Pkcs8(e) => e,
+        }
+    }
+}
+
+#[cfg(feature = "pkcs8")]
 impl From<pkcs8::Error> for Error {
     fn from(err: pkcs8::Error) -> Error {
         Error::Pkcs8(err)
+    }
+}
+
+#[cfg(feature = "pkcs8")]
+impl From<Error> for pkcs8::spki::Error {
+    fn from(err: Error) -> pkcs8::spki::Error {
+        match err {
+            Error::Asn1(e) => pkcs8::spki::Error::Asn1(e),
+            _ => pkcs8::spki::Error::KeyMalformed,
+        }
     }
 }
 

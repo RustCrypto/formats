@@ -15,8 +15,8 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-der = { version = "0.5", features = ["derive", "alloc"], path = "../der" }
-spki = { version = "0.5", path = "../spki" }
+der = { version = "=0.6.0-pre.0", features = ["derive", "alloc"], path = "../der" }
+spki = { version = "=0.6.0-pre", path = "../spki" }
 
 [dev-dependencies]
 hex-literal = "0.3"

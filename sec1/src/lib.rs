@@ -1,4 +1,13 @@
+#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_root_url = "https://docs.rs/sec1/0.3.0-pre"
+)]
+#![forbid(unsafe_code, clippy::unwrap_used)]
+#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
 //! ## `serde` support
 //!
@@ -8,16 +17,6 @@
 //! Additionally, when both the `alloc` and `serde` features are enabled, the
 //! serializers/deserializers will autodetect if a "human friendly" textual
 //! encoding is being used, and if so encode the points as hexadecimal.
-
-#![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/sec1/0.2.1"
-)]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;

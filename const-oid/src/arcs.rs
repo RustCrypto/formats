@@ -3,7 +3,16 @@
 use crate::{Error, ObjectIdentifier, Result};
 use core::mem;
 
-/// Type used to represent an "arc" (i.e. integer identifier value).
+/// Type alias used to represent an "arc" (i.e. integer identifier value).
+///
+/// X.660 does not define a maximum size of an arc.
+///
+/// The current representation is `u32`, which has been selected as being
+/// sufficient to cover the current PKCS/PKIX use cases this library has been
+/// used in conjunction with.
+///
+/// Future versions may potentially make it larger if a sufficiently important
+/// use case is discovered.
 pub type Arc = u32;
 
 /// Maximum value of the first arc in an OID.
@@ -18,7 +27,7 @@ pub(crate) const ARC_MAX_BYTES: usize = mem::size_of::<Arc>();
 /// Maximum value of the last byte in an arc.
 pub(crate) const ARC_MAX_LAST_OCTET: u8 = 0b11110000; // Max bytes of leading 1-bits
 
-/// [`Iterator`] over arcs (a.k.a. nodes) in an [`ObjectIdentifier`].
+/// [`Iterator`] over [`Arc`] values (a.k.a. nodes) in an [`ObjectIdentifier`].
 ///
 /// This iterates over all arcs in an OID, including the root.
 pub struct Arcs<'a> {
