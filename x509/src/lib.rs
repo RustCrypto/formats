@@ -22,6 +22,7 @@ pub mod pkix_extensions;
 pub mod pkix_oids;
 mod rdn;
 mod time;
+pub mod trust_anchor_format;
 mod validity;
 
 pub use crate::{

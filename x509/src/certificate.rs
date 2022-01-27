@@ -2,7 +2,7 @@
 
 use crate::{Name, Validity};
 use der::asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes};
-use der::{Sequence, TagMode, TagNumber};
+use der::{DecodeValue, Decoder, Length, Sequence, TagMode, TagNumber};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 /// returns false in support of integer DEFAULT fields set to 0
@@ -192,7 +192,7 @@ impl<'a> ::core::fmt::Debug for TBSCertificate<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Certificate<'a> {
     /// tbsCertificate       TBSCertificate,
     pub tbs_certificate: TBSCertificate<'a>,
@@ -200,6 +200,33 @@ pub struct Certificate<'a> {
     pub signature_algorithm: AlgorithmIdentifier<'a>,
     /// signature            BIT STRING
     pub signature: BitString<'a>,
+}
+
+impl<'a> DecodeValue<'a> for Certificate<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
+        let tbs_certificate = decoder.decode()?;
+        let signature_algorithm = decoder.decode()?;
+        let signature = decoder.decode()?;
+        Ok(Self {
+            tbs_certificate,
+            signature_algorithm,
+            signature,
+        })
+        // })
+    }
+}
+
+impl<'a> ::der::Sequence<'a> for Certificate<'a> {
+    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
+    where
+        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+    {
+        f(&[
+            &self.tbs_certificate,
+            &self.signature_algorithm,
+            &self.signature,
+        ])
+    }
 }
 
 /// Extension as defined in [RFC 5280 Section 4.1.2.9].

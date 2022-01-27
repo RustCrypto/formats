@@ -338,20 +338,19 @@ pub struct NameConstraints<'a> {
 const PERMITTED_SUBTREES_TAG: TagNumber = TagNumber::new(0);
 const EXCLUDED_SUBTREES_TAG: TagNumber = TagNumber::new(1);
 
-impl<'a> ::der::Decodable<'a> for NameConstraints<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let permitted_subtrees =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let excluded_subtrees =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                permitted_subtrees,
-                excluded_subtrees,
-            })
+impl<'a> DecodeValue<'a> for NameConstraints<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
+        let permitted_subtrees =
+            ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
+                .map(|cs| cs.value);
+        let excluded_subtrees =
+            ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
+                .map(|cs| cs.value);
+        Ok(Self {
+            permitted_subtrees,
+            excluded_subtrees,
         })
+        // })
     }
 }
 
