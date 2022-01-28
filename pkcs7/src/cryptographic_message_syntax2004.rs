@@ -1,11 +1,13 @@
 //! Selected structures from RFC5652
 
+use core::cmp::Ordering;
 use der::asn1::{BitString, ContextSpecific, SetOf, UIntBytes};
+use der::Sequence;
+use der::ValueOrd;
 use der::{
     Any, DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Length, Tag, TagMode,
     TagNumber,
 };
-use der::{OrdIsValueOrd, Sequence};
 use spki::{AlgorithmIdentifier, ObjectIdentifier};
 use x509::{AttributeTypeAndValue, Name, SubjectKeyIdentifier};
 
@@ -197,7 +199,7 @@ impl<'a> ::der::Sequence<'a> for EncapsulatedContentInfo<'a> {
 ///   signatureAlgorithm SignatureAlgorithmIdentifier,
 ///   signature SignatureValue,
 ///   unsignedAttrs \[1\] IMPLICIT UnsignedAttributes OPTIONAL }
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Sequence)]
+#[derive(Clone, Eq, PartialEq, Sequence)]
 pub struct SignerInfo<'a> {
     ///   version CMSVersion,
     pub version: u8,
@@ -214,7 +216,11 @@ pub struct SignerInfo<'a> {
     ///   unsignedAttrs \[1\] IMPLICIT UnsignedAttributes OPTIONAL }
     pub unsigned_attrs: UnsignedAttributes<'a>,
 }
-impl OrdIsValueOrd for SignerInfo<'_> {}
+impl ValueOrd for SignerInfo<'_> {
+    fn value_cmp(&self, _other: &Self) -> der::Result<Ordering> {
+        todo!()
+    }
+}
 
 /// SignerIdentifier ::= CHOICE {
 ///   issuerAndSerialNumber IssuerAndSerialNumber,
