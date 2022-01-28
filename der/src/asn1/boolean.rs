@@ -1,8 +1,8 @@
 //! ASN.1 `BOOLEAN` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
-    Length, OrdIsValueOrd, Result, Tag,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
+    ErrorKind, FixedTag, Length, Result, Tag,
 };
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
