@@ -1,4 +1,4 @@
-//! Extensions [`Extensions`] as defined in RFC 5280
+//! Extensions as defined in RFC 5280
 
 use crate::general_name::GeneralName;
 use crate::general_name::GeneralNames;
@@ -7,7 +7,7 @@ use crate::{default_zero, AttributeTypeAndValue};
 use alloc::vec::Vec;
 use der::asn1::{
     Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier,
-    OctetString, UIntBytes, Utf8String,
+    OctetString, PrintableString, UIntBytes, Utf8String,
 };
 use der::{
     Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Enumerated, ErrorKind,
@@ -42,6 +42,37 @@ pub enum DisplayText<'a> {
     /// utf8String       UTF8String     (SIZE (1..200))
     #[asn1(type = "UTF8String")]
     Utf8String(Utf8String<'a>),
+}
+
+///    DirectoryString ::= CHOICE {
+///          teletexString           TeletexString (SIZE (1..MAX)),
+///          printableString         PrintableString (SIZE (1..MAX)),
+///          universalString         UniversalString (SIZE (1..MAX)),
+///          utf8String              UTF8String (SIZE (1..MAX)),
+///          bmpString               BMPString (SIZE (1..MAX)) }
+#[derive(Choice, Clone, Debug, Eq, PartialEq)]
+pub enum DirectoryString<'a> {
+    /// teletexString           TeletexString (SIZE (1..MAX)),
+    // TODO: support TeletexString if desired
+
+    /// printableString         PrintableString (SIZE (1..MAX)),
+    #[asn1(type = "PrintableString")]
+    PrintableString(PrintableString<'a>),
+
+    /// universalString    UniversalString  (SIZE (1..200)),
+    // TODO: support UniversalString if desired
+
+    /// utf8String       UTF8String     (SIZE (1..200))
+    #[asn1(type = "UTF8String")]
+    Utf8String(Utf8String<'a>),
+
+    /// bmpString        BMPString      (SIZE (1..200)),
+    // TODO: support BMPString if desired
+
+    // IA5String is not part of the type but is screwed up often enough to include
+    /// ia5String        IA5String      (SIZE (1..200))
+    #[asn1(type = "IA5String")]
+    Ia5String(Ia5String<'a>),
 }
 
 /// Extended key usage extension as defined in [RFC 5280 Section 4.2.1.12] and as identified by the [`PKIX_CE_EXTKEYUSAGE`](constant.PKIX_CE_EXTKEYUSAGE.html) OID.
@@ -197,18 +228,18 @@ pub struct PolicyQualifierInfo<'a> {
 ///
 /// ```text
 /// PrivateKeyUsagePeriod ::= SEQUENCE {
-///      notBefore       [0]     GeneralizedTime OPTIONAL,
-///      notAfter        [1]     GeneralizedTime OPTIONAL }
+///      notBefore       \[0\]     GeneralizedTime OPTIONAL,
+///      notAfter        \[1\]     GeneralizedTime OPTIONAL }
 ///      -- either notBefore or notAfter MUST be present
 /// ```
 ///
 /// [RFC 3280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc3280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PrivateKeyUsagePeriod {
-    /// notBefore       [0]     GeneralizedTime OPTIONAL,
+    /// notBefore       \[0\]     GeneralizedTime OPTIONAL,
     pub not_before: Option<GeneralizedTime>,
 
-    /// notAfter        [1]     GeneralizedTime OPTIONAL
+    /// notAfter        \[1\]     GeneralizedTime OPTIONAL
     pub not_after: Option<GeneralizedTime>,
 }
 
@@ -319,18 +350,18 @@ pub struct PolicyMapping {
 ///
 /// ```text
 /// NameConstraints ::= SEQUENCE {
-///      permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
-///      excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
+///      permittedSubtrees       \[0\]     GeneralSubtrees OPTIONAL,
+///      excludedSubtrees        \[1\]     GeneralSubtrees OPTIONAL }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NameConstraints<'a> {
-    /// permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
+    /// permittedSubtrees       \[0\]     GeneralSubtrees OPTIONAL,
     //#[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     pub permitted_subtrees: Option<GeneralSubtrees<'a>>,
 
-    /// excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
+    /// excludedSubtrees        \[1\]     GeneralSubtrees OPTIONAL }
     //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub excluded_subtrees: Option<GeneralSubtrees<'a>>,
 }
@@ -338,6 +369,9 @@ pub struct NameConstraints<'a> {
 const PERMITTED_SUBTREES_TAG: TagNumber = TagNumber::new(0);
 const EXCLUDED_SUBTREES_TAG: TagNumber = TagNumber::new(1);
 
+// impl<'a> ::der::Decodable<'a> for NameConstraints<'a> {
+//     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
+//         decoder.sequence(|decoder| {
 impl<'a> DecodeValue<'a> for NameConstraints<'a> {
     fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
         let permitted_subtrees =
@@ -391,8 +425,8 @@ pub type GeneralSubtrees<'a> = Vec<GeneralSubtree<'a>>;
 /// ```text
 /// GeneralSubtree ::= SEQUENCE {
 ///      base                    GeneralName,
-///      minimum         [0]     BaseDistance DEFAULT 0,
-///      maximum         [1]     BaseDistance OPTIONAL }
+///      minimum         \[0\]     BaseDistance DEFAULT 0,
+///      maximum         \[1\]     BaseDistance OPTIONAL }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
@@ -401,10 +435,10 @@ pub struct GeneralSubtree<'a> {
     /// base                    GeneralName,
     pub base: GeneralName<'a>,
 
-    /// minimum         [0]     BaseDistance DEFAULT 0,
+    /// minimum         \[0\]     BaseDistance DEFAULT 0,
     pub minimum: u32,
 
-    /// maximum         [1]     BaseDistance OPTIONAL }
+    /// maximum         \[1\]     BaseDistance OPTIONAL }
     pub maximum: Option<u32>,
 }
 
@@ -464,17 +498,17 @@ impl<'a> ::der::Sequence<'a> for GeneralSubtree<'a> {
 ///
 /// ```text
 /// PolicyConstraints ::= SEQUENCE {
-///      requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
-///      inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
+///      requireExplicitPolicy   \[0\]     SkipCerts OPTIONAL,
+///      inhibitPolicyMapping    \[1\]     SkipCerts OPTIONAL }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.11]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.11
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PolicyConstraints {
-    /// requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
+    /// requireExplicitPolicy   \[0\]     SkipCerts OPTIONAL,
     pub require_explicit_policy: Option<u32>,
 
-    /// inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
+    /// inhibitPolicyMapping    \[1\]     SkipCerts OPTIONAL }
     pub inhibit_policy_mapping: Option<u32>,
 }
 
@@ -657,9 +691,9 @@ pub enum CRLReason {
 ///
 /// ```text
 ///   AuthorityKeyIdentifier ::= SEQUENCE {
-///       keyIdentifier             [0] KeyIdentifier           OPTIONAL,
-///       authorityCertIssuer       [1] GeneralNames            OPTIONAL,
-///       authorityCertSerialNumber [2] CertificateSerialNumber OPTIONAL  }
+///       keyIdentifier             \[0\] KeyIdentifier           OPTIONAL,
+///       authorityCertIssuer       \[1\] GeneralNames            OPTIONAL,
+///       authorityCertSerialNumber \[2\] CertificateSerialNumber OPTIONAL  }
 ///
 ///    KeyIdentifier ::= OCTET STRING
 /// ```
@@ -668,15 +702,15 @@ pub enum CRLReason {
 //#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AuthorityKeyIdentifier<'a> {
-    /// keyIdentifier             [0] KeyIdentifier           OPTIONAL,
+    /// keyIdentifier             \[0\] KeyIdentifier           OPTIONAL,
     //#[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     pub key_identifier: Option<OctetString<'a>>,
 
-    /// authorityCertIssuer       [1] GeneralNames            OPTIONAL,
+    /// authorityCertIssuer       \[1\] GeneralNames            OPTIONAL,
     //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub authority_cert_issuer: Option<GeneralNames<'a>>,
 
-    /// authorityCertSerialNumber [2] CertificateSerialNumber OPTIONAL  }
+    /// authorityCertSerialNumber \[2\] CertificateSerialNumber OPTIONAL  }
     //#[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
     pub authority_cert_serial_number: Option<UIntBytes<'a>>,
 }
@@ -767,23 +801,23 @@ pub type CRLDistributionPoints<'a> = Vec<DistributionPoint<'a>>;
 ///
 /// ```text
 /// DistributionPoint ::= SEQUENCE {
-///      distributionPoint       [0]     DistributionPointName OPTIONAL,
-///      reasons                 [1]     ReasonFlags OPTIONAL,
-///      cRLIssuer               [2]     GeneralNames OPTIONAL }
+///      distributionPoint       \[0\]     DistributionPointName OPTIONAL,
+///      reasons                 \[1\]     ReasonFlags OPTIONAL,
+///      cRLIssuer               \[2\]     GeneralNames OPTIONAL }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 //#[derive(Sequence)]
 pub struct DistributionPoint<'a> {
-    /// distributionPoint       [0]     DistributionPointName OPTIONAL,
+    /// distributionPoint       \[0\]     DistributionPointName OPTIONAL,
     //#[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     pub distribution_point: Option<DistributionPointName<'a>>,
 
-    /// reasons                 [1]     ReasonFlags OPTIONAL,
+    /// reasons                 \[1\]     ReasonFlags OPTIONAL,
     //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub reasons: Option<ReasonFlags<'a>>,
 
-    /// cRLIssuer               [2]     GeneralNames OPTIONAL }
+    /// cRLIssuer               \[2\]     GeneralNames OPTIONAL }
     //#[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
     pub crl_issuer: Option<GeneralNames<'a>>,
 }
@@ -845,17 +879,17 @@ impl<'a> ::der::Sequence<'a> for DistributionPoint<'a> {
 ///
 /// ```text
 /// DistributionPointName ::= CHOICE {
-///      fullName                [0]     GeneralNames,
-///      nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
+///      fullName                \[0\]     GeneralNames,
+///      nameRelativeToCRLIssuer \[1\]     RelativeDistinguishedName }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DistributionPointName<'a> {
-    /// fullName                [0]     GeneralNames,
+    /// fullName                \[0\]     GeneralNames,
     FullName(GeneralNames<'a>),
 
-    /// nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
+    /// nameRelativeToCRLIssuer \[1\]     RelativeDistinguishedName }
     NameRelativeToCRLIssuer(RelativeDistinguishedName<'a>),
 }
 
@@ -944,12 +978,12 @@ pub type FreshestCRL<'a> = CRLDistributionPoints<'a>;
 ///
 /// ```text
 /// IssuingDistributionPoint ::= SEQUENCE {
-///      distributionPoint          [0] DistributionPointName OPTIONAL,
-///      onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
-///      onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
-///      onlySomeReasons            [3] ReasonFlags OPTIONAL,
-///      indirectCRL                [4] BOOLEAN DEFAULT FALSE,
-///      onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE }
+///      distributionPoint          \[0\] DistributionPointName OPTIONAL,
+///      onlyContainsUserCerts      \[1\] BOOLEAN DEFAULT FALSE,
+///      onlyContainsCACerts        \[2\] BOOLEAN DEFAULT FALSE,
+///      onlySomeReasons            \[3\] ReasonFlags OPTIONAL,
+///      indirectCRL                \[4\] BOOLEAN DEFAULT FALSE,
+///      onlyContainsAttributeCerts \[5\] BOOLEAN DEFAULT FALSE }
 ///      -- at most one of onlyContainsUserCerts, onlyContainsCACerts,
 ///      -- and onlyContainsAttributeCerts may be set to TRUE.
 /// ```
@@ -957,22 +991,22 @@ pub type FreshestCRL<'a> = CRLDistributionPoints<'a>;
 /// [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
 //#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct IssuingDistributionPoint<'a> {
-    /// distributionPoint          [0] DistributionPointName OPTIONAL,
+    /// distributionPoint          \[0\] DistributionPointName OPTIONAL,
     pub distribution_point: Option<DistributionPointName<'a>>,
 
-    /// onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+    /// onlyContainsUserCerts      \[1\] BOOLEAN DEFAULT FALSE,
     pub only_contains_user_certs: bool,
 
-    /// onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
+    /// onlyContainsCACerts        \[2\] BOOLEAN DEFAULT FALSE,
     pub only_contains_cacerts: bool,
 
-    /// onlySomeReasons            [3] ReasonFlags OPTIONAL,
+    /// onlySomeReasons            \[3\] ReasonFlags OPTIONAL,
     pub only_some_reasons: Option<ReasonFlags<'a>>,
 
-    /// indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+    /// indirectCRL                \[4\] BOOLEAN DEFAULT FALSE,
     pub indirect_crl: bool,
 
-    /// onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+    /// onlyContainsAttributeCerts \[5\] BOOLEAN DEFAULT FALSE
     pub only_contains_attribute_certs: bool,
 }
 

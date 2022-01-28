@@ -11,7 +11,7 @@ use der::{Decodable, DecodeValue, Decoder, ErrorKind, Length, Sequence, TagMode,
 /// ```text
 ///    OtherName ::= SEQUENCE {
 ///         type-id    OBJECT IDENTIFIER,
-///         value      [0] EXPLICIT ANY DEFINED BY type-id }
+///         value      \[0\] EXPLICIT ANY DEFINED BY type-id }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
@@ -20,7 +20,7 @@ pub struct OtherName<'a> {
     /// type-id    OBJECT IDENTIFIER,
     pub type_id: ObjectIdentifier,
 
-    /// value      [0] EXPLICIT ANY DEFINED BY type-id }
+    /// value      \[0\] EXPLICIT ANY DEFINED BY type-id }
     pub value: Any<'a>,
 }
 
@@ -54,43 +54,43 @@ pub type GeneralNames<'a> = Vec<GeneralName<'a>>;
 ///
 /// ```text
 ///    GeneralName ::= CHOICE {
-///         otherName                       [0]     OtherName,
-///         rfc822Name                      [1]     IA5String,
-///         dNSName                         [2]     IA5String,
-///         x400Address                     [3]     ORAddress,
-///         directoryName                   [4]     Name,
-///         ediPartyName                    [5]     EDIPartyName,
-///         uniformResourceIdentifier       [6]     IA5String,
-///         iPAddress                       [7]     OCTET STRING,
-///         registeredID                    [8]     OBJECT IDENTIFIER }
+///         otherName                       \[0\]     OtherName,
+///         rfc822Name                      \[1\]     IA5String,
+///         dNSName                         \[2\]     IA5String,
+///         x400Address                     \[3\]     ORAddress,
+///         directoryName                   \[4\]     Name,
+///         ediPartyName                    \[5\]     EDIPartyName,
+///         uniformResourceIdentifier       \[6\]     IA5String,
+///         iPAddress                       \[7\]     OCTET STRING,
+///         registeredID                    \[8\]     OBJECT IDENTIFIER }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum GeneralName<'a> {
-    /// otherName                       [0]     OtherName,
+    /// otherName                       \[0\]     OtherName,
     OtherName(OtherName<'a>),
 
-    /// rfc822Name                      [1]     IA5String,
+    /// rfc822Name                      \[1\]     IA5String,
     Rfc822Name(Ia5String<'a>),
 
-    /// dNSName                         [2]     IA5String,
+    /// dNSName                         \[2\]     IA5String,
     DnsName(Ia5String<'a>),
 
-    // x400Address                     [3]     ORAddress,
+    // x400Address                     \[3\]     ORAddress,
     // Not supporting x400Address
-    /// directoryName                   [4]     Name,
+    /// directoryName                   \[4\]     Name,
     DirectoryName(Name<'a>),
 
-    // ediPartyName                    [5]     EDIPartyName,
+    // ediPartyName                    \[5\]     EDIPartyName,
     // Not supporting ediPartyName
-    /// uniformResourceIdentifier       [6]     IA5String,
+    /// uniformResourceIdentifier       \[6\]     IA5String,
     UniformResourceIdentifier(Ia5String<'a>),
 
-    /// iPAddress                       [7]     OCTET STRING,
+    /// iPAddress                       \[7\]     OCTET STRING,
     IpAddress(OctetString<'a>),
 
-    /// registeredID                    [8]     OBJECT IDENTIFIER
+    /// registeredID                    \[8\]     OBJECT IDENTIFIER
     RegisteredId(ObjectIdentifier),
 }
 
