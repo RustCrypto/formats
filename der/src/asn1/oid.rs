@@ -1,8 +1,8 @@
 //! ASN.1 `OBJECT IDENTIFIER`
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
-    OrdIsValueOrd, Result, Tag, Tagged,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
+    FixedTag, Length, Result, Tag, Tagged,
 };
 use const_oid::ObjectIdentifier;
 
