@@ -17,6 +17,7 @@ rust-version = "1.57"
 [dependencies]
 der = { version = "=0.6.0-pre.0", features = ["oid"], path = "../der" }
 spki = { version = "=0.6.0-pre", path = "../spki" }
+x509 = { version = "0.0.1", path = "../x509" }
 
 [dev-dependencies]
 hex-literal = "0.3"
