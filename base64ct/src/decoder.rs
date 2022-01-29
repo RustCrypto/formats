@@ -43,7 +43,15 @@ pub struct Decoder<'i, E: Variant> {
 impl<'i, E: Variant> Decoder<'i, E> {
     /// Create a new decoder for a byte slice containing contiguous
     /// (non-newline-delimited) Base64-encoded data.
+    ///
+    /// # Returns
+    /// - `Ok(decoder)` on success.
+    /// - `Err(Error::InvalidLength)` if the input buffer is empty.
     pub fn new(input: &'i [u8]) -> Result<Self, Error> {
+        if input.is_empty() {
+            return Err(InvalidLength);
+        }
+
         Ok(Self {
             line: Line::new(input),
             line_reader: LineReader::default(),
@@ -70,8 +78,17 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// eol        = CRLF / CR / LF
     /// ```
     ///
+    /// # Returns
+    /// - `Ok(decoder)` on success.
+    /// - `Err(Error::InvalidLength)` if the input buffer is empty or the line
+    ///   width is zero.
+    ///
     /// [RFC7468]: https://datatracker.ietf.org/doc/html/rfc7468
     pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
+        if input.is_empty() {
+            return Err(InvalidLength);
+        }
+
         Ok(Self {
             line: Line::default(),
             line_reader: LineReader::new(input, line_width)?,
@@ -89,7 +106,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read
     pub fn decode<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8], Error> {
         if self.is_finished() {
-            return Err(Error::InvalidLength);
+            return Err(InvalidLength);
         }
 
         let mut out_pos = 0;
@@ -183,7 +200,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
             self.line = line;
             Ok(())
         } else {
-            Err(Error::InvalidLength)
+            Err(InvalidLength)
         }
     }
 
@@ -222,7 +239,7 @@ impl BlockBuffer {
         debug_assert!(self.is_empty());
 
         if decoded_input.len() > Self::SIZE {
-            return Err(Error::InvalidLength);
+            return Err(InvalidLength);
         }
 
         self.position = 0;
@@ -310,7 +327,7 @@ impl<'i> LineReader<'i> {
     /// Create a new reader which operates over linewrapped data.
     fn new(bytes: &'i [u8], line_width: usize) -> Result<Self, Error> {
         if line_width == 0 {
-            return Err(Error::InvalidLength);
+            return Err(InvalidLength);
         }
 
         Ok(Self {
