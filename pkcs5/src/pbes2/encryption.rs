@@ -16,13 +16,13 @@ use pbkdf2::pbkdf2;
 use scrypt::scrypt;
 
 type Aes128Cbc = Cbc<aes::Aes128, Pkcs7>;
-#[cfg(feature = "ecb")]
+#[cfg(feature = "aes-ecb-insecure")]
 type Aes128Ecb = Ecb<aes::Aes128, Pkcs7>;
 type Aes192Cbc = Cbc<aes::Aes192, Pkcs7>;
-#[cfg(feature = "ecb")]
+#[cfg(feature = "aes-ecb-insecure")]
 type Aes192Ecb = Ecb<aes::Aes192, Pkcs7>;
 type Aes256Cbc = Cbc<aes::Aes256, Pkcs7>;
-#[cfg(feature = "ecb")]
+#[cfg(feature = "aes-ecb-insecure")]
 type Aes256Ecb = Ecb<aes::Aes256, Pkcs7>;
 
 #[cfg(feature = "des-insecure")]
@@ -55,7 +55,7 @@ pub fn encrypt_in_place<'b>(
                 .encrypt(buffer, pos)
                 .map_err(|_| Error::EncryptFailed)
         }
-        #[cfg(feature = "ecb")]
+        #[cfg(feature = "aes-ecb-insecure")]
         EncryptionScheme::Aes128Ecb => {
             let cipher = Aes128Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
                 .map_err(|_| es.to_alg_params_invalid())?;
@@ -70,7 +70,7 @@ pub fn encrypt_in_place<'b>(
                 .encrypt(buffer, pos)
                 .map_err(|_| Error::EncryptFailed)
         }
-        #[cfg(feature = "ecb")]
+        #[cfg(feature = "aes-ecb-insecure")]
         EncryptionScheme::Aes192Ecb => {
             let cipher = Aes192Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
                 .map_err(|_| es.to_alg_params_invalid())?;
@@ -85,7 +85,7 @@ pub fn encrypt_in_place<'b>(
                 .encrypt(buffer, pos)
                 .map_err(|_| Error::EncryptFailed)
         }
-        #[cfg(feature = "ecb")]
+        #[cfg(feature = "aes-ecb-insecure")]
         EncryptionScheme::Aes256Ecb => {
             let cipher = Aes256Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
                 .map_err(|_| es.to_alg_params_invalid())?;
@@ -124,7 +124,7 @@ pub fn decrypt_in_place<'a>(
                 .map_err(|_| es.to_alg_params_invalid())?;
             cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
         }
-        #[cfg(feature = "ecb")]
+        #[cfg(feature = "aes-ecb-insecure")]
         EncryptionScheme::Aes128Ecb => {
             let cipher = Aes128Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
                 .map_err(|_| es.to_alg_params_invalid())?;
@@ -135,7 +135,7 @@ pub fn decrypt_in_place<'a>(
                 .map_err(|_| es.to_alg_params_invalid())?;
             cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
         }
-        #[cfg(feature = "ecb")]
+        #[cfg(feature = "aes-ecb-insecure")]
         EncryptionScheme::Aes192Ecb => {
             let cipher = Aes192Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
                 .map_err(|_| es.to_alg_params_invalid())?;
@@ -146,7 +146,7 @@ pub fn decrypt_in_place<'a>(
                 .map_err(|_| es.to_alg_params_invalid())?;
             cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
         }
-        #[cfg(feature = "ecb")]
+        #[cfg(feature = "aes-ecb-insecure")]
         EncryptionScheme::Aes256Ecb => {
             let cipher = Aes256Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
                 .map_err(|_| es.to_alg_params_invalid())?;

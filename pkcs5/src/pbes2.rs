@@ -27,7 +27,7 @@ pub const AES_128_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.
 
 /// 128-bit Advanced Encryption Standard (AES) algorithm with Electronic Code
 /// Book (ECB) mode of operation.
-#[cfg(feature = "ecb")]
+#[cfg(feature = "aes-ecb-insecure")]
 pub const AES_128_ECB_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.1");
 
 /// 192-bit Advanced Encryption Standard (AES) algorithm with Cipher-Block
@@ -36,7 +36,7 @@ pub const AES_192_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.
 
 /// 192-bit Advanced Encryption Standard (AES) algorithm with Electronic Code
 /// Book (ECB) mode of operation.
-#[cfg(feature = "ecb")]
+#[cfg(feature = "aes-ecb-insecure")]
 pub const AES_192_ECB_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.21");
 
 /// 256-bit Advanced Encryption Standard (AES) algorithm with Cipher-Block
@@ -45,7 +45,7 @@ pub const AES_256_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.
 
 /// 256-bit Advanced Encryption Standard (AES) algorithm with Electronic Code Book
 /// (ECB) mode of operation.
-#[cfg(feature = "ecb")]
+#[cfg(feature = "aes-ecb-insecure")]
 pub const AES_256_ECB_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.41");
 
 /// DES operating in CBC mode
@@ -254,7 +254,7 @@ pub enum EncryptionScheme<'a> {
     },
 
     /// AES-128 in ECB mode
-    #[cfg(feature = "ecb")]
+    #[cfg(feature = "aes-ecb-insecure")]
     Aes128Ecb,
 
     /// AES-192 in CBC mode
@@ -264,7 +264,7 @@ pub enum EncryptionScheme<'a> {
     },
 
     /// AES-192 in ECB mode
-    #[cfg(feature = "ecb")]
+    #[cfg(feature = "aes-ecb-insecure")]
     Aes192Ecb,
 
     /// AES-256 in CBC mode
@@ -274,7 +274,7 @@ pub enum EncryptionScheme<'a> {
     },
 
     /// AES-256 in ECB mode
-    #[cfg(feature = "ecb")]
+    #[cfg(feature = "aes-ecb-insecure")]
     Aes256Ecb,
 
     /// 3-Key Triple DES in CBC mode
@@ -297,13 +297,13 @@ impl<'a> EncryptionScheme<'a> {
     pub fn key_size(&self) -> usize {
         match self {
             Self::Aes128Cbc { .. } => 16,
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             Self::Aes128Ecb => 16,
             Self::Aes192Cbc { .. } => 24,
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             Self::Aes192Ecb => 24,
             Self::Aes256Cbc { .. } => 32,
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             Self::Aes256Ecb => 32,
             #[cfg(feature = "des-insecure")]
             Self::DesCbc { .. } => 8,
@@ -316,13 +316,13 @@ impl<'a> EncryptionScheme<'a> {
     pub fn oid(&self) -> ObjectIdentifier {
         match self {
             Self::Aes128Cbc { .. } => AES_128_CBC_OID,
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             Self::Aes128Ecb => AES_128_ECB_OID,
             Self::Aes192Cbc { .. } => AES_192_CBC_OID,
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             Self::Aes192Ecb => AES_192_ECB_OID,
             Self::Aes256Cbc { .. } => AES_256_CBC_OID,
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             Self::Aes256Ecb => AES_256_ECB_OID,
             #[cfg(feature = "des-insecure")]
             Self::DesCbc { .. } => DES_CBC_OID,
@@ -351,7 +351,7 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
         // TODO(tarcieri): support for non-AES algorithms?
 
-        #[cfg(feature = "ecb")]
+        #[cfg(feature = "aes-ecb-insecure")]
         match alg.oid {
             AES_128_ECB_OID => return Ok(Self::Aes128Ecb),
             AES_192_ECB_OID => return Ok(Self::Aes192Ecb),
@@ -403,13 +403,13 @@ impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
     fn try_from(scheme: EncryptionScheme<'a>) -> der::Result<Self> {
         let parameters = match scheme {
             EncryptionScheme::Aes128Cbc { iv } => Some(iv),
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             EncryptionScheme::Aes128Ecb => None,
             EncryptionScheme::Aes192Cbc { iv } => Some(iv),
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             EncryptionScheme::Aes192Ecb => None,
             EncryptionScheme::Aes256Cbc { iv } => Some(iv),
-            #[cfg(feature = "ecb")]
+            #[cfg(feature = "aes-ecb-insecure")]
             EncryptionScheme::Aes256Ecb => None,
             #[cfg(feature = "des-insecure")]
             EncryptionScheme::DesCbc { iv } => Some(iv),
