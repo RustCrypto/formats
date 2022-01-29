@@ -3,7 +3,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/base64ct/1.3.3"
+    html_root_url = "https://docs.rs/base64ct/1.4.0-pre"
 )]
 #![doc = include_str!("../README.md")]
 #![warn(
@@ -72,12 +72,17 @@ extern crate alloc;
 extern crate std;
 
 mod decoder;
+mod encoder;
 mod encoding;
 mod errors;
 mod variant;
 
+#[cfg(test)]
+mod test_vectors;
+
 pub use crate::{
     decoder::Decoder,
+    encoder::Encoder,
     encoding::Encoding,
     errors::{Error, InvalidEncodingError, InvalidLengthError},
     variant::{
