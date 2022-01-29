@@ -1,8 +1,8 @@
 //! ASN.1 `SEQUENCE OF` support.
 
 use crate::{
-    arrayvec, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable, EncodeValue, Encoder,
-    ErrorKind, FixedTag, Length, Result, Tag, ValueOrd,
+    arrayvec, ord::iter_cmp, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable,
+    EncodeValue, Encoder, ErrorKind, FixedTag, Length, Result, Tag, ValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -109,7 +109,7 @@ where
     T: DerOrd,
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-        value_cmp(self.iter(), other.iter())
+        iter_cmp(self.iter(), other.iter())
     }
 }
 
@@ -127,6 +127,8 @@ impl<'a, T> Iterator for SequenceOfIter<'a, T> {
         self.inner.next()
     }
 }
+
+impl<'a, T> ExactSizeIterator for SequenceOfIter<'a, T> {}
 
 impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
 where
@@ -166,7 +168,7 @@ where
     T: DerOrd,
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-        value_cmp(self.iter(), other.iter())
+        iter_cmp(self.iter(), other.iter())
     }
 }
 
@@ -225,22 +227,6 @@ where
     T: DerOrd,
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-        value_cmp(self.iter(), other.iter())
+        iter_cmp(self.iter(), other.iter())
     }
-}
-
-/// Compare two `SEQUENCE OF`s by value.
-fn value_cmp<'a, I, T: 'a>(a: I, b: I) -> Result<Ordering>
-where
-    I: Iterator<Item = &'a T>,
-    T: DerOrd,
-{
-    for (value1, value2) in a.zip(b) {
-        match value1.der_cmp(value2)? {
-            Ordering::Equal => (),
-            other => return Ok(other),
-        }
-    }
-
-    Ok(Ordering::Equal)
 }

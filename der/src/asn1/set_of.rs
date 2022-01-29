@@ -1,8 +1,8 @@
 //! ASN.1 `SET OF` support.
 
 use crate::{
-    arrayvec, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable, EncodeValue, Encoder,
-    ErrorKind, FixedTag, Length, Result, Tag,
+    arrayvec, ord::iter_cmp, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable,
+    EncodeValue, Encoder, ErrorKind, FixedTag, Length, Result, Tag, ValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -126,6 +126,15 @@ where
     const TAG: Tag = Tag::Set;
 }
 
+impl<T, const N: usize> ValueOrd for SetOf<T, N>
+where
+    T: Clone + DerOrd,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        iter_cmp(self.iter(), other.iter())
+    }
+}
+
 /// Iterator over the elements of an [`SetOf`].
 #[derive(Clone, Debug)]
 pub struct SetOfIter<'a, T> {
@@ -140,6 +149,8 @@ impl<'a, T> Iterator for SetOfIter<'a, T> {
         self.inner.next()
     }
 }
+
+impl<'a, T> ExactSizeIterator for SetOfIter<'a, T> {}
 
 /// ASN.1 `SET OF` backed by a [`Vec`].
 ///
@@ -254,4 +265,15 @@ where
     T: Clone + DerOrd,
 {
     const TAG: Tag = Tag::Set;
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<T> ValueOrd for SetOfVec<T>
+where
+    T: Clone + DerOrd,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        iter_cmp(self.iter(), other.iter())
+    }
 }

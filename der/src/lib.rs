@@ -360,7 +360,7 @@ pub use crate::{
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
-    ord::{DerOrd, OrdIsValueOrd, ValueOrd},
+    ord::{DerOrd, ValueOrd},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     value::{DecodeValue, EncodeValue},
 };
