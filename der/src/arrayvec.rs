@@ -121,4 +121,11 @@ impl<'a, T> Iterator for Iter<'a, T> {
             None
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.elements.len() - self.position;
+        (len, Some(len))
+    }
 }
+
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
