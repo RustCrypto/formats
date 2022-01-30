@@ -56,13 +56,9 @@ pub fn encrypt_in_place<'b>(
                 .map_err(|_| Error::EncryptFailed)
         }
         #[cfg(feature = "aes-ecb-insecure")]
-        EncryptionScheme::Aes128Ecb => {
-            let cipher = Aes128Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher
-                .encrypt(buffer, pos)
-                .map_err(|_| Error::EncryptFailed)
-        }
+        EncryptionScheme::Aes128Ecb => Err(Error::UnsupportedAlgorithm {
+            oid: super::AES_128_ECB_OID,
+        }),
         EncryptionScheme::Aes192Cbc { iv } => {
             let cipher = Aes192Cbc::new_from_slices(encryption_key.as_slice(), iv)
                 .map_err(|_| es.to_alg_params_invalid())?;
@@ -71,13 +67,9 @@ pub fn encrypt_in_place<'b>(
                 .map_err(|_| Error::EncryptFailed)
         }
         #[cfg(feature = "aes-ecb-insecure")]
-        EncryptionScheme::Aes192Ecb => {
-            let cipher = Aes192Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher
-                .encrypt(buffer, pos)
-                .map_err(|_| Error::EncryptFailed)
-        }
+        EncryptionScheme::Aes192Ecb => Err(Error::UnsupportedAlgorithm {
+            oid: super::AES_192_ECB_OID,
+        }),
         EncryptionScheme::Aes256Cbc { iv } => {
             let cipher = Aes256Cbc::new_from_slices(encryption_key.as_slice(), iv)
                 .map_err(|_| es.to_alg_params_invalid())?;
@@ -86,13 +78,9 @@ pub fn encrypt_in_place<'b>(
                 .map_err(|_| Error::EncryptFailed)
         }
         #[cfg(feature = "aes-ecb-insecure")]
-        EncryptionScheme::Aes256Ecb => {
-            let cipher = Aes256Ecb::new_from_slices(encryption_key.as_slice(), Default::default())
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher
-                .encrypt(buffer, pos)
-                .map_err(|_| Error::EncryptFailed)
-        }
+        EncryptionScheme::Aes256Ecb => Err(Error::UnsupportedAlgorithm {
+            oid: super::AES_256_ECB_OID,
+        }),
         #[cfg(feature = "3des")]
         EncryptionScheme::DesEde3Cbc { iv } => {
             let cipher = DesEde3Cbc::new_from_slices(encryption_key.as_slice(), iv)
