@@ -14,7 +14,7 @@ use {
 };
 
 #[cfg(feature = "std")]
-use std::{path::Path, str};
+use std::path::Path;
 
 /// PKCS#1 `RSA PRIVATE KEY` document.
 ///
