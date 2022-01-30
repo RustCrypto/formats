@@ -20,7 +20,7 @@ use der::Document;
 #[cfg(feature = "std")]
 use std::path::Path;
 
-#[cfg(any(feature = "pem", feature = "std"))]
+#[cfg(feature = "pem")]
 use zeroize::Zeroizing;
 
 /// Parse an [`EcPrivateKey`] from a SEC1-encoded document.
