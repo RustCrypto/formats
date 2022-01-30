@@ -4,7 +4,7 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! # #[cfg(feature = "alloc")]
+//! # #[cfg(feature = "std")]
 //! # {
 //! /// Example PEM document
 //! /// NOTE: do not actually put private key literals into your source code!!!
