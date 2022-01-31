@@ -21,6 +21,7 @@ use crate::{
     base64::{self, Decode},
     Algorithm, Error, Result,
 };
+use core::str::FromStr;
 
 #[cfg(feature = "alloc")]
 use alloc::{borrow::ToOwned, string::String};
@@ -69,6 +70,14 @@ impl PublicKey {
     /// Get the digital signature [`Algorithm`] used by this key.
     pub fn algorithm(&self) -> Algorithm {
         self.key_data.algorithm()
+    }
+}
+
+impl FromStr for PublicKey {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::from_openssh(s)
     }
 }
 
