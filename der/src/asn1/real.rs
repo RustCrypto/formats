@@ -166,18 +166,11 @@ impl TryFrom<Any<'_>> for f64 {
 /// Is the N-th bit 1 in the first octet?
 /// NOTE: this function is zero indexed
 pub(crate) fn is_nth_bit_one<const N: usize>(bytes: &[u8]) -> bool {
-    let mask = match N {
-        0 => 0b00000001,
-        1 => 0b00000010,
-        2 => 0b00000100,
-        3 => 0b00001000,
-        4 => 0b00010000,
-        5 => 0b00100000,
-        6 => 0b01000000,
-        7 => 0b10000000,
-        _ => return false,
-    };
-    bytes.get(0).map(|byte| byte & mask != 0).unwrap_or(false)
+    if N < 8 {
+        bytes.get(0).map(|byte| byte & (1 << N) != 0).unwrap_or(false)
+    } else {
+        false
+    }
 }
 
 /// Convert bits M, N into a u8, in the first octet only
