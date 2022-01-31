@@ -10,7 +10,7 @@ impl DecodeValue<'_> for f64 {
     fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
         let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
 
-        if length == Length::ONE && bytes[0] == 0x0 {
+        if length == Length::ZERO {
             Ok(0.0)
         } else if is_nth_bit_one::<7>(bytes) {
             // Binary encoding from section 8.5.7 applies
@@ -58,10 +58,10 @@ impl DecodeValue<'_> for f64 {
                 _ => unreachable!(),
             }
         } else {
-            let astr = StrSlice::from_bytes(&bytes[3..])?;
+            let astr = StrSlice::from_bytes(&bytes[1..])?;
             match astr.inner.parse::<f64>() {
                 Ok(val) => Ok(val),
-                Err(_) => Err(Error::new(ErrorKind::RealISO6093Error, Length::ZERO)),
+                Err(_) => Err(Error::new(ErrorKind::RealISO6093Error, Length::ONE)),
             }
         }
     }
@@ -69,11 +69,14 @@ impl DecodeValue<'_> for f64 {
 
 impl EncodeValue for f64 {
     fn value_len(&self) -> Result<Length> {
-        if self.is_nan()
+        if self.is_sign_positive() && (*self) < f64::MIN_POSITIVE {
+            // Zero: positive yet smaller than the minimum positive number
+            Ok(Length::ZERO)
+        } else if self.is_nan()
             || self.is_infinite()
             || (self.is_sign_negative() && -self < f64::MIN_POSITIVE)
-            || (self.is_sign_positive() && (*self) < f64::MIN_POSITIVE)
         {
+            // NaN, infinite (positive or negative), or negative zero (negative but its negative is less than the min positive number)
             Ok(Length::ONE)
         } else {
             // The length is that of the first octets plus those needed for the exponent plus those needed for the mantissa
@@ -95,7 +98,7 @@ impl EncodeValue for f64 {
         {
             if self.is_sign_positive() && (*self) < f64::MIN_POSITIVE {
                 // Zero
-                encoder.bytes(&[0b0000_0000])?;
+                return Ok(());
             } else if self.is_nan() {
                 // Not a number
                 encoder.bytes(&[0b0100_0010])?;
@@ -167,7 +170,10 @@ impl TryFrom<Any<'_>> for f64 {
 /// NOTE: this function is zero indexed
 pub(crate) fn is_nth_bit_one<const N: usize>(bytes: &[u8]) -> bool {
     if N < 8 {
-        bytes.get(0).map(|byte| byte & (1 << N) != 0).unwrap_or(false)
+        bytes
+            .get(0)
+            .map(|byte| byte & (1 << N) != 0)
+            .unwrap_or(false)
     } else {
         false
     }
@@ -236,8 +242,8 @@ mod tests {
     fn encdec_normal() {
         {
             let val = 0.0;
-            let expected = &[0x09, 0x01, 0x0];
-            let mut buffer = [0u8; 3];
+            let expected = &[0x09, 0x0];
+            let mut buffer = [0u8; 2];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(expected, encoded, "invalid encoding of {}", val);
             let decoded = f64::from_der(encoded).unwrap();
@@ -608,6 +614,96 @@ mod tests {
             let (s, e, m) = integer_decode_f64(val);
             let val2 = integer_encode_f64(s, e, m);
             assert!((val - val2).abs() < f64::EPSILON, "fail: {}", val);
+        }
+    }
+
+    #[test]
+    fn validation_cases() {
+        // Caveat: these test cases are from the ASN.1 playground: https://asn1.io/asn1playground/ .
+        // This tool encodes _all_ values that are non-zero in the ISO 6093 NR3 representation.
+        // This does not seem to perfectly adhere to the ITU specifications, Special Cases section.
+        // The implementation in this case correctly supports decoding such values. It will, however,
+        // systematically encode REALs in their base 2 form, with a scaling factor where needed to 
+        // ensure that the mantissa is either odd or zero (as per section 11.3.1).
+        {
+            let expect = 10.0;
+            let testcase = &[0x09, 0x05, 0x03, 0x31, 0x2E, 0x45, 0x31];
+            let decoded = f64::from_der(testcase).unwrap();
+            assert!(
+                (decoded - expect).abs() < f64::EPSILON,
+                "wanted: {}\tgot: {}",
+                expect,
+                decoded
+            );
+        }
+        {
+            let expect = 100.0;
+            let testcase = &[0x09, 0x05, 0x03, 0x31, 0x2E, 0x45, 0x32];
+            let decoded = f64::from_der(testcase).unwrap();
+            assert!(
+                (decoded - expect).abs() < f64::EPSILON,
+                "wanted: {}\tgot: {}",
+                expect,
+                decoded
+            );
+        }
+        {
+            let expect = 101.0;
+            let testcase = &[0x09, 0x08, 0x03, 0x31, 0x30, 0x31, 0x2E, 0x45, 0x2B, 0x30];
+            let decoded = f64::from_der(testcase).unwrap();
+            assert!(
+                (decoded - expect).abs() < f64::EPSILON,
+                "wanted: {}\tgot: {}",
+                expect,
+                decoded
+            );
+        }
+        {
+            let expect = -951.2357864;
+            let testcase = &[
+                0x09, 0x10, 0x03, 0x2D, 0x39, 0x35, 0x31, 0x32, 0x33, 0x35, 0x37, 0x38, 0x36, 0x34,
+                0x2E, 0x45, 0x2D, 0x37,
+            ];
+            let decoded = f64::from_der(testcase).unwrap();
+            assert!(
+                (decoded - expect).abs() < f64::EPSILON,
+                "wanted: {}\tgot: {}",
+                expect,
+                decoded
+            );
+        }
+        {
+            let expect = -0.5;
+            let testcase = &[0x09, 0x07, 0x03, 0x2D, 0x35, 0x2E, 0x45, 0x2D, 0x31];
+            let decoded = f64::from_der(testcase).unwrap();
+            assert!(
+                (decoded - expect).abs() < f64::EPSILON,
+                "wanted: {}\tgot: {}",
+                expect,
+                decoded
+            );
+        }
+        {
+            let expect = -0.0;
+            let testcase = &[0x09, 0x03, 0x01, 0x2D, 0x30];
+            let decoded = f64::from_der(testcase).unwrap();
+            assert!(
+                (decoded - expect).abs() < f64::EPSILON,
+                "wanted: {}\tgot: {}",
+                expect,
+                decoded
+            );
+        }
+        {
+            let expect = 0.0;
+            let testcase = &[0x09, 0x00];
+            let decoded = f64::from_der(testcase).unwrap();
+            assert!(
+                (decoded - expect).abs() < f64::EPSILON,
+                "wanted: {}\tgot: {}",
+                expect,
+                decoded
+            );
         }
     }
 }
