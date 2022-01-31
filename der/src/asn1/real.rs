@@ -184,16 +184,7 @@ pub(crate) fn is_nth_bit_one<const N: usize>(bytes: &[u8]) -> bool {
 pub(crate) fn mnth_bits_to_u8<const M: usize, const N: usize>(bytes: &[u8]) -> u8 {
     let bit_m = is_nth_bit_one::<M>(bytes);
     let bit_n = is_nth_bit_one::<N>(bytes);
-    let data = if bit_m && bit_n {
-        0b11
-    } else if !bit_m && !bit_n {
-        0b00
-    } else if bit_n {
-        0b01
-    } else {
-        0b10
-    };
-    u8::from_be_bytes([data])
+    (bit_m as u8) << 1 | bit_n as u8
 }
 
 /// Decode an f64 as its sign, exponent, and mantissa in u64 and in that order, using bit shifts and masks
