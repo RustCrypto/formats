@@ -1,10 +1,7 @@
 //! `encrypted-data` content type [RFC 5652 § 8](https://datatracker.ietf.org/doc/html/rfc5652#section-8)
 
 use crate::enveloped_data_content::EncryptedContentInfo;
-use der::{
-    Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, FixedTag, Header, Length,
-    Sequence, Tag,
-};
+use der::{DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header, Length, Sequence, Tag};
 
 /// Syntax version of the `encrypted-data` content type.
 ///
@@ -73,31 +70,11 @@ impl EncodeValue for Version {
 ///   - [`version`](EncryptedDataContent::version) is the syntax version number.
 ///   - [`encrypted_content_info`](EncryptedDataContent::encrypted_content_info) is the encrypted content
 ///     information, as in [EncryptedContentInfo].
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct EncryptedDataContent<'a> {
     /// the syntax version number.
     pub version: Version,
 
     /// the encrypted content information.
     pub encrypted_content_info: EncryptedContentInfo<'a>,
-}
-
-impl<'a> Decodable<'a> for EncryptedDataContent<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<EncryptedDataContent<'a>> {
-        decoder.sequence(|decoder| {
-            Ok(EncryptedDataContent {
-                version: decoder.decode()?,
-                encrypted_content_info: decoder.decode()?,
-            })
-        })
-    }
-}
-
-impl<'a> Sequence<'a> for EncryptedDataContent<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
-    {
-        f(&[&self.version, &self.encrypted_content_info])
-    }
 }
