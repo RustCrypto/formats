@@ -1,3 +1,5 @@
+#![cfg(feature = "std")]
+
 use tls_codec::{Serialize, TlsVecU16};
 
 #[test]

@@ -23,7 +23,7 @@ criterion = "0.3"
 [features]
 default = [ "std" ]
 derive = [ "std", "tls_codec_derive" ]
-serde_serialize = [ "serde" ]
+serde_serialize = [ "std", "serde" ]
 std = []
 
 [[bench]]
