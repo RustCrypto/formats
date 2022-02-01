@@ -52,27 +52,25 @@ impl<'o, E: Variant> Encoder<'o, E> {
     /// - `Ok(bytes)` if the expected amount of data was read
     /// - `Err(Error::InvalidLength)` if there is insufficient space in the output buffer
     pub fn encode(&mut self, mut input: &[u8]) -> Result<(), Error> {
-        while !input.is_empty() {
-            // If there's data in the block buffer, fill it
-            if !self.block_buffer.is_empty() {
-                self.fill_block_buffer(&mut input)?;
-            }
+        // If there's data in the block buffer, fill it
+        if !self.block_buffer.is_empty() {
+            self.fill_block_buffer(&mut input)?;
+        }
 
-            // Attempt to decode a stride of block-aligned data
-            let in_blocks = input.len() / 3;
-            let out_blocks = self.remaining().len() / 4;
-            let blocks = cmp::min(in_blocks, out_blocks);
+        // Attempt to decode a stride of block-aligned data
+        let in_blocks = input.len() / 3;
+        let out_blocks = self.remaining().len() / 4;
+        let blocks = cmp::min(in_blocks, out_blocks);
 
-            if blocks > 0 {
-                let (in_aligned, in_rem) = input.split_at(blocks * 3);
-                input = in_rem;
-                self.perform_encode(in_aligned)?;
-            }
+        if blocks > 0 {
+            let (in_aligned, in_rem) = input.split_at(blocks * 3);
+            input = in_rem;
+            self.perform_encode(in_aligned)?;
+        }
 
-            // If there's remaining non-aligned data, fill the block buffer
-            if !input.is_empty() {
-                self.fill_block_buffer(&mut input)?;
-            }
+        // If there's remaining non-aligned data, fill the block buffer
+        if !input.is_empty() {
+            self.fill_block_buffer(&mut input)?;
         }
 
         Ok(())
