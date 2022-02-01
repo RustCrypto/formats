@@ -249,8 +249,8 @@ impl Encode for KeyData {
             #[cfg(feature = "ecdsa")]
             Self::Ecdsa(key) => key.encoded_len()?,
             Self::Ed25519(key) => key.encoded_len()?,
-            #[allow(unreachable_patterns)]
-            _ => return Err(Error::Algorithm),
+            #[cfg(feature = "alloc")]
+            Self::Rsa(key) => key.encoded_len()?,
         };
 
         Ok(alg_len + key_len)
@@ -264,8 +264,8 @@ impl Encode for KeyData {
             #[cfg(feature = "ecdsa")]
             Self::Ecdsa(key) => key.encode(encoder),
             Self::Ed25519(key) => key.encode(encoder),
-            #[allow(unreachable_patterns)]
-            _ => Err(Error::Algorithm),
+            #[cfg(feature = "alloc")]
+            Self::Rsa(key) => key.encode(encoder),
         }
     }
 }
