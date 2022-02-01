@@ -212,3 +212,10 @@ fn decode_rsa_4096_openssh() {
 
     assert_eq!("user@example.com", ossh_key.comment);
 }
+
+#[cfg(feature = "alloc")]
+#[test]
+fn encode_ed25519_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_ED25519_EXAMPLE).unwrap();
+    assert_eq!(OSSH_ED25519_EXAMPLE.trim_end(), &ossh_key.to_string())
+}
