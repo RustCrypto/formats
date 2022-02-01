@@ -3,8 +3,8 @@
 use crate::{Certificate, CertificatePolicies, Extensions, Name, NameConstraints};
 use der::asn1::{BitString, ContextSpecific, OctetString, Utf8String};
 use der::{
-    DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Length, Tag, TagMode,
-    TagNumber,
+    DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Length, Sequence, Tag,
+    TagMode, TagNumber,
 };
 use spki::SubjectPublicKeyInfo;
 
@@ -143,106 +143,30 @@ impl<'a> ::core::fmt::Debug for TrustAnchorInfo<'a> {
 ///  policyFlags      \[2\] CertPolicyFlags OPTIONAL,
 ///  nameConstr       \[3\] NameConstraints OPTIONAL,
 ///  pathLenConstraint\[4\] INTEGER (0..MAX) OPTIONAL}
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct CertPathControls<'a> {
     /// taName               Name,
     pub ta_name: Name<'a>,
 
     /// certificate      \[0\] Certificate OPTIONAL,
+    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     pub certificate: Option<Certificate<'a>>,
 
     /// policySet        \[1\] CertificatePolicies OPTIONAL,
+    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub policy_set: Option<CertificatePolicies<'a>>,
 
     /// policyFlags      \[2\] CertPolicyFlags OPTIONAL,
+    #[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
     pub policy_flags: Option<CertPolicyFlags<'a>>,
 
     /// nameConstr       \[3\] NameConstraints OPTIONAL,
+    #[asn1(context_specific = "3", optional = "true", tag_mode = "IMPLICIT")]
     pub name_constr: Option<NameConstraints<'a>>,
 
     /// pathLenConstraint\[4\] INTEGER (0..MAX) OPTIONAL}
+    #[asn1(context_specific = "4", optional = "true", tag_mode = "IMPLICIT")]
     pub path_len_constraint: Option<u32>,
-}
-
-impl<'a> ::der::Decodable<'a> for CertPathControls<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let ta_name = decoder.decode()?;
-
-            let certificate =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let policy_set =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            let policy_flags =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N2)?
-                    .map(|cs| cs.value);
-
-            let name_constr =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N3)?
-                    .map(|cs| cs.value);
-            let path_len_constraint =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N4)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                ta_name,
-                certificate,
-                policy_set,
-                policy_flags,
-                name_constr,
-                path_len_constraint,
-            })
-        })
-    }
-}
-const CPC_CERTIFICATE_TAG: TagNumber = TagNumber::new(0);
-const CPC_POLICY_SET_TAG: TagNumber = TagNumber::new(1);
-const CPC_POLICY_FLAGS_TAG: TagNumber = TagNumber::new(2);
-const CPC_NAME_CONSTRAINTS_TAG: TagNumber = TagNumber::new(3);
-const CPC_PATH_LEN_CONSTRAINT_TAG: TagNumber = TagNumber::new(4);
-impl<'a> ::der::Sequence<'a> for CertPathControls<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        #[allow(unused_imports)]
-        use core::convert::TryFrom;
-        f(&[
-            &self.ta_name,
-            &self.certificate.as_ref().map(|exts| ContextSpecific {
-                tag_number: CPC_CERTIFICATE_TAG,
-                tag_mode: TagMode::Implicit,
-                value: exts.clone(),
-            }),
-            &self.policy_set.as_ref().map(|exts| ContextSpecific {
-                tag_number: CPC_POLICY_SET_TAG,
-                tag_mode: TagMode::Implicit,
-                value: exts.clone(),
-            }),
-            &self
-                .policy_flags
-                .as_ref()
-                .map(|policy_flags| ContextSpecific {
-                    tag_number: CPC_POLICY_FLAGS_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: *policy_flags,
-                }),
-            &self.name_constr.as_ref().map(|exts| ContextSpecific {
-                tag_number: CPC_NAME_CONSTRAINTS_TAG,
-                tag_mode: TagMode::Implicit,
-                value: exts.clone(),
-            }),
-            &self
-                .path_len_constraint
-                .as_ref()
-                .map(|path_len_constraint| ContextSpecific {
-                    tag_number: CPC_PATH_LEN_CONSTRAINT_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: *path_len_constraint,
-                }),
-        ])
-    }
 }
 
 /// CertPolicyFlags ::= BIT STRING {
