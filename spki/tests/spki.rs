@@ -1,12 +1,12 @@
 //! `SubjectPublicKeyInfo` tests.
 
-#[cfg(feature = "alloc")]
+#[cfg(all(feature = "alloc", feature = "fingerprint"))]
 use spki::der::Encodable;
 
 #[cfg(feature = "fingerprint")]
 use {hex_literal::hex, spki::SubjectPublicKeyInfo};
 
-#[cfg(feature = "pem")]
+#[cfg(all(feature = "pem", feature = "fingerprint"))]
 use spki::{der::Document, EncodePublicKey, PublicKeyDocument};
 
 #[cfg(feature = "fingerprint")]
@@ -15,7 +15,7 @@ use spki::{der::Document, EncodePublicKey, PublicKeyDocument};
 const ED25519_DER_EXAMPLE: &[u8] = include_bytes!("examples/ed25519-pub.der");
 
 /// Ed25519 public key encoded as PEM
-#[cfg(feature = "pem")]
+#[cfg(all(feature = "pem", feature = "fingerprint"))]
 const ED25519_PEM_EXAMPLE: &str = include_str!("examples/ed25519-pub.pem");
 
 /// The SPKI fingerprint for `ED25519_SPKI_FINGERPRINT` as a Base64 string
@@ -31,8 +31,8 @@ const ED25519_SPKI_FINGERPRINT_BASE64: &str = "Vd1MdLDkhTTi9OFzzs61DfjyenrCqomRz
 const ED25519_SPKI_FINGERPRINT: &[u8] =
     &hex!("55dd4c74b0e48534e2f4e173ceceb50df8f27a7ac2aa8991cc7ae914e030bced");
 
-#[cfg(all(feature = "fingerprint", feature = "alloc"))]
 #[test]
+#[cfg(all(feature = "fingerprint", feature = "alloc"))]
 fn decode_and_base64fingerprint_spki() {
     // Repeat the decode test from the pkcs8 crate
     let spki = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
@@ -51,8 +51,8 @@ fn decode_and_base64fingerprint_spki() {
     );
 }
 
-#[cfg(feature = "fingerprint")]
 #[test]
+#[cfg(feature = "fingerprint")]
 fn decode_and_fingerprint_spki() {
     // Repeat the decode test from the pkcs8 crate
     let spki = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
@@ -72,7 +72,7 @@ fn decode_and_fingerprint_spki() {
 }
 
 #[test]
-#[cfg(feature = "pem")]
+#[cfg(all(feature = "pem", feature = "fingerprint"))]
 fn decode_ed25519_pem() {
     let doc: PublicKeyDocument = ED25519_PEM_EXAMPLE.parse().unwrap();
     assert_eq!(doc.as_ref(), ED25519_DER_EXAMPLE);
@@ -83,7 +83,7 @@ fn decode_ed25519_pem() {
 }
 
 #[test]
-#[cfg(feature = "alloc")]
+#[cfg(all(feature = "alloc", feature = "fingerprint"))]
 fn encode_ed25519_der() {
     let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_vec().unwrap();
@@ -91,7 +91,7 @@ fn encode_ed25519_der() {
 }
 
 #[test]
-#[cfg(feature = "pem")]
+#[cfg(all(feature = "pem", feature = "fingerprint"))]
 fn encode_ed25519_pem() {
     let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
     let pk_encoded = PublicKeyDocument::try_from(pk)

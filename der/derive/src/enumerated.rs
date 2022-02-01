@@ -95,7 +95,7 @@ impl DeriveEnumerated {
         }
 
         quote! {
-            impl ::der::DecodeValue<'static> for #ident {
+            impl ::der::DecodeValue<'_> for #ident {
                 fn decode_value(
                     decoder: &mut ::der::Decoder<'_>,
                     length: ::der::Length

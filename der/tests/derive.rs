@@ -7,7 +7,7 @@
 //!
 //! $ cargo expand --test derive --all-features
 
-#![cfg(feature = "derive")]
+#![cfg(all(feature = "derive", feature = "alloc"))]
 
 /// Custom derive test cases for the `Choice` macro.
 mod choice {
@@ -199,6 +199,7 @@ mod enumerated {
 }
 
 /// Custom derive test cases for the `Sequence` macro.
+#[cfg(feature = "oid")]
 mod sequence {
     use der::{
         asn1::{Any, ObjectIdentifier, SetOf},

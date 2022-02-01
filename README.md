@@ -15,6 +15,7 @@ Cryptography-related format encoders/decoders: PKCS, PKIX.
 | `pkcs5`       | [![crates.io](https://img.shields.io/crates/v/pkcs5.svg)](https://crates.io/crates/pkcs5)             | [![Documentation](https://docs.rs/pkcs5/badge.svg)](https://docs.rs/pkcs5)             | Implementation of PKCS#5: Password-Based Cryptography Specification Version 2.1 ([RFC 8018])                                               |
 | `pkcs7`       | [![crates.io](https://img.shields.io/crates/v/pkcs7.svg)](https://crates.io/crates/pkcs7)             | [![Documentation](https://docs.rs/pkcs7/badge.svg)](https://docs.rs/pkcs7)             | Implementation of PKCS#7: Cryptographic Message Syntax v1.5 ([RFC 5652] and [RFC 8933])                                                    |
 | `pkcs8`       | [![crates.io](https://img.shields.io/crates/v/pkcs8.svg)](https://crates.io/crates/pkcs8)             | [![Documentation](https://docs.rs/pkcs8/badge.svg)](https://docs.rs/pkcs8)             | Implementation of PKCS#8(v2): Private-Key Information Syntax Specification ([RFC 5208]) and asymmetric key packages ([RFC 5958])           |
+| `pkcs10`      | [![crates.io](https://img.shields.io/crates/v/pkcs10.svg)](https://crates.io/crates/pkcs10)           | [![Documentation](https://docs.rs/pkcs10/badge.svg)](https://docs.rs/pkcs10)          | Implementation of PKCS#10: Certification Request Syntax Specification ([RFC 2986])                             |
 | `sec1`        | [![crates.io](https://img.shields.io/crates/v/sec1.svg)](https://crates.io/crates/sec1)               | [![Documentation](https://docs.rs/sec1/badge.svg)](https://docs.rs/sec1)               | [SEC1: Elliptic Curve Cryptography] encoding formats                                                                                       |
 | `spki`        | [![crates.io](https://img.shields.io/crates/v/spki.svg)](https://crates.io/crates/spki)               | [![Documentation](https://docs.rs/spki/badge.svg)](https://docs.rs/spki)               | X.509 Subject Public Key Info ([RFC 5280 Section 4.1]) describing public keys as well as their associated AlgorithmIdentifiers (i.e. OIDs) |
 | `ssh-key`     | [![crates.io](https://img.shields.io/crates/v/ssh-key.svg)](https://crates.io/crates/ssh-key)         | [![Documentation](https://docs.rs/ssh-key/badge.svg)](https://docs.rs/ssh-key)         | SSH key file formats as described in [RFC 4716]                                                                                            |
@@ -46,6 +47,7 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # "links"
 [itu x.660]: https://www.itu.int/rec/T-REC-X.660
 [itu x.690]: https://www.itu.int/rec/T-REC-X.690
+[rfc 2986]: https://datatracker.ietf.org/doc/html/rfc2986
 [rfc 4716]: https://datatracker.ietf.org/doc/html/rfc4253
 [rfc 5208]: https://datatracker.ietf.org/doc/html/rfc5208
 [rfc 5280 section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1

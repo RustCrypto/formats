@@ -84,9 +84,13 @@ impl DeriveSequence {
         }
 
         quote! {
-            impl<#lt_params> ::der::Decodable<#lifetime> for #ident<#lt_params> {
-                fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
-                    decoder.sequence(|decoder| {
+            impl<#lt_params> ::der::DecodeValue<#lifetime> for #ident<#lt_params> {
+                fn decode_value(
+                    decoder: &mut ::der::Decoder<#lifetime>,
+                    length: ::der::Length,
+                ) -> ::der::Result<Self> {
+                    use ::der::DecodeValue;
+                    ::der::asn1::SequenceRef::decode_value(decoder, length)?.decode_body(|decoder| {
                         #(#decode_body)*
 
                         Ok(Self {

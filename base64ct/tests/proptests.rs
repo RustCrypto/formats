@@ -9,6 +9,9 @@ use std::iter;
 /// Incremental Base64 decoder.
 type Decoder<'a> = base64ct::Decoder<'a, Base64ct>;
 
+/// Incremental Base64 encoder.
+type Encoder<'a> = base64ct::Encoder<'a, Base64ct>;
+
 proptest! {
     /// Ensure `base64ct` decodes data encoded by `base64` ref crate
     #[test]
@@ -47,7 +50,7 @@ proptest! {
         line_width in 4..128usize,
         chunk_size in 1..256usize
     ) {
-        for line_ending in ["\n"] { //["\r", "\n", "\r\n"] {
+        for line_ending in ["\r", "\n", "\r\n"] {
             let encoded = base64::encode(&bytes);
 
             let mut encoded_wrapped = Vec::new();
@@ -112,5 +115,25 @@ proptest! {
         let encoded_ct = Base64ct::encode_string(&bytes);
         let encoded_ref = base64::encode(&bytes);
         prop_assert_eq!(encoded_ct, encoded_ref);
+    }
+
+    /// Ensure that `base64ct`'s incremental encoder is able to encode randomly
+    /// generated inputs which match what's encoded by the `base64` ref crate
+    #[test]
+    fn encode_incremental(bytes in bytes_regex(".{1,256}").unwrap(), chunk_size in 1..256usize) {
+        let expected = base64::encode(&bytes);
+        let chunk_size = match chunk_size % bytes.len() {
+            0 => 1,
+            n => n
+        };
+
+        let mut buffer = [0u8; 1024];
+        let mut encoder = Encoder::new(&mut buffer).unwrap();
+
+        for chunk in bytes.chunks(chunk_size) {
+            encoder.encode(chunk).unwrap();
+        }
+
+        prop_assert_eq!(expected, encoder.finish().unwrap());
     }
 }
