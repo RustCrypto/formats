@@ -244,6 +244,8 @@ impl Encode for KeyData {
     fn encoded_len(&self) -> Result<usize> {
         let alg_len = self.algorithm().encoded_len()?;
         let key_len = match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(key) => key.encoded_len()?,
             #[cfg(feature = "ecdsa")]
             Self::Ecdsa(key) => key.encoded_len()?,
             Self::Ed25519(key) => key.encoded_len()?,
@@ -257,6 +259,8 @@ impl Encode for KeyData {
     fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
         self.algorithm().encode(encoder)?;
         match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(key) => key.encode(encoder),
             #[cfg(feature = "ecdsa")]
             Self::Ecdsa(key) => key.encode(encoder),
             Self::Ed25519(key) => key.encode(encoder),
