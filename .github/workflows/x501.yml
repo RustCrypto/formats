@@ -1,20 +1,18 @@
-name: x509
+name: x501
 
 on:
   pull_request:
     paths:
       - "const-oid/**"
       - "der/**"
-      - "spki/**"
       - "x501/**"
-      - "x509/**"
       - "Cargo.*"
   push:
     branches: master
 
 defaults:
   run:
-    working-directory: x509
+    working-directory: x501
 
 env:
   CARGO_INCREMENTAL: 0
@@ -40,7 +38,7 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo install cargo-hack
-      - run: cargo hack build --release --target ${{ matrix.target }} --feature-powerset --exclude-features std
+      - run: cargo hack build --release --target ${{ matrix.target }} --feature-powerset
 
   test:
     runs-on: ubuntu-latest
