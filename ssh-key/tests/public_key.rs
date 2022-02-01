@@ -213,6 +213,27 @@ fn decode_rsa_4096_openssh() {
     assert_eq!("user@example.com", ossh_key.comment);
 }
 
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+#[test]
+fn encode_ecdsa_p256_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P256_EXAMPLE).unwrap();
+    assert_eq!(OSSH_ECDSA_P256_EXAMPLE.trim_end(), &ossh_key.to_string())
+}
+
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+#[test]
+fn encode_ecdsa_p384_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P384_EXAMPLE).unwrap();
+    assert_eq!(OSSH_ECDSA_P384_EXAMPLE.trim_end(), &ossh_key.to_string())
+}
+
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+#[test]
+fn encode_ecdsa_p521_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P521_EXAMPLE).unwrap();
+    assert_eq!(OSSH_ECDSA_P521_EXAMPLE.trim_end(), &ossh_key.to_string())
+}
+
 #[cfg(feature = "alloc")]
 #[test]
 fn encode_ed25519_openssh() {

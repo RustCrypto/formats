@@ -86,10 +86,10 @@ impl PublicKey {
     /// [`String`] for the result.
     #[cfg(feature = "alloc")]
     pub fn to_openssh(&self) -> Result<String> {
-        let encoded_len = 2
-            + self.algorithm().as_str().len()
-            + (self.key_data.encoded_len()? * 4 / 3)
-            + self.comment.len();
+        let alg_len = self.algorithm().as_str().len();
+        let key_data_len = (((self.key_data.encoded_len()? * 4) / 3) + 3) & !3;
+        let comment_len = self.comment.len();
+        let encoded_len = 2 + alg_len + key_data_len + comment_len;
 
         let mut buf = vec![0u8; encoded_len];
         let actual_len = self.encode_openssh(&mut buf)?.len();
@@ -244,16 +244,21 @@ impl Encode for KeyData {
     fn encoded_len(&self) -> Result<usize> {
         let alg_len = self.algorithm().encoded_len()?;
         let key_len = match self {
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(key) => key.encoded_len()?,
             Self::Ed25519(key) => key.encoded_len()?,
             #[allow(unreachable_patterns)]
             _ => return Err(Error::Algorithm),
         };
+
         Ok(alg_len + key_len)
     }
 
     fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
         self.algorithm().encode(encoder)?;
         match self {
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(key) => key.encode(encoder),
             Self::Ed25519(key) => key.encode(encoder),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),

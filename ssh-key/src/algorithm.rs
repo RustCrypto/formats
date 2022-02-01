@@ -235,6 +235,16 @@ impl Decode for EcdsaCurve {
     }
 }
 
+impl Encode for EcdsaCurve {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4 + self.as_str().len())
+    }
+
+    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+        encoder.encode_str(self.as_str())
+    }
+}
+
 impl fmt::Display for EcdsaCurve {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
