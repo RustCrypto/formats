@@ -18,12 +18,16 @@ pub use self::ed25519::Ed25519PublicKey;
 pub use self::{dsa::DsaPublicKey, rsa::RsaPublicKey};
 
 use crate::{
-    base64::{self, Decode},
+    base64::{self, Decode, Encode},
     Algorithm, Error, Result,
 };
+use core::str::FromStr;
 
 #[cfg(feature = "alloc")]
-use alloc::{borrow::ToOwned, string::String};
+use alloc::{
+    borrow::ToOwned,
+    string::{String, ToString},
+};
 
 /// SSH public key.
 #[derive(Clone, Debug)]
@@ -66,9 +70,51 @@ impl PublicKey {
         })
     }
 
+    /// Encode this public key as a OpenSSH-formatted public key.
+    pub fn encode_openssh<'o>(&self, out: &'o mut [u8]) -> Result<&'o str> {
+        #[cfg(not(feature = "alloc"))]
+        let comment = "";
+        #[cfg(feature = "alloc")]
+        let comment = &self.comment;
+
+        openssh::Encapsulation::encode(out, self.algorithm().as_str(), comment, |encoder| {
+            self.key_data.encode(encoder)
+        })
+    }
+
+    /// Encode this public key as an OpenSSH-formatted public key, allocating a
+    /// [`String`] for the result.
+    #[cfg(feature = "alloc")]
+    pub fn to_openssh(&self) -> Result<String> {
+        let alg_len = self.algorithm().as_str().len();
+        let key_data_len = (((self.key_data.encoded_len()? * 4) / 3) + 3) & !3;
+        let comment_len = self.comment.len();
+        let encoded_len = 2 + alg_len + key_data_len + comment_len;
+
+        let mut buf = vec![0u8; encoded_len];
+        let actual_len = self.encode_openssh(&mut buf)?.len();
+        buf.truncate(actual_len);
+        Ok(String::from_utf8(buf)?)
+    }
+
     /// Get the digital signature [`Algorithm`] used by this key.
     pub fn algorithm(&self) -> Algorithm {
         self.key_data.algorithm()
+    }
+}
+
+impl FromStr for PublicKey {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::from_openssh(s)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl ToString for PublicKey {
+    fn to_string(&self) -> String {
+        self.to_openssh().expect("SSH public key encoding error")
     }
 }
 
@@ -190,6 +236,36 @@ impl Decode for KeyData {
             Algorithm::Rsa => RsaPublicKey::decode(decoder).map(Self::Rsa),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
+        }
+    }
+}
+
+impl Encode for KeyData {
+    fn encoded_len(&self) -> Result<usize> {
+        let alg_len = self.algorithm().encoded_len()?;
+        let key_len = match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(key) => key.encoded_len()?,
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(key) => key.encoded_len()?,
+            Self::Ed25519(key) => key.encoded_len()?,
+            #[cfg(feature = "alloc")]
+            Self::Rsa(key) => key.encoded_len()?,
+        };
+
+        Ok(alg_len + key_len)
+    }
+
+    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+        self.algorithm().encode(encoder)?;
+        match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(key) => key.encode(encoder),
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(key) => key.encode(encoder),
+            Self::Ed25519(key) => key.encode(encoder),
+            #[cfg(feature = "alloc")]
+            Self::Rsa(key) => key.encode(encoder),
         }
     }
 }

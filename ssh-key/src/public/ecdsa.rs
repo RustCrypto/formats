@@ -1,7 +1,7 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) public keys.
 
 use crate::{
-    base64::{self, Decode},
+    base64::{self, Decode, Encode},
     Algorithm, EcdsaCurve, Error, Result,
 };
 use core::fmt;
@@ -101,6 +101,17 @@ impl Decode for EcdsaPublicKey {
         } else {
             Err(Error::Algorithm)
         }
+    }
+}
+
+impl Encode for EcdsaPublicKey {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4 + self.curve().encoded_len()? + self.as_ref().len())
+    }
+
+    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+        self.curve().encode(encoder)?;
+        encoder.encode_byte_slice(self.as_ref())
     }
 }
 

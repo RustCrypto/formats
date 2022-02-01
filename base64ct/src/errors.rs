@@ -65,5 +65,12 @@ impl From<InvalidLengthError> for Error {
     }
 }
 
+impl From<core::str::Utf8Error> for Error {
+    #[inline]
+    fn from(_: core::str::Utf8Error) -> Error {
+        Error::InvalidEncoding
+    }
+}
+
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}

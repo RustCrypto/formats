@@ -16,6 +16,11 @@ pub struct Decoder<'a> {
 
     /// Position within the decoded slice.
     position: Length,
+
+    /// Offset where `bytes` occurs in the original ASN.1 DER document.
+    ///
+    /// Used for nested decoding.
+    offset: Length,
 }
 
 impl<'a> Decoder<'a> {
@@ -24,7 +29,20 @@ impl<'a> Decoder<'a> {
         Ok(Self {
             bytes: Some(ByteSlice::new(bytes)?),
             position: Length::ZERO,
+            offset: Length::ZERO,
         })
+    }
+
+    /// Create a new decoder where `bytes` begins at a specified offset within
+    /// an original ASN.1 DER document.
+    ///
+    /// This is used for calculating positions when decoding nested documents.
+    pub(crate) fn new_with_offset(bytes: ByteSlice<'a>, offset: Length) -> Self {
+        Self {
+            bytes: Some(bytes),
+            position: Length::ZERO,
+            offset,
+        }
     }
 
     /// Decode a value which impls the [`Decodable`] trait.
@@ -58,7 +76,8 @@ impl<'a> Decoder<'a> {
 
     /// Get the position within the buffer.
     pub fn position(&self) -> Length {
-        self.position
+        // TODO(tarcieri): avoid potential panic here
+        (self.position + self.offset).expect("overflow")
     }
 
     /// Peek at the next byte in the decoder without modifying the cursor.
@@ -231,9 +250,7 @@ impl<'a> Decoder<'a> {
     where
         F: FnOnce(&mut Decoder<'a>) -> Result<T>,
     {
-        Tag::try_from(self.byte()?)?.assert_eq(Tag::Sequence)?;
-        let len = Length::decode(self)?;
-        self.decode_nested(len, f)
+        SequenceRef::decode(self)?.decode_body(f)
     }
 
     /// Decode a single byte, updating the internal cursor.
@@ -293,39 +310,6 @@ impl<'a> Decoder<'a> {
     /// Get the number of bytes still remaining in the buffer.
     pub(crate) fn remaining_len(&self) -> Result<Length> {
         self.remaining()?.len().try_into()
-    }
-
-    /// Create a nested decoder which operates over the provided [`Length`].
-    ///
-    /// The nested decoder is passed to the provided callback function which is
-    /// expected to decode a value of type `T` with it.
-    fn decode_nested<F, T>(&mut self, length: Length, f: F) -> Result<T>
-    where
-        F: FnOnce(&mut Self) -> Result<T>,
-    {
-        let start_pos = self.position();
-        let end_pos = (start_pos + length)?;
-        let bytes = match self.bytes {
-            Some(slice) => {
-                slice
-                    .as_bytes()
-                    .get(..end_pos.try_into()?)
-                    .ok_or(ErrorKind::Incomplete {
-                        expected_len: end_pos,
-                        actual_len: self.input_len()?,
-                    })?
-            }
-            None => return Err(self.error(ErrorKind::Failed)),
-        };
-
-        let mut nested_decoder = Self {
-            bytes: Some(ByteSlice::new(bytes)?),
-            position: start_pos,
-        };
-
-        self.position = end_pos;
-        let result = f(&mut nested_decoder)?;
-        nested_decoder.finish(result)
     }
 
     /// Obtain the remaining bytes in this decoder from the current cursor

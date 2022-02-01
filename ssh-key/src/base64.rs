@@ -57,7 +57,7 @@ impl<'i> Decoder<'i> {
         Ok(buf[0])
     }
 
-    /// Decodes a `uint32` as described in [RFC4251 § 5]:
+    /// Decode a `uint32` as described in [RFC4251 § 5]:
     ///
     /// > Represents a 32-bit unsigned integer.  Stored as four bytes in the
     /// > order of decreasing significance (network byte order).
@@ -113,7 +113,7 @@ impl<'i> Decoder<'i> {
         Ok(result)
     }
 
-    /// Decodes a `string` as described in [RFC4251 § 5]:
+    /// Decode a `string` as described in [RFC4251 § 5]:
     ///
     /// > Arbitrary length binary string.  Strings are allowed to contain
     /// > arbitrary binary data, including null characters and 8-bit
@@ -146,9 +146,97 @@ impl<'i> Decoder<'i> {
     }
 }
 
+/// Encoder trait.
+pub(crate) trait Encode: Sized {
+    /// Get the length of this type encoded in bytes, prior to Base64 encoding.
+    fn encoded_len(&self) -> Result<usize>;
+
+    /// Attempt to encode a value of this type using the provided [`Encoder`].
+    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()>;
+}
+
+/// Stateful Base64 encoder.
+pub(crate) struct Encoder<'o> {
+    inner: base64ct::Encoder<'o, base64ct::Base64>,
+}
+
+impl<'o> Encoder<'o> {
+    /// Create a new decoder for a byte slice containing contiguous
+    /// (non-newline-delimited) Base64-encoded data.
+    pub(crate) fn new(buffer: &'o mut [u8]) -> Result<Self> {
+        Ok(Self {
+            inner: base64ct::Encoder::new(buffer)?,
+        })
+    }
+
+    /// Encode the given byte slice as Base64.
+    pub(crate) fn encode(&mut self, bytes: &[u8]) -> Result<()> {
+        Ok(self.inner.encode(bytes)?)
+    }
+
+    /// Encode a `uint32` as described in [RFC4251 § 5]:
+    ///
+    /// > Represents a 32-bit unsigned integer.  Stored as four bytes in the
+    /// > order of decreasing significance (network byte order).
+    /// > For example: the value 699921578 (0x29b7f4aa) is stored as 29 b7 f4 aa.
+    ///
+    /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
+    pub(crate) fn encode_u32(&mut self, num: u32) -> Result<()> {
+        self.encode(&num.to_be_bytes())
+    }
+
+    /// Encode a `usize` as a `uint32` as described in [RFC4251 § 5].
+    ///
+    /// Uses [`Encoder::encode_u32`] after converting from a `usize`, handling
+    /// potential overflow if `usize` is bigger than `u32`.
+    ///
+    /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
+    pub(crate) fn encode_usize(&mut self, num: usize) -> Result<()> {
+        self.encode_u32(u32::try_from(num)?)
+    }
+
+    /// Encodes `[u8]` into `byte[n]` as described in [RFC4251 § 5]:
+    ///
+    /// > A byte represents an arbitrary 8-bit value (octet).  Fixed length
+    /// > data is sometimes represented as an array of bytes, written
+    /// > byte[n], where n is the number of bytes in the array.
+    ///
+    /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
+    pub(crate) fn encode_byte_slice(&mut self, bytes: &[u8]) -> Result<()> {
+        self.encode_usize(bytes.len())?;
+        self.encode(bytes)
+    }
+
+    /// Encode a `string` as described in [RFC4251 § 5]:
+    ///
+    /// > Arbitrary length binary string.  Strings are allowed to contain
+    /// > arbitrary binary data, including null characters and 8-bit
+    /// > characters.  They are stored as a uint32 containing its length
+    /// > (number of bytes that follow) and zero (= empty string) or more
+    /// > bytes that are the value of the string.  Terminating null
+    /// > characters are not used.
+    /// >
+    /// > Strings are also used to store text.  In that case, US-ASCII is
+    /// > used for internal names, and ISO-10646 UTF-8 for text that might
+    /// > be displayed to the user.  The terminating null character SHOULD
+    /// > NOT normally be stored in the string.  For example: the US-ASCII
+    /// > string "testing" is represented as 00 00 00 07 t e s t i n g.  The
+    /// > UTF-8 mapping does not alter the encoding of US-ASCII characters.
+    ///
+    /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
+    pub(crate) fn encode_str(&mut self, s: &str) -> Result<()> {
+        self.encode_byte_slice(s.as_bytes())
+    }
+
+    /// Finish encoding, returning the encoded Base64 as a `str`.
+    pub(crate) fn finish(self) -> Result<&'o str> {
+        Ok(self.inner.finish()?)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::Decoder;
+    use super::{Decoder, Encoder};
 
     /// From `id_ecdsa_p256.pub`
     const EXAMPLE_BASE64: &str =
@@ -167,5 +255,13 @@ mod tests {
         let mut buf = [0u8; EXAMPLE_BIN.len()];
         let decoded = decoder.decode_into(&mut buf).unwrap();
         assert_eq!(EXAMPLE_BIN, decoded);
+    }
+
+    #[test]
+    fn encode() {
+        let mut buffer = [0u8; EXAMPLE_BASE64.len()];
+        let mut encoder = Encoder::new(&mut buffer).unwrap();
+        encoder.encode(EXAMPLE_BIN).unwrap();
+        assert_eq!(EXAMPLE_BASE64, encoder.finish().unwrap());
     }
 }

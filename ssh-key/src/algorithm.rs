@@ -1,7 +1,7 @@
 //! Algorithm support.
 
 use crate::{
-    base64::{self, Decode},
+    base64::{self, Decode, Encode},
     Error, Result,
 };
 use core::{fmt, str};
@@ -106,6 +106,16 @@ impl Decode for Algorithm {
     fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
+    }
+}
+
+impl Encode for Algorithm {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4 + self.as_str().len())
+    }
+
+    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+        encoder.encode_str(self.as_str())
     }
 }
 
@@ -222,6 +232,16 @@ impl Decode for EcdsaCurve {
     fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
+    }
+}
+
+impl Encode for EcdsaCurve {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4 + self.as_str().len())
+    }
+
+    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+        encoder.encode_str(self.as_str())
     }
 }
 
