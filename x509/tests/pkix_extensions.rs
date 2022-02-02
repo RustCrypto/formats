@@ -2,7 +2,7 @@
 use der::asn1::{BitString, UIntBytes, Utf8String};
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
-#[cfg(feature = "alloc")]
+use x501::name::Name;
 use x509::KeyUsage;
 use x509::*;
 use x509::{

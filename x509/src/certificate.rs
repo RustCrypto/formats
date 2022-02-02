@@ -1,9 +1,11 @@
 //! Certificate [`Certificate`] and TBSCertificate [`TBSCertificate`] as defined in RFC 5280
 
-use crate::{Name, Validity};
+use crate::Validity;
+
 use der::asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes};
 use der::{Sequence, TagMode, TagNumber};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+use x501::name::Name;
 
 /// returns false in support of integer DEFAULT fields set to 0
 pub fn default_zero_u8() -> u8 {
