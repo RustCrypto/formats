@@ -565,6 +565,7 @@ dependencies = [
  "der",
  "hex-literal",
  "spki",
+ "x501",
  "x509",
 ]
 

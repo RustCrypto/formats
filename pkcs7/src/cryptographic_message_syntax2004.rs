@@ -9,7 +9,9 @@ use der::{
     TagNumber,
 };
 use spki::{AlgorithmIdentifier, ObjectIdentifier};
-use x509::{AttributeTypeAndValue, Name, SubjectKeyIdentifier};
+use x501::attr::AttributeTypeAndValue;
+use x501::name::Name;
+use x509::SubjectKeyIdentifier;
 
 /// ContentInfo ::= SEQUENCE {
 ///   contentType ContentType,

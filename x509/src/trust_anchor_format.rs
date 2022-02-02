@@ -1,12 +1,13 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
-use crate::{Certificate, CertificatePolicies, Extensions, Name, NameConstraints};
+use crate::{Certificate, CertificatePolicies, Extensions, NameConstraints};
 use der::asn1::{BitString, ContextSpecific, OctetString, Utf8String};
 use der::{
     DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Length, Tag, TagMode,
     TagNumber,
 };
 use spki::SubjectPublicKeyInfo;
+use x501::name::Name;
 
 /// TrustAnchorInfo ::= SEQUENCE {
 ///       version   TrustAnchorInfoVersion DEFAULT v1,
