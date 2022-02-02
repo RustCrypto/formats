@@ -20,6 +20,7 @@ mod general_name;
 pub mod pkix_extensions;
 pub mod pkix_oids;
 mod time;
+pub mod trust_anchor_format;
 mod validity;
 
 pub use crate::{

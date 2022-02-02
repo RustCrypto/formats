@@ -326,58 +326,15 @@ pub struct PolicyMapping {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct NameConstraints<'a> {
     /// permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
-    //#[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     pub permitted_subtrees: Option<GeneralSubtrees<'a>>,
 
     /// excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
-    //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub excluded_subtrees: Option<GeneralSubtrees<'a>>,
-}
-
-const PERMITTED_SUBTREES_TAG: TagNumber = TagNumber::new(0);
-const EXCLUDED_SUBTREES_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> ::der::Decodable<'a> for NameConstraints<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let permitted_subtrees =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let excluded_subtrees =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                permitted_subtrees,
-                excluded_subtrees,
-            })
-        })
-    }
-}
-
-impl<'a> ::der::Sequence<'a> for NameConstraints<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[
-            &self
-                .permitted_subtrees
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: PERMITTED_SUBTREES_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: elem.clone(),
-                }),
-            &self.excluded_subtrees.as_ref().map(|elem| ContextSpecific {
-                tag_number: EXCLUDED_SUBTREES_TAG,
-                tag_mode: TagMode::Implicit,
-                value: elem.clone(),
-            }),
-        ])
-    }
 }
 
 /// GeneralSubtrees as defined in [RFC 5280 Section 4.2.1.10] in support of the Name Constraints extension.
