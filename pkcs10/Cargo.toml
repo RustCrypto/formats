@@ -15,12 +15,13 @@ edition = "2021"
 rust-version = "1.56"
 
 [dev-dependencies]
+x509 = { version = "0.0.1", path = "../x509" }
 hex-literal = "0.3"
 
 [dependencies]
 der = { version = "0.6.0-pre.0", features = ["oid", "derive", "alloc"], path = "../der" }
 spki = { version = "0.6.0-pre", path = "../spki" }
-x509 = { version = "0.0.1", path = "../x509" }
+x501 = { version = "0.1.0", path = "../x501" }
 
 [features]
 pem = ["der/pem", "spki/pem"]

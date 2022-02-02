@@ -19,5 +19,6 @@ members = [
     "tai64",
     "tls_codec",
     "tls_codec/derive",
+    "x501",
     "x509"
 ]

@@ -1,5 +1,8 @@
 use super::{Attributes, Version};
+
 use der::{Decodable, Sequence};
+use spki::SubjectPublicKeyInfo;
+use x501::name::Name;
 
 /// PKCS#10 `CertificationRequestInfo` as defined in [RFC 2986 Section 4].
 ///
@@ -19,10 +22,10 @@ pub struct CertReqInfo<'a> {
     pub version: Version,
 
     /// Subject name.
-    pub subject: x509::Name<'a>,
+    pub subject: Name<'a>,
 
     /// Subject public key info.
-    pub public_key: spki::SubjectPublicKeyInfo<'a>,
+    pub public_key: SubjectPublicKeyInfo<'a>,
 
     /// Request attributes.
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
