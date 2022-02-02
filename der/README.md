@@ -23,25 +23,29 @@ implemented as crates maintained by the [RustCrypto] project:
 - [`pkcs5`]: Password-Based Cryptography Specification
 - [`pkcs7`]: Cryptographic Message Syntax
 - [`pkcs8`]: Private-Key Information Syntax Specification
+- [`pkcs10`]: Certification Request Syntax Specification
 - [`sec1`]: Elliptic Curve Cryptography
 - [`spki`]: X.509 Subject Public Key Info
+- [`x501`]: Directory Services Types
+- [`x509`]: Public Key Infrastructure Certificate
 
 The core implementation avoids any heap usage (with convenience methods
 that allocate gated under the off-by-default `alloc` feature).
 
-The DER decoder attempts to ensure that the input document is in canonical
-form, and will return errors if non-canonical productions are encountered.
+The DER decoder in this crate performs checks to ensure that the input document
+is in canonical form, and will return errors if non-canonical productions are
+encountered. There is currently no way to disable these checks.
 
 ### Features
 
 - Rich support for ASN.1 types used by PKCS/PKIX documents
 - Performs DER canonicalization checks at decoding time
-- `no_std` friendly: supports "heapless" usage or optionally supports the
-  `alloc` crate if desired
+- `no_std` friendly: supports "heapless" usage
+- Optionally supports `alloc` and `std` if desired
 - No hard dependencies! Self-contained implementation with optional
   integrations with the following crates, all of which are `no_std` friendly:
   - `const-oid`: const-friendly OID implementation
-  - `crypto-bigint`: constant-time bignum library
+  - `pem-rfc7468`: PKCS/PKIX-flavored PEM library with constant-time decoder/encoders
   - `time` crate: date/time library
 
 ## Minimum Supported Rust Version
@@ -87,5 +91,8 @@ dual licensed as above, without any additional terms or conditions.
 [`pkcs5`]: https://github.com/RustCrypto/formats/tree/master/pkcs5
 [`pkcs7`]: https://github.com/RustCrypto/formats/tree/master/pkcs7
 [`pkcs8`]: https://github.com/RustCrypto/formats/tree/master/pkcs8
+[`pkcs10`]: https://github.com/RustCrypto/formats/tree/master/pkcs10
 [`sec1`]: https://github.com/RustCrypto/formats/tree/master/sec1
 [`spki`]: https://github.com/RustCrypto/formats/tree/master/spki
+[`x501`]: https://github.com/RustCrypto/formats/tree/master/x501
+[`x509`]: https://github.com/RustCrypto/formats/tree/master/x509
