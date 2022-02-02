@@ -1,10 +1,10 @@
 //! GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
 
-use crate::Name;
 use alloc::string::ToString;
 use alloc::vec::Vec;
 use der::asn1::{Any, ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
 use der::{Decodable, DecodeValue, Decoder, ErrorKind, Length, Sequence, TagMode, TagNumber};
+use x501::name::Name;
 
 /// OtherName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
 ///

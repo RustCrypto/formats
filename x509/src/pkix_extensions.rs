@@ -1,9 +1,9 @@
 //! Extensions [`Extensions`] as defined in RFC 5280
 
+use crate::default_zero;
 use crate::general_name::GeneralName;
 use crate::general_name::GeneralNames;
-use crate::RelativeDistinguishedName;
-use crate::{default_zero, AttributeTypeAndValue};
+
 use alloc::vec::Vec;
 use der::asn1::{
     Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier,
@@ -13,6 +13,8 @@ use der::{
     Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Enumerated, ErrorKind,
     FixedTag, Length, Sequence, Tag, TagMode, TagNumber,
 };
+use x501::attr::AttributeTypeAndValue;
+use x501::name::RelativeDistinguishedName;
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
 ///

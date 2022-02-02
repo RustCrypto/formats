@@ -267,6 +267,47 @@ where
     const TAG: Tag = Tag::Set;
 }
 
+/// Construct a [`SetOfVec`] from a [`Vec`], sorting the elements using the
+/// [`DerOrd`] trait.
+///
+/// # Panics
+///
+/// The current implementation will panic if [`DerOrd::der_cmp`] returns an
+/// error.
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<T> From<Vec<T>> for SetOfVec<T>
+where
+    T: Clone + DerOrd,
+{
+    fn from(mut vec: Vec<T>) -> SetOfVec<T> {
+        // TODO(tarcieri): avoid panics
+        vec.sort_by(|a, b| a.der_cmp(b).expect("der_cmp error"));
+        SetOfVec { inner: vec }
+    }
+}
+
+/// Construct a [`SetOfVec`] from an iterator, determining the ordering using
+/// the [`DerOrd`] trait.
+///
+/// # Panics
+///
+/// The current implementation will panic if [`DerOrd::der_cmp`] returns an
+/// error.
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<T> FromIterator<T> for SetOfVec<T>
+where
+    T: Clone + DerOrd,
+{
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        iter.into_iter().collect::<Vec<T>>().into()
+    }
+}
+
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> ValueOrd for SetOfVec<T>
