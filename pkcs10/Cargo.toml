@@ -1,6 +1,6 @@
 [package]
 name = "pkcs10"
-version = "0.1.0"
+version = "0.0.0"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #10:
 Certification Request Syntax Specification (RFC 5208).
@@ -21,7 +21,7 @@ hex-literal = "0.3"
 [dependencies]
 der = { version = "0.6.0-pre.0", features = ["oid", "derive", "alloc"], path = "../der" }
 spki = { version = "0.6.0-pre", path = "../spki" }
-x501 = { version = "0.1.0", path = "../x501" }
+x501 = { version = "0.0.0", path = "../x501" }
 
 [features]
 pem = ["der/pem", "spki/pem"]
