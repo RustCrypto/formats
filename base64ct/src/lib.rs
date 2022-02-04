@@ -3,7 +3,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/base64ct/1.4.0-pre"
+    html_root_url = "https://docs.rs/base64ct/1.4.0-pre.0"
 )]
 #![doc = include_str!("../README.md")]
 #![warn(
