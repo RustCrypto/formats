@@ -1,6 +1,6 @@
 [package]
 name = "x501"
-version = "0.1.0" # Also update html_root_url in lib.rs when bumping this
+version = "0.0.0" # Also update html_root_url in lib.rs when bumping this
 edition = "2021"
 description = "Pure Rust implementation of some of the types defined in X.501"
 authors = ["RustCrypto Developers"]
