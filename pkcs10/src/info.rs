@@ -1,7 +1,8 @@
-use super::{Attributes, Version};
+use super::Version;
 
 use der::{Decodable, Sequence};
 use spki::SubjectPublicKeyInfo;
+use x501::attr::Attributes;
 use x501::name::Name;
 
 /// PKCS#10 `CertificationRequestInfo` as defined in [RFC 2986 Section 4].
