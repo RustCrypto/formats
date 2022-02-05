@@ -1229,6 +1229,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "x509-ext"
+version = "0.1.0"
+dependencies = [
+ "der",
+ "hex-literal",
+]
+
+[[package]]
 name = "zeroize"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
