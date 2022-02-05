@@ -1,22 +1,21 @@
-//! Validity [`Time`] as defined in RFC 5280
+//! X.501 time types as defined in RFC 5280
 
 use core::time::Duration;
-use der::{
-    asn1::{GeneralizedTime, UtcTime},
-    Choice,
-};
+use der::asn1::{GeneralizedTime, UtcTime};
+use der::{Choice, Decodable, Error, Result, Sequence};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
 
-/// Validity [`Time`] as defined in [RFC 5280 Section 4.1.2.5].
+/// X.501 `Time` as defined in [RFC 5280 Section 4.1.2.5].
 ///
 /// Schema definition from [RFC 5280 Appendix A]:
 ///
 /// ```text
 /// Time ::= CHOICE {
 ///      utcTime        UTCTime,
-///      generalTime    GeneralizedTime }
+///      generalTime    GeneralizedTime
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.5]: https://tools.ietf.org/html/rfc5280#section-4.1.2.5
@@ -87,5 +86,31 @@ impl TryFrom<SystemTime> for Time {
 
     fn try_from(time: SystemTime) -> der::Result<Time> {
         Ok(GeneralizedTime::try_from(time)?.into())
+    }
+}
+
+/// X.501 `Validity` as defined in [RFC 5280 Section 4.1.2.5]
+///
+/// ```text
+/// Validity ::= SEQUENCE {
+///     notBefore      Time,
+///     notAfter       Time
+/// }
+/// ```
+/// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
+pub struct Validity {
+    /// notBefore value
+    pub not_before: Time,
+
+    /// notAfter value
+    pub not_after: Time,
+}
+
+impl<'a> TryFrom<&'a [u8]> for Validity {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+        Self::from_der(bytes)
     }
 }

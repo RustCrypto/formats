@@ -38,7 +38,7 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo install cargo-hack
-      - run: cargo hack build --release --target ${{ matrix.target }} --feature-powerset
+      - run: cargo hack build --release --target ${{ matrix.target }} --feature-powerset --exclude-features std
 
   test:
     runs-on: ubuntu-latest
