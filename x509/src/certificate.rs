@@ -1,19 +1,15 @@
 //! Certificate [`Certificate`] and TBSCertificate [`TBSCertificate`] as defined in RFC 5280
 
-use der::asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes};
+use der::asn1::{BitString, ContextSpecific, UIntBytes};
 use der::{Sequence, TagMode, TagNumber};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use x501::name::Name;
 use x501::time::Validity;
+use x509_ext::Extensions;
 
 /// returns false in support of integer DEFAULT fields set to 0
 pub fn default_zero_u8() -> u8 {
     0
-}
-
-/// returns false in support of boolean DEFAULT fields
-pub fn default_false() -> bool {
-    false
 }
 
 /// returns false in support of integer DEFAULT fields set to 0
@@ -202,43 +198,3 @@ pub struct Certificate<'a> {
     /// signature            BIT STRING
     pub signature: BitString<'a>,
 }
-
-/// Extension as defined in [RFC 5280 Section 4.1.2.9].
-///
-/// The ASN.1 definition for Extension objects is below. The extnValue type may be further parsed using a decoder corresponding to the extnID value.
-///
-/// ```text
-///    Extension  ::=  SEQUENCE  {
-///         extnID      OBJECT IDENTIFIER,
-///         critical    BOOLEAN DEFAULT FALSE,
-///         extnValue   OCTET STRING
-///                     -- contains the DER encoding of an ASN.1 value
-///                     -- corresponding to the extension type identified
-///                     -- by extnID
-///         }
-/// ```
-///
-/// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct Extension<'a> {
-    /// extnID      OBJECT IDENTIFIER,
-    pub extn_id: ObjectIdentifier,
-
-    /// critical    BOOLEAN DEFAULT FALSE,
-    #[asn1(default = "default_false")]
-    pub critical: bool,
-
-    /// extnValue   OCTET STRING
-    #[asn1(type = "OCTET STRING")]
-    pub extn_value: &'a [u8],
-}
-
-/// Extensions as defined in [RFC 5280 Section 4.1.2.9].
-///
-/// ```text
-///    Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension
-/// ```
-///
-/// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
-//pub type Extensions<'a> = SequenceOf<Extension<'a>, 10>;
-pub type Extensions<'a> = alloc::vec::Vec<Extension<'a>>;

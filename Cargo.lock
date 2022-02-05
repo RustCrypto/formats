@@ -547,7 +547,7 @@ dependencies = [
  "hex-literal",
  "spki",
  "x501",
- "x509",
+ "x509-ext",
 ]
 
 [[package]]
@@ -1226,6 +1226,7 @@ dependencies = [
  "hex-literal",
  "spki",
  "x501",
+ "x509-ext",
 ]
 
 [[package]]

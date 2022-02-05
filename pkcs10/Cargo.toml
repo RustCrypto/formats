@@ -15,7 +15,7 @@ edition = "2021"
 rust-version = "1.56"
 
 [dev-dependencies]
-x509 = { version = "0.0.1", path = "../x509" }
+x509-ext = { version = "0.1.0", path = "../x509-ext" }
 hex-literal = "0.3"
 
 [dependencies]

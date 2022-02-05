@@ -3,12 +3,8 @@ use der::asn1::{BitString, UIntBytes, Utf8String};
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x501::name::Name;
-use x509::KeyUsage;
 use x509::*;
-use x509::{
-    BasicConstraints, Certificate, CertificatePolicies, GeneralName, OtherName,
-    SubjectKeyIdentifier,
-};
+use x509_ext::Extensions;
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
     let i = exts.iter();
