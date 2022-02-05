@@ -19,13 +19,10 @@ pub mod extensions_utils;
 mod general_name;
 pub mod pkix_extensions;
 pub mod pkix_oids;
-mod time;
 pub mod trust_anchor_format;
-mod validity;
 
 pub use crate::{
     certificate::*, extensions_utils::*, general_name::*, pkix_extensions::*, pkix_oids::*,
-    time::Time, validity::Validity,
 };
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
