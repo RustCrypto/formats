@@ -18,6 +18,12 @@ subsequently used in numerous standards such as [RFC 2986] and [RFC 5280].
 The most common modern use of these types is in X.509 certificates and related
 standards.
 
+### Conformity Note
+
+Many of the types in this crate are defined in both [ISO/IEC 9594] and IETF
+standards such as [RFC 2986] and [RFC 5280]. Where types differ between these
+standards, this crate conforms to the IETF standards.
+
 ## Minimum Supported Rust Version
 
 This crate requires **Rust 1.56** at a minimum.
@@ -57,3 +63,5 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [RFC 2986]: https://tools.ietf.org/html/rfc2986
+[RFC 5280]: https://tools.ietf.org/html/rfc5280
+[ISO/IEC 9594]: https://www.iso.org/standard/72557.html
