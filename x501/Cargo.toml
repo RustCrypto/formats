@@ -7,7 +7,7 @@ authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/x509"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
-keywords = ["crypto", "X.501"]
+keywords = ["crypto"]
 readme = "README.md"
 rust-version = "1.56"
 
