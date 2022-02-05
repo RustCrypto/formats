@@ -1,10 +1,9 @@
 //! X.501 time types as defined in RFC 5280
 
-use alloc::string::ToString;
 use core::fmt;
 use core::time::Duration;
 use der::asn1::{GeneralizedTime, UtcTime};
-use der::{Choice, Decodable, Error, Result, Sequence};
+use der::{Choice, DateTime, Decodable, Error, Result, Sequence};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -42,6 +41,14 @@ impl Time {
         }
     }
 
+    /// Get Time as DateTime
+    pub fn to_date_time(&self) -> DateTime {
+        match self {
+            Time::UtcTime(t) => t.to_date_time(),
+            Time::GeneralTime(t) => t.to_date_time(),
+        }
+    }
+
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
@@ -55,10 +62,7 @@ impl Time {
 
 impl fmt::Display for Time {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> core::result::Result<(), fmt::Error> {
-        match self {
-            Time::UtcTime(t) => f.write_str(t.to_date_time().to_string().as_str()),
-            Time::GeneralTime(t) => f.write_str(t.to_date_time().to_string().as_str()),
-        }
+        write!(f, "{}", self.to_date_time())
     }
 }
 
