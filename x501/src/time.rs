@@ -1,5 +1,7 @@
 //! X.501 time types as defined in RFC 5280
 
+use alloc::string::ToString;
+use core::fmt;
 use core::time::Duration;
 use der::asn1::{GeneralizedTime, UtcTime};
 use der::{Choice, Decodable, Error, Result, Sequence};
@@ -47,6 +49,15 @@ impl Time {
         match self {
             Time::UtcTime(t) => t.to_system_time(),
             Time::GeneralTime(t) => t.to_system_time(),
+        }
+    }
+}
+
+impl fmt::Display for Time {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> core::result::Result<(), fmt::Error> {
+        match self {
+            Time::UtcTime(t) => f.write_str(t.to_date_time().to_string().as_str()),
+            Time::GeneralTime(t) => f.write_str(t.to_date_time().to_string().as_str()),
         }
     }
 }
