@@ -1,5 +1,5 @@
 use der::asn1::ObjectIdentifier;
-use der::{DecodeValue, Decoder, EncodeValue, Encoder, ErrorKind, FixedTag, Length, Tag};
+use der::{DecodeValue, Decoder, EncodeValue, Encoder, ErrorKind, FixedTag, Header, Length, Tag};
 
 /// Indicates the type of content.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -46,8 +46,8 @@ impl ContentType {
 }
 
 impl<'a> DecodeValue<'a> for ContentType {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> der::Result<ContentType> {
-        let oid = ObjectIdentifier::decode_value(decoder, length)?;
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> der::Result<ContentType> {
+        let oid = ObjectIdentifier::decode_value(decoder, header)?;
         ContentType::from_oid(oid).ok_or_else(|| decoder.error(ErrorKind::OidUnknown { oid }))
     }
 }

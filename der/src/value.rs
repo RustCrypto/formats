@@ -9,7 +9,7 @@ use crate::Tag;
 /// and [`Length`].
 pub trait DecodeValue<'a>: Sized {
     /// Attempt to decode this message using the provided [`Decoder`].
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self>;
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self>;
 }
 
 /// Encode the value part of a Tag-Length-Value encoded field, sans the [`Tag`]

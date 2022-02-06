@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    FixedTag, Length, Result, StrSlice, Tag,
+    FixedTag, Header, Length, Result, StrSlice, Tag,
 };
 use core::{fmt, str};
 
@@ -70,8 +70,8 @@ impl AsRef<[u8]> for Utf8String<'_> {
 }
 
 impl<'a> DecodeValue<'a> for Utf8String<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(decoder, length)?.as_bytes())
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(decoder, header)?.as_bytes())
     }
 }
 

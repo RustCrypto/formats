@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Length, Result, Tag,
+    ErrorKind, FixedTag, Header, Length, Result, Tag,
 };
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
@@ -15,8 +15,8 @@ const TRUE_OCTET: u8 = 0b11111111;
 const FALSE_OCTET: u8 = 0b00000000;
 
 impl<'a> DecodeValue<'a> for bool {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-        if length != Length::ONE {
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        if header.length != Length::ONE {
             return Err(decoder.error(ErrorKind::Length { tag: Self::TAG }));
         }
 

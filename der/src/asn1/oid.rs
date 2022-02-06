@@ -2,13 +2,13 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    FixedTag, Length, Result, Tag, Tagged,
+    FixedTag, Header, Length, Result, Tag, Tagged,
 };
 use const_oid::ObjectIdentifier;
 
 impl DecodeValue<'_> for ObjectIdentifier {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
         Ok(Self::from_bytes(bytes)?)
     }
 }

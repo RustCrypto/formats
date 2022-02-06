@@ -2,7 +2,7 @@
 
 use crate::{
     arrayvec, ord::iter_cmp, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable,
-    EncodeValue, Encoder, ErrorKind, FixedTag, Length, Result, Tag, ValueOrd,
+    EncodeValue, Encoder, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -85,8 +85,8 @@ impl<'a, T, const N: usize> DecodeValue<'a> for SetOf<T, N>
 where
     T: Clone + Decodable<'a> + DerOrd,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-        let end_pos = (decoder.position() + length)?;
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        let end_pos = (decoder.position() + header.length)?;
         let mut result = Self::new();
 
         while decoder.position() < end_pos {
@@ -222,8 +222,8 @@ impl<'a, T> DecodeValue<'a> for SetOfVec<T>
 where
     T: Clone + Decodable<'a> + DerOrd,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-        let end_pos = (decoder.position() + length)?;
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        let end_pos = (decoder.position() + header.length)?;
         let mut result = Self::new();
 
         while decoder.position() < end_pos {
