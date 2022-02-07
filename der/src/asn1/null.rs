@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue,
-    Encoder, Error, ErrorKind, FixedTag, Length, Result, Tag,
+    Encoder, Error, ErrorKind, FixedTag, Header, Length, Result, Tag,
 };
 
 /// ASN.1 `NULL` type.
@@ -10,8 +10,8 @@ use crate::{
 pub struct Null;
 
 impl DecodeValue<'_> for Null {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        if length.is_zero() {
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        if header.length.is_zero() {
             Ok(Null)
         } else {
             Err(decoder.error(ErrorKind::Length { tag: Self::TAG }))
@@ -64,8 +64,8 @@ impl<'a> From<()> for Any<'a> {
 }
 
 impl DecodeValue<'_> for () {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        Null::decode_value(decoder, length)?;
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        Null::decode_value(decoder, header)?;
         Ok(())
     }
 }

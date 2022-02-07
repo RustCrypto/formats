@@ -1,7 +1,9 @@
 //! `data` content type [RFC 5652 § 4](https://datatracker.ietf.org/doc/html/rfc5652#section-4)
 
 use core::convert::{From, TryFrom};
-use der::{asn1::OctetString, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Length, Tag};
+use der::{
+    asn1::OctetString, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header, Length, Tag,
+};
 
 /// The content that is just an octet string.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -29,8 +31,8 @@ impl<'a> From<DataContent<'a>> for &'a [u8] {
 }
 
 impl<'a> DecodeValue<'a> for DataContent<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> der::Result<DataContent<'a>> {
-        Ok(OctetString::decode_value(decoder, length)?
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> der::Result<DataContent<'a>> {
+        Ok(OctetString::decode_value(decoder, header)?
             .as_bytes()
             .into())
     }

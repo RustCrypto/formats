@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, ErrorKind,
-    FixedTag, Length, Result, Tag, ValueOrd,
+    FixedTag, Header, Length, Result, Tag, ValueOrd,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
@@ -116,9 +116,14 @@ impl<'a> BitString<'a> {
 }
 
 impl<'a> DecodeValue<'a> for BitString<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, encoded_len: Length) -> Result<Self> {
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        let header = Header {
+            tag: header.tag,
+            length: (header.length - Length::ONE)?,
+        };
+
         let unused_bits = decoder.byte()?;
-        let inner = ByteSlice::decode_value(decoder, (encoded_len - Length::ONE)?)?;
+        let inner = ByteSlice::decode_value(decoder, header)?;
         Self::new(unused_bits, inner.as_bytes())
     }
 }

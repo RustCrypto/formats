@@ -2,8 +2,8 @@
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{
-    ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, FixedTag, Length,
-    Result, Tag,
+    ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, FixedTag, Header,
+    Length, Result, Tag,
 };
 
 /// ASN.1 `SEQUENCE` trait.
@@ -75,9 +75,9 @@ impl<'a> SequenceRef<'a> {
 }
 
 impl<'a> DecodeValue<'a> for SequenceRef<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         let offset = decoder.position();
-        let body = ByteSlice::decode_value(decoder, length)?;
+        let body = ByteSlice::decode_value(decoder, header)?;
         Ok(Self { body, offset })
     }
 }

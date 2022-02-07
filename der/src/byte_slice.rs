@@ -2,7 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    str_slice::StrSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, Length, Result,
+    str_slice::StrSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, Header, Length,
+    Result,
 };
 use core::cmp::Ordering;
 
@@ -55,8 +56,8 @@ impl AsRef<[u8]> for ByteSlice<'_> {
 }
 
 impl<'a> DecodeValue<'a> for ByteSlice<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-        decoder.bytes(length).and_then(Self::new)
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        decoder.bytes(header.length).and_then(Self::new)
     }
 }
 
