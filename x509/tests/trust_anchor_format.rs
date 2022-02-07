@@ -13,7 +13,7 @@ fn decode_ta1() {
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
     let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header.length).unwrap();
+    let tac = TrustAnchorChoice::decode_value(&mut decoder, header).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -129,7 +129,7 @@ fn decode_ta2() {
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
     let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header.length).unwrap();
+    let tac = TrustAnchorChoice::decode_value(&mut decoder, header).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -233,7 +233,7 @@ fn decode_ta3() {
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
     let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header.length).unwrap();
+    let tac = TrustAnchorChoice::decode_value(&mut decoder, header).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -352,7 +352,7 @@ fn decode_ta4() {
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
     let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header.length).unwrap();
+    let tac = TrustAnchorChoice::decode_value(&mut decoder, header).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);

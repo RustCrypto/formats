@@ -98,9 +98,9 @@ impl DeriveEnumerated {
             impl ::der::DecodeValue<'_> for #ident {
                 fn decode_value(
                     decoder: &mut ::der::Decoder<'_>,
-                    length: ::der::Length
+                    header: ::der::Header
                 ) -> ::der::Result<Self> {
-                    <#repr as ::der::DecodeValue>::decode_value(decoder, length)?.try_into()
+                    <#repr as ::der::DecodeValue>::decode_value(decoder, header)?.try_into()
                 }
             }
 

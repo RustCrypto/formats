@@ -4,7 +4,8 @@ use crate::{
     asn1::Any,
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
-    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length, Result, Tag,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Header, Length, Result,
+    Tag,
 };
 use core::time::Duration;
 
@@ -73,8 +74,8 @@ impl GeneralizedTime {
 }
 
 impl DecodeValue<'_> for GeneralizedTime {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        match *ByteSlice::decode_value(decoder, length)?.as_bytes() {
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        match *ByteSlice::decode_value(decoder, header)?.as_bytes() {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
                 let year = datetime::decode_decimal(Self::TAG, y1, y2)? as u16 * 100
@@ -159,8 +160,8 @@ impl TryFrom<Any<'_>> for GeneralizedTime {
 }
 
 impl DecodeValue<'_> for DateTime {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        Ok(GeneralizedTime::decode_value(decoder, length)?.into())
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        Ok(GeneralizedTime::decode_value(decoder, header)?.into())
     }
 }
 
@@ -183,8 +184,8 @@ impl OrdIsValueOrd for DateTime {}
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl DecodeValue<'_> for SystemTime {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        Ok(GeneralizedTime::decode_value(decoder, length)?.into())
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        Ok(GeneralizedTime::decode_value(decoder, header)?.into())
     }
 }
 
@@ -259,8 +260,8 @@ impl OrdIsValueOrd for SystemTime {}
 #[cfg(feature = "time")]
 #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl DecodeValue<'_> for PrimitiveDateTime {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        GeneralizedTime::decode_value(decoder, length)?.try_into()
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        GeneralizedTime::decode_value(decoder, header)?.try_into()
     }
 }
 

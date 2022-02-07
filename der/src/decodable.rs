@@ -31,6 +31,6 @@ where
     fn decode(decoder: &mut Decoder<'a>) -> Result<T> {
         let header = Header::decode(decoder)?;
         header.tag.assert_eq(T::TAG)?;
-        T::decode_value(decoder, header.length)
+        T::decode_value(decoder, header)
     }
 }

@@ -3,7 +3,7 @@
 use crate::{Certificate, CertificatePolicies, Extensions, NameConstraints};
 use der::asn1::{BitString, ContextSpecific, OctetString, Utf8String};
 use der::{
-    DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Length, Sequence, Tag,
+    DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Header, Sequence, Tag,
     TagMode, TagNumber,
 };
 use spki::SubjectPublicKeyInfo;
@@ -48,7 +48,7 @@ pub struct TrustAnchorInfo<'a> {
 // impl<'a> ::der::Decodable<'a> for TrustAnchorInfo<'a> {
 //     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
 impl<'a> DecodeValue<'a> for TrustAnchorInfo<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
+    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
         let version = match decoder.decode()? {
             Some(v) => Some(v),
             _ => Some(1),
@@ -196,7 +196,7 @@ pub enum TrustAnchorChoice<'a> {
 const TAC_TA_INFO_TAG: TagNumber = TagNumber::new(2);
 
 impl<'a> DecodeValue<'a> for TrustAnchorChoice<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
+    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
         let t = decoder.peek_tag()?;
         let o = t.octet();
         // Context specific support always returns an Option<>, just ignore since OPTIONAL does not apply here
