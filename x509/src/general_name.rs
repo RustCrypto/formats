@@ -3,7 +3,7 @@
 use alloc::string::ToString;
 use alloc::vec::Vec;
 use der::asn1::{Any, ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
-use der::{Decodable, DecodeValue, Decoder, ErrorKind, Length, Sequence, TagMode, TagNumber};
+use der::{Decodable, DecodeValue, Decoder, ErrorKind, Header, Sequence, TagMode, TagNumber};
 use x501::name::Name;
 
 /// OtherName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
@@ -25,7 +25,7 @@ pub struct OtherName<'a> {
 }
 
 impl<'a> DecodeValue<'a> for OtherName<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
+    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
         let type_id = decoder.decode()?;
         let value = decoder.decode()?;
         Ok(Self { type_id, value })

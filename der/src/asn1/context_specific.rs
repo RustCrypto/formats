@@ -72,7 +72,7 @@ impl<T> ContextSpecific<T> {
     {
         Self::decode_with(decoder, tag_number, |decoder| {
             let header = Header::decode(decoder)?;
-            let value = T::decode_value(decoder, header.length)?;
+            let value = T::decode_value(decoder, header)?;
 
             if header.tag.is_constructed() != value.tag().is_constructed() {
                 return Err(header.tag.non_canonical_error());

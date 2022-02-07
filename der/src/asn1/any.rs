@@ -56,8 +56,13 @@ impl<'a> Any<'a> {
         T: DecodeValue<'a> + FixedTag,
     {
         self.tag.assert_eq(T::TAG)?;
+        let header = Header {
+            tag: self.tag,
+            length: self.value.len(),
+        };
+
         let mut decoder = Decoder::new(self.value())?;
-        let result = T::decode_value(&mut decoder, self.value.len())?;
+        let result = T::decode_value(&mut decoder, header)?;
         decoder.finish(result)
     }
 
@@ -150,9 +155,10 @@ impl<'a> Choice<'a> for Any<'a> {
 impl<'a> Decodable<'a> for Any<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Any<'a>> {
         let header = Header::decode(decoder)?;
-        let tag = header.tag;
-        let value = ByteSlice::decode_value(decoder, header.length)?;
-        Ok(Self { tag, value })
+        Ok(Self {
+            tag: header.tag,
+            value: ByteSlice::decode_value(decoder, header)?,
+        })
     }
 }
 

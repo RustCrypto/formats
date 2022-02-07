@@ -9,9 +9,10 @@ use der::asn1::{
     Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier,
     OctetString, UIntBytes, Utf8String,
 };
+use der::Header;
 use der::{
     Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Enumerated, ErrorKind,
-    FixedTag, Length, Sequence, Tag, TagMode, TagNumber,
+    FixedTag, Sequence, Tag, TagMode, TagNumber,
 };
 use x501::attr::AttributeTypeAndValue;
 use x501::name::RelativeDistinguishedName;
@@ -823,7 +824,7 @@ const FULL_NAME_TAG: TagNumber = TagNumber::new(0);
 const NAME_RELATIVE_TO_ISSUER_TAG: TagNumber = TagNumber::new(1);
 
 impl<'a> DecodeValue<'a> for DistributionPointName<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _length: Length) -> der::Result<Self> {
+    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
         let t = decoder.peek_tag()?;
         let o = t.octet();
         // Context specific support always returns an Option<>, just ignore since OPTIONAL does not apply here

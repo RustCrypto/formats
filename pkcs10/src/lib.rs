@@ -11,12 +11,10 @@
 
 extern crate alloc;
 
-mod attribute;
 mod document;
 mod info;
 mod version;
 
-pub use attribute::{Attribute, Attributes};
 pub use document::CertReqDocument;
 pub use info::CertReqInfo;
 pub use version::Version;

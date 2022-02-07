@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Length, Result, Tag,
+    ErrorKind, FixedTag, Header, Length, Result, Tag,
 };
 
 /// ASN.1 `OCTET STRING` type.
@@ -43,10 +43,9 @@ impl AsRef<[u8]> for OctetString<'_> {
 }
 
 impl<'a> DecodeValue<'a> for OctetString<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-        Ok(Self {
-            inner: ByteSlice::decode_value(decoder, length)?,
-        })
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        let inner = ByteSlice::decode_value(decoder, header)?;
+        Ok(Self { inner })
     }
 }
 
