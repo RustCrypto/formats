@@ -2,44 +2,10 @@
 
 use alloc::string::ToString;
 use alloc::vec::Vec;
-use der::asn1::{Any, ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
-use der::{Decodable, DecodeValue, Decoder, ErrorKind, Header, Sequence, TagMode, TagNumber};
+use der::asn1::{ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
+use der::{Decodable, Decoder, ErrorKind, TagMode, TagNumber};
 use x501::name::Name;
-
-/// OtherName as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
-///
-/// ```text
-///    OtherName ::= SEQUENCE {
-///         type-id    OBJECT IDENTIFIER,
-///         value      [0] EXPLICIT ANY DEFINED BY type-id }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct OtherName<'a> {
-    /// type-id    OBJECT IDENTIFIER,
-    pub type_id: ObjectIdentifier,
-
-    /// value      [0] EXPLICIT ANY DEFINED BY type-id }
-    pub value: Any<'a>,
-}
-
-impl<'a> DecodeValue<'a> for OtherName<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
-        let type_id = decoder.decode()?;
-        let value = decoder.decode()?;
-        Ok(Self { type_id, value })
-    }
-}
-
-impl<'a> Sequence<'a> for OtherName<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[&self.type_id, &self.value])
-    }
-}
+use x509_ext::pkix::name::OtherName;
 
 /// GeneralNames as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
 ///
