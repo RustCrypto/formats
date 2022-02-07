@@ -67,7 +67,7 @@ fn decode_rsa_2048_der() {
     // Check the attributes (just one; contains extensions).
     assert_eq!(cr.info.attributes.len(), 1);
     let attribute = cr.info.attributes.get(0).unwrap();
-    assert_eq!(attribute.kind, "1.2.840.113549.1.9.14".parse().unwrap()); // extensionRequest
+    assert_eq!(attribute.oid, "1.2.840.113549.1.9.14".parse().unwrap()); // extensionRequest
     assert_eq!(attribute.values.len(), 1);
 
     // Check the extensions.
