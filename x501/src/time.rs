@@ -41,7 +41,7 @@ impl Time {
         }
     }
 
-    /// Get Time as DateTime
+    /// Get [`Time`] as [`DateTime`]
     pub fn to_date_time(&self) -> DateTime {
         match self {
             Time::UtcTime(t) => t.to_date_time(),
