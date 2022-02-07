@@ -64,7 +64,7 @@ impl DecodeCertificate for CertificateDocument {
     }
 }
 
-#[cfg(feature = "alloc")]
+#[cfg(any(feature = "alloc", feature = "std"))]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl EncodeCertificate for CertificateDocument {
     fn to_certificate_der(&self) -> Result<CertificateDocument> {

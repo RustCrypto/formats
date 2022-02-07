@@ -1,13 +1,10 @@
 //! CertificateDocument implementation
 
-#[cfg(feature = "alloc")]
-use crate::certificate_document::CertificateDocument;
-
 use crate::Certificate;
 use der::{Error, Result};
 
-#[cfg(feature = "alloc")]
-use der::Document;
+#[cfg(any(feature = "alloc", feature = "std"))]
+use {crate::certificate_document::CertificateDocument, der::Document};
 
 #[cfg(feature = "std")]
 use std::path::Path;
@@ -24,8 +21,8 @@ pub trait DecodeCertificate: for<'a> TryFrom<Certificate<'a>, Error = Error> + S
     }
 
     /// Deserialize certificate from a [`CertificateDocument`].
-    #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    #[cfg(any(feature = "alloc", feature = "std"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "alloc", feature = "std"))))]
     fn from_certificate_doc(doc: &CertificateDocument) -> Result<Self> {
         Self::try_from(doc.decode())
     }
@@ -63,8 +60,8 @@ pub trait DecodeCertificate: for<'a> TryFrom<Certificate<'a>, Error = Error> + S
 }
 
 /// Serialize a certificate object to a DER-encoded document.
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "alloc", feature = "std"))))]
 pub trait EncodeCertificate {
     /// Serialize a [`CertificateDocument`] containing a Certificate.
     fn to_certificate_der(&self) -> Result<CertificateDocument>;
