@@ -24,13 +24,12 @@ pub fn default_zero() -> u32 {
     0
 }
 
-/// only support v3 certificates
+/// only supporting v3 certificates, but all versions are listed here
 /// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
-pub const X509_CERT_VERSION: u8 = 2;
 
 /// Version identifier for X.509 certificates. In practice, only v3 is used.
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd)]
-pub enum X509Version {
+pub enum Version {
     /// Denotes X.509 v1
     V1 = 0,
 
@@ -41,13 +40,19 @@ pub enum X509Version {
     V3 = 2,
 }
 
-impl Decodable<'_> for X509Version {
-    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
-        X509Version::try_from(u8::decode(decoder)?).map_err(|_| Self::TAG.value_error())
+impl Default for Version {
+    fn default() -> Self {
+        Version::V3
     }
 }
 
-impl Encodable for X509Version {
+impl Decodable<'_> for Version {
+    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
+        Version::try_from(u8::decode(decoder)?).map_err(|_| Self::TAG.value_error())
+    }
+}
+
+impl Encodable for Version {
     fn encoded_len(&self) -> der::Result<der::Length> {
         Length::ONE.for_tlv()
     }
@@ -57,23 +62,23 @@ impl Encodable for X509Version {
     }
 }
 
-impl FixedTag for X509Version {
+impl FixedTag for Version {
     const TAG: Tag = Tag::Integer;
 }
 
-impl From<X509Version> for u8 {
-    fn from(version: X509Version) -> Self {
+impl From<Version> for u8 {
+    fn from(version: Version) -> Self {
         version as u8
     }
 }
 
-impl TryFrom<u8> for X509Version {
+impl TryFrom<u8> for Version {
     type Error = Error;
-    fn try_from(byte: u8) -> Result<X509Version, Error> {
+    fn try_from(byte: u8) -> Result<Version, Error> {
         match byte {
-            0 => Ok(X509Version::V1),
-            1 => Ok(X509Version::V2),
-            2 => Ok(X509Version::V3),
+            0 => Ok(Version::V1),
+            1 => Ok(Version::V2),
+            2 => Ok(Version::V3),
             _ => Err(Self::TAG.value_error()),
         }
     }
@@ -108,7 +113,7 @@ impl TryFrom<u8> for X509Version {
 pub struct TBSCertificate<'a> {
     /// version         [0]  Version DEFAULT v1,
     //#[asn1(context_specific = "0", default = "default_zero_u8")]
-    pub version: X509Version,
+    pub version: Version,
     /// serialNumber         CertificateSerialNumber,
     pub serial_number: UIntBytes<'a>,
     /// signature            AlgorithmIdentifier{SIGNATURE-ALGORITHM, {SignatureAlgorithms}},
@@ -138,7 +143,7 @@ impl<'a> ::der::Decodable<'a> for TBSCertificate<'a> {
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value)
                     .unwrap_or_else(default_zero_u8);
-            let version = X509Version::try_from(version_int)?;
+            let version = Version::try_from(version_int)?;
             let serial_number = decoder.decode()?;
             let signature = decoder.decode()?;
             let issuer = decoder.decode()?;
@@ -146,19 +151,19 @@ impl<'a> ::der::Decodable<'a> for TBSCertificate<'a> {
             let subject = decoder.decode()?;
             let subject_public_key_info = decoder.decode()?;
 
-            let issuer_unique_id = if X509Version::V2 <= version {
+            let issuer_unique_id = if Version::V2 <= version {
                 ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
                     .map(|cs| cs.value)
             } else {
                 None
             };
-            let subject_unique_id = if X509Version::V2 <= version {
+            let subject_unique_id = if Version::V2 <= version {
                 ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N2)?
                     .map(|cs| cs.value)
             } else {
                 None
             };
-            let extensions = if X509Version::V3 <= version {
+            let extensions = if Version::V3 <= version {
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N3)?
                     .map(|cs| cs.value)
             } else {
@@ -189,17 +194,17 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
     {
         let version_value: u8 = self.version.try_into()?;
 
-        let issuer_unique_id = if X509Version::V2 <= self.version {
+        let issuer_unique_id = if Version::V2 <= self.version {
             &self.issuer_unique_id
         } else {
             &None
         };
-        let subject_unique_id = if X509Version::V2 <= self.version {
+        let subject_unique_id = if Version::V2 <= self.version {
             &self.subject_unique_id
         } else {
             &None
         };
-        let extensions = if X509Version::V3 <= self.version {
+        let extensions = if Version::V3 <= self.version {
             self.extensions.as_ref().map(|exts| ContextSpecific {
                 tag_number: EXTENSIONS_TAG,
                 tag_mode: TagMode::Explicit,
