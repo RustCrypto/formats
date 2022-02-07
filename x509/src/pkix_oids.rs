@@ -1,5 +1,6 @@
 //! Object identifier values from PKIX1Implicit and PKIX1Explicit ASN.1 modules
 use crate::ObjectIdentifier;
+use alloc::string::{String, ToString};
 
 /// OID for CPS qualifier: 1.3.6.1.5.5.7.2.1
 pub const PKIX_QT_CPS: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.5.5.7.2.1");
@@ -148,7 +149,7 @@ pub const PKIX_CE_CERTIFICATEISSUER: ObjectIdentifier = ObjectIdentifier::new("2
 /// OID for holdInstructionCode extension: 2.5.29.23
 pub const PKIX_CE_HOLDINSTRUCTIONCODE: ObjectIdentifier = ObjectIdentifier::new("2.5.29.23");
 
-/// OID forholdinstruction-callissuer attribute: 2.2.840.10040.2.2
+/// OID for holdinstruction-callissuer attribute: 2.2.840.10040.2.2
 pub const PKIX_HI_HOLDINSTRUCTION_CALLISSUER: ObjectIdentifier =
     ObjectIdentifier::new("2.2.840.10040.2.2");
 
@@ -177,7 +178,7 @@ pub const PKIX_CE_AUTHORITY_KEY_IDENTIFIER: ObjectIdentifier = ObjectIdentifier:
 /// OID for policyConstraints extension: 2.5.29.36. See [`PolicyConstraints`](struct.PolicyConstraints.html).
 pub const PKIX_CE_POLICY_CONSTRAINTS: ObjectIdentifier = ObjectIdentifier::new("2.5.29.36");
 
-/// OID for policyConstraints extension: 2.5.29.46. See [`PolicyConstraints`](type.FreshestCRL.html).
+/// OID for freshestCrl extension: 2.5.29.46. See [`FreshestCrl`](type.FreshestCRL.html).
 pub const PKIX_CE_FRESHEST_CRL: ObjectIdentifier = ObjectIdentifier::new("2.5.29.46");
 
 /// OID for inhibitAnyPolicy extension: 2.5.29.54. See [`InhibitAnyPolicy`](type.InhibitAnyPolicy.html).
@@ -350,3 +351,116 @@ pub const PKIXALG_SHA384: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.1
 ///        { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101)
 ///        csor(3) algorithms(4) hashalgs(2) 3 }
 pub const PKIXALG_SHA512: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.2.3");
+
+/// oid_to_string takes an ObjectIdentifier and returns a String containing a friendly name or a
+/// dot notation representation of the OID, i.e., 1.2.3.4, if no friendly name is found.
+pub fn oid_to_string(oid: &ObjectIdentifier) -> String {
+    let s = oid_to_str(oid);
+    if s.is_empty() {
+        return oid.to_string();
+    }
+    s.to_string()
+}
+
+/// oid_to_str takes an ObjectIdentifier and returns a str containing a friendly name or an empty
+/// string if no friendly name is found.
+pub fn oid_to_str(oid: &ObjectIdentifier) -> &'static str {
+    match *oid {
+        PKIX_QT_CPS => "qtCps",
+        PKIX_QT_UNOTICE => "qtUnotice",
+        PKIX_AD_OCSP => "adOcsp",
+        PKIX_AD_CA_ISSUERS => "adCaIssuers",
+        PKIX_AD_TIME_STAMPING => "adTimeStamping",
+        PKIX_AD_CA_REPOSITORY => "adCaRepository",
+        PKIX_AT_NAME => "name",
+        PKIX_AT_SURNAME => "sn",
+        PKIX_AT_GIVENNAME => "givenName",
+        PKIX_AT_INITIALS => "initials",
+        PKIX_AT_GENERATION_QUALIFIER => "generationQualifier",
+        PKIX_AT_COMMON_NAME => "cn",
+        PKIX_AT_LOCALITY_NAME => "l",
+        PKIX_AT_STATEORPROVINCENAME => "st",
+        PKIX_AT_STREET => "street",
+        PKIX_AT_ORGANIZATIONNAME => "ou",
+        PKIX_AT_ORGANIZATIONALUNITNAME => "sn",
+        PKIX_AT_TITLE => "title",
+        PKIX_AT_DNQUALIFIER => "dnQualifier",
+        PKIX_AT_COUNTRYNAME => "c",
+        PKIX_AT_SERIALNUMBER => "serialNumber",
+        PKIX_AT_PSEUDONYM => "pseudonym",
+        PKIX_DOMAINCOMPONENT => "dc",
+        PKIX_EMAILADDRESS => "emailAddress",
+        PKIX_CE_ANYPOLICY => "anyPolicy",
+        PKIX_CE_EXTKEYUSAGE => "extKeyUsage",
+        PKIX_CE_ANYEXTENDEDKEYUSAGE => "anyExtendedKeyUsage",
+        PKIX_KP_SERVERAUTH => "serverAuth",
+        PKIX_KP_CLIENTAUTH => "clientAuth",
+        PKIX_KP_CODESIGNING => "codeSigning",
+        PKIX_KP_EMAILPROTECTION => "emailProtection",
+        PKIX_KP_TIMESTAMPING => "timeStamping",
+        PKIX_KP_OCSPSIGNING => "OCSPSigning",
+        PKIX_PE_AUTHORITYINFOACCESS => "authorityInfoAccess",
+        PKIX_PE_SUBJECTINFOACCESS => "subjectInfoAccess",
+        PKIX_CE_SUBJECT_DIRECTORY_ATTRIBUTES => "subjectDirectoryAttributes",
+        PKIX_CE_SUBJECT_KEY_IDENTIFIER => "subjectKeyIdentifier",
+        PKIX_CE_KEY_USAGE => "keyUsage",
+        PKIX_CE_PRIVATE_KEY_USAGE_PERIOD => "privateKeyUsagePeriod",
+        PKIX_CE_SUBJECT_ALT_NAME => "subjectAltName",
+        PKIX_CE_ISSUER_ALT_NAME => "issuerAltName",
+        PKIX_CE_BASIC_CONSTRAINTS => "basicConstraints",
+        PKIX_CE_CRLNUMBER => "cRLNumber",
+        PKIX_CE_CRLREASONS => "cRLReasons",
+        PKIX_CE_ISSUINGDISTRIBUTIONPOINT => "issuingDistributionPoint",
+        PKIX_CE_DELTACRLINDICATOR => "deltaCRLIndicator",
+        PKIX_CE_CERTIFICATEISSUER => "certificateIssuer",
+        PKIX_CE_HOLDINSTRUCTIONCODE => "holdInstructionCode",
+        PKIX_HI_HOLDINSTRUCTION_CALLISSUER => "holdinstruction-callissuer",
+        PKIX_HI_HOLDINSTRUCTION_REJECT => "holdinstruction-reject",
+        PKIX_CE_INVALIDITYDATE => "invalidityDate",
+        PKIX_CE_NAME_CONSTRAINTS => "nameConstraints",
+        PKIX_CE_CRL_DISTRIBUTION_POINTS => "cRLDistributionPoints",
+        PKIX_CE_CERTIFICATE_POLICIES => "certificatePolicies",
+        PKIX_CE_POLICY_MAPPINGS => "policyMappings",
+        PKIX_CE_AUTHORITY_KEY_IDENTIFIER => "authorityKeyIdentifier",
+        PKIX_CE_POLICY_CONSTRAINTS => "policyConstraints",
+        PKIX_CE_FRESHEST_CRL => "freshestCrl",
+        PKIX_CE_INHIBIT_ANY_POLICY => "inhibitAnyPolicy",
+        PKIX_OCSP_NOCHECK => "ocspNoCheck",
+        PIV_NACI_INDICATOR => "pivNaciIdendicator",
+        PKIXALG_RSA_ENCRYPTION => "rsaEncryption",
+        PKIXALG_EC_PUBLIC_KEY => "ecPublicKey",
+        PKIXALG_DH => "ecDH",
+        PKIXALG_SECP192R1 => "secp192r1",
+        PKIXALG_SECP163K1 => "sect163k1",
+        PKIXALG_SECP163R2 => "sect163r2",
+        PKIXALG_SECP224R1 => "secp224r1",
+        PKIXALG_SECP233K1 => "sect233k1",
+        PKIXALG_SECP233R1 => "sect233r1",
+        PKIXALG_SECP256R1 => "secp256r1",
+        PKIXALG_SECP283K1 => "sect283k1",
+        PKIXALG_SECP283R1 => "sect283r1",
+        PKIXALG_SECP384R1 => "secp384r1",
+        PKIXALG_SECP409K1 => "sect409k1",
+        PKIXALG_SECP409R1 => "sect409r1",
+        PKIXALG_SECP521R1 => "secp521r1",
+        PKIXALG_SECP571K1 => "sect571k1",
+        PKIXALG_SECP571R1 => "sect571r1",
+        PKIXALG_ECDSA_WITH_SHA224 => "ecdsa-with-SHA224",
+        PKIXALG_ECDSA_WITH_SHA256 => "ecdsa-with-SHA256",
+        PKIXALG_ECDSA_WITH_SHA384 => "ecdsa-with-SHA384",
+        PKIXALG_ECDSA_WITH_SHA512 => "ecdsa-with-SHA512",
+        PKIXALG_SHA224_WITH_RSA_ENCRYPTION => "sha224WithRSAEncryption",
+        PKIXALG_SHA256_WITH_RSA_ENCRYPTION => "sha256WithRSAEncryption",
+        PKIXALG_SHA384_WITH_RSA_ENCRYPTION => "sha384WithRSAEncryption",
+        PKIXALG_SHA512_WITH_RSA_ENCRYPTION => "sha512WithRSAEncryption",
+        PKIXALG_RSAES_OAEP => "RSAES-OAEP",
+        PKIXALG_PSPECIFIED => "pSpecified",
+        PKIXALG_MGF1 => "MFG1",
+        PKIXALG_RSASSA_PSS => "sha1",
+        PKIXALG_SHA224 => "sha224",
+        PKIXALG_SHA256 => "sha256",
+        PKIXALG_SHA384 => "sha384",
+        PKIXALG_SHA512 => "sha512",
+        _ => "",
+    }
+}
