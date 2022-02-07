@@ -28,7 +28,7 @@ pub fn default_zero() -> u32 {
 /// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
 
 /// Version identifier for X.509 certificates. In practice, only v3 is used.
-#[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd)]
 pub enum Version {
     /// Denotes X.509 v1
     V1 = 0,
