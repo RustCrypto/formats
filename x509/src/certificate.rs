@@ -2,7 +2,8 @@
 
 use der::asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes};
 use der::{
-    Decodable, Decoder, Encodable, Encoder, Error, FixedTag, Sequence, Tag, TagMode, TagNumber,
+    Decodable, Decoder, Encodable, Encoder, Error, FixedTag, Length, Sequence, Tag, TagMode,
+    TagNumber,
 };
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use x501::name::Name;
@@ -48,7 +49,7 @@ impl Decodable<'_> for X509Version {
 
 impl Encodable for X509Version {
     fn encoded_len(&self) -> der::Result<der::Length> {
-        der::Length::from(1u8).for_tlv()
+        Length::ONE.for_tlv()
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
