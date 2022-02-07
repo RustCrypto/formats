@@ -3,7 +3,7 @@
 use crate::asn1::integer::uint::{encode_bytes, encoded_len};
 use crate::{
     asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Length, Result, Tag,
+    FixedTag, Length, Result, Tag,
 };
 
 impl DecodeValue<'_> for f64 {
@@ -18,7 +18,8 @@ impl DecodeValue<'_> for f64 {
             // Section 8.5.7.2: Check the base -- the DER specs say that only base 2 should be supported in DER, but here we allow decoding of BER, just not encoding of BER
             let base = mnth_bits_to_u8::<5, 4>(bytes);
             if base != 0 {
-                return Err(Error::new(ErrorKind::RealBaseInvalid(base), Length::ZERO));
+                // Real related error: base is not DER compliant (base encoded in enum)
+                return Err(Tag::Real.value_error());
             }
 
             // Section 8.5.7.3
@@ -35,7 +36,10 @@ impl DecodeValue<'_> for f64 {
                     mantissa_start = 3;
                     u64::from_be_bytes([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, bytes[1], bytes[2]])
                 }
-                _ => return Err(Error::new(ErrorKind::RealExponentTooLong, Length::ZERO)),
+                _ => {
+                    // Real related error: encoded exponent cannot be represented on an IEEE-754 double
+                    return Err(Tag::Real.value_error());
+                }
             };
             // Section 8.5.7.5: Read the remaining bytes for the mantissa
             // FIXME: Fill backward but in a better way
@@ -61,7 +65,10 @@ impl DecodeValue<'_> for f64 {
             let astr = StrSlice::from_bytes(&bytes[1..])?;
             match astr.inner.parse::<f64>() {
                 Ok(val) => Ok(val),
-                Err(_) => Err(Error::new(ErrorKind::RealISO6093Error, Length::ONE)),
+                Err(_) => {
+                    // Real related error: encoding not supported or malformed
+                    Err(Tag::Real.value_error())
+                }
             }
         }
     }
@@ -240,7 +247,14 @@ mod tests {
 
     #[test]
     fn encdec_normal() {
+        // The comments correspond to the decoded value from the ASN.1 playground when the bytes are inputed.
         {
+            /*
+               R REAL: tag = [UNIVERSAL 9] primitive; length = 0
+               0
+               Successfully decoded 2 bytes.
+               rec1value R ::= 0
+            */
             let val = 0.0;
             let expected = &[0x09, 0x0];
             let mut buffer = [0u8; 2];
@@ -256,6 +270,12 @@ mod tests {
         }
 
         {
+            /*
+               R REAL: tag = [UNIVERSAL 9] primitive; length = 3
+               0 * 2^1
+               Successfully decoded 5 bytes.
+               rec1value R ::= 0
+            */
             let val = f64::MIN_POSITIVE;
             let expected = &[0x09, 0x03, 0x80, 0x01, 0x0];
             let mut buffer = [0u8; 6];
@@ -623,7 +643,7 @@ mod tests {
         // This tool encodes _all_ values that are non-zero in the ISO 6093 NR3 representation.
         // This does not seem to perfectly adhere to the ITU specifications, Special Cases section.
         // The implementation in this case correctly supports decoding such values. It will, however,
-        // systematically encode REALs in their base 2 form, with a scaling factor where needed to 
+        // systematically encode REALs in their base 2 form, with a scaling factor where needed to
         // ensure that the mantissa is either odd or zero (as per section 11.3.1).
         {
             let expect = 10.0;
@@ -704,6 +724,11 @@ mod tests {
                 expect,
                 decoded
             );
+        }
+        {
+            use super::integer_encode_f64;
+            let v = integer_encode_f64(1, 1023, 1);
+            panic!("{}", v);
         }
     }
 }
