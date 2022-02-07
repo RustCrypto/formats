@@ -13,10 +13,6 @@ use der::{asn1::ObjectIdentifier, Sequence};
 
 extern crate alloc;
 
-fn default_false() -> bool {
-    false
-}
-
 /// Extension as defined in [RFC 5280 Section 4.1.2.9].
 ///
 /// The ASN.1 definition for Extension objects is below. The extnValue type may
@@ -40,7 +36,7 @@ pub struct Extension<'a> {
     pub extn_id: ObjectIdentifier,
 
     /// critical    BOOLEAN DEFAULT FALSE,
-    #[asn1(default = "default_false")]
+    #[asn1(default = "Default::default")]
     pub critical: bool,
 
     /// extnValue   OCTET STRING
