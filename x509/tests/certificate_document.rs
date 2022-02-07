@@ -3,7 +3,7 @@ use crate::certificate_document::CertificateDocument;
 use der::Document;
 use x509::certificate_traits::DecodeCertificate;
 
-#[cfg(feature = "alloc")]
+#[cfg(all(feature = "std", feature = "alloc"))]
 use x509::certificate_traits::EncodeCertificate;
 
 #[cfg(feature = "alloc")]
