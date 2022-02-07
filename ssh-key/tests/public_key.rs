@@ -212,3 +212,52 @@ fn decode_rsa_4096_openssh() {
 
     assert_eq!("user@example.com", ossh_key.comment);
 }
+
+#[cfg(feature = "alloc")]
+#[test]
+fn encode_dsa_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_DSA_EXAMPLE).unwrap();
+    assert_eq!(OSSH_DSA_EXAMPLE.trim_end(), &ossh_key.to_string());
+}
+
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+#[test]
+fn encode_ecdsa_p256_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P256_EXAMPLE).unwrap();
+    assert_eq!(OSSH_ECDSA_P256_EXAMPLE.trim_end(), &ossh_key.to_string());
+}
+
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+#[test]
+fn encode_ecdsa_p384_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P384_EXAMPLE).unwrap();
+    assert_eq!(OSSH_ECDSA_P384_EXAMPLE.trim_end(), &ossh_key.to_string());
+}
+
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+#[test]
+fn encode_ecdsa_p521_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_ECDSA_P521_EXAMPLE).unwrap();
+    assert_eq!(OSSH_ECDSA_P521_EXAMPLE.trim_end(), &ossh_key.to_string());
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn encode_ed25519_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_ED25519_EXAMPLE).unwrap();
+    assert_eq!(OSSH_ED25519_EXAMPLE.trim_end(), &ossh_key.to_string());
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn encode_rsa_3072_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_RSA_3072_EXAMPLE).unwrap();
+    assert_eq!(OSSH_RSA_3072_EXAMPLE.trim_end(), &ossh_key.to_string());
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn encode_rsa_4096_openssh() {
+    let ossh_key = PublicKey::from_openssh(OSSH_RSA_4096_EXAMPLE).unwrap();
+    assert_eq!(OSSH_RSA_4096_EXAMPLE.trim_end(), &ossh_key.to_string());
+}

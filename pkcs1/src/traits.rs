@@ -17,7 +17,7 @@ use std::path::Path;
 #[cfg(all(feature = "alloc", feature = "pkcs8"))]
 use der::Document;
 
-#[cfg(any(feature = "pem", feature = "std"))]
+#[cfg(feature = "pem")]
 use zeroize::Zeroizing;
 
 /// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.

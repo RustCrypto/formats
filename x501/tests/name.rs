@@ -2,7 +2,7 @@
 //use der::asn1::{SetOf, SequenceOfIter, SequenceOf};
 use der::{Decodable, Encodable, Tag, Tagged}; //, Encodable};
 use hex_literal::hex;
-use x509::{Name, RelativeDistinguishedName}; //, AttributeTypeAndValue;
+use x501::name::{Name, RelativeDistinguishedName}; //, AttributeTypeAndValue;
 
 #[test]
 fn decode_name() {

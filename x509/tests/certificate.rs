@@ -5,6 +5,20 @@ use hex_literal::hex;
 use x509::Certificate;
 use x509::*;
 
+// TODO - parse and compare extension values
+const EXTENSIONS: &[(&str, bool)] = &[
+    ("2.5.29.15", true),
+    ("2.5.29.19", true),
+    ("2.5.29.33", false),
+    ("2.5.29.32", false),
+    ("2.5.29.14", false),
+    ("2.5.29.31", false),
+    ("1.3.6.1.5.5.7.1.11", false),
+    ("1.3.6.1.5.5.7.1.1", false),
+    ("2.5.29.54", false),
+    ("2.5.29.35", false),
+];
+
 ///Structure supporting deferred decoding of fields in the Certificate SEQUENCE
 pub struct DeferDecodeCertificate<'a> {
     /// tbsCertificate       TBSCertificate,
@@ -172,43 +186,9 @@ fn decode_cert() {
     let cert: Certificate = result.unwrap();
     println!("{:?}", cert);
     let exts = cert.tbs_certificate.extensions.unwrap();
-    let i = exts.iter();
-    let mut counter = 0;
-    for ext in i {
-        // TODO - parse and compare extension values
-        if 0 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.15");
-            assert_eq!(ext.critical, true);
-        } else if 1 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.19");
-            assert_eq!(ext.critical, true);
-        } else if 2 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.33");
-            assert_eq!(ext.critical, false);
-        } else if 3 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.32");
-            assert_eq!(ext.critical, false);
-        } else if 4 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.14");
-            assert_eq!(ext.critical, false);
-        } else if 5 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.31");
-            assert_eq!(ext.critical, false);
-        } else if 6 == counter {
-            assert_eq!(ext.extn_id.to_string(), "1.3.6.1.5.5.7.1.11");
-            assert_eq!(ext.critical, false);
-        } else if 7 == counter {
-            assert_eq!(ext.extn_id.to_string(), "1.3.6.1.5.5.7.1.1");
-            assert_eq!(ext.critical, false);
-        } else if 8 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.54");
-            assert_eq!(ext.critical, false);
-        } else if 9 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.35");
-            assert_eq!(ext.critical, false);
-        }
-
-        counter += 1;
+    for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
+        assert_eq!(ext.extn_id.to_string(), *oid);
+        assert_eq!(ext.critical, *crit);
     }
 
     let result = Certificate::from_der(der_encoded_cert);
@@ -342,45 +322,12 @@ fn decode_cert() {
 
     // TODO - parse and compare public key
 
-    counter = 0;
     let exts = cert.tbs_certificate.extensions.unwrap();
-    let i = exts.iter();
-    for ext in i {
-        // TODO - parse and compare extension values
-        if 0 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.15");
-            assert_eq!(ext.critical, true);
-        } else if 1 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.19");
-            assert_eq!(ext.critical, true);
-        } else if 2 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.33");
-            assert_eq!(ext.critical, false);
-        } else if 3 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.32");
-            assert_eq!(ext.critical, false);
-        } else if 4 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.14");
-            assert_eq!(ext.critical, false);
-        } else if 5 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.31");
-            assert_eq!(ext.critical, false);
-        } else if 6 == counter {
-            assert_eq!(ext.extn_id.to_string(), "1.3.6.1.5.5.7.1.11");
-            assert_eq!(ext.critical, false);
-        } else if 7 == counter {
-            assert_eq!(ext.extn_id.to_string(), "1.3.6.1.5.5.7.1.1");
-            assert_eq!(ext.critical, false);
-        } else if 8 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.54");
-            assert_eq!(ext.critical, false);
-        } else if 9 == counter {
-            assert_eq!(ext.extn_id.to_string(), "2.5.29.35");
-            assert_eq!(ext.critical, false);
-        }
-
-        counter += 1;
+    for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
+        assert_eq!(ext.extn_id.to_string(), *oid);
+        assert_eq!(ext.critical, *crit);
     }
+
     assert_eq!(
         cert.signature_algorithm.oid.to_string(),
         "1.2.840.113549.1.1.11"

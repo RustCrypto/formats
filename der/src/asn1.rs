@@ -34,7 +34,7 @@ pub use self::{
     octet_string::OctetString,
     optional::OptionalRef,
     printable_string::PrintableString,
-    sequence::Sequence,
+    sequence::{Sequence, SequenceRef},
     sequence_of::{SequenceOf, SequenceOfIter},
     set_of::{SetOf, SetOfIter},
     utc_time::UtcTime,

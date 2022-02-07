@@ -9,14 +9,15 @@ authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/x509"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
-keywords = ["crypto", "x.509"]
+keywords = ["crypto"]
 readme = "README.md"
 edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-der = { version = "=0.6.0-pre.0", features = ["derive", "alloc"], path = "../der" }
-spki = { version = "=0.6.0-pre", path = "../spki" }
+der = { version = "=0.6.0-pre.1", features = ["derive", "alloc"], path = "../der" }
+spki = { version = "=0.6.0-pre.0", path = "../spki" }
+x501 = { version = "=0.1.0-pre.0", path = "../x501" }
 
 [dev-dependencies]
 hex-literal = "0.3"

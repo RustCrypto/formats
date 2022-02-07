@@ -12,7 +12,7 @@
 //! ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti user@example.com
 //! ```
 
-use crate::{Error, Result};
+use crate::{base64, Error, Result};
 use core::str;
 
 /// OpenSSH public key encapsulation parser.
@@ -31,8 +31,8 @@ pub(crate) struct Encapsulation<'a> {
 impl<'a> Encapsulation<'a> {
     /// Parse the given binary data.
     pub(super) fn decode(mut bytes: &'a [u8]) -> Result<Self> {
-        let algorithm_id = parse_segment_str(&mut bytes)?;
-        let base64_data = parse_segment(&mut bytes)?;
+        let algorithm_id = decode_segment_str(&mut bytes)?;
+        let base64_data = decode_segment(&mut bytes)?;
         let comment = str::from_utf8(bytes)
             .map_err(|_| Error::CharacterEncoding)?
             .trim_end();
@@ -48,10 +48,34 @@ impl<'a> Encapsulation<'a> {
             comment,
         })
     }
+
+    /// Encode data with OpenSSH public key encapsulation.
+    pub(super) fn encode<'o, F>(
+        out: &'o mut [u8],
+        algorithm_id: &str,
+        comment: &str,
+        f: F,
+    ) -> Result<&'o str>
+    where
+        F: FnOnce(&mut base64::Encoder<'_>) -> Result<()>,
+    {
+        let mut offset = 0;
+        encode_str(out, &mut offset, algorithm_id)?;
+        encode_str(out, &mut offset, " ")?;
+
+        let mut encoder = base64::Encoder::new(&mut out[offset..])?;
+        f(&mut encoder)?;
+        let base64_len = encoder.finish()?.len();
+
+        offset += base64_len;
+        encode_str(out, &mut offset, " ")?;
+        encode_str(out, &mut offset, comment)?;
+        Ok(str::from_utf8(&out[..offset])?)
+    }
 }
 
 /// Parse a segment of the public key.
-fn parse_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
+fn decode_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
     let start = *bytes;
     let mut len = 0;
 
@@ -81,8 +105,21 @@ fn parse_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
 }
 
 /// Parse a segment of the public key as a `&str`.
-fn parse_segment_str<'a>(bytes: &mut &'a [u8]) -> Result<&'a str> {
-    str::from_utf8(parse_segment(bytes)?).map_err(|_| Error::CharacterEncoding)
+fn decode_segment_str<'a>(bytes: &mut &'a [u8]) -> Result<&'a str> {
+    str::from_utf8(decode_segment(bytes)?).map_err(|_| Error::CharacterEncoding)
+}
+
+/// Encode a segment of the public key.
+fn encode_str(out: &mut [u8], offset: &mut usize, s: &str) -> Result<()> {
+    let bytes = s.as_bytes();
+
+    if *offset + bytes.len() > out.len() {
+        return Err(Error::Length);
+    }
+
+    out[*offset..][..bytes.len()].copy_from_slice(bytes);
+    *offset += bytes.len();
+    Ok(())
 }
 
 #[cfg(test)]

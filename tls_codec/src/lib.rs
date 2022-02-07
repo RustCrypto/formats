@@ -5,6 +5,8 @@
 //! ## Usage
 //!
 //! ```
+//! # #[cfg(feature = "std")]
+//! # {
 //! use tls_codec::{TlsVecU8, Serialize, Deserialize};
 //! let mut b = &[1u8, 4, 77, 88, 1, 99] as &[u8];
 //!
@@ -13,6 +15,7 @@
 //! println!("b: {:?}", b);
 //! let v = TlsVecU8::<u8>::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
 //! assert_eq!(&[77, 88, 1, 99], v.as_slice());
+//! # }
 //! ```
 
 #[cfg_attr(feature = "std", macro_use)]

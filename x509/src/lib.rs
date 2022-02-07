@@ -14,19 +14,15 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-mod attribute;
 mod certificate;
 pub mod extensions_utils;
 mod general_name;
 pub mod pkix_extensions;
 pub mod pkix_oids;
-mod rdn;
-mod time;
-mod validity;
+pub mod trust_anchor_format;
 
 pub use crate::{
-    attribute::AttributeTypeAndValue, certificate::*, extensions_utils::*, general_name::*,
-    pkix_extensions::*, pkix_oids::*, rdn::*, time::Time, validity::Validity,
+    certificate::*, extensions_utils::*, general_name::*, pkix_extensions::*, pkix_oids::*,
 };
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
