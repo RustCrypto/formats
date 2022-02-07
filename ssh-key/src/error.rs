@@ -85,6 +85,14 @@ impl From<core::str::Utf8Error> for Error {
     }
 }
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<alloc::string::FromUtf8Error> for Error {
+    fn from(_: alloc::string::FromUtf8Error) -> Error {
+        Error::CharacterEncoding
+    }
+}
+
 #[cfg(feature = "ecdsa")]
 #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 impl From<sec1::Error> for Error {

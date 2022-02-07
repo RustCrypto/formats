@@ -16,8 +16,8 @@ edition = "2021"
 rust-version = "1.57"
 
 [dependencies]
-der = { version = "=0.6.0-pre.0", features = ["oid"], path = "../der" }
-spki = { version = "=0.6.0-pre", path = "../spki" }
+der = { version = "=0.6.0-pre.1", features = ["oid"], path = "../der" }
+spki = { version = "=0.6.0-pre.0", path = "../spki" }
 
 # optional dependencies
 rand_core = { version = "0.6", optional = true, default-features = false }
@@ -34,7 +34,7 @@ alloc = ["der/alloc", "spki/alloc", "zeroize"]
 des-insecure = ["encryption", "pkcs5/des-insecure"]
 encryption = ["alloc", "pkcs5/alloc", "pkcs5/pbes2", "rand_core"]
 pem = ["alloc", "der/pem", "spki/pem"]
-rand = ["rand_core/std"]
+rand = ["std", "rand_core/std"]
 sha1 = ["encryption", "pkcs5/sha1"]
 std = ["alloc", "der/std", "spki/std"]
 

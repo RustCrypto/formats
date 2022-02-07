@@ -1,8 +1,8 @@
 //! ASN.1 `IA5String` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
-    OrdIsValueOrd, Result, StrSlice, Tag,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
+    FixedTag, Length, Result, StrSlice, Tag,
 };
 use core::{fmt, str};
 

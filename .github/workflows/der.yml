@@ -36,13 +36,8 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - run: cargo build --target ${{ matrix.target }} --release
-      - run: cargo build --target ${{ matrix.target }} --release --features alloc
-      - run: cargo build --target ${{ matrix.target }} --release --features derive
-      - run: cargo build --target ${{ matrix.target }} --release --features oid
-      - run: cargo build --target ${{ matrix.target }} --release --features pem
-      - run: cargo build --target ${{ matrix.target }} --release --features time
-      - run: cargo build --target ${{ matrix.target }} --release --features alloc,derive,oid,pem,time
+      - run: cargo install cargo-hack
+      - run: cargo hack build --release --target ${{ matrix.target }} --feature-powerset --exclude-features std
 
   test:
     strategy:
@@ -83,10 +78,8 @@ jobs:
           profile: minimal
           override: true
       - run: ${{ matrix.deps }}
-      - run: cargo test --target ${{ matrix.target }} --release
-      - run: cargo test --target ${{ matrix.target }} --release --features oid
-      - run: cargo test --target ${{ matrix.target }} --release --features pem
-      - run: cargo test --target ${{ matrix.target }} --release --all-features
+      - run: cargo install cargo-hack
+      - run: cargo hack test --release --feature-powerset
 
   derive:
     runs-on: ubuntu-latest
@@ -102,5 +95,6 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
           profile: minimal
-      - run: cargo test --release
+      - run: cargo install cargo-hack
+      - run: cargo hack test --release --feature-powerset
         working-directory: der/derive

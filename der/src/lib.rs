@@ -4,7 +4,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/der/0.6.0-pre"
+    html_root_url = "https://docs.rs/der/0.6.0-pre.1"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(
@@ -360,7 +360,7 @@ pub use crate::{
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
-    ord::{DerOrd, OrdIsValueOrd, ValueOrd},
+    ord::{DerOrd, ValueOrd},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     value::{DecodeValue, EncodeValue},
 };

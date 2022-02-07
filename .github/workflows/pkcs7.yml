@@ -37,7 +37,8 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - run: cargo build --release --target ${{ matrix.target }} --no-default-features
+      - run: cargo install cargo-hack
+      - run: cargo hack build --release --target ${{ matrix.target }} --feature-powerset
 
   test:
     runs-on: ubuntu-latest
@@ -53,6 +54,5 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-      - run: cargo test --release --no-default-features
-      - run: cargo test --release
-      - run: cargo test --release --all-features
+      - run: cargo install cargo-hack
+      - run: cargo hack test --release --feature-powerset

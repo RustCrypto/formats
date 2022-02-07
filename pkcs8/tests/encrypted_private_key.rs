@@ -8,7 +8,7 @@ use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfo};
 #[cfg(feature = "encryption")]
 use pkcs8::PrivateKeyDocument;
 
-#[cfg(feature = "pem")]
+#[cfg(any(feature = "std", feature = "pem"))]
 use pkcs8::EncryptedPrivateKeyDocument;
 
 #[cfg(feature = "std")]
