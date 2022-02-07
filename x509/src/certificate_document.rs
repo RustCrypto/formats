@@ -48,19 +48,19 @@ impl DecodeCertificate for CertificateDocument {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_certificate_pem(s: &str) -> Result<Self> {
-        Ok(Self::from_pem(s)?)
+        Self::from_pem(s)
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_certificate_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        Ok(Self::read_der_file(path)?)
+        Self::read_der_file(path)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     fn read_certificate_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        Ok(Self::read_pem_file(path)?)
+        Self::read_pem_file(path)
     }
 }
 
@@ -74,13 +74,13 @@ impl EncodeCertificate for CertificateDocument {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_certificate_pem(&self, line_ending: LineEnding) -> Result<String> {
-        Ok(self.to_pem(line_ending)?)
+        self.to_pem(line_ending)
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_certificate_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        Ok(self.write_der_file(path)?)
+        self.write_der_file(path)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
@@ -90,7 +90,7 @@ impl EncodeCertificate for CertificateDocument {
         path: impl AsRef<Path>,
         line_ending: LineEnding,
     ) -> Result<()> {
-        Ok(self.write_pem_file(path, line_ending)?)
+        self.write_pem_file(path, line_ending)
     }
 }
 
