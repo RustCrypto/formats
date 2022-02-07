@@ -194,7 +194,7 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
 
-    assert_eq!(cert.tbs_certificate.version, 2);
+    assert_eq!(cert.tbs_certificate.version, X509Version::V3);
     let target_serial: [u8; 16] = [
         0x7F, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x49, 0xCF, 0x70, 0x66, 0x4D, 0x00, 0x00, 0x00,
         0x02,

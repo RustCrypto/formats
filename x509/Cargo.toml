@@ -23,7 +23,9 @@ x501 = { version = "=0.1.0-pre.0", path = "../x501" }
 hex-literal = "0.3"
 
 [features]
+alloc = ["der/alloc"]
 std = ["der/std"]
+pem = ["alloc", "der/pem"]
 
 [package.metadata.docs.rs]
 all-features = true

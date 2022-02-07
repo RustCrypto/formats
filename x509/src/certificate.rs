@@ -1,7 +1,9 @@
 //! Certificate [`Certificate`] and TBSCertificate [`TBSCertificate`] as defined in RFC 5280
 
 use der::asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes};
-use der::{Sequence, TagMode, TagNumber};
+use der::{
+    Decodable, Decoder, Encodable, Encoder, Error, FixedTag, Sequence, Tag, TagMode, TagNumber,
+};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use x501::name::Name;
 use x501::time::Validity;
@@ -24,6 +26,57 @@ pub fn default_zero() -> u32 {
 /// only support v3 certificates
 /// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
 pub const X509_CERT_VERSION: u8 = 2;
+
+/// Version identifier for X.509 certificates. In practice, only v3 is used.
+#[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd)]
+pub enum X509Version {
+    /// Denotes X.509 v1
+    V1 = 0,
+
+    /// Denotes X.509 v2 - added issuerUniqueID and subjectUniqueID (both of which have been deprecated)
+    V2 = 1,
+
+    /// Denotes X.509 v3 - add extensions
+    V3 = 2,
+}
+
+impl Decodable<'_> for X509Version {
+    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
+        X509Version::try_from(u8::decode(decoder)?).map_err(|_| Self::TAG.value_error())
+    }
+}
+
+impl Encodable for X509Version {
+    fn encoded_len(&self) -> der::Result<der::Length> {
+        der::Length::from(1u8).for_tlv()
+    }
+
+    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
+        u8::from(*self).encode(encoder)
+    }
+}
+
+impl FixedTag for X509Version {
+    const TAG: Tag = Tag::Integer;
+}
+
+impl From<X509Version> for u8 {
+    fn from(version: X509Version) -> Self {
+        version as u8
+    }
+}
+
+impl TryFrom<u8> for X509Version {
+    type Error = Error;
+    fn try_from(byte: u8) -> Result<X509Version, Error> {
+        match byte {
+            0 => Ok(X509Version::V1),
+            1 => Ok(X509Version::V2),
+            2 => Ok(X509Version::V3),
+            _ => Err(Self::TAG.value_error()),
+        }
+    }
+}
 
 /// X.509 `TBSCertificate` as defined in [RFC 5280 Section 4.1.2.5]
 ///
@@ -54,7 +107,7 @@ pub const X509_CERT_VERSION: u8 = 2;
 pub struct TBSCertificate<'a> {
     /// version         [0]  Version DEFAULT v1,
     //#[asn1(context_specific = "0", default = "default_zero_u8")]
-    pub version: u8,
+    pub version: X509Version,
     /// serialNumber         CertificateSerialNumber,
     pub serial_number: UIntBytes<'a>,
     /// signature            AlgorithmIdentifier{SIGNATURE-ALGORITHM, {SignatureAlgorithms}},
@@ -80,25 +133,37 @@ pub struct TBSCertificate<'a> {
 impl<'a> ::der::Decodable<'a> for TBSCertificate<'a> {
     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
         decoder.sequence(|decoder| {
-            let version =
+            let version_int =
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value)
                     .unwrap_or_else(default_zero_u8);
+            let version = X509Version::try_from(version_int)?;
             let serial_number = decoder.decode()?;
             let signature = decoder.decode()?;
             let issuer = decoder.decode()?;
             let validity = decoder.decode()?;
             let subject = decoder.decode()?;
             let subject_public_key_info = decoder.decode()?;
-            let issuer_unique_id =
+
+            let issuer_unique_id = if X509Version::V2 <= version {
                 ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            let subject_unique_id =
+                    .map(|cs| cs.value)
+            } else {
+                None
+            };
+            let subject_unique_id = if X509Version::V2 <= version {
                 ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N2)?
-                    .map(|cs| cs.value);
-            let extensions =
+                    .map(|cs| cs.value)
+            } else {
+                None
+            };
+            let extensions = if X509Version::V3 <= version {
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N3)?
-                    .map(|cs| cs.value);
+                    .map(|cs| cs.value)
+            } else {
+                None
+            };
+
             Ok(Self {
                 version,
                 serial_number,
@@ -121,13 +186,35 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
     where
         F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
+        let version_value: u8 = self.version.try_into()?;
+
+        let issuer_unique_id = if X509Version::V2 <= self.version {
+            &self.issuer_unique_id
+        } else {
+            &None
+        };
+        let subject_unique_id = if X509Version::V2 <= self.version {
+            &self.subject_unique_id
+        } else {
+            &None
+        };
+        let extensions = if X509Version::V3 <= self.version {
+            self.extensions.as_ref().map(|exts| ContextSpecific {
+                tag_number: EXTENSIONS_TAG,
+                tag_mode: TagMode::Explicit,
+                value: exts.clone(),
+            })
+        } else {
+            None
+        };
+
         #[allow(unused_imports)]
         use core::convert::TryFrom;
         f(&[
             &ContextSpecific {
                 tag_number: VERSION_TAG,
                 tag_mode: TagMode::Explicit,
-                value: self.version,
+                value: version_value,
             },
             &self.serial_number,
             &self.signature,
@@ -135,13 +222,9 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
             &self.validity,
             &self.subject,
             &self.subject_public_key_info,
-            &self.issuer_unique_id,
-            &self.subject_unique_id,
-            &self.extensions.as_ref().map(|exts| ContextSpecific {
-                tag_number: EXTENSIONS_TAG,
-                tag_mode: TagMode::Explicit,
-                value: exts.clone(),
-            }),
+            issuer_unique_id,
+            subject_unique_id,
+            &extensions,
         ])
     }
 }
