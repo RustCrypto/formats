@@ -46,7 +46,7 @@ pub type AttributeValue<'a> = Any<'a>;
 #[derive(Clone, Debug, PartialEq, Eq, Sequence, ValueOrd)]
 pub struct Attribute<'a> {
     /// Attribute type (OID).
-    pub kind: AttributeType,
+    pub oid: AttributeType,
 
     /// Attribute values.
     pub values: SetOfVec<AttributeValue<'a>>,
