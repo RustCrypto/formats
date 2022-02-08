@@ -10,7 +10,7 @@ use x501::name::Name;
 use x501::time::Validity;
 
 /// returns false in support of integer DEFAULT fields set to 0
-pub fn default_v1() -> Version {
+fn default_v1() -> Version {
     Version::V1
 }
 
