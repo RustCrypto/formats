@@ -1,7 +1,6 @@
 //! Extensions [`Extensions`] as defined in RFC 5280
 
-use crate::general_name::GeneralName;
-use crate::general_name::GeneralNames;
+use crate::ext::pkix::name::{GeneralName, GeneralNames};
 
 use alloc::vec::Vec;
 
