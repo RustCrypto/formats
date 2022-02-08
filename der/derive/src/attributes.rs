@@ -78,6 +78,9 @@ pub(crate) struct FieldAttrs {
     /// Inherits from the type-level tagging mode if specified, or otherwise
     /// defaults to `EXPLICIT`.
     pub tag_mode: TagMode,
+
+    /// Is the inner type constructed?
+    pub constructed: bool,
 }
 
 impl FieldAttrs {
@@ -97,6 +100,7 @@ impl FieldAttrs {
         let mut extensible = None;
         let mut optional = None;
         let mut tag_mode = None;
+        let mut constructed = None;
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
@@ -146,6 +150,13 @@ impl FieldAttrs {
                 }
 
                 asn1_type = Some(ty);
+            // `constructed = "..."` attribute
+            } else if let Some(ty) = attr.parse_value("constructed") {
+                if constructed.is_some() {
+                    abort!(attr.name, "duplicate ASN.1 `constructed` attribute: {}");
+                }
+
+                constructed = Some(ty);
             } else {
                 abort!(
                     attr.name,
@@ -162,6 +173,7 @@ impl FieldAttrs {
             extensible: extensible.unwrap_or_default(),
             optional: optional.unwrap_or_default(),
             tag_mode: tag_mode.unwrap_or(type_attrs.tag_mode),
+            constructed: constructed.unwrap_or_default(),
         }
     }
 
@@ -173,8 +185,7 @@ impl FieldAttrs {
                 .context_specific
                 .map(|tag_number| {
                     Some(Tag::ContextSpecific {
-                        // TODO(tarcieri): handle constructed inner types
-                        constructed: false,
+                        constructed: self.constructed,
                         number: tag_number,
                     })
                 })
@@ -226,11 +237,12 @@ impl FieldAttrs {
                 }
             } else {
                 // TODO(tarcieri): better error handling?
+                let constructed = self.constructed;
                 quote! {
                     #context_specific.ok_or_else(|| {
                         der::Tag::ContextSpecific {
                             number: #tag_number,
-                            constructed: false
+                            constructed: #constructed
                         }.value_error()
                     })?.value
                 }
