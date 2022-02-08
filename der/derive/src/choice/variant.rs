@@ -67,8 +67,22 @@ impl ChoiceVariant {
     /// Derive a match arm for the impl body for `der::EncodeValue::value_len`.
     pub(super) fn to_value_len_tokens(&self) -> TokenStream {
         let ident = &self.ident;
-        quote! {
-            Self::#ident(variant) => variant.value_len(),
+
+        match self.attrs.context_specific {
+            Some(tag_number) => {
+                let tag_number = tag_number.to_tokens();
+                let tag_mode = self.attrs.tag_mode.to_tokens();
+
+                quote! {
+                    Self::#ident(variant) => ::der::asn1::ContextSpecificRef {
+                        tag_number: #tag_number,
+                        tag_mode: #tag_mode,
+                        value: variant,
+                    }.value_len(),
+                }
+            }
+
+            _ => quote! { Self::#ident(variant) => variant.value_len(), },
         }
     }
 
