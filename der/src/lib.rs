@@ -326,6 +326,7 @@
 //! [`Utf8String`]: asn1::Utf8String
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(test, macro_use)]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
