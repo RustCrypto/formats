@@ -1,6 +1,6 @@
 //! Certificate tests
 use der::asn1::{BitString, UIntBytes};
-use der::{Decodable, Decoder, Encodable, Tag, Tagged};
+use der::{Decodable, Decoder, Encodable, ErrorKind, Tag, Tagged};
 use hex_literal::hex;
 use x509::Certificate;
 use x509::*;
@@ -67,7 +67,9 @@ pub struct DeferDecodeTBSCertificate<'a> {
     /// Defer decoded field
     pub extensions: &'a [u8],
 }
-
+pub fn default_zero_u8() -> u8 {
+    0
+}
 impl<'a> Decodable<'a> for DeferDecodeTBSCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<DeferDecodeTBSCertificate<'a>> {
         decoder.sequence(|decoder| {
@@ -97,6 +99,25 @@ impl<'a> Decodable<'a> for DeferDecodeTBSCertificate<'a> {
                 extensions,
             })
         })
+    }
+}
+
+#[test]
+fn unusual_x509_versions() {
+    let der_encoded_cert = include_bytes!("examples/v1_cert.der");
+    let defer_cert = DeferDecodeCertificate::from_der(der_encoded_cert).unwrap();
+
+    let parsed_tbs = TBSCertificate::from_der(defer_cert.tbs_certificate).unwrap();
+    let reencoded_tbs = parsed_tbs.to_vec().unwrap();
+    assert_eq!(defer_cert.tbs_certificate, reencoded_tbs);
+
+    let der_encoded_cert = include_bytes!("examples/invalid_version.der");
+    let defer_cert = DeferDecodeCertificate::from_der(der_encoded_cert).unwrap();
+
+    let r = TBSCertificate::from_der(defer_cert.tbs_certificate);
+    assert!(r.is_err());
+    if let Err(e) = r {
+        assert_eq!(e.kind(), ErrorKind::Value { tag: Tag::Integer });
     }
 }
 

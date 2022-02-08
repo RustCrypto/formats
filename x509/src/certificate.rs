@@ -10,8 +10,8 @@ use x501::name::Name;
 use x501::time::Validity;
 
 /// returns false in support of integer DEFAULT fields set to 0
-pub fn default_zero_u8() -> u8 {
-    0
+pub fn default_v1() -> Version {
+    Version::V1
 }
 
 /// returns false in support of boolean DEFAULT fields
@@ -112,7 +112,7 @@ impl TryFrom<u8> for Version {
 #[derive(Clone, Eq, PartialEq)]
 pub struct TBSCertificate<'a> {
     /// version         [0]  Version DEFAULT v1,
-    //#[asn1(context_specific = "0", default = "default_zero_u8")]
+    //#[asn1(context_specific = "0", default = "default_v1")]
     pub version: Version,
     /// serialNumber         CertificateSerialNumber,
     pub serial_number: UIntBytes<'a>,
@@ -139,11 +139,10 @@ pub struct TBSCertificate<'a> {
 impl<'a> ::der::Decodable<'a> for TBSCertificate<'a> {
     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
         decoder.sequence(|decoder| {
-            let version_int =
+            let version =
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value)
-                    .unwrap_or_else(default_zero_u8);
-            let version = Version::try_from(version_int)?;
+                    .unwrap_or_else(default_v1);
             let serial_number = decoder.decode()?;
             let signature = decoder.decode()?;
             let issuer = decoder.decode()?;
@@ -192,6 +191,12 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
     where
         F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
+        let version = &ContextSpecific {
+            tag_number: VERSION_TAG,
+            tag_mode: TagMode::Explicit,
+            value: self.version,
+        };
+
         let issuer_unique_id = if Version::V2 <= self.version {
             &self.issuer_unique_id
         } else {
@@ -215,11 +220,11 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
         #[allow(unused_imports)]
         use core::convert::TryFrom;
         f(&[
-            &ContextSpecific {
-                tag_number: VERSION_TAG,
-                tag_mode: TagMode::Explicit,
-                value: self.version,
-            },
+            &::der::asn1::OptionalRef(if self.version == Version::V1 {
+                None
+            } else {
+                Some(version)
+            }),
             &self.serial_number,
             &self.signature,
             &self.issuer,
