@@ -1,6 +1,5 @@
 //! CertificateDocument implementation
 
-use crate::certificate_traits::*;
 use crate::Certificate;
 use der::{Error, Result};
 
@@ -40,52 +39,60 @@ impl<'a> Document<'a> for CertificateDocument {
     const SENSITIVE: bool = false;
 }
 
-impl DecodeCertificate for CertificateDocument {
-    fn from_certificate_der(bytes: &[u8]) -> Result<Self> {
+impl CertificateDocument {
+    /// Parse [`Certificate`] from buffer containing DER-encoded certificate
+    pub fn from_certificate_der(bytes: &[u8]) -> Result<Self> {
         Self::from_der(bytes)
     }
 
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn from_certificate_pem(s: &str) -> Result<Self> {
+    /// Parse [`Certificate`] from buffer containing PEM-encoded certificate
+    pub fn from_certificate_pem(s: &str) -> Result<Self> {
         Self::from_pem(s)
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_certificate_der_file(path: impl AsRef<Path>) -> Result<Self> {
+    /// Read DER-encdoed [`Certificate`] from file
+    pub fn read_certificate_der_file(path: impl AsRef<Path>) -> Result<Self> {
         Self::read_der_file(path)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
-    fn read_certificate_pem_file(path: impl AsRef<Path>) -> Result<Self> {
+    /// Read PEM-encdoed [`Certificate`] from file
+    pub fn read_certificate_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         Self::read_pem_file(path)
     }
 }
 
 #[cfg(any(feature = "alloc", feature = "std"))]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl EncodeCertificate for CertificateDocument {
-    fn to_certificate_der(&self) -> Result<CertificateDocument> {
+impl CertificateDocument {
+    /// Generate DER-encoded [`Certificate`]
+    pub fn to_certificate_der(&self) -> Result<CertificateDocument> {
         Ok(self.clone())
     }
 
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_certificate_pem(&self, line_ending: LineEnding) -> Result<String> {
+    /// Generate PEM-encoded [`Certificate`]
+    pub fn to_certificate_pem(&self, line_ending: LineEnding) -> Result<String> {
         self.to_pem(line_ending)
     }
 
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_certificate_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
+    /// Write DER-encoded [`Certificate`] to a file
+    pub fn write_certificate_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         self.write_der_file(path)
     }
 
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
-    fn write_certificate_pem_file(
+    /// Write PEM-encoded [`Certificate`] to a file
+    pub fn write_certificate_pem_file(
         &self,
         path: impl AsRef<Path>,
         line_ending: LineEnding,

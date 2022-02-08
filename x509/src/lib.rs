@@ -16,7 +16,6 @@ extern crate std;
 
 pub mod certificate;
 pub mod certificate_document;
-pub mod certificate_traits;
 pub mod extensions_utils;
 pub mod general_name;
 pub mod pkix_extensions;

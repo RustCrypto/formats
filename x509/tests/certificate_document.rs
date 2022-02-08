@@ -1,7 +1,6 @@
 //! Certificate document tests
 use crate::certificate_document::CertificateDocument;
 use der::Document;
-use x509::certificate_traits::DecodeCertificate;
 
 #[cfg(all(feature = "pem", any(feature = "alloc", feature = "std")))]
 use der::Encodable;
@@ -43,8 +42,6 @@ fn decode_cert_der_file() {
 #[test]
 #[cfg(all(feature = "pem", any(feature = "alloc", feature = "std")))]
 fn decode_cert_pem() {
-    use x509::certificate_traits::EncodeCertificate;
-
     let doc: CertificateDocument = CERT_PEM_EXAMPLE.parse().unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
 
@@ -91,8 +88,6 @@ fn encode_cert_der() {
 #[test]
 #[cfg(feature = "std")]
 fn write_cert_der() {
-    use x509::certificate_traits::EncodeCertificate;
-
     let doc: CertificateDocument =
         CertificateDocument::from_certificate_der(CERT_DER_EXAMPLE).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
@@ -116,8 +111,6 @@ fn write_cert_der() {
 #[test]
 #[cfg(all(feature = "pem", any(feature = "alloc", feature = "std")))]
 fn encode_cert_pem() {
-    use x509::certificate_traits::EncodeCertificate;
-
     let pk = Certificate::try_from(CERT_DER_EXAMPLE).unwrap();
     let pk_encoded = CertificateDocument::try_from(pk)
         .unwrap()
@@ -130,8 +123,6 @@ fn encode_cert_pem() {
 #[test]
 #[cfg(all(feature = "std", feature = "pem"))]
 fn write_cert_pem() {
-    use x509::certificate_traits::EncodeCertificate;
-
     let doc: CertificateDocument =
         CertificateDocument::from_certificate_der(CERT_DER_EXAMPLE).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
