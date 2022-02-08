@@ -7,7 +7,7 @@ use crate::{
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use {alloc::vec::Vec, core::slice};
+use {crate::Error, alloc::vec::Vec, core::slice};
 
 /// ASN.1 `SET OF` backed by an array.
 ///
@@ -200,6 +200,11 @@ where
         self.inner.get(index)
     }
 
+    /// Convert this [`SetOfVec`] into the inner [`Vec`].
+    pub fn into_vec(self) -> Vec<T> {
+        self.inner
+    }
+
     /// Iterate over the elements of this [`SetOfVec`].
     pub fn iter(&self) -> slice::Iter<'_, T> {
         self.inner.iter()
@@ -213,6 +218,17 @@ where
     /// Number of elements in this [`SetOfVec`].
     pub fn len(&self) -> usize {
         self.inner.len()
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<T> AsRef<[T]> for SetOfVec<T>
+where
+    T: Clone + DerOrd,
+{
+    fn as_ref(&self) -> &[T] {
+        &self.inner
     }
 }
 
@@ -267,44 +283,43 @@ where
     const TAG: Tag = Tag::Set;
 }
 
-/// Construct a [`SetOfVec`] from a [`Vec`], sorting the elements using the
-/// [`DerOrd`] trait.
-///
-/// # Panics
-///
-/// The current implementation will panic if [`DerOrd::der_cmp`] returns an
-/// error.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<T> From<Vec<T>> for SetOfVec<T>
+impl<T> From<SetOfVec<T>> for Vec<T>
 where
     T: Clone + DerOrd,
 {
-    fn from(mut vec: Vec<T>) -> SetOfVec<T> {
-        // TODO(tarcieri): avoid panics
-        vec.sort_by(|a, b| a.der_cmp(b).expect("der_cmp error"));
-        SetOfVec { inner: vec }
+    fn from(set: SetOfVec<T>) -> Vec<T> {
+        set.into_vec()
     }
 }
 
-/// Construct a [`SetOfVec`] from an iterator, determining the ordering using
-/// the [`DerOrd`] trait.
-///
-/// # Panics
-///
-/// The current implementation will panic if [`DerOrd::der_cmp`] returns an
-/// error.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<T> FromIterator<T> for SetOfVec<T>
+impl<T> TryFrom<Vec<T>> for SetOfVec<T>
 where
     T: Clone + DerOrd,
 {
-    fn from_iter<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = T>,
-    {
-        iter.into_iter().collect::<Vec<T>>().into()
+    type Error = Error;
+
+    fn try_from(mut vec: Vec<T>) -> Result<SetOfVec<T>> {
+        if vec.len() > 1 {
+            // Use `Ordering::Less` as a placeholder in the event of comparison failure
+            vec.sort_by(|a, b| a.der_cmp(b).unwrap_or(Ordering::Less));
+
+            // Perform a pass over the elements to ensure they're sorted
+            for i in 0..(vec.len() - 1) {
+                match vec.get(i..(i + 2)) {
+                    Some([a, b]) => match a.der_cmp(b) {
+                        Ok(Ordering::Less) | Ok(Ordering::Equal) => (),
+                        _ => return Err(ErrorKind::SetOrdering.into()),
+                    },
+                    _ => return Err(ErrorKind::SetOrdering.into()),
+                }
+            }
+        }
+
+        Ok(SetOfVec { inner: vec })
     }
 }
 
@@ -316,5 +331,19 @@ where
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         iter_cmp(self.iter(), other.iter())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "alloc")]
+    use super::SetOfVec;
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn setofvec_tryfrom_vec() {
+        let vec = vec![3u16, 2, 1, 65535, 0];
+        let set = SetOfVec::try_from(vec).unwrap();
+        assert_eq!(set.as_ref(), &[0, 1, 2, 3, 65535]);
     }
 }
