@@ -1,8 +1,6 @@
 //! Extensions [`Extensions`] as defined in RFC 5280
 
 use crate::default_zero;
-use crate::general_name::GeneralName;
-use crate::general_name::GeneralNames;
 
 use alloc::vec::Vec;
 use der::asn1::{
@@ -16,6 +14,7 @@ use der::{
 };
 use x501::attr::AttributeTypeAndValue;
 use x501::name::RelativeDistinguishedName;
+use x509_ext::pkix::name::{GeneralName, GeneralNames};
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
 ///

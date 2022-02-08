@@ -3,6 +3,7 @@ use hex_literal::hex;
 use x509::der::{DecodeValue, Encodable};
 use x509::trust_anchor_format::TrustAnchorChoice;
 use x509::*;
+use x509_ext::pkix::name::GeneralName;
 
 #[test]
 fn decode_ta1() {
