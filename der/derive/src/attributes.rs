@@ -179,19 +179,16 @@ impl FieldAttrs {
 
     /// Get the expected [`Tag`] for this field.
     pub fn tag(&self) -> Option<Tag> {
-        match self.tag_mode {
-            TagMode::Explicit => self.asn1_type.map(Tag::Universal),
-            TagMode::Implicit => self
-                .context_specific
-                .map(|tag_number| {
-                    Some(Tag::ContextSpecific {
-                        constructed: self.constructed,
-                        number: tag_number,
-                    })
-                })
-                .unwrap_or_else(|| {
-                    abort_call_site!("implicit tagging requires an associated `tag_number`")
-                }),
+        match self.context_specific {
+            Some(tag_number) => Some(Tag::ContextSpecific {
+                constructed: self.constructed,
+                number: tag_number,
+            }),
+
+            None => match self.tag_mode {
+                TagMode::Explicit => self.asn1_type.map(Tag::Universal),
+                TagMode::Implicit => abort_call_site!("implicit tagging requires a `tag_number`"),
+            },
         }
     }
 
