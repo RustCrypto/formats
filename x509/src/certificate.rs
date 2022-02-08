@@ -54,7 +54,7 @@ impl DecodeValue<'_> for Version {
 
 impl EncodeValue for Version {
     fn value_len(&self) -> der::Result<der::Length> {
-        Length::ONE.for_tlv()
+        Ok(Length::ONE)
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
@@ -192,8 +192,6 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
     where
         F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
     {
-        let version_value: u8 = self.version.try_into()?;
-
         let issuer_unique_id = if Version::V2 <= self.version {
             &self.issuer_unique_id
         } else {
@@ -220,7 +218,7 @@ impl<'a> ::der::Sequence<'a> for TBSCertificate<'a> {
             &ContextSpecific {
                 tag_number: VERSION_TAG,
                 tag_mode: TagMode::Explicit,
-                value: version_value,
+                value: self.version,
             },
             &self.serial_number,
             &self.signature,
