@@ -2,8 +2,8 @@
 
 use der::asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes};
 use der::{
-    Decodable, Decoder, Encodable, Encoder, Error, FixedTag, Length, Sequence, Tag, TagMode,
-    TagNumber,
+    DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Header, Length, Sequence, Tag,
+    TagMode, TagNumber,
 };
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use x501::name::Name;
@@ -46,19 +46,19 @@ impl Default for Version {
     }
 }
 
-impl Decodable<'_> for Version {
-    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
-        Version::try_from(u8::decode(decoder)?).map_err(|_| Self::TAG.value_error())
+impl DecodeValue<'_> for Version {
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> der::Result<Self> {
+        Version::try_from(u8::decode_value(decoder, header)?).map_err(|_| Self::TAG.value_error())
     }
 }
 
-impl Encodable for Version {
-    fn encoded_len(&self) -> der::Result<der::Length> {
+impl EncodeValue for Version {
+    fn value_len(&self) -> der::Result<der::Length> {
         Length::ONE.for_tlv()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        u8::from(*self).encode(encoder)
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
+        u8::from(*self).encode_value(encoder)
     }
 }
 
