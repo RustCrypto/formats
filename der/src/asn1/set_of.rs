@@ -2,12 +2,12 @@
 
 use crate::{
     arrayvec, ord::iter_cmp, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable,
-    EncodeValue, Encoder, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
+    EncodeValue, Encoder, Error, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
 };
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use {crate::Error, alloc::vec::Vec, core::slice};
+use {alloc::vec::Vec, core::slice};
 
 /// ASN.1 `SET OF` backed by an array.
 ///
@@ -18,14 +18,14 @@ use {crate::Error, alloc::vec::Vec, core::slice};
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct SetOf<T, const N: usize>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     inner: ArrayVec<T, N>,
 }
 
 impl<T, const N: usize> SetOf<T, N>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     /// Create a new [`SetOf`].
     pub fn new() -> Self {
@@ -74,7 +74,7 @@ where
 
 impl<T, const N: usize> Default for SetOf<T, N>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     fn default() -> Self {
         Self::new()
@@ -83,7 +83,7 @@ where
 
 impl<'a, T, const N: usize> DecodeValue<'a> for SetOf<T, N>
 where
-    T: Clone + Decodable<'a> + DerOrd,
+    T: Decodable<'a> + DerOrd,
 {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         let end_pos = (decoder.position() + header.length)?;
@@ -103,7 +103,7 @@ where
 
 impl<'a, T, const N: usize> EncodeValue for SetOf<T, N>
 where
-    T: 'a + Clone + Decodable<'a> + Encodable + DerOrd,
+    T: 'a + Decodable<'a> + Encodable + DerOrd,
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
@@ -121,14 +121,33 @@ where
 
 impl<'a, T, const N: usize> FixedTag for SetOf<T, N>
 where
-    T: Clone + Decodable<'a> + DerOrd,
+    T: Decodable<'a> + DerOrd,
 {
     const TAG: Tag = Tag::Set;
 }
 
+impl<T, const N: usize> TryFrom<[T; N]> for SetOf<T, N>
+where
+    T: DerOrd,
+{
+    type Error = Error;
+
+    fn try_from(mut arr: [T; N]) -> Result<SetOf<T, N>> {
+        der_sort(&mut arr)?;
+
+        let mut result = SetOf::new();
+
+        for elem in arr {
+            result.add(elem)?;
+        }
+
+        Ok(result)
+    }
+}
+
 impl<T, const N: usize> ValueOrd for SetOf<T, N>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         iter_cmp(self.iter(), other.iter())
@@ -161,7 +180,7 @@ impl<'a, T> ExactSizeIterator for SetOfIter<'a, T> {}
 #[derive(Clone, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
 pub struct SetOfVec<T>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     inner: Vec<T>,
 }
@@ -170,7 +189,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> SetOfVec<T>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     /// Create a new [`SetOfVec`].
     pub fn new() -> Self {
@@ -193,6 +212,11 @@ where
 
         self.inner.push(new_elem);
         Ok(())
+    }
+
+    /// Borrow the elements of this [`SetOfVec`] as a slice.
+    pub fn as_slice(&self) -> &[T] {
+        self.inner.as_slice()
     }
 
     /// Get the nth element from this [`SetOfVec`].
@@ -225,10 +249,10 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> AsRef<[T]> for SetOfVec<T>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     fn as_ref(&self) -> &[T] {
-        &self.inner
+        self.as_slice()
     }
 }
 
@@ -236,7 +260,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> DecodeValue<'a> for SetOfVec<T>
 where
-    T: Clone + Decodable<'a> + DerOrd,
+    T: Decodable<'a> + DerOrd,
 {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         let end_pos = (decoder.position() + header.length)?;
@@ -258,7 +282,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> EncodeValue for SetOfVec<T>
 where
-    T: 'a + Clone + Decodable<'a> + Encodable + DerOrd,
+    T: 'a + Decodable<'a> + Encodable + DerOrd,
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
@@ -278,7 +302,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> FixedTag for SetOfVec<T>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     const TAG: Tag = Tag::Set;
 }
@@ -287,7 +311,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> From<SetOfVec<T>> for Vec<T>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     fn from(set: SetOfVec<T>) -> Vec<T> {
         set.into_vec()
@@ -298,28 +322,27 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> TryFrom<Vec<T>> for SetOfVec<T>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     type Error = Error;
 
     fn try_from(mut vec: Vec<T>) -> Result<SetOfVec<T>> {
-        if vec.len() > 1 {
-            // Use `Ordering::Less` as a placeholder in the event of comparison failure
-            vec.sort_by(|a, b| a.der_cmp(b).unwrap_or(Ordering::Less));
-
-            // Perform a pass over the elements to ensure they're sorted
-            for i in 0..(vec.len() - 1) {
-                match vec.get(i..(i + 2)) {
-                    Some([a, b]) => match a.der_cmp(b) {
-                        Ok(Ordering::Less) | Ok(Ordering::Equal) => (),
-                        _ => return Err(ErrorKind::SetOrdering.into()),
-                    },
-                    _ => return Err(ErrorKind::SetOrdering.into()),
-                }
-            }
-        }
-
+        // TODO(tarcieri): use `[T]::sort_by` here?
+        der_sort(vec.as_mut_slice())?;
         Ok(SetOfVec { inner: vec })
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<T, const N: usize> TryFrom<[T; N]> for SetOfVec<T>
+where
+    T: DerOrd,
+{
+    type Error = Error;
+
+    fn try_from(arr: [T; N]) -> Result<SetOfVec<T>> {
+        Vec::from(arr).try_into()
     }
 }
 
@@ -327,17 +350,56 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> ValueOrd for SetOfVec<T>
 where
-    T: Clone + DerOrd,
+    T: DerOrd,
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         iter_cmp(self.iter(), other.iter())
     }
 }
 
-#[cfg(test)]
+/// Sort a mut slice according to its [`DerOrd`], returning any errors which
+/// might occur during the comparison.
+///
+/// The algorithm is insertion sort, which should perform well when the input
+/// is mostly sorted to begin with.
+///
+/// This function is used rather than Rust's built-in `[T]::sort_by` in order
+/// to support heapless `no_std` targets as well as to enable bubbling up
+/// sorting errors.
+fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
+    for i in 1..=slice.len() {
+        let mut j = i - 1;
+
+        while j > 0 && slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
+            slice.swap(j - 1, j);
+            j -= 1;
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
-    #[cfg(feature = "alloc")]
-    use super::SetOfVec;
+    use super::{SetOf, SetOfVec};
+    use alloc::vec::Vec;
+
+    #[test]
+    fn setof_tryfrom_array() {
+        let arr = [3u16, 2, 1, 65535, 0];
+        let set = SetOf::try_from(arr).unwrap();
+        assert_eq!(
+            set.iter().cloned().collect::<Vec<u16>>(),
+            &[0, 1, 2, 3, 65535]
+        );
+    }
+
+    #[test]
+    fn setofvec_tryfrom_array() {
+        let arr = [3u16, 2, 1, 65535, 0];
+        let set = SetOfVec::try_from(arr).unwrap();
+        assert_eq!(set.as_ref(), &[0, 1, 2, 3, 65535]);
+    }
 
     #[cfg(feature = "alloc")]
     #[test]
