@@ -93,6 +93,11 @@
 //! - `UTCTime`: performs an intermediate conversion to [`der::asn1::UtcTime`]
 //! - `UTF8String`: performs an intermediate conversion to [`der::asn1::Utf8String`]
 //!
+//! ### `#[asn1(constructed = "...")]` attribute: support for constructed inner types
+//!
+//! This attribute can be used to specify that an "inner" type is constructed. It is most
+//! commonly used when a `CHOICE` has a constructed inner type.
+//!
 //! Note: please open a GitHub Issue if you would like to request support
 //! for additional ASN.1 types.
 //!

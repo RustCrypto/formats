@@ -280,6 +280,7 @@ mod tests {
             extensible: false,
             optional: false,
             tag_mode: TagMode::Explicit,
+            constructed: false,
         };
 
         let field_type = Ident::new("String", span);
@@ -319,6 +320,7 @@ mod tests {
             extensible: false,
             optional: false,
             tag_mode: TagMode::Implicit,
+            constructed: false,
         };
 
         let field_type = Ident::new("String", span);
