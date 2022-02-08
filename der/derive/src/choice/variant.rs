@@ -47,8 +47,10 @@ impl ChoiceVariant {
         let tag = self.tag.to_tokens();
         let ident = &self.ident;
         let decoder = self.attrs.decoder();
-        quote! {
-            #tag => Ok(Self::#ident(#decoder.try_into()?)),
+
+        match self.attrs.asn1_type {
+            Some(..) => quote! { #tag => Ok(Self::#ident(#decoder.try_into()?)), },
+            None => quote! { #tag => Ok(Self::#ident(#decoder)), },
         }
     }
 
@@ -103,7 +105,6 @@ mod tests {
             quote! {
                 ::der::Tag::Utf8String => Ok(Self::ExampleVariant(
                     decoder.decode()?
-                    .try_into()?
                 )),
             }
             .to_string()
@@ -113,6 +114,55 @@ mod tests {
             variant.to_encode_value_tokens().to_string(),
             quote! {
                 Self::ExampleVariant(variant) => encoder.encode_value(variant)?,
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            variant.to_value_len_tokens().to_string(),
+            quote! {
+                Self::ExampleVariant(variant) => variant.value_len(),
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            variant.to_tagged_tokens().to_string(),
+            quote! {
+                Self::ExampleVariant(_) => ::der::Tag::Utf8String,
+            }
+            .to_string()
+        )
+    }
+
+    #[test]
+    fn utf8string() {
+        let span = Span::call_site();
+
+        let variant = ChoiceVariant {
+            ident: Ident::new("ExampleVariant", span),
+            attrs: FieldAttrs {
+                asn1_type: Some(Asn1Type::Utf8String),
+                ..Default::default()
+            },
+            tag: Tag::Universal(Asn1Type::Utf8String),
+        };
+
+        assert_eq!(
+            variant.to_decode_tokens().to_string(),
+            quote! {
+                ::der::Tag::Utf8String => Ok(Self::ExampleVariant(
+                    decoder.utf8_string()?
+                    .try_into()?
+                )),
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            variant.to_encode_value_tokens().to_string(),
+            quote! {
+                Self::ExampleVariant(variant) => ::der::asn1::Utf8String::new(variant)?.encode_value(encoder),
             }
             .to_string()
         );
@@ -153,7 +203,7 @@ mod tests {
                 ::der::Tag::ContextSpecific {
                     constructed: false,
                     number: ::der::TagNumber::N0,
-                } => Ok(Self::ImplicitVariant(decoder.decode()?.try_into()?)),
+                } => Ok(Self::ImplicitVariant(decoder.decode()?)),
             }
             .to_string()
         );
