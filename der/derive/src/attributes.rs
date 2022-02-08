@@ -247,19 +247,28 @@ impl FieldAttrs {
         }
     }
 
-    /// Get a `der::Encoder` object which respects these field attributes.
-    pub fn encoder(&self, binding: &TokenStream) -> TokenStream {
-        if let Some(tag_number) = self.context_specific {
-            let tag_number = tag_number.to_tokens();
-            let tag_mode = self.tag_mode.to_tokens();
-            quote!(encoder.context_specific(#tag_number, #tag_mode, #binding))
-        } else {
-            self.asn1_type
+    /// Get tokens to encode the binding using `::der::EncodeValue`.
+    pub fn value_encode(&self, binding: &TokenStream) -> TokenStream {
+        match self.context_specific {
+            Some(tag_number) => {
+                let tag_number = tag_number.to_tokens();
+                let tag_mode = self.tag_mode.to_tokens();
+                quote! {
+                    ::der::asn1::ContextSpecificRef {
+                        tag_number: #tag_number,
+                        tag_mode: #tag_mode,
+                        value: #binding,
+                    }.encode_value(encoder)
+                }
+            }
+
+            None => self
+                .asn1_type
                 .map(|ty| {
                     let encoder_obj = ty.encoder(binding);
-                    quote!(#encoder_obj.encode(encoder))
+                    quote!(#encoder_obj.encode_value(encoder))
                 })
-                .unwrap_or_else(|| quote!(encoder.encode(#binding)?))
+                .unwrap_or_else(|| quote!(encoder.encode_value(#binding)?)),
         }
     }
 }

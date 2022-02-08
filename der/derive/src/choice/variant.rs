@@ -52,21 +52,21 @@ impl ChoiceVariant {
         }
     }
 
-    /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    pub(super) fn to_encode_tokens(&self) -> TokenStream {
+    /// Derive a match arm for the impl body for `der::EncodeValue::encode_value`.
+    pub(super) fn to_encode_value_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         let binding = quote!(variant);
-        let encoder = self.attrs.encoder(&binding);
+        let encoder = self.attrs.value_encode(&binding);
         quote! {
             Self::#ident(#binding) => #encoder,
         }
     }
 
-    /// Derive a match arm for the impl body for `der::Encodable::encode`.
-    pub(super) fn to_encoded_len_tokens(&self) -> TokenStream {
+    /// Derive a match arm for the impl body for `der::EncodeValue::value_len`.
+    pub(super) fn to_value_len_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         quote! {
-            Self::#ident(variant) => variant.encoded_len(),
+            Self::#ident(variant) => variant.value_len(),
         }
     }
 
@@ -110,17 +110,17 @@ mod tests {
         );
 
         assert_eq!(
-            variant.to_encode_tokens().to_string(),
+            variant.to_encode_value_tokens().to_string(),
             quote! {
-                Self::ExampleVariant(variant) => encoder.encode(variant)?,
+                Self::ExampleVariant(variant) => encoder.encode_value(variant)?,
             }
             .to_string()
         );
 
         assert_eq!(
-            variant.to_encoded_len_tokens().to_string(),
+            variant.to_value_len_tokens().to_string(),
             quote! {
-                Self::ExampleVariant(variant) => variant.encoded_len(),
+                Self::ExampleVariant(variant) => variant.value_len(),
             }
             .to_string()
         );
@@ -159,17 +159,17 @@ mod tests {
         );
 
         assert_eq!(
-            variant.to_encode_tokens().to_string(),
+            variant.to_encode_value_tokens().to_string(),
             quote! {
-                Self::ImplicitVariant(variant) => encoder.encode(variant)?,
+                Self::ImplicitVariant(variant) => encoder.encode_value(variant)?,
             }
             .to_string()
         );
 
         assert_eq!(
-            variant.to_encoded_len_tokens().to_string(),
+            variant.to_value_len_tokens().to_string(),
             quote! {
-                Self::ImplicitVariant(variant) => variant.encoded_len(),
+                Self::ImplicitVariant(variant) => variant.value_len(),
             }
             .to_string()
         );
