@@ -13,6 +13,8 @@ use der::{asn1::ObjectIdentifier, Sequence};
 
 extern crate alloc;
 
+pub mod pkix;
+
 /// Extension as defined in [RFC 5280 Section 4.1.2.9].
 ///
 /// The ASN.1 definition for Extension objects is below. The extnValue type may
