@@ -24,8 +24,7 @@ const CERT_PEM_EXAMPLE: &str = include_str!("examples/amazon.pem");
 #[cfg(all(feature = "pem", feature = "std"))]
 fn decode_cert_pem_file() {
     let doc: CertificateDocument =
-        CertificateDocument::read_certificate_pem_file(Path::new("tests/examples/amazon.pem"))
-            .unwrap();
+        CertificateDocument::read_pem_file(Path::new("tests/examples/amazon.pem")).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
 }
 
@@ -34,8 +33,7 @@ fn decode_cert_pem_file() {
 fn decode_cert_der_file() {
     use crate::certificate_document::CertificateDocument;
     let doc: CertificateDocument =
-        CertificateDocument::read_certificate_der_file(Path::new("tests/examples/amazon.der"))
-            .unwrap();
+        CertificateDocument::read_der_file(Path::new("tests/examples/amazon.der")).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
 }
 
@@ -48,28 +46,20 @@ fn decode_cert_pem() {
     // Ensure `CertificateDocument` parses successfully
     let cert = Certificate::try_from(CERT_DER_EXAMPLE).unwrap();
     assert_eq!(doc.decode(), cert);
-    assert_eq!(
-        doc.to_certificate_pem(LineEnding::default()).unwrap(),
-        CERT_PEM_EXAMPLE
-    );
+    assert_eq!(doc.to_pem(LineEnding::default()).unwrap(), CERT_PEM_EXAMPLE);
 
-    let doc: CertificateDocument =
-        CertificateDocument::from_certificate_pem(CERT_PEM_EXAMPLE).unwrap();
+    let doc: CertificateDocument = CertificateDocument::from_pem(CERT_PEM_EXAMPLE).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
 
     // Ensure `CertificateDocument` parses successfully
     let cert = Certificate::try_from(CERT_DER_EXAMPLE).unwrap();
     assert_eq!(doc.decode(), cert);
-    assert_eq!(
-        doc.to_certificate_pem(LineEnding::default()).unwrap(),
-        CERT_PEM_EXAMPLE
-    );
+    assert_eq!(doc.to_pem(LineEnding::default()).unwrap(), CERT_PEM_EXAMPLE);
 }
 
 #[test]
 fn decode_cert_der() {
-    let doc: CertificateDocument =
-        CertificateDocument::from_certificate_der(CERT_DER_EXAMPLE).unwrap();
+    let doc: CertificateDocument = CertificateDocument::from_der(CERT_DER_EXAMPLE).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
 
     // Ensure `CertificateDocument` parses successfully
@@ -88,22 +78,19 @@ fn encode_cert_der() {
 #[test]
 #[cfg(feature = "std")]
 fn write_cert_der() {
-    let doc: CertificateDocument =
-        CertificateDocument::from_certificate_der(CERT_DER_EXAMPLE).unwrap();
+    let doc: CertificateDocument = CertificateDocument::from_der(CERT_DER_EXAMPLE).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
-    assert_eq!(doc.to_certificate_der().unwrap().as_ref(), CERT_DER_EXAMPLE);
+    assert_eq!(doc.to_der().as_ref(), CERT_DER_EXAMPLE);
 
-    let r = doc.write_certificate_der_file(Path::new("tests/examples/amazon.der.regen"));
+    let r = doc.write_der_file(Path::new("tests/examples/amazon.der.regen"));
     if r.is_err() {
         panic!("Failed to write file")
     }
 
-    let doc: CertificateDocument = CertificateDocument::read_certificate_der_file(Path::new(
-        "tests/examples/amazon.der.regen",
-    ))
-    .unwrap();
+    let doc: CertificateDocument =
+        CertificateDocument::read_der_file(Path::new("tests/examples/amazon.der.regen")).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
-    assert_eq!(doc.to_certificate_der().unwrap().as_ref(), CERT_DER_EXAMPLE);
+    assert_eq!(doc.to_der().as_ref(), CERT_DER_EXAMPLE);
     let r = std::fs::remove_file("tests/examples/amazon.der.regen");
     if r.is_err() {}
 }
@@ -114,7 +101,7 @@ fn encode_cert_pem() {
     let pk = Certificate::try_from(CERT_DER_EXAMPLE).unwrap();
     let pk_encoded = CertificateDocument::try_from(pk)
         .unwrap()
-        .to_certificate_pem(Default::default())
+        .to_pem(Default::default())
         .unwrap();
 
     assert_eq!(CERT_PEM_EXAMPLE, pk_encoded);
@@ -123,12 +110,11 @@ fn encode_cert_pem() {
 #[test]
 #[cfg(all(feature = "std", feature = "pem"))]
 fn write_cert_pem() {
-    let doc: CertificateDocument =
-        CertificateDocument::from_certificate_der(CERT_DER_EXAMPLE).unwrap();
+    let doc: CertificateDocument = CertificateDocument::from_der(CERT_DER_EXAMPLE).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
-    assert_eq!(doc.to_certificate_der().unwrap().as_ref(), CERT_DER_EXAMPLE);
+    assert_eq!(doc.to_der().as_ref(), CERT_DER_EXAMPLE);
 
-    let r = doc.write_certificate_pem_file(
+    let r = doc.write_pem_file(
         Path::new("tests/examples/amazon.pem.regen"),
         LineEnding::default(),
     );
@@ -136,12 +122,10 @@ fn write_cert_pem() {
         panic!("Failed to write file")
     }
 
-    let doc: CertificateDocument = CertificateDocument::read_certificate_pem_file(Path::new(
-        "tests/examples/amazon.pem.regen",
-    ))
-    .unwrap();
+    let doc: CertificateDocument =
+        CertificateDocument::read_pem_file(Path::new("tests/examples/amazon.pem.regen")).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
-    assert_eq!(doc.to_certificate_der().unwrap().as_ref(), CERT_DER_EXAMPLE);
+    assert_eq!(doc.to_der().as_ref(), CERT_DER_EXAMPLE);
     let r = std::fs::remove_file("tests/examples/amazon.pem.regen");
     if r.is_err() {}
 }
