@@ -5,6 +5,7 @@ use hex_literal::hex;
 use x501::name::Name;
 use x509::*;
 use x509_ext::pkix::name::{GeneralName, GeneralNames};
+use x509_ext::pkix::AuthorityKeyIdentifier;
 use x509_ext::Extensions;
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
@@ -585,7 +586,7 @@ fn decode_cert() {
             let akid = AuthorityKeyIdentifier::from_der(ext.extn_value).unwrap();
             assert_eq!(
                 &hex!("7C4C863AB80BD589870BEDB7E11BBD2A08BB3D23FF"),
-                akid.key_identifier.unwrap().as_bytes()
+                akid.key_identifier.unwrap()
             );
 
             let reencoded = akid.to_vec().unwrap();
@@ -726,7 +727,7 @@ fn decode_cert() {
             assert_eq!(ext.critical, false);
             let akid = AuthorityKeyIdentifier::from_der(ext.extn_value).unwrap();
             assert_eq!(
-                akid.key_identifier.unwrap().as_bytes(),
+                akid.key_identifier.unwrap(),
                 &hex!("E47D5FD15C9586082C05AEBE75B665A7D95DA866")[..]
             );
         } else if 1 == counter {

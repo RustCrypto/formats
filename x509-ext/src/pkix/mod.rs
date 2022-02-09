@@ -4,4 +4,8 @@
 //!
 //! [RFC 5280]: https://datatracker.ietf.org/doc/html/rfc5280
 
+mod authkeyid;
+
 pub mod name;
+
+pub use authkeyid::AuthorityKeyIdentifier;
