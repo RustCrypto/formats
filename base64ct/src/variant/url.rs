@@ -8,7 +8,7 @@ use super::{Decode, Encode, Variant};
 /// [A-Z]      [a-z]      [0-9]      -     _
 /// 0x41-0x5a, 0x61-0x7a, 0x30-0x39, 0x2d, 0x5f
 /// ```
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Base64Url;
 
 impl Variant for Base64Url {
@@ -25,7 +25,7 @@ impl Variant for Base64Url {
 /// [A-Z]      [a-z]      [0-9]      -     _
 /// 0x41-0x5a, 0x61-0x7a, 0x30-0x39, 0x2d, 0x5f
 /// ```
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Base64UrlUnpadded;
 
 impl Variant for Base64UrlUnpadded {

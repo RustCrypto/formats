@@ -8,7 +8,7 @@ pub mod standard;
 pub mod url;
 
 /// Core encoder/decoder functions for a particular Base64 variant
-pub trait Variant: 'static + Copy + Clone + Debug + Send + Sized + Sync {
+pub trait Variant: 'static + Copy + Debug + Eq + Send + Sized + Sync {
     /// Unpadded equivalent of this variant.
     ///
     /// For variants that are unpadded to begin with, this should be `Self`.

@@ -16,7 +16,7 @@ const PAD: u8 = b'=';
 ///
 /// This trait must be imported to make use of any Base64 variant defined
 /// in this crate.
-pub trait Encoding: 'static + Copy + Clone + Debug + Send + Sized + Sync {
+pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
     /// Decode a Base64 string into the provided destination buffer.
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error>;
 
