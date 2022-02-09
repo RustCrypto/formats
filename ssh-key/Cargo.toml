@@ -17,6 +17,7 @@ rust-version = "1.57"
 
 [dependencies]
 base64ct = { version = "=1.4.0-pre.0", path = "../base64ct" }
+pem-rfc7468 = { version = "=0.4.0-pre.0", path = "../pem-rfc7468" }
 zeroize = { version = "1", default-features = false }
 
 # optional dependencies

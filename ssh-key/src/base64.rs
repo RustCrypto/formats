@@ -32,14 +32,6 @@ impl<'i> Decoder<'i> {
         })
     }
 
-    /// Create a new decoder for a byte slice containing Base64 which
-    /// line wraps at the given line length.
-    pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self> {
-        Ok(Self {
-            inner: base64ct::Decoder::new_wrapped(input, line_width)?,
-        })
-    }
-
     /// Decode as much Base64 as is needed to exactly fill `out`.
     ///
     /// # Returns
@@ -143,6 +135,14 @@ impl<'i> Decoder<'i> {
     /// Has all of the input data been decoded?
     pub(crate) fn is_finished(&self) -> bool {
         self.inner.is_finished()
+    }
+}
+
+impl<'i> From<pem_rfc7468::Decoder<'i>> for Decoder<'i> {
+    fn from(decoder: pem_rfc7468::Decoder<'i>) -> Decoder<'i> {
+        Decoder {
+            inner: decoder.into(),
+        }
     }
 }
 
