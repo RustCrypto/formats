@@ -321,7 +321,7 @@ fn validate_padding<T: Variant>(encoded: &[u8], decoded: &[u8]) -> Result<(), Er
 /// Note that this function does not fully validate the Base64 is well-formed
 /// and may return incorrect results for malformed Base64.
 #[inline(always)]
-fn decoded_len(input_len: usize) -> usize {
+pub(crate) fn decoded_len(input_len: usize) -> usize {
     // overflow-proof computation of `(3*n)/4`
     let k = input_len / 4;
     let l = input_len - 4 * k;
