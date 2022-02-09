@@ -21,8 +21,8 @@ rust-version = "1.56"
 base64ct = { version = "=1.4.0-pre.0", path = "../base64ct" }
 
 [features]
-alloc = []
-std = ["alloc"]
+alloc = ["base64ct/alloc"]
+std = ["alloc", "base64ct/std"]
 
 [package.metadata.docs.rs]
 all-features = true

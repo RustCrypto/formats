@@ -94,6 +94,9 @@ const ENCAPSULATION_BOUNDARY_DELIMITER: &[u8] = b"-----";
 /// > handle other line sizes.
 const BASE64_WRAP_WIDTH: usize = 64;
 
+/// Buffered Base64 decoder type.
+pub type Base64Decoder<'i> = base64ct::Decoder<'i, base64ct::Base64>;
+
 /// Marker trait for types with an associated PEM type label.
 pub trait PemLabel {
     /// Expected PEM type label for a given document, e.g. `"PRIVATE KEY"`
