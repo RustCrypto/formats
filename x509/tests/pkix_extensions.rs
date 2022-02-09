@@ -1,11 +1,11 @@
 //! Certificate tests
 use der::asn1::{BitString, UIntBytes};
-use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
+use der::{Decodable, Encodable, ErrorKind, Tag, Tagged};
 use hex_literal::hex;
 use x501::name::Name;
 use x509::*;
 use x509_ext::pkix::name::{GeneralName, GeneralNames};
-use x509_ext::pkix::AuthorityKeyIdentifier;
+use x509_ext::pkix::{AuthorityKeyIdentifier, SubjectKeyIdentifier};
 use x509_ext::Extensions;
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
@@ -427,11 +427,8 @@ fn decode_cert() {
             );
             assert_eq!(ext.critical, false);
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
-            assert_eq!(Length::new(21), skid.len());
-            assert_eq!(
-                &hex!("DBD3DEBF0D7B615B32803BC0206CD7AADD39B8ACFF"),
-                skid.as_bytes()
-            );
+            assert_eq!(21, skid.len());
+            assert_eq!(&hex!("DBD3DEBF0D7B615B32803BC0206CD7AADD39B8ACFF"), &*skid);
 
             let reencoded = skid.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -738,7 +735,7 @@ fn decode_cert() {
             assert_eq!(ext.critical, false);
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
             assert_eq!(
-                skid.as_bytes(),
+                &*skid,
                 &hex!("580184241BBC2B52944A3DA510721451F5AF3AC9")[..]
             );
         } else if 2 == counter {

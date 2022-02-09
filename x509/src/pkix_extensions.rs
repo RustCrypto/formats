@@ -4,8 +4,8 @@ use crate::default_zero;
 
 use alloc::vec::Vec;
 use der::asn1::{
-    Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier,
-    OctetString, UIntBytes, Utf8String,
+    Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier, UIntBytes,
+    Utf8String,
 };
 use der::Header;
 use der::{
@@ -117,15 +117,6 @@ pub struct BasicConstraints {
     /// pathLenConstraint       INTEGER (0..MAX) OPTIONAL
     pub path_len_constraint: Option<u8>,
 }
-
-/// Subject key identifier extension as defined in [RFC 5280 Section 4.2.1.2] and as identified by the [`PKIX_CE_SUBJECT_KEY_IDENTIFIER`](constant.PKIX_CE_SUBJECT_KEY_IDENTIFIER.html) OID.
-///
-/// ```text
-/// SubjectKeyIdentifier ::= KeyIdentifier
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
-pub type SubjectKeyIdentifier<'a> = OctetString<'a>;
 
 /// Key usage extension as defined in [RFC 5280 Section 4.2.1.3] and as identified by the [`PKIX_CE_KEY_USAGE`](constant.PKIX_CE_KEY_USAGE.html) OID.
 ///
