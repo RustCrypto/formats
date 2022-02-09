@@ -10,7 +10,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[non_exhaustive]
 pub enum Error {
     /// Base64-related errors.
-    Base64,
+    Base64(base64ct::Error),
 
     /// Character encoding-related errors.
     CharacterEncoding,
@@ -39,17 +39,21 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            Error::Base64 => "PEM Base64 error",
-            Error::CharacterEncoding => "PEM character encoding error",
-            Error::EncapsulatedText => "PEM error in encapsulated text",
-            Error::HeaderDisallowed => "PEM headers disallowed by RFC7468",
-            Error::Label => "PEM type label invalid",
-            Error::Length => "PEM length invalid",
-            Error::Preamble => "PEM preamble contains invalid data (NUL byte)",
-            Error::PreEncapsulationBoundary => "PEM error in pre-encapsulation boundary",
-            Error::PostEncapsulationBoundary => "PEM error in post-encapsulation boundary",
-        })
+        match self {
+            Error::Base64(err) => write!(f, "PEM Base64 error: {}", err),
+            Error::CharacterEncoding => f.write_str("PEM character encoding error"),
+            Error::EncapsulatedText => f.write_str("PEM error in encapsulated text"),
+            Error::HeaderDisallowed => f.write_str("PEM headers disallowed by RFC7468"),
+            Error::Label => f.write_str("PEM type label invalid"),
+            Error::Length => f.write_str("PEM length invalid"),
+            Error::Preamble => f.write_str("PEM preamble contains invalid data (NUL byte)"),
+            Error::PreEncapsulationBoundary => {
+                f.write_str("PEM error in pre-encapsulation boundary")
+            }
+            Error::PostEncapsulationBoundary => {
+                f.write_str("PEM error in post-encapsulation boundary")
+            }
+        }
     }
 }
 
@@ -57,8 +61,8 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 impl From<base64ct::Error> for Error {
-    fn from(_: base64ct::Error) -> Error {
-        Error::Base64
+    fn from(err: base64ct::Error) -> Error {
+        Error::Base64(err)
     }
 }
 
