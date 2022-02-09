@@ -241,3 +241,9 @@ impl fmt::Display for ObjectIdentifier {
         Ok(())
     }
 }
+
+/// A trait expressing the association of a type with an OID.
+pub trait Typed {
+    /// The OID which identifies an encoded type.
+    const OID: ObjectIdentifier;
+}
