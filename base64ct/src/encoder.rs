@@ -7,6 +7,9 @@ use crate::{
 };
 use core::{cmp, marker::PhantomData, str};
 
+#[cfg(docsrs)]
+use crate::{Base64, Base64Unpadded};
+
 /// Stateful Base64 encoder with support for buffered, incremental encoding.
 ///
 /// The `E` type parameter can be any type which impls [`Encoding`] such as
