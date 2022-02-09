@@ -5,7 +5,7 @@ use hex_literal::hex;
 use x501::name::Name;
 use x509::*;
 use x509_ext::pkix::name::{GeneralName, GeneralNames};
-use x509_ext::pkix::{AuthorityKeyIdentifier, SubjectKeyIdentifier};
+use x509_ext::pkix::*;
 use x509_ext::Extensions;
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
@@ -265,20 +265,8 @@ fn decode_cert() {
             assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
 
-            use x509::extensions_utils::KeyUsageValues;
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
-            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
-            let mut count = 0;
-            for v in kuv {
-                if 0 == count {
-                    assert_eq!(v, KeyUsageValues::KeyCertSign);
-                } else if 1 == count {
-                    assert_eq!(v, KeyUsageValues::CRLSign);
-                } else {
-                    panic!("Should not occur");
-                }
-                count += 1;
-            }
+            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, *ku);
 
             let reencoded = ku.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -741,20 +729,8 @@ fn decode_cert() {
         } else if 2 == counter {
             assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
-            use x509::extensions_utils::KeyUsageValues;
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
-            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
-            let mut count = 0;
-            for v in kuv {
-                if 0 == count {
-                    assert_eq!(v, KeyUsageValues::KeyCertSign);
-                } else if 1 == count {
-                    assert_eq!(v, KeyUsageValues::CRLSign);
-                } else {
-                    panic!("Should not occur");
-                }
-                count += 1;
-            }
+            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, *ku);
         } else if 3 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
