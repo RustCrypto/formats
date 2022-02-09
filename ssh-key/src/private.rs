@@ -9,7 +9,6 @@ mod dsa;
 #[cfg(feature = "ecdsa")]
 mod ecdsa;
 mod ed25519;
-mod openssh;
 #[cfg(feature = "alloc")]
 mod rsa;
 
@@ -27,9 +26,13 @@ use crate::{
     public, Algorithm, CipherAlg, Error, KdfAlg, KdfOptions, Result,
 };
 use core::str::FromStr;
+use pem_rfc7468::{self as pem, PemLabel};
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
+
+/// Line width used by the PEM encoding of OpenSSH private keys
+const PEM_LINE_WIDTH: usize = 70;
 
 /// SSH private key.
 #[derive(Clone, Debug)]
@@ -64,23 +67,25 @@ impl PrivateKey {
     /// -----BEGIN OPENSSH PRIVATE KEY-----
     /// ```
     pub fn from_openssh(input: impl AsRef<[u8]>) -> Result<Self> {
-        let encapsulation = openssh::Encapsulation::decode(input.as_ref())?;
-        let mut decoder = base64::Decoder::new_wrapped(
-            encapsulation.base64_data,
-            openssh::Encapsulation::LINE_WIDTH,
-        )?;
+        let pem_decoder = pem::Decoder::new_wrapped(input.as_ref(), PEM_LINE_WIDTH)?;
+
+        if pem_decoder.type_label() != Self::TYPE_LABEL {
+            return Err(Error::Pem);
+        }
+
+        let mut base64_decoder = base64::Decoder::from(pem_decoder);
 
         let mut auth_magic = [0u8; Self::AUTH_MAGIC.len()];
-        decoder.decode_into(&mut auth_magic)?;
+        base64_decoder.decode_into(&mut auth_magic)?;
 
         if auth_magic != Self::AUTH_MAGIC {
             return Err(Error::FormatEncoding);
         }
 
-        let cipher_alg = CipherAlg::decode(&mut decoder)?;
-        let kdf_alg = KdfAlg::decode(&mut decoder)?;
-        let kdf_options = KdfOptions::decode(&mut decoder)?;
-        let nkeys = decoder.decode_u32()? as usize;
+        let cipher_alg = CipherAlg::decode(&mut base64_decoder)?;
+        let kdf_alg = KdfAlg::decode(&mut base64_decoder)?;
+        let kdf_options = KdfOptions::decode(&mut base64_decoder)?;
+        let nkeys = base64_decoder.decode_u32()? as usize;
 
         // TODO(tarcieri): support more than one key?
         if nkeys != 1 {
@@ -89,26 +94,26 @@ impl PrivateKey {
 
         for _ in 0..nkeys {
             // TODO(tarcieri): validate decoded length
-            let _len = decoder.decode_u32()? as usize;
-            let _pubkey = public::KeyData::decode(&mut decoder)?;
+            let _len = base64_decoder.decode_u32()? as usize;
+            let _pubkey = public::KeyData::decode(&mut base64_decoder)?;
         }
 
         // Begin decoding unencrypted list of N private keys
         // See OpenSSH PROTOCOL.key § 3
         // TODO(tarcieri): validate decoded length
-        let _len = decoder.decode_u32()? as usize;
-        let checkint1 = decoder.decode_u32()?;
-        let checkint2 = decoder.decode_u32()?;
+        let _len = base64_decoder.decode_u32()? as usize;
+        let checkint1 = base64_decoder.decode_u32()?;
+        let checkint2 = base64_decoder.decode_u32()?;
 
         if checkint1 != checkint2 {
             // TODO(tarcieri): treat this as a cryptographic error?
             return Err(Error::FormatEncoding);
         }
 
-        let key_data = KeypairData::decode(&mut decoder)?;
+        let key_data = KeypairData::decode(&mut base64_decoder)?;
 
         #[cfg(feature = "alloc")]
-        let comment = decoder.decode_string()?;
+        let comment = base64_decoder.decode_string()?;
 
         // TODO(tarcieri): parse/validate padding bytes?
         Ok(Self {
@@ -133,6 +138,10 @@ impl FromStr for PrivateKey {
     fn from_str(s: &str) -> Result<Self> {
         Self::from_openssh(s)
     }
+}
+
+impl PemLabel for PrivateKey {
+    const TYPE_LABEL: &'static str = "OPENSSH PRIVATE KEY";
 }
 
 /// Private key data.

@@ -85,6 +85,12 @@ impl From<core::str::Utf8Error> for Error {
     }
 }
 
+impl From<pem_rfc7468::Error> for Error {
+    fn from(_: pem_rfc7468::Error) -> Error {
+        Error::Pem
+    }
+}
+
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl From<alloc::string::FromUtf8Error> for Error {
