@@ -2,3 +2,7 @@
 
 pub mod name;
 pub mod oids;
+
+mod authkeyid;
+
+pub use authkeyid::AuthorityKeyIdentifier;

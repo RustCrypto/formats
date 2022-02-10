@@ -4,7 +4,7 @@ use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x501::name::Name;
 use x509::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
-use x509::ext::pkix::oids::*;
+use x509::ext::pkix::{oids::*, *};
 use x509::*;
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
