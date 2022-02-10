@@ -111,15 +111,6 @@ pub struct BasicConstraints {
     pub path_len_constraint: Option<u8>,
 }
 
-/// Subject key identifier extension as defined in [RFC 5280 Section 4.2.1.2] and as identified by the [`PKIX_CE_SUBJECT_KEY_IDENTIFIER`](constant.PKIX_CE_SUBJECT_KEY_IDENTIFIER.html) OID.
-///
-/// ```text
-/// SubjectKeyIdentifier ::= KeyIdentifier
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
-pub type SubjectKeyIdentifier<'a> = OctetString<'a>;
-
 flags! {
     /// Key usage flags as defined in [RFC 5280 Section 4.2.1.3].
     ///
