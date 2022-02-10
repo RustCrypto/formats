@@ -1,6 +1,7 @@
 //! PKIX X.509 Certificate Extensions (RFC 5280)
 
 pub mod certpolicy;
+pub mod constraints;
 pub mod name;
 pub mod oids;
 
@@ -10,6 +11,7 @@ mod policymap;
 
 pub use authkeyid::AuthorityKeyIdentifier;
 pub use certpolicy::CertificatePolicies;
+pub use constraints::BasicConstraints;
 pub use keyusage::{KeyUsage, KeyUsages};
 pub use policymap::{PolicyMapping, PolicyMappings};
 
