@@ -213,65 +213,29 @@ pub struct PolicyQualifierInfo<'a> {
     pub qualifier: Option<Any<'a>>,
 }
 
-/// Private key usage extension as defined in [RFC 3280 Section 4.2.1.4] and as identified by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
+/// PrivateKeyUsagePeriod as defined in [RFC 3280 Section 4.2.1.4].
+///
+/// This extension is by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
 ///
 /// RFC 5280 states "use of this ISO standard extension is neither deprecated nor recommended for use in the Internet PKI."
 ///
 /// ```text
 /// PrivateKeyUsagePeriod ::= SEQUENCE {
-///      notBefore       [0]     GeneralizedTime OPTIONAL,
-///      notAfter        [1]     GeneralizedTime OPTIONAL }
-///      -- either notBefore or notAfter MUST be present
+///     notBefore       [0]     GeneralizedTime OPTIONAL,
+///     notAfter        [1]     GeneralizedTime OPTIONAL
+///     -- either notBefore or notAfter MUST be present
+/// }
 /// ```
 ///
 /// [RFC 3280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc3280#section-4.2.1.4
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
+#[allow(missing_docs)]
 pub struct PrivateKeyUsagePeriod {
-    /// notBefore       [0]     GeneralizedTime OPTIONAL,
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
     pub not_before: Option<GeneralizedTime>,
 
-    /// notAfter        [1]     GeneralizedTime OPTIONAL
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub not_after: Option<GeneralizedTime>,
-}
-
-impl<'a> ::der::Decodable<'a> for PrivateKeyUsagePeriod {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let not_before =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let not_after =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                not_before,
-                not_after,
-            })
-        })
-    }
-}
-
-const NOT_BEFORE_TAG: TagNumber = TagNumber::new(0);
-const NOT_AFTER_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> ::der::Sequence<'a> for PrivateKeyUsagePeriod {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[
-            &self.not_before.as_ref().map(|elem| ContextSpecific {
-                tag_number: NOT_BEFORE_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *elem,
-            }),
-            &self.not_after.as_ref().map(|elem| ContextSpecific {
-                tag_number: NOT_AFTER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *elem,
-            }),
-        ])
-    }
 }
 
 /// NoticeReference as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
@@ -366,78 +330,31 @@ pub struct NameConstraints<'a> {
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
 pub type GeneralSubtrees<'a> = Vec<GeneralSubtree<'a>>;
 
-/// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10] in support of the Name Constraints extension.
+/// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10].
 ///
 /// ```text
 /// GeneralSubtree ::= SEQUENCE {
-///      base                    GeneralName,
-///      minimum         [0]     BaseDistance DEFAULT 0,
-///      maximum         [1]     BaseDistance OPTIONAL }
+///     base                    GeneralName,
+///     minimum         [0]     BaseDistance DEFAULT 0,
+///     maximum         [1]     BaseDistance OPTIONAL
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct GeneralSubtree<'a> {
-    /// base                    GeneralName,
     pub base: GeneralName<'a>,
 
-    /// minimum         [0]     BaseDistance DEFAULT 0,
+    #[asn1(
+        context_specific = "0",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
     pub minimum: u32,
 
-    /// maximum         [1]     BaseDistance OPTIONAL }
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub maximum: Option<u32>,
-}
-
-impl<'a> ::der::Decodable<'a> for GeneralSubtree<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let base = decoder.decode()?;
-
-            let minimum =
-                match decoder.context_specific::<u32>(GS_MINIMUM_TAG, TagMode::Implicit)? {
-                    Some(v) => v,
-                    _ => 0,
-                };
-
-            let maximum = decoder.context_specific::<u32>(GS_MAXIMUM_TAG, TagMode::Implicit)?;
-
-            Ok(Self {
-                base,
-                minimum,
-                maximum,
-            })
-        })
-    }
-}
-const GS_MINIMUM_TAG: TagNumber = TagNumber::new(0);
-const GS_MAXIMUM_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> ::der::Sequence<'a> for GeneralSubtree<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        //f(&[&self.base, &self.minimum, &self.maximum])
-        let cs_min = ContextSpecific {
-            tag_number: GS_MINIMUM_TAG,
-            tag_mode: TagMode::Implicit,
-            value: self.minimum,
-        };
-
-        f(&[
-            &self.base,
-            &::der::asn1::OptionalRef(if self.minimum == Default::default() {
-                None
-            } else {
-                Some(&cs_min)
-            }),
-            &self.maximum.as_ref().map(|exts| ContextSpecific {
-                tag_number: GS_MAXIMUM_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *exts,
-            }),
-        ])
-    }
 }
 
 /// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11].
