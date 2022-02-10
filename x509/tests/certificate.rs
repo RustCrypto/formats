@@ -106,7 +106,7 @@ fn reencode_cert() {
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
     let defer_cert = DeferDecodeCertificate::from_der(der_encoded_cert).unwrap();
 
-    let parsed_tbs = TBSCertificate::from_der(defer_cert.tbs_certificate).unwrap();
+    let parsed_tbs = TbsCertificate::from_der(defer_cert.tbs_certificate).unwrap();
     let reencoded_tbs = parsed_tbs.to_vec().unwrap();
     assert_eq!(defer_cert.tbs_certificate, reencoded_tbs);
 
