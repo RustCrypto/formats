@@ -4,14 +4,13 @@ version = 3
 
 [[package]]
 name = "aes"
-version = "0.7.5"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e8b47f52ea9bae42228d07ec09eb676433d7c4ed1ebdf0f1d1c29ed446f1ab8"
+checksum = "0f6c3373fb58bb23c6ed0f191f915f0e9459c6929fc430c0d74b8237c521953a"
 dependencies = [
  "cfg-if",
- "cipher",
+ "cipher 0.4.0",
  "cpufeatures",
- "opaque-debug",
 ]
 
 [[package]]
@@ -80,20 +79,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "block-modes"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cb03d1bed155d89dce0f845b7899b18a9a163e148fd004e1c28421a783e2d8e"
-dependencies = [
- "block-padding",
- "cipher",
-]
-
-[[package]]
 name = "block-padding"
-version = "0.2.1"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
+checksum = "5808df4b2412175c4db3afb115c83d8d0cd26ca4f30a042026cddef8580e526a"
+dependencies = [
+ "generic-array",
+]
 
 [[package]]
 name = "bstr"
@@ -129,6 +121,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cbc"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "531051805c8ee7ea043a698cf0682318e76d8189c0445d4da2b9abb512024b98"
+dependencies = [
+ "cipher 0.4.0",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -141,6 +142,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ee52072ec15386f770805afd189a01c8841be8696bed250fa2f13c4c0d6dfb7"
 dependencies = [
  "generic-array",
+]
+
+[[package]]
+name = "cipher"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4f3e8c9be82c31c331bc9db0fd70a1068f8a288d980b2414dcaa25ab17ac1e0"
+dependencies = [
+ "crypto-common",
+ "inout",
 ]
 
 [[package]]
@@ -252,9 +263,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-common"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "683d6b536309245c849479fba3da410962a43ed8e51c26b729208ec0ac2798d0"
+checksum = "a4600d695eb3f6ce1cd44e6e291adceb2cc3ab12f20a33777ecd0bf6eba34e06"
 dependencies = [
  "generic-array",
 ]
@@ -305,13 +316,11 @@ dependencies = [
 
 [[package]]
 name = "des"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac41dd49fb554432020d52c875fc290e110113f864c6b1b525cd62c7e7747a5d"
+checksum = "d961b09f113791a8b11d677b9ccfdf2a8f79c2bd49e8ab8ef9fdfadcae683528"
 dependencies = [
- "byteorder",
- "cipher",
- "opaque-debug",
+ "cipher 0.4.0",
 ]
 
 [[package]]
@@ -396,6 +405,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ddca131f3e7f2ce2df364b57949a9d47915cfbd35e46cfee355ccebbf794d6a2"
 dependencies = [
  "digest",
+]
+
+[[package]]
+name = "inout"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e1f03d4ab4d5dc9ec2d219f86c15d2a15fc08239d1cd3b2d6a19717c0a2f443"
+dependencies = [
+ "block-padding",
+ "generic-array",
 ]
 
 [[package]]
@@ -508,12 +527,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ab1bc2a289d34bd04a330323ac98a1b4bc82c9d9fcb1e66b63caa84da26b575"
 
 [[package]]
-name = "opaque-debug"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
-
-[[package]]
 name = "pbkdf2"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -555,7 +568,7 @@ name = "pkcs5"
 version = "0.5.0-pre"
 dependencies = [
  "aes",
- "block-modes",
+ "cbc",
  "der",
  "des",
  "hex-literal",
@@ -833,7 +846,7 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c0fbb5f676da676c260ba276a8f43a8dc67cf02d1438423aeb1c677a7212686"
 dependencies = [
- "cipher",
+ "cipher 0.3.0",
 ]
 
 [[package]]
