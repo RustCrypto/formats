@@ -601,7 +601,7 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
 
-    assert_eq!(cert.tbs_certificate.version, 2);
+    assert_eq!(cert.tbs_certificate.version, Version::V3);
     let target_serial: [u8; 1] = [2];
     assert_eq!(
         cert.tbs_certificate.serial_number,
