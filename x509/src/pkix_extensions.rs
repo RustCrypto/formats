@@ -59,62 +59,6 @@ pub struct PrivateKeyUsagePeriod {
     pub not_after: Option<GeneralizedTime>,
 }
 
-/// Name constraints extension as defined in [RFC 5280 Section 4.2.1.10] and as identified by the [`PKIX_CE_NAME_CONSTRAINTS`](constant.PKIX_CE_NAME_CONSTRAINTS.html) OID.
-///
-/// ```text
-/// NameConstraints ::= SEQUENCE {
-///      permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
-///      excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct NameConstraints<'a> {
-    /// permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
-    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
-    pub permitted_subtrees: Option<GeneralSubtrees<'a>>,
-
-    /// excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
-    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
-    pub excluded_subtrees: Option<GeneralSubtrees<'a>>,
-}
-
-/// GeneralSubtrees as defined in [RFC 5280 Section 4.2.1.10] in support of the Name Constraints extension.
-///
-/// ```text
-/// GeneralSubtrees ::= SEQUENCE SIZE (1..MAX) OF GeneralSubtree
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
-pub type GeneralSubtrees<'a> = Vec<GeneralSubtree<'a>>;
-
-/// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10].
-///
-/// ```text
-/// GeneralSubtree ::= SEQUENCE {
-///     base                    GeneralName,
-///     minimum         [0]     BaseDistance DEFAULT 0,
-///     maximum         [1]     BaseDistance OPTIONAL
-/// }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-#[allow(missing_docs)]
-pub struct GeneralSubtree<'a> {
-    pub base: GeneralName<'a>,
-
-    #[asn1(
-        context_specific = "0",
-        tag_mode = "IMPLICIT",
-        default = "Default::default"
-    )]
-    pub minimum: u32,
-
-    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub maximum: Option<u32>,
-}
-
 /// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11].
 ///
 /// This extension is identified by the [`PKIX_CE_POLICY_CONSTRAINTS`](constant.PKIX_CE_POLICY_CONSTRAINTS.html) OID.

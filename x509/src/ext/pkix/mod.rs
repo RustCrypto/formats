@@ -11,7 +11,7 @@ mod policymap;
 
 pub use authkeyid::AuthorityKeyIdentifier;
 pub use certpolicy::CertificatePolicies;
-pub use constraints::BasicConstraints;
+pub use constraints::{BasicConstraints, NameConstraints};
 pub use keyusage::{KeyUsage, KeyUsages};
 pub use policymap::{PolicyMapping, PolicyMappings};
 

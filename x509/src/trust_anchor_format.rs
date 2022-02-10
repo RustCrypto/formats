@@ -1,7 +1,8 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
 use crate::ext::pkix::certpolicy::CertificatePolicies;
-use crate::{Certificate, Extensions, NameConstraints, TbsCertificate};
+use crate::ext::pkix::NameConstraints;
+use crate::{Certificate, Extensions, TbsCertificate};
 
 use der::asn1::{OctetString, Utf8String};
 use der::{Choice, Enumerated, Sequence};
