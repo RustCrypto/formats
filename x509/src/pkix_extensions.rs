@@ -440,68 +440,26 @@ impl<'a> ::der::Sequence<'a> for GeneralSubtree<'a> {
     }
 }
 
-/// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11] and as identified by the [`PKIX_CE_POLICY_CONSTRAINTS`](constant.PKIX_CE_POLICY_CONSTRAINTS.html) OID.
+/// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11].
+///
+/// This extension is identified by the [`PKIX_CE_POLICY_CONSTRAINTS`](constant.PKIX_CE_POLICY_CONSTRAINTS.html) OID.
 ///
 /// ```text
 /// PolicyConstraints ::= SEQUENCE {
 ///      requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
-///      inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
+///      inhibitPolicyMapping    [1]     SkipCerts OPTIONAL
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.11]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.11
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct PolicyConstraints {
-    /// requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
+    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     pub require_explicit_policy: Option<u32>,
 
-    /// inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
+    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub inhibit_policy_mapping: Option<u32>,
-}
-
-impl<'a> ::der::Decodable<'a> for PolicyConstraints {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let require_explicit_policy =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let inhibit_policy_mapping =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                require_explicit_policy,
-                inhibit_policy_mapping,
-            })
-        })
-    }
-}
-
-const REQUIRE_EXPLICIT_POLICY_TAG: TagNumber = TagNumber::new(0);
-const INHIBIT_POLICY_MAPPING_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> ::der::Sequence<'a> for PolicyConstraints {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[
-            &self
-                .require_explicit_policy
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: REQUIRE_EXPLICIT_POLICY_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: *elem,
-                }),
-            &self
-                .inhibit_policy_mapping
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: INHIBIT_POLICY_MAPPING_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: *elem,
-                }),
-        ])
-    }
 }
 
 /// Inhibit any policy extension as defined in [RFC 5280 Section 4.2.1.14] and as identified by the [`PKIX_CE_INHIBIT_ANY_POLICY`](constant.PKIX_CE_INHIBIT_ANY_POLICY.html) OID.
