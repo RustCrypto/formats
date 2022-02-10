@@ -2,6 +2,7 @@
 
 pub mod certpolicy;
 pub mod constraints;
+pub mod crl;
 pub mod name;
 pub mod oids;
 
@@ -14,6 +15,10 @@ pub use access::{AccessDescription, AuthorityInfoAccessSyntax, SubjectInfoAccess
 pub use authkeyid::AuthorityKeyIdentifier;
 pub use certpolicy::CertificatePolicies;
 pub use constraints::{BasicConstraints, NameConstraints, PolicyConstraints};
+pub use crl::{
+    BaseCrlNumber, CrlDistributionPoints, CrlNumber, CrlReason, FreshestCrl,
+    IssuingDistributionPoint,
+};
 pub use keyusage::{ExtendedKeyUsage, KeyUsage, KeyUsages, PrivateKeyUsagePeriod};
 pub use policymap::{PolicyMapping, PolicyMappings};
 

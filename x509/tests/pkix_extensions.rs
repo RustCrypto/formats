@@ -4,6 +4,7 @@ use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x501::name::Name;
 use x509::ext::other::{OcspNoCheck, PivNaciIndicator};
+use x509::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
 use x509::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
 use x509::ext::pkix::{oids::*, *};
 use x509::*;
@@ -68,7 +69,7 @@ fn spin_over_exts<'a>(exts: Extensions<'a>) {
             let reencoded = nc.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if "2.5.29.31" == ext.extn_id.to_string() {
-            let crldps_result = CRLDistributionPoints::from_der(ext.extn_value);
+            let crldps_result = CrlDistributionPoints::from_der(ext.extn_value);
             assert!(crldps_result.is_ok());
 
             let crldps = crldps_result.unwrap();
@@ -110,7 +111,7 @@ fn spin_over_exts<'a>(exts: Extensions<'a>) {
             let reencoded = eku.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if "2.5.29.46" == ext.extn_id.to_string() {
-            let fc_result = FreshestCRL::from_der(ext.extn_value);
+            let fc_result = FreshestCrl::from_der(ext.extn_value);
             assert!(fc_result.is_ok());
 
             let fc = fc_result.unwrap();
@@ -423,7 +424,7 @@ fn decode_cert() {
                 CE_CRL_DISTRIBUTION_POINTS.to_string()
             );
             assert_eq!(ext.critical, false);
-            let crl_dps = CRLDistributionPoints::from_der(ext.extn_value).unwrap();
+            let crl_dps = CrlDistributionPoints::from_der(ext.extn_value).unwrap();
             assert_eq!(2, crl_dps.len());
 
             let reencoded = crl_dps.to_vec().unwrap();

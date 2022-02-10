@@ -16,9 +16,8 @@ extern crate std;
 
 mod certificate;
 pub mod ext;
-pub mod pkix_extensions;
 pub mod trust_anchor_format;
 
-pub use crate::{certificate::*, pkix_extensions::*};
+pub use crate::certificate::*;
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
