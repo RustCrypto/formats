@@ -4,8 +4,10 @@ pub mod name;
 pub mod oids;
 
 mod authkeyid;
+mod keyusage;
 
 pub use authkeyid::AuthorityKeyIdentifier;
+pub use keyusage::{KeyUsage, KeyUsages};
 
 use der::asn1::OctetString;
 
