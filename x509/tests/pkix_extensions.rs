@@ -3,7 +3,7 @@ use der::asn1::{BitString, UIntBytes};
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x501::name::Name;
-use x509::ext::pkix::name::{GeneralName, GeneralNames};
+use x509::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
 use x509::KeyUsage;
 use x509::*;
 use x509::{BasicConstraints, Certificate, CertificatePolicies, SubjectKeyIdentifier};

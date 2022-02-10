@@ -1,6 +1,6 @@
 //! Extensions [`Extensions`] as defined in RFC 5280
 
-use crate::ext::pkix::name::{GeneralName, GeneralNames};
+use crate::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
 
 use alloc::vec::Vec;
 
@@ -8,7 +8,6 @@ use der::asn1::*;
 use der::{Choice, Enumerated, Sequence};
 use flagset::{flags, FlagSet};
 use x501::attr::AttributeTypeAndValue;
-use x501::name::RelativeDistinguishedName;
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
 ///
@@ -574,26 +573,6 @@ pub struct DistributionPoint<'a> {
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub crl_issuer: Option<GeneralNames<'a>>,
-}
-
-/// DistributionPointName as defined in [RFC 5280 Section 4.2.1.13].
-///
-/// ```text
-/// DistributionPointName ::= CHOICE {
-///     fullName                [0]     GeneralNames,
-///     nameRelativeToCRLIssuer [1]     RelativeDistinguishedName
-/// }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-#[derive(Clone, Debug, Eq, PartialEq, Choice)]
-#[allow(missing_docs)]
-pub enum DistributionPointName<'a> {
-    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
-    FullName(GeneralNames<'a>),
-
-    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
-    NameRelativeToCRLIssuer(RelativeDistinguishedName<'a>),
 }
 
 /// Freshest CRL extension as defined in [RFC 5280 Section 5.2.6] and as identified by the [`PKIX_CE_FRESHEST_CRL`](constant.PKIX_CE_FRESHEST_CRL.html) OID.
