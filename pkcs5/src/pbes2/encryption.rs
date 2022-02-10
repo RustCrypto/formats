@@ -20,31 +20,25 @@ use scrypt::scrypt;
 /// Maximum size of a derived encryption key
 const MAX_KEY_LEN: usize = 32;
 
-fn cbc_encrypt<'a, C>(
+fn cbc_encrypt<'a, C: BlockEncryptMut + BlockCipher + KeyInit>(
     es: EncryptionScheme<'_>,
     key: EncryptionKey,
     iv: &[u8],
     buffer: &'a mut [u8],
     pos: usize,
-) -> Result<&'a [u8]>
-where
-    C: BlockEncryptMut + BlockCipher + KeyInit,
-{
+) -> Result<&'a [u8]> {
     cbc::Encryptor::<C>::new_from_slices(key.as_slice(), iv)
         .map_err(|_| es.to_alg_params_invalid())?
         .encrypt_padded_mut::<Pkcs7>(buffer, pos)
         .map_err(|_| Error::EncryptFailed)
 }
 
-fn cbc_decrypt<'a, C>(
+fn cbc_decrypt<'a, C: BlockDecryptMut + BlockCipher + KeyInit>(
     es: EncryptionScheme<'_>,
     key: EncryptionKey,
     iv: &[u8],
     buffer: &'a mut [u8],
-) -> Result<&'a [u8]>
-where
-    C: BlockDecryptMut + BlockCipher + KeyInit,
-{
+) -> Result<&'a [u8]> {
     cbc::Decryptor::<C>::new_from_slices(key.as_slice(), iv)
         .map_err(|_| es.to_alg_params_invalid())?
         .decrypt_padded_mut::<Pkcs7>(buffer)
