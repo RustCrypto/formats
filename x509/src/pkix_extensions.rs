@@ -1,6 +1,5 @@
 //! Extensions [`Extensions`] as defined in RFC 5280
 
-use crate::default_zero;
 use crate::general_name::GeneralName;
 use crate::general_name::GeneralNames;
 
@@ -407,7 +406,7 @@ impl<'a> ::der::Sequence<'a> for GeneralSubtree<'a> {
 
         f(&[
             &self.base,
-            &::der::asn1::OptionalRef(if self.minimum == default_zero() {
+            &::der::asn1::OptionalRef(if self.minimum == Default::default() {
                 None
             } else {
                 Some(&cs_min)

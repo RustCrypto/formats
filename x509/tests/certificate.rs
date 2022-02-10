@@ -74,7 +74,7 @@ impl<'a> Decodable<'a> for DeferDecodeTBSCertificate<'a> {
             let version =
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value)
-                    .unwrap_or_else(default_zero_u8);
+                    .unwrap_or_else(Default::default);
             let serial_number = decoder.tlv_bytes()?;
             let signature = decoder.tlv_bytes()?;
             let issuer = decoder.tlv_bytes()?;
