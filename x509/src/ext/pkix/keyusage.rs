@@ -1,3 +1,6 @@
+use alloc::vec::Vec;
+
+use der::asn1::ObjectIdentifier;
 use flagset::{flags, FlagSet};
 
 flags! {
@@ -39,3 +42,23 @@ flags! {
 ///
 /// [RFC 5280 Section 4.2.1.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
 pub type KeyUsage<'a> = FlagSet<KeyUsages>;
+
+/// ExtKeyUsageSyntax as defined in [RFC 5280 Section 4.2.1.12].
+///
+/// This extension is identified by the [`PKIX_CE_EXTKEYUSAGE`](constant.PKIX_CE_EXTKEYUSAGE.html) OID.
+///
+/// Many extended key usage values include:
+/// - [`PKIX_CE_ANYEXTENDEDKEYUSAGE`](constant.PKIX_CE_ANYEXTENDEDKEYUSAGE.html),
+/// - [`PKIX_KP_SERVERAUTH`](constant.PKIX_KP_SERVERAUTH.html),
+/// - [`PKIX_KP_CLIENTAUTH`](constant.PKIX_KP_CLIENTAUTH.html),
+/// - [`PKIX_KP_CODESIGNING`](constant.PKIX_KP_CODESIGNING.html),
+/// - [`PKIX_KP_EMAILPROTECTION`](constant.PKIX_KP_EMAILPROTECTION.html),
+/// - [`PKIX_KP_TIMESTAMPING`](constant.PKIX_KP_TIMESTAMPING.html),
+///
+/// ```text
+/// ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
+/// KeyPurposeId ::= OBJECT IDENTIFIER
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
+pub type ExtendedKeyUsage<'a> = Vec<ObjectIdentifier>;
