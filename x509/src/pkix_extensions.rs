@@ -26,15 +26,6 @@ use x501::attr::AttributeTypeAndValue;
 /// [RFC 5280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
 pub type ExtendedKeyUsage<'a> = Vec<ObjectIdentifier>;
 
-/// Issuer alternative name extension as defined in [RFC 5280 Section 4.2.1.7] and as identified by the [`PKIX_CE_ISSUER_ALT_NAME`](constant.PKIX_CE_ISSUER_ALT_NAME.html) OID.
-///
-/// ```text
-/// IssuerAltName ::= GeneralNames
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.7]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.7
-pub type IssuerAltName<'a> = GeneralNames<'a>;
-
 /// OCSP noCheck extension as defined in [RFC 6960 Section 4.2.2.2.1] and as idenfied by the [`PKIX_OCSP_NOCHECK`](constant.PKIX_OCSP_NOCHECK.html) OID.
 ///
 /// ```text

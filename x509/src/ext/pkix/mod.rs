@@ -36,3 +36,14 @@ pub type SubjectKeyIdentifier<'a> = OctetString<'a>;
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 pub type SubjectAltName<'a> = name::GeneralNames<'a>;
+
+/// IssuerAltName as defined in [RFC 5280 Section 4.2.1.7].
+///
+/// This extension is identified by the [`PKIX_CE_ISSUER_ALT_NAME`](constant.PKIX_CE_ISSUER_ALT_NAME.html) OID.
+///
+/// ```text
+/// IssuerAltName ::= GeneralNames
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.7]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.7
+pub type IssuerAltName<'a> = name::GeneralNames<'a>;
