@@ -5,10 +5,12 @@ pub mod constraints;
 pub mod name;
 pub mod oids;
 
+mod access;
 mod authkeyid;
 mod keyusage;
 mod policymap;
 
+pub use access::{AccessDescription, AuthorityInfoAccessSyntax, SubjectInfoAccessSyntax};
 pub use authkeyid::AuthorityKeyIdentifier;
 pub use certpolicy::CertificatePolicies;
 pub use constraints::{BasicConstraints, NameConstraints, PolicyConstraints};
