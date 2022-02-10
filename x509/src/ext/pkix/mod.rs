@@ -13,7 +13,10 @@ pub use certpolicy::CertificatePolicies;
 pub use keyusage::{KeyUsage, KeyUsages};
 pub use policymap::{PolicyMapping, PolicyMappings};
 
+use alloc::vec::Vec;
+
 use der::asn1::OctetString;
+use x501::attr::AttributeTypeAndValue;
 
 /// SubjectKeyIdentifier as defined in [RFC 5280 Section 4.2.1.2].
 ///
@@ -47,3 +50,14 @@ pub type SubjectAltName<'a> = name::GeneralNames<'a>;
 ///
 /// [RFC 5280 Section 4.2.1.7]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.7
 pub type IssuerAltName<'a> = name::GeneralNames<'a>;
+
+/// SubjectDirectoryAttributes as defined in [RFC 5280 Section 4.2.1.8].
+///
+/// This extension is identified by the [`PKIX_CE_SUBJECT_DIRECTORY_ATTRIBUTES`](constant.PKIX_CE_SUBJECT_DIRECTORY_ATTRIBUTES.html) OID.
+///
+/// ```text
+/// SubjectDirectoryAttributes ::= SEQUENCE SIZE (1..MAX) OF AttributeSet
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.8]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.8
+pub type SubjectDirectoryAttributes<'a> = Vec<AttributeTypeAndValue<'a>>;

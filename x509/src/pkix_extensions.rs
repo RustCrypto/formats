@@ -7,7 +7,6 @@ use alloc::vec::Vec;
 use der::asn1::*;
 use der::{Enumerated, Sequence};
 use flagset::{flags, FlagSet};
-use x501::attr::AttributeTypeAndValue;
 
 /// Extended key usage extension as defined in [RFC 5280 Section 4.2.1.12] and as identified by the [`PKIX_CE_EXTKEYUSAGE`](constant.PKIX_CE_EXTKEYUSAGE.html) OID.
 ///
@@ -34,15 +33,6 @@ pub type ExtendedKeyUsage<'a> = Vec<ObjectIdentifier>;
 ///
 /// [RFC 6960 Section 4.2.2.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.2.2.1
 pub type OcspNoCheck = Null;
-
-/// Subject directory attributes extension as defined in [RFC 5280 Section 4.2.1.8] and as identified by the [`PKIX_CE_SUBJECT_DIRECTORY_ATTRIBUTES`](constant.PKIX_CE_SUBJECT_DIRECTORY_ATTRIBUTES.html) OID.
-///
-/// ```text
-/// SubjectDirectoryAttributes ::= SEQUENCE SIZE (1..MAX) OF AttributeSet
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.8]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.8
-pub type SubjectDirectoryAttributes<'a> = Vec<AttributeTypeAndValue<'a>>;
 
 /// Basic constraints extension as defined in [RFC 5280 Section 4.2.1.9] and as identified by the [`PKIX_CE_BASIC_CONSTRAINTS`](constant.PKIX_CE_BASIC_CONSTRAINTS.html) OID.
 ///
