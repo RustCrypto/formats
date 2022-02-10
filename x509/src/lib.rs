@@ -15,6 +15,7 @@ extern crate alloc;
 extern crate std;
 
 mod certificate;
+pub mod ext;
 mod general_name;
 pub mod pkix_extensions;
 pub mod pkix_oids;
