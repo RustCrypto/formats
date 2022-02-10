@@ -6,10 +6,12 @@ pub mod oids;
 
 mod authkeyid;
 mod keyusage;
+mod policymap;
 
 pub use authkeyid::AuthorityKeyIdentifier;
 pub use certpolicy::CertificatePolicies;
 pub use keyusage::{KeyUsage, KeyUsages};
+pub use policymap::{PolicyMapping, PolicyMappings};
 
 use der::asn1::OctetString;
 
