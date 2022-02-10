@@ -25,3 +25,14 @@ use der::asn1::OctetString;
 ///
 /// [RFC 5280 Section 4.2.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
 pub type SubjectKeyIdentifier<'a> = OctetString<'a>;
+
+/// SubjectAltName as defined in [RFC 5280 Section 4.2.1.6].
+///
+/// This extension is identified by the [`PKIX_CE_SUBJECT_ALT_NAME`](constant.PKIX_CE_SUBJECT_ALT_NAME.html) OID.
+///
+/// ```text
+/// SubjectAltName ::= GeneralNames
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
+pub type SubjectAltName<'a> = name::GeneralNames<'a>;
