@@ -1,29 +1,12 @@
 //! GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
 
+use crate::ext::pkix::name::OtherName;
+
 use alloc::string::ToString;
 use alloc::vec::Vec;
-use der::asn1::{Any, ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
-use der::{Decodable, Decoder, ErrorKind, Sequence, TagMode, TagNumber};
+use der::asn1::{ContextSpecific, Ia5String, ObjectIdentifier, OctetString};
+use der::{Decodable, Decoder, ErrorKind, TagMode, TagNumber};
 use x501::name::Name;
-
-/// OtherName as defined in [RFC 5280 Section 4.2.1.6].
-///
-/// ```text
-/// OtherName ::= SEQUENCE {
-///     type-id    OBJECT IDENTIFIER,
-///     value      [0] EXPLICIT ANY DEFINED BY type-id
-/// }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-#[allow(missing_docs)]
-pub struct OtherName<'a> {
-    pub type_id: ObjectIdentifier,
-
-    #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
-    pub value: Any<'a>,
-}
 
 /// GeneralNames as defined in [RFC 5280 Section 4.2.1.6] in support of the Subject Alternative Name extension.
 ///

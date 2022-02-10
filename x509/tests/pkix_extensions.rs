@@ -237,7 +237,6 @@ fn decode_general_name() {
     }
 
     // OtherName
-
     let bytes = hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");
     match GeneralName::from_der(&bytes).unwrap() {
         GeneralName::OtherName(other_name) => {
