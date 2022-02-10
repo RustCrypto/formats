@@ -278,20 +278,8 @@ fn decode_cert() {
             assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
 
-            use x509::extensions_utils::KeyUsageValues;
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
-            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
-            let mut count = 0;
-            for v in kuv {
-                if 0 == count {
-                    assert_eq!(v, KeyUsageValues::KeyCertSign);
-                } else if 1 == count {
-                    assert_eq!(v, KeyUsageValues::CRLSign);
-                } else {
-                    panic!("Should not occur");
-                }
-                count += 1;
-            }
+            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
 
             let reencoded = ku.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -757,20 +745,8 @@ fn decode_cert() {
         } else if 2 == counter {
             assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
-            use x509::extensions_utils::KeyUsageValues;
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
-            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
-            let mut count = 0;
-            for v in kuv {
-                if 0 == count {
-                    assert_eq!(v, KeyUsageValues::KeyCertSign);
-                } else if 1 == count {
-                    assert_eq!(v, KeyUsageValues::CRLSign);
-                } else {
-                    panic!("Should not occur");
-                }
-                count += 1;
-            }
+            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
         } else if 3 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
@@ -1008,16 +984,16 @@ fn decode_idp() {
     assert!(idp.only_some_reasons.is_some());
     assert!(idp.distribution_point.is_some());
 
-    let rfv = get_reason_flags_values(&idp.only_some_reasons.unwrap());
-    assert_eq!(true, rfv.unused);
-    assert_eq!(false, rfv.key_compromise);
-    assert_eq!(false, rfv.ca_compromise);
-    assert_eq!(true, rfv.affiliation_changed);
-    assert_eq!(true, rfv.superseded);
-    assert_eq!(true, rfv.cessation_of_operation);
-    assert_eq!(true, rfv.certificate_hold);
-    assert_eq!(true, rfv.remove_from_crl);
-    assert_eq!(true, rfv.aa_compromise);
+    assert_eq!(
+        Reasons::Unused
+            | Reasons::AffiliationChanged
+            | Reasons::Superseded
+            | Reasons::CessationOfOperation
+            | Reasons::CertificateHold
+            | Reasons::PrivilegeWithdrawn
+            | Reasons::AaCompromise,
+        idp.only_some_reasons.unwrap()
+    );
 
     //  930  360:             SEQUENCE {
     //  934  353:               [0] {

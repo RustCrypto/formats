@@ -1243,6 +1243,7 @@ name = "x509"
 version = "0.0.1"
 dependencies = [
  "der",
+ "flagset",
  "hex-literal",
  "spki",
  "x501",
