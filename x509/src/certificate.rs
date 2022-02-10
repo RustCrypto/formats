@@ -6,21 +6,6 @@ use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use x501::name::Name;
 use x501::time::Validity;
 
-/// returns false in support of integer DEFAULT fields set to 0
-pub fn default_zero_u8() -> u8 {
-    0
-}
-
-/// returns false in support of boolean DEFAULT fields
-pub fn default_false() -> bool {
-    false
-}
-
-/// returns false in support of integer DEFAULT fields set to 0
-pub fn default_zero() -> u32 {
-    0
-}
-
 /// only support v3 certificates
 /// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
 pub const X509_CERT_VERSION: u8 = 2;
@@ -53,7 +38,7 @@ pub const X509_CERT_VERSION: u8 = 2;
 #[derive(Clone, Eq, PartialEq)]
 pub struct TBSCertificate<'a> {
     /// version         [0]  Version DEFAULT v1,
-    //#[asn1(context_specific = "0", default = "default_zero_u8")]
+    //#[asn1(context_specific = "0", default = "Default::default")]
     pub version: u8,
     /// serialNumber         CertificateSerialNumber,
     pub serial_number: UIntBytes<'a>,
@@ -83,7 +68,7 @@ impl<'a> ::der::Decodable<'a> for TBSCertificate<'a> {
             let version =
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value)
-                    .unwrap_or_else(default_zero_u8);
+                    .unwrap_or_else(Default::default);
             let serial_number = decoder.decode()?;
             let signature = decoder.decode()?;
             let issuer = decoder.decode()?;
@@ -225,7 +210,7 @@ pub struct Extension<'a> {
     pub extn_id: ObjectIdentifier,
 
     /// critical    BOOLEAN DEFAULT FALSE,
-    #[asn1(default = "default_false")]
+    #[asn1(default = "Default::default")]
     pub critical: bool,
 
     /// extnValue   OCTET STRING
