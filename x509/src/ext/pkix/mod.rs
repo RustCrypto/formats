@@ -63,3 +63,14 @@ pub type IssuerAltName<'a> = name::GeneralNames<'a>;
 ///
 /// [RFC 5280 Section 4.2.1.8]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.8
 pub type SubjectDirectoryAttributes<'a> = Vec<AttributeTypeAndValue<'a>>;
+
+/// InhibitAnyPolicy as defined in [RFC 5280 Section 4.2.1.14].
+///
+/// This extension is identified by the [`PKIX_CE_INHIBIT_ANY_POLICY`](constant.PKIX_CE_INHIBIT_ANY_POLICY.html) OID.
+///
+/// ```text
+/// InhibitAnyPolicy ::= SkipCerts
+/// ```
+///
+/// [RFC 5280 Section 4.2.1.14]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.14
+pub type InhibitAnyPolicy = u32;

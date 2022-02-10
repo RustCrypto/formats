@@ -42,15 +42,6 @@ pub struct PrivateKeyUsagePeriod {
     pub not_after: Option<GeneralizedTime>,
 }
 
-/// Inhibit any policy extension as defined in [RFC 5280 Section 4.2.1.14] and as identified by the [`PKIX_CE_INHIBIT_ANY_POLICY`](constant.PKIX_CE_INHIBIT_ANY_POLICY.html) OID.
-///
-/// ```text
-/// InhibitAnyPolicy ::= SkipCerts
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.14]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.14
-pub type InhibitAnyPolicy = u32;
-
 /// Authority information access extension as defined in [RFC 5280 Section 4.2.2.1] and as identified by the [`PKIX_PE_AUTHORITYINFOACCESS`](constant.PKIX_PE_AUTHORITYINFOACCESS.html) OID.
 ///
 /// ```text
