@@ -4,15 +4,9 @@ use crate::general_name::GeneralName;
 use crate::general_name::GeneralNames;
 
 use alloc::vec::Vec;
-use der::asn1::{
-    Any, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier, OctetString,
-    UIntBytes, Utf8String,
-};
-use der::Header;
-use der::{
-    Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Enumerated, ErrorKind,
-    FixedTag, Sequence, Tag, TagMode, TagNumber,
-};
+
+use der::asn1::*;
+use der::{Choice, Enumerated, Sequence};
 use flagset::{flags, FlagSet};
 use x501::attr::AttributeTypeAndValue;
 use x501::name::RelativeDistinguishedName;
@@ -559,172 +553,48 @@ pub type ReasonFlags = FlagSet<Reasons>;
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 pub type CRLDistributionPoints<'a> = Vec<DistributionPoint<'a>>;
 
-/// DistributionPoint as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
+/// DistributionPoint as defined in [RFC 5280 Section 4.2.1.13].
 ///
 /// ```text
 /// DistributionPoint ::= SEQUENCE {
-///      distributionPoint       [0]     DistributionPointName OPTIONAL,
-///      reasons                 [1]     ReasonFlags OPTIONAL,
-///      cRLIssuer               [2]     GeneralNames OPTIONAL }
+///     distributionPoint       [0]     DistributionPointName OPTIONAL,
+///     reasons                 [1]     ReasonFlags OPTIONAL,
+///     cRLIssuer               [2]     GeneralNames OPTIONAL
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-//#[derive(Sequence)]
+#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
+#[allow(missing_docs)]
 pub struct DistributionPoint<'a> {
-    /// distributionPoint       [0]     DistributionPointName OPTIONAL,
-    //#[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub distribution_point: Option<DistributionPointName<'a>>,
 
-    /// reasons                 [1]     ReasonFlags OPTIONAL,
-    //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub reasons: Option<ReasonFlags>,
 
-    /// cRLIssuer               [2]     GeneralNames OPTIONAL }
-    //#[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub crl_issuer: Option<GeneralNames<'a>>,
 }
 
-const CRLDP_DISTRIBUTION_POINT_TAG: TagNumber = TagNumber::new(0);
-const REASONS_TAG: TagNumber = TagNumber::new(1);
-const CRL_ISSUER_TAG: TagNumber = TagNumber::new(2);
-
-impl<'a> ::der::Decodable<'a> for DistributionPoint<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let distribution_point =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let reasons =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            let crl_issuer =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N2)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                distribution_point,
-                reasons,
-                crl_issuer,
-            })
-        })
-    }
-}
-
-impl<'a> ::der::Sequence<'a> for DistributionPoint<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[
-            &self
-                .distribution_point
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: CRLDP_DISTRIBUTION_POINT_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: elem.clone(),
-                }),
-            &self.reasons.as_ref().map(|elem| ContextSpecific {
-                tag_number: REASONS_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *elem,
-            }),
-            &self.crl_issuer.as_ref().map(|elem| ContextSpecific {
-                tag_number: CRL_ISSUER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: elem.clone(),
-            }),
-        ])
-    }
-}
-
-/// DistributionPointName as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
+/// DistributionPointName as defined in [RFC 5280 Section 4.2.1.13].
 ///
 /// ```text
 /// DistributionPointName ::= CHOICE {
-///      fullName                [0]     GeneralNames,
-///      nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
+///     fullName                [0]     GeneralNames,
+///     nameRelativeToCRLIssuer [1]     RelativeDistinguishedName
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Choice)]
+#[allow(missing_docs)]
 pub enum DistributionPointName<'a> {
-    /// fullName                [0]     GeneralNames,
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
     FullName(GeneralNames<'a>),
 
-    /// nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
     NameRelativeToCRLIssuer(RelativeDistinguishedName<'a>),
-}
-
-const FULL_NAME_TAG: TagNumber = TagNumber::new(0);
-const NAME_RELATIVE_TO_ISSUER_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> DecodeValue<'a> for DistributionPointName<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
-        let t = decoder.peek_tag()?;
-        let o = t.octet();
-        // Context specific support always returns an Option<>, just ignore since OPTIONAL does not apply here
-        match o {
-            0xA0 => {
-                let on = decoder
-                    .context_specific::<GeneralNames<'a>>(FULL_NAME_TAG, TagMode::Implicit)?;
-                match on {
-                    Some(on) => Ok(DistributionPointName::FullName(on)),
-                    _ => Err(ErrorKind::Failed.into()),
-                }
-            }
-            0xA1 => {
-                let on = decoder.context_specific::<RelativeDistinguishedName<'a>>(
-                    NAME_RELATIVE_TO_ISSUER_TAG,
-                    TagMode::Implicit,
-                )?;
-                match on {
-                    Some(on) => Ok(DistributionPointName::NameRelativeToCRLIssuer(on)),
-                    _ => Err(ErrorKind::Failed.into()),
-                }
-            }
-            _ => Err(ErrorKind::TagUnknown { byte: o }.into()),
-        }
-    }
-}
-
-impl<'a> EncodeValue for DistributionPointName<'a> {
-    fn encode_value(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
-        match self {
-            Self::FullName(variant) => ContextSpecific {
-                tag_number: FULL_NAME_TAG,
-                tag_mode: TagMode::Implicit,
-                value: variant.clone(),
-            }
-            .encode(encoder),
-            Self::NameRelativeToCRLIssuer(variant) => ContextSpecific {
-                tag_number: NAME_RELATIVE_TO_ISSUER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: (*variant).clone(),
-            }
-            .encode(encoder),
-        }
-    }
-    fn value_len(&self) -> ::der::Result<::der::Length> {
-        match self {
-            Self::FullName(variant) => ContextSpecific {
-                tag_number: FULL_NAME_TAG,
-                tag_mode: TagMode::Implicit,
-                value: variant.clone(),
-            }
-            .encoded_len(),
-            Self::NameRelativeToCRLIssuer(variant) => ContextSpecific {
-                tag_number: NAME_RELATIVE_TO_ISSUER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: variant.clone(),
-            }
-            .encoded_len(),
-        }
-    }
-}
-
-//TODO - see why this is necessary to avoid problem at line 78 in context_specific.rs due to mismatched tag
-impl<'a> FixedTag for DistributionPointName<'a> {
-    const TAG: Tag = ::der::Tag::Sequence;
 }
 
 /// Freshest CRL extension as defined in [RFC 5280 Section 5.2.6] and as identified by the [`PKIX_CE_FRESHEST_CRL`](constant.PKIX_CE_FRESHEST_CRL.html) OID.
@@ -736,94 +606,60 @@ impl<'a> FixedTag for DistributionPointName<'a> {
 /// [RFC 5280 Section 5.2.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.6
 pub type FreshestCRL<'a> = CRLDistributionPoints<'a>;
 
-/// Issuing distribution point extension as defined in [RFC 5280 Section 5.2.5] and as identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
+/// IssuingDistributionPoint as defined in [RFC 5280 Section 5.2.5].
+///
+/// This extension is identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
 ///
 /// ```text
 /// IssuingDistributionPoint ::= SEQUENCE {
-///      distributionPoint          [0] DistributionPointName OPTIONAL,
-///      onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
-///      onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
-///      onlySomeReasons            [3] ReasonFlags OPTIONAL,
-///      indirectCRL                [4] BOOLEAN DEFAULT FALSE,
-///      onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE }
-///      -- at most one of onlyContainsUserCerts, onlyContainsCACerts,
-///      -- and onlyContainsAttributeCerts may be set to TRUE.
+///     distributionPoint          [0] DistributionPointName OPTIONAL,
+///     onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+///     onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
+///     onlySomeReasons            [3] ReasonFlags OPTIONAL,
+///     indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+///     onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+///     -- at most one of onlyContainsUserCerts, onlyContainsCACerts,
+///     -- and onlyContainsAttributeCerts may be set to TRUE.
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
-//#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct IssuingDistributionPoint<'a> {
-    /// distributionPoint          [0] DistributionPointName OPTIONAL,
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub distribution_point: Option<DistributionPointName<'a>>,
 
-    /// onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+    #[asn1(
+        context_specific = "1",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
     pub only_contains_user_certs: bool,
 
-    /// onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
-    pub only_contains_cacerts: bool,
+    #[asn1(
+        context_specific = "2",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
+    pub only_contains_ca_certs: bool,
 
-    /// onlySomeReasons            [3] ReasonFlags OPTIONAL,
+    #[asn1(context_specific = "3", tag_mode = "IMPLICIT", optional = "true")]
     pub only_some_reasons: Option<ReasonFlags>,
 
-    /// indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+    #[asn1(
+        context_specific = "4",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
     pub indirect_crl: bool,
 
-    /// onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+    #[asn1(
+        context_specific = "5",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
     pub only_contains_attribute_certs: bool,
-}
-
-const DISTRIBUTION_POINT_TAG: TagNumber = TagNumber::new(0);
-const ONLY_CONTAINS_USER_CERTS_TAG: TagNumber = TagNumber::new(1);
-const ONLY_CONTAINS_CA_CERTS_TAG: TagNumber = TagNumber::new(2);
-const ONLY_SOME_REASONS_TAG: TagNumber = TagNumber::new(3);
-const INDIRECT_TAG: TagNumber = TagNumber::new(4);
-const ONLY_CONTAINS_ATTRIBUTE_CERTS_TAG: TagNumber = TagNumber::new(5);
-
-impl<'a> Decodable<'a> for IssuingDistributionPoint<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let distribution_point = decoder.context_specific::<DistributionPointName<'_>>(
-                DISTRIBUTION_POINT_TAG,
-                TagMode::Implicit,
-            )?;
-
-            // for each of the BOOLEAN fields, assign the DEFAULT value upon None
-            let mut only_contains_user_certs = decoder
-                .context_specific::<bool>(ONLY_CONTAINS_USER_CERTS_TAG, TagMode::Implicit)?;
-            if None == only_contains_user_certs {
-                only_contains_user_certs = Some(false);
-            }
-
-            let mut only_contains_cacerts =
-                decoder.context_specific::<bool>(ONLY_CONTAINS_CA_CERTS_TAG, TagMode::Implicit)?;
-            if None == only_contains_cacerts {
-                only_contains_cacerts = Some(false);
-            }
-
-            let only_some_reasons = decoder
-                .context_specific::<ReasonFlags>(ONLY_SOME_REASONS_TAG, TagMode::Implicit)?;
-
-            let mut indirect_crl =
-                decoder.context_specific::<bool>(INDIRECT_TAG, TagMode::Implicit)?;
-            if None == indirect_crl {
-                indirect_crl = Some(false);
-            }
-
-            let mut only_contains_attribute_certs = decoder
-                .context_specific::<bool>(ONLY_CONTAINS_ATTRIBUTE_CERTS_TAG, TagMode::Implicit)?;
-            if None == only_contains_attribute_certs {
-                only_contains_attribute_certs = Some(false);
-            }
-            Ok(IssuingDistributionPoint {
-                distribution_point,
-                only_contains_user_certs: only_contains_user_certs.unwrap(),
-                only_contains_cacerts: only_contains_cacerts.unwrap(),
-                only_some_reasons,
-                indirect_crl: indirect_crl.unwrap(),
-                only_contains_attribute_certs: only_contains_attribute_certs.unwrap(),
-            })
-        })
-    }
 }
 
 /// The PIV NACI extension is defined in [FIPS 201-2 Appendix B] and is identified by the [`PIV_NACI_INDICATOR`](constant.PIV_NACI_INDICATOR.html) OID.
