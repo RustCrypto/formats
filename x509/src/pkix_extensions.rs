@@ -481,44 +481,22 @@ pub type InhibitAnyPolicy = u32;
 /// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
 pub type AuthorityInfoAccessSyntax<'a> = Vec<AccessDescription<'a>>;
 
-/// AccessDescription as defined in [RFC 5280 Section 4.2.2.1] in support of the Authority Information Access extension (and referenced by Subject Information Access extension).
+/// AccessDescription as defined in [RFC 5280 Section 4.2.2.1].
 ///
 /// ```text
 /// AccessDescription  ::=  SEQUENCE {
-///         accessMethod          OBJECT IDENTIFIER,
-///         accessLocation        GeneralName  }
+///     accessMethod          OBJECT IDENTIFIER,
+///     accessLocation        GeneralName
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct AccessDescription<'a> {
-    /// accessMethod          OBJECT IDENTIFIER,
     pub access_method: ObjectIdentifier,
 
-    /// accessLocation        GeneralName
     pub access_location: GeneralName<'a>,
-}
-
-impl<'a> ::der::Decodable<'a> for AccessDescription<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let access_method = decoder.decode()?;
-            let access_location = decoder.decode()?;
-            Ok(Self {
-                access_method,
-                access_location,
-            })
-        })
-    }
-}
-
-impl<'a> ::der::Sequence<'a> for AccessDescription<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[&self.access_method, &self.access_location])
-    }
 }
 
 /// Subject information access extension as defined in [RFC 5280 Section 4.2.2.2] and as identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
