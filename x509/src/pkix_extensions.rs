@@ -5,39 +5,9 @@ use crate::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
 use alloc::vec::Vec;
 
 use der::asn1::*;
-use der::{Choice, Enumerated, Sequence};
+use der::{Enumerated, Sequence};
 use flagset::{flags, FlagSet};
 use x501::attr::AttributeTypeAndValue;
-
-/// DisplayText as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
-///
-/// ASN.1 structure for DisplayText is below. At present, only the ia5String and utf8String options are supported.
-///
-/// ```text
-///    DisplayText ::= CHOICE {
-///         ia5String        IA5String      (SIZE (1..200)),
-///         visibleString    VisibleString  (SIZE (1..200)),
-///         bmpString        BMPString      (SIZE (1..200)),
-///         utf8String       UTF8String     (SIZE (1..200)) }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-#[derive(Choice, Clone, Debug, Eq, PartialEq)]
-pub enum DisplayText<'a> {
-    /// ia5String        IA5String      (SIZE (1..200))
-    #[asn1(type = "IA5String")]
-    Ia5String(Ia5String<'a>),
-
-    /// visibleString    VisibleString  (SIZE (1..200)),
-    // TODO: support VisibleString if desired
-
-    /// bmpString        BMPString      (SIZE (1..200)),
-    // TODO: support BMPString if desired
-
-    /// utf8String       UTF8String     (SIZE (1..200))
-    #[asn1(type = "UTF8String")]
-    Utf8String(Utf8String<'a>),
-}
 
 /// Extended key usage extension as defined in [RFC 5280 Section 4.2.1.12] and as identified by the [`PKIX_CE_EXTKEYUSAGE`](constant.PKIX_CE_EXTKEYUSAGE.html) OID.
 ///
@@ -111,53 +81,6 @@ pub struct BasicConstraints {
     pub path_len_constraint: Option<u8>,
 }
 
-/// Certificate policies extension as defined in [RFC 5280 Section 4.2.1.4] and as identified by the [`PKIX_CE_CERTIFICATE_POLICIES`](constant.PKIX_CE_CERTIFICATE_POLICIES.html) OID.
-///
-/// ```text
-///CertificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-pub type CertificatePolicies<'a> = Vec<PolicyInformation<'a>>;
-
-/// PolicyInformation as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
-///
-/// ```text
-/// PolicyInformation ::= SEQUENCE {
-///      policyIdentifier   CertPolicyId,
-///      policyQualifiers   SEQUENCE SIZE (1..MAX) OF
-///              PolicyQualifierInfo OPTIONAL }
-///
-/// CertPolicyId ::= OBJECT IDENTIFIER
-///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct PolicyInformation<'a> {
-    /// policyIdentifier   CertPolicyId,
-    pub policy_identifier: ObjectIdentifier,
-
-    /// policyQualifiers   SEQUENCE SIZE (1..MAX) OF PolicyQualifierInfo OPTIONAL
-    pub policy_qualifiers: Option<Vec<PolicyQualifierInfo<'a>>>,
-}
-
-/// PolicyQualifierInfo as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
-///
-/// ```text
-/// PolicyQualifierInfo ::= SEQUENCE {
-///      policyQualifierId  PolicyQualifierId,
-///      qualifier          ANY DEFINED BY policyQualifierId }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct PolicyQualifierInfo<'a> {
-    /// policyQualifierId  PolicyQualifierId,
-    pub policy_qualifier_id: ObjectIdentifier,
-
-    /// qualifier          ANY DEFINED BY policyQualifierId
-    pub qualifier: Option<Any<'a>>,
-}
-
 /// PrivateKeyUsagePeriod as defined in [RFC 3280 Section 4.2.1.4].
 ///
 /// This extension is by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
@@ -181,42 +104,6 @@ pub struct PrivateKeyUsagePeriod {
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub not_after: Option<GeneralizedTime>,
-}
-
-/// NoticeReference as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
-///
-/// ```text
-/// NoticeReference ::= SEQUENCE {
-///      organization     DisplayText,
-///      noticeNumbers    SEQUENCE OF INTEGER }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct NoticeReference<'a> {
-    /// organization     DisplayText,
-    pub organization: DisplayText<'a>,
-
-    /// noticeNumbers    SEQUENCE OF INTEGER
-    pub notice_numbers: Option<Vec<UIntBytes<'a>>>,
-}
-
-/// UserNotice as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
-///
-/// ```text
-/// UserNotice ::= SEQUENCE {
-///      noticeRef        NoticeReference OPTIONAL,
-///      explicitText     DisplayText OPTIONAL }
-/// ```
-///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct UserNotice<'a> {
-    /// noticeRef        NoticeReference OPTIONAL,
-    pub notice_ref: Option<GeneralizedTime>,
-
-    /// explicitText     DisplayText OPTIONAL }
-    pub explicit_text: Option<DisplayText<'a>>,
 }
 
 /// Policy mappings extension as defined in [RFC 5280 Section 4.2.1.5] and as identified by the [`PKIX_CE_POLICY_MAPPINGS`](constant.PKIX_CE_POLICY_MAPPINGS.html) OID.
