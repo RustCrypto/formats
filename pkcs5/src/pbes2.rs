@@ -64,7 +64,7 @@ const DES_BLOCK_SIZE: usize = 8;
 /// ```
 ///
 /// [RFC 8018 Appendix A.4]: https://tools.ietf.org/html/rfc8018#appendix-A.4
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct Parameters<'a> {
     /// Key derivation function
     pub kdf: Kdf<'a>,
@@ -194,21 +194,6 @@ impl<'a> Parameters<'a> {
         pos: usize,
     ) -> Result<&'b [u8]> {
         encryption::encrypt_in_place(self, password, buffer, pos)
-    }
-}
-
-impl<'a> Decodable<'a> for Parameters<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.any()?.try_into()
-    }
-}
-
-impl<'a> Sequence<'a> for Parameters<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
-    {
-        f(&[&self.kdf, &self.encryption])
     }
 }
 
