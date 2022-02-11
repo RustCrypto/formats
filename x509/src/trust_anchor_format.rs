@@ -1,11 +1,12 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
 use crate::{Certificate, CertificatePolicies, Extensions, NameConstraints};
-use der::asn1::{BitString, OctetString, Utf8String};
+use der::asn1::{OctetString, Utf8String};
 use der::{
     DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Header, Sequence, Tag,
     TagMode, TagNumber,
 };
+use flagset::{flags, FlagSet};
 use spki::SubjectPublicKeyInfo;
 use x501::name::Name;
 
@@ -78,11 +79,30 @@ pub struct CertPathControls<'a> {
     pub path_len_constraint: Option<u32>,
 }
 
-/// CertPolicyFlags ::= BIT STRING {
-///  inhibitPolicyMapping    (0),
-///  requireExplicitPolicy   (1),
-///  inhibitAnyPolicy        (2) }
-pub type CertPolicyFlags<'a> = BitString<'a>;
+flags! {
+    /// Certificate policies as defined in [RFC 5280 Section 4.2.1.13].
+    ///
+    /// ```text
+    /// CertPolicyFlags ::= BIT STRING {
+    ///     inhibitPolicyMapping    (0),
+    ///     requireExplicitPolicy   (1),
+    ///     inhibitAnyPolicy        (2)
+    /// }
+    /// ```
+    ///
+    /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+    #[allow(missing_docs)]
+    pub enum CertPolicies: u8 {
+        InhibitPolicyMapping = 1 << 0,
+        RequireExplicitPolicy = 1 << 1,
+        InhibitAnyPolicy = 1 << 2,
+    }
+}
+
+/// Certificate policy flags as defined in [RFC 5280 Section 4.2.1.13].
+///
+/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+pub type CertPolicyFlags<'a> = FlagSet<CertPolicies>;
 
 /// TrustAnchorChoice ::= CHOICE {
 ///   certificate  Certificate,

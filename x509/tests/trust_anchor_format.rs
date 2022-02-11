@@ -1,7 +1,7 @@
 use der::Decoder;
 use hex_literal::hex;
 use x509::der::{DecodeValue, Encodable};
-use x509::trust_anchor_format::TrustAnchorChoice;
+use x509::trust_anchor_format::{CertPolicies, TrustAnchorChoice};
 use x509::*;
 
 #[test]
@@ -253,20 +253,12 @@ fn decode_ta3() {
 
             let cert_path = tai.cert_path.as_ref().unwrap();
 
-            let cpf = cert_path.policy_flags.unwrap();
-            let b = cpf.raw_bytes();
-            if 0x80 != 0x80 & b[0] {
-                panic!("Missing policy flag bit 0")
-            }
-            if 0x40 != 0x40 & b[0] {
-                panic!("Missing policy flag bit 1")
-            }
-            if 0x20 != 0x20 & b[0] {
-                panic!("Missing policy flag bit 2")
-            }
-            if cpf.unused_bits() != 5 {
-                panic!("Wrong unused bits for policy flags")
-            }
+            assert_eq!(
+                CertPolicies::InhibitPolicyMapping
+                    | CertPolicies::RequireExplicitPolicy
+                    | CertPolicies::InhibitAnyPolicy,
+                cert_path.policy_flags.unwrap()
+            );
 
             let mut counter = 0;
             let i = cert_path.ta_name.iter();
