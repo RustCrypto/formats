@@ -25,7 +25,7 @@ des = { version = "0.8", optional = true, default-features = false }
 hmac = { version = "0.12", optional = true, default-features = false }
 pbkdf2 = { version = "0.10", optional = true, default-features = false }
 scrypt = { version = "0.8", optional = true, default-features = false }
-sha-1 = { version = "0.10", optional = true, default-features = false }
+sha1 = { version = "0.10", optional = true, default-features = false }
 sha2 = { version = "0.10", optional = true, default-features = false }
 
 [dev-dependencies]
@@ -36,7 +36,7 @@ alloc = []
 3des = ["pbes2", "des"]
 des-insecure = ["pbes2", "des"]
 pbes2 = ["aes", "cbc", "hmac", "pbkdf2", "scrypt", "sha2"]
-sha1 = ["pbes2", "sha-1"]
+sha1-insecure = ["pbes2", "sha1"]
 
 [package.metadata.docs.rs]
 all-features = true

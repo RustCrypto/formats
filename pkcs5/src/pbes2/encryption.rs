@@ -111,13 +111,13 @@ impl EncryptionKey {
         match kdf {
             Kdf::Pbkdf2(pbkdf2_params) => {
                 let key = match pbkdf2_params.prf {
-                    #[cfg(feature = "sha1")]
+                    #[cfg(feature = "sha1-insecure")]
                     Pbkdf2Prf::HmacWithSha1 => EncryptionKey::derive_with_pbkdf2::<sha1::Sha1>(
                         password,
                         pbkdf2_params,
                         key_size,
                     ),
-                    #[cfg(not(feature = "sha1"))]
+                    #[cfg(not(feature = "sha1-insecure"))]
                     Pbkdf2Prf::HmacWithSha1 => {
                         return Err(Error::UnsupportedAlgorithm {
                             oid: super::HMAC_WITH_SHA1_OID,
