@@ -8,15 +8,6 @@ use der::asn1::*;
 use der::{Enumerated, Sequence};
 use flagset::{flags, FlagSet};
 
-/// OCSP noCheck extension as defined in [RFC 6960 Section 4.2.2.2.1] and as idenfied by the [`PKIX_OCSP_NOCHECK`](constant.PKIX_OCSP_NOCHECK.html) OID.
-///
-/// ```text
-/// OcspNoCheck ::= NULL
-/// ```
-///
-/// [RFC 6960 Section 4.2.2.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.2.2.1
-pub type OcspNoCheck = Null;
-
 /// CRL number extension as defined in [RFC 5280 Section 5.2.3] and as identified by the [`PKIX_CE_CRLNUMBER`](constant.PKIX_CE_CRLNUMBER.html) OID.
 ///
 /// ```text
