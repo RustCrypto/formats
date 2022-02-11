@@ -1,7 +1,7 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
 use crate::{Certificate, CertificatePolicies, Extensions, NameConstraints};
-use der::asn1::{BitString, ContextSpecific, OctetString, Utf8String};
+use der::asn1::{BitString, OctetString, Utf8String};
 use der::{
     DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Header, Sequence, Tag,
     TagMode, TagNumber,
@@ -9,132 +9,42 @@ use der::{
 use spki::SubjectPublicKeyInfo;
 use x501::name::Name;
 
+/// ```text
 /// TrustAnchorInfo ::= SEQUENCE {
-///       version   TrustAnchorInfoVersion DEFAULT v1,
-///       pubKey    SubjectPublicKeyInfo,
-///       keyId     KeyIdentifier,
-///       taTitle   TrustAnchorTitle OPTIONAL,
-///       certPath  CertPathControls OPTIONAL,
-///       exts      \[1\] EXPLICIT Extensions   OPTIONAL,
-///       taTitleLangTag   \[2\] UTF8String OPTIONAL }
+///     version         TrustAnchorInfoVersion DEFAULT v1,
+///     pubKey          SubjectPublicKeyInfo,
+///     keyId           KeyIdentifier,
+///     taTitle         TrustAnchorTitle OPTIONAL,
+///     certPath        CertPathControls OPTIONAL,
+///     exts            [1] EXPLICIT Extensions   OPTIONAL,
+///     taTitleLangTag  [2] UTF8String OPTIONAL
+/// }
 ///
 /// TrustAnchorInfoVersion ::= INTEGER { v1(1) }
 ///
 /// TrustAnchorTitle ::= UTF8String (SIZE (1..64))
-#[derive(Clone, Eq, PartialEq)]
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
+#[allow(missing_docs)]
 pub struct TrustAnchorInfo<'a> {
-    /// version   TrustAnchorInfoVersion DEFAULT v1,
-    pub version: Option<u8>,
+    #[asn1(default = "Default::default")]
+    pub version: u8,
 
-    /// pubKey    SubjectPublicKeyInfo,
     pub pub_key: SubjectPublicKeyInfo<'a>,
 
-    /// keyId     KeyIdentifier,
     pub key_id: OctetString<'a>,
 
-    /// taTitle   TrustAnchorTitle OPTIONAL,
+    #[asn1(optional = "true")]
     pub ta_title: Option<Utf8String<'a>>,
 
-    /// certPath  CertPathControls OPTIONAL,
+    #[asn1(optional = "true")]
     pub cert_path: Option<CertPathControls<'a>>,
 
-    /// exts      \[1\] EXPLICIT Extensions   OPTIONAL,
+    #[asn1(context_specific = "1", tag_mode = "EXPLICIT", optional = "true")]
     pub extensions: Option<Extensions<'a>>,
 
-    /// taTitleLangTag   \[2\] UTF8String OPTIONAL }
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub ta_title_lang_tag: Option<Utf8String<'a>>,
-}
-
-// impl<'a> ::der::Decodable<'a> for TrustAnchorInfo<'a> {
-//     fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-impl<'a> DecodeValue<'a> for TrustAnchorInfo<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
-        let version = match decoder.decode()? {
-            Some(v) => Some(v),
-            _ => Some(1),
-        };
-
-        let pub_key = decoder.decode()?;
-        let key_id = decoder.decode()?;
-        let ta_title = decoder.decode()?;
-        let cert_path = decoder.decode()?;
-        let extensions =
-            ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N1)?
-                .map(|cs| cs.value);
-        let ta_title_lang_tag =
-            ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N2)?
-                .map(|cs| cs.value);
-        Ok(Self {
-            version,
-            pub_key,
-            key_id,
-            ta_title,
-            cert_path,
-            extensions,
-            ta_title_lang_tag,
-        })
-    }
-}
-
-const TAF_EXTENSIONS_TAG: TagNumber = TagNumber::new(1);
-const TA_TITLE_LANG_TAG: TagNumber = TagNumber::new(0);
-impl<'a> ::der::Sequence<'a> for TrustAnchorInfo<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        #[allow(unused_imports)]
-        use core::convert::TryFrom;
-        f(&[
-            &::der::asn1::OptionalRef(if self.version == Some(1) {
-                None
-            } else {
-                Some(&self.version)
-            }),
-            &self.pub_key,
-            &self.key_id,
-            &self.ta_title,
-            &self.cert_path,
-            &self.extensions.as_ref().map(|exts| ContextSpecific {
-                tag_number: TAF_EXTENSIONS_TAG,
-                tag_mode: TagMode::Explicit,
-                value: exts.clone(),
-            }),
-            &self
-                .ta_title_lang_tag
-                .as_ref()
-                .map(|ta_title_lang_tag| ContextSpecific {
-                    tag_number: TA_TITLE_LANG_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: *ta_title_lang_tag,
-                }),
-        ])
-    }
-}
-
-impl<'a> ::core::fmt::Debug for TrustAnchorInfo<'a> {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.write_fmt(format_args!("\n\tVersion: {:02X?}\n", self.version))?;
-        f.write_fmt(format_args!("\tPublic Key Info: {:?}\n", self.pub_key))?;
-        f.write_fmt(format_args!("\tKey ID: {:?}\n", self.key_id))?;
-        f.write_fmt(format_args!("\tTA title: {:?}\n", self.ta_title))?;
-        f.write_fmt(format_args!(
-            "\tTA title language tag: {:?}\n",
-            self.ta_title_lang_tag
-        ))?;
-        f.write_fmt(format_args!(
-            "\tCertificate path controls: {:?}\n",
-            self.cert_path
-        ))?;
-        if let Some(exts) = self.extensions.as_ref() {
-            for (i, e) in exts.iter().enumerate() {
-                f.write_fmt(format_args!("\tExtension #{}: {:?}\n", i, e))?;
-            }
-        } else {
-            f.write_fmt(format_args!("\tExtensions: None\n"))?;
-        }
-        Ok(())
-    }
 }
 
 /// CertPathControls ::= SEQUENCE {
