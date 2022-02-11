@@ -2,10 +2,25 @@
 
 use crate::{Certificate, CertificatePolicies, Extensions, NameConstraints, TbsCertificate};
 use der::asn1::{OctetString, Utf8String};
-use der::{Choice, Sequence};
+use der::{Choice, Enumerated, Sequence};
 use flagset::{flags, FlagSet};
 use spki::SubjectPublicKeyInfo;
 use x501::name::Name;
+
+/// Version identifier for TrustAnchorInfo
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
+#[asn1(type = "INTEGER")]
+#[repr(u8)]
+pub enum Version {
+    /// Version 1 (default)
+    V1 = 0,
+}
+
+impl Default for Version {
+    fn default() -> Self {
+        Version::V1
+    }
+}
 
 /// ```text
 /// TrustAnchorInfo ::= SEQUENCE {
@@ -26,7 +41,7 @@ use x501::name::Name;
 #[allow(missing_docs)]
 pub struct TrustAnchorInfo<'a> {
     #[asn1(default = "Default::default")]
-    pub version: u8,
+    pub version: Version,
 
     pub pub_key: SubjectPublicKeyInfo<'a>,
 
