@@ -5,14 +5,15 @@ use crate::general_name::GeneralNames;
 
 use alloc::vec::Vec;
 use der::asn1::{
-    Any, BitString, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier,
-    OctetString, UIntBytes, Utf8String,
+    Any, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier, OctetString,
+    UIntBytes, Utf8String,
 };
 use der::Header;
 use der::{
     Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Enumerated, ErrorKind,
     FixedTag, Sequence, Tag, TagMode, TagNumber,
 };
+use flagset::{flags, FlagSet};
 use x501::attr::AttributeTypeAndValue;
 use x501::name::RelativeDistinguishedName;
 
@@ -127,24 +128,43 @@ pub struct BasicConstraints {
 /// [RFC 5280 Section 4.2.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
 pub type SubjectKeyIdentifier<'a> = OctetString<'a>;
 
-/// Key usage extension as defined in [RFC 5280 Section 4.2.1.3] and as identified by the [`PKIX_CE_KEY_USAGE`](constant.PKIX_CE_KEY_USAGE.html) OID.
-///
-/// ```text
-/// KeyUsage ::= BIT STRING {
-///      digitalSignature        (0),
-///      nonRepudiation          (1),  -- recent editions of X.509 have
-///                                 -- renamed this bit to contentCommitment
-///      keyEncipherment         (2),
-///      dataEncipherment        (3),
-///      keyAgreement            (4),
-///      keyCertSign             (5),
-///      cRLSign                 (6),
-///      encipherOnly            (7),
-///      decipherOnly            (8) }
-/// ```
+flags! {
+    /// Key usage flags as defined in [RFC 5280 Section 4.2.1.3].
+    ///
+    /// ```text
+    /// KeyUsage ::= BIT STRING {
+    ///      digitalSignature        (0),
+    ///      nonRepudiation          (1),  -- recent editions of X.509 have
+    ///                                    -- renamed this bit to contentCommitment
+    ///      keyEncipherment         (2),
+    ///      dataEncipherment        (3),
+    ///      keyAgreement            (4),
+    ///      keyCertSign             (5),
+    ///      cRLSign                 (6),
+    ///      encipherOnly            (7),
+    ///      decipherOnly            (8)
+    /// }
+    /// ```
+    ///
+    /// [RFC 5280 Section 4.2.1.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
+    #[allow(missing_docs)]
+    pub enum KeyUsages: u16 {
+        DigitalSignature = 1 << 0,
+        NonRepudiation = 1 << 1,
+        KeyEncipherment = 1 << 2,
+        DataEncipherment = 1 << 3,
+        KeyAgreement = 1 << 4,
+        KeyCertSign = 1 << 5,
+        CRLSign = 1 << 6,
+        EncipherOnly = 1 << 7,
+        DecipherOnly = 1 << 8,
+    }
+}
+
+/// KeyUsage as defined in [RFC 5280 Section 4.2.1.3] and as identified by the [`PKIX_CE_KEY_USAGE`](constant.PKIX_CE_KEY_USAGE.html) OID.
 ///
 /// [RFC 5280 Section 4.2.1.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
-pub type KeyUsage<'a> = BitString<'a>;
+pub type KeyUsage<'a> = FlagSet<KeyUsages>;
 
 /// Certificate policies extension as defined in [RFC 5280 Section 4.2.1.4] and as identified by the [`PKIX_CE_CERTIFICATE_POLICIES`](constant.PKIX_CE_CERTIFICATE_POLICIES.html) OID.
 ///
@@ -696,23 +716,41 @@ impl<'a> ::der::Sequence<'a> for AuthorityKeyIdentifier<'a> {
     }
 }
 
-/// ReasonFlags as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
-///
-/// ```text
-/// ReasonFlags ::= BIT STRING {
-///      unused                  (0),
-///      keyCompromise           (1),
-///      cACompromise            (2),
-///      affiliationChanged      (3),
-///      superseded              (4),
-///      cessationOfOperation    (5),
-///      certificateHold         (6),
-///      privilegeWithdrawn      (7),
-///      aACompromise            (8) }
-/// ```
+flags! {
+    /// Reason flags as defined in [RFC 5280 Section 4.2.1.13].
+    ///
+    /// ```text
+    /// ReasonFlags ::= BIT STRING {
+    ///      unused                  (0),
+    ///      keyCompromise           (1),
+    ///      cACompromise            (2),
+    ///      affiliationChanged      (3),
+    ///      superseded              (4),
+    ///      cessationOfOperation    (5),
+    ///      certificateHold         (6),
+    ///      privilegeWithdrawn      (7),
+    ///      aACompromise            (8) }
+    /// ```
+    ///
+    /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+    #[allow(missing_docs)]
+    pub enum Reasons: u16 {
+        Unused = 1 << 0,
+        KeyCompromise = 1 << 1,
+        CaCompromise = 1 << 2,
+        AffiliationChanged = 1 << 3,
+        Superseded = 1 << 4,
+        CessationOfOperation = 1 << 5,
+        CertificateHold = 1 << 6,
+        PrivilegeWithdrawn = 1 << 7,
+        AaCompromise = 1 << 8,
+    }
+}
+
+/// `ReasonFlags` as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-pub type ReasonFlags<'a> = BitString<'a>;
+pub type ReasonFlags = FlagSet<Reasons>;
 
 /// CRL distribution points extension as defined in [RFC 5280 Section 4.2.1.13] and as identified by the [`PKIX_CE_CRL_DISTRIBUTION_POINTS`](constant.PKIX_CE_CRL_DISTRIBUTION_POINTS.html) OID.
 ///
@@ -741,7 +779,7 @@ pub struct DistributionPoint<'a> {
 
     /// reasons                 [1]     ReasonFlags OPTIONAL,
     //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
-    pub reasons: Option<ReasonFlags<'a>>,
+    pub reasons: Option<ReasonFlags>,
 
     /// cRLIssuer               [2]     GeneralNames OPTIONAL }
     //#[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
@@ -927,7 +965,7 @@ pub struct IssuingDistributionPoint<'a> {
     pub only_contains_cacerts: bool,
 
     /// onlySomeReasons            [3] ReasonFlags OPTIONAL,
-    pub only_some_reasons: Option<ReasonFlags<'a>>,
+    pub only_some_reasons: Option<ReasonFlags>,
 
     /// indirectCRL                [4] BOOLEAN DEFAULT FALSE,
     pub indirect_crl: bool,
@@ -965,7 +1003,7 @@ impl<'a> Decodable<'a> for IssuingDistributionPoint<'a> {
             }
 
             let only_some_reasons = decoder
-                .context_specific::<ReasonFlags<'_>>(ONLY_SOME_REASONS_TAG, TagMode::Implicit)?;
+                .context_specific::<ReasonFlags>(ONLY_SOME_REASONS_TAG, TagMode::Implicit)?;
 
             let mut indirect_crl =
                 decoder.context_specific::<bool>(INDIRECT_TAG, TagMode::Implicit)?;

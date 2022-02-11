@@ -15,14 +15,11 @@ extern crate alloc;
 extern crate std;
 
 mod certificate;
-pub mod extensions_utils;
 mod general_name;
 pub mod pkix_extensions;
 pub mod pkix_oids;
 pub mod trust_anchor_format;
 
-pub use crate::{
-    certificate::*, extensions_utils::*, general_name::*, pkix_extensions::*, pkix_oids::*,
-};
+pub use crate::{certificate::*, general_name::*, pkix_extensions::*, pkix_oids::*};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};

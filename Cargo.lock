@@ -298,6 +298,7 @@ version = "0.6.0-pre.1"
 dependencies = [
  "const-oid",
  "der_derive",
+ "flagset",
  "hex-literal",
  "pem-rfc7468",
  "proptest",
@@ -348,6 +349,12 @@ checksum = "c3fcf0cee53519c866c09b5de1f6c56ff9d647101f81c1964fa632e148896cdf"
 dependencies = [
  "instant",
 ]
+
+[[package]]
+name = "flagset"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cda653ca797810c02f7ca4b804b40b8b95ae046eb989d356bce17919a8c25499"
 
 [[package]]
 name = "fnv"
@@ -1236,6 +1243,7 @@ name = "x509"
 version = "0.0.1"
 dependencies = [
  "der",
+ "flagset",
  "hex-literal",
  "spki",
  "x501",
