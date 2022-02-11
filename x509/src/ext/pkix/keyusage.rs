@@ -1,6 +1,7 @@
 use alloc::vec::Vec;
 
-use der::asn1::ObjectIdentifier;
+use der::asn1::{GeneralizedTime, ObjectIdentifier};
+use der::Sequence;
 use flagset::{flags, FlagSet};
 
 flags! {
@@ -62,3 +63,28 @@ pub type KeyUsage<'a> = FlagSet<KeyUsages>;
 ///
 /// [RFC 5280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
 pub type ExtendedKeyUsage<'a> = Vec<ObjectIdentifier>;
+
+/// PrivateKeyUsagePeriod as defined in [RFC 3280 Section 4.2.1.4].
+///
+/// This extension is identified by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
+///
+/// RFC 5280 states "use of this ISO standard extension is neither deprecated nor recommended for use in the Internet PKI."
+///
+/// ```text
+/// PrivateKeyUsagePeriod ::= SEQUENCE {
+///      notBefore       [0]     GeneralizedTime OPTIONAL,
+///      notAfter        [1]     GeneralizedTime OPTIONAL }
+///      -- either notBefore or notAfter MUST be present
+/// ```
+///
+/// [RFC 3280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc3280#section-4.2.1.4
+#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
+pub struct PrivateKeyUsagePeriod {
+    /// notBefore       [0]     GeneralizedTime OPTIONAL,
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
+    pub not_before: Option<GeneralizedTime>,
+
+    /// notAfter        [1]     GeneralizedTime OPTIONAL
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
+    pub not_after: Option<GeneralizedTime>,
+}

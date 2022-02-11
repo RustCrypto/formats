@@ -17,31 +17,6 @@ use flagset::{flags, FlagSet};
 /// [RFC 6960 Section 4.2.2.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.2.2.1
 pub type OcspNoCheck = Null;
 
-/// PrivateKeyUsagePeriod as defined in [RFC 3280 Section 4.2.1.4].
-///
-/// This extension is by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
-///
-/// RFC 5280 states "use of this ISO standard extension is neither deprecated nor recommended for use in the Internet PKI."
-///
-/// ```text
-/// PrivateKeyUsagePeriod ::= SEQUENCE {
-///     notBefore       [0]     GeneralizedTime OPTIONAL,
-///     notAfter        [1]     GeneralizedTime OPTIONAL
-///     -- either notBefore or notAfter MUST be present
-/// }
-/// ```
-///
-/// [RFC 3280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc3280#section-4.2.1.4
-#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
-#[allow(missing_docs)]
-pub struct PrivateKeyUsagePeriod {
-    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
-    pub not_before: Option<GeneralizedTime>,
-
-    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub not_after: Option<GeneralizedTime>,
-}
-
 /// CRL number extension as defined in [RFC 5280 Section 5.2.3] and as identified by the [`PKIX_CE_CRLNUMBER`](constant.PKIX_CE_CRLNUMBER.html) OID.
 ///
 /// ```text

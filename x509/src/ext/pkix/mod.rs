@@ -14,7 +14,7 @@ pub use access::{AccessDescription, AuthorityInfoAccessSyntax, SubjectInfoAccess
 pub use authkeyid::AuthorityKeyIdentifier;
 pub use certpolicy::CertificatePolicies;
 pub use constraints::{BasicConstraints, NameConstraints, PolicyConstraints};
-pub use keyusage::{ExtendedKeyUsage, KeyUsage, KeyUsages};
+pub use keyusage::{ExtendedKeyUsage, KeyUsage, KeyUsages, PrivateKeyUsagePeriod};
 pub use policymap::{PolicyMapping, PolicyMappings};
 
 use alloc::vec::Vec;
