@@ -14,10 +14,9 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-mod certificate;
 pub mod ext;
 pub mod trust_anchor_format;
 
-pub use crate::certificate::*;
-pub use der::{self, asn1::ObjectIdentifier};
-pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
+mod certificate;
+
+pub use certificate::{Certificate, TbsCertificate, Version};

@@ -2,7 +2,7 @@
 
 use crate::ext::pkix::certpolicy::CertificatePolicies;
 use crate::ext::pkix::NameConstraints;
-use crate::{Certificate, Extensions, TbsCertificate};
+use crate::{ext::Extensions, Certificate, TbsCertificate};
 
 use der::asn1::{OctetString, Utf8String};
 use der::{Choice, Enumerated, Sequence};

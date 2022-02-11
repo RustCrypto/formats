@@ -1,10 +1,7 @@
-//! Certificate [`Certificate`] and TBSCertificate [`TBSCertificate`] as defined in RFC 5280
-
-use der::asn1::{BitString, ObjectIdentifier, UIntBytes};
+use der::asn1::{BitString, UIntBytes};
 use der::{Enumerated, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
-use x501::name::Name;
-use x501::time::Validity;
+use x501::{name::Name, time::Validity};
 
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
 ///
@@ -33,7 +30,7 @@ impl Default for Version {
     }
 }
 
-/// X.509 `TBSCertificate` as defined in [RFC 5280 Section 4.1]
+/// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
 ///
 /// ASN.1 structure containing the names of the subject and issuer, a public
 /// key associated with the subject, a validity period, and other associated
@@ -57,7 +54,7 @@ impl Default for Version {
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct TbsCertificate<'a> {
@@ -77,74 +74,31 @@ pub struct TbsCertificate<'a> {
     pub subject: Name<'a>,
     pub subject_public_key_info: SubjectPublicKeyInfo<'a>,
 
-    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub issuer_unique_id: Option<BitString<'a>>,
 
-    #[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub subject_unique_id: Option<BitString<'a>>,
 
-    #[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
-    pub extensions: Option<Extensions<'a>>,
+    #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
+    pub extensions: Option<crate::ext::Extensions<'a>>,
 }
 
 /// X.509 certificates are defined in [RFC 5280 Section 4.1].
 ///
-/// ASN.1 structure for an X.509 certificate:
-///
 /// ```text
 /// Certificate  ::=  SEQUENCE  {
-///      tbsCertificate       TBSCertificate,
-///      signatureAlgorithm   AlgorithmIdentifier,
-///      signature            BIT STRING  }
+///     tbsCertificate       TBSCertificate,
+///     signatureAlgorithm   AlgorithmIdentifier,
+///     signature            BIT STRING
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct Certificate<'a> {
-    /// tbsCertificate       TBSCertificate,
     pub tbs_certificate: TbsCertificate<'a>,
-    /// signatureAlgorithm   AlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    /// signature            BIT STRING
     pub signature: BitString<'a>,
 }
-
-/// Extension as defined in [RFC 5280 Section 4.1.2.9].
-///
-/// The ASN.1 definition for Extension objects is below. The extnValue type may be further parsed using a decoder corresponding to the extnID value.
-///
-/// ```text
-///    Extension  ::=  SEQUENCE  {
-///         extnID      OBJECT IDENTIFIER,
-///         critical    BOOLEAN DEFAULT FALSE,
-///         extnValue   OCTET STRING
-///                     -- contains the DER encoding of an ASN.1 value
-///                     -- corresponding to the extension type identified
-///                     -- by extnID
-///         }
-/// ```
-///
-/// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct Extension<'a> {
-    /// extnID      OBJECT IDENTIFIER,
-    pub extn_id: ObjectIdentifier,
-
-    /// critical    BOOLEAN DEFAULT FALSE,
-    #[asn1(default = "Default::default")]
-    pub critical: bool,
-
-    /// extnValue   OCTET STRING
-    #[asn1(type = "OCTET STRING")]
-    pub extn_value: &'a [u8],
-}
-
-/// Extensions as defined in [RFC 5280 Section 4.1.2.9].
-///
-/// ```text
-///    Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension
-/// ```
-///
-/// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
-//pub type Extensions<'a> = SequenceOf<Extension<'a>, 10>;
-pub type Extensions<'a> = alloc::vec::Vec<Extension<'a>>;

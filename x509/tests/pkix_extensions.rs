@@ -7,7 +7,8 @@ use x509::ext::other::{OcspNoCheck, PivNaciIndicator};
 use x509::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
 use x509::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
 use x509::ext::pkix::{oids::*, *};
-use x509::*;
+use x509::ext::Extensions;
+use x509::{Certificate, Version};
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
     let i = exts.iter();
