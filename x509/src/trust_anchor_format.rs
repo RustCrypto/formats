@@ -1,11 +1,8 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
-use crate::{Certificate, CertificatePolicies, Extensions, NameConstraints};
+use crate::{Certificate, CertificatePolicies, Extensions, NameConstraints, TbsCertificate};
 use der::asn1::{OctetString, Utf8String};
-use der::{
-    DecodeValue, Decoder, Encodable, EncodeValue, ErrorKind, FixedTag, Header, Sequence, Tag,
-    TagMode, TagNumber,
-};
+use der::{Choice, Sequence};
 use flagset::{flags, FlagSet};
 use spki::SubjectPublicKeyInfo;
 use x501::name::Name;
@@ -104,93 +101,22 @@ flags! {
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 pub type CertPolicyFlags<'a> = FlagSet<CertPolicies>;
 
+/// ```text
 /// TrustAnchorChoice ::= CHOICE {
 ///   certificate  Certificate,
-///   tbsCert      \[1\] EXPLICIT TBSCertificate,
-///   taInfo       \[2\] EXPLICIT TrustAnchorInfo }
-#[derive(Clone, Debug, Eq, PartialEq)]
+///   tbsCert      [1] EXPLICIT TBSCertificate,
+///   taInfo       [2] EXPLICIT TrustAnchorInfo
+/// }
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq, Choice)]
 #[allow(clippy::large_enum_variant)]
+#[allow(missing_docs)]
 pub enum TrustAnchorChoice<'a> {
-    ///   certificate  Certificate,
     Certificate(Certificate<'a>),
-    // Not supporting TBSCertificate option
-    //   tbsCert      \[1\] EXPLICIT TBSCertificate,
-    //TbsCertificate(TBSCertificate<'a>),
-    ///   taInfo       \[2\] EXPLICIT TrustAnchorInfo }
+
+    #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
+    TbsCertificate(TbsCertificate<'a>),
+
+    #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
     TaInfo(TrustAnchorInfo<'a>),
 }
-
-//const TAC_TBS_CERTIFICATE_TAG: TagNumber = TagNumber::new(1);
-const TAC_TA_INFO_TAG: TagNumber = TagNumber::new(2);
-
-impl<'a> DecodeValue<'a> for TrustAnchorChoice<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
-        let t = decoder.peek_tag()?;
-        let o = t.octet();
-        // Context specific support always returns an Option<>, just ignore since OPTIONAL does not apply here
-        match o {
-            0x30 => {
-                let cert = decoder.decode()?;
-                Ok(TrustAnchorChoice::Certificate(cert))
-            }
-            // TODO - need DecodeValue on TBSCertificate to support this
-            // 0xA1 => {
-            //     let on = decoder
-            //         .context_specific::<TBSCertificate<'a>>(TAC_TBS_CERTIFICATE_TAG, TagMode::Explicit)?;
-            //     match on {
-            //         Some(on) => Ok(TrustAnchorChoice::TbsCertificate(on)),
-            //         _ => Err(ErrorKind::Failed.into()),
-            //     }
-            // }
-            0xA2 => {
-                let on = decoder
-                    .context_specific::<TrustAnchorInfo<'a>>(TAC_TA_INFO_TAG, TagMode::Explicit)?;
-                match on {
-                    Some(on) => Ok(TrustAnchorChoice::TaInfo(on)),
-                    _ => Err(ErrorKind::Failed.into()),
-                }
-            }
-            _ => Err(ErrorKind::TagUnknown { byte: o }.into()),
-        }
-    }
-}
-
-impl<'a> EncodeValue for TrustAnchorChoice<'a> {
-    fn encode_value(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
-        match self {
-            Self::Certificate(certificate) => certificate.encode(encoder),
-            // Self::TbsCertificate(variant) => ContextSpecific {
-            //     tag_number: TAC_TBS_CERTIFICATE_TAG,
-            //     tag_mode: TagMode::Explicit,
-            //     value: variant.clone(),
-            // }.encode(encoder),
-            Self::TaInfo(variant) => variant.encode(encoder),
-        }
-    }
-    fn value_len(&self) -> ::der::Result<::der::Length> {
-        match self {
-            Self::Certificate(certificate) => certificate.encoded_len(),
-            // Self::TbsCertificate(variant) => ContextSpecific {
-            //     tag_number: TAC_TBS_CERTIFICATE_TAG,
-            //     tag_mode: TagMode::Explicit,
-            //     value: variant.clone(),
-            // }.encoded_len(),
-            Self::TaInfo(variant) => variant.encoded_len(),
-        }
-    }
-}
-
-//TODO - see why this is necessary to avoid problem at line 78 in context_specific.rs due to mismatched tag
-impl<'a> FixedTag for TrustAnchorChoice<'a> {
-    const TAG: Tag = ::der::Tag::ContextSpecific {
-        constructed: true,
-        number: TAC_TA_INFO_TAG,
-    };
-}
-
-// Not supporting these structures
-// TrustAnchorList ::= SEQUENCE SIZE (1..MAX) OF TrustAnchorChoice
-//
-// id-ct-trustAnchorList      OBJECT IDENTIFIER ::= { iso(1)
-//     member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
-//     id-smime(16) id-ct(1) 34 }
