@@ -331,7 +331,7 @@ impl AttrNameValue {
                 self.value
                     .value()
                     .parse()
-                    .unwrap_or_else(|_| abort!(self.name, "error parsing `{}` attribute")),
+                    .unwrap_or_else(|_| abort!(self.name, "error parsing attribute")),
             )
         } else {
             None
