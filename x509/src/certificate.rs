@@ -1,14 +1,37 @@
 //! Certificate [`Certificate`] and TBSCertificate [`TBSCertificate`] as defined in RFC 5280
 
 use der::asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes};
-use der::{Sequence, TagMode, TagNumber};
+use der::{Enumerated, Sequence, TagMode, TagNumber};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use x501::name::Name;
 use x501::time::Validity;
 
-/// only support v3 certificates
+/// Certificate `Version` as defined in [RFC 5280 Section 4.1].
+///
+/// ```text
 /// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
-pub const X509_CERT_VERSION: u8 = 2;
+/// ```
+///
+/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
+#[asn1(type = "INTEGER")]
+#[repr(u8)]
+pub enum Version {
+    /// Version 1 (default)
+    V1 = 0,
+
+    /// Version 2
+    V2 = 1,
+
+    /// Version 3
+    V3 = 2,
+}
+
+impl Default for Version {
+    fn default() -> Self {
+        Self::V1
+    }
+}
 
 /// X.509 `TBSCertificate` as defined in [RFC 5280 Section 4.1.2.5]
 ///
@@ -39,7 +62,7 @@ pub const X509_CERT_VERSION: u8 = 2;
 pub struct TBSCertificate<'a> {
     /// version         [0]  Version DEFAULT v1,
     //#[asn1(context_specific = "0", default = "Default::default")]
-    pub version: u8,
+    pub version: Version,
     /// serialNumber         CertificateSerialNumber,
     pub serial_number: UIntBytes<'a>,
     /// signature            AlgorithmIdentifier{SIGNATURE-ALGORITHM, {SignatureAlgorithms}},
