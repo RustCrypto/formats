@@ -4,7 +4,7 @@
 pub(crate) mod document;
 
 use crate::{Error, Result};
-use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
+use der::{asn1::UIntBytes, Decodable, Sequence};
 
 #[cfg(feature = "alloc")]
 use crate::RsaPublicKeyDocument;
@@ -24,7 +24,7 @@ use {crate::LineEnding, alloc::string::String, der::Document};
 /// ```
 ///
 /// [RFC 8017 Appendix 1.1]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.1
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct RsaPublicKey<'a> {
     /// `n`: RSA modulus
     pub modulus: UIntBytes<'a>,
@@ -47,26 +47,6 @@ impl<'a> RsaPublicKey<'a> {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn to_pem(self, line_ending: LineEnding) -> Result<String> {
         Ok(self.to_der()?.to_pem(line_ending)?)
-    }
-}
-
-impl<'a> Decodable<'a> for RsaPublicKey<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
-            Ok(Self {
-                modulus: decoder.decode()?,
-                public_exponent: decoder.decode()?,
-            })
-        })
-    }
-}
-
-impl<'a> Sequence<'a> for RsaPublicKey<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
-    {
-        f(&[&self.modulus, &self.public_exponent])
     }
 }
 
