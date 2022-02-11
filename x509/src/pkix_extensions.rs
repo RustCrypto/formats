@@ -210,12 +210,3 @@ pub struct IssuingDistributionPoint<'a> {
     )]
     pub only_contains_attribute_certs: bool,
 }
-
-/// The PIV NACI extension is defined in [FIPS 201-2 Appendix B] and is identified by the [`PIV_NACI_INDICATOR`](constant.PIV_NACI_INDICATOR.html) OID.
-///
-/// ```text
-/// NACI-indicator ::= BOOLEAN
-/// ```
-///
-/// [FIPS 201-2 Appendix B]: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.201-2.pdf
-pub type PivNaciIndicator = bool;
