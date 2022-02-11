@@ -1,14 +1,11 @@
 //! Certificate tests
-use der::asn1::{BitString, UIntBytes, Utf8String};
+use der::asn1::{BitString, UIntBytes};
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x501::name::Name;
 use x509::KeyUsage;
 use x509::*;
-use x509::{
-    BasicConstraints, Certificate, CertificatePolicies, GeneralName, OtherName,
-    SubjectKeyIdentifier,
-};
+use x509::{BasicConstraints, Certificate, CertificatePolicies, GeneralName, SubjectKeyIdentifier};
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
     let i = exts.iter();
@@ -240,21 +237,11 @@ fn decode_general_name() {
     }
 
     // OtherName
-    let on = OtherName::from_der(
-        &hex!("3021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
-    )
-    .unwrap();
 
-    let onval = Utf8String::from_der(on.value.value()).unwrap();
-    assert_eq!(onval.to_string(), "Upn_214950130@mil");
-
-    let other_name = GeneralName::from_der(
-        &hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
-    )
-    .unwrap();
-    match other_name {
+    let bytes = hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");
+    match GeneralName::from_der(&bytes).unwrap() {
         GeneralName::OtherName(other_name) => {
-            let onval = Utf8String::from_der(other_name.value.value()).unwrap();
+            let onval = other_name.value.utf8_string().unwrap();
             assert_eq!(onval.to_string(), "Upn_214950130@mil");
         }
         _ => panic!("Failed to parse OtherName from GeneralName"),
