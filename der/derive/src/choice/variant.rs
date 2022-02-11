@@ -4,7 +4,60 @@ use crate::{FieldAttrs, Tag, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{Fields, Ident, Variant};
+use syn::{Fields, Ident, Path, Type, Variant};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) enum TagOrPath {
+    Tag(Tag),
+    Path(Path),
+}
+
+impl PartialEq<Tag> for TagOrPath {
+    fn eq(&self, rhs: &Tag) -> bool {
+        match self {
+            Self::Tag(lhs) => lhs == rhs,
+            _ => false,
+        }
+    }
+}
+
+impl From<Tag> for TagOrPath {
+    fn from(tag: Tag) -> Self {
+        Self::Tag(tag)
+    }
+}
+
+impl From<Path> for TagOrPath {
+    fn from(path: Path) -> Self {
+        Self::Path(path)
+    }
+}
+
+impl From<&Variant> for TagOrPath {
+    fn from(input: &Variant) -> Self {
+        if let Fields::Unnamed(fields) = &input.fields {
+            if fields.unnamed.len() == 1 {
+                if let Type::Path(path) = &fields.unnamed[0].ty {
+                    return path.path.clone().into();
+                }
+            }
+        }
+
+        abort!(
+            &input.ident,
+            "no #[asn1(type=...)] specified for enum variant"
+        )
+    }
+}
+
+impl TagOrPath {
+    pub fn to_tokens(&self) -> TokenStream {
+        match self {
+            Self::Tag(tag) => tag.to_tokens(),
+            Self::Path(path) => quote! { <#path as ::der::FixedTag>::TAG },
+        }
+    }
+}
 
 /// "IR" for a variant of a derived `Choice`.
 pub(super) struct ChoiceVariant {
@@ -15,7 +68,7 @@ pub(super) struct ChoiceVariant {
     pub(super) attrs: FieldAttrs,
 
     /// Tag for the ASN.1 type.
-    pub(super) tag: Tag,
+    pub(super) tag: TagOrPath,
 }
 
 impl ChoiceVariant {
@@ -37,7 +90,8 @@ impl ChoiceVariant {
 
         let tag = attrs
             .tag()
-            .unwrap_or_else(|| abort!(&ident, "no #[asn1(type=...)] specified for enum variant",));
+            .map(TagOrPath::from)
+            .unwrap_or_else(|| TagOrPath::from(input));
 
         Self { ident, attrs, tag }
     }
@@ -99,7 +153,7 @@ impl ChoiceVariant {
 #[cfg(test)]
 mod tests {
     use super::ChoiceVariant;
-    use crate::{Asn1Type, FieldAttrs, Tag, TagMode, TagNumber};
+    use crate::{choice::variant::TagOrPath, Asn1Type, FieldAttrs, Tag, TagMode, TagNumber};
     use proc_macro2::Span;
     use quote::quote;
     use syn::Ident;
@@ -108,7 +162,7 @@ mod tests {
     fn simple() {
         let ident = Ident::new("ExampleVariant", Span::call_site());
         let attrs = FieldAttrs::default();
-        let tag = Tag::Universal(Asn1Type::Utf8String);
+        let tag = Tag::Universal(Asn1Type::Utf8String).into();
         let variant = ChoiceVariant { ident, attrs, tag };
 
         assert_eq!(
@@ -124,7 +178,7 @@ mod tests {
         assert_eq!(
             variant.to_encode_value_tokens().to_string(),
             quote! {
-                Self::ExampleVariant(variant) => encoder.encode_value(variant)?,
+                Self::ExampleVariant(variant) => variant.encode_value(encoder),
             }
             .to_string()
         );
@@ -153,7 +207,7 @@ mod tests {
             asn1_type: Some(Asn1Type::Utf8String),
             ..Default::default()
         };
-        let tag = Tag::Universal(Asn1Type::Utf8String);
+        let tag = Tag::Universal(Asn1Type::Utf8String).into();
         let variant = ChoiceVariant { ident, attrs, tag };
 
         assert_eq!(
@@ -204,10 +258,10 @@ mod tests {
                 };
                 assert_eq!(attrs.tag_mode, TagMode::Explicit);
 
-                let tag = Tag::ContextSpecific {
+                let tag = TagOrPath::Tag(Tag::ContextSpecific {
                     constructed,
                     number: TagNumber(tag_number),
-                };
+                });
 
                 let variant = ChoiceVariant { ident, attrs, tag };
                 let tag_number = TagNumber(tag_number).to_tokens();
@@ -289,10 +343,10 @@ mod tests {
                     ..Default::default()
                 };
 
-                let tag = Tag::ContextSpecific {
+                let tag = TagOrPath::Tag(Tag::ContextSpecific {
                     constructed,
                     number: TagNumber(tag_number),
-                };
+                });
 
                 let variant = ChoiceVariant { ident, attrs, tag };
                 let tag_number = TagNumber(tag_number).to_tokens();
