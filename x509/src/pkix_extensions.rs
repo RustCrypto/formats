@@ -4,15 +4,9 @@ use crate::general_name::GeneralName;
 use crate::general_name::GeneralNames;
 
 use alloc::vec::Vec;
-use der::asn1::{
-    Any, ContextSpecific, GeneralizedTime, Ia5String, Null, ObjectIdentifier, OctetString,
-    UIntBytes, Utf8String,
-};
-use der::Header;
-use der::{
-    Choice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Enumerated, ErrorKind,
-    FixedTag, Sequence, Tag, TagMode, TagNumber,
-};
+
+use der::asn1::*;
+use der::{Choice, Enumerated, Sequence};
 use flagset::{flags, FlagSet};
 use x501::attr::AttributeTypeAndValue;
 use x501::name::RelativeDistinguishedName;
@@ -213,65 +207,29 @@ pub struct PolicyQualifierInfo<'a> {
     pub qualifier: Option<Any<'a>>,
 }
 
-/// Private key usage extension as defined in [RFC 3280 Section 4.2.1.4] and as identified by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
+/// PrivateKeyUsagePeriod as defined in [RFC 3280 Section 4.2.1.4].
+///
+/// This extension is by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
 ///
 /// RFC 5280 states "use of this ISO standard extension is neither deprecated nor recommended for use in the Internet PKI."
 ///
 /// ```text
 /// PrivateKeyUsagePeriod ::= SEQUENCE {
-///      notBefore       [0]     GeneralizedTime OPTIONAL,
-///      notAfter        [1]     GeneralizedTime OPTIONAL }
-///      -- either notBefore or notAfter MUST be present
+///     notBefore       [0]     GeneralizedTime OPTIONAL,
+///     notAfter        [1]     GeneralizedTime OPTIONAL
+///     -- either notBefore or notAfter MUST be present
+/// }
 /// ```
 ///
 /// [RFC 3280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc3280#section-4.2.1.4
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
+#[allow(missing_docs)]
 pub struct PrivateKeyUsagePeriod {
-    /// notBefore       [0]     GeneralizedTime OPTIONAL,
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
     pub not_before: Option<GeneralizedTime>,
 
-    /// notAfter        [1]     GeneralizedTime OPTIONAL
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub not_after: Option<GeneralizedTime>,
-}
-
-impl<'a> ::der::Decodable<'a> for PrivateKeyUsagePeriod {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let not_before =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let not_after =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                not_before,
-                not_after,
-            })
-        })
-    }
-}
-
-const NOT_BEFORE_TAG: TagNumber = TagNumber::new(0);
-const NOT_AFTER_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> ::der::Sequence<'a> for PrivateKeyUsagePeriod {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[
-            &self.not_before.as_ref().map(|elem| ContextSpecific {
-                tag_number: NOT_BEFORE_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *elem,
-            }),
-            &self.not_after.as_ref().map(|elem| ContextSpecific {
-                tag_number: NOT_AFTER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *elem,
-            }),
-        ])
-    }
 }
 
 /// NoticeReference as defined in [RFC 5280 Section 4.2.1.4] in support of the Certificate Policies extension.
@@ -366,142 +324,53 @@ pub struct NameConstraints<'a> {
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
 pub type GeneralSubtrees<'a> = Vec<GeneralSubtree<'a>>;
 
-/// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10] in support of the Name Constraints extension.
+/// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10].
 ///
 /// ```text
 /// GeneralSubtree ::= SEQUENCE {
-///      base                    GeneralName,
-///      minimum         [0]     BaseDistance DEFAULT 0,
-///      maximum         [1]     BaseDistance OPTIONAL }
+///     base                    GeneralName,
+///     minimum         [0]     BaseDistance DEFAULT 0,
+///     maximum         [1]     BaseDistance OPTIONAL
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct GeneralSubtree<'a> {
-    /// base                    GeneralName,
     pub base: GeneralName<'a>,
 
-    /// minimum         [0]     BaseDistance DEFAULT 0,
+    #[asn1(
+        context_specific = "0",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
     pub minimum: u32,
 
-    /// maximum         [1]     BaseDistance OPTIONAL }
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub maximum: Option<u32>,
 }
 
-impl<'a> ::der::Decodable<'a> for GeneralSubtree<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let base = decoder.decode()?;
-
-            let minimum =
-                match decoder.context_specific::<u32>(GS_MINIMUM_TAG, TagMode::Implicit)? {
-                    Some(v) => v,
-                    _ => 0,
-                };
-
-            let maximum = decoder.context_specific::<u32>(GS_MAXIMUM_TAG, TagMode::Implicit)?;
-
-            Ok(Self {
-                base,
-                minimum,
-                maximum,
-            })
-        })
-    }
-}
-const GS_MINIMUM_TAG: TagNumber = TagNumber::new(0);
-const GS_MAXIMUM_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> ::der::Sequence<'a> for GeneralSubtree<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        //f(&[&self.base, &self.minimum, &self.maximum])
-        let cs_min = ContextSpecific {
-            tag_number: GS_MINIMUM_TAG,
-            tag_mode: TagMode::Implicit,
-            value: self.minimum,
-        };
-
-        f(&[
-            &self.base,
-            &::der::asn1::OptionalRef(if self.minimum == Default::default() {
-                None
-            } else {
-                Some(&cs_min)
-            }),
-            &self.maximum.as_ref().map(|exts| ContextSpecific {
-                tag_number: GS_MAXIMUM_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *exts,
-            }),
-        ])
-    }
-}
-
-/// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11] and as identified by the [`PKIX_CE_POLICY_CONSTRAINTS`](constant.PKIX_CE_POLICY_CONSTRAINTS.html) OID.
+/// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11].
+///
+/// This extension is identified by the [`PKIX_CE_POLICY_CONSTRAINTS`](constant.PKIX_CE_POLICY_CONSTRAINTS.html) OID.
 ///
 /// ```text
 /// PolicyConstraints ::= SEQUENCE {
 ///      requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
-///      inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
+///      inhibitPolicyMapping    [1]     SkipCerts OPTIONAL
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.11]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.11
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct PolicyConstraints {
-    /// requireExplicitPolicy   [0]     SkipCerts OPTIONAL,
+    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     pub require_explicit_policy: Option<u32>,
 
-    /// inhibitPolicyMapping    [1]     SkipCerts OPTIONAL }
+    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub inhibit_policy_mapping: Option<u32>,
-}
-
-impl<'a> ::der::Decodable<'a> for PolicyConstraints {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let require_explicit_policy =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let inhibit_policy_mapping =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                require_explicit_policy,
-                inhibit_policy_mapping,
-            })
-        })
-    }
-}
-
-const REQUIRE_EXPLICIT_POLICY_TAG: TagNumber = TagNumber::new(0);
-const INHIBIT_POLICY_MAPPING_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> ::der::Sequence<'a> for PolicyConstraints {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[
-            &self
-                .require_explicit_policy
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: REQUIRE_EXPLICIT_POLICY_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: *elem,
-                }),
-            &self
-                .inhibit_policy_mapping
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: INHIBIT_POLICY_MAPPING_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: *elem,
-                }),
-        ])
-    }
 }
 
 /// Inhibit any policy extension as defined in [RFC 5280 Section 4.2.1.14] and as identified by the [`PKIX_CE_INHIBIT_ANY_POLICY`](constant.PKIX_CE_INHIBIT_ANY_POLICY.html) OID.
@@ -523,44 +392,22 @@ pub type InhibitAnyPolicy = u32;
 /// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
 pub type AuthorityInfoAccessSyntax<'a> = Vec<AccessDescription<'a>>;
 
-/// AccessDescription as defined in [RFC 5280 Section 4.2.2.1] in support of the Authority Information Access extension (and referenced by Subject Information Access extension).
+/// AccessDescription as defined in [RFC 5280 Section 4.2.2.1].
 ///
 /// ```text
 /// AccessDescription  ::=  SEQUENCE {
-///         accessMethod          OBJECT IDENTIFIER,
-///         accessLocation        GeneralName  }
+///     accessMethod          OBJECT IDENTIFIER,
+///     accessLocation        GeneralName
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct AccessDescription<'a> {
-    /// accessMethod          OBJECT IDENTIFIER,
     pub access_method: ObjectIdentifier,
 
-    /// accessLocation        GeneralName
     pub access_location: GeneralName<'a>,
-}
-
-impl<'a> ::der::Decodable<'a> for AccessDescription<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let access_method = decoder.decode()?;
-            let access_location = decoder.decode()?;
-            Ok(Self {
-                access_method,
-                access_location,
-            })
-        })
-    }
-}
-
-impl<'a> ::der::Sequence<'a> for AccessDescription<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[&self.access_method, &self.access_location])
-    }
 }
 
 /// Subject information access extension as defined in [RFC 5280 Section 4.2.2.2] and as identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
@@ -633,87 +480,32 @@ pub enum CRLReason {
     AaCompromise = 10,
 }
 
-/// Authority key identifier extension as defined in [RFC 5280 Section 4.2.1.1] and as identified by the [`PKIX_CE_AUTHORITY_KEY_IDENTIFIER`](constant.PKIX_CE_AUTHORITY_KEY_IDENTIFIER.html) OID.
+/// AuthorityKeyIdentifier as defined in [RFC 5280 Section 4.2.1.1].
+///
+/// This extension is identified by the [`PKIX_CE_AUTHORITY_KEY_IDENTIFIER`](constant.PKIX_CE_AUTHORITY_KEY_IDENTIFIER.html) OID.
 ///
 /// ```text
-///   AuthorityKeyIdentifier ::= SEQUENCE {
-///       keyIdentifier             [0] KeyIdentifier           OPTIONAL,
-///       authorityCertIssuer       [1] GeneralNames            OPTIONAL,
-///       authorityCertSerialNumber [2] CertificateSerialNumber OPTIONAL  }
+/// AuthorityKeyIdentifier ::= SEQUENCE {
+///     keyIdentifier             [0] KeyIdentifier           OPTIONAL,
+///     authorityCertIssuer       [1] GeneralNames            OPTIONAL,
+///     authorityCertSerialNumber [2] CertificateSerialNumber OPTIONAL
+/// }
 ///
-///    KeyIdentifier ::= OCTET STRING
+/// KeyIdentifier ::= OCTET STRING
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
-//#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct AuthorityKeyIdentifier<'a> {
-    /// keyIdentifier             [0] KeyIdentifier           OPTIONAL,
-    //#[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
     pub key_identifier: Option<OctetString<'a>>,
 
-    /// authorityCertIssuer       [1] GeneralNames            OPTIONAL,
-    //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub authority_cert_issuer: Option<GeneralNames<'a>>,
 
-    /// authorityCertSerialNumber [2] CertificateSerialNumber OPTIONAL  }
-    //#[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub authority_cert_serial_number: Option<UIntBytes<'a>>,
-}
-impl<'a> ::der::Decodable<'a> for AuthorityKeyIdentifier<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let key_identifier =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let authority_cert_issuer =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            let authority_cert_serial_number =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N2)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                key_identifier,
-                authority_cert_issuer,
-                authority_cert_serial_number,
-            })
-        })
-    }
-}
-
-const KEY_IDENTIFIER_TAG: TagNumber = TagNumber::new(0);
-const AUTHORITY_CERT_ISSUER_TAG: TagNumber = TagNumber::new(1);
-const AUTHORITY_CERT_SERIAL_NUMBER: TagNumber = TagNumber::new(2);
-
-impl<'a> ::der::Sequence<'a> for AuthorityKeyIdentifier<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[
-            &self.key_identifier.as_ref().map(|elem| ContextSpecific {
-                tag_number: KEY_IDENTIFIER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *elem,
-            }),
-            &self
-                .authority_cert_issuer
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: AUTHORITY_CERT_ISSUER_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: elem.clone(),
-                }),
-            &self
-                .authority_cert_serial_number
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: AUTHORITY_CERT_SERIAL_NUMBER,
-                    tag_mode: TagMode::Implicit,
-                    value: *elem,
-                }),
-        ])
-    }
 }
 
 flags! {
@@ -761,172 +553,48 @@ pub type ReasonFlags = FlagSet<Reasons>;
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 pub type CRLDistributionPoints<'a> = Vec<DistributionPoint<'a>>;
 
-/// DistributionPoint as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
+/// DistributionPoint as defined in [RFC 5280 Section 4.2.1.13].
 ///
 /// ```text
 /// DistributionPoint ::= SEQUENCE {
-///      distributionPoint       [0]     DistributionPointName OPTIONAL,
-///      reasons                 [1]     ReasonFlags OPTIONAL,
-///      cRLIssuer               [2]     GeneralNames OPTIONAL }
+///     distributionPoint       [0]     DistributionPointName OPTIONAL,
+///     reasons                 [1]     ReasonFlags OPTIONAL,
+///     cRLIssuer               [2]     GeneralNames OPTIONAL
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-//#[derive(Sequence)]
+#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
+#[allow(missing_docs)]
 pub struct DistributionPoint<'a> {
-    /// distributionPoint       [0]     DistributionPointName OPTIONAL,
-    //#[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub distribution_point: Option<DistributionPointName<'a>>,
 
-    /// reasons                 [1]     ReasonFlags OPTIONAL,
-    //#[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub reasons: Option<ReasonFlags>,
 
-    /// cRLIssuer               [2]     GeneralNames OPTIONAL }
-    //#[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub crl_issuer: Option<GeneralNames<'a>>,
 }
 
-const CRLDP_DISTRIBUTION_POINT_TAG: TagNumber = TagNumber::new(0);
-const REASONS_TAG: TagNumber = TagNumber::new(1);
-const CRL_ISSUER_TAG: TagNumber = TagNumber::new(2);
-
-impl<'a> ::der::Decodable<'a> for DistributionPoint<'a> {
-    fn decode(decoder: &mut ::der::Decoder<'a>) -> ::der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let distribution_point =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let reasons =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            let crl_issuer =
-                ::der::asn1::ContextSpecific::decode_implicit(decoder, ::der::TagNumber::N2)?
-                    .map(|cs| cs.value);
-            Ok(Self {
-                distribution_point,
-                reasons,
-                crl_issuer,
-            })
-        })
-    }
-}
-
-impl<'a> ::der::Sequence<'a> for DistributionPoint<'a> {
-    fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-    where
-        F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
-    {
-        f(&[
-            &self
-                .distribution_point
-                .as_ref()
-                .map(|elem| ContextSpecific {
-                    tag_number: CRLDP_DISTRIBUTION_POINT_TAG,
-                    tag_mode: TagMode::Implicit,
-                    value: elem.clone(),
-                }),
-            &self.reasons.as_ref().map(|elem| ContextSpecific {
-                tag_number: REASONS_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *elem,
-            }),
-            &self.crl_issuer.as_ref().map(|elem| ContextSpecific {
-                tag_number: CRL_ISSUER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: elem.clone(),
-            }),
-        ])
-    }
-}
-
-/// DistributionPointName as defined in [RFC 5280 Section 4.2.1.13] in support of the CRL distribution points extension.
+/// DistributionPointName as defined in [RFC 5280 Section 4.2.1.13].
 ///
 /// ```text
 /// DistributionPointName ::= CHOICE {
-///      fullName                [0]     GeneralNames,
-///      nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
+///     fullName                [0]     GeneralNames,
+///     nameRelativeToCRLIssuer [1]     RelativeDistinguishedName
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Choice)]
+#[allow(missing_docs)]
 pub enum DistributionPointName<'a> {
-    /// fullName                [0]     GeneralNames,
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
     FullName(GeneralNames<'a>),
 
-    /// nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
     NameRelativeToCRLIssuer(RelativeDistinguishedName<'a>),
-}
-
-const FULL_NAME_TAG: TagNumber = TagNumber::new(0);
-const NAME_RELATIVE_TO_ISSUER_TAG: TagNumber = TagNumber::new(1);
-
-impl<'a> DecodeValue<'a> for DistributionPointName<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, _header: Header) -> der::Result<Self> {
-        let t = decoder.peek_tag()?;
-        let o = t.octet();
-        // Context specific support always returns an Option<>, just ignore since OPTIONAL does not apply here
-        match o {
-            0xA0 => {
-                let on = decoder
-                    .context_specific::<GeneralNames<'a>>(FULL_NAME_TAG, TagMode::Implicit)?;
-                match on {
-                    Some(on) => Ok(DistributionPointName::FullName(on)),
-                    _ => Err(ErrorKind::Failed.into()),
-                }
-            }
-            0xA1 => {
-                let on = decoder.context_specific::<RelativeDistinguishedName<'a>>(
-                    NAME_RELATIVE_TO_ISSUER_TAG,
-                    TagMode::Implicit,
-                )?;
-                match on {
-                    Some(on) => Ok(DistributionPointName::NameRelativeToCRLIssuer(on)),
-                    _ => Err(ErrorKind::Failed.into()),
-                }
-            }
-            _ => Err(ErrorKind::TagUnknown { byte: o }.into()),
-        }
-    }
-}
-
-impl<'a> EncodeValue for DistributionPointName<'a> {
-    fn encode_value(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
-        match self {
-            Self::FullName(variant) => ContextSpecific {
-                tag_number: FULL_NAME_TAG,
-                tag_mode: TagMode::Implicit,
-                value: variant.clone(),
-            }
-            .encode(encoder),
-            Self::NameRelativeToCRLIssuer(variant) => ContextSpecific {
-                tag_number: NAME_RELATIVE_TO_ISSUER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: (*variant).clone(),
-            }
-            .encode(encoder),
-        }
-    }
-    fn value_len(&self) -> ::der::Result<::der::Length> {
-        match self {
-            Self::FullName(variant) => ContextSpecific {
-                tag_number: FULL_NAME_TAG,
-                tag_mode: TagMode::Implicit,
-                value: variant.clone(),
-            }
-            .encoded_len(),
-            Self::NameRelativeToCRLIssuer(variant) => ContextSpecific {
-                tag_number: NAME_RELATIVE_TO_ISSUER_TAG,
-                tag_mode: TagMode::Implicit,
-                value: variant.clone(),
-            }
-            .encoded_len(),
-        }
-    }
-}
-
-//TODO - see why this is necessary to avoid problem at line 78 in context_specific.rs due to mismatched tag
-impl<'a> FixedTag for DistributionPointName<'a> {
-    const TAG: Tag = ::der::Tag::Sequence;
 }
 
 /// Freshest CRL extension as defined in [RFC 5280 Section 5.2.6] and as identified by the [`PKIX_CE_FRESHEST_CRL`](constant.PKIX_CE_FRESHEST_CRL.html) OID.
@@ -938,94 +606,60 @@ impl<'a> FixedTag for DistributionPointName<'a> {
 /// [RFC 5280 Section 5.2.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.6
 pub type FreshestCRL<'a> = CRLDistributionPoints<'a>;
 
-/// Issuing distribution point extension as defined in [RFC 5280 Section 5.2.5] and as identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
+/// IssuingDistributionPoint as defined in [RFC 5280 Section 5.2.5].
+///
+/// This extension is identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
 ///
 /// ```text
 /// IssuingDistributionPoint ::= SEQUENCE {
-///      distributionPoint          [0] DistributionPointName OPTIONAL,
-///      onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
-///      onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
-///      onlySomeReasons            [3] ReasonFlags OPTIONAL,
-///      indirectCRL                [4] BOOLEAN DEFAULT FALSE,
-///      onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE }
-///      -- at most one of onlyContainsUserCerts, onlyContainsCACerts,
-///      -- and onlyContainsAttributeCerts may be set to TRUE.
+///     distributionPoint          [0] DistributionPointName OPTIONAL,
+///     onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+///     onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
+///     onlySomeReasons            [3] ReasonFlags OPTIONAL,
+///     indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+///     onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+///     -- at most one of onlyContainsUserCerts, onlyContainsCACerts,
+///     -- and onlyContainsAttributeCerts may be set to TRUE.
+/// }
 /// ```
 ///
 /// [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
-//#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct IssuingDistributionPoint<'a> {
-    /// distributionPoint          [0] DistributionPointName OPTIONAL,
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub distribution_point: Option<DistributionPointName<'a>>,
 
-    /// onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+    #[asn1(
+        context_specific = "1",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
     pub only_contains_user_certs: bool,
 
-    /// onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
-    pub only_contains_cacerts: bool,
+    #[asn1(
+        context_specific = "2",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
+    pub only_contains_ca_certs: bool,
 
-    /// onlySomeReasons            [3] ReasonFlags OPTIONAL,
+    #[asn1(context_specific = "3", tag_mode = "IMPLICIT", optional = "true")]
     pub only_some_reasons: Option<ReasonFlags>,
 
-    /// indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+    #[asn1(
+        context_specific = "4",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
     pub indirect_crl: bool,
 
-    /// onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+    #[asn1(
+        context_specific = "5",
+        tag_mode = "IMPLICIT",
+        default = "Default::default"
+    )]
     pub only_contains_attribute_certs: bool,
-}
-
-const DISTRIBUTION_POINT_TAG: TagNumber = TagNumber::new(0);
-const ONLY_CONTAINS_USER_CERTS_TAG: TagNumber = TagNumber::new(1);
-const ONLY_CONTAINS_CA_CERTS_TAG: TagNumber = TagNumber::new(2);
-const ONLY_SOME_REASONS_TAG: TagNumber = TagNumber::new(3);
-const INDIRECT_TAG: TagNumber = TagNumber::new(4);
-const ONLY_CONTAINS_ATTRIBUTE_CERTS_TAG: TagNumber = TagNumber::new(5);
-
-impl<'a> Decodable<'a> for IssuingDistributionPoint<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let distribution_point = decoder.context_specific::<DistributionPointName<'_>>(
-                DISTRIBUTION_POINT_TAG,
-                TagMode::Implicit,
-            )?;
-
-            // for each of the BOOLEAN fields, assign the DEFAULT value upon None
-            let mut only_contains_user_certs = decoder
-                .context_specific::<bool>(ONLY_CONTAINS_USER_CERTS_TAG, TagMode::Implicit)?;
-            if None == only_contains_user_certs {
-                only_contains_user_certs = Some(false);
-            }
-
-            let mut only_contains_cacerts =
-                decoder.context_specific::<bool>(ONLY_CONTAINS_CA_CERTS_TAG, TagMode::Implicit)?;
-            if None == only_contains_cacerts {
-                only_contains_cacerts = Some(false);
-            }
-
-            let only_some_reasons = decoder
-                .context_specific::<ReasonFlags>(ONLY_SOME_REASONS_TAG, TagMode::Implicit)?;
-
-            let mut indirect_crl =
-                decoder.context_specific::<bool>(INDIRECT_TAG, TagMode::Implicit)?;
-            if None == indirect_crl {
-                indirect_crl = Some(false);
-            }
-
-            let mut only_contains_attribute_certs = decoder
-                .context_specific::<bool>(ONLY_CONTAINS_ATTRIBUTE_CERTS_TAG, TagMode::Implicit)?;
-            if None == only_contains_attribute_certs {
-                only_contains_attribute_certs = Some(false);
-            }
-            Ok(IssuingDistributionPoint {
-                distribution_point,
-                only_contains_user_certs: only_contains_user_certs.unwrap(),
-                only_contains_cacerts: only_contains_cacerts.unwrap(),
-                only_some_reasons,
-                indirect_crl: indirect_crl.unwrap(),
-                only_contains_attribute_certs: only_contains_attribute_certs.unwrap(),
-            })
-        })
-    }
 }
 
 /// The PIV NACI extension is defined in [FIPS 201-2 Appendix B] and is identified by the [`PIV_NACI_INDICATOR`](constant.PIV_NACI_INDICATOR.html) OID.

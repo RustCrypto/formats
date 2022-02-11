@@ -872,7 +872,7 @@ fn decode_idp() {
 
     // IDP from 04A8739769B3C090A11DCDFABA3CF33F4BEF21F3.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp = IssuingDistributionPoint::from_der(&hex!("30038201FF")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, true);
+    assert_eq!(idp.only_contains_ca_certs, true);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, false);
@@ -977,7 +977,7 @@ fn decode_idp() {
     // IDP from 54B0D2A6F6AA4780771CC4F9F076F623CEB0F57E.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp =
         IssuingDistributionPoint::from_der(&hex!("3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8303079F80")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, false);
+    assert_eq!(idp.only_contains_ca_certs, false);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, false);
@@ -1097,7 +1097,7 @@ fn decode_idp() {
     // IDP from 959528526E54B646AF895E2362D3AD20F4B3284D.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp =
         IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358401FF")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, false);
+    assert_eq!(idp.only_contains_ca_certs, false);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, true);

@@ -1,7 +1,7 @@
-use der::Decoder;
+use der::{Decodable, Decoder};
 use hex_literal::hex;
-use x509::der::{DecodeValue, Encodable};
-use x509::trust_anchor_format::TrustAnchorChoice;
+use x509::der::Encodable;
+use x509::trust_anchor_format::{CertPolicies, TrustAnchorChoice};
 use x509::*;
 
 #[test]
@@ -12,8 +12,7 @@ fn decode_ta1() {
     let der_encoded_cert = include_bytes!("examples/eca.der");
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
-    let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header).unwrap();
+    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -128,8 +127,7 @@ fn decode_ta2() {
     let der_encoded_cert = include_bytes!("examples/entrust.der");
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
-    let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header).unwrap();
+    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -232,8 +230,7 @@ fn decode_ta3() {
     let der_encoded_cert = include_bytes!("examples/exostar.der");
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
-    let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header).unwrap();
+    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -253,20 +250,12 @@ fn decode_ta3() {
 
             let cert_path = tai.cert_path.as_ref().unwrap();
 
-            let cpf = cert_path.policy_flags.unwrap();
-            let b = cpf.raw_bytes();
-            if 0x80 != 0x80 & b[0] {
-                panic!("Missing policy flag bit 0")
-            }
-            if 0x40 != 0x40 & b[0] {
-                panic!("Missing policy flag bit 1")
-            }
-            if 0x20 != 0x20 & b[0] {
-                panic!("Missing policy flag bit 2")
-            }
-            if cpf.unused_bits() != 5 {
-                panic!("Wrong unused bits for policy flags")
-            }
+            assert_eq!(
+                CertPolicies::InhibitPolicyMapping
+                    | CertPolicies::RequireExplicitPolicy
+                    | CertPolicies::InhibitAnyPolicy,
+                cert_path.policy_flags.unwrap()
+            );
 
             let mut counter = 0;
             let i = cert_path.ta_name.iter();
@@ -351,8 +340,7 @@ fn decode_ta4() {
     let der_encoded_cert = include_bytes!("examples/raytheon.der");
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
-    let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header).unwrap();
+    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
