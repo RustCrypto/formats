@@ -47,36 +47,34 @@ pub struct TrustAnchorInfo<'a> {
     pub ta_title_lang_tag: Option<Utf8String<'a>>,
 }
 
+/// ```text
 /// CertPathControls ::= SEQUENCE {
-///  taName           Name,
-///  certificate      \[0\] Certificate OPTIONAL,
-///  policySet        \[1\] CertificatePolicies OPTIONAL,
-///  policyFlags      \[2\] CertPolicyFlags OPTIONAL,
-///  nameConstr       \[3\] NameConstraints OPTIONAL,
-///  pathLenConstraint\[4\] INTEGER (0..MAX) OPTIONAL}
+///     taName              Name,
+///     certificate         [0] Certificate OPTIONAL,
+///     policySet           [1] CertificatePolicies OPTIONAL,
+///     policyFlags         [2] CertPolicyFlags OPTIONAL,
+///     nameConstr          [3] NameConstraints OPTIONAL,
+///     pathLenConstraint   [4] INTEGER (0..MAX) OPTIONAL
+/// }
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct CertPathControls<'a> {
-    /// taName               Name,
     pub ta_name: Name<'a>,
 
-    /// certificate      \[0\] Certificate OPTIONAL,
-    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
     pub certificate: Option<Certificate<'a>>,
 
-    /// policySet        \[1\] CertificatePolicies OPTIONAL,
-    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub policy_set: Option<CertificatePolicies<'a>>,
 
-    /// policyFlags      \[2\] CertPolicyFlags OPTIONAL,
-    #[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub policy_flags: Option<CertPolicyFlags<'a>>,
 
-    /// nameConstr       \[3\] NameConstraints OPTIONAL,
-    #[asn1(context_specific = "3", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "3", tag_mode = "IMPLICIT", optional = "true")]
     pub name_constr: Option<NameConstraints<'a>>,
 
-    /// pathLenConstraint\[4\] INTEGER (0..MAX) OPTIONAL}
-    #[asn1(context_specific = "4", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "4", tag_mode = "IMPLICIT", optional = "true")]
     pub path_len_constraint: Option<u32>,
 }
 
