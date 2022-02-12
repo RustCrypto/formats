@@ -35,7 +35,7 @@ fn run_combinations(prfs: &[&str]) {
     }
 }
 
-#[cfg(feature = "sha1")]
+#[cfg(feature = "sha1-insecure")]
 #[test]
 fn all_combinations_with_sha1() {
     let prfs = vec!["hmacWithSHA1"];
