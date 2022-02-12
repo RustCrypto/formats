@@ -1,67 +1,103 @@
 //! ASN.1 DER-encoded documents stored on the heap.
 
 use crate::{Decodable, Encodable, Error, Result};
-use alloc::{boxed::Box, vec::Vec};
+use alloc::vec::Vec;
+use core::marker::PhantomData;
 
 #[cfg(feature = "pem")]
-use {crate::pem, alloc::string::String};
+use {
+    crate::pem::{self, PemLabel},
+    alloc::string::String,
+};
 
 #[cfg(feature = "std")]
 use std::{fs, path::Path};
 
+/// Marker trait which identifies whether or not documents contain sensitive
+/// information, such as private keys.
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub trait Sensitivity {
+    /// Does this type contain potentially sensitive data?
+    ///
+    /// This enables hardened file permissions when persisting data to disk.
+    const SENSITIVE: bool;
+}
+
 /// ASN.1 DER-encoded document.
 ///
-/// This trait is intended to impl on types which contain an ASN.1 DER-encoded
-/// document which is guaranteed to encode as the associated `Message` type.
+/// This type wraps an encoded ASN.1 DER message which is guaranteed to
+/// infallibly decode as type `T`.
 ///
 /// It implements common functionality related to encoding/decoding such
 /// documents, such as PEM encapsulation as well as reading/writing documents
 /// from/to the filesystem.
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
-    /// ASN.1 message type this document decodes to.
-    type Message: Decodable<'a> + Encodable + Sized;
+pub struct Document<T: Sensitivity> {
+    /// ASN.1 DER-encoded document guaranteed to decode to `T` infallibly.
+    der_bytes: Vec<u8>,
 
-    /// Does this type contain potentially sensitive data?
-    ///
-    /// This enables hardened file permissions when persisting data to disk.
-    const SENSITIVE: bool;
+    /// Rust type corresponding to the ASN.1 DER message the bytes can be
+    /// infallibly deserialized as.
+    msg_type: PhantomData<T>,
+}
 
+impl<T> Document<T> where T: Sensitivity {}
+
+impl<T> Document<T>
+where
+    T: Sensitivity,
+{
     /// Borrow the inner serialized bytes of this document.
-    fn as_der(&self) -> &[u8] {
-        self.as_ref()
-    }
-
-    /// Return an allocated ASN.1 DER serialization as a boxed slice.
-    fn to_der(&self) -> Box<[u8]> {
-        self.as_ref().to_vec().into_boxed_slice()
+    pub fn as_der(&self) -> &[u8] {
+        self.der_bytes.as_slice()
     }
 
     /// Decode this document as ASN.1 DER.
-    fn decode(&'a self) -> Self::Message {
-        Self::Message::from_der(self.as_ref()).expect("ASN.1 DER document malformed")
+    pub fn decode<'a>(&'a self) -> T
+    where
+        T: Decodable<'a> + Sized,
+    {
+        self.try_decode().expect("ASN.1 DER document malformed")
     }
 
     /// Create a new document from the provided ASN.1 DER bytes.
-    fn from_der(bytes: &[u8]) -> Result<Self> {
-        bytes.to_vec().try_into()
+    pub fn from_der(bytes: impl Into<Vec<u8>>) -> Result<Self>
+    where
+        T: for<'a> Decodable<'a> + Sized,
+    {
+        let doc = Self {
+            der_bytes: bytes.into(),
+            msg_type: PhantomData,
+        };
+
+        // Ensure document parses successfully
+        doc.try_decode()?;
+        Ok(doc)
+    }
+
+    /// Return an allocated ASN.1 DER serialization as a byte vector.
+    pub fn to_der(&self) -> Vec<u8> {
+        self.der_bytes.clone()
     }
 
     /// Encode the provided type as ASN.1 DER.
-    fn from_msg(msg: &Self::Message) -> Result<Self> {
+    pub fn from_msg(msg: &T) -> Result<Self>
+    where
+        T: for<'a> Decodable<'a> + Encodable + Sized,
+    {
         msg.to_vec()?.try_into()
     }
 
     /// Decode ASN.1 DER document from PEM.
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn from_pem(s: &str) -> Result<Self>
+    pub fn from_pem(s: &str) -> Result<Self>
     where
-        Self: pem::PemLabel,
+        T: for<'a> Decodable<'a> + PemLabel + Sized,
     {
         let (label, der_bytes) = pem::decode_vec(s.as_bytes())?;
 
-        if label != Self::TYPE_LABEL {
+        if label != T::TYPE_LABEL {
             return Err(pem::Error::Label.into());
         }
 
@@ -71,49 +107,99 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     /// Encode ASN.1 DER document as a PEM string.
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    fn to_pem(&self, line_ending: pem::LineEnding) -> Result<String>
+    pub fn to_pem(&self, line_ending: pem::LineEnding) -> Result<String>
     where
-        Self: pem::PemLabel,
+        T: PemLabel,
     {
         Ok(pem::encode_string(
-            Self::TYPE_LABEL,
+            T::TYPE_LABEL,
             line_ending,
-            self.as_ref(),
+            self.as_der(),
         )?)
     }
 
     /// Read ASN.1 DER document from a file.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn read_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        fs::read(path)?.try_into()
-    }
-
-    /// Read PEM-encoded ASN.1 DER document from a file.
-    #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
-    fn read_pem_file(path: impl AsRef<Path>) -> Result<Self>
+    pub fn read_der_file(path: impl AsRef<Path>) -> Result<Self>
     where
-        Self: pem::PemLabel,
+        T: for<'a> Decodable<'a> + Sized,
     {
-        Self::from_pem(&fs::read_to_string(path)?)
+        fs::read(path)?.try_into()
     }
 
     /// Write ASN.1 DER document to a file.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        write_file(path, self.as_ref(), Self::SENSITIVE)
+    pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
+        write_file(path, self.as_der(), T::SENSITIVE)
+    }
+
+    /// Read PEM-encoded ASN.1 DER document from a file.
+    #[cfg(all(feature = "pem", feature = "std"))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
+    pub fn read_pem_file(path: impl AsRef<Path>) -> Result<Self>
+    where
+        T: for<'a> Decodable<'a> + PemLabel + Sized,
+    {
+        Self::from_pem(&fs::read_to_string(path)?)
     }
 
     /// Write PEM-encoded ASN.1 DER document to a file.
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
-    fn write_pem_file(&self, path: impl AsRef<Path>, line_ending: pem::LineEnding) -> Result<()>
+    pub fn write_pem_file(&self, path: impl AsRef<Path>, line_ending: pem::LineEnding) -> Result<()>
     where
-        Self: pem::PemLabel,
+        T: PemLabel,
     {
-        write_file(path, self.to_pem(line_ending)?.as_bytes(), Self::SENSITIVE)
+        write_file(path, self.to_pem(line_ending)?.as_bytes(), T::SENSITIVE)
+    }
+
+    /// Attempt to decode `self.der_bytes` as `T`.
+    ///
+    /// This method doesn't uphold the invariant that `T` always decodes
+    /// successfully, but is needed to make the lifetimes for the constructor
+    /// work.
+    fn try_decode<'a>(&'a self) -> Result<T>
+    where
+        T: Decodable<'a> + Sized,
+    {
+        T::from_der(self.as_der())
+    }
+}
+
+impl<T> AsRef<[u8]> for Document<T>
+where
+    T: Sensitivity,
+{
+    fn as_ref(&self) -> &[u8] {
+        self.as_der()
+    }
+}
+
+// NOTE: `Drop` is defined unconditionally to ensure bounds do not change based
+// on selected cargo features, which would not be a purely additive change
+impl<T> Drop for Document<T>
+where
+    T: Sensitivity,
+{
+    fn drop(&mut self) {
+        #[cfg(feature = "zeroize")]
+        if T::SENSITIVE {
+            use zeroize::Zeroize;
+            self.der_bytes.zeroize();
+        }
+    }
+}
+
+impl<T> TryFrom<Vec<u8>> for Document<T>
+where
+    T: for<'a> Decodable<'a> + Sensitivity + Sized,
+{
+    type Error = Error;
+
+    fn try_from(der_bytes: Vec<u8>) -> Result<Document<T>> {
+        Self::from_der(der_bytes)
     }
 }
 

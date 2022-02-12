@@ -303,6 +303,7 @@ dependencies = [
  "pem-rfc7468",
  "proptest",
  "time",
+ "zeroize",
 ]
 
 [[package]]
