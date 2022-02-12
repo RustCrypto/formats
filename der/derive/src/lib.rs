@@ -210,7 +210,7 @@ pub fn derive_choice(input: TokenStream) -> TokenStream {
 ///
 /// Note that the derive macro will write a `TryFrom<...>` impl for the
 /// provided `#[repr]`, which is used by the decoder.
-#[proc_macro_derive(Enumerated)]
+#[proc_macro_derive(Enumerated, attributes(asn1))]
 #[proc_macro_error]
 pub fn derive_enumerated(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

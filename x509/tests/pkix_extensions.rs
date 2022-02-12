@@ -278,20 +278,8 @@ fn decode_cert() {
             assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
 
-            use x509::extensions_utils::KeyUsageValues;
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
-            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
-            let mut count = 0;
-            for v in kuv {
-                if 0 == count {
-                    assert_eq!(v, KeyUsageValues::KeyCertSign);
-                } else if 1 == count {
-                    assert_eq!(v, KeyUsageValues::CRLSign);
-                } else {
-                    panic!("Should not occur");
-                }
-                count += 1;
-            }
+            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
 
             let reencoded = ku.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -613,7 +601,7 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
 
-    assert_eq!(cert.tbs_certificate.version, 2);
+    assert_eq!(cert.tbs_certificate.version, Version::V3);
     let target_serial: [u8; 1] = [2];
     assert_eq!(
         cert.tbs_certificate.serial_number,
@@ -757,20 +745,8 @@ fn decode_cert() {
         } else if 2 == counter {
             assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
-            use x509::extensions_utils::KeyUsageValues;
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
-            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
-            let mut count = 0;
-            for v in kuv {
-                if 0 == count {
-                    assert_eq!(v, KeyUsageValues::KeyCertSign);
-                } else if 1 == count {
-                    assert_eq!(v, KeyUsageValues::CRLSign);
-                } else {
-                    panic!("Should not occur");
-                }
-                count += 1;
-            }
+            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
         } else if 3 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
@@ -896,7 +872,7 @@ fn decode_idp() {
 
     // IDP from 04A8739769B3C090A11DCDFABA3CF33F4BEF21F3.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp = IssuingDistributionPoint::from_der(&hex!("30038201FF")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, true);
+    assert_eq!(idp.only_contains_ca_certs, true);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, false);
@@ -1001,23 +977,23 @@ fn decode_idp() {
     // IDP from 54B0D2A6F6AA4780771CC4F9F076F623CEB0F57E.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp =
         IssuingDistributionPoint::from_der(&hex!("3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8303079F80")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, false);
+    assert_eq!(idp.only_contains_ca_certs, false);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, false);
     assert!(idp.only_some_reasons.is_some());
     assert!(idp.distribution_point.is_some());
 
-    let rfv = get_reason_flags_values(&idp.only_some_reasons.unwrap());
-    assert_eq!(true, rfv.unused);
-    assert_eq!(false, rfv.key_compromise);
-    assert_eq!(false, rfv.ca_compromise);
-    assert_eq!(true, rfv.affiliation_changed);
-    assert_eq!(true, rfv.superseded);
-    assert_eq!(true, rfv.cessation_of_operation);
-    assert_eq!(true, rfv.certificate_hold);
-    assert_eq!(true, rfv.remove_from_crl);
-    assert_eq!(true, rfv.aa_compromise);
+    assert_eq!(
+        Reasons::Unused
+            | Reasons::AffiliationChanged
+            | Reasons::Superseded
+            | Reasons::CessationOfOperation
+            | Reasons::CertificateHold
+            | Reasons::PrivilegeWithdrawn
+            | Reasons::AaCompromise,
+        idp.only_some_reasons.unwrap()
+    );
 
     //  930  360:             SEQUENCE {
     //  934  353:               [0] {
@@ -1121,7 +1097,7 @@ fn decode_idp() {
     // IDP from 959528526E54B646AF895E2362D3AD20F4B3284D.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp =
         IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358401FF")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, false);
+    assert_eq!(idp.only_contains_ca_certs, false);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, true);

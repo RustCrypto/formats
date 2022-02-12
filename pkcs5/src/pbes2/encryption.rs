@@ -2,7 +2,9 @@
 
 use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptParams};
 use crate::{Error, Result};
-use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
+use cbc::cipher::{
+    block_padding::Pkcs7, BlockCipher, BlockDecryptMut, BlockEncryptMut, KeyInit, KeyIvInit,
+};
 use hmac::{
     digest::{
         block_buffer::Eager,
@@ -15,22 +17,38 @@ use hmac::{
 use pbkdf2::pbkdf2;
 use scrypt::scrypt;
 
-type Aes128Cbc = Cbc<aes::Aes128, Pkcs7>;
-type Aes192Cbc = Cbc<aes::Aes192, Pkcs7>;
-type Aes256Cbc = Cbc<aes::Aes256, Pkcs7>;
-
-#[cfg(feature = "des-insecure")]
-type DesCbc = Cbc<des::Des, Pkcs7>;
-#[cfg(feature = "3des")]
-type DesEde3Cbc = Cbc<des::TdesEde3, Pkcs7>;
-
 /// Maximum size of a derived encryption key
 const MAX_KEY_LEN: usize = 32;
+
+fn cbc_encrypt<'a, C: BlockEncryptMut + BlockCipher + KeyInit>(
+    es: EncryptionScheme<'_>,
+    key: EncryptionKey,
+    iv: &[u8],
+    buffer: &'a mut [u8],
+    pos: usize,
+) -> Result<&'a [u8]> {
+    cbc::Encryptor::<C>::new_from_slices(key.as_slice(), iv)
+        .map_err(|_| es.to_alg_params_invalid())?
+        .encrypt_padded_mut::<Pkcs7>(buffer, pos)
+        .map_err(|_| Error::EncryptFailed)
+}
+
+fn cbc_decrypt<'a, C: BlockDecryptMut + BlockCipher + KeyInit>(
+    es: EncryptionScheme<'_>,
+    key: EncryptionKey,
+    iv: &[u8],
+    buffer: &'a mut [u8],
+) -> Result<&'a [u8]> {
+    cbc::Decryptor::<C>::new_from_slices(key.as_slice(), iv)
+        .map_err(|_| es.to_alg_params_invalid())?
+        .decrypt_padded_mut::<Pkcs7>(buffer)
+        .map_err(|_| Error::EncryptFailed)
+}
 
 pub fn encrypt_in_place<'b>(
     params: &Parameters<'_>,
     password: impl AsRef<[u8]>,
-    buffer: &'b mut [u8],
+    buf: &'b mut [u8],
     pos: usize,
 ) -> Result<&'b [u8]> {
     let es = params.encryption;
@@ -38,39 +56,14 @@ pub fn encrypt_in_place<'b>(
     if key_size > MAX_KEY_LEN {
         return Err(es.to_alg_params_invalid());
     }
-    let encryption_key =
-        EncryptionKey::derive_from_password(password.as_ref(), &params.kdf, key_size)?;
+    let key = EncryptionKey::derive_from_password(password.as_ref(), &params.kdf, key_size)?;
 
     match es {
-        EncryptionScheme::Aes128Cbc { iv } => {
-            let cipher = Aes128Cbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher
-                .encrypt(buffer, pos)
-                .map_err(|_| Error::EncryptFailed)
-        }
-        EncryptionScheme::Aes192Cbc { iv } => {
-            let cipher = Aes192Cbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher
-                .encrypt(buffer, pos)
-                .map_err(|_| Error::EncryptFailed)
-        }
-        EncryptionScheme::Aes256Cbc { iv } => {
-            let cipher = Aes256Cbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher
-                .encrypt(buffer, pos)
-                .map_err(|_| Error::EncryptFailed)
-        }
+        EncryptionScheme::Aes128Cbc { iv } => cbc_encrypt::<aes::Aes128Enc>(es, key, iv, buf, pos),
+        EncryptionScheme::Aes192Cbc { iv } => cbc_encrypt::<aes::Aes192Enc>(es, key, iv, buf, pos),
+        EncryptionScheme::Aes256Cbc { iv } => cbc_encrypt::<aes::Aes256Enc>(es, key, iv, buf, pos),
         #[cfg(feature = "3des")]
-        EncryptionScheme::DesEde3Cbc { iv } => {
-            let cipher = DesEde3Cbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher
-                .encrypt(buffer, pos)
-                .map_err(|_| Error::EncryptFailed)
-        }
+        EncryptionScheme::DesEde3Cbc { iv } => cbc_encrypt::<des::TdesEde3>(es, key, iv, buf, pos),
         #[cfg(feature = "des-insecure")]
         EncryptionScheme::DesCbc { .. } => Err(Error::UnsupportedAlgorithm {
             oid: super::DES_CBC_OID,
@@ -82,40 +75,19 @@ pub fn encrypt_in_place<'b>(
 pub fn decrypt_in_place<'a>(
     params: &Parameters<'_>,
     password: impl AsRef<[u8]>,
-    buffer: &'a mut [u8],
+    buf: &'a mut [u8],
 ) -> Result<&'a [u8]> {
     let es = params.encryption;
-    let encryption_key =
-        EncryptionKey::derive_from_password(password.as_ref(), &params.kdf, es.key_size())?;
+    let key = EncryptionKey::derive_from_password(password.as_ref(), &params.kdf, es.key_size())?;
 
     match es {
-        EncryptionScheme::Aes128Cbc { iv } => {
-            let cipher = Aes128Cbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
-        }
-        EncryptionScheme::Aes192Cbc { iv } => {
-            let cipher = Aes192Cbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
-        }
-        EncryptionScheme::Aes256Cbc { iv } => {
-            let cipher = Aes256Cbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
-        }
+        EncryptionScheme::Aes128Cbc { iv } => cbc_decrypt::<aes::Aes128Dec>(es, key, iv, buf),
+        EncryptionScheme::Aes192Cbc { iv } => cbc_decrypt::<aes::Aes192Dec>(es, key, iv, buf),
+        EncryptionScheme::Aes256Cbc { iv } => cbc_decrypt::<aes::Aes256Dec>(es, key, iv, buf),
         #[cfg(feature = "3des")]
-        EncryptionScheme::DesEde3Cbc { iv } => {
-            let cipher = DesEde3Cbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
-        }
+        EncryptionScheme::DesEde3Cbc { iv } => cbc_decrypt::<des::TdesEde3>(es, key, iv, buf),
         #[cfg(feature = "des-insecure")]
-        EncryptionScheme::DesCbc { iv } => {
-            let cipher = DesCbc::new_from_slices(encryption_key.as_slice(), iv)
-                .map_err(|_| es.to_alg_params_invalid())?;
-            cipher.decrypt(buffer).map_err(|_| Error::DecryptFailed)
-        }
+        EncryptionScheme::DesCbc { iv } => cbc_decrypt::<des::Des>(es, key, iv, buf),
     }
 }
 
@@ -139,13 +111,13 @@ impl EncryptionKey {
         match kdf {
             Kdf::Pbkdf2(pbkdf2_params) => {
                 let key = match pbkdf2_params.prf {
-                    #[cfg(feature = "sha1")]
+                    #[cfg(feature = "sha1-insecure")]
                     Pbkdf2Prf::HmacWithSha1 => EncryptionKey::derive_with_pbkdf2::<sha1::Sha1>(
                         password,
                         pbkdf2_params,
                         key_size,
                     ),
-                    #[cfg(not(feature = "sha1"))]
+                    #[cfg(not(feature = "sha1-insecure"))]
                     Pbkdf2Prf::HmacWithSha1 => {
                         return Err(Error::UnsupportedAlgorithm {
                             oid: super::HMAC_WITH_SHA1_OID,

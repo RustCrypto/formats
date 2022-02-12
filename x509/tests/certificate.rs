@@ -74,7 +74,7 @@ impl<'a> Decodable<'a> for DeferDecodeTBSCertificate<'a> {
             let version =
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value)
-                    .unwrap_or_else(default_zero_u8);
+                    .unwrap_or_else(Default::default);
             let serial_number = decoder.tlv_bytes()?;
             let signature = decoder.tlv_bytes()?;
             let issuer = decoder.tlv_bytes()?;
@@ -106,7 +106,7 @@ fn reencode_cert() {
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
     let defer_cert = DeferDecodeCertificate::from_der(der_encoded_cert).unwrap();
 
-    let parsed_tbs = TBSCertificate::from_der(defer_cert.tbs_certificate).unwrap();
+    let parsed_tbs = TbsCertificate::from_der(defer_cert.tbs_certificate).unwrap();
     let reencoded_tbs = parsed_tbs.to_vec().unwrap();
     assert_eq!(defer_cert.tbs_certificate, reencoded_tbs);
 
@@ -194,7 +194,7 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
 
-    assert_eq!(cert.tbs_certificate.version, 2);
+    assert_eq!(cert.tbs_certificate.version, Version::V3);
     let target_serial: [u8; 16] = [
         0x7F, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x49, 0xCF, 0x70, 0x66, 0x4D, 0x00, 0x00, 0x00,
         0x02,

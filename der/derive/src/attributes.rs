@@ -277,7 +277,7 @@ impl FieldAttrs {
                     let encoder_obj = ty.encoder(binding);
                     quote!(#encoder_obj.encode_value(encoder))
                 })
-                .unwrap_or_else(|| quote!(encoder.encode_value(#binding)?)),
+                .unwrap_or_else(|| quote!(#binding.encode_value(encoder))),
         }
     }
 }
@@ -331,7 +331,7 @@ impl AttrNameValue {
                 self.value
                     .value()
                     .parse()
-                    .unwrap_or_else(|_| abort!(self.name, "error parsing `{}` attribute")),
+                    .unwrap_or_else(|_| abort!(self.name, "error parsing attribute")),
             )
         } else {
             None
