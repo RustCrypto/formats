@@ -2,26 +2,20 @@
 
 use crate::{Decodable, Encodable, Error, Result};
 use alloc::vec::Vec;
-use core::marker::PhantomData;
+use core::{
+    fmt::{self, Debug},
+    marker::PhantomData,
+};
 
 #[cfg(feature = "pem")]
 use {
     crate::pem::{self, PemLabel},
     alloc::string::String,
+    core::str::FromStr,
 };
 
 #[cfg(feature = "std")]
 use std::{fs, path::Path};
-
-/// Marker trait which identifies whether or not documents contain sensitive
-/// information, such as private keys.
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub trait Sensitivity {
-    /// Does this type contain potentially sensitive data?
-    ///
-    /// This enables hardened file permissions when persisting data to disk.
-    const SENSITIVE: bool;
-}
 
 /// ASN.1 DER-encoded document.
 ///
@@ -32,7 +26,7 @@ pub trait Sensitivity {
 /// documents, such as PEM encapsulation as well as reading/writing documents
 /// from/to the filesystem.
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub struct Document<T: Sensitivity> {
+pub struct Document<T, const SENSITIVE: bool> {
     /// ASN.1 DER-encoded document guaranteed to decode to `T` infallibly.
     der_bytes: Vec<u8>,
 
@@ -41,12 +35,7 @@ pub struct Document<T: Sensitivity> {
     msg_type: PhantomData<T>,
 }
 
-impl<T> Document<T> where T: Sensitivity {}
-
-impl<T> Document<T>
-where
-    T: Sensitivity,
-{
+impl<T, const SENSITIVE: bool> Document<T, SENSITIVE> {
     /// Borrow the inner serialized bytes of this document.
     pub fn as_der(&self) -> &[u8] {
         self.der_bytes.as_slice()
@@ -132,7 +121,7 @@ where
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        write_file(path, self.as_der(), T::SENSITIVE)
+        write_file(path, self.as_der(), SENSITIVE)
     }
 
     /// Read PEM-encoded ASN.1 DER document from a file.
@@ -152,7 +141,7 @@ where
     where
         T: PemLabel,
     {
-        write_file(path, self.to_pem(line_ending)?.as_bytes(), T::SENSITIVE)
+        write_file(path, self.to_pem(line_ending)?.as_bytes(), SENSITIVE)
     }
 
     /// Attempt to decode `self.der_bytes` as `T`.
@@ -168,38 +157,71 @@ where
     }
 }
 
-impl<T> AsRef<[u8]> for Document<T>
-where
-    T: Sensitivity,
-{
+impl<T, const SENSITIVE: bool> AsRef<[u8]> for Document<T, SENSITIVE> {
     fn as_ref(&self) -> &[u8] {
         self.as_der()
     }
 }
 
+impl<T> Debug for Document<T, false>
+where
+    T: for<'a> Decodable<'a> + Debug + Sized,
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt.debug_tuple("Document").field(&self.decode()).finish()
+    }
+}
+
+impl<T> Debug for Document<T, true> {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt.debug_struct("Document").finish_non_exhaustive()
+    }
+}
+
 // NOTE: `Drop` is defined unconditionally to ensure bounds do not change based
 // on selected cargo features, which would not be a purely additive change
-impl<T> Drop for Document<T>
-where
-    T: Sensitivity,
-{
+impl<T, const SENSITIVE: bool> Drop for Document<T, SENSITIVE> {
     fn drop(&mut self) {
         #[cfg(feature = "zeroize")]
-        if T::SENSITIVE {
+        if SENSITIVE {
             use zeroize::Zeroize;
             self.der_bytes.zeroize();
         }
     }
 }
 
-impl<T> TryFrom<Vec<u8>> for Document<T>
+impl<T, const SENSITIVE: bool> TryFrom<&[u8]> for Document<T, SENSITIVE>
 where
-    T: for<'a> Decodable<'a> + Sensitivity + Sized,
+    T: for<'a> Decodable<'a> + Sized,
 {
     type Error = Error;
 
-    fn try_from(der_bytes: Vec<u8>) -> Result<Document<T>> {
+    fn try_from(der_bytes: &[u8]) -> Result<Self> {
         Self::from_der(der_bytes)
+    }
+}
+
+impl<T, const SENSITIVE: bool> TryFrom<Vec<u8>> for Document<T, SENSITIVE>
+where
+    T: for<'a> Decodable<'a> + Sized,
+{
+    type Error = Error;
+
+    fn try_from(der_bytes: Vec<u8>) -> Result<Self> {
+        Self::from_der(der_bytes)
+    }
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl<T, const SENSITIVE: bool> FromStr for Document<T, SENSITIVE>
+where
+    T: for<'a> Decodable<'a> + PemLabel + Sized,
+{
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::from_pem(s)
     }
 }
 
