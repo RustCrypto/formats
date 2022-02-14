@@ -20,7 +20,7 @@ use der::Document;
 #[cfg(feature = "pem")]
 use zeroize::Zeroizing;
 
-/// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
+/// Parse an [RsaPrivateKey][`crate::private_key::RsaPrivateKey`] from a PKCS#1-encoded document.
 pub trait DecodeRsaPrivateKey: Sized {
     /// Deserialize PKCS#1 private key from ASN.1 DER-encoded data
     /// (binary format).
@@ -58,13 +58,13 @@ pub trait DecodeRsaPrivateKey: Sized {
     }
 }
 
-/// Parse a [`RsaPublicKey`] from a PKCS#1-encoded document.
+/// Parse a [RsaPublicKey][`crate::public_key::RsaPublicKey`] from a PKCS#1-encoded document.
 pub trait DecodeRsaPublicKey: Sized {
-    /// Deserialize object from ASN.1 DER-encoded [`RsaPublicKey`]
+    /// Deserialize object from ASN.1 DER-encoded [RsaPublicKey][`crate::public_key::RsaPublicKey`]
     /// (binary format).
     fn from_pkcs1_der(bytes: &[u8]) -> Result<Self>;
 
-    /// Deserialize PEM-encoded [`RsaPublicKey`].
+    /// Deserialize PEM-encoded [RsaPublicKey][`crate::public_key::RsaPublicKey`].
     ///
     /// Keys in this format begin with the following:
     ///
@@ -77,7 +77,7 @@ pub trait DecodeRsaPublicKey: Sized {
         RsaPublicKeyDocument::from_pkcs1_pem(s).and_then(|doc| Self::from_pkcs1_der(doc.as_der()))
     }
 
-    /// Load [`RsaPublicKey`] from an ASN.1 DER-encoded file on the local
+    /// Load [RsaPublicKey][`crate::public_key::RsaPublicKey`] from an ASN.1 DER-encoded file on the local
     /// filesystem (binary format).
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
@@ -86,7 +86,7 @@ pub trait DecodeRsaPublicKey: Sized {
             .and_then(|doc| Self::from_pkcs1_der(doc.as_der()))
     }
 
-    /// Load [`RsaPublicKey`] from a PEM-encoded file on the local filesystem.
+    /// Load [RsaPublicKey][`crate::public_key::RsaPublicKey`] from a PEM-encoded file on the local filesystem.
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
@@ -96,7 +96,7 @@ pub trait DecodeRsaPublicKey: Sized {
     }
 }
 
-/// Serialize a [`RsaPrivateKey`] to a PKCS#1 encoded document.
+/// Serialize a [RsaPrivateKey][`crate::private_key::RsaPrivateKey`] to a PKCS#1 encoded document.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub trait EncodeRsaPrivateKey {
@@ -125,7 +125,7 @@ pub trait EncodeRsaPrivateKey {
     }
 }
 
-/// Serialize a [`RsaPublicKey`] to a PKCS#1-encoded document.
+/// Serialize a [RsaPublicKey][`crate::public_key::RsaPublicKey`] to a PKCS#1-encoded document.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub trait EncodeRsaPublicKey {

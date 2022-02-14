@@ -13,7 +13,7 @@ use crate::{Base64, Base64Unpadded};
 /// Stateful Base64 encoder with support for buffered, incremental encoding.
 ///
 /// The `E` type parameter can be any type which impls [`Encoding`] such as
-/// [`Base64`] or [`Base64Unpadded`].
+/// [Base64][`crate::variant::standard::Base64`] or [Base64Unpadded][`crate::variant::standard::Base64Unpadded`].
 ///
 /// Internally it uses a sealed `Variant` trait which is an implementation
 /// detail of this crate, and leverages a [blanket impl] of [`Encoding`].
