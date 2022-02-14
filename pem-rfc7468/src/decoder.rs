@@ -133,7 +133,7 @@ impl<'i> Decoder<'i> {
         self.base64.is_finished()
     }
 
-    /// Convert into the inner [`base64::Decoder`].
+    /// Convert into the inner [Base64Decoder][`crate::Base64Decoder`].
     pub fn into_base64_decoder(self) -> Base64Decoder<'i> {
         self.base64
     }
