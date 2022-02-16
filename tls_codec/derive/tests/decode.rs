@@ -1,4 +1,4 @@
-use tls_codec::{Deserialize, Serialize, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8};
+use tls_codec::{Deserialize, Serialize, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8, VLBytes};
 use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 
 #[derive(TlsDeserialize, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize)]
@@ -316,4 +316,32 @@ fn enum_with_custom_serialized_field() {
     let serialized = x.tls_serialize_detached().unwrap();
     let deserialized = EnumWithCustomSerializedField::tls_deserialize(&mut &*serialized).unwrap();
     assert_eq!(deserialized, x);
+}
+
+// Variable length vectors
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+struct MyContainer {
+    value: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+struct MyByteContainer {
+    value: VLBytes,
+}
+
+#[test]
+fn simple_variable_length_struct() {
+    let val = MyContainer {
+        value: vec![1, 2, 3, 4, 5, 6, 7, 8, 9],
+    };
+    let serialized = val.tls_serialize_detached().unwrap();
+    let deserialized = MyContainer::tls_deserialize(&mut &*serialized).unwrap();
+    assert_eq!(deserialized, val);
+
+    let val = MyByteContainer {
+        value: VLBytes::new(vec![1, 2, 3, 4, 5, 6, 7, 8, 9]),
+    };
+    let serialized = val.tls_serialize_detached().unwrap();
+    let deserialized = MyByteContainer::tls_deserialize(&mut &*serialized).unwrap();
+    assert_eq!(deserialized, val);
 }
