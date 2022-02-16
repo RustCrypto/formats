@@ -66,6 +66,8 @@ pub enum GeneralName<'a> {
 mod test {
     use super::{GeneralName, GeneralNames};
 
+    use std::println;
+
     use der::{Decodable, Encodable};
     use hex_literal::hex;
     use rstest::rstest;
