@@ -22,6 +22,9 @@ pub struct OtherName<'a> {
 #[test]
 #[cfg(test)]
 fn test() {
+    use alloc::string::ToString;
+    use std::eprintln;
+
     use der::{Decodable, Encodable};
     use hex_literal::hex;
 
