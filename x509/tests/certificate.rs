@@ -1,7 +1,8 @@
 //! Certificate tests
-use der::asn1::{BitString, UIntBytes};
+use der::asn1::{BitString, ObjectIdentifier, UIntBytes};
 use der::{Decodable, Decoder, Encodable, Tag, Tagged};
 use hex_literal::hex;
+use spki::AlgorithmIdentifier;
 use x509::Certificate;
 use x509::*;
 

@@ -22,6 +22,7 @@ x501 = { version = "=0.1.0-pre.0", path = "../x501" }
 
 [dev-dependencies]
 hex-literal = "0.3"
+rstest = "0.12.0"
 
 [features]
 std = ["der/std"]
