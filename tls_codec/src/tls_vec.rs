@@ -811,8 +811,6 @@ macro_rules! impl_tls_byte_vec {
     };
 }
 
-// TODO: #1 provide specialized TlsByteVec* versions holding u8 that are more efficient.
-
 impl_public_tls_vec!(u8, TlsVecU8, 1);
 impl_public_tls_vec!(u16, TlsVecU16, 2);
 impl_public_tls_vec!(u32, TlsVecU32, 4);
