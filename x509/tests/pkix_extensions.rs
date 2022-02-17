@@ -1,14 +1,14 @@
 //! Certificate tests
-use der::asn1::{BitString, UIntBytes, Utf8String};
+use der::asn1::{BitString, UIntBytes};
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x501::name::Name;
-use x509::KeyUsage;
-use x509::*;
-use x509::{
-    BasicConstraints, Certificate, CertificatePolicies, GeneralName, OtherName,
-    SubjectKeyIdentifier,
-};
+use x509::ext::other::{OcspNoCheck, PivNaciIndicator};
+use x509::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
+use x509::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
+use x509::ext::pkix::{oids::*, *};
+use x509::ext::Extensions;
+use x509::{Certificate, Version};
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
     let i = exts.iter();
@@ -70,7 +70,7 @@ fn spin_over_exts<'a>(exts: Extensions<'a>) {
             let reencoded = nc.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if "2.5.29.31" == ext.extn_id.to_string() {
-            let crldps_result = CRLDistributionPoints::from_der(ext.extn_value);
+            let crldps_result = CrlDistributionPoints::from_der(ext.extn_value);
             assert!(crldps_result.is_ok());
 
             let crldps = crldps_result.unwrap();
@@ -112,7 +112,7 @@ fn spin_over_exts<'a>(exts: Extensions<'a>) {
             let reencoded = eku.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if "2.5.29.46" == ext.extn_id.to_string() {
-            let fc_result = FreshestCRL::from_der(ext.extn_value);
+            let fc_result = FreshestCrl::from_der(ext.extn_value);
             assert!(fc_result.is_ok());
 
             let fc = fc_result.unwrap();
@@ -240,21 +240,10 @@ fn decode_general_name() {
     }
 
     // OtherName
-    let on = OtherName::from_der(
-        &hex!("3021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
-    )
-    .unwrap();
-
-    let onval = Utf8String::from_der(on.value.value()).unwrap();
-    assert_eq!(onval.to_string(), "Upn_214950130@mil");
-
-    let other_name = GeneralName::from_der(
-        &hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
-    )
-    .unwrap();
-    match other_name {
+    let bytes = hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");
+    match GeneralName::from_der(&bytes).unwrap() {
         GeneralName::OtherName(other_name) => {
-            let onval = Utf8String::from_der(other_name.value.value()).unwrap();
+            let onval = other_name.value.utf8_string().unwrap();
             assert_eq!(onval.to_string(), "Upn_214950130@mil");
         }
         _ => panic!("Failed to parse OtherName from GeneralName"),
@@ -275,7 +264,7 @@ fn decode_cert() {
     let mut counter = 0;
     for ext in i {
         if 0 == counter {
-            assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
+            assert_eq!(ext.extn_id.to_string(), CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
 
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
@@ -284,10 +273,7 @@ fn decode_cert() {
             let reencoded = ku.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 1 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_CE_BASIC_CONSTRAINTS.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), CE_BASIC_CONSTRAINTS.to_string());
             assert_eq!(ext.critical, true);
             let bc = BasicConstraints::from_der(ext.extn_value).unwrap();
             assert_eq!(true, bc.ca);
@@ -296,7 +282,7 @@ fn decode_cert() {
             let reencoded = bc.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 2 == counter {
-            assert_eq!(ext.extn_id.to_string(), PKIX_CE_POLICY_MAPPINGS.to_string());
+            assert_eq!(ext.extn_id.to_string(), CE_POLICY_MAPPINGS.to_string());
             assert_eq!(ext.critical, false);
             let pm = PolicyMappings::from_der(ext.extn_value).unwrap();
             assert_eq!(19, pm.len());
@@ -361,10 +347,7 @@ fn decode_cert() {
                 counter_pm += 1;
             }
         } else if 3 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_CE_CERTIFICATE_POLICIES.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), CE_CERTIFICATE_POLICIES.to_string());
             assert_eq!(ext.critical, false);
             let cps = CertificatePolicies::from_der(ext.extn_value).unwrap();
             assert_eq!(19, cps.len());
@@ -424,7 +407,7 @@ fn decode_cert() {
         } else if 4 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_SUBJECT_KEY_IDENTIFIER.to_string()
+                CE_SUBJECT_KEY_IDENTIFIER.to_string()
             );
             assert_eq!(ext.critical, false);
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
@@ -439,10 +422,10 @@ fn decode_cert() {
         } else if 5 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_CRL_DISTRIBUTION_POINTS.to_string()
+                CE_CRL_DISTRIBUTION_POINTS.to_string()
             );
             assert_eq!(ext.critical, false);
-            let crl_dps = CRLDistributionPoints::from_der(ext.extn_value).unwrap();
+            let crl_dps = CrlDistributionPoints::from_der(ext.extn_value).unwrap();
             assert_eq!(2, crl_dps.len());
 
             let reencoded = crl_dps.to_vec().unwrap();
@@ -495,10 +478,7 @@ fn decode_cert() {
                 crldp_counter += 1;
             }
         } else if 6 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_PE_SUBJECTINFOACCESS.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), PE_SUBJECTINFOACCESS.to_string());
             assert_eq!(ext.critical, false);
             let sias = SubjectInfoAccessSyntax::from_der(ext.extn_value).unwrap();
             assert_eq!(1, sias.len());
@@ -522,10 +502,7 @@ fn decode_cert() {
                 }
             }
         } else if 7 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_PE_AUTHORITYINFOACCESS.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), PE_AUTHORITYINFOACCESS.to_string());
             assert_eq!(ext.critical, false);
             let aias = AuthorityInfoAccessSyntax::from_der(ext.extn_value).unwrap();
             assert_eq!(2, aias.len());
@@ -568,10 +545,7 @@ fn decode_cert() {
                 aia_counter += 1;
             }
         } else if 8 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_CE_INHIBIT_ANY_POLICY.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), CE_INHIBIT_ANY_POLICY.to_string());
             assert_eq!(ext.critical, false);
             let iap = InhibitAnyPolicy::from_der(ext.extn_value).unwrap();
             assert_eq!(0, iap);
@@ -581,7 +555,7 @@ fn decode_cert() {
         } else if 9 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_AUTHORITY_KEY_IDENTIFIER.to_string()
+                CE_AUTHORITY_KEY_IDENTIFIER.to_string()
             );
             assert_eq!(ext.critical, false);
             let akid = AuthorityKeyIdentifier::from_der(ext.extn_value).unwrap();
@@ -723,7 +697,7 @@ fn decode_cert() {
         if 0 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_AUTHORITY_KEY_IDENTIFIER.to_string()
+                CE_AUTHORITY_KEY_IDENTIFIER.to_string()
             );
             assert_eq!(ext.critical, false);
             let akid = AuthorityKeyIdentifier::from_der(ext.extn_value).unwrap();
@@ -734,7 +708,7 @@ fn decode_cert() {
         } else if 1 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_SUBJECT_KEY_IDENTIFIER.to_string()
+                CE_SUBJECT_KEY_IDENTIFIER.to_string()
             );
             assert_eq!(ext.critical, false);
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
@@ -743,15 +717,12 @@ fn decode_cert() {
                 &hex!("580184241BBC2B52944A3DA510721451F5AF3AC9")[..]
             );
         } else if 2 == counter {
-            assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
+            assert_eq!(ext.extn_id.to_string(), CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
             assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
         } else if 3 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_CE_CERTIFICATE_POLICIES.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), CE_CERTIFICATE_POLICIES.to_string());
             assert_eq!(ext.critical, false);
             let r = CertificatePolicies::from_der(ext.extn_value);
             let cp = r.unwrap();
@@ -760,10 +731,7 @@ fn decode_cert() {
                 assert_eq!(p.policy_identifier.to_string(), "2.16.840.1.101.3.2.1.48.1");
             }
         } else if 4 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_CE_BASIC_CONSTRAINTS.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), CE_BASIC_CONSTRAINTS.to_string());
             assert_eq!(ext.critical, true);
             let bc = BasicConstraints::from_der(ext.extn_value).unwrap();
             assert_eq!(bc.ca, true);

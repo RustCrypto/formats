@@ -11,15 +11,12 @@
 
 extern crate alloc;
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", test))]
 extern crate std;
 
-mod certificate;
-mod general_name;
-pub mod pkix_extensions;
-pub mod pkix_oids;
-pub mod trust_anchor_format;
+pub mod anchor;
+pub mod ext;
 
-pub use crate::{certificate::*, general_name::*, pkix_extensions::*, pkix_oids::*};
-pub use der::{self, asn1::ObjectIdentifier};
-pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
+mod certificate;
+
+pub use certificate::{Certificate, TbsCertificate, Version};
