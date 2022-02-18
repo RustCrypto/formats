@@ -22,3 +22,6 @@ members = [
     "x501",
     "x509"
 ]
+
+[profile.dev]
+opt-level = 2

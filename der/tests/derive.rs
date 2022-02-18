@@ -407,26 +407,22 @@ mod sequence {
     #[test]
     fn extension_test() {
         let ext1 = ExtensionExample::from_der(&hex!(
-            "
-            300F        //  0  15: SEQUENCE {
-            0603551D13  //  2   3:   OBJECT IDENTIFIER basicConstraints (2 5 29 19)
-            0101FF      //  7   1:   BOOLEAN TRUE
-            0405        //  10   5:   OCTET STRING, encapsulates {
-            3003        //  12   3:     SEQUENCE {
-            0101FF      //  14   1:       BOOLEAN TRUE
-            "
+            "300F"        //  0  15: SEQUENCE {
+            "0603551D13"  //  2   3:   OBJECT IDENTIFIER basicConstraints (2 5 29 19)
+            "0101FF"      //  7   1:   BOOLEAN TRUE
+            "0405"        //  10   5:   OCTET STRING, encapsulates {
+            "3003"        //  12   3:     SEQUENCE {
+            "0101FF"      //  14   1:       BOOLEAN TRUE
         ))
         .unwrap();
         assert_eq!(ext1.critical, true);
 
         let ext2 = ExtensionExample::from_der(&hex!(
-            "
-            301F                                            //  0  31: SEQUENCE {
-            0603551D23                                      //  2   3:   OBJECT IDENTIFIER authorityKeyIdentifier (2 5 29 35)
-            0418                                            //  7  24:   OCTET STRING, encapsulates {
-            3016                                            //  9  22:     SEQUENCE {
-            8014E47D5FD15C9586082C05AEBE75B665A7D95DA866    // 11  20:       [0] E4 7D 5F D1 5C 95 86 08 2C 05 AE BE 75 B6 65 A7 D9 5D A8 66
-            "
+            "301F"                                            //  0  31: SEQUENCE {
+            "0603551D23"                                      //  2   3:   OBJECT IDENTIFIER authorityKeyIdentifier (2 5 29 35)
+            "0418"                                            //  7  24:   OCTET STRING, encapsulates {
+            "3016"                                            //  9  22:     SEQUENCE {
+            "8014E47D5FD15C9586082C05AEBE75B665A7D95DA866"    // 11  20:       [0] E4 7D 5F D1 5C 95 86 08 2C 05 AE BE 75 B6 65 A7 D9 5D A8 66
         ))
         .unwrap();
         assert_eq!(ext2.critical, false);

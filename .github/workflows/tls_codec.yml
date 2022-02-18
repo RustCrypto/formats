@@ -36,8 +36,13 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - run: cargo install cargo-hack
-      - run: cargo hack build --release --target ${{ matrix.target }} --feature-powerset --exclude-features std,default,derive,serde_serialize
+      - uses: RustCrypto/actions/cargo-hack-install@master
+      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features std,default,derive,serde_serialize
+
+  minimal-versions:
+    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
+    with:
+        working-directory: ${{ github.workflow }}
 
   test:
     runs-on: ubuntu-latest
@@ -66,5 +71,5 @@ jobs:
           profile: minimal
           override: true
       - run: ${{ matrix.deps }}
-      - run: cargo install cargo-hack
-      - run: cargo hack test --release --feature-powerset
+      - uses: RustCrypto/actions/cargo-hack-install@master
+      - run: cargo hack test --feature-powerset
