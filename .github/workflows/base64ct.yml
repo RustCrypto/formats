@@ -59,14 +59,3 @@ jobs:
           override: true
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack test --feature-powerset
-
-  bench:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly-2021-10-19 # Pinned to avoid nightly breakages. Bump if needed.
-          override: true
-      - run: cargo build --benches
