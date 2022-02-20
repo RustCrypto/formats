@@ -74,6 +74,26 @@ impl<'a> AlgorithmIdentifier<'a> {
     pub fn parameters_oid(&self) -> Result<ObjectIdentifier> {
         Ok(ObjectIdentifier::try_from(self.parameters_any()?)?)
     }
+
+    /// Convert to a pair of [`ObjectIdentifier`]s.
+    ///
+    /// This method is helpful for decomposing in match statements. Note in
+    /// particular that `NULL` parameters are treated the same as missing
+    /// parameters.
+    ///
+    /// Returns an error if parameters are present but not an OID.
+    pub fn oids(&self) -> der::Result<(ObjectIdentifier, Option<ObjectIdentifier>)> {
+        Ok((
+            self.oid,
+            match self.parameters {
+                None => None,
+                Some(p) => match p {
+                    Any::NULL => None,
+                    _ => Some(p.oid()?),
+                },
+            },
+        ))
+    }
 }
 
 impl<'a> Decodable<'a> for AlgorithmIdentifier<'a> {
