@@ -1,7 +1,7 @@
 use super::GeneralNames;
+use crate::name::RelativeDistinguishedName;
 
 use der::Choice;
-use x501::name::RelativeDistinguishedName;
 
 /// DistributionPointName as defined in [RFC 5280 Section 4.2.1.13].
 ///

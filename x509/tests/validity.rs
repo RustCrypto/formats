@@ -2,7 +2,7 @@
 
 use der::Encodable;
 use hex_literal::hex;
-use x501::time::Validity;
+use x509::time::Validity;
 
 #[test]
 fn decode_validity() {

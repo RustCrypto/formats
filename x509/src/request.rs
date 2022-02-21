@@ -1,10 +1,10 @@
 //! PKCS#10 Certification Request types
 
+use crate::{attr::Attributes, name::Name};
+
 use der::asn1::BitString;
 use der::{Decodable, Enumerated, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
-use x501::attr::Attributes;
-use x501::name::Name;
 
 /// Version identifier for certification request information.
 ///

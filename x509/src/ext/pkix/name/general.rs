@@ -1,10 +1,10 @@
 //! GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
 
 use super::{EdiPartyName, OtherName};
+use crate::name::Name;
 
 use der::asn1::{Ia5String, ObjectIdentifier, OctetString};
 use der::Choice;
-use x501::name::Name;
 
 /// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
 ///

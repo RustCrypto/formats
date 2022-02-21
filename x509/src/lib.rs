@@ -15,8 +15,11 @@ extern crate alloc;
 extern crate std;
 
 pub mod anchor;
+pub mod attr;
 pub mod ext;
+pub mod name;
 pub mod request;
+pub mod time;
 
 mod certificate;
 

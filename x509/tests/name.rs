@@ -1,8 +1,8 @@
 //! Name tests
-//use der::asn1::{SetOf, SequenceOfIter, SequenceOf};
-use der::{Decodable, Encodable, Tag, Tagged}; //, Encodable};
+
+use der::{Decodable, Encodable, Tag, Tagged};
 use hex_literal::hex;
-use x501::name::{Name, RelativeDistinguishedName}; //, AttributeTypeAndValue;
+use x509::name::{Name, RelativeDistinguishedName};
 
 #[test]
 fn decode_name() {

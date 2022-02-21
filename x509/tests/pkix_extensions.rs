@@ -2,12 +2,12 @@
 use der::asn1::{BitString, UIntBytes};
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
-use x501::name::Name;
 use x509::ext::other::{OcspNoCheck, PivNaciIndicator};
 use x509::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
 use x509::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
 use x509::ext::pkix::{oids::*, *};
 use x509::ext::Extensions;
+use x509::name::Name;
 use x509::{Certificate, Version};
 
 fn spin_over_exts<'a>(exts: Extensions<'a>) {
