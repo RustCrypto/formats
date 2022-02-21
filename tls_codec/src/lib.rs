@@ -34,6 +34,7 @@ use {
 
 mod arrays;
 mod primitives;
+#[cfg(feature = "std")]
 mod quic_vec;
 mod tls_vec;
 
@@ -43,6 +44,7 @@ pub use tls_vec::{
     TlsSliceU8, TlsVecU16, TlsVecU32, TlsVecU8,
 };
 
+#[cfg(feature = "std")]
 pub use quic_vec::{VLByteSlice, VLBytes};
 
 #[cfg(feature = "derive")]

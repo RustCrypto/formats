@@ -37,7 +37,7 @@ fn read_variable_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize
     }
     for _ in 0..len_len {
         let mut next = [0u8; 1];
-        bytes.read(&mut next)?;
+        bytes.read_exact(&mut next)?;
         length = (length << 8) + usize::from(next[0]);
     }
 
@@ -61,7 +61,6 @@ fn length_encoding_bytes(length: u64) -> usize {
 // === (De)Serialize for `Vec<T>` and &[T].
 
 impl<T: Serialize + std::fmt::Debug> Serialize for Vec<T> {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
         self.as_slice().tls_serialize(writer)
@@ -69,7 +68,6 @@ impl<T: Serialize + std::fmt::Debug> Serialize for Vec<T> {
 }
 
 impl<T: Size> Size for Vec<T> {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         self.as_slice().tls_serialized_len()
@@ -77,7 +75,6 @@ impl<T: Size> Size for Vec<T> {
 }
 
 impl<T: Deserialize> Deserialize for Vec<T> {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
         let (length, len_len) = read_variable_length(bytes)?;
@@ -120,12 +117,11 @@ fn write_length<W: std::io::Write>(writer: &mut W, content_length: usize) -> Res
         *b |= (len & 0xFF) as u8;
         len >>= 8;
     }
-    writer.write_all(&mut length_bytes)?;
+    writer.write_all(&length_bytes)?;
     Ok(len_len)
 }
 
 impl<T: Serialize + std::fmt::Debug> Serialize for &[T] {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
         // We need to pre-compute the length of the content.
@@ -154,7 +150,6 @@ impl<T: Serialize + std::fmt::Debug> Serialize for &[T] {
 }
 
 impl<T: Size> Size for &[T] {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
@@ -229,7 +224,6 @@ fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
 }
 
 impl Serialize for VLBytes {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
         tls_serialize_bytes(writer, self.as_slice())
@@ -237,7 +231,6 @@ impl Serialize for VLBytes {
 }
 
 impl Size for VLBytes {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.as_slice())
@@ -285,7 +278,6 @@ impl Deserialize for VLBytes {
 }
 
 impl Serialize for &VLBytes {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
         (*self).tls_serialize(writer)
@@ -293,7 +285,6 @@ impl Serialize for &VLBytes {
 }
 
 impl Size for &VLBytes {
-    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
@@ -311,14 +302,12 @@ impl<'a> VLByteSlice<'a> {
 }
 
 impl<'a> Serialize for &VLByteSlice<'a> {
-    #[cfg(feature = "std")]
     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
         tls_serialize_bytes(writer, self.0)
     }
 }
 
 impl<'a> Serialize for VLByteSlice<'a> {
-    #[cfg(feature = "std")]
     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
         tls_serialize_bytes(writer, self.0)
     }
