@@ -16,6 +16,7 @@ extern crate std;
 
 pub mod anchor;
 pub mod ext;
+pub mod request;
 
 mod certificate;
 
