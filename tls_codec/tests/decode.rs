@@ -140,7 +140,7 @@ fn deserialize_var_len_vec() {
 
 #[test]
 fn deserialize_tls_vl_bytes() {
-    let mut b = [4u8, 77, 88, 1, 99].as_slice();
+    let mut b = &[4u8, 77, 88, 1, 99] as &[u8];
 
     let v = VLBytes::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
     assert_eq!(5, v.tls_serialized_len());
