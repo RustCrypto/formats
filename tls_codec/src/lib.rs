@@ -34,6 +34,8 @@ use {
 
 mod arrays;
 mod primitives;
+#[cfg(feature = "std")]
+mod quic_vec;
 mod tls_vec;
 
 pub use tls_vec::{
@@ -41,6 +43,9 @@ pub use tls_vec::{
     TlsByteSliceU8, TlsByteVecU16, TlsByteVecU32, TlsByteVecU8, TlsSliceU16, TlsSliceU32,
     TlsSliceU8, TlsVecU16, TlsVecU32, TlsVecU8,
 };
+
+#[cfg(feature = "std")]
+pub use quic_vec::{VLByteSlice, VLBytes};
 
 #[cfg(feature = "derive")]
 pub use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};

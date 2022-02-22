@@ -30,6 +30,10 @@ std = []
 name = "tls_vec"
 harness = false
 
+[[bench]]
+name = "quic_vec"
+harness = false
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]

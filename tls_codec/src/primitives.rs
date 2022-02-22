@@ -82,6 +82,7 @@ macro_rules! impl_unsigned {
             #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 let written = writer.write(&self.to_be_bytes())?;
+                debug_assert_eq!(written, $bytes);
                 Ok(written)
             }
         }
