@@ -11,6 +11,8 @@ mod authkeyid;
 mod keyusage;
 mod policymap;
 
+use crate::attr::AttributeTypeAndValue;
+
 pub use access::{AccessDescription, AuthorityInfoAccessSyntax, SubjectInfoAccessSyntax};
 pub use authkeyid::AuthorityKeyIdentifier;
 pub use certpolicy::CertificatePolicies;
@@ -25,7 +27,6 @@ pub use policymap::{PolicyMapping, PolicyMappings};
 use alloc::vec::Vec;
 
 use der::asn1::OctetString;
-use x501::attr::AttributeTypeAndValue;
 
 /// SubjectKeyIdentifier as defined in [RFC 5280 Section 4.2.1.2].
 ///

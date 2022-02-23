@@ -1,14 +1,13 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
-use crate::ext::pkix::certpolicy::CertificatePolicies;
-use crate::ext::pkix::NameConstraints;
-use crate::{ext::Extensions, Certificate, TbsCertificate};
+use crate::ext::pkix::{certpolicy::CertificatePolicies, NameConstraints};
+use crate::{ext::Extensions, name::Name};
+use crate::{Certificate, TbsCertificate};
 
 use der::asn1::{OctetString, Utf8String};
 use der::{Choice, Enumerated, Sequence};
 use flagset::{flags, FlagSet};
 use spki::SubjectPublicKeyInfo;
-use x501::name::Name;
 
 /// Version identifier for TrustAnchorInfo
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]

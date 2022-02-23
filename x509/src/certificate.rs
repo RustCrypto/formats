@@ -1,7 +1,8 @@
+use crate::{name::Name, time::Validity};
+
 use der::asn1::{BitString, UIntBytes};
 use der::{Enumerated, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
-use x501::{name::Name, time::Validity};
 
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
 ///

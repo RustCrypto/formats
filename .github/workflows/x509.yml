@@ -6,7 +6,6 @@ on:
       - "const-oid/**"
       - "der/**"
       - "spki/**"
-      - "x501/**"
       - "x509/**"
       - "Cargo.*"
   push:
