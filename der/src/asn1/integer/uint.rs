@@ -93,6 +93,19 @@ mod tests {
     }
 
     #[test]
+    fn decode_to_array_extra_zero() {
+        let err = decode_to_array::<4>(&[0, 1, 2]).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::Noncanonical { tag: Tag::Integer });
+    }
+
+    #[test]
+    fn decode_to_array_missing_zero() {
+        // We're decoding an unsigned integer, but this value would be signed
+        let err = decode_to_array::<4>(&[0xFF, 0xFE]).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::Value { tag: Tag::Integer });
+    }
+
+    #[test]
     fn decode_to_array_oversized_input() {
         let err = decode_to_array::<1>(&[1, 2, 3]).err().unwrap();
         assert_eq!(err.kind(), ErrorKind::Length { tag: Tag::Integer });
