@@ -455,3 +455,38 @@ mod sequence {
         );
     }
 }
+
+mod newtype {
+    use der::{asn1::BitString, Decodable, Encodable};
+    use der_derive::Newtype;
+
+    #[derive(Newtype)]
+    struct Lifetime<'a>(BitString<'a>);
+
+    #[derive(Newtype)]
+    struct NoLifetime(bool);
+
+    #[test]
+    fn decode() {
+        let bs = BitString::from_bytes(&[0, 1, 2, 3]).unwrap();
+        let en = bs.to_vec().unwrap();
+        let lt = Lifetime::from_der(&en).unwrap();
+        assert_eq!(bs, lt.into());
+
+        let en = true.to_vec().unwrap();
+        let lt = NoLifetime::from_der(&en).unwrap();
+        assert!(bool::from(lt));
+    }
+
+    #[test]
+    fn encode() {
+        let bs = BitString::from_bytes(&[0, 1, 2, 3]).unwrap();
+        let en = bs.to_vec().unwrap();
+        let lt = Lifetime::from(bs).to_vec().unwrap();
+        assert_eq!(en, lt);
+
+        let en = true.to_vec().unwrap();
+        let lt = NoLifetime::from(true).to_vec().unwrap();
+        assert_eq!(en, lt);
+    }
+}
