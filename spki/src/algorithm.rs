@@ -2,10 +2,8 @@
 
 use crate::{Error, Result};
 use core::cmp::Ordering;
-use der::{
-    asn1::{Any, ObjectIdentifier},
-    Decodable, Decoder, DerOrd, Encodable, Sequence, ValueOrd,
-};
+use der::asn1::{Any, ObjectIdentifier, SequenceRef};
+use der::{Decodable, DecodeValue, Decoder, DerOrd, Encodable, Header, Sequence, ValueOrd};
 
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
 ///
@@ -96,9 +94,9 @@ impl<'a> AlgorithmIdentifier<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for AlgorithmIdentifier<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
+impl<'a> DecodeValue<'a> for AlgorithmIdentifier<'a> {
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> der::Result<Self> {
+        SequenceRef::decode_value(decoder, header)?.decode_body(|decoder| {
             let oid = decoder.decode()?;
             let parameters = decoder.decode()?;
             Ok(Self { oid, parameters })
