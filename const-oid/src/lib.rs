@@ -17,6 +17,10 @@ mod encoder;
 mod error;
 mod parser;
 
+#[cfg(feature = "db")]
+#[cfg_attr(docsrs, doc(cfg(feature = "db")))]
+pub mod db;
+
 pub use crate::{
     arcs::{Arc, Arcs},
     error::{Error, Result},
@@ -24,6 +28,18 @@ pub use crate::{
 
 use crate::arcs::{RootArcs, ARC_MAX_BYTES, ARC_MAX_LAST_OCTET};
 use core::{fmt, str::FromStr};
+
+/// A named OID.
+///
+/// This type associates a name with an object identifier.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct NamedOid<'a> {
+    /// The object identifier.
+    pub oid: ObjectIdentifier,
+
+    /// The OID's name.
+    pub name: &'a str,
+}
 
 /// Object identifier (OID).
 ///
