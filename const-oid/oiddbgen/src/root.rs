@@ -1,69 +1,32 @@
-use crate::{kind::Kind, node::Node, spec::Spec};
+use crate::{node::Node, spec::Spec};
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
-#[derive(Clone, Debug)]
-pub struct Root {
-    tree: BTreeMap<u8, Kind>,
-    docs: HashMap<u8, (Ident, TokenStream)>,
-}
-
-impl Default for Root {
-    fn default() -> Self {
-        let mut docs = HashMap::new();
-
-        for (c, name, desc) in Self::DOCS {
-            let name = Ident::new(name, Span::call_site());
-            let desc = quote! { #![doc = #desc] };
-            docs.insert(*c, (name, desc));
-        }
-
-        let tree = BTreeMap::new();
-        Self { tree, docs }
-    }
-}
+#[derive(Clone, Debug, Default)]
+pub struct Root(BTreeMap<Ident, Spec>);
 
 impl Root {
-    const DOCS: &'static [(u8, &'static str, &'static str)] = &[
-        // From IANA
-        (b'A', "attr", "Attribute Type"),
-        (b'C', "dit", "DIT Content Rule"),
-        (b'E', "url", "LDAP URL Extension"),
-        (b'F', "family", "Family"),
-        (b'M', "matching", "Matching Rule"),
-        (b'N', "name", "Name Form"),
-        (b'O', "obj", "Object Class"),
-        (b'R', "admin", "Administrative Role"),
-        // Custom Additions
-        (b'X', "ext", "X.509 Certificate Extensions"),
-    ];
-
     pub fn parse_line(&mut self, line: &str) {
         let (name, next) = line.split_at(line.find(',').unwrap());
-        let (kind, next) = next[1..].split_at(next[1..].find(',').unwrap());
+        let (.., next) = next[1..].split_at(next[1..].find(',').unwrap());
         let (obji, spec) = next[1..].split_at(next[1..].find(',').unwrap());
 
         let arc: Option<usize> = obji.find('.').and_then(|i| obji.split_at(i).0.parse().ok());
         if arc.is_some() && spec.trim().starts_with(",[RFC") {
             let name = name.trim().to_string();
-            let kind = kind.trim().as_bytes()[0];
             let obji = obji.trim().to_string();
             let spec = Ident::new(
                 &spec[2..][..spec.len() - 3].to_ascii_lowercase(),
                 Span::call_site(),
             );
 
-            if self.docs.contains_key(&kind) {
-                self.tree
-                    .entry(kind)
-                    .or_insert_with(Kind::default)
-                    .entry(spec)
-                    .or_insert_with(Spec::default)
-                    .push(Node::new(obji, name));
-            }
+            self.0
+                .entry(spec)
+                .or_insert_with(Spec::default)
+                .push(Node::new(obji, name));
         }
     }
 
@@ -71,10 +34,9 @@ impl Root {
         let mut mods = TokenStream::default();
         let mut syms = TokenStream::default();
 
-        for (kind, k) in self.tree.iter() {
-            let (kind, docs) = self.docs.get(kind).unwrap();
-            mods.extend(k.module(kind, docs));
-            syms.extend(k.symbols(quote! { &#kind }));
+        for (spec, s) in &self.0 {
+            mods.extend(s.module(spec));
+            syms.extend(s.symbols(quote! { &#spec }));
         }
 
         quote! {
