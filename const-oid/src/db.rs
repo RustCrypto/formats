@@ -86,17 +86,17 @@ impl<'a> Database<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::attr::rfc4519::CN;
+    use crate::ObjectIdentifier;
+
+    use super::rfc4519::CN;
 
     #[test]
     fn by_oid() {
         let cn = super::DB.by_oid(&CN.oid).expect("cn not found");
         assert_eq!(&CN, cn);
 
-        let cn = super::attr::DB.by_oid(&CN.oid).expect("cn not found");
-        assert_eq!(&CN, cn);
-
-        assert_eq!(None, super::obj::DB.by_oid(&CN.oid));
+        let none = ObjectIdentifier::new("0.1.2.3.4.5.6.7.8.9");
+        assert_eq!(None, super::DB.by_oid(&none));
     }
 
     #[test]
@@ -104,9 +104,6 @@ mod tests {
         let cn = super::DB.by_name(CN.name).expect("cn not found");
         assert_eq!(&CN, cn);
 
-        let cn = super::attr::DB.by_name(CN.name).expect("cn not found");
-        assert_eq!(&CN, cn);
-
-        assert_eq!(None, super::obj::DB.by_name(CN.name));
+        assert_eq!(None, super::DB.by_name("purplePeopleEater"));
     }
 }
