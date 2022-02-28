@@ -4,13 +4,13 @@ use quote::quote;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Node {
-    obji: String,
+    obid: String,
     name: String,
     symb: Ident,
 }
 
 impl Node {
-    pub fn new(obji: String, name: String) -> Self {
+    pub fn new(obid: String, name: String) -> Self {
         // Raise the first letter in the beginning or after a hyphen.
         // This produces more natural UpperSnake conversions below.
         let mut upper = true;
@@ -31,7 +31,7 @@ impl Node {
         let symb = symb.to_case(Case::UpperSnake);
         let symb = Ident::new(&symb, Span::call_site());
 
-        Self { obji, name, symb }
+        Self { obid, name, symb }
     }
 
     pub fn symbol(&self) -> &Ident {
@@ -39,13 +39,13 @@ impl Node {
     }
 
     pub fn definition(&self) -> TokenStream {
-        let obji = self.obji.replace(' ', ""); // Fix a typo.
+        let obid = self.obid.replace(' ', ""); // Fix a typo.
         let symb = &self.symb;
         let name = &self.name;
 
         quote! {
             pub const #symb: crate::NamedOid<'_> = crate::NamedOid {
-                oid: crate::ObjectIdentifier::new(#obji),
+                oid: crate::ObjectIdentifier::new(#obid),
                 name: #name,
             };
         }

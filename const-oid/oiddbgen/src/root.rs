@@ -9,25 +9,16 @@ use quote::quote;
 pub struct Root(BTreeMap<Ident, Spec>);
 
 impl Root {
-    pub fn parse_line(&mut self, line: &str) {
-        let (name, next) = line.split_at(line.find(',').unwrap());
-        let (.., next) = next[1..].split_at(next[1..].find(',').unwrap());
-        let (obji, spec) = next[1..].split_at(next[1..].find(',').unwrap());
+    pub fn add(&mut self, spec: &str, name: &str, obid: &str) {
+        let name = name.trim().to_string();
+        let obid = obid.trim().to_string();
+        let spec = spec.trim().to_ascii_lowercase();
+        let spec = Ident::new(&spec, Span::call_site());
 
-        let arc: Option<usize> = obji.find('.').and_then(|i| obji.split_at(i).0.parse().ok());
-        if arc.is_some() && spec.trim().starts_with(",[RFC") {
-            let name = name.trim().to_string();
-            let obji = obji.trim().to_string();
-            let spec = Ident::new(
-                &spec[2..][..spec.len() - 3].to_ascii_lowercase(),
-                Span::call_site(),
-            );
-
-            self.0
-                .entry(spec)
-                .or_insert_with(Spec::default)
-                .push(Node::new(obji, name));
-        }
+        self.0
+            .entry(spec)
+            .or_insert_with(Spec::default)
+            .push(Node::new(obid, name));
     }
 
     pub fn module(&self) -> TokenStream {

@@ -2538,81 +2538,49 @@ pub mod rfc5020 {
     };
 }
 pub mod rfc5280 {
+    pub const ANY_EXTENDED_KEY_USAGE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.37.0"),
+        name: "anyExtendedKeyUsage",
+    };
+    pub const ANY_POLICY: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.32.0"),
+        name: "anyPolicy",
+    };
+    pub const ID_AD_CA_ISSUERS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.48.2"),
+        name: "id-ad-caIssuers",
+    };
+    pub const ID_AD_CA_REPOSITORY: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.48.5"),
+        name: "id-ad-caRepository",
+    };
+    pub const ID_AD_OCSP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.48.1"),
+        name: "id-ad-ocsp",
+    };
+    pub const ID_AD_TIME_STAMPING: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.48.3"),
+        name: "id-ad-timeStamping",
+    };
+    pub const ID_AT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.4"),
+        name: "id-at",
+    };
     pub const ID_CE_AUTHORITY_KEY_IDENTIFIER: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("2.5.29.35"),
         name: "id-ce-authorityKeyIdentifier",
-    };
-    pub const ID_CE_SUBJECT_KEY_IDENTIFIER: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.14"),
-        name: "id-ce-subjectKeyIdentifier",
-    };
-    pub const ID_CE_KEY_USAGE: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.15"),
-        name: "id-ce-keyUsage",
-    };
-    pub const ID_CE_PRIVATE_KEY_USAGE_PERIOD: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.16"),
-        name: "id-ce-privateKeyUsagePeriod",
-    };
-    pub const ID_CE_CERTIFICATE_POLICIES: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.32"),
-        name: "id-ce-certificatePolicies",
-    };
-    pub const ID_CE_POLICY_MAPPINGS: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.33"),
-        name: "id-ce-policyMappings",
-    };
-    pub const ID_CE_SUBJECT_ALT_NAME: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.17"),
-        name: "id-ce-subjectAltName",
-    };
-    pub const ID_CE_ISSUER_ALT_NAME: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.18"),
-        name: "id-ce-issuerAltName",
-    };
-    pub const ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.9"),
-        name: "id-ce-subjectDirectoryAttributes",
     };
     pub const ID_CE_BASIC_CONSTRAINTS: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("2.5.29.19"),
         name: "id-ce-basicConstraints",
     };
-    pub const ID_CE_NAME_CONSTRAINTS: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.30"),
-        name: "id-ce-nameConstraints",
-    };
-    pub const ID_CE_POLICY_CONSTRAINTS: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.36"),
-        name: "id-ce-policyConstraints",
-    };
     pub const ID_CE_CRL_DISTRIBUTION_POINTS: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("2.5.29.31"),
         name: "id-ce-cRLDistributionPoints",
     };
-    pub const ID_CE_EXT_KEY_USAGE: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.37"),
-        name: "id-ce-extKeyUsage",
-    };
-    pub const ID_CE_INHIBIT_ANY_POLICY: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.54"),
-        name: "id-ce-inhibitAnyPolicy",
-    };
-    pub const ID_CE_FRESHEST_CRL: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.46"),
-        name: "id-ce-freshestCRL",
-    };
     pub const ID_CE_CRL_NUMBER: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("2.5.29.20"),
         name: "id-ce-cRLNumber",
-    };
-    pub const ID_CE_ISSUING_DISTRIBUTION_POINT: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.28"),
-        name: "id-ce-issuingDistributionPoint",
-    };
-    pub const ID_CE_DELTA_CRL_INDICATOR: crate::NamedOid<'_> = crate::NamedOid {
-        oid: crate::ObjectIdentifier::new("2.5.29.27"),
-        name: "id-ce-deltaCRLIndicator",
     };
     pub const ID_CE_CRL_REASONS: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("2.5.29.21"),
@@ -2622,13 +2590,109 @@ pub mod rfc5280 {
         oid: crate::ObjectIdentifier::new("2.5.29.29"),
         name: "id-ce-certificateIssuer",
     };
+    pub const ID_CE_DELTA_CRL_INDICATOR: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.27"),
+        name: "id-ce-deltaCRLIndicator",
+    };
+    pub const ID_CE_FRESHEST_CRL: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.46"),
+        name: "id-ce-freshestCRL",
+    };
     pub const ID_CE_HOLD_INSTRUCTION_CODE: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("2.5.29.23"),
         name: "id-ce-holdInstructionCode",
     };
+    pub const ID_CE_INHIBIT_ANY_POLICY: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.54"),
+        name: "id-ce-inhibitAnyPolicy",
+    };
     pub const ID_CE_INVALIDITY_DATE: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("2.5.29.24"),
         name: "id-ce-invalidityDate",
+    };
+    pub const ID_CE_ISSUER_ALT_NAME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.18"),
+        name: "id-ce-issuerAltName",
+    };
+    pub const ID_CE_ISSUING_DISTRIBUTION_POINT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.28"),
+        name: "id-ce-issuingDistributionPoint",
+    };
+    pub const ID_CE_KEY_USAGE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.15"),
+        name: "id-ce-keyUsage",
+    };
+    pub const ID_CE_NAME_CONSTRAINTS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.30"),
+        name: "id-ce-nameConstraints",
+    };
+    pub const ID_CE_POLICY_CONSTRAINTS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.36"),
+        name: "id-ce-policyConstraints",
+    };
+    pub const ID_CE_POLICY_MAPPINGS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.33"),
+        name: "id-ce-policyMappings",
+    };
+    pub const ID_CE_PRIVATE_KEY_USAGE_PERIOD: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.16"),
+        name: "id-ce-privateKeyUsagePeriod",
+    };
+    pub const ID_CE_SUBJECT_ALT_NAME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.17"),
+        name: "id-ce-subjectAltName",
+    };
+    pub const ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.9"),
+        name: "id-ce-subjectDirectoryAttributes",
+    };
+    pub const ID_CE_SUBJECT_KEY_IDENTIFIER: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.14"),
+        name: "id-ce-subjectKeyIdentifier",
+    };
+    pub const ID_KP_OCSP_SIGNING: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.3.9"),
+        name: "id-kp-OCSPSigning",
+    };
+    pub const ID_KP_CLIENT_AUTH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.3.2"),
+        name: "id-kp-clientAuth",
+    };
+    pub const ID_KP_CODE_SIGNING: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.3.3"),
+        name: "id-kp-codeSigning",
+    };
+    pub const ID_KP_EMAIL_PROTECTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.3.4"),
+        name: "id-kp-emailProtection",
+    };
+    pub const ID_KP_SERVER_AUTH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.3.1"),
+        name: "id-kp-serverAuth",
+    };
+    pub const ID_KP_TIME_STAMPING: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.3.8"),
+        name: "id-kp-timeStamping",
+    };
+    pub const ID_PE_AUTHORITY_INFO_ACCESS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.1.1"),
+        name: "id-pe-authorityInfoAccess",
+    };
+    pub const ID_PE_SUBJECT_INFO_ACCESS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.1.11"),
+        name: "id-pe-subjectInfoAccess",
+    };
+    pub const ID_QT_CPS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.2.1"),
+        name: "id-qt-cps",
+    };
+    pub const ID_QT_UNOTICE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.2.2"),
+        name: "id-qt-unotice",
+    };
+    pub const PKCS_9: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9"),
+        name: "pkcs-9",
     };
 }
 pub mod rfc6109 {
@@ -3492,29 +3556,45 @@ pub const DB: super::Database<'static> = super::Database(&[
     &rfc4876::SERVICE_CREDENTIAL_LEVEL,
     &rfc4876::SERVICE_SEARCH_DESCRIPTOR,
     &rfc5020::ENTRY_DN,
+    &rfc5280::ANY_EXTENDED_KEY_USAGE,
+    &rfc5280::ANY_POLICY,
+    &rfc5280::ID_AD_CA_ISSUERS,
+    &rfc5280::ID_AD_CA_REPOSITORY,
+    &rfc5280::ID_AD_OCSP,
+    &rfc5280::ID_AD_TIME_STAMPING,
+    &rfc5280::ID_AT,
     &rfc5280::ID_CE_AUTHORITY_KEY_IDENTIFIER,
-    &rfc5280::ID_CE_SUBJECT_KEY_IDENTIFIER,
-    &rfc5280::ID_CE_KEY_USAGE,
-    &rfc5280::ID_CE_PRIVATE_KEY_USAGE_PERIOD,
-    &rfc5280::ID_CE_CERTIFICATE_POLICIES,
-    &rfc5280::ID_CE_POLICY_MAPPINGS,
-    &rfc5280::ID_CE_SUBJECT_ALT_NAME,
-    &rfc5280::ID_CE_ISSUER_ALT_NAME,
-    &rfc5280::ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES,
     &rfc5280::ID_CE_BASIC_CONSTRAINTS,
-    &rfc5280::ID_CE_NAME_CONSTRAINTS,
-    &rfc5280::ID_CE_POLICY_CONSTRAINTS,
     &rfc5280::ID_CE_CRL_DISTRIBUTION_POINTS,
-    &rfc5280::ID_CE_EXT_KEY_USAGE,
-    &rfc5280::ID_CE_INHIBIT_ANY_POLICY,
-    &rfc5280::ID_CE_FRESHEST_CRL,
     &rfc5280::ID_CE_CRL_NUMBER,
-    &rfc5280::ID_CE_ISSUING_DISTRIBUTION_POINT,
-    &rfc5280::ID_CE_DELTA_CRL_INDICATOR,
     &rfc5280::ID_CE_CRL_REASONS,
     &rfc5280::ID_CE_CERTIFICATE_ISSUER,
+    &rfc5280::ID_CE_DELTA_CRL_INDICATOR,
+    &rfc5280::ID_CE_FRESHEST_CRL,
     &rfc5280::ID_CE_HOLD_INSTRUCTION_CODE,
+    &rfc5280::ID_CE_INHIBIT_ANY_POLICY,
     &rfc5280::ID_CE_INVALIDITY_DATE,
+    &rfc5280::ID_CE_ISSUER_ALT_NAME,
+    &rfc5280::ID_CE_ISSUING_DISTRIBUTION_POINT,
+    &rfc5280::ID_CE_KEY_USAGE,
+    &rfc5280::ID_CE_NAME_CONSTRAINTS,
+    &rfc5280::ID_CE_POLICY_CONSTRAINTS,
+    &rfc5280::ID_CE_POLICY_MAPPINGS,
+    &rfc5280::ID_CE_PRIVATE_KEY_USAGE_PERIOD,
+    &rfc5280::ID_CE_SUBJECT_ALT_NAME,
+    &rfc5280::ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES,
+    &rfc5280::ID_CE_SUBJECT_KEY_IDENTIFIER,
+    &rfc5280::ID_KP_OCSP_SIGNING,
+    &rfc5280::ID_KP_CLIENT_AUTH,
+    &rfc5280::ID_KP_CODE_SIGNING,
+    &rfc5280::ID_KP_EMAIL_PROTECTION,
+    &rfc5280::ID_KP_SERVER_AUTH,
+    &rfc5280::ID_KP_TIME_STAMPING,
+    &rfc5280::ID_PE_AUTHORITY_INFO_ACCESS,
+    &rfc5280::ID_PE_SUBJECT_INFO_ACCESS,
+    &rfc5280::ID_QT_CPS,
+    &rfc5280::ID_QT_UNOTICE,
+    &rfc5280::PKCS_9,
     &rfc6109::LDIF_LOCATION_URL,
     &rfc6109::LDIF_LOCATION_URL_OBJECT,
     &rfc6109::MAIL_RECEIPT,
