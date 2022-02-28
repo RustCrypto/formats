@@ -3,8 +3,8 @@ name = "ssh-key"
 version = "0.3.0-pre" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of SSH key file format decoders/encoders as described
-in RFC4253 and RFC4716 as well as the OpenSSH key formats. Supports "heapless"
-`no_std` embedded targets with an optional `alloc` feature (Ed25519 and ECDSA only)
+in RFC4253 and RFC4716 as well as the OpenSSH key formats and `authorized_keys`.
+Supports "heapless" `no_std` embedded targets with an optional `alloc` feature.
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
