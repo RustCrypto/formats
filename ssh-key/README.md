@@ -12,7 +12,8 @@
 ## About
 
 Pure Rust implementation of SSH key file format decoders/encoders as described
-in [RFC4253] and [RFC4716] as well as OpenSSH's [PROTOCOL.key] format specification.
+in [RFC4253] and [RFC4716] as well as OpenSSH's [PROTOCOL.key] format specification
+and `authorized_keys` files.
 
 ## Features
 
@@ -23,6 +24,7 @@ in [RFC4253] and [RFC4716] as well as OpenSSH's [PROTOCOL.key] format specificat
   - [x] ECDSA (`no_std` "heapless")
   - [x] Ed25519 (`no_std` "heapless")
   - [x] RSA (`no_std` + `alloc`)
+- [x] Parsing `autorized_keys` files
 - [x] Built-in zeroize support for private keys
 
 #### TODO:
@@ -31,6 +33,7 @@ in [RFC4253] and [RFC4716] as well as OpenSSH's [PROTOCOL.key] format specificat
 - [ ] Encrypted private key support
 - [ ] Legacy SSH key (pre-OpenSSH) format support
 - [ ] Integrations with other RustCrypto crates (e.g. `ecdsa`, `ed25519`, `rsa`)
+- [ ] FIDO2 key support
 
 ## Minimum Supported Rust Version
 

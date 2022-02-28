@@ -114,6 +114,7 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+pub mod authorized_keys;
 pub mod private;
 pub mod public;
 
@@ -126,6 +127,7 @@ mod mpint;
 
 pub use crate::{
     algorithm::{Algorithm, CipherAlg, EcdsaCurve, KdfAlg, KdfOptions},
+    authorized_keys::AuthorizedKeys,
     error::{Error, Result},
     private::PrivateKey,
     public::PublicKey,

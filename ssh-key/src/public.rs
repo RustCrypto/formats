@@ -30,7 +30,7 @@ use alloc::{
 };
 
 /// SSH public key.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct PublicKey {
     /// Key data.
     pub key_data: KeyData,
