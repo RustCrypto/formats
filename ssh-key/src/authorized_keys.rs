@@ -61,7 +61,7 @@ impl<'a> AuthorizedKeys<'a> {
         loop {
             let mut line = self.lines.next()?;
 
-            // Strip comment, if present
+            // Strip comment if present
             if let Some((l, _)) = line.split_once(COMMENT_DELIMITER) {
                 line = l;
             }
