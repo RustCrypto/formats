@@ -4,13 +4,12 @@ use regex::Regex;
 
 #[derive(Clone, Debug)]
 pub struct Asn1Parser {
-    spec: String,
     tree: BTreeMap<String, (Option<String>, Option<String>)>,
 }
 
 impl Asn1Parser {
     const DEF: &'static str = r"(?mx)
-        (?P<name>[a-z][a-zA-Z0-9-]*)                # name
+        (?P<name>[a-zA-Z][a-zA-Z0-9-]*)                # name
         \s+
         OBJECT
         \s+
@@ -20,11 +19,11 @@ impl Asn1Parser {
         \s*
         \{
             \s*
-            (?:(?P<base>[a-z][a-zA-Z0-9-]*)\s+)?    # base
+            (?:(?P<base>[a-zA-Z][a-zA-Z0-9-]*)\s+)?    # base
             (?P<tail>                               # tail
                 (?:
                     (?:
-                        [a-z][a-zA-Z0-9-]*\([0-9]+\)\s+
+                        [a-zA-Z][a-zA-Z0-9-]*\([0-9]+\)\s+
                     )
                     |
                     (?:
@@ -37,7 +36,7 @@ impl Asn1Parser {
 
     const ARC: &'static str = r"(?mx)
         (?:
-            [a-z][a-zA-Z0-9-]*\(([0-9]+)\)
+            [a-zA-Z][a-zA-Z0-9-]*\(([0-9]+)\)
         )
         |
         (?:
@@ -45,7 +44,7 @@ impl Asn1Parser {
         )
     ";
 
-    pub fn new(spec: String, asn1: &str) -> Self {
+    pub fn new(asn1: &str) -> Self {
         let def = Regex::new(Self::DEF).unwrap();
         let arc = Regex::new(Self::ARC).unwrap();
 
@@ -64,10 +63,15 @@ impl Asn1Parser {
                     .join(".")
             });
 
+            let tail = match tail.as_deref() {
+                Some("") => None,
+                _ => tail,
+            };
+
             tree.insert(name, (base, tail));
         }
 
-        Self { spec, tree }
+        Self { tree }
     }
 
     pub fn resolve(&self, name: &str) -> Option<String> {
@@ -84,7 +88,7 @@ impl Asn1Parser {
         }
     }
 
-    pub fn iter(&self) -> impl '_ + Iterator<Item = (String, String, String)> {
+    pub fn iter(&self) -> impl '_ + Iterator<Item = (String, String)> {
         let bases: HashSet<&String> = self
             .tree
             .values()
@@ -94,14 +98,13 @@ impl Asn1Parser {
         self.tree
             .keys()
             .filter(move |n| !bases.contains(n))
-            .filter_map(|n| self.resolve(n).map(|p| (self.spec.clone(), n.clone(), p)))
+            .filter_map(|n| self.resolve(n).map(|p| (n.clone(), p)))
     }
 }
 
 #[test]
 fn test() {
     let asn1 = super::Asn1Parser::new(
-        "none".into(),
         r"
             foo OBJECT IDENTIFIER ::= { bar(1) baz(2) 3 }
             bat OBJECT IDENTIFIER ::= { foo qux(4) 5 }
@@ -109,11 +112,7 @@ fn test() {
         ",
     );
 
-    let answer = (
-        "none".to_string(),
-        "quz".to_string(),
-        "1.2.3.4.5.6".to_string(),
-    );
+    let answer = ("quz".to_string(), "1.2.3.4.5.6".to_string());
 
     let mut iter = asn1.iter();
     assert_eq!(Some(answer), iter.next());

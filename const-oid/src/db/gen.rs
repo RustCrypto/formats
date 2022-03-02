@@ -2695,6 +2695,619 @@ pub mod rfc5280 {
         name: "pkcs-9",
     };
 }
+pub mod rfc5911 {
+    pub const DES_EDE_3_CBC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.3.7"),
+        name: "des-ede3-cbc",
+    };
+    pub const HMAC_SHA_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.8.1.2"),
+        name: "hMAC-SHA1",
+    };
+    pub const ID_PBKDF_2: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.5.12"),
+        name: "id-PBKDF2",
+    };
+    pub const ID_AA_COMMUNITY_IDENTIFIERS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.40"),
+        name: "id-aa-communityIdentifiers",
+    };
+    pub const ID_AA_CONTENT_REFERENCE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.10"),
+        name: "id-aa-contentReference",
+    };
+    pub const ID_AA_DECRYPT_KEY_ID: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.37"),
+        name: "id-aa-decryptKeyID",
+    };
+    pub const ID_AA_ER_EXTERNAL: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.50"),
+        name: "id-aa-er-external",
+    };
+    pub const ID_AA_ER_INTERNAL: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.49"),
+        name: "id-aa-er-internal",
+    };
+    pub const ID_AA_FIRMWARE_PACKAGE_ID: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.35"),
+        name: "id-aa-firmwarePackageID",
+    };
+    pub const ID_AA_FIRMWARE_PACKAGE_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.42"),
+        name: "id-aa-firmwarePackageInfo",
+    };
+    pub const ID_AA_IMPL_COMPRESS_ALGS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.43"),
+        name: "id-aa-implCompressAlgs",
+    };
+    pub const ID_AA_IMPL_CRYPTO_ALGS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.38"),
+        name: "id-aa-implCryptoAlgs",
+    };
+    pub const ID_AA_ML_EXPAND_HISTORY: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.3"),
+        name: "id-aa-mlExpandHistory",
+    };
+    pub const ID_AA_SIGNING_CERTIFICATE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.12"),
+        name: "id-aa-signingCertificate",
+    };
+    pub const ID_AA_SIGNING_CERTIFICATE_V_2: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.47"),
+        name: "id-aa-signingCertificateV2",
+    };
+    pub const ID_AA_TARGET_HARDWARE_I_DS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.36"),
+        name: "id-aa-targetHardwareIDs",
+    };
+    pub const ID_AA_WRAPPED_FIRMWARE_KEY: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.39"),
+        name: "id-aa-wrappedFirmwareKey",
+    };
+    pub const ID_AES_128_CBC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.2"),
+        name: "id-aes128-CBC",
+    };
+    pub const ID_AES_128_CCM: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.7"),
+        name: "id-aes128-CCM",
+    };
+    pub const ID_AES_128_GCM: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.6"),
+        name: "id-aes128-GCM",
+    };
+    pub const ID_AES_128_WRAP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.5"),
+        name: "id-aes128-wrap",
+    };
+    pub const ID_AES_192_CBC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.22"),
+        name: "id-aes192-CBC",
+    };
+    pub const ID_AES_192_CCM: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.27"),
+        name: "id-aes192-CCM",
+    };
+    pub const ID_AES_192_GCM: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.26"),
+        name: "id-aes192-GCM",
+    };
+    pub const ID_AES_192_WRAP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.25"),
+        name: "id-aes192-wrap",
+    };
+    pub const ID_AES_256_CBC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.42"),
+        name: "id-aes256-CBC",
+    };
+    pub const ID_AES_256_CCM: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.47"),
+        name: "id-aes256-CCM",
+    };
+    pub const ID_AES_256_GCM: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.46"),
+        name: "id-aes256-GCM",
+    };
+    pub const ID_AES_256_WRAP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.1.45"),
+        name: "id-aes256-wrap",
+    };
+    pub const ID_ALG_CMS_3_DE_SWRAP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.3.6"),
+        name: "id-alg-CMS3DESwrap",
+    };
+    pub const ID_ALG_CMSRC_2_WRAP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.3.7"),
+        name: "id-alg-CMSRC2wrap",
+    };
+    pub const ID_ALG_ESDH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.3.5"),
+        name: "id-alg-ESDH",
+    };
+    pub const ID_ALG_SSDH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.3.10"),
+        name: "id-alg-SSDH",
+    };
+    pub const ID_CAP_PREFER_BINARY_INSIDE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.11.1"),
+        name: "id-cap-preferBinaryInside",
+    };
+    pub const ID_CET_SKD_FAIL_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.15.1"),
+        name: "id-cet-skdFailInfo",
+    };
+    pub const ID_CMC_GLA_SKD_ALG_REQUEST: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.7.99.1"),
+        name: "id-cmc-gla-skdAlgRequest",
+    };
+    pub const ID_CMC_GLA_SKD_ALG_RESPONSE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.7.99.2"),
+        name: "id-cmc-gla-skdAlgResponse",
+    };
+    pub const ID_CONTENT_TYPE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.3"),
+        name: "id-contentType",
+    };
+    pub const ID_COUNTERSIGNATURE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.6"),
+        name: "id-countersignature",
+    };
+    pub const ID_CT_AUTH_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.2"),
+        name: "id-ct-authData",
+    };
+    pub const ID_CT_CONTENT_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.6"),
+        name: "id-ct-contentInfo",
+    };
+    pub const ID_CT_FIRMWARE_LOAD_ERROR: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.18"),
+        name: "id-ct-firmwareLoadError",
+    };
+    pub const ID_CT_FIRMWARE_LOAD_RECEIPT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.17"),
+        name: "id-ct-firmwareLoadReceipt",
+    };
+    pub const ID_CT_FIRMWARE_PACKAGE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.16"),
+        name: "id-ct-firmwarePackage",
+    };
+    pub const ID_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.1"),
+        name: "id-data",
+    };
+    pub const ID_DIGESTED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.5"),
+        name: "id-digestedData",
+    };
+    pub const ID_ENCRYPTED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.6"),
+        name: "id-encryptedData",
+    };
+    pub const ID_ENVELOPED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.3"),
+        name: "id-envelopedData",
+    };
+    pub const ID_MESSAGE_DIGEST: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.4"),
+        name: "id-messageDigest",
+    };
+    pub const ID_ON_HARDWARE_MODULE_NAME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.8.4"),
+        name: "id-on-hardwareModuleName",
+    };
+    pub const ID_SIGNED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.2"),
+        name: "id-signedData",
+    };
+    pub const ID_SIGNING_TIME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.5"),
+        name: "id-signingTime",
+    };
+    pub const ID_SKD: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.8"),
+        name: "id-skd",
+    };
+    pub const LTANS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.11"),
+        name: "ltans",
+    };
+    pub const RC_2_CBC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.3.2"),
+        name: "rc2-cbc",
+    };
+    pub const SMIME_CAPABILITIES: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.15"),
+        name: "smimeCapabilities",
+    };
+}
+pub mod rfc5912 {
+    pub const NAME_COMP_ALG_SET: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.19.4"),
+        name: "NameCompAlgSet",
+    };
+    pub const DHPUBLICNUMBER: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10046.2.1"),
+        name: "dhpublicnumber",
+    };
+    pub const DSA_WITH_SHA_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10040.4.3"),
+        name: "dsa-with-sha1",
+    };
+    pub const DSA_WITH_SHA_224: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.3.1"),
+        name: "dsa-with-sha224",
+    };
+    pub const DSA_WITH_SHA_256: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.3.2"),
+        name: "dsa-with-sha256",
+    };
+    pub const ECDSA_WITH_SHA_224: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10045.4.3.1"),
+        name: "ecdsa-with-SHA224",
+    };
+    pub const ECDSA_WITH_SHA_256: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10045.4.3.2"),
+        name: "ecdsa-with-SHA256",
+    };
+    pub const ECDSA_WITH_SHA_384: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10045.4.3.3"),
+        name: "ecdsa-with-SHA384",
+    };
+    pub const ECDSA_WITH_SHA_512: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10045.4.3.4"),
+        name: "ecdsa-with-SHA512",
+    };
+    pub const ID_DH_BASED_MAC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113533.7.66.30"),
+        name: "id-DHBasedMac",
+    };
+    pub const ID_PASSWORD_BASED_MAC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113533.7.66.13"),
+        name: "id-PasswordBasedMac",
+    };
+    pub const ID_RSAES_OAEP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.7"),
+        name: "id-RSAES-OAEP",
+    };
+    pub const ID_RSASSA_PSS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.10"),
+        name: "id-RSASSA-PSS",
+    };
+    pub const ID_AT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.4"),
+        name: "id-at",
+    };
+    pub const ID_CE_AUTHORITY_KEY_IDENTIFIER: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.35"),
+        name: "id-ce-authorityKeyIdentifier",
+    };
+    pub const ID_CE_BASIC_CONSTRAINTS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.19"),
+        name: "id-ce-basicConstraints",
+    };
+    pub const ID_CE_CRL_NUMBER: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.20"),
+        name: "id-ce-cRLNumber",
+    };
+    pub const ID_CE_CRL_REASONS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.21"),
+        name: "id-ce-cRLReasons",
+    };
+    pub const ID_CE_CERTIFICATE_ISSUER: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.29"),
+        name: "id-ce-certificateIssuer",
+    };
+    pub const ID_CE_CERTIFICATE_POLICIES: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.32"),
+        name: "id-ce-certificatePolicies",
+    };
+    pub const ID_CE_DELTA_CRL_INDICATOR: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.27"),
+        name: "id-ce-deltaCRLIndicator",
+    };
+    pub const ID_CE_FRESHEST_CRL: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.46"),
+        name: "id-ce-freshestCRL",
+    };
+    pub const ID_CE_HOLD_INSTRUCTION_CODE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.23"),
+        name: "id-ce-holdInstructionCode",
+    };
+    pub const ID_CE_INHIBIT_ANY_POLICY: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.54"),
+        name: "id-ce-inhibitAnyPolicy",
+    };
+    pub const ID_CE_INVALIDITY_DATE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.24"),
+        name: "id-ce-invalidityDate",
+    };
+    pub const ID_CE_ISSUER_ALT_NAME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.18"),
+        name: "id-ce-issuerAltName",
+    };
+    pub const ID_CE_ISSUING_DISTRIBUTION_POINT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.28"),
+        name: "id-ce-issuingDistributionPoint",
+    };
+    pub const ID_CE_KEY_USAGE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.15"),
+        name: "id-ce-keyUsage",
+    };
+    pub const ID_CE_NAME_CONSTRAINTS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.30"),
+        name: "id-ce-nameConstraints",
+    };
+    pub const ID_CE_NO_REV_AVAIL: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.56"),
+        name: "id-ce-noRevAvail",
+    };
+    pub const ID_CE_POLICY_CONSTRAINTS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.36"),
+        name: "id-ce-policyConstraints",
+    };
+    pub const ID_CE_POLICY_MAPPINGS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.33"),
+        name: "id-ce-policyMappings",
+    };
+    pub const ID_CE_PRIVATE_KEY_USAGE_PERIOD: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.16"),
+        name: "id-ce-privateKeyUsagePeriod",
+    };
+    pub const ID_CE_SUBJECT_ALT_NAME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.17"),
+        name: "id-ce-subjectAltName",
+    };
+    pub const ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.9"),
+        name: "id-ce-subjectDirectoryAttributes",
+    };
+    pub const ID_CE_SUBJECT_KEY_IDENTIFIER: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.14"),
+        name: "id-ce-subjectKeyIdentifier",
+    };
+    pub const ID_CE_TARGET_INFORMATION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.5.29.55"),
+        name: "id-ce-targetInformation",
+    };
+    pub const ID_CT_SCVP_CERT_VAL_REQUEST: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.10"),
+        name: "id-ct-scvp-certValRequest",
+    };
+    pub const ID_CT_SCVP_CERT_VAL_RESPONSE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.11"),
+        name: "id-ct-scvp-certValResponse",
+    };
+    pub const ID_CT_SCVP_VAL_POL_REQUEST: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.12"),
+        name: "id-ct-scvp-valPolRequest",
+    };
+    pub const ID_CT_SCVP_VAL_POL_RESPONSE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.13"),
+        name: "id-ct-scvp-valPolResponse",
+    };
+    pub const ID_DSA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10040.4.1"),
+        name: "id-dsa",
+    };
+    pub const ID_EC_DH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.1.12"),
+        name: "id-ecDH",
+    };
+    pub const ID_EC_MQV: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.1.13"),
+        name: "id-ecMQV",
+    };
+    pub const ID_EC_PUBLIC_KEY: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10045.2.1"),
+        name: "id-ecPublicKey",
+    };
+    pub const ID_KEY_EXCHANGE_ALGORITHM: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.2.1.1.22"),
+        name: "id-keyExchangeAlgorithm",
+    };
+    pub const ID_MD_2: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.2.2"),
+        name: "id-md2",
+    };
+    pub const ID_MD_5: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.2.5"),
+        name: "id-md5",
+    };
+    pub const ID_MGF_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.8"),
+        name: "id-mgf1",
+    };
+    pub const ID_P_SPECIFIED: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.9"),
+        name: "id-pSpecified",
+    };
+    pub const ID_SHA_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.14.3.2.26"),
+        name: "id-sha1",
+    };
+    pub const ID_SHA_224: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.2.4"),
+        name: "id-sha224",
+    };
+    pub const ID_SHA_256: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.2.1"),
+        name: "id-sha256",
+    };
+    pub const ID_SHA_384: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.2.2"),
+        name: "id-sha384",
+    };
+    pub const ID_SHA_512: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("2.16.840.1.101.3.4.2.3"),
+        name: "id-sha512",
+    };
+    pub const ID_SMIME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16"),
+        name: "id-smime",
+    };
+    pub const ID_STC_BUILD_AA_PATH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.17.4"),
+        name: "id-stc-build-aa-path",
+    };
+    pub const ID_STC_BUILD_PKC_PATH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.17.1"),
+        name: "id-stc-build-pkc-path",
+    };
+    pub const ID_STC_BUILD_STATUS_CHECKED_AA_PATH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.17.6"),
+        name: "id-stc-build-status-checked-aa-path",
+    };
+    pub const ID_STC_BUILD_STATUS_CHECKED_PKC_PATH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.17.3"),
+        name: "id-stc-build-status-checked-pkc-path",
+    };
+    pub const ID_STC_BUILD_VALID_AA_PATH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.17.5"),
+        name: "id-stc-build-valid-aa-path",
+    };
+    pub const ID_STC_BUILD_VALID_PKC_PATH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.17.2"),
+        name: "id-stc-build-valid-pkc-path",
+    };
+    pub const ID_STC_STATUS_CHECK_AC_AND_BUILD_STATUS_CHECKED_AA_PATH: crate::NamedOid<'_> =
+        crate::NamedOid {
+            oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.17.7"),
+            name: "id-stc-status-check-ac-and-build-status-checked-aa-path",
+        };
+    pub const ID_SVP_BASIC_VAL_ALG: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.19.3"),
+        name: "id-svp-basicValAlg",
+    };
+    pub const ID_SVP_DEFAULT_VAL_POLICY: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.19.1"),
+        name: "id-svp-defaultValPolicy",
+    };
+    pub const ID_SVP_NAME_VAL_ALG: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.19.2"),
+        name: "id-svp-nameValAlg",
+    };
+    pub const ID_SWB_AA_CERT_PATH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.18.5"),
+        name: "id-swb-aa-cert-path",
+    };
+    pub const ID_SWB_AA_REVOCATION_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.18.6"),
+        name: "id-swb-aa-revocation-info",
+    };
+    pub const ID_SWB_AC_REVOCATION_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.18.7"),
+        name: "id-swb-ac-revocation-info",
+    };
+    pub const ID_SWB_PKC_BEST_CERT_PATH: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.18.1"),
+        name: "id-swb-pkc-best-cert-path",
+    };
+    pub const ID_SWB_PKC_PUBLIC_KEY_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.18.4"),
+        name: "id-swb-pkc-public-key-info",
+    };
+    pub const ID_SWB_PKC_REVOCATION_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.18.2"),
+        name: "id-swb-pkc-revocation-info",
+    };
+    pub const ID_SWB_RELAYED_RESPONSES: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.18.9"),
+        name: "id-swb-relayed-responses",
+    };
+    pub const MD_2_WITH_RSA_ENCRYPTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.2"),
+        name: "md2WithRSAEncryption",
+    };
+    pub const MD_5_WITH_RSA_ENCRYPTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.4"),
+        name: "md5WithRSAEncryption",
+    };
+    pub const PKCS_9: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9"),
+        name: "pkcs-9",
+    };
+    pub const RSA_ENCRYPTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.1"),
+        name: "rsaEncryption",
+    };
+    pub const SECP_224_R_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.33"),
+        name: "secp224r1",
+    };
+    pub const SECP_256_R_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.10045.3.1.7"),
+        name: "secp256r1",
+    };
+    pub const SECP_384_R_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.34"),
+        name: "secp384r1",
+    };
+    pub const SECP_521_R_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.35"),
+        name: "secp521r1",
+    };
+    pub const SECT_163_K_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.1"),
+        name: "sect163k1",
+    };
+    pub const SECT_163_R_2: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.15"),
+        name: "sect163r2",
+    };
+    pub const SECT_233_K_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.26"),
+        name: "sect233k1",
+    };
+    pub const SECT_233_R_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.27"),
+        name: "sect233r1",
+    };
+    pub const SECT_283_K_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.16"),
+        name: "sect283k1",
+    };
+    pub const SECT_283_R_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.17"),
+        name: "sect283r1",
+    };
+    pub const SECT_409_K_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.36"),
+        name: "sect409k1",
+    };
+    pub const SECT_409_R_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.37"),
+        name: "sect409r1",
+    };
+    pub const SECT_571_K_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.38"),
+        name: "sect571k1",
+    };
+    pub const SECT_571_R_1: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.132.0.39"),
+        name: "sect571r1",
+    };
+    pub const SHA_1_WITH_RSA_ENCRYPTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.5"),
+        name: "sha1WithRSAEncryption",
+    };
+    pub const SHA_224_WITH_RSA_ENCRYPTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.14"),
+        name: "sha224WithRSAEncryption",
+    };
+    pub const SHA_256_WITH_RSA_ENCRYPTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.11"),
+        name: "sha256WithRSAEncryption",
+    };
+    pub const SHA_384_WITH_RSA_ENCRYPTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.12"),
+        name: "sha384WithRSAEncryption",
+    };
+    pub const SHA_512_WITH_RSA_ENCRYPTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.1.13"),
+        name: "sha512WithRSAEncryption",
+    };
+}
 pub mod rfc6109 {
     pub const LDIF_LOCATION_URL: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("1.3.6.1.4.1.16572.2.2.6"),
@@ -2731,6 +3344,260 @@ pub mod rfc6109 {
     pub const PROVIDER_UNIT: crate::NamedOid<'_> = crate::NamedOid {
         oid: crate::ObjectIdentifier::new("1.3.6.1.4.1.16572.2.2.7"),
         name: "providerUnit",
+    };
+}
+pub mod rfc6268 {
+    pub const ID_AA_BINARY_SIGNING_TIME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2.46"),
+        name: "id-aa-binarySigningTime",
+    };
+    pub const ID_AA_MULTIPLE_SIGNATURES: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.2.51"),
+        name: "id-aa-multipleSignatures",
+    };
+    pub const ID_ALG_ZLIB_COMPRESS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.3.8"),
+        name: "id-alg-zlibCompress",
+    };
+    pub const ID_CONTENT_TYPE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.3"),
+        name: "id-contentType",
+    };
+    pub const ID_COUNTERSIGNATURE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.6"),
+        name: "id-countersignature",
+    };
+    pub const ID_CT_AUTH_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.2"),
+        name: "id-ct-authData",
+    };
+    pub const ID_CT_COMPRESSED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.9"),
+        name: "id-ct-compressedData",
+    };
+    pub const ID_CT_CONTENT_COLLECTION: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.19"),
+        name: "id-ct-contentCollection",
+    };
+    pub const ID_CT_CONTENT_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.6"),
+        name: "id-ct-contentInfo",
+    };
+    pub const ID_CT_CONTENT_WITH_ATTRS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1.20"),
+        name: "id-ct-contentWithAttrs",
+    };
+    pub const ID_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.1"),
+        name: "id-data",
+    };
+    pub const ID_DIGESTED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.5"),
+        name: "id-digestedData",
+    };
+    pub const ID_ENCRYPTED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.6"),
+        name: "id-encryptedData",
+    };
+    pub const ID_ENVELOPED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.3"),
+        name: "id-envelopedData",
+    };
+    pub const ID_MESSAGE_DIGEST: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.4"),
+        name: "id-messageDigest",
+    };
+    pub const ID_SIGNED_DATA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.7.2"),
+        name: "id-signedData",
+    };
+    pub const ID_SIGNING_TIME: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.5"),
+        name: "id-signingTime",
+    };
+}
+pub mod rfc7107 {
+    pub const ID_AA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.2"),
+        name: "id-aa",
+    };
+    pub const ID_ALG: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.3"),
+        name: "id-alg",
+    };
+    pub const ID_CAP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.11"),
+        name: "id-cap",
+    };
+    pub const ID_CD: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.4"),
+        name: "id-cd",
+    };
+    pub const ID_CT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.1"),
+        name: "id-ct",
+    };
+    pub const ID_CTI: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.6"),
+        name: "id-cti",
+    };
+    pub const ID_EIT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.10"),
+        name: "id-eit",
+    };
+    pub const ID_MOD: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.0"),
+        name: "id-mod",
+    };
+    pub const ID_PSKC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.12"),
+        name: "id-pskc",
+    };
+    pub const ID_SKD: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.8"),
+        name: "id-skd",
+    };
+    pub const ID_SPQ: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.5"),
+        name: "id-spq",
+    };
+    pub const ID_STI: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.9"),
+        name: "id-sti",
+    };
+    pub const ID_TSP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.2.840.113549.1.9.16.7"),
+        name: "id-tsp",
+    };
+}
+pub mod rfc7299 {
+    pub const ID_TEST: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.13"),
+        name: "id-TEST",
+    };
+    pub const ID_ACA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.10"),
+        name: "id-aca",
+    };
+    pub const ID_AD: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.48"),
+        name: "id-ad",
+    };
+    pub const ID_ALG: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.6"),
+        name: "id-alg",
+    };
+    pub const ID_BVAE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.19.3"),
+        name: "id-bvae",
+    };
+    pub const ID_CCT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.12"),
+        name: "id-cct",
+    };
+    pub const ID_CET: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.15"),
+        name: "id-cet",
+    };
+    pub const ID_CMC: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.7"),
+        name: "id-cmc",
+    };
+    pub const ID_CMC_GLA_RR: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.7.99"),
+        name: "id-cmc-glaRR",
+    };
+    pub const ID_CP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.14"),
+        name: "id-cp",
+    };
+    pub const ID_DNVAE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.19.4"),
+        name: "id-dnvae",
+    };
+    pub const ID_IT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.4"),
+        name: "id-it",
+    };
+    pub const ID_KP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.3"),
+        name: "id-kp",
+    };
+    pub const ID_LOGO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.20"),
+        name: "id-logo",
+    };
+    pub const ID_MOD: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.0"),
+        name: "id-mod",
+    };
+    pub const ID_MR: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.22"),
+        name: "id-mr",
+    };
+    pub const ID_NVAE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.19.2"),
+        name: "id-nvae",
+    };
+    pub const ID_ON: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.8"),
+        name: "id-on",
+    };
+    pub const ID_PDA: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.9"),
+        name: "id-pda",
+    };
+    pub const ID_PE: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.1"),
+        name: "id-pe",
+    };
+    pub const ID_PKIP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.5"),
+        name: "id-pkip",
+    };
+    pub const ID_PKIX_OCSP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.48.1"),
+        name: "id-pkix-ocsp",
+    };
+    pub const ID_PPL: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.21"),
+        name: "id-ppl",
+    };
+    pub const ID_QCS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.11"),
+        name: "id-qcs",
+    };
+    pub const ID_QT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.2"),
+        name: "id-qt",
+    };
+    pub const ID_REG_CTRL: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.5.1"),
+        name: "id-regCtrl",
+    };
+    pub const ID_REG_INFO: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.5.2"),
+        name: "id-regInfo",
+    };
+    pub const ID_RI: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.16"),
+        name: "id-ri",
+    };
+    pub const ID_SCT: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.17"),
+        name: "id-sct",
+    };
+    pub const ID_SKIS: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.23"),
+        name: "id-skis",
+    };
+    pub const ID_SVP: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.19"),
+        name: "id-svp",
+    };
+    pub const ID_SWB: crate::NamedOid<'_> = crate::NamedOid {
+        oid: crate::ObjectIdentifier::new("1.3.6.1.5.5.7.18"),
+        name: "id-swb",
     };
 }
 pub mod rfc7532 {
@@ -3595,6 +4462,158 @@ pub const DB: super::Database<'static> = super::Database(&[
     &rfc5280::ID_QT_CPS,
     &rfc5280::ID_QT_UNOTICE,
     &rfc5280::PKCS_9,
+    &rfc5911::DES_EDE_3_CBC,
+    &rfc5911::HMAC_SHA_1,
+    &rfc5911::ID_PBKDF_2,
+    &rfc5911::ID_AA_COMMUNITY_IDENTIFIERS,
+    &rfc5911::ID_AA_CONTENT_REFERENCE,
+    &rfc5911::ID_AA_DECRYPT_KEY_ID,
+    &rfc5911::ID_AA_ER_EXTERNAL,
+    &rfc5911::ID_AA_ER_INTERNAL,
+    &rfc5911::ID_AA_FIRMWARE_PACKAGE_ID,
+    &rfc5911::ID_AA_FIRMWARE_PACKAGE_INFO,
+    &rfc5911::ID_AA_IMPL_COMPRESS_ALGS,
+    &rfc5911::ID_AA_IMPL_CRYPTO_ALGS,
+    &rfc5911::ID_AA_ML_EXPAND_HISTORY,
+    &rfc5911::ID_AA_SIGNING_CERTIFICATE,
+    &rfc5911::ID_AA_SIGNING_CERTIFICATE_V_2,
+    &rfc5911::ID_AA_TARGET_HARDWARE_I_DS,
+    &rfc5911::ID_AA_WRAPPED_FIRMWARE_KEY,
+    &rfc5911::ID_AES_128_CBC,
+    &rfc5911::ID_AES_128_CCM,
+    &rfc5911::ID_AES_128_GCM,
+    &rfc5911::ID_AES_128_WRAP,
+    &rfc5911::ID_AES_192_CBC,
+    &rfc5911::ID_AES_192_CCM,
+    &rfc5911::ID_AES_192_GCM,
+    &rfc5911::ID_AES_192_WRAP,
+    &rfc5911::ID_AES_256_CBC,
+    &rfc5911::ID_AES_256_CCM,
+    &rfc5911::ID_AES_256_GCM,
+    &rfc5911::ID_AES_256_WRAP,
+    &rfc5911::ID_ALG_CMS_3_DE_SWRAP,
+    &rfc5911::ID_ALG_CMSRC_2_WRAP,
+    &rfc5911::ID_ALG_ESDH,
+    &rfc5911::ID_ALG_SSDH,
+    &rfc5911::ID_CAP_PREFER_BINARY_INSIDE,
+    &rfc5911::ID_CET_SKD_FAIL_INFO,
+    &rfc5911::ID_CMC_GLA_SKD_ALG_REQUEST,
+    &rfc5911::ID_CMC_GLA_SKD_ALG_RESPONSE,
+    &rfc5911::ID_CONTENT_TYPE,
+    &rfc5911::ID_COUNTERSIGNATURE,
+    &rfc5911::ID_CT_AUTH_DATA,
+    &rfc5911::ID_CT_CONTENT_INFO,
+    &rfc5911::ID_CT_FIRMWARE_LOAD_ERROR,
+    &rfc5911::ID_CT_FIRMWARE_LOAD_RECEIPT,
+    &rfc5911::ID_CT_FIRMWARE_PACKAGE,
+    &rfc5911::ID_DATA,
+    &rfc5911::ID_DIGESTED_DATA,
+    &rfc5911::ID_ENCRYPTED_DATA,
+    &rfc5911::ID_ENVELOPED_DATA,
+    &rfc5911::ID_MESSAGE_DIGEST,
+    &rfc5911::ID_ON_HARDWARE_MODULE_NAME,
+    &rfc5911::ID_SIGNED_DATA,
+    &rfc5911::ID_SIGNING_TIME,
+    &rfc5911::ID_SKD,
+    &rfc5911::LTANS,
+    &rfc5911::RC_2_CBC,
+    &rfc5911::SMIME_CAPABILITIES,
+    &rfc5912::NAME_COMP_ALG_SET,
+    &rfc5912::DHPUBLICNUMBER,
+    &rfc5912::DSA_WITH_SHA_1,
+    &rfc5912::DSA_WITH_SHA_224,
+    &rfc5912::DSA_WITH_SHA_256,
+    &rfc5912::ECDSA_WITH_SHA_224,
+    &rfc5912::ECDSA_WITH_SHA_256,
+    &rfc5912::ECDSA_WITH_SHA_384,
+    &rfc5912::ECDSA_WITH_SHA_512,
+    &rfc5912::ID_DH_BASED_MAC,
+    &rfc5912::ID_PASSWORD_BASED_MAC,
+    &rfc5912::ID_RSAES_OAEP,
+    &rfc5912::ID_RSASSA_PSS,
+    &rfc5912::ID_AT,
+    &rfc5912::ID_CE_AUTHORITY_KEY_IDENTIFIER,
+    &rfc5912::ID_CE_BASIC_CONSTRAINTS,
+    &rfc5912::ID_CE_CRL_NUMBER,
+    &rfc5912::ID_CE_CRL_REASONS,
+    &rfc5912::ID_CE_CERTIFICATE_ISSUER,
+    &rfc5912::ID_CE_CERTIFICATE_POLICIES,
+    &rfc5912::ID_CE_DELTA_CRL_INDICATOR,
+    &rfc5912::ID_CE_FRESHEST_CRL,
+    &rfc5912::ID_CE_HOLD_INSTRUCTION_CODE,
+    &rfc5912::ID_CE_INHIBIT_ANY_POLICY,
+    &rfc5912::ID_CE_INVALIDITY_DATE,
+    &rfc5912::ID_CE_ISSUER_ALT_NAME,
+    &rfc5912::ID_CE_ISSUING_DISTRIBUTION_POINT,
+    &rfc5912::ID_CE_KEY_USAGE,
+    &rfc5912::ID_CE_NAME_CONSTRAINTS,
+    &rfc5912::ID_CE_NO_REV_AVAIL,
+    &rfc5912::ID_CE_POLICY_CONSTRAINTS,
+    &rfc5912::ID_CE_POLICY_MAPPINGS,
+    &rfc5912::ID_CE_PRIVATE_KEY_USAGE_PERIOD,
+    &rfc5912::ID_CE_SUBJECT_ALT_NAME,
+    &rfc5912::ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES,
+    &rfc5912::ID_CE_SUBJECT_KEY_IDENTIFIER,
+    &rfc5912::ID_CE_TARGET_INFORMATION,
+    &rfc5912::ID_CT_SCVP_CERT_VAL_REQUEST,
+    &rfc5912::ID_CT_SCVP_CERT_VAL_RESPONSE,
+    &rfc5912::ID_CT_SCVP_VAL_POL_REQUEST,
+    &rfc5912::ID_CT_SCVP_VAL_POL_RESPONSE,
+    &rfc5912::ID_DSA,
+    &rfc5912::ID_EC_DH,
+    &rfc5912::ID_EC_MQV,
+    &rfc5912::ID_EC_PUBLIC_KEY,
+    &rfc5912::ID_KEY_EXCHANGE_ALGORITHM,
+    &rfc5912::ID_MD_2,
+    &rfc5912::ID_MD_5,
+    &rfc5912::ID_MGF_1,
+    &rfc5912::ID_P_SPECIFIED,
+    &rfc5912::ID_SHA_1,
+    &rfc5912::ID_SHA_224,
+    &rfc5912::ID_SHA_256,
+    &rfc5912::ID_SHA_384,
+    &rfc5912::ID_SHA_512,
+    &rfc5912::ID_SMIME,
+    &rfc5912::ID_STC_BUILD_AA_PATH,
+    &rfc5912::ID_STC_BUILD_PKC_PATH,
+    &rfc5912::ID_STC_BUILD_STATUS_CHECKED_AA_PATH,
+    &rfc5912::ID_STC_BUILD_STATUS_CHECKED_PKC_PATH,
+    &rfc5912::ID_STC_BUILD_VALID_AA_PATH,
+    &rfc5912::ID_STC_BUILD_VALID_PKC_PATH,
+    &rfc5912::ID_STC_STATUS_CHECK_AC_AND_BUILD_STATUS_CHECKED_AA_PATH,
+    &rfc5912::ID_SVP_BASIC_VAL_ALG,
+    &rfc5912::ID_SVP_DEFAULT_VAL_POLICY,
+    &rfc5912::ID_SVP_NAME_VAL_ALG,
+    &rfc5912::ID_SWB_AA_CERT_PATH,
+    &rfc5912::ID_SWB_AA_REVOCATION_INFO,
+    &rfc5912::ID_SWB_AC_REVOCATION_INFO,
+    &rfc5912::ID_SWB_PKC_BEST_CERT_PATH,
+    &rfc5912::ID_SWB_PKC_PUBLIC_KEY_INFO,
+    &rfc5912::ID_SWB_PKC_REVOCATION_INFO,
+    &rfc5912::ID_SWB_RELAYED_RESPONSES,
+    &rfc5912::MD_2_WITH_RSA_ENCRYPTION,
+    &rfc5912::MD_5_WITH_RSA_ENCRYPTION,
+    &rfc5912::PKCS_9,
+    &rfc5912::RSA_ENCRYPTION,
+    &rfc5912::SECP_224_R_1,
+    &rfc5912::SECP_256_R_1,
+    &rfc5912::SECP_384_R_1,
+    &rfc5912::SECP_521_R_1,
+    &rfc5912::SECT_163_K_1,
+    &rfc5912::SECT_163_R_2,
+    &rfc5912::SECT_233_K_1,
+    &rfc5912::SECT_233_R_1,
+    &rfc5912::SECT_283_K_1,
+    &rfc5912::SECT_283_R_1,
+    &rfc5912::SECT_409_K_1,
+    &rfc5912::SECT_409_R_1,
+    &rfc5912::SECT_571_K_1,
+    &rfc5912::SECT_571_R_1,
+    &rfc5912::SHA_1_WITH_RSA_ENCRYPTION,
+    &rfc5912::SHA_224_WITH_RSA_ENCRYPTION,
+    &rfc5912::SHA_256_WITH_RSA_ENCRYPTION,
+    &rfc5912::SHA_384_WITH_RSA_ENCRYPTION,
+    &rfc5912::SHA_512_WITH_RSA_ENCRYPTION,
     &rfc6109::LDIF_LOCATION_URL,
     &rfc6109::LDIF_LOCATION_URL_OBJECT,
     &rfc6109::MAIL_RECEIPT,
@@ -3604,6 +4623,68 @@ pub const DB: super::Database<'static> = super::Database(&[
     &rfc6109::PROVIDER_CERTIFICATE_HASH,
     &rfc6109::PROVIDER_NAME,
     &rfc6109::PROVIDER_UNIT,
+    &rfc6268::ID_AA_BINARY_SIGNING_TIME,
+    &rfc6268::ID_AA_MULTIPLE_SIGNATURES,
+    &rfc6268::ID_ALG_ZLIB_COMPRESS,
+    &rfc6268::ID_CONTENT_TYPE,
+    &rfc6268::ID_COUNTERSIGNATURE,
+    &rfc6268::ID_CT_AUTH_DATA,
+    &rfc6268::ID_CT_COMPRESSED_DATA,
+    &rfc6268::ID_CT_CONTENT_COLLECTION,
+    &rfc6268::ID_CT_CONTENT_INFO,
+    &rfc6268::ID_CT_CONTENT_WITH_ATTRS,
+    &rfc6268::ID_DATA,
+    &rfc6268::ID_DIGESTED_DATA,
+    &rfc6268::ID_ENCRYPTED_DATA,
+    &rfc6268::ID_ENVELOPED_DATA,
+    &rfc6268::ID_MESSAGE_DIGEST,
+    &rfc6268::ID_SIGNED_DATA,
+    &rfc6268::ID_SIGNING_TIME,
+    &rfc7107::ID_AA,
+    &rfc7107::ID_ALG,
+    &rfc7107::ID_CAP,
+    &rfc7107::ID_CD,
+    &rfc7107::ID_CT,
+    &rfc7107::ID_CTI,
+    &rfc7107::ID_EIT,
+    &rfc7107::ID_MOD,
+    &rfc7107::ID_PSKC,
+    &rfc7107::ID_SKD,
+    &rfc7107::ID_SPQ,
+    &rfc7107::ID_STI,
+    &rfc7107::ID_TSP,
+    &rfc7299::ID_TEST,
+    &rfc7299::ID_ACA,
+    &rfc7299::ID_AD,
+    &rfc7299::ID_ALG,
+    &rfc7299::ID_BVAE,
+    &rfc7299::ID_CCT,
+    &rfc7299::ID_CET,
+    &rfc7299::ID_CMC,
+    &rfc7299::ID_CMC_GLA_RR,
+    &rfc7299::ID_CP,
+    &rfc7299::ID_DNVAE,
+    &rfc7299::ID_IT,
+    &rfc7299::ID_KP,
+    &rfc7299::ID_LOGO,
+    &rfc7299::ID_MOD,
+    &rfc7299::ID_MR,
+    &rfc7299::ID_NVAE,
+    &rfc7299::ID_ON,
+    &rfc7299::ID_PDA,
+    &rfc7299::ID_PE,
+    &rfc7299::ID_PKIP,
+    &rfc7299::ID_PKIX_OCSP,
+    &rfc7299::ID_PPL,
+    &rfc7299::ID_QCS,
+    &rfc7299::ID_QT,
+    &rfc7299::ID_REG_CTRL,
+    &rfc7299::ID_REG_INFO,
+    &rfc7299::ID_RI,
+    &rfc7299::ID_SCT,
+    &rfc7299::ID_SKIS,
+    &rfc7299::ID_SVP,
+    &rfc7299::ID_SWB,
     &rfc7532::FEDFS_ANNOTATION,
     &rfc7532::FEDFS_DESCR,
     &rfc7532::FEDFS_FSL,
