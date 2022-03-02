@@ -26,10 +26,7 @@ pub use crate::{
     error::{Error, Result},
 };
 
-use crate::{
-    arcs::{RootArcs, ARC_MAX_BYTES, ARC_MAX_LAST_OCTET},
-    encoder::Encoder,
-};
+use crate::encoder::Encoder;
 use core::{fmt, str::FromStr};
 
 /// A named OID.
@@ -132,43 +129,19 @@ impl ObjectIdentifier {
             return Err(Error::Length);
         }
 
-        // Validate root arcs are in range
-        ber_bytes
-            .get(0)
-            .cloned()
-            .ok_or(Error::Length)
-            .and_then(RootArcs::try_from)?;
-
-        // Validate lower arcs are well-formed
-        let mut arc_offset = 1;
-        let mut arc_bytes = 0;
-
-        // TODO(tarcieri): consolidate this with `Arcs::next`?
-        while arc_offset < len {
-            match ber_bytes.get(arc_offset + arc_bytes).cloned() {
-                Some(byte) => {
-                    if (arc_bytes == ARC_MAX_BYTES) && (byte & ARC_MAX_LAST_OCTET != 0) {
-                        return Err(Error::ArcTooBig);
-                    }
-
-                    arc_bytes += 1;
-
-                    if byte & 0b10000000 == 0 {
-                        arc_offset += arc_bytes;
-                        arc_bytes = 0;
-                    }
-                }
-                None => return Err(Error::Base128),
-            }
-        }
-
         let mut bytes = [0u8; Self::MAX_SIZE];
         bytes[..len].copy_from_slice(ber_bytes);
 
-        Ok(Self {
+        let oid = Self {
             bytes,
             length: len as u8,
-        })
+        };
+
+        // Ensure arcs are well-formed
+        let mut arcs = oid.arcs();
+        while arcs.try_next()?.is_some() {}
+
+        Ok(oid)
     }
 
     /// Get the BER/DER serialization of this OID as bytes.
