@@ -6,6 +6,7 @@ use crate::{
 };
 
 /// BER/DER encoder
+#[derive(Debug)]
 pub(crate) struct Encoder {
     /// Current state
     state: State,
@@ -18,6 +19,7 @@ pub(crate) struct Encoder {
 }
 
 /// Current state of the encoder
+#[derive(Debug)]
 enum State {
     /// Initial state - no arcs yet encoded
     Initial,
@@ -40,59 +42,76 @@ impl Encoder {
     }
 
     /// Encode an [`Arc`] as base 128 into the internal buffer
-    pub(crate) const fn encode(mut self, arc: Arc) -> Self {
+    pub(crate) const fn arc(mut self, arc: Arc) -> Result<Self> {
         match self.state {
             State::Initial => {
-                assert!(arc <= ARC_MAX_FIRST, "invalid first arc (must be 0-2)");
+                if arc > ARC_MAX_FIRST {
+                    return Err(Error::ArcInvalid { arc });
+                }
+
                 self.state = State::FirstArc(arc);
-                self
+                Ok(self)
             }
             State::FirstArc(first_arc) => {
-                assert!(arc <= ARC_MAX_SECOND, "invalid second arc (must be 0-39)");
+                if arc > ARC_MAX_SECOND {
+                    return Err(Error::ArcInvalid { arc });
+                }
+
                 self.state = State::Body;
                 self.bytes[0] = (first_arc * (ARC_MAX_SECOND + 1)) as u8 + arc as u8;
                 self.cursor = 1;
-                self
+                Ok(self)
             }
             State::Body => {
                 // Total number of bytes in encoded arc - 1
                 let nbytes = base128_len(arc);
 
-                assert!(
-                    self.cursor + nbytes + 1 < ObjectIdentifier::MAX_SIZE,
-                    "OID too long (exceeded max DER bytes)"
-                );
+                if self.cursor + nbytes + 1 >= ObjectIdentifier::MAX_SIZE {
+                    return Err(Error::Length);
+                }
 
                 let new_cursor = self.cursor + nbytes + 1;
-                let mut result = self.encode_base128_byte(arc, nbytes, false);
-                result.cursor = new_cursor;
-                result
+
+                // TODO(tarcieri): use `?` when stable in `const fn`
+                match self.encode_base128_byte(arc, nbytes, false) {
+                    Ok(mut encoder) => {
+                        encoder.cursor = new_cursor;
+                        Ok(encoder)
+                    }
+                    Err(err) => Err(err),
+                }
             }
         }
     }
 
     /// Finish encoding an OID
-    pub(crate) const fn finish(self) -> ObjectIdentifier {
-        assert!(self.cursor >= 2, "OID too short (minimum 3 arcs)");
-        ObjectIdentifier {
-            bytes: self.bytes,
-            length: self.cursor as u8,
+    pub(crate) const fn finish(self) -> Result<ObjectIdentifier> {
+        if self.cursor >= 2 {
+            Ok(ObjectIdentifier {
+                bytes: self.bytes,
+                length: self.cursor as u8,
+            })
+        } else {
+            Err(Error::NotEnoughArcs)
         }
     }
 
     /// Encode a single byte of a base128 value
-    const fn encode_base128_byte(mut self, mut n: u32, i: usize, continued: bool) -> Self {
+    const fn encode_base128_byte(mut self, mut n: u32, i: usize, continued: bool) -> Result<Self> {
         let mask = if continued { 0b10000000 } else { 0 };
 
         if n > 0x80 {
             self.bytes[self.cursor + i] = (n & 0b1111111) as u8 | mask;
             n >>= 7;
 
-            assert!(i > 0, "Base 128 offset miscalculation");
-            self.encode_base128_byte(n, i.saturating_sub(1), true)
+            if i > 0 {
+                self.encode_base128_byte(n, i.saturating_sub(1), true)
+            } else {
+                Err(Error::Base128)
+            }
         } else {
             self.bytes[self.cursor] = n as u8 | mask;
-            self
+            Ok(self)
         }
     }
 }
@@ -108,26 +127,6 @@ const fn base128_len(arc: Arc) -> usize {
     }
 }
 
-/// Write the given unsigned integer in base 128
-// TODO(tarcieri): consolidate encoding logic with `encode_base128_byte`
-pub(crate) fn write_base128(bytes: &mut [u8], mut n: Arc) -> Result<usize> {
-    let nbytes = base128_len(n);
-    let mut i = nbytes;
-    let mut mask = 0;
-
-    while n > 0x80 {
-        let byte = bytes.get_mut(i).ok_or(Error)?;
-        *byte = (n & 0b1111111 | mask) as u8;
-        n >>= 7;
-        i = i.checked_sub(1).expect("overflow");
-        mask = 0b10000000;
-    }
-
-    bytes[0] = (n | mask) as u8;
-
-    Ok(nbytes + 1)
-}
-
 #[cfg(test)]
 mod tests {
     use super::Encoder;
@@ -139,12 +138,12 @@ mod tests {
     #[test]
     fn encode() {
         let encoder = Encoder::new();
-        let encoder = encoder.encode(1);
-        let encoder = encoder.encode(2);
-        let encoder = encoder.encode(840);
-        let encoder = encoder.encode(10045);
-        let encoder = encoder.encode(2);
-        let encoder = encoder.encode(1);
+        let encoder = encoder.arc(1).unwrap();
+        let encoder = encoder.arc(2).unwrap();
+        let encoder = encoder.arc(840).unwrap();
+        let encoder = encoder.arc(10045).unwrap();
+        let encoder = encoder.arc(2).unwrap();
+        let encoder = encoder.arc(1).unwrap();
         assert_eq!(&encoder.bytes[..encoder.cursor], EXAMPLE_OID_BER);
     }
 }

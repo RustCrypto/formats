@@ -7,27 +7,31 @@ use der::{
 };
 
 /// Password-Based Key Derivation Function (PBKDF2) OID.
-pub const PBKDF2_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.5.12");
+pub const PBKDF2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12");
 
 /// HMAC-SHA1 (for use with PBKDF2)
-pub const HMAC_WITH_SHA1_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.7");
+pub const HMAC_WITH_SHA1_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.2.7");
 
 /// HMAC-SHA-224 (for use with PBKDF2)
-pub const HMAC_WITH_SHA224_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.8");
+pub const HMAC_WITH_SHA224_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.2.8");
 
 /// HMAC-SHA-256 (for use with PBKDF2)
-pub const HMAC_WITH_SHA256_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.9");
+pub const HMAC_WITH_SHA256_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.2.9");
 
 /// HMAC-SHA-384 (for use with PBKDF2)
-pub const HMAC_WITH_SHA384_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.10");
+pub const HMAC_WITH_SHA384_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.2.10");
 
 /// HMAC-SHA-512 (for use with PBKDF2)
-pub const HMAC_WITH_SHA512_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.11");
+pub const HMAC_WITH_SHA512_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.2.11");
 
 /// `id-scrypt` ([RFC 7914])
 ///
 /// [RFC 7914]: https://datatracker.ietf.org/doc/html/rfc7914#section-7
-pub const SCRYPT_OID: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.4.1.11591.4.11");
+pub const SCRYPT_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11591.4.11");
 
 /// Type used for expressing scrypt cost
 type ScryptCost = u16;

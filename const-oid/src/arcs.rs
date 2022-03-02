@@ -102,9 +102,13 @@ pub(crate) struct RootArcs(u8);
 impl RootArcs {
     /// Create [`RootArcs`] from the first and second arc values represented
     /// as `Arc` integers.
-    pub(crate) fn new(first_arc: Arc, second_arc: Arc) -> Result<Self> {
-        if first_arc > ARC_MAX_FIRST || second_arc > ARC_MAX_SECOND {
-            return Err(Error);
+    pub(crate) const fn new(first_arc: Arc, second_arc: Arc) -> Result<Self> {
+        if first_arc > ARC_MAX_FIRST {
+            return Err(Error::ArcInvalid { arc: first_arc });
+        }
+
+        if second_arc > ARC_MAX_SECOND {
+            return Err(Error::ArcInvalid { arc: second_arc });
         }
 
         let byte = (first_arc * (ARC_MAX_SECOND + 1)) as u8 + second_arc as u8;
@@ -112,12 +116,12 @@ impl RootArcs {
     }
 
     /// Get the value of the first arc
-    pub(crate) fn first_arc(self) -> Arc {
+    pub(crate) const fn first_arc(self) -> Arc {
         self.0 as Arc / (ARC_MAX_SECOND + 1)
     }
 
     /// Get the value of the second arc
-    pub(crate) fn second_arc(self) -> Arc {
+    pub(crate) const fn second_arc(self) -> Arc {
         self.0 as Arc % (ARC_MAX_SECOND + 1)
     }
 }

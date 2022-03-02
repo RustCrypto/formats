@@ -1,10 +1,11 @@
 //! OID string parser with `const` support.
 
-use crate::{encoder::Encoder, Arc, ObjectIdentifier};
+use crate::{encoder::Encoder, Arc, Error, ObjectIdentifier, Result};
 
 /// Const-friendly OID string parser.
 ///
 /// Parses an OID from the dotted string representation.
+#[derive(Debug)]
 pub(crate) struct Parser {
     /// Current arc in progress
     current_arc: Arc,
@@ -15,56 +16,60 @@ pub(crate) struct Parser {
 
 impl Parser {
     /// Parse an OID from a dot-delimited string e.g. `1.2.840.113549.1.1.1`
-    pub(crate) const fn parse(s: &str) -> Self {
+    pub(crate) const fn parse(s: &str) -> Result<Self> {
         let bytes = s.as_bytes();
-        assert!(!bytes.is_empty(), "OID string is empty");
-        assert!(
-            matches!(bytes[0], b'0'..=b'9'),
-            "OID must start with a digit"
-        );
 
-        let current_arc = 0;
-        let encoder = Encoder::new();
-        Self {
-            current_arc,
-            encoder,
+        if bytes.is_empty() {
+            return Err(Error::Empty);
         }
-        .parse_bytes(bytes)
+
+        match bytes[0] {
+            b'0'..=b'9' => Self {
+                current_arc: 0,
+                encoder: Encoder::new(),
+            }
+            .parse_bytes(bytes),
+            actual => Err(Error::DigitExpected { actual }),
+        }
     }
 
     /// Finish parsing, returning the result
-    pub(crate) const fn finish(self) -> ObjectIdentifier {
+    pub(crate) const fn finish(self) -> Result<ObjectIdentifier> {
         self.encoder.finish()
     }
 
     /// Parse the remaining bytes
-    const fn parse_bytes(mut self, bytes: &[u8]) -> Self {
+    const fn parse_bytes(mut self, bytes: &[u8]) -> Result<Self> {
         match bytes {
-            [] => {
-                self.encoder = self.encoder.encode(self.current_arc);
-                self
-            }
+            // TODO(tarcieri): use `?` when stable in `const fn`
+            [] => match self.encoder.arc(self.current_arc) {
+                Ok(encoder) => {
+                    self.encoder = encoder;
+                    Ok(self)
+                }
+                Err(err) => Err(err),
+            },
             [byte @ b'0'..=b'9', remaining @ ..] => {
                 let digit = byte.saturating_sub(b'0');
                 self.current_arc = self.current_arc * 10 + digit as Arc;
                 self.parse_bytes(remaining)
             }
             [b'.', remaining @ ..] => {
-                assert!(!remaining.is_empty(), "invalid trailing '.' in OID");
-                self.encoder = self.encoder.encode(self.current_arc);
-                self.current_arc = 0;
-                self.parse_bytes(remaining)
-            }
-            [byte, ..] => {
-                assert!(
-                    matches!(byte, b'0'..=b'9' | b'.'),
-                    "invalid character in OID"
-                );
+                if remaining.is_empty() {
+                    return Err(Error::TrailingDot);
+                }
 
-                // Unreachable (checked by above `assert!`)
-                // Needed for match exhaustiveness and matching types
-                self
+                // TODO(tarcieri): use `?` when stable in `const fn`
+                match self.encoder.arc(self.current_arc) {
+                    Ok(encoder) => {
+                        self.encoder = encoder;
+                        self.current_arc = 0;
+                        self.parse_bytes(remaining)
+                    }
+                    Err(err) => Err(err),
+                }
             }
+            [byte, ..] => Err(Error::DigitExpected { actual: *byte }),
         }
     }
 }
@@ -72,28 +77,34 @@ impl Parser {
 #[cfg(test)]
 mod tests {
     use super::Parser;
+    use crate::Error;
 
     #[test]
     fn parse() {
-        let oid = Parser::parse("1.23.456").finish();
+        let oid = Parser::parse("1.23.456").unwrap().finish().unwrap();
         assert_eq!(oid, "1.23.456".parse().unwrap());
     }
 
     #[test]
-    #[should_panic]
     fn reject_empty_string() {
-        Parser::parse("");
+        assert_eq!(Parser::parse("").err().unwrap(), Error::Empty);
     }
 
     #[test]
-    #[should_panic]
     fn reject_non_digits() {
-        Parser::parse("X");
+        assert_eq!(
+            Parser::parse("X").err().unwrap(),
+            Error::DigitExpected { actual: b'X' }
+        );
+
+        assert_eq!(
+            Parser::parse("1.2.X").err().unwrap(),
+            Error::DigitExpected { actual: b'X' }
+        );
     }
 
     #[test]
-    #[should_panic]
     fn reject_trailing_dot() {
-        Parser::parse("1.23.");
+        assert_eq!(Parser::parse("1.23.").err().unwrap(), Error::TrailingDot);
     }
 }

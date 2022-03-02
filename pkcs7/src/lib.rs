@@ -22,26 +22,27 @@ pub mod enveloped_data_content;
 use der::asn1::ObjectIdentifier;
 
 /// `pkcs-7` Object Identifier (OID).
-pub const PKCS_7_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.7");
+pub const PKCS_7_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.7");
 
 /// `pkcs-7 data` Object Identifier (OID).
-pub const PKCS_7_DATA_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.7.1");
+pub const PKCS_7_DATA_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.1");
 
 /// `pkcs-7 signedData` Object Identifier (OID).
-pub const PKCS_7_SIGNED_DATA_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.7.2");
+pub const PKCS_7_SIGNED_DATA_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.2");
 
 /// `pkcs-7 signedData` Object Identifier (OID).
 pub const PKCS_7_ENVELOPED_DATA_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.7.3");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.3");
 
 /// `pkcs-7 signedAndEnvelopedData` Object Identifier (OID).
 pub const PKCS_7_SIGNED_AND_ENVELOPED_DATA_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.7.4");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.4");
 
 /// `pkcs-7 digestedData` Object Identifier (OID).
 pub const PKCS_7_DIGESTED_DATA_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.7.5");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.5");
 
 /// `pkcs-7 encryptedData` Object Identifier (OID).
 pub const PKCS_7_ENCRYPTED_DATA_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.7.6");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.6");

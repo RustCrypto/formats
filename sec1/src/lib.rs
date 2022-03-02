@@ -62,4 +62,4 @@ use pkcs8::ObjectIdentifier;
 /// <http://oid-info.com/get/1.2.840.10045.2.1>
 #[cfg(feature = "pkcs8")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.2.1");
+pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");

@@ -348,8 +348,10 @@ mod sequence {
         false
     }
 
-    const ID_EC_PUBLIC_KEY_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.2.1");
-    const PRIME256V1_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.3.1.7");
+    const ID_EC_PUBLIC_KEY_OID: ObjectIdentifier =
+        ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");
+
+    const PRIME256V1_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.3.1.7");
 
     const ALGORITHM_IDENTIFIER_DER: &[u8] =
         &hex!("30 13 06 07 2a 86 48 ce 3d 02 01 06 08 2a 86 48 ce 3d 03 01 07");
