@@ -40,7 +40,7 @@ fn decode_encrypted_key_example() {
 
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
-    let expected_oid = ObjectIdentifier::new("1.2.840.113549.1.12.1.6");
+    let expected_oid = ObjectIdentifier::new("1.2.840.113549.1.12.1.6").unwrap();
     let expected_salt = &hex!("ad2d4b4e87b34d67");
     match content {
         ContentInfo::EncryptedData(Some(EncryptedDataContent {

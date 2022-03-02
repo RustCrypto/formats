@@ -49,7 +49,7 @@ pub use der::pem::{self, LineEnding};
 /// `rsaEncryption` Object Identifier (OID)
 #[cfg(feature = "pkcs8")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.1.1");
+pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.1");
 
 /// `AlgorithmIdentifier` for RSA.
 #[cfg(feature = "pkcs8")]

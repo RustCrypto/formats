@@ -26,7 +26,10 @@ pub use crate::{
     error::{Error, Result},
 };
 
-use crate::arcs::{RootArcs, ARC_MAX_BYTES, ARC_MAX_LAST_OCTET};
+use crate::{
+    arcs::{RootArcs, ARC_MAX_BYTES, ARC_MAX_LAST_OCTET},
+    encoder::Encoder,
+};
 use core::{fmt, str::FromStr};
 
 /// A named OID.
@@ -70,51 +73,55 @@ impl ObjectIdentifier {
     /// Maximum size of a BER/DER-encoded OID in bytes.
     pub const MAX_SIZE: usize = 39; // 32-bytes total w\ 1-byte length
 
-    /// Parse an [`ObjectIdentifier`] from the dot-delimited string form, e.g.:
+    /// Parse an [`ObjectIdentifier`] from the dot-delimited string form,
+    /// panicking on parse errors.
+    ///
+    /// This function exists as a workaround for `unwrap` not yet being
+    /// stable in `const fn` contexts, and is intended to allow the result to
+    /// be bound to a constant value:
     ///
     /// ```
     /// use const_oid::ObjectIdentifier;
     ///
-    /// pub const MY_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.1.1");
+    /// pub const MY_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.1");
     /// ```
     ///
-    /// # Panics
+    /// In future versions of Rust it should be possible to replace this with
+    /// `ObjectIdentifier::new(...).unwrap()`.
     ///
-    /// This method panics in the event the OID is malformed according to the
-    /// "Validity" rules given in the toplevel documentation for this type.
-    ///
-    /// For that reason this method is *ONLY* recommended for use in constants
-    /// (where it will generate a compiler error instead).
-    ///
-    /// To parse an OID from a `&str` slice fallibly and without panicking,
-    /// use the [`FromStr`][1] impl instead (or via `str`'s [`parse`][2]
-    /// method).
-    ///
-    /// [1]: ./struct.ObjectIdentifier.html#impl-FromStr
-    /// [2]: https://doc.rust-lang.org/nightly/std/primitive.str.html#method.parse
-    pub const fn new(s: &str) -> Self {
-        parser::Parser::parse(s).finish()
+    /// Use [`ObjectIdentifier::new`] for fallible parsing.
+    // TODO(tarcieri): remove this when `Result::unwrap` is `const fn`
+    pub const fn new_unwrap(s: &str) -> Self {
+        match Self::new(s) {
+            Ok(oid) => oid,
+            Err(Error::ArcInvalid { .. } | Error::ArcTooBig) => panic!("OID contains invalid arc"),
+            Err(Error::Base128) => panic!("OID contains arc with invalid base 128 encoding"),
+            Err(Error::DigitExpected { .. }) => panic!("OID expected to start with digit"),
+            Err(Error::Empty) => panic!("OID value is empty"),
+            Err(Error::Length) => panic!("OID length invalid"),
+            Err(Error::NotEnoughArcs) => panic!("OID requires minimum of 3 arcs"),
+            Err(Error::TrailingDot) => panic!("OID ends with invalid trailing '.'"),
+        }
+    }
+
+    /// Parse an [`ObjectIdentifier`] from the dot-delimited string form.
+    pub const fn new(s: &str) -> Result<Self> {
+        // TODO(tarcieri): use `?` when stable in `const fn`
+        match parser::Parser::parse(s) {
+            Ok(parser) => parser.finish(),
+            Err(err) => Err(err),
+        }
     }
 
     /// Parse an OID from a slice of [`Arc`] values (i.e. integers).
-    pub fn from_arcs(arcs: &[Arc]) -> Result<Self> {
-        let mut bytes = [0u8; Self::MAX_SIZE];
+    pub fn from_arcs<'a>(arcs: impl IntoIterator<Item = &'a Arc>) -> Result<Self> {
+        let mut encoder = Encoder::new();
 
-        bytes[0] = match *arcs {
-            [first, second, _, ..] => RootArcs::new(first, second)?.into(),
-            _ => return Err(Error),
-        };
-
-        let mut offset = 1;
-
-        for &arc in &arcs[2..] {
-            offset += encoder::write_base128(&mut bytes[offset..], arc)?;
+        for &arc in arcs {
+            encoder = encoder.arc(arc)?;
         }
 
-        Ok(Self {
-            bytes,
-            length: offset as u8,
-        })
+        encoder.finish()
     }
 
     /// Parse an OID from from its BER/DER encoding.
@@ -122,14 +129,14 @@ impl ObjectIdentifier {
         let len = ber_bytes.len();
 
         if !(2..=Self::MAX_SIZE).contains(&len) {
-            return Err(Error);
+            return Err(Error::Length);
         }
 
         // Validate root arcs are in range
         ber_bytes
             .get(0)
             .cloned()
-            .ok_or(Error)
+            .ok_or(Error::Length)
             .and_then(RootArcs::try_from)?;
 
         // Validate lower arcs are well-formed
@@ -141,8 +148,7 @@ impl ObjectIdentifier {
             match ber_bytes.get(arc_offset + arc_bytes).cloned() {
                 Some(byte) => {
                     if (arc_bytes == ARC_MAX_BYTES) && (byte & ARC_MAX_LAST_OCTET != 0) {
-                        // Overflowed `Arc` (u32)
-                        return Err(Error);
+                        return Err(Error::ArcTooBig);
                     }
 
                     arc_bytes += 1;
@@ -152,7 +158,7 @@ impl ObjectIdentifier {
                         arc_bytes = 0;
                     }
                 }
-                None => return Err(Error), // truncated OID
+                None => return Err(Error::Base128),
             }
         }
 
@@ -196,29 +202,7 @@ impl FromStr for ObjectIdentifier {
     type Err = Error;
 
     fn from_str(string: &str) -> Result<Self> {
-        let mut split = string.split('.');
-        let first_arc = split.next().and_then(|s| s.parse().ok()).ok_or(Error)?;
-        let second_arc = split.next().and_then(|s| s.parse().ok()).ok_or(Error)?;
-
-        let mut bytes = [0u8; Self::MAX_SIZE];
-        bytes[0] = RootArcs::new(first_arc, second_arc)?.into();
-
-        let mut offset = 1;
-
-        for s in split {
-            let arc = s.parse().map_err(|_| Error)?;
-            offset += encoder::write_base128(&mut bytes[offset..], arc)?;
-        }
-
-        if offset > 1 {
-            Ok(Self {
-                bytes,
-                length: offset as u8,
-            })
-        } else {
-            // Minimum 3 arcs
-            Err(Error)
-        }
+        Self::new(string)
     }
 }
 

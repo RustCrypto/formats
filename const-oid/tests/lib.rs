@@ -3,29 +3,30 @@
 // TODO(tarcieri): test full set of OID encoding constraints specified here:
 // <https://misc.daniel-marschall.de/asn.1/oid_facts.html>
 
-use const_oid::ObjectIdentifier;
+use const_oid::{Error, ObjectIdentifier};
 use hex_literal::hex;
 use std::string::ToString;
 
 /// Example OID value with a root arc of `0` (and large arc).
 const EXAMPLE_OID_0_STR: &str = "0.9.2342.19200300.100.1.1";
 const EXAMPLE_OID_0_BER: &[u8] = &hex!("0992268993F22C640101");
-const EXAMPLE_OID_0: ObjectIdentifier = ObjectIdentifier::new(EXAMPLE_OID_0_STR);
+const EXAMPLE_OID_0: ObjectIdentifier = ObjectIdentifier::new_unwrap(EXAMPLE_OID_0_STR);
 
 /// Example OID value with a root arc of `1`.
 const EXAMPLE_OID_1_STR: &str = "1.2.840.10045.2.1";
 const EXAMPLE_OID_1_BER: &[u8] = &hex!("2A8648CE3D0201");
-const EXAMPLE_OID_1: ObjectIdentifier = ObjectIdentifier::new(EXAMPLE_OID_1_STR);
+const EXAMPLE_OID_1: ObjectIdentifier = ObjectIdentifier::new_unwrap(EXAMPLE_OID_1_STR);
 
 /// Example OID value with a root arc of `2`.
 const EXAMPLE_OID_2_STR: &str = "2.16.840.1.101.3.4.1.42";
 const EXAMPLE_OID_2_BER: &[u8] = &hex!("60864801650304012A");
-const EXAMPLE_OID_2: ObjectIdentifier = ObjectIdentifier::new(EXAMPLE_OID_2_STR);
+const EXAMPLE_OID_2: ObjectIdentifier = ObjectIdentifier::new_unwrap(EXAMPLE_OID_2_STR);
 
 /// Example OID value with a large arc
 const EXAMPLE_OID_LARGE_ARC_STR: &str = "0.9.2342.19200300.100.1.1";
 const EXAMPLE_OID_LARGE_ARC_BER: &[u8] = &hex!("0992268993F22C640101");
-const EXAMPLE_OID_LARGE_ARC: ObjectIdentifier = ObjectIdentifier::new("0.9.2342.19200300.100.1.1");
+const EXAMPLE_OID_LARGE_ARC: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("0.9.2342.19200300.100.1.1");
 
 #[test]
 fn from_bytes() {
@@ -141,25 +142,27 @@ fn as_bytes() {
 }
 
 #[test]
-#[should_panic]
 fn parse_empty() {
-    ObjectIdentifier::new("");
+    assert_eq!(ObjectIdentifier::new(""), Err(Error::Empty));
 }
 
 #[test]
-#[should_panic]
-fn parse_too_short() {
-    ObjectIdentifier::new("1.2");
+fn parse_not_enough_arcs() {
+    assert_eq!(ObjectIdentifier::new("1.2"), Err(Error::NotEnoughArcs));
 }
 
 #[test]
-#[should_panic]
 fn parse_invalid_first_arc() {
-    ObjectIdentifier::new("3.2.840.10045.3.1.7");
+    assert_eq!(
+        ObjectIdentifier::new("3.2.840.10045.3.1.7"),
+        Err(Error::ArcInvalid { arc: 3 })
+    );
 }
 
 #[test]
-#[should_panic]
 fn parse_invalid_second_arc() {
-    ObjectIdentifier::new("1.40.840.10045.3.1.7");
+    assert_eq!(
+        ObjectIdentifier::new("1.40.840.10045.3.1.7"),
+        Err(Error::ArcInvalid { arc: 40 })
+    );
 }

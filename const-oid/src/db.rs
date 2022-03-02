@@ -95,7 +95,7 @@ mod tests {
         let cn = super::DB.by_oid(&CN.oid).expect("cn not found");
         assert_eq!(&CN, cn);
 
-        let none = ObjectIdentifier::new("0.1.2.3.4.5.6.7.8.9");
+        let none = ObjectIdentifier::new_unwrap("0.1.2.3.4.5.6.7.8.9");
         assert_eq!(None, super::DB.by_oid(&none));
     }
 

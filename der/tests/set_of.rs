@@ -56,6 +56,6 @@ mod attr_regression {
         let der_bytes = hex!("3139301906035504030C12546573742055736572393031353734333830301C060A0992268993F22C640101130E3437303031303030303134373333");
         let set = SetOf::<AttributeTypeAndValue<'_>, 3>::from_der(&der_bytes).unwrap();
         let attr1 = set.get(0).unwrap();
-        assert_eq!(ObjectIdentifier::new("2.5.4.3"), attr1.oid);
+        assert_eq!(ObjectIdentifier::new("2.5.4.3").unwrap(), attr1.oid);
     }
 }

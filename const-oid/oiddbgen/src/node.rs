@@ -45,7 +45,7 @@ impl Node {
 
         quote! {
             pub const #symb: crate::NamedOid<'_> = crate::NamedOid {
-                oid: crate::ObjectIdentifier::new(#obid),
+                oid: crate::ObjectIdentifier::new_unwrap(#obid),
                 name: #name,
             };
         }
