@@ -1,8 +1,7 @@
 //! PEM encoder.
 
 use crate::{
-    grammar::{self, CHAR_CR, CHAR_LF},
-    Error, Result, BASE64_WRAP_WIDTH, ENCAPSULATION_BOUNDARY_DELIMITER,
+    grammar, Error, LineEnding, Result, BASE64_WRAP_WIDTH, ENCAPSULATION_BOUNDARY_DELIMITER,
     POST_ENCAPSULATION_BOUNDARY, PRE_ENCAPSULATION_BOUNDARY,
 };
 use base64ct::{Base64, Encoding};
@@ -60,52 +59,6 @@ pub fn encode_string(label: &str, line_ending: LineEnding, input: &[u8]) -> Resu
     let mut buf = vec![0u8; encoded_len(label, line_ending, input)];
     encode(label, line_ending, input, &mut buf)?;
     String::from_utf8(buf).map_err(|_| Error::CharacterEncoding)
-}
-
-/// Line endings.
-///
-/// Use [`LineEnding::default`] to get an appropriate line ending for the
-/// current operating system.
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub enum LineEnding {
-    /// Carriage return: `\r` (Pre-OS X Macintosh)
-    CR,
-
-    /// Line feed: `\n` (Unix OSes)
-    LF,
-
-    /// Carriage return + line feed: `\r\n` (Windows)
-    CRLF,
-}
-
-impl Default for LineEnding {
-    /// Use the line ending for the current OS
-    #[cfg(windows)]
-    fn default() -> LineEnding {
-        LineEnding::CRLF
-    }
-    #[cfg(not(windows))]
-    fn default() -> LineEnding {
-        LineEnding::LF
-    }
-}
-
-#[allow(clippy::len_without_is_empty)]
-impl LineEnding {
-    /// Get the byte serialization of this [`LineEnding`].
-    pub fn as_bytes(self) -> &'static [u8] {
-        match self {
-            LineEnding::CR => &[CHAR_CR],
-            LineEnding::LF => &[CHAR_LF],
-            LineEnding::CRLF => &[CHAR_CR, CHAR_LF],
-        }
-    }
-
-    /// Get the encoded length of this [`LineEnding`].
-    pub fn len(self) -> usize {
-        self.as_bytes().len()
-    }
 }
 
 /// Output buffer for writing encoded PEM output.

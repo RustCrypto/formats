@@ -63,9 +63,10 @@ mod grammar;
 
 pub use crate::{
     decoder::{decode, decode_label, Decoder},
-    encoder::{encode, encoded_len, LineEnding},
+    encoder::{encode, encoded_len},
     error::{Error, Result},
 };
+pub use base64ct::LineEnding;
 
 #[cfg(feature = "alloc")]
 pub use crate::{decoder::decode_vec, encoder::encode_string};
