@@ -8,6 +8,9 @@ use crate::{
 };
 use core::{cmp, marker::PhantomData, str};
 
+#[cfg(feature = "std")]
+use std::io;
+
 #[cfg(docsrs)]
 use crate::{Base64, Base64Unpadded};
 
@@ -151,6 +154,20 @@ impl<'o, E: Variant> Encoder<'o, E> {
 
         self.position = self.position.checked_add(len).ok_or(InvalidLength)?;
         Ok(len)
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<'o, E: Variant> io::Write for Encoder<'o, E> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.encode(buf)?;
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        // TODO(tarcieri): return an error if there's still data remaining in the buffer?
+        Ok(())
     }
 }
 
