@@ -2,9 +2,11 @@
 
 use crate::{
     encoding,
+    line_ending::{CHAR_CR, CHAR_LF},
     variant::Variant,
     Encoding,
     Error::{self, InvalidLength},
+    MIN_LINE_WIDTH,
 };
 use core::{cmp, marker::PhantomData};
 
@@ -16,12 +18,6 @@ use std::io;
 
 #[cfg(docsrs)]
 use crate::{Base64, Base64Unpadded};
-
-/// Carriage return
-const CHAR_CR: u8 = 0x0d;
-
-/// Line feed
-const CHAR_LF: u8 = 0x0a;
 
 /// Stateful Base64 decoder with support for buffered, incremental decoding.
 ///
@@ -420,7 +416,7 @@ impl<'i> LineReader<'i> {
 
     /// Create a new reader which operates over linewrapped data.
     fn new_wrapped(bytes: &'i [u8], line_width: usize) -> Result<Self, Error> {
-        if line_width < 4 {
+        if line_width < MIN_LINE_WIDTH {
             return Err(InvalidLength);
         }
 
