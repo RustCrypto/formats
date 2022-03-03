@@ -23,11 +23,11 @@ impl Root {
 
     pub fn module(&self) -> TokenStream {
         let mut mods = TokenStream::default();
-        let mut syms = TokenStream::default();
+        let mut recs = TokenStream::default();
 
         for (spec, s) in &self.0 {
             mods.extend(s.module(spec));
-            syms.extend(s.symbols(quote! { &#spec }));
+            recs.extend(s.records(quote! { &#spec }));
         }
 
         quote! {
@@ -36,7 +36,7 @@ impl Root {
             #mods
 
             pub const DB: super::Database<'static> = super::Database(&[
-                #syms
+                #recs
             ]);
         }
     }

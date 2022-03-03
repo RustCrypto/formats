@@ -34,6 +34,10 @@ impl Node {
         Self { obid, name, symb }
     }
 
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
     pub fn symbol(&self) -> &Ident {
         &self.symb
     }
@@ -41,13 +45,9 @@ impl Node {
     pub fn definition(&self) -> TokenStream {
         let obid = self.obid.replace(' ', ""); // Fix a typo.
         let symb = &self.symb;
-        let name = &self.name;
 
         quote! {
-            pub const #symb: crate::NamedOid<'_> = crate::NamedOid {
-                oid: crate::ObjectIdentifier::new_unwrap(#obid),
-                name: #name,
-            };
+            pub const #symb: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap(#obid);
         }
     }
 }
