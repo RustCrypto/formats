@@ -11,12 +11,13 @@ impl Spec {
         self.0.push(value)
     }
 
-    pub fn symbols(&self, path: TokenStream) -> TokenStream {
+    pub fn records(&self, path: TokenStream) -> TokenStream {
         let mut stream = TokenStream::default();
 
         for n in &self.0 {
+            let name = n.name();
             let symb = n.symbol();
-            stream.extend(quote! { #path::#symb, })
+            stream.extend(quote! { (#path::#symb, #name), })
         }
 
         stream

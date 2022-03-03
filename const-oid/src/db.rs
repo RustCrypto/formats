@@ -15,7 +15,7 @@ mod gen;
 
 pub use gen::*;
 
-use crate::{Error, NamedOid, ObjectIdentifier};
+use crate::{Error, ObjectIdentifier};
 
 /// A const implementation of byte equals.
 const fn eq(lhs: &[u8], rhs: &[u8]) -> bool {
@@ -36,7 +36,7 @@ const fn eq(lhs: &[u8], rhs: &[u8]) -> bool {
 }
 
 /// A query interface for OIDs/Names.
-pub struct Database<'a>(&'a [&'a NamedOid<'a>]);
+pub struct Database<'a>(&'a [(&'a ObjectIdentifier, &'a str)]);
 
 impl<'a> Database<'a> {
     /// Looks up a name for an OID.
@@ -47,18 +47,17 @@ impl<'a> Database<'a> {
     where
         'a: 'b,
     {
-        let oi = oid.parse()?;
-        Ok(self.by_oid(&oi).map(|n| n.name).unwrap_or(oid))
+        Ok(self.by_oid(&oid.parse()?).unwrap_or(oid))
     }
 
     /// Finds a named oid by its associated OID.
-    pub const fn by_oid(&self, oid: &ObjectIdentifier) -> Option<&'a NamedOid<'a>> {
+    pub const fn by_oid(&self, oid: &ObjectIdentifier) -> Option<&'a str> {
         let mut i = 0;
 
         while i < self.0.len() {
-            let lhs = self.0[i].oid;
+            let lhs = self.0[i].0;
             if lhs.length == oid.length && eq(&lhs.bytes, &oid.bytes) {
-                return Some(self.0[i]);
+                return Some(self.0[i].1);
             }
 
             i += 1;
@@ -68,13 +67,13 @@ impl<'a> Database<'a> {
     }
 
     /// Finds a named oid by its associated name.
-    pub const fn by_name(&self, name: &str) -> Option<&'a NamedOid<'a>> {
+    pub const fn by_name(&self, name: &str) -> Option<&'a ObjectIdentifier> {
         let mut i = 0;
 
         while i < self.0.len() {
-            let lhs = self.0[i].name;
+            let lhs = self.0[i].1;
             if eq(lhs.as_bytes(), name.as_bytes()) {
-                return Some(self.0[i]);
+                return Some(self.0[i].0);
             }
 
             i += 1;
@@ -92,8 +91,8 @@ mod tests {
 
     #[test]
     fn by_oid() {
-        let cn = super::DB.by_oid(&CN.oid).expect("cn not found");
-        assert_eq!(&CN, cn);
+        let cn = super::DB.by_oid(&CN).expect("cn not found");
+        assert_eq!("cn", cn);
 
         let none = ObjectIdentifier::new_unwrap("0.1.2.3.4.5.6.7.8.9");
         assert_eq!(None, super::DB.by_oid(&none));
@@ -101,7 +100,7 @@ mod tests {
 
     #[test]
     fn by_name() {
-        let cn = super::DB.by_name(CN.name).expect("cn not found");
+        let cn = super::DB.by_name("cn").expect("cn not found");
         assert_eq!(&CN, cn);
 
         assert_eq!(None, super::DB.by_name("purplePeopleEater"));

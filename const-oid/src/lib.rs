@@ -29,18 +29,6 @@ pub use crate::{
 use crate::encoder::Encoder;
 use core::{fmt, str::FromStr};
 
-/// A named OID.
-///
-/// This type associates a name with an object identifier.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct NamedOid<'a> {
-    /// The object identifier.
-    pub oid: ObjectIdentifier,
-
-    /// The OID's name.
-    pub name: &'a str,
-}
-
 /// Object identifier (OID).
 ///
 /// OIDs are hierarchical structures consisting of "arcs", i.e. integer
