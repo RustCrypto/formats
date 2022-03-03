@@ -519,6 +519,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ocsp"
+version = "0.0.1"
+dependencies = [
+ "der",
+ "hex-literal",
+ "spki",
+ "x509",
+]
+
+[[package]]
 name = "oorandom"
 version = "11.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -574,6 +584,7 @@ dependencies = [
  "der",
  "hex-literal",
  "spki",
+ "x509",
 ]
 
 [[package]]
