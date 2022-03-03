@@ -84,23 +84,23 @@ pub const CE_EXTKEYUSAGE: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.5.2
 /// OID for anyExtendedKeyUsage EKU value: 2.5.29.37.0
 pub const CE_ANYEXTENDEDKEYUSAGE: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.5.29.37.0");
 
-/// OID for serverAuth key purpose: 1.3.6.1.5.5.7.3.31
-pub const KP_SERVERAUTH: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.31");
+/// OID for serverAuth key purpose: 1.3.6.1.5.5.7.3.1
+pub const KP_SERVERAUTH: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.5.5.7.3.1");
 
-/// OID for clientAuth key purpose: 1.3.6.1.5.5.7.3.32
-pub const KP_CLIENTAUTH: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.32");
+/// OID for clientAuth key purpose: 1.3.6.1.5.5.7.3.2
+pub const KP_CLIENTAUTH: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.5.5.7.3.2");
 
-/// OID for codeSigning key purpose: 1.3.6.1.5.5.7.3.33
-pub const KP_CODESIGNING: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.33");
+/// OID for codeSigning key purpose: 1.3.6.1.5.5.7.3.3
+pub const KP_CODESIGNING: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.5.5.7.3.3");
 
-/// OID for emailProtection key purpose: 1.3.6.1.5.5.7.3.34
-pub const KP_EMAILPROTECTION: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.34");
+/// OID for emailProtection key purpose: 1.3.6.1.5.5.7.3.4
+pub const KP_EMAILPROTECTION: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.5.5.7.3.4");
 
-/// OID for timeStamping key purpose: 1.3.6.1.5.5.7.3.38
-pub const KP_TIMESTAMPING: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.38");
+/// OID for timeStamping key purpose: 1.3.6.1.5.5.7.3.8
+pub const KP_TIMESTAMPING: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.5.5.7.3.8");
 
-/// OID for OCSPSigning key purpose: 1.3.6.1.5.5.7.3.39
-pub const KP_OCSPSIGNING: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.39");
+/// OID for OCSPSigning key purpose: 1.3.6.1.5.5.7.3.9
+pub const KP_OCSPSIGNING: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.5.5.7.3.9");
 
 /// OID for authorityInfoAccess extension: 1.3.6.1.5.5.7.1.1
 pub const PE_AUTHORITYINFOACCESS: ObjectIdentifier =
