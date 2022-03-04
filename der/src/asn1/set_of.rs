@@ -177,12 +177,22 @@ impl<'a, T> ExactSizeIterator for SetOfIter<'a, T> {}
 /// and depends on `alloc` support.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-#[derive(Clone, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct SetOfVec<T>
 where
     T: DerOrd,
 {
     inner: Vec<T>,
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<T: DerOrd> Default for SetOfVec<T> {
+    fn default() -> Self {
+        Self {
+            inner: Default::default(),
+        }
+    }
 }
 
 #[cfg(feature = "alloc")]
