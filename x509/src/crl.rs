@@ -41,7 +41,7 @@ pub struct RevokedCert<'a> {
     /// revocationDate          Time,
     pub revocation_date: Time,
     /// crlEntryExtensions      Extensions OPTIONAL
-    pub crl_entry_extensions: Extensions<'a>,
+    pub crl_entry_extensions: Option<Extensions<'a>>,
 }
 
 /// Structure fabricated from the revokedCertificates definition in TBSCertList
