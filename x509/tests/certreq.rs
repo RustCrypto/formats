@@ -34,9 +34,9 @@ fn decode_rsa_2048_der() {
     assert_eq!(cr.info.version, Version::V1);
 
     // Check all the RDNs.
-    assert_eq!(cr.info.subject.len(), NAMES.len());
-    for (name, (oid, val)) in cr.info.subject.iter().zip(NAMES) {
-        let kind = name.get(0).unwrap();
+    assert_eq!(cr.info.subject.0.len(), NAMES.len());
+    for (name, (oid, val)) in cr.info.subject.0.iter().zip(NAMES) {
+        let kind = name.0.get(0).unwrap();
         let value = match kind.value.tag() {
             Tag::Utf8String => kind.value.utf8_string().unwrap().as_str(),
             Tag::PrintableString => kind.value.printable_string().unwrap().as_str(),
@@ -44,7 +44,7 @@ fn decode_rsa_2048_der() {
         };
 
         assert_eq!(kind.oid, oid.parse().unwrap());
-        assert_eq!(name.len(), 1);
+        assert_eq!(name.0.len(), 1);
         assert_eq!(value, *val);
     }
 

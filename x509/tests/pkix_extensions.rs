@@ -610,9 +610,9 @@ fn decode_cert() {
     );
 
     let mut counter = 0;
-    let i = cert.tbs_certificate.issuer.iter();
+    let i = cert.tbs_certificate.issuer.0.iter();
     for rdn in i {
-        let i1 = rdn.iter();
+        let i1 = rdn.0.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -652,9 +652,9 @@ fn decode_cert() {
     );
 
     counter = 0;
-    let i = cert.tbs_certificate.subject.iter();
+    let i = cert.tbs_certificate.subject.0.iter();
     for rdn in i {
-        let i1 = rdn.iter();
+        let i1 = rdn.0.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -867,13 +867,13 @@ fn decode_idp() {
 
     let n =
         Name::from_der(&hex!("305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
-    assert_eq!(4, n.len());
+    assert_eq!(4, n.0.len());
 
     let gn =
         GeneralName::from_der(&hex!("A45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
     match gn {
         GeneralName::DirectoryName(gn) => {
-            assert_eq!(4, gn.len());
+            assert_eq!(4, gn.0.len());
         }
         _ => {}
     }
@@ -884,7 +884,7 @@ fn decode_idp() {
     let gn = gns.get(0).unwrap();
     match gn {
         GeneralName::DirectoryName(gn) => {
-            assert_eq!(4, gn.len());
+            assert_eq!(4, gn.0.len());
         }
         _ => {}
     }
@@ -915,7 +915,7 @@ fn decode_idp() {
             let gn = dpn.get(0).unwrap();
             match gn {
                 GeneralName::DirectoryName(gn) => {
-                    assert_eq!(4, gn.len());
+                    assert_eq!(4, gn.0.len());
                 }
                 _ => {}
             }
@@ -1096,7 +1096,7 @@ fn decode_idp() {
             for gn in dp {
                 match gn {
                     GeneralName::DirectoryName(gn) => {
-                        assert_eq!(4, gn.len());
+                        assert_eq!(4, gn.0.len());
                     }
                     _ => {
                         panic!("Expected DirectoryName")
