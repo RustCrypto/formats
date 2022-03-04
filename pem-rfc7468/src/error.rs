@@ -2,10 +2,10 @@
 
 use core::fmt;
 
-/// Result type.
+/// Result type with the `pem-rfc7468` crate's [`Error`] type.
 pub type Result<T> = core::result::Result<T, Error>;
 
-/// Error type.
+/// PEM errors.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum Error {

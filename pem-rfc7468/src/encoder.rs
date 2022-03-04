@@ -1,8 +1,8 @@
 //! PEM encoder.
 
 use crate::{
-    grammar, Error, LineEnding, Result, BASE64_WRAP_WIDTH, ENCAPSULATION_BOUNDARY_DELIMITER,
-    POST_ENCAPSULATION_BOUNDARY, PRE_ENCAPSULATION_BOUNDARY,
+    grammar, Base64Encoder, Error, LineEnding, Result, BASE64_WRAP_WIDTH,
+    ENCAPSULATION_BOUNDARY_DELIMITER, POST_ENCAPSULATION_BOUNDARY, PRE_ENCAPSULATION_BOUNDARY,
 };
 use base64ct::{Base64, Encoding};
 
@@ -10,45 +10,28 @@ use base64ct::{Base64, Encoding};
 use alloc::string::String;
 
 /// Encode a PEM document according to RFC 7468's "Strict" grammar.
-pub fn encode<'a>(
-    label: &str,
+pub fn encode<'o>(
+    type_label: &str,
     line_ending: LineEnding,
     input: &[u8],
-    buf: &'a mut [u8],
-) -> Result<&'a [u8]> {
-    grammar::validate_label(label.as_bytes())?;
-
-    let mut buf = Buffer::new(buf, line_ending);
-    buf.write(PRE_ENCAPSULATION_BOUNDARY)?;
-    buf.write(label.as_bytes())?;
-    buf.writeln(ENCAPSULATION_BOUNDARY_DELIMITER)?;
-
-    for chunk in input.chunks((BASE64_WRAP_WIDTH * 3) / 4) {
-        buf.write_base64ln(chunk)?;
-    }
-
-    buf.write(POST_ENCAPSULATION_BOUNDARY)?;
-    buf.write(label.as_bytes())?;
-    buf.writeln(ENCAPSULATION_BOUNDARY_DELIMITER)?;
-    buf.finish()
+    buf: &'o mut [u8],
+) -> Result<&'o [u8]> {
+    let mut encoder = Encoder::new(type_label, line_ending, buf)?;
+    encoder.encode(input)?;
+    let encoded_len = encoder.finish()?;
+    Ok(&buf[..encoded_len])
 }
 
 /// Get the length of a PEM encoded document with the given bytes and label.
 pub fn encoded_len(label: &str, line_ending: LineEnding, input: &[u8]) -> usize {
     // TODO(tarcieri): use checked arithmetic
-    PRE_ENCAPSULATION_BOUNDARY.len()
-        + label.as_bytes().len()
-        + ENCAPSULATION_BOUNDARY_DELIMITER.len()
-        + line_ending.len()
-        + input
-            .chunks((BASE64_WRAP_WIDTH * 3) / 4)
-            .fold(0, |acc, chunk| {
-                acc + Base64::encoded_len(chunk) + line_ending.len()
-            })
-        + POST_ENCAPSULATION_BOUNDARY.len()
-        + label.as_bytes().len()
-        + ENCAPSULATION_BOUNDARY_DELIMITER.len()
-        + line_ending.len()
+    let base64_len = input
+        .chunks((BASE64_WRAP_WIDTH * 3) / 4)
+        .fold(0, |acc, chunk| {
+            acc + Base64::encoded_len(chunk) + line_ending.len()
+        });
+
+    encoded_len_inner(label, line_ending, base64_len)
 }
 
 /// Encode a PEM document according to RFC 7468's "Strict" grammar, returning
@@ -61,66 +44,128 @@ pub fn encode_string(label: &str, line_ending: LineEnding, input: &[u8]) -> Resu
     String::from_utf8(buf).map_err(|_| Error::CharacterEncoding)
 }
 
-/// Output buffer for writing encoded PEM output.
-struct Buffer<'a> {
-    /// Backing byte slice where PEM output is being written.
-    bytes: &'a mut [u8],
+/// Buffered PEM encoder.
+///
+/// Stateful buffered encoder type which encodes an input PEM document according
+/// to RFC 7468's "Strict" grammar.
+pub struct Encoder<'l, 'o> {
+    /// PEM type label.
+    type_label: &'l str,
 
-    /// Total number of bytes written into the buffer so far.
-    position: usize,
-
-    /// Line ending to use
+    /// Line ending used to wrap Base64.
     line_ending: LineEnding,
+
+    /// Buffered Base64 encoder.
+    base64: Base64Encoder<'o>,
 }
 
-impl<'a> Buffer<'a> {
-    /// Initialize buffer.
-    pub fn new(bytes: &'a mut [u8], line_ending: LineEnding) -> Self {
-        Self {
-            bytes,
-            position: 0,
-            line_ending,
-        }
+impl<'l, 'o> Encoder<'l, 'o> {
+    /// Create a new PEM [`Encoder`] with the default options which
+    /// writes output into the provided buffer.
+    ///
+    /// Uses the default 64-character line wrapping.
+    pub fn new(type_label: &'l str, line_ending: LineEnding, out: &'o mut [u8]) -> Result<Self> {
+        Self::new_wrapped(type_label, BASE64_WRAP_WIDTH, line_ending, out)
     }
 
-    /// Write a byte slice to the buffer.
-    pub fn write(&mut self, slice: &[u8]) -> Result<()> {
-        let reserved = self.reserve(slice.len())?;
-        reserved.copy_from_slice(slice);
+    /// Create a new PEM [`Encoder`] which wraps at the given line width.
+    pub fn new_wrapped(
+        type_label: &'l str,
+        line_width: usize,
+        line_ending: LineEnding,
+        mut out: &'o mut [u8],
+    ) -> Result<Self> {
+        grammar::validate_label(type_label.as_bytes())?;
+
+        for boundary_part in [
+            PRE_ENCAPSULATION_BOUNDARY,
+            type_label.as_bytes(),
+            ENCAPSULATION_BOUNDARY_DELIMITER,
+            line_ending.as_bytes(),
+        ] {
+            if out.len() < boundary_part.len() {
+                return Err(Error::Length);
+            }
+
+            let (part, rest) = out.split_at_mut(boundary_part.len());
+            out = rest;
+
+            part.copy_from_slice(boundary_part);
+        }
+
+        let base64 = Base64Encoder::new_wrapped(out, line_width, line_ending)?;
+
+        Ok(Self {
+            type_label,
+            line_ending,
+            base64,
+        })
+    }
+
+    /// Get the PEM type label used for this document.
+    pub fn type_label(&self) -> &'l str {
+        self.type_label
+    }
+
+    /// Encode the provided input data.
+    ///
+    /// This method can be called as many times as needed with any sized input
+    /// to write data encoded data into the output buffer, so long as there is
+    /// sufficient space in the buffer to handle the resulting Base64 encoded
+    /// data.
+    pub fn encode(&mut self, input: &[u8]) -> Result<()> {
+        self.base64.encode(input)?;
         Ok(())
     }
 
-    /// Write a byte slice to the buffer with a newline at the end.
-    pub fn writeln(&mut self, slice: &[u8]) -> Result<()> {
-        self.write(slice)?;
-        self.write(self.line_ending.as_bytes())
+    /// Borrow the inner [`Base64Encoder`].
+    pub fn base64_encoder(&mut self) -> &mut Base64Encoder<'o> {
+        &mut self.base64
     }
 
-    /// Write Base64-encoded data to the buffer.
+    /// Finish encoding PEM, writing the post-encapsulation boundary.
     ///
-    /// Automatically adds a newline at the end.
-    pub fn write_base64ln(&mut self, bytes: &[u8]) -> Result<()> {
-        let reserved = self.reserve(Base64::encoded_len(bytes))?;
-        Base64::encode(bytes, reserved)?;
-        self.write(self.line_ending.as_bytes())
+    /// On success, returns the total number of bytes written to the output
+    /// buffer.
+    pub fn finish(self) -> Result<usize> {
+        let (base64, mut out) = self.base64.finish_with_remaining()?;
+
+        for boundary_part in [
+            self.line_ending.as_bytes(),
+            POST_ENCAPSULATION_BOUNDARY,
+            self.type_label.as_bytes(),
+            ENCAPSULATION_BOUNDARY_DELIMITER,
+            self.line_ending.as_bytes(),
+        ] {
+            if out.len() < boundary_part.len() {
+                return Err(Error::Length);
+            }
+
+            let (part, rest) = out.split_at_mut(boundary_part.len());
+            out = rest;
+
+            part.copy_from_slice(boundary_part);
+        }
+
+        Ok(encoded_len_inner(
+            self.type_label,
+            self.line_ending,
+            base64.len() + self.line_ending.len(),
+        ))
     }
+}
 
-    /// Finish writing to the buffer, returning the portion that has been
-    /// written to.
-    pub fn finish(self) -> Result<&'a [u8]> {
-        self.bytes.get(..self.position).ok_or(Error::Length)
-    }
-
-    /// Reserve space in the encoding buffer, returning a mutable slice.
-    fn reserve(&mut self, nbytes: usize) -> Result<&mut [u8]> {
-        let new_position = self.position.checked_add(nbytes).ok_or(Error::Length)?;
-
-        let reserved = self
-            .bytes
-            .get_mut(self.position..new_position)
-            .ok_or(Error::Length)?;
-
-        self.position = new_position;
-        Ok(reserved)
-    }
+/// Compute the length of a PEM encoded document with a Base64-encoded body of
+/// the given length.
+fn encoded_len_inner(label: &str, line_ending: LineEnding, base64_len: usize) -> usize {
+    // TODO(tarcieri): use checked arithmetic
+    PRE_ENCAPSULATION_BOUNDARY.len()
+        + label.as_bytes().len()
+        + ENCAPSULATION_BOUNDARY_DELIMITER.len()
+        + line_ending.len()
+        + base64_len
+        + POST_ENCAPSULATION_BOUNDARY.len()
+        + label.as_bytes().len()
+        + ENCAPSULATION_BOUNDARY_DELIMITER.len()
+        + line_ending.len()
 }

@@ -114,15 +114,28 @@ impl<'o, E: Variant> Encoder<'o, E> {
         Ok(())
     }
 
+    /// Get the position inside of the output buffer where the write cursor
+    /// is currently located.
+    pub fn position(&self) -> usize {
+        self.position
+    }
+
     /// Finish encoding data, returning the resulting Base64 as a `str`.
-    pub fn finish(mut self) -> Result<&'o str, Error> {
+    pub fn finish(self) -> Result<&'o str, Error> {
+        self.finish_with_remaining().map(|(base64, _)| base64)
+    }
+
+    /// Finish encoding data, returning the resulting Base64 as a `str`
+    /// along with the remaining space in the output buffer.
+    pub fn finish_with_remaining(mut self) -> Result<(&'o str, &'o mut [u8]), Error> {
         if !self.block_buffer.is_empty() {
             let buffer_len = self.block_buffer.position;
             let block = self.block_buffer.bytes;
             self.perform_encode(&block[..buffer_len])?;
         }
 
-        Ok(str::from_utf8(&self.output[..self.position])?)
+        let (base64, remaining) = self.output.split_at_mut(self.position);
+        Ok((str::from_utf8(base64)?, remaining))
     }
 
     /// Borrow the remaining data in the buffer.
@@ -253,7 +266,7 @@ impl LineWrapper {
     fn insert_newlines(&mut self, mut buffer: &mut [u8], len: &mut usize) -> Result<(), Error> {
         let mut buffer_len = *len;
 
-        if buffer_len < self.remaining {
+        if buffer_len <= self.remaining {
             self.remaining = self
                 .remaining
                 .checked_sub(buffer_len)
@@ -267,8 +280,8 @@ impl LineWrapper {
             .checked_sub(self.remaining)
             .ok_or(InvalidLength)?;
 
-        // The `wrap_blocks` function should ensure the buffer is smaller than a Base64 block
-        debug_assert!(buffer_len < 4, "buffer exceeds 4-bytes");
+        // The `wrap_blocks` function should ensure the buffer is no larger than a Base64 block
+        debug_assert!(buffer_len <= 4, "buffer too long: {}", buffer_len);
 
         if buffer_len + self.ending.len() >= buffer.len() {
             // Not enough space in buffer to add newlines
@@ -310,6 +323,19 @@ mod tests {
     #[test]
     fn encode_multiline_unpadded() {
         encode_test::<Base64Unpadded>(MULTILINE_UNPADDED_BIN, MULTILINE_UNPADDED_BASE64, Some(70));
+    }
+
+    #[test]
+    fn no_trailing_newline_when_aligned() {
+        let mut buffer = [0u8; 64];
+        let mut encoder = Encoder::<Base64>::new_wrapped(&mut buffer, 64, LineEnding::LF).unwrap();
+        encoder.encode(&[0u8; 48]).unwrap();
+
+        // Ensure no newline character is present in this case
+        assert_eq!(
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            encoder.finish().unwrap()
+        );
     }
 
     /// Core functionality of an encoding test.
