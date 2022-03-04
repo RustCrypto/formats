@@ -4,7 +4,6 @@ pub mod certpolicy;
 pub mod constraints;
 pub mod crl;
 pub mod name;
-pub mod oids;
 
 mod access;
 mod authkeyid;
