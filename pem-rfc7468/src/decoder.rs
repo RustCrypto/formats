@@ -74,7 +74,7 @@ fn check_for_headers(pem: &[u8], err: Error) -> Error {
     }
 }
 
-/// PEM decoder.
+/// Buffered PEM decoder.
 ///
 /// Stateful buffered decoder type which decodes an input PEM document according
 /// to RFC 7468's "Strict" grammar.
@@ -133,7 +133,7 @@ impl<'i> Decoder<'i> {
         self.base64.is_finished()
     }
 
-    /// Convert into the inner [`base64::Decoder`].
+    /// Convert into the inner [`Base64Decoder`].
     pub fn into_base64_decoder(self) -> Base64Decoder<'i> {
         self.base64
     }
