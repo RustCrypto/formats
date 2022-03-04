@@ -13,8 +13,8 @@ use x509::Certificate;
 ///    tbsRequest              TBSRequest,
 ///    optionalSignature   [0] EXPLICIT Signature OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct OcspRequest<'a> {
     pub tbs_request: TbsRequest<'a>,
 
@@ -29,10 +29,9 @@ pub struct OcspRequest<'a> {
 ///    requestList             SEQUENCE OF Request,
 ///    requestExtensions   [2] EXPLICIT Extensions OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct TbsRequest<'a> {
-    ///    version             \[0\] EXPLICIT Version DEFAULT v1,
     #[asn1(
         context_specific = "0",
         default = "Default::default",
@@ -40,14 +39,11 @@ pub struct TbsRequest<'a> {
     )]
     pub version: Version,
 
-    ///    requestorName       \[1\] EXPLICIT GeneralName OPTIONAL,
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub requestor_name: Option<GeneralName<'a>>,
 
-    ///    requestList             SEQUENCE OF Request,
     pub request_list: alloc::vec::Vec<Request<'a>>,
 
-    ///    requestExtensions   \[2\] EXPLICIT Extensions OPTIONAL }
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
     pub request_extensions: Option<Extensions<'a>>,
 }
@@ -58,16 +54,12 @@ pub struct TbsRequest<'a> {
 ///    signature               BIT STRING,
 ///    certs                  [0] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct Signature<'a> {
-    ///    signatureAlgorithm      AlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
-
-    ///    signature               BIT STRING,
     pub signature: BitString<'a>,
 
-    ///    certs               \[0\] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub certs: Option<Vec<Certificate<'a>>>,
 }
@@ -78,12 +70,11 @@ pub struct Signature<'a> {
 /// Version ::= INTEGER { v1(0) }
 /// ```
 ///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]
+#[allow(missing_docs)]
 pub enum Version {
-    /// Version 1 (default)
     V1 = 0,
 }
 
@@ -98,13 +89,11 @@ impl Default for Version {
 ///    reqCert                     CertID,
 ///    singleRequestExtensions     [0] EXPLICIT Extensions OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct Request<'a> {
-    ///    reqCert                     CertID,
     pub req_cert: CertId<'a>,
 
-    ///    singleRequestExtensions \[0\] EXPLICIT Extensions OPTIONAL }
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub single_request_extensions: Option<Extensions<'a>>,
 }
@@ -116,19 +105,12 @@ pub struct Request<'a> {
 ///    issuerKeyHash           OCTET STRING, -- Hash of issuer's public key
 ///    serialNumber            CertificateSerialNumber }
 /// ```
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct CertId<'a> {
-    ///    hashAlgorithm           AlgorithmIdentifier,
     pub hash_algorithm: AlgorithmIdentifier<'a>,
-
-    ///    issuerNameHash          OCTET STRING, -- Hash of issuer's DN
     pub issuer_name_hash: OctetString<'a>,
-
-    ///    issuerKeyHash           OCTET STRING, -- Hash of issuer's public key
     pub issuer_key_hash: OctetString<'a>,
-
-    ///    serialNumber            CertificateSerialNumber }
     pub serial_number: UIntBytes<'a>,
 }
 
@@ -137,8 +119,8 @@ pub struct CertId<'a> {
 ///    responseStatus          OCSPResponseStatus,
 ///    responseBytes           [0] EXPLICIT ResponseBytes OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct OcspResponse<'a> {
     pub response_status: OcspResponseStatus,
 
@@ -157,27 +139,15 @@ pub struct OcspResponse<'a> {
 ///    unauthorized        (6)   -- Request unauthorized
 /// }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Enumerated, Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
+#[allow(missing_docs)]
 pub enum OcspResponseStatus {
-    ///    successful          (0),  -- Response has valid confirmations
     Successful = 0,
-
-    ///    malformedRequest    (1),  -- Illegal confirmation request
     MalformedRequest = 1,
-
-    ///    internalError       (2),  -- Internal error in issuer
     InternalError = 2,
-
-    ///    tryLater            (3),  -- Try again later
     TryLater = 3,
-
-    //                              -- (4) is not used
-    ///    sigRequired         (5),  -- Must sign the request
     SigRequired = 5,
-
-    ///    unauthorized        (6)   -- Request unauthorized
     Unauthorized = 6,
 }
 
@@ -186,13 +156,10 @@ pub enum OcspResponseStatus {
 ///    responseType            OBJECT IDENTIFIER,
 ///    response                OCTET STRING }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct ResponseBytes<'a> {
-    ///    responseType            OBJECT IDENTIFIER,
     pub response_type: ObjectIdentifier,
-
-    ///    response                OCTET STRING }
     pub response: OctetString<'a>,
 }
 
@@ -203,19 +170,13 @@ pub struct ResponseBytes<'a> {
 ///   signature                BIT STRING,
 ///   certs                \[0\] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct BasicOcspResponse<'a> {
-    ///   tbsResponseData          ResponseData,
     pub tbs_response_data: ResponseData<'a>,
-
-    ///   signatureAlgorithm       AlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
-
-    ///   signature                BIT STRING,
     pub signature: BitString<'a>,
 
-    ///    certs               \[0\] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub certs: Option<alloc::vec::Vec<Any<'a>>>,
 }
@@ -228,27 +189,19 @@ pub struct BasicOcspResponse<'a> {
 ///    responses               SEQUENCE OF SingleResponse,
 ///    responseExtensions   [1] EXPLICIT Extensions OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct ResponseData<'a> {
-    ///    version             \[0\] EXPLICIT Version DEFAULT v1,
     #[asn1(
         context_specific = "0",
         default = "Default::default",
         tag_mode = "EXPLICIT"
     )]
     pub version: Version,
-
-    ///    responderID             ResponderID,
     pub responder_id: ResponderId<'a>,
-
-    ///    producedAt              GeneralizedTime,
     pub produced_at: GeneralizedTime,
-
-    ///    responses               SEQUENCE OF SingleResponse,
     pub responses: Vec<SingleResponse<'a>>,
 
-    ///    responseExtensions  \[1\] EXPLICIT Extensions OPTIONAL }
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub response_extensions: Option<Extensions<'a>>,
 }
@@ -258,14 +211,12 @@ pub struct ResponseData<'a> {
 ///    byName              [1] Name,
 ///    byKey               [2] KeyHash }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
+#[allow(missing_docs)]
 pub enum ResponderId<'a> {
-    ///    byName              \[1\] Name,
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
     ByName(Name<'a>),
 
-    ///    byKey               \[2\] KeyHash }
     #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
     ByKey(KeyHash<'a>),
 }
@@ -277,7 +228,6 @@ pub enum ResponderId<'a> {
 ///                          -- the tag, length, and number of unused
 ///                          -- bits] in the responder's certificate)
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 pub type KeyHash<'a> = OctetString<'a>;
 
 /// ```text
@@ -288,23 +238,16 @@ pub type KeyHash<'a> = OctetString<'a>;
 ///    nextUpdate              [0] EXPLICIT GeneralizedTime OPTIONAL,
 ///    singleExtensions        [1] EXPLICIT Extensions OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct SingleResponse<'a> {
-    ///    certID                  CertID,
     pub cert_id: CertId<'a>,
-
-    ///    certStatus              CertStatus,
     pub cert_status: CertStatus,
-
-    ///    thisUpdate              GeneralizedTime,
     pub this_update: GeneralizedTime,
 
-    ///    nextUpdate          \[0\] EXPLICIT GeneralizedTime OPTIONAL,
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub next_update: Option<GeneralizedTime>,
 
-    ///    singleExtensions    \[1\] EXPLICIT Extensions OPTIONAL }
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub single_request_extensions: Option<Extensions<'a>>,
 }
@@ -315,18 +258,15 @@ pub struct SingleResponse<'a> {
 ///    revoked             [1] IMPLICIT RevokedInfo,
 ///    unknown             [2] IMPLICIT UnknownInfo }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
+#[allow(missing_docs)]
 pub enum CertStatus {
-    ///    good                \[0\] IMPLICIT NULL,
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
     Good(Null),
 
-    ///    revoked             \[1\] IMPLICIT RevokedInfo,
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
     Revoked(RevokedInfo),
 
-    ///    unknown             \[2\] IMPLICIT UnknownInfo }
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT")]
     Unknown(UnknownInfo),
 }
@@ -336,13 +276,11 @@ pub enum CertStatus {
 ///    revocationTime          GeneralizedTime,
 ///    revocationReason        [0] EXPLICIT CRLReason OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct RevokedInfo {
-    ///    revocationTime          GeneralizedTime,
     pub revocation_time: GeneralizedTime,
 
-    ///    revocationReason    \[0\] EXPLICIT CRLReason OPTIONAL }
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub revocation_reason: Option<CrlReason>,
 }
@@ -350,19 +288,16 @@ pub struct RevokedInfo {
 /// ```text
 /// UnknownInfo ::= NULL
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 pub type UnknownInfo = Null;
 
 /// ```text
 // ArchiveCutoff ::= GeneralizedTime
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 pub type ArchiveCutoff = GeneralizedTime;
 
 /// ```text
 // AcceptableResponses ::= SEQUENCE OF OBJECT IDENTIFIER
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 pub type AcceptableResponses = Vec<ObjectIdentifier>;
 
 /// ```text
@@ -370,13 +305,10 @@ pub type AcceptableResponses = Vec<ObjectIdentifier>;
 ///    issuer                  Name,
 ///    locator                 AuthorityInfoAccessSyntax }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct ServiceLocator<'a> {
-    ///    issuer                  Name,
     pub issuer: Name<'a>,
-
-    ///    locator                 AuthorityInfoAccessSyntax }
     pub locator: AuthorityInfoAccessSyntax<'a>,
 }
 
@@ -386,8 +318,8 @@ pub struct ServiceLocator<'a> {
 ///     crlNum               [1] EXPLICIT INTEGER OPTIONAL,
 ///     crlTime              [2] EXPLICIT GeneralizedTime OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct CrlId<'a> {
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub crl_url: Option<Ia5String<'a>>,
@@ -401,7 +333,7 @@ pub struct CrlId<'a> {
 
 /// ```text
 /// PreferredSignatureAlgorithms ::= SEQUENCE OF PreferredSignatureAlgorithm
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+/// ```
 pub type PreferredSignatureAlgorithms<'a> = Vec<PreferredSignatureAlgorithm<'a>>;
 
 /// ```text
@@ -409,8 +341,8 @@ pub type PreferredSignatureAlgorithms<'a> = Vec<PreferredSignatureAlgorithm<'a>>
 ///    sigIdentifier   AlgorithmIdentifier,
 ///    certIdentifier  AlgorithmIdentifier OPTIONAL }
 /// ```
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct PreferredSignatureAlgorithm<'a> {
     pub sig_identifier: AlgorithmIdentifier<'a>,
     pub cert_identifier: Option<AlgorithmIdentifier<'a>>,

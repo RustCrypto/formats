@@ -14,14 +14,11 @@ use spki::AlgorithmIdentifier;
 ///      signatureAlgorithm   AlgorithmIdentifier,
 ///      signatureValue       BIT STRING  }
 /// ```
-/// [RFC 5280 Section 5.1]: <https://datatracker.ietf.org/doc/html/rfc5280#section-5.1>
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct CertificateList<'a> {
-    /// tbsCertList       TBSCertList,
     pub tbs_cert_list: TbsCertList<'a>,
-    /// signatureAlgorithm   AlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    /// signature            BIT STRING
     pub signature: BitString<'a>,
 }
 
@@ -35,12 +32,10 @@ pub struct CertificateList<'a> {
 /// }
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct RevokedCert<'a> {
-    /// userCertificate         CertificateSerialNumber,
     pub serial_number: UIntBytes<'a>,
-    /// revocationDate          Time,
     pub revocation_date: Time,
-    /// crlEntryExtensions      Extensions OPTIONAL
     pub crl_entry_extensions: Option<Extensions<'a>>,
 }
 
@@ -69,21 +64,15 @@ pub type RevokedCerts<'a> = alloc::vec::Vec<RevokedCert<'a>>;
 ///                                }
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct TbsCertList<'a> {
-    ///      version                 Version OPTIONAL,
-    ///                                   -- if present, MUST be v2
     pub version: Version,
-    ///      signature               AlgorithmIdentifier,
     pub signature: AlgorithmIdentifier<'a>,
-    ///      issuer                  Name,
     pub issuer: Name<'a>,
-    ///      thisUpdate              Time,
     pub this_update: Time,
-    ///      nextUpdate              Time OPTIONAL,
     pub next_update: Option<Time>,
-    ///      revokedCertificates     RevokedCerts
     pub revoked_certificates: Option<RevokedCerts<'a>>,
-    ///      crlExtensions           \[0\]  EXPLICIT Extensions OPTIONAL
+
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub crl_extensions: Option<Extensions<'a>>,
 }

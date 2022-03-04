@@ -13,10 +13,10 @@ use x509::name::Name;
 ///   contentType ContentType,
 ///   content \[0\] EXPLICIT ANY DEFINED BY contentType }
 #[derive(Clone, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct ContentInfo2004<'a> {
-    ///   contentType ContentType,
     pub content_type: ObjectIdentifier,
-    ///   content \[0\] EXPLICIT ANY DEFINED BY contentType }
+
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
     pub content: Any<'a>,
 }
@@ -29,22 +29,21 @@ pub struct ContentInfo2004<'a> {
 ///   crls \[1\] IMPLICIT RevocationInfoChoices OPTIONAL,
 ///   signerInfos SignerInfos }
 #[derive(Clone, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct SignedData<'a> {
-    ///   version CMSVersion,
     pub version: u8,
-    ///   digestAlgorithms DigestAlgorithmIdentifiers,
     pub digest_algorithms: DigestAlgorithmIdentifiers<'a>,
-    ///   encapContentInfo EncapsulatedContentInfo,
     pub encap_content_info: EncapsulatedContentInfo<'a>,
+
     // Using Any as a means of deferring most of the decoding of the certificates (will still need
     // to call to_vec on the resulting Any to restore tag and length values).
     ///   certificates \[0\] IMPLICIT CertificateSet OPTIONAL,
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
     pub certificates: Option<alloc::vec::Vec<Any<'a>>>,
-    ///   crls \[1\] IMPLICIT RevocationInfoChoices OPTIONAL,
+
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub crls: Option<alloc::vec::Vec<Any<'a>>>,
-    ///   signerInfos SignerInfos }
+
     pub signer_infos: SetOfVec<SignerInfo<'a>>,
 }
 
@@ -55,10 +54,10 @@ pub type DigestAlgorithmIdentifiers<'a> = SetOfVec<ObjectIdentifier>;
 ///   eContentType ContentType,
 ///   eContent \[0\] EXPLICIT OCTET STRING OPTIONAL }
 #[derive(Clone, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct EncapsulatedContentInfo<'a> {
-    ///   eContentType ContentType,
     pub econtent_type: ObjectIdentifier,
-    ///   eContent \[0\] EXPLICIT OCTET STRING OPTIONAL }
+
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub econtent: Option<OctetString<'a>>,
 }
@@ -74,20 +73,14 @@ pub struct EncapsulatedContentInfo<'a> {
 ///   signature SignatureValue,
 ///   unsignedAttrs \[1\] IMPLICIT UnsignedAttributes OPTIONAL }
 #[derive(Clone, Eq, PartialEq, PartialOrd, Sequence)]
+#[allow(missing_docs)]
 pub struct SignerInfo<'a> {
-    ///   version CMSVersion,
     pub version: u8,
-    ///   sid SignerIdentifier,
     pub sid: SignerIdentifier<'a>,
-    ///   digestAlgorithm DigestAlgorithmIdentifier,
     pub digest_algorithm: AlgorithmIdentifier<'a>,
-    ///   signedAttrs \[0\] IMPLICIT SignedAttributes OPTIONAL,
     pub signed_attrs: SignedAttributes<'a>,
-    ///   signatureAlgorithm SignatureAlgorithmIdentifier,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    ///   signature SignatureValue,
     pub signature: BitString<'a>,
-    ///   unsignedAttrs \[1\] IMPLICIT UnsignedAttributes OPTIONAL }
     pub unsigned_attrs: UnsignedAttributes<'a>,
 }
 impl ValueOrd for SignerInfo<'_> {
@@ -100,10 +93,10 @@ impl ValueOrd for SignerInfo<'_> {
 ///   issuerAndSerialNumber IssuerAndSerialNumber,
 ///   subjectKeyIdentifier \[0\] SubjectKeyIdentifier }
 #[derive(Clone, Eq, PartialEq, PartialOrd, Choice)]
+#[allow(missing_docs)]
 pub enum SignerIdentifier<'a> {
-    ///   issuerAndSerialNumber IssuerAndSerialNumber,
     IssuerAndSerialNumber(IssuerAndSerialNumber<'a>),
-    ///   subjectKeyIdentifier \[0\] SubjectKeyIdentifier }
+
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
     SubjectKeyIdentifier(SubjectKeyIdentifier<'a>),
 }
