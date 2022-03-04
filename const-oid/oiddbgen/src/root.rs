@@ -18,7 +18,7 @@ impl Root {
         self.0
             .entry(spec)
             .or_insert_with(Spec::default)
-            .push(Node::new(obid, name));
+            .insert(Node::new(obid, name));
     }
 
     pub fn module(&self) -> TokenStream {

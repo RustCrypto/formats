@@ -1,14 +1,16 @@
+use std::collections::BTreeSet;
+
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
 use crate::node::Node;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
-pub struct Spec(Vec<Node>);
+pub struct Spec(BTreeSet<Node>);
 
 impl Spec {
-    pub fn push(&mut self, value: Node) {
-        self.0.push(value)
+    pub fn insert(&mut self, value: Node) -> bool {
+        self.0.insert(value)
     }
 
     pub fn records(&self, path: TokenStream) -> TokenStream {
