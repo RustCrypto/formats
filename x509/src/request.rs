@@ -1,9 +1,14 @@
 //! PKCS#10 Certification Request types
 
+use crate::ext::Extension;
 use crate::{attr::Attributes, name::Name};
 
+use alloc::vec::Vec;
+
+use const_oid::db::rfc5912::ID_EXTENSION_REQ;
+use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::BitString;
-use der::{Decodable, Enumerated, Sequence};
+use der::{Decodable, Enumerated, Newtype, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 /// Version identifier for certification request information.
@@ -82,4 +87,18 @@ impl<'a> TryFrom<&'a [u8]> for CertReq<'a> {
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         Self::from_der(bytes)
     }
+}
+
+/// `ExtensionReq` as defined in [RFC 5272 Section 3.1].
+///
+/// ```text
+/// ExtensionReq ::= SEQUENCE SIZE (1..MAX) OF Extension
+/// ```
+///
+/// [RFC 5272 Section 3.1]: https://datatracker.ietf.org/doc/html/rfc5272#section-3.1
+#[derive(Clone, Debug, PartialEq, Eq, Newtype)]
+pub struct ExtensionReq<'a>(Vec<Extension<'a>>);
+
+impl<'a> AssociatedOid for ExtensionReq<'a> {
+    const OID: ObjectIdentifier = ID_EXTENSION_REQ;
 }
