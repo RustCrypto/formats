@@ -1290,6 +1290,12 @@ pub mod rfc5280 {
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.3");
     pub const ID_AD_CA_REPOSITORY: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.5");
+    pub const ID_HOLDINSTRUCTION_NONE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.2.840.10040.2.1");
+    pub const ID_HOLDINSTRUCTION_CALLISSUER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.2.840.10040.2.2");
+    pub const ID_HOLDINSTRUCTION_REJECT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.2.840.10040.2.3");
     pub const ID_CE_SUBJECT_KEY_IDENTIFIER: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.5.29.14");
     pub const ID_CE_KEY_USAGE: crate::ObjectIdentifier =
@@ -1353,6 +1359,8 @@ pub mod rfc5911 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.6");
     pub const SMIME_CAPABILITIES: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.15");
+    pub const ID_CT_RECEIPT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.1");
     pub const ID_CT_FIRMWARE_PACKAGE: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.16");
     pub const ID_CT_FIRMWARE_LOAD_RECEIPT: crate::ObjectIdentifier =
@@ -1361,14 +1369,22 @@ pub mod rfc5911 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.18");
     pub const ID_CT_AUTH_DATA: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.2");
+    pub const ID_CT_AUTH_ENVELOPED_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.23");
     pub const ID_CT_CONTENT_INFO: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.6");
     pub const ID_CAP_PREFER_BINARY_INSIDE: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.11.1");
+    pub const ID_AA_RECEIPT_REQUEST: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.1");
     pub const ID_AA_CONTENT_REFERENCE: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.10");
+    pub const ID_AA_ENCRYP_KEY_PREF: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.11");
     pub const ID_AA_SIGNING_CERTIFICATE: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.12");
+    pub const ID_AA_SECURITY_LABEL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.2");
     pub const ID_AA_ML_EXPAND_HISTORY: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.3");
     pub const ID_AA_FIRMWARE_PACKAGE_ID: crate::ObjectIdentifier =
@@ -1381,6 +1397,8 @@ pub mod rfc5911 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.38");
     pub const ID_AA_WRAPPED_FIRMWARE_KEY: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.39");
+    pub const ID_AA_CONTENT_HINT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.4");
     pub const ID_AA_COMMUNITY_IDENTIFIERS: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.40");
     pub const ID_AA_FIRMWARE_PACKAGE_INFO: crate::ObjectIdentifier =
@@ -1391,8 +1409,14 @@ pub mod rfc5911 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.47");
     pub const ID_AA_ER_INTERNAL: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.49");
+    pub const ID_AA_MSG_SIG_DIGEST: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.5");
     pub const ID_AA_ER_EXTERNAL: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.50");
+    pub const ID_AA_CONTENT_IDENTIFIER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.7");
+    pub const ID_AA_EQUIVALENT_LABELS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.9");
     pub const ID_ALG_SSDH: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.10");
     pub const ID_ALG_ESDH: crate::ObjectIdentifier =
@@ -1401,8 +1425,34 @@ pub mod rfc5911 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.6");
     pub const ID_ALG_CMSRC_2_WRAP: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.7");
-    pub const ID_SKD: crate::ObjectIdentifier =
-        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8");
+    pub const ID_SKD_GL_USE_KEK: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.1");
+    pub const ID_SKD_GLA_QUERY_REQUEST: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.11");
+    pub const ID_SKD_GLA_QUERY_RESPONSE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.12");
+    pub const ID_SKD_GL_PROVIDE_CERT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.13");
+    pub const ID_SKD_GL_MANAGE_CERT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.14");
+    pub const ID_SKD_GL_KEY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.15");
+    pub const ID_SKD_GL_DELETE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.2");
+    pub const ID_SKD_GL_ADD_MEMBER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.3");
+    pub const ID_SKD_GL_DELETE_MEMBER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.4");
+    pub const ID_SKD_GL_REKEY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.5");
+    pub const ID_SKD_GL_ADD_OWNER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.6");
+    pub const ID_SKD_GL_REMOVE_OWNER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.7");
+    pub const ID_SKD_GL_KEY_COMPROMISE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.8");
+    pub const ID_SKD_GLK_REFRESH: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.8.9");
     pub const ID_CONTENT_TYPE: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.3");
     pub const ID_MESSAGE_DIGEST: crate::ObjectIdentifier =
@@ -1501,6 +1551,8 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.9");
     pub const PKCS_9: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9");
+    pub const ID_EXTENSION_REQ: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.14");
     pub const ID_SMIME: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16");
     pub const ID_CT_SCVP_CERT_VAL_REQUEST: crate::ObjectIdentifier =
@@ -1511,6 +1563,10 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.12");
     pub const ID_CT_SCVP_VAL_POL_RESPONSE: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.13");
+    pub const ID_CT_ENC_KEY_WITH_ID: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.21");
+    pub const ID_AA_CMC_UNSIGNED_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.34");
     pub const ID_MD_2: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.2");
     pub const ID_MD_5: crate::ObjectIdentifier =
@@ -1547,6 +1603,30 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("1.3.132.1.13");
     pub const ID_SHA_1: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
+    pub const ID_PE_AUTHORITY_INFO_ACCESS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.1.1");
+    pub const ID_PE_AC_PROXYING: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.1.10");
+    pub const ID_PE_SUBJECT_INFO_ACCESS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.1.11");
+    pub const ID_PE_AC_AUDIT_IDENTITY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.1.4");
+    pub const ID_PE_AA_CONTROLS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.1.6");
+    pub const ID_ACA_AUTHENTICATION_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.10.1");
+    pub const ID_ACA_ACCESS_IDENTITY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.10.2");
+    pub const ID_ACA_CHARGING_IDENTITY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.10.3");
+    pub const ID_ACA_GROUP: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.10.4");
+    pub const ID_ACA_ENC_ATTRS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.10.6");
+    pub const ID_CCT_PKI_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.12.2");
+    pub const ID_CCT_PKI_RESPONSE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.12.3");
     pub const ID_STC_BUILD_PKC_PATH: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.17.1");
     pub const ID_STC_BUILD_VALID_PKC_PATH: crate::ObjectIdentifier =
@@ -1563,6 +1643,16 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.17.7");
     pub const ID_SWB_PKC_BEST_CERT_PATH: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.18.1");
+    pub const ID_SWB_PKC_CERT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.18.10");
+    pub const ID_SWB_AC_CERT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.18.11");
+    pub const ID_SWB_PKC_ALL_CERT_PATHS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.18.12");
+    pub const ID_SWB_PKC_EE_REVOCATION_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.18.13");
+    pub const ID_SWB_PKC_C_AS_REVOCATION_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.18.14");
     pub const ID_SWB_PKC_REVOCATION_INFO: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.18.2");
     pub const ID_SWB_PKC_PUBLIC_KEY_INFO: crate::ObjectIdentifier =
@@ -1583,6 +1673,140 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.19.3");
     pub const NAME_COMP_ALG_SET: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.19.4");
+    pub const ID_QT_CPS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.2.1");
+    pub const ID_QT_UNOTICE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.2.2");
+    pub const ID_KP_SERVER_AUTH: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.1");
+    pub const ID_KP_SCVP_SERVER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.15");
+    pub const ID_KP_SCVP_CLIENT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.16");
+    pub const ID_KP_CLIENT_AUTH: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.2");
+    pub const ID_KP_CODE_SIGNING: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.3");
+    pub const ID_KP_EMAIL_PROTECTION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.4");
+    pub const ID_KP_TIME_STAMPING: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.8");
+    pub const ID_KP_OCSP_SIGNING: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.3.9");
+    pub const ID_IT_CA_PROT_ENC_CERT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.1");
+    pub const ID_IT_KEY_PAIR_PARAM_REQ: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.10");
+    pub const ID_IT_KEY_PAIR_PARAM_REP: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.11");
+    pub const ID_IT_REV_PASSPHRASE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.12");
+    pub const ID_IT_IMPLICIT_CONFIRM: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.13");
+    pub const ID_IT_CONFIRM_WAIT_TIME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.14");
+    pub const ID_IT_ORIG_PKI_MESSAGE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.15");
+    pub const ID_IT_SUPP_LANG_TAGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.16");
+    pub const ID_IT_SIGN_KEY_PAIR_TYPES: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.2");
+    pub const ID_IT_ENC_KEY_PAIR_TYPES: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.3");
+    pub const ID_IT_PREFERRED_SYMM_ALG: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.4");
+    pub const ID_IT_CA_KEY_UPDATE_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.5");
+    pub const ID_IT_CURRENT_CRL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.6");
+    pub const ID_IT_UNSUPPORTED_OI_DS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.4.7");
+    pub const ID_AD_OCSP: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1");
+    pub const ID_AD_CA_ISSUERS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.2");
+    pub const ID_AD_TIME_STAMPING: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.3");
+    pub const ID_AD_CA_REPOSITORY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.5");
+    pub const ID_REG_CTRL_REG_TOKEN: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.5.1.1");
+    pub const ID_REG_CTRL_AUTHENTICATOR: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.5.1.2");
+    pub const ID_REG_CTRL_PKI_PUBLICATION_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.5.1.3");
+    pub const ID_REG_CTRL_PKI_ARCHIVE_OPTIONS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.5.1.4");
+    pub const ID_REG_CTRL_OLD_CERT_ID: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.5.1.5");
+    pub const ID_REG_CTRL_PROTOCOL_ENCR_KEY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.5.1.6");
+    pub const ID_REG_INFO_UTF_8_PAIRS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.5.2.1");
+    pub const ID_REG_INFO_CERT_REQ: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.5.2.2");
+    pub const ID_ALG_NO_SIGNATURE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.6.2");
+    pub const ID_CMC_STATUS_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.1");
+    pub const ID_CMC_DECRYPTED_POP: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.10");
+    pub const ID_CMC_LRA_POP_WITNESS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.11");
+    pub const ID_CMC_GET_CERT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.15");
+    pub const ID_CMC_GET_CRL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.16");
+    pub const ID_CMC_REVOKE_REQUEST: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.17");
+    pub const ID_CMC_REG_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.18");
+    pub const ID_CMC_RESPONSE_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.19");
+    pub const ID_CMC_IDENTIFICATION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.2");
+    pub const ID_CMC_QUERY_PENDING: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.21");
+    pub const ID_CMC_POP_LINK_RANDOM: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.22");
+    pub const ID_CMC_POP_LINK_WITNESS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.23");
+    pub const ID_CMC_CONFIRM_CERT_ACCEPTANCE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.24");
+    pub const ID_CMC_STATUS_INFO_V_2: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.25");
+    pub const ID_CMC_TRUSTED_ANCHORS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.26");
+    pub const ID_CMC_AUTH_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.27");
+    pub const ID_CMC_BATCH_REQUESTS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.28");
+    pub const ID_CMC_BATCH_RESPONSES: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.29");
+    pub const ID_CMC_IDENTITY_PROOF: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.3");
+    pub const ID_CMC_PUBLISH_CERT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.30");
+    pub const ID_CMC_MOD_CERT_TEMPLATE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.31");
+    pub const ID_CMC_CONTROL_PROCESSED: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.32");
+    pub const ID_CMC_IDENTITY_PROOF_V_2: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.33");
+    pub const ID_CMC_POP_LINK_WITNESS_V_2: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.34");
+    pub const ID_CMC_DATA_RETURN: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.4");
+    pub const ID_CMC_TRANSACTION_ID: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.5");
+    pub const ID_CMC_SENDER_NONCE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.6");
+    pub const ID_CMC_RECIPIENT_NONCE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.7");
+    pub const ID_CMC_ADD_EXTENSIONS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.8");
+    pub const ID_CMC_ENCRYPTED_POP: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.7.9");
     pub const ID_KEY_EXCHANGE_ALGORITHM: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.2.1.1.22");
     pub const ID_SHA_256: crate::ObjectIdentifier =
@@ -1597,6 +1821,12 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.1");
     pub const DSA_WITH_SHA_256: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.2");
+    pub const ID_HOLDINSTRUCTION_NONE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.2.840.10040.2.1");
+    pub const ID_HOLDINSTRUCTION_CALLISSUER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.2.840.10040.2.2");
+    pub const ID_HOLDINSTRUCTION_REJECT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.2.840.10040.2.3");
     pub const ID_CE_SUBJECT_KEY_IDENTIFIER: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.5.29.14");
     pub const ID_CE_KEY_USAGE: crate::ObjectIdentifier =
@@ -1625,6 +1855,8 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("2.5.29.29");
     pub const ID_CE_NAME_CONSTRAINTS: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.5.29.30");
+    pub const ID_CE_CRL_DISTRIBUTION_POINTS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.5.29.31");
     pub const ID_CE_CERTIFICATE_POLICIES: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.5.29.32");
     pub const ID_CE_POLICY_MAPPINGS: crate::ObjectIdentifier =
@@ -1633,6 +1865,8 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("2.5.29.35");
     pub const ID_CE_POLICY_CONSTRAINTS: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.5.29.36");
+    pub const ANY_EXTENDED_KEY_USAGE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.5.29.37.0");
     pub const ID_CE_FRESHEST_CRL: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.5.29.46");
     pub const ID_CE_INHIBIT_ANY_POLICY: crate::ObjectIdentifier =
@@ -1643,7 +1877,7 @@ pub mod rfc5912 {
         crate::ObjectIdentifier::new_unwrap("2.5.29.56");
     pub const ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.5.29.9");
-    pub const ID_AT: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4");
+    pub const ID_AT_ROLE: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4.72");
 }
 pub mod rfc6109 {
     pub const LDIF_LOCATION_URL_OBJECT: crate::ObjectIdentifier =
@@ -1682,6 +1916,8 @@ pub mod rfc6268 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.2");
     pub const ID_CT_CONTENT_WITH_ATTRS: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.20");
+    pub const ID_CT_AUTH_ENVELOPED_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.23");
     pub const ID_CT_CONTENT_INFO: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.6");
     pub const ID_CT_COMPRESSED_DATA: crate::ObjectIdentifier =
@@ -1700,6 +1936,14 @@ pub mod rfc6268 {
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.5");
     pub const ID_COUNTERSIGNATURE: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.6");
+    pub const ID_HMAC_WITH_SHA_384: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.10");
+    pub const ID_HMAC_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.11");
+    pub const ID_HMAC_WITH_SHA_224: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.8");
+    pub const ID_HMAC_WITH_SHA_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.9");
 }
 pub mod rfc7107 {
     pub const ID_MOD: crate::ObjectIdentifier =
@@ -3089,6 +3333,15 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc5280::ID_AD_CA_ISSUERS, "id-ad-caIssuers"),
     (&rfc5280::ID_AD_TIME_STAMPING, "id-ad-timeStamping"),
     (&rfc5280::ID_AD_CA_REPOSITORY, "id-ad-caRepository"),
+    (&rfc5280::ID_HOLDINSTRUCTION_NONE, "id-holdinstruction-none"),
+    (
+        &rfc5280::ID_HOLDINSTRUCTION_CALLISSUER,
+        "id-holdinstruction-callissuer",
+    ),
+    (
+        &rfc5280::ID_HOLDINSTRUCTION_REJECT,
+        "id-holdinstruction-reject",
+    ),
     (
         &rfc5280::ID_CE_SUBJECT_KEY_IDENTIFIER,
         "id-ce-subjectKeyIdentifier",
@@ -3150,6 +3403,7 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc5911::ID_DIGESTED_DATA, "id-digestedData"),
     (&rfc5911::ID_ENCRYPTED_DATA, "id-encryptedData"),
     (&rfc5911::SMIME_CAPABILITIES, "smimeCapabilities"),
+    (&rfc5911::ID_CT_RECEIPT, "id-ct-receipt"),
     (&rfc5911::ID_CT_FIRMWARE_PACKAGE, "id-ct-firmwarePackage"),
     (
         &rfc5911::ID_CT_FIRMWARE_LOAD_RECEIPT,
@@ -3160,16 +3414,23 @@ pub const DB: super::Database<'static> = super::Database(&[
         "id-ct-firmwareLoadError",
     ),
     (&rfc5911::ID_CT_AUTH_DATA, "id-ct-authData"),
+    (
+        &rfc5911::ID_CT_AUTH_ENVELOPED_DATA,
+        "id-ct-authEnvelopedData",
+    ),
     (&rfc5911::ID_CT_CONTENT_INFO, "id-ct-contentInfo"),
     (
         &rfc5911::ID_CAP_PREFER_BINARY_INSIDE,
         "id-cap-preferBinaryInside",
     ),
+    (&rfc5911::ID_AA_RECEIPT_REQUEST, "id-aa-receiptRequest"),
     (&rfc5911::ID_AA_CONTENT_REFERENCE, "id-aa-contentReference"),
+    (&rfc5911::ID_AA_ENCRYP_KEY_PREF, "id-aa-encrypKeyPref"),
     (
         &rfc5911::ID_AA_SIGNING_CERTIFICATE,
         "id-aa-signingCertificate",
     ),
+    (&rfc5911::ID_AA_SECURITY_LABEL, "id-aa-securityLabel"),
     (&rfc5911::ID_AA_ML_EXPAND_HISTORY, "id-aa-mlExpandHistory"),
     (
         &rfc5911::ID_AA_FIRMWARE_PACKAGE_ID,
@@ -3185,6 +3446,7 @@ pub const DB: super::Database<'static> = super::Database(&[
         &rfc5911::ID_AA_WRAPPED_FIRMWARE_KEY,
         "id-aa-wrappedFirmwareKey",
     ),
+    (&rfc5911::ID_AA_CONTENT_HINT, "id-aa-contentHint"),
     (
         &rfc5911::ID_AA_COMMUNITY_IDENTIFIERS,
         "id-aa-communityIdentifiers",
@@ -3199,12 +3461,34 @@ pub const DB: super::Database<'static> = super::Database(&[
         "id-aa-signingCertificateV2",
     ),
     (&rfc5911::ID_AA_ER_INTERNAL, "id-aa-er-internal"),
+    (&rfc5911::ID_AA_MSG_SIG_DIGEST, "id-aa-msgSigDigest"),
     (&rfc5911::ID_AA_ER_EXTERNAL, "id-aa-er-external"),
+    (
+        &rfc5911::ID_AA_CONTENT_IDENTIFIER,
+        "id-aa-contentIdentifier",
+    ),
+    (&rfc5911::ID_AA_EQUIVALENT_LABELS, "id-aa-equivalentLabels"),
     (&rfc5911::ID_ALG_SSDH, "id-alg-SSDH"),
     (&rfc5911::ID_ALG_ESDH, "id-alg-ESDH"),
     (&rfc5911::ID_ALG_CMS_3_DE_SWRAP, "id-alg-CMS3DESwrap"),
     (&rfc5911::ID_ALG_CMSRC_2_WRAP, "id-alg-CMSRC2wrap"),
-    (&rfc5911::ID_SKD, "id-skd"),
+    (&rfc5911::ID_SKD_GL_USE_KEK, "id-skd-glUseKEK"),
+    (&rfc5911::ID_SKD_GLA_QUERY_REQUEST, "id-skd-glaQueryRequest"),
+    (
+        &rfc5911::ID_SKD_GLA_QUERY_RESPONSE,
+        "id-skd-glaQueryResponse",
+    ),
+    (&rfc5911::ID_SKD_GL_PROVIDE_CERT, "id-skd-glProvideCert"),
+    (&rfc5911::ID_SKD_GL_MANAGE_CERT, "id-skd-glManageCert"),
+    (&rfc5911::ID_SKD_GL_KEY, "id-skd-glKey"),
+    (&rfc5911::ID_SKD_GL_DELETE, "id-skd-glDelete"),
+    (&rfc5911::ID_SKD_GL_ADD_MEMBER, "id-skd-glAddMember"),
+    (&rfc5911::ID_SKD_GL_DELETE_MEMBER, "id-skd-glDeleteMember"),
+    (&rfc5911::ID_SKD_GL_REKEY, "id-skd-glRekey"),
+    (&rfc5911::ID_SKD_GL_ADD_OWNER, "id-skd-glAddOwner"),
+    (&rfc5911::ID_SKD_GL_REMOVE_OWNER, "id-skd-glRemoveOwner"),
+    (&rfc5911::ID_SKD_GL_KEY_COMPROMISE, "id-skd-glKeyCompromise"),
+    (&rfc5911::ID_SKD_GLK_REFRESH, "id-skd-glkRefresh"),
     (&rfc5911::ID_CONTENT_TYPE, "id-contentType"),
     (&rfc5911::ID_MESSAGE_DIGEST, "id-messageDigest"),
     (&rfc5911::ID_SIGNING_TIME, "id-signingTime"),
@@ -3274,6 +3558,7 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc5912::ID_MGF_1, "id-mgf1"),
     (&rfc5912::ID_P_SPECIFIED, "id-pSpecified"),
     (&rfc5912::PKCS_9, "pkcs-9"),
+    (&rfc5912::ID_EXTENSION_REQ, "id-ExtensionReq"),
     (&rfc5912::ID_SMIME, "id-smime"),
     (
         &rfc5912::ID_CT_SCVP_CERT_VAL_REQUEST,
@@ -3291,6 +3576,8 @@ pub const DB: super::Database<'static> = super::Database(&[
         &rfc5912::ID_CT_SCVP_VAL_POL_RESPONSE,
         "id-ct-scvp-valPolResponse",
     ),
+    (&rfc5912::ID_CT_ENC_KEY_WITH_ID, "id-ct-encKeyWithID"),
+    (&rfc5912::ID_AA_CMC_UNSIGNED_DATA, "id-aa-cmc-unsignedData"),
     (&rfc5912::ID_MD_2, "id-md2"),
     (&rfc5912::ID_MD_5, "id-md5"),
     (&rfc5912::SECT_163_K_1, "sect163k1"),
@@ -3309,6 +3596,30 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc5912::ID_EC_DH, "id-ecDH"),
     (&rfc5912::ID_EC_MQV, "id-ecMQV"),
     (&rfc5912::ID_SHA_1, "id-sha1"),
+    (
+        &rfc5912::ID_PE_AUTHORITY_INFO_ACCESS,
+        "id-pe-authorityInfoAccess",
+    ),
+    (&rfc5912::ID_PE_AC_PROXYING, "id-pe-ac-proxying"),
+    (
+        &rfc5912::ID_PE_SUBJECT_INFO_ACCESS,
+        "id-pe-subjectInfoAccess",
+    ),
+    (&rfc5912::ID_PE_AC_AUDIT_IDENTITY, "id-pe-ac-auditIdentity"),
+    (&rfc5912::ID_PE_AA_CONTROLS, "id-pe-aaControls"),
+    (
+        &rfc5912::ID_ACA_AUTHENTICATION_INFO,
+        "id-aca-authenticationInfo",
+    ),
+    (&rfc5912::ID_ACA_ACCESS_IDENTITY, "id-aca-accessIdentity"),
+    (
+        &rfc5912::ID_ACA_CHARGING_IDENTITY,
+        "id-aca-chargingIdentity",
+    ),
+    (&rfc5912::ID_ACA_GROUP, "id-aca-group"),
+    (&rfc5912::ID_ACA_ENC_ATTRS, "id-aca-encAttrs"),
+    (&rfc5912::ID_CCT_PKI_DATA, "id-cct-PKIData"),
+    (&rfc5912::ID_CCT_PKI_RESPONSE, "id-cct-PKIResponse"),
     (&rfc5912::ID_STC_BUILD_PKC_PATH, "id-stc-build-pkc-path"),
     (
         &rfc5912::ID_STC_BUILD_VALID_PKC_PATH,
@@ -3334,6 +3645,20 @@ pub const DB: super::Database<'static> = super::Database(&[
     (
         &rfc5912::ID_SWB_PKC_BEST_CERT_PATH,
         "id-swb-pkc-best-cert-path",
+    ),
+    (&rfc5912::ID_SWB_PKC_CERT, "id-swb-pkc-cert"),
+    (&rfc5912::ID_SWB_AC_CERT, "id-swb-ac-cert"),
+    (
+        &rfc5912::ID_SWB_PKC_ALL_CERT_PATHS,
+        "id-swb-pkc-all-cert-paths",
+    ),
+    (
+        &rfc5912::ID_SWB_PKC_EE_REVOCATION_INFO,
+        "id-swb-pkc-ee-revocation-info",
+    ),
+    (
+        &rfc5912::ID_SWB_PKC_C_AS_REVOCATION_INFO,
+        "id-swb-pkc-CAs-revocation-info",
     ),
     (
         &rfc5912::ID_SWB_PKC_REVOCATION_INFO,
@@ -3363,6 +3688,100 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc5912::ID_SVP_NAME_VAL_ALG, "id-svp-nameValAlg"),
     (&rfc5912::ID_SVP_BASIC_VAL_ALG, "id-svp-basicValAlg"),
     (&rfc5912::NAME_COMP_ALG_SET, "NameCompAlgSet"),
+    (&rfc5912::ID_QT_CPS, "id-qt-cps"),
+    (&rfc5912::ID_QT_UNOTICE, "id-qt-unotice"),
+    (&rfc5912::ID_KP_SERVER_AUTH, "id-kp-serverAuth"),
+    (&rfc5912::ID_KP_SCVP_SERVER, "id-kp-scvpServer"),
+    (&rfc5912::ID_KP_SCVP_CLIENT, "id-kp-scvpClient"),
+    (&rfc5912::ID_KP_CLIENT_AUTH, "id-kp-clientAuth"),
+    (&rfc5912::ID_KP_CODE_SIGNING, "id-kp-codeSigning"),
+    (&rfc5912::ID_KP_EMAIL_PROTECTION, "id-kp-emailProtection"),
+    (&rfc5912::ID_KP_TIME_STAMPING, "id-kp-timeStamping"),
+    (&rfc5912::ID_KP_OCSP_SIGNING, "id-kp-OCSPSigning"),
+    (&rfc5912::ID_IT_CA_PROT_ENC_CERT, "id-it-caProtEncCert"),
+    (&rfc5912::ID_IT_KEY_PAIR_PARAM_REQ, "id-it-keyPairParamReq"),
+    (&rfc5912::ID_IT_KEY_PAIR_PARAM_REP, "id-it-keyPairParamRep"),
+    (&rfc5912::ID_IT_REV_PASSPHRASE, "id-it-revPassphrase"),
+    (&rfc5912::ID_IT_IMPLICIT_CONFIRM, "id-it-implicitConfirm"),
+    (&rfc5912::ID_IT_CONFIRM_WAIT_TIME, "id-it-confirmWaitTime"),
+    (&rfc5912::ID_IT_ORIG_PKI_MESSAGE, "id-it-origPKIMessage"),
+    (&rfc5912::ID_IT_SUPP_LANG_TAGS, "id-it-suppLangTags"),
+    (
+        &rfc5912::ID_IT_SIGN_KEY_PAIR_TYPES,
+        "id-it-signKeyPairTypes",
+    ),
+    (&rfc5912::ID_IT_ENC_KEY_PAIR_TYPES, "id-it-encKeyPairTypes"),
+    (&rfc5912::ID_IT_PREFERRED_SYMM_ALG, "id-it-preferredSymmAlg"),
+    (&rfc5912::ID_IT_CA_KEY_UPDATE_INFO, "id-it-caKeyUpdateInfo"),
+    (&rfc5912::ID_IT_CURRENT_CRL, "id-it-currentCRL"),
+    (&rfc5912::ID_IT_UNSUPPORTED_OI_DS, "id-it-unsupportedOIDs"),
+    (&rfc5912::ID_AD_OCSP, "id-ad-ocsp"),
+    (&rfc5912::ID_AD_CA_ISSUERS, "id-ad-caIssuers"),
+    (&rfc5912::ID_AD_TIME_STAMPING, "id-ad-timeStamping"),
+    (&rfc5912::ID_AD_CA_REPOSITORY, "id-ad-caRepository"),
+    (&rfc5912::ID_REG_CTRL_REG_TOKEN, "id-regCtrl-regToken"),
+    (
+        &rfc5912::ID_REG_CTRL_AUTHENTICATOR,
+        "id-regCtrl-authenticator",
+    ),
+    (
+        &rfc5912::ID_REG_CTRL_PKI_PUBLICATION_INFO,
+        "id-regCtrl-pkiPublicationInfo",
+    ),
+    (
+        &rfc5912::ID_REG_CTRL_PKI_ARCHIVE_OPTIONS,
+        "id-regCtrl-pkiArchiveOptions",
+    ),
+    (&rfc5912::ID_REG_CTRL_OLD_CERT_ID, "id-regCtrl-oldCertID"),
+    (
+        &rfc5912::ID_REG_CTRL_PROTOCOL_ENCR_KEY,
+        "id-regCtrl-protocolEncrKey",
+    ),
+    (&rfc5912::ID_REG_INFO_UTF_8_PAIRS, "id-regInfo-utf8Pairs"),
+    (&rfc5912::ID_REG_INFO_CERT_REQ, "id-regInfo-certReq"),
+    (&rfc5912::ID_ALG_NO_SIGNATURE, "id-alg-noSignature"),
+    (&rfc5912::ID_CMC_STATUS_INFO, "id-cmc-statusInfo"),
+    (&rfc5912::ID_CMC_DECRYPTED_POP, "id-cmc-decryptedPOP"),
+    (&rfc5912::ID_CMC_LRA_POP_WITNESS, "id-cmc-lraPOPWitness"),
+    (&rfc5912::ID_CMC_GET_CERT, "id-cmc-getCert"),
+    (&rfc5912::ID_CMC_GET_CRL, "id-cmc-getCRL"),
+    (&rfc5912::ID_CMC_REVOKE_REQUEST, "id-cmc-revokeRequest"),
+    (&rfc5912::ID_CMC_REG_INFO, "id-cmc-regInfo"),
+    (&rfc5912::ID_CMC_RESPONSE_INFO, "id-cmc-responseInfo"),
+    (&rfc5912::ID_CMC_IDENTIFICATION, "id-cmc-identification"),
+    (&rfc5912::ID_CMC_QUERY_PENDING, "id-cmc-queryPending"),
+    (&rfc5912::ID_CMC_POP_LINK_RANDOM, "id-cmc-popLinkRandom"),
+    (&rfc5912::ID_CMC_POP_LINK_WITNESS, "id-cmc-popLinkWitness"),
+    (
+        &rfc5912::ID_CMC_CONFIRM_CERT_ACCEPTANCE,
+        "id-cmc-confirmCertAcceptance",
+    ),
+    (&rfc5912::ID_CMC_STATUS_INFO_V_2, "id-cmc-statusInfoV2"),
+    (&rfc5912::ID_CMC_TRUSTED_ANCHORS, "id-cmc-trustedAnchors"),
+    (&rfc5912::ID_CMC_AUTH_DATA, "id-cmc-authData"),
+    (&rfc5912::ID_CMC_BATCH_REQUESTS, "id-cmc-batchRequests"),
+    (&rfc5912::ID_CMC_BATCH_RESPONSES, "id-cmc-batchResponses"),
+    (&rfc5912::ID_CMC_IDENTITY_PROOF, "id-cmc-identityProof"),
+    (&rfc5912::ID_CMC_PUBLISH_CERT, "id-cmc-publishCert"),
+    (&rfc5912::ID_CMC_MOD_CERT_TEMPLATE, "id-cmc-modCertTemplate"),
+    (
+        &rfc5912::ID_CMC_CONTROL_PROCESSED,
+        "id-cmc-controlProcessed",
+    ),
+    (
+        &rfc5912::ID_CMC_IDENTITY_PROOF_V_2,
+        "id-cmc-identityProofV2",
+    ),
+    (
+        &rfc5912::ID_CMC_POP_LINK_WITNESS_V_2,
+        "id-cmc-popLinkWitnessV2",
+    ),
+    (&rfc5912::ID_CMC_DATA_RETURN, "id-cmc-dataReturn"),
+    (&rfc5912::ID_CMC_TRANSACTION_ID, "id-cmc-transactionId"),
+    (&rfc5912::ID_CMC_SENDER_NONCE, "id-cmc-senderNonce"),
+    (&rfc5912::ID_CMC_RECIPIENT_NONCE, "id-cmc-recipientNonce"),
+    (&rfc5912::ID_CMC_ADD_EXTENSIONS, "id-cmc-addExtensions"),
+    (&rfc5912::ID_CMC_ENCRYPTED_POP, "id-cmc-encryptedPOP"),
     (
         &rfc5912::ID_KEY_EXCHANGE_ALGORITHM,
         "id-keyExchangeAlgorithm",
@@ -3373,6 +3792,15 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc5912::ID_SHA_224, "id-sha224"),
     (&rfc5912::DSA_WITH_SHA_224, "dsa-with-sha224"),
     (&rfc5912::DSA_WITH_SHA_256, "dsa-with-sha256"),
+    (&rfc5912::ID_HOLDINSTRUCTION_NONE, "id-holdinstruction-none"),
+    (
+        &rfc5912::ID_HOLDINSTRUCTION_CALLISSUER,
+        "id-holdinstruction-callissuer",
+    ),
+    (
+        &rfc5912::ID_HOLDINSTRUCTION_REJECT,
+        "id-holdinstruction-reject",
+    ),
     (
         &rfc5912::ID_CE_SUBJECT_KEY_IDENTIFIER,
         "id-ce-subjectKeyIdentifier",
@@ -3406,6 +3834,10 @@ pub const DB: super::Database<'static> = super::Database(&[
     ),
     (&rfc5912::ID_CE_NAME_CONSTRAINTS, "id-ce-nameConstraints"),
     (
+        &rfc5912::ID_CE_CRL_DISTRIBUTION_POINTS,
+        "id-ce-cRLDistributionPoints",
+    ),
+    (
         &rfc5912::ID_CE_CERTIFICATE_POLICIES,
         "id-ce-certificatePolicies",
     ),
@@ -3418,6 +3850,7 @@ pub const DB: super::Database<'static> = super::Database(&[
         &rfc5912::ID_CE_POLICY_CONSTRAINTS,
         "id-ce-policyConstraints",
     ),
+    (&rfc5912::ANY_EXTENDED_KEY_USAGE, "anyExtendedKeyUsage"),
     (&rfc5912::ID_CE_FRESHEST_CRL, "id-ce-freshestCRL"),
     (&rfc5912::ID_CE_INHIBIT_ANY_POLICY, "id-ce-inhibitAnyPolicy"),
     (
@@ -3429,7 +3862,7 @@ pub const DB: super::Database<'static> = super::Database(&[
         &rfc5912::ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES,
         "id-ce-subjectDirectoryAttributes",
     ),
-    (&rfc5912::ID_AT, "id-at"),
+    (&rfc5912::ID_AT_ROLE, "id-at-role"),
     (&rfc6109::LDIF_LOCATION_URL_OBJECT, "LDIFLocationURLObject"),
     (&rfc6109::PROVIDER, "provider"),
     (
@@ -3453,6 +3886,10 @@ pub const DB: super::Database<'static> = super::Database(&[
     ),
     (&rfc6268::ID_CT_AUTH_DATA, "id-ct-authData"),
     (&rfc6268::ID_CT_CONTENT_WITH_ATTRS, "id-ct-contentWithAttrs"),
+    (
+        &rfc6268::ID_CT_AUTH_ENVELOPED_DATA,
+        "id-ct-authEnvelopedData",
+    ),
     (&rfc6268::ID_CT_CONTENT_INFO, "id-ct-contentInfo"),
     (&rfc6268::ID_CT_COMPRESSED_DATA, "id-ct-compressedData"),
     (
@@ -3468,6 +3905,10 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc6268::ID_MESSAGE_DIGEST, "id-messageDigest"),
     (&rfc6268::ID_SIGNING_TIME, "id-signingTime"),
     (&rfc6268::ID_COUNTERSIGNATURE, "id-countersignature"),
+    (&rfc6268::ID_HMAC_WITH_SHA_384, "id-hmacWithSHA384"),
+    (&rfc6268::ID_HMAC_WITH_SHA_512, "id-hmacWithSHA512"),
+    (&rfc6268::ID_HMAC_WITH_SHA_224, "id-hmacWithSHA224"),
+    (&rfc6268::ID_HMAC_WITH_SHA_256, "id-hmacWithSHA256"),
     (&rfc7107::ID_MOD, "id-mod"),
     (&rfc7107::ID_CT, "id-ct"),
     (&rfc7107::ID_EIT, "id-eit"),
