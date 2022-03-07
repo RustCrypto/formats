@@ -9,7 +9,7 @@ pub struct Asn1Parser {
 
 impl Asn1Parser {
     const DEF: &'static str = r"(?mx)
-        (?P<name>[a-zA-Z][a-zA-Z0-9-]*)                # name
+        (?P<name>[a-zA-Z][a-zA-Z0-9-]*)             # name
         \s+
         OBJECT
         \s+
@@ -19,15 +19,15 @@ impl Asn1Parser {
         \s*
         \{
             \s*
-            (?:(?P<base>[a-zA-Z][a-zA-Z0-9-]*)\s+)?    # base
+            (?P<base>[a-zA-Z][a-zA-Z0-9-]*\s*)??    # base
             (?P<tail>                               # tail
                 (?:
                     (?:
-                        [a-zA-Z][a-zA-Z0-9-]*\([0-9]+\)\s+
+                        [a-zA-Z][a-zA-Z0-9-]*\([0-9]+\)\s*
                     )
                     |
                     (?:
-                        [0-9]+\s+
+                        [0-9]+\s*
                     )
                 )*
             )
@@ -51,8 +51,8 @@ impl Asn1Parser {
         let mut tree = BTreeMap::default();
         for mat in def.find_iter(asn1) {
             let caps = def.captures(mat.as_str()).unwrap();
-            let name = caps.name("name").unwrap().as_str().to_owned();
-            let base = caps.name("base").map(|m| m.as_str().to_string());
+            let name = caps.name("name").unwrap().as_str().trim().to_string();
+            let base = caps.name("base").map(|m| m.as_str().trim().to_string());
             let tail = caps.name("tail").map(|m| {
                 arc.find_iter(m.as_str())
                     .map(|m| {
