@@ -37,10 +37,8 @@ pub type SubjectInfoAccessSyntax<'a> = Vec<AccessDescription<'a>>;
 ///
 /// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct AccessDescription<'a> {
-    /// accessMethod          OBJECT IDENTIFIER,
     pub access_method: ObjectIdentifier,
-
-    /// accessLocation        GeneralName
     pub access_location: GeneralName<'a>,
 }

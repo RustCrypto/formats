@@ -39,12 +39,11 @@ use der::Choice;
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
+#[allow(missing_docs)]
 pub enum DirectoryString<'a> {
-    /// ia5String        IA5String      (SIZE (1..200))
     #[asn1(type = "PrintableString")]
     PrintableString(PrintableString<'a>),
 
-    /// utf8String       UTF8String     (SIZE (1..200))
     #[asn1(type = "UTF8String")]
     Utf8String(Utf8String<'a>),
 }

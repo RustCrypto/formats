@@ -25,10 +25,8 @@ pub type PolicyMappings<'a> = Vec<PolicyMapping>;
 ///
 /// [RFC 5280 Section 4.2.1.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.5
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct PolicyMapping {
-    /// issuerDomainPolicy      CertPolicyId,
     pub issuer_domain_policy: ObjectIdentifier,
-
-    /// subjectDomainPolicy     CertPolicyId }
     pub subject_domain_policy: ObjectIdentifier,
 }

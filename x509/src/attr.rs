@@ -44,11 +44,9 @@ pub type AttributeValue<'a> = Any<'a>;
 /// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
 #[derive(Clone, Debug, PartialEq, Eq, Sequence, ValueOrd)]
+#[allow(missing_docs)]
 pub struct Attribute<'a> {
-    /// Attribute type (OID).
     pub oid: AttributeType,
-
-    /// Attribute values.
     pub values: SetOfVec<AttributeValue<'a>>,
 }
 
@@ -80,10 +78,8 @@ pub type Attributes<'a> = SetOfVec<Attribute<'a>>;
 ///
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd)]
+#[allow(missing_docs)]
 pub struct AttributeTypeAndValue<'a> {
-    /// OID describing the type of the attribute
     pub oid: AttributeType,
-
-    /// Value of the attribute
     pub value: Any<'a>,
 }
