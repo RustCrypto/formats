@@ -29,6 +29,12 @@ pub use crate::{
 use crate::encoder::Encoder;
 use core::{fmt, str::FromStr};
 
+/// A trait which associates an OID with a type.
+pub trait AssociatedOid {
+    /// The OID associated with this type.
+    const OID: ObjectIdentifier;
+}
+
 /// Object identifier (OID).
 ///
 /// OIDs are hierarchical structures consisting of "arcs", i.e. integer
