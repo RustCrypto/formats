@@ -35,6 +35,24 @@ const fn eq(lhs: &[u8], rhs: &[u8]) -> bool {
     true
 }
 
+/// A const implementation of case-insensitive ASCII equals.
+const fn eq_case(lhs: &[u8], rhs: &[u8]) -> bool {
+    if lhs.len() != rhs.len() {
+        return false;
+    }
+
+    let mut i = 0usize;
+    while i < lhs.len() {
+        if !lhs[i].eq_ignore_ascii_case(&rhs[i]) {
+            return false;
+        }
+
+        i += 1;
+    }
+
+    true
+}
+
 /// A query interface for OIDs/Names.
 pub struct Database<'a>(&'a [(&'a ObjectIdentifier, &'a str)]);
 
@@ -72,7 +90,7 @@ impl<'a> Database<'a> {
 
         while i < self.0.len() {
             let lhs = self.0[i].1;
-            if eq(lhs.as_bytes(), name.as_bytes()) {
+            if eq_case(lhs.as_bytes(), name.as_bytes()) {
                 return Some(self.0[i].0);
             }
 
@@ -100,7 +118,7 @@ mod tests {
 
     #[test]
     fn by_name() {
-        let cn = super::DB.by_name("cn").expect("cn not found");
+        let cn = super::DB.by_name("CN").expect("cn not found");
         assert_eq!(&CN, cn);
 
         assert_eq!(None, super::DB.by_name("purplePeopleEater"));
