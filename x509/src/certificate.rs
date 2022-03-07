@@ -1,7 +1,9 @@
 use crate::{name::Name, time::Validity};
 
+use alloc::vec::Vec;
+
 use der::asn1::{BitString, UIntBytes};
-use der::{Enumerated, Sequence};
+use der::{Enumerated, Newtype, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
@@ -103,3 +105,17 @@ pub struct Certificate<'a> {
     pub signature_algorithm: AlgorithmIdentifier<'a>,
     pub signature: BitString<'a>,
 }
+
+/// `PkiPath` as defined by X.509 and referenced by [RFC 6066].
+///
+/// This contains a series of certificates in validation order from the
+/// top-most certificate to the bottom-most certificate. This means that
+/// the first certificate signs the second certificate and so on.
+///
+/// ```text
+/// PkiPath ::= SEQUENCE OF Certificate
+/// ```
+///
+/// [RFC 6066]: https://datatracker.ietf.org/doc/html/rfc6066#section-10.1
+#[derive(Clone, Debug, PartialEq, Eq, Default, Newtype)]
+pub struct PkiPath<'a>(Vec<Certificate<'a>>);

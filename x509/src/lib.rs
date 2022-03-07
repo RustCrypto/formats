@@ -25,4 +25,4 @@ pub mod time;
 
 mod certificate;
 
-pub use certificate::{Certificate, TbsCertificate, Version};
+pub use certificate::{Certificate, PkiPath, TbsCertificate, Version};
