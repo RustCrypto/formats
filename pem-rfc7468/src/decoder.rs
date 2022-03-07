@@ -61,19 +61,6 @@ pub fn decode_label(pem: &[u8]) -> Result<&str> {
     Ok(Encapsulation::try_from(pem)?.label())
 }
 
-/// Check for PEM headers in the input, as they are disallowed by RFC7468.
-///
-/// Returns `Error::HeaderDisallowed` if headers are encountered.
-fn check_for_headers(pem: &[u8], err: Error) -> Error {
-    if err == Error::Base64(base64ct::Error::InvalidEncoding)
-        && pem.iter().any(|&b| b == grammar::CHAR_COLON)
-    {
-        Error::HeaderDisallowed
-    } else {
-        err
-    }
-}
-
 /// Buffered PEM decoder.
 ///
 /// Stateful buffered decoder type which decodes an input PEM document according
@@ -251,6 +238,19 @@ impl<'a> TryFrom<&'a [u8]> for Encapsulation<'a> {
 
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
         Self::parse(bytes)
+    }
+}
+
+/// Check for PEM headers in the input, as they are disallowed by RFC7468.
+///
+/// Returns `Error::HeaderDisallowed` if headers are encountered.
+fn check_for_headers(pem: &[u8], err: Error) -> Error {
+    if err == Error::Base64(base64ct::Error::InvalidEncoding)
+        && pem.iter().any(|&b| b == grammar::CHAR_COLON)
+    {
+        Error::HeaderDisallowed
+    } else {
+        err
     }
 }
 

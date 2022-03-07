@@ -9,6 +9,9 @@ use base64ct::{Base64, Encoding};
 #[cfg(feature = "alloc")]
 use alloc::string::String;
 
+#[cfg(feature = "std")]
+use std::io;
+
 /// Encode a PEM document according to RFC 7468's "Strict" grammar.
 pub fn encode<'o>(
     type_label: &str,
@@ -152,6 +155,20 @@ impl<'l, 'o> Encoder<'l, 'o> {
             self.line_ending,
             base64.len() + self.line_ending.len(),
         ))
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<'l, 'o> io::Write for Encoder<'l, 'o> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.encode(buf)?;
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        // TODO(tarcieri): return an error if there's still data remaining in the buffer?
+        Ok(())
     }
 }
 
