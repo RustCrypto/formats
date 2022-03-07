@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -7,6 +9,24 @@ pub struct Node {
     obid: String,
     name: String,
     symb: Ident,
+}
+
+impl Ord for Node {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.obid.cmp(&other.obid) {
+            Ordering::Equal => match self.name.len().cmp(&other.name.len()) {
+                Ordering::Equal => self.name.cmp(&other.name),
+                o => o,
+            },
+            o => o,
+        }
+    }
+}
+
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Node {
