@@ -16,6 +16,7 @@ extern crate std;
 
 pub mod anchor;
 pub mod attr;
+pub mod crl;
 pub mod ext;
 pub mod name;
 pub mod request;
