@@ -1,7 +1,7 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) private keys.
 
 use crate::{
-    base64::{self, Decode},
+    base64::{self, Decode, DecoderExt},
     public::EcdsaPublicKey,
     Algorithm, EcdsaCurve, Error, Result,
 };
@@ -35,7 +35,7 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
         }
 
         let mut bytes = [0u8; SIZE];
-        decoder.decode_into(&mut bytes)?;
+        decoder.decode(&mut bytes)?;
         Ok(Self { bytes })
     }
 }

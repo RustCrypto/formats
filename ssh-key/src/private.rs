@@ -22,7 +22,7 @@ pub use self::{
 };
 
 use crate::{
-    base64::{self, Decode},
+    base64::{self, Decode, DecoderExt},
     public, Algorithm, CipherAlg, Error, KdfAlg, KdfOptions, Result,
 };
 use core::str::FromStr;
@@ -76,7 +76,7 @@ impl PrivateKey {
         let mut base64_decoder = base64::Decoder::from(pem_decoder);
 
         let mut auth_magic = [0u8; Self::AUTH_MAGIC.len()];
-        base64_decoder.decode_into(&mut auth_magic)?;
+        base64_decoder.decode(&mut auth_magic)?;
 
         if auth_magic != Self::AUTH_MAGIC {
             return Err(Error::FormatEncoding);

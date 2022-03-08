@@ -70,7 +70,7 @@ impl PublicKey {
         })
     }
 
-    /// Encode this public key as a OpenSSH-formatted public key.
+    /// Encode OpenSSH-formatted (PEM) public key.
     pub fn encode_openssh<'o>(&self, out: &'o mut [u8]) -> Result<&'o str> {
         #[cfg(not(feature = "alloc"))]
         let comment = "";

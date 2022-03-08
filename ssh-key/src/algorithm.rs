@@ -1,7 +1,7 @@
 //! Algorithm support.
 
 use crate::{
-    base64::{self, Decode, Encode},
+    base64::{self, Decode, DecoderExt, Encode, EncoderExt},
     Error, Result,
 };
 use core::{fmt, str};
