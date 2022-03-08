@@ -1,7 +1,7 @@
 //! Rivest–Shamir–Adleman (RSA) private keys.
 
 use crate::{
-    base64::{self, Decode},
+    base64::{Decode, DecoderExt},
     public::RsaPublicKey,
     MPInt, Result,
 };
@@ -26,7 +26,7 @@ pub struct RsaPrivateKey {
 }
 
 impl Decode for RsaPrivateKey {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         let d = MPInt::decode(decoder)?;
         let iqmp = MPInt::decode(decoder)?;
         let p = MPInt::decode(decoder)?;
@@ -55,7 +55,7 @@ pub struct RsaKeypair {
 }
 
 impl Decode for RsaKeypair {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         let n = MPInt::decode(decoder)?;
         let e = MPInt::decode(decoder)?;
         let public = RsaPublicKey { n, e };

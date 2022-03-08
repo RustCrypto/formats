@@ -12,7 +12,10 @@
 //! ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti user@example.com
 //! ```
 
-use crate::{base64, Error, Result};
+use crate::{
+    base64::{self},
+    Error, Result,
+};
 use core::str;
 
 /// OpenSSH public key encapsulation parser.

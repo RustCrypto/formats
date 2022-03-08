@@ -16,7 +16,7 @@ const MAX_SIZE: usize = 0xFFFFF;
 /// Decoder trait.
 pub(crate) trait Decode: Sized {
     /// Attempt to decode a value of this type using the provided [`Decoder`].
-    fn decode(decoder: &mut Decoder<'_>) -> Result<Self>;
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self>;
 }
 
 /// Encoder trait.
@@ -25,7 +25,7 @@ pub(crate) trait Encode: Sized {
     fn encoded_len(&self) -> Result<usize>;
 
     /// Attempt to encode a value of this type using the provided [`Encoder`].
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()>;
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()>;
 }
 
 /// Stateful Base64 decoder.
@@ -38,16 +38,19 @@ pub(crate) type Encoder<'o> = base64ct::Encoder<'o, base64ct::Base64>;
 pub(crate) trait DecoderExt {
     /// Decode as much Base64 as is needed to exactly fill `out`.
     ///
+    /// This is the base decoding method on which the rest of the trait is
+    /// implemented in terms of.
+    ///
     /// # Returns
     /// - `Ok(bytes)` if the expected amount of data was read
     /// - `Err(Error::Length)` if the exact amount of data couldn't be read
-    fn decode_into<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]>;
+    fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]>;
 
     /// Decodes a single byte.
     #[cfg(feature = "ecdsa")]
     fn decode_u8(&mut self) -> Result<u8> {
         let mut buf = [0];
-        self.decode_into(&mut buf)?;
+        self.decode_base64(&mut buf)?;
         Ok(buf[0])
     }
 
@@ -60,7 +63,7 @@ pub(crate) trait DecoderExt {
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     fn decode_u32(&mut self) -> Result<u32> {
         let mut bytes = [0u8; 4];
-        self.decode_into(&mut bytes)?;
+        self.decode_base64(&mut bytes)?;
         Ok(u32::from_be_bytes(bytes))
     }
 
@@ -88,7 +91,7 @@ pub(crate) trait DecoderExt {
     fn decode_byte_slice<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
         let len = self.decode_usize()?;
         let result = out.get_mut(..len).ok_or(Error::Length)?;
-        self.decode_into(result)?;
+        self.decode_base64(result)?;
         Ok(result)
     }
 
@@ -103,7 +106,7 @@ pub(crate) trait DecoderExt {
     fn decode_byte_vec(&mut self) -> Result<Vec<u8>> {
         let len = self.decode_usize()?;
         let mut result = vec![0u8; len];
-        self.decode_into(&mut result)?;
+        self.decode_base64(&mut result)?;
         Ok(result)
     }
 
@@ -136,13 +139,13 @@ pub(crate) trait DecoderExt {
 }
 
 impl DecoderExt for Decoder<'_> {
-    fn decode_into<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
+    fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
         Ok(self.decode(out)?)
     }
 }
 
 impl DecoderExt for pem::Decoder<'_> {
-    fn decode_into<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
+    fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
         Ok(self.decode(out)?)
     }
 }
@@ -150,7 +153,10 @@ impl DecoderExt for pem::Decoder<'_> {
 /// Encoder extension trait.
 pub(crate) trait EncoderExt {
     /// Encode the given byte slice as Base64.
-    fn encode_raw(&mut self, bytes: &[u8]) -> Result<()>;
+    ///
+    /// This is the base encoding method on which the rest of the trait is
+    /// implemented in terms of.
+    fn encode_base64(&mut self, bytes: &[u8]) -> Result<()>;
 
     /// Encode a `uint32` as described in [RFC4251 § 5]:
     ///
@@ -160,7 +166,7 @@ pub(crate) trait EncoderExt {
     ///
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     fn encode_u32(&mut self, num: u32) -> Result<()> {
-        self.encode_raw(&num.to_be_bytes())
+        self.encode_base64(&num.to_be_bytes())
     }
 
     /// Encode a `usize` as a `uint32` as described in [RFC4251 § 5].
@@ -182,7 +188,7 @@ pub(crate) trait EncoderExt {
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     fn encode_byte_slice(&mut self, bytes: &[u8]) -> Result<()> {
         self.encode_usize(bytes.len())?;
-        self.encode_raw(bytes)
+        self.encode_base64(bytes)
     }
 
     /// Encode a `string` as described in [RFC4251 § 5]:
@@ -208,13 +214,13 @@ pub(crate) trait EncoderExt {
 }
 
 impl EncoderExt for Encoder<'_> {
-    fn encode_raw(&mut self, bytes: &[u8]) -> Result<()> {
+    fn encode_base64(&mut self, bytes: &[u8]) -> Result<()> {
         Ok(self.encode(bytes)?)
     }
 }
 
 impl EncoderExt for pem::Encoder<'_, '_> {
-    fn encode_raw(&mut self, bytes: &[u8]) -> Result<()> {
+    fn encode_base64(&mut self, bytes: &[u8]) -> Result<()> {
         Ok(self.encode(bytes)?)
     }
 }
