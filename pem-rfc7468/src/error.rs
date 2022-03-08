@@ -72,6 +72,12 @@ impl From<base64ct::InvalidLengthError> for Error {
     }
 }
 
+impl From<core::str::Utf8Error> for Error {
+    fn from(_: core::str::Utf8Error) -> Error {
+        Error::CharacterEncoding
+    }
+}
+
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<Error> for std::io::Error {

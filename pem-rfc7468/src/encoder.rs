@@ -5,6 +5,7 @@ use crate::{
     ENCAPSULATION_BOUNDARY_DELIMITER, POST_ENCAPSULATION_BOUNDARY, PRE_ENCAPSULATION_BOUNDARY,
 };
 use base64ct::{Base64, Encoding};
+use core::str;
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -18,11 +19,11 @@ pub fn encode<'o>(
     line_ending: LineEnding,
     input: &[u8],
     buf: &'o mut [u8],
-) -> Result<&'o [u8]> {
+) -> Result<&'o str> {
     let mut encoder = Encoder::new(type_label, line_ending, buf)?;
     encoder.encode(input)?;
     let encoded_len = encoder.finish()?;
-    Ok(&buf[..encoded_len])
+    Ok(str::from_utf8(&buf[..encoded_len])?)
 }
 
 /// Get the length of a PEM encoded document with the given bytes and label.
@@ -42,8 +43,10 @@ pub fn encoded_len(label: &str, line_ending: LineEnding, input: &[u8]) -> usize 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub fn encode_string(label: &str, line_ending: LineEnding, input: &[u8]) -> Result<String> {
-    let mut buf = vec![0u8; encoded_len(label, line_ending, input)];
-    encode(label, line_ending, input, &mut buf)?;
+    let expected_len = encoded_len(label, line_ending, input);
+    let mut buf = vec![0u8; expected_len];
+    let actual_len = encode(label, line_ending, input, &mut buf)?.len();
+    debug_assert_eq!(expected_len, actual_len);
     String::from_utf8(buf).map_err(|_| Error::CharacterEncoding)
 }
 
