@@ -109,6 +109,18 @@ impl Decode for Ed25519Keypair {
     }
 }
 
+impl From<Ed25519Keypair> for Ed25519PublicKey {
+    fn from(keypair: Ed25519Keypair) -> Ed25519PublicKey {
+        keypair.public
+    }
+}
+
+impl From<&Ed25519Keypair> for Ed25519PublicKey {
+    fn from(keypair: &Ed25519Keypair) -> Ed25519PublicKey {
+        keypair.public
+    }
+}
+
 impl fmt::Debug for Ed25519Keypair {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Ed25519Keypair")

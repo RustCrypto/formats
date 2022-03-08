@@ -64,6 +64,18 @@ impl Decode for RsaKeypair {
     }
 }
 
+impl From<RsaKeypair> for RsaPublicKey {
+    fn from(keypair: RsaKeypair) -> RsaPublicKey {
+        keypair.public
+    }
+}
+
+impl From<&RsaKeypair> for RsaPublicKey {
+    fn from(keypair: &RsaKeypair) -> RsaPublicKey {
+        keypair.public.clone()
+    }
+}
+
 impl fmt::Debug for RsaKeypair {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RsaKeypair")

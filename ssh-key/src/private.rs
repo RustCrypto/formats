@@ -23,7 +23,7 @@ pub use self::{
 
 use crate::{
     base64::{Decode, DecoderExt},
-    public, Algorithm, CipherAlg, Error, KdfAlg, KdfOptions, Result,
+    public, Algorithm, CipherAlg, Error, KdfAlg, KdfOptions, PublicKey, Result,
 };
 use core::str::FromStr;
 use pem_rfc7468::{self as pem, PemLabel};
@@ -127,6 +127,27 @@ impl PrivateKey {
     /// Get the digital signature [`Algorithm`] used by this key.
     pub fn algorithm(&self) -> Algorithm {
         self.key_data.algorithm()
+    }
+
+    /// Get the [`PublicKey`] which corresponds to this private key.
+    pub fn public_key(&self) -> PublicKey {
+        PublicKey {
+            key_data: public::KeyData::from(&self.key_data),
+            #[cfg(feature = "alloc")]
+            comment: self.comment.clone(),
+        }
+    }
+}
+
+impl From<PrivateKey> for PublicKey {
+    fn from(private_key: PrivateKey) -> PublicKey {
+        private_key.public_key()
+    }
+}
+
+impl From<&PrivateKey> for PublicKey {
+    fn from(private_key: &PrivateKey) -> PublicKey {
+        private_key.public_key()
     }
 }
 
@@ -260,6 +281,20 @@ impl Decode for KeypairData {
             Algorithm::Rsa => RsaKeypair::decode(decoder).map(Self::Rsa),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
+        }
+    }
+}
+
+impl From<&KeypairData> for public::KeyData {
+    fn from(keypair_data: &KeypairData) -> public::KeyData {
+        match keypair_data {
+            #[cfg(feature = "alloc")]
+            KeypairData::Dsa(dsa) => public::KeyData::Dsa(dsa.into()),
+            #[cfg(feature = "ecdsa")]
+            KeypairData::Ecdsa(ecdsa) => public::KeyData::Ecdsa(ecdsa.into()),
+            KeypairData::Ed25519(ed25519) => public::KeyData::Ed25519(ed25519.into()),
+            #[cfg(feature = "alloc")]
+            KeypairData::Rsa(rsa) => public::KeyData::Rsa(rsa.into()),
         }
     }
 }
