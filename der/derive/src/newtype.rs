@@ -75,18 +75,16 @@ impl DeriveNewtype {
                 }
             }
 
-            #limpl ::core::ops::Deref for #ltype {
-                type Target = #ftype;
-
+            #limpl ::core::convert::AsRef<#ftype> for #ltype {
                 #[inline]
-                fn deref(&self) -> &Self::Target {
+                fn as_ref(&self) -> &#ftype {
                     &self.0
                 }
             }
 
-            #limpl ::core::ops::DerefMut for #ltype {
+            #limpl ::core::convert::AsMut<#ftype> for #ltype {
                 #[inline]
-                fn deref_mut(&mut self) -> &mut Self::Target {
+                fn as_mut(&mut self) -> &mut #ftype {
                     &mut self.0
                 }
             }

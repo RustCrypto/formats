@@ -118,4 +118,4 @@ pub struct Certificate<'a> {
 ///
 /// [RFC 6066]: https://datatracker.ietf.org/doc/html/rfc6066#section-10.1
 #[derive(Clone, Debug, PartialEq, Eq, Default, Newtype)]
-pub struct PkiPath<'a>(Vec<Certificate<'a>>);
+pub struct PkiPath<'a>(pub Vec<Certificate<'a>>);
