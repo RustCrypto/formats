@@ -1,7 +1,7 @@
 //! Algorithm support.
 
 use crate::{
-    base64::{self, Decode, DecoderExt, Encode, EncoderExt},
+    base64::{Decode, DecoderExt, Encode, EncoderExt},
     Error, Result,
 };
 use core::{fmt, str};
@@ -103,7 +103,7 @@ impl Algorithm {
 }
 
 impl Decode for Algorithm {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -114,7 +114,7 @@ impl Encode for Algorithm {
         Ok(4 + self.as_str().len())
     }
 
-    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
         encoder.encode_str(self.as_str())
     }
 }
@@ -165,7 +165,7 @@ impl CipherAlg {
 }
 
 impl Decode for CipherAlg {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -229,7 +229,7 @@ impl EcdsaCurve {
 }
 
 impl Decode for EcdsaCurve {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -240,7 +240,7 @@ impl Encode for EcdsaCurve {
         Ok(4 + self.as_str().len())
     }
 
-    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
         encoder.encode_str(self.as_str())
     }
 }
@@ -291,7 +291,7 @@ impl KdfAlg {
 }
 
 impl Decode for KdfAlg {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         let mut buf = [0u8; Self::MAX_SIZE];
         Self::new(decoder.decode_str(&mut buf)?)
     }
@@ -330,7 +330,7 @@ impl KdfOptions {
 }
 
 impl Decode for KdfOptions {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         let mut buf = [0u8; 0];
         Self::new(decoder.decode_str(&mut buf)?)
     }

@@ -1,7 +1,7 @@
 //! Digital Signature Algorithm (DSA) private keys.
 
 use crate::{
-    base64::{self, Decode},
+    base64::{Decode, DecoderExt},
     public::DsaPublicKey,
     MPInt, Result,
 };
@@ -40,7 +40,7 @@ impl AsRef<[u8]> for DsaPrivateKey {
 }
 
 impl Decode for DsaPrivateKey {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         Ok(Self {
             inner: MPInt::decode(decoder)?,
         })
@@ -64,7 +64,7 @@ pub struct DsaKeypair {
 }
 
 impl Decode for DsaKeypair {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         let public = DsaPublicKey::decode(decoder)?;
         let private = DsaPrivateKey::decode(decoder)?;
         Ok(DsaKeypair { public, private })

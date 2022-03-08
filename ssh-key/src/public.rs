@@ -18,7 +18,7 @@ pub use self::ed25519::Ed25519PublicKey;
 pub use self::{dsa::DsaPublicKey, rsa::RsaPublicKey};
 
 use crate::{
-    base64::{self, Decode, Encode},
+    base64::{self, Decode, DecoderExt, Encode, EncoderExt},
     Algorithm, Error, Result,
 };
 use core::str::FromStr;
@@ -222,7 +222,7 @@ impl KeyData {
 }
 
 impl Decode for KeyData {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaPublicKey::decode(decoder).map(Self::Dsa),
@@ -256,7 +256,7 @@ impl Encode for KeyData {
         Ok(alg_len + key_len)
     }
 
-    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
         self.algorithm().encode(encoder)?;
         match self {
             #[cfg(feature = "alloc")]
