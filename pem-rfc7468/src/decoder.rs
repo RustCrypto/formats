@@ -119,11 +119,6 @@ impl<'i> Decoder<'i> {
     pub fn is_finished(&self) -> bool {
         self.base64.is_finished()
     }
-
-    /// Convert into the inner [`Base64Decoder`].
-    pub fn into_base64_decoder(self) -> Base64Decoder<'i> {
-        self.base64
-    }
 }
 
 impl<'i> From<Decoder<'i>> for Base64Decoder<'i> {

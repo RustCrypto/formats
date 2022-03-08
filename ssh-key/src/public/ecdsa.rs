@@ -1,7 +1,7 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) public keys.
 
 use crate::{
-    base64::{self, Decode, Encode},
+    base64::{self, Decode, DecoderExt, Encode, EncoderExt},
     Algorithm, EcdsaCurve, Error, Result,
 };
 use core::fmt;

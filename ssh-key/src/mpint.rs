@@ -1,7 +1,7 @@
 //! Multiple precision integer
 
 use crate::{
-    base64::{self, Decode, Encode},
+    base64::{self, Decode, DecoderExt, Encode, EncoderExt},
     Error, Result,
 };
 use alloc::vec::Vec;
