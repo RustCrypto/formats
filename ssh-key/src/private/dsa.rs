@@ -71,6 +71,18 @@ impl Decode for DsaKeypair {
     }
 }
 
+impl From<DsaKeypair> for DsaPublicKey {
+    fn from(keypair: DsaKeypair) -> DsaPublicKey {
+        keypair.public
+    }
+}
+
+impl From<&DsaKeypair> for DsaPublicKey {
+    fn from(keypair: &DsaKeypair) -> DsaPublicKey {
+        keypair.public.clone()
+    }
+}
+
 impl fmt::Debug for DsaKeypair {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("DsaKeypair")
