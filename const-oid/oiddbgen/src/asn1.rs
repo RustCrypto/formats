@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 
 use regex::Regex;
 
@@ -89,15 +89,8 @@ impl Asn1Parser {
     }
 
     pub fn iter(&self) -> impl '_ + Iterator<Item = (String, String)> {
-        let bases: HashSet<&String> = self
-            .tree
-            .values()
-            .filter_map(|(base, ..)| base.as_ref())
-            .collect();
-
         self.tree
             .keys()
-            .filter(move |n| !bases.contains(n))
             .filter_map(|n| self.resolve(n).map(|p| (n.clone(), p)))
     }
 }
