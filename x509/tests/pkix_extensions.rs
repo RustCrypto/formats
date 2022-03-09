@@ -2,7 +2,6 @@
 use der::asn1::{BitString, UIntBytes};
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
-use x509::ext::other::{OcspNoCheck, PivNaciIndicator};
 use x509::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
 use x509::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
 use x509::ext::pkix::*;
@@ -143,12 +142,11 @@ fn spin_over_exts<'a>(exts: Extensions<'a>) {
             let reencoded = sia.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if "1.3.6.1.5.5.7.48.1.5" == ext.extn_id.to_string() {
-            let nc_result = OcspNoCheck::from_der(ext.extn_value);
-            assert!(nc_result.is_ok());
-
-            let nc = nc_result.unwrap();
-            let reencoded = nc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
+            println!(
+                "Ignoring ocsp-nocheck ({}) with criticality {}",
+                ext.extn_id.to_string(),
+                ext.critical
+            );
         } else if "2.16.840.1.113730.1.1" == ext.extn_id.to_string() {
             let nct_result = BitString::from_der(ext.extn_value);
             assert!(nct_result.is_ok());
@@ -157,12 +155,11 @@ fn spin_over_exts<'a>(exts: Extensions<'a>) {
             let reencoded = nct.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if "2.16.840.1.101.3.6.9.1" == ext.extn_id.to_string() {
-            let pni_result = PivNaciIndicator::from_der(ext.extn_value);
-            assert!(pni_result.is_ok());
-
-            let pni = pni_result.unwrap();
-            let reencoded = pni.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
+            println!(
+                "Ignoring piv-NACI ({}) with criticality {}",
+                ext.extn_id.to_string(),
+                ext.critical
+            );
         } else if "1.2.840.113533.7.65.0" == ext.extn_id.to_string() {
             println!(
                 "Ignoring Entrust version info ({}) with criticality {}",

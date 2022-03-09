@@ -3,7 +3,6 @@
 use der::Sequence;
 use spki::ObjectIdentifier;
 
-pub mod other;
 pub mod pkix;
 
 /// Extension as defined in [RFC 5280 Section 4.1.2.9].
