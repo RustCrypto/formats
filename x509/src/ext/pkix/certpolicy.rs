@@ -2,19 +2,24 @@
 
 use alloc::vec::Vec;
 
+use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
+use const_oid::AssociatedOid;
 use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, UIntBytes, Utf8String};
-use der::{Any, Choice, Sequence};
+use der::{Any, Choice, Newtype, Sequence};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
-///
-/// This extension is identified by the [`PKIX_CE_CERTIFICATE_POLICIES`](constant.PKIX_CE_CERTIFICATE_POLICIES.html) OID.
 ///
 /// ```text
 /// CertificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-pub type CertificatePolicies<'a> = Vec<PolicyInformation<'a>>;
+#[derive(Clone, Debug, PartialEq, Eq, Newtype)]
+pub struct CertificatePolicies<'a>(pub Vec<PolicyInformation<'a>>);
+
+impl<'a> AssociatedOid for CertificatePolicies<'a> {
+    const OID: ObjectIdentifier = ID_CE_CERTIFICATE_POLICIES;
+}
 
 /// PolicyInformation as defined in [RFC 5280 Section 4.2.1.4].
 ///

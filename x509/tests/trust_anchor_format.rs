@@ -77,7 +77,7 @@ fn decode_ta1() {
             let cert_path = tai.cert_path.as_ref().unwrap();
             let mut counter = 0;
             let exts = cert_path.policy_set.as_ref().unwrap();
-            let i = exts.iter();
+            let i = exts.0.iter();
             for ext in i {
                 assert_eq!(policy_ids[counter], ext.policy_identifier.to_string());
                 counter += 1;

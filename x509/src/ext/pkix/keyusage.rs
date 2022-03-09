@@ -1,7 +1,11 @@
 use alloc::vec::Vec;
 
+use const_oid::db::rfc5280::{
+    ID_CE_EXT_KEY_USAGE, ID_CE_KEY_USAGE, ID_CE_PRIVATE_KEY_USAGE_PERIOD,
+};
+use const_oid::AssociatedOid;
 use der::asn1::{GeneralizedTime, ObjectIdentifier};
-use der::Sequence;
+use der::{Newtype, Sequence};
 use flagset::{flags, FlagSet};
 
 flags! {
@@ -39,14 +43,15 @@ flags! {
 
 /// KeyUsage as defined in [RFC 5280 Section 4.2.1.3].
 ///
-/// This extension is identified by the [`PKIX_CE_KEY_USAGE`](constant.PKIX_CE_KEY_USAGE.html) OID.
-///
 /// [RFC 5280 Section 4.2.1.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
-pub type KeyUsage<'a> = FlagSet<KeyUsages>;
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Newtype)]
+pub struct KeyUsage(pub FlagSet<KeyUsages>);
+
+impl AssociatedOid for KeyUsage {
+    const OID: ObjectIdentifier = ID_CE_KEY_USAGE;
+}
 
 /// ExtKeyUsageSyntax as defined in [RFC 5280 Section 4.2.1.12].
-///
-/// This extension is identified by the [`PKIX_CE_EXTKEYUSAGE`](constant.PKIX_CE_EXTKEYUSAGE.html) OID.
 ///
 /// Many extended key usage values include:
 /// - [`PKIX_CE_ANYEXTENDEDKEYUSAGE`](constant.PKIX_CE_ANYEXTENDEDKEYUSAGE.html),
@@ -62,11 +67,14 @@ pub type KeyUsage<'a> = FlagSet<KeyUsages>;
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
-pub type ExtendedKeyUsage<'a> = Vec<ObjectIdentifier>;
+#[derive(Clone, Debug, PartialEq, Eq, Newtype)]
+pub struct ExtendedKeyUsage(pub Vec<ObjectIdentifier>);
+
+impl AssociatedOid for ExtendedKeyUsage {
+    const OID: ObjectIdentifier = ID_CE_EXT_KEY_USAGE;
+}
 
 /// PrivateKeyUsagePeriod as defined in [RFC 3280 Section 4.2.1.4].
-///
-/// This extension is identified by the [`PKIX_CE_PRIVATE_KEY_USAGE_PERIOD`](constant.PKIX_CE_PRIVATE_KEY_USAGE_PERIOD.html) OID.
 ///
 /// RFC 5280 states "use of this ISO standard extension is neither deprecated nor recommended for use in the Internet PKI."
 ///
@@ -86,4 +94,8 @@ pub struct PrivateKeyUsagePeriod {
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub not_after: Option<GeneralizedTime>,
+}
+
+impl AssociatedOid for PrivateKeyUsagePeriod {
+    const OID: ObjectIdentifier = ID_CE_PRIVATE_KEY_USAGE_PERIOD;
 }

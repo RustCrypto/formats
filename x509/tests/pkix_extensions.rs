@@ -285,7 +285,7 @@ fn decode_cert() {
             assert_eq!(ext.extn_id.to_string(), ID_CE_POLICY_MAPPINGS.to_string());
             assert_eq!(ext.critical, false);
             let pm = PolicyMappings::from_der(ext.extn_value).unwrap();
-            assert_eq!(19, pm.len());
+            assert_eq!(19, pm.0.len());
 
             let reencoded = pm.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -335,7 +335,7 @@ fn decode_cert() {
             ];
 
             let mut counter_pm = 0;
-            for mapping in pm {
+            for mapping in pm.0 {
                 assert_eq!(
                     issuer_domain_policy[counter_pm],
                     mapping.issuer_domain_policy.to_string()
@@ -353,7 +353,7 @@ fn decode_cert() {
             );
             assert_eq!(ext.critical, false);
             let cps = CertificatePolicies::from_der(ext.extn_value).unwrap();
-            assert_eq!(19, cps.len());
+            assert_eq!(19, cps.0.len());
 
             let reencoded = cps.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -381,7 +381,7 @@ fn decode_cert() {
             ];
 
             let mut cp_counter = 0;
-            for cp in cps {
+            for cp in cps.0 {
                 assert_eq!(ids[cp_counter], cp.policy_identifier.to_string());
                 if 18 == cp_counter {
                     assert!(cp.policy_qualifiers.is_some());
@@ -414,10 +414,10 @@ fn decode_cert() {
             );
             assert_eq!(ext.critical, false);
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
-            assert_eq!(Length::new(21), skid.len());
+            assert_eq!(Length::new(21), skid.0.len());
             assert_eq!(
                 &hex!("DBD3DEBF0D7B615B32803BC0206CD7AADD39B8ACFF"),
-                skid.as_bytes()
+                skid.0.as_bytes()
             );
 
             let reencoded = skid.to_vec().unwrap();
@@ -429,13 +429,13 @@ fn decode_cert() {
             );
             assert_eq!(ext.critical, false);
             let crl_dps = CrlDistributionPoints::from_der(ext.extn_value).unwrap();
-            assert_eq!(2, crl_dps.len());
+            assert_eq!(2, crl_dps.0.len());
 
             let reencoded = crl_dps.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
             let mut crldp_counter = 0;
-            for crldp in crl_dps {
+            for crldp in crl_dps.0 {
                 let dpn = crldp.distribution_point.unwrap();
                 if 0 == crldp_counter {
                     match dpn {
@@ -487,12 +487,12 @@ fn decode_cert() {
             );
             assert_eq!(ext.critical, false);
             let sias = SubjectInfoAccessSyntax::from_der(ext.extn_value).unwrap();
-            assert_eq!(1, sias.len());
+            assert_eq!(1, sias.0.len());
 
             let reencoded = sias.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
-            for sia in sias {
+            for sia in sias.0 {
                 assert_eq!("1.3.6.1.5.5.7.48.5", sia.access_method.to_string());
                 let gn = sia.access_location;
                 match gn {
@@ -514,13 +514,13 @@ fn decode_cert() {
             );
             assert_eq!(ext.critical, false);
             let aias = AuthorityInfoAccessSyntax::from_der(ext.extn_value).unwrap();
-            assert_eq!(2, aias.len());
+            assert_eq!(2, aias.0.len());
             let mut aia_counter = 0;
 
             let reencoded = aias.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
-            for aia in aias {
+            for aia in aias.0 {
                 if 0 == aia_counter {
                     assert_eq!("1.3.6.1.5.5.7.48.2", aia.access_method.to_string());
                     let gn = aia.access_location;
@@ -560,7 +560,7 @@ fn decode_cert() {
             );
             assert_eq!(ext.critical, false);
             let iap = InhibitAnyPolicy::from_der(ext.extn_value).unwrap();
-            assert_eq!(0, iap);
+            assert_eq!(0, iap.0);
 
             let reencoded = iap.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -725,7 +725,7 @@ fn decode_cert() {
             assert_eq!(ext.critical, false);
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
             assert_eq!(
-                skid.as_bytes(),
+                skid.0.as_bytes(),
                 &hex!("580184241BBC2B52944A3DA510721451F5AF3AC9")[..]
             );
         } else if 2 == counter {
@@ -741,7 +741,7 @@ fn decode_cert() {
             assert_eq!(ext.critical, false);
             let r = CertificatePolicies::from_der(ext.extn_value);
             let cp = r.unwrap();
-            let i = cp.iter();
+            let i = cp.0.iter();
             for p in i {
                 assert_eq!(p.policy_identifier.to_string(), "2.16.840.1.101.3.2.1.48.1");
             }

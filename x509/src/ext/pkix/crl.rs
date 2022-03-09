@@ -2,59 +2,74 @@
 
 pub mod dp;
 
+use const_oid::db::rfc5280::{
+    ID_CE_CRL_DISTRIBUTION_POINTS, ID_CE_CRL_NUMBER, ID_CE_CRL_REASONS, ID_CE_DELTA_CRL_INDICATOR,
+    ID_CE_FRESHEST_CRL,
+};
+use const_oid::{AssociatedOid, ObjectIdentifier};
 pub use dp::IssuingDistributionPoint;
 
 use alloc::vec::Vec;
 
-use der::{asn1::UIntBytes, Enumerated};
+use der::{asn1::UIntBytes, Enumerated, Newtype};
 
 /// CrlNumber as defined in [RFC 5280 Section 5.2.3].
-///
-/// This extension is identified by the [`PKIX_CE_CRLNUMBER`](constant.PKIX_CE_CRLNUMBER.html) OID.
 ///
 /// ```text
 /// CRLNumber ::= INTEGER (0..MAX)
 /// ```
 ///
 /// [RFC 5280 Section 5.2.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.3
-pub type CrlNumber<'a> = UIntBytes<'a>;
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Newtype)]
+pub struct CrlNumber<'a>(pub UIntBytes<'a>);
+
+impl<'a> AssociatedOid for CrlNumber<'a> {
+    const OID: ObjectIdentifier = ID_CE_CRL_NUMBER;
+}
 
 /// BaseCRLNumber as defined in [RFC 5280 Section 5.2.4].
-///
-/// This extension is identified by the [`PKIX_CE_DELTACRLINDICATOR`](constant.PKIX_CE_DELTACRLINDICATOR.html) OID.
 ///
 /// ```text
 /// BaseCRLNumber ::= CRLNumber
 /// ```
 ///
 /// [RFC 5280 Section 5.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.4
-pub type BaseCrlNumber<'a> = CrlNumber<'a>;
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Newtype)]
+pub struct BaseCrlNumber<'a>(pub UIntBytes<'a>);
+
+impl<'a> AssociatedOid for BaseCrlNumber<'a> {
+    const OID: ObjectIdentifier = ID_CE_DELTA_CRL_INDICATOR;
+}
 
 /// CrlDistributionPoints as defined in [RFC 5280 Section 4.2.1.13].
-///
-/// This extension is identified by the [`PKIX_CE_CRL_DISTRIBUTION_POINTS`](constant.PKIX_CE_CRL_DISTRIBUTION_POINTS.html) OID.
 ///
 /// ```text
 /// CRLDistributionPoints ::= SEQUENCE SIZE (1..MAX) OF DistributionPoint
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-pub type CrlDistributionPoints<'a> = Vec<dp::DistributionPoint<'a>>;
+#[derive(Clone, Debug, Default, PartialEq, Eq, Newtype)]
+pub struct CrlDistributionPoints<'a>(pub Vec<dp::DistributionPoint<'a>>);
+
+impl<'a> AssociatedOid for CrlDistributionPoints<'a> {
+    const OID: ObjectIdentifier = ID_CE_CRL_DISTRIBUTION_POINTS;
+}
 
 /// FreshestCrl as defined in [RFC 5280 Section 5.2.6].
-///
-/// This extension is identified by the [`PKIX_CE_FRESHEST_CRL`](constant.PKIX_CE_FRESHEST_CRL.html) OID.
 ///
 /// ```text
 /// FreshestCRL ::= CRLDistributionPoints
 /// ```
 ///
 /// [RFC 5280 Section 5.2.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.6
-pub type FreshestCrl<'a> = CrlDistributionPoints<'a>;
+#[derive(Clone, Debug, Default, PartialEq, Eq, Newtype)]
+pub struct FreshestCrl<'a>(pub Vec<dp::DistributionPoint<'a>>);
+
+impl<'a> AssociatedOid for FreshestCrl<'a> {
+    const OID: ObjectIdentifier = ID_CE_FRESHEST_CRL;
+}
 
 /// CRLReason as defined in [RFC 5280 Section 5.3.1].
-///
-/// This extension is identified by the [`PKIX_CE_CRLREASONS`](constant.PKIX_CE_CRLREASONS.html) OID.
 ///
 /// ```text
 /// CRLReason ::= ENUMERATED {
@@ -86,4 +101,8 @@ pub enum CrlReason {
     RemoveFromCRL = 8,
     PrivilegeWithdrawn = 9,
     AaCompromise = 10,
+}
+
+impl AssociatedOid for CrlReason {
+    const OID: ObjectIdentifier = ID_CE_CRL_REASONS;
 }

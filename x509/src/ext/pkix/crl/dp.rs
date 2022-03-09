@@ -1,13 +1,12 @@
 //! PKIX distribution point types
 
+use const_oid::{db::rfc5280::ID_PE_SUBJECT_INFO_ACCESS, AssociatedOid, ObjectIdentifier};
 use der::Sequence;
 use flagset::{flags, FlagSet};
 
 use crate::ext::pkix::name::{DistributionPointName, GeneralNames};
 
 /// IssuingDistributionPoint as defined in [RFC 5280 Section 5.2.5].
-///
-/// This extension is identified by the [`PKIX_PE_SUBJECTINFOACCESS`](constant.PKIX_PE_SUBJECTINFOACCESS.html) OID.
 ///
 /// ```text
 /// IssuingDistributionPoint ::= SEQUENCE {
@@ -59,6 +58,10 @@ pub struct IssuingDistributionPoint<'a> {
         default = "Default::default"
     )]
     pub only_contains_attribute_certs: bool,
+}
+
+impl<'a> AssociatedOid for IssuingDistributionPoint<'a> {
+    const OID: ObjectIdentifier = ID_PE_SUBJECT_INFO_ACCESS;
 }
 
 /// DistributionPoint as defined in [RFC 5280 Section 4.2.1.13].

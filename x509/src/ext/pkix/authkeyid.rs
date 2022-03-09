@@ -1,11 +1,11 @@
 use super::name::GeneralNames;
 
+use const_oid::db::rfc5280::ID_CE_AUTHORITY_KEY_IDENTIFIER;
+use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::{OctetString, UIntBytes};
 use der::Sequence;
 
 /// AuthorityKeyIdentifier as defined in [RFC 5280 Section 4.2.1.1].
-///
-/// This extension is identified by the [`PKIX_CE_AUTHORITY_KEY_IDENTIFIER`](constant.PKIX_CE_AUTHORITY_KEY_IDENTIFIER.html) OID.
 ///
 /// ```text
 /// AuthorityKeyIdentifier ::= SEQUENCE {
@@ -29,4 +29,8 @@ pub struct AuthorityKeyIdentifier<'a> {
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub authority_cert_serial_number: Option<UIntBytes<'a>>,
+}
+
+impl<'a> AssociatedOid for AuthorityKeyIdentifier<'a> {
+    const OID: ObjectIdentifier = ID_CE_AUTHORITY_KEY_IDENTIFIER;
 }
