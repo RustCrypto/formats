@@ -5,6 +5,7 @@ use regex::Regex;
 #[derive(Clone, Debug)]
 pub struct Asn1Parser {
     tree: BTreeMap<String, (Option<String>, Option<String>)>,
+    base: BTreeMap<&'static str, &'static str>,
 }
 
 impl Asn1Parser {
@@ -44,9 +45,14 @@ impl Asn1Parser {
         )
     ";
 
-    pub fn new(asn1: &str) -> Self {
+    pub fn new(asn1: &str, bases: &[(&'static str, &'static str)]) -> Self {
         let def = Regex::new(Self::DEF).unwrap();
         let arc = Regex::new(Self::ARC).unwrap();
+
+        let mut base = BTreeMap::default();
+        for (name, tail) in bases {
+            base.insert(*name, *tail);
+        }
 
         let mut tree = BTreeMap::default();
         for mat in def.find_iter(asn1) {
@@ -71,10 +77,14 @@ impl Asn1Parser {
             tree.insert(name, (base, tail));
         }
 
-        Self { tree }
+        Self { tree, base }
     }
 
     pub fn resolve(&self, name: &str) -> Option<String> {
+        if let Some(tail) = self.base.get(name) {
+            return Some(tail.to_string());
+        }
+
         let (base, arcs) = self.tree.get(name)?;
         if let Some(base) = base {
             let base = self.resolve(base)?;
