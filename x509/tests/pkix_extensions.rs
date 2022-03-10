@@ -1,5 +1,6 @@
 //! Certificate tests
-use der::asn1::{BitString, UIntBytes};
+use const_oid::AssociatedOid;
+use der::asn1::UIntBytes;
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x509::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
@@ -12,208 +13,102 @@ use x509::{Certificate, Version};
 use const_oid::db::rfc5280::*;
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 
-fn spin_over_exts<'a>(exts: Extensions<'a>) {
-    let i = exts.iter();
-    for ext in i {
-        if "2.5.29.9" == ext.extn_id.to_string() {
-            let sdac_result = SubjectDirectoryAttributes::from_der(ext.extn_value);
-            assert!(sdac_result.is_ok());
+fn spin_over_exts(exts: Extensions) {
+    for ext in exts {
+        match ext.extn_id {
+            SubjectDirectoryAttributes::OID => {
+                let decoded = SubjectDirectoryAttributes::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let sdac = sdac_result.unwrap();
-            let reencoded = sdac.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.14" == ext.extn_id.to_string() {
-            let skid_result = SubjectKeyIdentifier::from_der(ext.extn_value);
-            assert!(skid_result.is_ok());
+            SubjectKeyIdentifier::OID => {
+                let decoded = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let skid = skid_result.unwrap();
-            let reencoded = skid.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.15" == ext.extn_id.to_string() {
-            let ku_result = KeyUsage::from_der(ext.extn_value);
-            assert!(ku_result.is_ok());
+            KeyUsage::OID => {
+                let decoded = KeyUsage::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let ku = ku_result.unwrap();
-            let reencoded = ku.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.16" == ext.extn_id.to_string() {
-            let pku_result = PrivateKeyUsagePeriod::from_der(ext.extn_value);
-            assert!(pku_result.is_ok());
+            PrivateKeyUsagePeriod::OID => {
+                let decoded = PrivateKeyUsagePeriod::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let pku = pku_result.unwrap();
-            let reencoded = pku.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.17" == ext.extn_id.to_string() {
-            let san_result = SubjectAltName::from_der(ext.extn_value);
-            assert!(san_result.is_ok());
+            SubjectAltName::OID => {
+                let decoded = SubjectAltName::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let san = san_result.unwrap();
-            let reencoded = san.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.18" == ext.extn_id.to_string() {
-            let ian_result = IssuerAltName::from_der(ext.extn_value);
-            assert!(ian_result.is_ok());
+            IssuerAltName::OID => {
+                let decoded = IssuerAltName::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let ian = ian_result.unwrap();
-            let reencoded = ian.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.19" == ext.extn_id.to_string() {
-            let bc_result = BasicConstraints::from_der(ext.extn_value);
-            assert!(bc_result.is_ok());
+            BasicConstraints::OID => {
+                let decoded = BasicConstraints::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let bc = bc_result.unwrap();
-            let reencoded = bc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.30" == ext.extn_id.to_string() {
-            let nc_result = NameConstraints::from_der(ext.extn_value);
-            assert!(nc_result.is_ok());
+            NameConstraints::OID => {
+                let decoded = NameConstraints::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let nc = nc_result.unwrap();
-            let reencoded = nc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.31" == ext.extn_id.to_string() {
-            let crldps_result = CrlDistributionPoints::from_der(ext.extn_value);
-            assert!(crldps_result.is_ok());
+            CrlDistributionPoints::OID => {
+                let decoded = CrlDistributionPoints::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let crldps = crldps_result.unwrap();
-            let reencoded = crldps.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.32" == ext.extn_id.to_string() {
-            let pols_result = CertificatePolicies::from_der(ext.extn_value);
-            assert!(pols_result.is_ok());
+            CertificatePolicies::OID => {
+                let decoded = CertificatePolicies::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let pols = pols_result.unwrap();
-            let reencoded = pols.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.33" == ext.extn_id.to_string() {
-            let pms_result = PolicyMappings::from_der(ext.extn_value);
-            assert!(pms_result.is_ok());
+            PolicyMappings::OID => {
+                let decoded = PolicyMappings::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let pms = pms_result.unwrap();
-            let reencoded = pms.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.35" == ext.extn_id.to_string() {
-            let akid_result = AuthorityKeyIdentifier::from_der(ext.extn_value);
-            assert!(akid_result.is_ok());
+            AuthorityKeyIdentifier::OID => {
+                let decoded = AuthorityKeyIdentifier::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let akid = akid_result.unwrap();
-            let reencoded = akid.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.36" == ext.extn_id.to_string() {
-            let pc_result = PolicyConstraints::from_der(ext.extn_value);
-            assert!(pc_result.is_ok());
+            PolicyConstraints::OID => {
+                let decoded = PolicyConstraints::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let pc = pc_result.unwrap();
-            let reencoded = pc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.37" == ext.extn_id.to_string() {
-            let eku_result = ExtendedKeyUsage::from_der(ext.extn_value);
-            assert!(eku_result.is_ok());
+            ExtendedKeyUsage::OID => {
+                let decoded = ExtendedKeyUsage::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let eku = eku_result.unwrap();
-            let reencoded = eku.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.46" == ext.extn_id.to_string() {
-            let fc_result = FreshestCrl::from_der(ext.extn_value);
-            assert!(fc_result.is_ok());
+            FreshestCrl::OID => {
+                let decoded = FreshestCrl::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let fc = fc_result.unwrap();
-            let reencoded = fc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.54" == ext.extn_id.to_string() {
-            let iap_result = InhibitAnyPolicy::from_der(ext.extn_value);
-            assert!(iap_result.is_ok());
+            InhibitAnyPolicy::OID => {
+                let decoded = InhibitAnyPolicy::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let iap = iap_result.unwrap();
-            let reencoded = iap.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "1.3.6.1.5.5.7.1.1" == ext.extn_id.to_string() {
-            let aia_result = AuthorityInfoAccessSyntax::from_der(ext.extn_value);
-            assert!(aia_result.is_ok());
+            AuthorityInfoAccessSyntax::OID => {
+                let decoded = AuthorityInfoAccessSyntax::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let aia = aia_result.unwrap();
-            let reencoded = aia.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "1.3.6.1.5.5.7.1.11" == ext.extn_id.to_string() {
-            let sia_result = SubjectInfoAccessSyntax::from_der(ext.extn_value);
-            assert!(sia_result.is_ok());
+            SubjectInfoAccessSyntax::OID => {
+                let decoded = SubjectInfoAccessSyntax::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let sia = sia_result.unwrap();
-            let reencoded = sia.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "1.3.6.1.5.5.7.48.1.5" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring ocsp-nocheck ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "2.16.840.1.113730.1.1" == ext.extn_id.to_string() {
-            let nct_result = BitString::from_der(ext.extn_value);
-            assert!(nct_result.is_ok());
-
-            let nct = nct_result.unwrap();
-            let reencoded = nct.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.16.840.1.101.3.6.9.1" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring piv-NACI ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.2.840.113533.7.65.0" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring Entrust version info ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "2.16.840.1.114027.30.1" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring some (likely) Entrust extension ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.20.2" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring enrollCerttypeExtension ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.21.1" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring cAKeyCertIndexPair ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.21.2" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring certSrvPreviousCertHash ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.21.7" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring certificateTemplate ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.21.10" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring applicationCertPolicies ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.5.5.7.1.3" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring qcStatements ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else {
-            println!(
-                "Unrecognized extension ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
+            _ => {
+                eprintln!("ignoring {} with criticality {}", ext.extn_id, ext.critical);
+            }
         }
     }
 }
