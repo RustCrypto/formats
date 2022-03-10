@@ -97,9 +97,9 @@ impl From<&Time> for SystemTime {
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl TryFrom<SystemTime> for Time {
-    type Error = der::Error;
+    type Error = Error;
 
-    fn try_from(time: SystemTime) -> der::Result<Time> {
+    fn try_from(time: SystemTime) -> Result<Time> {
         Ok(GeneralizedTime::try_from(time)?.into())
     }
 }
