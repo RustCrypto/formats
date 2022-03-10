@@ -2022,6 +2022,28 @@ pub mod rfc6268 {
     pub const ID_HMAC_WITH_SHA_256: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.9");
 }
+pub mod rfc6960 {
+    pub const ID_PKIX_OCSP: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1");
+    pub const ID_PKIX_OCSP_BASIC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.1");
+    pub const ID_PKIX_OCSP_NONCE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.2");
+    pub const ID_PKIX_OCSP_CRL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.3");
+    pub const ID_PKIX_OCSP_RESPONSE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.4");
+    pub const ID_PKIX_OCSP_NOCHECK: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.5");
+    pub const ID_PKIX_OCSP_ARCHIVE_CUTOFF: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.6");
+    pub const ID_PKIX_OCSP_SERVICE_LOCATOR: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.7");
+    pub const ID_PKIX_OCSP_PREF_SIG_ALGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.8");
+    pub const ID_PKIX_OCSP_EXTENDED_REVOKE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.9");
+}
 pub mod rfc7107 {
     pub const ID_SMIME: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16");
@@ -4033,6 +4055,28 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc6268::ID_HMAC_WITH_SHA_512, "id-hmacWithSHA512"),
     (&rfc6268::ID_HMAC_WITH_SHA_224, "id-hmacWithSHA224"),
     (&rfc6268::ID_HMAC_WITH_SHA_256, "id-hmacWithSHA256"),
+    (&rfc6960::ID_PKIX_OCSP, "id-pkix-ocsp"),
+    (&rfc6960::ID_PKIX_OCSP_BASIC, "id-pkix-ocsp-basic"),
+    (&rfc6960::ID_PKIX_OCSP_NONCE, "id-pkix-ocsp-nonce"),
+    (&rfc6960::ID_PKIX_OCSP_CRL, "id-pkix-ocsp-crl"),
+    (&rfc6960::ID_PKIX_OCSP_RESPONSE, "id-pkix-ocsp-response"),
+    (&rfc6960::ID_PKIX_OCSP_NOCHECK, "id-pkix-ocsp-nocheck"),
+    (
+        &rfc6960::ID_PKIX_OCSP_ARCHIVE_CUTOFF,
+        "id-pkix-ocsp-archive-cutoff",
+    ),
+    (
+        &rfc6960::ID_PKIX_OCSP_SERVICE_LOCATOR,
+        "id-pkix-ocsp-service-locator",
+    ),
+    (
+        &rfc6960::ID_PKIX_OCSP_PREF_SIG_ALGS,
+        "id-pkix-ocsp-pref-sig-algs",
+    ),
+    (
+        &rfc6960::ID_PKIX_OCSP_EXTENDED_REVOKE,
+        "id-pkix-ocsp-extended-revoke",
+    ),
     (&rfc7107::ID_SMIME, "id-smime"),
     (&rfc7107::ID_MOD, "id-mod"),
     (&rfc7107::ID_CT, "id-ct"),
