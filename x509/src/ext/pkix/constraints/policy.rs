@@ -1,8 +1,7 @@
+use const_oid::{db::rfc5280::ID_CE_POLICY_CONSTRAINTS, AssociatedOid, ObjectIdentifier};
 use der::Sequence;
 
 /// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11].
-///
-/// This extension is identified by the [`PKIX_CE_POLICY_CONSTRAINTS`](constant.PKIX_CE_POLICY_CONSTRAINTS.html) OID.
 ///
 /// ```text
 /// PolicyConstraints ::= SEQUENCE {
@@ -20,4 +19,8 @@ pub struct PolicyConstraints {
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub inhibit_policy_mapping: Option<u32>,
+}
+
+impl AssociatedOid for PolicyConstraints {
+    const OID: ObjectIdentifier = ID_CE_POLICY_CONSTRAINTS;
 }

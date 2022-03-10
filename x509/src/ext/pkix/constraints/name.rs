@@ -2,13 +2,12 @@
 
 use alloc::vec::Vec;
 
+use const_oid::{db::rfc5280::ID_CE_NAME_CONSTRAINTS, AssociatedOid, ObjectIdentifier};
 use der::Sequence;
 
 use super::super::name::GeneralName;
 
 /// NameConstraints extension as defined in [RFC 5280 Section 4.2.1.10].
-///
-/// This extension is identified by the [`PKIX_CE_NAME_CONSTRAINTS`](constant.PKIX_CE_NAME_CONSTRAINTS.html) OID.
 ///
 /// ```text
 /// NameConstraints ::= SEQUENCE {
@@ -26,6 +25,10 @@ pub struct NameConstraints<'a> {
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub excluded_subtrees: Option<GeneralSubtrees<'a>>,
+}
+
+impl<'a> AssociatedOid for NameConstraints<'a> {
+    const OID: ObjectIdentifier = ID_CE_NAME_CONSTRAINTS;
 }
 
 /// GeneralSubtrees as defined in [RFC 5280 Section 4.2.1.10].
