@@ -19,7 +19,7 @@ rust-version = "1.57"
 generic-array = { version = "0.14.4", default-features = false }
 
 # optional dependencies
-der = { version = "=0.6.0-pre.1", optional = true, features = ["oid"], path = "../der" }
+der = { version = "=0.6.0-pre.2", optional = true, features = ["oid"], path = "../der" }
 pkcs8 = { version = "=0.9.0-pre", optional = true, default-features = false, path = "../pkcs8" }
 serde = { version = "1.0.16", optional = true, default-features = false }
 subtle = { version = "2", optional = true, default-features = false }
