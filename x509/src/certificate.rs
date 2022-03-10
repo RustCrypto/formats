@@ -2,8 +2,9 @@ use crate::{name::Name, time::Validity};
 
 use alloc::vec::Vec;
 
+use const_oid::AssociatedOid;
 use der::asn1::{BitString, UIntBytes};
-use der::{Enumerated, Newtype, Sequence};
+use der::{Decodable, Enumerated, Error, ErrorKind, Newtype, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
@@ -85,6 +86,40 @@ pub struct TbsCertificate<'a> {
 
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
     pub extensions: Option<crate::ext::Extensions<'a>>,
+}
+
+impl<'a> TbsCertificate<'a> {
+    /// Decodes a single extension
+    ///
+    /// Returns an error if multiple of these extensions is present. Returns
+    /// `Ok(None)` if the extension is not present. Returns a decoding error
+    /// if decoding failed. Otherwise returns the extension.
+    pub fn get<'b: 'a, T: Decodable<'a> + AssociatedOid>(
+        &'b self,
+    ) -> Result<Option<(bool, T)>, Error> {
+        let mut iter = self.filter::<T>().peekable();
+        match iter.next() {
+            None => Ok(None),
+            Some(item) => match iter.peek() {
+                Some(..) => Err(ErrorKind::Failed.into()),
+                None => Ok(Some(item?)),
+            },
+        }
+    }
+
+    /// Filters extensions by an associated OID
+    ///
+    /// Returns a filtered iterator over all the extensions with the OID.
+    pub fn filter<'b: 'a, T: Decodable<'a> + AssociatedOid>(
+        &'b self,
+    ) -> impl 'b + Iterator<Item = Result<(bool, T), Error>> {
+        self.extensions
+            .as_deref()
+            .unwrap_or(&[])
+            .iter()
+            .filter(|e| e.extn_id == T::OID)
+            .map(|e| Ok((e.critical, T::from_der(e.extn_value)?)))
+    }
 }
 
 /// X.509 certificates are defined in [RFC 5280 Section 4.1].
