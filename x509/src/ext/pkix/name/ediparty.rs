@@ -26,12 +26,11 @@ use super::DirectoryString;
 /// [this OpenSSL bug]: https://github.com/openssl/openssl/issues/6859
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
 pub struct EdiPartyName<'a> {
-    /// nameAssigner
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub name_assigner: Option<DirectoryString<'a>>,
 
-    /// partyName
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT")]
     pub party_name: DirectoryString<'a>,
 }
