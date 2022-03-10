@@ -122,6 +122,21 @@ pub struct Validity {
     pub not_after: Time,
 }
 
+impl Validity {
+    /// Creates a `Validity` which starts now and lasts for `duration`.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn from_now(duration: Duration) -> Result<Self> {
+        let now = SystemTime::now();
+        let then = now + duration;
+
+        Ok(Self {
+            not_before: Time::try_from(now)?,
+            not_after: Time::try_from(then)?,
+        })
+    }
+}
+
 impl<'a> TryFrom<&'a [u8]> for Validity {
     type Error = Error;
 
