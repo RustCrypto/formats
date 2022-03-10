@@ -1,8 +1,11 @@
 //! Name tests
 
-use der::{Decodable, Encodable, Tag, Tagged};
+use const_oid::ObjectIdentifier;
+use der::asn1::{OctetString, SetOfVec, Utf8String};
+use der::{Any, Decodable, Encodable, Tag, Tagged};
 use hex_literal::hex;
-use x509::name::{Name, RelativeDistinguishedName};
+use x509::attr::AttributeTypeAndValue;
+use x509::name::{Name, RdnSequence, RelativeDistinguishedName};
 
 #[test]
 fn decode_name() {
@@ -31,9 +34,9 @@ fn decode_name() {
     let rdn1a = rdn1.unwrap();
 
     let mut counter = 0;
-    let i = rdn1a.iter();
+    let i = rdn1a.0.iter();
     for rdn in i {
-        let i1 = rdn.iter();
+        let i1 = rdn.0.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -66,7 +69,7 @@ fn decode_rdn() {
     //        :   }
     let rdn1 =
         RelativeDistinguishedName::from_der(&hex!("310B3009060355040613025553")[..]).unwrap();
-    let i = rdn1.iter();
+    let i = rdn1.0.iter();
     for atav in i {
         let oid = atav.oid;
         assert_eq!(oid.to_string(), "2.5.4.6");
@@ -92,7 +95,7 @@ fn decode_rdn() {
         &hex!("311F300A060355040A0C03313233301106035504030C0A4A4F484E20534D495448")[..],
     )
     .unwrap();
-    let mut i = rdn2a.iter();
+    let mut i = rdn2a.0.iter();
     let atav1a = i.next().unwrap();
     let oid2 = atav1a.oid;
     assert_eq!(oid2.to_string(), "2.5.4.10");
@@ -109,19 +112,19 @@ fn decode_rdn() {
     let utf8a = value1.utf8_string().unwrap();
     assert_eq!(utf8a.to_string(), "JOHN SMITH");
 
-    let mut from_scratch = RelativeDistinguishedName::new();
-    assert!(from_scratch.add(*atav1a).is_ok());
-    assert!(from_scratch.add(*atav2a).is_ok());
+    let mut from_scratch = RelativeDistinguishedName::default();
+    assert!(from_scratch.0.add(*atav1a).is_ok());
+    assert!(from_scratch.0.add(*atav2a).is_ok());
     let reencoded = from_scratch.to_vec().unwrap();
     assert_eq!(
         reencoded,
         &hex!("311F300A060355040A0C03313233301106035504030C0A4A4F484E20534D495448")
     );
 
-    let mut from_scratch2 = RelativeDistinguishedName::new();
-    assert!(from_scratch2.add(*atav2a).is_ok());
+    let mut from_scratch2 = RelativeDistinguishedName::default();
+    assert!(from_scratch2.0.add(*atav2a).is_ok());
     // fails when caller adds items not in DER lexicographical order
-    assert!(from_scratch2.add(*atav1a).is_err());
+    assert!(from_scratch2.0.add(*atav1a).is_err());
 
     //parsing fails due to incorrect order
     assert!(RelativeDistinguishedName::from_der(
@@ -180,3 +183,154 @@ fn decode_rdn() {
 //     let b3 = atav3.to_vec().unwrap();
 //     assert_eq!(b3, &hex!("3009060355040313025553")[..]);
 // }
+
+/// Tests RdnSequence string serialization and deserialization
+#[test]
+fn rdns_serde() {
+    #[allow(clippy::type_complexity)]
+    let values: &[(&[&str], &str, &[&[AttributeTypeAndValue]])] = &[
+        (
+            &[
+                "CN=foo,SN=bar,C=baz+L=bat",
+                "commonName=foo,sn=bar,COUNTRYNAME=baz+l=bat",
+            ],
+            "CN=foo,SN=bar,C=baz+L=bat",
+            &[
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::CN,
+                    value: Any::from(Utf8String::new("foo").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::SN,
+                    value: Any::from(Utf8String::new("bar").unwrap()),
+                }],
+                &[
+                    AttributeTypeAndValue {
+                        oid: const_oid::db::rfc4519::C,
+                        value: Any::from(Utf8String::new("baz").unwrap()),
+                    },
+                    AttributeTypeAndValue {
+                        oid: const_oid::db::rfc4519::L,
+                        value: Any::from(Utf8String::new("bat").unwrap()),
+                    },
+                ],
+            ],
+        ),
+        (
+            &["UID=jsmith,DC=example,DC=net"],
+            "UID=jsmith,DC=example,DC=net",
+            &[
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::UID,
+                    value: Any::from(Utf8String::new("jsmith").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Utf8String::new("example").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Utf8String::new("net").unwrap()),
+                }],
+            ],
+        ),
+        (
+            &["OU=Sales+CN=J.  Smith,DC=example,DC=net"],
+            "OU=Sales+CN=J.  Smith,DC=example,DC=net",
+            &[
+                &[
+                    AttributeTypeAndValue {
+                        oid: const_oid::db::rfc4519::OU,
+                        value: Any::from(Utf8String::new("Sales").unwrap()),
+                    },
+                    AttributeTypeAndValue {
+                        oid: const_oid::db::rfc4519::CN,
+                        value: Any::from(Utf8String::new("J.  Smith").unwrap()),
+                    },
+                ],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Utf8String::new("example").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Utf8String::new("net").unwrap()),
+                }],
+            ],
+        ),
+        (
+            &["CN=James \\\"Jim\\\" Smith\\, III,DC=example,DC=net"],
+            "CN=James \\\"Jim\\\" Smith\\, III,DC=example,DC=net",
+            &[
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::CN,
+                    value: Any::from(Utf8String::new(r#"James "Jim" Smith, III"#).unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Utf8String::new("example").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Utf8String::new("net").unwrap()),
+                }],
+            ],
+        ),
+        (
+            &["CN=Before\\0dAfter,DC=example,DC=net"],
+            "CN=Before\\0dAfter,DC=example,DC=net",
+            &[
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::CN,
+                    value: Any::from(Utf8String::new("Before\rAfter").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Utf8String::new("example").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Utf8String::new("net").unwrap()),
+                }],
+            ],
+        ),
+        (
+            &["1.3.6.1.4.1.1466.0=#04024869"],
+            "1.3.6.1.4.1.1466.0=#04024869",
+            &[&[AttributeTypeAndValue {
+                oid: ObjectIdentifier::new("1.3.6.1.4.1.1466.0").unwrap(),
+                value: Any::from(OctetString::new(&[b'H', b'i']).unwrap()),
+            }]],
+        ),
+    ];
+
+    for (inputs, output, rdns) in values {
+        let mut brdns = RdnSequence::default();
+        for rdn in rdns.iter() {
+            let sofv = SetOfVec::try_from(rdn.to_vec()).unwrap();
+            brdns.0.push(RelativeDistinguishedName::from(sofv));
+        }
+
+        // Check that serialization matches the expected output.
+        eprintln!("output: {}", output);
+        assert_eq!(*output, format!("{}", brdns));
+
+        // Check that all inputs deserializize as expected.
+        for input in inputs.iter() {
+            eprintln!("input: {}", input);
+
+            let der = RdnSequence::encode_from_string(input).unwrap();
+            let rdns = RdnSequence::from_der(&der).unwrap();
+
+            for (l, r) in brdns.0.iter().zip(rdns.0.iter()) {
+                for (ll, rr) in l.0.iter().zip(r.0.iter()) {
+                    assert_eq!(ll, rr);
+                }
+
+                assert_eq!(l, r);
+            }
+
+            assert_eq!(brdns, rdns);
+        }
+    }
+}
