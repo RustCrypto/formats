@@ -7,7 +7,12 @@
     html_root_url = "https://docs.rs/x509/0.0.1"
 )]
 #![forbid(unsafe_code)]
-#![warn(missing_docs, rust_2018_idioms)]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 extern crate alloc;
 

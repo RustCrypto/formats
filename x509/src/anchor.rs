@@ -84,7 +84,7 @@ pub struct CertPathControls<'a> {
     pub policy_set: Option<CertificatePolicies<'a>>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub policy_flags: Option<CertPolicyFlags<'a>>,
+    pub policy_flags: Option<CertPolicyFlags>,
 
     #[asn1(context_specific = "3", tag_mode = "IMPLICIT", optional = "true")]
     pub name_constr: Option<NameConstraints<'a>>,
@@ -116,7 +116,7 @@ flags! {
 /// Certificate policy flags as defined in [RFC 5280 Section 4.2.1.13].
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-pub type CertPolicyFlags<'a> = FlagSet<CertPolicies>;
+pub type CertPolicyFlags = FlagSet<CertPolicies>;
 
 /// ```text
 /// TrustAnchorChoice ::= CHOICE {
