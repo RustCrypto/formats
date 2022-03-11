@@ -57,26 +57,37 @@ const UNIX_FILE_PERMISSIONS: u32 = 0o600;
 #[derive(Clone, Debug)]
 pub struct PrivateKey {
     /// Cipher algorithm (a.k.a. `ciphername`).
-    pub cipher_alg: CipherAlg,
+    cipher_alg: CipherAlg,
 
     /// KDF algorithm.
-    pub kdf_alg: KdfAlg,
+    kdf_alg: KdfAlg,
 
     /// KDF options.
-    pub kdf_options: KdfOptions,
+    kdf_options: KdfOptions,
 
     /// Key data.
-    pub key_data: KeypairData,
+    key_data: KeypairData,
 
     /// Comment on the key (e.g. email address).
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub comment: String,
+    comment: String,
 }
 
 impl PrivateKey {
     /// Magic string used to identify keys in this format.
-    pub const AUTH_MAGIC: &'static [u8] = b"openssh-key-v1\0";
+    const AUTH_MAGIC: &'static [u8] = b"openssh-key-v1\0";
+
+    /// Create a new unencrypted private key with the given keypair data and comment.
+    ///
+    /// On `no_std` platforms, use `PrivateKey::from(key_data)` instead.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn new(key_data: KeypairData, comment: impl Into<String>) -> Self {
+        let mut private_key = Self::from(key_data);
+        private_key.comment = comment.into();
+        private_key
+    }
 
     /// Parse an OpenSSH-formatted PEM private key.
     ///
@@ -128,13 +139,7 @@ impl PrivateKey {
         let key_data = KeypairData::decode(&mut pem_decoder)?;
 
         #[cfg(not(feature = "alloc"))]
-        {
-            let len = pem_decoder.decode_usize()?;
-            for _ in 0..len {
-                let mut byte = [0];
-                pem_decoder.decode(&mut byte)?;
-            }
-        }
+        pem_decoder.drain_prefixed()?;
         #[cfg(feature = "alloc")]
         let comment = pem_decoder.decode_string()?;
 
@@ -191,23 +196,15 @@ impl PrivateKey {
         pem_encoder.encode_usize(public_key_data.encoded_len()?)?;
         public_key_data.encode(&mut pem_encoder)?;
 
-        // Get private key comment
-        // TODO(tarcieri): comment accessor method with consistent behavior
-        #[cfg(not(feature = "alloc"))]
-        let comment = "";
-        #[cfg(feature = "alloc")]
-        let comment = &self.comment;
-
         // Encode private key
         let padding_len = self.padding_len()?;
         debug_assert!(padding_len <= 7, "padding too long: {}", padding_len);
-
         pem_encoder.encode_usize(self.private_key_len()? + padding_len)?;
         let checkint = public_key_data.checkint();
         pem_encoder.encode_u32(checkint)?;
         pem_encoder.encode_u32(checkint)?;
         self.key_data.encode(&mut pem_encoder)?;
-        pem_encoder.encode_str(comment)?;
+        pem_encoder.encode_str(self.comment())?;
         pem_encoder.encode_base64(&PADDING_BYTES[..padding_len])?;
 
         let encoded_len = pem_encoder.finish()?;
@@ -260,6 +257,38 @@ impl PrivateKey {
         self.key_data.algorithm()
     }
 
+    /// Comment on the key (e.g. email address).
+    #[cfg(not(feature = "alloc"))]
+    pub fn comment(&self) -> &str {
+        ""
+    }
+
+    /// Comment on the key (e.g. email address).
+    #[cfg(feature = "alloc")]
+    pub fn comment(&self) -> &str {
+        &self.comment
+    }
+
+    /// Cipher algorithm (a.k.a. `ciphername`).
+    pub fn cipher_alg(&self) -> CipherAlg {
+        self.cipher_alg
+    }
+
+    /// KDF algorithm.
+    pub fn kdf_alg(&self) -> KdfAlg {
+        self.kdf_alg
+    }
+
+    /// KDF options.
+    pub fn kdf_options(&self) -> &KdfOptions {
+        &self.kdf_options
+    }
+
+    /// Keypair data.
+    pub fn key_data(&self) -> &KeypairData {
+        &self.key_data
+    }
+
     /// Get the [`PublicKey`] which corresponds to this private key.
     pub fn public_key(&self) -> PublicKey {
         PublicKey {
@@ -295,16 +324,10 @@ impl PrivateKey {
 
     /// Get the length of the private key data in bytes (not including padding).
     fn private_key_len(&self) -> Result<usize> {
-        // TODO(tarcieri): comment accessor method with consistent behavior
-        #[cfg(not(feature = "alloc"))]
-        let comment_len = 0;
-        #[cfg(feature = "alloc")]
-        let comment_len = self.comment.len();
-
         Ok(8 // 2 * checkints
-            + self.key_data.encoded_len()?
+            + self.key_data().encoded_len()?
             + 4 // comment length prefix
-            + comment_len)
+            + self.comment().len())
     }
 
     /// Get the number of padding bytes to add to this key (without padding).
@@ -321,6 +344,19 @@ impl PrivateKey {
                 }
             }
             None => Err(Error::Length),
+        }
+    }
+}
+
+impl From<KeypairData> for PrivateKey {
+    fn from(key_data: KeypairData) -> PrivateKey {
+        PrivateKey {
+            cipher_alg: CipherAlg::None,
+            kdf_alg: KdfAlg::None,
+            kdf_options: KdfOptions::default(),
+            key_data,
+            #[cfg(feature = "alloc")]
+            comment: String::new(),
         }
     }
 }
@@ -353,13 +389,14 @@ impl str::FromStr for PrivateKey {
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl ConstantTimeEq for PrivateKey {
     fn ct_eq(&self, other: &Self) -> Choice {
-        // TODO(tarcieri): comment accessor method with consistent behavior
-        #[cfg(not(feature = "alloc"))]
-        let comment_eq = Choice::from(1);
-        #[cfg(feature = "alloc")]
-        let comment_eq = self.comment.as_bytes().ct_eq(other.comment.as_bytes());
-
-        comment_eq & self.key_data.ct_eq(&other.key_data)
+        // Constant-time with respect to key data and comment
+        self.key_data.ct_eq(&other.key_data)
+            & self.comment.as_bytes().ct_eq(other.comment.as_bytes())
+            & Choice::from(
+                (self.cipher_alg == other.cipher_alg
+                    && self.kdf_alg == other.kdf_alg
+                    && self.kdf_options == other.kdf_options) as u8,
+            )
     }
 }
 

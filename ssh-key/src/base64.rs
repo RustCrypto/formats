@@ -178,6 +178,21 @@ pub(crate) trait DecoderExt {
     fn decode_string(&mut self) -> Result<String> {
         String::from_utf8(self.decode_byte_vec()?).map_err(|_| Error::CharacterEncoding)
     }
+
+    /// Drain the given number of bytes from the decoder, discarding them.
+    fn drain(&mut self, n_bytes: usize) -> Result<()> {
+        let mut byte = [0];
+        for _ in 0..n_bytes {
+            self.decode_base64(&mut byte)?;
+        }
+        Ok(())
+    }
+
+    /// Decode a `u32` length prefix, and then drain the length of the body.
+    fn drain_prefixed(&mut self) -> Result<()> {
+        let n_bytes = self.decode_usize()?;
+        self.drain(n_bytes)
+    }
 }
 
 impl DecoderExt for Decoder<'_> {

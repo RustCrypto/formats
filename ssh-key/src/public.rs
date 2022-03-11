@@ -33,15 +33,26 @@ use alloc::{
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct PublicKey {
     /// Key data.
-    pub key_data: KeyData,
+    pub(crate) key_data: KeyData,
 
     /// Comment on the key (e.g. email address)
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub comment: String,
+    pub(crate) comment: String,
 }
 
 impl PublicKey {
+    /// Create a new public key with the given comment.
+    ///
+    /// On `no_std` platforms, use `PublicKey::from(key_data)` instead.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn new(key_data: KeyData, comment: impl Into<String>) -> Self {
+        Self {
+            key_data,
+            comment: comment.into(),
+        }
+    }
+
     /// Parse an OpenSSH-formatted public key.
     ///
     /// OpenSSH-formatted public keys look like the following:
@@ -72,12 +83,7 @@ impl PublicKey {
 
     /// Encode OpenSSH-formatted (PEM) public key.
     pub fn encode_openssh<'o>(&self, out: &'o mut [u8]) -> Result<&'o str> {
-        #[cfg(not(feature = "alloc"))]
-        let comment = "";
-        #[cfg(feature = "alloc")]
-        let comment = &self.comment;
-
-        openssh::Encapsulation::encode(out, self.algorithm().as_str(), comment, |encoder| {
+        openssh::Encapsulation::encode(out, self.algorithm().as_str(), self.comment(), |encoder| {
             self.key_data.encode(encoder)
         })
     }
@@ -85,6 +91,7 @@ impl PublicKey {
     /// Encode an OpenSSH-formatted public key, allocating a [`String`] for
     /// the result.
     #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn to_openssh(&self) -> Result<String> {
         let alg_len = self.algorithm().as_str().len();
         let key_data_len = base64::encoded_len(self.key_data.encoded_len()?);
@@ -100,6 +107,33 @@ impl PublicKey {
     /// Get the digital signature [`Algorithm`] used by this key.
     pub fn algorithm(&self) -> Algorithm {
         self.key_data.algorithm()
+    }
+
+    /// Comment on the key (e.g. email address).
+    #[cfg(not(feature = "alloc"))]
+    pub fn comment(&self) -> &str {
+        ""
+    }
+
+    /// Comment on the key (e.g. email address).
+    #[cfg(feature = "alloc")]
+    pub fn comment(&self) -> &str {
+        &self.comment
+    }
+
+    /// Private key data.
+    pub fn key_data(&self) -> &KeyData {
+        &self.key_data
+    }
+}
+
+impl From<KeyData> for PublicKey {
+    fn from(key_data: KeyData) -> PublicKey {
+        PublicKey {
+            key_data,
+            #[cfg(feature = "alloc")]
+            comment: String::new(),
+        }
     }
 }
 
