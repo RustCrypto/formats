@@ -56,11 +56,17 @@ fn from_bytes() {
     assert_eq!(oid3, EXAMPLE_OID_LARGE_ARC);
 
     // Empty
-    assert!(ObjectIdentifier::from_bytes(&[]).is_err());
+    assert_eq!(ObjectIdentifier::from_bytes(&[]), Err(Error::Empty));
 
     // Truncated
-    assert!(ObjectIdentifier::from_bytes(&[42]).is_err());
-    assert!(ObjectIdentifier::from_bytes(&[42, 134]).is_err());
+    assert_eq!(
+        ObjectIdentifier::from_bytes(&[42]),
+        Err(Error::NotEnoughArcs)
+    );
+    assert_eq!(
+        ObjectIdentifier::from_bytes(&[42, 134]),
+        Err(Error::NotEnoughArcs)
+    );
 }
 
 #[test]
@@ -93,16 +99,25 @@ fn from_str() {
     assert_eq!(oid3, EXAMPLE_OID_LARGE_ARC);
 
     // Too short
-    assert!("1.2".parse::<ObjectIdentifier>().is_err());
+    assert_eq!("1.2".parse::<ObjectIdentifier>(), Err(Error::NotEnoughArcs));
 
     // Truncated
-    assert!("1.2.840.10045.2.".parse::<ObjectIdentifier>().is_err());
+    assert_eq!(
+        "1.2.840.10045.2.".parse::<ObjectIdentifier>(),
+        Err(Error::TrailingDot)
+    );
 
     // Invalid first arc
-    assert!("3.2.840.10045.2.1".parse::<ObjectIdentifier>().is_err());
+    assert_eq!(
+        "3.2.840.10045.2.1".parse::<ObjectIdentifier>(),
+        Err(Error::ArcInvalid { arc: 3 })
+    );
 
     // Invalid second arc
-    assert!("1.40.840.10045.2.1".parse::<ObjectIdentifier>().is_err());
+    assert_eq!(
+        "1.40.840.10045.2.1".parse::<ObjectIdentifier>(),
+        Err(Error::ArcInvalid { arc: 40 })
+    );
 }
 
 #[test]
@@ -126,13 +141,22 @@ fn try_from_u32_slice() {
     assert_eq!(EXAMPLE_OID_2, oid2);
 
     // Too short
-    assert!(ObjectIdentifier::from_arcs([1, 2]).is_err());
+    assert_eq!(
+        ObjectIdentifier::from_arcs([1, 2]),
+        Err(Error::NotEnoughArcs)
+    );
 
     // Invalid first arc
-    assert!(ObjectIdentifier::from_arcs([3, 2, 840, 10045, 3, 1, 7]).is_err());
+    assert_eq!(
+        ObjectIdentifier::from_arcs([3, 2, 840, 10045, 3, 1, 7]),
+        Err(Error::ArcInvalid { arc: 3 })
+    );
 
     // Invalid second arc
-    assert!(ObjectIdentifier::from_arcs([1, 40, 840, 10045, 3, 1, 7]).is_err());
+    assert_eq!(
+        ObjectIdentifier::from_arcs([1, 40, 840, 10045, 3, 1, 7]),
+        Err(Error::ArcInvalid { arc: 40 })
+    );
 }
 
 #[test]
