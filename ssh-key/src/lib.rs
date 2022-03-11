@@ -21,10 +21,9 @@
 //!
 //! #### Example
 //!
-//! ```
+#![cfg_attr(feature = "std", doc = "```")]
+#![cfg_attr(not(feature = "std"), doc = "```ignore")]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! # #[cfg(feature = "std")]
-//! # {
 //! use ssh_key::PublicKey;
 //!
 //! let encoded_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti user@example.com";
@@ -32,10 +31,10 @@
 //!
 //! // Key attributes
 //! assert_eq!(public_key.algorithm(), ssh_key::Algorithm::Ed25519);
-//! assert_eq!(public_key.comment, "user@example.com");
+//! assert_eq!(public_key.comment(), "user@example.com");
 //!
 //! // Key data: in this example an Ed25519 key
-//! if let Some(ed25519_public_key) = public_key.key_data.ed25519() {
+//! if let Some(ed25519_public_key) = public_key.key_data().ed25519() {
 //!     assert_eq!(
 //!         ed25519_public_key.as_ref(),
 //!         [
@@ -45,7 +44,6 @@
 //!         ].as_ref()
 //!     );
 //! }
-//! # }
 //! # Ok(())
 //! # }
 //! ```
@@ -60,10 +58,9 @@
 //!
 //! #### Example
 //!
-//! ```
+#![cfg_attr(feature = "std", doc = " ```")]
+#![cfg_attr(not(feature = "std"), doc = " ```ignore")]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! # #[cfg(feature = "std")]
-//! # {
 //! use ssh_key::PrivateKey;
 //!
 //! // WARNING: don't actually hardcode private keys in source code!!!
@@ -81,10 +78,10 @@
 //!
 //! // Key attributes
 //! assert_eq!(private_key.algorithm(), ssh_key::Algorithm::Ed25519);
-//! assert_eq!(private_key.comment, "user@example.com");
+//! assert_eq!(private_key.comment(), "user@example.com");
 //!
 //! // Key data: in this example an Ed25519 key
-//! if let Some(ed25519_keypair) = private_key.key_data.ed25519() {
+//! if let Some(ed25519_keypair) = private_key.key_data().ed25519() {
 //!     assert_eq!(
 //!         ed25519_keypair.public.as_ref(),
 //!         [
@@ -103,7 +100,6 @@
 //!         ].as_ref()
 //!     )
 //! }
-//! # }
 //! # Ok(())
 //! # }
 //! ```
