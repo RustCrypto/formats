@@ -1,10 +1,16 @@
 //! Parser for `AuthorizedKeysFile`-formatted data.
 
 use crate::{Error, PublicKey, Result};
-use core::fmt;
+use core::str;
+
+#[cfg(feature = "alloc")]
+use {
+    alloc::string::{String, ToString},
+    core::fmt,
+};
 
 #[cfg(feature = "std")]
-use std::{fs, path::Path};
+use std::{fs, path::Path, vec::Vec};
 
 /// Character that begins a comment
 const COMMENT_DELIMITER: char = '#';
@@ -41,17 +47,14 @@ impl<'a> AuthorizedKeys<'a> {
         }
     }
 
-    /// Read a file from the filesystem, calling the given closure with an
-    /// [`AuthorizedKeys`] parser which operates over a temporary buffer.
+    /// Read an [`AuthorizedKeys`] file from the filesystem, returning an
+    /// [`Entry`] vector on success.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    pub fn read_file<T, F>(path: impl AsRef<Path>, f: F) -> Result<T>
-    where
-        F: FnOnce(AuthorizedKeys<'_>) -> Result<T>,
-    {
+    pub fn read_file(path: impl AsRef<Path>) -> Result<Vec<Entry>> {
         // TODO(tarcieri): permissions checks
         let input = fs::read_to_string(path)?;
-        f(AuthorizedKeys::new(&input))
+        AuthorizedKeys::new(&input).collect()
     }
 
     /// Get the next line, trimming any comments and trailing whitespace.
@@ -76,39 +79,81 @@ impl<'a> AuthorizedKeys<'a> {
     }
 }
 
-impl<'a> Iterator for AuthorizedKeys<'a> {
-    type Item = Result<Entry<'a>>;
+impl Iterator for AuthorizedKeys<'_> {
+    type Item = Result<Entry>;
 
-    fn next(&mut self) -> Option<Result<Entry<'a>>> {
-        self.next_line_trimmed().map(TryInto::try_into)
+    fn next(&mut self) -> Option<Result<Entry>> {
+        self.next_line_trimmed().map(|line| line.parse())
     }
 }
 
 /// Individual entry in an `authorized_keys` file containing a single public key.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Entry<'a> {
-    /// Options field, if present.
-    pub options: Options<'a>,
+pub struct Entry {
+    /// Configuration options field, if present.
+    #[cfg(feature = "alloc")]
+    config_opts: ConfigOpts,
 
     /// Public key
-    pub public_key: PublicKey,
+    public_key: PublicKey,
 }
 
-impl<'a> TryFrom<&'a str> for Entry<'a> {
-    type Error = Error;
+impl Entry {
+    /// Get configuration options for this entry.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn config_opts(&self) -> &ConfigOpts {
+        &self.config_opts
+    }
 
-    fn try_from(line: &'a str) -> Result<Self> {
+    /// Get public key for this entry.
+    pub fn public_key(&self) -> &PublicKey {
+        &self.public_key
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl From<Entry> for ConfigOpts {
+    fn from(entry: Entry) -> ConfigOpts {
+        entry.config_opts
+    }
+}
+
+impl From<Entry> for PublicKey {
+    fn from(entry: Entry) -> PublicKey {
+        entry.public_key
+    }
+}
+
+impl From<PublicKey> for Entry {
+    fn from(public_key: PublicKey) -> Entry {
+        Entry {
+            #[cfg(feature = "alloc")]
+            config_opts: ConfigOpts::default(),
+            public_key,
+        }
+    }
+}
+
+impl str::FromStr for Entry {
+    type Err = Error;
+
+    fn from_str(line: &str) -> Result<Self> {
         // TODO(tarcieri): more liberal whitespace handling?
         match line.matches(' ').count() {
             1..=2 => Ok(Self {
-                options: Default::default(),
+                #[cfg(feature = "alloc")]
+                config_opts: Default::default(),
                 public_key: line.parse()?,
             }),
             3 => line
                 .split_once(' ')
-                .map(|(options_str, public_key_str)| {
+                .map(|(config_opts_str, public_key_str)| {
+                    ConfigOptsIter(config_opts_str).validate()?;
+
                     Ok(Self {
-                        options: options_str.try_into()?,
+                        #[cfg(feature = "alloc")]
+                        config_opts: ConfigOpts(config_opts_str.to_string()),
                         public_key: public_key_str.parse()?,
                     })
                 })
@@ -118,17 +163,99 @@ impl<'a> TryFrom<&'a str> for Entry<'a> {
     }
 }
 
-/// Configuration options associated with a particular public key.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct Options<'a>(&'a str);
+#[cfg(feature = "alloc")]
+impl ToString for Entry {
+    fn to_string(&self) -> String {
+        let mut s = String::new();
 
-impl<'a> Options<'a> {
+        if !self.config_opts.is_empty() {
+            s.push_str(self.config_opts.as_str());
+            s.push(' ');
+        }
+
+        s.push_str(&self.public_key.to_string());
+        s
+    }
+}
+
+/// Configuration options associated with a particular public key.
+///
+/// These options are a comma-separated list preceding each public key
+/// in the `authorized_keys` file.
+///
+/// The [`ConfigOpts::iter`] method can be used to iterate over each
+/// comma-separated value.
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct ConfigOpts(String);
+
+#[cfg(feature = "alloc")]
+impl ConfigOpts {
     /// Parse an options string.
-    pub fn new(string: &'a str) -> Result<Self> {
-        // Ensure options can be iterated over successfully
-        let mut opts = Self(string);
-        while opts.try_next()?.is_some() {}
-        Ok(Self(string))
+    pub fn new(string: impl Into<String>) -> Result<Self> {
+        let ret = Self(string.into());
+        ret.iter().validate()?;
+        Ok(ret)
+    }
+
+    /// Borrow the configuration options as a `str`.
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+
+    /// Are there no configuration options?
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Iterate over the comma-delimited configuration options.
+    pub fn iter(&self) -> ConfigOptsIter<'_> {
+        ConfigOptsIter(self.as_str())
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl AsRef<str> for ConfigOpts {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl str::FromStr for ConfigOpts {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::new(s)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl fmt::Display for ConfigOpts {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+/// Iterator over configuration options.
+#[derive(Clone, Debug)]
+pub struct ConfigOptsIter<'a>(&'a str);
+
+impl<'a> ConfigOptsIter<'a> {
+    /// Create new configuration options iterator.
+    ///
+    /// Validates that the options are well-formed.
+    pub fn new(s: &'a str) -> Result<Self> {
+        let ret = Self(s);
+        ret.clone().validate()?;
+        Ok(ret)
+    }
+
+    /// Validate that config options are well-formed.
+    fn validate(&mut self) -> Result<()> {
+        while self.try_next()?.is_some() {}
+        Ok(())
     }
 
     /// Attempt to parse the next comma-delimited option string.
@@ -178,7 +305,7 @@ impl<'a> Options<'a> {
     }
 }
 
-impl<'a> Iterator for Options<'a> {
+impl<'a> Iterator for ConfigOptsIter<'a> {
     type Item = &'a str;
 
     fn next(&mut self) -> Option<&'a str> {
@@ -187,52 +314,38 @@ impl<'a> Iterator for Options<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a str> for Options<'a> {
-    type Error = Error;
-
-    fn try_from(s: &'a str) -> Result<Self> {
-        Options::new(s)
-    }
-}
-
-impl fmt::Display for Options<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.0)
-    }
-}
-
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
-    use super::Options;
+    use super::ConfigOptsIter;
     use crate::Error;
 
     #[test]
     fn options_empty() {
-        assert_eq!(Options("").try_next(), Ok(None));
+        assert_eq!(ConfigOptsIter("").try_next(), Ok(None));
     }
 
     #[test]
     fn options_no_comma() {
-        let mut opts = Options("foo");
+        let mut opts = ConfigOptsIter("foo");
         assert_eq!(opts.try_next(), Ok(Some("foo")));
         assert_eq!(opts.try_next(), Ok(None));
     }
 
     #[test]
     fn options_no_comma_quoted() {
-        let mut opts = Options("foo=\"bar\"");
+        let mut opts = ConfigOptsIter("foo=\"bar\"");
         assert_eq!(opts.try_next(), Ok(Some("foo=\"bar\"")));
         assert_eq!(opts.try_next(), Ok(None));
 
         // Comma inside quoted section
-        let mut opts = Options("foo=\"bar,baz\"");
+        let mut opts = ConfigOptsIter("foo=\"bar,baz\"");
         assert_eq!(opts.try_next(), Ok(Some("foo=\"bar,baz\"")));
         assert_eq!(opts.try_next(), Ok(None));
     }
 
     #[test]
     fn options_comma_delimited() {
-        let mut opts = Options("foo,bar");
+        let mut opts = ConfigOptsIter("foo,bar");
         assert_eq!(opts.try_next(), Ok(Some("foo")));
         assert_eq!(opts.try_next(), Ok(Some("bar")));
         assert_eq!(opts.try_next(), Ok(None));
@@ -240,7 +353,7 @@ mod tests {
 
     #[test]
     fn options_comma_delimited_quoted() {
-        let mut opts = Options("foo=\"bar\",baz");
+        let mut opts = ConfigOptsIter("foo=\"bar\",baz");
         assert_eq!(opts.try_next(), Ok(Some("foo=\"bar\"")));
         assert_eq!(opts.try_next(), Ok(Some("baz")));
         assert_eq!(opts.try_next(), Ok(None));
@@ -248,10 +361,10 @@ mod tests {
 
     #[test]
     fn options_invalid_character() {
-        let mut opts = Options("❌");
+        let mut opts = ConfigOptsIter("❌");
         assert_eq!(opts.try_next(), Err(Error::CharacterEncoding));
 
-        let mut opts = Options("x,❌");
+        let mut opts = ConfigOptsIter("x,❌");
         assert_eq!(opts.try_next(), Ok(Some("x")));
         assert_eq!(opts.try_next(), Err(Error::CharacterEncoding));
     }

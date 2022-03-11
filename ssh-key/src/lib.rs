@@ -122,7 +122,7 @@ mod error;
 mod mpint;
 
 pub use crate::{
-    algorithm::{Algorithm, CipherAlg, EcdsaCurve, KdfAlg, KdfOptions},
+    algorithm::{Algorithm, CipherAlg, EcdsaCurve, KdfAlg, KdfOpts},
     authorized_keys::AuthorizedKeys,
     error::{Error, Result},
     private::PrivateKey,

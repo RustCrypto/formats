@@ -23,7 +23,7 @@ pub use self::{
 
 use crate::{
     base64::{Decode, DecoderExt, Encode, EncoderExt},
-    public, Algorithm, CipherAlg, Error, KdfAlg, KdfOptions, PublicKey, Result,
+    public, Algorithm, CipherAlg, Error, KdfAlg, KdfOpts, PublicKey, Result,
 };
 use core::str;
 use pem_rfc7468::{self as pem, LineEnding, PemLabel};
@@ -63,7 +63,7 @@ pub struct PrivateKey {
     kdf_alg: KdfAlg,
 
     /// KDF options.
-    kdf_options: KdfOptions,
+    kdf_opts: KdfOpts,
 
     /// Key data.
     key_data: KeypairData,
@@ -109,7 +109,7 @@ impl PrivateKey {
 
         let cipher_alg = CipherAlg::decode(&mut pem_decoder)?;
         let kdf_alg = KdfAlg::decode(&mut pem_decoder)?;
-        let kdf_options = KdfOptions::decode(&mut pem_decoder)?;
+        let kdf_opts = KdfOpts::decode(&mut pem_decoder)?;
         let nkeys = pem_decoder.decode_usize()?;
 
         // TODO(tarcieri): support more than one key?
@@ -153,7 +153,7 @@ impl PrivateKey {
         let private_key = Self {
             cipher_alg,
             kdf_alg,
-            kdf_options,
+            kdf_opts,
             key_data,
             #[cfg(feature = "alloc")]
             comment,
@@ -196,7 +196,7 @@ impl PrivateKey {
         // TODO(tarcieri): support for encrypted private keys
         self.cipher_alg.encode(&mut pem_encoder)?;
         self.kdf_alg.encode(&mut pem_encoder)?;
-        self.kdf_options.encode(&mut pem_encoder)?;
+        self.kdf_opts.encode(&mut pem_encoder)?;
 
         // TODO(tarcieri): support for encoding more than one private key
         let nkeys = 1;
@@ -291,8 +291,8 @@ impl PrivateKey {
     }
 
     /// KDF options.
-    pub fn kdf_options(&self) -> &KdfOptions {
-        &self.kdf_options
+    pub fn kdf_opts(&self) -> &KdfOpts {
+        &self.kdf_opts
     }
 
     /// Keypair data.
@@ -320,7 +320,7 @@ impl PrivateKey {
         let bytes_len = Self::AUTH_MAGIC.len()
             + self.cipher_alg.encoded_len()?
             + self.kdf_alg.encoded_len()?
-            + self.kdf_options.encoded_len()?
+            + self.kdf_opts.encoded_len()?
             + 4 // number of keys
             + 4 + public::KeyData::from(&self.key_data).encoded_len()?
             + 4 + private_key_len
@@ -351,7 +351,7 @@ impl From<KeypairData> for PrivateKey {
         PrivateKey {
             cipher_alg: CipherAlg::None,
             kdf_alg: KdfAlg::None,
-            kdf_options: KdfOptions::default(),
+            kdf_opts: KdfOpts::default(),
             key_data,
             #[cfg(feature = "alloc")]
             comment: String::new(),
@@ -393,7 +393,7 @@ impl ConstantTimeEq for PrivateKey {
             & Choice::from(
                 (self.cipher_alg == other.cipher_alg
                     && self.kdf_alg == other.kdf_alg
-                    && self.kdf_options == other.kdf_options) as u8,
+                    && self.kdf_opts == other.kdf_opts) as u8,
             )
     }
 }
