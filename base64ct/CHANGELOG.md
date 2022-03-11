@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.4.0 (2022-03-10)
+## 1.4.1 (2022-03-11)
+### Changed
+- Rename `Decoder::decoded_len` => `::remaining_len` ([#500])
+
+[#500]: https://github.com/RustCrypto/formats/pull/500
+
+## 1.4.0 (2022-03-10) [YANKED]
 ### Added
 - Buffered `Encoder` type ([#366], [#455], [#457])
 - `Decoder::decoded_len` method ([#403])
