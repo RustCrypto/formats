@@ -29,6 +29,9 @@ use alloc::{
     string::{String, ToString},
 };
 
+#[cfg(feature = "std")]
+use std::{fs, path::Path};
+
 /// SSH public key.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct PublicKey {
@@ -102,6 +105,23 @@ impl PublicKey {
         let actual_len = self.encode_openssh(&mut buf)?.len();
         buf.truncate(actual_len);
         Ok(String::from_utf8(buf)?)
+    }
+
+    /// Read public key from an OpenSSH-formatted PEM file.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn read_openssh_file(path: &Path) -> Result<Self> {
+        let input = fs::read_to_string(path)?;
+        Self::from_openssh(&*input)
+    }
+
+    /// Write public key as an OpenSSH-formatted PEM file.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn write_openssh_file(&self, path: &Path) -> Result<()> {
+        let encoded = self.to_openssh()?;
+        fs::write(path, encoded.as_bytes())?;
+        Ok(())
     }
 
     /// Get the digital signature [`Algorithm`] used by this key.

@@ -27,9 +27,10 @@ and `authorized_keys` files.
 - [x] Parsing `autorized_keys` files
 - [x] Built-in zeroize support for private keys
 
-#### TODO:
+#### TODO
 
 - [ ] Encrypted private key support
+- [ ] SSH certificate support
 - [ ] Legacy SSH key (pre-OpenSSH) format support
 - [ ] Integrations with other RustCrypto crates (e.g. `ecdsa`, `ed25519`, `rsa`)
 - [ ] FIDO2 key support
