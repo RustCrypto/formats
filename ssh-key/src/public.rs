@@ -84,7 +84,7 @@ impl PublicKey {
         })
     }
 
-    /// Encode OpenSSH-formatted (PEM) public key.
+    /// Encode OpenSSH-formatted public key.
     pub fn encode_openssh<'o>(&self, out: &'o mut [u8]) -> Result<&'o str> {
         openssh::Encapsulation::encode(out, self.algorithm().as_str(), self.comment(), |encoder| {
             self.key_data.encode(encoder)
@@ -107,7 +107,7 @@ impl PublicKey {
         Ok(String::from_utf8(buf)?)
     }
 
-    /// Read public key from an OpenSSH-formatted PEM file.
+    /// Read public key from an OpenSSH-formatted file.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn read_openssh_file(path: &Path) -> Result<Self> {
@@ -115,7 +115,7 @@ impl PublicKey {
         Self::from_openssh(&*input)
     }
 
-    /// Write public key as an OpenSSH-formatted PEM file.
+    /// Write public key as an OpenSSH-formatted file.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn write_openssh_file(&self, path: &Path) -> Result<()> {

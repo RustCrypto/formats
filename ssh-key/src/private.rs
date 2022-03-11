@@ -182,7 +182,7 @@ impl PrivateKey {
         Ok(private_key)
     }
 
-    /// Encode OpenSSH-formatted (PEM) public key.
+    /// Encode OpenSSH-formatted (PEM) private key.
     pub fn encode_openssh<'o>(
         &self,
         line_ending: LineEnding,
