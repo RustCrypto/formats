@@ -37,7 +37,7 @@ pub struct Decoder<'i, E: Variant> {
     line_reader: LineReader<'i>,
 
     /// Length of the remaining data after Base64 decoding.
-    decoded_len: usize,
+    remaining_len: usize,
 
     /// Block buffer used for non-block-aligned data.
     block_buffer: BlockBuffer,
@@ -55,12 +55,12 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// - `Err(Error::InvalidLength)` if the input buffer is empty.
     pub fn new(input: &'i [u8]) -> Result<Self, Error> {
         let line_reader = LineReader::new_unwrapped(input)?;
-        let decoded_len = line_reader.decoded_len::<E>()?;
+        let remaining_len = line_reader.decoded_len::<E>()?;
 
         Ok(Self {
             line: Line::default(),
             line_reader,
-            decoded_len,
+            remaining_len,
             block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
         })
@@ -92,12 +92,12 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// [RFC7468]: https://datatracker.ietf.org/doc/html/rfc7468
     pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
         let line_reader = LineReader::new_wrapped(input, line_width)?;
-        let decoded_len = line_reader.decoded_len::<E>()?;
+        let remaining_len = line_reader.decoded_len::<E>()?;
 
         Ok(Self {
             line: Line::default(),
             line_reader,
-            decoded_len,
+            remaining_len,
             block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
         })
@@ -159,8 +159,8 @@ impl<'i, E: Variant> Decoder<'i, E> {
             }
         }
 
-        self.decoded_len = self
-            .decoded_len
+        self.remaining_len = self
+            .remaining_len
             .checked_sub(out.len())
             .ok_or(InvalidLength)?;
 
@@ -175,15 +175,15 @@ impl<'i, E: Variant> Decoder<'i, E> {
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn decode_to_end<'o>(&mut self, buf: &'o mut Vec<u8>) -> Result<&'o [u8], Error> {
         let start_len = buf.len();
-        let decoded_len = self.decoded_len();
-        let total_len = start_len + decoded_len;
+        let remaining_len = self.remaining_len();
+        let total_len = start_len + remaining_len;
 
         if total_len > buf.capacity() {
             buf.reserve(total_len - buf.capacity());
         }
 
         // Append `decoded_len` zeroes to the vector
-        buf.extend(iter::repeat(0).take(decoded_len));
+        buf.extend(iter::repeat(0).take(remaining_len));
         self.decode(&mut buf[start_len..])?;
         Ok(&buf[start_len..])
     }
@@ -191,8 +191,8 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// Get the length of the remaining data after Base64 decoding.
     ///
     /// Decreases every time data is decoded.
-    pub fn decoded_len(&self) -> usize {
-        self.decoded_len
+    pub fn remaining_len(&self) -> usize {
+        self.remaining_len
     }
 
     /// Has all of the input data been decoded?
@@ -257,7 +257,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'i, E: Variant> io::Read for Decoder<'i, E> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let slice = match buf.get_mut(..self.decoded_len()) {
+        let slice = match buf.get_mut(..self.remaining_len()) {
             Some(bytes) => bytes,
             None => buf,
         };
@@ -600,7 +600,7 @@ mod tests {
     {
         for chunk_size in 1..expected.len() {
             let mut decoder = f();
-            let mut remaining_len = decoder.decoded_len();
+            let mut remaining_len = decoder.remaining_len();
             let mut buffer = [0u8; 1024];
 
             for chunk in expected.chunks(chunk_size) {
@@ -609,11 +609,11 @@ mod tests {
                 assert_eq!(chunk, decoded);
 
                 remaining_len -= decoded.len();
-                assert_eq!(remaining_len, decoder.decoded_len());
+                assert_eq!(remaining_len, decoder.remaining_len());
             }
 
             assert!(decoder.is_finished());
-            assert_eq!(decoder.decoded_len(), 0);
+            assert_eq!(decoder.remaining_len(), 0);
         }
     }
 }

@@ -201,7 +201,7 @@ impl DecoderExt for Decoder<'_> {
     }
 
     fn decoded_len(&self) -> usize {
-        self.decoded_len()
+        self.remaining_len()
     }
 
     fn is_finished(&self) -> bool {
@@ -215,7 +215,7 @@ impl DecoderExt for pem::Decoder<'_> {
     }
 
     fn decoded_len(&self) -> usize {
-        self.decoded_len()
+        self.remaining_len()
     }
 
     fn is_finished(&self) -> bool {
