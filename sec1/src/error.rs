@@ -10,6 +10,8 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[non_exhaustive]
 pub enum Error {
     /// ASN.1 DER-related errors.
+    #[cfg(feature = "der")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "der")))]
     Asn1(der::Error),
 
     /// Cryptographic errors.
@@ -35,6 +37,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            #[cfg(feature = "der")]
             Error::Asn1(err) => write!(f, "SEC1 ASN.1 error: {}", err),
             Error::Crypto => f.write_str("SEC1 cryptographic error"),
             #[cfg(feature = "pkcs8")]
@@ -45,6 +48,8 @@ impl fmt::Display for Error {
     }
 }
 
+#[cfg(feature = "der")]
+#[cfg_attr(docsrs, doc(cfg(feature = "der")))]
 impl From<der::Error> for Error {
     fn from(err: der::Error) -> Error {
         Error::Asn1(err)

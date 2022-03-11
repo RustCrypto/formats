@@ -55,6 +55,7 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber::new(1);
 /// [SEC1: Elliptic Curve Cryptography (Version 2.0)]: https://www.secg.org/sec1-v2.pdf
 /// [RFC5915 Section 3]: https://datatracker.ietf.org/doc/html/rfc5915#section-3
 #[derive(Clone)]
+#[cfg_attr(docsrs, doc(cfg(feature = "der")))]
 pub struct EcPrivateKey<'a> {
     /// Private key data.
     pub private_key: &'a [u8],
