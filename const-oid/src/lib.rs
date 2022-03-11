@@ -105,10 +105,10 @@ impl ObjectIdentifier {
     }
 
     /// Parse an OID from a slice of [`Arc`] values (i.e. integers).
-    pub fn from_arcs<'a>(arcs: impl IntoIterator<Item = &'a Arc>) -> Result<Self> {
+    pub fn from_arcs(arcs: impl IntoIterator<Item = Arc>) -> Result<Self> {
         let mut encoder = Encoder::new();
 
-        for &arc in arcs {
+        for arc in arcs {
             encoder = encoder.arc(arc)?;
         }
 
@@ -156,6 +156,17 @@ impl ObjectIdentifier {
     /// Returns [`Arcs`], an iterator over [`Arc`] values.
     pub fn arcs(&self) -> Arcs<'_> {
         Arcs::new(self)
+    }
+
+    /// Get the length of this [`ObjectIdentifier`] in arcs.
+    pub fn len(&self) -> usize {
+        self.arcs().count()
+    }
+
+    /// Get the parent OID of this one (if applicable).
+    pub fn parent(&self) -> Option<Self> {
+        let num_arcs = self.len().checked_sub(1)?;
+        Self::from_arcs(self.arcs().take(num_arcs)).ok()
     }
 
     /// Push an additional arc onto this OID, returning the child OID.
