@@ -119,6 +119,7 @@ impl PrivateKey {
         let checkint1 = pem_decoder.decode_u32()?;
         let checkint2 = pem_decoder.decode_u32()?;
 
+        // TODO(tarcieri): constant-time comparison?
         if checkint1 != checkint2 {
             // TODO(tarcieri): treat this as a cryptographic error?
             return Err(Error::FormatEncoding);
@@ -126,19 +127,43 @@ impl PrivateKey {
 
         let key_data = KeypairData::decode(&mut pem_decoder)?;
 
+        #[cfg(not(feature = "alloc"))]
+        {
+            let len = pem_decoder.decode_usize()?;
+            for _ in 0..len {
+                let mut byte = [0];
+                pem_decoder.decode(&mut byte)?;
+            }
+        }
         #[cfg(feature = "alloc")]
         let comment = pem_decoder.decode_string()?;
 
-        // TODO(tarcieri): validate padding is well-formed
-
-        Ok(Self {
+        let private_key = Self {
             cipher_alg,
             kdf_alg,
             kdf_options,
             key_data,
             #[cfg(feature = "alloc")]
             comment,
-        })
+        };
+
+        let padding_len = private_key.padding_len()?;
+
+        if padding_len != 0 {
+            // TODO(tarcieri): support for encrypted private keys
+            let mut padding = [0u8; UNENCRYPTED_BLOCK_SIZE];
+            pem_decoder.decode(&mut padding[..padding_len])?;
+
+            if PADDING_BYTES[..padding_len] != padding[..padding_len] {
+                return Err(Error::FormatEncoding);
+            }
+        }
+
+        if !pem_decoder.is_finished() {
+            return Err(Error::Length);
+        }
+
+        Ok(private_key)
     }
 
     /// Encode OpenSSH-formatted (PEM) public key.
