@@ -125,8 +125,15 @@ impl PrivateKey {
 
         // Begin decoding unencrypted list of N private keys
         // See OpenSSH PROTOCOL.key § 3
-        // TODO(tarcieri): validate decoded length
-        let _len = pem_decoder.decode_usize()?;
+        let private_key_len = pem_decoder.decode_usize()?;
+
+        // TODO(tarcieri): support for encrypted private keys
+        let block_size = UNENCRYPTED_BLOCK_SIZE;
+
+        if (private_key_len % block_size != 0) || (private_key_len != pem_decoder.decoded_len()) {
+            return Err(Error::Length);
+        }
+
         let checkint1 = pem_decoder.decode_u32()?;
         let checkint2 = pem_decoder.decode_u32()?;
 
@@ -152,7 +159,11 @@ impl PrivateKey {
             comment,
         };
 
-        let padding_len = private_key.padding_len()?;
+        let padding_len = pem_decoder.decoded_len();
+
+        if padding_len >= block_size {
+            return Err(Error::Length);
+        }
 
         if padding_len != 0 {
             // TODO(tarcieri): support for encrypted private keys
@@ -197,7 +208,7 @@ impl PrivateKey {
         public_key_data.encode(&mut pem_encoder)?;
 
         // Encode private key
-        let padding_len = self.padding_len()?;
+        let padding_len = padding_len(self.private_key_len()?, UNENCRYPTED_BLOCK_SIZE);
         debug_assert!(padding_len <= 7, "padding too long: {}", padding_len);
         pem_encoder.encode_usize(self.private_key_len()? + padding_len)?;
         let checkint = public_key_data.checkint();
@@ -303,14 +314,17 @@ impl PrivateKey {
     /// May be slightly longer than the actual result.
     #[cfg(feature = "alloc")]
     fn openssh_encoded_len(&self, line_ending: LineEnding) -> Result<usize> {
+        let private_key_len = self.private_key_len()?;
+
+        // TODO(tarcieri): checked arithmetic
         let bytes_len = Self::AUTH_MAGIC.len()
             + self.cipher_alg.encoded_len()?
             + self.kdf_alg.encoded_len()?
             + self.kdf_options.encoded_len()?
             + 4 // number of keys
             + 4 + public::KeyData::from(&self.key_data).encoded_len()?
-            + 4 + self.private_key_len()?
-            + self.padding_len()?;
+            + 4 + private_key_len
+            + padding_len(private_key_len, UNENCRYPTED_BLOCK_SIZE);
 
         let mut base64_len = base64::encoded_len(bytes_len);
         base64_len += (base64_len.saturating_sub(1) / PEM_LINE_WIDTH) * line_ending.len();
@@ -324,27 +338,11 @@ impl PrivateKey {
 
     /// Get the length of the private key data in bytes (not including padding).
     fn private_key_len(&self) -> Result<usize> {
+        // TODO(tarcieri): checked arithmetic
         Ok(8 // 2 * checkints
             + self.key_data().encoded_len()?
             + 4 // comment length prefix
             + self.comment().len())
-    }
-
-    /// Get the number of padding bytes to add to this key (without padding).
-    fn padding_len(&self) -> Result<usize> {
-        // TODO(tarcieri): encrypted key support
-        let block_size = UNENCRYPTED_BLOCK_SIZE;
-
-        match block_size.checked_sub(self.private_key_len()? % block_size) {
-            Some(len) => {
-                if len == block_size {
-                    Ok(0)
-                } else {
-                    Ok(len)
-                }
-            }
-            None => Err(Error::Length),
-        }
     }
 }
 
@@ -609,3 +607,14 @@ impl PartialEq for KeypairData {
 #[cfg(feature = "subtle")]
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl Eq for KeypairData {}
+
+/// Compute padding length for the given input length and block size.
+fn padding_len(input_size: usize, block_size: usize) -> usize {
+    let input_rem = input_size % block_size;
+
+    if input_rem == 0 {
+        0
+    } else {
+        block_size - input_rem
+    }
+}
