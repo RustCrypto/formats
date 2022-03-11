@@ -119,10 +119,11 @@ impl ObjectIdentifier {
     pub fn from_bytes(ber_bytes: &[u8]) -> Result<Self> {
         let len = ber_bytes.len();
 
-        if !(2..=Self::MAX_SIZE).contains(&len) {
-            return Err(Error::Length);
+        match len {
+            0 => return Err(Error::Empty),
+            3..=Self::MAX_SIZE => (),
+            _ => return Err(Error::NotEnoughArcs),
         }
-
         let mut bytes = [0u8; Self::MAX_SIZE];
         bytes[..len].copy_from_slice(ber_bytes);
 
