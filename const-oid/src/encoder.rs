@@ -32,7 +32,7 @@ enum State {
 }
 
 impl Encoder {
-    /// Create a new encoder initialized to an empty default state
+    /// Create a new encoder initialized to an empty default state.
     pub(crate) const fn new() -> Self {
         Self {
             state: State::Initial,
@@ -41,7 +41,16 @@ impl Encoder {
         }
     }
 
-    /// Encode an [`Arc`] as base 128 into the internal buffer
+    /// Extend an existing OID.
+    pub(crate) const fn extend(oid: ObjectIdentifier) -> Self {
+        Self {
+            state: State::Body,
+            bytes: oid.bytes,
+            cursor: oid.length as usize,
+        }
+    }
+
+    /// Encode an [`Arc`] as base 128 into the internal buffer.
     pub(crate) const fn arc(mut self, arc: Arc) -> Result<Self> {
         match self.state {
             State::Initial => {
@@ -84,7 +93,7 @@ impl Encoder {
         }
     }
 
-    /// Finish encoding an OID
+    /// Finish encoding an OID.
     pub(crate) const fn finish(self) -> Result<ObjectIdentifier> {
         if self.cursor >= 2 {
             Ok(ObjectIdentifier {
@@ -96,7 +105,7 @@ impl Encoder {
         }
     }
 
-    /// Encode a single byte of a base128 value
+    /// Encode a single byte of a Base 128 value.
     const fn encode_base128_byte(mut self, mut n: u32, i: usize, continued: bool) -> Result<Self> {
         let mask = if continued { 0b10000000 } else { 0 };
 
@@ -116,7 +125,7 @@ impl Encoder {
     }
 }
 
-/// Compute the length - 1 of an arc when encoded in base 128
+/// Compute the length - 1 of an arc when encoded in base 128.
 const fn base128_len(arc: Arc) -> usize {
     match arc {
         0..=0x7f => 0,
