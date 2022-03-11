@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.0 (2022-03-11)
+### Added
+- Fallible `const fn` parser + `::new_unwrap` ([#458], [#459])
+- OID database gated under the `db` feature ([#451], [#453], [#456], [#488])
+- `AssociatedOid` trait ([#479])
+- `ObjectIdentifier::push_arc` ([#504])
+- `ObjectIdentifier::parent` ([#505])
+
+### Changed
+- `ObjectIdentifier::new` now returns a `Result` ([#458])
+
+[#451]: https://github.com/RustCrypto/formats/pull/451
+[#453]: https://github.com/RustCrypto/formats/pull/453
+[#456]: https://github.com/RustCrypto/formats/pull/456
+[#458]: https://github.com/RustCrypto/formats/pull/458
+[#459]: https://github.com/RustCrypto/formats/pull/459
+[#479]: https://github.com/RustCrypto/formats/pull/479
+[#488]: https://github.com/RustCrypto/formats/pull/488
+[#504]: https://github.com/RustCrypto/formats/pull/504
+[#505]: https://github.com/RustCrypto/formats/pull/505
+
 ## 0.8.0 (2022-01-17)
 ### Changed
 - Leverage `const_panic`; MSRV 1.57 ([#341])
