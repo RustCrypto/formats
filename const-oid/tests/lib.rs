@@ -115,24 +115,24 @@ fn display() {
 
 #[test]
 fn try_from_u32_slice() {
-    let oid1 = ObjectIdentifier::from_arcs(&[1, 2, 840, 10045, 2, 1]).unwrap();
+    let oid1 = ObjectIdentifier::from_arcs([1, 2, 840, 10045, 2, 1]).unwrap();
     assert_eq!(oid1.arc(0).unwrap(), 1);
     assert_eq!(oid1.arc(1).unwrap(), 2);
     assert_eq!(EXAMPLE_OID_1, oid1);
 
-    let oid2 = ObjectIdentifier::from_arcs(&[2, 16, 840, 1, 101, 3, 4, 1, 42]).unwrap();
+    let oid2 = ObjectIdentifier::from_arcs([2, 16, 840, 1, 101, 3, 4, 1, 42]).unwrap();
     assert_eq!(oid2.arc(0).unwrap(), 2);
     assert_eq!(oid2.arc(1).unwrap(), 16);
     assert_eq!(EXAMPLE_OID_2, oid2);
 
     // Too short
-    assert!(ObjectIdentifier::from_arcs(&[1, 2]).is_err());
+    assert!(ObjectIdentifier::from_arcs([1, 2]).is_err());
 
     // Invalid first arc
-    assert!(ObjectIdentifier::from_arcs(&[3, 2, 840, 10045, 3, 1, 7]).is_err());
+    assert!(ObjectIdentifier::from_arcs([3, 2, 840, 10045, 3, 1, 7]).is_err());
 
     // Invalid second arc
-    assert!(ObjectIdentifier::from_arcs(&[1, 40, 840, 10045, 3, 1, 7]).is_err());
+    assert!(ObjectIdentifier::from_arcs([1, 40, 840, 10045, 3, 1, 7]).is_err());
 }
 
 #[test]
@@ -168,10 +168,18 @@ fn parse_invalid_second_arc() {
 }
 
 #[test]
+fn parent() {
+    let oid = ObjectIdentifier::new("1.2.3.4").unwrap();
+    let parent = oid.parent().unwrap();
+    assert_eq!(parent, ObjectIdentifier::new("1.2.3").unwrap());
+    assert_eq!(parent.parent(), None);
+}
+
+#[test]
 fn push_arc() {
-    let oid = ObjectIdentifier::new_unwrap("1.2.3");
+    let oid = ObjectIdentifier::new("1.2.3").unwrap();
     assert_eq!(
         oid.push_arc(4).unwrap(),
-        ObjectIdentifier::new_unwrap("1.2.3.4")
+        ObjectIdentifier::new("1.2.3.4").unwrap()
     );
 }
