@@ -26,19 +26,23 @@ extern crate std;
 pub mod point;
 
 mod error;
+#[cfg(feature = "der")]
 mod parameters;
+#[cfg(feature = "der")]
 mod private_key;
+#[cfg(feature = "der")]
 mod traits;
 
+#[cfg(feature = "der")]
 pub use der;
 
-pub use self::{
+pub use crate::{
     error::{Error, Result},
-    parameters::EcParameters,
     point::EncodedPoint,
-    private_key::EcPrivateKey,
-    traits::DecodeEcPrivateKey,
 };
+
+#[cfg(feature = "der")]
+pub use crate::{parameters::EcParameters, private_key::EcPrivateKey, traits::DecodeEcPrivateKey};
 
 pub use generic_array::typenum::consts;
 

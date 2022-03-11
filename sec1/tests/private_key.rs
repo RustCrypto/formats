@@ -1,5 +1,7 @@
 //! SEC1 private key tests
 
+#![cfg(feature = "der")]
+
 use der::asn1::ObjectIdentifier;
 use hex_literal::hex;
 use sec1::{EcParameters, EcPrivateKey};

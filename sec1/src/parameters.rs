@@ -18,6 +18,7 @@ use der::{
 ///   -- with ANSI X9.
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(docsrs, doc(cfg(feature = "der")))]
 pub enum EcParameters {
     /// Elliptic curve named by a particular OID.
     ///
