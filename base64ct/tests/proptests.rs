@@ -33,7 +33,7 @@ proptest! {
 
         let mut buffer = [0u8; 384];
         let mut decoder = Decoder::new(encoded.as_bytes()).unwrap();
-        let mut remaining_len = decoder.decoded_len();
+        let mut remaining_len = decoder.remaining_len();
 
         for chunk in bytes.chunks(chunk_size) {
             prop_assert!(!decoder.is_finished());
@@ -42,11 +42,11 @@ proptest! {
             prop_assert_eq!(Ok(chunk), decoded);
 
             remaining_len -= decoded.unwrap().len();
-            prop_assert_eq!(remaining_len, decoder.decoded_len());
+            prop_assert_eq!(remaining_len, decoder.remaining_len());
         }
 
         prop_assert!(decoder.is_finished());
-        prop_assert_eq!(decoder.decoded_len(), 0);
+        prop_assert_eq!(decoder.remaining_len(), 0);
     }
 
     #[test]
@@ -81,7 +81,7 @@ proptest! {
 
             let mut buffer = [0u8; 384];
             let mut decoder = Decoder::new_wrapped(&encoded_wrapped, line_width).unwrap();
-            let mut remaining_len = decoder.decoded_len();
+            let mut remaining_len = decoder.remaining_len();
 
             for chunk in bytes.chunks(chunk_size) {
                 prop_assert!(!decoder.is_finished());
@@ -90,11 +90,11 @@ proptest! {
                 prop_assert_eq!(Ok(chunk), decoded);
 
                 remaining_len -= decoded.unwrap().len();
-                prop_assert_eq!(remaining_len, decoder.decoded_len());
+                prop_assert_eq!(remaining_len, decoder.remaining_len());
             }
 
             prop_assert!(decoder.is_finished());
-            prop_assert_eq!(decoder.decoded_len(), 0);
+            prop_assert_eq!(decoder.remaining_len(), 0);
         }
     }
 

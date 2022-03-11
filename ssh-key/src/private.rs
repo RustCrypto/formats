@@ -130,7 +130,7 @@ impl PrivateKey {
         // TODO(tarcieri): support for encrypted private keys
         let block_size = UNENCRYPTED_BLOCK_SIZE;
 
-        if (private_key_len % block_size != 0) || (private_key_len != pem_decoder.decoded_len()) {
+        if (private_key_len % block_size != 0) || (private_key_len != pem_decoder.remaining_len()) {
             return Err(Error::Length);
         }
 
@@ -159,7 +159,7 @@ impl PrivateKey {
             comment,
         };
 
-        let padding_len = pem_decoder.decoded_len();
+        let padding_len = pem_decoder.remaining_len();
 
         if padding_len >= block_size {
             return Err(Error::Length);

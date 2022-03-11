@@ -30,7 +30,9 @@ use std::io;
 pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o [u8])> {
     let mut decoder = Decoder::new(pem).map_err(|e| check_for_headers(pem, e))?;
     let type_label = decoder.type_label();
-    let buf = buf.get_mut(..decoder.decoded_len()).ok_or(Error::Length)?;
+    let buf = buf
+        .get_mut(..decoder.remaining_len())
+        .ok_or(Error::Length)?;
     let decoded = decoder.decode(buf).map_err(|e| check_for_headers(pem, e))?;
 
     if decoder.base64.is_finished() {
@@ -111,8 +113,8 @@ impl<'i> Decoder<'i> {
     }
 
     /// Get the decoded length of the remaining PEM data after Base64 decoding.
-    pub fn decoded_len(&self) -> usize {
-        self.base64.decoded_len()
+    pub fn remaining_len(&self) -> usize {
+        self.base64.remaining_len()
     }
 
     /// Are we finished decoding the PEM input?
