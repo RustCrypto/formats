@@ -82,12 +82,12 @@ impl PublicKey {
         })
     }
 
-    /// Encode this public key as an OpenSSH-formatted public key, allocating a
-    /// [`String`] for the result.
+    /// Encode an OpenSSH-formatted public key, allocating a [`String`] for
+    /// the result.
     #[cfg(feature = "alloc")]
     pub fn to_openssh(&self) -> Result<String> {
         let alg_len = self.algorithm().as_str().len();
-        let key_data_len = (((self.key_data.encoded_len()? * 4) / 3) + 3) & !3;
+        let key_data_len = base64::encoded_len(self.key_data.encoded_len()?);
         let comment_len = self.comment.len();
         let encoded_len = 2 + alg_len + key_data_len + comment_len;
 
@@ -219,6 +219,30 @@ impl KeyData {
     pub fn is_rsa(&self) -> bool {
         matches!(self, Self::Rsa(_))
     }
+
+    /// Compute a "checkint" from a public key.
+    ///
+    /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
+    // TODO(tarcieri): true randomness or a better algorithm?
+    pub(crate) fn checkint(&self) -> u32 {
+        let bytes = match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(dsa) => dsa.checkint_bytes(),
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(ecdsa) => ecdsa.as_sec1_bytes(),
+            Self::Ed25519(ed25519) => ed25519.as_ref(),
+            #[cfg(feature = "alloc")]
+            Self::Rsa(rsa) => rsa.checkint_bytes(),
+        };
+
+        let mut n = 0u32;
+
+        for chunk in bytes.chunks_exact(4) {
+            n ^= u32::from_be_bytes(chunk.try_into().expect("not 4 bytes"));
+        }
+
+        n
+    }
 }
 
 impl Decode for KeyData {
@@ -243,6 +267,7 @@ impl Decode for KeyData {
 impl Encode for KeyData {
     fn encoded_len(&self) -> Result<usize> {
         let alg_len = self.algorithm().encoded_len()?;
+
         let key_len = match self {
             #[cfg(feature = "alloc")]
             Self::Dsa(key) => key.encoded_len()?,
@@ -258,6 +283,7 @@ impl Encode for KeyData {
 
     fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
         self.algorithm().encode(encoder)?;
+
         match self {
             #[cfg(feature = "alloc")]
             Self::Dsa(key) => key.encode(encoder),

@@ -35,6 +35,12 @@ pub enum Error {
 
     /// Errors in the post-encapsulation boundary.
     PostEncapsulationBoundary,
+
+    /// Unexpected PEM type label.
+    UnexpectedTypeLabel {
+        /// Type label that was expected.
+        expected: &'static str,
+    },
 }
 
 impl fmt::Display for Error {
@@ -52,6 +58,9 @@ impl fmt::Display for Error {
             }
             Error::PostEncapsulationBoundary => {
                 f.write_str("PEM error in post-encapsulation boundary")
+            }
+            Error::UnexpectedTypeLabel { expected } => {
+                write!(f, "unexpected PEM type label: expecting \"{}\"", expected)
             }
         }
     }

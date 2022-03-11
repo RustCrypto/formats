@@ -1,7 +1,7 @@
 //! Algorithm support.
 
 use crate::{
-    base64::{Decode, DecoderExt, Encode, EncoderExt},
+    base64::{Decode, DecoderExt, Encode, EncoderExt, StrField},
     Error, Result,
 };
 use core::{fmt, str};
@@ -45,9 +45,6 @@ pub enum Algorithm {
 }
 
 impl Algorithm {
-    /// Maximum size of algorithms known to this crate in bytes.
-    const MAX_SIZE: usize = 20;
-
     /// Decode algorithm from the given string identifier.
     ///
     /// # Supported algorithms
@@ -102,21 +99,14 @@ impl Algorithm {
     }
 }
 
-impl Decode for Algorithm {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
-        let mut buf = [0u8; Self::MAX_SIZE];
-        Self::new(decoder.decode_str(&mut buf)?)
+impl AsRef<str> for Algorithm {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 
-impl Encode for Algorithm {
-    fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.as_str().len())
-    }
-
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
-        encoder.encode_str(self.as_str())
-    }
+impl StrField for Algorithm {
+    type DecodeBuf = [u8; 20]; // max length: "ecdsa-sha2-nistpXXX"
 }
 
 impl fmt::Display for Algorithm {
@@ -142,9 +132,6 @@ pub enum CipherAlg {
 }
 
 impl CipherAlg {
-    /// Maximum size of cipher algorithms known to this crate in bytes.
-    const MAX_SIZE: usize = 4;
-
     /// Decode cipher algorithm from the given `ciphername`.
     ///
     /// # Supported ciphernames
@@ -164,11 +151,14 @@ impl CipherAlg {
     }
 }
 
-impl Decode for CipherAlg {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
-        let mut buf = [0u8; Self::MAX_SIZE];
-        Self::new(decoder.decode_str(&mut buf)?)
+impl AsRef<str> for CipherAlg {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
+}
+
+impl StrField for CipherAlg {
+    type DecodeBuf = [u8; 4]; // max length: 'none'
 }
 
 impl fmt::Display for CipherAlg {
@@ -199,9 +189,6 @@ pub enum EcdsaCurve {
 }
 
 impl EcdsaCurve {
-    /// Maximum size of a curve identifier known to this crate in bytes.
-    const MAX_SIZE: usize = 8;
-
     /// Decode elliptic curve from the given string identifier.
     ///
     /// # Supported curves
@@ -228,21 +215,14 @@ impl EcdsaCurve {
     }
 }
 
-impl Decode for EcdsaCurve {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
-        let mut buf = [0u8; Self::MAX_SIZE];
-        Self::new(decoder.decode_str(&mut buf)?)
+impl AsRef<str> for EcdsaCurve {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 
-impl Encode for EcdsaCurve {
-    fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.as_str().len())
-    }
-
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
-        encoder.encode_str(self.as_str())
-    }
+impl StrField for EcdsaCurve {
+    type DecodeBuf = [u8; 8]; // max length: 'nistpXXX'
 }
 
 impl fmt::Display for EcdsaCurve {
@@ -268,9 +248,6 @@ pub enum KdfAlg {
 }
 
 impl KdfAlg {
-    /// Maximum size of KDF algorithms known to this crate in bytes.
-    const MAX_SIZE: usize = 4;
-
     /// Decode KDF algorithm from the given `kdfname`.
     ///
     /// # Supported kdfnames
@@ -290,11 +267,14 @@ impl KdfAlg {
     }
 }
 
-impl Decode for KdfAlg {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
-        let mut buf = [0u8; Self::MAX_SIZE];
-        Self::new(decoder.decode_str(&mut buf)?)
+impl AsRef<str> for KdfAlg {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
+}
+
+impl StrField for KdfAlg {
+    type DecodeBuf = [u8; 4]; // max length: 'none'
 }
 
 impl fmt::Display for KdfAlg {
@@ -313,7 +293,7 @@ impl str::FromStr for KdfAlg {
 
 /// Key Derivation Function (KDF) options.
 // TODO(tarcieri): stub!
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct KdfOptions {}
 
@@ -331,7 +311,35 @@ impl KdfOptions {
 
 impl Decode for KdfOptions {
     fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+        // TODO(tarcieri): stub!
         let mut buf = [0u8; 0];
         Self::new(decoder.decode_str(&mut buf)?)
+    }
+}
+
+impl Encode for KdfOptions {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4)
+    }
+
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+        // TODO(tarcieri): stub!
+        encoder.encode_str("")
+    }
+}
+
+impl fmt::Display for KdfOptions {
+    fn fmt(&self, _: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // TODO(tarcieri): stub!
+        Ok(())
+    }
+}
+
+impl str::FromStr for KdfOptions {
+    type Err = Error;
+
+    fn from_str(id: &str) -> Result<Self> {
+        // TODO(tarcieri): stub!
+        Self::new(id)
     }
 }

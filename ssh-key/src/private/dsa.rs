@@ -1,12 +1,15 @@
 //! Digital Signature Algorithm (DSA) private keys.
 
 use crate::{
-    base64::{Decode, DecoderExt},
+    base64::{Decode, DecoderExt, Encode, EncoderExt},
     public::DsaPublicKey,
     MPInt, Result,
 };
 use core::fmt;
 use zeroize::Zeroize;
+
+#[cfg(feature = "subtle")]
+use subtle::{Choice, ConstantTimeEq};
 
 /// Digital Signature Algorithm (DSA) private key.
 ///
@@ -53,6 +56,42 @@ impl Drop for DsaPrivateKey {
     }
 }
 
+impl Encode for DsaPrivateKey {
+    fn encoded_len(&self) -> Result<usize> {
+        self.inner.encoded_len()
+    }
+
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+        self.inner.encode(encoder)
+    }
+}
+
+impl fmt::Debug for DsaPrivateKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DsaPrivateKey").finish_non_exhaustive()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for DsaPrivateKey {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.inner.ct_eq(&other.inner)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for DsaPrivateKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for DsaPrivateKey {}
+
 /// Digital Signature Algorithm (DSA) private/public keypair.
 #[derive(Clone)]
 pub struct DsaKeypair {
@@ -68,6 +107,17 @@ impl Decode for DsaKeypair {
         let public = DsaPublicKey::decode(decoder)?;
         let private = DsaPrivateKey::decode(decoder)?;
         Ok(DsaKeypair { public, private })
+    }
+}
+
+impl Encode for DsaKeypair {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(self.public.encoded_len()? + self.private.encoded_len()?)
+    }
+
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+        self.public.encode(encoder)?;
+        self.private.encode(encoder)
     }
 }
 
@@ -90,3 +140,23 @@ impl fmt::Debug for DsaKeypair {
             .finish_non_exhaustive()
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for DsaKeypair {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        Choice::from((self.public == other.public) as u8) & self.private.ct_eq(&other.private)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for DsaKeypair {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for DsaKeypair {}

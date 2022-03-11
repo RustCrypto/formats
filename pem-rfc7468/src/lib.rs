@@ -55,7 +55,7 @@ mod grammar;
 
 pub use crate::{
     decoder::{decode, decode_label, Decoder},
-    encoder::{encode, encoded_len, Encoder},
+    encoder::{encapsulated_len, encode, encoded_len, Encoder},
     error::{Error, Result},
 };
 pub use base64ct::LineEnding;
@@ -97,4 +97,15 @@ pub type Base64Encoder<'o> = base64ct::Encoder<'o, base64ct::Base64>;
 pub trait PemLabel {
     /// Expected PEM type label for a given document, e.g. `"PRIVATE KEY"`
     const TYPE_LABEL: &'static str;
+
+    /// Validate that a given label matches the expected label.
+    fn validate_pem_label(actual: &str) -> Result<()> {
+        if Self::TYPE_LABEL == actual {
+            Ok(())
+        } else {
+            Err(Error::UnexpectedTypeLabel {
+                expected: Self::TYPE_LABEL,
+            })
+        }
+    }
 }

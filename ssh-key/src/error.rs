@@ -1,6 +1,7 @@
 //! Error types
 
 use core::fmt;
+use pem_rfc7468 as pem;
 
 /// Result type with `ssh-key`'s [`Error`] as the error type.
 pub type Result<T> = core::result::Result<T, Error>;
@@ -38,7 +39,7 @@ pub enum Error {
     Overflow,
 
     /// PEM encoding errors.
-    Pem,
+    Pem(pem::Error),
 }
 
 impl fmt::Display for Error {
@@ -54,7 +55,7 @@ impl fmt::Display for Error {
             Error::Io(err) => write!(f, "I/O error: {}", std::io::Error::from(*err)),
             Error::Length => f.write_str("length invalid"),
             Error::Overflow => f.write_str("internal overflow error"),
-            Error::Pem => f.write_str("PEM encoding error"),
+            Error::Pem(err) => write!(f, "{}", err),
         }
     }
 }
@@ -93,8 +94,8 @@ impl From<core::str::Utf8Error> for Error {
 }
 
 impl From<pem_rfc7468::Error> for Error {
-    fn from(_: pem_rfc7468::Error) -> Error {
-        Error::Pem
+    fn from(err: pem_rfc7468::Error) -> Error {
+        Error::Pem(err)
     }
 }
 

@@ -8,6 +8,9 @@ use alloc::vec::Vec;
 use core::fmt;
 use zeroize::Zeroize;
 
+#[cfg(feature = "subtle")]
+use subtle::{Choice, ConstantTimeEq};
+
 /// Multiple precision integer, a.k.a. "mpint".
 ///
 /// This type is used for representing the big integer components of
@@ -154,6 +157,14 @@ impl fmt::UpperHex for MPInt {
             write!(f, "{:02X}", byte)?;
         }
         Ok(())
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for MPInt {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.as_ref().ct_eq(other.as_ref())
     }
 }
 

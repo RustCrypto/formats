@@ -22,13 +22,15 @@ zeroize = { version = "1", default-features = false }
 
 # optional dependencies
 sec1 = { version = "=0.3.0-pre", optional = true, default-features = false, path = "../sec1" }
+subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
+tempfile = "3"
 
 [features]
 default = ["alloc", "ecdsa"]
-alloc = []
+alloc = ["zeroize/alloc"]
 ecdsa = ["sec1"]
 std = ["alloc", "base64ct/std"]
 

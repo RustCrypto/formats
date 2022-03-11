@@ -132,6 +132,7 @@ pub use crate::{
     private::PrivateKey,
     public::PublicKey,
 };
+pub use base64ct::LineEnding;
 
 #[cfg(feature = "alloc")]
 pub use crate::mpint::MPInt;

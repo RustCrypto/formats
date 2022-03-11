@@ -1,12 +1,15 @@
 //! Rivest–Shamir–Adleman (RSA) private keys.
 
 use crate::{
-    base64::{Decode, DecoderExt},
+    base64::{Decode, DecoderExt, Encode, EncoderExt},
     public::RsaPublicKey,
     MPInt, Result,
 };
 use core::fmt;
 use zeroize::Zeroize;
+
+#[cfg(feature = "subtle")]
+use subtle::{Choice, ConstantTimeEq};
 
 /// RSA private key.
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
@@ -35,6 +38,21 @@ impl Decode for RsaPrivateKey {
     }
 }
 
+impl Encode for RsaPrivateKey {
+    fn encoded_len(&self) -> Result<usize> {
+        [&self.d, &self.iqmp, &self.p, &self.q]
+            .iter()
+            .fold(Ok(0), |acc, n| Ok(acc? + n.encoded_len()?))
+    }
+
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+        self.d.encode(encoder)?;
+        self.iqmp.encode(encoder)?;
+        self.p.encode(encoder)?;
+        self.q.encode(encoder)
+    }
+}
+
 impl Drop for RsaPrivateKey {
     fn drop(&mut self) {
         self.d.zeroize();
@@ -43,6 +61,29 @@ impl Drop for RsaPrivateKey {
         self.q.zeroize();
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for RsaPrivateKey {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.d.ct_eq(&other.d)
+            & self.iqmp.ct_eq(&self.iqmp)
+            & self.p.ct_eq(&other.p)
+            & self.q.ct_eq(&other.q)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for RsaPrivateKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for RsaPrivateKey {}
 
 /// RSA private/public keypair.
 #[derive(Clone)]
@@ -61,6 +102,20 @@ impl Decode for RsaKeypair {
         let public = RsaPublicKey { n, e };
         let private = RsaPrivateKey::decode(decoder)?;
         Ok(RsaKeypair { public, private })
+    }
+}
+
+impl Encode for RsaKeypair {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(self.public.n.encoded_len()?
+            + self.public.e.encoded_len()?
+            + self.private.encoded_len()?)
+    }
+
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+        self.public.n.encode(encoder)?;
+        self.public.e.encode(encoder)?;
+        self.private.encode(encoder)
     }
 }
 
@@ -83,3 +138,23 @@ impl fmt::Debug for RsaKeypair {
             .finish_non_exhaustive()
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for RsaKeypair {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        Choice::from((self.public == other.public) as u8) & self.private.ct_eq(&other.private)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for RsaKeypair {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for RsaKeypair {}
