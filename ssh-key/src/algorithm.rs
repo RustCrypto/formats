@@ -295,9 +295,9 @@ impl str::FromStr for KdfAlg {
 // TODO(tarcieri): stub!
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[non_exhaustive]
-pub struct KdfOptions {}
+pub struct KdfOpts {}
 
-impl KdfOptions {
+impl KdfOpts {
     /// Create new KDF options.
     pub(crate) fn new(kdfoptions: &str) -> Result<Self> {
         // TODO(tarcieri): support for KDF options
@@ -309,7 +309,7 @@ impl KdfOptions {
     }
 }
 
-impl Decode for KdfOptions {
+impl Decode for KdfOpts {
     fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
         // TODO(tarcieri): stub!
         let mut buf = [0u8; 0];
@@ -317,7 +317,7 @@ impl Decode for KdfOptions {
     }
 }
 
-impl Encode for KdfOptions {
+impl Encode for KdfOpts {
     fn encoded_len(&self) -> Result<usize> {
         Ok(4)
     }
@@ -328,14 +328,14 @@ impl Encode for KdfOptions {
     }
 }
 
-impl fmt::Display for KdfOptions {
+impl fmt::Display for KdfOpts {
     fn fmt(&self, _: &mut fmt::Formatter<'_>) -> fmt::Result {
         // TODO(tarcieri): stub!
         Ok(())
     }
 }
 
-impl str::FromStr for KdfOptions {
+impl str::FromStr for KdfOpts {
     type Err = Error;
 
     fn from_str(id: &str) -> Result<Self> {
