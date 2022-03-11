@@ -13,6 +13,14 @@ use alloc::{string::String, vec::Vec};
 /// Maximum size of a `usize` this library will accept.
 const MAX_SIZE: usize = 0xFFFFF;
 
+/// Get the estimated length of data when encoded as Base64.
+///
+/// This is an upper bound where the actual length might be slightly shorter.
+#[cfg(feature = "alloc")]
+pub(crate) fn encoded_len(input_len: usize) -> usize {
+    (((input_len * 4) / 3) + 3) & !3
+}
+
 /// Decoder trait.
 pub(crate) trait Decode: Sized {
     /// Attempt to decode a value of this type using the provided [`Decoder`].
@@ -26,6 +34,34 @@ pub(crate) trait Encode: Sized {
 
     /// Attempt to encode a value of this type using the provided [`Encoder`].
     fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()>;
+}
+
+/// String-like fields.
+///
+/// These fields receive a blanket impl of [`Decode`] and [`Encode`].
+pub(crate) trait StrField: AsRef<str> + str::FromStr<Err = Error> {
+    /// Decoding buffer type.
+    ///
+    /// This needs to be a byte array large enough to fit the largest
+    /// possible value of this type.
+    type DecodeBuf: AsMut<[u8]> + Default;
+}
+
+impl<T: StrField> Decode for T {
+    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+        let mut buf = T::DecodeBuf::default();
+        decoder.decode_str(buf.as_mut())?.parse()
+    }
+}
+
+impl<T: StrField> Encode for T {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4 + self.as_ref().len())
+    }
+
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+        encoder.encode_str(self.as_ref())
+    }
 }
 
 /// Stateful Base64 decoder.
@@ -45,6 +81,12 @@ pub(crate) trait DecoderExt {
     /// - `Ok(bytes)` if the expected amount of data was read
     /// - `Err(Error::Length)` if the exact amount of data couldn't be read
     fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]>;
+
+    /// Get the length of the remaining data after Base64 decoding.
+    fn decoded_len(&self) -> usize;
+
+    /// Is decoding finished?
+    fn is_finished(&self) -> bool;
 
     /// Decodes a single byte.
     #[cfg(feature = "ecdsa")]
@@ -142,11 +184,27 @@ impl DecoderExt for Decoder<'_> {
     fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
         Ok(self.decode(out)?)
     }
+
+    fn decoded_len(&self) -> usize {
+        self.decoded_len()
+    }
+
+    fn is_finished(&self) -> bool {
+        self.is_finished()
+    }
 }
 
 impl DecoderExt for pem::Decoder<'_> {
     fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
         Ok(self.decode(out)?)
+    }
+
+    fn decoded_len(&self) -> usize {
+        self.decoded_len()
+    }
+
+    fn is_finished(&self) -> bool {
+        self.is_finished()
     }
 }
 

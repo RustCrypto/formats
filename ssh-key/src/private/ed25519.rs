@@ -3,12 +3,15 @@
 //! Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
 use crate::{
-    base64::{Decode, DecoderExt},
+    base64::{Decode, DecoderExt, Encode, EncoderExt},
     public::Ed25519PublicKey,
     Error, Result,
 };
 use core::fmt;
 use zeroize::{Zeroize, Zeroizing};
+
+#[cfg(feature = "subtle")]
+use subtle::{Choice, ConstantTimeEq};
 
 /// Ed25519 private key.
 // TODO(tarcieri): use `ed25519::PrivateKey`? (doesn't exist yet)
@@ -28,6 +31,12 @@ impl Ed25519PrivateKey {
 impl AsRef<[u8; Self::BYTE_SIZE]> for Ed25519PrivateKey {
     fn as_ref(&self) -> &[u8; Self::BYTE_SIZE] {
         &self.0
+    }
+}
+
+impl Drop for Ed25519PrivateKey {
+    fn drop(&mut self) {
+        self.0.zeroize();
     }
 }
 
@@ -55,11 +64,25 @@ impl fmt::UpperHex for Ed25519PrivateKey {
     }
 }
 
-impl Drop for Ed25519PrivateKey {
-    fn drop(&mut self) {
-        self.0.zeroize();
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for Ed25519PrivateKey {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.as_ref().ct_eq(other.as_ref())
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for Ed25519PrivateKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for Ed25519PrivateKey {}
 
 /// Ed25519 private/public keypair.
 #[derive(Clone)]
@@ -100,12 +123,25 @@ impl Decode for Ed25519Keypair {
         decoder.decode_base64(&mut *bytes)?;
 
         let (priv_bytes, pub_bytes) = bytes.split_at(Ed25519PrivateKey::BYTE_SIZE);
+
         if pub_bytes != public.as_ref() {
             return Err(Error::FormatEncoding);
         }
 
         let private = Ed25519PrivateKey(priv_bytes.try_into()?);
+
         Ok(Self { public, private })
+    }
+}
+
+impl Encode for Ed25519Keypair {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(self.public.encoded_len()? + 4 + Self::BYTE_SIZE)
+    }
+
+    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+        self.public.encode(encoder)?;
+        encoder.encode_byte_slice(&*Zeroizing::new(self.to_bytes()))
     }
 }
 
@@ -128,3 +164,23 @@ impl fmt::Debug for Ed25519Keypair {
             .finish_non_exhaustive()
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for Ed25519Keypair {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        Choice::from((self.public == other.public) as u8) & self.private.ct_eq(&other.private)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for Ed25519Keypair {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for Ed25519Keypair {}

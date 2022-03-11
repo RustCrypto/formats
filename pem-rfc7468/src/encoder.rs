@@ -13,6 +13,31 @@ use alloc::string::String;
 #[cfg(feature = "std")]
 use std::io;
 
+/// Compute the length of a PEM encoded document which encapsulates a
+/// Base64-encoded body of the given length.
+///
+/// The `base64_len` value does *NOT* include the trailing newline's length.
+pub fn encapsulated_len(label: &str, line_ending: LineEnding, base64_len: usize) -> usize {
+    // TODO(tarcieri): use checked arithmetic
+    PRE_ENCAPSULATION_BOUNDARY.len()
+        + label.as_bytes().len()
+        + ENCAPSULATION_BOUNDARY_DELIMITER.len()
+        + line_ending.len()
+        + base64_len
+        + line_ending.len()
+        + POST_ENCAPSULATION_BOUNDARY.len()
+        + label.as_bytes().len()
+        + ENCAPSULATION_BOUNDARY_DELIMITER.len()
+        + line_ending.len()
+}
+
+/// Get the length of a PEM encoded document with the given bytes and label.
+pub fn encoded_len(label: &str, line_ending: LineEnding, input: &[u8]) -> usize {
+    let mut base64_len = Base64::encoded_len(input);
+    base64_len += (base64_len.saturating_sub(1) / BASE64_WRAP_WIDTH) * line_ending.len();
+    encapsulated_len(label, line_ending, base64_len)
+}
+
 /// Encode a PEM document according to RFC 7468's "Strict" grammar.
 pub fn encode<'o>(
     type_label: &str,
@@ -24,18 +49,6 @@ pub fn encode<'o>(
     encoder.encode(input)?;
     let encoded_len = encoder.finish()?;
     Ok(str::from_utf8(&buf[..encoded_len])?)
-}
-
-/// Get the length of a PEM encoded document with the given bytes and label.
-pub fn encoded_len(label: &str, line_ending: LineEnding, input: &[u8]) -> usize {
-    // TODO(tarcieri): use checked arithmetic
-    let base64_len = input
-        .chunks((BASE64_WRAP_WIDTH * 3) / 4)
-        .fold(0, |acc, chunk| {
-            acc + Base64::encoded_len(chunk) + line_ending.len()
-        });
-
-    encoded_len_inner(label, line_ending, base64_len)
 }
 
 /// Encode a PEM document according to RFC 7468's "Strict" grammar, returning
@@ -153,10 +166,10 @@ impl<'l, 'o> Encoder<'l, 'o> {
             part.copy_from_slice(boundary_part);
         }
 
-        Ok(encoded_len_inner(
+        Ok(encapsulated_len(
             self.type_label,
             self.line_ending,
-            base64.len() + self.line_ending.len(),
+            base64.len(),
         ))
     }
 }
@@ -173,19 +186,4 @@ impl<'l, 'o> io::Write for Encoder<'l, 'o> {
         // TODO(tarcieri): return an error if there's still data remaining in the buffer?
         Ok(())
     }
-}
-
-/// Compute the length of a PEM encoded document with a Base64-encoded body of
-/// the given length.
-fn encoded_len_inner(label: &str, line_ending: LineEnding, base64_len: usize) -> usize {
-    // TODO(tarcieri): use checked arithmetic
-    PRE_ENCAPSULATION_BOUNDARY.len()
-        + label.as_bytes().len()
-        + ENCAPSULATION_BOUNDARY_DELIMITER.len()
-        + line_ending.len()
-        + base64_len
-        + POST_ENCAPSULATION_BOUNDARY.len()
-        + label.as_bytes().len()
-        + ENCAPSULATION_BOUNDARY_DELIMITER.len()
-        + line_ending.len()
 }
