@@ -166,3 +166,12 @@ fn parse_invalid_second_arc() {
         Err(Error::ArcInvalid { arc: 40 })
     );
 }
+
+#[test]
+fn push_arc() {
+    let oid = ObjectIdentifier::new_unwrap("1.2.3");
+    assert_eq!(
+        oid.push_arc(4).unwrap(),
+        ObjectIdentifier::new_unwrap("1.2.3.4")
+    );
+}

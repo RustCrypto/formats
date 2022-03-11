@@ -157,6 +157,15 @@ impl ObjectIdentifier {
     pub fn arcs(&self) -> Arcs<'_> {
         Arcs::new(self)
     }
+
+    /// Push an additional arc onto this OID, returning the child OID.
+    pub const fn push_arc(self, arc: Arc) -> Result<Self> {
+        // TODO(tarcieri): use `?` when stable in `const fn`
+        match Encoder::extend(self).arc(arc) {
+            Ok(encoder) => encoder.finish(),
+            Err(err) => Err(err),
+        }
+    }
 }
 
 impl AsRef<[u8]> for ObjectIdentifier {
