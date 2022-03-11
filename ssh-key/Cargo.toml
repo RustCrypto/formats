@@ -29,7 +29,7 @@ hex-literal = "0.3"
 tempfile = "3"
 
 [features]
-default = ["alloc", "ecdsa"]
+default = ["ecdsa", "std"]
 alloc = ["zeroize/alloc"]
 ecdsa = ["sec1"]
 std = ["alloc", "base64ct/std"]
