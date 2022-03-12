@@ -1,5 +1,5 @@
 use der::Decodable;
-use x509::crl::CertificateList;
+use x509_cert::crl::CertificateList;
 
 #[test]
 fn decode_crl() {

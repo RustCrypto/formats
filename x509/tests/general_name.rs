@@ -1,4 +1,4 @@
-use x509::ext::pkix::name::{GeneralName, GeneralNames};
+use x509_cert::ext::pkix::name::{GeneralName, GeneralNames};
 
 use der::{Decodable, Encodable};
 use hex_literal::hex;

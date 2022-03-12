@@ -1,7 +1,7 @@
 use der::{Decodable, Decoder, Encodable};
 use hex_literal::hex;
-use x509::anchor::{CertPolicies, TrustAnchorChoice};
-use x509::ext::pkix::name::GeneralName;
+use x509_cert::anchor::{CertPolicies, TrustAnchorChoice};
+use x509_cert::ext::pkix::name::GeneralName;
 
 #[test]
 fn decode_ta1() {

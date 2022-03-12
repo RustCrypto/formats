@@ -4,8 +4,8 @@ use const_oid::ObjectIdentifier;
 use der::asn1::{OctetString, SetOfVec, Utf8String};
 use der::{Any, Decodable, Encodable, Tag, Tagged};
 use hex_literal::hex;
-use x509::attr::AttributeTypeAndValue;
-use x509::name::{Name, RdnSequence, RelativeDistinguishedName};
+use x509_cert::attr::AttributeTypeAndValue;
+use x509_cert::name::{Name, RdnSequence, RelativeDistinguishedName};
 
 #[test]
 fn decode_name() {

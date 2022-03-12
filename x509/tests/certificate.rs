@@ -3,8 +3,8 @@ use der::asn1::{BitString, ObjectIdentifier, UIntBytes};
 use der::{Decodable, Decoder, Encodable, Tag, Tagged};
 use hex_literal::hex;
 use spki::AlgorithmIdentifier;
-use x509::Certificate;
-use x509::*;
+use x509_cert::Certificate;
+use x509_cert::*;
 
 // TODO - parse and compare extension values
 const EXTENSIONS: &[(&str, bool)] = &[

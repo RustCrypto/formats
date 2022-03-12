@@ -10,7 +10,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-x509 = { path = ".." }
+x509-cert = { path = ".." }
 
 # Prevents this crate from interfering with the workspace
 [workspace]
