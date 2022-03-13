@@ -286,7 +286,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.6.0-pre.2"
+version = "0.6.0-pre.3"
 dependencies = [
  "const-oid",
  "der_derive",
@@ -299,7 +299,7 @@ dependencies = [
 
 [[package]]
 name = "der_derive"
-version = "0.6.0-pre.2"
+version = "0.6.0-pre.3"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -552,7 +552,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.5.0-pre"
+version = "0.5.0-pre.1"
 dependencies = [
  "aes",
  "cbc",
@@ -578,7 +578,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.9.0-pre"
+version = "0.9.0-pre.1"
 dependencies = [
  "der",
  "hex-literal",
@@ -878,7 +878,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.3.0-pre"
+version = "0.3.0-pre.1"
 dependencies = [
  "der",
  "generic-array",
@@ -960,7 +960,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.6.0-pre.1"
+version = "0.6.0-pre.2"
 dependencies = [
  "base64ct",
  "der",
