@@ -1,7 +1,8 @@
 //! Digital Signature Algorithm (DSA) public keys.
 
 use crate::{
-    base64::{Decode, DecoderExt, Encode, EncoderExt},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     MPInt, Result,
 };
 
@@ -35,7 +36,7 @@ impl DsaPublicKey {
 }
 
 impl Decode for DsaPublicKey {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let p = MPInt::decode(decoder)?;
         let q = MPInt::decode(decoder)?;
         let g = MPInt::decode(decoder)?;
@@ -52,7 +53,7 @@ impl Encode for DsaPublicKey {
             + self.y.encoded_len()?)
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.p.encode(encoder)?;
         self.q.encode(encoder)?;
         self.g.encode(encoder)?;

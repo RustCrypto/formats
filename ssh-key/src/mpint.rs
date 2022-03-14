@@ -1,7 +1,8 @@
 //! Multiple precision integer
 
 use crate::{
-    base64::{Decode, DecoderExt, Encode, EncoderExt},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     Error, Result,
 };
 use alloc::vec::Vec;
@@ -87,7 +88,7 @@ impl AsRef<[u8]> for MPInt {
 }
 
 impl Decode for MPInt {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         decoder.decode_byte_vec()?.try_into()
     }
 }
@@ -97,7 +98,7 @@ impl Encode for MPInt {
         Ok(4 + self.as_bytes().len())
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         encoder.encode_byte_slice(self.as_bytes())
     }
 }

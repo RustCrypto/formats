@@ -115,7 +115,8 @@ pub mod private;
 pub mod public;
 
 mod algorithm;
-mod base64;
+mod decoder;
+mod encoder;
 mod error;
 
 #[cfg(feature = "alloc")]

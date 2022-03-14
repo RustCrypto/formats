@@ -1,7 +1,8 @@
 //! Digital Signature Algorithm (DSA) private keys.
 
 use crate::{
-    base64::{Decode, DecoderExt, Encode, EncoderExt},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     public::DsaPublicKey,
     MPInt, Result,
 };
@@ -43,7 +44,7 @@ impl AsRef<[u8]> for DsaPrivateKey {
 }
 
 impl Decode for DsaPrivateKey {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         Ok(Self {
             inner: MPInt::decode(decoder)?,
         })
@@ -61,7 +62,7 @@ impl Encode for DsaPrivateKey {
         self.inner.encoded_len()
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.inner.encode(encoder)
     }
 }
@@ -103,7 +104,7 @@ pub struct DsaKeypair {
 }
 
 impl Decode for DsaKeypair {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let public = DsaPublicKey::decode(decoder)?;
         let private = DsaPrivateKey::decode(decoder)?;
         Ok(DsaKeypair { public, private })
@@ -115,7 +116,7 @@ impl Encode for DsaKeypair {
         Ok(self.public.encoded_len()? + self.private.encoded_len()?)
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.public.encode(encoder)?;
         self.private.encode(encoder)
     }
