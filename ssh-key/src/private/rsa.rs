@@ -1,7 +1,8 @@
 //! Rivest–Shamir–Adleman (RSA) private keys.
 
 use crate::{
-    base64::{Decode, DecoderExt, Encode, EncoderExt},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     public::RsaPublicKey,
     MPInt, Result,
 };
@@ -29,7 +30,7 @@ pub struct RsaPrivateKey {
 }
 
 impl Decode for RsaPrivateKey {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let d = MPInt::decode(decoder)?;
         let iqmp = MPInt::decode(decoder)?;
         let p = MPInt::decode(decoder)?;
@@ -45,7 +46,7 @@ impl Encode for RsaPrivateKey {
             .fold(Ok(0), |acc, n| Ok(acc? + n.encoded_len()?))
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.d.encode(encoder)?;
         self.iqmp.encode(encoder)?;
         self.p.encode(encoder)?;
@@ -96,7 +97,7 @@ pub struct RsaKeypair {
 }
 
 impl Decode for RsaKeypair {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let n = MPInt::decode(decoder)?;
         let e = MPInt::decode(decoder)?;
         let public = RsaPublicKey { n, e };
@@ -112,7 +113,7 @@ impl Encode for RsaKeypair {
             + self.private.encoded_len()?)
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.public.n.encode(encoder)?;
         self.public.e.encode(encoder)?;
         self.private.encode(encoder)

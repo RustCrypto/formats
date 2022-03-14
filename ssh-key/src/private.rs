@@ -22,14 +22,15 @@ pub use self::{
 };
 
 use crate::{
-    base64::{Decode, DecoderExt, Encode, EncoderExt},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     public, Algorithm, CipherAlg, Error, KdfAlg, KdfOpts, PublicKey, Result,
 };
 use core::str;
 use pem_rfc7468::{self as pem, LineEnding, PemLabel};
 
 #[cfg(feature = "alloc")]
-use {crate::base64, alloc::string::String, zeroize::Zeroizing};
+use {crate::encoder::encoded_len, alloc::string::String, zeroize::Zeroizing};
 
 #[cfg(feature = "std")]
 use std::{fs, io::Write, path::Path};
@@ -326,7 +327,7 @@ impl PrivateKey {
             + 4 + private_key_len
             + padding_len(private_key_len, UNENCRYPTED_BLOCK_SIZE);
 
-        let mut base64_len = base64::encoded_len(bytes_len);
+        let mut base64_len = encoded_len(bytes_len);
         base64_len += (base64_len.saturating_sub(1) / PEM_LINE_WIDTH) * line_ending.len();
 
         Ok(pem::encapsulated_len(
@@ -514,7 +515,7 @@ impl KeypairData {
 }
 
 impl Decode for KeypairData {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaKeypair::decode(decoder).map(Self::Dsa),
@@ -549,7 +550,7 @@ impl Encode for KeypairData {
         Ok(alg_len + key_len)
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.algorithm().encode(encoder)?;
 
         match self {

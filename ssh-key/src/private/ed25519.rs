@@ -3,7 +3,8 @@
 //! Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
 use crate::{
-    base64::{Decode, DecoderExt, Encode, EncoderExt},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     public::Ed25519PublicKey,
     Error, Result,
 };
@@ -108,7 +109,7 @@ impl Ed25519Keypair {
 }
 
 impl Decode for Ed25519Keypair {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         // Decode private key
         let public = Ed25519PublicKey::decode(decoder)?;
 
@@ -139,7 +140,7 @@ impl Encode for Ed25519Keypair {
         Ok(self.public.encoded_len()? + 4 + Self::BYTE_SIZE)
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.public.encode(encoder)?;
         encoder.encode_byte_slice(&*Zeroizing::new(self.to_bytes()))
     }

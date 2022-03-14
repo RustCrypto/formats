@@ -18,15 +18,19 @@ pub use self::ed25519::Ed25519PublicKey;
 pub use self::{dsa::DsaPublicKey, rsa::RsaPublicKey};
 
 use crate::{
-    base64::{self, Decode, DecoderExt, Encode, EncoderExt},
+    decoder::{Base64Decoder, Decode, Decoder},
+    encoder::{Encode, Encoder},
     Algorithm, Error, Result,
 };
 use core::str::FromStr;
 
 #[cfg(feature = "alloc")]
-use alloc::{
-    borrow::ToOwned,
-    string::{String, ToString},
+use {
+    crate::encoder::encoded_len,
+    alloc::{
+        borrow::ToOwned,
+        string::{String, ToString},
+    },
 };
 
 #[cfg(feature = "std")]
@@ -65,7 +69,7 @@ impl PublicKey {
     /// ```
     pub fn from_openssh(input: impl AsRef<[u8]>) -> Result<Self> {
         let encapsulation = openssh::Encapsulation::decode(input.as_ref())?;
-        let mut decoder = base64::Decoder::new(encapsulation.base64_data)?;
+        let mut decoder = Base64Decoder::new(encapsulation.base64_data)?;
         let key_data = KeyData::decode(&mut decoder)?;
 
         if !decoder.is_finished() {
@@ -97,7 +101,7 @@ impl PublicKey {
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn to_openssh(&self) -> Result<String> {
         let alg_len = self.algorithm().as_str().len();
-        let key_data_len = base64::encoded_len(self.key_data.encoded_len()?);
+        let key_data_len = encoded_len(self.key_data.encoded_len()?);
         let comment_len = self.comment.len();
         let encoded_len = 2 + alg_len + key_data_len + comment_len;
 
@@ -300,7 +304,7 @@ impl KeyData {
 }
 
 impl Decode for KeyData {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaPublicKey::decode(decoder).map(Self::Dsa),
@@ -335,7 +339,7 @@ impl Encode for KeyData {
         Ok(alg_len + key_len)
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.algorithm().encode(encoder)?;
 
         match self {

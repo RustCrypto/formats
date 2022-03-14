@@ -1,7 +1,8 @@
 //! Algorithm support.
 
 use crate::{
-    base64::{Decode, DecoderExt, Encode, EncoderExt, StrField},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     Error, Result,
 };
 use core::{fmt, str};
@@ -23,6 +24,34 @@ const SSH_ED25519: &str = "ssh-ed25519";
 
 /// RSA
 const SSH_RSA: &str = "ssh-rsa";
+
+/// String-like fields.
+///
+/// These fields receive a blanket impl of [`Decode`] and [`Encode`].
+pub(crate) trait StrField: AsRef<str> + str::FromStr<Err = Error> {
+    /// Decoding buffer type.
+    ///
+    /// This needs to be a byte array large enough to fit the largest
+    /// possible value of this type.
+    type DecodeBuf: AsMut<[u8]> + Default;
+}
+
+impl<T: StrField> Decode for T {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+        let mut buf = T::DecodeBuf::default();
+        decoder.decode_str(buf.as_mut())?.parse()
+    }
+}
+
+impl<T: StrField> Encode for T {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4 + self.as_ref().len())
+    }
+
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        encoder.encode_str(self.as_ref())
+    }
+}
 
 /// SSH key algorithms.
 ///
@@ -310,7 +339,7 @@ impl KdfOpts {
 }
 
 impl Decode for KdfOpts {
-    fn decode(decoder: &mut impl DecoderExt) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         // TODO(tarcieri): stub!
         let mut buf = [0u8; 0];
         Self::new(decoder.decode_str(&mut buf)?)
@@ -322,7 +351,7 @@ impl Encode for KdfOpts {
         Ok(4)
     }
 
-    fn encode(&self, encoder: &mut impl EncoderExt) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         // TODO(tarcieri): stub!
         encoder.encode_str("")
     }
