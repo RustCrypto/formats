@@ -4,7 +4,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/x509-cert/0.0.1"
+    html_root_url = "https://docs.rs/x509-cert/0.0.2"
 )]
 #![forbid(unsafe_code)]
 #![warn(
