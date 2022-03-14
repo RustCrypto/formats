@@ -3,12 +3,12 @@ use const_oid::AssociatedOid;
 use der::asn1::UIntBytes;
 use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
-use x509::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
-use x509::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
-use x509::ext::pkix::*;
-use x509::ext::Extensions;
-use x509::name::Name;
-use x509::{Certificate, Version};
+use x509_cert::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
+use x509_cert::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
+use x509_cert::ext::pkix::*;
+use x509_cert::ext::Extensions;
+use x509_cert::name::Name;
+use x509_cert::{Certificate, Version};
 
 use const_oid::db::rfc5280::*;
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
