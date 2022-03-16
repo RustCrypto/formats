@@ -1,6 +1,6 @@
 [package]
 name = "ssh-key"
-version = "0.3.0-pre" # Also update html_root_url in lib.rs when bumping this
+version = "0.3.0"
 description = """
 Pure Rust implementation of SSH key file format decoders/encoders as described
 in RFC4253 and RFC4716 as well as the OpenSSH key formats and `authorized_keys`.
