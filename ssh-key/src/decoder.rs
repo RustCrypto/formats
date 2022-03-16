@@ -23,7 +23,7 @@ pub(crate) trait Decode: Sized {
 
 /// Decoder extension trait.
 pub(crate) trait Decoder {
-    /// Decode as much Base64 as is needed to exactly fill `out`.
+    /// Decode as much data as is needed to exactly fill `out`.
     ///
     /// This is the base decoding method on which the rest of the trait is
     /// implemented in terms of.
@@ -31,7 +31,7 @@ pub(crate) trait Decoder {
     /// # Returns
     /// - `Ok(bytes)` if the expected amount of data was read
     /// - `Err(Error::Length)` if the exact amount of data couldn't be read
-    fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]>;
+    fn decode_raw<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]>;
 
     /// Get the length of the remaining data after Base64 decoding.
     fn decoded_len(&self) -> usize;
@@ -43,7 +43,7 @@ pub(crate) trait Decoder {
     #[cfg(feature = "ecdsa")]
     fn decode_u8(&mut self) -> Result<u8> {
         let mut buf = [0];
-        self.decode_base64(&mut buf)?;
+        self.decode_raw(&mut buf)?;
         Ok(buf[0])
     }
 
@@ -56,7 +56,7 @@ pub(crate) trait Decoder {
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     fn decode_u32(&mut self) -> Result<u32> {
         let mut bytes = [0u8; 4];
-        self.decode_base64(&mut bytes)?;
+        self.decode_raw(&mut bytes)?;
         Ok(u32::from_be_bytes(bytes))
     }
 
@@ -84,7 +84,7 @@ pub(crate) trait Decoder {
     fn decode_byte_slice<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
         let len = self.decode_usize()?;
         let result = out.get_mut(..len).ok_or(Error::Length)?;
-        self.decode_base64(result)?;
+        self.decode_raw(result)?;
         Ok(result)
     }
 
@@ -99,7 +99,7 @@ pub(crate) trait Decoder {
     fn decode_byte_vec(&mut self) -> Result<Vec<u8>> {
         let len = self.decode_usize()?;
         let mut result = vec![0u8; len];
-        self.decode_base64(&mut result)?;
+        self.decode_raw(&mut result)?;
         Ok(result)
     }
 
@@ -134,7 +134,7 @@ pub(crate) trait Decoder {
     fn drain(&mut self, n_bytes: usize) -> Result<()> {
         let mut byte = [0];
         for _ in 0..n_bytes {
-            self.decode_base64(&mut byte)?;
+            self.decode_raw(&mut byte)?;
         }
         Ok(())
     }
@@ -147,7 +147,7 @@ pub(crate) trait Decoder {
 }
 
 impl Decoder for Base64Decoder<'_> {
-    fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
+    fn decode_raw<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
         Ok(self.decode(out)?)
     }
 
@@ -161,7 +161,7 @@ impl Decoder for Base64Decoder<'_> {
 }
 
 impl Decoder for pem::Decoder<'_> {
-    fn decode_base64<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
+    fn decode_raw<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
         Ok(self.decode(out)?)
     }
 

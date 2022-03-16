@@ -217,7 +217,7 @@ impl PrivateKey {
         pem_encoder.encode_u32(checkint)?;
         self.key_data.encode(&mut pem_encoder)?;
         pem_encoder.encode_str(self.comment())?;
-        pem_encoder.encode_base64(&PADDING_BYTES[..padding_len])?;
+        pem_encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
 
         let encoded_len = pem_encoder.finish()?;
         Ok(str::from_utf8(&out[..encoded_len])?)

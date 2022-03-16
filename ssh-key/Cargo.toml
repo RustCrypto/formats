@@ -22,6 +22,7 @@ zeroize = { version = "1", default-features = false }
 
 # optional dependencies
 sec1 = { version = "=0.3.0-pre.1", optional = true, default-features = false, path = "../sec1" }
+sha2 = { version = "0.10", optional = true, default-features = false }
 subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]
@@ -29,9 +30,10 @@ hex-literal = "0.3"
 tempfile = "3"
 
 [features]
-default = ["ecdsa", "std"]
+default = ["ecdsa", "fingerprint", "std"]
 alloc = ["zeroize/alloc"]
 ecdsa = ["sec1"]
+fingerprint = ["sha2"]
 std = ["alloc", "base64ct/std"]
 
 [package.metadata.docs.rs]
