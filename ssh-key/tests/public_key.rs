@@ -73,10 +73,7 @@ fn decode_dsa_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &ossh_key
-            .fingerprint(Default::default())
-            .unwrap()
-            .to_string(),
+        &ossh_key.fingerprint(Default::default()).to_string(),
         "SHA256:Nh0Me49Zh9fDw/VYUfq43IJmI1T+XrjiYONPND8GzaM"
     );
 }
@@ -105,10 +102,7 @@ fn decode_ecdsa_p256_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &ossh_key
-            .fingerprint(Default::default())
-            .unwrap()
-            .to_string(),
+        &ossh_key.fingerprint(Default::default()).to_string(),
         "SHA256:JQ6FV0rf7qqJHZqIj4zNH8eV0oB8KLKh9Pph3FTD98g"
     );
 }
@@ -138,10 +132,7 @@ fn decode_ecdsa_p384_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &ossh_key
-            .fingerprint(Default::default())
-            .unwrap()
-            .to_string(),
+        &ossh_key.fingerprint(Default::default()).to_string(),
         "SHA256:nkGE8oV7pHvOiPKHtQRs67WUPiVLRxbNu//gV/k4Vjw"
     );
 }
@@ -172,10 +163,7 @@ fn decode_ecdsa_p521_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &ossh_key
-            .fingerprint(Default::default())
-            .unwrap()
-            .to_string(),
+        &ossh_key.fingerprint(Default::default()).to_string(),
         "SHA256:l3AUUMK6Q2BbuiqvMx2fs97f8LUYq7sWCAx7q5m3S6M"
     );
 }
@@ -195,10 +183,7 @@ fn decode_ed25519_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &ossh_key
-            .fingerprint(Default::default())
-            .unwrap()
-            .to_string(),
+        &ossh_key.fingerprint(Default::default()).to_string(),
         "SHA256:UCUiLr7Pjs9wFFJMDByLgc3NrtdU344OgUM45wZPcIQ"
     );
 }
@@ -230,10 +215,7 @@ fn decode_rsa_3072_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &ossh_key
-            .fingerprint(Default::default())
-            .unwrap()
-            .to_string(),
+        &ossh_key.fingerprint(Default::default()).to_string(),
         "SHA256:Fmxts/GcV77PakFnf1Ueki5mpU4ZjUQWGRjZGAo3n/I"
     );
 }
@@ -268,10 +250,7 @@ fn decode_rsa_4096_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &ossh_key
-            .fingerprint(Default::default())
-            .unwrap()
-            .to_string(),
+        &ossh_key.fingerprint(Default::default()).to_string(),
         "SHA256:FKAyeywtQNZLl1YTzIzCV/ThadBlnWMaD7jHQYDseEY"
     );
 }

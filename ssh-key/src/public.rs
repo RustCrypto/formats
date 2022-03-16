@@ -158,10 +158,11 @@ impl PublicKey {
     /// Use [`Default::default()`] to use the default hash function (SHA-256).
     #[cfg(feature = "fingerprint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    pub fn fingerprint(&self, hash_alg: HashAlg) -> Result<Fingerprint> {
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Fingerprint {
         match hash_alg {
             HashAlg::Sha256 => Sha256Fingerprint::try_from(self).map(Into::into),
         }
+        .expect("error calculating fingerprint")
     }
 }
 
