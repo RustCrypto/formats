@@ -44,7 +44,7 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
         }
 
         let mut bytes = [0u8; SIZE];
-        decoder.decode_base64(&mut bytes)?;
+        decoder.decode_raw(&mut bytes)?;
         Ok(Self { bytes })
     }
 
@@ -63,10 +63,10 @@ impl<const SIZE: usize> Encode for EcdsaPrivateKey<SIZE> {
         encoder.encode_usize(usize::from(self.needs_leading_zero()) + SIZE)?;
 
         if self.needs_leading_zero() {
-            encoder.encode_base64(&[0])?;
+            encoder.encode_raw(&[0])?;
         }
 
-        encoder.encode_base64(&self.bytes)
+        encoder.encode_raw(&self.bytes)
     }
 }
 

@@ -33,7 +33,7 @@ impl Decode for Ed25519PublicKey {
         }
 
         let mut bytes = [0u8; Self::BYTE_SIZE];
-        decoder.decode_base64(&mut bytes)?;
+        decoder.decode_raw(&mut bytes)?;
         Ok(Self(bytes))
     }
 }

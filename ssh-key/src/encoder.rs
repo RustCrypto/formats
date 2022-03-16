@@ -6,6 +6,9 @@ use crate::Result;
 use core::str;
 use pem_rfc7468 as pem;
 
+#[cfg(feature = "fingerprint")]
+use sha2::{Digest, Sha256};
+
 /// Get the estimated length of data when encoded as Base64.
 ///
 /// This is an upper bound where the actual length might be slightly shorter.
@@ -28,11 +31,11 @@ pub(crate) trait Encode: Sized {
 
 /// Encoder extension trait.
 pub(crate) trait Encoder {
-    /// Encode the given byte slice as Base64.
+    /// Encode the given byte slice containing raw unstructured data.
     ///
     /// This is the base encoding method on which the rest of the trait is
     /// implemented in terms of.
-    fn encode_base64(&mut self, bytes: &[u8]) -> Result<()>;
+    fn encode_raw(&mut self, bytes: &[u8]) -> Result<()>;
 
     /// Encode a `uint32` as described in [RFC4251 § 5]:
     ///
@@ -42,7 +45,7 @@ pub(crate) trait Encoder {
     ///
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     fn encode_u32(&mut self, num: u32) -> Result<()> {
-        self.encode_base64(&num.to_be_bytes())
+        self.encode_raw(&num.to_be_bytes())
     }
 
     /// Encode a `usize` as a `uint32` as described in [RFC4251 § 5].
@@ -64,7 +67,7 @@ pub(crate) trait Encoder {
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     fn encode_byte_slice(&mut self, bytes: &[u8]) -> Result<()> {
         self.encode_usize(bytes.len())?;
-        self.encode_base64(bytes)
+        self.encode_raw(bytes)
     }
 
     /// Encode a `string` as described in [RFC4251 § 5]:
@@ -90,13 +93,21 @@ pub(crate) trait Encoder {
 }
 
 impl Encoder for Base64Encoder<'_> {
-    fn encode_base64(&mut self, bytes: &[u8]) -> Result<()> {
+    fn encode_raw(&mut self, bytes: &[u8]) -> Result<()> {
         Ok(self.encode(bytes)?)
     }
 }
 
 impl Encoder for pem::Encoder<'_, '_> {
-    fn encode_base64(&mut self, bytes: &[u8]) -> Result<()> {
+    fn encode_raw(&mut self, bytes: &[u8]) -> Result<()> {
         Ok(self.encode(bytes)?)
+    }
+}
+
+#[cfg(feature = "fingerprint")]
+impl Encoder for Sha256 {
+    fn encode_raw(&mut self, bytes: &[u8]) -> Result<()> {
+        self.update(bytes);
+        Ok(())
     }
 }

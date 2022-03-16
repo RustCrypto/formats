@@ -121,7 +121,7 @@ impl Decode for Ed25519Keypair {
         }
 
         let mut bytes = Zeroizing::new([0u8; Self::BYTE_SIZE]);
-        decoder.decode_base64(&mut *bytes)?;
+        decoder.decode_raw(&mut *bytes)?;
 
         let (priv_bytes, pub_bytes) = bytes.split_at(Ed25519PrivateKey::BYTE_SIZE);
 

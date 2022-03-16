@@ -976,6 +976,7 @@ dependencies = [
  "hex-literal",
  "pem-rfc7468",
  "sec1",
+ "sha2",
  "subtle",
  "tempfile",
  "zeroize",

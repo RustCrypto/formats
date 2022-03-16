@@ -7,6 +7,9 @@ use crate::{
 };
 use core::{fmt, str};
 
+/// SHA-256 hash function.
+const SHA256: &str = "SHA256";
+
 /// ECDSA with SHA-256 + NIST P-256
 const ECDSA_SHA2_P256: &str = "ecdsa-sha2-nistp256";
 
@@ -25,10 +28,10 @@ const SSH_ED25519: &str = "ssh-ed25519";
 /// RSA
 const SSH_RSA: &str = "ssh-rsa";
 
-/// String-like fields.
+/// String identifiers for cryptographic algorithms.
 ///
-/// These fields receive a blanket impl of [`Decode`] and [`Encode`].
-pub(crate) trait StrField: AsRef<str> + str::FromStr<Err = Error> {
+/// Receives a blanket impl of [`Decode`] and [`Encode`].
+pub(crate) trait AlgString: AsRef<str> + str::FromStr<Err = Error> {
     /// Decoding buffer type.
     ///
     /// This needs to be a byte array large enough to fit the largest
@@ -36,14 +39,14 @@ pub(crate) trait StrField: AsRef<str> + str::FromStr<Err = Error> {
     type DecodeBuf: AsMut<[u8]> + Default;
 }
 
-impl<T: StrField> Decode for T {
+impl<T: AlgString> Decode for T {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let mut buf = T::DecodeBuf::default();
         decoder.decode_str(buf.as_mut())?.parse()
     }
 }
 
-impl<T: StrField> Encode for T {
+impl<T: AlgString> Encode for T {
     fn encoded_len(&self) -> Result<usize> {
         Ok(4 + self.as_ref().len())
     }
@@ -134,7 +137,7 @@ impl AsRef<str> for Algorithm {
     }
 }
 
-impl StrField for Algorithm {
+impl AlgString for Algorithm {
     type DecodeBuf = [u8; 20]; // max length: "ecdsa-sha2-nistpXXX"
 }
 
@@ -186,7 +189,7 @@ impl AsRef<str> for CipherAlg {
     }
 }
 
-impl StrField for CipherAlg {
+impl AlgString for CipherAlg {
     type DecodeBuf = [u8; 4]; // max length: 'none'
 }
 
@@ -250,7 +253,7 @@ impl AsRef<str> for EcdsaCurve {
     }
 }
 
-impl StrField for EcdsaCurve {
+impl AlgString for EcdsaCurve {
     type DecodeBuf = [u8; 8]; // max length: 'nistpXXX'
 }
 
@@ -265,6 +268,60 @@ impl str::FromStr for EcdsaCurve {
 
     fn from_str(id: &str) -> Result<Self> {
         EcdsaCurve::new(id)
+    }
+}
+
+/// Hashing algorithms a.k.a. digest functions.
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub enum HashAlg {
+    /// SHA-256
+    Sha256,
+}
+
+impl HashAlg {
+    /// Decode elliptic curve from the given string identifier.
+    ///
+    /// # Supported hash algorithms
+    ///
+    /// - `SHA256`
+    pub fn new(id: &str) -> Result<Self> {
+        match id {
+            SHA256 => Ok(HashAlg::Sha256),
+            _ => Err(Error::Algorithm),
+        }
+    }
+
+    /// Get the string identifier for this hash algorithm.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            HashAlg::Sha256 => SHA256,
+        }
+    }
+}
+
+impl AsRef<str> for HashAlg {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl Default for HashAlg {
+    fn default() -> Self {
+        HashAlg::Sha256
+    }
+}
+
+impl fmt::Display for HashAlg {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl str::FromStr for HashAlg {
+    type Err = Error;
+
+    fn from_str(id: &str) -> Result<Self> {
+        HashAlg::new(id)
     }
 }
 
@@ -302,7 +359,7 @@ impl AsRef<str> for KdfAlg {
     }
 }
 
-impl StrField for KdfAlg {
+impl AlgString for KdfAlg {
     type DecodeBuf = [u8; 4]; // max length: 'none'
 }
 

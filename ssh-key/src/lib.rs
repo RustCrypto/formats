@@ -119,11 +119,13 @@ mod decoder;
 mod encoder;
 mod error;
 
+#[cfg(feature = "fingerprint")]
+mod fingerprint;
 #[cfg(feature = "alloc")]
 mod mpint;
 
 pub use crate::{
-    algorithm::{Algorithm, CipherAlg, EcdsaCurve, KdfAlg, KdfOpts},
+    algorithm::{Algorithm, CipherAlg, EcdsaCurve, HashAlg, KdfAlg, KdfOpts},
     authorized_keys::AuthorizedKeys,
     error::{Error, Result},
     private::PrivateKey,
@@ -137,3 +139,6 @@ pub use crate::mpint::MPInt;
 #[cfg(feature = "ecdsa")]
 #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 pub use sec1;
+
+#[cfg(feature = "fingerprint")]
+pub use crate::fingerprint::{Fingerprint, Sha256Fingerprint};

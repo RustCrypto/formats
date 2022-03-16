@@ -33,6 +33,9 @@ use {
     },
 };
 
+#[cfg(feature = "fingerprint")]
+use crate::{Fingerprint, HashAlg, Sha256Fingerprint};
+
 #[cfg(feature = "std")]
 use std::{fs, path::Path};
 
@@ -148,6 +151,17 @@ impl PublicKey {
     /// Private key data.
     pub fn key_data(&self) -> &KeyData {
         &self.key_data
+    }
+
+    /// Compute key fingerprint.
+    ///
+    /// Use [`Default::default()`] to use the default hash function (SHA-256).
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Result<Fingerprint> {
+        match hash_alg {
+            HashAlg::Sha256 => Sha256Fingerprint::try_from(self).map(Into::into),
+        }
     }
 }
 
