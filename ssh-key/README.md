@@ -24,7 +24,8 @@ and `authorized_keys` files.
   - [x] ECDSA (`no_std` "heapless")
   - [x] Ed25519 (`no_std` "heapless")
   - [x] RSA (`no_std` + `alloc`)
-- [x] Parsing `autorized_keys` files
+- [x] Fingerprint support (SHA-256 only)
+- [x] Parsing `authorized_keys` files
 - [x] Built-in zeroize support for private keys
 
 #### TODO
