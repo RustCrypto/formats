@@ -23,6 +23,7 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+#[cfg(feature = "point")]
 pub mod point;
 
 mod error;
@@ -36,15 +37,16 @@ mod traits;
 #[cfg(feature = "der")]
 pub use der;
 
-pub use crate::{
-    error::{Error, Result},
-    point::EncodedPoint,
-};
+pub use crate::error::{Error, Result};
+
+#[cfg(feature = "point")]
+pub use crate::point::EncodedPoint;
+
+#[cfg(feature = "point")]
+pub use generic_array::typenum::consts;
 
 #[cfg(feature = "der")]
 pub use crate::{parameters::EcParameters, private_key::EcPrivateKey, traits::DecodeEcPrivateKey};
-
-pub use generic_array::typenum::consts;
 
 #[cfg(feature = "alloc")]
 pub use crate::{private_key::document::EcPrivateKeyDocument, traits::EncodeEcPrivateKey};
