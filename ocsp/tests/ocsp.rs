@@ -2,9 +2,9 @@ use const_oid::db::rfc6960::ID_PKIX_OCSP_BASIC;
 use der::asn1::{Null, ObjectIdentifier};
 use der::{Decodable, Encodable};
 use hex_literal::hex;
-use ocsp::ocsp::Version::V1;
-use ocsp::ocsp::*;
 use x509_cert::ext::pkix::CrlReason;
+use x509_ocsp::ocsp::Version::V1;
+use x509_ocsp::ocsp::*;
 
 #[test]
 fn decode_ocsp_req_ca_signed() {

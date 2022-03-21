@@ -1,5 +1,5 @@
 [package]
-name = "ocsp"
+name = "x509-ocsp"
 version = "0.0.1"
 description = """
 Pure Rust implementation of the X.509 Internet Public Key Infrastructure
