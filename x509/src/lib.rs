@@ -23,6 +23,7 @@ pub use der;
 
 pub mod anchor;
 pub mod attr;
+pub mod certificate_document;
 pub mod crl;
 pub mod ext;
 pub mod name;
