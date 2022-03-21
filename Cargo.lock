@@ -534,6 +534,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pbkdf2"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83a0692ec44e4cf1ef28ca317f14f8f07da2d95ec3fa01f86e4467b725e60917"
+dependencies = [
+ "digest",
+]
+
+[[package]]
 name = "pem-rfc7468"
 version = "0.4.0"
 dependencies = [
@@ -560,7 +569,7 @@ dependencies = [
  "des",
  "hex-literal",
  "hmac",
- "pbkdf2",
+ "pbkdf2 0.11.0",
  "scrypt",
  "sha1",
  "sha2",
@@ -871,7 +880,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba0aaf3911fff0d942c10a49779de7754699810fc7dbe3df515613b2ecc8195a"
 dependencies = [
  "hmac",
- "pbkdf2",
+ "pbkdf2 0.10.1",
  "salsa20",
  "sha2",
 ]
