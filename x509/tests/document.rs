@@ -1,6 +1,6 @@
 //! Certificate document tests
-use crate::certificate_document::CertificateDocument;
 use der::Document;
+use x509_cert::certificate::document::CertificateDocument;
 
 #[cfg(all(feature = "pem", any(feature = "alloc", feature = "std")))]
 use der::Encodable;
@@ -31,7 +31,7 @@ fn decode_cert_pem_file() {
 #[test]
 #[cfg(all(feature = "std", feature = "alloc"))]
 fn decode_cert_der_file() {
-    use crate::certificate_document::CertificateDocument;
+    use x509_cert::certificate::document::CertificateDocument;
     let doc: CertificateDocument =
         CertificateDocument::read_der_file(Path::new("tests/examples/amazon.der")).unwrap();
     assert_eq!(doc.as_ref(), CERT_DER_EXAMPLE);
