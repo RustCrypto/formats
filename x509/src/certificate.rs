@@ -1,3 +1,5 @@
+//! Certificate types
+
 use crate::{name::Name, time::Validity};
 
 use alloc::vec::Vec;
@@ -6,6 +8,8 @@ use const_oid::AssociatedOid;
 use der::asn1::{BitString, UIntBytes};
 use der::{Decodable, Enumerated, Error, ErrorKind, Newtype, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+
+pub mod document;
 
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
 ///

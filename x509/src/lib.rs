@@ -23,12 +23,11 @@ pub use der;
 
 pub mod anchor;
 pub mod attr;
+pub mod certificate;
 pub mod crl;
 pub mod ext;
 pub mod name;
 pub mod request;
 pub mod time;
-
-mod certificate;
 
 pub use certificate::{Certificate, PkiPath, TbsCertificate, Version};
