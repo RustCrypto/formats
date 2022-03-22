@@ -5,7 +5,7 @@ use der::{Error, Result};
 
 use alloc::vec::Vec;
 use core::fmt;
-use der::{Decodable, Document};
+use der::{Decode, Document};
 
 #[cfg(feature = "pem")]
 use {core::str::FromStr, der::pem};

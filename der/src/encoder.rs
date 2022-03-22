@@ -1,7 +1,7 @@
 //! DER encoder.
 
 use crate::{
-    asn1::*, Encodable, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag, TagMode,
+    asn1::*, Encode, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag, TagMode,
     TagNumber, Tagged,
 };
 
@@ -24,8 +24,8 @@ impl<'a> Encoder<'a> {
         }
     }
 
-    /// Encode a value which impls the [`Encodable`] trait.
-    pub fn encode<T: Encodable>(&mut self, encodable: &T) -> Result<()> {
+    /// Encode a value which impls the [`Encode`] trait.
+    pub fn encode<T: Encode>(&mut self, encodable: &T) -> Result<()> {
         if self.is_failed() {
             self.error(ErrorKind::Failed)?;
         }
@@ -249,7 +249,7 @@ impl<'a> Encoder<'a> {
 mod tests {
     use hex_literal::hex;
 
-    use crate::{asn1::BitString, Encodable, ErrorKind, Length, TagMode, TagNumber};
+    use crate::{asn1::BitString, Encode, ErrorKind, Length, TagMode, TagNumber};
 
     use super::Encoder;
 

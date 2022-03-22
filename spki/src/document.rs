@@ -3,7 +3,7 @@
 use crate::{DecodePublicKey, EncodePublicKey, Error, Result, SubjectPublicKeyInfo};
 use alloc::vec::Vec;
 use core::fmt;
-use der::{Decodable, Document};
+use der::{Decode, Document};
 
 #[cfg(feature = "std")]
 use std::path::Path;

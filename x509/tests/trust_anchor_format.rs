@@ -1,4 +1,4 @@
-use der::{Decodable, Decoder, Encodable};
+use der::{Decode, Decoder, Encode};
 use hex_literal::hex;
 use x509_cert::anchor::{CertPolicies, TrustAnchorChoice};
 use x509_cert::ext::pkix::name::GeneralName;

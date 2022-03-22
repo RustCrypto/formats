@@ -1,7 +1,7 @@
 //! Certificate tests
 use const_oid::AssociatedOid;
 use der::asn1::UIntBytes;
-use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
+use der::{Decode, Encode, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
 use x509_cert::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};

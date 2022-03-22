@@ -1,6 +1,6 @@
 //! Certificate tests
 use der::asn1::{BitString, ObjectIdentifier, UIntBytes};
-use der::{Decodable, Decoder, Encodable, Tag, Tagged};
+use der::{Decode, Decoder, Encode, Tag, Tagged};
 use hex_literal::hex;
 use spki::AlgorithmIdentifier;
 use x509_cert::Certificate;
@@ -30,7 +30,7 @@ pub struct DeferDecodeCertificate<'a> {
     pub signature: &'a [u8],
 }
 
-impl<'a> Decodable<'a> for DeferDecodeCertificate<'a> {
+impl<'a> Decode<'a> for DeferDecodeCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<DeferDecodeCertificate<'a>> {
         decoder.sequence(|decoder| {
             let tbs_certificate = decoder.tlv_bytes()?;
@@ -69,7 +69,7 @@ pub struct DeferDecodeTBSCertificate<'a> {
     pub extensions: &'a [u8],
 }
 
-impl<'a> Decodable<'a> for DeferDecodeTBSCertificate<'a> {
+impl<'a> Decode<'a> for DeferDecodeTBSCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<DeferDecodeTBSCertificate<'a>> {
         decoder.sequence(|decoder| {
             let version =

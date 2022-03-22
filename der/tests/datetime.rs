@@ -1,6 +1,6 @@
 //! Tests for the [`DateTime`] type.
 
-use der::{asn1::UtcTime, DateTime, Decodable, Encodable};
+use der::{asn1::UtcTime, DateTime, Decode, Encode};
 use proptest::prelude::*;
 
 proptest! {

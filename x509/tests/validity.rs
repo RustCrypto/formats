@@ -1,6 +1,6 @@
 //! Validity tests
 
-use der::Encodable;
+use der::Encode;
 use hex_literal::hex;
 use x509_cert::time::Validity;
 

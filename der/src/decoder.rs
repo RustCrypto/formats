@@ -1,8 +1,8 @@
 //! DER decoder.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Encodable, Error, ErrorKind, FixedTag,
-    Header, Length, Result, Tag, TagMode, TagNumber,
+    asn1::*, ByteSlice, Choice, Decode, DecodeValue, Encode, Error, ErrorKind, FixedTag, Header,
+    Length, Result, Tag, TagMode, TagNumber,
 };
 
 /// DER decoder.
@@ -45,8 +45,8 @@ impl<'a> Decoder<'a> {
         }
     }
 
-    /// Decode a value which impls the [`Decodable`] trait.
-    pub fn decode<T: Decodable<'a>>(&mut self) -> Result<T> {
+    /// Decode a value which impls the [`Decode`] trait.
+    pub fn decode<T: Decode<'a>>(&mut self) -> Result<T> {
         if self.is_failed() {
             return Err(self.error(ErrorKind::Failed));
         }
@@ -335,7 +335,7 @@ impl<'a> Decoder<'a> {
 #[cfg(test)]
 mod tests {
     use super::Decoder;
-    use crate::{Decodable, ErrorKind, Length, Tag};
+    use crate::{Decode, ErrorKind, Length, Tag};
     use hex_literal::hex;
 
     // INTEGER: 42

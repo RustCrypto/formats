@@ -1,11 +1,11 @@
 //! ASN.1 `OPTIONAL` as mapped to Rust's `Option` type
 
-use crate::{Choice, Decodable, Decoder, DerOrd, Encodable, Encoder, Length, Result, Tag};
+use crate::{Choice, Decode, Decoder, DerOrd, Encode, Encoder, Length, Result, Tag};
 use core::cmp::Ordering;
 
-impl<'a, T> Decodable<'a> for Option<T>
+impl<'a, T> Decode<'a> for Option<T>
 where
-    T: Choice<'a>, // NOTE: all `Decodable + Tagged` types receive a blanket `Choice` impl
+    T: Choice<'a>, // NOTE: all `Decode + Tagged` types receive a blanket `Choice` impl
 {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Option<T>> {
         if let Some(byte) = decoder.peek_byte() {
@@ -18,9 +18,9 @@ where
     }
 }
 
-impl<T> Encodable for Option<T>
+impl<T> Encode for Option<T>
 where
-    T: Encodable,
+    T: Encode,
 {
     fn encoded_len(&self) -> Result<Length> {
         if let Some(encodable) = self {
@@ -59,9 +59,9 @@ where
 /// A reference to an ASN.1 `OPTIONAL` type, used for encoding only.
 pub struct OptionalRef<'a, T>(pub Option<&'a T>);
 
-impl<'a, T> Encodable for OptionalRef<'a, T>
+impl<'a, T> Encode for OptionalRef<'a, T>
 where
-    T: Encodable,
+    T: Encode,
 {
     fn encoded_len(&self) -> Result<Length> {
         if let Some(encodable) = self.0 {

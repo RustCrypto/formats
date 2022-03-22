@@ -1,8 +1,8 @@
 //! ASN.1 `ANY` type.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decodable, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder,
-    Error, ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd,
+    asn1::*, ByteSlice, Choice, Decode, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error,
+    ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -79,7 +79,7 @@ impl<'a> Any<'a> {
     /// Attempt to decode an ASN.1 `CONTEXT-SPECIFIC` field.
     pub fn context_specific<T>(self) -> Result<ContextSpecific<T>>
     where
-        T: Decodable<'a>,
+        T: Decode<'a>,
     {
         self.try_into()
     }
@@ -152,7 +152,7 @@ impl<'a> Choice<'a> for Any<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for Any<'a> {
+impl<'a> Decode<'a> for Any<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Any<'a>> {
         let header = Header::decode(decoder)?;
         Ok(Self {

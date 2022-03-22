@@ -2,7 +2,7 @@
 
 use crate::{Error, Result};
 use core::fmt;
-use der::{asn1::OctetString, Decodable, Decoder, Encodable, Sequence};
+use der::{asn1::OctetString, Decode, Decoder, Encode, Sequence};
 use pkcs5::EncryptionScheme;
 
 #[cfg(feature = "alloc")]
@@ -71,7 +71,7 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for EncryptedPrivateKeyInfo<'a> {
+impl<'a> Decode<'a> for EncryptedPrivateKeyInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<EncryptedPrivateKeyInfo<'a>> {
         decoder.sequence(|decoder| {
             Ok(Self {
@@ -85,7 +85,7 @@ impl<'a> Decodable<'a> for EncryptedPrivateKeyInfo<'a> {
 impl<'a> Sequence<'a> for EncryptedPrivateKeyInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[
             &self.encryption_algorithm,

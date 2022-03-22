@@ -1,8 +1,8 @@
 //! ASN.1 `SEQUENCE OF` support.
 
 use crate::{
-    arrayvec, ord::iter_cmp, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable,
-    EncodeValue, Encoder, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
+    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue,
+    Encoder, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -64,7 +64,7 @@ impl<T, const N: usize> Default for SequenceOf<T, N> {
 
 impl<'a, T, const N: usize> DecodeValue<'a> for SequenceOf<T, N>
 where
-    T: Decodable<'a>,
+    T: Decode<'a>,
 {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         let end_pos = (decoder.position() + header.length)?;
@@ -84,7 +84,7 @@ where
 
 impl<T, const N: usize> EncodeValue for SequenceOf<T, N>
 where
-    T: Encodable,
+    T: Encode,
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
@@ -132,7 +132,7 @@ impl<'a, T> ExactSizeIterator for SequenceOfIter<'a, T> {}
 
 impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
 where
-    T: Decodable<'a>,
+    T: Decode<'a>,
 {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         SequenceOf::decode_value(decoder, header)?
@@ -143,7 +143,7 @@ where
 
 impl<T, const N: usize> EncodeValue for [T; N]
 where
-    T: Encodable,
+    T: Encode,
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
@@ -176,7 +176,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> DecodeValue<'a> for Vec<T>
 where
-    T: Decodable<'a>,
+    T: Decode<'a>,
 {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         let end_pos = (decoder.position() + header.length)?;
@@ -198,7 +198,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> EncodeValue for Vec<T>
 where
-    T: Encodable,
+    T: Encode,
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()

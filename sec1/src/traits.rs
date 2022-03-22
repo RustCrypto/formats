@@ -11,7 +11,7 @@ use {crate::LineEnding, alloc::string::String};
 #[cfg(feature = "pkcs8")]
 use {
     crate::{EcPrivateKey, ALGORITHM_OID},
-    der::Decodable,
+    der::Decode,
 };
 
 #[cfg(all(feature = "alloc", feature = "pkcs8"))]

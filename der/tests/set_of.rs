@@ -25,7 +25,7 @@ mod attr_regression {
     use core::cmp::Ordering;
     use der::{
         asn1::{Any, ObjectIdentifier, SetOf},
-        Decodable, Result, Sequence, ValueOrd,
+        Decode, Result, Sequence, ValueOrd,
     };
     use hex_literal::hex;
 

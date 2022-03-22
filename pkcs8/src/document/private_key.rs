@@ -3,7 +3,7 @@
 use crate::{DecodePrivateKey, EncodePrivateKey, Error, PrivateKeyInfo, Result};
 use alloc::vec::Vec;
 use core::fmt;
-use der::{Decodable, Document};
+use der::{Decode, Document};
 use zeroize::{Zeroize, Zeroizing};
 
 #[cfg(feature = "encryption")]
