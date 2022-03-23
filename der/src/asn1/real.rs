@@ -876,13 +876,6 @@ mod tests {
         {
             let expect = 101.0;
             let testcase = &[0x09, 0x08, 0x03, 0x31, 0x30, 0x31, 0x2E, 0x45, 0x2B, 0x30];
-            // let mut buffer = [0u8; 12];
-            // let encoded = expect.encode_to_slice(&mut buffer).unwrap();
-            // assert_eq!(
-            //     testcase, encoded,
-            //     "invalid encoding of {}:\ngot  {:x?}\nwant: {:x?}",
-            //     expect, encoded, testcase
-            // );
             let decoded = f64::from_der(testcase).unwrap();
             assert!(
                 (decoded - expect).abs() < f64::EPSILON,
@@ -908,13 +901,6 @@ mod tests {
                 0x09, 0x0F, 0x03, 0x39, 0x35, 0x31, 0x32, 0x33, 0x35, 0x37, 0x38, 0x36, 0x34, 0x2E,
                 0x45, 0x2D, 0x37,
             ];
-            // let mut buffer = [0u8; 12];
-            // let encoded = expect.encode_to_slice(&mut buffer).unwrap();
-            // assert_eq!(
-            //     testcase, encoded,
-            //     "invalid encoding of {}:\ngot  {:x?}\nwant: {:x?}",
-            //     expect, encoded, testcase
-            // );
             let decoded = f64::from_der(testcase).unwrap();
             assert!(
                 (decoded - expect).abs() < f64::EPSILON,
@@ -927,13 +913,6 @@ mod tests {
         {
             let expect = -10.0;
             let testcase = &[0x09, 0x06, 0x03, 0x2D, 0x31, 0x2E, 0x45, 0x31];
-            // let mut buffer = [0u8; 12];
-            // let encoded = expect.encode_to_slice(&mut buffer).unwrap();
-            // assert_eq!(
-            //     testcase, encoded,
-            //     "invalid encoding of {}:\ngot  {:x?}\nwant: {:x?}",
-            //     expect, encoded, testcase
-            // );
             let decoded = f64::from_der(testcase).unwrap();
             assert!(
                 (decoded - expect).abs() < f64::EPSILON,
