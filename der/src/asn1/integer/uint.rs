@@ -53,7 +53,7 @@ pub(crate) fn encoded_len(bytes: &[u8]) -> Result<Length> {
 }
 
 /// Strip the leading zeroes from the given byte slice
-pub(super) fn strip_leading_zeroes(mut bytes: &[u8]) -> &[u8] {
+pub(crate) fn strip_leading_zeroes(mut bytes: &[u8]) -> &[u8] {
     while let Some((byte, rest)) = bytes.split_first() {
         if *byte == 0 && !rest.is_empty() {
             bytes = rest;
