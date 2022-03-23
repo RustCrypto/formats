@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use crate::attr::AttributeTypeAndValue;
 
-use der::{asn1::SetOfVec, Decodable, Encodable, Newtype};
+use der::{asn1::SetOfVec, Decode, Encode, Newtype};
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
 ///

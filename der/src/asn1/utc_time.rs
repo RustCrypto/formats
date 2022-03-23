@@ -188,7 +188,7 @@ impl TryFrom<Any<'_>> for UtcTime {
 #[cfg(test)]
 mod tests {
     use super::UtcTime;
-    use crate::{Decodable, Encodable, Encoder};
+    use crate::{Decode, Encode, Encoder};
     use hex_literal::hex;
 
     #[test]

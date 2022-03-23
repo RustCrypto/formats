@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 use const_oid::db::rfc5912::ID_EXTENSION_REQ;
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::BitString;
-use der::{Decodable, Enumerated, Newtype, Sequence};
+use der::{Decode, Enumerated, Newtype, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 /// Version identifier for certification request information.

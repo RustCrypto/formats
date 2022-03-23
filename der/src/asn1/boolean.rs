@@ -65,7 +65,7 @@ impl TryFrom<Any<'_>> for bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Decodable, Encodable};
+    use crate::{Decode, Encode};
 
     #[test]
     fn decode() {

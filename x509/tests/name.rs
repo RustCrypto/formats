@@ -2,7 +2,7 @@
 
 use const_oid::ObjectIdentifier;
 use der::asn1::{OctetString, SetOfVec, Utf8String};
-use der::{Any, Decodable, Encodable, Tag, Tagged};
+use der::{Any, Decode, Encode, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::attr::AttributeTypeAndValue;
 use x509_cert::name::{Name, RdnSequence, RelativeDistinguishedName};

@@ -1,6 +1,6 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decodable, Decoder, DerOrd, Encodable, Encoder, Error, ErrorKind, Result};
+use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Result};
 use core::{
     cmp::Ordering,
     fmt,
@@ -191,7 +191,7 @@ impl TryFrom<Length> for usize {
     }
 }
 
-impl Decodable<'_> for Length {
+impl Decode<'_> for Length {
     fn decode(decoder: &mut Decoder<'_>) -> Result<Length> {
         match decoder.byte()? {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
@@ -225,7 +225,7 @@ impl Decodable<'_> for Length {
     }
 }
 
-impl Encodable for Length {
+impl Encode for Length {
     fn encoded_len(&self) -> Result<Length> {
         match self.0 {
             0..=0x7F => Ok(Length(1)),
@@ -278,7 +278,7 @@ impl fmt::Display for Length {
 #[cfg(test)]
 mod tests {
     use super::Length;
-    use crate::{Decodable, DerOrd, Encodable, ErrorKind};
+    use crate::{Decode, DerOrd, Encode, ErrorKind};
     use core::cmp::Ordering;
 
     #[test]

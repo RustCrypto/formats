@@ -1,4 +1,4 @@
-use der::{asn1::ObjectIdentifier, Any, Decodable, Sequence};
+use der::{asn1::ObjectIdentifier, Any, Decode, Sequence};
 
 /// OtherName as defined in [RFC 5280 Section 4.2.1.6].
 ///
@@ -23,7 +23,7 @@ pub struct OtherName<'a> {
 #[cfg(test)]
 fn test() {
     use alloc::string::ToString;
-    use der::{Decodable, Encodable};
+    use der::{Decode, Encode};
     use hex_literal::hex;
 
     let input = hex!("3021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");

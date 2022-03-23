@@ -1,8 +1,8 @@
 //! ASN.1 `NULL` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue,
-    Encoder, Error, ErrorKind, FixedTag, Header, Length, Result, Tag,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, Encode, EncodeValue, Encoder,
+    Error, ErrorKind, FixedTag, Header, Length, Result, Tag,
 };
 
 /// ASN.1 `NULL` type.
@@ -70,7 +70,7 @@ impl DecodeValue<'_> for () {
     }
 }
 
-impl Encodable for () {
+impl Encode for () {
     fn encoded_len(&self) -> Result<Length> {
         Null.encoded_len()
     }
@@ -87,7 +87,7 @@ impl FixedTag for () {
 #[cfg(test)]
 mod tests {
     use super::Null;
-    use crate::{Decodable, Encodable};
+    use crate::{Decode, Encode};
 
     #[test]
     fn decode() {

@@ -1,7 +1,8 @@
 //! X.509 `SubjectPublicKeyInfo`
 
 use crate::{AlgorithmIdentifier, Error, Result};
-use der::{asn1::BitString, Decodable, Decoder, Encodable, Sequence};
+use core::cmp::Ordering;
+use der::{asn1::BitString, Decode, Decoder, DerOrd, Encode, Sequence, ValueOrd};
 
 #[cfg(feature = "fingerprint")]
 use sha2::{digest, Digest, Sha256};
@@ -49,9 +50,14 @@ impl<'a> SubjectPublicKeyInfo<'a> {
     pub fn fingerprint_base64(&self) -> Result<String> {
         Ok(Base64::encode_string(self.fingerprint()?.as_slice()))
     }
+
+    /// Get a [`BitString`] representing the `subject_public_key`
+    fn subject_public_key_bitstring(&self) -> der::Result<BitString<'a>> {
+        BitString::from_bytes(self.subject_public_key)
+    }
 }
 
-impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
+impl<'a> Decode<'a> for SubjectPublicKeyInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
             let algorithm = decoder.decode()?;
@@ -71,12 +77,9 @@ impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
 impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
-        f(&[
-            &self.algorithm,
-            &BitString::from_bytes(self.subject_public_key)?,
-        ])
+        f(&[&self.algorithm, &self.subject_public_key_bitstring()?])
     }
 }
 
@@ -85,5 +88,16 @@ impl<'a> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a> {
 
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
+    }
+}
+
+impl ValueOrd for SubjectPublicKeyInfo<'_> {
+    fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
+        match self.algorithm.der_cmp(&other.algorithm)? {
+            Ordering::Equal => self
+                .subject_public_key_bitstring()?
+                .der_cmp(&other.subject_public_key_bitstring()?),
+            other => Ok(other),
+        }
     }
 }

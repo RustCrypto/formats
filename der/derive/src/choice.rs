@@ -1,4 +1,4 @@
-//! Support for deriving the `Decodable` and `Encodable` traits on enums for
+//! Support for deriving the `Decode` and `Encode` traits on enums for
 //! the purposes of decoding/encoding ASN.1 `CHOICE` types as mapped to
 //! enum variants.
 
@@ -94,7 +94,7 @@ impl DeriveChoice {
                 }
             }
 
-            impl<#lt_params> ::der::Decodable<#lifetime> for #ident<#lt_params> {
+            impl<#lt_params> ::der::Decode<#lifetime> for #ident<#lt_params> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     match decoder.peek_tag()? {
                         #(#decode_body)*

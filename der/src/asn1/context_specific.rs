@@ -1,8 +1,8 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::Any, Choice, Decodable, DecodeValue, Decoder, DerOrd, Encodable, EncodeValue, Encoder,
-    Error, Header, Length, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd,
+    asn1::Any, Choice, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue, Encoder, Error,
+    Header, Length, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -44,7 +44,7 @@ impl<T> ContextSpecific<T> {
         tag_number: TagNumber,
     ) -> Result<Option<Self>>
     where
-        T: Decodable<'a>,
+        T: Decode<'a>,
     {
         Self::decode_with(decoder, tag_number, |decoder| {
             let any = Any::decode(decoder)?;
@@ -123,16 +123,16 @@ impl<T> ContextSpecific<T> {
 
 impl<'a, T> Choice<'a> for ContextSpecific<T>
 where
-    T: Decodable<'a> + Tagged,
+    T: Decode<'a> + Tagged,
 {
     fn can_decode(tag: Tag) -> bool {
         tag.is_context_specific()
     }
 }
 
-impl<'a, T> Decodable<'a> for ContextSpecific<T>
+impl<'a, T> Decode<'a> for ContextSpecific<T>
 where
-    T: Decodable<'a>,
+    T: Decode<'a>,
 {
     fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
         Any::decode(decoder)?.try_into()
@@ -172,7 +172,7 @@ where
 
 impl<'a, T> TryFrom<Any<'a>> for ContextSpecific<T>
 where
-    T: Decodable<'a>,
+    T: Decode<'a>,
 {
     type Error = Error;
 
@@ -259,7 +259,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::ContextSpecific;
-    use crate::{asn1::BitString, Decodable, Decoder, Encodable, TagMode, TagNumber};
+    use crate::{asn1::BitString, Decode, Decoder, Encode, TagMode, TagNumber};
     use hex_literal::hex;
 
     // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`

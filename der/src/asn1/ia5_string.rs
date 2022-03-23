@@ -136,7 +136,7 @@ impl<'a> fmt::Debug for Ia5String<'a> {
 #[cfg(test)]
 mod tests {
     use super::Ia5String;
-    use crate::Decodable;
+    use crate::Decode;
     use hex_literal::hex;
 
     #[test]

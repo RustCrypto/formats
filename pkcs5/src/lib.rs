@@ -12,7 +12,7 @@
 //! # Usage
 //!
 //! The main API for this crate is the [`EncryptionScheme`] enum, which impls
-//! the [`Decodable`][`der::Decodable`] and [`Encodable`] traits from the
+//! the [`Decode`][`der::Decodable`] and [`Encode`] traits from the
 //! [`der`] crate, and can be used for decoding/encoding PKCS#5
 //! [`AlgorithmIdentifier`] fields.
 //!
@@ -30,7 +30,7 @@ pub use crate::error::{Error, Result};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::AlgorithmIdentifier;
 
-use der::{Decodable, Decoder, Encodable, Encoder, Length, Tag};
+use der::{Decode, Decoder, Encode, Encoder, Length, Tag};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
@@ -136,13 +136,13 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for EncryptionScheme<'a> {
+impl<'a> Decode<'a> for EncryptionScheme<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         AlgorithmIdentifier::decode(decoder)?.try_into()
     }
 }
 
-impl<'a> Encodable for EncryptionScheme<'a> {
+impl<'a> Encode for EncryptionScheme<'a> {
     fn encoded_len(&self) -> der::Result<Length> {
         match self {
             Self::Pbes1(pbes1) => pbes1.encoded_len(),

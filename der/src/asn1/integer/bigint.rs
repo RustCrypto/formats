@@ -97,7 +97,7 @@ mod tests {
     use super::UIntBytes;
     use crate::{
         asn1::{integer::tests::*, Any},
-        Decodable, Encodable, Encoder, ErrorKind, Tag,
+        Decode, Encode, Encoder, ErrorKind, Tag,
     };
 
     #[test]

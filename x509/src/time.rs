@@ -3,7 +3,7 @@
 use core::fmt;
 use core::time::Duration;
 use der::asn1::{GeneralizedTime, UtcTime};
-use der::{Choice, DateTime, Decodable, Error, Result, Sequence};
+use der::{Choice, DateTime, Decode, Error, Result, Sequence};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;

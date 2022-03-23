@@ -2,24 +2,24 @@
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{
-    ByteSlice, Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, FixedTag, Header,
+    ByteSlice, Decode, DecodeValue, Decoder, Encode, EncodeValue, Encoder, FixedTag, Header,
     Length, Result, Tag,
 };
 
 /// ASN.1 `SEQUENCE` trait.
 ///
-/// Types which impl this trait receive blanket impls for the [`Decodable`],
-/// [`Encodable`], and [`FixedTag`] traits.
-pub trait Sequence<'a>: Decodable<'a> {
-    /// Call the provided function with a slice of [`Encodable`] trait objects
+/// Types which impl this trait receive blanket impls for the [`Decode`],
+/// [`Encode`], and [`FixedTag`] traits.
+pub trait Sequence<'a>: Decode<'a> {
+    /// Call the provided function with a slice of [`Encode`] trait objects
     /// representing the fields of this `SEQUENCE`.
     ///
     /// This method uses a callback because structs with fields which aren't
-    /// directly [`Encodable`] may need to construct temporary values from
+    /// directly [`Encode`] may need to construct temporary values from
     /// their fields prior to encoding.
     fn fields<F, T>(&self, f: F) -> Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> Result<T>;
+        F: FnOnce(&[&dyn Encode]) -> Result<T>;
 }
 
 impl<'a, M> EncodeValue for M

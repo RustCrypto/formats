@@ -1,6 +1,6 @@
 //! PKCS#1 OtherPrimeInfo support.
 
-use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
+use der::{asn1::UIntBytes, Decode, Decoder, Encode, Sequence};
 
 /// PKCS#1 OtherPrimeInfo as defined in [RFC 8017 Appendix 1.2].
 ///
@@ -28,7 +28,7 @@ pub struct OtherPrimeInfo<'a> {
     pub coefficient: UIntBytes<'a>,
 }
 
-impl<'a> Decodable<'a> for OtherPrimeInfo<'a> {
+impl<'a> Decode<'a> for OtherPrimeInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
             Ok(Self {
@@ -43,7 +43,7 @@ impl<'a> Decodable<'a> for OtherPrimeInfo<'a> {
 impl<'a> Sequence<'a> for OtherPrimeInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[&self.prime, &self.exponent, &self.coefficient])
     }

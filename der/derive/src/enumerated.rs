@@ -1,4 +1,4 @@
-//! Support for deriving the `Decodable` and `Encodable` traits on enums for
+//! Support for deriving the `Decode` and `Encode` traits on enums for
 //! the purposes of decoding/encoding ASN.1 `ENUMERATED` types as mapped to
 //! enum variants.
 

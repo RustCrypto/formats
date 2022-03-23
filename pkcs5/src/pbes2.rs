@@ -15,7 +15,7 @@ pub use self::kdf::{
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence, Tag,
+    Decode, Decoder, Encode, Encoder, ErrorKind, Length, Sequence, Tag,
 };
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -200,7 +200,7 @@ impl<'a> Parameters<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for Parameters<'a> {
+impl<'a> Decode<'a> for Parameters<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.any()?.try_into()
     }
@@ -209,7 +209,7 @@ impl<'a> Decodable<'a> for Parameters<'a> {
 impl<'a> Sequence<'a> for Parameters<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[&self.kdf, &self.encryption])
     }
@@ -303,7 +303,7 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for EncryptionScheme<'a> {
+impl<'a> Decode<'a> for EncryptionScheme<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         AlgorithmIdentifier::decode(decoder).and_then(TryInto::try_into)
     }
@@ -373,7 +373,7 @@ impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
     }
 }
 
-impl<'a> Encodable for EncryptionScheme<'a> {
+impl<'a> Encode for EncryptionScheme<'a> {
     fn encoded_len(&self) -> der::Result<Length> {
         AlgorithmIdentifier::try_from(*self)?.encoded_len()
     }

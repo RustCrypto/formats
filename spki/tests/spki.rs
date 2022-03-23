@@ -1,7 +1,7 @@
 //! `SubjectPublicKeyInfo` tests.
 
 #[cfg(all(feature = "alloc", feature = "fingerprint"))]
-use spki::der::Encodable;
+use spki::der::Encode;
 
 #[cfg(feature = "fingerprint")]
 use {hex_literal::hex, spki::SubjectPublicKeyInfo};

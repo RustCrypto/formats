@@ -1,8 +1,8 @@
 //! ASN.1 `SET OF` support.
 
 use crate::{
-    arrayvec, ord::iter_cmp, ArrayVec, Decodable, DecodeValue, Decoder, DerOrd, Encodable,
-    EncodeValue, Encoder, Error, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
+    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue,
+    Encoder, Error, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -83,7 +83,7 @@ where
 
 impl<'a, T, const N: usize> DecodeValue<'a> for SetOf<T, N>
 where
-    T: Decodable<'a> + DerOrd,
+    T: Decode<'a> + DerOrd,
 {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         let end_pos = (decoder.position() + header.length)?;
@@ -103,7 +103,7 @@ where
 
 impl<'a, T, const N: usize> EncodeValue for SetOf<T, N>
 where
-    T: 'a + Decodable<'a> + Encodable + DerOrd,
+    T: 'a + Decode<'a> + Encode + DerOrd,
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
@@ -121,7 +121,7 @@ where
 
 impl<'a, T, const N: usize> FixedTag for SetOf<T, N>
 where
-    T: Decodable<'a> + DerOrd,
+    T: Decode<'a> + DerOrd,
 {
     const TAG: Tag = Tag::Set;
 }
@@ -270,7 +270,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> DecodeValue<'a> for SetOfVec<T>
 where
-    T: Decodable<'a> + DerOrd,
+    T: Decode<'a> + DerOrd,
 {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         let end_pos = (decoder.position() + header.length)?;
@@ -292,7 +292,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> EncodeValue for SetOfVec<T>
 where
-    T: 'a + Decodable<'a> + Encodable + DerOrd,
+    T: 'a + Decode<'a> + Encode + DerOrd,
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()

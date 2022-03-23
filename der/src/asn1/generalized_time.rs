@@ -320,7 +320,7 @@ impl TryFrom<GeneralizedTime> for PrimitiveDateTime {
 #[cfg(test)]
 mod tests {
     use super::GeneralizedTime;
-    use crate::{Decodable, Encodable, Encoder};
+    use crate::{Decode, Encode, Encoder};
     use hex_literal::hex;
 
     #[test]

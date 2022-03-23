@@ -5,7 +5,7 @@
 use crate::AlgorithmIdentifier;
 use der::{
     asn1::{ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, FixedTag, Length, Tag,
+    Decode, Decoder, Encode, Encoder, ErrorKind, FixedTag, Length, Tag,
 };
 
 /// `pbeWithMD2AndDES-CBC` Object Identifier (OID).
@@ -80,13 +80,13 @@ impl Parameters {
     }
 }
 
-impl Decodable<'_> for Parameters {
+impl Decode<'_> for Parameters {
     fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
         AlgorithmIdentifier::decode(decoder)?.try_into()
     }
 }
 
-impl Encodable for Parameters {
+impl Encode for Parameters {
     fn encoded_len(&self) -> der::Result<Length> {
         self.inner_len()?.for_tlv()
     }
@@ -217,7 +217,7 @@ impl EncryptionScheme {
     }
 }
 
-impl Encodable for EncryptionScheme {
+impl Encode for EncryptionScheme {
     fn encoded_len(&self) -> der::Result<Length> {
         self.oid().encoded_len()
     }

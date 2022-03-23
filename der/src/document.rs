@@ -1,6 +1,6 @@
 //! ASN.1 DER-encoded documents stored on the heap.
 
-use crate::{Decodable, Encodable, Error, Result};
+use crate::{Decode, Encode, Error, Result};
 use alloc::{boxed::Box, vec::Vec};
 
 #[cfg(feature = "pem")]
@@ -20,7 +20,7 @@ use std::{fs, path::Path};
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     /// ASN.1 message type this document decodes to.
-    type Message: Decodable<'a> + Encodable + Sized;
+    type Message: Decode<'a> + Encode + Sized;
 
     /// Does this type contain potentially sensitive data?
     ///

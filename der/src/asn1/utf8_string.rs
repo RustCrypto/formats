@@ -13,8 +13,8 @@ use alloc::{borrow::ToOwned, string::String};
 ///
 /// Supports the full UTF-8 encoding.
 ///
-/// Note that the [`Decodable`][`crate::Decodable`] and
-/// [`Encodable`][`crate::Encodable`] traits are impl'd for Rust's
+/// Note that the [`Decode`][`crate::Decodable`] and
+/// [`Encode`][`crate::Encodable`] traits are impl'd for Rust's
 /// [`str`][`prim@str`] primitive, which decodes/encodes as a [`Utf8String`].
 ///
 /// You are free to use [`str`][`prim@str`] instead of this type, however it's
@@ -196,7 +196,7 @@ impl OrdIsValueOrd for String {}
 #[cfg(test)]
 mod tests {
     use super::Utf8String;
-    use crate::Decodable;
+    use crate::Decode;
 
     #[test]
     fn parse_ascii_bytes() {

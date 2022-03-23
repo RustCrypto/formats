@@ -142,11 +142,11 @@ use syn::{parse_macro_input, DeriveInput};
 /// Derive the [`Choice`][1] trait on an `enum`.
 ///
 /// This custom derive macro can be used to automatically impl the
-/// [`Decodable`][2] and [`Encodable`][3] traits along with the
+/// [`Decode`][2] and [`Encode`][3] traits along with the
 /// [`Choice`][1] supertrait for any enum representing an ASN.1 `CHOICE`.
 ///
 /// The enum must consist entirely of 1-tuple variants wrapping inner
-/// types which must also impl the [`Decodable`][2] and [`Encodable`][3]
+/// types which must also impl the [`Decode`][2] and [`Encode`][3]
 /// traits. It will will also generate [`From`] impls for each of the
 /// inner types of the variants into the enum that wraps them.
 ///
@@ -173,8 +173,8 @@ use syn::{parse_macro_input, DeriveInput};
 /// information about the `#[asn1]` attribute.
 ///
 /// [1]: https://docs.rs/der/latest/der/trait.Choice.html
-/// [2]: https://docs.rs/der/latest/der/trait.Decodable.html
-/// [3]: https://docs.rs/der/latest/der/trait.Encodable.html
+/// [2]: https://docs.rs/der/latest/der/trait.Decode.html
+/// [3]: https://docs.rs/der/latest/der/trait.Encode.html
 /// [4]: https://docs.rs/der_derive/
 #[proc_macro_derive(Choice, attributes(asn1))]
 #[proc_macro_error]
