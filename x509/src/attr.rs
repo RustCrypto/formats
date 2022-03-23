@@ -5,7 +5,7 @@ use core::fmt::{self, Write};
 
 use const_oid::db::DB;
 use der::asn1::{Any, ObjectIdentifier, SetOfVec};
-use der::{Decodable, Encodable, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd};
+use der::{Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd};
 
 /// X.501 `AttributeType` as defined in [RFC 5280 Appendix A.1].
 ///

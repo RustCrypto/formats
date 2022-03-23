@@ -3,7 +3,7 @@
 use crate::{Error, Result};
 use core::cmp::Ordering;
 use der::asn1::{Any, ObjectIdentifier, SequenceRef};
-use der::{Decodable, DecodeValue, Decoder, DerOrd, Encodable, Header, Sequence, ValueOrd};
+use der::{Decode, DecodeValue, Decoder, DerOrd, Encode, Header, Sequence, ValueOrd};
 
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
 ///
@@ -107,7 +107,7 @@ impl<'a> DecodeValue<'a> for AlgorithmIdentifier<'a> {
 impl<'a> Sequence<'a> for AlgorithmIdentifier<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[&self.oid, &self.parameters])
     }

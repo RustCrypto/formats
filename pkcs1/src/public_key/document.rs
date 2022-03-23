@@ -3,7 +3,7 @@
 use crate::{DecodeRsaPublicKey, EncodeRsaPublicKey, Error, Result, RsaPublicKey};
 use alloc::vec::Vec;
 use core::fmt;
-use der::{Decodable, Document, Encodable};
+use der::{Decode, Document, Encode};
 
 #[cfg(feature = "pem")]
 use {

@@ -4,7 +4,7 @@ use crate::ContentType;
 
 use der::{
     asn1::{ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
+    Decode, Decoder, Encode, Sequence, TagMode, TagNumber,
 };
 use spki::AlgorithmIdentifier;
 
@@ -49,7 +49,7 @@ pub struct EncryptedContentInfo<'a> {
     pub encrypted_content: Option<&'a [u8]>,
 }
 
-impl<'a> Decodable<'a> for EncryptedContentInfo<'a> {
+impl<'a> Decode<'a> for EncryptedContentInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<EncryptedContentInfo<'a>> {
         decoder.sequence(|decoder| {
             Ok(EncryptedContentInfo {
@@ -66,7 +66,7 @@ impl<'a> Decodable<'a> for EncryptedContentInfo<'a> {
 impl<'a> Sequence<'a> for EncryptedContentInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         let opt_octet = self.encrypted_content.map(OctetString::new).transpose()?;
         f(&[

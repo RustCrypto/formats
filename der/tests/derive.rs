@@ -15,7 +15,7 @@ mod choice {
     mod explicit {
         use der::{
             asn1::{GeneralizedTime, UtcTime},
-            Choice, Decodable, Encodable, Encoder,
+            Choice, Decode, Encode, Encoder,
         };
         use hex_literal::hex;
         use std::time::Duration;
@@ -82,7 +82,7 @@ mod choice {
     mod implicit {
         use der::{
             asn1::{BitString, GeneralizedTime},
-            Choice, Decodable, Encodable, Encoder,
+            Choice, Decode, Encode, Encoder,
         };
         use hex_literal::hex;
 
@@ -153,7 +153,7 @@ mod choice {
 
 /// Custom derive test cases for the `Enumerated` macro.
 mod enumerated {
-    use der::{Decodable, Encodable, Encoder, Enumerated};
+    use der::{Decode, Encode, Encoder, Enumerated};
     use hex_literal::hex;
 
     /// X.509 `CRLReason`.
@@ -203,7 +203,7 @@ mod enumerated {
 mod sequence {
     use der::{
         asn1::{Any, ObjectIdentifier, SetOf},
-        Decodable, Encodable, Sequence, ValueOrd,
+        Decode, Encode, Sequence, ValueOrd,
     };
     use hex_literal::hex;
 
@@ -459,7 +459,7 @@ mod sequence {
 }
 
 mod newtype {
-    use der::{asn1::BitString, Decodable, Encodable};
+    use der::{asn1::BitString, Decode, Encode};
     use der_derive::Newtype;
 
     #[derive(Newtype)]

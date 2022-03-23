@@ -3,7 +3,7 @@ use der::Document;
 use x509_cert::certificate::document::CertificateDocument;
 
 #[cfg(all(feature = "pem", any(feature = "alloc", feature = "std")))]
-use der::Encodable;
+use der::Encode;
 
 use x509_cert::*;
 

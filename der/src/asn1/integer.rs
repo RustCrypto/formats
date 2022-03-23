@@ -152,7 +152,7 @@ where
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use crate::{Decodable, Encodable};
+    use crate::{Decode, Encode};
 
     // Vectors from Section 5.7 of:
     // https://luca.ntop.org/Teaching/Appunti/asn1.html

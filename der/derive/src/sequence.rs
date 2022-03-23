@@ -103,7 +103,7 @@ impl DeriveSequence {
             impl<#lt_params> ::der::Sequence<#lifetime> for #ident<#lt_params> {
                 fn fields<F, T>(&self, f: F) -> ::der::Result<T>
                 where
-                    F: FnOnce(&[&dyn der::Encodable]) -> ::der::Result<T>,
+                    F: FnOnce(&[&dyn der::Encode]) -> ::der::Result<T>,
                 {
                     f(&[
                         #(#encode_body),*

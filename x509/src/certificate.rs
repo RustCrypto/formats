@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 
 use const_oid::AssociatedOid;
 use der::asn1::{BitString, UIntBytes};
-use der::{Decodable, Enumerated, Error, ErrorKind, Newtype, Sequence};
+use der::{Decode, Enumerated, Error, ErrorKind, Newtype, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 pub mod document;
@@ -98,7 +98,7 @@ impl<'a> TbsCertificate<'a> {
     /// Returns an error if multiple of these extensions is present. Returns
     /// `Ok(None)` if the extension is not present. Returns a decoding error
     /// if decoding failed. Otherwise returns the extension.
-    pub fn get<'b: 'a, T: Decodable<'a> + AssociatedOid>(
+    pub fn get<'b: 'a, T: Decode<'a> + AssociatedOid>(
         &'b self,
     ) -> Result<Option<(bool, T)>, Error> {
         let mut iter = self.filter::<T>().peekable();
@@ -114,7 +114,7 @@ impl<'a> TbsCertificate<'a> {
     /// Filters extensions by an associated OID
     ///
     /// Returns a filtered iterator over all the extensions with the OID.
-    pub fn filter<'b: 'a, T: Decodable<'a> + AssociatedOid>(
+    pub fn filter<'b: 'a, T: Decode<'a> + AssociatedOid>(
         &'b self,
     ) -> impl 'b + Iterator<Item = Result<(bool, T), Error>> {
         self.extensions

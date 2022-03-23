@@ -7,7 +7,7 @@ pub(crate) mod other_prime_info;
 
 use crate::{Error, Result, RsaPublicKey, Version};
 use core::fmt;
-use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence, Tag};
+use der::{asn1::UIntBytes, Decode, Decoder, Encode, Sequence, Tag};
 
 #[cfg(feature = "alloc")]
 use {self::other_prime_info::OtherPrimeInfo, crate::RsaPrivateKeyDocument, alloc::vec::Vec};
@@ -110,7 +110,7 @@ impl<'a> RsaPrivateKey<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for RsaPrivateKey<'a> {
+impl<'a> Decode<'a> for RsaPrivateKey<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
             let version = Version::decode(decoder)?;
@@ -140,7 +140,7 @@ impl<'a> Decodable<'a> for RsaPrivateKey<'a> {
 impl<'a> Sequence<'a> for RsaPrivateKey<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[
             &self.version(),
@@ -197,7 +197,7 @@ pub struct OtherPrimeInfos<'a> {
 }
 
 #[cfg(not(feature = "alloc"))]
-impl<'a> Decodable<'a> for OtherPrimeInfos<'a> {
+impl<'a> Decode<'a> for OtherPrimeInfos<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         // Placeholder decoder that always returns an error.
         // Use `Tag::Integer` to signal an unsupported version.

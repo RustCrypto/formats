@@ -1,6 +1,6 @@
 //! Certification request (`CertReq`) tests
 
-use der::{Encodable, Tag, Tagged};
+use der::{Encode, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::request::{CertReq, Version};
 

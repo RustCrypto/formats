@@ -1,6 +1,6 @@
 use x509_cert::ext::pkix::name::{GeneralName, GeneralNames};
 
-use der::{Decodable, Encodable};
+use der::{Decode, Encode};
 use hex_literal::hex;
 use rstest::rstest;
 

@@ -2,7 +2,7 @@ use crate::{data_content::DataContent, encrypted_data_content::EncryptedDataCont
 
 use der::{
     asn1::{ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
+    Decode, Decoder, Encode, Sequence, TagMode, TagNumber,
 };
 
 const CONTENT_TAG: TagNumber = TagNumber::new(0);
@@ -65,7 +65,7 @@ impl<'a> ContentInfo<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for ContentInfo<'a> {
+impl<'a> Decode<'a> for ContentInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<ContentInfo<'a>> {
         decoder.sequence(|decoder| {
             let content_type = decoder.decode()?;
@@ -89,7 +89,7 @@ impl<'a> Decodable<'a> for ContentInfo<'a> {
 impl<'a> Sequence<'a> for ContentInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         match self {
             Self::Data(data) => f(&[
@@ -124,7 +124,7 @@ impl<'a> Sequence<'a> for ContentInfo<'a> {
 mod tests {
     use super::{ContentInfo, DataContent};
     use core::convert::TryFrom;
-    use der::{asn1::OctetString, Decodable, Encodable, Encoder, Length, TagMode, TagNumber};
+    use der::{asn1::OctetString, Decode, Encode, Encoder, Length, TagMode, TagNumber};
 
     #[test]
     fn empty_data() -> der::Result<()> {

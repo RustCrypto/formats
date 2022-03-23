@@ -3,7 +3,7 @@
 use crate::{EncryptedPrivateKeyInfo, Error, Result};
 use alloc::{borrow::ToOwned, vec::Vec};
 use core::fmt;
-use der::{Decodable, Document, Encodable};
+use der::{Decode, Document, Encode};
 use zeroize::{Zeroize, Zeroizing};
 
 #[cfg(feature = "encryption")]

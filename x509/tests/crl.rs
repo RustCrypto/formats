@@ -1,4 +1,4 @@
-use der::Decodable;
+use der::Decode;
 use x509_cert::crl::CertificateList;
 
 #[test]

@@ -1,6 +1,6 @@
 //! PKCS#7 example tests
 
-use der::{asn1::ObjectIdentifier, Decodable, Encoder};
+use der::{asn1::ObjectIdentifier, Decode, Encoder};
 use hex_literal::hex;
 use pkcs7::{
     encrypted_data_content::EncryptedDataContent, enveloped_data_content::EncryptedContentInfo,

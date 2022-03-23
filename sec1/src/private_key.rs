@@ -12,7 +12,7 @@ use crate::{EcParameters, Error};
 use core::fmt;
 use der::{
     asn1::{BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Sequence, Tag, TagMode, TagNumber,
+    Decode, Decoder, Encode, Sequence, Tag, TagMode, TagNumber,
 };
 
 /// `ECPrivateKey` version.
@@ -67,7 +67,7 @@ pub struct EcPrivateKey<'a> {
     pub public_key: Option<&'a [u8]>,
 }
 
-impl<'a> Decodable<'a> for EcPrivateKey<'a> {
+impl<'a> Decode<'a> for EcPrivateKey<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
             if decoder.uint8()? != VERSION {
@@ -93,7 +93,7 @@ impl<'a> Decodable<'a> for EcPrivateKey<'a> {
 impl<'a> Sequence<'a> for EcPrivateKey<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[
             &VERSION,

@@ -2,7 +2,7 @@
 
 use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
-use der::{asn1::BitString, Decodable, Decoder, DerOrd, Encodable, Sequence, ValueOrd};
+use der::{asn1::BitString, Decode, Decoder, DerOrd, Encode, Sequence, ValueOrd};
 
 #[cfg(feature = "fingerprint")]
 use sha2::{digest, Digest, Sha256};
@@ -57,7 +57,7 @@ impl<'a> SubjectPublicKeyInfo<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
+impl<'a> Decode<'a> for SubjectPublicKeyInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
             let algorithm = decoder.decode()?;
@@ -77,7 +77,7 @@ impl<'a> Decodable<'a> for SubjectPublicKeyInfo<'a> {
 impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[&self.algorithm, &self.subject_public_key_bitstring()?])
     }
