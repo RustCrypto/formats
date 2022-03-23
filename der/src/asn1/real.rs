@@ -1,6 +1,4 @@
 //! ASN.1 `NULL` support.
-
-use crate::asn1::integer::uint::{encode_bytes, encoded_len};
 use crate::{
     asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
     FixedTag, Length, Result, Tag,
@@ -98,13 +96,14 @@ impl EncodeValue for f64 {
                 Length::ONE
             } else {
                 let ebytes = exponent.to_be_bytes();
-                encoded_len(&ebytes)?
+                Length::try_from(strip_leading_zeroes(&ebytes).len())?
             };
             let mantissa_len = if mantissa == 0 {
                 Length::ONE
             } else {
                 let mbytes = mantissa.to_be_bytes();
-                encoded_len(&mbytes)?
+                // encoded_len(&mbytes)?
+                Length::try_from(strip_leading_zeroes(&mbytes).len())?
             };
             exponent_len + mantissa_len + Length::ONE
         }
@@ -141,57 +140,38 @@ impl EncodeValue for f64 {
             // Always use binary encoding, set bit 8 to 1
             let mut first_byte = 0b1000_0000;
             if self.is_sign_negative() {
-                // Section 8.5.7.1
+                // Section 8.5.7.1: set bit 7 to 1 if negative
                 first_byte |= 0b0100_0000;
             }
             // Bits 6 and 5 are set to 0 to specify that binary encoding is used
 
-            let (_sign, exponent, mut mantissa) = decode_f64(*self);
-            // If the mantissa is even ( % 2 == 0) and it isn't zero, then
-            // ensure that the mantissa is either zero or odd by a
-            let mut scaling_factor: u8 = 0;
-            if mantissa % 2 == 0 && mantissa != 0 {
-                loop {
-                    // Shift by one, store that as scaling factor
-                    mantissa >>= 1;
-                    first_byte |= 0b0000_0100;
-                    scaling_factor += 1;
-                    if mantissa % 2 == 1 {
-                        break;
-                    }
-                    if scaling_factor >= 4 {
-                        // We can only encode a scaling of 2^3
-                        return Err(Tag::Real.value_error());
-                    }
-                }
-            }
-            // Add the scaling factor
-            match scaling_factor {
-                0 => {}
-                1 => first_byte |= 0b0000_0100,
-                2 => first_byte |= 0b0000_1000,
-                3 => first_byte |= 0b0000_1100,
-                _ => unreachable!(),
-            };
+            // NOTE: the scaling factor is only used to align the implicit point of the mantissa.
+            // This is unnecessary in DER because the base is 2, and therefore necessarily aligned.
+            // Therefore, we do not modify the mantissa in anyway after this function call, which
+            // already adds the implicit one of the IEEE 754 representation.
+            let (_sign, exponent, mantissa) = decode_f64(*self);
+
             // Encode the exponent as two's complement on 16 bits and remove the bias
             let exponent_bytes = exponent.to_be_bytes();
             let ebytes = strip_leading_zeroes(&exponent_bytes);
-            
+
             match ebytes.len() {
-                0 | 1 => {},
+                0 | 1 => {}
                 2 => first_byte |= 0b0000_0001,
                 3 => first_byte |= 0b0000_0010,
-                _ => todo!("support multi octet exponent encoding")
+                _ => todo!("support multi octet exponent encoding"),
             }
 
             encoder.bytes(&[first_byte])?;
 
             // Encode both bytes or just the last one, handled by encode_bytes directly
             // Rust already encodes the data as two's complement, so no further processing is needed
-            encode_bytes(encoder, &ebytes)?;
+            encoder.bytes(ebytes)?;
 
             // Now, encode the mantissa as unsigned binary number
-            encode_bytes(encoder, &mantissa.to_be_bytes())?;
+            let mantissa_bytes = mantissa.to_be_bytes();
+            let mbytes = strip_leading_zeroes(&mantissa_bytes);
+            encoder.bytes(mbytes)?;
         }
         Ok(())
     }
@@ -368,7 +348,7 @@ mod tests {
         {
             // rec1value R ::= { mantissa -1, base 2, exponent 1 }
             let val = -1.0000000000000002;
-            let expected = &[0x09, 0x03, 0xc4, 0x00, 0x01];
+            let expected = &[0x09, 0x03, 0xc0, 0x00, 0x02];
             let mut buffer = [0u8; 5];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -386,29 +366,11 @@ mod tests {
         }
 
         {
+            // rec1value R ::= { mantissa 1, base 2, exponent -1022 }
+            // NOTE: f64::MIN_EXP == -1021 so the exponent decoded by ASN.1 is what we expect
             let val = f64::MIN_POSITIVE;
-            let expected = &[0x09, 0x03, 0x80, 0x01, 0x0];
+            let expected = &[0x09, 0x04, 0x81, 0xfc, 0x02, 0x01];
             let mut buffer = [0u8; 7];
-            let encoded = val.encode_to_slice(&mut buffer).unwrap();
-            // assert_eq!(
-            //     expected, encoded,
-            //     "invalid encoding of {}:\ngot  {:x?}\nwant: {:x?}",
-            //     val, encoded, expected
-            // );
-            let decoded = f64::from_der(encoded).unwrap();
-            assert!(
-                (decoded - val).abs() < f64::EPSILON,
-                "wanted: {}\tgot: {}",
-                val,
-                decoded
-            );
-        }
-
-        {
-            let val = f64::MIN;
-            // TODO: Update expected
-            let expected = &[9, 10, 129, 7, 254, 15, 255, 255, 255, 255, 255, 255];
-            let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
                 expected, encoded,
@@ -425,9 +387,32 @@ mod tests {
         }
 
         {
-            let val = f64::MAX;
-            let expected = &[9, 10, 129, 7, 254, 15, 255, 255, 255, 255, 255, 255];
-            let mut buffer = [0u8; 12];
+            // rec4value R ::= { mantissa 1, base 2, exponent 3 }
+            let val = 1.0000000000000016;
+            let expected = &[0x09, 0x03, 0x80, 0x00, 0x08];
+            let mut buffer = [0u8; 5];
+            let encoded = val.encode_to_slice(&mut buffer).unwrap();
+            assert_eq!(
+                expected, encoded,
+                "invalid encoding of {}:\ngot  {:x?}\nwant: {:x?}",
+                val, encoded, expected
+            );
+            let decoded = f64::from_der(encoded).unwrap();
+            assert!(
+                (decoded - val).abs() < f64::EPSILON,
+                "wanted: {}\tgot: {}",
+                val,
+                decoded
+            );
+        }
+
+        {
+            // rec5value R ::= { mantissa 4222124650659841, base 2, exponent 4 }
+            let val = 31.0;
+            let expected = &[
+                0x9, 0x9, 0x80, 0x04, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+            ];
+            let mut buffer = [0u8; 11];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
                 expected, encoded,
@@ -448,8 +433,10 @@ mod tests {
     fn encdec_irrationals() {
         {
             let val = core::f64::consts::PI;
-            let expected = &[9, 10, 133, 4, 0, 4, 144, 253, 170, 34, 22, 140];
-            let mut buffer = [0u8; 12];
+            let expected = &[
+                0x09, 0x09, 0x80, 0x01, 0x09, 0x21, 0xfb, 0x54, 0x44, 0x2d, 0x19,
+            ];
+            let mut buffer = [0u8; 11];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
                 expected, encoded,
@@ -467,7 +454,9 @@ mod tests {
 
         {
             let val = core::f64::consts::E;
-            let expected = &[9, 10, 129, 4, 0, 5, 191, 10, 139, 20, 87, 105];
+            let expected = &[
+                0x09, 0x09, 0x80, 0x01, 0x05, 0xbf, 0x0a, 0x8b, 0x14, 0x57, 0x6a,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -485,7 +474,9 @@ mod tests {
         }
         {
             let val = core::f64::consts::LN_2;
-            let expected = &[9, 10, 129, 3, 254, 6, 46, 66, 254, 250, 57, 239];
+            let expected = &[
+                0x09, 0x0a, 0x81, 0xff, 0xff, 0x6, 0x2e, 0x42, 0xfe, 0xfa, 0x39, 0xf0,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -507,9 +498,12 @@ mod tests {
     fn encdec_reasonable_f64() {
         // Tests the encoding and decoding of reals with some arbitrary numbers
         {
+            // rec1value R ::= { mantissa 2414341043715239, base 2, exponent 21 }
             let val = 3221417.1584163485;
-            let expected = &[9, 10, 133, 4, 20, 4, 73, 234, 74, 35, 126, 83];
-            let mut buffer = [0u8; 12];
+            let expected = &[
+                0x9, 0x9, 0x80, 0x15, 0x8, 0x93, 0xd4, 0x94, 0x46, 0xfc, 0xa7,
+            ];
+            let mut buffer = [0u8; 11];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
                 expected, encoded,
@@ -526,8 +520,11 @@ mod tests {
         }
 
         {
+            // rec1value R ::= { mantissa 2671155248072715, base 2, exponent 23 }
             let val = 13364022.365665454;
-            let expected = &[9, 10, 133, 4, 22, 4, 190, 179, 101, 217, 196, 5];
+            let expected = &[
+                0x09, 0x09, 0x80, 0x17, 0x09, 0x7d, 0x66, 0xcb, 0xb3, 0x88, 0x0b,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -545,8 +542,11 @@ mod tests {
         }
 
         {
+            // rec1value R ::= { mantissa -4386812962460287, base 2, exponent 14 }
             let val = -32343.132588105735;
-            let expected = &[9, 10, 197, 4, 13, 7, 202, 228, 62, 41, 105, 63];
+            let expected = &[
+                0x09, 0x09, 0xc0, 0x0e, 0x0f, 0x95, 0xc8, 0x7c, 0x52, 0xd2, 0x7f,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -565,7 +565,9 @@ mod tests {
 
         {
             let val = -27084.866751869475;
-            let expected = &[9, 10, 193, 4, 13, 10, 115, 55, 120, 220, 213, 73];
+            let expected = &[
+                0x09, 0x09, 0xc0, 0x0e, 0x0a, 0x73, 0x37, 0x78, 0xdc, 0xd5, 0x4a,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -583,8 +585,11 @@ mod tests {
         }
 
         {
+            // rec1value R ::= { mantissa -4372913134428149, base 2, exponent 7 }
             let val = -252.28566647111404;
-            let expected = &[9, 10, 197, 4, 6, 7, 196, 146, 23, 1, 111, 250];
+            let expected = &[
+                0x09, 0x09, 0xc0, 0x07, 0x0f, 0x89, 0x24, 0x2e, 0x02, 0xdf, 0xf5,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -603,7 +608,9 @@ mod tests {
 
         {
             let val = -14.399709612928548;
-            let expected = &[9, 10, 193, 4, 2, 12, 204, 166, 189, 6, 217, 145];
+            let expected = &[
+                0x09, 0x09, 0xc0, 0x03, 0x0c, 0xcc, 0xa6, 0xbd, 0x06, 0xd9, 0x92,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -622,7 +629,9 @@ mod tests {
 
         {
             let val = -0.08340570261832964;
-            let expected = &[9, 10, 197, 3, 251, 2, 173, 9, 190, 133, 215, 30];
+            let expected = &[
+                0x09, 0x0a, 0xc1, 0xff, 0xfc, 0x05, 0x5a, 0x13, 0x7d, 0x0b, 0xae, 0x3d,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -641,7 +650,9 @@ mod tests {
 
         {
             let val = 0.00536851453803701;
-            let expected = &[9, 10, 133, 3, 247, 2, 254, 165, 210, 243, 166, 73];
+            let expected = &[
+                0x09, 0x0a, 0x81, 0xff, 0xf8, 0x05, 0xfd, 0x4b, 0xa5, 0xe7, 0x4c, 0x93,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -660,7 +671,9 @@ mod tests {
 
         {
             let val = 0.00045183525648866433;
-            let expected = &[9, 10, 133, 3, 243, 6, 206, 68, 211, 44, 153, 156];
+            let expected = &[
+                0x09, 0x0a, 0x81, 0xff, 0xf4, 0x0d, 0x9c, 0x89, 0xa6, 0x59, 0x33, 0x39,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -679,7 +692,9 @@ mod tests {
 
         {
             let val = 0.000033869092002682955;
-            let expected = &[9, 10, 129, 3, 240, 1, 193, 213, 35, 213, 84, 123];
+            let expected = &[
+                0x09, 0x0a, 0x81, 0xff, 0xf1, 0x01, 0xc1, 0xd5, 0x23, 0xd5, 0x54, 0x7c,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -698,7 +713,9 @@ mod tests {
 
         {
             let val = 0.0000011770891033600088;
-            let expected = &[9, 10, 129, 3, 235, 3, 191, 143, 39, 244, 98, 85];
+            let expected = &[
+                0x09, 0x0a, 0x81, 0xff, 0xec, 0x03, 0xbf, 0x8f, 0x27, 0xf4, 0x62, 0x56,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -717,7 +734,9 @@ mod tests {
 
         {
             let val = 0.00000005549514041997082;
-            let expected = &[9, 10, 133, 3, 230, 6, 229, 152, 213, 183, 92, 107];
+            let expected = &[
+                0x09, 0x0a, 0x81, 0xff, 0xe7, 0x0d, 0xcb, 0x31, 0xab, 0x6e, 0xb8, 0xd7,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -736,7 +755,9 @@ mod tests {
 
         {
             let val = 0.0000000012707044685547803;
-            let expected = &[9, 10, 133, 3, 225, 2, 234, 79, 5, 121, 127, 143];
+            let expected = &[
+                0x09, 0x0a, 0x81, 0xff, 0xe2, 0x05, 0xd4, 0x9e, 0x0a, 0xf2, 0xff, 0x1f,
+            ];
             let mut buffer = [0u8; 12];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
@@ -755,7 +776,9 @@ mod tests {
 
         {
             let val = 0.00000000002969611878378562;
-            let expected = &[9, 9, 129, 3, 220, 83, 91, 111, 151, 238, 181];
+            let expected = &[
+                0x09, 0x09, 0x81, 0xff, 0xdd, 0x53, 0x5b, 0x6f, 0x97, 0xee, 0xb6,
+            ];
             let mut buffer = [0u8; 11];
             let encoded = val.encode_to_slice(&mut buffer).unwrap();
             assert_eq!(
