@@ -1,7 +1,7 @@
 //! ASN.1 `NULL` support.
 use crate::{
     asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    FixedTag, Length, Result, Tag, Header,
+    FixedTag, Header, Length, Result, Tag,
 };
 
 use super::integer::uint::strip_leading_zeroes;
