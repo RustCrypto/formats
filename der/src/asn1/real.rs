@@ -1,16 +1,16 @@
 //! ASN.1 `NULL` support.
 use crate::{
     asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    FixedTag, Length, Result, Tag,
+    FixedTag, Length, Result, Tag, Header,
 };
 
 use super::integer::uint::strip_leading_zeroes;
 
 impl DecodeValue<'_> for f64 {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
 
-        if length == Length::ZERO {
+        if header.length == Length::ZERO {
             Ok(0.0)
         } else if is_nth_bit_one::<7>(bytes) {
             // Binary encoding from section 8.5.7 applies
@@ -247,7 +247,8 @@ pub(crate) fn encode_f64(sign: u64, exponent: u64, mantissa: u64) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Decodable, Encodable};
+    use crate::decodable::Decode;
+    use crate::encodable::Encode;
 
     #[test]
     fn decode_subnormal() {
