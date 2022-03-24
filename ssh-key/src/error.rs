@@ -1,6 +1,7 @@
 //! Error types
 
 use core::fmt;
+use pem_rfc7468 as pem;
 
 /// Result type with `ssh-key`'s [`Error`] as the error type.
 pub type Result<T> = core::result::Result<T, Error>;
@@ -26,6 +27,11 @@ pub enum Error {
     /// Other format encoding errors.
     FormatEncoding,
 
+    /// Input/output errors.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    Io(std::io::ErrorKind),
+
     /// Invalid length.
     Length,
 
@@ -33,7 +39,7 @@ pub enum Error {
     Overflow,
 
     /// PEM encoding errors.
-    Pem,
+    Pem(pem::Error),
 }
 
 impl fmt::Display for Error {
@@ -45,9 +51,11 @@ impl fmt::Display for Error {
             #[cfg(feature = "ecdsa")]
             Error::Ecdsa(err) => write!(f, "ECDSA encoding error: {}", err),
             Error::FormatEncoding => f.write_str("format encoding error"),
+            #[cfg(feature = "std")]
+            Error::Io(err) => write!(f, "I/O error: {}", std::io::Error::from(*err)),
             Error::Length => f.write_str("length invalid"),
             Error::Overflow => f.write_str("internal overflow error"),
-            Error::Pem => f.write_str("PEM encoding error"),
+            Error::Pem(err) => write!(f, "{}", err),
         }
     }
 }
@@ -85,6 +93,12 @@ impl From<core::str::Utf8Error> for Error {
     }
 }
 
+impl From<pem_rfc7468::Error> for Error {
+    fn from(err: pem_rfc7468::Error) -> Error {
+        Error::Pem(err)
+    }
+}
+
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl From<alloc::string::FromUtf8Error> for Error {
@@ -98,5 +112,13 @@ impl From<alloc::string::FromUtf8Error> for Error {
 impl From<sec1::Error> for Error {
     fn from(err: sec1::Error) -> Error {
         Error::Ecdsa(err)
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Error {
+        Error::Io(err.kind())
     }
 }

@@ -39,7 +39,7 @@ This library supports parsing OIDs in const contexts, e.g.:
 ```rust
 use const_oid::ObjectIdentifier;
 
-pub const MY_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.1.1");
+pub const MY_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.1");
 ```
 
 The OID parser is implemented entirely in terms of `const fn` and without the

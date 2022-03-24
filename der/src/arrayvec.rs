@@ -29,7 +29,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
     /// impl on `T`.
     pub fn add(&mut self, element: T) -> Result<()> {
         match self.length.checked_add(1) {
-            Some(n) if n < N => {
+            Some(n) if n <= N => {
                 self.elements[self.length] = Some(element);
                 self.length = n;
                 Ok(())
@@ -129,3 +129,20 @@ impl<'a, T> Iterator for Iter<'a, T> {
 }
 
 impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
+
+#[cfg(test)]
+mod tests {
+    use super::ArrayVec;
+    use crate::ErrorKind;
+
+    #[test]
+    fn add() {
+        let mut vec = ArrayVec::<u8, 3>::new();
+        vec.add(1).unwrap();
+        vec.add(2).unwrap();
+        vec.add(3).unwrap();
+
+        assert_eq!(vec.add(4).err().unwrap(), ErrorKind::Overlength.into());
+        assert_eq!(vec.len(), 3);
+    }
+}

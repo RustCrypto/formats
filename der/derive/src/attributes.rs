@@ -78,6 +78,9 @@ pub(crate) struct FieldAttrs {
     /// Inherits from the type-level tagging mode if specified, or otherwise
     /// defaults to `EXPLICIT`.
     pub tag_mode: TagMode,
+
+    /// Is the inner type constructed?
+    pub constructed: bool,
 }
 
 impl FieldAttrs {
@@ -97,6 +100,7 @@ impl FieldAttrs {
         let mut extensible = None;
         let mut optional = None;
         let mut tag_mode = None;
+        let mut constructed = None;
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
@@ -146,6 +150,13 @@ impl FieldAttrs {
                 }
 
                 asn1_type = Some(ty);
+            // `constructed = "..."` attribute
+            } else if let Some(ty) = attr.parse_value("constructed") {
+                if constructed.is_some() {
+                    abort!(attr.name, "duplicate ASN.1 `constructed` attribute: {}");
+                }
+
+                constructed = Some(ty);
             } else {
                 abort!(
                     attr.name,
@@ -162,25 +173,22 @@ impl FieldAttrs {
             extensible: extensible.unwrap_or_default(),
             optional: optional.unwrap_or_default(),
             tag_mode: tag_mode.unwrap_or(type_attrs.tag_mode),
+            constructed: constructed.unwrap_or_default(),
         }
     }
 
     /// Get the expected [`Tag`] for this field.
     pub fn tag(&self) -> Option<Tag> {
-        match self.tag_mode {
-            TagMode::Explicit => self.asn1_type.map(Tag::Universal),
-            TagMode::Implicit => self
-                .context_specific
-                .map(|tag_number| {
-                    Some(Tag::ContextSpecific {
-                        // TODO(tarcieri): handle constructed inner types
-                        constructed: false,
-                        number: tag_number,
-                    })
-                })
-                .unwrap_or_else(|| {
-                    abort_call_site!("implicit tagging requires an associated `tag_number`")
-                }),
+        match self.context_specific {
+            Some(tag_number) => Some(Tag::ContextSpecific {
+                constructed: self.constructed,
+                number: tag_number,
+            }),
+
+            None => match self.tag_mode {
+                TagMode::Explicit => self.asn1_type.map(Tag::Universal),
+                TagMode::Implicit => abort_call_site!("implicit tagging requires a `tag_number`"),
+            },
         }
     }
 
@@ -226,11 +234,12 @@ impl FieldAttrs {
                 }
             } else {
                 // TODO(tarcieri): better error handling?
+                let constructed = self.constructed;
                 quote! {
                     #context_specific.ok_or_else(|| {
                         der::Tag::ContextSpecific {
                             number: #tag_number,
-                            constructed: false
+                            constructed: #constructed
                         }.value_error()
                     })?.value
                 }
@@ -247,19 +256,28 @@ impl FieldAttrs {
         }
     }
 
-    /// Get a `der::Encoder` object which respects these field attributes.
-    pub fn encoder(&self, binding: &TokenStream) -> TokenStream {
-        if let Some(tag_number) = self.context_specific {
-            let tag_number = tag_number.to_tokens();
-            let tag_mode = self.tag_mode.to_tokens();
-            quote!(encoder.context_specific(#tag_number, #tag_mode, #binding))
-        } else {
-            self.asn1_type
+    /// Get tokens to encode the binding using `::der::EncodeValue`.
+    pub fn value_encode(&self, binding: &TokenStream) -> TokenStream {
+        match self.context_specific {
+            Some(tag_number) => {
+                let tag_number = tag_number.to_tokens();
+                let tag_mode = self.tag_mode.to_tokens();
+                quote! {
+                    ::der::asn1::ContextSpecificRef {
+                        tag_number: #tag_number,
+                        tag_mode: #tag_mode,
+                        value: #binding,
+                    }.encode_value(encoder)
+                }
+            }
+
+            None => self
+                .asn1_type
                 .map(|ty| {
                     let encoder_obj = ty.encoder(binding);
-                    quote!(#encoder_obj.encode(encoder))
+                    quote!(#encoder_obj.encode_value(encoder))
                 })
-                .unwrap_or_else(|| quote!(encoder.encode(#binding)?))
+                .unwrap_or_else(|| quote!(#binding.encode_value(encoder))),
         }
     }
 }
@@ -313,7 +331,7 @@ impl AttrNameValue {
                 self.value
                     .value()
                     .parse()
-                    .unwrap_or_else(|_| abort!(self.name, "error parsing `{}` attribute")),
+                    .unwrap_or_else(|_| abort!(self.name, "error parsing attribute")),
             )
         } else {
             None

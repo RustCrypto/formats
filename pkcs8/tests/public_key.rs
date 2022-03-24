@@ -4,7 +4,7 @@ use hex_literal::hex;
 use pkcs8::SubjectPublicKeyInfo;
 
 #[cfg(feature = "alloc")]
-use der::Encodable;
+use der::Encode;
 
 #[cfg(feature = "pem")]
 use pkcs8::{der::Document, EncodePublicKey};

@@ -1,10 +1,10 @@
 [package]
 name = "ssh-key"
-version = "0.3.0-pre" # Also update html_root_url in lib.rs when bumping this
+version = "0.3.0"
 description = """
 Pure Rust implementation of SSH key file format decoders/encoders as described
-in RFC4253 and RFC4716 as well as the OpenSSH key formats. Supports "heapless"
-`no_std` embedded targets with an optional `alloc` feature (Ed25519 and ECDSA only)
+in RFC4253 and RFC4716 as well as the OpenSSH key formats and `authorized_keys`.
+Supports "heapless" `no_std` embedded targets with an optional `alloc` feature.
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
@@ -16,19 +16,24 @@ edition = "2021"
 rust-version = "1.57"
 
 [dependencies]
-base64ct = { version = "=1.4.0-pre.0", path = "../base64ct" }
+base64ct = { version = "1.4", path = "../base64ct" }
+pem-rfc7468 = { version = "0.4", path = "../pem-rfc7468" }
 zeroize = { version = "1", default-features = false }
 
 # optional dependencies
-sec1 = { version = "=0.3.0-pre", optional = true, default-features = false, path = "../sec1" }
+sec1 = { version = "=0.3.0-pre.1", optional = true, default-features = false, features = ["point"], path = "../sec1" }
+sha2 = { version = "0.10", optional = true, default-features = false }
+subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
+tempfile = "3"
 
 [features]
-default = ["alloc", "ecdsa"]
-alloc = []
+default = ["ecdsa", "fingerprint", "std"]
+alloc = ["zeroize/alloc"]
 ecdsa = ["sec1"]
+fingerprint = ["sha2"]
 std = ["alloc", "base64ct/std"]
 
 [package.metadata.docs.rs]

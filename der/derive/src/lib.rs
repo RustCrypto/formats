@@ -93,6 +93,11 @@
 //! - `UTCTime`: performs an intermediate conversion to [`der::asn1::UtcTime`]
 //! - `UTF8String`: performs an intermediate conversion to [`der::asn1::Utf8String`]
 //!
+//! ### `#[asn1(constructed = "...")]` attribute: support for constructed inner types
+//!
+//! This attribute can be used to specify that an "inner" type is constructed. It is most
+//! commonly used when a `CHOICE` has a constructed inner type.
+//!
 //! Note: please open a GitHub Issue if you would like to request support
 //! for additional ASN.1 types.
 //!
@@ -115,6 +120,7 @@ mod asn1_type;
 mod attributes;
 mod choice;
 mod enumerated;
+mod newtype;
 mod sequence;
 mod tag;
 mod value_ord;
@@ -124,6 +130,7 @@ use crate::{
     attributes::{FieldAttrs, TypeAttrs, ATTR_NAME},
     choice::DeriveChoice,
     enumerated::DeriveEnumerated,
+    newtype::DeriveNewtype,
     sequence::DeriveSequence,
     tag::{Tag, TagMode, TagNumber},
     value_ord::DeriveValueOrd,
@@ -135,11 +142,11 @@ use syn::{parse_macro_input, DeriveInput};
 /// Derive the [`Choice`][1] trait on an `enum`.
 ///
 /// This custom derive macro can be used to automatically impl the
-/// [`Decodable`][2] and [`Encodable`][3] traits along with the
+/// [`Decode`][2] and [`Encode`][3] traits along with the
 /// [`Choice`][1] supertrait for any enum representing an ASN.1 `CHOICE`.
 ///
 /// The enum must consist entirely of 1-tuple variants wrapping inner
-/// types which must also impl the [`Decodable`][2] and [`Encodable`][3]
+/// types which must also impl the [`Decode`][2] and [`Encode`][3]
 /// traits. It will will also generate [`From`] impls for each of the
 /// inner types of the variants into the enum that wraps them.
 ///
@@ -166,8 +173,8 @@ use syn::{parse_macro_input, DeriveInput};
 /// information about the `#[asn1]` attribute.
 ///
 /// [1]: https://docs.rs/der/latest/der/trait.Choice.html
-/// [2]: https://docs.rs/der/latest/der/trait.Decodable.html
-/// [3]: https://docs.rs/der/latest/der/trait.Encodable.html
+/// [2]: https://docs.rs/der/latest/der/trait.Decode.html
+/// [3]: https://docs.rs/der/latest/der/trait.Encode.html
 /// [4]: https://docs.rs/der_derive/
 #[proc_macro_derive(Choice, attributes(asn1))]
 #[proc_macro_error]
@@ -205,7 +212,7 @@ pub fn derive_choice(input: TokenStream) -> TokenStream {
 ///
 /// Note that the derive macro will write a `TryFrom<...>` impl for the
 /// provided `#[repr]`, which is used by the decoder.
-#[proc_macro_derive(Enumerated)]
+#[proc_macro_derive(Enumerated, attributes(asn1))]
 #[proc_macro_error]
 pub fn derive_enumerated(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -263,4 +270,16 @@ pub fn derive_sequence(input: TokenStream) -> TokenStream {
 pub fn derive_value_ord(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     DeriveValueOrd::new(input).to_tokens().into()
+}
+
+/// Wraps a der type in a newtype.
+///
+/// The newtype receives implementations of `der::FixedTag`,
+/// `der::DecodeValue`, `der::EncodeValue`, `Deref`, `DerefMut`, and
+/// bi-directional `From`.
+#[proc_macro_derive(Newtype)]
+#[proc_macro_error]
+pub fn derive_newtype(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    DeriveNewtype::new(input).to_tokens().into()
 }

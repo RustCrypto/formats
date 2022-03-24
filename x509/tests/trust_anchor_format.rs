@@ -1,8 +1,7 @@
-use der::Decoder;
+use der::{Decode, Decoder, Encode};
 use hex_literal::hex;
-use x509::der::{DecodeValue, Encodable};
-use x509::trust_anchor_format::TrustAnchorChoice;
-use x509::*;
+use x509_cert::anchor::{CertPolicies, TrustAnchorChoice};
+use x509_cert::ext::pkix::name::GeneralName;
 
 #[test]
 fn decode_ta1() {
@@ -12,8 +11,7 @@ fn decode_ta1() {
     let der_encoded_cert = include_bytes!("examples/eca.der");
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
-    let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header.length).unwrap();
+    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -79,16 +77,16 @@ fn decode_ta1() {
             let cert_path = tai.cert_path.as_ref().unwrap();
             let mut counter = 0;
             let exts = cert_path.policy_set.as_ref().unwrap();
-            let i = exts.iter();
+            let i = exts.0.iter();
             for ext in i {
                 assert_eq!(policy_ids[counter], ext.policy_identifier.to_string());
                 counter += 1;
             }
 
             counter = 0;
-            let i = cert_path.ta_name.iter();
+            let i = cert_path.ta_name.0.iter();
             for rdn in i {
-                let i1 = rdn.iter();
+                let i1 = rdn.0.iter();
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -128,8 +126,7 @@ fn decode_ta2() {
     let der_encoded_cert = include_bytes!("examples/entrust.der");
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
-    let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header.length).unwrap();
+    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -150,9 +147,9 @@ fn decode_ta2() {
             let cert_path = tai.cert_path.as_ref().unwrap();
 
             let mut counter = 0;
-            let i = cert_path.ta_name.iter();
+            let i = cert_path.ta_name.0.iter();
             for rdn in i {
-                let i1 = rdn.iter();
+                let i1 = rdn.0.iter();
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -186,9 +183,9 @@ fn decode_ta2() {
             for gs in gsi {
                 match &gs.base {
                     GeneralName::DirectoryName(dn) => {
-                        let i = dn.iter();
+                        let i = dn.0.iter();
                         for rdn in i {
-                            let i1 = rdn.iter();
+                            let i1 = rdn.0.iter();
                             for atav in i1 {
                                 if 0 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -232,8 +229,7 @@ fn decode_ta3() {
     let der_encoded_cert = include_bytes!("examples/exostar.der");
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
-    let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header.length).unwrap();
+    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -253,25 +249,17 @@ fn decode_ta3() {
 
             let cert_path = tai.cert_path.as_ref().unwrap();
 
-            let cpf = cert_path.policy_flags.unwrap();
-            let b = cpf.raw_bytes();
-            if 0x80 != 0x80 & b[0] {
-                panic!("Missing policy flag bit 0")
-            }
-            if 0x40 != 0x40 & b[0] {
-                panic!("Missing policy flag bit 1")
-            }
-            if 0x20 != 0x20 & b[0] {
-                panic!("Missing policy flag bit 2")
-            }
-            if cpf.unused_bits() != 5 {
-                panic!("Wrong unused bits for policy flags")
-            }
+            assert_eq!(
+                CertPolicies::InhibitPolicyMapping
+                    | CertPolicies::RequireExplicitPolicy
+                    | CertPolicies::InhibitAnyPolicy,
+                cert_path.policy_flags.unwrap()
+            );
 
             let mut counter = 0;
-            let i = cert_path.ta_name.iter();
+            let i = cert_path.ta_name.0.iter();
             for rdn in i {
-                let i1 = rdn.iter();
+                let i1 = rdn.0.iter();
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -305,9 +293,9 @@ fn decode_ta3() {
             for gs in gsi {
                 match &gs.base {
                     GeneralName::DirectoryName(dn) => {
-                        let i = dn.iter();
+                        let i = dn.0.iter();
                         for rdn in i {
-                            let i1 = rdn.iter();
+                            let i1 = rdn.0.iter();
                             for atav in i1 {
                                 if 0 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -351,8 +339,7 @@ fn decode_ta4() {
     let der_encoded_cert = include_bytes!("examples/raytheon.der");
 
     let mut decoder = Decoder::new(der_encoded_tac).unwrap();
-    let header = decoder.peek_header().unwrap();
-    let tac = TrustAnchorChoice::decode_value(&mut decoder, header.length).unwrap();
+    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -373,9 +360,9 @@ fn decode_ta4() {
             let cert_path = tai.cert_path.as_ref().unwrap();
 
             let mut counter = 0;
-            let i = cert_path.ta_name.iter();
+            let i = cert_path.ta_name.0.iter();
             for rdn in i {
-                let i1 = rdn.iter();
+                let i1 = rdn.0.iter();
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");

@@ -3,7 +3,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/base64ct/1.4.0-pre.0"
+    html_root_url = "https://docs.rs/base64ct/1.4.1"
 )]
 #![doc = include_str!("../README.md")]
 #![warn(
@@ -75,6 +75,7 @@ mod decoder;
 mod encoder;
 mod encoding;
 mod errors;
+mod line_ending;
 mod variant;
 
 #[cfg(test)]
@@ -85,6 +86,7 @@ pub use crate::{
     encoder::Encoder,
     encoding::Encoding,
     errors::{Error, InvalidEncodingError, InvalidLengthError},
+    line_ending::LineEnding,
     variant::{
         bcrypt::Base64Bcrypt,
         crypt::Base64Crypt,
@@ -92,3 +94,6 @@ pub use crate::{
         url::{Base64Url, Base64UrlUnpadded},
     },
 };
+
+/// Minimum supported line width.
+const MIN_LINE_WIDTH: usize = 4;

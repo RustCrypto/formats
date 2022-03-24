@@ -4,7 +4,7 @@ use crate::{
     errors::{Error, InvalidEncodingError, InvalidLengthError},
     variant::Variant,
 };
-use core::str;
+use core::{fmt::Debug, str};
 
 #[cfg(feature = "alloc")]
 use alloc::{string::String, vec::Vec};
@@ -16,7 +16,7 @@ const PAD: u8 = b'=';
 ///
 /// This trait must be imported to make use of any Base64 variant defined
 /// in this crate.
-pub trait Encoding {
+pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
     /// Decode a Base64 string into the provided destination buffer.
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error>;
 
@@ -321,7 +321,7 @@ fn validate_padding<T: Variant>(encoded: &[u8], decoded: &[u8]) -> Result<(), Er
 /// Note that this function does not fully validate the Base64 is well-formed
 /// and may return incorrect results for malformed Base64.
 #[inline(always)]
-fn decoded_len(input_len: usize) -> usize {
+pub(crate) fn decoded_len(input_len: usize) -> usize {
     // overflow-proof computation of `(3*n)/4`
     let k = input_len / 4;
     let l = input_len - 4 * k;

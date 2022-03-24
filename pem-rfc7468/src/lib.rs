@@ -1,11 +1,19 @@
+#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_root_url = "https://docs.rs/pem-rfc7468/0.4.0"
+)]
+#![forbid(unsafe_code, clippy::unwrap_used)]
+#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 #![doc = include_str!("../README.md")]
 
 //! # Usage
 //!
-//! ```
+#![cfg_attr(feature = "std", doc = " ```")]
+#![cfg_attr(not(feature = "std"), doc = " ```ignore")]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! # #[cfg(feature = "std")]
-//! # {
 //! /// Example PEM document
 //! /// NOTE: do not actually put private key literals into your source code!!!
 //! let example_pem = "\
@@ -30,25 +38,9 @@
 //! use pem_rfc7468::LineEnding;
 //! let encoded_pem = pem_rfc7468::encode_string(type_label, LineEnding::default(), &data)?;
 //! assert_eq!(&encoded_pem, example_pem);
-//! # }
 //! # Ok(())
 //! # }
 //! ```
-//!
-//! [RFC 1421]: https://datatracker.ietf.org/doc/html/rfc1421
-//! [RFC 7468]: https://datatracker.ietf.org/doc/html/rfc7468
-//! [RFC 7468 p6]: https://datatracker.ietf.org/doc/html/rfc7468#page-6
-//! [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf
-
-#![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pem-rfc7468/0.4.0-pre.0"
-)]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
 #[cfg(feature = "alloc")]
 #[macro_use]
@@ -63,9 +55,10 @@ mod grammar;
 
 pub use crate::{
     decoder::{decode, decode_label, Decoder},
-    encoder::{encode, encoded_len, LineEnding},
+    encoder::{encapsulated_len, encode, encoded_len, Encoder},
     error::{Error, Result},
 };
+pub use base64ct::LineEnding;
 
 #[cfg(feature = "alloc")]
 pub use crate::{decoder::decode_vec, encoder::encode_string};
@@ -94,8 +87,25 @@ const ENCAPSULATION_BOUNDARY_DELIMITER: &[u8] = b"-----";
 /// > handle other line sizes.
 const BASE64_WRAP_WIDTH: usize = 64;
 
+/// Buffered Base64 decoder type.
+pub type Base64Decoder<'i> = base64ct::Decoder<'i, base64ct::Base64>;
+
+/// Buffered Base64 encoder type.
+pub type Base64Encoder<'o> = base64ct::Encoder<'o, base64ct::Base64>;
+
 /// Marker trait for types with an associated PEM type label.
 pub trait PemLabel {
     /// Expected PEM type label for a given document, e.g. `"PRIVATE KEY"`
     const TYPE_LABEL: &'static str;
+
+    /// Validate that a given label matches the expected label.
+    fn validate_pem_label(actual: &str) -> Result<()> {
+        if Self::TYPE_LABEL == actual {
+            Ok(())
+        } else {
+            Err(Error::UnexpectedTypeLabel {
+                expected: Self::TYPE_LABEL,
+            })
+        }
+    }
 }

@@ -1,4 +1,4 @@
-//! Support for deriving the `Decodable` and `Encodable` traits on enums for
+//! Support for deriving the `Decode` and `Encode` traits on enums for
 //! the purposes of decoding/encoding ASN.1 `ENUMERATED` types as mapped to
 //! enum variants.
 
@@ -6,7 +6,7 @@ use crate::ATTR_NAME;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, Variant};
+use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, Meta, MetaList, NestedMeta, Variant};
 
 /// Valid options for the `#[repr]` attribute on `Enumerated` types.
 const REPR_TYPES: &[&str] = &["u8", "u16", "u32"];
@@ -18,6 +18,9 @@ pub(crate) struct DeriveEnumerated {
 
     /// Value of the `repr` attribute.
     repr: Ident,
+
+    /// Whether or not to tag the enum as an integer
+    integer: bool,
 
     /// Variants of this enum.
     variants: Vec<EnumeratedVariant>,
@@ -36,13 +39,25 @@ impl DeriveEnumerated {
 
         // Reject `asn1` attributes, parse the `repr` attribute
         let mut repr: Option<Ident> = None;
+        let mut integer = false;
 
         for attr in &input.attrs {
             if attr.path.is_ident(ATTR_NAME) {
-                abort!(
-                    attr.path,
-                    "`asn1` attribute is not allowed on `Enumerated` types"
-                );
+                if let Ok(Meta::List(MetaList { nested, .. })) = attr.parse_meta() {
+                    for meta in nested {
+                        if let NestedMeta::Meta(Meta::NameValue(nv)) = meta {
+                            if nv.path.is_ident("type") {
+                                if let Lit::Str(lit) = nv.lit {
+                                    match lit.value().as_str() {
+                                        "ENUMERATED" => integer = false,
+                                        "INTEGER" => integer = true,
+                                        s => abort!(lit, "`type = \"{}\"` is unsupported", s),
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             } else if attr.path.is_ident("repr") {
                 if repr.is_some() {
                     abort!(
@@ -81,6 +96,7 @@ impl DeriveEnumerated {
                 )
             }),
             variants,
+            integer,
         }
     }
 
@@ -88,6 +104,10 @@ impl DeriveEnumerated {
     pub fn to_tokens(&self) -> TokenStream {
         let ident = &self.ident;
         let repr = &self.repr;
+        let tag = match self.integer {
+            false => quote! { ::der::Tag::Enumerated },
+            true => quote! { ::der::Tag::Integer },
+        };
 
         let mut try_from_body = Vec::new();
         for variant in &self.variants {
@@ -98,9 +118,9 @@ impl DeriveEnumerated {
             impl ::der::DecodeValue<'_> for #ident {
                 fn decode_value(
                     decoder: &mut ::der::Decoder<'_>,
-                    length: ::der::Length
+                    header: ::der::Header
                 ) -> ::der::Result<Self> {
-                    <#repr as ::der::DecodeValue>::decode_value(decoder, length)?.try_into()
+                    <#repr as ::der::DecodeValue>::decode_value(decoder, header)?.try_into()
                 }
             }
 
@@ -115,7 +135,7 @@ impl DeriveEnumerated {
             }
 
             impl ::der::FixedTag for #ident {
-                const TAG: ::der::Tag = ::der::Tag::Enumerated;
+                const TAG: ::der::Tag = #tag;
             }
 
             impl TryFrom<#repr> for #ident {
@@ -124,7 +144,7 @@ impl DeriveEnumerated {
                 fn try_from(n: #repr) -> ::der::Result<Self> {
                     match n {
                         #(#try_from_body)*
-                        _ => Err(der::Tag::Enumerated.value_error())
+                        _ => Err(#tag.value_error())
                     }
                 }
             }

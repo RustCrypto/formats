@@ -1,6 +1,6 @@
 //! Base64 variants
 
-use core::ops::Range;
+use core::{fmt::Debug, ops::Range};
 
 pub mod bcrypt;
 pub mod crypt;
@@ -8,7 +8,7 @@ pub mod standard;
 pub mod url;
 
 /// Core encoder/decoder functions for a particular Base64 variant
-pub trait Variant {
+pub trait Variant: 'static + Copy + Debug + Eq + Send + Sized + Sync {
     /// Unpadded equivalent of this variant.
     ///
     /// For variants that are unpadded to begin with, this should be `Self`.

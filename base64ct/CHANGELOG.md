@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.1 (2022-03-11)
+### Changed
+- Rename `Decoder::decoded_len` => `::remaining_len` ([#500])
+
+[#500]: https://github.com/RustCrypto/formats/pull/500
+
+## 1.4.0 (2022-03-10) [YANKED]
+### Added
+- Buffered `Encoder` type ([#366], [#455], [#457])
+- `Decoder::decoded_len` method ([#403])
+- Impl `std::io::Read` for `Decoder` ([#404])
+- Bounds for `Encoding`/`Variant` ZSTs ([#405], [#408])
+
+[#366]: https://github.com/RustCrypto/formats/pull/366
+[#403]: https://github.com/RustCrypto/formats/pull/403
+[#404]: https://github.com/RustCrypto/formats/pull/404
+[#405]: https://github.com/RustCrypto/formats/pull/405
+[#408]: https://github.com/RustCrypto/formats/pull/408
+[#455]: https://github.com/RustCrypto/formats/pull/455
+[#457]: https://github.com/RustCrypto/formats/pull/457
+
 ## 1.3.3 (2021-12-28)
 ### Fixed
 - Potential infinite loop in `Decoder::decode` ([#305])

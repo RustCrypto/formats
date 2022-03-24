@@ -1,12 +1,16 @@
 //! Multiple precision integer
 
 use crate::{
-    base64::{self, Decode, Encode},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     Error, Result,
 };
 use alloc::vec::Vec;
 use core::fmt;
 use zeroize::Zeroize;
+
+#[cfg(feature = "subtle")]
+use subtle::{Choice, ConstantTimeEq};
 
 /// Multiple precision integer, a.k.a. "mpint".
 ///
@@ -84,7 +88,7 @@ impl AsRef<[u8]> for MPInt {
 }
 
 impl Decode for MPInt {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         decoder.decode_byte_vec()?.try_into()
     }
 }
@@ -94,7 +98,7 @@ impl Encode for MPInt {
         Ok(4 + self.as_bytes().len())
     }
 
-    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         encoder.encode_byte_slice(self.as_bytes())
     }
 }
@@ -154,6 +158,14 @@ impl fmt::UpperHex for MPInt {
             write!(f, "{:02X}", byte)?;
         }
         Ok(())
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for MPInt {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.as_ref().ct_eq(other.as_ref())
     }
 }
 

@@ -15,7 +15,7 @@ mod choice {
     mod explicit {
         use der::{
             asn1::{GeneralizedTime, UtcTime},
-            Choice, Decodable, Encodable, Encoder,
+            Choice, Decode, Encode, Encoder,
         };
         use hex_literal::hex;
         use std::time::Duration;
@@ -82,7 +82,7 @@ mod choice {
     mod implicit {
         use der::{
             asn1::{BitString, GeneralizedTime},
-            Choice, Decodable, Encodable, Encoder,
+            Choice, Decode, Encode, Encoder,
         };
         use hex_literal::hex;
 
@@ -153,7 +153,7 @@ mod choice {
 
 /// Custom derive test cases for the `Enumerated` macro.
 mod enumerated {
-    use der::{Decodable, Encodable, Encoder, Enumerated};
+    use der::{Decode, Encode, Encoder, Enumerated};
     use hex_literal::hex;
 
     /// X.509 `CRLReason`.
@@ -203,7 +203,7 @@ mod enumerated {
 mod sequence {
     use der::{
         asn1::{Any, ObjectIdentifier, SetOf},
-        Decodable, Encodable, Sequence, ValueOrd,
+        Decode, Encode, Sequence, ValueOrd,
     };
     use hex_literal::hex;
 
@@ -348,8 +348,10 @@ mod sequence {
         false
     }
 
-    const ID_EC_PUBLIC_KEY_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.2.1");
-    const PRIME256V1_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.3.1.7");
+    const ID_EC_PUBLIC_KEY_OID: ObjectIdentifier =
+        ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");
+
+    const PRIME256V1_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.3.1.7");
 
     const ALGORITHM_IDENTIFIER_DER: &[u8] =
         &hex!("30 13 06 07 2a 86 48 ce 3d 02 01 06 08 2a 86 48 ce 3d 03 01 07");
@@ -407,26 +409,22 @@ mod sequence {
     #[test]
     fn extension_test() {
         let ext1 = ExtensionExample::from_der(&hex!(
-            "
-            300F        //  0  15: SEQUENCE {
-            0603551D13  //  2   3:   OBJECT IDENTIFIER basicConstraints (2 5 29 19)
-            0101FF      //  7   1:   BOOLEAN TRUE
-            0405        //  10   5:   OCTET STRING, encapsulates {
-            3003        //  12   3:     SEQUENCE {
-            0101FF      //  14   1:       BOOLEAN TRUE
-            "
+            "300F"        //  0  15: SEQUENCE {
+            "0603551D13"  //  2   3:   OBJECT IDENTIFIER basicConstraints (2 5 29 19)
+            "0101FF"      //  7   1:   BOOLEAN TRUE
+            "0405"        //  10   5:   OCTET STRING, encapsulates {
+            "3003"        //  12   3:     SEQUENCE {
+            "0101FF"      //  14   1:       BOOLEAN TRUE
         ))
         .unwrap();
         assert_eq!(ext1.critical, true);
 
         let ext2 = ExtensionExample::from_der(&hex!(
-            "
-            301F                                            //  0  31: SEQUENCE {
-            0603551D23                                      //  2   3:   OBJECT IDENTIFIER authorityKeyIdentifier (2 5 29 35)
-            0418                                            //  7  24:   OCTET STRING, encapsulates {
-            3016                                            //  9  22:     SEQUENCE {
-            8014E47D5FD15C9586082C05AEBE75B665A7D95DA866    // 11  20:       [0] E4 7D 5F D1 5C 95 86 08 2C 05 AE BE 75 B6 65 A7 D9 5D A8 66
-            "
+            "301F"                                            //  0  31: SEQUENCE {
+            "0603551D23"                                      //  2   3:   OBJECT IDENTIFIER authorityKeyIdentifier (2 5 29 35)
+            "0418"                                            //  7  24:   OCTET STRING, encapsulates {
+            "3016"                                            //  9  22:     SEQUENCE {
+            "8014E47D5FD15C9586082C05AEBE75B665A7D95DA866"    // 11  20:       [0] E4 7D 5F D1 5C 95 86 08 2C 05 AE BE 75 B6 65 A7 D9 5D A8 66
         ))
         .unwrap();
         assert_eq!(ext2.critical, false);
@@ -457,5 +455,40 @@ mod sequence {
             ALGORITHM_IDENTIFIER_DER,
             algorithm_identifier.to_vec().unwrap()
         );
+    }
+}
+
+mod newtype {
+    use der::{asn1::BitString, Decode, Encode};
+    use der_derive::Newtype;
+
+    #[derive(Newtype)]
+    struct Lifetime<'a>(BitString<'a>);
+
+    #[derive(Newtype)]
+    struct NoLifetime(bool);
+
+    #[test]
+    fn decode() {
+        let bs = BitString::from_bytes(&[0, 1, 2, 3]).unwrap();
+        let en = bs.to_vec().unwrap();
+        let lt = Lifetime::from_der(&en).unwrap();
+        assert_eq!(bs, lt.into());
+
+        let en = true.to_vec().unwrap();
+        let lt = NoLifetime::from_der(&en).unwrap();
+        assert!(bool::from(lt));
+    }
+
+    #[test]
+    fn encode() {
+        let bs = BitString::from_bytes(&[0, 1, 2, 3]).unwrap();
+        let en = bs.to_vec().unwrap();
+        let lt = Lifetime::from(bs).to_vec().unwrap();
+        assert_eq!(en, lt);
+
+        let en = true.to_vec().unwrap();
+        let lt = NoLifetime::from(true).to_vec().unwrap();
+        assert_eq!(en, lt);
     }
 }

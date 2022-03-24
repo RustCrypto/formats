@@ -4,7 +4,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/der/0.6.0-pre.1"
+    html_root_url = "https://docs.rs/der/0.6.0-pre.2"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(
@@ -15,8 +15,8 @@
 )]
 
 //! # Usage
-//! ## [`Decodable`] and [`Encodable`] traits
-//! The [`Decodable`] and [`Encodable`] traits are the core abstractions on
+//! ## [`Decode`] and [`Encode`] traits
+//! The [`Decode`] and [`Encode`] traits are the core abstractions on
 //! which this crate is built and control what types can be (de)serialized
 //! as ASN.1 DER.
 //!
@@ -66,13 +66,13 @@
 //!
 //! Structured ASN.1 messages are typically encoded as a `SEQUENCE`, which
 //! this crate maps to a Rust struct using the [`Sequence`] trait. This
-//! trait is bounded on the [`Decodable`] trait and provides a blanket impl
-//! of the [`Encodable`] trait, so any type which impls [`Sequence`] can be
+//! trait is bounded on the [`Decode`] trait and provides a blanket impl
+//! of the [`Encode`] trait, so any type which impls [`Sequence`] can be
 //! used for both decoding and encoding.
 //!
 //! The [`Decoder`] and [`Encoder`] types provide the decoding/encoding API
 //! respectively, and are designed to work in conjunction with concrete ASN.1
-//! types which impl the [`Decodable`] and [`Encodable`] traits, including
+//! types which impl the [`Decode`] and [`Encode`] traits, including
 //! all types which impl the [`Sequence`] trait.
 //!
 //! The following code example shows how to define a struct which maps to the
@@ -86,7 +86,7 @@
 //! // "heapless" usage when the `alloc` feature is disabled.
 //! use der::{
 //!     asn1::{Any, ObjectIdentifier},
-//!     Decodable, Decoder, Encodable, Sequence
+//!     Decode, Decoder, Encode, Sequence
 //! };
 //!
 //! /// X.509 `AlgorithmIdentifier`.
@@ -100,14 +100,14 @@
 //!     pub parameters: Option<Any<'a>>
 //! }
 //!
-//! impl<'a> Decodable<'a> for AlgorithmIdentifier<'a> {
+//! impl<'a> Decode<'a> for AlgorithmIdentifier<'a> {
 //!     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
 //!         // The `Decoder::sequence` method decodes an ASN.1 `SEQUENCE` tag
 //!         // and length then calls the provided `FnOnce` with a nested
 //!         // `der::Decoder` which can be used to decode it.
 //!         decoder.sequence(|decoder| {
 //!             // The `der::Decoder::Decode` method can be used to decode any
-//!             // type which impls the `Decodable` trait, which is impl'd for
+//!             // type which impls the `Decode` trait, which is impl'd for
 //!             // all of the ASN.1 built-in types in the `der` crate.
 //!             //
 //!             // Note that if your struct's fields don't contain an ASN.1
@@ -123,7 +123,7 @@
 //!
 //!             // This field contains an ASN.1 `OPTIONAL` type. The `der` crate
 //!             // maps this directly to Rust's `Option` type and provides
-//!             // impls of the `Decodable` and `Encodable` traits for `Option`.
+//!             // impls of the `Decode` and `Encode` traits for `Option`.
 //!             // To explicitly request an `OPTIONAL` type be decoded, use the
 //!             // `decoder.optional()` method.
 //!             let parameters = decoder.decode()?;
@@ -141,7 +141,7 @@
 //!     // The `Sequence::fields` method is used for encoding and functions as
 //!     // a visitor for all of the fields in a message.
 //!     //
-//!     // To implement it, you must define a slice containing `Encodable`
+//!     // To implement it, you must define a slice containing `Encode`
 //!     // trait objects, then pass it to the provided `field_encoder`
 //!     // function, which is implemented by the `der` crate and handles
 //!     // message serialization.
@@ -150,15 +150,15 @@
 //!     // heterogeneous field types, and a callback is used to allow for the
 //!     // construction of temporary field encoder types. The latter means
 //!     // that the fields of your Rust struct don't necessarily need to
-//!     // impl the `Encodable` trait, but if they don't you must construct
+//!     // impl the `Encode` trait, but if they don't you must construct
 //!     // a temporary wrapper value which does.
 //!     //
 //!     // Types which impl the `Sequence` trait receive blanket impls of both
-//!     // the `Encodable` and `Tagged` traits (where the latter is impl'd as
+//!     // the `Encode` and `Tagged` traits (where the latter is impl'd as
 //!     // `Tagged::TAG = der::Tag::Sequence`.
 //!     fn fields<F, T>(&self, field_encoder: F) -> der::Result<T>
 //!     where
-//!         F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+//!         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
 //!     {
 //!         field_encoder(&[&self.algorithm, &self.parameters])
 //!     }
@@ -174,8 +174,8 @@
 //! // `Any` borrow a reference to it, so we have to serialize the OID.
 //! //
 //! // When the `alloc` feature of this crate is enabled, any type that impls
-//! // the `Encodable` trait including all ASN.1 built-in types and any type
-//! // which impls `Sequence` can be serialized by calling `Encodable::to_vec()`.
+//! // the `Encode` trait including all ASN.1 built-in types and any type
+//! // which impls `Sequence` can be serialized by calling `Encode::to_vec()`.
 //! //
 //! // If you would prefer to avoid allocations, you can create a byte array
 //! // as backing storage instead, pass that to `der::Encoder::new`, and then
@@ -202,7 +202,7 @@
 //! let der_encoded_algorithm_identifier = algorithm_identifier.to_vec().unwrap();
 //!
 //! // Deserialize the `AlgorithmIdentifier` we just serialized from ASN.1 DER
-//! // using `der::Decodable::from_bytes`.
+//! // using `der::Decode::from_bytes`.
 //! let decoded_algorithm_identifier = AlgorithmIdentifier::from_der(
 //!     &der_encoded_algorithm_identifier
 //! ).unwrap();
@@ -227,7 +227,7 @@
 //! ```
 //! # #[cfg(all(feature = "alloc", feature = "derive", feature = "oid"))]
 //! # {
-//! use der::{asn1::{Any, ObjectIdentifier}, Encodable, Decodable, Sequence};
+//! use der::{asn1::{Any, ObjectIdentifier}, Encode, Decode, Sequence};
 //!
 //! /// X.509 `AlgorithmIdentifier` (same as above)
 //! #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)] // NOTE: added `Sequence`
@@ -264,7 +264,7 @@
 //! # }
 //! ```
 //!
-//! For fields which don't directly impl [`Decodable`] and [`Encodable`],
+//! For fields which don't directly impl [`Decode`] and [`Encode`],
 //! you can add annotations to convert to an intermediate ASN.1 type
 //! first, so long as that type impls `TryFrom` and `Into` for the
 //! ASN.1 type.
@@ -326,6 +326,7 @@
 //! [`Utf8String`]: asn1::Utf8String
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(test, macro_use)]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
@@ -353,9 +354,9 @@ mod document;
 pub use crate::{
     asn1::{Any, Choice, Sequence},
     datetime::DateTime,
-    decodable::Decodable,
+    decodable::Decode,
     decoder::Decoder,
-    encodable::Encodable,
+    encodable::Encode,
     encoder::Encoder,
     error::{Error, ErrorKind, Result},
     header::Header,
@@ -374,7 +375,7 @@ pub use crypto_bigint as bigint;
 
 #[cfg(feature = "derive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
-pub use der_derive::{Choice, Enumerated, Sequence, ValueOrd};
+pub use der_derive::{Choice, Enumerated, Newtype, Sequence, ValueOrd};
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]

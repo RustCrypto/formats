@@ -1,6 +1,6 @@
 [package]
 name = "pem-rfc7468"
-version = "0.4.0-pre.0" # Also update html_root_url in lib.rs when bumping this
+version = "0.4.0" # Also update html_root_url in lib.rs when bumping this
 description = """
 PEM Encoding (RFC 7468) for PKIX, PKCS, and CMS Structures, implementing a
 strict subset of the original Privacy-Enhanced Mail encoding intended
@@ -18,11 +18,11 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-base64ct = { version = "=1.4.0-pre.0", path = "../base64ct" }
+base64ct = { version = "1.4", path = "../base64ct" }
 
 [features]
-alloc = []
-std = ["alloc"]
+alloc = ["base64ct/alloc"]
+std = ["alloc", "base64ct/std"]
 
 [package.metadata.docs.rs]
 all-features = true

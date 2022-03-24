@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, ErrorKind,
-    FixedTag, Length, Result, Tag, ValueOrd,
+    FixedTag, Header, Length, Result, Tag, ValueOrd,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
@@ -116,9 +116,14 @@ impl<'a> BitString<'a> {
 }
 
 impl<'a> DecodeValue<'a> for BitString<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, encoded_len: Length) -> Result<Self> {
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        let header = Header {
+            tag: header.tag,
+            length: (header.length - Length::ONE)?,
+        };
+
         let unused_bits = decoder.byte()?;
-        let inner = ByteSlice::decode_value(decoder, (encoded_len - Length::ONE)?)?;
+        let inner = ByteSlice::decode_value(decoder, header)?;
         Self::new(unused_bits, inner.as_bytes())
     }
 }
@@ -219,6 +224,74 @@ impl<'a> ExactSizeIterator for BitStringIter<'a> {
 }
 
 impl<'a> FusedIterator for BitStringIter<'a> {}
+
+#[cfg(feature = "flagset")]
+impl<T: flagset::Flags> FixedTag for flagset::FlagSet<T> {
+    const TAG: Tag = BitString::TAG;
+}
+
+#[cfg(feature = "flagset")]
+impl<'a, T> DecodeValue<'a> for flagset::FlagSet<T>
+where
+    T: flagset::Flags,
+    T::Type: From<bool>,
+    T::Type: core::ops::Shl<usize, Output = T::Type>,
+{
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+        let position = decoder.position();
+
+        let bits = BitString::decode_value(decoder, header)?;
+
+        let mut flags = T::none().bits();
+        if bits.bit_len() > core::mem::size_of_val(&flags) * 8 {
+            return Err(Error::new(ErrorKind::Overlength, position));
+        }
+
+        for (i, bit) in bits.bits().enumerate() {
+            flags |= T::Type::from(bit) << i;
+        }
+
+        Ok(Self::new_truncated(flags))
+    }
+}
+
+#[cfg(feature = "flagset")]
+#[inline(always)]
+fn encode<T>(set: &flagset::FlagSet<T>) -> (usize, [u8; 16])
+where
+    T: flagset::Flags,
+    u128: From<T::Type>,
+{
+    let bits: u128 = set.bits().into();
+    let mut swap = 0u128;
+
+    for i in 0..128 {
+        let on = bits & (1 << i);
+        swap |= on >> i << (128 - i - 1);
+    }
+
+    (bits.leading_zeros() as usize, swap.to_be_bytes())
+}
+
+#[cfg(feature = "flagset")]
+impl<T: flagset::Flags> EncodeValue for flagset::FlagSet<T>
+where
+    T::Type: From<bool>,
+    T::Type: core::ops::Shl<usize, Output = T::Type>,
+    u128: From<T::Type>,
+{
+    fn value_len(&self) -> Result<Length> {
+        let (lead, buff) = encode(self);
+        let buff = &buff[..buff.len() - lead / 8];
+        BitString::new((lead % 8) as u8, buff)?.value_len()
+    }
+
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        let (lead, buff) = encode(self);
+        let buff = &buff[..buff.len() - lead / 8];
+        BitString::new((lead % 8) as u8, buff)?.encode_value(encoder)
+    }
+}
 
 #[cfg(test)]
 mod tests {

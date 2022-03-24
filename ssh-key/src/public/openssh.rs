@@ -12,7 +12,7 @@
 //! ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti user@example.com
 //! ```
 
-use crate::{base64, Error, Result};
+use crate::{encoder::Base64Encoder, Error, Result};
 use core::str;
 
 /// OpenSSH public key encapsulation parser.
@@ -57,13 +57,13 @@ impl<'a> Encapsulation<'a> {
         f: F,
     ) -> Result<&'o str>
     where
-        F: FnOnce(&mut base64::Encoder<'_>) -> Result<()>,
+        F: FnOnce(&mut Base64Encoder<'_>) -> Result<()>,
     {
         let mut offset = 0;
         encode_str(out, &mut offset, algorithm_id)?;
         encode_str(out, &mut offset, " ")?;
 
-        let mut encoder = base64::Encoder::new(&mut out[offset..])?;
+        let mut encoder = Base64Encoder::new(&mut out[offset..])?;
         f(&mut encoder)?;
         let base64_len = encoder.finish()?.len();
 

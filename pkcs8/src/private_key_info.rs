@@ -4,7 +4,7 @@ use crate::{AlgorithmIdentifier, Error, Result, Version};
 use core::fmt;
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decodable, Decoder, Encodable, Sequence, TagMode, TagNumber,
+    Decode, Decoder, Encode, Sequence, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -156,7 +156,7 @@ impl<'a> PrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
+impl<'a> Decode<'a> for PrivateKeyInfo<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<PrivateKeyInfo<'a>> {
         decoder.sequence(|decoder| {
             // Parse and validate `version` INTEGER.
@@ -195,7 +195,7 @@ impl<'a> Decodable<'a> for PrivateKeyInfo<'a> {
 impl<'a> Sequence<'a> for PrivateKeyInfo<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[
             &u8::from(self.version()),

@@ -5,8 +5,8 @@ pub(super) mod int;
 pub(super) mod uint;
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Length,
-    Result, Tag, ValueOrd,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Header,
+    Length, Result, Tag, ValueOrd,
 };
 use core::{cmp::Ordering, mem};
 
@@ -14,8 +14,8 @@ macro_rules! impl_int_encoding {
     ($($int:ty => $uint:ty),+) => {
         $(
             impl<'a> DecodeValue<'a> for $int {
-                fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-                    let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
+                fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+                    let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
 
                     let result = if is_highest_bit_set(bytes) {
                         <$uint>::from_be_bytes(int::decode_to_array(bytes)?) as $int
@@ -24,7 +24,7 @@ macro_rules! impl_int_encoding {
                     };
 
                     // Ensure we compute the same encoded length as the original any value
-                    if length != result.value_len()? {
+                    if header.length != result.value_len()? {
                         return Err(Self::TAG.non_canonical_error());
                     }
 
@@ -75,12 +75,12 @@ macro_rules! impl_uint_encoding {
     ($($uint:ty),+) => {
         $(
             impl<'a> DecodeValue<'a> for $uint {
-                fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> Result<Self> {
-                    let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
+                fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+                    let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
                     let result = Self::from_be_bytes(uint::decode_to_array(bytes)?);
 
                     // Ensure we compute the same encoded length as the original any value
-                    if length != result.value_len()? {
+                    if header.length != result.value_len()? {
                         return Err(Self::TAG.non_canonical_error());
                     }
 
@@ -152,7 +152,7 @@ where
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use crate::{Decodable, Encodable};
+    use crate::{Decode, Encode};
 
     // Vectors from Section 5.7 of:
     // https://luca.ntop.org/Teaching/Appunti/asn1.html

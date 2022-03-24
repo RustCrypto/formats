@@ -2,13 +2,13 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    FixedTag, Length, Result, Tag, Tagged,
+    FixedTag, Header, Length, Result, Tag, Tagged,
 };
 use const_oid::ObjectIdentifier;
 
 impl DecodeValue<'_> for ObjectIdentifier {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, length)?.as_bytes();
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
         Ok(Self::from_bytes(bytes)?)
     }
 }
@@ -56,9 +56,9 @@ impl TryFrom<Any<'_>> for ObjectIdentifier {
 #[cfg(test)]
 mod tests {
     use super::ObjectIdentifier;
-    use crate::{Decodable, Encodable, Length};
+    use crate::{Decode, Encode, Length};
 
-    const EXAMPLE_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549");
+    const EXAMPLE_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549");
     const EXAMPLE_OID_BYTES: &[u8; 8] = &[0x06, 0x06, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d];
 
     #[test]

@@ -1,20 +1,23 @@
 //! Buffered Base64 decoder.
 
 use crate::{
+    encoding,
+    line_ending::{CHAR_CR, CHAR_LF},
     variant::Variant,
     Encoding,
     Error::{self, InvalidLength},
+    MIN_LINE_WIDTH,
 };
 use core::{cmp, marker::PhantomData};
 
+#[cfg(feature = "alloc")]
+use {alloc::vec::Vec, core::iter};
+
+#[cfg(feature = "std")]
+use std::io;
+
 #[cfg(docsrs)]
 use crate::{Base64, Base64Unpadded};
-
-/// Carriage return
-const CHAR_CR: u8 = 0x0d;
-
-/// Line feed
-const CHAR_LF: u8 = 0x0a;
 
 /// Stateful Base64 decoder with support for buffered, incremental decoding.
 ///
@@ -33,6 +36,9 @@ pub struct Decoder<'i, E: Variant> {
     /// Base64 input data reader.
     line_reader: LineReader<'i>,
 
+    /// Length of the remaining data after Base64 decoding.
+    remaining_len: usize,
+
     /// Block buffer used for non-block-aligned data.
     block_buffer: BlockBuffer,
 
@@ -48,13 +54,13 @@ impl<'i, E: Variant> Decoder<'i, E> {
     /// - `Ok(decoder)` on success.
     /// - `Err(Error::InvalidLength)` if the input buffer is empty.
     pub fn new(input: &'i [u8]) -> Result<Self, Error> {
-        if input.is_empty() {
-            return Err(InvalidLength);
-        }
+        let line_reader = LineReader::new_unwrapped(input)?;
+        let remaining_len = line_reader.decoded_len::<E>()?;
 
         Ok(Self {
-            line: Line::new(input),
-            line_reader: LineReader::default(),
+            line: Line::default(),
+            line_reader,
+            remaining_len,
             block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
         })
@@ -85,13 +91,13 @@ impl<'i, E: Variant> Decoder<'i, E> {
     ///
     /// [RFC7468]: https://datatracker.ietf.org/doc/html/rfc7468
     pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
-        if input.is_empty() {
-            return Err(InvalidLength);
-        }
+        let line_reader = LineReader::new_wrapped(input, line_width)?;
+        let remaining_len = line_reader.decoded_len::<E>()?;
 
         Ok(Self {
             line: Line::default(),
-            line_reader: LineReader::new(input, line_width)?,
+            line_reader,
+            remaining_len,
             block_buffer: BlockBuffer::default(),
             encoding: PhantomData,
         })
@@ -153,7 +159,40 @@ impl<'i, E: Variant> Decoder<'i, E> {
             }
         }
 
+        self.remaining_len = self
+            .remaining_len
+            .checked_sub(out.len())
+            .ok_or(InvalidLength)?;
+
         Ok(out)
+    }
+
+    /// Decode all remaining Base64 data, placing the result into `buf`.
+    ///
+    /// If successful, this function will return the total number of bytes
+    /// decoded into `buf`.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn decode_to_end<'o>(&mut self, buf: &'o mut Vec<u8>) -> Result<&'o [u8], Error> {
+        let start_len = buf.len();
+        let remaining_len = self.remaining_len();
+        let total_len = start_len + remaining_len;
+
+        if total_len > buf.capacity() {
+            buf.reserve(total_len - buf.capacity());
+        }
+
+        // Append `decoded_len` zeroes to the vector
+        buf.extend(iter::repeat(0).take(remaining_len));
+        self.decode(&mut buf[start_len..])?;
+        Ok(&buf[start_len..])
+    }
+
+    /// Get the length of the remaining data after Base64 decoding.
+    ///
+    /// Decreases every time data is decoded.
+    pub fn remaining_len(&self) -> usize {
+        self.remaining_len
     }
 
     /// Has all of the input data been decoded?
@@ -211,6 +250,29 @@ impl<'i, E: Variant> Decoder<'i, E> {
         } else {
             E::Unpadded::decode(src, dst)
         }
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<'i, E: Variant> io::Read for Decoder<'i, E> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let slice = match buf.get_mut(..self.remaining_len()) {
+            Some(bytes) => bytes,
+            None => buf,
+        };
+
+        self.decode(slice)?;
+        Ok(slice.len())
+    }
+
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        Ok(self.decode_to_end(buf)?.len())
+    }
+
+    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        self.decode(buf)?;
+        Ok(())
     }
 }
 
@@ -285,8 +347,8 @@ impl<'i> Default for Line<'i> {
 }
 
 impl<'i> Line<'i> {
-    /// Create a new line which wraps the given input data
-    pub fn new(bytes: &'i [u8]) -> Self {
+    /// Create a new line which wraps the given input data.
+    fn new(bytes: &'i [u8]) -> Self {
         Self { remaining: bytes }
     }
 
@@ -302,6 +364,12 @@ impl<'i> Line<'i> {
         bytes
     }
 
+    /// Slice off a tail of a given length.
+    fn slice_tail(&self, nbytes: usize) -> Result<&'i [u8], Error> {
+        let offset = self.len().checked_sub(nbytes).ok_or(InvalidLength)?;
+        self.remaining.get(offset..).ok_or(InvalidLength)
+    }
+
     /// Get the number of bytes remaining in this line.
     fn len(&self) -> usize {
         self.remaining.len()
@@ -311,10 +379,20 @@ impl<'i> Line<'i> {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    /// Trim the newline off the end of this line.
+    fn trim_end(&self) -> Self {
+        Line::new(match self.remaining {
+            [line @ .., CHAR_CR, CHAR_LF] => line,
+            [line @ .., CHAR_CR] => line,
+            [line @ .., CHAR_LF] => line,
+            line => line,
+        })
+    }
 }
 
 /// Iterator over multi-line Base64 input.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 struct LineReader<'i> {
     /// Remaining linewrapped data to be processed.
     remaining: &'i [u8],
@@ -324,21 +402,102 @@ struct LineReader<'i> {
 }
 
 impl<'i> LineReader<'i> {
+    /// Create a new reader which operates over continugous unwrapped data.
+    fn new_unwrapped(bytes: &'i [u8]) -> Result<Self, Error> {
+        if bytes.is_empty() {
+            Err(InvalidLength)
+        } else {
+            Ok(Self {
+                remaining: bytes,
+                line_width: None,
+            })
+        }
+    }
+
     /// Create a new reader which operates over linewrapped data.
-    fn new(bytes: &'i [u8], line_width: usize) -> Result<Self, Error> {
-        if line_width == 0 {
+    fn new_wrapped(bytes: &'i [u8], line_width: usize) -> Result<Self, Error> {
+        if line_width < MIN_LINE_WIDTH {
             return Err(InvalidLength);
         }
 
-        Ok(Self {
-            remaining: bytes,
-            line_width: Some(line_width),
-        })
+        let mut reader = Self::new_unwrapped(bytes)?;
+        reader.line_width = Some(line_width);
+        Ok(reader)
     }
 
     /// Is this line reader empty?
     fn is_empty(&self) -> bool {
         self.remaining.is_empty()
+    }
+
+    /// Get the total length of the data decoded from this line reader.
+    fn decoded_len<E: Variant>(&self) -> Result<usize, Error> {
+        let mut buffer = [0u8; 4];
+        let mut lines = self.clone();
+        let mut line = match lines.next().transpose()? {
+            Some(l) => l,
+            None => return Ok(0),
+        };
+        let mut base64_len = 0usize;
+
+        loop {
+            base64_len = base64_len.checked_add(line.len()).ok_or(InvalidLength)?;
+
+            match lines.next().transpose()? {
+                Some(l) => {
+                    // Store the end of the line in the buffer so we can
+                    // reassemble the last block to determine the real length
+                    buffer.copy_from_slice(line.slice_tail(4)?);
+
+                    line = l
+                }
+
+                // To compute an exact decoded length we need to decode the
+                // last Base64 block and get the decoded length.
+                //
+                // This is what the somewhat complex code below is doing.
+                None => {
+                    // Compute number of bytes in the last block (may be unpadded)
+                    let base64_last_block_len = match base64_len % 4 {
+                        0 => 4,
+                        n => n,
+                    };
+
+                    // Compute decoded length without the last block
+                    let decoded_len = encoding::decoded_len(
+                        base64_len
+                            .checked_sub(base64_last_block_len)
+                            .ok_or(InvalidLength)?,
+                    );
+
+                    // Compute the decoded length of the last block
+                    let mut out = [0u8; 3];
+                    let last_block_len = if line.len() < base64_last_block_len {
+                        let buffered_part_len = base64_last_block_len
+                            .checked_sub(line.len())
+                            .ok_or(InvalidLength)?;
+
+                        let offset = 4usize.checked_sub(buffered_part_len).ok_or(InvalidLength)?;
+
+                        for i in 0..buffered_part_len {
+                            buffer[i] = buffer[offset.checked_add(i).ok_or(InvalidLength)?];
+                        }
+
+                        buffer[buffered_part_len..][..line.len()].copy_from_slice(line.remaining);
+                        let buffer_len = buffered_part_len
+                            .checked_add(line.len())
+                            .ok_or(InvalidLength)?;
+
+                        E::decode(&buffer[..buffer_len], &mut out)?.len()
+                    } else {
+                        let last_block = line.slice_tail(base64_last_block_len)?;
+                        E::decode(last_block, &mut out)?.len()
+                    };
+
+                    return decoded_len.checked_add(last_block_len).ok_or(InvalidLength);
+                }
+            }
+        }
     }
 }
 
@@ -352,7 +511,7 @@ impl<'i> Iterator for LineReader<'i> {
                     if self.remaining.is_empty() {
                         return None;
                     } else {
-                        let line = Line::new(self.remaining);
+                        let line = Line::new(self.remaining).trim_end();
                         self.remaining = &[];
                         return Some(Ok(line));
                     }
@@ -369,6 +528,15 @@ impl<'i> Iterator for LineReader<'i> {
             let line = Line::new(&self.remaining[..line_width]);
             self.remaining = rest;
             Some(Ok(line))
+        } else if !self.remaining.is_empty() {
+            let line = Line::new(self.remaining).trim_end();
+            self.remaining = b"";
+
+            if line.is_empty() {
+                None
+            } else {
+                Some(Ok(line))
+            }
         } else {
             None
         }
@@ -378,6 +546,9 @@ impl<'i> Iterator for LineReader<'i> {
 #[cfg(test)]
 mod tests {
     use crate::{test_vectors::*, variant::Variant, Base64, Base64Unpadded, Decoder};
+
+    #[cfg(feature = "std")]
+    use {alloc::vec::Vec, std::io::Read};
 
     #[test]
     fn decode_padded() {
@@ -408,6 +579,19 @@ mod tests {
         })
     }
 
+    #[cfg(feature = "std")]
+    #[test]
+    fn read_multiline_padded() {
+        let mut decoder =
+            Decoder::<Base64>::new_wrapped(MULTILINE_PADDED_BASE64.as_bytes(), 70).unwrap();
+
+        let mut buf = Vec::new();
+        let len = decoder.read_to_end(&mut buf).unwrap();
+
+        assert_eq!(len, MULTILINE_PADDED_BIN.len());
+        assert_eq!(buf.as_slice(), MULTILINE_PADDED_BIN);
+    }
+
     /// Core functionality of a decoding test
     fn decode_test<'a, F, V>(expected: &[u8], f: F)
     where
@@ -416,15 +600,20 @@ mod tests {
     {
         for chunk_size in 1..expected.len() {
             let mut decoder = f();
+            let mut remaining_len = decoder.remaining_len();
             let mut buffer = [0u8; 1024];
 
             for chunk in expected.chunks(chunk_size) {
                 assert!(!decoder.is_finished());
                 let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
                 assert_eq!(chunk, decoded);
+
+                remaining_len -= decoded.len();
+                assert_eq!(remaining_len, decoder.remaining_len());
             }
 
             assert!(decoder.is_finished());
+            assert_eq!(decoder.remaining_len(), 0);
         }
     }
 }

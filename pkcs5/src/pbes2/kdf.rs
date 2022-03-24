@@ -3,31 +3,35 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence, Tag, Tagged,
+    Decode, Decoder, Encode, Encoder, ErrorKind, Length, Sequence, Tag, Tagged,
 };
 
 /// Password-Based Key Derivation Function (PBKDF2) OID.
-pub const PBKDF2_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.5.12");
+pub const PBKDF2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12");
 
 /// HMAC-SHA1 (for use with PBKDF2)
-pub const HMAC_WITH_SHA1_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.7");
+pub const HMAC_WITH_SHA1_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.2.7");
 
 /// HMAC-SHA-224 (for use with PBKDF2)
-pub const HMAC_WITH_SHA224_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.8");
+pub const HMAC_WITH_SHA224_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.2.8");
 
 /// HMAC-SHA-256 (for use with PBKDF2)
-pub const HMAC_WITH_SHA256_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.9");
+pub const HMAC_WITH_SHA256_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.2.9");
 
 /// HMAC-SHA-384 (for use with PBKDF2)
-pub const HMAC_WITH_SHA384_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.10");
+pub const HMAC_WITH_SHA384_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.2.10");
 
 /// HMAC-SHA-512 (for use with PBKDF2)
-pub const HMAC_WITH_SHA512_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.2.11");
+pub const HMAC_WITH_SHA512_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.2.11");
 
 /// `id-scrypt` ([RFC 7914])
 ///
 /// [RFC 7914]: https://datatracker.ietf.org/doc/html/rfc7914#section-7
-pub const SCRYPT_OID: ObjectIdentifier = ObjectIdentifier::new("1.3.6.1.4.1.11591.4.11");
+pub const SCRYPT_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11591.4.11");
 
 /// Type used for expressing scrypt cost
 type ScryptCost = u16;
@@ -93,7 +97,7 @@ impl<'a> Kdf<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for Kdf<'a> {
+impl<'a> Decode<'a> for Kdf<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         AlgorithmIdentifier::decode(decoder)?.try_into()
     }
@@ -102,7 +106,7 @@ impl<'a> Decodable<'a> for Kdf<'a> {
 impl<'a> Sequence<'a> for Kdf<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         match self {
             Self::Pbkdf2(params) => f(&[&self.oid(), params]),
@@ -199,7 +203,7 @@ impl<'a> Pbkdf2Params<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for Pbkdf2Params<'a> {
+impl<'a> Decode<'a> for Pbkdf2Params<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.any()?.try_into()
     }
@@ -208,7 +212,7 @@ impl<'a> Decodable<'a> for Pbkdf2Params<'a> {
 impl<'a> Sequence<'a> for Pbkdf2Params<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         if self.prf == Pbkdf2Prf::default() {
             f(&[
@@ -332,7 +336,7 @@ impl<'a> From<Pbkdf2Prf> for AlgorithmIdentifier<'a> {
     }
 }
 
-impl Encodable for Pbkdf2Prf {
+impl Encode for Pbkdf2Prf {
     fn encoded_len(&self) -> der::Result<Length> {
         AlgorithmIdentifier::try_from(*self)?.encoded_len()
     }
@@ -392,7 +396,7 @@ impl<'a> ScryptParams<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for ScryptParams<'a> {
+impl<'a> Decode<'a> for ScryptParams<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.any()?.try_into()
     }
@@ -401,7 +405,7 @@ impl<'a> Decodable<'a> for ScryptParams<'a> {
 impl<'a> Sequence<'a> for ScryptParams<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[
             &OctetString::new(self.salt)?,

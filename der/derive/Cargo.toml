@@ -1,6 +1,6 @@
 [package]
 name = "der_derive"
-version = "0.6.0-pre.1" # Also update html_root_url in lib.rs when bumping this
+version = "0.6.0-pre.3" # Also update html_root_url in lib.rs when bumping this
 description = "Custom derive support for the `der` crate's `Choice` and `Sequence` traits"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
@@ -19,4 +19,4 @@ proc-macro = true
 proc-macro2 = "1"
 proc-macro-error = "1"
 quote = "1"
-syn = { version = "1", features = ["extra-traits"] }
+syn = { version = "1.0.58", features = ["extra-traits"] }

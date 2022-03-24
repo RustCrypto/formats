@@ -15,7 +15,7 @@ pub use self::kdf::{
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, Length, Sequence, Tag,
+    Decode, Decoder, Encode, Encoder, ErrorKind, Length, Sequence, Tag,
 };
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -23,30 +23,33 @@ use alloc::vec::Vec;
 
 /// 128-bit Advanced Encryption Standard (AES) algorithm with Cipher-Block
 /// Chaining (CBC) mode of operation.
-pub const AES_128_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.2");
+pub const AES_128_CBC_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.1.2");
 
 /// 192-bit Advanced Encryption Standard (AES) algorithm with Cipher-Block
 /// Chaining (CBC) mode of operation.
-pub const AES_192_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.22");
+pub const AES_192_CBC_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.1.22");
 
 /// 256-bit Advanced Encryption Standard (AES) algorithm with Cipher-Block
 /// Chaining (CBC) mode of operation.
-pub const AES_256_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("2.16.840.1.101.3.4.1.42");
+pub const AES_256_CBC_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.1.42");
 
 /// DES operating in CBC mode
 #[cfg(feature = "des-insecure")]
 #[cfg_attr(docsrs, doc(cfg(feature = "des-insecure")))]
-pub const DES_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("1.3.14.3.2.7");
+pub const DES_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.7");
 
 /// Triple DES operating in CBC mode
 #[cfg(feature = "3des")]
 #[cfg_attr(docsrs, doc(cfg(feature = "3des")))]
-pub const DES_EDE3_CBC_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.3.7");
+pub const DES_EDE3_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.3.7");
 
 /// Password-Based Encryption Scheme 2 (PBES2) OID.
 ///
 /// <https://tools.ietf.org/html/rfc8018#section-6.2>
-pub const PBES2_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.5.13");
+pub const PBES2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.13");
 
 /// AES cipher block size
 const AES_BLOCK_SIZE: usize = 16;
@@ -197,7 +200,7 @@ impl<'a> Parameters<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for Parameters<'a> {
+impl<'a> Decode<'a> for Parameters<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.any()?.try_into()
     }
@@ -206,7 +209,7 @@ impl<'a> Decodable<'a> for Parameters<'a> {
 impl<'a> Sequence<'a> for Parameters<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[&self.kdf, &self.encryption])
     }
@@ -300,7 +303,7 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for EncryptionScheme<'a> {
+impl<'a> Decode<'a> for EncryptionScheme<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         AlgorithmIdentifier::decode(decoder).and_then(TryInto::try_into)
     }
@@ -370,7 +373,7 @@ impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
     }
 }
 
-impl<'a> Encodable for EncryptionScheme<'a> {
+impl<'a> Encode for EncryptionScheme<'a> {
     fn encoded_len(&self) -> der::Result<Length> {
         AlgorithmIdentifier::try_from(*self)?.encoded_len()
     }

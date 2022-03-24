@@ -1,7 +1,8 @@
 //! Digital Signature Algorithm (DSA) public keys.
 
 use crate::{
-    base64::{self, Decode, Encode},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     MPInt, Result,
 };
 
@@ -25,8 +26,17 @@ pub struct DsaPublicKey {
     pub y: MPInt,
 }
 
+impl DsaPublicKey {
+    /// Borrow the bytes used to compute a "checkint" for this key.
+    ///
+    /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
+    pub(super) fn checkint_bytes(&self) -> &[u8] {
+        self.y.as_bytes()
+    }
+}
+
 impl Decode for DsaPublicKey {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let p = MPInt::decode(decoder)?;
         let q = MPInt::decode(decoder)?;
         let g = MPInt::decode(decoder)?;
@@ -43,7 +53,7 @@ impl Encode for DsaPublicKey {
             + self.y.encoded_len()?)
     }
 
-    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.p.encode(encoder)?;
         self.q.encode(encoder)?;
         self.g.encode(encoder)?;

@@ -11,7 +11,7 @@ use {crate::LineEnding, alloc::string::String};
 #[cfg(feature = "pkcs8")]
 use {
     crate::{EcPrivateKey, ALGORITHM_OID},
-    der::Decodable,
+    der::Decode,
 };
 
 #[cfg(all(feature = "alloc", feature = "pkcs8"))]
@@ -24,6 +24,7 @@ use std::path::Path;
 use zeroize::Zeroizing;
 
 /// Parse an [`EcPrivateKey`] from a SEC1-encoded document.
+#[cfg_attr(docsrs, doc(cfg(feature = "der")))]
 pub trait DecodeEcPrivateKey: Sized {
     /// Deserialize SEC1 private key from ASN.1 DER-encoded data
     /// (binary format).
@@ -63,7 +64,7 @@ pub trait DecodeEcPrivateKey: Sized {
 
 /// Serialize a [`EcPrivateKey`] to a SEC1 encoded document.
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "der"))))]
 pub trait EncodeEcPrivateKey {
     /// Serialize a [`EcPrivateKeyDocument`] containing a SEC1-encoded private key.
     fn to_sec1_der(&self) -> Result<EcPrivateKeyDocument>;

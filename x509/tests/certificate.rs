@@ -1,9 +1,10 @@
 //! Certificate tests
-use der::asn1::{BitString, UIntBytes};
-use der::{Decodable, Decoder, Encodable, Tag, Tagged};
+use der::asn1::{BitString, ObjectIdentifier, UIntBytes};
+use der::{Decode, Decoder, Encode, Tag, Tagged};
 use hex_literal::hex;
-use x509::Certificate;
-use x509::*;
+use spki::AlgorithmIdentifier;
+use x509_cert::Certificate;
+use x509_cert::*;
 
 // TODO - parse and compare extension values
 const EXTENSIONS: &[(&str, bool)] = &[
@@ -29,7 +30,7 @@ pub struct DeferDecodeCertificate<'a> {
     pub signature: &'a [u8],
 }
 
-impl<'a> Decodable<'a> for DeferDecodeCertificate<'a> {
+impl<'a> Decode<'a> for DeferDecodeCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<DeferDecodeCertificate<'a>> {
         decoder.sequence(|decoder| {
             let tbs_certificate = decoder.tlv_bytes()?;
@@ -68,13 +69,13 @@ pub struct DeferDecodeTBSCertificate<'a> {
     pub extensions: &'a [u8],
 }
 
-impl<'a> Decodable<'a> for DeferDecodeTBSCertificate<'a> {
+impl<'a> Decode<'a> for DeferDecodeTBSCertificate<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<DeferDecodeTBSCertificate<'a>> {
         decoder.sequence(|decoder| {
             let version =
                 ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
                     .map(|cs| cs.value)
-                    .unwrap_or_else(default_zero_u8);
+                    .unwrap_or_else(Default::default);
             let serial_number = decoder.tlv_bytes()?;
             let signature = decoder.tlv_bytes()?;
             let issuer = decoder.tlv_bytes()?;
@@ -106,7 +107,7 @@ fn reencode_cert() {
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
     let defer_cert = DeferDecodeCertificate::from_der(der_encoded_cert).unwrap();
 
-    let parsed_tbs = TBSCertificate::from_der(defer_cert.tbs_certificate).unwrap();
+    let parsed_tbs = TbsCertificate::from_der(defer_cert.tbs_certificate).unwrap();
     let reencoded_tbs = parsed_tbs.to_vec().unwrap();
     assert_eq!(defer_cert.tbs_certificate, reencoded_tbs);
 
@@ -161,7 +162,7 @@ fn decode_oversized_oids() {
         o1str,
         "1.3.6.1.4.1.311.21.8.11672683.15464451.6967228.369088.2847561.77.4994205.11305917"
     );
-    let o1 = ObjectIdentifier::new(
+    let o1 = ObjectIdentifier::new_unwrap(
         "1.3.6.1.4.1.311.21.8.11672683.15464451.6967228.369088.2847561.77.4994205.11305917",
     );
     assert_eq!(
@@ -194,7 +195,7 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
 
-    assert_eq!(cert.tbs_certificate.version, 2);
+    assert_eq!(cert.tbs_certificate.version, Version::V3);
     let target_serial: [u8; 16] = [
         0x7F, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x49, 0xCF, 0x70, 0x66, 0x4D, 0x00, 0x00, 0x00,
         0x02,
@@ -217,9 +218,9 @@ fn decode_cert() {
     );
 
     let mut counter = 0;
-    let i = cert.tbs_certificate.issuer.iter();
+    let i = cert.tbs_certificate.issuer.0.iter();
     for rdn in i {
-        let i1 = rdn.iter();
+        let i1 = rdn.0.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -262,9 +263,9 @@ fn decode_cert() {
     );
 
     counter = 0;
-    let i = cert.tbs_certificate.subject.iter();
+    let i = cert.tbs_certificate.subject.0.iter();
     for rdn in i {
-        let i1 = rdn.iter();
+        let i1 = rdn.0.iter();
         for atav in i1 {
             // Yes, this cert features RDNs encoded in reverse order
             if 0 == counter {

@@ -8,6 +8,7 @@ use super::{Decode, Encode, Variant};
 /// [.-9]      [A-Z]      [a-z]
 /// 0x2e-0x39, 0x41-0x5a, 0x61-0x7a
 /// ```
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Base64Crypt;
 
 impl Variant for Base64Crypt {

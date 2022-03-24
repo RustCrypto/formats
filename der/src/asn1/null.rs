@@ -1,8 +1,8 @@
 //! ASN.1 `NULL` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, Encodable, EncodeValue,
-    Encoder, Error, ErrorKind, FixedTag, Length, Result, Tag,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, Encode, EncodeValue, Encoder,
+    Error, ErrorKind, FixedTag, Header, Length, Result, Tag,
 };
 
 /// ASN.1 `NULL` type.
@@ -10,8 +10,8 @@ use crate::{
 pub struct Null;
 
 impl DecodeValue<'_> for Null {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        if length.is_zero() {
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        if header.length.is_zero() {
             Ok(Null)
         } else {
             Err(decoder.error(ErrorKind::Length { tag: Self::TAG }))
@@ -64,13 +64,13 @@ impl<'a> From<()> for Any<'a> {
 }
 
 impl DecodeValue<'_> for () {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> Result<Self> {
-        Null::decode_value(decoder, length)?;
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+        Null::decode_value(decoder, header)?;
         Ok(())
     }
 }
 
-impl Encodable for () {
+impl Encode for () {
     fn encoded_len(&self) -> Result<Length> {
         Null.encoded_len()
     }
@@ -87,7 +87,7 @@ impl FixedTag for () {
 #[cfg(test)]
 mod tests {
     use super::Null;
-    use crate::{Decodable, Encodable};
+    use crate::{Decode, Encode};
 
     #[test]
     fn decode() {

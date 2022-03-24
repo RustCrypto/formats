@@ -1,6 +1,6 @@
 [package]
-name = "x509"
-version = "0.0.1" # Also update html_root_url in lib.rs when bumping this
+name = "x509-cert"
+version = "0.0.2" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of the X.509 Public Key Infrastructure Certificate
 format as described in RFC 5280
@@ -15,15 +15,19 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-der = { version = "=0.6.0-pre.1", features = ["derive", "alloc"], path = "../der" }
-spki = { version = "=0.6.0-pre.0", path = "../spki" }
-x501 = { version = "=0.1.0-pre.0", path = "../x501" }
+const-oid = { version = "0.9", features = ["db"], path = "../const-oid" }
+der = { version = "=0.6.0-pre.3", features = ["derive", "alloc", "flagset"], path = "../der" }
+flagset = { version = "0.4.3" }
+spki = { version = "=0.6.0-pre.2", path = "../spki" }
 
 [dev-dependencies]
 hex-literal = "0.3"
+rstest = "0.12.0"
 
 [features]
-std = ["der/std"]
+alloc = ["der/alloc"]
+std = ["der/std", "spki/std"]
+pem = ["alloc", "der/pem"]
 
 [package.metadata.docs.rs]
 all-features = true

@@ -73,4 +73,14 @@ impl From<core::str::Utf8Error> for Error {
 }
 
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl From<Error> for std::io::Error {
+    fn from(err: Error) -> std::io::Error {
+        // TODO(tarcieri): better customize `ErrorKind`?
+        std::io::Error::new(std::io::ErrorKind::InvalidData, err)
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}

@@ -1,4 +1,4 @@
-//! Trait definition for [`Encodable`].
+//! Trait definition for [`Encode`].
 
 use crate::{EncodeValue, Encoder, Length, Result, Tagged};
 
@@ -6,7 +6,7 @@ use crate::{EncodeValue, Encoder, Length, Result, Tagged};
 use {crate::ErrorKind, alloc::vec::Vec, core::iter};
 
 /// Encoding trait.
-pub trait Encodable {
+pub trait Encode {
     /// Compute the length of this value in bytes when encoded as ASN.1 DER.
     fn encoded_len(&self) -> Result<Length>;
 
@@ -55,7 +55,7 @@ pub trait Encodable {
     }
 }
 
-impl<T> Encodable for T
+impl<T> Encode for T
 where
     T: EncodeValue + Tagged,
 {

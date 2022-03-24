@@ -4,7 +4,7 @@
 pub(crate) mod document;
 
 use crate::{Error, Result};
-use der::{asn1::UIntBytes, Decodable, Decoder, Encodable, Sequence};
+use der::{asn1::UIntBytes, Decode, Decoder, Encode, Sequence};
 
 #[cfg(feature = "alloc")]
 use crate::RsaPublicKeyDocument;
@@ -50,7 +50,7 @@ impl<'a> RsaPublicKey<'a> {
     }
 }
 
-impl<'a> Decodable<'a> for RsaPublicKey<'a> {
+impl<'a> Decode<'a> for RsaPublicKey<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
         decoder.sequence(|decoder| {
             Ok(Self {
@@ -64,7 +64,7 @@ impl<'a> Decodable<'a> for RsaPublicKey<'a> {
 impl<'a> Sequence<'a> for RsaPublicKey<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[&self.modulus, &self.public_exponent])
     }

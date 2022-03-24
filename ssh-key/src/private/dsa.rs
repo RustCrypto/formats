@@ -1,12 +1,16 @@
 //! Digital Signature Algorithm (DSA) private keys.
 
 use crate::{
-    base64::{self, Decode},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     public::DsaPublicKey,
     MPInt, Result,
 };
 use core::fmt;
 use zeroize::Zeroize;
+
+#[cfg(feature = "subtle")]
+use subtle::{Choice, ConstantTimeEq};
 
 /// Digital Signature Algorithm (DSA) private key.
 ///
@@ -40,7 +44,7 @@ impl AsRef<[u8]> for DsaPrivateKey {
 }
 
 impl Decode for DsaPrivateKey {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         Ok(Self {
             inner: MPInt::decode(decoder)?,
         })
@@ -53,6 +57,42 @@ impl Drop for DsaPrivateKey {
     }
 }
 
+impl Encode for DsaPrivateKey {
+    fn encoded_len(&self) -> Result<usize> {
+        self.inner.encoded_len()
+    }
+
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        self.inner.encode(encoder)
+    }
+}
+
+impl fmt::Debug for DsaPrivateKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DsaPrivateKey").finish_non_exhaustive()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for DsaPrivateKey {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.inner.ct_eq(&other.inner)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for DsaPrivateKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for DsaPrivateKey {}
+
 /// Digital Signature Algorithm (DSA) private/public keypair.
 #[derive(Clone)]
 pub struct DsaKeypair {
@@ -64,10 +104,33 @@ pub struct DsaKeypair {
 }
 
 impl Decode for DsaKeypair {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let public = DsaPublicKey::decode(decoder)?;
         let private = DsaPrivateKey::decode(decoder)?;
         Ok(DsaKeypair { public, private })
+    }
+}
+
+impl Encode for DsaKeypair {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(self.public.encoded_len()? + self.private.encoded_len()?)
+    }
+
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        self.public.encode(encoder)?;
+        self.private.encode(encoder)
+    }
+}
+
+impl From<DsaKeypair> for DsaPublicKey {
+    fn from(keypair: DsaKeypair) -> DsaPublicKey {
+        keypair.public
+    }
+}
+
+impl From<&DsaKeypair> for DsaPublicKey {
+    fn from(keypair: &DsaKeypair) -> DsaPublicKey {
+        keypair.public.clone()
     }
 }
 
@@ -78,3 +141,23 @@ impl fmt::Debug for DsaKeypair {
             .finish_non_exhaustive()
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for DsaKeypair {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        Choice::from((self.public == other.public) as u8) & self.private.ct_eq(&other.private)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for DsaKeypair {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for DsaKeypair {}

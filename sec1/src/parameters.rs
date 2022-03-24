@@ -1,6 +1,6 @@
 use der::{
     asn1::{Any, ObjectIdentifier},
-    DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Length, Tag,
+    DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header, Length, Tag,
 };
 
 /// Elliptic curve parameters as described in
@@ -18,6 +18,7 @@ use der::{
 ///   -- with ANSI X9.
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(docsrs, doc(cfg(feature = "der")))]
 pub enum EcParameters {
     /// Elliptic curve named by a particular OID.
     ///
@@ -28,8 +29,8 @@ pub enum EcParameters {
 }
 
 impl DecodeValue<'_> for EcParameters {
-    fn decode_value(decoder: &mut Decoder<'_>, length: Length) -> der::Result<Self> {
-        ObjectIdentifier::decode_value(decoder, length).map(Self::NamedCurve)
+    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> der::Result<Self> {
+        ObjectIdentifier::decode_value(decoder, header).map(Self::NamedCurve)
     }
 }
 

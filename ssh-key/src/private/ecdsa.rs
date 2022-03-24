@@ -1,13 +1,17 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) private keys.
 
 use crate::{
-    base64::{self, Decode},
+    decoder::{Decode, Decoder},
+    encoder::{Encode, Encoder},
     public::EcdsaPublicKey,
     Algorithm, EcdsaCurve, Error, Result,
 };
 use core::fmt;
 use sec1::consts::{U32, U48, U66};
 use zeroize::Zeroize;
+
+#[cfg(feature = "subtle")]
+use subtle::{Choice, ConstantTimeEq};
 
 /// Elliptic Curve Digital Signature Algorithm (ECDSA) private key.
 #[derive(Clone)]
@@ -17,13 +21,18 @@ pub struct EcdsaPrivateKey<const SIZE: usize> {
 }
 
 impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
+    /// Borrow the inner byte array as a slice.
+    pub fn as_slice(&self) -> &[u8] {
+        self.bytes.as_ref()
+    }
+
     /// Convert to the inner byte array.
     pub fn into_bytes(self) -> [u8; SIZE] {
         self.bytes
     }
 
     /// Decode ECDSA private key using the provided Base64 decoder.
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let len = decoder.decode_usize()?;
 
         if len == SIZE + 1 {
@@ -35,8 +44,29 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
         }
 
         let mut bytes = [0u8; SIZE];
-        decoder.decode_into(&mut bytes)?;
+        decoder.decode_raw(&mut bytes)?;
         Ok(Self { bytes })
+    }
+
+    /// Does this private key need to be prefixed with a leading zero?
+    fn needs_leading_zero(&self) -> bool {
+        self.bytes[0] >= 0x80
+    }
+}
+
+impl<const SIZE: usize> Encode for EcdsaPrivateKey<SIZE> {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4usize + usize::from(self.needs_leading_zero()) + SIZE)
+    }
+
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        encoder.encode_usize(usize::from(self.needs_leading_zero()) + SIZE)?;
+
+        if self.needs_leading_zero() {
+            encoder.encode_raw(&[0])?;
+        }
+
+        encoder.encode_raw(&self.bytes)
     }
 }
 
@@ -75,6 +105,26 @@ impl<const SIZE: usize> Drop for EcdsaPrivateKey<SIZE> {
         self.bytes.zeroize();
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl<const SIZE: usize> ConstantTimeEq for EcdsaPrivateKey<SIZE> {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.as_ref().ct_eq(other.as_ref())
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl<const SIZE: usize> PartialEq for EcdsaPrivateKey<SIZE> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl<const SIZE: usize> Eq for EcdsaPrivateKey<SIZE> {}
 
 /// Elliptic Curve Digital Signature Algorithm (ECDSA) private/public keypair.
 #[derive(Clone, Debug)]
@@ -142,7 +192,7 @@ impl EcdsaKeypair {
 }
 
 impl Decode for EcdsaKeypair {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         match EcdsaPublicKey::decode(decoder)? {
             EcdsaPublicKey::NistP256(public) => {
                 let private = EcdsaPrivateKey::<32>::decode(decoder)?;
@@ -157,6 +207,32 @@ impl Decode for EcdsaKeypair {
                 Ok(Self::NistP521 { public, private })
             }
         }
+    }
+}
+
+impl Encode for EcdsaKeypair {
+    fn encoded_len(&self) -> Result<usize> {
+        let public_len = EcdsaPublicKey::from(self).encoded_len()?;
+
+        let private_len = match self {
+            Self::NistP256 { private, .. } => private.encoded_len()?,
+            Self::NistP384 { private, .. } => private.encoded_len()?,
+            Self::NistP521 { private, .. } => private.encoded_len()?,
+        };
+
+        Ok(public_len + private_len)
+    }
+
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        EcdsaPublicKey::from(self).encode(encoder)?;
+
+        match self {
+            Self::NistP256 { private, .. } => private.encode(encoder)?,
+            Self::NistP384 { private, .. } => private.encode(encoder)?,
+            Self::NistP521 { private, .. } => private.encode(encoder)?,
+        }
+
+        Ok(())
     }
 }
 
@@ -175,3 +251,38 @@ impl From<&EcdsaKeypair> for EcdsaPublicKey {
         }
     }
 }
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl ConstantTimeEq for EcdsaKeypair {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        let public_eq =
+            Choice::from((EcdsaPublicKey::from(self) == EcdsaPublicKey::from(other)) as u8);
+
+        let private_key_a = match self {
+            Self::NistP256 { private, .. } => private.as_slice(),
+            Self::NistP384 { private, .. } => private.as_slice(),
+            Self::NistP521 { private, .. } => private.as_slice(),
+        };
+
+        let private_key_b = match other {
+            Self::NistP256 { private, .. } => private.as_slice(),
+            Self::NistP384 { private, .. } => private.as_slice(),
+            Self::NistP521 { private, .. } => private.as_slice(),
+        };
+
+        public_eq & private_key_a.ct_eq(private_key_b)
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl PartialEq for EcdsaKeypair {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl Eq for EcdsaKeypair {}

@@ -23,24 +23,30 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+#[cfg(feature = "point")]
 pub mod point;
 
 mod error;
+#[cfg(feature = "der")]
 mod parameters;
+#[cfg(feature = "der")]
 mod private_key;
+#[cfg(feature = "der")]
 mod traits;
 
+#[cfg(feature = "der")]
 pub use der;
 
-pub use self::{
-    error::{Error, Result},
-    parameters::EcParameters,
-    point::EncodedPoint,
-    private_key::EcPrivateKey,
-    traits::DecodeEcPrivateKey,
-};
+pub use crate::error::{Error, Result};
 
+#[cfg(feature = "point")]
+pub use crate::point::EncodedPoint;
+
+#[cfg(feature = "point")]
 pub use generic_array::typenum::consts;
+
+#[cfg(feature = "der")]
+pub use crate::{parameters::EcParameters, private_key::EcPrivateKey, traits::DecodeEcPrivateKey};
 
 #[cfg(feature = "alloc")]
 pub use crate::{private_key::document::EcPrivateKeyDocument, traits::EncodeEcPrivateKey};
@@ -62,4 +68,4 @@ use pkcs8::ObjectIdentifier;
 /// <http://oid-info.com/get/1.2.840.10045.2.1>
 #[cfg(feature = "pkcs8")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new("1.2.840.10045.2.1");
+pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");

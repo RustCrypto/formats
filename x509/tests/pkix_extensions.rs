@@ -1,219 +1,114 @@
 //! Certificate tests
-use der::asn1::{BitString, UIntBytes, Utf8String};
-use der::{Decodable, Encodable, ErrorKind, Length, Tag, Tagged};
+use const_oid::AssociatedOid;
+use der::asn1::UIntBytes;
+use der::{Decode, Encode, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
-use x501::name::Name;
-use x509::KeyUsage;
-use x509::*;
-use x509::{
-    BasicConstraints, Certificate, CertificatePolicies, GeneralName, OtherName,
-    SubjectKeyIdentifier,
-};
+use x509_cert::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
+use x509_cert::ext::pkix::name::{DistributionPointName, GeneralName, GeneralNames};
+use x509_cert::ext::pkix::*;
+use x509_cert::ext::Extensions;
+use x509_cert::name::Name;
+use x509_cert::{Certificate, Version};
 
-fn spin_over_exts<'a>(exts: Extensions<'a>) {
-    let i = exts.iter();
-    for ext in i {
-        if "2.5.29.9" == ext.extn_id.to_string() {
-            let sdac_result = SubjectDirectoryAttributes::from_der(ext.extn_value);
-            assert!(sdac_result.is_ok());
+use const_oid::db::rfc5280::*;
+use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 
-            let sdac = sdac_result.unwrap();
-            let reencoded = sdac.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.14" == ext.extn_id.to_string() {
-            let skid_result = SubjectKeyIdentifier::from_der(ext.extn_value);
-            assert!(skid_result.is_ok());
+fn spin_over_exts(exts: Extensions) {
+    for ext in exts {
+        match ext.extn_id {
+            SubjectDirectoryAttributes::OID => {
+                let decoded = SubjectDirectoryAttributes::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let skid = skid_result.unwrap();
-            let reencoded = skid.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.15" == ext.extn_id.to_string() {
-            let ku_result = KeyUsage::from_der(ext.extn_value);
-            assert!(ku_result.is_ok());
+            SubjectKeyIdentifier::OID => {
+                let decoded = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let ku = ku_result.unwrap();
-            let reencoded = ku.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.16" == ext.extn_id.to_string() {
-            let pku_result = PrivateKeyUsagePeriod::from_der(ext.extn_value);
-            assert!(pku_result.is_ok());
+            KeyUsage::OID => {
+                let decoded = KeyUsage::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let pku = pku_result.unwrap();
-            let reencoded = pku.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.17" == ext.extn_id.to_string() {
-            let san_result = SubjectAltName::from_der(ext.extn_value);
-            assert!(san_result.is_ok());
+            PrivateKeyUsagePeriod::OID => {
+                let decoded = PrivateKeyUsagePeriod::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let san = san_result.unwrap();
-            let reencoded = san.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.18" == ext.extn_id.to_string() {
-            let ian_result = IssuerAltName::from_der(ext.extn_value);
-            assert!(ian_result.is_ok());
+            SubjectAltName::OID => {
+                let decoded = SubjectAltName::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let ian = ian_result.unwrap();
-            let reencoded = ian.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.19" == ext.extn_id.to_string() {
-            let bc_result = BasicConstraints::from_der(ext.extn_value);
-            assert!(bc_result.is_ok());
+            IssuerAltName::OID => {
+                let decoded = IssuerAltName::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let bc = bc_result.unwrap();
-            let reencoded = bc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.30" == ext.extn_id.to_string() {
-            let nc_result = NameConstraints::from_der(ext.extn_value);
-            assert!(nc_result.is_ok());
+            BasicConstraints::OID => {
+                let decoded = BasicConstraints::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let nc = nc_result.unwrap();
-            let reencoded = nc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.31" == ext.extn_id.to_string() {
-            let crldps_result = CRLDistributionPoints::from_der(ext.extn_value);
-            assert!(crldps_result.is_ok());
+            NameConstraints::OID => {
+                let decoded = NameConstraints::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let crldps = crldps_result.unwrap();
-            let reencoded = crldps.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.32" == ext.extn_id.to_string() {
-            let pols_result = CertificatePolicies::from_der(ext.extn_value);
-            assert!(pols_result.is_ok());
+            CrlDistributionPoints::OID => {
+                let decoded = CrlDistributionPoints::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let pols = pols_result.unwrap();
-            let reencoded = pols.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.33" == ext.extn_id.to_string() {
-            let pms_result = PolicyMappings::from_der(ext.extn_value);
-            assert!(pms_result.is_ok());
+            CertificatePolicies::OID => {
+                let decoded = CertificatePolicies::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let pms = pms_result.unwrap();
-            let reencoded = pms.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.35" == ext.extn_id.to_string() {
-            let akid_result = AuthorityKeyIdentifier::from_der(ext.extn_value);
-            assert!(akid_result.is_ok());
+            PolicyMappings::OID => {
+                let decoded = PolicyMappings::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let akid = akid_result.unwrap();
-            let reencoded = akid.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.36" == ext.extn_id.to_string() {
-            let pc_result = PolicyConstraints::from_der(ext.extn_value);
-            assert!(pc_result.is_ok());
+            AuthorityKeyIdentifier::OID => {
+                let decoded = AuthorityKeyIdentifier::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let pc = pc_result.unwrap();
-            let reencoded = pc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.37" == ext.extn_id.to_string() {
-            let eku_result = ExtendedKeyUsage::from_der(ext.extn_value);
-            assert!(eku_result.is_ok());
+            PolicyConstraints::OID => {
+                let decoded = PolicyConstraints::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let eku = eku_result.unwrap();
-            let reencoded = eku.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.46" == ext.extn_id.to_string() {
-            let fc_result = FreshestCRL::from_der(ext.extn_value);
-            assert!(fc_result.is_ok());
+            ExtendedKeyUsage::OID => {
+                let decoded = ExtendedKeyUsage::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let fc = fc_result.unwrap();
-            let reencoded = fc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.5.29.54" == ext.extn_id.to_string() {
-            let iap_result = InhibitAnyPolicy::from_der(ext.extn_value);
-            assert!(iap_result.is_ok());
+            FreshestCrl::OID => {
+                let decoded = FreshestCrl::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let iap = iap_result.unwrap();
-            let reencoded = iap.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "1.3.6.1.5.5.7.1.1" == ext.extn_id.to_string() {
-            let aia_result = AuthorityInfoAccessSyntax::from_der(ext.extn_value);
-            assert!(aia_result.is_ok());
+            InhibitAnyPolicy::OID => {
+                let decoded = InhibitAnyPolicy::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let aia = aia_result.unwrap();
-            let reencoded = aia.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "1.3.6.1.5.5.7.1.11" == ext.extn_id.to_string() {
-            let sia_result = SubjectInfoAccessSyntax::from_der(ext.extn_value);
-            assert!(sia_result.is_ok());
+            AuthorityInfoAccessSyntax::OID => {
+                let decoded = AuthorityInfoAccessSyntax::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let sia = sia_result.unwrap();
-            let reencoded = sia.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "1.3.6.1.5.5.7.48.1.5" == ext.extn_id.to_string() {
-            let nc_result = OcspNoCheck::from_der(ext.extn_value);
-            assert!(nc_result.is_ok());
+            SubjectInfoAccessSyntax::OID => {
+                let decoded = SubjectInfoAccessSyntax::from_der(ext.extn_value).unwrap();
+                assert_eq!(ext.extn_value, decoded.to_vec().unwrap());
+            }
 
-            let nc = nc_result.unwrap();
-            let reencoded = nc.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.16.840.1.113730.1.1" == ext.extn_id.to_string() {
-            let nct_result = BitString::from_der(ext.extn_value);
-            assert!(nct_result.is_ok());
-
-            let nct = nct_result.unwrap();
-            let reencoded = nct.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "2.16.840.1.101.3.6.9.1" == ext.extn_id.to_string() {
-            let pni_result = PivNaciIndicator::from_der(ext.extn_value);
-            assert!(pni_result.is_ok());
-
-            let pni = pni_result.unwrap();
-            let reencoded = pni.to_vec().unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if "1.2.840.113533.7.65.0" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring Entrust version info ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "2.16.840.1.114027.30.1" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring some (likely) Entrust extension ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.20.2" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring enrollCerttypeExtension ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.21.1" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring cAKeyCertIndexPair ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.21.2" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring certSrvPreviousCertHash ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.21.7" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring certificateTemplate ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.4.1.311.21.10" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring applicationCertPolicies ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else if "1.3.6.1.5.5.7.1.3" == ext.extn_id.to_string() {
-            println!(
-                "Ignoring qcStatements ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
-        } else {
-            println!(
-                "Unrecognized extension ({}) with criticality {}",
-                ext.extn_id.to_string(),
-                ext.critical
-            );
+            _ => {
+                eprintln!("ignoring {} with criticality {}", ext.extn_id, ext.critical);
+            }
         }
     }
 }
@@ -240,21 +135,10 @@ fn decode_general_name() {
     }
 
     // OtherName
-    let on = OtherName::from_der(
-        &hex!("3021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
-    )
-    .unwrap();
-
-    let onval = Utf8String::from_der(on.value.value()).unwrap();
-    assert_eq!(onval.to_string(), "Upn_214950130@mil");
-
-    let other_name = GeneralName::from_der(
-        &hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C")[..],
-    )
-    .unwrap();
-    match other_name {
+    let bytes = hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");
+    match GeneralName::from_der(&bytes).unwrap() {
         GeneralName::OtherName(other_name) => {
-            let onval = Utf8String::from_der(other_name.value.value()).unwrap();
+            let onval = other_name.value.utf8_string().unwrap();
             assert_eq!(onval.to_string(), "Upn_214950130@mil");
         }
         _ => panic!("Failed to parse OtherName from GeneralName"),
@@ -275,31 +159,16 @@ fn decode_cert() {
     let mut counter = 0;
     for ext in i {
         if 0 == counter {
-            assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
+            assert_eq!(ext.extn_id.to_string(), ID_CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
 
-            use x509::extensions_utils::KeyUsageValues;
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
-            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
-            let mut count = 0;
-            for v in kuv {
-                if 0 == count {
-                    assert_eq!(v, KeyUsageValues::KeyCertSign);
-                } else if 1 == count {
-                    assert_eq!(v, KeyUsageValues::CRLSign);
-                } else {
-                    panic!("Should not occur");
-                }
-                count += 1;
-            }
+            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
 
             let reencoded = ku.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 1 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_CE_BASIC_CONSTRAINTS.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), ID_CE_BASIC_CONSTRAINTS.to_string());
             assert_eq!(ext.critical, true);
             let bc = BasicConstraints::from_der(ext.extn_value).unwrap();
             assert_eq!(true, bc.ca);
@@ -308,10 +177,10 @@ fn decode_cert() {
             let reencoded = bc.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 2 == counter {
-            assert_eq!(ext.extn_id.to_string(), PKIX_CE_POLICY_MAPPINGS.to_string());
+            assert_eq!(ext.extn_id.to_string(), ID_CE_POLICY_MAPPINGS.to_string());
             assert_eq!(ext.critical, false);
             let pm = PolicyMappings::from_der(ext.extn_value).unwrap();
-            assert_eq!(19, pm.len());
+            assert_eq!(19, pm.0.len());
 
             let reencoded = pm.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -361,7 +230,7 @@ fn decode_cert() {
             ];
 
             let mut counter_pm = 0;
-            for mapping in pm {
+            for mapping in pm.0 {
                 assert_eq!(
                     issuer_domain_policy[counter_pm],
                     mapping.issuer_domain_policy.to_string()
@@ -375,11 +244,11 @@ fn decode_cert() {
         } else if 3 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_CERTIFICATE_POLICIES.to_string()
+                ID_CE_CERTIFICATE_POLICIES.to_string()
             );
             assert_eq!(ext.critical, false);
             let cps = CertificatePolicies::from_der(ext.extn_value).unwrap();
-            assert_eq!(19, cps.len());
+            assert_eq!(19, cps.0.len());
 
             let reencoded = cps.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
@@ -407,7 +276,7 @@ fn decode_cert() {
             ];
 
             let mut cp_counter = 0;
-            for cp in cps {
+            for cp in cps.0 {
                 assert_eq!(ids[cp_counter], cp.policy_identifier.to_string());
                 if 18 == cp_counter {
                     assert!(cp.policy_qualifiers.is_some());
@@ -436,14 +305,14 @@ fn decode_cert() {
         } else if 4 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_SUBJECT_KEY_IDENTIFIER.to_string()
+                ID_CE_SUBJECT_KEY_IDENTIFIER.to_string()
             );
             assert_eq!(ext.critical, false);
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
-            assert_eq!(Length::new(21), skid.len());
+            assert_eq!(Length::new(21), skid.0.len());
             assert_eq!(
                 &hex!("DBD3DEBF0D7B615B32803BC0206CD7AADD39B8ACFF"),
-                skid.as_bytes()
+                skid.0.as_bytes()
             );
 
             let reencoded = skid.to_vec().unwrap();
@@ -451,17 +320,17 @@ fn decode_cert() {
         } else if 5 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_CRL_DISTRIBUTION_POINTS.to_string()
+                ID_CE_CRL_DISTRIBUTION_POINTS.to_string()
             );
             assert_eq!(ext.critical, false);
-            let crl_dps = CRLDistributionPoints::from_der(ext.extn_value).unwrap();
-            assert_eq!(2, crl_dps.len());
+            let crl_dps = CrlDistributionPoints::from_der(ext.extn_value).unwrap();
+            assert_eq!(2, crl_dps.0.len());
 
             let reencoded = crl_dps.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
             let mut crldp_counter = 0;
-            for crldp in crl_dps {
+            for crldp in crl_dps.0 {
                 let dpn = crldp.distribution_point.unwrap();
                 if 0 == crldp_counter {
                     match dpn {
@@ -509,16 +378,16 @@ fn decode_cert() {
         } else if 6 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_PE_SUBJECTINFOACCESS.to_string()
+                ID_PE_SUBJECT_INFO_ACCESS.to_string()
             );
             assert_eq!(ext.critical, false);
             let sias = SubjectInfoAccessSyntax::from_der(ext.extn_value).unwrap();
-            assert_eq!(1, sias.len());
+            assert_eq!(1, sias.0.len());
 
             let reencoded = sias.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
-            for sia in sias {
+            for sia in sias.0 {
                 assert_eq!("1.3.6.1.5.5.7.48.5", sia.access_method.to_string());
                 let gn = sia.access_location;
                 match gn {
@@ -536,17 +405,17 @@ fn decode_cert() {
         } else if 7 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_PE_AUTHORITYINFOACCESS.to_string()
+                ID_PE_AUTHORITY_INFO_ACCESS.to_string()
             );
             assert_eq!(ext.critical, false);
             let aias = AuthorityInfoAccessSyntax::from_der(ext.extn_value).unwrap();
-            assert_eq!(2, aias.len());
+            assert_eq!(2, aias.0.len());
             let mut aia_counter = 0;
 
             let reencoded = aias.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
-            for aia in aias {
+            for aia in aias.0 {
                 if 0 == aia_counter {
                     assert_eq!("1.3.6.1.5.5.7.48.2", aia.access_method.to_string());
                     let gn = aia.access_location;
@@ -582,18 +451,18 @@ fn decode_cert() {
         } else if 8 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_INHIBIT_ANY_POLICY.to_string()
+                ID_CE_INHIBIT_ANY_POLICY.to_string()
             );
             assert_eq!(ext.critical, false);
             let iap = InhibitAnyPolicy::from_der(ext.extn_value).unwrap();
-            assert_eq!(0, iap);
+            assert_eq!(0, iap.0);
 
             let reencoded = iap.to_vec().unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 9 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_AUTHORITY_KEY_IDENTIFIER.to_string()
+                ID_CE_AUTHORITY_KEY_IDENTIFIER.to_string()
             );
             assert_eq!(ext.critical, false);
             let akid = AuthorityKeyIdentifier::from_der(ext.extn_value).unwrap();
@@ -613,7 +482,7 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
 
-    assert_eq!(cert.tbs_certificate.version, 2);
+    assert_eq!(cert.tbs_certificate.version, Version::V3);
     let target_serial: [u8; 1] = [2];
     assert_eq!(
         cert.tbs_certificate.serial_number,
@@ -633,9 +502,9 @@ fn decode_cert() {
     );
 
     let mut counter = 0;
-    let i = cert.tbs_certificate.issuer.iter();
+    let i = cert.tbs_certificate.issuer.0.iter();
     for rdn in i {
-        let i1 = rdn.iter();
+        let i1 = rdn.0.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -675,9 +544,9 @@ fn decode_cert() {
     );
 
     counter = 0;
-    let i = cert.tbs_certificate.subject.iter();
+    let i = cert.tbs_certificate.subject.0.iter();
     for rdn in i {
-        let i1 = rdn.iter();
+        let i1 = rdn.0.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -735,7 +604,7 @@ fn decode_cert() {
         if 0 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_AUTHORITY_KEY_IDENTIFIER.to_string()
+                ID_CE_AUTHORITY_KEY_IDENTIFIER.to_string()
             );
             assert_eq!(ext.critical, false);
             let akid = AuthorityKeyIdentifier::from_der(ext.extn_value).unwrap();
@@ -746,48 +615,33 @@ fn decode_cert() {
         } else if 1 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_SUBJECT_KEY_IDENTIFIER.to_string()
+                ID_CE_SUBJECT_KEY_IDENTIFIER.to_string()
             );
             assert_eq!(ext.critical, false);
             let skid = SubjectKeyIdentifier::from_der(ext.extn_value).unwrap();
             assert_eq!(
-                skid.as_bytes(),
+                skid.0.as_bytes(),
                 &hex!("580184241BBC2B52944A3DA510721451F5AF3AC9")[..]
             );
         } else if 2 == counter {
-            assert_eq!(ext.extn_id.to_string(), PKIX_CE_KEY_USAGE.to_string());
+            assert_eq!(ext.extn_id.to_string(), ID_CE_KEY_USAGE.to_string());
             assert_eq!(ext.critical, true);
-            use x509::extensions_utils::KeyUsageValues;
             let ku = KeyUsage::from_der(ext.extn_value).unwrap();
-            let kuv = x509::extensions_utils::get_key_usage_values(&ku);
-            let mut count = 0;
-            for v in kuv {
-                if 0 == count {
-                    assert_eq!(v, KeyUsageValues::KeyCertSign);
-                } else if 1 == count {
-                    assert_eq!(v, KeyUsageValues::CRLSign);
-                } else {
-                    panic!("Should not occur");
-                }
-                count += 1;
-            }
+            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
         } else if 3 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
-                PKIX_CE_CERTIFICATE_POLICIES.to_string()
+                ID_CE_CERTIFICATE_POLICIES.to_string()
             );
             assert_eq!(ext.critical, false);
             let r = CertificatePolicies::from_der(ext.extn_value);
             let cp = r.unwrap();
-            let i = cp.iter();
+            let i = cp.0.iter();
             for p in i {
                 assert_eq!(p.policy_identifier.to_string(), "2.16.840.1.101.3.2.1.48.1");
             }
         } else if 4 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                PKIX_CE_BASIC_CONSTRAINTS.to_string()
-            );
+            assert_eq!(ext.extn_id.to_string(), ID_CE_BASIC_CONSTRAINTS.to_string());
             assert_eq!(ext.critical, true);
             let bc = BasicConstraints::from_der(ext.extn_value).unwrap();
             assert_eq!(bc.ca, true);
@@ -896,7 +750,7 @@ fn decode_idp() {
 
     // IDP from 04A8739769B3C090A11DCDFABA3CF33F4BEF21F3.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp = IssuingDistributionPoint::from_der(&hex!("30038201FF")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, true);
+    assert_eq!(idp.only_contains_ca_certs, true);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, false);
@@ -905,13 +759,13 @@ fn decode_idp() {
 
     let n =
         Name::from_der(&hex!("305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
-    assert_eq!(4, n.len());
+    assert_eq!(4, n.0.len());
 
     let gn =
         GeneralName::from_der(&hex!("A45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
     match gn {
         GeneralName::DirectoryName(gn) => {
-            assert_eq!(4, gn.len());
+            assert_eq!(4, gn.0.len());
         }
         _ => {}
     }
@@ -922,7 +776,7 @@ fn decode_idp() {
     let gn = gns.get(0).unwrap();
     match gn {
         GeneralName::DirectoryName(gn) => {
-            assert_eq!(4, gn.len());
+            assert_eq!(4, gn.0.len());
         }
         _ => {}
     }
@@ -953,7 +807,7 @@ fn decode_idp() {
             let gn = dpn.get(0).unwrap();
             match gn {
                 GeneralName::DirectoryName(gn) => {
-                    assert_eq!(4, gn.len());
+                    assert_eq!(4, gn.0.len());
                 }
                 _ => {}
             }
@@ -1001,23 +855,23 @@ fn decode_idp() {
     // IDP from 54B0D2A6F6AA4780771CC4F9F076F623CEB0F57E.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp =
         IssuingDistributionPoint::from_der(&hex!("3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8303079F80")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, false);
+    assert_eq!(idp.only_contains_ca_certs, false);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, false);
     assert!(idp.only_some_reasons.is_some());
     assert!(idp.distribution_point.is_some());
 
-    let rfv = get_reason_flags_values(&idp.only_some_reasons.unwrap());
-    assert_eq!(true, rfv.unused);
-    assert_eq!(false, rfv.key_compromise);
-    assert_eq!(false, rfv.ca_compromise);
-    assert_eq!(true, rfv.affiliation_changed);
-    assert_eq!(true, rfv.superseded);
-    assert_eq!(true, rfv.cessation_of_operation);
-    assert_eq!(true, rfv.certificate_hold);
-    assert_eq!(true, rfv.remove_from_crl);
-    assert_eq!(true, rfv.aa_compromise);
+    assert_eq!(
+        Reasons::Unused
+            | Reasons::AffiliationChanged
+            | Reasons::Superseded
+            | Reasons::CessationOfOperation
+            | Reasons::CertificateHold
+            | Reasons::PrivilegeWithdrawn
+            | Reasons::AaCompromise,
+        idp.only_some_reasons.unwrap()
+    );
 
     //  930  360:             SEQUENCE {
     //  934  353:               [0] {
@@ -1121,7 +975,7 @@ fn decode_idp() {
     // IDP from 959528526E54B646AF895E2362D3AD20F4B3284D.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp =
         IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358401FF")).unwrap();
-    assert_eq!(idp.only_contains_cacerts, false);
+    assert_eq!(idp.only_contains_ca_certs, false);
     assert_eq!(idp.only_contains_attribute_certs, false);
     assert_eq!(idp.only_contains_user_certs, false);
     assert_eq!(idp.indirect_crl, true);
@@ -1134,7 +988,7 @@ fn decode_idp() {
             for gn in dp {
                 match gn {
                     GeneralName::DirectoryName(gn) => {
-                        assert_eq!(4, gn.len());
+                        assert_eq!(4, gn.0.len());
                     }
                     _ => {
                         panic!("Expected DirectoryName")

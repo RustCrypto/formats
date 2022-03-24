@@ -1,6 +1,6 @@
 //! PKCS#7 example tests
 
-use der::{asn1::ObjectIdentifier, Decodable, Encoder};
+use der::{asn1::ObjectIdentifier, Decode, Encoder};
 use hex_literal::hex;
 use pkcs7::{
     encrypted_data_content::EncryptedDataContent, enveloped_data_content::EncryptedContentInfo,
@@ -40,7 +40,7 @@ fn decode_encrypted_key_example() {
 
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
-    let expected_oid = ObjectIdentifier::new("1.2.840.113549.1.12.1.6");
+    let expected_oid = ObjectIdentifier::new("1.2.840.113549.1.12.1.6").unwrap();
     let expected_salt = &hex!("ad2d4b4e87b34d67");
     match content {
         ContentInfo::EncryptedData(Some(EncryptedDataContent {

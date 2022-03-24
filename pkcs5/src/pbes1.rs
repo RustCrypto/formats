@@ -5,32 +5,32 @@
 use crate::AlgorithmIdentifier;
 use der::{
     asn1::{ObjectIdentifier, OctetString},
-    Decodable, Decoder, Encodable, Encoder, ErrorKind, FixedTag, Length, Tag,
+    Decode, Decoder, Encode, Encoder, ErrorKind, FixedTag, Length, Tag,
 };
 
 /// `pbeWithMD2AndDES-CBC` Object Identifier (OID).
 pub const PBE_WITH_MD2_AND_DES_CBC_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.5.1");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.1");
 
 /// `pbeWithMD2AndRC2-CBC` Object Identifier (OID).
 pub const PBE_WITH_MD2_AND_RC2_CBC_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.5.4");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.4");
 
 /// `pbeWithMD5AndDES-CBC` Object Identifier (OID).
 pub const PBE_WITH_MD5_AND_DES_CBC_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.5.3");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.3");
 
 /// `pbeWithMD5AndRC2-CBC` Object Identifier (OID).
 pub const PBE_WITH_MD5_AND_RC2_CBC_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.5.6");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.6");
 
 /// `pbeWithSHA1AndDES-CBC` Object Identifier (OID).
 pub const PBE_WITH_SHA1_AND_DES_CBC_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.5.10");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.10");
 
 /// `pbeWithSHA1AndRC2-CBC` Object Identifier (OID).
 pub const PBE_WITH_SHA1_AND_RC2_CBC_OID: ObjectIdentifier =
-    ObjectIdentifier::new("1.2.840.113549.1.5.11");
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.11");
 
 /// Length of a PBES1 salt (as defined in the `PBEParameter` ASN.1 message).
 pub const SALT_LENGTH: usize = 8;
@@ -80,13 +80,13 @@ impl Parameters {
     }
 }
 
-impl Decodable<'_> for Parameters {
+impl Decode<'_> for Parameters {
     fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
         AlgorithmIdentifier::decode(decoder)?.try_into()
     }
 }
 
-impl Encodable for Parameters {
+impl Encode for Parameters {
     fn encoded_len(&self) -> der::Result<Length> {
         self.inner_len()?.for_tlv()
     }
@@ -217,7 +217,7 @@ impl EncryptionScheme {
     }
 }
 
-impl Encodable for EncryptionScheme {
+impl Encode for EncryptionScheme {
     fn encoded_len(&self) -> der::Result<Length> {
         self.oid().encoded_len()
     }

@@ -10,12 +10,17 @@
 //!
 //! [RFC 4648]: https://datatracker.ietf.org/doc/html/rfc4648
 
+use crate::{
+    grammar, Base64Decoder, Error, Result, BASE64_WRAP_WIDTH, POST_ENCAPSULATION_BOUNDARY,
+    PRE_ENCAPSULATION_BOUNDARY,
+};
+use core::str;
+
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
-use crate::{grammar, Error, Result, POST_ENCAPSULATION_BOUNDARY, PRE_ENCAPSULATION_BOUNDARY};
-use base64ct::{Base64, Encoding};
-use core::str;
+#[cfg(feature = "std")]
+use std::io;
 
 /// Decode a PEM document according to RFC 7468's "Strict" grammar.
 ///
@@ -23,7 +28,18 @@ use core::str;
 /// the decoded label and the portion of the provided buffer containing the
 /// decoded message.
 pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o [u8])> {
-    Decoder::new().decode(pem, buf)
+    let mut decoder = Decoder::new(pem).map_err(|e| check_for_headers(pem, e))?;
+    let type_label = decoder.type_label();
+    let buf = buf
+        .get_mut(..decoder.remaining_len())
+        .ok_or(Error::Length)?;
+    let decoded = decoder.decode(buf).map_err(|e| check_for_headers(pem, e))?;
+
+    if decoder.base64.is_finished() {
+        Ok((type_label, decoded))
+    } else {
+        Err(Error::Length)
+    }
 }
 
 /// Decode a PEM document according to RFC 7468's "Strict" grammar, returning
@@ -31,7 +47,13 @@ pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub fn decode_vec(pem: &[u8]) -> Result<(&str, Vec<u8>)> {
-    Decoder::new().decode_vec(pem)
+    let mut decoder = Decoder::new(pem).map_err(|e| check_for_headers(pem, e))?;
+    let type_label = decoder.type_label();
+    let mut buf = Vec::new();
+    decoder
+        .decode_to_end(&mut buf)
+        .map_err(|e| check_for_headers(pem, e))?;
+    Ok((type_label, buf))
 }
 
 /// Decode the encapsulation boundaries of a PEM document according to RFC 7468's "Strict" grammar.
@@ -41,64 +63,85 @@ pub fn decode_label(pem: &[u8]) -> Result<&str> {
     Ok(Encapsulation::try_from(pem)?.label())
 }
 
-/// PEM decoder.
+/// Buffered PEM decoder.
 ///
-/// This type provides a degree of configurability for how PEM is decoded.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct Decoder {
-    /// Number of characters at which to line-wrap Base64-encoded data
-    /// (default `64`).
-    ///
-    /// Must be a multiple of `4`, or otherwise decoding operations will return
-    /// `Error::Base64`.
-    // TODO(tarcieri): support for wrap widths which aren't multiples of 4?
-    pub wrap_width: usize,
+/// Stateful buffered decoder type which decodes an input PEM document according
+/// to RFC 7468's "Strict" grammar.
+#[derive(Clone)]
+pub struct Decoder<'i> {
+    /// PEM type label.
+    type_label: &'i str,
+
+    /// Buffered Base64 decoder.
+    base64: Base64Decoder<'i>,
 }
 
-impl Decoder {
-    /// Create a new [`Decoder`] with the default options.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Decode a PEM document according to RFC 7468's "Strict" grammar.
+impl<'i> Decoder<'i> {
+    /// Create a new PEM [`Decoder`] with the default options.
     ///
-    /// On success, writes the decoded document into the provided buffer, returning
-    /// the decoded label and the portion of the provided buffer containing the
-    /// decoded message.
-    pub fn decode<'i, 'o>(&self, pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o [u8])> {
-        let encapsulation = Encapsulation::try_from(pem)?;
-        let label = encapsulation.label();
-        let decoded_bytes = encapsulation.decode(self, buf)?;
-        Ok((label, decoded_bytes))
+    /// Uses the default 64-character line wrapping.
+    pub fn new(pem: &'i [u8]) -> Result<Self> {
+        Self::new_wrapped(pem, BASE64_WRAP_WIDTH)
     }
 
-    /// Decode a PEM document according to RFC 7468's "Strict" grammar, returning
-    /// the result as a [`Vec`] upon success.
+    /// Create a new PEM [`Decoder`] which wraps at the given line width.
+    pub fn new_wrapped(pem: &'i [u8], line_width: usize) -> Result<Self> {
+        let encapsulation = Encapsulation::try_from(pem)?;
+        let type_label = encapsulation.label();
+        let base64 = Base64Decoder::new_wrapped(encapsulation.encapsulated_text, line_width)?;
+        Ok(Self { type_label, base64 })
+    }
+
+    /// Get the PEM type label for the input document.
+    pub fn type_label(&self) -> &'i str {
+        self.type_label
+    }
+
+    /// Decode data into the provided output buffer.
+    ///
+    /// There must be at least as much remaining Base64 input to be decoded
+    /// in order to completely fill `buf`.
+    pub fn decode<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8]> {
+        Ok(self.base64.decode(buf)?)
+    }
+
+    /// Decode all of the remaining data in the input buffer into `buf`.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn decode_vec<'a>(&self, pem: &'a [u8]) -> Result<(&'a str, Vec<u8>)> {
-        let encapsulation = Encapsulation::try_from(pem)?;
-        let label = encapsulation.label();
+    pub fn decode_to_end<'o>(&mut self, buf: &'o mut Vec<u8>) -> Result<&'o [u8]> {
+        Ok(self.base64.decode_to_end(buf)?)
+    }
 
-        // count all chars (gives over-estimation, due to whitespace)
-        let max_len = encapsulation.encapsulated_text.len() * 3 / 4;
+    /// Get the decoded length of the remaining PEM data after Base64 decoding.
+    pub fn remaining_len(&self) -> usize {
+        self.base64.remaining_len()
+    }
 
-        let mut result = vec![0u8; max_len];
-        let decoded_len = encapsulation.decode(self, &mut result)?.len();
-
-        // Actual encoded length can be slightly shorter than estimated
-        // TODO(tarcieri): more reliable length estimation
-        result.truncate(decoded_len);
-        Ok((label, result))
+    /// Are we finished decoding the PEM input?
+    pub fn is_finished(&self) -> bool {
+        self.base64.is_finished()
     }
 }
 
-impl Default for Decoder {
-    fn default() -> Self {
-        Self {
-            wrap_width: crate::BASE64_WRAP_WIDTH,
-        }
+impl<'i> From<Decoder<'i>> for Base64Decoder<'i> {
+    fn from(decoder: Decoder<'i>) -> Base64Decoder<'i> {
+        decoder.base64
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<'i> io::Read for Decoder<'i> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.base64.read(buf)
+    }
+
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        self.base64.read_to_end(buf)
+    }
+
+    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        self.base64.read_exact(buf)
     }
 }
 
@@ -185,51 +228,6 @@ impl<'a> Encapsulation<'a> {
     pub fn label(self) -> &'a str {
         self.label
     }
-
-    /// Get an iterator over the (allegedly) Base64-encoded lines of the
-    /// encapsulated text.
-    pub fn encapsulated_text(self, wrap_width: usize) -> Result<Lines<'a>> {
-        if (wrap_width > 0) && (wrap_width % 4 == 0) {
-            Ok(Lines {
-                bytes: self.encapsulated_text,
-                is_start: true,
-                wrap_width,
-            })
-        } else {
-            Err(Error::Base64)
-        }
-    }
-
-    /// Decode the "encapsulated text", i.e. Base64-encoded data which lies between
-    /// the pre/post-encapsulation boundaries.
-    fn decode<'o>(&self, decoder: &Decoder, buf: &'o mut [u8]) -> Result<&'o [u8]> {
-        // Ensure wrap width is supported.
-        if (decoder.wrap_width == 0) || (decoder.wrap_width % 4 != 0) {
-            return Err(Error::Base64);
-        }
-
-        let mut out_len = 0;
-
-        for line in self.encapsulated_text(decoder.wrap_width)? {
-            let line = line?;
-
-            match Base64::decode(line, &mut buf[out_len..]) {
-                Err(error) => {
-                    // in the case that we are decoding the first line
-                    // and we error, then attribute the error to an unsupported header
-                    // if a colon char is present in the line
-                    if out_len == 0 && line.iter().any(|&b| b == grammar::CHAR_COLON) {
-                        return Err(Error::HeaderDisallowed);
-                    } else {
-                        return Err(error.into());
-                    }
-                }
-                Ok(out) => out_len += out.len(),
-            }
-        }
-
-        Ok(&buf[..out_len])
-    }
 }
 
 impl<'a> TryFrom<&'a [u8]> for Encapsulation<'a> {
@@ -240,66 +238,31 @@ impl<'a> TryFrom<&'a [u8]> for Encapsulation<'a> {
     }
 }
 
-/// Iterator over the lines in the encapsulated text.
-struct Lines<'a> {
-    /// Remaining data being iterated over.
-    bytes: &'a [u8],
-
-    /// `true` if no lines have been read.
-    is_start: bool,
-
-    /// Base64 line-wrapping width in bytes.
-    wrap_width: usize,
-}
-
-impl<'a> Iterator for Lines<'a> {
-    type Item = Result<&'a [u8]>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.bytes.len() > self.wrap_width {
-            let (line, rest) = self.bytes.split_at(self.wrap_width);
-            if let Some(rest) = grammar::strip_leading_eol(rest) {
-                self.is_start = false;
-                self.bytes = rest;
-                Some(Ok(line))
-            } else {
-                // if bytes remaining does not split at `wrap_width` such
-                // that the next char(s) in the rest is vertical whitespace
-                // then attribute the error generically as `EncapsulatedText`
-                // unless we are at the first line and the line contains a colon
-                // then it may be a unsupported header
-                Some(Err(
-                    if self.is_start && line.iter().any(|&b| b == grammar::CHAR_COLON) {
-                        Error::HeaderDisallowed
-                    } else {
-                        Error::EncapsulatedText
-                    },
-                ))
-            }
-        } else if !self.bytes.is_empty() {
-            let line = self.bytes;
-            self.bytes = &[];
-            Some(Ok(line))
-        } else {
-            None
-        }
+/// Check for PEM headers in the input, as they are disallowed by RFC7468.
+///
+/// Returns `Error::HeaderDisallowed` if headers are encountered.
+fn check_for_headers(pem: &[u8], err: Error) -> Error {
+    if err == Error::Base64(base64ct::Error::InvalidEncoding)
+        && pem.iter().any(|&b| b == grammar::CHAR_COLON)
+    {
+        Error::HeaderDisallowed
+    } else {
+        err
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Encapsulation;
-    use crate::BASE64_WRAP_WIDTH;
 
     #[test]
     fn pkcs8_example() {
         let pem = include_bytes!("../tests/examples/pkcs8.pem");
-        let result = Encapsulation::parse(pem).unwrap();
-        assert_eq!(result.label, "PRIVATE KEY");
+        let encapsulation = Encapsulation::parse(pem).unwrap();
+        assert_eq!(encapsulation.label, "PRIVATE KEY");
 
-        let mut lines = result.encapsulated_text(BASE64_WRAP_WIDTH).unwrap();
         assert_eq!(
-            lines.next().unwrap().unwrap(),
+            encapsulation.encapsulated_text,
             &[
                 77, 67, 52, 67, 65, 81, 65, 119, 66, 81, 89, 68, 75, 50, 86, 119, 66, 67, 73, 69,
                 73, 66, 102, 116, 110, 72, 80, 112, 50, 50, 83, 101, 119, 89, 109, 109, 69, 111,
@@ -307,6 +270,5 @@ mod tests {
                 106, 47, 49, 53, 101, 113, 70
             ]
         );
-        assert_eq!(lines.next(), None);
     }
 }

@@ -3,8 +3,7 @@
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/ssh-key/0.3.0-pre"
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg"
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
@@ -21,10 +20,9 @@
 //!
 //! #### Example
 //!
-//! ```
+#![cfg_attr(feature = "std", doc = "```")]
+#![cfg_attr(not(feature = "std"), doc = "```ignore")]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! # #[cfg(feature = "std")]
-//! # {
 //! use ssh_key::PublicKey;
 //!
 //! let encoded_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti user@example.com";
@@ -32,10 +30,10 @@
 //!
 //! // Key attributes
 //! assert_eq!(public_key.algorithm(), ssh_key::Algorithm::Ed25519);
-//! assert_eq!(public_key.comment, "user@example.com");
+//! assert_eq!(public_key.comment(), "user@example.com");
 //!
 //! // Key data: in this example an Ed25519 key
-//! if let Some(ed25519_public_key) = public_key.key_data.ed25519() {
+//! if let Some(ed25519_public_key) = public_key.key_data().ed25519() {
 //!     assert_eq!(
 //!         ed25519_public_key.as_ref(),
 //!         [
@@ -45,7 +43,6 @@
 //!         ].as_ref()
 //!     );
 //! }
-//! # }
 //! # Ok(())
 //! # }
 //! ```
@@ -60,10 +57,9 @@
 //!
 //! #### Example
 //!
-//! ```
+#![cfg_attr(feature = "std", doc = " ```")]
+#![cfg_attr(not(feature = "std"), doc = " ```ignore")]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! # #[cfg(feature = "std")]
-//! # {
 //! use ssh_key::PrivateKey;
 //!
 //! // WARNING: don't actually hardcode private keys in source code!!!
@@ -81,10 +77,10 @@
 //!
 //! // Key attributes
 //! assert_eq!(private_key.algorithm(), ssh_key::Algorithm::Ed25519);
-//! assert_eq!(private_key.comment, "user@example.com");
+//! assert_eq!(private_key.comment(), "user@example.com");
 //!
 //! // Key data: in this example an Ed25519 key
-//! if let Some(ed25519_keypair) = private_key.key_data.ed25519() {
+//! if let Some(ed25519_keypair) = private_key.key_data().ed25519() {
 //!     assert_eq!(
 //!         ed25519_keypair.public.as_ref(),
 //!         [
@@ -103,7 +99,6 @@
 //!         ].as_ref()
 //!     )
 //! }
-//! # }
 //! # Ok(())
 //! # }
 //! ```
@@ -114,22 +109,28 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+pub mod authorized_keys;
 pub mod private;
 pub mod public;
 
 mod algorithm;
-mod base64;
+mod decoder;
+mod encoder;
 mod error;
 
+#[cfg(feature = "fingerprint")]
+mod fingerprint;
 #[cfg(feature = "alloc")]
 mod mpint;
 
 pub use crate::{
-    algorithm::{Algorithm, CipherAlg, EcdsaCurve, KdfAlg, KdfOptions},
+    algorithm::{Algorithm, CipherAlg, EcdsaCurve, HashAlg, KdfAlg, KdfOpts},
+    authorized_keys::AuthorizedKeys,
     error::{Error, Result},
     private::PrivateKey,
     public::PublicKey,
 };
+pub use base64ct::LineEnding;
 
 #[cfg(feature = "alloc")]
 pub use crate::mpint::MPInt;
@@ -137,3 +138,6 @@ pub use crate::mpint::MPInt;
 #[cfg(feature = "ecdsa")]
 #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 pub use sec1;
+
+#[cfg(feature = "fingerprint")]
+pub use crate::fingerprint::{Fingerprint, Sha256Fingerprint};

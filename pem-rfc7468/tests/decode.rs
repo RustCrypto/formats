@@ -32,10 +32,9 @@ fn pkcs1_example_with_preceeding_junk() {
 fn pkcs1_enc_example() {
     let pem = include_bytes!("examples/ssh_rsa_pem_password.pem");
     let mut buf = [0u8; 2048];
-    match pem_rfc7468::decode(pem, &mut buf) {
-        Err(pem_rfc7468::Error::HeaderDisallowed) => (),
-        _ => panic!("Expected HeaderDisallowed error"),
-    }
+    let result = pem_rfc7468::decode(pem, &mut buf);
+    assert_eq!(result, Err(pem_rfc7468::Error::HeaderDisallowed));
+
     let label = pem_rfc7468::decode_label(pem).unwrap();
     assert_eq!(label, "RSA PRIVATE KEY");
 }
@@ -44,20 +43,17 @@ fn pkcs1_enc_example() {
 #[cfg(feature = "alloc")]
 fn pkcs1_enc_example_with_vec() {
     let pem = include_bytes!("examples/ssh_rsa_pem_password.pem");
-    match pem_rfc7468::decode_vec(pem) {
-        Err(pem_rfc7468::Error::HeaderDisallowed) => (),
-        _ => panic!("Expected HeaderDisallowed error"),
-    }
+    let result = pem_rfc7468::decode_vec(pem);
+    assert_eq!(result, Err(pem_rfc7468::Error::HeaderDisallowed));
 }
 
 #[test]
 fn header_of_length_64() {
     let pem = include_bytes!("examples/chosen_header.pem");
     let mut buf = [0u8; 2048];
-    match pem_rfc7468::decode(pem, &mut buf) {
-        Err(pem_rfc7468::Error::HeaderDisallowed) => (),
-        _ => panic!("Expected HeaderDisallowed error"),
-    }
+    let result = pem_rfc7468::decode(pem, &mut buf);
+    assert_eq!(result, Err(pem_rfc7468::Error::HeaderDisallowed));
+
     let label = pem_rfc7468::decode_label(pem).unwrap();
     assert_eq!(label, "RSA PRIVATE KEY");
 }

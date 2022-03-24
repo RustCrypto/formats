@@ -4,25 +4,30 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/x509/0.0.1"
+    html_root_url = "https://docs.rs/x509-cert/0.0.2"
 )]
 #![forbid(unsafe_code)]
-#![warn(missing_docs, rust_2018_idioms)]
+#![warn(
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 extern crate alloc;
 
 #[cfg(feature = "std")]
 extern crate std;
 
-mod certificate;
-pub mod extensions_utils;
-mod general_name;
-pub mod pkix_extensions;
-pub mod pkix_oids;
-pub mod trust_anchor_format;
+pub use der;
 
-pub use crate::{
-    certificate::*, extensions_utils::*, general_name::*, pkix_extensions::*, pkix_oids::*,
-};
-pub use der::{self, asn1::ObjectIdentifier};
-pub use spki::{self, AlgorithmIdentifier, SubjectPublicKeyInfo};
+pub mod anchor;
+pub mod attr;
+pub mod certificate;
+pub mod crl;
+pub mod ext;
+pub mod name;
+pub mod request;
+pub mod time;
+
+pub use certificate::{Certificate, PkiPath, TbsCertificate, Version};

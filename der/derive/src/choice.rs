@@ -1,4 +1,4 @@
-//! Support for deriving the `Decodable` and `Encodable` traits on enums for
+//! Support for deriving the `Decode` and `Encode` traits on enums for
 //! the purposes of decoding/encoding ASN.1 `CHOICE` types as mapped to
 //! enum variants.
 
@@ -76,14 +76,14 @@ impl DeriveChoice {
         let mut can_decode_body = Vec::new();
         let mut decode_body = Vec::new();
         let mut encode_body = Vec::new();
-        let mut encoded_len_body = Vec::new();
+        let mut value_len_body = Vec::new();
         let mut tagged_body = Vec::new();
 
         for variant in &self.variants {
             can_decode_body.push(variant.tag.to_tokens());
             decode_body.push(variant.to_decode_tokens());
-            encode_body.push(variant.to_encode_tokens());
-            encoded_len_body.push(variant.to_encoded_len_tokens());
+            encode_body.push(variant.to_encode_value_tokens());
+            value_len_body.push(variant.to_value_len_tokens());
             tagged_body.push(variant.to_tagged_tokens());
         }
 
@@ -94,7 +94,7 @@ impl DeriveChoice {
                 }
             }
 
-            impl<#lt_params> ::der::Decodable<#lifetime> for #ident<#lt_params> {
+            impl<#lt_params> ::der::Decode<#lifetime> for #ident<#lt_params> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
                     match decoder.peek_tag()? {
                         #(#decode_body)*
@@ -107,16 +107,16 @@ impl DeriveChoice {
                 }
             }
 
-            impl<#lt_params> ::der::Encodable for #ident<#lt_params> {
-                fn encode(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
+            impl<#lt_params> ::der::EncodeValue for #ident<#lt_params> {
+                fn encode_value(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
                     match self {
                         #(#encode_body)*
                     }
                 }
 
-                fn encoded_len(&self) -> ::der::Result<::der::Length> {
+                fn value_len(&self) -> ::der::Result<::der::Length> {
                     match self {
-                        #(#encoded_len_body)*
+                        #(#value_len_body)*
                     }
                 }
             }

@@ -2,7 +2,7 @@
 
 use crate::enveloped_data_content::EncryptedContentInfo;
 use der::{
-    Decodable, DecodeValue, Decoder, Encodable, EncodeValue, Encoder, FixedTag, Length, Sequence,
+    Decode, DecodeValue, Decoder, Encode, EncodeValue, Encoder, FixedTag, Header, Length, Sequence,
     Tag,
 };
 
@@ -41,8 +41,8 @@ impl TryFrom<u8> for Version {
 }
 
 impl<'a> DecodeValue<'a> for Version {
-    fn decode_value(decoder: &mut Decoder<'a>, length: Length) -> der::Result<Version> {
-        Version::try_from(u8::decode_value(decoder, length)?)
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> der::Result<Version> {
+        Version::try_from(u8::decode_value(decoder, header)?)
     }
 }
 
@@ -82,7 +82,7 @@ pub struct EncryptedDataContent<'a> {
     pub encrypted_content_info: EncryptedContentInfo<'a>,
 }
 
-impl<'a> Decodable<'a> for EncryptedDataContent<'a> {
+impl<'a> Decode<'a> for EncryptedDataContent<'a> {
     fn decode(decoder: &mut Decoder<'a>) -> der::Result<EncryptedDataContent<'a>> {
         decoder.sequence(|decoder| {
             Ok(EncryptedDataContent {
@@ -96,7 +96,7 @@ impl<'a> Decodable<'a> for EncryptedDataContent<'a> {
 impl<'a> Sequence<'a> for EncryptedDataContent<'a> {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
-        F: FnOnce(&[&dyn Encodable]) -> der::Result<T>,
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[&self.version, &self.encrypted_content_info])
     }

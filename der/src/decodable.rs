@@ -1,4 +1,4 @@
-//! Trait definition for [`Decodable`].
+//! Trait definition for [`Decode`].
 
 use crate::{DecodeValue, Decoder, FixedTag, Header, Result};
 
@@ -12,7 +12,7 @@ use crate::{DecodeValue, Decoder, FixedTag, Header, Result};
 /// In almost all cases you do not need to impl this trait yourself, but rather
 /// can instead impl `TryFrom<Any<'a>, Error = Error>` and receive a blanket
 /// impl of this trait.
-pub trait Decodable<'a>: Sized {
+pub trait Decode<'a>: Sized {
     /// Attempt to decode this message using the provided decoder.
     fn decode(decoder: &mut Decoder<'a>) -> Result<Self>;
 
@@ -24,13 +24,13 @@ pub trait Decodable<'a>: Sized {
     }
 }
 
-impl<'a, T> Decodable<'a> for T
+impl<'a, T> Decode<'a> for T
 where
     T: DecodeValue<'a> + FixedTag,
 {
     fn decode(decoder: &mut Decoder<'a>) -> Result<T> {
         let header = Header::decode(decoder)?;
         header.tag.assert_eq(T::TAG)?;
-        T::decode_value(decoder, header.length)
+        T::decode_value(decoder, header)
     }
 }

@@ -18,30 +18,51 @@ pub use self::ed25519::Ed25519PublicKey;
 pub use self::{dsa::DsaPublicKey, rsa::RsaPublicKey};
 
 use crate::{
-    base64::{self, Decode, Encode},
+    decoder::{Base64Decoder, Decode, Decoder},
+    encoder::{Encode, Encoder},
     Algorithm, Error, Result,
 };
 use core::str::FromStr;
 
 #[cfg(feature = "alloc")]
-use alloc::{
-    borrow::ToOwned,
-    string::{String, ToString},
+use {
+    crate::encoder::encoded_len,
+    alloc::{
+        borrow::ToOwned,
+        string::{String, ToString},
+    },
 };
 
+#[cfg(feature = "fingerprint")]
+use crate::{Fingerprint, HashAlg, Sha256Fingerprint};
+
+#[cfg(feature = "std")]
+use std::{fs, path::Path};
+
 /// SSH public key.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct PublicKey {
     /// Key data.
-    pub key_data: KeyData,
+    pub(crate) key_data: KeyData,
 
     /// Comment on the key (e.g. email address)
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub comment: String,
+    pub(crate) comment: String,
 }
 
 impl PublicKey {
+    /// Create a new public key with the given comment.
+    ///
+    /// On `no_std` platforms, use `PublicKey::from(key_data)` instead.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn new(key_data: KeyData, comment: impl Into<String>) -> Self {
+        Self {
+            key_data,
+            comment: comment.into(),
+        }
+    }
+
     /// Parse an OpenSSH-formatted public key.
     ///
     /// OpenSSH-formatted public keys look like the following:
@@ -51,7 +72,7 @@ impl PublicKey {
     /// ```
     pub fn from_openssh(input: impl AsRef<[u8]>) -> Result<Self> {
         let encapsulation = openssh::Encapsulation::decode(input.as_ref())?;
-        let mut decoder = base64::Decoder::new(encapsulation.base64_data)?;
+        let mut decoder = Base64Decoder::new(encapsulation.base64_data)?;
         let key_data = KeyData::decode(&mut decoder)?;
 
         if !decoder.is_finished() {
@@ -70,24 +91,20 @@ impl PublicKey {
         })
     }
 
-    /// Encode this public key as a OpenSSH-formatted public key.
+    /// Encode OpenSSH-formatted public key.
     pub fn encode_openssh<'o>(&self, out: &'o mut [u8]) -> Result<&'o str> {
-        #[cfg(not(feature = "alloc"))]
-        let comment = "";
-        #[cfg(feature = "alloc")]
-        let comment = &self.comment;
-
-        openssh::Encapsulation::encode(out, self.algorithm().as_str(), comment, |encoder| {
+        openssh::Encapsulation::encode(out, self.algorithm().as_str(), self.comment(), |encoder| {
             self.key_data.encode(encoder)
         })
     }
 
-    /// Encode this public key as an OpenSSH-formatted public key, allocating a
-    /// [`String`] for the result.
+    /// Encode an OpenSSH-formatted public key, allocating a [`String`] for
+    /// the result.
     #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn to_openssh(&self) -> Result<String> {
         let alg_len = self.algorithm().as_str().len();
-        let key_data_len = (((self.key_data.encoded_len()? * 4) / 3) + 3) & !3;
+        let key_data_len = encoded_len(self.key_data.encoded_len()?);
         let comment_len = self.comment.len();
         let encoded_len = 2 + alg_len + key_data_len + comment_len;
 
@@ -97,9 +114,65 @@ impl PublicKey {
         Ok(String::from_utf8(buf)?)
     }
 
+    /// Read public key from an OpenSSH-formatted file.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn read_openssh_file(path: &Path) -> Result<Self> {
+        let input = fs::read_to_string(path)?;
+        Self::from_openssh(&*input)
+    }
+
+    /// Write public key as an OpenSSH-formatted file.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn write_openssh_file(&self, path: &Path) -> Result<()> {
+        let encoded = self.to_openssh()?;
+        fs::write(path, encoded.as_bytes())?;
+        Ok(())
+    }
+
     /// Get the digital signature [`Algorithm`] used by this key.
     pub fn algorithm(&self) -> Algorithm {
         self.key_data.algorithm()
+    }
+
+    /// Comment on the key (e.g. email address).
+    #[cfg(not(feature = "alloc"))]
+    pub fn comment(&self) -> &str {
+        ""
+    }
+
+    /// Comment on the key (e.g. email address).
+    #[cfg(feature = "alloc")]
+    pub fn comment(&self) -> &str {
+        &self.comment
+    }
+
+    /// Private key data.
+    pub fn key_data(&self) -> &KeyData {
+        &self.key_data
+    }
+
+    /// Compute key fingerprint.
+    ///
+    /// Use [`Default::default()`] to use the default hash function (SHA-256).
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Fingerprint {
+        match hash_alg {
+            HashAlg::Sha256 => Sha256Fingerprint::try_from(self).map(Into::into),
+        }
+        .expect("error calculating fingerprint")
+    }
+}
+
+impl From<KeyData> for PublicKey {
+    fn from(key_data: KeyData) -> PublicKey {
+        PublicKey {
+            key_data,
+            #[cfg(feature = "alloc")]
+            comment: String::new(),
+        }
     }
 }
 
@@ -219,10 +292,34 @@ impl KeyData {
     pub fn is_rsa(&self) -> bool {
         matches!(self, Self::Rsa(_))
     }
+
+    /// Compute a "checkint" from a public key.
+    ///
+    /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
+    // TODO(tarcieri): true randomness or a better algorithm?
+    pub(crate) fn checkint(&self) -> u32 {
+        let bytes = match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(dsa) => dsa.checkint_bytes(),
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(ecdsa) => ecdsa.as_sec1_bytes(),
+            Self::Ed25519(ed25519) => ed25519.as_ref(),
+            #[cfg(feature = "alloc")]
+            Self::Rsa(rsa) => rsa.checkint_bytes(),
+        };
+
+        let mut n = 0u32;
+
+        for chunk in bytes.chunks_exact(4) {
+            n ^= u32::from_be_bytes(chunk.try_into().expect("not 4 bytes"));
+        }
+
+        n
+    }
 }
 
 impl Decode for KeyData {
-    fn decode(decoder: &mut base64::Decoder<'_>) -> Result<Self> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaPublicKey::decode(decoder).map(Self::Dsa),
@@ -243,6 +340,7 @@ impl Decode for KeyData {
 impl Encode for KeyData {
     fn encoded_len(&self) -> Result<usize> {
         let alg_len = self.algorithm().encoded_len()?;
+
         let key_len = match self {
             #[cfg(feature = "alloc")]
             Self::Dsa(key) => key.encoded_len()?,
@@ -256,8 +354,9 @@ impl Encode for KeyData {
         Ok(alg_len + key_len)
     }
 
-    fn encode(&self, encoder: &mut base64::Encoder<'_>) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.algorithm().encode(encoder)?;
+
         match self {
             #[cfg(feature = "alloc")]
             Self::Dsa(key) => key.encode(encoder),

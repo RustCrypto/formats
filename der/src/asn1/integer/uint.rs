@@ -28,9 +28,14 @@ pub(crate) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
 pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
     let input = decode_to_slice(bytes)?;
 
-    // Input has leading zeroes removed, so we need to add them back
+    // Compute number of leading zeroes to add
+    let num_zeroes = N
+        .checked_sub(input.len())
+        .ok_or_else(|| Tag::Integer.length_error())?;
+
+    // Copy input into `N`-sized output buffer with leading zeroes
     let mut output = [0u8; N];
-    output[N.saturating_sub(input.len())..].copy_from_slice(input);
+    output[num_zeroes..].copy_from_slice(input);
     Ok(output)
 }
 
@@ -68,4 +73,41 @@ pub(crate) fn strip_leading_zeroes(mut bytes: &[u8]) -> &[u8] {
 /// Does the given integer need a leading zero?
 fn needs_leading_zero(bytes: &[u8]) -> bool {
     matches!(bytes.get(0), Some(byte) if *byte >= 0x80)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::decode_to_array;
+    use crate::{ErrorKind, Tag};
+
+    #[test]
+    fn decode_to_array_no_leading_zero() {
+        let arr = decode_to_array::<4>(&[1, 2]).unwrap();
+        assert_eq!(arr, [0, 0, 1, 2]);
+    }
+
+    #[test]
+    fn decode_to_array_leading_zero() {
+        let arr = decode_to_array::<4>(&[0x00, 0xFF, 0xFE]).unwrap();
+        assert_eq!(arr, [0x00, 0x00, 0xFF, 0xFE]);
+    }
+
+    #[test]
+    fn decode_to_array_extra_zero() {
+        let err = decode_to_array::<4>(&[0, 1, 2]).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::Noncanonical { tag: Tag::Integer });
+    }
+
+    #[test]
+    fn decode_to_array_missing_zero() {
+        // We're decoding an unsigned integer, but this value would be signed
+        let err = decode_to_array::<4>(&[0xFF, 0xFE]).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::Value { tag: Tag::Integer });
+    }
+
+    #[test]
+    fn decode_to_array_oversized_input() {
+        let err = decode_to_array::<1>(&[1, 2, 3]).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::Length { tag: Tag::Integer });
+    }
 }

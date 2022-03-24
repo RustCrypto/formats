@@ -22,7 +22,7 @@ Cryptography-related format encoders/decoders: PKCS, PKIX.
 | `tai64`       | [![crates.io](https://img.shields.io/crates/v/tai64.svg)](https://crates.io/crates/tai64)             | [![Documentation](https://docs.rs/tai64/badge.svg)](https://docs.rs/tai64)             | TAI64(N) Timestamps                                                                                                                        |
 | `tls_codec`   | [![crates.io](https://img.shields.io/crates/v/tls_codec.svg)](https://crates.io/crates/tls_codec)     | [![Documentation](https://docs.rs/tls_codec/badge.svg)](https://docs.rs/tls_codec)     | TLS codec as defined in [RFC 8446 Section 3] as well as some extensions required by MLS.     
 | `x501`        | [![crates.io](https://img.shields.io/crates/v/x501.svg)](https://crates.io/crates/x501)               | [![Documentation](https://docs.rs/x501/badge.svg)](https://docs.rs/x501)               | X.501 Directory Services Types
-| `x509`        | [![crates.io](https://img.shields.io/crates/v/x509.svg)](https://crates.io/crates/x509)               | [![Documentation](https://docs.rs/x509/badge.svg)](https://docs.rs/x509)               | Implementation of the X.509 Public Key Infrastructure Certificate format as described in [RFC 5280]                                        |
+| `x509`        | [![crates.io](https://img.shields.io/crates/v/x509.svg)](https://crates.io/crates/x509-cert)               | [![Documentation](https://docs.rs/x509-cert/badge.svg)](https://docs.rs/x509-cert)               | Implementation of the X.509 Public Key Infrastructure Certificate format as described in [RFC 5280]                                        |
 
 ## License
 

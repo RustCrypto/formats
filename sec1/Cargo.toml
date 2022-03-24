@@ -1,6 +1,6 @@
 [package]
 name = "sec1"
-version = "0.3.0-pre" # Also update html_root_url in lib.rs when bumping this
+version = "0.3.0-pre.1" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of SEC1: Elliptic Curve Cryptography encoding formats
 including ASN.1 DER-serialized private keys as well as the
@@ -16,12 +16,11 @@ edition = "2021"
 rust-version = "1.57"
 
 [dependencies]
-der = { version = "=0.6.0-pre.1", features = ["oid"], path = "../der" }
-generic-array = { version = "0.14", default-features = false }
-
 # optional dependencies
-pkcs8 = { version = "=0.9.0-pre", optional = true, default-features = false, path = "../pkcs8" }
-serde = { version = "1", optional = true, default-features = false }
+der = { version = "=0.6.0-pre.3", optional = true, features = ["oid"], path = "../der" }
+generic-array = { version = "0.14.4", optional = true, default-features = false }
+pkcs8 = { version = "=0.9.0-pre.1", optional = true, default-features = false, path = "../pkcs8" }
+serde = { version = "1.0.16", optional = true, default-features = false }
 subtle = { version = "2", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
@@ -29,8 +28,10 @@ zeroize = { version = "1", optional = true, default-features = false }
 hex-literal = "0.3"
 
 [features]
+default = ["der", "point"]
 alloc = ["der/alloc", "pkcs8/alloc", "zeroize/alloc"]
 pem = ["alloc", "der/pem", "pkcs8/pem"]
+point = ["generic-array"]
 std = ["der/std", "alloc"]
 
 [package.metadata.docs.rs]
