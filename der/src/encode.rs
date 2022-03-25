@@ -5,6 +5,9 @@ use crate::{Encoder, Header, Length, Result, Tagged};
 #[cfg(feature = "alloc")]
 use {crate::ErrorKind, alloc::vec::Vec, core::iter};
 
+#[cfg(doc)]
+use crate::Tag;
+
 /// Encoding trait.
 pub trait Encode {
     /// Compute the length of this value in bytes when encoded as ASN.1 DER.

@@ -2,6 +2,9 @@
 
 use crate::{Decoder, FixedTag, Header, Result};
 
+#[cfg(doc)]
+use crate::{Length, Tag};
+
 /// Decoding trait.
 ///
 /// This trait provides the core abstraction upon which all decoding operations

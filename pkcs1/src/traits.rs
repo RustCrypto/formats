@@ -20,6 +20,9 @@ use der::Document;
 #[cfg(feature = "pem")]
 use zeroize::Zeroizing;
 
+#[cfg(doc)]
+use crate::{RsaPrivateKey, RsaPublicKey};
+
 /// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
 pub trait DecodeRsaPrivateKey: Sized {
     /// Deserialize PKCS#1 private key from ASN.1 DER-encoded data
