@@ -5,6 +5,7 @@ members = [
     "base16ct",
     "base64ct",
     "const-oid",
+    "crypto-serde",
     "der",
     "der/derive",
     "pem-rfc7468",
