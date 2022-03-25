@@ -1,0 +1,27 @@
+[package]
+name = "crypto-serde"
+description = "Serde serializer/deserializer helpers used by the RustCrypto project"
+version = "0.0.0"
+authors = ["RustCrypto Developers"]
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/RustCrypto/formats/tree/master/crypto-serde"
+categories = ["cryptography", "encoding", "no-std", "parsing"]
+keywords = ["crypto", "serde"]
+readme = "README.md"
+edition = "2021"
+rust-version = "1.56"
+
+[dependencies]
+base16ct = { version = "0.1.1", default-features = false, features = ["alloc"] }
+serde = { version = "1", default-features = false, features = ["alloc"] }
+
+# optional features
+zeroize = { version = "1", optional = true, default-features = false, features = ["alloc"] }
+
+[dev-dependencies]
+bincode = "1"
+ciborium = "0.2"
+hex-literal = "0.3"
+serde = { version = "1.0.100", default-features = false, features = ["derive"] }
+serde_json = "1"
+toml = "0.5"
