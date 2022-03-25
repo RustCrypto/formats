@@ -9,6 +9,11 @@ on:
     paths-ignore:
       - README.md
 
+env:
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-Dwarnings"
+  RUSTDOCFLAGS: "-Dwarnings"
+
 jobs:
   clippy:
     runs-on: ubuntu-latest
@@ -21,7 +26,19 @@ jobs:
           components: clippy
           override: true
           profile: minimal
-      - run: cargo clippy --all --all-features -- -D warnings
+      - run: cargo clippy --all-features
+
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: RustCrypto/actions/cargo-cache@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+      - run: cargo doc --all-features
 
   rustfmt:
     runs-on: ubuntu-latest
