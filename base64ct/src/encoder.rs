@@ -11,7 +11,7 @@ use core::{cmp, marker::PhantomData, str};
 #[cfg(feature = "std")]
 use std::io;
 
-#[cfg(docsrs)]
+#[cfg(doc)]
 use crate::{Base64, Base64Unpadded};
 
 /// Stateful Base64 encoder with support for buffered, incremental encoding.

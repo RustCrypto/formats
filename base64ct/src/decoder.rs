@@ -16,7 +16,7 @@ use {alloc::vec::Vec, core::iter};
 #[cfg(feature = "std")]
 use std::io;
 
-#[cfg(docsrs)]
+#[cfg(doc)]
 use crate::{Base64, Base64Unpadded};
 
 /// Stateful Base64 decoder with support for buffered, incremental decoding.

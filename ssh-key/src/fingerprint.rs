@@ -84,7 +84,8 @@ pub struct Sha256Fingerprint([u8; SHA256_BASE64_LEN]);
 impl Sha256Fingerprint {
     /// Create a new SHA-256 fingerprint from the given binary digest.
     ///
-    /// Use [`FromStr`] to parse an existing Base64-encoded fingerprint.
+    /// Use [`FromStr`][`str::FromStr`] to parse an existing Base64-encoded
+    /// fingerprint.
     pub fn new(digest_bytes: &[u8; SHA256_BIN_LEN]) -> Self {
         let mut base64 = [0u8; SHA256_BASE64_LEN];
         Base64Unpadded::encode(digest_bytes, &mut base64).expect(ENCODING_ERR_MSG);

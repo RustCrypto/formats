@@ -12,9 +12,8 @@
 //! # Usage
 //!
 //! The main API for this crate is the [`EncryptionScheme`] enum, which impls
-//! the [`Decode`][`der::Decodable`] and [`Encode`] traits from the
-//! [`der`] crate, and can be used for decoding/encoding PKCS#5
-//! [`AlgorithmIdentifier`] fields.
+//! the [`Decode`] and [`Encode`] traits from the [`der`] crate, and can be
+//! used for decoding/encoding PKCS#5 [`AlgorithmIdentifier`] fields.
 //!
 //! [RFC 8018]: https://tools.ietf.org/html/rfc8018
 
