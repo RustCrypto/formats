@@ -1,6 +1,6 @@
 //! Trait definition for [`Decode`].
 
-use crate::{DecodeValue, Decoder, FixedTag, Header, Result};
+use crate::{Decoder, FixedTag, Header, Result};
 
 /// Decoding trait.
 ///
@@ -33,4 +33,11 @@ where
         header.tag.assert_eq(T::TAG)?;
         T::decode_value(decoder, header)
     }
+}
+
+/// Decode the value part of a Tag-Length-Value encoded field, sans the [`Tag`]
+/// and [`Length`].
+pub trait DecodeValue<'a>: Sized {
+    /// Attempt to decode this message using the provided [`Decoder`].
+    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self>;
 }
