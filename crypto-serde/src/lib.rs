@@ -24,6 +24,34 @@ use serde::{
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
 
+/// Serialize the given type as lower case hex when using human-readable
+/// formats or binary if the format is binary.
+pub fn serialize_hex_lower_or_bin<S, T>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: ser::Serializer,
+    T: AsRef<[u8]>,
+{
+    if serializer.is_human_readable() {
+        base16ct::lower::encode_string(value.as_ref()).serialize(serializer)
+    } else {
+        value.as_ref().serialize(serializer)
+    }
+}
+
+/// Serialize the given type as upper case hex when using human-readable
+/// formats or binary if the format is binary.
+pub fn serialize_hex_upper_or_bin<S, T>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: ser::Serializer,
+    T: AsRef<[u8]>,
+{
+    if serializer.is_human_readable() {
+        base16ct::upper::encode_string(value.as_ref()).serialize(serializer)
+    } else {
+        value.as_ref().serialize(serializer)
+    }
+}
+
 /// [`HexOrBin`] serializer which uses lower case.
 pub type HexLowerOrBin = HexOrBin<false>;
 
@@ -63,15 +91,10 @@ impl<const UPPERCASE: bool> Serialize for HexOrBin<UPPERCASE> {
     where
         S: ser::Serializer,
     {
-        if serializer.is_human_readable() {
-            if UPPERCASE {
-                base16ct::upper::encode_string(self.as_ref())
-            } else {
-                base16ct::lower::encode_string(self.as_ref())
-            }
-            .serialize(serializer)
+        if UPPERCASE {
+            serialize_hex_upper_or_bin(self, serializer)
         } else {
-            self.as_ref().serialize(serializer)
+            serialize_hex_lower_or_bin(self, serializer)
         }
     }
 }
