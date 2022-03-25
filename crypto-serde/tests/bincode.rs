@@ -2,6 +2,7 @@
 
 use crypto_serde::HexUpperOrBin;
 use hex_literal::hex;
+use proptest::{prelude::*, string::*};
 
 /// Example input to be serialized.
 const EXAMPLE_BYTES: &[u8] = &hex!("000102030405060708090A0B0C0D0E0F");
@@ -19,4 +20,13 @@ fn deserialize() {
 fn serialize() {
     let serialized = bincode::serialize(&HexUpperOrBin::from(EXAMPLE_BYTES)).unwrap();
     assert_eq!(&serialized, BINCODE_BYTES);
+}
+
+proptest! {
+    #[test]
+    fn round_trip(bytes in bytes_regex(".{0,256}").unwrap()) {
+        let serialized = bincode::serialize(&HexUpperOrBin::from(bytes.as_ref())).unwrap();
+        let deserialized = bincode::deserialize::<HexUpperOrBin>(&serialized).unwrap();
+        prop_assert_eq!(bytes, deserialized.0);
+    }
 }

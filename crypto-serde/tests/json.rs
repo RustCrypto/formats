@@ -2,6 +2,7 @@
 
 use crypto_serde::{HexLowerOrBin, HexUpperOrBin};
 use hex_literal::hex;
+use proptest::{prelude::*, string::*};
 use serde_json as json;
 
 /// Example input to be serialized.
@@ -29,4 +30,20 @@ fn hex_upper() {
 
     let deserialized = json::from_str::<HexUpperOrBin>(&serialized).unwrap();
     assert_eq!(deserialized.as_ref(), EXAMPLE_BYTES);
+}
+
+proptest! {
+    #[test]
+    fn round_trip_lower(bytes in bytes_regex(".{0,256}").unwrap()) {
+        let serialized = json::to_string(&HexLowerOrBin::from(bytes.as_ref())).unwrap();
+        let deserialized = json::from_str::<HexLowerOrBin>(&serialized).unwrap();
+        prop_assert_eq!(bytes, deserialized.0);
+    }
+
+    #[test]
+    fn round_trip_upper(bytes in bytes_regex(".{0,256}").unwrap()) {
+        let serialized = json::to_string(&HexUpperOrBin::from(bytes.as_ref())).unwrap();
+        let deserialized = json::from_str::<HexUpperOrBin>(&serialized).unwrap();
+        prop_assert_eq!(bytes, deserialized.0);
+    }
 }
