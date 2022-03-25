@@ -37,7 +37,6 @@ impl DecodeValue<'_> for f64 {
                     mantissa_start = 3;
                     let ebytes = (i16::from_be_bytes([bytes[1], bytes[2]])).to_be_bytes();
                     u64::from_be_bytes([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, ebytes[0], ebytes[1]])
-                    // u64::from_be_bytes([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, bytes[1], bytes[2]])
                 }
                 _ => {
                     // Real related error: encoded exponent cannot be represented on an IEEE-754 double
@@ -824,7 +823,9 @@ mod tests {
             let val2 = encode_f64(s, e, m);
             assert!(
                 (val - val2).abs() < f64::EPSILON,
-                "fail - want {val}\tgot {val2}"
+                "fail - want {}\tgot {}",
+                val,
+                val2
             );
         }
     }
