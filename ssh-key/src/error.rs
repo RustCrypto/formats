@@ -24,6 +24,9 @@ pub enum Error {
     #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
     Ecdsa(sec1::Error),
 
+    /// Cannot perform operation on encrypted private key.
+    Encrypted,
+
     /// Other format encoding errors.
     FormatEncoding,
 
@@ -40,6 +43,9 @@ pub enum Error {
 
     /// PEM encoding errors.
     Pem(pem::Error),
+
+    /// Public key does not match private key.
+    PublicKey,
 }
 
 impl fmt::Display for Error {
@@ -50,12 +56,14 @@ impl fmt::Display for Error {
             Error::CharacterEncoding => f.write_str("character encoding invalid"),
             #[cfg(feature = "ecdsa")]
             Error::Ecdsa(err) => write!(f, "ECDSA encoding error: {}", err),
+            Error::Encrypted => f.write_str("private key is encrypted"),
             Error::FormatEncoding => f.write_str("format encoding error"),
             #[cfg(feature = "std")]
             Error::Io(err) => write!(f, "I/O error: {}", std::io::Error::from(*err)),
             Error::Length => f.write_str("length invalid"),
             Error::Overflow => f.write_str("internal overflow error"),
             Error::Pem(err) => write!(f, "{}", err),
+            Error::PublicKey => f.write_str("public key is incorrect"),
         }
     }
 }
