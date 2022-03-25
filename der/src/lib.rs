@@ -353,7 +353,7 @@ mod document;
 pub use crate::{
     asn1::{Any, Choice, Sequence},
     datetime::DateTime,
-    decode::{Decode, DecodeValue},
+    decode::{Decode, DecodeOwned, DecodeValue},
     decoder::Decoder,
     encode::{Encode, EncodeValue},
     encoder::Encoder,
