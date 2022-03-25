@@ -1,5 +1,7 @@
 //! CBOR-specific tests.
 
+#![cfg(feature = "alloc")]
+
 use ciborium::{de, ser};
 use crypto_serde::HexUpperOrBin;
 use hex_literal::hex;

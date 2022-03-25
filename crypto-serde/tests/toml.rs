@@ -1,5 +1,7 @@
 //! TOML-specific tests.
 
+#![cfg(feature = "alloc")]
+
 use crypto_serde::{HexLowerOrBin, HexUpperOrBin};
 use hex_literal::hex;
 use serde::{Deserialize, Serialize};
