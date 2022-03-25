@@ -1,5 +1,7 @@
 //! JSON-specific tests.
 
+#![cfg(feature = "alloc")]
+
 use crypto_serde::{HexLowerOrBin, HexUpperOrBin};
 use hex_literal::hex;
 use proptest::{prelude::*, string::*};
