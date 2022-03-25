@@ -35,6 +35,18 @@ where
     }
 }
 
+/// Marker trait for data structures that can be decoded from DER without
+/// borrowing any data from the decoder.
+///
+/// This is primarily useful for trait bounds on functions which require that
+/// no data is borrowed from the decoder, for example a PEM decoder which needs
+/// to first decode data from Base64.
+///
+/// This trait is inspired by the [`DeserializeOwned` trait from `serde`](https://docs.rs/serde/latest/serde/de/trait.DeserializeOwned.html).
+pub trait DecodeOwned: for<'a> Decode<'a> {}
+
+impl<T> DecodeOwned for T where T: for<'a> Decode<'a> {}
+
 /// Decode the value part of a Tag-Length-Value encoded field, sans the [`Tag`]
 /// and [`Length`].
 pub trait DecodeValue<'a>: Sized {
