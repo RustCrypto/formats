@@ -336,9 +336,9 @@ pub mod asn1;
 pub(crate) mod arrayvec;
 mod byte_slice;
 mod datetime;
-mod decodable;
+mod decode;
 mod decoder;
-mod encodable;
+mod encode;
 mod encoder;
 mod error;
 mod header;
@@ -346,7 +346,6 @@ mod length;
 mod ord;
 mod str_slice;
 mod tag;
-mod value;
 
 #[cfg(feature = "alloc")]
 mod document;
@@ -354,16 +353,15 @@ mod document;
 pub use crate::{
     asn1::{Any, Choice, Sequence},
     datetime::DateTime,
-    decodable::Decode,
+    decode::{Decode, DecodeValue},
     decoder::Decoder,
-    encodable::Encode,
+    encode::{Encode, EncodeValue},
     encoder::Encoder,
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
     ord::{DerOrd, ValueOrd},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
-    value::{DecodeValue, EncodeValue},
 };
 
 #[cfg(feature = "alloc")]

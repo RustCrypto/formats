@@ -1,6 +1,6 @@
 //! Trait definition for [`Encode`].
 
-use crate::{EncodeValue, Encoder, Length, Result, Tagged};
+use crate::{Encoder, Header, Length, Result, Tagged};
 
 #[cfg(feature = "alloc")]
 use {crate::ErrorKind, alloc::vec::Vec, core::iter};
@@ -69,4 +69,24 @@ where
         self.header()?.encode(encoder)?;
         self.encode_value(encoder)
     }
+}
+
+/// Encode the value part of a Tag-Length-Value encoded field, sans the [`Tag`]
+/// and [`Length`].
+pub trait EncodeValue {
+    /// Get the [`Header`] used to encode this value.
+    fn header(&self) -> Result<Header>
+    where
+        Self: Tagged,
+    {
+        Header::new(self.tag(), self.value_len()?)
+    }
+
+    /// Compute the length of this value (sans [`Tag`]+[`Length`] header) when
+    /// encoded as ASN.1 DER.
+    fn value_len(&self) -> Result<Length>;
+
+    /// Encode value (sans [`Tag`]+[`Length`] header) as ASN.1 DER using the
+    /// provided [`Encoder`].
+    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()>;
 }
