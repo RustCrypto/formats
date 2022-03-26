@@ -7,13 +7,10 @@ use crate::{
 };
 use core::{fmt, str};
 
-#[cfg(feature = "alloc")]
-use alloc::vec::Vec;
-
 /// AES-256 in counter (CTR) mode
 const AES256_CTR: &str = "aes256-ctr";
 
-/// bcrypt-pbkdf2
+/// bcrypt-pbkdf
 const BCRYPT: &str = "bcrypt";
 
 /// ECDSA with SHA-256 + NIST P-256
@@ -364,7 +361,7 @@ pub enum KdfAlg {
     /// None.
     None,
 
-    /// bcrypt-pbkdf2.
+    /// bcrypt-pbkdf.
     Bcrypt,
 }
 
@@ -419,61 +416,5 @@ impl str::FromStr for KdfAlg {
 
     fn from_str(id: &str) -> Result<Self> {
         Self::new(id)
-    }
-}
-
-/// Key Derivation Function (KDF) options.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-#[non_exhaustive]
-pub struct KdfOpts {
-    /// Encoded KDF options.
-    #[cfg(feature = "alloc")]
-    bytes: Vec<u8>,
-}
-
-impl KdfOpts {
-    /// Are the KDF options empty?
-    pub fn is_empty(&self) -> bool {
-        self.as_ref().is_empty()
-    }
-}
-
-impl AsRef<[u8]> for KdfOpts {
-    #[cfg(not(feature = "alloc"))]
-    fn as_ref(&self) -> &[u8] {
-        &[]
-    }
-
-    #[cfg(feature = "alloc")]
-    fn as_ref(&self) -> &[u8] {
-        self.bytes.as_ref()
-    }
-}
-
-impl Decode for KdfOpts {
-    #[cfg(not(feature = "alloc"))]
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        if decoder.decode_usize()? == 0 {
-            Ok(Self::default())
-        } else {
-            Err(Error::Algorithm)
-        }
-    }
-
-    #[cfg(feature = "alloc")]
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        Ok(Self {
-            bytes: decoder.decode_byte_vec()?,
-        })
-    }
-}
-
-impl Encode for KdfOpts {
-    fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.as_ref().len())
-    }
-
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_byte_slice(self.as_ref())
     }
 }
