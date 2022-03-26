@@ -117,6 +117,7 @@ mod algorithm;
 mod decoder;
 mod encoder;
 mod error;
+mod kdf;
 
 #[cfg(feature = "fingerprint")]
 mod fingerprint;
@@ -124,9 +125,10 @@ mod fingerprint;
 mod mpint;
 
 pub use crate::{
-    algorithm::{Algorithm, CipherAlg, EcdsaCurve, HashAlg, KdfAlg, KdfOpts},
+    algorithm::{Algorithm, CipherAlg, EcdsaCurve, HashAlg, KdfAlg},
     authorized_keys::AuthorizedKeys,
     error::{Error, Result},
+    kdf::KdfOpts,
     private::PrivateKey,
     public::PublicKey,
 };
