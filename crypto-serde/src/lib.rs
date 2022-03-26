@@ -21,10 +21,13 @@ use core::fmt;
 
 use serde::de::{Error, Expected, SeqAccess, Visitor};
 use serde::ser::SerializeTuple;
-use serde::{Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+#[cfg(not(feature = "alloc"))]
+use serde::ser::Error as _;
 
 #[cfg(feature = "alloc")]
-use {alloc::vec::Vec, serde::de::Deserialize};
+use alloc::vec::Vec;
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -36,24 +39,17 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    #[cfg(feature = "alloc")]
     if serializer.is_human_readable() {
-        return base16ct::lower::encode_string(value.as_ref()).serialize(serializer);
-    }
-    #[cfg(not(feature = "alloc"))]
-    if serializer.is_human_readable() {
-        return Err(S::Error::custom(
-            "serializer is human readable, which requires the `alloc` crate feature",
-        ));
-    }
+        serialize_hex::<_, _, false>(value, serializer)
+    } else {
+        let mut seq = serializer.serialize_tuple(value.as_ref().len())?;
 
-    let mut seq = serializer.serialize_tuple(value.as_ref().len())?;
+        for byte in value.as_ref() {
+            seq.serialize_element(byte)?;
+        }
 
-    for byte in value.as_ref() {
-        seq.serialize_element(byte)?;
+        seq.end()
     }
-
-    seq.end()
 }
 
 /// Serialize the given type as upper case hex when using human-readable
@@ -63,24 +59,17 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    #[cfg(feature = "alloc")]
     if serializer.is_human_readable() {
-        return base16ct::upper::encode_string(value.as_ref()).serialize(serializer);
-    }
-    #[cfg(not(feature = "alloc"))]
-    if serializer.is_human_readable() {
-        return Err(S::Error::custom(
-            "serializer is human readable, which requires the `alloc` crate feature",
-        ));
-    }
+        serialize_hex::<_, _, true>(value, serializer)
+    } else {
+        let mut seq = serializer.serialize_tuple(value.as_ref().len())?;
 
-    let mut seq = serializer.serialize_tuple(value.as_ref().len())?;
+        for byte in value.as_ref() {
+            seq.serialize_element(byte)?;
+        }
 
-    for byte in value.as_ref() {
-        seq.serialize_element(byte)?;
+        seq.end()
     }
-
-    seq.end()
 }
 
 /// Serialize the given type as lower case hex when using human-readable
@@ -90,18 +79,11 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    #[cfg(feature = "alloc")]
     if serializer.is_human_readable() {
-        return base16ct::lower::encode_string(value.as_ref()).serialize(serializer);
+        serialize_hex::<_, _, false>(value, serializer)
+    } else {
+        value.as_ref().serialize(serializer)
     }
-    #[cfg(not(feature = "alloc"))]
-    if serializer.is_human_readable() {
-        return Err(S::Error::custom(
-            "serializer is human readable, which requires the `alloc` crate feature",
-        ));
-    }
-
-    value.as_ref().serialize(serializer)
 }
 
 /// Serialize the given type as upper case hex when using human-readable
@@ -111,18 +93,32 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    #[cfg(feature = "alloc")]
     if serializer.is_human_readable() {
+        serialize_hex::<_, _, true>(value, serializer)
+    } else {
+        value.as_ref().serialize(serializer)
+    }
+}
+
+fn serialize_hex<S, T, const UPPERCASE: bool>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: AsRef<[u8]>,
+{
+    #[cfg(feature = "alloc")]
+    if UPPERCASE {
         return base16ct::upper::encode_string(value.as_ref()).serialize(serializer);
+    } else {
+        return base16ct::lower::encode_string(value.as_ref()).serialize(serializer);
     }
     #[cfg(not(feature = "alloc"))]
-    if serializer.is_human_readable() {
+    {
+        let _ = value;
+        let _ = serializer;
         return Err(S::Error::custom(
             "serializer is human readable, which requires the `alloc` crate feature",
         ));
     }
-
-    value.as_ref().serialize(serializer)
 }
 
 /// Deserialize the given array from hex when using human-readable formats or

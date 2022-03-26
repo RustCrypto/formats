@@ -44,7 +44,7 @@ fn array() {
         where
             D: Deserializer<'de>,
         {
-            crypto_serde::deserialize_array_hex_or_bin::<16, _>(deserializer).map(Self)
+            crypto_serde::deserialize_array_hex_or_bin::<_, 16>(deserializer).map(Self)
         }
     }
 
