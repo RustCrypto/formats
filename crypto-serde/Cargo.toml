@@ -12,10 +12,10 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
+base16ct = { version = "0.1.1", default-features = false }
 serde = { version = "1", default-features = false }
 
 # optional features
-base16ct = { version = "0.1.1", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
