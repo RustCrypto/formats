@@ -30,7 +30,11 @@ use core::str;
 use pem_rfc7468::{self as pem, LineEnding, PemLabel};
 
 #[cfg(feature = "alloc")]
-use {crate::encoder::encoded_len, alloc::string::String, zeroize::Zeroizing};
+use {
+    crate::encoder::encoded_len,
+    alloc::{string::String, vec::Vec},
+    zeroize::Zeroizing,
+};
 
 #[cfg(feature = "std")]
 use std::{fs, io::Write, path::Path};
@@ -66,13 +70,11 @@ pub struct PrivateKey {
     /// KDF options.
     kdf_opts: KdfOpts,
 
+    /// Public key.
+    public_key: PublicKey,
+
     /// Key data.
     key_data: KeypairData,
-
-    /// Comment on the key (e.g. email address).
-    #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    comment: String,
 }
 
 impl PrivateKey {
@@ -84,10 +86,10 @@ impl PrivateKey {
     /// On `no_std` platforms, use `PrivateKey::from(key_data)` instead.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn new(key_data: KeypairData, comment: impl Into<String>) -> Self {
-        let mut private_key = Self::from(key_data);
-        private_key.comment = comment.into();
-        private_key
+    pub fn new(key_data: KeypairData, comment: impl Into<String>) -> Result<Self> {
+        let mut private_key = Self::try_from(key_data)?;
+        private_key.public_key.comment = comment.into();
+        Ok(private_key)
     }
 
     /// Parse an OpenSSH-formatted PEM private key.
@@ -118,10 +120,35 @@ impl PrivateKey {
             return Err(Error::Length);
         }
 
-        for _ in 0..nkeys {
-            // TODO(tarcieri): validate decoded length
-            let _len = pem_decoder.decode_usize()?;
-            let _pubkey = public::KeyData::decode(&mut pem_decoder)?;
+        let public_key_len = pem_decoder.decode_usize()?;
+        let public_key_offset = pem_decoder.remaining_len();
+
+        #[cfg_attr(not(feature = "alloc"), allow(unused_mut))]
+        let mut public_key = PublicKey::from(public::KeyData::decode(&mut pem_decoder)?);
+
+        // Validate public key length
+        if pem_decoder.remaining_len().checked_add(public_key_len) != Some(public_key_offset) {
+            return Err(Error::Length);
+        }
+
+        // Handle encrypted private key
+        #[cfg(feature = "alloc")]
+        if !cipher_alg.is_none() {
+            let key_data = KeypairData::Encrypted(pem_decoder.decode_byte_vec()?);
+
+            let private_key = Self {
+                cipher_alg,
+                kdf_alg,
+                kdf_opts,
+                public_key,
+                key_data,
+            };
+
+            if !pem_decoder.is_finished() {
+                return Err(Error::Length);
+            }
+
+            return Ok(private_key);
         }
 
         // Begin decoding unencrypted list of N private keys
@@ -138,7 +165,6 @@ impl PrivateKey {
         let checkint1 = pem_decoder.decode_u32()?;
         let checkint2 = pem_decoder.decode_u32()?;
 
-        // TODO(tarcieri): constant-time comparison?
         if checkint1 != checkint2 {
             // TODO(tarcieri): treat this as a cryptographic error?
             return Err(Error::FormatEncoding);
@@ -146,18 +172,25 @@ impl PrivateKey {
 
         let key_data = KeypairData::decode(&mut pem_decoder)?;
 
+        // Ensure public key matches private key
+        if public_key.key_data() != &public::KeyData::try_from(&key_data)? {
+            return Err(Error::PublicKey);
+        }
+
+        // Decode comment (e.g. email address)
         #[cfg(not(feature = "alloc"))]
         pem_decoder.drain_prefixed()?;
         #[cfg(feature = "alloc")]
-        let comment = pem_decoder.decode_string()?;
+        {
+            public_key.comment = pem_decoder.decode_string()?;
+        }
 
         let private_key = Self {
             cipher_alg,
             kdf_alg,
             kdf_opts,
+            public_key,
             key_data,
-            #[cfg(feature = "alloc")]
-            comment,
         };
 
         let padding_len = pem_decoder.remaining_len();
@@ -204,15 +237,14 @@ impl PrivateKey {
         pem_encoder.encode_usize(nkeys)?;
 
         // Encode public key
-        let public_key_data = public::KeyData::from(&self.key_data);
-        pem_encoder.encode_usize(public_key_data.encoded_len()?)?;
-        public_key_data.encode(&mut pem_encoder)?;
+        pem_encoder.encode_usize(self.public_key.key_data().encoded_len()?)?;
+        self.public_key.key_data().encode(&mut pem_encoder)?;
 
         // Encode private key
         let padding_len = padding_len(self.private_key_len()?, UNENCRYPTED_BLOCK_SIZE);
         debug_assert!(padding_len <= 7, "padding too long: {}", padding_len);
         pem_encoder.encode_usize(self.private_key_len()? + padding_len)?;
-        let checkint = public_key_data.checkint();
+        let checkint = self.public_key.key_data().checkint();
         pem_encoder.encode_u32(checkint)?;
         pem_encoder.encode_u32(checkint)?;
         self.key_data.encode(&mut pem_encoder)?;
@@ -266,19 +298,12 @@ impl PrivateKey {
 
     /// Get the digital signature [`Algorithm`] used by this key.
     pub fn algorithm(&self) -> Algorithm {
-        self.key_data.algorithm()
+        self.public_key.algorithm()
     }
 
     /// Comment on the key (e.g. email address).
-    #[cfg(not(feature = "alloc"))]
     pub fn comment(&self) -> &str {
-        ""
-    }
-
-    /// Comment on the key (e.g. email address).
-    #[cfg(feature = "alloc")]
-    pub fn comment(&self) -> &str {
-        &self.comment
+        self.public_key.comment()
     }
 
     /// Cipher algorithm (a.k.a. `ciphername`).
@@ -302,12 +327,8 @@ impl PrivateKey {
     }
 
     /// Get the [`PublicKey`] which corresponds to this private key.
-    pub fn public_key(&self) -> PublicKey {
-        PublicKey {
-            key_data: public::KeyData::from(&self.key_data),
-            #[cfg(feature = "alloc")]
-            comment: self.comment.clone(),
-        }
+    pub fn public_key(&self) -> &PublicKey {
+        &self.public_key
     }
 
     /// Estimated length of a PEM-encoded key in OpenSSH format.
@@ -322,8 +343,8 @@ impl PrivateKey {
             + self.cipher_alg.encoded_len()?
             + self.kdf_alg.encoded_len()?
             + self.kdf_opts.encoded_len()?
-            + 4 // number of keys
-            + 4 + public::KeyData::from(&self.key_data).encoded_len()?
+            + 4 // number of keys (encoded as uint32)
+            + 4 + self.public_key.key_data().encoded_len()?
             + 4 + private_key_len
             + padding_len(private_key_len, UNENCRYPTED_BLOCK_SIZE);
 
@@ -347,28 +368,31 @@ impl PrivateKey {
     }
 }
 
-impl From<KeypairData> for PrivateKey {
-    fn from(key_data: KeypairData) -> PrivateKey {
-        PrivateKey {
+impl TryFrom<KeypairData> for PrivateKey {
+    type Error = Error;
+
+    fn try_from(key_data: KeypairData) -> Result<PrivateKey> {
+        let public_key = public::KeyData::try_from(&key_data)?;
+
+        Ok(Self {
             cipher_alg: CipherAlg::None,
             kdf_alg: KdfAlg::None,
             kdf_opts: KdfOpts::default(),
+            public_key: public_key.into(),
             key_data,
-            #[cfg(feature = "alloc")]
-            comment: String::new(),
-        }
+        })
     }
 }
 
 impl From<PrivateKey> for PublicKey {
     fn from(private_key: PrivateKey) -> PublicKey {
-        private_key.public_key()
+        private_key.public_key
     }
 }
 
 impl From<&PrivateKey> for PublicKey {
     fn from(private_key: &PrivateKey) -> PublicKey {
-        private_key.public_key()
+        private_key.public_key.clone()
     }
 }
 
@@ -390,11 +414,11 @@ impl ConstantTimeEq for PrivateKey {
     fn ct_eq(&self, other: &Self) -> Choice {
         // Constant-time with respect to key data and comment
         self.key_data.ct_eq(&other.key_data)
-            & self.comment.as_bytes().ct_eq(other.comment.as_bytes())
             & Choice::from(
                 (self.cipher_alg == other.cipher_alg
                     && self.kdf_alg == other.kdf_alg
-                    && self.kdf_opts == other.kdf_opts) as u8,
+                    && self.kdf_opts == other.kdf_opts
+                    && self.public_key == other.public_key) as u8,
             )
     }
 }
@@ -428,6 +452,10 @@ pub enum KeypairData {
     /// Ed25519 keypair.
     Ed25519(Ed25519Keypair),
 
+    /// Encrypted private key (ciphertext).
+    #[cfg(feature = "alloc")]
+    Encrypted(Vec<u8>),
+
     /// RSA keypair.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
@@ -436,16 +464,18 @@ pub enum KeypairData {
 
 impl KeypairData {
     /// Get the [`Algorithm`] for this private key.
-    pub fn algorithm(&self) -> Algorithm {
-        match self {
+    pub fn algorithm(&self) -> Result<Algorithm> {
+        Ok(match self {
             #[cfg(feature = "alloc")]
             Self::Dsa(_) => Algorithm::Dsa,
             #[cfg(feature = "ecdsa")]
             Self::Ecdsa(key) => key.algorithm(),
             Self::Ed25519(_) => Algorithm::Ed25519,
             #[cfg(feature = "alloc")]
+            Self::Encrypted(_) => return Err(Error::Encrypted),
+            #[cfg(feature = "alloc")]
             Self::Rsa(_) => Algorithm::Rsa,
-        }
+        })
     }
 
     /// Get DSA keypair if this key is the correct type.
@@ -535,7 +565,7 @@ impl Decode for KeypairData {
 
 impl Encode for KeypairData {
     fn encoded_len(&self) -> Result<usize> {
-        let alg_len = self.algorithm().encoded_len()?;
+        let alg_len = self.algorithm()?.encoded_len()?;
 
         let key_len = match self {
             #[cfg(feature = "alloc")]
@@ -544,6 +574,8 @@ impl Encode for KeypairData {
             Self::Ecdsa(key) => key.encoded_len()?,
             Self::Ed25519(key) => key.encoded_len()?,
             #[cfg(feature = "alloc")]
+            Self::Encrypted(_) => return Err(Error::Encrypted),
+            #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encoded_len()?,
         };
 
@@ -551,7 +583,7 @@ impl Encode for KeypairData {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.algorithm().encode(encoder)?;
+        self.algorithm()?.encode(encoder)?;
 
         match self {
             #[cfg(feature = "alloc")]
@@ -560,22 +592,28 @@ impl Encode for KeypairData {
             Self::Ecdsa(key) => key.encode(encoder),
             Self::Ed25519(key) => key.encode(encoder),
             #[cfg(feature = "alloc")]
+            Self::Encrypted(_) => Err(Error::Encrypted),
+            #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encode(encoder),
         }
     }
 }
 
-impl From<&KeypairData> for public::KeyData {
-    fn from(keypair_data: &KeypairData) -> public::KeyData {
-        match keypair_data {
+impl TryFrom<&KeypairData> for public::KeyData {
+    type Error = Error;
+
+    fn try_from(keypair_data: &KeypairData) -> Result<public::KeyData> {
+        Ok(match keypair_data {
             #[cfg(feature = "alloc")]
             KeypairData::Dsa(dsa) => public::KeyData::Dsa(dsa.into()),
             #[cfg(feature = "ecdsa")]
             KeypairData::Ecdsa(ecdsa) => public::KeyData::Ecdsa(ecdsa.into()),
             KeypairData::Ed25519(ed25519) => public::KeyData::Ed25519(ed25519.into()),
             #[cfg(feature = "alloc")]
+            KeypairData::Encrypted(_) => return Err(Error::Encrypted),
+            #[cfg(feature = "alloc")]
             KeypairData::Rsa(rsa) => public::KeyData::Rsa(rsa.into()),
-        }
+        })
     }
 }
 

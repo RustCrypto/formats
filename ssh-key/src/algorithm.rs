@@ -7,8 +7,14 @@ use crate::{
 };
 use core::{fmt, str};
 
-/// SHA-256 hash function.
-const SHA256: &str = "SHA256";
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
+/// AES-256 in counter (CTR) mode
+const AES256_CTR: &str = "aes256-ctr";
+
+/// bcrypt-pbkdf2
+const BCRYPT: &str = "bcrypt";
 
 /// ECDSA with SHA-256 + NIST P-256
 const ECDSA_SHA2_P256: &str = "ecdsa-sha2-nistp256";
@@ -18,6 +24,12 @@ const ECDSA_SHA2_P384: &str = "ecdsa-sha2-nistp384";
 
 /// ECDSA with SHA-256 + NIST P-256
 const ECDSA_SHA2_P521: &str = "ecdsa-sha2-nistp521";
+
+/// None
+const NONE: &str = "none";
+
+/// SHA-256 hash function.
+const SHA256: &str = "SHA256";
 
 /// Digital Signature Algorithm
 const SSH_DSA: &str = "ssh-dss";
@@ -42,7 +54,10 @@ pub(crate) trait AlgString: AsRef<str> + str::FromStr<Err = Error> {
 impl<T: AlgString> Decode for T {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let mut buf = T::DecodeBuf::default();
-        decoder.decode_str(buf.as_mut())?.parse()
+        decoder
+            .decode_str(buf.as_mut())
+            .map_err(|_| Error::Algorithm)?
+            .parse()
     }
 }
 
@@ -161,16 +176,24 @@ impl str::FromStr for Algorithm {
 pub enum CipherAlg {
     /// None.
     None,
+
+    /// AES-256 in counter (CTR) mode.
+    Aes256Ctr,
 }
 
 impl CipherAlg {
+    /// Maximum length of an algorithm string: `aes256-ctr` (10 chars)
+    const MAX_SIZE: usize = 10;
+
     /// Decode cipher algorithm from the given `ciphername`.
     ///
-    /// # Supported ciphernames
+    /// # Supported cipher names
     /// - `none`
+    /// - `aes256-ctr`
     pub fn new(ciphername: &str) -> Result<Self> {
         match ciphername {
-            "none" => Ok(CipherAlg::None),
+            NONE => Ok(Self::None),
+            AES256_CTR => Ok(Self::Aes256Ctr),
             _ => Err(Error::Algorithm),
         }
     }
@@ -178,8 +201,14 @@ impl CipherAlg {
     /// Get the string identifier which corresponds to this algorithm.
     pub fn as_str(self) -> &'static str {
         match self {
-            CipherAlg::None => "none",
+            Self::None => NONE,
+            Self::Aes256Ctr => AES256_CTR,
         }
+    }
+
+    /// Is the cipher algorithm "none"?
+    pub fn is_none(self) -> bool {
+        self == Self::None
     }
 }
 
@@ -190,7 +219,7 @@ impl AsRef<str> for CipherAlg {
 }
 
 impl AlgString for CipherAlg {
-    type DecodeBuf = [u8; 4]; // max length: 'none'
+    type DecodeBuf = [u8; Self::MAX_SIZE];
 }
 
 impl fmt::Display for CipherAlg {
@@ -221,6 +250,9 @@ pub enum EcdsaCurve {
 }
 
 impl EcdsaCurve {
+    /// Maximum length of an algorithm string: `nistpXXX` (8 chars)
+    const MAX_SIZE: usize = 8;
+
     /// Decode elliptic curve from the given string identifier.
     ///
     /// # Supported curves
@@ -254,7 +286,7 @@ impl AsRef<str> for EcdsaCurve {
 }
 
 impl AlgString for EcdsaCurve {
-    type DecodeBuf = [u8; 8]; // max length: 'nistpXXX'
+    type DecodeBuf = [u8; Self::MAX_SIZE];
 }
 
 impl fmt::Display for EcdsaCurve {
@@ -331,16 +363,23 @@ impl str::FromStr for HashAlg {
 pub enum KdfAlg {
     /// None.
     None,
+
+    /// bcrypt-pbkdf2.
+    Bcrypt,
 }
 
 impl KdfAlg {
+    /// Maximum length of an algorithm string: `bcrypt` (6 chars)
+    const MAX_SIZE: usize = 6;
+
     /// Decode KDF algorithm from the given `kdfname`.
     ///
-    /// # Supported kdfnames
+    /// # Supported KDF names
     /// - `none`
     pub fn new(kdfname: &str) -> Result<Self> {
         match kdfname {
-            "none" => Ok(KdfAlg::None),
+            NONE => Ok(Self::None),
+            BCRYPT => Ok(Self::Bcrypt),
             _ => Err(Error::Algorithm),
         }
     }
@@ -348,8 +387,14 @@ impl KdfAlg {
     /// Get the string identifier which corresponds to this algorithm.
     pub fn as_str(self) -> &'static str {
         match self {
-            KdfAlg::None => "none",
+            Self::None => NONE,
+            Self::Bcrypt => BCRYPT,
         }
+    }
+
+    /// Is the KDF algorithm "none"?
+    pub fn is_none(self) -> bool {
+        self == Self::None
     }
 }
 
@@ -360,7 +405,7 @@ impl AsRef<str> for KdfAlg {
 }
 
 impl AlgString for KdfAlg {
-    type DecodeBuf = [u8; 4]; // max length: 'none'
+    type DecodeBuf = [u8; Self::MAX_SIZE];
 }
 
 impl fmt::Display for KdfAlg {
@@ -378,54 +423,57 @@ impl str::FromStr for KdfAlg {
 }
 
 /// Key Derivation Function (KDF) options.
-// TODO(tarcieri): stub!
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[non_exhaustive]
-pub struct KdfOpts {}
+pub struct KdfOpts {
+    /// Encoded KDF options.
+    #[cfg(feature = "alloc")]
+    bytes: Vec<u8>,
+}
 
 impl KdfOpts {
-    /// Create new KDF options.
-    pub(crate) fn new(kdfoptions: &str) -> Result<Self> {
-        // TODO(tarcieri): support for KDF options
-        if kdfoptions.is_empty() {
-            Ok(Self {})
-        } else {
-            Err(Error::Algorithm)
-        }
+    /// Are the KDF options empty?
+    pub fn is_empty(&self) -> bool {
+        self.as_ref().is_empty()
+    }
+}
+
+impl AsRef<[u8]> for KdfOpts {
+    #[cfg(not(feature = "alloc"))]
+    fn as_ref(&self) -> &[u8] {
+        &[]
+    }
+
+    #[cfg(feature = "alloc")]
+    fn as_ref(&self) -> &[u8] {
+        self.bytes.as_ref()
     }
 }
 
 impl Decode for KdfOpts {
+    #[cfg(not(feature = "alloc"))]
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        // TODO(tarcieri): stub!
-        let mut buf = [0u8; 0];
-        Self::new(decoder.decode_str(&mut buf)?)
+        if decoder.decode_usize()? == 0 {
+            Ok(Self::default())
+        } else {
+            Err(Error::Algorithm)
+        }
+    }
+
+    #[cfg(feature = "alloc")]
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+        Ok(Self {
+            bytes: decoder.decode_byte_vec()?,
+        })
     }
 }
 
 impl Encode for KdfOpts {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4)
+        Ok(4 + self.as_ref().len())
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        // TODO(tarcieri): stub!
-        encoder.encode_str("")
-    }
-}
-
-impl fmt::Display for KdfOpts {
-    fn fmt(&self, _: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // TODO(tarcieri): stub!
-        Ok(())
-    }
-}
-
-impl str::FromStr for KdfOpts {
-    type Err = Error;
-
-    fn from_str(id: &str) -> Result<Self> {
-        // TODO(tarcieri): stub!
-        Self::new(id)
+        encoder.encode_byte_slice(self.as_ref())
     }
 }
