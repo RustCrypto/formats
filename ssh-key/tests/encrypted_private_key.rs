@@ -17,3 +17,12 @@ fn decode_ed25519_enc_openssh() {
         ossh_key.public_key().key_data().ed25519().unwrap().as_ref(),
     );
 }
+
+#[test]
+fn encode_ed25519_enc_openssh() {
+    let ossh_key = PrivateKey::from_openssh(OSSH_ED25519_ENC_EXAMPLE).unwrap();
+    assert_eq!(
+        OSSH_ED25519_ENC_EXAMPLE.trim_end(),
+        ossh_key.to_openssh(Default::default()).unwrap().trim_end()
+    );
+}

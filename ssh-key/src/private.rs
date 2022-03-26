@@ -52,7 +52,7 @@ const PADDING_BYTES: [u8; 7] = [1, 2, 3, 4, 5, 6, 7];
 const PEM_LINE_WIDTH: usize = 70;
 
 /// Block size to use for unencrypted keys.
-const UNENCRYPTED_BLOCK_SIZE: usize = 8;
+const DEFAULT_BLOCK_SIZE: usize = 8;
 
 /// Unix file permissions for SSH private keys.
 #[cfg(all(unix, feature = "std"))]
@@ -156,7 +156,7 @@ impl PrivateKey {
         let private_key_len = pem_decoder.decode_usize()?;
 
         // TODO(tarcieri): support for encrypted private keys
-        let block_size = UNENCRYPTED_BLOCK_SIZE;
+        let block_size = DEFAULT_BLOCK_SIZE;
 
         if (private_key_len % block_size != 0) || (private_key_len != pem_decoder.remaining_len()) {
             return Err(Error::Length);
@@ -185,14 +185,6 @@ impl PrivateKey {
             public_key.comment = pem_decoder.decode_string()?;
         }
 
-        let private_key = Self {
-            cipher_alg,
-            kdf_alg,
-            kdf_opts,
-            public_key,
-            key_data,
-        };
-
         let padding_len = pem_decoder.remaining_len();
 
         if padding_len >= block_size {
@@ -201,7 +193,7 @@ impl PrivateKey {
 
         if padding_len != 0 {
             // TODO(tarcieri): support for encrypted private keys
-            let mut padding = [0u8; UNENCRYPTED_BLOCK_SIZE];
+            let mut padding = [0u8; DEFAULT_BLOCK_SIZE];
             pem_decoder.decode(&mut padding[..padding_len])?;
 
             if PADDING_BYTES[..padding_len] != padding[..padding_len] {
@@ -213,7 +205,13 @@ impl PrivateKey {
             return Err(Error::Length);
         }
 
-        Ok(private_key)
+        Ok(Self {
+            cipher_alg,
+            kdf_alg,
+            kdf_opts,
+            public_key,
+            key_data,
+        })
     }
 
     /// Encode OpenSSH-formatted (PEM) private key.
@@ -241,15 +239,22 @@ impl PrivateKey {
         self.public_key.key_data().encode(&mut pem_encoder)?;
 
         // Encode private key
-        let padding_len = padding_len(self.private_key_len()?, UNENCRYPTED_BLOCK_SIZE);
-        debug_assert!(padding_len <= 7, "padding too long: {}", padding_len);
-        pem_encoder.encode_usize(self.private_key_len()? + padding_len)?;
-        let checkint = self.public_key.key_data().checkint();
-        pem_encoder.encode_u32(checkint)?;
-        pem_encoder.encode_u32(checkint)?;
-        self.key_data.encode(&mut pem_encoder)?;
-        pem_encoder.encode_str(self.comment())?;
-        pem_encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
+        let private_key_len = self.private_key_len()?;
+
+        if self.is_encrypted() {
+            pem_encoder.encode_usize(private_key_len)?;
+            self.key_data.encode(&mut pem_encoder)?;
+        } else {
+            let padding_len = padding_len(private_key_len, DEFAULT_BLOCK_SIZE);
+            debug_assert!(padding_len <= 7, "padding too long: {}", padding_len);
+            pem_encoder.encode_usize(private_key_len + padding_len)?;
+            let checkint = self.public_key.key_data().checkint();
+            pem_encoder.encode_u32(checkint)?;
+            pem_encoder.encode_u32(checkint)?;
+            self.key_data.encode(&mut pem_encoder)?;
+            pem_encoder.encode_str(self.comment())?;
+            pem_encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
+        }
 
         let encoded_len = pem_encoder.finish()?;
         Ok(str::from_utf8(&out[..encoded_len])?)
@@ -311,6 +316,11 @@ impl PrivateKey {
         self.cipher_alg
     }
 
+    /// Is this key encrypted?
+    pub fn is_encrypted(&self) -> bool {
+        self.key_data.is_encrypted()
+    }
+
     /// KDF algorithm.
     pub fn kdf_alg(&self) -> KdfAlg {
         self.kdf_alg
@@ -339,14 +349,17 @@ impl PrivateKey {
         let private_key_len = self.private_key_len()?;
 
         // TODO(tarcieri): checked arithmetic
-        let bytes_len = Self::AUTH_MAGIC.len()
+        let mut bytes_len = Self::AUTH_MAGIC.len()
             + self.cipher_alg.encoded_len()?
             + self.kdf_alg.encoded_len()?
             + self.kdf_opts.encoded_len()?
             + 4 // number of keys (encoded as uint32)
             + 4 + self.public_key.key_data().encoded_len()?
-            + 4 + private_key_len
-            + padding_len(private_key_len, UNENCRYPTED_BLOCK_SIZE);
+            + 4 + private_key_len;
+
+        if !self.is_encrypted() {
+            bytes_len += padding_len(private_key_len, DEFAULT_BLOCK_SIZE);
+        }
 
         let mut base64_len = encoded_len(bytes_len);
         base64_len += (base64_len.saturating_sub(1) / PEM_LINE_WIDTH) * line_ending.len();
@@ -360,11 +373,15 @@ impl PrivateKey {
 
     /// Get the length of the private key data in bytes (not including padding).
     fn private_key_len(&self) -> Result<usize> {
-        // TODO(tarcieri): checked arithmetic
-        Ok(8 // 2 * checkints
-            + self.key_data().encoded_len()?
-            + 4 // comment length prefix
-            + self.comment().len())
+        if self.is_encrypted() {
+            self.key_data().encoded_len()
+        } else {
+            // TODO(tarcieri): checked arithmetic
+            Ok(8 // 2 * checkints
+                + self.key_data().encoded_len()?
+                + 4 // comment length prefix
+                + self.comment().len())
+        }
     }
 }
 
@@ -412,7 +429,7 @@ impl str::FromStr for PrivateKey {
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl ConstantTimeEq for PrivateKey {
     fn ct_eq(&self, other: &Self) -> Choice {
-        // Constant-time with respect to key data and comment
+        // Constant-time with respect to private key data
         self.key_data.ct_eq(&other.key_data)
             & Choice::from(
                 (self.cipher_alg == other.cipher_alg
@@ -536,6 +553,18 @@ impl KeypairData {
         matches!(self, Self::Ed25519(_))
     }
 
+    /// Is this key encrypted?
+    #[cfg(not(feature = "alloc"))]
+    pub fn is_encrypted(&self) -> bool {
+        false
+    }
+
+    /// Is this key encrypted?
+    #[cfg(feature = "alloc")]
+    pub fn is_encrypted(&self) -> bool {
+        matches!(self, Self::Encrypted(_))
+    }
+
     /// Is this key an RSA key?
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
@@ -565,7 +594,11 @@ impl Decode for KeypairData {
 
 impl Encode for KeypairData {
     fn encoded_len(&self) -> Result<usize> {
-        let alg_len = self.algorithm()?.encoded_len()?;
+        let alg_len = if self.is_encrypted() {
+            0
+        } else {
+            self.algorithm()?.encoded_len()?
+        };
 
         let key_len = match self {
             #[cfg(feature = "alloc")]
@@ -574,7 +607,7 @@ impl Encode for KeypairData {
             Self::Ecdsa(key) => key.encoded_len()?,
             Self::Ed25519(key) => key.encoded_len()?,
             #[cfg(feature = "alloc")]
-            Self::Encrypted(_) => return Err(Error::Encrypted),
+            Self::Encrypted(ciphertext) => ciphertext.len(),
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encoded_len()?,
         };
@@ -583,7 +616,9 @@ impl Encode for KeypairData {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.algorithm()?.encode(encoder)?;
+        if !self.is_encrypted() {
+            self.algorithm()?.encode(encoder)?;
+        }
 
         match self {
             #[cfg(feature = "alloc")]
@@ -592,7 +627,7 @@ impl Encode for KeypairData {
             Self::Ecdsa(key) => key.encode(encoder),
             Self::Ed25519(key) => key.encode(encoder),
             #[cfg(feature = "alloc")]
-            Self::Encrypted(_) => Err(Error::Encrypted),
+            Self::Encrypted(ciphertext) => encoder.encode_raw(ciphertext),
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encode(encoder),
         }
