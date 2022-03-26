@@ -246,8 +246,7 @@ pub(crate) fn encode_f64(sign: u64, exponent: u64, mantissa: u64) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use crate::decodable::Decode;
-    use crate::encodable::Encode;
+    use crate::{Decode, Encode};
 
     #[test]
     fn decode_subnormal() {
