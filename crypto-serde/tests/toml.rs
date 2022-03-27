@@ -17,24 +17,6 @@ const HEX_LOWER: &str = "\"000102030405060708090a0b0c0d0e0f\"";
 const HEX_UPPER: &str = "\"000102030405060708090A0B0C0D0E0F\"";
 
 #[test]
-fn serialize_slice() {
-    let serialized = toml::to_string(&slice::HexLowerOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
-    assert_eq!(serialized, HEX_LOWER);
-
-    let serialized = toml::to_string(&slice::HexUpperOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
-    assert_eq!(serialized, HEX_UPPER);
-}
-
-#[test]
-fn serialize_array() {
-    let serialized = toml::to_string(&array::HexLowerOrBin::from(EXAMPLE_BYTES)).unwrap();
-    assert_eq!(serialized, HEX_LOWER);
-
-    let serialized = toml::to_string(&array::HexUpperOrBin::from(EXAMPLE_BYTES)).unwrap();
-    assert_eq!(serialized, HEX_UPPER);
-}
-
-#[test]
 fn deserialize_slice() {
     #[derive(Deserialize, Serialize)]
     pub struct Test {
@@ -62,6 +44,24 @@ fn deserialize_array() {
 
     assert_eq!(deserialized.lower.0, EXAMPLE_BYTES);
     assert_eq!(deserialized.upper.0, EXAMPLE_BYTES);
+}
+
+#[test]
+fn serialize_slice() {
+    let serialized = toml::to_string(&slice::HexLowerOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
+    assert_eq!(serialized, HEX_LOWER);
+
+    let serialized = toml::to_string(&slice::HexUpperOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
+    assert_eq!(serialized, HEX_UPPER);
+}
+
+#[test]
+fn serialize_array() {
+    let serialized = toml::to_string(&array::HexLowerOrBin::from(EXAMPLE_BYTES)).unwrap();
+    assert_eq!(serialized, HEX_LOWER);
+
+    let serialized = toml::to_string(&array::HexUpperOrBin::from(EXAMPLE_BYTES)).unwrap();
+    assert_eq!(serialized, HEX_UPPER);
 }
 
 proptest! {

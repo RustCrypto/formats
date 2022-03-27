@@ -17,24 +17,6 @@ const HEX_LOWER: &str = "\"000102030405060708090a0b0c0d0e0f\"";
 const HEX_UPPER: &str = "\"000102030405060708090A0B0C0D0E0F\"";
 
 #[test]
-fn serialize_slice() {
-    let serialized = json::to_string(&slice::HexLowerOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
-    assert_eq!(serialized, HEX_LOWER);
-
-    let serialized = json::to_string(&slice::HexUpperOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
-    assert_eq!(serialized, HEX_UPPER);
-}
-
-#[test]
-fn serialize_array() {
-    let serialized = json::to_string(&array::HexLowerOrBin::from(EXAMPLE_BYTES)).unwrap();
-    assert_eq!(serialized, HEX_LOWER);
-
-    let serialized = json::to_string(&array::HexUpperOrBin::from(EXAMPLE_BYTES)).unwrap();
-    assert_eq!(serialized, HEX_UPPER);
-}
-
-#[test]
 fn deserialize_slice() {
     let deserialized = json::from_str::<slice::HexLowerOrBin>(HEX_LOWER).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
@@ -50,6 +32,24 @@ fn deserialize_array() {
 
     let deserialized = json::from_str::<array::HexUpperOrBin<16>>(HEX_UPPER).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
+}
+
+#[test]
+fn serialize_slice() {
+    let serialized = json::to_string(&slice::HexLowerOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
+    assert_eq!(serialized, HEX_LOWER);
+
+    let serialized = json::to_string(&slice::HexUpperOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
+    assert_eq!(serialized, HEX_UPPER);
+}
+
+#[test]
+fn serialize_array() {
+    let serialized = json::to_string(&array::HexLowerOrBin::from(EXAMPLE_BYTES)).unwrap();
+    assert_eq!(serialized, HEX_LOWER);
+
+    let serialized = json::to_string(&array::HexUpperOrBin::from(EXAMPLE_BYTES)).unwrap();
+    assert_eq!(serialized, HEX_UPPER);
 }
 
 proptest! {
