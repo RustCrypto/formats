@@ -24,7 +24,7 @@ pub use self::{
 use crate::{
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    public, Algorithm, CipherAlg, Error, Kdf, KdfAlg, PublicKey, Result,
+    public, Algorithm, CipherAlg, Error, Kdf, PublicKey, Result,
 };
 use core::str;
 use pem_rfc7468::{self as pem, LineEnding, PemLabel};
@@ -41,6 +41,9 @@ use aes::{
     cipher::{InnerIvInit, KeyInit, StreamCipherCore},
     Aes256,
 };
+
+#[cfg(feature = "fingerprint")]
+use crate::{Fingerprint, HashAlg};
 
 #[cfg(feature = "std")]
 use std::{fs, io::Write, path::Path};
@@ -316,14 +319,18 @@ impl PrivateKey {
         self.cipher_alg
     }
 
+    /// Compute key fingerprint.
+    ///
+    /// Use [`Default::default()`] to use the default hash function (SHA-256).
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Fingerprint {
+        self.public_key.fingerprint(hash_alg)
+    }
+
     /// Is this key encrypted?
     pub fn is_encrypted(&self) -> bool {
         self.key_data.is_encrypted()
-    }
-
-    /// KDF algorithm.
-    pub fn kdf_alg(&self) -> KdfAlg {
-        self.kdf.algorithm()
     }
 
     /// KDF options.
