@@ -31,3 +31,8 @@ toml = "0.5"
 [features]
 default = ["alloc"]
 alloc = ["base16ct/alloc", "serde/alloc"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+targets = []
