@@ -3,7 +3,7 @@
 #![cfg(feature = "alloc")]
 
 use hex_literal::hex;
-use ssh_key::{Algorithm, KdfAlg, KdfOpts, PrivateKey};
+use ssh_key::{Algorithm, Kdf, KdfAlg, PrivateKey};
 
 /// Unencrypted Ed25519 OpenSSH-formatted private key.
 #[cfg(all(feature = "encryption", feature = "subtle"))]
@@ -24,8 +24,8 @@ fn decode_ed25519_enc_openssh() {
     assert_eq!(Algorithm::Ed25519, ossh_key.algorithm());
     assert_eq!(KdfAlg::Bcrypt, ossh_key.kdf_alg());
 
-    match ossh_key.kdf_opts() {
-        KdfOpts::Bcrypt { salt, rounds } => {
+    match ossh_key.kdf() {
+        Kdf::Bcrypt { salt, rounds } => {
             assert_eq!(salt, &hex!("4a1fdeae8d6ba607afd69d334f8d379a"));
             assert_eq!(*rounds, 16);
         }
