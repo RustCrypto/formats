@@ -24,7 +24,7 @@ pub use serde;
 use serde::Serializer;
 
 #[cfg(not(feature = "alloc"))]
-use serde::ser::Error as _;
+use serde::ser::Error;
 
 #[cfg(feature = "alloc")]
 use serde::Serialize;
