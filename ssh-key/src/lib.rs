@@ -114,6 +114,7 @@ pub mod private;
 pub mod public;
 
 mod algorithm;
+mod cipher;
 mod decoder;
 mod encoder;
 mod error;
@@ -125,8 +126,9 @@ mod fingerprint;
 mod mpint;
 
 pub use crate::{
-    algorithm::{Algorithm, CipherAlg, EcdsaCurve, HashAlg, KdfAlg},
+    algorithm::{Algorithm, EcdsaCurve, HashAlg, KdfAlg},
     authorized_keys::AuthorizedKeys,
+    cipher::Cipher,
     error::{Error, Result},
     kdf::Kdf,
     private::PrivateKey,
