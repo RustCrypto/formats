@@ -49,7 +49,7 @@ fn decode_dsa_openssh() {
     assert_eq!(Algorithm::Dsa, ossh_key.algorithm());
     assert_eq!(CipherAlg::None, ossh_key.cipher_alg());
     assert_eq!(KdfAlg::None, ossh_key.kdf_alg());
-    assert!(ossh_key.kdf_opts().is_empty());
+    assert!(ossh_key.kdf().is_none());
 
     let dsa_keypair = ossh_key.key_data().dsa().unwrap();
     assert_eq!(
@@ -94,7 +94,7 @@ fn decode_ecdsa_p256_openssh() {
     assert_eq!(Algorithm::Ecdsa(EcdsaCurve::NistP256), ossh_key.algorithm(),);
     assert_eq!(CipherAlg::None, ossh_key.cipher_alg());
     assert_eq!(KdfAlg::None, ossh_key.kdf_alg());
-    assert!(ossh_key.kdf_opts().is_empty());
+    assert!(ossh_key.kdf().is_none());
 
     let ecdsa_keypair = ossh_key.key_data().ecdsa().unwrap();
     assert_eq!(EcdsaCurve::NistP256, ecdsa_keypair.curve());
@@ -121,7 +121,7 @@ fn decode_ecdsa_p384_openssh() {
     assert_eq!(Algorithm::Ecdsa(EcdsaCurve::NistP384), ossh_key.algorithm(),);
     assert_eq!(CipherAlg::None, ossh_key.cipher_alg());
     assert_eq!(KdfAlg::None, ossh_key.kdf_alg());
-    assert!(ossh_key.kdf_opts().is_empty());
+    assert!(ossh_key.kdf().is_none());
 
     let ecdsa_keypair = ossh_key.key_data().ecdsa().unwrap();
     assert_eq!(EcdsaCurve::NistP384, ecdsa_keypair.curve());
@@ -152,7 +152,7 @@ fn decode_ecdsa_p521_openssh() {
     assert_eq!(Algorithm::Ecdsa(EcdsaCurve::NistP521), ossh_key.algorithm(),);
     assert_eq!(CipherAlg::None, ossh_key.cipher_alg());
     assert_eq!(KdfAlg::None, ossh_key.kdf_alg());
-    assert!(ossh_key.kdf_opts().is_empty());
+    assert!(ossh_key.kdf().is_none());
 
     let ecdsa_keypair = ossh_key.key_data().ecdsa().unwrap();
     assert_eq!(EcdsaCurve::NistP521, ecdsa_keypair.curve());
@@ -183,7 +183,7 @@ fn decode_ed25519_openssh() {
     assert_eq!(Algorithm::Ed25519, ossh_key.algorithm());
     assert_eq!(CipherAlg::None, ossh_key.cipher_alg());
     assert_eq!(KdfAlg::None, ossh_key.kdf_alg());
-    assert!(ossh_key.kdf_opts().is_empty());
+    assert!(ossh_key.kdf().is_none());
 
     let ed25519_keypair = ossh_key.key_data().ed25519().unwrap();
     assert_eq!(
@@ -206,7 +206,7 @@ fn decode_rsa_3072_openssh() {
     assert_eq!(Algorithm::Rsa, ossh_key.algorithm());
     assert_eq!(CipherAlg::None, ossh_key.cipher_alg());
     assert_eq!(KdfAlg::None, ossh_key.kdf_alg());
-    assert!(ossh_key.kdf_opts().is_empty());
+    assert!(ossh_key.kdf().is_none());
 
     let rsa_keypair = ossh_key.key_data().rsa().unwrap();
     assert_eq!(&hex!("010001"), rsa_keypair.public.e.as_bytes());
@@ -278,7 +278,7 @@ fn decode_rsa_4096_openssh() {
     assert_eq!(Algorithm::Rsa, ossh_key.algorithm());
     assert_eq!(CipherAlg::None, ossh_key.cipher_alg());
     assert_eq!(KdfAlg::None, ossh_key.kdf_alg());
-    assert!(ossh_key.kdf_opts().is_empty());
+    assert!(ossh_key.kdf().is_none());
 
     let rsa_keypair = ossh_key.key_data().rsa().unwrap();
     assert_eq!(&hex!("010001"), rsa_keypair.public.e.as_bytes());

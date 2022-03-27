@@ -24,7 +24,7 @@ pub use self::{
 use crate::{
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    public, Algorithm, CipherAlg, Error, KdfAlg, KdfOpts, PublicKey, Result,
+    public, Algorithm, CipherAlg, Error, Kdf, KdfAlg, PublicKey, Result,
 };
 use core::str;
 use pem_rfc7468::{self as pem, LineEnding, PemLabel};
@@ -80,7 +80,7 @@ pub struct PrivateKey {
     cipher_alg: CipherAlg,
 
     /// KDF options.
-    kdf_opts: KdfOpts,
+    kdf: Kdf,
 
     /// Public key.
     public_key: PublicKey,
@@ -127,8 +127,7 @@ impl PrivateKey {
         }
 
         let cipher_alg = CipherAlg::decode(&mut pem_decoder)?;
-        let kdf_alg = KdfAlg::decode(&mut pem_decoder)?;
-        let kdf_opts = KdfOpts::decode(kdf_alg, &mut pem_decoder)?;
+        let kdf = Kdf::decode(&mut pem_decoder)?;
         let nkeys = pem_decoder.decode_usize()?;
 
         // TODO(tarcieri): support more than one key?
@@ -158,7 +157,7 @@ impl PrivateKey {
 
             return Ok(Self {
                 cipher_alg,
-                kdf_opts,
+                kdf,
                 public_key,
                 key_data,
             });
@@ -174,7 +173,7 @@ impl PrivateKey {
 
         Ok(Self {
             cipher_alg,
-            kdf_opts,
+            kdf,
             public_key,
             key_data,
         })
@@ -191,8 +190,7 @@ impl PrivateKey {
 
         pem_encoder.encode(Self::AUTH_MAGIC)?;
         self.cipher_alg.encode(&mut pem_encoder)?;
-        self.kdf_alg().encode(&mut pem_encoder)?;
-        self.kdf_opts.encode(&mut pem_encoder)?;
+        self.kdf.encode(&mut pem_encoder)?;
 
         // TODO(tarcieri): support for encoding more than one private key
         let nkeys = 1;
@@ -272,7 +270,7 @@ impl PrivateKey {
         let block_size = self.cipher_alg.block_size().ok_or(Error::Decrypted)?;
 
         let mut key_and_iv = vec![0u8; key_size + iv_size];
-        self.kdf_opts.derive(password, &mut key_and_iv)?;
+        self.kdf.derive(password, &mut key_and_iv)?;
 
         let (key_bytes, iv_bytes) = key_and_iv.split_at(key_size);
         let mut buffer =
@@ -297,7 +295,7 @@ impl PrivateKey {
 
         Ok(Self {
             cipher_alg: CipherAlg::None,
-            kdf_opts: KdfOpts::Empty,
+            kdf: Kdf::None,
             public_key,
             key_data,
         })
@@ -325,12 +323,12 @@ impl PrivateKey {
 
     /// KDF algorithm.
     pub fn kdf_alg(&self) -> KdfAlg {
-        self.kdf_opts.algorithm()
+        self.kdf.algorithm()
     }
 
     /// KDF options.
-    pub fn kdf_opts(&self) -> &KdfOpts {
-        &self.kdf_opts
+    pub fn kdf(&self) -> &Kdf {
+        &self.kdf
     }
 
     /// Keypair data.
@@ -353,8 +351,7 @@ impl PrivateKey {
         // TODO(tarcieri): checked arithmetic
         let mut bytes_len = Self::AUTH_MAGIC.len()
             + self.cipher_alg.encoded_len()?
-            + self.kdf_alg().encoded_len()?
-            + self.kdf_opts.encoded_len()?
+            + self.kdf.encoded_len()?
             + 4 // number of keys (encoded as uint32)
             + 4 + self.public_key.key_data().encoded_len()?
             + 4 + private_key_len;
@@ -394,7 +391,7 @@ impl TryFrom<KeypairData> for PrivateKey {
 
         Ok(Self {
             cipher_alg: CipherAlg::None,
-            kdf_opts: KdfOpts::Empty,
+            kdf: Kdf::None,
             public_key: public_key.into(),
             key_data,
         })
@@ -433,7 +430,7 @@ impl ConstantTimeEq for PrivateKey {
         self.key_data.ct_eq(&other.key_data)
             & Choice::from(
                 (self.cipher_alg == other.cipher_alg
-                    && self.kdf_opts == other.kdf_opts
+                    && self.kdf == other.kdf
                     && self.public_key == other.public_key) as u8,
             )
     }

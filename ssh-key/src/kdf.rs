@@ -3,7 +3,7 @@
 //! These are used for deriving an encryption key from a password.
 
 use crate::{
-    decoder::Decoder,
+    decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     Error, KdfAlg, Result,
 };
@@ -14,12 +14,12 @@ use alloc::vec::Vec;
 #[cfg(feature = "encryption")]
 use bcrypt_pbkdf::bcrypt_pbkdf;
 
-/// Key Derivation Function (KDF) options.
+/// Key Derivation Functions (KDF).
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
-pub enum KdfOpts {
-    /// No KDF options.
-    Empty,
+pub enum Kdf {
+    /// No KDF.
+    None,
 
     /// bcrypt-pbkdf options.
     #[cfg(feature = "alloc")]
@@ -33,13 +33,54 @@ pub enum KdfOpts {
     },
 }
 
-impl KdfOpts {
-    /// Decode KDF options for the given algorithm.
-    pub(crate) fn decode(alg: KdfAlg, decoder: &mut impl Decoder) -> Result<Self> {
-        match alg {
+impl Kdf {
+    /// Get the KDF algorithm.
+    pub fn algorithm(&self) -> KdfAlg {
+        match self {
+            Self::None => KdfAlg::None,
+            #[cfg(feature = "alloc")]
+            Self::Bcrypt { .. } => KdfAlg::Bcrypt,
+        }
+    }
+
+    /// Derive an encryption key from the given password.
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn derive(&self, password: impl AsRef<[u8]>, output: &mut [u8]) -> Result<()> {
+        match self {
+            Kdf::None => Err(Error::Decrypted),
+            Kdf::Bcrypt { salt, rounds } => {
+                bcrypt_pbkdf(password, salt, *rounds, output).map_err(|_| Error::Crypto)?;
+                Ok(())
+            }
+        }
+    }
+
+    /// Is the KDF configured as `none`?
+    pub fn is_none(&self) -> bool {
+        self == &Self::None
+    }
+
+    /// Is the KDF configured as `bcrypt` (i.e. bcrypt-pbkdf)?
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn is_bcrypt(&self) -> bool {
+        matches!(self, Self::Bcrypt { .. })
+    }
+}
+
+impl Default for Kdf {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+impl Decode for Kdf {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+        match KdfAlg::decode(decoder)? {
             KdfAlg::None => {
                 if decoder.decode_usize()? == 0 {
-                    Ok(Self::Empty)
+                    Ok(Self::None)
                 } else {
                     Err(Error::Algorithm)
                 }
@@ -59,53 +100,23 @@ impl KdfOpts {
             }
         }
     }
-
-    /// Get the KDF algorithm.
-    pub fn algorithm(&self) -> KdfAlg {
-        match self {
-            Self::Empty => KdfAlg::None,
-            #[cfg(feature = "alloc")]
-            Self::Bcrypt { .. } => KdfAlg::Bcrypt,
-        }
-    }
-
-    /// Derive an encryption key from the given password.
-    #[cfg(feature = "encryption")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
-    pub fn derive(&self, password: impl AsRef<[u8]>, output: &mut [u8]) -> Result<()> {
-        match self {
-            KdfOpts::Empty => Err(Error::Decrypted),
-            KdfOpts::Bcrypt { salt, rounds } => {
-                bcrypt_pbkdf(password, salt, *rounds, output).map_err(|_| Error::Crypto)?;
-                Ok(())
-            }
-        }
-    }
-
-    /// Are the KDF options empty?
-    pub fn is_empty(&self) -> bool {
-        self == &Self::Empty
-    }
 }
 
-impl Default for KdfOpts {
-    fn default() -> Self {
-        Self::Empty
-    }
-}
-
-impl Encode for KdfOpts {
+impl Encode for Kdf {
     fn encoded_len(&self) -> Result<usize> {
-        match self {
-            Self::Empty => Ok(4),
-            #[cfg(feature = "alloc")]
-            Self::Bcrypt { salt, .. } => Ok(4 + 4 + salt.len() + 4),
-        }
+        Ok(self.algorithm().encoded_len()?
+            + match self {
+                Self::None => 4,
+                #[cfg(feature = "alloc")]
+                Self::Bcrypt { salt, .. } => 4 + 4 + salt.len() + 4,
+            })
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        self.algorithm().encode(encoder)?;
+
         match self {
-            Self::Empty => encoder.encode_usize(0),
+            Self::None => encoder.encode_usize(0),
             #[cfg(feature = "alloc")]
             Self::Bcrypt { salt, rounds } => {
                 encoder.encode_usize(4 + salt.len() + 4)?;

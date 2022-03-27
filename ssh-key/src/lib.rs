@@ -128,7 +128,7 @@ pub use crate::{
     algorithm::{Algorithm, CipherAlg, EcdsaCurve, HashAlg, KdfAlg},
     authorized_keys::AuthorizedKeys,
     error::{Error, Result},
-    kdf::KdfOpts,
+    kdf::Kdf,
     private::PrivateKey,
     public::PublicKey,
 };
