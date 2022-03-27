@@ -4,10 +4,10 @@
 use core::fmt;
 
 use serde::de::{Error, Visitor};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserializer, Serialize, Serializer};
 
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use ::{alloc::vec::Vec, serde::Deserialize};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -47,8 +47,29 @@ where
     D: Deserializer<'de>,
 {
     if deserializer.is_human_readable() {
-        base16ct::mixed::decode(<&str>::deserialize(deserializer)?, buffer)
-            .map_err(D::Error::custom)
+        struct StrVisitor<'b>(&'b mut [u8]);
+
+        impl<'de, 'b> Visitor<'de> for StrVisitor<'b> {
+            type Value = &'b [u8];
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(
+                    formatter,
+                    "a string with a maximum length of {}",
+                    self.0.len() * 2
+                )
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                // TODO: Map `base16ct::Error::InvalidLength` to `Error::invalid_length`.
+                base16ct::mixed::decode(v, self.0).map_err(E::custom)
+            }
+        }
+
+        deserializer.deserialize_str(StrVisitor(buffer))
     } else {
         struct SliceVisitor<'b>(&'b mut [u8]);
 
@@ -108,7 +129,24 @@ where
     D: Deserializer<'de>,
 {
     if deserializer.is_human_readable() {
-        base16ct::mixed::decode_vec(<&str>::deserialize(deserializer)?).map_err(D::Error::custom)
+        struct StrVisitor;
+
+        impl<'de> Visitor<'de> for StrVisitor {
+            type Value = Vec<u8>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(formatter, "a string")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                base16ct::mixed::decode_vec(v).map_err(E::custom)
+            }
+        }
+
+        deserializer.deserialize_str(StrVisitor)
     } else {
         Vec::deserialize(deserializer)
     }

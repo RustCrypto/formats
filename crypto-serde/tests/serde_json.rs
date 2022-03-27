@@ -26,11 +26,31 @@ fn deserialize_slice() {
 }
 
 #[test]
+fn deserialize_slice_owned() {
+    let deserialized = json::from_reader::<_, slice::HexLowerOrBin>(HEX_LOWER.as_bytes()).unwrap();
+    assert_eq!(deserialized.0, EXAMPLE_BYTES);
+
+    let deserialized = json::from_reader::<_, slice::HexUpperOrBin>(HEX_UPPER.as_bytes()).unwrap();
+    assert_eq!(deserialized.0, EXAMPLE_BYTES);
+}
+
+#[test]
 fn deserialize_array() {
     let deserialized = json::from_str::<array::HexLowerOrBin<16>>(HEX_LOWER).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 
     let deserialized = json::from_str::<array::HexUpperOrBin<16>>(HEX_UPPER).unwrap();
+    assert_eq!(deserialized.0, EXAMPLE_BYTES);
+}
+
+#[test]
+fn deserialize_array_owned() {
+    let deserialized =
+        json::from_reader::<_, array::HexLowerOrBin<16>>(HEX_LOWER.as_bytes()).unwrap();
+    assert_eq!(deserialized.0, EXAMPLE_BYTES);
+
+    let deserialized =
+        json::from_reader::<_, array::HexUpperOrBin<16>>(HEX_UPPER.as_bytes()).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 }
 
