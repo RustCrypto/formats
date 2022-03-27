@@ -11,6 +11,9 @@ use crate::{
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
+#[cfg(feature = "encryption")]
+use bcrypt_pbkdf::bcrypt_pbkdf;
+
 /// Key Derivation Function (KDF) options.
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
@@ -63,6 +66,19 @@ impl KdfOpts {
             Self::Empty => KdfAlg::None,
             #[cfg(feature = "alloc")]
             Self::Bcrypt { .. } => KdfAlg::Bcrypt,
+        }
+    }
+
+    /// Derive an encryption key from the given password.
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn derive(&self, password: impl AsRef<[u8]>, output: &mut [u8]) -> Result<()> {
+        match self {
+            KdfOpts::Empty => Err(Error::Decrypted),
+            KdfOpts::Bcrypt { salt, rounds } => {
+                bcrypt_pbkdf(password, salt, *rounds, output).map_err(|_| Error::Crypto)?;
+                Ok(())
+            }
         }
     }
 

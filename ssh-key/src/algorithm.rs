@@ -207,6 +207,30 @@ impl CipherAlg {
     pub fn is_none(self) -> bool {
         self == Self::None
     }
+
+    /// Get the key size for this cipher in bytes.
+    pub fn key_size(self) -> Option<usize> {
+        match self {
+            Self::None => None,
+            Self::Aes256Ctr => Some(32),
+        }
+    }
+
+    /// Get the initialization vector size for this cipher in bytes.
+    pub fn iv_size(self) -> Option<usize> {
+        match self {
+            Self::None => None,
+            Self::Aes256Ctr => Some(16),
+        }
+    }
+
+    /// Get the block size for this cipher in bytes.
+    pub fn block_size(self) -> Option<usize> {
+        match self {
+            Self::None => None,
+            Self::Aes256Ctr => Some(16),
+        }
+    }
 }
 
 impl AsRef<str> for CipherAlg {
