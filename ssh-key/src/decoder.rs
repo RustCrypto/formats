@@ -34,7 +34,7 @@ pub(crate) trait Decoder {
     fn decode_raw<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]>;
 
     /// Get the length of the remaining data after Base64 decoding.
-    fn decoded_len(&self) -> usize;
+    fn remaining_len(&self) -> usize;
 
     /// Is decoding finished?
     fn is_finished(&self) -> bool;
@@ -151,7 +151,7 @@ impl Decoder for Base64Decoder<'_> {
         Ok(self.decode(out)?)
     }
 
-    fn decoded_len(&self) -> usize {
+    fn remaining_len(&self) -> usize {
         self.remaining_len()
     }
 
@@ -165,11 +165,32 @@ impl Decoder for pem::Decoder<'_> {
         Ok(self.decode(out)?)
     }
 
-    fn decoded_len(&self) -> usize {
+    fn remaining_len(&self) -> usize {
         self.remaining_len()
     }
 
     fn is_finished(&self) -> bool {
         self.is_finished()
+    }
+}
+
+impl Decoder for &[u8] {
+    fn decode_raw<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
+        if self.len() >= out.len() {
+            let (head, tail) = self.split_at(out.len());
+            *self = tail;
+            out.copy_from_slice(head);
+            Ok(out)
+        } else {
+            Err(Error::Length)
+        }
+    }
+
+    fn remaining_len(&self) -> usize {
+        self.len()
+    }
+
+    fn is_finished(&self) -> bool {
+        self.is_empty()
     }
 }

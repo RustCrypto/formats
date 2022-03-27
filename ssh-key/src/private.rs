@@ -36,6 +36,12 @@ use {
     zeroize::Zeroizing,
 };
 
+#[cfg(feature = "encryption")]
+use aes::{
+    cipher::{InnerIvInit, KeyInit, StreamCipherCore},
+    Aes256,
+};
+
 #[cfg(feature = "std")]
 use std::{fs, io::Write, path::Path};
 
@@ -45,18 +51,27 @@ use std::os::unix::fs::OpenOptionsExt;
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
+/// Block size to use for unencrypted keys.
+const DEFAULT_BLOCK_SIZE: usize = 8;
+
+/// Maximum supported block size.
+///
+/// This is the block size used by e.g. AES.
+const MAX_BLOCK_SIZE: usize = 16;
+
 /// Padding bytes to use.
-const PADDING_BYTES: [u8; 7] = [1, 2, 3, 4, 5, 6, 7];
+const PADDING_BYTES: [u8; MAX_BLOCK_SIZE - 1] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
 /// Line width used by the PEM encoding of OpenSSH private keys.
 const PEM_LINE_WIDTH: usize = 70;
 
-/// Block size to use for unencrypted keys.
-const DEFAULT_BLOCK_SIZE: usize = 8;
-
 /// Unix file permissions for SSH private keys.
 #[cfg(all(unix, feature = "std"))]
 const UNIX_FILE_PERMISSIONS: u32 = 0o600;
+
+/// Counter mode with a 32-bit big endian counter.
+#[cfg(feature = "encryption")]
+type Ctr128BE<Cipher> = ctr::CtrCore<Cipher, ctr::flavors::Ctr128BE>;
 
 /// SSH private key.
 #[derive(Clone, Debug)]
@@ -84,6 +99,10 @@ impl PrivateKey {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn new(key_data: KeypairData, comment: impl Into<String>) -> Result<Self> {
+        if key_data.is_encrypted() {
+            return Err(Error::Encrypted);
+        }
+
         let mut private_key = Self::try_from(key_data)?;
         private_key.public_key.comment = comment.into();
         Ok(private_key)
@@ -145,59 +164,13 @@ impl PrivateKey {
             });
         }
 
-        // Begin decoding unencrypted list of N private keys
-        // See OpenSSH PROTOCOL.key § 3
-        let private_key_len = pem_decoder.decode_usize()?;
-
-        // TODO(tarcieri): support for encrypted private keys
-        let block_size = DEFAULT_BLOCK_SIZE;
-
-        if (private_key_len % block_size != 0) || (private_key_len != pem_decoder.remaining_len()) {
-            return Err(Error::Length);
-        }
-
-        let checkint1 = pem_decoder.decode_u32()?;
-        let checkint2 = pem_decoder.decode_u32()?;
-
-        if checkint1 != checkint2 {
-            // TODO(tarcieri): treat this as a cryptographic error?
-            return Err(Error::FormatEncoding);
-        }
-
-        let key_data = KeypairData::decode(&mut pem_decoder)?;
-
-        // Ensure public key matches private key
-        if public_key.key_data() != &public::KeyData::try_from(&key_data)? {
-            return Err(Error::PublicKey);
-        }
-
-        // Decode comment (e.g. email address)
-        #[cfg(not(feature = "alloc"))]
-        pem_decoder.drain_prefixed()?;
-        #[cfg(feature = "alloc")]
-        {
-            public_key.comment = pem_decoder.decode_string()?;
-        }
-
-        let padding_len = pem_decoder.remaining_len();
-
-        if padding_len >= block_size {
-            return Err(Error::Length);
-        }
-
-        if padding_len != 0 {
-            // TODO(tarcieri): support for encrypted private keys
-            let mut padding = [0u8; DEFAULT_BLOCK_SIZE];
-            pem_decoder.decode(&mut padding[..padding_len])?;
-
-            if PADDING_BYTES[..padding_len] != padding[..padding_len] {
-                return Err(Error::FormatEncoding);
-            }
-        }
-
-        if !pem_decoder.is_finished() {
-            return Err(Error::Length);
-        }
+        // TODO(tarcieri): validate private key length
+        let _private_key_len = pem_decoder.decode_usize()?;
+        let key_data = KeypairData::decode_with_comment(
+            &mut pem_decoder,
+            &mut public_key,
+            DEFAULT_BLOCK_SIZE,
+        )?;
 
         Ok(Self {
             cipher_alg,
@@ -217,8 +190,6 @@ impl PrivateKey {
             pem::Encoder::new_wrapped(Self::TYPE_LABEL, PEM_LINE_WIDTH, line_ending, out)?;
 
         pem_encoder.encode(Self::AUTH_MAGIC)?;
-
-        // TODO(tarcieri): support for encrypted private keys
         self.cipher_alg.encode(&mut pem_encoder)?;
         self.kdf_alg().encode(&mut pem_encoder)?;
         self.kdf_opts.encode(&mut pem_encoder)?;
@@ -241,9 +212,6 @@ impl PrivateKey {
             let padding_len = padding_len(private_key_len, DEFAULT_BLOCK_SIZE);
             debug_assert!(padding_len <= 7, "padding too long: {}", padding_len);
             pem_encoder.encode_usize(private_key_len + padding_len)?;
-            let checkint = self.public_key.key_data().checkint();
-            pem_encoder.encode_u32(checkint)?;
-            pem_encoder.encode_u32(checkint)?;
             self.key_data.encode(&mut pem_encoder)?;
             pem_encoder.encode_str(self.comment())?;
             pem_encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
@@ -292,6 +260,47 @@ impl PrivateKey {
             .and_then(|mut file| file.write_all(pem.as_bytes()))?;
 
         Ok(())
+    }
+
+    /// Attempt to decrypt an encrypted private key using the provided
+    /// password to derive an encryption key.
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn decrypt(&self, password: impl AsRef<[u8]>) -> Result<Self> {
+        let key_size = self.cipher_alg.key_size().ok_or(Error::Decrypted)?;
+        let iv_size = self.cipher_alg.iv_size().ok_or(Error::Decrypted)?;
+        let block_size = self.cipher_alg.block_size().ok_or(Error::Decrypted)?;
+
+        let mut key_and_iv = vec![0u8; key_size + iv_size];
+        self.kdf_opts.derive(password, &mut key_and_iv)?;
+
+        let (key_bytes, iv_bytes) = key_and_iv.split_at(key_size);
+        let mut buffer =
+            Zeroizing::new(self.key_data.encrypted().ok_or(Error::Decrypted)?.to_vec());
+
+        match self.cipher_alg {
+            CipherAlg::Aes256Ctr => {
+                let cipher = Aes256::new_from_slice(key_bytes)
+                    .and_then(|aes| Ctr128BE::inner_iv_slice_init(aes, iv_bytes))
+                    .map_err(|_| Error::Crypto)?;
+
+                cipher
+                    .try_apply_keystream_partial(buffer.as_mut_slice().into())
+                    .map_err(|_| Error::Crypto)?;
+            }
+            _ => return Err(Error::Decrypted),
+        }
+
+        let mut public_key = self.public_key.clone();
+        let key_data =
+            KeypairData::decode_with_comment(&mut buffer.as_slice(), &mut public_key, block_size)?;
+
+        Ok(Self {
+            cipher_alg: CipherAlg::None,
+            kdf_opts: KdfOpts::Empty,
+            public_key,
+            key_data,
+        })
     }
 
     /// Get the digital signature [`Algorithm`] used by this key.
@@ -370,8 +379,7 @@ impl PrivateKey {
             self.key_data().encoded_len()
         } else {
             // TODO(tarcieri): checked arithmetic
-            Ok(8 // 2 * checkints
-                + self.key_data().encoded_len()?
+            Ok(self.key_data().encoded_len()?
                 + 4 // comment length prefix
                 + self.comment().len())
         }
@@ -515,6 +523,16 @@ impl KeypairData {
         }
     }
 
+    /// Get the encrypted ciphertext if this key is encrypted.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn encrypted(&self) -> Option<&[u8]> {
+        match self {
+            Self::Encrypted(ciphertext) => Some(ciphertext),
+            _ => None,
+        }
+    }
+
     /// Get RSA keypair if this key is the correct type.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
@@ -562,10 +580,67 @@ impl KeypairData {
     pub fn is_rsa(&self) -> bool {
         matches!(self, Self::Rsa(_))
     }
+
+    /// Decode [`KeypairData`] along with its associated comment, storing
+    /// the comment in the provided public key.
+    ///
+    /// This method also checks padding for validity and ensures that the
+    /// decoded private key matches the provided public key.
+    ///
+    /// For private key format specification, see OpenSSH PROTOCOL.key § 3
+    fn decode_with_comment(
+        decoder: &mut impl Decoder,
+        public_key: &mut PublicKey,
+        block_size: usize,
+    ) -> Result<Self> {
+        debug_assert!(block_size <= MAX_BLOCK_SIZE);
+
+        // Ensure input data is padding-aligned
+        if decoder.remaining_len() % block_size != 0 {
+            return Err(Error::Length);
+        }
+
+        let key_data = KeypairData::decode(decoder)?;
+
+        // Ensure public key matches private key
+        if public_key.key_data() != &public::KeyData::try_from(&key_data)? {
+            return Err(Error::PublicKey);
+        }
+
+        public_key.decode_comment(decoder)?;
+
+        let padding_len = decoder.remaining_len();
+
+        if padding_len >= block_size {
+            return Err(Error::Length);
+        }
+
+        if padding_len != 0 {
+            let mut padding = [0u8; MAX_BLOCK_SIZE];
+            decoder.decode_raw(&mut padding[..padding_len])?;
+
+            if PADDING_BYTES[..padding_len] != padding[..padding_len] {
+                return Err(Error::FormatEncoding);
+            }
+        }
+
+        if !decoder.is_finished() {
+            return Err(Error::Length);
+        }
+
+        Ok(key_data)
+    }
 }
 
 impl Decode for KeypairData {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+        let checkint1 = decoder.decode_u32()?;
+        let checkint2 = decoder.decode_u32()?;
+
+        if checkint1 != checkint2 {
+            return Err(Error::Crypto);
+        }
+
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaKeypair::decode(decoder).map(Self::Dsa),
@@ -585,10 +660,11 @@ impl Decode for KeypairData {
 
 impl Encode for KeypairData {
     fn encoded_len(&self) -> Result<usize> {
-        let alg_len = if self.is_encrypted() {
+        let header_len = if self.is_encrypted() {
             0
         } else {
-            self.algorithm()?.encoded_len()?
+            let checkint_len = 8; // 2 x 32-bit checkints
+            checkint_len + self.algorithm()?.encoded_len()?
         };
 
         let key_len = match self {
@@ -603,11 +679,16 @@ impl Encode for KeypairData {
             Self::Rsa(key) => key.encoded_len()?,
         };
 
-        Ok(alg_len + key_len)
+        Ok(header_len + key_len)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         if !self.is_encrypted() {
+            // Compute checkint (uses deterministic method)
+            let checkint = public::KeyData::try_from(self)?.checkint();
+            encoder.encode_u32(checkint)?;
+            encoder.encode_u32(checkint)?;
+
             self.algorithm()?.encode(encoder)?;
         }
 

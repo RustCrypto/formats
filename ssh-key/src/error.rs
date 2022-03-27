@@ -19,6 +19,12 @@ pub enum Error {
     /// Character encoding-related errors.
     CharacterEncoding,
 
+    /// Cryptographic errors.
+    Crypto,
+
+    /// Cannot perform operation on decrypted private key.
+    Decrypted,
+
     /// ECDSA key encoding errors.
     #[cfg(feature = "ecdsa")]
     #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
@@ -54,6 +60,8 @@ impl fmt::Display for Error {
             Error::Algorithm => f.write_str("unknown or unsupported algorithm"),
             Error::Base64(err) => write!(f, "Base64 encoding error: {}", err),
             Error::CharacterEncoding => f.write_str("character encoding invalid"),
+            Error::Crypto => f.write_str("cryptographic error"),
+            Error::Decrypted => f.write_str("private key is already decrypted"),
             #[cfg(feature = "ecdsa")]
             Error::Ecdsa(err) => write!(f, "ECDSA encoding error: {}", err),
             Error::Encrypted => f.write_str("private key is encrypted"),

@@ -5,8 +5,18 @@
 use hex_literal::hex;
 use ssh_key::{Algorithm, KdfAlg, KdfOpts, PrivateKey};
 
+/// Unencrypted Ed25519 OpenSSH-formatted private key.
+#[cfg(all(feature = "encryption", feature = "subtle"))]
+const OSSH_ED25519_EXAMPLE: &str = include_str!("examples/id_ed25519");
+
 /// Encrypted Ed25519 OpenSSH-formatted private key.
+///
+/// This is the encrypted form of `OSSH_ED25519_EXAMPLE`.
 const OSSH_ED25519_ENC_EXAMPLE: &str = include_str!("examples/id_ed25519.enc");
+
+/// Bad password; don't actually use outside tests!
+#[cfg(all(feature = "encryption", feature = "subtle"))]
+const PASSWORD: &[u8] = b"hunter42";
 
 #[test]
 fn decode_ed25519_enc_openssh() {
@@ -25,6 +35,17 @@ fn decode_ed25519_enc_openssh() {
     assert_eq!(
         &hex!("b33eaef37ea2df7caa010defdea34e241f65f1b529a4f43ed14327f5c54aab62"),
         ossh_key.public_key().key_data().ed25519().unwrap().as_ref(),
+    );
+}
+
+#[cfg(all(feature = "encryption", feature = "subtle"))]
+#[test]
+fn decrypt_ed25519_enc_openssh() {
+    let ossh_key_enc = PrivateKey::from_openssh(OSSH_ED25519_ENC_EXAMPLE).unwrap();
+    let ossh_key_dec = ossh_key_enc.decrypt(PASSWORD).unwrap();
+    assert_eq!(
+        PrivateKey::from_openssh(OSSH_ED25519_EXAMPLE).unwrap(),
+        ossh_key_dec
     );
 }
 

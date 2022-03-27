@@ -164,6 +164,22 @@ impl PublicKey {
         }
         .expect("error calculating fingerprint")
     }
+
+    /// Decode comment (e.g. email address).
+    ///
+    /// This is a stub implementation that ignores the comment.
+    #[cfg(not(feature = "alloc"))]
+    pub(crate) fn decode_comment(&mut self, decoder: &mut impl Decoder) -> Result<()> {
+        decoder.drain_prefixed()?;
+        Ok(())
+    }
+
+    /// Decode comment (e.g. email address)
+    #[cfg(feature = "alloc")]
+    pub(crate) fn decode_comment(&mut self, decoder: &mut impl Decoder) -> Result<()> {
+        self.comment = decoder.decode_string()?;
+        Ok(())
+    }
 }
 
 impl From<KeyData> for PublicKey {
