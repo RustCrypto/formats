@@ -7,9 +7,6 @@ use crate::{
 };
 use core::{fmt, str};
 
-/// AES-256 in counter (CTR) mode
-const AES256_CTR: &str = "aes256-ctr";
-
 /// bcrypt-pbkdf
 const BCRYPT: &str = "bcrypt";
 
@@ -58,6 +55,23 @@ impl<T: AlgString> Decode for T {
     }
 }
 
+impl<T: AlgString> Decode for Option<T> {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+        let mut buf = T::DecodeBuf::default();
+        debug_assert!(buf.as_mut().len() >= NONE.len());
+
+        let name = decoder
+            .decode_str(buf.as_mut())
+            .map_err(|_| Error::Algorithm)?;
+
+        if name == NONE {
+            Ok(None)
+        } else {
+            name.parse().map(Some)
+        }
+    }
+}
+
 impl<T: AlgString> Encode for T {
     fn encoded_len(&self) -> Result<usize> {
         Ok(4 + self.as_ref().len())
@@ -65,6 +79,16 @@ impl<T: AlgString> Encode for T {
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         encoder.encode_str(self.as_ref())
+    }
+}
+
+impl<T: AlgString> Encode for Option<T> {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(4 + self.as_ref().map(AsRef::as_ref).unwrap_or(NONE).len())
+    }
+
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        encoder.encode_str(self.as_ref().map(AsRef::as_ref).unwrap_or(NONE))
     }
 }
 
@@ -160,96 +184,6 @@ impl fmt::Display for Algorithm {
 }
 
 impl str::FromStr for Algorithm {
-    type Err = Error;
-
-    fn from_str(id: &str) -> Result<Self> {
-        Self::new(id)
-    }
-}
-
-/// Cipher algorithms.
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
-#[non_exhaustive]
-pub enum CipherAlg {
-    /// None.
-    None,
-
-    /// AES-256 in counter (CTR) mode.
-    Aes256Ctr,
-}
-
-impl CipherAlg {
-    /// Maximum length of an algorithm string: `aes256-ctr` (10 chars)
-    const MAX_SIZE: usize = 10;
-
-    /// Decode cipher algorithm from the given `ciphername`.
-    ///
-    /// # Supported cipher names
-    /// - `none`
-    /// - `aes256-ctr`
-    pub fn new(ciphername: &str) -> Result<Self> {
-        match ciphername {
-            NONE => Ok(Self::None),
-            AES256_CTR => Ok(Self::Aes256Ctr),
-            _ => Err(Error::Algorithm),
-        }
-    }
-
-    /// Get the string identifier which corresponds to this algorithm.
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::None => NONE,
-            Self::Aes256Ctr => AES256_CTR,
-        }
-    }
-
-    /// Is the cipher algorithm "none"?
-    pub fn is_none(self) -> bool {
-        self == Self::None
-    }
-
-    /// Get the key size for this cipher in bytes.
-    pub fn key_size(self) -> Option<usize> {
-        match self {
-            Self::None => None,
-            Self::Aes256Ctr => Some(32),
-        }
-    }
-
-    /// Get the initialization vector size for this cipher in bytes.
-    pub fn iv_size(self) -> Option<usize> {
-        match self {
-            Self::None => None,
-            Self::Aes256Ctr => Some(16),
-        }
-    }
-
-    /// Get the block size for this cipher in bytes.
-    pub fn block_size(self) -> Option<usize> {
-        match self {
-            Self::None => None,
-            Self::Aes256Ctr => Some(16),
-        }
-    }
-}
-
-impl AsRef<str> for CipherAlg {
-    fn as_ref(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl AlgString for CipherAlg {
-    type DecodeBuf = [u8; Self::MAX_SIZE];
-}
-
-impl fmt::Display for CipherAlg {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-impl str::FromStr for CipherAlg {
     type Err = Error;
 
     fn from_str(id: &str) -> Result<Self> {

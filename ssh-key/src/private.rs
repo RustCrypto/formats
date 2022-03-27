@@ -24,7 +24,7 @@ pub use self::{
 use crate::{
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    public, Algorithm, CipherAlg, Error, Kdf, PublicKey, Result,
+    public, Algorithm, Cipher, Error, Kdf, PublicKey, Result,
 };
 use core::str;
 use pem_rfc7468::{self as pem, LineEnding, PemLabel};
@@ -34,12 +34,6 @@ use {
     crate::encoder::encoded_len,
     alloc::{string::String, vec::Vec},
     zeroize::Zeroizing,
-};
-
-#[cfg(feature = "encryption")]
-use aes::{
-    cipher::{InnerIvInit, KeyInit, StreamCipherCore},
-    Aes256,
 };
 
 #[cfg(feature = "fingerprint")]
@@ -72,15 +66,11 @@ const PEM_LINE_WIDTH: usize = 70;
 #[cfg(all(unix, feature = "std"))]
 const UNIX_FILE_PERMISSIONS: u32 = 0o600;
 
-/// Counter mode with a 32-bit big endian counter.
-#[cfg(feature = "encryption")]
-type Ctr128BE<Cipher> = ctr::CtrCore<Cipher, ctr::flavors::Ctr128BE>;
-
 /// SSH private key.
 #[derive(Clone, Debug)]
 pub struct PrivateKey {
     /// Cipher algorithm (a.k.a. `ciphername`).
-    cipher_alg: CipherAlg,
+    cipher: Option<Cipher>,
 
     /// KDF options.
     kdf: Kdf,
@@ -129,7 +119,7 @@ impl PrivateKey {
             return Err(Error::FormatEncoding);
         }
 
-        let cipher_alg = CipherAlg::decode(&mut pem_decoder)?;
+        let cipher = Option::<Cipher>::decode(&mut pem_decoder)?;
         let kdf = Kdf::decode(&mut pem_decoder)?;
         let nkeys = pem_decoder.decode_usize()?;
 
@@ -150,8 +140,12 @@ impl PrivateKey {
         }
 
         // Handle encrypted private key
+        #[cfg(not(feature = "alloc"))]
+        if cipher.is_some() {
+            return Err(Error::Encrypted);
+        }
         #[cfg(feature = "alloc")]
-        if !cipher_alg.is_none() {
+        if cipher.is_some() {
             let key_data = KeypairData::Encrypted(pem_decoder.decode_byte_vec()?);
 
             if !pem_decoder.is_finished() {
@@ -159,7 +153,7 @@ impl PrivateKey {
             }
 
             return Ok(Self {
-                cipher_alg,
+                cipher,
                 kdf,
                 public_key,
                 key_data,
@@ -175,7 +169,7 @@ impl PrivateKey {
         )?;
 
         Ok(Self {
-            cipher_alg,
+            cipher,
             kdf,
             public_key,
             key_data,
@@ -192,7 +186,7 @@ impl PrivateKey {
             pem::Encoder::new_wrapped(Self::TYPE_LABEL, PEM_LINE_WIDTH, line_ending, out)?;
 
         pem_encoder.encode(Self::AUTH_MAGIC)?;
-        self.cipher_alg.encode(&mut pem_encoder)?;
+        self.cipher.encode(&mut pem_encoder)?;
         self.kdf.encode(&mut pem_encoder)?;
 
         // TODO(tarcieri): support for encoding more than one private key
@@ -268,36 +262,26 @@ impl PrivateKey {
     #[cfg(feature = "encryption")]
     #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>) -> Result<Self> {
-        let key_size = self.cipher_alg.key_size().ok_or(Error::Decrypted)?;
-        let iv_size = self.cipher_alg.iv_size().ok_or(Error::Decrypted)?;
-        let block_size = self.cipher_alg.block_size().ok_or(Error::Decrypted)?;
-
-        let mut key_and_iv = vec![0u8; key_size + iv_size];
+        let cipher = self.cipher.ok_or(Error::Decrypted)?;
+        let mut key_and_iv = vec![0u8; cipher.key_size() + cipher.iv_size()];
         self.kdf.derive(password, &mut key_and_iv)?;
 
-        let (key_bytes, iv_bytes) = key_and_iv.split_at(key_size);
+        let (key_bytes, iv_bytes) = key_and_iv.split_at(cipher.key_size());
         let mut buffer =
             Zeroizing::new(self.key_data.encrypted().ok_or(Error::Decrypted)?.to_vec());
 
-        match self.cipher_alg {
-            CipherAlg::Aes256Ctr => {
-                let cipher = Aes256::new_from_slice(key_bytes)
-                    .and_then(|aes| Ctr128BE::inner_iv_slice_init(aes, iv_bytes))
-                    .map_err(|_| Error::Crypto)?;
-
-                cipher
-                    .try_apply_keystream_partial(buffer.as_mut_slice().into())
-                    .map_err(|_| Error::Crypto)?;
-            }
-            _ => return Err(Error::Decrypted),
-        }
+        cipher.decrypt(key_bytes, iv_bytes, buffer.as_mut_slice())?;
 
         let mut public_key = self.public_key.clone();
-        let key_data =
-            KeypairData::decode_with_comment(&mut buffer.as_slice(), &mut public_key, block_size)?;
+
+        let key_data = KeypairData::decode_with_comment(
+            &mut buffer.as_slice(),
+            &mut public_key,
+            cipher.block_size(),
+        )?;
 
         Ok(Self {
-            cipher_alg: CipherAlg::None,
+            cipher: None,
             kdf: Kdf::None,
             public_key,
             key_data,
@@ -315,8 +299,8 @@ impl PrivateKey {
     }
 
     /// Cipher algorithm (a.k.a. `ciphername`).
-    pub fn cipher_alg(&self) -> CipherAlg {
-        self.cipher_alg
+    pub fn cipher(&self) -> Option<Cipher> {
+        self.cipher
     }
 
     /// Compute key fingerprint.
@@ -330,7 +314,9 @@ impl PrivateKey {
 
     /// Is this key encrypted?
     pub fn is_encrypted(&self) -> bool {
-        self.key_data.is_encrypted()
+        let ret = self.key_data.is_encrypted();
+        debug_assert_eq!(ret, self.cipher.is_some());
+        ret
     }
 
     /// KDF options.
@@ -357,7 +343,7 @@ impl PrivateKey {
 
         // TODO(tarcieri): checked arithmetic
         let mut bytes_len = Self::AUTH_MAGIC.len()
-            + self.cipher_alg.encoded_len()?
+            + self.cipher.encoded_len()?
             + self.kdf.encoded_len()?
             + 4 // number of keys (encoded as uint32)
             + 4 + self.public_key.key_data().encoded_len()?
@@ -397,7 +383,7 @@ impl TryFrom<KeypairData> for PrivateKey {
         let public_key = public::KeyData::try_from(&key_data)?;
 
         Ok(Self {
-            cipher_alg: CipherAlg::None,
+            cipher: None,
             kdf: Kdf::None,
             public_key: public_key.into(),
             key_data,
@@ -436,7 +422,7 @@ impl ConstantTimeEq for PrivateKey {
         // Constant-time with respect to private key data
         self.key_data.ct_eq(&other.key_data)
             & Choice::from(
-                (self.cipher_alg == other.cipher_alg
+                (self.cipher == other.cipher
                     && self.kdf == other.kdf
                     && self.public_key == other.public_key) as u8,
             )

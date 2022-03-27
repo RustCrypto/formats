@@ -3,7 +3,7 @@
 #![cfg(feature = "alloc")]
 
 use hex_literal::hex;
-use ssh_key::{Algorithm, Kdf, KdfAlg, PrivateKey};
+use ssh_key::{Algorithm, Cipher, Kdf, KdfAlg, PrivateKey};
 
 /// Unencrypted Ed25519 OpenSSH-formatted private key.
 #[cfg(all(feature = "encryption", feature = "subtle"))]
@@ -22,6 +22,7 @@ const PASSWORD: &[u8] = b"hunter42";
 fn decode_ed25519_enc_openssh() {
     let key = PrivateKey::from_openssh(OPENSSH_ED25519_ENC_EXAMPLE).unwrap();
     assert_eq!(Algorithm::Ed25519, key.algorithm());
+    assert_eq!(Cipher::Aes256Ctr, key.cipher().unwrap());
     assert_eq!(KdfAlg::Bcrypt, key.kdf().algorithm());
 
     match key.kdf() {
