@@ -52,56 +52,54 @@ where
 
 /// Deserialize the given array from hex when using human-readable formats or
 /// binary if the format is binary.
-pub fn deserialize_hex_or_bin<'de, D, const N: usize>(deserializer: D) -> Result<[u8; N], D::Error>
+pub fn deserialize_hex_or_bin<'de, D>(buffer: &mut [u8], deserializer: D) -> Result<(), D::Error>
 where
     D: Deserializer<'de>,
 {
     if deserializer.is_human_readable() {
         let hex = <&str>::deserialize(deserializer)?;
 
-        if hex.len() != N * 2 {
-            struct LenError<const N: usize>;
+        if hex.len() != buffer.len() * 2 {
+            struct LenError(usize);
 
-            impl<const N: usize> Expected for LenError<N> {
+            impl Expected for LenError {
                 fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                    write!(formatter, "a string of length {}", N * 2)
+                    write!(formatter, "a string of length {}", self.0 * 2)
                 }
             }
 
-            return Err(Error::invalid_length(hex.len(), &LenError::<N>));
+            return Err(Error::invalid_length(hex.len(), &LenError(buffer.len())));
         }
 
-        let mut buffer = [0; N];
-        base16ct::mixed::decode(hex, &mut buffer).map_err(D::Error::custom)?;
+        base16ct::mixed::decode(hex, buffer).map_err(D::Error::custom)?;
 
-        Ok(buffer)
+        Ok(())
     } else {
-        struct ArrayVisitor<const N: usize>;
+        struct ArrayVisitor<'b>(&'b mut [u8]);
 
-        impl<'de, const N: usize> Visitor<'de> for ArrayVisitor<N> {
-            type Value = [u8; N];
+        impl<'de> Visitor<'de> for ArrayVisitor<'_> {
+            type Value = ();
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(formatter, "an array of length {}", N)
+                write!(formatter, "an array of length {}", self.0.len())
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
             {
-                let mut buffer = [0; N];
-
-                for (index, byte) in buffer.iter_mut().enumerate() {
-                    *byte = seq
-                        .next_element()?
-                        .ok_or_else(|| Error::invalid_length(index, &self))?;
+                for (index, byte) in self.0.iter_mut().enumerate() {
+                    *byte = match seq.next_element()? {
+                        Some(byte) => byte,
+                        None => return Err(Error::invalid_length(index, &self)),
+                    };
                 }
 
-                Ok(buffer)
+                Ok(())
             }
         }
 
-        deserializer.deserialize_tuple(N, ArrayVisitor)
+        deserializer.deserialize_tuple(buffer.len(), ArrayVisitor(buffer))
     }
 }
 
@@ -159,7 +157,10 @@ impl<'de, const N: usize, const UPPERCASE: bool> Deserialize<'de> for HexOrBin<N
     where
         D: Deserializer<'de>,
     {
-        deserialize_hex_or_bin(deserializer).map(Self)
+        let mut buffer = [0; N];
+        deserialize_hex_or_bin(&mut buffer, deserializer)?;
+
+        Ok(Self(buffer))
     }
 }
 
