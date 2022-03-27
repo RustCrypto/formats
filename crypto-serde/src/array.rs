@@ -5,7 +5,10 @@ use core::fmt;
 
 use serde::de::{Error, Expected, SeqAccess, Visitor};
 use serde::ser::SerializeTuple;
-use serde::{Deserialize, Deserializer, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+#[cfg(feature = "zeroize")]
+use zeroize::Zeroize;
 
 /// Serialize the given type as lower case hex when using human-readable
 /// formats or binary if the format is binary.
@@ -99,5 +102,70 @@ where
         }
 
         deserializer.deserialize_tuple(N, ArrayVisitor)
+    }
+}
+
+/// [`HexOrBin`] serializer which uses lower case.
+pub type HexLowerOrBin<const N: usize> = HexOrBin<N, false>;
+
+/// [`HexOrBin`] serializer which uses upper case.
+pub type HexUpperOrBin<const N: usize> = HexOrBin<N, true>;
+
+/// Serializer/deserializer newtype which encodes bytes as either binary or hex.
+///
+/// Use hexadecimal with human-readable formats, or raw binary with binary formats.
+pub struct HexOrBin<const N: usize, const UPPERCASE: bool>(pub [u8; N]);
+
+impl<const N: usize, const UPPERCASE: bool> AsRef<[u8]> for HexOrBin<N, UPPERCASE> {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
+
+impl<const N: usize, const UPPERCASE: bool> From<&[u8; N]> for HexOrBin<N, UPPERCASE> {
+    fn from(bytes: &[u8; N]) -> Self {
+        Self(*bytes)
+    }
+}
+
+impl<const N: usize, const UPPERCASE: bool> From<[u8; N]> for HexOrBin<N, UPPERCASE> {
+    fn from(bytes: [u8; N]) -> Self {
+        Self(bytes)
+    }
+}
+
+impl<const N: usize, const UPPERCASE: bool> From<HexOrBin<N, UPPERCASE>> for [u8; N] {
+    fn from(hex_or_bin: HexOrBin<N, UPPERCASE>) -> Self {
+        hex_or_bin.0
+    }
+}
+
+impl<const N: usize, const UPPERCASE: bool> Serialize for HexOrBin<N, UPPERCASE> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if UPPERCASE {
+            serialize_hex_upper_or_bin(self, serializer)
+        } else {
+            serialize_hex_lower_or_bin(self, serializer)
+        }
+    }
+}
+
+impl<'de, const N: usize, const UPPERCASE: bool> Deserialize<'de> for HexOrBin<N, UPPERCASE> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserialize_hex_or_bin(deserializer).map(Self)
+    }
+}
+
+#[cfg(feature = "zeroize")]
+#[cfg_attr(docsrs, doc(cfg(feature = "zeroize")))]
+impl<const N: usize, const UPPERCASE: bool> Zeroize for HexOrBin<N, UPPERCASE> {
+    fn zeroize(&mut self) {
+        self.0.as_mut_slice().zeroize();
     }
 }
