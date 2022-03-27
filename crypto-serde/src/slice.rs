@@ -71,6 +71,7 @@ pub type HexUpperOrBin = HexOrBin<true>;
 /// Use hexadecimal with human-readable formats, or raw binary with binary formats.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct HexOrBin<const UPPERCASE: bool>(pub Vec<u8>);
 
 #[cfg(feature = "alloc")]

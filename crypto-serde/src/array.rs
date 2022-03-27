@@ -114,6 +114,7 @@ pub type HexUpperOrBin<const N: usize> = HexOrBin<N, true>;
 /// Serializer/deserializer newtype which encodes bytes as either binary or hex.
 ///
 /// Use hexadecimal with human-readable formats, or raw binary with binary formats.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct HexOrBin<const N: usize, const UPPERCASE: bool>(pub [u8; N]);
 
 impl<const N: usize, const UPPERCASE: bool> AsRef<[u8]> for HexOrBin<N, UPPERCASE> {

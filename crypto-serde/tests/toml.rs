@@ -67,7 +67,7 @@ fn deserialize_array() {
 proptest! {
     #[test]
     fn round_trip_slice_lower(bytes in vec(any::<u8>(), 0..1024)) {
-        #[derive(Deserialize, Serialize)]
+        #[derive(Debug, Deserialize, PartialEq, Serialize)]
         pub struct Test {
             test: slice::HexLowerOrBin,
         }
@@ -76,12 +76,12 @@ proptest! {
 
         let serialized = toml::to_string(&test).unwrap();
         let deserialized = toml::from_str::<Test>(&serialized).unwrap();
-        prop_assert_eq!(test.test.0, deserialized.test.0);
+        prop_assert_eq!(test, deserialized);
     }
 
     #[test]
     fn round_trip_slice_upper(bytes in vec(any::<u8>(), 0..1024)) {
-        #[derive(Deserialize, Serialize)]
+        #[derive(Debug, Deserialize, PartialEq, Serialize)]
         pub struct Test {
             test: slice::HexUpperOrBin,
         }
@@ -90,12 +90,12 @@ proptest! {
 
         let serialized = toml::to_string(&test).unwrap();
         let deserialized = toml::from_str::<Test>(&serialized).unwrap();
-        prop_assert_eq!(test.test.0, deserialized.test.0);
+        prop_assert_eq!(test, deserialized);
     }
 
     #[test]
     fn round_trip_array_lower(bytes in uniform32(0u8..)) {
-        #[derive(Deserialize, Serialize)]
+        #[derive(Debug, Deserialize, PartialEq, Serialize)]
         pub struct Test {
             test: array::HexLowerOrBin<32>,
         }
@@ -104,12 +104,12 @@ proptest! {
 
         let serialized = toml::to_string(&test).unwrap();
         let deserialized = toml::from_str::<Test>(&serialized).unwrap();
-        prop_assert_eq!(test.test.0, deserialized.test.0);
+        prop_assert_eq!(test, deserialized);
     }
 
     #[test]
     fn round_trip_array_upper(bytes in uniform32(0u8..)) {
-        #[derive(Deserialize, Serialize)]
+        #[derive(Debug, Deserialize, PartialEq, Serialize)]
         pub struct Test {
             test: array::HexUpperOrBin<32>,
         }
@@ -118,6 +118,6 @@ proptest! {
 
         let serialized = toml::to_string(&test).unwrap();
         let deserialized = toml::from_str::<Test>(&serialized).unwrap();
-        prop_assert_eq!(test.test.0, deserialized.test.0);
+        prop_assert_eq!(test, deserialized);
     }
 }
