@@ -314,6 +314,7 @@ dependencies = [
  "hex-literal",
  "proptest",
  "serde",
+ "serde-json-core",
  "serde_json",
  "toml",
  "zeroize",
@@ -959,6 +960,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce31e24b01e1e524df96f1c2fdd054405f8d7376249a5110886fb4b658484789"
 dependencies = [
  "serde_derive",
+]
+
+[[package]]
+name = "serde-json-core"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8014aeea272bca0f0779778d43253f2f3375b414185b30e6ecc4d3e4a9994781"
+dependencies = [
+ "ryu",
+ "serde",
 ]
 
 [[package]]
