@@ -2,7 +2,7 @@
 
 #![cfg(feature = "alloc")]
 
-use crypto_serde::{HexLowerOrBin, HexUpperOrBin};
+use crypto_serde::slice::{HexLowerOrBin, HexUpperOrBin};
 use hex_literal::hex;
 use serde::{Deserialize, Serialize};
 

@@ -3,7 +3,7 @@
 #![cfg(feature = "alloc")]
 
 use ciborium::{de, ser};
-use crypto_serde::HexUpperOrBin;
+use crypto_serde::slice::HexUpperOrBin;
 use hex_literal::hex;
 use proptest::{prelude::*, string::*};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -32,7 +32,7 @@ fn deserialize_array() {
         where
             D: Deserializer<'de>,
         {
-            crypto_serde::deserialize_array_hex_or_bin::<_, 16>(deserializer).map(Self)
+            crypto_serde::array::deserialize_hex_or_bin::<_, 16>(deserializer).map(Self)
         }
     }
 
@@ -60,7 +60,7 @@ fn serialize_array() {
         where
             S: Serializer,
         {
-            crypto_serde::serialize_array_hex_upper_or_bin(&self.0, serializer)
+            crypto_serde::array::serialize_hex_upper_or_bin(&self.0, serializer)
         }
     }
 

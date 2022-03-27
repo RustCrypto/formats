@@ -2,7 +2,7 @@
 
 #![cfg(feature = "alloc")]
 
-use crypto_serde::{HexLowerOrBin, HexUpperOrBin};
+use crypto_serde::slice::{HexLowerOrBin, HexUpperOrBin};
 use hex_literal::hex;
 use proptest::{prelude::*, string::*};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -54,7 +54,7 @@ fn array() {
         where
             D: Deserializer<'de>,
         {
-            crypto_serde::deserialize_array_hex_or_bin::<_, 16>(deserializer).map(Self)
+            crypto_serde::array::deserialize_hex_or_bin::<_, 16>(deserializer).map(Self)
         }
     }
 
@@ -63,7 +63,7 @@ fn array() {
         where
             S: Serializer,
         {
-            crypto_serde::serialize_array_hex_lower_or_bin(&self.0, serializer)
+            crypto_serde::array::serialize_hex_lower_or_bin(&self.0, serializer)
         }
     }
 
