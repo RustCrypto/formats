@@ -115,6 +115,12 @@ pub type HexUpperOrBin<const N: usize> = HexOrBin<N, true>;
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct HexOrBin<const N: usize, const UPPERCASE: bool>(pub [u8; N]);
 
+impl<const N: usize, const UPPERCASE: bool> Default for HexOrBin<N, UPPERCASE> {
+    fn default() -> Self {
+        Self([0; N])
+    }
+}
+
 impl<const N: usize, const UPPERCASE: bool> AsRef<[u8]> for HexOrBin<N, UPPERCASE> {
     fn as_ref(&self) -> &[u8] {
         self.0.as_ref()
