@@ -25,7 +25,7 @@ fn deserialize() {
 #[test]
 fn deserialize_owned() {
     let deserialized =
-        bincode::deserialize_from::<_, HexUpperOrBin>(BINCODE_SLICE.as_slice()).unwrap();
+        bincode::deserialize_from::<_, HexUpperOrBin>(BINCODE_SLICE.as_ref()).unwrap();
     assert_eq!(deserialized.as_ref(), EXAMPLE_BYTES);
 }
 
@@ -45,13 +45,13 @@ fn deserialize_array() {
     let deserialized = bincode::deserialize::<Test>(&BINCODE_ARRAY).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 
-    let deserialized = bincode::deserialize_from::<_, Test>(BINCODE_ARRAY.as_slice()).unwrap();
+    let deserialized = bincode::deserialize_from::<_, Test>(BINCODE_ARRAY.as_ref()).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 }
 
 #[test]
 fn serialize() {
-    let serialized = bincode::serialize(&HexUpperOrBin::from(EXAMPLE_BYTES.as_slice())).unwrap();
+    let serialized = bincode::serialize(&HexUpperOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
     assert_eq!(&serialized, &BINCODE_SLICE);
 }
 

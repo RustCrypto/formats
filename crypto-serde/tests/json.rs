@@ -19,7 +19,7 @@ const HEX_UPPER: &str = "\"000102030405060708090A0B0C0D0E0F\"";
 
 #[test]
 fn hex_lower() {
-    let serialized = json::to_string(&HexLowerOrBin::from(EXAMPLE_BYTES.as_slice())).unwrap();
+    let serialized = json::to_string(&HexLowerOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
     assert_eq!(serialized, HEX_LOWER);
 
     let deserialized = json::from_str::<HexLowerOrBin>(&serialized).unwrap();
@@ -28,7 +28,7 @@ fn hex_lower() {
 
 #[test]
 fn hex_upper() {
-    let serialized = json::to_string(&HexUpperOrBin::from(EXAMPLE_BYTES.as_slice())).unwrap();
+    let serialized = json::to_string(&HexUpperOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
     assert_eq!(serialized, HEX_UPPER);
 
     let deserialized = json::from_str::<HexUpperOrBin>(&serialized).unwrap();

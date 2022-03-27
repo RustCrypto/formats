@@ -19,7 +19,7 @@ const CBOR_ARRAY: [u8; 17] = CBOR_SLICE;
 
 #[test]
 fn deserialize() {
-    let deserialized = de::from_reader::<HexUpperOrBin, _>(CBOR_SLICE.as_slice()).unwrap();
+    let deserialized = de::from_reader::<HexUpperOrBin, _>(CBOR_SLICE.as_ref()).unwrap();
     assert_eq!(deserialized.as_ref(), EXAMPLE_BYTES);
 }
 
@@ -36,7 +36,7 @@ fn deserialize_array() {
         }
     }
 
-    let deserialized = de::from_reader::<Test, _>(CBOR_SLICE.as_slice()).unwrap();
+    let deserialized = de::from_reader::<Test, _>(CBOR_SLICE.as_ref()).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 }
 
@@ -44,7 +44,7 @@ fn deserialize_array() {
 fn serialize() {
     let mut serialized = Vec::new();
     ser::into_writer(
-        &HexUpperOrBin::from(EXAMPLE_BYTES.as_slice()),
+        &HexUpperOrBin::from(EXAMPLE_BYTES.as_ref()),
         &mut serialized,
     )
     .unwrap();
