@@ -28,24 +28,6 @@ where
 }
 
 #[test]
-fn serialize_slice() {
-    let serialized = serialize(&slice::HexLowerOrBin::from(EXAMPLE_BYTES.as_ref()));
-    assert_eq!(serialized, HEX_LOWER);
-
-    let serialized = serialize(&slice::HexUpperOrBin::from(EXAMPLE_BYTES.as_ref()));
-    assert_eq!(serialized, HEX_UPPER);
-}
-
-#[test]
-fn serialize_array() {
-    let serialized = serialize(&array::HexLowerOrBin::from(EXAMPLE_BYTES));
-    assert_eq!(serialized, HEX_LOWER);
-
-    let serialized = serialize(&array::HexUpperOrBin::from(EXAMPLE_BYTES));
-    assert_eq!(serialized, HEX_UPPER);
-}
-
-#[test]
 fn deserialize_slice() {
     let deserialized = json::from_str::<slice::HexLowerOrBin>(HEX_LOWER).unwrap().0;
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
@@ -65,6 +47,24 @@ fn deserialize_array() {
         .unwrap()
         .0;
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
+}
+
+#[test]
+fn serialize_slice() {
+    let serialized = serialize(&slice::HexLowerOrBin::from(EXAMPLE_BYTES.as_ref()));
+    assert_eq!(serialized, HEX_LOWER);
+
+    let serialized = serialize(&slice::HexUpperOrBin::from(EXAMPLE_BYTES.as_ref()));
+    assert_eq!(serialized, HEX_UPPER);
+}
+
+#[test]
+fn serialize_array() {
+    let serialized = serialize(&array::HexLowerOrBin::from(EXAMPLE_BYTES));
+    assert_eq!(serialized, HEX_LOWER);
+
+    let serialized = serialize(&array::HexUpperOrBin::from(EXAMPLE_BYTES));
+    assert_eq!(serialized, HEX_UPPER);
 }
 
 proptest! {

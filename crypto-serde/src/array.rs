@@ -3,7 +3,7 @@
 
 use core::fmt;
 
-use serde::de::{Error, Expected, SeqAccess, Visitor};
+use serde::de::{Error, SeqAccess, Visitor};
 use serde::ser::SerializeTuple;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -57,23 +57,30 @@ where
     D: Deserializer<'de>,
 {
     if deserializer.is_human_readable() {
-        let hex = <&str>::deserialize(deserializer)?;
+        struct StrVisitor<'b>(&'b mut [u8]);
 
-        if hex.len() != buffer.len() * 2 {
-            struct LenError(usize);
+        impl<'de> Visitor<'de> for StrVisitor<'_> {
+            type Value = ();
 
-            impl Expected for LenError {
-                fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                    write!(formatter, "a string of length {}", self.0 * 2)
-                }
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(formatter, "a string of length {}", self.0.len() * 2)
             }
 
-            return Err(Error::invalid_length(hex.len(), &LenError(buffer.len())));
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                if v.len() != self.0.len() * 2 {
+                    return Err(Error::invalid_length(v.len(), &self));
+                }
+
+                base16ct::mixed::decode(v, self.0).map_err(E::custom)?;
+
+                Ok(())
+            }
         }
 
-        base16ct::mixed::decode(hex, buffer).map_err(D::Error::custom)?;
-
-        Ok(())
+        deserializer.deserialize_str(StrVisitor(buffer))
     } else {
         struct ArrayVisitor<'b>(&'b mut [u8]);
 
