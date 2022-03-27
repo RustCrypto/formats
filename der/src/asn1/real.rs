@@ -1,7 +1,7 @@
 //! ASN.1 `NULL` support.
 use crate::{
-    asn1::Any, str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    FixedTag, Header, Length, Result, Tag,
+    str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header,
+    Length, Result, Tag,
 };
 
 use super::integer::uint::strip_leading_zeroes;
@@ -178,20 +178,6 @@ impl EncodeValue for f64 {
 
 impl FixedTag for f64 {
     const TAG: Tag = Tag::Real;
-}
-
-impl<'a> From<f64> for Any<'a> {
-    fn from(_: f64) -> Any<'a> {
-        Any::from_tag_and_value(Tag::Real, ByteSlice::default())
-    }
-}
-
-impl TryFrom<Any<'_>> for f64 {
-    type Error = Error;
-
-    fn try_from(any: Any<'_>) -> Result<f64> {
-        any.decode_into()
-    }
 }
 
 /// Is the N-th bit 1 in the first octet?
