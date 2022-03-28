@@ -74,6 +74,18 @@ impl Cipher {
     #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn decrypt(self, key: &[u8], iv: &[u8], buffer: &mut [u8]) -> Result<()> {
         match self {
+            // Counter mode encryption and decryption are the same operation
+            Self::Aes256Ctr => self.encrypt(key, iv, buffer)?,
+        }
+
+        Ok(())
+    }
+
+    /// Encrypt the ciphertext in the `buffer` in-place using this cipher.
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn encrypt(self, key: &[u8], iv: &[u8], buffer: &mut [u8]) -> Result<()> {
+        match self {
             Self::Aes256Ctr => {
                 let cipher = Aes256::new_from_slice(key)
                     .and_then(|aes| Ctr128BE::inner_iv_slice_init(aes, iv))
@@ -97,6 +109,12 @@ impl AsRef<str> for Cipher {
 
 impl AlgString for Cipher {
     type DecodeBuf = [u8; Self::MAX_SIZE];
+}
+
+impl Default for Cipher {
+    fn default() -> Cipher {
+        Cipher::Aes256Ctr
+    }
 }
 
 impl fmt::Display for Cipher {

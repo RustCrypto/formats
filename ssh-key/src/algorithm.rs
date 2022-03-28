@@ -363,6 +363,12 @@ impl AlgString for KdfAlg {
     type DecodeBuf = [u8; Self::MAX_SIZE];
 }
 
+impl Default for KdfAlg {
+    fn default() -> KdfAlg {
+        KdfAlg::Bcrypt
+    }
+}
+
 impl fmt::Display for KdfAlg {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())

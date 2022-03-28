@@ -12,7 +12,20 @@ use crate::{
 use alloc::vec::Vec;
 
 #[cfg(feature = "encryption")]
-use bcrypt_pbkdf::bcrypt_pbkdf;
+use {
+    crate::Cipher,
+    bcrypt_pbkdf::bcrypt_pbkdf,
+    rand_core::{CryptoRng, RngCore},
+    zeroize::Zeroizing,
+};
+
+/// Default number of rounds to use for bcrypt-pbkdf.
+#[cfg(feature = "encryption")]
+const DEFAULT_BCRYPT_ROUNDS: u32 = 16;
+
+/// Default salt size. Matches OpenSSH.
+#[cfg(feature = "encryption")]
+const DEFAULT_SALT_SIZE: usize = 16;
 
 /// Key Derivation Functions (KDF).
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -34,6 +47,25 @@ pub enum Kdf {
 }
 
 impl Kdf {
+    /// Initialize KDF configuration for the given algorithm.
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn new(algorithm: KdfAlg, mut rng: impl CryptoRng + RngCore) -> Result<Self> {
+        let mut salt = vec![0u8; DEFAULT_SALT_SIZE];
+        rng.fill_bytes(&mut salt);
+
+        match algorithm {
+            KdfAlg::None => {
+                // Disallow explicit initialization with a `none` algorithm
+                Err(Error::Algorithm)
+            }
+            KdfAlg::Bcrypt => Ok(Kdf::Bcrypt {
+                salt,
+                rounds: DEFAULT_BCRYPT_ROUNDS,
+            }),
+        }
+    }
+
     /// Get the KDF algorithm.
     pub fn algorithm(&self) -> KdfAlg {
         match self {
@@ -54,6 +86,22 @@ impl Kdf {
                 Ok(())
             }
         }
+    }
+
+    /// Derive key and IV for the given [`Cipher`].
+    ///
+    /// Returns two byte vectors containing the key and IV respectively.
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn derive_key_and_iv(
+        &self,
+        cipher: Cipher,
+        password: impl AsRef<[u8]>,
+    ) -> Result<(Zeroizing<Vec<u8>>, Vec<u8>)> {
+        let mut okm = Zeroizing::new(vec![0u8; cipher.key_size() + cipher.iv_size()]);
+        self.derive(password, &mut okm)?;
+        let iv = okm.split_off(cipher.key_size());
+        Ok((okm, iv))
     }
 
     /// Is the KDF configured as `none`?

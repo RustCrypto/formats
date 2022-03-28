@@ -58,3 +58,21 @@ fn encode_ed25519_enc_openssh() {
         key.to_openssh(Default::default()).unwrap().trim_end()
     );
 }
+
+#[cfg(all(feature = "encryption", feature = "getrandom", feature = "subtle"))]
+#[test]
+fn encrypt_ed25519_openssh() {
+    use rand_core::OsRng;
+
+    let key_dec = PrivateKey::from_openssh(OPENSSH_ED25519_EXAMPLE).unwrap();
+    let key_enc = key_dec.encrypt(&mut OsRng, PASSWORD).unwrap();
+
+    // Ensure encrypted key round trips through encoder/decoder
+    let key_enc_str = key_enc.to_openssh(Default::default()).unwrap();
+    let key_enc2 = PrivateKey::from_openssh(&*key_enc_str).unwrap();
+    assert_eq!(key_enc, key_enc2);
+
+    // Ensure decrypted key matches the original
+    let key_dec2 = key_enc.decrypt(PASSWORD).unwrap();
+    assert_eq!(key_dec, key_dec2);
+}

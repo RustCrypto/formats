@@ -6,6 +6,9 @@ use crate::Result;
 use core::str;
 use pem_rfc7468 as pem;
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 #[cfg(feature = "fingerprint")]
 use sha2::{Digest, Sha256};
 
@@ -101,6 +104,15 @@ impl Encoder for Base64Encoder<'_> {
 impl Encoder for pem::Encoder<'_, '_> {
     fn encode_raw(&mut self, bytes: &[u8]) -> Result<()> {
         Ok(self.encode(bytes)?)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl Encoder for Vec<u8> {
+    fn encode_raw(&mut self, bytes: &[u8]) -> Result<()> {
+        self.extend_from_slice(bytes);
+        Ok(())
     }
 }
 

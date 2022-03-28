@@ -39,7 +39,7 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - uses: RustCrypto/actions/cargo-hack-install@master
-      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features default,std
+      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features default,getrandom,std
 
   minimal-versions:
     uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master

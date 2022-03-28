@@ -39,6 +39,9 @@ use {
 #[cfg(feature = "fingerprint")]
 use crate::{Fingerprint, HashAlg};
 
+#[cfg(feature = "encryption")]
+use rand_core::{CryptoRng, RngCore};
+
 #[cfg(feature = "std")]
 use std::{fs, io::Write, path::Path};
 
@@ -198,18 +201,16 @@ impl PrivateKey {
         self.public_key.key_data().encode(&mut pem_encoder)?;
 
         // Encode private key
-        let private_key_len = self.private_key_len()?;
+        pem_encoder.encode_usize(self.private_key_len(DEFAULT_BLOCK_SIZE)?)?;
 
         if self.is_encrypted() {
-            pem_encoder.encode_usize(private_key_len)?;
             self.key_data.encode(&mut pem_encoder)?;
         } else {
-            let padding_len = padding_len(private_key_len, DEFAULT_BLOCK_SIZE);
-            debug_assert!(padding_len <= 7, "padding too long: {}", padding_len);
-            pem_encoder.encode_usize(private_key_len + padding_len)?;
-            self.key_data.encode(&mut pem_encoder)?;
-            pem_encoder.encode_str(self.comment())?;
-            pem_encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
+            self.key_data.encode_with_comment(
+                &mut pem_encoder,
+                self.comment(),
+                DEFAULT_BLOCK_SIZE,
+            )?;
         }
 
         let encoded_len = pem_encoder.finish()?;
@@ -259,18 +260,18 @@ impl PrivateKey {
 
     /// Attempt to decrypt an encrypted private key using the provided
     /// password to derive an encryption key.
+    ///
+    /// Returns [`Error::Decrypted`] if the private key is already decrypted.
     #[cfg(feature = "encryption")]
     #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>) -> Result<Self> {
         let cipher = self.cipher.ok_or(Error::Decrypted)?;
-        let mut key_and_iv = vec![0u8; cipher.key_size() + cipher.iv_size()];
-        self.kdf.derive(password, &mut key_and_iv)?;
+        let (key_bytes, iv_bytes) = self.kdf.derive_key_and_iv(cipher, password)?;
 
-        let (key_bytes, iv_bytes) = key_and_iv.split_at(cipher.key_size());
         let mut buffer =
             Zeroizing::new(self.key_data.encrypted().ok_or(Error::Decrypted)?.to_vec());
 
-        cipher.decrypt(key_bytes, iv_bytes, buffer.as_mut_slice())?;
+        cipher.decrypt(&key_bytes, &iv_bytes, buffer.as_mut_slice())?;
 
         let mut public_key = self.public_key.clone();
 
@@ -285,6 +286,44 @@ impl PrivateKey {
             kdf: Kdf::None,
             public_key,
             key_data,
+        })
+    }
+
+    /// Attempt to encrypt an unencrypted private key using the provided
+    /// password to derive an encryption key.
+    ///
+    /// Uses the following algorithms:
+    /// - Cipher: [`Cipher::Aes256Ctr`]
+    /// - KDF: [`Kdf::Bcrypt`] (i.e. `bcrypt-pbkdf`)
+    ///
+    /// Returns [`Error::Encrypted`] if the private key is already encrypted.
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn encrypt(
+        &self,
+        rng: impl CryptoRng + RngCore,
+        password: impl AsRef<[u8]>,
+    ) -> Result<Self> {
+        if self.is_encrypted() {
+            return Err(Error::Encrypted);
+        }
+
+        let cipher = Cipher::default();
+        let kdf = Kdf::new(Default::default(), rng)?;
+        let (key_bytes, iv_bytes) = kdf.derive_key_and_iv(cipher, password)?;
+
+        let mut buffer = Vec::with_capacity(self.private_key_len(cipher.block_size())?);
+
+        // Encode and encrypt private key
+        self.key_data
+            .encode_with_comment(&mut buffer, self.comment(), cipher.block_size())?;
+        cipher.encrypt(&key_bytes, &iv_bytes, buffer.as_mut_slice())?;
+
+        Ok(Self {
+            cipher: Some(cipher),
+            kdf,
+            public_key: self.public_key.key_data.clone().into(),
+            key_data: KeypairData::Encrypted(buffer),
         })
     }
 
@@ -319,7 +358,9 @@ impl PrivateKey {
         ret
     }
 
-    /// KDF options.
+    /// Key Derivation Function (KDF) used to encrypt this key.
+    ///
+    /// Returns [`Kdf::None`] if this key is not encrypted.
     pub fn kdf(&self) -> &Kdf {
         &self.kdf
     }
@@ -339,19 +380,15 @@ impl PrivateKey {
     /// May be slightly longer than the actual result.
     #[cfg(feature = "alloc")]
     fn openssh_encoded_len(&self, line_ending: LineEnding) -> Result<usize> {
-        let private_key_len = self.private_key_len()?;
+        let private_key_len = self.private_key_len(DEFAULT_BLOCK_SIZE)?;
 
         // TODO(tarcieri): checked arithmetic
-        let mut bytes_len = Self::AUTH_MAGIC.len()
+        let bytes_len = Self::AUTH_MAGIC.len()
             + self.cipher.encoded_len()?
             + self.kdf.encoded_len()?
             + 4 // number of keys (encoded as uint32)
             + 4 + self.public_key.key_data().encoded_len()?
             + 4 + private_key_len;
-
-        if !self.is_encrypted() {
-            bytes_len += padding_len(private_key_len, DEFAULT_BLOCK_SIZE);
-        }
 
         let mut base64_len = encoded_len(bytes_len);
         base64_len += (base64_len.saturating_sub(1) / PEM_LINE_WIDTH) * line_ending.len();
@@ -363,15 +400,13 @@ impl PrivateKey {
         ))
     }
 
-    /// Get the length of the private key data in bytes (not including padding).
-    fn private_key_len(&self) -> Result<usize> {
+    /// Get the length of the private key data in bytes (including padding).
+    fn private_key_len(&self, block_size: usize) -> Result<usize> {
         if self.is_encrypted() {
             self.key_data().encoded_len()
         } else {
-            // TODO(tarcieri): checked arithmetic
-            Ok(self.key_data().encoded_len()?
-                + 4 // comment length prefix
-                + self.comment().len())
+            let len = self.key_data().encoded_len_with_comment(self.comment())?;
+            Ok(len + padding_len(len, block_size))
         }
     }
 }
@@ -620,6 +655,37 @@ impl KeypairData {
 
         Ok(key_data)
     }
+
+    /// Encode [`KeypairData`] along with its associated comment and padding.
+    fn encode_with_comment(
+        &self,
+        encoder: &mut impl Encoder,
+        comment: &str,
+        block_size: usize,
+    ) -> Result<()> {
+        if self.is_encrypted() {
+            // Can't encode an encrypted key with a comment
+            return Err(Error::Encrypted);
+        }
+
+        let private_key_len = self.encoded_len_with_comment(comment)?;
+        let padding_len = padding_len(private_key_len, block_size);
+
+        self.encode(encoder)?;
+        encoder.encode_str(comment)?;
+        encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
+        Ok(())
+    }
+
+    /// Get the length of this private key when encoded with the given comment.
+    ///
+    /// This length is sans padding.
+    fn encoded_len_with_comment(&self, comment: &str) -> Result<usize> {
+        // TODO(tarcieri): checked arithmetic
+        Ok(self.encoded_len()?
+            + 4 // comment length prefix
+            + comment.len())
+    }
 }
 
 impl Decode for KeypairData {
@@ -726,6 +792,8 @@ impl ConstantTimeEq for KeypairData {
             (Self::Ecdsa(a), Self::Ecdsa(b)) => a.ct_eq(b),
             (Self::Ed25519(a), Self::Ed25519(b)) => a.ct_eq(b),
             #[cfg(feature = "alloc")]
+            (Self::Encrypted(a), Self::Encrypted(b)) => a.ct_eq(b),
+            #[cfg(feature = "alloc")]
             (Self::Rsa(a), Self::Rsa(b)) => a.ct_eq(b),
             _ => Choice::from(0),
         }
@@ -748,9 +816,17 @@ impl Eq for KeypairData {}
 fn padding_len(input_size: usize, block_size: usize) -> usize {
     let input_rem = input_size % block_size;
 
-    if input_rem == 0 {
+    let padding_len = if input_rem == 0 {
         0
     } else {
         block_size - input_rem
-    }
+    };
+
+    debug_assert!(
+        padding_len < MAX_BLOCK_SIZE,
+        "padding too long: {}",
+        padding_len
+    );
+
+    padding_len
 }
