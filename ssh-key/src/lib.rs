@@ -140,8 +140,10 @@ pub use base64ct::LineEnding;
 pub use crate::mpint::MPInt;
 
 #[cfg(feature = "ecdsa")]
-#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 pub use sec1;
 
 #[cfg(feature = "fingerprint")]
 pub use crate::fingerprint::{Fingerprint, Sha256Fingerprint};
+
+#[cfg(feature = "rand_core")]
+pub use rand_core;
