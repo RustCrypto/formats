@@ -98,9 +98,10 @@ impl Kdf {
         cipher: Cipher,
         password: impl AsRef<[u8]>,
     ) -> Result<(Zeroizing<Vec<u8>>, Vec<u8>)> {
-        let mut okm = Zeroizing::new(vec![0u8; cipher.key_size() + cipher.iv_size()]);
+        let (key_size, iv_size) = cipher.key_and_iv_size().ok_or(Error::Decrypted)?;
+        let mut okm = Zeroizing::new(vec![0u8; key_size + iv_size]);
         self.derive(password, &mut okm)?;
-        let iv = okm.split_off(cipher.key_size());
+        let iv = okm.split_off(key_size);
         Ok((okm, iv))
     }
 
@@ -150,12 +151,18 @@ impl Decode for Kdf {
 
 impl Encode for Kdf {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(self.algorithm().encoded_len()?
-            + match self {
-                Self::None => 4,
-                #[cfg(feature = "alloc")]
-                Self::Bcrypt { salt, .. } => 4 + 4 + salt.len() + 4,
-            })
+        let kdfname_len = self.algorithm().encoded_len()?;
+
+        let kdfopts_len = match self {
+            Self::None => 0,
+            #[cfg(feature = "alloc")]
+            Self::Bcrypt { salt, .. } => salt.len().checked_add(8).ok_or(Error::Length)?,
+        };
+
+        kdfname_len
+            .checked_add(4) // kdfopts length prefix (uint32)
+            .and_then(|len| len.checked_add(kdfopts_len))
+            .ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
@@ -165,7 +172,7 @@ impl Encode for Kdf {
             Self::None => encoder.encode_usize(0),
             #[cfg(feature = "alloc")]
             Self::Bcrypt { salt, rounds } => {
-                encoder.encode_usize(4 + salt.len() + 4)?;
+                encoder.encode_usize(salt.len().checked_add(8).ok_or(Error::Length)?)?;
                 encoder.encode_byte_slice(salt)?;
                 encoder.encode_u32(*rounds)
             }

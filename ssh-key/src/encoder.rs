@@ -16,7 +16,7 @@ use sha2::{Digest, Sha256};
 ///
 /// This is an upper bound where the actual length might be slightly shorter.
 #[cfg(feature = "alloc")]
-pub(crate) fn encoded_len(input_len: usize) -> usize {
+pub(crate) fn base64_encoded_len(input_len: usize) -> usize {
     (((input_len * 4) / 3) + 3) & !3
 }
 

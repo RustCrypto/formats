@@ -55,23 +55,6 @@ impl<T: AlgString> Decode for T {
     }
 }
 
-impl<T: AlgString> Decode for Option<T> {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let mut buf = T::DecodeBuf::default();
-        debug_assert!(buf.as_mut().len() >= NONE.len());
-
-        let name = decoder
-            .decode_str(buf.as_mut())
-            .map_err(|_| Error::Algorithm)?;
-
-        if name == NONE {
-            Ok(None)
-        } else {
-            name.parse().map(Some)
-        }
-    }
-}
-
 impl<T: AlgString> Encode for T {
     fn encoded_len(&self) -> Result<usize> {
         Ok(4 + self.as_ref().len())
@@ -79,16 +62,6 @@ impl<T: AlgString> Encode for T {
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         encoder.encode_str(self.as_ref())
-    }
-}
-
-impl<T: AlgString> Encode for Option<T> {
-    fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.as_ref().map(AsRef::as_ref).unwrap_or(NONE).len())
-    }
-
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_str(self.as_ref().map(AsRef::as_ref).unwrap_or(NONE))
     }
 }
 

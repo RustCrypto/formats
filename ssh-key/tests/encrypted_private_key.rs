@@ -22,7 +22,7 @@ const PASSWORD: &[u8] = b"hunter42";
 fn decode_ed25519_enc_openssh() {
     let key = PrivateKey::from_openssh(OPENSSH_ED25519_ENC_EXAMPLE).unwrap();
     assert_eq!(Algorithm::Ed25519, key.algorithm());
-    assert_eq!(Cipher::Aes256Ctr, key.cipher().unwrap());
+    assert_eq!(Cipher::Aes256Ctr, key.cipher());
     assert_eq!(KdfAlg::Bcrypt, key.kdf().algorithm());
 
     match key.kdf() {
