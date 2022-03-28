@@ -16,7 +16,9 @@ use sha2::{Digest, Sha256};
 ///
 /// This is an upper bound where the actual length might be slightly shorter.
 #[cfg(feature = "alloc")]
+#[allow(clippy::integer_arithmetic)]
 pub(crate) fn base64_encoded_len(input_len: usize) -> usize {
+    // TODO(tarcieri): checked arithmetic
     (((input_len * 4) / 3) + 3) & !3
 }
 

@@ -140,7 +140,12 @@ impl PrivateKey {
         }
         #[cfg(feature = "alloc")]
         if cipher.is_some() {
-            let key_data = KeypairData::Encrypted(pem_decoder.decode_byte_vec()?);
+            let ciphertext = pem_decoder.decode_byte_vec()?;
+
+            // Ensure ciphertext is padded to the expected length
+            if ciphertext.len().checked_rem(cipher.block_size()) != Some(0) {
+                return Err(Error::Crypto);
+            }
 
             if !pem_decoder.is_finished() {
                 return Err(Error::Length);
@@ -150,7 +155,7 @@ impl PrivateKey {
                 cipher,
                 kdf,
                 public_key,
-                key_data,
+                key_data: KeypairData::Encrypted(ciphertext),
             });
         }
 
@@ -609,7 +614,7 @@ impl KeypairData {
         debug_assert!(cipher.block_size() <= MAX_BLOCK_SIZE);
 
         // Ensure input data is padding-aligned
-        if decoder.remaining_len() % cipher.block_size() != 0 {
+        if decoder.remaining_len().checked_rem(cipher.block_size()) != Some(0) {
             return Err(Error::Length);
         }
 
@@ -720,8 +725,9 @@ impl Encode for KeypairData {
         let header_len = if self.is_encrypted() {
             0
         } else {
-            let checkint_len = 8; // 2 x 32-bit checkints
-            checkint_len + self.algorithm()?.encoded_len()?
+            8usize // 2 x uint32 checkints
+                .checked_add(self.algorithm()?.encoded_len()?)
+                .ok_or(Error::Length)?
         };
 
         let key_len = match self {
@@ -736,7 +742,7 @@ impl Encode for KeypairData {
             Self::Rsa(key) => key.encoded_len()?,
         };
 
-        Ok(header_len + key_len)
+        header_len.checked_add(key_len).ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

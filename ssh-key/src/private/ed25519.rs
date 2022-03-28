@@ -133,7 +133,11 @@ impl Decode for Ed25519Keypair {
 
 impl Encode for Ed25519Keypair {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(self.public.encoded_len()? + 4 + Self::BYTE_SIZE)
+        self.public
+            .encoded_len()?
+            .checked_add(4)
+            .and_then(|len| len.checked_add(Self::BYTE_SIZE))
+            .ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

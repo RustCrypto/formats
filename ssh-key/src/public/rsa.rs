@@ -3,7 +3,7 @@
 use crate::{
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    MPInt, Result,
+    Error, MPInt, Result,
 };
 
 /// RSA public key.
@@ -38,7 +38,10 @@ impl Decode for RsaPublicKey {
 
 impl Encode for RsaPublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(self.e.encoded_len()? + self.n.encoded_len()?)
+        self.e
+            .encoded_len()?
+            .checked_add(self.n.encoded_len()?)
+            .ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

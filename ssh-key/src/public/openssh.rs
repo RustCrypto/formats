@@ -67,7 +67,7 @@ impl<'a> Encapsulation<'a> {
         f(&mut encoder)?;
         let base64_len = encoder.finish()?.len();
 
-        offset += base64_len;
+        offset = offset.checked_add(base64_len).ok_or(Error::Length)?;
         encode_str(out, &mut offset, " ")?;
         encode_str(out, &mut offset, comment)?;
         Ok(str::from_utf8(&out[..offset])?)
@@ -77,14 +77,14 @@ impl<'a> Encapsulation<'a> {
 /// Parse a segment of the public key.
 fn decode_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
     let start = *bytes;
-    let mut len = 0;
+    let mut len = 0usize;
 
     loop {
         match *bytes {
             [b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'+' | b'-' | b'/' | b'=', rest @ ..] => {
                 // Valid character; continue
                 *bytes = rest;
-                len += 1;
+                len = len.checked_add(1).ok_or(Error::Length)?;
             }
             [b' ', rest @ ..] => {
                 // Encountered space; we're done
@@ -113,12 +113,12 @@ fn decode_segment_str<'a>(bytes: &mut &'a [u8]) -> Result<&'a str> {
 fn encode_str(out: &mut [u8], offset: &mut usize, s: &str) -> Result<()> {
     let bytes = s.as_bytes();
 
-    if *offset + bytes.len() > out.len() {
+    if out.len() < offset.checked_add(bytes.len()).ok_or(Error::Length)? {
         return Err(Error::Length);
     }
 
     out[*offset..][..bytes.len()].copy_from_slice(bytes);
-    *offset += bytes.len();
+    *offset = offset.checked_add(bytes.len()).ok_or(Error::Length)?;
     Ok(())
 }
 

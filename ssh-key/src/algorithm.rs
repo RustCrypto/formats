@@ -57,7 +57,7 @@ impl<T: AlgString> Decode for T {
 
 impl<T: AlgString> Encode for T {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.as_ref().len())
+        4usize.checked_add(self.as_ref().len()).ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

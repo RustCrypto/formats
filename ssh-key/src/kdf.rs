@@ -99,7 +99,9 @@ impl Kdf {
         password: impl AsRef<[u8]>,
     ) -> Result<(Zeroizing<Vec<u8>>, Vec<u8>)> {
         let (key_size, iv_size) = cipher.key_and_iv_size().ok_or(Error::Decrypted)?;
-        let mut okm = Zeroizing::new(vec![0u8; key_size + iv_size]);
+        let okm_size = key_size.checked_add(iv_size).ok_or(Error::Length)?;
+
+        let mut okm = Zeroizing::new(vec![0u8; okm_size]);
         self.derive(password, &mut okm)?;
         let iv = okm.split_off(key_size);
         Ok((okm, iv))

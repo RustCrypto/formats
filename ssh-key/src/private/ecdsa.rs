@@ -34,7 +34,7 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
     /// Decode ECDSA private key using the provided Base64 decoder.
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         decoder.decode_length_prefixed(|decoder, len| {
-            if len == SIZE + 1 {
+            if len == SIZE.checked_add(1).ok_or(Error::Length)? {
                 // Strip leading zero
                 // TODO(tarcieri): make sure leading zero was necessary
                 if decoder.decode_u8()? != 0 {
@@ -56,11 +56,17 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
 
 impl<const SIZE: usize> Encode for EcdsaPrivateKey<SIZE> {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4usize + usize::from(self.needs_leading_zero()) + SIZE)
+        4usize
+            .checked_add(self.needs_leading_zero().into())
+            .and_then(|len| len.checked_add(SIZE))
+            .ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_usize(usize::from(self.needs_leading_zero()) + SIZE)?;
+        encoder.encode_usize(
+            SIZE.checked_add(self.needs_leading_zero().into())
+                .ok_or(Error::Length)?,
+        )?;
 
         if self.needs_leading_zero() {
             encoder.encode_raw(&[0])?;
@@ -220,7 +226,7 @@ impl Encode for EcdsaKeypair {
             Self::NistP521 { private, .. } => private.encoded_len()?,
         };
 
-        Ok(public_len + private_len)
+        public_len.checked_add(private_len).ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
