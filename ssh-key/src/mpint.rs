@@ -95,7 +95,9 @@ impl Decode for MPInt {
 
 impl Encode for MPInt {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.as_bytes().len())
+        4usize
+            .checked_add(self.as_bytes().len())
+            .ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

@@ -109,9 +109,14 @@ impl Decode for RsaKeypair {
 
 impl Encode for RsaKeypair {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(self.public.n.encoded_len()?
-            + self.public.e.encoded_len()?
-            + self.private.encoded_len()?)
+        [
+            self.public.n.encoded_len()?,
+            self.public.e.encoded_len()?,
+            self.private.encoded_len()?,
+        ]
+        .iter()
+        .try_fold(0usize, |acc, &len| acc.checked_add(len))
+        .ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

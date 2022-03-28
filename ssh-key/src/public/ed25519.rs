@@ -5,7 +5,7 @@
 use crate::{
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    Result,
+    Error, Result,
 };
 use core::fmt;
 
@@ -35,7 +35,7 @@ impl Decode for Ed25519PublicKey {
 
 impl Encode for Ed25519PublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + Self::BYTE_SIZE)
+        4usize.checked_add(Self::BYTE_SIZE).ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

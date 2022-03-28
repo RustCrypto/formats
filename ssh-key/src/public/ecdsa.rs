@@ -107,7 +107,10 @@ impl Decode for EcdsaPublicKey {
 
 impl Encode for EcdsaPublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.curve().encoded_len()? + self.as_ref().len())
+        4usize
+            .checked_add(self.curve().encoded_len()?)
+            .and_then(|len| len.checked_add(self.as_ref().len()))
+            .ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
