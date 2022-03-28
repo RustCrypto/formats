@@ -131,16 +131,10 @@ impl PrivateKey {
             return Err(Error::Length);
         }
 
-        let public_key_len = pem_decoder.decode_usize()?;
-        let public_key_offset = pem_decoder.remaining_len();
-
         #[cfg_attr(not(feature = "alloc"), allow(unused_mut))]
-        let mut public_key = PublicKey::from(public::KeyData::decode(&mut pem_decoder)?);
-
-        // Validate public key length
-        if pem_decoder.remaining_len().checked_add(public_key_len) != Some(public_key_offset) {
-            return Err(Error::Length);
-        }
+        let mut public_key = PublicKey::from(
+            pem_decoder.decode_length_prefixed(|decoder, _len| public::KeyData::decode(decoder))?,
+        );
 
         // Handle encrypted private key
         #[cfg(not(feature = "alloc"))]
@@ -163,13 +157,9 @@ impl PrivateKey {
             });
         }
 
-        // TODO(tarcieri): validate private key length
-        let _private_key_len = pem_decoder.decode_usize()?;
-        let key_data = KeypairData::decode_with_comment(
-            &mut pem_decoder,
-            &mut public_key,
-            DEFAULT_BLOCK_SIZE,
-        )?;
+        let key_data = pem_decoder.decode_length_prefixed(|decoder, _len| {
+            KeypairData::decode_with_comment(decoder, &mut public_key, DEFAULT_BLOCK_SIZE)
+        })?;
 
         Ok(Self {
             cipher,
@@ -197,8 +187,7 @@ impl PrivateKey {
         pem_encoder.encode_usize(nkeys)?;
 
         // Encode public key
-        pem_encoder.encode_usize(self.public_key.key_data().encoded_len()?)?;
-        self.public_key.key_data().encode(&mut pem_encoder)?;
+        pem_encoder.encode_length_prefixed(self.public_key.key_data())?;
 
         // Encode private key
         pem_encoder.encode_usize(self.private_key_len(DEFAULT_BLOCK_SIZE)?)?;
@@ -311,7 +300,6 @@ impl PrivateKey {
         let cipher = Cipher::default();
         let kdf = Kdf::new(Default::default(), rng)?;
         let (key_bytes, iv_bytes) = kdf.derive_key_and_iv(cipher, password)?;
-
         let mut buffer = Vec::with_capacity(self.private_key_len(cipher.block_size())?);
 
         // Encode and encrypt private key
@@ -391,6 +379,9 @@ impl PrivateKey {
             + 4 + private_key_len;
 
         let mut base64_len = encoded_len(bytes_len);
+
+        // Add the length of the line endings which will be inserted when
+        // encoded Base64 is linewrapped
         base64_len += (base64_len.saturating_sub(1) / PEM_LINE_WIDTH) * line_ending.len();
 
         Ok(pem::encapsulated_len(

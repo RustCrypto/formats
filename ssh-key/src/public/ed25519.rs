@@ -5,7 +5,7 @@
 use crate::{
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    Error, Result,
+    Result,
 };
 use core::fmt;
 
@@ -27,13 +27,8 @@ impl AsRef<[u8; Self::BYTE_SIZE]> for Ed25519PublicKey {
 
 impl Decode for Ed25519PublicKey {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        // Validate length prefix
-        if decoder.decode_usize()? != Self::BYTE_SIZE {
-            return Err(Error::Length);
-        }
-
         let mut bytes = [0u8; Self::BYTE_SIZE];
-        decoder.decode_raw(&mut bytes)?;
+        decoder.decode_length_prefixed(|decoder, _len| decoder.decode_raw(&mut bytes))?;
         Ok(Self(bytes))
     }
 }

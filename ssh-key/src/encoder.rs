@@ -33,7 +33,7 @@ pub(crate) trait Encode: Sized {
 }
 
 /// Encoder extension trait.
-pub(crate) trait Encoder {
+pub(crate) trait Encoder: Sized {
     /// Encode the given byte slice containing raw unstructured data.
     ///
     /// This is the base encoding method on which the rest of the trait is
@@ -59,6 +59,15 @@ pub(crate) trait Encoder {
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     fn encode_usize(&mut self, num: usize) -> Result<()> {
         self.encode_u32(u32::try_from(num)?)
+    }
+
+    /// Encodes length-prefixed nested data.
+    ///
+    /// Encodes a `uint32` which identifies the length of some encapsulated
+    /// data, then encodes the value.
+    fn encode_length_prefixed<T: Encode>(&mut self, value: &T) -> Result<()> {
+        self.encode_usize(value.encoded_len()?)?;
+        value.encode(self)
     }
 
     /// Encodes `[u8]` into `byte[n]` as described in [RFC4251 § 5]:

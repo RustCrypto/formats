@@ -459,10 +459,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "418d37c8b1d42553c93648be529cb70f920d3baf8ef469b74b9638df426e0b4c"
 dependencies = [
  "cfg-if",
- "js-sys",
  "libc",
  "wasi",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -1076,7 +1074,6 @@ dependencies = [
  "base64ct",
  "bcrypt-pbkdf",
  "ctr",
- "getrandom",
  "hex-literal",
  "pem-rfc7468",
  "rand_core",

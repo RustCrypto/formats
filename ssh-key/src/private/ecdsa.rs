@@ -33,19 +33,19 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
 
     /// Decode ECDSA private key using the provided Base64 decoder.
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let len = decoder.decode_usize()?;
-
-        if len == SIZE + 1 {
-            // Strip leading zero
-            // TODO(tarcieri): make sure leading zero was necessary
-            if decoder.decode_u8()? != 0 {
-                return Err(Error::FormatEncoding);
+        decoder.decode_length_prefixed(|decoder, len| {
+            if len == SIZE + 1 {
+                // Strip leading zero
+                // TODO(tarcieri): make sure leading zero was necessary
+                if decoder.decode_u8()? != 0 {
+                    return Err(Error::FormatEncoding);
+                }
             }
-        }
 
-        let mut bytes = [0u8; SIZE];
-        decoder.decode_raw(&mut bytes)?;
-        Ok(Self { bytes })
+            let mut bytes = [0u8; SIZE];
+            decoder.decode_raw(&mut bytes)?;
+            Ok(Self { bytes })
+        })
     }
 
     /// Does this private key need to be prefixed with a leading zero?

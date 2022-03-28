@@ -138,13 +138,11 @@ impl Decode for Kdf {
                 return Err(Error::Algorithm);
 
                 #[cfg(feature = "alloc")]
-                {
-                    // TODO(tarcieri): validate length
-                    let _len = decoder.decode_usize()?;
+                decoder.decode_length_prefixed(|decoder, _len| {
                     let salt = decoder.decode_byte_vec()?;
                     let rounds = decoder.decode_u32()?;
                     Ok(Self::Bcrypt { salt, rounds })
-                }
+                })
             }
         }
     }

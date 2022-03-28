@@ -116,20 +116,16 @@ impl Decode for Ed25519Keypair {
         // The OpenSSH serialization of Ed25519 keys is repetitive and includes
         // a serialization of `private_key[32] || public_key[32]` immediately
         // following the public key.
-        if decoder.decode_usize()? != Self::BYTE_SIZE {
-            return Err(Error::Length);
-        }
-
         let mut bytes = Zeroizing::new([0u8; Self::BYTE_SIZE]);
-        decoder.decode_raw(&mut *bytes)?;
+        decoder.decode_length_prefixed(|decoder, _len| decoder.decode_raw(&mut *bytes))?;
 
         let (priv_bytes, pub_bytes) = bytes.split_at(Ed25519PrivateKey::BYTE_SIZE);
-
-        if pub_bytes != public.as_ref() {
-            return Err(Error::FormatEncoding);
-        }
-
         let private = Ed25519PrivateKey(priv_bytes.try_into()?);
+
+        // Ensure public key matches the one one the keypair
+        if pub_bytes != public.as_ref() {
+            return Err(Error::Crypto);
+        }
 
         Ok(Self { public, private })
     }

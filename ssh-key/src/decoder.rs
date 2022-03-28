@@ -74,6 +74,30 @@ pub(crate) trait Decoder {
         }
     }
 
+    /// Decode length-prefixed nested data.
+    ///
+    /// Decodes a `uint32` which identifies the length of some encapsulated
+    /// data, then calls the given nested decoder function with the length of
+    /// the remaining data.
+    ///
+    /// As a postcondition, this function checks that the total amount of data
+    /// consumed matches the length prefix.
+    // TODO(tarcieri): enforce that data can't be read past the given length
+    fn decode_length_prefixed<T, F>(&mut self, f: F) -> Result<T>
+    where
+        F: FnOnce(&mut Self, usize) -> Result<T>,
+    {
+        let len = self.decode_usize()?;
+        let offset = self.remaining_len();
+        let ret = f(self, len)?;
+
+        if self.remaining_len().checked_add(len) == Some(offset) {
+            Ok(ret)
+        } else {
+            Err(Error::Length)
+        }
+    }
+
     /// Decodes `[u8]` from `byte[n]` as described in [RFC4251 § 5]:
     ///
     /// > A byte represents an arbitrary 8-bit value (octet).  Fixed length
@@ -82,10 +106,11 @@ pub(crate) trait Decoder {
     ///
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     fn decode_byte_slice<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8]> {
-        let len = self.decode_usize()?;
-        let result = out.get_mut(..len).ok_or(Error::Length)?;
-        self.decode_raw(result)?;
-        Ok(result)
+        self.decode_length_prefixed(|decoder, len| {
+            let slice = out.get_mut(..len).ok_or(Error::Length)?;
+            decoder.decode_raw(slice)?;
+            Ok(&slice[..])
+        })
     }
 
     /// Decodes `Vec<u8>` from `byte[n]` as described in [RFC4251 § 5]:
@@ -97,10 +122,11 @@ pub(crate) trait Decoder {
     /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
     #[cfg(feature = "alloc")]
     fn decode_byte_vec(&mut self) -> Result<Vec<u8>> {
-        let len = self.decode_usize()?;
-        let mut result = vec![0u8; len];
-        self.decode_raw(&mut result)?;
-        Ok(result)
+        self.decode_length_prefixed(|decoder, len| {
+            let mut result = vec![0u8; len];
+            decoder.decode_raw(&mut result)?;
+            Ok(result)
+        })
     }
 
     /// Decode a `string` as described in [RFC4251 § 5]:
@@ -141,8 +167,7 @@ pub(crate) trait Decoder {
 
     /// Decode a `u32` length prefix, and then drain the length of the body.
     fn drain_prefixed(&mut self) -> Result<()> {
-        let n_bytes = self.decode_usize()?;
-        self.drain(n_bytes)
+        self.decode_length_prefixed(|decoder, len| decoder.drain(len))
     }
 }
 
