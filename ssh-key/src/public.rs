@@ -26,7 +26,7 @@ use core::str::FromStr;
 
 #[cfg(feature = "alloc")]
 use {
-    crate::encoder::encoded_len,
+    crate::encoder::base64_encoded_len,
     alloc::{
         borrow::ToOwned,
         string::{String, ToString},
@@ -103,10 +103,15 @@ impl PublicKey {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn to_openssh(&self) -> Result<String> {
-        let alg_len = self.algorithm().as_str().len();
-        let key_data_len = encoded_len(self.key_data.encoded_len()?);
-        let comment_len = self.comment.len();
-        let encoded_len = 2 + alg_len + key_data_len + comment_len;
+        let encoded_len = [
+            2, // interstitial spaces
+            self.algorithm().as_str().len(),
+            base64_encoded_len(self.key_data.encoded_len()?),
+            self.comment.len(),
+        ]
+        .iter()
+        .try_fold(0usize, |acc, &len| acc.checked_add(len))
+        .ok_or(Error::Length)?;
 
         let mut buf = vec![0u8; encoded_len];
         let actual_len = self.encode_openssh(&mut buf)?.len();
@@ -367,7 +372,7 @@ impl Encode for KeyData {
             Self::Rsa(key) => key.encoded_len()?,
         };
 
-        Ok(alg_len + key_len)
+        alg_len.checked_add(key_len).ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

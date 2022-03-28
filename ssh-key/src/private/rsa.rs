@@ -4,7 +4,7 @@ use crate::{
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     public::RsaPublicKey,
-    MPInt, Result,
+    Error, MPInt, Result,
 };
 use core::fmt;
 use zeroize::Zeroize;
@@ -43,7 +43,8 @@ impl Encode for RsaPrivateKey {
     fn encoded_len(&self) -> Result<usize> {
         [&self.d, &self.iqmp, &self.p, &self.q]
             .iter()
-            .fold(Ok(0), |acc, n| Ok(acc? + n.encoded_len()?))
+            .try_fold(0usize, |acc, n| acc.checked_add(n.encoded_len().ok()?))
+            .ok_or(Error::Length)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
