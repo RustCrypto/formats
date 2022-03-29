@@ -24,6 +24,10 @@ specification  and `authorized_keys` files.
   - [x] ECDSA (`no_std` "heapless")
   - [x] Ed25519 (`no_std` "heapless")
   - [x] RSA (`no_std` + `alloc`)
+- [ ] Integrations with other crates
+  - [x] `ed25519-dalek`
+  - [ ] `p256`
+  - [ ] `rsa`
 - [x] Encrypted private key support
 - [x] Fingerprint support (SHA-256 only)
 - [x] Parsing `authorized_keys` files

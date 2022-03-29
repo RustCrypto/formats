@@ -49,6 +49,7 @@ pub enum KeypairData {
 
     /// Encrypted private key (ciphertext).
     #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     Encrypted(Vec<u8>),
 
     /// RSA keypair.
@@ -345,6 +346,36 @@ impl TryFrom<&KeypairData> for public::KeyData {
             #[cfg(feature = "alloc")]
             KeypairData::Rsa(rsa) => public::KeyData::Rsa(rsa.into()),
         })
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<DsaKeypair> for KeypairData {
+    fn from(keypair: DsaKeypair) -> KeypairData {
+        Self::Dsa(keypair)
+    }
+}
+
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+impl From<EcdsaKeypair> for KeypairData {
+    fn from(keypair: EcdsaKeypair) -> KeypairData {
+        Self::Ecdsa(keypair)
+    }
+}
+
+impl From<Ed25519Keypair> for KeypairData {
+    fn from(keypair: Ed25519Keypair) -> KeypairData {
+        Self::Ed25519(keypair)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<RsaKeypair> for KeypairData {
+    fn from(keypair: RsaKeypair) -> KeypairData {
+        Self::Rsa(keypair)
     }
 }
 

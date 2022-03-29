@@ -11,6 +11,9 @@ use crate::{
 use core::fmt;
 use zeroize::{Zeroize, Zeroizing};
 
+#[cfg(feature = "rand_core")]
+use rand_core::{CryptoRng, RngCore};
+
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
@@ -26,6 +29,15 @@ impl Ed25519PrivateKey {
     /// Convert to the inner byte array.
     pub fn into_bytes(self) -> [u8; Self::BYTE_SIZE] {
         self.0
+    }
+
+    /// Generate a random Ed25519 private key.
+    #[cfg(feature = "rand_core")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rand_core")))]
+    pub fn random(mut rng: impl CryptoRng + RngCore) -> Self {
+        let mut key_bytes = [0u8; Self::BYTE_SIZE];
+        rng.fill_bytes(&mut key_bytes);
+        Self(key_bytes)
     }
 }
 
@@ -65,6 +77,38 @@ impl fmt::UpperHex for Ed25519PrivateKey {
     }
 }
 
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<Ed25519PrivateKey> for ed25519_dalek::SecretKey {
+    fn from(key: Ed25519PrivateKey) -> ed25519_dalek::SecretKey {
+        ed25519_dalek::SecretKey::from(&key)
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<&Ed25519PrivateKey> for ed25519_dalek::SecretKey {
+    fn from(key: &Ed25519PrivateKey) -> ed25519_dalek::SecretKey {
+        ed25519_dalek::SecretKey::from_bytes(key.as_ref()).expect("invalid Ed25519 key")
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<ed25519_dalek::SecretKey> for Ed25519PrivateKey {
+    fn from(key: ed25519_dalek::SecretKey) -> Ed25519PrivateKey {
+        Ed25519PrivateKey::from(&key)
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<&ed25519_dalek::SecretKey> for Ed25519PrivateKey {
+    fn from(key: &ed25519_dalek::SecretKey) -> Ed25519PrivateKey {
+        Ed25519PrivateKey(key.to_bytes())
+    }
+}
+
 #[cfg(feature = "subtle")]
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl ConstantTimeEq for Ed25519PrivateKey {
@@ -98,6 +142,13 @@ pub struct Ed25519Keypair {
 impl Ed25519Keypair {
     /// Size of an Ed25519 keypair in bytes.
     pub const BYTE_SIZE: usize = 64;
+
+    /// Generate a random Ed25519 private keypair.
+    #[cfg(feature = "ed25519")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+    pub fn random(rng: impl CryptoRng + RngCore) -> Self {
+        Ed25519PrivateKey::random(rng).into()
+    }
 
     /// Serialize an Ed25519 keypair as bytes.
     pub fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
@@ -163,6 +214,68 @@ impl fmt::Debug for Ed25519Keypair {
         f.debug_struct("Ed25519Keypair")
             .field("public", &self.public)
             .finish_non_exhaustive()
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<Ed25519PrivateKey> for Ed25519Keypair {
+    fn from(private: Ed25519PrivateKey) -> Ed25519Keypair {
+        let secret = ed25519_dalek::SecretKey::from(&private);
+        let public = ed25519_dalek::PublicKey::from(&secret);
+
+        Ed25519Keypair {
+            private,
+            public: public.into(),
+        }
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl TryFrom<Ed25519Keypair> for ed25519_dalek::Keypair {
+    type Error = Error;
+
+    fn try_from(key: Ed25519Keypair) -> Result<ed25519_dalek::Keypair> {
+        Ok(ed25519_dalek::Keypair {
+            secret: key.private.into(),
+            public: key.public.try_into()?,
+        })
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl TryFrom<&Ed25519Keypair> for ed25519_dalek::Keypair {
+    type Error = Error;
+
+    fn try_from(key: &Ed25519Keypair) -> Result<ed25519_dalek::Keypair> {
+        Ok(ed25519_dalek::Keypair {
+            secret: (&key.private).into(),
+            public: key.public.try_into()?,
+        })
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<ed25519_dalek::Keypair> for Ed25519Keypair {
+    fn from(key: ed25519_dalek::Keypair) -> Ed25519Keypair {
+        Ed25519Keypair {
+            private: key.secret.into(),
+            public: key.public.into(),
+        }
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<&ed25519_dalek::Keypair> for Ed25519Keypair {
+    fn from(key: &ed25519_dalek::Keypair) -> Ed25519Keypair {
+        Ed25519Keypair {
+            private: (&key.secret).into(),
+            public: key.public.into(),
+        }
     }
 }
 

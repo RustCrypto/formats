@@ -170,6 +170,13 @@ impl PublicKey {
         .expect("error calculating fingerprint")
     }
 
+    /// Set the comment on the key.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn set_comment(&mut self, comment: impl Into<String>) {
+        self.comment = comment.into();
+    }
+
     /// Decode comment (e.g. email address).
     ///
     /// This is a stub implementation that ignores the comment.
