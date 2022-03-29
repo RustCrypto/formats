@@ -37,11 +37,11 @@ use {crate::encoder::base64_encoded_len, alloc::string::String, zeroize::Zeroizi
 #[cfg(feature = "fingerprint")]
 use crate::{Fingerprint, HashAlg};
 
+#[cfg(any(feature = "ed25519", feature = "encryption"))]
+use rand_core::{CryptoRng, RngCore};
+
 #[cfg(feature = "encryption")]
-use {
-    alloc::vec::Vec,
-    rand_core::{CryptoRng, RngCore},
-};
+use alloc::vec::Vec;
 
 #[cfg(feature = "std")]
 use std::{fs, io::Write, path::Path};
@@ -351,6 +351,28 @@ impl PrivateKey {
     /// Get the [`PublicKey`] which corresponds to this private key.
     pub fn public_key(&self) -> &PublicKey {
         &self.public_key
+    }
+
+    /// Generate a random Ed25519 private key.
+    #[cfg(feature = "ed25519")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+    pub fn random_ed25519(rng: impl CryptoRng + RngCore) -> Self {
+        let key_data = KeypairData::from(Ed25519Keypair::random(rng));
+        let public_key = public::KeyData::try_from(&key_data).expect("invalid key");
+
+        Self {
+            cipher: Cipher::None,
+            kdf: Kdf::None,
+            public_key: public_key.into(),
+            key_data,
+        }
+    }
+
+    /// Set the comment on the key.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn set_comment(&mut self, comment: impl Into<String>) {
+        self.public_key.set_comment(comment);
     }
 
     /// Estimated length of a PEM-encoded key in OpenSSH format.
