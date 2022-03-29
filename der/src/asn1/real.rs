@@ -1,4 +1,5 @@
-//! ASN.1 `NULL` support.
+//! ASN.1 `REAL` support.
+
 use crate::{
     str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header,
     Length, Result, Tag,
@@ -6,6 +7,8 @@ use crate::{
 
 use super::integer::uint::strip_leading_zeroes;
 
+// TODO: panic-free implementation
+#[allow(clippy::panic_in_result_fn)]
 impl DecodeValue<'_> for f64 {
     fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
         let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
@@ -15,8 +18,10 @@ impl DecodeValue<'_> for f64 {
         } else if is_nth_bit_one::<7>(bytes) {
             // Binary encoding from section 8.5.7 applies
             let sign: u64 = if is_nth_bit_one::<6>(bytes) { 1 } else { 0 };
+
             // Section 8.5.7.2: Check the base -- the DER specs say that only base 2 should be supported in DER
             let base = mnth_bits_to_u8::<5, 4>(bytes);
+
             if base != 0 {
                 // Real related error: base is not DER compliant (base encoded in enum)
                 return Err(Tag::Real.value_error());
@@ -60,7 +65,9 @@ impl DecodeValue<'_> for f64 {
                 1 => Ok(f64::NEG_INFINITY),
                 2 => Ok(f64::NAN),
                 3 => Ok(-0.0_f64),
-                _ => unreachable!(),
+                _ => {
+                    unreachable!()
+                }
             }
         } else {
             let astr = StrSlice::from_bytes(&bytes[1..])?;
@@ -158,7 +165,10 @@ impl EncodeValue for f64 {
                 0 | 1 => {}
                 2 => first_byte |= 0b0000_0001,
                 3 => first_byte |= 0b0000_0010,
-                _ => todo!("support multi octet exponent encoding"),
+                _ => {
+                    // TODO: support multi octet exponent encoding?
+                    return Err(Tag::Real.value_error());
+                }
             }
 
             encoder.bytes(&[first_byte])?;
