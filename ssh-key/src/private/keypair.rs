@@ -2,6 +2,7 @@
 
 use super::ed25519::Ed25519Keypair;
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     public, Algorithm, Cipher, Error, PublicKey, Result,
@@ -238,8 +239,7 @@ impl KeypairData {
     /// and padded using the padding size for the given cipher.
     pub(super) fn encoded_len_padded(&self, comment: &str, cipher: Cipher) -> Result<usize> {
         let len = self.encoded_len_with_comment(comment)?;
-        len.checked_add(cipher.padding_len(len))
-            .ok_or(Error::Length)
+        [len, cipher.padding_len(len)].checked_sum()
     }
 
     /// Get the length of this private key when encoded with the given comment.
@@ -251,10 +251,7 @@ impl KeypairData {
             return Err(Error::Encrypted);
         }
 
-        self.encoded_len()?
-            .checked_add(4)
-            .and_then(|len| len.checked_add(comment.len()))
-            .ok_or(Error::Length)
+        [4, self.encoded_len()?, comment.len()].checked_sum()
     }
 }
 
@@ -286,13 +283,10 @@ impl Decode for KeypairData {
 
 impl Encode for KeypairData {
     fn encoded_len(&self) -> Result<usize> {
-        let header_len = if self.is_encrypted() {
-            0
-        } else {
-            8usize // 2 x uint32 checkints
-                .checked_add(self.algorithm()?.encoded_len()?)
-                .ok_or(Error::Length)?
-        };
+        #[cfg(feature = "alloc")]
+        if let Some(ciphertext) = self.encrypted() {
+            return Ok(ciphertext.len());
+        }
 
         let key_len = match self {
             #[cfg(feature = "alloc")]
@@ -301,12 +295,17 @@ impl Encode for KeypairData {
             Self::Ecdsa(key) => key.encoded_len()?,
             Self::Ed25519(key) => key.encoded_len()?,
             #[cfg(feature = "alloc")]
-            Self::Encrypted(ciphertext) => ciphertext.len(),
+            Self::Encrypted(_) => return Err(Error::Encrypted),
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encoded_len()?,
         };
 
-        header_len.checked_add(key_len).ok_or(Error::Length)
+        [
+            8, // 2 x uint32 checkints
+            self.algorithm()?.encoded_len()?,
+            key_len,
+        ]
+        .checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

@@ -1,9 +1,10 @@
 //! Digital Signature Algorithm (DSA) public keys.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    Error, MPInt, Result,
+    MPInt, Result,
 };
 
 /// Digital Signature Algorithm (DSA) public key.
@@ -47,10 +48,13 @@ impl Decode for DsaPublicKey {
 
 impl Encode for DsaPublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        [&self.p, &self.q, &self.g, &self.y]
-            .iter()
-            .try_fold(0usize, |acc, n| acc.checked_add(n.encoded_len().ok()?))
-            .ok_or(Error::Length)
+        [
+            self.p.encoded_len()?,
+            self.q.encoded_len()?,
+            self.g.encoded_len()?,
+            self.y.encoded_len()?,
+        ]
+        .checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

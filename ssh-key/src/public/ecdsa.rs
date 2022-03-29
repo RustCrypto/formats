@@ -1,6 +1,7 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) public keys.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     Algorithm, EcdsaCurve, Error, Result,
@@ -107,10 +108,7 @@ impl Decode for EcdsaPublicKey {
 
 impl Encode for EcdsaPublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        4usize
-            .checked_add(self.curve().encoded_len()?)
-            .and_then(|len| len.checked_add(self.as_ref().len()))
-            .ok_or(Error::Length)
+        [4, self.curve().encoded_len()?, self.as_ref().len()].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

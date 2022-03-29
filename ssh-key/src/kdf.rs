@@ -3,6 +3,7 @@
 //! These are used for deriving an encryption key from a password.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     Error, KdfAlg, Result,
@@ -153,18 +154,18 @@ impl Decode for Kdf {
 
 impl Encode for Kdf {
     fn encoded_len(&self) -> Result<usize> {
-        let kdfname_len = self.algorithm().encoded_len()?;
-
         let kdfopts_len = match self {
             Self::None => 0,
             #[cfg(feature = "alloc")]
-            Self::Bcrypt { salt, .. } => salt.len().checked_add(8).ok_or(Error::Length)?,
+            Self::Bcrypt { salt, .. } => [8, salt.len()].checked_sum()?,
         };
 
-        kdfname_len
-            .checked_add(4) // kdfopts length prefix (uint32)
-            .and_then(|len| len.checked_add(kdfopts_len))
-            .ok_or(Error::Length)
+        [
+            self.algorithm().encoded_len()?,
+            4, // kdfopts length prefix (uint32)
+            kdfopts_len,
+        ]
+        .checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
@@ -174,7 +175,7 @@ impl Encode for Kdf {
             Self::None => encoder.encode_usize(0),
             #[cfg(feature = "alloc")]
             Self::Bcrypt { salt, rounds } => {
-                encoder.encode_usize(salt.len().checked_add(8).ok_or(Error::Length)?)?;
+                encoder.encode_usize([8, salt.len()].checked_sum()?)?;
                 encoder.encode_byte_slice(salt)?;
                 encoder.encode_u32(*rounds)
             }

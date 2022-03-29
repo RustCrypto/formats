@@ -128,7 +128,11 @@ use core::str;
 use pem_rfc7468::{self as pem, LineEnding, PemLabel};
 
 #[cfg(feature = "alloc")]
-use {crate::encoder::base64_encoded_len, alloc::string::String, zeroize::Zeroizing};
+use {
+    crate::{checked::CheckedSum, encoder::base64_encoded_len},
+    alloc::string::String,
+    zeroize::Zeroizing,
+};
 
 #[cfg(feature = "fingerprint")]
 use crate::{Fingerprint, HashAlg};
@@ -493,9 +497,7 @@ impl PrivateKey {
             4, // private key length prefix (uint32)
             private_key_len,
         ]
-        .iter()
-        .try_fold(0usize, |acc, &len| acc.checked_add(len))
-        .ok_or(Error::Length)?;
+        .checked_sum()?;
 
         let base64_len = base64_encoded_len(bytes_len);
 
@@ -510,7 +512,7 @@ impl PrivateKey {
         Ok(pem::encapsulated_len(
             Self::TYPE_LABEL,
             line_ending,
-            base64_len.checked_add(newline_len).ok_or(Error::Length)?,
+            [base64_len, newline_len].checked_sum()?,
         ))
     }
 }

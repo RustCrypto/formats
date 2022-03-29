@@ -18,6 +18,7 @@ pub use self::ed25519::Ed25519PublicKey;
 pub use self::{dsa::DsaPublicKey, rsa::RsaPublicKey};
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Base64Decoder, Decode, Decoder},
     encoder::{Encode, Encoder},
     Algorithm, Error, Result,
@@ -109,9 +110,7 @@ impl PublicKey {
             base64_encoded_len(self.key_data.encoded_len()?),
             self.comment.len(),
         ]
-        .iter()
-        .try_fold(0usize, |acc, &len| acc.checked_add(len))
-        .ok_or(Error::Length)?;
+        .checked_sum()?;
 
         let mut buf = vec![0u8; encoded_len];
         let actual_len = self.encode_openssh(&mut buf)?.len();
@@ -367,8 +366,6 @@ impl Decode for KeyData {
 
 impl Encode for KeyData {
     fn encoded_len(&self) -> Result<usize> {
-        let alg_len = self.algorithm().encoded_len()?;
-
         let key_len = match self {
             #[cfg(feature = "alloc")]
             Self::Dsa(key) => key.encoded_len()?,
@@ -379,7 +376,7 @@ impl Encode for KeyData {
             Self::Rsa(key) => key.encoded_len()?,
         };
 
-        alg_len.checked_add(key_len).ok_or(Error::Length)
+        [self.algorithm().encoded_len()?, key_len].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
