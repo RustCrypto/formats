@@ -6,9 +6,12 @@
     html_root_url = "https://docs.rs/base64ct/1.4.1"
 )]
 #![doc = include_str!("../README.md")]
+#![forbid(clippy::unwrap_used)]
 #![warn(
+    clippy::integer_arithmetic,
     missing_docs,
     rust_2018_idioms,
+    unsafe_code,
     unused_lifetimes,
     unused_qualifications
 )]
