@@ -167,7 +167,9 @@ impl KeypairData {
     /// This method also checks padding for validity and ensures that the
     /// decoded private key matches the provided public key.
     ///
-    /// For private key format specification, see OpenSSH PROTOCOL.key § 3
+    /// For private key format specification, see OpenSSH [PROTOCOL.key] § 3.
+    ///
+    /// [PROTOCOL.key]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD
     pub(super) fn decode_padded(
         decoder: &mut impl Decoder,
         public_key: &mut PublicKey,

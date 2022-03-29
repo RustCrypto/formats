@@ -55,6 +55,8 @@
 //!
 //! ### Parsing OpenSSH Private Keys
 //!
+//! *NOTE: for more private key usage examples, see the [`private`] module.*
+//!
 //! OpenSSH-formatted private keys are PEM-encoded and begin with the following:
 //!
 //! ```text
@@ -107,27 +109,6 @@
 //! }
 //! # Ok(())
 //! # }
-//! ```
-//!
-//! ## Generating random keys
-//!
-//! This crate supports generation of random keys using algorithm-specific
-//! backends gated on cargo features.
-//!
-//! The examples below require enabling this crate's `getrandom` feature as
-//! well as the crate feature identified in backticks in the title of each
-//! example.
-//!
-//! ### `ed25519`: support for generating Ed25519 keys using `ed25519_dalek`
-//!
-#![cfg_attr(all(feature = "ed25519", feature = "getrandom"), doc = " ```")]
-#![cfg_attr(
-    not(all(feature = "ed25519", feature = "getrandom")),
-    doc = " ```ignore"
-)]
-//! use ssh_key::{PrivateKey, rand_core::OsRng};
-//!
-//! let private_key = PrivateKey::random_ed25519(&mut OsRng);
 //! ```
 
 #[cfg(feature = "alloc")]
