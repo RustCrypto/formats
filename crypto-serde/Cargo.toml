@@ -1,6 +1,9 @@
 [package]
 name = "crypto-serde"
-description = "Serde serializer/deserializer helpers used by the RustCrypto project"
+description = """
+Constant-time serde serializer/deserializer helpers for data that potentially
+contains secrets (e.g. cryptographic keys)
+"""
 version = "0.1.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"

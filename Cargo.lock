@@ -327,7 +327,7 @@ dependencies = [
 
 [[package]]
 name = "crypto-serde"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "base16ct 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode",

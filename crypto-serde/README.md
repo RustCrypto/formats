@@ -6,9 +6,29 @@
 ![Apache 2.0/MIT Licensed][license-image]
 ![MSRV][msrv-image]
 
-Serde serializer/deserializer helpers used by the RustCrypto project.
+Constant-time serde serializer/deserializer helpers for data that potentially
+contains secrets (e.g. cryptographic keys)
 
 [Documentation][docs-link]
+
+## About
+
+[Serialization is a potential sidechannel for leaking sensitive secrets][Util::Lookup]
+such as cryptographic keys.
+
+This crate provides "best effort" constant-time helper methods for reducing
+the amount of timing variability involved in serializing/deserializing data
+when using `serde`, Rust's standard serialization framework.
+
+These helper methods conditionally serialize data as hexadecimal using the
+constant-time [`base16ct`] crate when using human-readable formats such as
+JSON or TOML. When using a binary format, the data is serialized as-is into
+binary.
+
+While this crate can't ensure that format implementations don't perform
+other kinds of data-dependent branching on the contents of the serialized data,
+using a constant-time hex serialization with human-readable formats should
+help reduce the overall timing variability.
 
 ## Minimum Supported Rust Version
 
@@ -47,3 +67,5 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (general links)
 
 [RustCrypto]: https://github.com/RustCrypto
+[Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf
+[`base16ct`]: https://github.com/RustCrypto/formats/tree/master/base16ct
