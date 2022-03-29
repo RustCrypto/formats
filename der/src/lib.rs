@@ -8,6 +8,8 @@
 )]
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(
+    clippy::panic,
+    clippy::panic_in_result_fn,
     missing_docs,
     rust_2018_idioms,
     unused_lifetimes,
@@ -25,6 +27,7 @@
 //! - [`bool`]: ASN.1 `BOOLEAN`.
 //! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`.
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`.
+//! - [`f64`]: ASN.1 `REAL`
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`.
 //!   `String` requires `alloc` feature. See also [`Utf8String`].
 //!   Requires `alloc` feature. See also [`SetOf`].
