@@ -91,6 +91,8 @@ impl<T: Variant> Encoding for T {
         }
     }
 
+    // TODO(tarcieri): explicitly checked/wrapped arithmetic
+    #[allow(clippy::integer_arithmetic)]
     fn decode_in_place(mut buf: &mut [u8]) -> Result<&[u8], InvalidEncodingError> {
         // TODO: eliminate unsafe code when LLVM12 is stable
         // See: https://github.com/rust-lang/rust/issues/80963
@@ -109,6 +111,7 @@ impl<T: Variant> Encoding for T {
             // SAFETY: `p3` and `p4` point inside `buf`, while they may overlap,
             // read and write are clearly separated from each other and done via
             // raw pointers.
+            #[allow(unsafe_code)]
             unsafe {
                 debug_assert!(3 * chunk + 3 <= buf.len());
                 debug_assert!(4 * chunk + 4 <= buf.len());
@@ -138,6 +141,7 @@ impl<T: Variant> Encoding for T {
             // SAFETY: `dst_rem_len` is always smaller than 4, so we don't
             // read outside of `tmp_out`, write and the final slicing never go
             // outside of `buf`.
+            #[allow(unsafe_code)]
             unsafe {
                 debug_assert!(dst_rem_pos + dst_rem_len <= buf.len());
                 debug_assert!(dst_rem_len <= tmp_out.len());
@@ -213,6 +217,7 @@ impl<T: Variant> Encoding for T {
         debug_assert!(str::from_utf8(dst).is_ok());
 
         // SAFETY: values written by `encode_3bytes` are valid one-byte UTF-8 chars
+        #[allow(unsafe_code)]
         Ok(unsafe { str::from_utf8_unchecked(dst) })
     }
 
@@ -226,7 +231,10 @@ impl<T: Variant> Encoding for T {
         debug_assert!(str::from_utf8(&dst).is_ok());
 
         // SAFETY: `dst` is fully written and contains only valid one-byte UTF-8 chars
-        unsafe { String::from_utf8_unchecked(dst) }
+        #[allow(unsafe_code)]
+        unsafe {
+            String::from_utf8_unchecked(dst)
+        }
     }
 
     fn encoded_len(bytes: &[u8]) -> usize {
@@ -250,14 +258,18 @@ pub(crate) fn decode_padding(input: &[u8]) -> Result<(usize, i16), InvalidEncodi
     }
 
     let unpadded_len = match *input {
-        [.., b0, b1] => {
-            let pad_len = is_pad_ct(b0) + is_pad_ct(b1);
-            input.len() - pad_len as usize
-        }
+        [.., b0, b1] => is_pad_ct(b0)
+            .checked_add(is_pad_ct(b1))
+            .and_then(|len| len.try_into().ok())
+            .and_then(|len| input.len().checked_sub(len))
+            .ok_or(InvalidEncodingError)?,
         _ => input.len(),
     };
 
-    let padding_len = input.len() - unpadded_len;
+    let padding_len = input
+        .len()
+        .checked_sub(unpadded_len)
+        .ok_or(InvalidEncodingError)?;
 
     let err = match *input {
         [.., b0] if padding_len == 1 => is_pad_ct(b0) ^ 1,
@@ -320,6 +332,8 @@ fn validate_padding<T: Variant>(encoded: &[u8], decoded: &[u8]) -> Result<(), Er
 ///
 /// Note that this function does not fully validate the Base64 is well-formed
 /// and may return incorrect results for malformed Base64.
+// TODO(tarcieri): explicitly checked/wrapped arithmetic
+#[allow(clippy::integer_arithmetic)]
 #[inline(always)]
 pub(crate) fn decoded_len(input_len: usize) -> usize {
     // overflow-proof computation of `(3*n)/4`
@@ -329,11 +343,15 @@ pub(crate) fn decoded_len(input_len: usize) -> usize {
 }
 
 /// Branchless match that a given byte is the `PAD` character
+// TODO(tarcieri): explicitly checked/wrapped arithmetic
+#[allow(clippy::integer_arithmetic)]
 #[inline(always)]
 fn is_pad_ct(input: u8) -> i16 {
     ((((PAD as i16 - 1) - input as i16) & (input as i16 - (PAD as i16 + 1))) >> 8) & 1
 }
 
+// TODO(tarcieri): explicitly checked/wrapped arithmetic
+#[allow(clippy::integer_arithmetic)]
 #[inline(always)]
 const fn encoded_len_inner(n: usize, padded: bool) -> Option<usize> {
     match n.checked_mul(4) {
