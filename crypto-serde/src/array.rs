@@ -1,5 +1,4 @@
-//! TODO
-//! crypto-serde implementation for arrays.
+//! Serialization primitives for arrays.
 
 use core::fmt;
 
@@ -50,8 +49,9 @@ where
     }
 }
 
-/// Deserialize the given array from hex when using human-readable formats or
-/// binary if the format is binary.
+/// Deserialize from hex when using human-readable formats or binary if the
+/// format is binary. Fails if the `buffer` isn't the exact same size as the
+/// resulting array.
 pub fn deserialize_hex_or_bin<'de, D>(buffer: &mut [u8], deserializer: D) -> Result<(), D::Error>
 where
     D: Deserializer<'de>,

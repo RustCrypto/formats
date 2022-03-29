@@ -1,7 +1,7 @@
 [package]
 name = "crypto-serde"
 description = "Serde serializer/deserializer helpers used by the RustCrypto project"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/crypto-serde"
@@ -31,3 +31,8 @@ toml = "0.5"
 [features]
 default = ["alloc"]
 alloc = ["base16ct/alloc", "serde/alloc"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+targets = []
