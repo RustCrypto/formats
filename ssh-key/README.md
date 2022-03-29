@@ -51,8 +51,8 @@ specification  and `authorized_keys` files.
 | `ssh-dsa`                            | ✅        | ✅        | `alloc` ️ | ⛔      |
 | `ssh-ed25519`                        | ✅        | ✅        | heapless  | ✅️     |
 | `ssh-rsa`                            | ✅        | ✅        | `alloc`   | ⛔️     |
-| `sk-ecdsa-sha2-nistp256@openssh.com` | ⛔        | ⛔        | heapless  | ⛔️     |
-| `sk-ssh-ed25519@openssh.com`         | ⛔        | ⛔        | heapless  | ✅️     |
+| `sk-ecdsa-sha2-nistp256@openssh.com` | ⛔        | ⛔        | -         | ⛔️     |
+| `sk-ssh-ed25519@openssh.com`         | ⛔        | ⛔        | -         | ⛔️     |
 
 ## Minimum Supported Rust Version
 
