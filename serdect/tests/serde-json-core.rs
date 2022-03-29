@@ -2,11 +2,11 @@
 
 #![cfg(feature = "alloc")]
 
-use crypto_serde::{array, slice};
 use hex_literal::hex;
 use proptest::{array::*, collection::vec, prelude::*};
 use serde::Serialize;
 use serde_json_core as json;
+use serdect::{array, slice};
 
 /// Example input to be serialized.
 const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0E0F");

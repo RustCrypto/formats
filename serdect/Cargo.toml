@@ -1,12 +1,15 @@
 [package]
-name = "crypto-serde"
-description = "Serde serializer/deserializer helpers used by the RustCrypto project"
-version = "0.1.0"
+name = "serdect"
+description = """
+Constant-time serde serializer/deserializer helpers for data that potentially
+contains secrets (e.g. cryptographic keys)
+"""
+version = "0.0.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/crypto-serde"
+repository = "https://github.com/RustCrypto/formats/tree/master/serdect"
 categories = ["cryptography", "encoding", "no-std", "parsing"]
-keywords = ["crypto", "serde"]
+keywords = ["crypto", "constant-time", "serde"]
 readme = "README.md"
 edition = "2021"
 rust-version = "1.56"
