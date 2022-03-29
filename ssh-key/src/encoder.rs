@@ -1,6 +1,7 @@
-//! Encoder support.
+//! Encoder-side implementation of the SSH protocol's data type representations
+//! as described in [RFC4251 § 5].
 //!
-//! Support for encoding SSH keys to the OpenSSH wire format.
+//! [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
 
 use crate::Result;
 use core::str;

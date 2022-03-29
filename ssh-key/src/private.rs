@@ -1,8 +1,104 @@
 //! SSH private key support.
 //!
-//! Support for decoding SSH private keys from the OpenSSH file format:
+//! Support for decoding SSH private keys (i.e. digital signature keys)
+//! from the OpenSSH file format:
 //!
-//! <https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.key>
+//! <https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD>
+//!
+//! ## Decrypting encrypted private keys
+//!
+//! When the `encryption` feature of this crate is enabled, it's possible to
+//! decrypt keys which have been encrypted under a password:
+//!
+#![cfg_attr(all(feature = "encryption", feature = "std"), doc = " ```")]
+#![cfg_attr(not(all(feature = "encryption", feature = "std")), doc = " ```ignore")]
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use ssh_key::PrivateKey;
+//!
+//! // WARNING: don't actually hardcode private keys in source code!!!
+//! let encoded_key = r#"
+//! -----BEGIN OPENSSH PRIVATE KEY-----
+//! b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABBKH96ujW
+//! umB6/WnTNPjTeaAAAAEAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN
+//! 796jTiQfZfG1KaT0PtFDJ/XFSqtiAAAAoFzvbvyFMhAiwBOXF0mhUUacPUCMZXivG2up2c
+//! hEnAw1b6BLRPyWbY5cC2n9ggD4ivJ1zSts6sBgjyiXQAReyrP35myYvT/OIB/NpwZM/xIJ
+//! N7MHSUzlkX4adBrga3f7GS4uv4ChOoxC4XsE5HsxtGsq1X8jzqLlZTmOcxkcEneYQexrUc
+//! bQP0o+gL5aKK8cQgiIlXeDbRjqhc4+h4EF6lY=
+//! -----END OPENSSH PRIVATE KEY-----
+//! "#;
+//!
+//! let encrypted_key = PrivateKey::from_openssh(encoded_key)?;
+//! assert!(encrypted_key.is_encrypted());
+//!
+//! // WARNING: don't hardcode passwords, and this one's bad anyway
+//! let password = "hunter42";
+//!
+//! let decrypted_key = encrypted_key.decrypt(password)?;
+//! assert!(!decrypted_key.is_encrypted());
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Encrypting plaintext private keys
+//!
+//! When the `encryption` feature of this crate is enabled, it's possible to
+//! encrypt plaintext private keys under a provided password.
+//!
+//! The example below also requires enabling this crate's `getrandom` feature.
+//!
+#![cfg_attr(
+    all(
+        feature = "ed25519",
+        feature = "encryption",
+        feature = "getrandom",
+        feature = "std"
+    ),
+    doc = " ```"
+)]
+#![cfg_attr(
+    not(all(
+        feature = "ed25519",
+        feature = "encryption",
+        feature = "getrandom",
+        feature = "std"
+    )),
+    doc = " ```ignore"
+)]
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use ssh_key::{PrivateKey, rand_core::OsRng};
+//!
+//! // Generate a random key
+//! let unencrypted_key = PrivateKey::random_ed25519(&mut OsRng);
+//!
+//! // WARNING: don't hardcode passwords, and this one's bad anyway
+//! let password = "hunter42";
+//!
+//! let encrypted_key = unencrypted_key.encrypt(&mut OsRng, password)?;
+//! assert!(encrypted_key.is_encrypted());
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Generating random keys
+//!
+//! This crate supports generation of random keys using algorithm-specific
+//! backends gated on cargo features.
+//!
+//! The examples below require enabling this crate's `getrandom` feature as
+//! well as the crate feature identified in backticks in the title of each
+//! example.
+//!
+//! ### `ed25519`: support for generating Ed25519 keys using `ed25519_dalek`
+//!
+#![cfg_attr(all(feature = "ed25519", feature = "getrandom"), doc = " ```")]
+#![cfg_attr(
+    not(all(feature = "ed25519", feature = "getrandom")),
+    doc = " ```ignore"
+)]
+//! use ssh_key::{PrivateKey, rand_core::OsRng};
+//!
+//! let private_key = PrivateKey::random_ed25519(&mut OsRng);
+//! ```
 
 #[cfg(feature = "alloc")]
 mod dsa;

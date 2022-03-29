@@ -1,6 +1,7 @@
-//! Decoder support.
+//! Decoder-side implementation of the SSH protocol's data type representations
+//! as described in [RFC4251 § 5].
 //!
-//! Support for decoding SSH keys from the OpenSSH wire format.
+//! [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
 
 use crate::{Error, Result};
 use core::str;
