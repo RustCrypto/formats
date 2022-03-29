@@ -30,7 +30,7 @@
 //!         D: Deserializer<'de>,
 //!     {
 //!         let mut buffer = [0; 32];
-//!         crypto_serde::array::deserialize_hex_or_bin(&mut buffer, deserializer)?;
+//!         serdect::array::deserialize_hex_or_bin(&mut buffer, deserializer)?;
 //!         Ok(Self(buffer))
 //!     }
 //! }
@@ -40,7 +40,7 @@
 //!     where
 //!         S: Serializer,
 //!     {
-//!         crypto_serde::array::serialize_hex_lower_or_bin(&self.0, serializer)
+//!         serdect::array::serialize_hex_lower_or_bin(&self.0, serializer)
 //!     }
 //! }
 //!
@@ -76,7 +76,7 @@
 //!     where
 //!         D: Deserializer<'de>,
 //!     {
-//!         crypto_serde::slice::deserialize_hex_or_bin_vec(deserializer).map(Self)
+//!         serdect::slice::deserialize_hex_or_bin_vec(deserializer).map(Self)
 //!     }
 //! }
 //!
@@ -85,7 +85,7 @@
 //!     where
 //!         S: Serializer,
 //!     {
-//!         crypto_serde::slice::serialize_hex_lower_or_bin(&self.0, serializer)
+//!         serdect::slice::serialize_hex_lower_or_bin(&self.0, serializer)
 //!     }
 //! }
 //!

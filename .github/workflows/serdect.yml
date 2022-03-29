@@ -1,17 +1,18 @@
-name: crypto-serde
+name: serdect
 
 on:
   pull_request:
     paths:
+      - ".github/workflows/serdect"
       - "base16ct/**"
-      - "crypto-serde/**"
+      - "serdect/**"
       - "Cargo.*"
   push:
     branches: master
 
 defaults:
   run:
-    working-directory: crypto-serde
+    working-directory: serdect
 
 env:
   CARGO_INCREMENTAL: 0

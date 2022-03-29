@@ -335,22 +335,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crypto-serde"
-version = "0.0.0"
-dependencies = [
- "base16ct 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bincode",
- "ciborium",
- "hex-literal",
- "proptest",
- "serde",
- "serde-json-core",
- "serde_json",
- "toml",
- "zeroize",
-]
-
-[[package]]
 name = "csv"
 version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1096,6 +1080,22 @@ dependencies = [
  "itoa 1.0.1",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serdect"
+version = "0.0.0"
+dependencies = [
+ "base16ct 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bincode",
+ "ciborium",
+ "hex-literal",
+ "proptest",
+ "serde",
+ "serde-json-core",
+ "serde_json",
+ "toml",
+ "zeroize",
 ]
 
 [[package]]
