@@ -530,7 +530,7 @@ impl PrivateKey {
             Self::TYPE_LABEL,
             line_ending,
             [base64_len, newline_len].checked_sum()?,
-        ))
+        )?)
     }
 }
 
