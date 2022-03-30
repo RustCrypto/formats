@@ -69,7 +69,27 @@ pub fn encode<'o>(
     let mut encoder = Encoder::new(type_label, line_ending, buf)?;
     encoder.encode(input)?;
     let encoded_len = encoder.finish()?;
-    Ok(str::from_utf8(&buf[..encoded_len])?)
+    let output = &buf[..encoded_len];
+
+    // Sanity check
+    debug_assert!(str::from_utf8(output).is_ok());
+
+    // Ensure `output` contains characters from the lower 7-bit ASCII set
+    if output.iter().fold(0u8, |acc, &byte| acc | (byte & 0x80)) == 0 {
+        // Use unchecked conversion to avoid applying UTF-8 checks to potentially
+        // secret PEM documents (and therefore introducing a potential timing
+        // sidechannel)
+        //
+        // SAFETY: contents of this buffer are controlled entirely by the encoder,
+        // which ensures the contents are always a valid (ASCII) subset of UTF-8.
+        // It's also additionally sanity checked by two assertions above to ensure
+        // the validity (with the always-on runtime check implemented in a
+        // constant time-ish manner.
+        #[allow(unsafe_code)]
+        Ok(unsafe { str::from_utf8_unchecked(output) })
+    } else {
+        Err(Error::CharacterEncoding)
+    }
 }
 
 /// Encode a PEM document according to RFC 7468's "Strict" grammar, returning
