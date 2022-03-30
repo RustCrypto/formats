@@ -122,6 +122,7 @@ pub mod private;
 pub mod public;
 
 mod algorithm;
+mod checked;
 mod cipher;
 mod decoder;
 mod encoder;

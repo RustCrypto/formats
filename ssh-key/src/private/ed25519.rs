@@ -3,6 +3,7 @@
 //! Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     public::Ed25519PublicKey,
@@ -184,11 +185,7 @@ impl Decode for Ed25519Keypair {
 
 impl Encode for Ed25519Keypair {
     fn encoded_len(&self) -> Result<usize> {
-        self.public
-            .encoded_len()?
-            .checked_add(4)
-            .and_then(|len| len.checked_add(Self::BYTE_SIZE))
-            .ok_or(Error::Length)
+        [4, self.public.encoded_len()?, Self::BYTE_SIZE].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

@@ -1,10 +1,11 @@
 //! Digital Signature Algorithm (DSA) private keys.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     public::DsaPublicKey,
-    Error, MPInt, Result,
+    MPInt, Result,
 };
 use core::fmt;
 use zeroize::Zeroize;
@@ -113,10 +114,7 @@ impl Decode for DsaKeypair {
 
 impl Encode for DsaKeypair {
     fn encoded_len(&self) -> Result<usize> {
-        self.public
-            .encoded_len()?
-            .checked_add(self.private.encoded_len()?)
-            .ok_or(Error::Length)
+        [self.public.encoded_len()?, self.private.encoded_len()?].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

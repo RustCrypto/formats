@@ -1,6 +1,7 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) private keys.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     public::EcdsaPublicKey,
@@ -56,17 +57,11 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
 
 impl<const SIZE: usize> Encode for EcdsaPrivateKey<SIZE> {
     fn encoded_len(&self) -> Result<usize> {
-        4usize
-            .checked_add(self.needs_leading_zero().into())
-            .and_then(|len| len.checked_add(SIZE))
-            .ok_or(Error::Length)
+        [4, self.needs_leading_zero().into(), SIZE].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_usize(
-            SIZE.checked_add(self.needs_leading_zero().into())
-                .ok_or(Error::Length)?,
-        )?;
+        encoder.encode_usize([self.needs_leading_zero().into(), SIZE].checked_sum()?)?;
 
         if self.needs_leading_zero() {
             encoder.encode_raw(&[0])?;
@@ -226,7 +221,7 @@ impl Encode for EcdsaKeypair {
             Self::NistP521 { private, .. } => private.encoded_len()?,
         };
 
-        public_len.checked_add(private_len).ok_or(Error::Length)
+        [public_len, private_len].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

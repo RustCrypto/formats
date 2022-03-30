@@ -1,6 +1,7 @@
 //! Algorithm support.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     Error, Result,
@@ -57,7 +58,7 @@ impl<T: AlgString> Decode for T {
 
 impl<T: AlgString> Encode for T {
     fn encoded_len(&self) -> Result<usize> {
-        4usize.checked_add(self.as_ref().len()).ok_or(Error::Length)
+        [4, self.as_ref().len()].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

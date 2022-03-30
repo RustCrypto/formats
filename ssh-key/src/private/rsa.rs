@@ -1,10 +1,11 @@
 //! Rivest–Shamir–Adleman (RSA) private keys.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     public::RsaPublicKey,
-    Error, MPInt, Result,
+    MPInt, Result,
 };
 use core::fmt;
 use zeroize::Zeroize;
@@ -41,10 +42,13 @@ impl Decode for RsaPrivateKey {
 
 impl Encode for RsaPrivateKey {
     fn encoded_len(&self) -> Result<usize> {
-        [&self.d, &self.iqmp, &self.p, &self.q]
-            .iter()
-            .try_fold(0usize, |acc, n| acc.checked_add(n.encoded_len().ok()?))
-            .ok_or(Error::Length)
+        [
+            self.d.encoded_len()?,
+            self.iqmp.encoded_len()?,
+            self.p.encoded_len()?,
+            self.q.encoded_len()?,
+        ]
+        .checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
@@ -114,9 +118,7 @@ impl Encode for RsaKeypair {
             self.public.e.encoded_len()?,
             self.private.encoded_len()?,
         ]
-        .iter()
-        .try_fold(0usize, |acc, &len| acc.checked_add(len))
-        .ok_or(Error::Length)
+        .checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {

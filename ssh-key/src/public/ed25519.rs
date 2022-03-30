@@ -3,11 +3,15 @@
 //! Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    Error, Result,
+    Result,
 };
 use core::fmt;
+
+#[cfg(feature = "ed25519")]
+use crate::Error;
 
 /// Ed25519 public key.
 // TODO(tarcieri): use `ed25519::PublicKey`? (doesn't exist yet)
@@ -35,7 +39,7 @@ impl Decode for Ed25519PublicKey {
 
 impl Encode for Ed25519PublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        4usize.checked_add(Self::BYTE_SIZE).ok_or(Error::Length)
+        [4, Self::BYTE_SIZE].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
