@@ -1,7 +1,6 @@
 //! Buffered Base64 encoder.
 
 use crate::{
-    variant::Variant,
     Encoding,
     Error::{self, InvalidLength},
     LineEnding, MIN_LINE_WIDTH,
@@ -18,12 +17,7 @@ use crate::{Base64, Base64Unpadded};
 ///
 /// The `E` type parameter can be any type which impls [`Encoding`] such as
 /// [`Base64`] or [`Base64Unpadded`].
-///
-/// Internally it uses a sealed `Variant` trait which is an implementation
-/// detail of this crate, and leverages a [blanket impl] of [`Encoding`].
-///
-/// [blanket impl]: ./trait.Encoding.html#impl-Encoding
-pub struct Encoder<'o, E: Variant> {
+pub struct Encoder<'o, E: Encoding> {
     /// Output buffer.
     output: &'o mut [u8],
 
@@ -41,7 +35,7 @@ pub struct Encoder<'o, E: Variant> {
     encoding: PhantomData<E>,
 }
 
-impl<'o, E: Variant> Encoder<'o, E> {
+impl<'o, E: Encoding> Encoder<'o, E> {
     /// Create a new encoder which writes output to the given byte slice.
     ///
     /// Output constructed using this method is not line-wrapped.
@@ -173,7 +167,7 @@ impl<'o, E: Variant> Encoder<'o, E> {
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl<'o, E: Variant> io::Write for Encoder<'o, E> {
+impl<'o, E: Encoding> io::Write for Encoder<'o, E> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.encode(buf)?;
         Ok(buf.len())
