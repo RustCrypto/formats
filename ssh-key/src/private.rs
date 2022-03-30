@@ -367,8 +367,8 @@ impl PrivateKey {
         })
     }
 
-    /// Attempt to encrypt an unencrypted private key using the provided
-    /// password to derive an encryption key.
+    /// Encrypt an unencrypted private key using the provided password to
+    /// derive an encryption key.
     ///
     /// Uses the following algorithms:
     /// - Cipher: [`Cipher::Aes256Ctr`]
@@ -382,26 +382,43 @@ impl PrivateKey {
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<Self> {
+        self.encrypt_with(
+            Cipher::default(),
+            Kdf::new(Default::default(), rng)?,
+            password,
+        )
+    }
+
+    /// Encrypt an unencrypted private key using the provided cipher and KDF
+    /// configuration.
+    ///
+    /// Returns [`Error::Encrypted`] if the private key is already encrypted.
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn encrypt_with(
+        &self,
+        cipher: Cipher,
+        kdf: Kdf,
+        password: impl AsRef<[u8]>,
+    ) -> Result<Self> {
         if self.is_encrypted() {
             return Err(Error::Encrypted);
         }
 
-        let cipher = Cipher::default();
-        let kdf = Kdf::new(Default::default(), rng)?;
         let (key_bytes, iv_bytes) = kdf.derive_key_and_iv(cipher, password)?;
-        let mut buffer =
-            Vec::with_capacity(self.key_data.encoded_len_padded(self.comment(), cipher)?);
+        let msg_len = self.key_data.encoded_len_padded(self.comment(), cipher)?;
+        let mut out = Vec::with_capacity(msg_len);
 
         // Encode and encrypt private key
         self.key_data
-            .encode_padded(&mut buffer, self.comment(), cipher)?;
-        cipher.encrypt(&key_bytes, &iv_bytes, buffer.as_mut_slice())?;
+            .encode_padded(&mut out, self.comment(), cipher)?;
+        cipher.encrypt(&key_bytes, &iv_bytes, out.as_mut_slice())?;
 
         Ok(Self {
             cipher,
             kdf,
             public_key: self.public_key.key_data.clone().into(),
-            key_data: KeypairData::Encrypted(buffer),
+            key_data: KeypairData::Encrypted(out),
         })
     }
 
