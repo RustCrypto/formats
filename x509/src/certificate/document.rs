@@ -93,5 +93,5 @@ impl FromStr for CertificateDocument {
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl pem::PemLabel for CertificateDocument {
-    const TYPE_LABEL: &'static str = "CERTIFICATE";
+    const PEM_LABEL: &'static str = "CERTIFICATE";
 }

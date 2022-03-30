@@ -110,5 +110,5 @@ impl FromStr for EncryptedPrivateKeyDocument {
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl pem::PemLabel for EncryptedPrivateKeyDocument {
-    const TYPE_LABEL: &'static str = "ENCRYPTED PRIVATE KEY";
+    const PEM_LABEL: &'static str = "ENCRYPTED PRIVATE KEY";
 }

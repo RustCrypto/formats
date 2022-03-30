@@ -145,5 +145,5 @@ impl FromStr for EcPrivateKeyDocument {
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl pem::PemLabel for EcPrivateKeyDocument {
-    const TYPE_LABEL: &'static str = "EC PRIVATE KEY";
+    const PEM_LABEL: &'static str = "EC PRIVATE KEY";
 }

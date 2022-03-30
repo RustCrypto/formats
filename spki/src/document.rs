@@ -142,5 +142,5 @@ impl FromStr for PublicKeyDocument {
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl pem::PemLabel for PublicKeyDocument {
-    const TYPE_LABEL: &'static str = "PUBLIC KEY";
+    const PEM_LABEL: &'static str = "PUBLIC KEY";
 }

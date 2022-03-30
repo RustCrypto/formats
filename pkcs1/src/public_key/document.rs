@@ -139,5 +139,5 @@ impl FromStr for RsaPublicKeyDocument {
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl pem::PemLabel for RsaPublicKeyDocument {
-    const TYPE_LABEL: &'static str = "RSA PUBLIC KEY";
+    const PEM_LABEL: &'static str = "RSA PUBLIC KEY";
 }

@@ -271,7 +271,7 @@ impl PrivateKey {
         out: &'o mut [u8],
     ) -> Result<&'o str> {
         let mut pem_encoder =
-            pem::Encoder::new_wrapped(Self::TYPE_LABEL, PEM_LINE_WIDTH, line_ending, out)?;
+            pem::Encoder::new_wrapped(Self::PEM_LABEL, PEM_LINE_WIDTH, line_ending, out)?;
 
         pem_encoder.encode(Self::AUTH_MAGIC)?;
         self.cipher.encode(&mut pem_encoder)?;
@@ -527,7 +527,7 @@ impl PrivateKey {
             .ok_or(Error::Length)?;
 
         Ok(pem::encapsulated_len(
-            Self::TYPE_LABEL,
+            Self::PEM_LABEL,
             line_ending,
             [base64_len, newline_len].checked_sum()?,
         )?)
@@ -562,7 +562,7 @@ impl From<&PrivateKey> for PublicKey {
 }
 
 impl PemLabel for PrivateKey {
-    const TYPE_LABEL: &'static str = "OPENSSH PRIVATE KEY";
+    const PEM_LABEL: &'static str = "OPENSSH PRIVATE KEY";
 }
 
 impl str::FromStr for PrivateKey {

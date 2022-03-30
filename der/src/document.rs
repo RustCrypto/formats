@@ -61,7 +61,7 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
     {
         let (label, der_bytes) = pem::decode_vec(s.as_bytes())?;
 
-        if label != Self::TYPE_LABEL {
+        if label != Self::PEM_LABEL {
             return Err(pem::Error::Label.into());
         }
 
@@ -76,7 +76,7 @@ pub trait Document<'a>: AsRef<[u8]> + Sized + TryFrom<Vec<u8>, Error = Error> {
         Self: pem::PemLabel,
     {
         Ok(pem::encode_string(
-            Self::TYPE_LABEL,
+            Self::PEM_LABEL,
             line_ending,
             self.as_ref(),
         )?)
