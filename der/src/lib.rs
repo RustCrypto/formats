@@ -6,10 +6,11 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_root_url = "https://docs.rs/der/0.6.0-pre.2"
 )]
-#![forbid(unsafe_code, clippy::unwrap_used)]
+#![forbid(unsafe_code)]
 #![warn(
     clippy::panic,
     clippy::panic_in_result_fn,
+    clippy::unwrap_used,
     missing_docs,
     rust_2018_idioms,
     unused_lifetimes,
