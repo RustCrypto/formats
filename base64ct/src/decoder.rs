@@ -3,7 +3,6 @@
 use crate::{
     encoding,
     line_ending::{CHAR_CR, CHAR_LF},
-    variant::Variant,
     Encoding,
     Error::{self, InvalidLength},
     MIN_LINE_WIDTH,
@@ -23,13 +22,8 @@ use crate::{Base64, Base64Unpadded};
 ///
 /// The `E` type parameter can be any type which impls [`Encoding`] such as
 /// [`Base64`] or [`Base64Unpadded`].
-///
-/// Internally it uses a sealed `Variant` trait which is an implementation
-/// detail of this crate, and leverages a [blanket impl] of [`Encoding`].
-///
-/// [blanket impl]: ./trait.Encoding.html#impl-Encoding
 #[derive(Clone)]
-pub struct Decoder<'i, E: Variant> {
+pub struct Decoder<'i, E: Encoding> {
     /// Current line being processed.
     line: Line<'i>,
 
@@ -46,7 +40,7 @@ pub struct Decoder<'i, E: Variant> {
     encoding: PhantomData<E>,
 }
 
-impl<'i, E: Variant> Decoder<'i, E> {
+impl<'i, E: Encoding> Decoder<'i, E> {
     /// Create a new decoder for a byte slice containing contiguous
     /// (non-newline-delimited) Base64-encoded data.
     ///
@@ -256,7 +250,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl<'i, E: Variant> io::Read for Decoder<'i, E> {
+impl<'i, E: Encoding> io::Read for Decoder<'i, E> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let slice = match buf.get_mut(..self.remaining_len()) {
             Some(bytes) => bytes,
@@ -432,7 +426,7 @@ impl<'i> LineReader<'i> {
     }
 
     /// Get the total length of the data decoded from this line reader.
-    fn decoded_len<E: Variant>(&self) -> Result<usize, Error> {
+    fn decoded_len<E: Encoding>(&self) -> Result<usize, Error> {
         let mut buffer = [0u8; 4];
         let mut lines = self.clone();
         let mut line = match lines.next().transpose()? {

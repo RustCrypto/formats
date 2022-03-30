@@ -4,7 +4,7 @@ use crate::{
     errors::{Error, InvalidEncodingError, InvalidLengthError},
     variant::Variant,
 };
-use core::{fmt::Debug, str};
+use core::str;
 
 #[cfg(feature = "alloc")]
 use alloc::{string::String, vec::Vec};
@@ -16,7 +16,7 @@ const PAD: u8 = b'=';
 ///
 /// This trait must be imported to make use of any Base64 variant defined
 /// in this crate.
-pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
+pub trait Encoding: Variant {
     /// Decode a Base64 string into the provided destination buffer.
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error>;
 
