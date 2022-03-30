@@ -103,15 +103,15 @@ pub type Base64Encoder<'o> = base64ct::Encoder<'o, base64ct::Base64>;
 /// Marker trait for types with an associated PEM type label.
 pub trait PemLabel {
     /// Expected PEM type label for a given document, e.g. `"PRIVATE KEY"`
-    const TYPE_LABEL: &'static str;
+    const PEM_LABEL: &'static str;
 
     /// Validate that a given label matches the expected label.
     fn validate_pem_label(actual: &str) -> Result<()> {
-        if Self::TYPE_LABEL == actual {
+        if Self::PEM_LABEL == actual {
             Ok(())
         } else {
             Err(Error::UnexpectedTypeLabel {
-                expected: Self::TYPE_LABEL,
+                expected: Self::PEM_LABEL,
             })
         }
     }

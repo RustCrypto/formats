@@ -198,5 +198,5 @@ impl FromStr for PrivateKeyDocument {
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl pem::PemLabel for PrivateKeyDocument {
-    const TYPE_LABEL: &'static str = "PRIVATE KEY";
+    const PEM_LABEL: &'static str = "PRIVATE KEY";
 }
