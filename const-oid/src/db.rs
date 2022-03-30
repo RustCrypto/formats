@@ -9,7 +9,7 @@
 //! [RFC 5280]: https://datatracker.ietf.org/doc/html/rfc5280
 //! [Object Identifier Descriptors]: https://www.iana.org/assignments/ldap-parameters/ldap-parameters.xhtml#ldap-parameters-3
 
-#![allow(missing_docs)]
+#![allow(clippy::integer_arithmetic, missing_docs)]
 
 mod gen;
 
