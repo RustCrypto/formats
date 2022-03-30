@@ -9,6 +9,9 @@ use core::str;
 #[cfg(feature = "alloc")]
 use alloc::{string::String, vec::Vec};
 
+#[cfg(doc)]
+use crate::{Base64, Base64Bcrypt, Base64Crypt, Base64Unpadded, Base64Url, Base64UrlUnpadded};
+
 /// Padding character
 const PAD: u8 = b'=';
 
@@ -16,6 +19,15 @@ const PAD: u8 = b'=';
 ///
 /// This trait must be imported to make use of any Base64 variant defined
 /// in this crate.
+///
+/// The following encoding types impl this trait:
+///
+/// - [`Base64`]: standard Base64 encoding with `=` padding.
+/// - [`Base64Bcrypt`]: bcrypt Base64 encoding.
+/// - [`Base64Crypt`]: `crypt(3)` Base64 encoding.
+/// - [`Base64Unpadded`]: standard Base64 encoding *without* padding.
+/// - [`Base64Url`]: URL-safe Base64 encoding with `=` padding.
+/// - [`Base64UrlUnpadded`]: URL-safe Base64 encoding *without* padding.
 pub trait Encoding: Variant {
     /// Decode a Base64 string into the provided destination buffer.
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error>;
