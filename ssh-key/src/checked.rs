@@ -16,7 +16,7 @@ where
 {
     fn checked_sum(self) -> Result<usize> {
         self.into_iter()
-            .try_fold(0usize, |acc, len| acc.checked_add(len))
+            .try_fold(0, usize::checked_add)
             .ok_or(Error::Length)
     }
 }
