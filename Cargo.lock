@@ -389,6 +389,7 @@ dependencies = [
  "pem-rfc7468",
  "proptest",
  "time",
+ "zeroize",
 ]
 
 [[package]]
@@ -677,6 +678,7 @@ dependencies = [
  "der",
  "hex-literal",
  "pkcs8",
+ "tempfile",
  "zeroize",
 ]
 
@@ -716,7 +718,7 @@ dependencies = [
  "rand_core 0.6.3",
  "spki",
  "subtle",
- "zeroize",
+ "tempfile",
 ]
 
 [[package]]
@@ -1022,6 +1024,7 @@ dependencies = [
  "pkcs8",
  "serde",
  "subtle",
+ "tempfile",
  "zeroize",
 ]
 
@@ -1147,6 +1150,7 @@ dependencies = [
  "der",
  "hex-literal",
  "sha2 0.10.2",
+ "tempfile",
 ]
 
 [[package]]

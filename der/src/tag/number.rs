@@ -125,10 +125,12 @@ impl TagNumber {
     ///
     /// Panics if the tag number is greater than `30`.
     /// For a fallible conversion, use [`TryFrom`] instead.
-    #[allow(clippy::no_effect)]
     pub const fn new(byte: u8) -> Self {
-        // TODO(tarcieri): hax! use const panic when available
-        ["tag number out of range"][(byte > Self::MAX) as usize];
+        #[allow(clippy::panic)]
+        if byte > Self::MAX {
+            panic!("tag number out of range");
+        }
+
         Self(byte)
     }
 

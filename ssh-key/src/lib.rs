@@ -151,6 +151,7 @@ pub use crate::{
     public::PublicKey,
 };
 pub use base64ct::LineEnding;
+pub use pem_rfc7468 as pem;
 
 #[cfg(feature = "alloc")]
 pub use crate::{certificate::Certificate, mpint::MPInt};

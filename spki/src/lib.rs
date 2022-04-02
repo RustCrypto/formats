@@ -28,6 +28,7 @@
 //! ```
 
 #[cfg(feature = "alloc")]
+#[allow(unused_extern_crates)]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
@@ -36,9 +37,6 @@ mod algorithm;
 mod error;
 mod spki;
 mod traits;
-
-#[cfg(feature = "alloc")]
-mod document;
 
 pub use crate::{
     algorithm::AlgorithmIdentifier,
@@ -49,4 +47,4 @@ pub use crate::{
 pub use der::{self, asn1::ObjectIdentifier};
 
 #[cfg(feature = "alloc")]
-pub use crate::{document::PublicKeyDocument, traits::EncodePublicKey};
+pub use {crate::traits::EncodePublicKey, der::Document};

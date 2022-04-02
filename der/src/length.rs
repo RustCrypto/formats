@@ -155,6 +155,12 @@ impl From<u16> for Length {
     }
 }
 
+impl From<Length> for u32 {
+    fn from(length: Length) -> u32 {
+        length.0
+    }
+}
+
 impl TryFrom<u32> for Length {
     type Error = Error;
 
@@ -164,12 +170,6 @@ impl TryFrom<u32> for Length {
         } else {
             Err(ErrorKind::Overflow.into())
         }
-    }
-}
-
-impl From<Length> for u32 {
-    fn from(length: Length) -> u32 {
-        length.0
     }
 }
 

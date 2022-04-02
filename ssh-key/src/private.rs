@@ -123,10 +123,10 @@ use crate::{
     checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
+    pem::{self, LineEnding, PemLabel},
     public, Algorithm, Cipher, Error, Kdf, PublicKey, Result,
 };
 use core::str;
-use pem_rfc7468::{self as pem, LineEnding, PemLabel};
 
 #[cfg(feature = "alloc")]
 use {crate::encoder::base64_encoded_len, alloc::string::String, zeroize::Zeroizing};

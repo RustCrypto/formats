@@ -22,21 +22,12 @@
 //! - [`SubjectPublicKeyInfo`]: algorithm identifier and data representing a public key
 //!   (re-exported from the [`spki`] crate)
 //!
-//! When the `alloc` feature is enabled, the following additional types are
-//! available which provide more convenient decoding/encoding support:
-//!
-//! - [`EncryptedPrivateKeyDocument`]: (with `pkcs5` feature) heap-backed encrypted key.
-//! - [`PrivateKeyDocument`]: heap-backed storage for serialized [`PrivateKeyInfo`].
-//! - [`PublicKeyDocument`]: heap-backed storage for serialized [`SubjectPublicKeyInfo`].
-//!
 //! When the `pem` feature is enabled, it also supports decoding/encoding
 //! documents from "PEM encoding" format as defined in RFC 7468.
 //!
 //! ## Encrypted Private Key Support
 //! [`EncryptedPrivateKeyInfo`] supports decoding/encoding encrypted PKCS#8
-//! private keys and is gated under the `pkcs5` feature. The corresponding
-//! [`EncryptedPrivateKeyDocument`] type provides heap-backed storage
-//! (`alloc` feature required).
+//! private keys and is gated under the `pkcs5` feature.
 //!
 //! When the `encryption` feature of this crate is enabled, it provides
 //! [`EncryptedPrivateKeyInfo::decrypt`] and [`PrivateKeyInfo::encrypt`]
@@ -73,7 +64,7 @@
 //! [PKCS#5v2 Password Based Encryption Scheme 2 (RFC 8018)]: https://tools.ietf.org/html/rfc8018#section-6.2
 //! [scrypt]: https://en.wikipedia.org/wiki/Scrypt
 
-#[cfg(feature = "alloc")]
+#[cfg(feature = "pem")]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
@@ -82,9 +73,6 @@ mod error;
 mod private_key_info;
 mod traits;
 mod version;
-
-#[cfg(feature = "alloc")]
-mod document;
 
 #[cfg(feature = "pkcs5")]
 pub(crate) mod encrypted_private_key_info;
@@ -100,8 +88,9 @@ pub use spki::{self, AlgorithmIdentifier, DecodePublicKey, SubjectPublicKeyInfo}
 
 #[cfg(feature = "alloc")]
 pub use {
-    crate::{document::private_key::PrivateKeyDocument, traits::EncodePrivateKey},
-    spki::{EncodePublicKey, PublicKeyDocument},
+    crate::traits::EncodePrivateKey,
+    der::{Document, SecretDocument},
+    spki::EncodePublicKey,
 };
 
 #[cfg(feature = "pem")]
@@ -109,10 +98,7 @@ pub use {
 pub use der::pem::LineEnding;
 
 #[cfg(feature = "pkcs5")]
-pub use {crate::encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
+pub use {encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
 
 #[cfg(feature = "rand_core")]
 pub use rand_core;
-
-#[cfg(all(feature = "alloc", feature = "pkcs5"))]
-pub use crate::document::encrypted_private_key::EncryptedPrivateKeyDocument;

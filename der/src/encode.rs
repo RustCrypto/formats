@@ -5,6 +5,13 @@ use crate::{Encoder, Header, Length, Result, Tagged};
 #[cfg(feature = "alloc")]
 use {crate::ErrorKind, alloc::vec::Vec, core::iter};
 
+#[cfg(feature = "pem")]
+use {
+    alloc::string::String,
+    pem_rfc7468::{self as pem, LineEnding, PemLabel},
+    zeroize::Zeroizing,
+};
+
 #[cfg(doc)]
 use crate::Tag;
 
@@ -71,6 +78,27 @@ where
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         self.header()?.encode(encoder)?;
         self.encode_value(encoder)
+    }
+}
+
+/// PEM encoding trait.
+///
+/// This trait is automatically impl'd for any type which impls both
+/// [`Encode`] and [`PemLabel`].
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+pub trait EncodePem: Encode + PemLabel {
+    /// Try to encode this type as PEM.
+    fn to_pem(&self, line_ending: LineEnding) -> Result<String>;
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl<T: Encode + PemLabel> EncodePem for T {
+    fn to_pem(&self, line_ending: LineEnding) -> Result<String> {
+        // TODO(tarcieri): support for encoding directly from PEM (instead of two-pass)
+        let der = Zeroizing::new(self.to_vec()?);
+        Ok(pem::encode_string(Self::PEM_LABEL, line_ending, &der)?)
     }
 }
 
