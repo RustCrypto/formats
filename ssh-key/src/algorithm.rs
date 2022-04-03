@@ -11,6 +11,24 @@ use core::{fmt, str};
 /// bcrypt-pbkdf
 const BCRYPT: &str = "bcrypt";
 
+/// OpenSSH certificate with DSA public key
+const CERT_DSA: &str = "ssh-dss-cert-v01@openssh.com";
+
+/// OpenSSH certificate with ECDSA (NIST P-256) public key
+const CERT_ECDSA_SHA2_P256: &str = "ecdsa-sha2-nistp256-cert-v01@openssh.com";
+
+/// OpenSSH certificate with ECDSA (NIST P-384) public key
+const CERT_ECDSA_SHA2_P384: &str = "ecdsa-sha2-nistp384-cert-v01@openssh.com";
+
+/// OpenSSH certificate with ECDSA (NIST P-521) public key
+const CERT_ECDSA_SHA2_P521: &str = "ecdsa-sha2-nistp521-cert-v01@openssh.com";
+
+/// OpenSSH certificate with Ed25519 public key
+const CERT_ED25519: &str = "ssh-ed25519-cert-v01@openssh.com";
+
+/// OpenSSH certificate with RSA public key
+const CERT_RSA: &str = "ssh-rsa-cert-v01@openssh.com";
+
 /// ECDSA with SHA-256 + NIST P-256
 const ECDSA_SHA2_P256: &str = "ecdsa-sha2-nistp256";
 
@@ -98,10 +116,10 @@ impl Algorithm {
     /// - `ssh-rsa`
     pub fn new(id: &str) -> Result<Self> {
         match id {
+            SSH_DSA => Ok(Algorithm::Dsa),
             ECDSA_SHA2_P256 => Ok(Algorithm::Ecdsa(EcdsaCurve::NistP256)),
             ECDSA_SHA2_P384 => Ok(Algorithm::Ecdsa(EcdsaCurve::NistP384)),
             ECDSA_SHA2_P521 => Ok(Algorithm::Ecdsa(EcdsaCurve::NistP521)),
-            SSH_DSA => Ok(Algorithm::Dsa),
             SSH_ED25519 => Ok(Algorithm::Ed25519),
             SSH_RSA => Ok(Algorithm::Rsa),
             _ => Err(Error::Algorithm),
@@ -162,6 +180,153 @@ impl str::FromStr for Algorithm {
 
     fn from_str(id: &str) -> Result<Self> {
         Self::new(id)
+    }
+}
+/// OpenSSH certificate algorithms.
+///
+/// Digital signature algorithms used by OpenSSH certificates.
+///
+/// These map 1:1 to [`Algorithm`], but have different algorithm identifiers
+/// for use in certificates. See [PROTOCOL.certkeys] for more information.
+///
+/// [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[non_exhaustive]
+pub enum CertificateAlg {
+    /// Digital Signature Algorithm
+    Dsa,
+
+    /// Elliptic Curve Digital Signature Algorithm
+    Ecdsa(EcdsaCurve),
+
+    /// Ed25519
+    Ed25519,
+
+    /// RSA
+    Rsa,
+}
+
+impl CertificateAlg {
+    /// Maximum size of a certificate algorithm.
+    const MAX_SIZE: usize = 40; // ecdsa-sha2-nistpXXX-cert-v01@openssh.com
+
+    /// Decode algorithm from the given string identifier.
+    ///
+    /// # Supported algorithms
+    /// - `ssh-rsa-cert-v01@openssh.com`
+    /// - `ssh-dss-cert-v01@openssh.com`
+    /// - `ecdsa-sha2-nistp256-cert-v01@openssh.com`
+    /// - `ecdsa-sha2-nistp384-cert-v01@openssh.com`
+    /// - `ecdsa-sha2-nistp521-cert-v01@openssh.com`
+    /// - `ssh-ed25519-cert-v01@openssh.com`
+    pub fn new(id: &str) -> Result<Self> {
+        match id {
+            CERT_DSA => Ok(CertificateAlg::Dsa),
+            CERT_ECDSA_SHA2_P256 => Ok(CertificateAlg::Ecdsa(EcdsaCurve::NistP256)),
+            CERT_ECDSA_SHA2_P384 => Ok(CertificateAlg::Ecdsa(EcdsaCurve::NistP384)),
+            CERT_ECDSA_SHA2_P521 => Ok(CertificateAlg::Ecdsa(EcdsaCurve::NistP521)),
+            CERT_ED25519 => Ok(CertificateAlg::Ed25519),
+            CERT_RSA => Ok(CertificateAlg::Rsa),
+            _ => Err(Error::Algorithm),
+        }
+    }
+
+    /// Get the string identifier which corresponds to this algorithm.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            CertificateAlg::Dsa => CERT_DSA,
+            CertificateAlg::Ecdsa(EcdsaCurve::NistP256) => CERT_ECDSA_SHA2_P256,
+            CertificateAlg::Ecdsa(EcdsaCurve::NistP384) => CERT_ECDSA_SHA2_P384,
+            CertificateAlg::Ecdsa(EcdsaCurve::NistP521) => CERT_ECDSA_SHA2_P521,
+            CertificateAlg::Ed25519 => CERT_ED25519,
+            CertificateAlg::Rsa => CERT_RSA,
+        }
+    }
+
+    /// Is the algorithm DSA?
+    pub fn is_dsa(self) -> bool {
+        self == CertificateAlg::Dsa
+    }
+
+    /// Is the algorithm ECDSA?
+    pub fn is_ecdsa(self) -> bool {
+        matches!(self, CertificateAlg::Ecdsa(_))
+    }
+
+    /// Is the algorithm Ed25519?
+    pub fn is_ed25519(self) -> bool {
+        self == CertificateAlg::Ed25519
+    }
+
+    /// Is the algorithm RSA?
+    pub fn is_rsa(self) -> bool {
+        self == CertificateAlg::Rsa
+    }
+}
+
+impl AsRef<str> for CertificateAlg {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl Decode for CertificateAlg {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+        let mut buf = [0u8; Self::MAX_SIZE];
+        decoder
+            .decode_str(buf.as_mut())
+            .map_err(|_| Error::Algorithm)?
+            .parse()
+    }
+}
+
+impl Encode for CertificateAlg {
+    fn encoded_len(&self) -> Result<usize> {
+        [4, self.as_ref().len()].checked_sum()
+    }
+
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        encoder.encode_str(self.as_ref())
+    }
+}
+
+impl fmt::Display for CertificateAlg {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl str::FromStr for CertificateAlg {
+    type Err = Error;
+
+    fn from_str(id: &str) -> Result<Self> {
+        Self::new(id)
+    }
+}
+
+impl From<CertificateAlg> for Algorithm {
+    fn from(algorithm: CertificateAlg) -> Algorithm {
+        match algorithm {
+            CertificateAlg::Dsa => Algorithm::Dsa,
+            CertificateAlg::Ecdsa(EcdsaCurve::NistP256) => Algorithm::Ecdsa(EcdsaCurve::NistP256),
+            CertificateAlg::Ecdsa(EcdsaCurve::NistP384) => Algorithm::Ecdsa(EcdsaCurve::NistP384),
+            CertificateAlg::Ecdsa(EcdsaCurve::NistP521) => Algorithm::Ecdsa(EcdsaCurve::NistP521),
+            CertificateAlg::Ed25519 => Algorithm::Ed25519,
+            CertificateAlg::Rsa => Algorithm::Rsa,
+        }
+    }
+}
+
+impl From<Algorithm> for CertificateAlg {
+    fn from(algorithm: Algorithm) -> CertificateAlg {
+        match algorithm {
+            Algorithm::Dsa => CertificateAlg::Dsa,
+            Algorithm::Ecdsa(EcdsaCurve::NistP256) => CertificateAlg::Ecdsa(EcdsaCurve::NistP256),
+            Algorithm::Ecdsa(EcdsaCurve::NistP384) => CertificateAlg::Ecdsa(EcdsaCurve::NistP384),
+            Algorithm::Ecdsa(EcdsaCurve::NistP521) => CertificateAlg::Ecdsa(EcdsaCurve::NistP521),
+            Algorithm::Ed25519 => CertificateAlg::Ed25519,
+            Algorithm::Rsa => CertificateAlg::Rsa,
+        }
     }
 }
 

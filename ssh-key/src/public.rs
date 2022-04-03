@@ -17,6 +17,8 @@ pub use self::ed25519::Ed25519PublicKey;
 #[cfg(feature = "alloc")]
 pub use self::{dsa::DsaPublicKey, rsa::RsaPublicKey};
 
+pub(crate) use self::openssh::Encapsulation;
+
 use crate::{
     checked::CheckedSum,
     decoder::{Base64Decoder, Decode, Decoder},
@@ -72,7 +74,7 @@ impl PublicKey {
     /// ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti foo@bar.com
     /// ```
     pub fn from_openssh(input: impl AsRef<[u8]>) -> Result<Self> {
-        let encapsulation = openssh::Encapsulation::decode(input.as_ref())?;
+        let encapsulation = Encapsulation::decode(input.as_ref())?;
         let mut decoder = Base64Decoder::new(encapsulation.base64_data)?;
         let key_data = KeyData::decode(&mut decoder)?;
 
@@ -94,7 +96,7 @@ impl PublicKey {
 
     /// Encode OpenSSH-formatted public key.
     pub fn encode_openssh<'o>(&self, out: &'o mut [u8]) -> Result<&'o str> {
-        openssh::Encapsulation::encode(out, self.algorithm().as_str(), self.comment(), |encoder| {
+        Encapsulation::encode(out, self.algorithm().as_str(), self.comment(), |encoder| {
             self.key_data.encode(encoder)
         })
     }
@@ -343,11 +345,13 @@ impl KeyData {
 
         n
     }
-}
 
-impl Decode for KeyData {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        match Algorithm::decode(decoder)? {
+    /// Decode [`KeyData`] for the specified algorithm.
+    pub(crate) fn decode_algorithm(
+        decoder: &mut impl Decoder,
+        algorithm: Algorithm,
+    ) -> Result<Self> {
+        match algorithm {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaPublicKey::decode(decoder).map(Self::Dsa),
             #[cfg(feature = "ecdsa")]
@@ -361,6 +365,13 @@ impl Decode for KeyData {
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
         }
+    }
+}
+
+impl Decode for KeyData {
+    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+        let algorithm = Algorithm::decode(decoder)?;
+        Self::decode_algorithm(decoder, algorithm)
     }
 }
 

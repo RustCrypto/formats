@@ -61,6 +61,18 @@ pub(crate) trait Decoder {
         Ok(u32::from_be_bytes(bytes))
     }
 
+    /// Decode a `uint64` as described in [RFC4251 § 5]:
+    ///
+    /// > Represents a 64-bit unsigned integer.  Stored as eight bytes in
+    /// > the order of decreasing significance (network byte order).
+    ///
+    /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
+    fn decode_u64(&mut self) -> Result<u64> {
+        let mut bytes = [0u8; 8];
+        self.decode_raw(&mut bytes)?;
+        Ok(u64::from_be_bytes(bytes))
+    }
+
     /// Decode a `usize`.
     ///
     /// Uses [`Decoder::decode_u32`] and then converts to a `usize`, handling

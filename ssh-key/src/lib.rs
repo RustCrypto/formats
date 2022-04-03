@@ -132,13 +132,17 @@ mod encoder;
 mod error;
 mod kdf;
 
-#[cfg(feature = "fingerprint")]
-mod fingerprint;
+#[cfg(feature = "alloc")]
+mod certificate;
+
 #[cfg(feature = "alloc")]
 mod mpint;
 
+#[cfg(feature = "fingerprint")]
+mod fingerprint;
+
 pub use crate::{
-    algorithm::{Algorithm, EcdsaCurve, HashAlg, KdfAlg},
+    algorithm::{Algorithm, CertificateAlg, EcdsaCurve, HashAlg, KdfAlg},
     authorized_keys::AuthorizedKeys,
     cipher::Cipher,
     error::{Error, Result},
@@ -149,7 +153,7 @@ pub use crate::{
 pub use base64ct::LineEnding;
 
 #[cfg(feature = "alloc")]
-pub use crate::mpint::MPInt;
+pub use crate::{certificate::Certificate, mpint::MPInt};
 
 #[cfg(feature = "ecdsa")]
 pub use sec1;

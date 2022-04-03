@@ -41,7 +41,7 @@ use subtle::{Choice, ConstantTimeEq};
 /// | 80              | `00 00 00 02 00 80`
 /// |-1234            | `00 00 00 02 ed cc`
 /// | -deadbeef       | `00 00 00 05 ff 21 52 41 11`
-// TODO(tarcieri): support for heapless platforms, constant time comparisons
+// TODO(tarcieri): support for heapless platforms
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct MPInt {
