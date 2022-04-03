@@ -253,7 +253,7 @@ impl PrivateKey {
         }
 
         let key_data = pem_decoder.decode_length_prefixed(|decoder, _len| {
-            KeypairData::decode_padded(decoder, &mut public_key, cipher)
+            KeypairData::decode_privatekey_comment_pair(decoder, &mut public_key, cipher)
         })?;
 
         Ok(Self {
@@ -291,11 +291,14 @@ impl PrivateKey {
         } else {
             pem_encoder.encode_usize(
                 self.key_data
-                    .encoded_len_padded(self.comment(), self.cipher)?,
+                    .encoded_privatekey_comment_pair_len(self.comment(), self.cipher)?,
             )?;
 
-            self.key_data
-                .encode_padded(&mut pem_encoder, self.comment(), self.cipher)?;
+            self.key_data.encode_privatekey_comment_pair(
+                &mut pem_encoder,
+                self.comment(),
+                self.cipher,
+            )?;
         }
 
         let encoded_len = pem_encoder.finish()?;
@@ -357,7 +360,11 @@ impl PrivateKey {
         self.cipher.decrypt(&key_bytes, &iv_bytes, &mut buffer)?;
 
         let mut public_key = self.public_key.clone();
-        let key_data = KeypairData::decode_padded(&mut &**buffer, &mut public_key, self.cipher)?;
+        let key_data = KeypairData::decode_privatekey_comment_pair(
+            &mut &**buffer,
+            &mut public_key,
+            self.cipher,
+        )?;
 
         Ok(Self {
             cipher: Cipher::None,
@@ -406,12 +413,14 @@ impl PrivateKey {
         }
 
         let (key_bytes, iv_bytes) = kdf.derive_key_and_iv(cipher, password)?;
-        let msg_len = self.key_data.encoded_len_padded(self.comment(), cipher)?;
+        let msg_len = self
+            .key_data
+            .encoded_privatekey_comment_pair_len(self.comment(), cipher)?;
         let mut out = Vec::with_capacity(msg_len);
 
         // Encode and encrypt private key
         self.key_data
-            .encode_padded(&mut out, self.comment(), cipher)?;
+            .encode_privatekey_comment_pair(&mut out, self.comment(), cipher)?;
         cipher.encrypt(&key_bytes, &iv_bytes, out.as_mut_slice())?;
 
         Ok(Self {
@@ -501,7 +510,7 @@ impl PrivateKey {
             self.key_data.encoded_len()?
         } else {
             self.key_data
-                .encoded_len_padded(self.comment(), self.cipher)?
+                .encoded_privatekey_comment_pair_len(self.comment(), self.cipher)?
         };
 
         let bytes_len = [
