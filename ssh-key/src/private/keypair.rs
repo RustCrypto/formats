@@ -162,16 +162,33 @@ impl KeypairData {
         matches!(self, Self::Rsa(_))
     }
 
-    /// Decode [`KeypairData`] along with its associated comment, storing
-    /// the comment in the provided public key.
+    /// Decode [`KeypairData`] along with its associated checkints and comment,
+    /// storing the comment in the provided public key on success.
     ///
     /// This method also checks padding for validity and ensures that the
     /// decoded private key matches the provided public key.
     ///
-    /// For private key format specification, see OpenSSH [PROTOCOL.key] § 3.
+    /// For private key format specification, see OpenSSH [PROTOCOL.key] § 3:
+    ///
+    /// ```text
+    /// uint32  checkint
+    /// uint32  checkint
+    /// byte[]  privatekey1
+    /// string  comment1
+    /// byte[]  privatekey2
+    /// string  comment2
+    /// ...
+    /// string  privatekeyN
+    /// string  commentN
+    /// char    1
+    /// char    2
+    /// char    3
+    /// ...
+    /// char    padlen % 255
+    /// ```
     ///
     /// [PROTOCOL.key]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD
-    pub(super) fn decode_padded(
+    pub(super) fn decode_privatekey_comment_pair(
         decoder: &mut impl Decoder,
         public_key: &mut PublicKey,
         cipher: Cipher,
@@ -181,6 +198,13 @@ impl KeypairData {
         // Ensure input data is padding-aligned
         if decoder.remaining_len().checked_rem(cipher.block_size()) != Some(0) {
             return Err(Error::Length);
+        }
+
+        let checkint1 = decoder.decode_u32()?;
+        let checkint2 = decoder.decode_u32()?;
+
+        if checkint1 != checkint2 {
+            return Err(Error::Crypto);
         }
 
         let key_data = KeypairData::decode(decoder)?;
@@ -214,8 +238,9 @@ impl KeypairData {
         Ok(key_data)
     }
 
-    /// Encode [`KeypairData`] along with its associated comment and padding.
-    pub(super) fn encode_padded(
+    /// Encode [`KeypairData`] along with its associated checkints, comment,
+    /// and padding.
+    pub(super) fn encode_privatekey_comment_pair(
         &self,
         encoder: &mut impl Encoder,
         comment: &str,
@@ -229,6 +254,10 @@ impl KeypairData {
         let unpadded_len = self.encoded_len_with_comment(comment)?;
         let padding_len = cipher.padding_len(unpadded_len);
 
+        // Compute checkint (uses deterministic method)
+        let checkint = public::KeyData::try_from(self)?.checkint();
+        encoder.encode_u32(checkint)?;
+        encoder.encode_u32(checkint)?;
         self.encode(encoder)?;
         encoder.encode_str(comment)?;
         encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
@@ -237,7 +266,11 @@ impl KeypairData {
 
     /// Get the length of this private key when encoded with the given comment
     /// and padded using the padding size for the given cipher.
-    pub(super) fn encoded_len_padded(&self, comment: &str, cipher: Cipher) -> Result<usize> {
+    pub(super) fn encoded_privatekey_comment_pair_len(
+        &self,
+        comment: &str,
+        cipher: Cipher,
+    ) -> Result<usize> {
         let len = self.encoded_len_with_comment(comment)?;
         [len, cipher.padding_len(len)].checked_sum()
     }
@@ -251,19 +284,18 @@ impl KeypairData {
             return Err(Error::Encrypted);
         }
 
-        [4, self.encoded_len()?, comment.len()].checked_sum()
+        [
+            8, // 2 x uint32 checkints,
+            4, // u32 length prefix for key data
+            self.encoded_len()?,
+            comment.len(),
+        ]
+        .checked_sum()
     }
 }
 
 impl Decode for KeypairData {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let checkint1 = decoder.decode_u32()?;
-        let checkint2 = decoder.decode_u32()?;
-
-        if checkint1 != checkint2 {
-            return Err(Error::Crypto);
-        }
-
         match Algorithm::decode(decoder)? {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaKeypair::decode(decoder).map(Self::Dsa),
@@ -300,21 +332,11 @@ impl Encode for KeypairData {
             Self::Rsa(key) => key.encoded_len()?,
         };
 
-        [
-            8, // 2 x uint32 checkints
-            self.algorithm()?.encoded_len()?,
-            key_len,
-        ]
-        .checked_sum()
+        [self.algorithm()?.encoded_len()?, key_len].checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         if !self.is_encrypted() {
-            // Compute checkint (uses deterministic method)
-            let checkint = public::KeyData::try_from(self)?.checkint();
-            encoder.encode_u32(checkint)?;
-            encoder.encode_u32(checkint)?;
-
             self.algorithm()?.encode(encoder)?;
         }
 
