@@ -16,21 +16,22 @@ use crate::{encoder::Base64Encoder, Error, Result};
 use core::str;
 
 /// OpenSSH public key encapsulation parser.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct Encapsulation<'a> {
     /// Algorithm identifier
-    pub(super) algorithm_id: &'a str,
+    pub(crate) algorithm_id: &'a str,
 
     /// Base64-encoded key data
-    pub(super) base64_data: &'a [u8],
+    pub(crate) base64_data: &'a [u8],
 
     /// Comment
     #[cfg_attr(not(feature = "alloc"), allow(dead_code))]
-    pub(super) comment: &'a str,
+    pub(crate) comment: &'a str,
 }
 
 impl<'a> Encapsulation<'a> {
     /// Parse the given binary data.
-    pub(super) fn decode(mut bytes: &'a [u8]) -> Result<Self> {
+    pub(crate) fn decode(mut bytes: &'a [u8]) -> Result<Self> {
         let algorithm_id = decode_segment_str(&mut bytes)?;
         let base64_data = decode_segment(&mut bytes)?;
         let comment = str::from_utf8(bytes)
@@ -50,7 +51,7 @@ impl<'a> Encapsulation<'a> {
     }
 
     /// Encode data with OpenSSH public key encapsulation.
-    pub(super) fn encode<'o, F>(
+    pub(crate) fn encode<'o, F>(
         out: &'o mut [u8],
         algorithm_id: &str,
         comment: &str,
@@ -81,7 +82,8 @@ fn decode_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
 
     loop {
         match *bytes {
-            [b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'+' | b'-' | b'/' | b'=', rest @ ..] => {
+            [b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'+' | b'-' | b'/' | b'=' | b'@' | b'.', rest @ ..] =>
+            {
                 // Valid character; continue
                 *bytes = rest;
                 len = len.checked_add(1).ok_or(Error::Length)?;
@@ -93,7 +95,6 @@ fn decode_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
             }
             [_, ..] => {
                 // Invalid character
-                // TODO(tarcieri): better error?
                 return Err(Error::CharacterEncoding);
             }
             [] => {
