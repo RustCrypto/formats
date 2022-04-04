@@ -113,6 +113,11 @@ impl Kdf {
         self == &Self::None
     }
 
+    /// Is the KDF configured as anything other than `none`?
+    pub fn is_some(&self) -> bool {
+        !self.is_none()
+    }
+
     /// Is the KDF configured as `bcrypt` (i.e. bcrypt-pbkdf)?
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
