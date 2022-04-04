@@ -11,20 +11,26 @@ use core::{fmt, str};
 /// bcrypt-pbkdf
 const BCRYPT: &str = "bcrypt";
 
-/// OpenSSH certificate with DSA public key
+/// OpenSSH certificate for DSA public key
 const CERT_DSA: &str = "ssh-dss-cert-v01@openssh.com";
 
-/// OpenSSH certificate with ECDSA (NIST P-256) public key
+/// OpenSSH certificate for ECDSA (NIST P-256) public key
 const CERT_ECDSA_SHA2_P256: &str = "ecdsa-sha2-nistp256-cert-v01@openssh.com";
 
-/// OpenSSH certificate with ECDSA (NIST P-384) public key
+/// OpenSSH certificate for ECDSA (NIST P-384) public key
 const CERT_ECDSA_SHA2_P384: &str = "ecdsa-sha2-nistp384-cert-v01@openssh.com";
 
-/// OpenSSH certificate with ECDSA (NIST P-521) public key
+/// OpenSSH certificate for ECDSA (NIST P-521) public key
 const CERT_ECDSA_SHA2_P521: &str = "ecdsa-sha2-nistp521-cert-v01@openssh.com";
 
-/// OpenSSH certificate with Ed25519 public key
+/// OpenSSH certificate for Ed25519 public key
 const CERT_ED25519: &str = "ssh-ed25519-cert-v01@openssh.com";
+
+/// OpenSSH certificate for ECDSA (NIST P-256) U2F/FIDO security key
+const CERT_SK_ECDSA_SHA2_P256: &str = "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com";
+
+/// OpenSSH certificate for Ed25519 U2F/FIDO security key
+const CERT_SK_SSH_ED25519: &str = "sk-ssh-ed25519-cert-v01@openssh.com";
 
 /// OpenSSH certificate with RSA public key
 const CERT_RSA: &str = "ssh-rsa-cert-v01@openssh.com";
@@ -41,7 +47,7 @@ const ECDSA_SHA2_P521: &str = "ecdsa-sha2-nistp521";
 /// None
 const NONE: &str = "none";
 
-/// SHA-256 hash function.
+/// SHA-256 hash function
 const SHA256: &str = "SHA256";
 
 /// Digital Signature Algorithm
@@ -53,20 +59,23 @@ const SSH_ED25519: &str = "ssh-ed25519";
 /// RSA
 const SSH_RSA: &str = "ssh-rsa";
 
+/// U2F/FIDO security key with ECDSA/NIST P-256
+const SK_ECDSA_SHA2_P256: &str = "sk-ecdsa-sha2-nistp256@openssh.com";
+
+/// U2F/FIDO security key with Ed25519
+const SK_SSH_ED25519: &str = "sk-ssh-ed25519@openssh.com";
+
+/// Maximum size of any algorithm name/identifier.
+const MAX_ALG_NAME_SIZE: usize = 48;
+
 /// String identifiers for cryptographic algorithms.
 ///
 /// Receives a blanket impl of [`Decode`] and [`Encode`].
-pub(crate) trait AlgString: AsRef<str> + str::FromStr<Err = Error> {
-    /// Decoding buffer type.
-    ///
-    /// This needs to be a byte array large enough to fit the largest
-    /// possible value of this type.
-    type DecodeBuf: AsMut<[u8]> + Default;
-}
+pub(crate) trait AlgString: AsRef<str> + str::FromStr<Err = Error> {}
 
 impl<T: AlgString> Decode for T {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let mut buf = T::DecodeBuf::default();
+        let mut buf = [0u8; MAX_ALG_NAME_SIZE];
         decoder
             .decode_str(buf.as_mut())
             .map_err(|_| Error::Algorithm)?
@@ -102,6 +111,12 @@ pub enum Algorithm {
 
     /// RSA
     Rsa,
+
+    /// FIDO/U2F key with ECDSA/NIST-P256 + SHA-256
+    SkEcdsaSha2NistP256,
+
+    /// FIDO/U2F key with Ed25519
+    SkEd25519,
 }
 
 impl Algorithm {
@@ -114,6 +129,8 @@ impl Algorithm {
     /// - `ssh-dss`
     /// - `ssh-ed25519`
     /// - `ssh-rsa`
+    /// - `sk-ecdsa-sha2-nistp256@openssh.com` (FIDO/U2F key)
+    /// - `sk-ssh-ed25519@openssh.com` (FIDO/U2F key)
     pub fn new(id: &str) -> Result<Self> {
         match id {
             SSH_DSA => Ok(Algorithm::Dsa),
@@ -122,6 +139,8 @@ impl Algorithm {
             ECDSA_SHA2_P521 => Ok(Algorithm::Ecdsa(EcdsaCurve::NistP521)),
             SSH_ED25519 => Ok(Algorithm::Ed25519),
             SSH_RSA => Ok(Algorithm::Rsa),
+            SK_ECDSA_SHA2_P256 => Ok(Algorithm::SkEcdsaSha2NistP256),
+            SK_SSH_ED25519 => Ok(Algorithm::SkEd25519),
             _ => Err(Error::Algorithm),
         }
     }
@@ -135,6 +154,8 @@ impl Algorithm {
             Algorithm::Ecdsa(EcdsaCurve::NistP521) => ECDSA_SHA2_P521,
             Algorithm::Ed25519 => SSH_ED25519,
             Algorithm::Rsa => SSH_RSA,
+            Algorithm::SkEcdsaSha2NistP256 => SK_ECDSA_SHA2_P256,
+            Algorithm::SkEd25519 => SK_SSH_ED25519,
         }
     }
 
@@ -165,9 +186,7 @@ impl AsRef<str> for Algorithm {
     }
 }
 
-impl AlgString for Algorithm {
-    type DecodeBuf = [u8; 20]; // max length: "ecdsa-sha2-nistpXXX"
-}
+impl AlgString for Algorithm {}
 
 impl fmt::Display for Algorithm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -204,12 +223,15 @@ pub enum CertificateAlg {
 
     /// RSA
     Rsa,
+
+    /// FIDO/U2F key with ECDSA/NIST-P256 + SHA-256
+    SkEcdsaSha2NistP256,
+
+    /// FIDO/U2F key with Ed25519
+    SkEd25519,
 }
 
 impl CertificateAlg {
-    /// Maximum size of a certificate algorithm.
-    const MAX_SIZE: usize = 40; // ecdsa-sha2-nistpXXX-cert-v01@openssh.com
-
     /// Decode algorithm from the given string identifier.
     ///
     /// # Supported algorithms
@@ -219,6 +241,8 @@ impl CertificateAlg {
     /// - `ecdsa-sha2-nistp384-cert-v01@openssh.com`
     /// - `ecdsa-sha2-nistp521-cert-v01@openssh.com`
     /// - `ssh-ed25519-cert-v01@openssh.com`
+    /// - `sk-ecdsa-sha2-nistp256-cert-v01@openssh.com` (FIDO/U2F key)
+    /// - `sk-ssh-ed25519-cert-v01@openssh.com` (FIDO/U2F key)
     pub fn new(id: &str) -> Result<Self> {
         match id {
             CERT_DSA => Ok(CertificateAlg::Dsa),
@@ -227,6 +251,8 @@ impl CertificateAlg {
             CERT_ECDSA_SHA2_P521 => Ok(CertificateAlg::Ecdsa(EcdsaCurve::NistP521)),
             CERT_ED25519 => Ok(CertificateAlg::Ed25519),
             CERT_RSA => Ok(CertificateAlg::Rsa),
+            CERT_SK_ECDSA_SHA2_P256 => Ok(CertificateAlg::SkEcdsaSha2NistP256),
+            CERT_SK_SSH_ED25519 => Ok(CertificateAlg::SkEd25519),
             _ => Err(Error::Algorithm),
         }
     }
@@ -240,6 +266,8 @@ impl CertificateAlg {
             CertificateAlg::Ecdsa(EcdsaCurve::NistP521) => CERT_ECDSA_SHA2_P521,
             CertificateAlg::Ed25519 => CERT_ED25519,
             CertificateAlg::Rsa => CERT_RSA,
+            CertificateAlg::SkEcdsaSha2NistP256 => CERT_SK_ECDSA_SHA2_P256,
+            CertificateAlg::SkEd25519 => CERT_SK_SSH_ED25519,
         }
     }
 
@@ -270,25 +298,7 @@ impl AsRef<str> for CertificateAlg {
     }
 }
 
-impl Decode for CertificateAlg {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let mut buf = [0u8; Self::MAX_SIZE];
-        decoder
-            .decode_str(buf.as_mut())
-            .map_err(|_| Error::Algorithm)?
-            .parse()
-    }
-}
-
-impl Encode for CertificateAlg {
-    fn encoded_len(&self) -> Result<usize> {
-        [4, self.as_ref().len()].checked_sum()
-    }
-
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_str(self.as_ref())
-    }
-}
+impl AlgString for CertificateAlg {}
 
 impl fmt::Display for CertificateAlg {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -313,6 +323,8 @@ impl From<CertificateAlg> for Algorithm {
             CertificateAlg::Ecdsa(EcdsaCurve::NistP521) => Algorithm::Ecdsa(EcdsaCurve::NistP521),
             CertificateAlg::Ed25519 => Algorithm::Ed25519,
             CertificateAlg::Rsa => Algorithm::Rsa,
+            CertificateAlg::SkEcdsaSha2NistP256 => Algorithm::SkEcdsaSha2NistP256,
+            CertificateAlg::SkEd25519 => Algorithm::SkEd25519,
         }
     }
 }
@@ -326,6 +338,8 @@ impl From<Algorithm> for CertificateAlg {
             Algorithm::Ecdsa(EcdsaCurve::NistP521) => CertificateAlg::Ecdsa(EcdsaCurve::NistP521),
             Algorithm::Ed25519 => CertificateAlg::Ed25519,
             Algorithm::Rsa => CertificateAlg::Rsa,
+            Algorithm::SkEcdsaSha2NistP256 => CertificateAlg::SkEcdsaSha2NistP256,
+            Algorithm::SkEd25519 => CertificateAlg::SkEd25519,
         }
     }
 }
@@ -344,9 +358,6 @@ pub enum EcdsaCurve {
 }
 
 impl EcdsaCurve {
-    /// Maximum length of an algorithm string: `nistpXXX` (8 chars)
-    const MAX_SIZE: usize = 8;
-
     /// Decode elliptic curve from the given string identifier.
     ///
     /// # Supported curves
@@ -379,9 +390,7 @@ impl AsRef<str> for EcdsaCurve {
     }
 }
 
-impl AlgString for EcdsaCurve {
-    type DecodeBuf = [u8; Self::MAX_SIZE];
-}
+impl AlgString for EcdsaCurve {}
 
 impl fmt::Display for EcdsaCurve {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -463,9 +472,6 @@ pub enum KdfAlg {
 }
 
 impl KdfAlg {
-    /// Maximum length of an algorithm string: `bcrypt` (6 chars)
-    const MAX_SIZE: usize = 6;
-
     /// Decode KDF algorithm from the given `kdfname`.
     ///
     /// # Supported KDF names
@@ -498,9 +504,7 @@ impl AsRef<str> for KdfAlg {
     }
 }
 
-impl AlgString for KdfAlg {
-    type DecodeBuf = [u8; Self::MAX_SIZE];
-}
+impl AlgString for KdfAlg {}
 
 impl Default for KdfAlg {
     fn default() -> KdfAlg {

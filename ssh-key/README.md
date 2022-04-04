@@ -27,14 +27,14 @@ specification  and `authorized_keys` files.
 
 #### TODO
 
+- [ ] FIDO/U2F key support (`sk-*`)
 - [ ] Key generation support (WIP - see table below)
+- [ ] OpenSSH certificate support
 - [ ] Interop with digital signature crates
   - [x] `ed25519-dalek`
   - [ ] `p256` (ECDSA)
   - [ ] `p384` (ECDSA)
   - [ ] `rsa`
-- [ ] OpenSSH certificate support
-- [ ] U2F/FIDO2 key support (`sk-*`)
 - [ ] Legacy (pre-OpenSSH) SSH key format support
   - [ ] PKCS#1
   - [ ] PKCS#8
@@ -43,16 +43,16 @@ specification  and `authorized_keys` files.
 
 ## Supported algorithms
 
-| Name                                 | Decoding | Encoding | `no_std`  | Keygen |
-|--------------------------------------|----------|----------|-----------|--------|
-| `ecdsa-sha2-nistp256`                | ✅        | ✅        | heapless  | ⛔️     |
-| `ecdsa-sha2-nistp384`                | ✅        | ✅        | heapless  | ⛔️     |
-| `ecdsa-sha2-nistp521`                | ✅        | ✅        | heapless  | ⛔️     |
-| `ssh-dsa`                            | ✅        | ✅        | `alloc` ️ | ⛔      |
-| `ssh-ed25519`                        | ✅        | ✅        | heapless  | ✅️     |
-| `ssh-rsa`                            | ✅        | ✅        | `alloc`   | ⛔️     |
-| `sk-ecdsa-sha2-nistp256@openssh.com` | ⛔        | ⛔        | -         | ⛔️     |
-| `sk-ssh-ed25519@openssh.com`         | ⛔        | ⛔        | -         | ⛔️     |
+| Name                                 | Decoding | Encoding | Certificates | Keygen | `no_std`  |
+|--------------------------------------|----------|----------|--------------|--------|-----------|
+| `ecdsa-sha2-nistp256`                | ✅       | ✅       | ✅           | ⛔️     | heapless  |
+| `ecdsa-sha2-nistp384`                | ✅       | ✅       | ✅           | ⛔️     | heapless  |
+| `ecdsa-sha2-nistp521`                | ✅       | ✅       | ✅           | ⛔️     | heapless  |
+| `ssh-dsa`                            | ✅       | ✅       | ✅           | ⛔     | `alloc` ️  |
+| `ssh-ed25519`                        | ✅       | ✅       | ✅           | ✅️     | heapless  |
+| `ssh-rsa`                            | ✅       | ✅       | ✅           | ⛔️     | `alloc`   |
+| `sk-ecdsa-sha2-nistp256@openssh.com` | ⛔       | ⛔       | ⛔           | N/A    | -         |
+| `sk-ssh-ed25519@openssh.com`         | ⛔       | ⛔       | ⛔           | N/A    | -         |
 
 ## Minimum Supported Rust Version
 

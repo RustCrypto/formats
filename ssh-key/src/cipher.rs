@@ -30,9 +30,6 @@ pub enum Cipher {
 }
 
 impl Cipher {
-    /// Maximum length of an algorithm string: `aes256-ctr` (10 chars)
-    const MAX_SIZE: usize = 10;
-
     /// Decode cipher algorithm from the given `ciphername`.
     ///
     /// # Supported cipher names
@@ -129,9 +126,7 @@ impl AsRef<str> for Cipher {
     }
 }
 
-impl AlgString for Cipher {
-    type DecodeBuf = [u8; Self::MAX_SIZE];
-}
+impl AlgString for Cipher {}
 
 impl Default for Cipher {
     fn default() -> Cipher {
