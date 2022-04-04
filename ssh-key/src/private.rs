@@ -120,6 +120,7 @@ pub use self::{
 };
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
     public, Algorithm, Cipher, Error, Kdf, PublicKey, Result,
@@ -128,11 +129,7 @@ use core::str;
 use pem_rfc7468::{self as pem, LineEnding, PemLabel};
 
 #[cfg(feature = "alloc")]
-use {
-    crate::{checked::CheckedSum, encoder::base64_encoded_len},
-    alloc::string::String,
-    zeroize::Zeroizing,
-};
+use {crate::encoder::base64_encoded_len, alloc::string::String, zeroize::Zeroizing};
 
 #[cfg(feature = "fingerprint")]
 use crate::{Fingerprint, HashAlg};
@@ -151,6 +148,14 @@ use std::os::unix::fs::OpenOptionsExt;
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
+
+/// Maximum supported block size.
+///
+/// This is the block size used by e.g. AES.
+const MAX_BLOCK_SIZE: usize = 16;
+
+/// Padding bytes to use.
+const PADDING_BYTES: [u8; MAX_BLOCK_SIZE - 1] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
 /// Line width used by the PEM encoding of OpenSSH private keys.
 const PEM_LINE_WIDTH: usize = 70;
@@ -221,10 +226,8 @@ impl PrivateKey {
             return Err(Error::Length);
         }
 
-        #[cfg_attr(not(feature = "alloc"), allow(unused_mut))]
-        let mut public_key = PublicKey::from(
-            pem_decoder.decode_length_prefixed(|decoder, _len| public::KeyData::decode(decoder))?,
-        );
+        let public_key =
+            pem_decoder.decode_length_prefixed(|decoder, _len| public::KeyData::decode(decoder))?;
 
         // Handle encrypted private key
         #[cfg(not(feature = "alloc"))]
@@ -247,20 +250,16 @@ impl PrivateKey {
             return Ok(Self {
                 cipher,
                 kdf,
-                public_key,
+                public_key: public_key.into(),
                 key_data: KeypairData::Encrypted(ciphertext),
             });
         }
 
-        let key_data = pem_decoder.decode_length_prefixed(|decoder, _len| {
-            KeypairData::decode_privatekey_comment_pair(decoder, &mut public_key, cipher)
-        })?;
+        // Processing unencrypted key. No KDF should be set.
+        if kdf.is_some() {}
 
-        Ok(Self {
-            cipher,
-            kdf,
-            public_key,
-            key_data,
+        pem_decoder.decode_length_prefixed(|decoder, _len| {
+            Self::decode_privatekey_comment_pair(decoder, public_key, cipher.block_size())
         })
     }
 
@@ -289,16 +288,9 @@ impl PrivateKey {
             pem_encoder.encode_usize(self.key_data.encoded_len()?)?;
             self.key_data.encode(&mut pem_encoder)?;
         } else {
-            pem_encoder.encode_usize(
-                self.key_data
-                    .encoded_privatekey_comment_pair_len(self.comment(), self.cipher)?,
-            )?;
-
-            self.key_data.encode_privatekey_comment_pair(
-                &mut pem_encoder,
-                self.comment(),
-                self.cipher,
-            )?;
+            let len = self.encoded_privatekey_comment_pair_len(Cipher::None)?;
+            pem_encoder.encode_usize(len)?;
+            self.encode_privatekey_comment_pair(&mut pem_encoder, Cipher::None)?;
         }
 
         let encoded_len = pem_encoder.finish()?;
@@ -310,7 +302,7 @@ impl PrivateKey {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn to_openssh(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        let encoded_len = self.openssh_encoded_len(line_ending)?;
+        let encoded_len = self.pem_encoded_len(line_ending)?;
         let mut buf = vec![0u8; encoded_len];
         let actual_len = self.encode_openssh(line_ending, &mut buf)?.len();
         buf.truncate(actual_len);
@@ -359,19 +351,11 @@ impl PrivateKey {
         let mut buffer = Zeroizing::new(ciphertext.to_vec());
         self.cipher.decrypt(&key_bytes, &iv_bytes, &mut buffer)?;
 
-        let mut public_key = self.public_key.clone();
-        let key_data = KeypairData::decode_privatekey_comment_pair(
+        Self::decode_privatekey_comment_pair(
             &mut &**buffer,
-            &mut public_key,
-            self.cipher,
-        )?;
-
-        Ok(Self {
-            cipher: Cipher::None,
-            kdf: Kdf::None,
-            public_key,
-            key_data,
-        })
+            self.public_key.key_data.clone(),
+            self.cipher.block_size(),
+        )
     }
 
     /// Encrypt an unencrypted private key using the provided password to
@@ -413,14 +397,11 @@ impl PrivateKey {
         }
 
         let (key_bytes, iv_bytes) = kdf.derive_key_and_iv(cipher, password)?;
-        let msg_len = self
-            .key_data
-            .encoded_privatekey_comment_pair_len(self.comment(), cipher)?;
+        let msg_len = self.encoded_privatekey_comment_pair_len(cipher)?;
         let mut out = Vec::with_capacity(msg_len);
 
         // Encode and encrypt private key
-        self.key_data
-            .encode_privatekey_comment_pair(&mut out, self.comment(), cipher)?;
+        self.encode_privatekey_comment_pair(&mut out, cipher)?;
         cipher.encrypt(&key_bytes, &iv_bytes, out.as_mut_slice())?;
 
         Ok(Self {
@@ -501,16 +482,143 @@ impl PrivateKey {
         self.public_key.set_comment(comment);
     }
 
+    /// Decode [`KeypairData`] along with its associated checkints and comment,
+    /// storing the comment in the provided public key on success.
+    ///
+    /// This method also checks padding for validity and ensures that the
+    /// decoded private key matches the provided public key.
+    ///
+    /// For private key format specification, see OpenSSH [PROTOCOL.key] § 3:
+    ///
+    /// ```text
+    /// uint32  checkint
+    /// uint32  checkint
+    /// byte[]  privatekey1
+    /// string  comment1
+    /// byte[]  privatekey2
+    /// string  comment2
+    /// ...
+    /// string  privatekeyN
+    /// string  commentN
+    /// char    1
+    /// char    2
+    /// char    3
+    /// ...
+    /// char    padlen % 255
+    /// ```
+    ///
+    /// [PROTOCOL.key]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD
+    fn decode_privatekey_comment_pair(
+        decoder: &mut impl Decoder,
+        public_key: public::KeyData,
+        block_size: usize,
+    ) -> Result<Self> {
+        debug_assert!(block_size <= MAX_BLOCK_SIZE);
+
+        // Ensure input data is padding-aligned
+        if decoder.remaining_len().checked_rem(block_size) != Some(0) {
+            return Err(Error::Length);
+        }
+
+        let checkint1 = decoder.decode_u32()?;
+        let checkint2 = decoder.decode_u32()?;
+
+        if checkint1 != checkint2 {
+            return Err(Error::Crypto);
+        }
+
+        let key_data = KeypairData::decode(decoder)?;
+
+        // Ensure public key matches private key
+        if public_key != public::KeyData::try_from(&key_data)? {
+            return Err(Error::PublicKey);
+        }
+
+        let mut public_key = PublicKey::from(public_key);
+        public_key.decode_comment(decoder)?;
+
+        let padding_len = decoder.remaining_len();
+
+        if padding_len >= block_size {
+            return Err(Error::Length);
+        }
+
+        if padding_len != 0 {
+            let mut padding = [0u8; MAX_BLOCK_SIZE];
+            decoder.decode_raw(&mut padding[..padding_len])?;
+
+            if PADDING_BYTES[..padding_len] != padding[..padding_len] {
+                return Err(Error::FormatEncoding);
+            }
+        }
+
+        if !decoder.is_finished() {
+            return Err(Error::Length);
+        }
+
+        Ok(Self {
+            cipher: Cipher::None,
+            kdf: Kdf::None,
+            public_key,
+            key_data,
+        })
+    }
+
+    /// Encode [`KeypairData`] along with its associated checkints, comment,
+    /// and padding.
+    fn encode_privatekey_comment_pair(
+        &self,
+        encoder: &mut impl Encoder,
+        cipher: Cipher,
+    ) -> Result<()> {
+        let unpadded_len = self.unpadded_privatekey_comment_pair_len()?;
+        let padding_len = cipher.padding_len(unpadded_len);
+
+        // Compute checkint (uses deterministic method)
+        let checkint = public::KeyData::try_from(&self.key_data)?.checkint();
+        encoder.encode_u32(checkint)?;
+        encoder.encode_u32(checkint)?;
+        self.key_data.encode(encoder)?;
+        encoder.encode_str(self.comment())?;
+        encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
+        Ok(())
+    }
+
+    /// Get the length of this private key when encoded with the given comment
+    /// and padded using the padding size for the given cipher.
+    fn encoded_privatekey_comment_pair_len(&self, cipher: Cipher) -> Result<usize> {
+        let len = self.unpadded_privatekey_comment_pair_len()?;
+        [len, cipher.padding_len(len)].checked_sum()
+    }
+
+    /// Get the length of this private key when encoded with the given comment.
+    ///
+    /// This length is just the checkints, private key data, and comment sans
+    /// any padding.
+    fn unpadded_privatekey_comment_pair_len(&self) -> Result<usize> {
+        // This method is intended for use with unencrypted keys only
+        if self.is_encrypted() {
+            return Err(Error::Encrypted);
+        }
+
+        [
+            8, // 2 x uint32 checkints,
+            4, // u32 length prefix for key data
+            self.key_data.encoded_len()?,
+            self.comment().len(),
+        ]
+        .checked_sum()
+    }
+
     /// Estimated length of a PEM-encoded key in OpenSSH format.
     ///
     /// May be slightly longer than the actual result.
     #[cfg(feature = "alloc")]
-    fn openssh_encoded_len(&self, line_ending: LineEnding) -> Result<usize> {
+    fn pem_encoded_len(&self, line_ending: LineEnding) -> Result<usize> {
         let private_key_len = if self.is_encrypted() {
             self.key_data.encoded_len()?
         } else {
-            self.key_data
-                .encoded_privatekey_comment_pair_len(self.comment(), self.cipher)?
+            self.encoded_privatekey_comment_pair_len(Cipher::None)?
         };
 
         let bytes_len = [
