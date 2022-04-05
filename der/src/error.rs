@@ -3,7 +3,7 @@
 pub use core::str::Utf8Error;
 
 use crate::{Length, Tag};
-use core::{convert::Infallible, fmt};
+use core::{convert::Infallible, fmt, num::TryFromIntError};
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
@@ -88,6 +88,15 @@ impl From<ErrorKind> for Error {
 impl From<Infallible> for Error {
     fn from(_: Infallible) -> Error {
         unreachable!()
+    }
+}
+
+impl From<TryFromIntError> for Error {
+    fn from(_: TryFromIntError) -> Error {
+        Error {
+            kind: ErrorKind::Overflow,
+            position: None,
+        }
     }
 }
 

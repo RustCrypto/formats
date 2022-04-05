@@ -205,6 +205,7 @@ pub struct BitStringIter<'a> {
 impl<'a> Iterator for BitStringIter<'a> {
     type Item = bool;
 
+    #[allow(clippy::integer_arithmetic)]
     fn next(&mut self) -> Option<bool> {
         if self.position >= self.bit_string.bit_len() {
             return None;
@@ -231,6 +232,7 @@ impl<T: flagset::Flags> FixedTag for flagset::FlagSet<T> {
 }
 
 #[cfg(feature = "flagset")]
+#[allow(clippy::integer_arithmetic)]
 impl<'a, T> DecodeValue<'a> for flagset::FlagSet<T>
 where
     T: flagset::Flags,
@@ -256,8 +258,9 @@ where
 }
 
 #[cfg(feature = "flagset")]
+#[allow(clippy::integer_arithmetic)]
 #[inline(always)]
-fn encode<T>(set: &flagset::FlagSet<T>) -> (usize, [u8; 16])
+fn encode_flagset<T>(set: &flagset::FlagSet<T>) -> (usize, [u8; 16])
 where
     T: flagset::Flags,
     u128: From<T::Type>,
@@ -274,6 +277,7 @@ where
 }
 
 #[cfg(feature = "flagset")]
+#[allow(clippy::cast_possible_truncation, clippy::integer_arithmetic)]
 impl<T: flagset::Flags> EncodeValue for flagset::FlagSet<T>
 where
     T::Type: From<bool>,
@@ -281,13 +285,13 @@ where
     u128: From<T::Type>,
 {
     fn value_len(&self) -> Result<Length> {
-        let (lead, buff) = encode(self);
+        let (lead, buff) = encode_flagset(self);
         let buff = &buff[..buff.len() - lead / 8];
         BitString::new((lead % 8) as u8, buff)?.value_len()
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        let (lead, buff) = encode(self);
+        let (lead, buff) = encode_flagset(self);
         let buff = &buff[..buff.len() - lead / 8];
         BitString::new((lead % 8) as u8, buff)?.encode_value(encoder)
     }

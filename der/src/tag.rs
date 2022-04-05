@@ -353,7 +353,8 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "APPLICATION [{}] ({})",
-                number, FIELD_TYPE[constructed as usize]
+                number,
+                FIELD_TYPE[usize::from(constructed)]
             ),
             Tag::ContextSpecific {
                 constructed,
@@ -361,7 +362,8 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "CONTEXT-SPECIFIC [{}] ({})",
-                number, FIELD_TYPE[constructed as usize]
+                number,
+                FIELD_TYPE[usize::from(constructed)]
             ),
             Tag::Private {
                 constructed,
@@ -369,7 +371,8 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "PRIVATE [{}] ({})",
-                number, FIELD_TYPE[constructed as usize]
+                number,
+                FIELD_TYPE[usize::from(constructed)]
             ),
         }
     }
