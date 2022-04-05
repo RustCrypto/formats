@@ -123,3 +123,31 @@ fn decode_rsa_4096_openssh() {
 
     assert_eq!("user@example.com", key.comment());
 }
+
+#[test]
+fn encode_dsa_openssh() {
+    let key = Certificate::from_str(DSA_CERT_EXAMPLE).unwrap();
+    assert_eq!(DSA_CERT_EXAMPLE.trim_end(), &key.to_string().unwrap());
+}
+
+#[cfg(feature = "ecdsa")]
+#[test]
+fn encode_ecdsa_p256_openssh() {
+    let key = Certificate::from_str(ECDSA_P256_CERT_EXAMPLE).unwrap();
+    assert_eq!(
+        ECDSA_P256_CERT_EXAMPLE.trim_end(),
+        &key.to_string().unwrap()
+    );
+}
+
+#[test]
+fn encode_ed25519_openssh() {
+    let key = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    assert_eq!(ED25519_CERT_EXAMPLE.trim_end(), &key.to_string().unwrap());
+}
+
+#[test]
+fn encode_rsa_4096_openssh() {
+    let key = Certificate::from_str(RSA_4096_CERT_EXAMPLE).unwrap();
+    assert_eq!(RSA_4096_CERT_EXAMPLE.trim_end(), &key.to_string().unwrap());
+}

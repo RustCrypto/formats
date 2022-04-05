@@ -1,7 +1,9 @@
 //! OpenSSH certificate support.
 
 use crate::{
+    checked::CheckedSum,
     decoder::{Base64Decoder, Decode, Decoder},
+    encoder::{base64_encoded_len, Encode, Encoder},
     public::{Encapsulation, KeyData},
     CertificateAlg, Error, Result,
 };
@@ -79,6 +81,28 @@ impl Certificate {
     pub fn public_key(&self) -> &KeyData {
         &self.public_key
     }
+
+    /// Encode OpenSSH certificate to a [`String`].
+    pub fn to_string(&self) -> Result<String> {
+        let encoded_len = [
+            2, // interstitial spaces
+            self.algorithm().as_str().len(),
+            base64_encoded_len(self.encoded_len()?),
+            self.comment.len(),
+        ]
+        .checked_sum()?;
+
+        let mut out = vec![0u8; encoded_len];
+        let actual_len = Encapsulation::encode(
+            &mut out,
+            self.algorithm().as_str(),
+            self.comment(),
+            |encoder| self.encode(encoder),
+        )?
+        .len();
+        out.truncate(actual_len);
+        Ok(String::from_utf8(out)?)
+    }
 }
 
 impl Decode for Certificate {
@@ -115,6 +139,53 @@ impl Decode for Certificate {
             signature,
             comment: String::new(),
         })
+    }
+}
+
+impl Encode for Certificate {
+    fn encoded_len(&self) -> Result<usize> {
+        [
+            self.algorithm.encoded_len()?,
+            4, // nonce length prefix (uint32)
+            self.nonce.len(),
+            self.public_key.encoded_key_data_len()?,
+            8, // serial (uint64)
+            4, // cert type (uint32)
+            4, // key id length prefix (uint32)
+            self.key_id.len(),
+            4, // valid principals length prefix (uint32)
+            self.valid_principals.len(),
+            8, // valid after (uint64)
+            8, // valid before (uint64)
+            4, // critical options length prefix (uint32)
+            self.critical_options.len(),
+            4, // extensions length prefix (uint32)
+            self.extensions.len(),
+            4, // reserved length prefix (uint32)
+            self.reserved.len(),
+            4, // signature key length prefix (uint32)
+            self.signature_key.len(),
+            4, // signature length prefix (uint32)
+            self.signature.len(),
+        ]
+        .checked_sum()
+    }
+
+    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+        self.algorithm.encode(encoder)?;
+        encoder.encode_byte_slice(&self.nonce)?;
+        self.public_key.encode_key_data(encoder)?;
+        encoder.encode_u64(self.serial)?;
+        encoder.encode_u32(self.cert_type)?;
+        encoder.encode_str(&self.key_id)?;
+        encoder.encode_str(&self.valid_principals)?;
+        encoder.encode_u64(self.valid_after)?;
+        encoder.encode_u64(self.valid_before)?;
+        encoder.encode_str(&self.critical_options)?;
+        encoder.encode_str(&self.extensions)?;
+        encoder.encode_str(&self.reserved)?;
+        encoder.encode_byte_slice(&self.signature_key)?;
+        encoder.encode_byte_slice(&self.signature)
     }
 }
 

@@ -54,6 +54,16 @@ pub(crate) trait Encoder: Sized {
         self.encode_raw(&num.to_be_bytes())
     }
 
+    /// Encode a `uint64` as described in [RFC4251 § 5]:
+    ///
+    /// > Represents a 64-bit unsigned integer.  Stored as eight bytes in
+    /// > the order of decreasing significance (network byte order).
+    ///
+    /// [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
+    fn encode_u64(&mut self, num: u64) -> Result<()> {
+        self.encode_raw(&num.to_be_bytes())
+    }
+
     /// Encode a `usize` as a `uint32` as described in [RFC4251 § 5].
     ///
     /// Uses [`Encoder::encode_u32`] after converting from a `usize`, handling

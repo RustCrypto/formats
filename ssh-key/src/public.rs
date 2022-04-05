@@ -342,6 +342,33 @@ impl KeyData {
             _ => Err(Error::Algorithm),
         }
     }
+
+    /// Get the encoded length of this key data without a leading algorithm
+    /// identifier.
+    pub(crate) fn encoded_key_data_len(&self) -> Result<usize> {
+        match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(key) => key.encoded_len(),
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(key) => key.encoded_len(),
+            Self::Ed25519(key) => key.encoded_len(),
+            #[cfg(feature = "alloc")]
+            Self::Rsa(key) => key.encoded_len(),
+        }
+    }
+
+    /// Encode the key data without a leading algorithm identifier.
+    pub(crate) fn encode_key_data(&self, encoder: &mut impl Encoder) -> Result<()> {
+        match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(key) => key.encode(encoder),
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(key) => key.encode(encoder),
+            Self::Ed25519(key) => key.encode(encoder),
+            #[cfg(feature = "alloc")]
+            Self::Rsa(key) => key.encode(encoder),
+        }
+    }
 }
 
 impl Decode for KeyData {
@@ -353,30 +380,15 @@ impl Decode for KeyData {
 
 impl Encode for KeyData {
     fn encoded_len(&self) -> Result<usize> {
-        let key_len = match self {
-            #[cfg(feature = "alloc")]
-            Self::Dsa(key) => key.encoded_len()?,
-            #[cfg(feature = "ecdsa")]
-            Self::Ecdsa(key) => key.encoded_len()?,
-            Self::Ed25519(key) => key.encoded_len()?,
-            #[cfg(feature = "alloc")]
-            Self::Rsa(key) => key.encoded_len()?,
-        };
-
-        [self.algorithm().encoded_len()?, key_len].checked_sum()
+        [
+            self.algorithm().encoded_len()?,
+            self.encoded_key_data_len()?,
+        ]
+        .checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.algorithm().encode(encoder)?;
-
-        match self {
-            #[cfg(feature = "alloc")]
-            Self::Dsa(key) => key.encode(encoder),
-            #[cfg(feature = "ecdsa")]
-            Self::Ecdsa(key) => key.encode(encoder),
-            Self::Ed25519(key) => key.encode(encoder),
-            #[cfg(feature = "alloc")]
-            Self::Rsa(key) => key.encode(encoder),
-        }
+        self.encode_key_data(encoder)
     }
 }
