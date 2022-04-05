@@ -124,6 +124,10 @@ pub mod authorized_keys;
 pub mod private;
 pub mod public;
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub mod certificate;
+
 mod algorithm;
 mod checked;
 mod cipher;
@@ -131,9 +135,7 @@ mod decoder;
 mod encoder;
 mod error;
 mod kdf;
-
-#[cfg(feature = "alloc")]
-mod certificate;
+mod signature;
 
 #[cfg(feature = "alloc")]
 mod mpint;
@@ -149,12 +151,16 @@ pub use crate::{
     kdf::Kdf,
     private::PrivateKey,
     public::PublicKey,
+    signature::Signature,
 };
 pub use base64ct::LineEnding;
 pub use pem_rfc7468 as pem;
 
 #[cfg(feature = "alloc")]
-pub use crate::{certificate::Certificate, mpint::MPInt};
+pub use crate::{
+    certificate::{CertType, Certificate, OptionsMap},
+    mpint::MPInt,
+};
 
 #[cfg(feature = "ecdsa")]
 pub use sec1;

@@ -21,6 +21,7 @@ specification  and `authorized_keys` files.
 - [x] `no_std` support including support for "heapless" (no-`alloc`) targets
 - [x] Decoding/encoding OpenSSH-formatted public/private keys
 - [x] Private key encryption/decryption (`bcrypt-pbkdf` + `aes256-ctr` only)
+- [x] OpenSSH certificate support
 - [x] Fingerprint support (SHA-256 only)
 - [x] Parsing `authorized_keys` files
 - [x] Built-in zeroize support for private keys
@@ -29,7 +30,6 @@ specification  and `authorized_keys` files.
 
 - [ ] FIDO/U2F key support (`sk-*`)
 - [ ] Key generation support (WIP - see table below)
-- [ ] OpenSSH certificate support
 - [ ] Interop with digital signature crates
   - [x] `ed25519-dalek`
   - [ ] `p256` (ECDSA)
