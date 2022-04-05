@@ -376,9 +376,10 @@ where
 /// This function is used rather than Rust's built-in `[T]::sort_by` in order
 /// to support heapless `no_std` targets as well as to enable bubbling up
 /// sorting errors.
+#[allow(clippy::integer_arithmetic)]
 fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
-    for i in 1..=slice.len() {
-        let mut j = i - 1;
+    for i in 0..slice.len() {
+        let mut j = i;
 
         while j > 0 && slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
             slice.swap(j - 1, j);

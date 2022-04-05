@@ -123,7 +123,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.elements.len() - self.position;
+        let len = self.elements.len().saturating_sub(self.position);
         (len, Some(len))
     }
 }

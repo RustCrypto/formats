@@ -4,8 +4,8 @@ use crate::{
     asn1::Any,
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
-    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Header, Length, Result,
-    Tag,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag, Header,
+    Length, Result, Tag,
 };
 use core::time::Duration;
 
@@ -84,7 +84,7 @@ impl DecodeValue<'_> for UtcTime {
         match *ByteSlice::decode_value(decoder, header)?.as_bytes() {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [year1, year2, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
-                let year = datetime::decode_decimal(Self::TAG, year1, year2)?;
+                let year = u16::from(datetime::decode_decimal(Self::TAG, year1, year2)?);
                 let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
                 let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
                 let hour = datetime::decode_decimal(Self::TAG, hour1, hour2)?;
@@ -93,10 +93,11 @@ impl DecodeValue<'_> for UtcTime {
 
                 // RFC 5280 rules for interpreting the year
                 let year = if year >= 50 {
-                    year as u16 + 1900
+                    year.checked_add(1900)
                 } else {
-                    year as u16 + 2000
-                };
+                    year.checked_add(2000)
+                }
+                .ok_or(ErrorKind::DateTime)?;
 
                 DateTime::new(year, month, day, hour, minute, second)
                     .map_err(|_| Self::TAG.value_error())
@@ -114,10 +115,12 @@ impl EncodeValue for UtcTime {
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         let year = match self.0.year() {
-            y @ 1950..=1999 => y - 1900,
-            y @ 2000..=2049 => y - 2000,
+            y @ 1950..=1999 => y.checked_sub(1900),
+            y @ 2000..=2049 => y.checked_sub(2000),
             _ => return Err(Self::TAG.value_error()),
-        } as u8;
+        }
+        .and_then(|y| u8::try_from(y).ok())
+        .ok_or(ErrorKind::DateTime)?;
 
         datetime::encode_decimal(encoder, Self::TAG, year)?;
         datetime::encode_decimal(encoder, Self::TAG, self.0.month())?;

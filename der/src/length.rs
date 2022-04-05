@@ -145,13 +145,13 @@ impl Sub<Length> for Result<Length> {
 
 impl From<u8> for Length {
     fn from(len: u8) -> Length {
-        Length(len as u32)
+        Length(len.into())
     }
 }
 
 impl From<u16> for Length {
     fn from(len: u16) -> Length {
-        Length(len as u32)
+        Length(len.into())
     }
 }
 
@@ -202,9 +202,10 @@ impl Decode<'_> for Length {
                 let nbytes = tag.checked_sub(0x80).ok_or(ErrorKind::Overlength)? as usize;
                 debug_assert!(nbytes <= 4);
 
-                let mut decoded_len = 0;
+                let mut decoded_len = 0u32;
                 for _ in 0..nbytes {
-                    decoded_len = (decoded_len << 8) | decoder.byte()? as u32;
+                    decoded_len = decoded_len.checked_shl(8).ok_or(ErrorKind::Overflow)?
+                        | u32::from(decoder.byte()?);
                 }
 
                 let length = Length::try_from(decoded_len)?;
@@ -237,6 +238,7 @@ impl Encode for Length {
         }
     }
 
+    #[allow(clippy::cast_possible_truncation)]
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         if let Some(tag_byte) = self.initial_octet() {
             encoder.byte(tag_byte)?;

@@ -1,5 +1,12 @@
 //! ASN.1 `REAL` support.
 
+// TODO(tarcieri): checked arithmetic
+#![allow(
+    clippy::cast_lossless,
+    clippy::cast_sign_loss,
+    clippy::integer_arithmetic
+)]
+
 use crate::{
     str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header,
     Length, Result, Tag,
@@ -212,6 +219,7 @@ pub(crate) fn mnth_bits_to_u8<const M: usize, const N: usize>(bytes: &[u8]) -> u
 
 /// Decode an f64 as its sign, exponent, and mantissa in u64 and in that order, using bit shifts and masks.
 /// Note: this function **removes** the 1023 bias from the exponent and adds the implicit 1
+#[allow(clippy::cast_possible_truncation)]
 pub(crate) fn decode_f64(f: f64) -> (u64, u64, u64) {
     let bits = f.to_bits();
     let sign = bits >> 63;

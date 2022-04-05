@@ -54,7 +54,7 @@ pub(crate) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()
 #[inline]
 pub(crate) fn encoded_len(bytes: &[u8]) -> Result<Length> {
     let bytes = strip_leading_zeroes(bytes);
-    Length::try_from(bytes.len())? + needs_leading_zero(bytes) as u8
+    Length::try_from(bytes.len())? + u8::from(needs_leading_zero(bytes))
 }
 
 /// Strip the leading zeroes from the given byte slice
