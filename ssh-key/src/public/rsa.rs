@@ -20,15 +20,6 @@ pub struct RsaPublicKey {
     pub n: MPInt,
 }
 
-impl RsaPublicKey {
-    /// Borrow the bytes used to compute a "checkint" for this key.
-    ///
-    /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
-    pub(super) fn checkint_bytes(&self) -> &[u8] {
-        self.n.as_bytes()
-    }
-}
-
 impl Decode for RsaPublicKey {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let e = MPInt::decode(decoder)?;

@@ -153,6 +153,32 @@ impl KeypairData {
     pub fn is_rsa(&self) -> bool {
         matches!(self, Self::Rsa(_))
     }
+
+    /// Compute a deterministic "checkint" for this private key.
+    ///
+    /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
+    // TODO(tarcieri): true randomness or a better algorithm?
+    pub(super) fn checkint(&self) -> u32 {
+        let bytes = match self {
+            #[cfg(feature = "alloc")]
+            Self::Dsa(dsa) => dsa.private.as_bytes(),
+            #[cfg(feature = "ecdsa")]
+            Self::Ecdsa(ecdsa) => ecdsa.private_key_bytes(),
+            Self::Ed25519(ed25519) => ed25519.private.as_ref(),
+            #[cfg(feature = "alloc")]
+            Self::Encrypted(ciphertext) => ciphertext.as_ref(),
+            #[cfg(feature = "alloc")]
+            Self::Rsa(rsa) => rsa.private.d.as_bytes(),
+        };
+
+        let mut n = 0u32;
+
+        for chunk in bytes.chunks_exact(4) {
+            n ^= u32::from_be_bytes(chunk.try_into().expect("not 4 bytes"));
+        }
+
+        n
+    }
 }
 
 impl Decode for KeypairData {
