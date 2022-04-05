@@ -21,6 +21,7 @@ der_derive = { version = "=0.6.0-pre.3", optional = true, path = "derive" }
 flagset = { version = "0.4.3", optional = true }
 pem-rfc7468 = { version = "0.5", optional = true, path = "../pem-rfc7468" }
 time = { version = "0.3.4", optional = true, default-features = false }
+zeroize = { version = "1.5", optional = true, default-features = false, features = ["alloc"] }
 
 [dev-dependencies]
 hex-literal = "0.3.3"
@@ -30,7 +31,7 @@ proptest = "1"
 alloc = []
 derive = ["der_derive"]
 oid = ["const-oid"]
-pem = ["alloc", "pem-rfc7468/alloc"]
+pem = ["alloc", "pem-rfc7468/alloc", "zeroize"]
 std = ["alloc"]
 
 [package.metadata.docs.rs]

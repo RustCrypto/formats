@@ -2,6 +2,12 @@
 
 use crate::{Decoder, FixedTag, Header, Result};
 
+#[cfg(feature = "pem")]
+use {
+    crate::pem::{self, PemLabel},
+    zeroize::Zeroize,
+};
+
 #[cfg(doc)]
 use crate::{Length, Tag};
 
@@ -49,6 +55,31 @@ where
 pub trait DecodeOwned: for<'a> Decode<'a> {}
 
 impl<T> DecodeOwned for T where T: for<'a> Decode<'a> {}
+
+/// PEM decoding trait.
+///
+/// This trait is automatically impl'd for any type which impls both
+/// [`DecodeOwned`] and [`PemLabel`].
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+pub trait DecodePem: DecodeOwned + PemLabel {
+    /// Try to decode this type from PEM.
+    fn from_pem(pem: &str) -> Result<Self>;
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl<T: DecodeOwned + PemLabel> DecodePem for T {
+    fn from_pem(pem: &str) -> Result<Self> {
+        // TODO(tarcieri): support for decoding directly from PEM (instead of two-pass)
+        let (label, mut der_bytes) = pem::decode_vec(pem.as_bytes())?;
+        Self::validate_pem_label(label)?;
+
+        let result = T::from_der(&der_bytes);
+        der_bytes.zeroize();
+        result
+    }
+}
 
 /// Decode the value part of a Tag-Length-Value encoded field, sans the [`Tag`]
 /// and [`Length`].

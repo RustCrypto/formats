@@ -1,7 +1,7 @@
 //! Error types
 
+use crate::pem;
 use core::fmt;
-use pem_rfc7468 as pem;
 
 /// Result type with `ssh-key`'s [`Error`] as the error type.
 pub type Result<T> = core::result::Result<T, Error>;

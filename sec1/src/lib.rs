@@ -19,6 +19,7 @@
 //! encoding is being used, and if so encode the points as hexadecimal.
 
 #[cfg(feature = "alloc")]
+#[allow(unused_extern_crates)]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
@@ -49,7 +50,7 @@ pub use generic_array::typenum::consts;
 pub use crate::{parameters::EcParameters, private_key::EcPrivateKey, traits::DecodeEcPrivateKey};
 
 #[cfg(feature = "alloc")]
-pub use crate::{private_key::document::EcPrivateKeyDocument, traits::EncodeEcPrivateKey};
+pub use crate::traits::EncodeEcPrivateKey;
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]

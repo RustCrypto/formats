@@ -3,10 +3,13 @@
 use crate::{Error, Result, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
-use {crate::PublicKeyDocument, der::Document};
+use der::Document;
 
 #[cfg(feature = "pem")]
-use {alloc::string::String, der::pem::LineEnding};
+use {
+    alloc::string::String,
+    der::pem::{LineEnding, PemLabel},
+};
 
 #[cfg(feature = "std")]
 use std::path::Path;
@@ -21,13 +24,6 @@ pub trait DecodePublicKey:
         Self::try_from(SubjectPublicKeyInfo::try_from(bytes)?)
     }
 
-    /// Deserialize SPKI public key from a [`PublicKeyDocument`].
-    #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    fn from_public_key_doc(doc: &PublicKeyDocument) -> Result<Self> {
-        Self::try_from(doc.decode())
-    }
-
     /// Deserialize PEM-encoded [`SubjectPublicKeyInfo`].
     ///
     /// Keys in this format begin with the following delimiter:
@@ -38,7 +34,9 @@ pub trait DecodePublicKey:
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_public_key_pem(s: &str) -> Result<Self> {
-        PublicKeyDocument::from_public_key_pem(s).and_then(|doc| Self::from_public_key_doc(&doc))
+        let (label, doc) = Document::from_pem(s)?;
+        SubjectPublicKeyInfo::validate_pem_label(label)?;
+        Self::from_public_key_der(doc.as_bytes())
     }
 
     /// Load public key object from an ASN.1 DER-encoded file on the local
@@ -46,16 +44,17 @@ pub trait DecodePublicKey:
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_public_key_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        PublicKeyDocument::read_public_key_der_file(path)
-            .and_then(|doc| Self::from_public_key_doc(&doc))
+        let doc = Document::read_der_file(path)?;
+        Self::from_public_key_der(doc.as_bytes())
     }
 
     /// Load public key object from a PEM-encoded file on the local filesystem.
     #[cfg(all(feature = "pem", feature = "std"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     fn read_public_key_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        PublicKeyDocument::read_public_key_pem_file(path)
-            .and_then(|doc| Self::from_public_key_doc(&doc))
+        let (label, doc) = Document::read_pem_file(path)?;
+        SubjectPublicKeyInfo::validate_pem_label(&label)?;
+        Self::from_public_key_der(doc.as_bytes())
     }
 }
 
@@ -63,21 +62,22 @@ pub trait DecodePublicKey:
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub trait EncodePublicKey {
-    /// Serialize a [`PublicKeyDocument`] containing a SPKI-encoded public key.
-    fn to_public_key_der(&self) -> Result<PublicKeyDocument>;
+    /// Serialize a [`Document`] containing a SPKI-encoded public key.
+    fn to_public_key_der(&self) -> Result<Document>;
 
     /// Serialize this public key as PEM-encoded SPKI with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_public_key_pem(&self, line_ending: LineEnding) -> Result<String> {
-        self.to_public_key_der()?.to_public_key_pem(line_ending)
+        let doc = self.to_public_key_der()?;
+        Ok(doc.to_pem(SubjectPublicKeyInfo::PEM_LABEL, line_ending)?)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_public_key_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        self.to_public_key_der()?.write_public_key_der_file(path)
+        Ok(self.to_public_key_der()?.write_der_file(path)?)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path
@@ -88,7 +88,7 @@ pub trait EncodePublicKey {
         path: impl AsRef<Path>,
         line_ending: LineEnding,
     ) -> Result<()> {
-        self.to_public_key_der()?
-            .write_public_key_pem_file(path, line_ending)
+        let doc = self.to_public_key_der()?;
+        Ok(doc.write_pem_file(path, SubjectPublicKeyInfo::PEM_LABEL, line_ending)?)
     }
 }

@@ -179,7 +179,7 @@
 //! //
 //! // When the `alloc` feature of this crate is enabled, any type that impls
 //! // the `Encode` trait including all ASN.1 built-in types and any type
-//! // which impls `Sequence` can be serialized by calling `Encode::to_vec()`.
+//! // which impls `Sequence` can be serialized by calling `Encode::to_der()`.
 //! //
 //! // If you would prefer to avoid allocations, you can create a byte array
 //! // as backing storage instead, pass that to `der::Encoder::new`, and then
@@ -369,7 +369,7 @@ pub use crate::{
 };
 
 #[cfg(feature = "alloc")]
-pub use document::Document;
+pub use crate::document::Document;
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
@@ -381,10 +381,19 @@ pub use der_derive::{Choice, Enumerated, Newtype, Sequence, ValueOrd};
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use pem_rfc7468 as pem;
+pub use {
+    crate::{decode::DecodePem, encode::EncodePem},
+    pem_rfc7468 as pem,
+};
 
 #[cfg(feature = "time")]
 #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 pub use time;
+
+#[cfg(feature = "zeroize")]
+pub use zeroize;
+
+#[cfg(all(feature = "alloc", feature = "zeroize"))]
+pub use crate::document::SecretDocument;
 
 pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};

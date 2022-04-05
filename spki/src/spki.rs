@@ -4,6 +4,9 @@ use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{asn1::BitString, Decode, Decoder, DerOrd, Encode, Sequence, ValueOrd};
 
+#[cfg(feature = "alloc")]
+use der::Document;
+
 #[cfg(feature = "fingerprint")]
 use sha2::{digest, Digest, Sha256};
 
@@ -12,6 +15,9 @@ use {
     alloc::string::String,
     base64ct::{Base64, Encoding},
 };
+
+#[cfg(feature = "pem")]
+use der::pem::PemLabel;
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 Section 4.1.2.7].
 ///
@@ -100,4 +106,30 @@ impl ValueOrd for SubjectPublicKeyInfo<'_> {
             other => Ok(other),
         }
     }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl TryFrom<SubjectPublicKeyInfo<'_>> for Document {
+    type Error = Error;
+
+    fn try_from(spki: SubjectPublicKeyInfo<'_>) -> Result<Document> {
+        Self::try_from(&spki)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl TryFrom<&SubjectPublicKeyInfo<'_>> for Document {
+    type Error = Error;
+
+    fn try_from(spki: &SubjectPublicKeyInfo<'_>) -> Result<Document> {
+        Ok(Self::encode_msg(spki)?)
+    }
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl PemLabel for SubjectPublicKeyInfo<'_> {
+    const PEM_LABEL: &'static str = "PUBLIC KEY";
 }

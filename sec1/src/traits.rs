@@ -3,19 +3,16 @@
 use crate::Result;
 
 #[cfg(feature = "alloc")]
-use crate::EcPrivateKeyDocument;
+use der::SecretDocument;
 
 #[cfg(feature = "pem")]
-use {crate::LineEnding, alloc::string::String};
+use {crate::LineEnding, alloc::string::String, der::pem::PemLabel};
 
 #[cfg(feature = "pkcs8")]
 use {
     crate::{EcPrivateKey, ALGORITHM_OID},
     der::Decode,
 };
-
-#[cfg(all(feature = "alloc", feature = "pkcs8"))]
-use der::Document;
 
 #[cfg(feature = "std")]
 use std::path::Path;
@@ -40,7 +37,9 @@ pub trait DecodeEcPrivateKey: Sized {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_sec1_pem(s: &str) -> Result<Self> {
-        EcPrivateKeyDocument::from_sec1_pem(s).and_then(|doc| Self::from_sec1_der(doc.as_der()))
+        let (label, doc) = SecretDocument::from_pem(s)?;
+        EcPrivateKey::validate_pem_label(label)?;
+        Self::from_sec1_der(doc.as_bytes())
     }
 
     /// Load SEC1 private key from an ASN.1 DER-encoded file on the local
@@ -48,8 +47,7 @@ pub trait DecodeEcPrivateKey: Sized {
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_sec1_der_file(path: impl AsRef<Path>) -> Result<Self> {
-        EcPrivateKeyDocument::read_sec1_der_file(path)
-            .and_then(|doc| Self::from_sec1_der(doc.as_der()))
+        Self::from_sec1_der(SecretDocument::read_der_file(path)?.as_bytes())
     }
 
     /// Load SEC1 private key from a PEM-encoded file on the local filesystem.
@@ -57,8 +55,9 @@ pub trait DecodeEcPrivateKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn read_sec1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
-        EcPrivateKeyDocument::read_sec1_pem_file(path)
-            .and_then(|doc| Self::from_sec1_der(doc.as_der()))
+        let (label, doc) = SecretDocument::read_pem_file(path)?;
+        EcPrivateKey::validate_pem_label(&label)?;
+        Self::from_sec1_der(doc.as_bytes())
     }
 }
 
@@ -66,8 +65,8 @@ pub trait DecodeEcPrivateKey: Sized {
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "der"))))]
 pub trait EncodeEcPrivateKey {
-    /// Serialize a [`EcPrivateKeyDocument`] containing a SEC1-encoded private key.
-    fn to_sec1_der(&self) -> Result<EcPrivateKeyDocument>;
+    /// Serialize a [`SecretDocument`] containing a SEC1-encoded private key.
+    fn to_sec1_der(&self) -> Result<SecretDocument>;
 
     /// Serialize this private key as PEM-encoded SEC1 with the given [`LineEnding`].
     ///
@@ -75,14 +74,15 @@ pub trait EncodeEcPrivateKey {
     #[cfg(feature = "pem")]
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_sec1_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        self.to_sec1_der()?.to_sec1_pem(line_ending)
+        let doc = self.to_sec1_der()?;
+        Ok(doc.to_pem(EcPrivateKey::PEM_LABEL, line_ending)?)
     }
 
     /// Write ASN.1 DER-encoded SEC1 private key to the given path.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_sec1_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
-        self.to_sec1_der()?.write_sec1_der_file(path)
+        Ok(self.to_sec1_der()?.write_der_file(path)?)
     }
 
     /// Write ASN.1 DER-encoded SEC1 private key to the given path.
@@ -90,7 +90,8 @@ pub trait EncodeEcPrivateKey {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn write_sec1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
-        self.to_sec1_der()?.write_sec1_pem_file(path, line_ending)
+        let doc = self.to_sec1_der()?;
+        Ok(doc.write_pem_file(path, EcPrivateKey::PEM_LABEL, line_ending)?)
     }
 }
 
@@ -118,9 +119,11 @@ impl<T: pkcs8::DecodePrivateKey> DecodeEcPrivateKey for T {
 #[cfg(all(feature = "alloc", feature = "pkcs8"))]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "pkcs8"))))]
 impl<T: pkcs8::EncodePrivateKey> EncodeEcPrivateKey for T {
-    fn to_sec1_der(&self) -> Result<EcPrivateKeyDocument> {
+    fn to_sec1_der(&self) -> Result<SecretDocument> {
         let doc = self.to_pkcs8_der()?;
-        let pkcs8_key = pkcs8::PrivateKeyInfo::from_der(doc.as_der())?;
+        let pkcs8_key = pkcs8::PrivateKeyInfo::from_der(doc.as_bytes())?;
+        pkcs8_key.algorithm.assert_algorithm_oid(ALGORITHM_OID)?;
+
         let mut pkcs1_key = EcPrivateKey::from_der(pkcs8_key.private_key)?;
         pkcs1_key.parameters = Some(pkcs8_key.algorithm.parameters_oid()?.into());
         pkcs1_key.try_into()

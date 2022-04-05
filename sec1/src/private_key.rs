@@ -5,15 +5,18 @@
 //!
 //! <https://www.secg.org/sec1-v2.pdf>
 
-#[cfg(feature = "alloc")]
-pub(crate) mod document;
-
-use crate::{EcParameters, Error};
+use crate::{EcParameters, Error, Result};
 use core::fmt;
 use der::{
     asn1::{BitString, ContextSpecific, OctetString},
     Decode, Decoder, Encode, Sequence, Tag, TagMode, TagNumber,
 };
+
+#[cfg(feature = "alloc")]
+use der::SecretDocument;
+
+#[cfg(feature = "pem")]
+use der::pem::PemLabel;
 
 /// `ECPrivateKey` version.
 ///
@@ -120,7 +123,7 @@ impl<'a> Sequence<'a> for EcPrivateKey<'a> {
 impl<'a> TryFrom<&'a [u8]> for EcPrivateKey<'a> {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<EcPrivateKey<'a>, Error> {
+    fn try_from(bytes: &'a [u8]) -> Result<EcPrivateKey<'a>> {
         Ok(Self::from_der(bytes)?)
     }
 }
@@ -132,4 +135,30 @@ impl<'a> fmt::Debug for EcPrivateKey<'a> {
             .field("public_key", &self.public_key)
             .finish_non_exhaustive()
     }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl TryFrom<EcPrivateKey<'_>> for SecretDocument {
+    type Error = Error;
+
+    fn try_from(private_key: EcPrivateKey<'_>) -> Result<Self> {
+        SecretDocument::try_from(&private_key)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl TryFrom<&EcPrivateKey<'_>> for SecretDocument {
+    type Error = Error;
+
+    fn try_from(private_key: &EcPrivateKey<'_>) -> Result<Self> {
+        Ok(Self::encode_msg(private_key)?)
+    }
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl PemLabel for EcPrivateKey<'_> {
+    const PEM_LABEL: &'static str = "EC PRIVATE KEY";
 }
