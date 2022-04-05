@@ -173,6 +173,9 @@ pub struct PrivateKey {
     /// KDF options.
     kdf: Kdf,
 
+    /// "Checkint" value used to verify successful decryption.
+    checkint: Option<u32>,
+
     /// Public key.
     public_key: PublicKey,
 
@@ -250,6 +253,7 @@ impl PrivateKey {
             return Ok(Self {
                 cipher,
                 kdf,
+                checkint: None,
                 public_key: public_key.into(),
                 key_data: KeypairData::Encrypted(ciphertext),
             });
@@ -289,8 +293,9 @@ impl PrivateKey {
             self.key_data.encode(&mut pem_encoder)?;
         } else {
             let len = self.encoded_privatekey_comment_pair_len(Cipher::None)?;
+            let checkint = self.checkint.unwrap_or_else(|| self.key_data.checkint());
             pem_encoder.encode_usize(len)?;
-            self.encode_privatekey_comment_pair(&mut pem_encoder, Cipher::None)?;
+            self.encode_privatekey_comment_pair(&mut pem_encoder, Cipher::None, checkint)?;
         }
 
         let encoded_len = pem_encoder.finish()?;
@@ -370,12 +375,15 @@ impl PrivateKey {
     #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn encrypt(
         &self,
-        rng: impl CryptoRng + RngCore,
+        mut rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<Self> {
+        let checkint = rng.next_u32();
+
         self.encrypt_with(
             Cipher::default(),
             Kdf::new(Default::default(), rng)?,
+            checkint,
             password,
         )
     }
@@ -390,6 +398,7 @@ impl PrivateKey {
         &self,
         cipher: Cipher,
         kdf: Kdf,
+        checkint: u32,
         password: impl AsRef<[u8]>,
     ) -> Result<Self> {
         if self.is_encrypted() {
@@ -401,12 +410,13 @@ impl PrivateKey {
         let mut out = Vec::with_capacity(msg_len);
 
         // Encode and encrypt private key
-        self.encode_privatekey_comment_pair(&mut out, cipher)?;
+        self.encode_privatekey_comment_pair(&mut out, cipher, checkint)?;
         cipher.encrypt(&key_bytes, &iv_bytes, out.as_mut_slice())?;
 
         Ok(Self {
             cipher,
             kdf,
+            checkint: None,
             public_key: self.public_key.key_data.clone().into(),
             key_data: KeypairData::Encrypted(out),
         })
@@ -463,13 +473,15 @@ impl PrivateKey {
     /// Generate a random Ed25519 private key.
     #[cfg(feature = "ed25519")]
     #[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
-    pub fn random_ed25519(rng: impl CryptoRng + RngCore) -> Self {
+    pub fn random_ed25519(mut rng: impl CryptoRng + RngCore) -> Self {
+        let checkint = rng.next_u32();
         let key_data = KeypairData::from(Ed25519Keypair::random(rng));
         let public_key = public::KeyData::try_from(&key_data).expect("invalid key");
 
         Self {
             cipher: Cipher::None,
             kdf: Kdf::None,
+            checkint: Some(checkint),
             public_key: public_key.into(),
             key_data,
         }
@@ -559,6 +571,7 @@ impl PrivateKey {
         Ok(Self {
             cipher: Cipher::None,
             kdf: Kdf::None,
+            checkint: Some(checkint1),
             public_key,
             key_data,
         })
@@ -570,12 +583,11 @@ impl PrivateKey {
         &self,
         encoder: &mut impl Encoder,
         cipher: Cipher,
+        checkint: u32,
     ) -> Result<()> {
         let unpadded_len = self.unpadded_privatekey_comment_pair_len()?;
         let padding_len = cipher.padding_len(unpadded_len);
 
-        // Compute checkint (uses deterministic method)
-        let checkint = public::KeyData::try_from(&self.key_data)?.checkint();
         encoder.encode_u32(checkint)?;
         encoder.encode_u32(checkint)?;
         self.key_data.encode(encoder)?;
@@ -660,6 +672,7 @@ impl TryFrom<KeypairData> for PrivateKey {
         Ok(Self {
             cipher: Cipher::None,
             kdf: Kdf::None,
+            checkint: None,
             public_key: public_key.into(),
             key_data,
         })

@@ -27,15 +27,6 @@ pub struct DsaPublicKey {
     pub y: MPInt,
 }
 
-impl DsaPublicKey {
-    /// Borrow the bytes used to compute a "checkint" for this key.
-    ///
-    /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
-    pub(super) fn checkint_bytes(&self) -> &[u8] {
-        self.y.as_bytes()
-    }
-}
-
 impl Decode for DsaPublicKey {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let p = MPInt::decode(decoder)?;
