@@ -7,9 +7,22 @@ use crate::{
     Algorithm, EcdsaCurve, Error, Result,
 };
 
-/// Digital signature.
+/// Digital signature (e.g. DSA, ECDSA, Ed25519).
 ///
-/// The main application for these is CA signatures over an SSH certificate.
+/// These are used as part of the OpenSSH certificate format to represent
+/// signatures by certificate authorities (CAs).
+///
+/// From OpenSSH's [PROTOCOL.certkeys] specification:
+///
+/// > Signatures are computed and encoded according to the rules defined for
+/// > the CA's public key algorithm ([RFC4253 section 6.6] for ssh-rsa and
+/// > ssh-dss, [RFC5656] for the ECDSA types, and [RFC8032] for Ed25519).
+///
+/// [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
+/// [RFC4253 section 6.6]: https://datatracker.ietf.org/doc/html/rfc4253#section-6.6
+/// [RFC5656]: https://datatracker.ietf.org/doc/html/rfc5656
+/// [RFC8032]: https://datatracker.ietf.org/doc/html/rfc8032
+// TODO(tarcieri): RSA support
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum Signature {
     /// DSA signature.

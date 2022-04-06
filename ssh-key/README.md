@@ -13,16 +13,19 @@
 
 Pure Rust implementation of SSH key file format decoders/encoders as described
 in [RFC4251] and [RFC4253] as well as OpenSSH's [PROTOCOL.key] format
-specification  and `authorized_keys` files.
+specification, certificates as specified in [PROTOCOL.certkeys]  and the
+`authorized_keys` file format.
 
 ## Features
 
-- [x] Constant-time Base64 decoding/encoding using `base64ct`/`pem-rfc7468` crates
-- [x] `no_std` support including support for "heapless" (no-`alloc`) targets
-- [x] Decoding/encoding OpenSSH-formatted public/private keys
+- [x] Constant-time Base64 decoder/encoder using `base64ct`/`pem-rfc7468` crates
+- [x] Decoder/encoder support for the following OpenSSH formats:
+  - [x] OpenSSH public keys
+  - [x] OpenSSH private keys (i.e. `BEGIN OPENSSH PRIVATE KEY`)
+  - [x] OpenSSH certificates
 - [x] Private key encryption/decryption (`bcrypt-pbkdf` + `aes256-ctr` only)
-- [x] OpenSSH certificate support
 - [x] Fingerprint support (SHA-256 only)
+- [x] `no_std` support including support for "heapless" (no-`alloc`) targets
 - [x] Parsing `authorized_keys` files
 - [x] Built-in zeroize support for private keys
 
@@ -30,6 +33,7 @@ specification  and `authorized_keys` files.
 
 - [ ] FIDO/U2F key support (`sk-*`)
 - [ ] Key generation support (WIP - see table below)
+- [ ] OpenSSH certificate signature verification/signing
 - [ ] Interop with digital signature crates
   - [x] `ed25519-dalek`
   - [ ] `p256` (ECDSA)
@@ -96,3 +100,4 @@ dual licensed as above, without any additional terms or conditions.
 [RFC4253]: https://datatracker.ietf.org/doc/html/rfc4253
 [RFC4716]: https://datatracker.ietf.org/doc/html/rfc4716
 [PROTOCOL.key]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD
+[PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
