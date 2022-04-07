@@ -28,6 +28,7 @@ ed25519-dalek = { version = "1.0.1", optional = true, default-features = false, 
 rand_core = { version = "0.6", optional = true, default-features = false }
 sec1 = { version = "=0.3.0-pre.1", optional = true, default-features = false, features = ["point"], path = "../sec1" }
 sha2 = { version = "0.10", optional = true, default-features = false }
+signature = { version = "1.3.1", optional = true, default-features = false }
 subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]
@@ -37,7 +38,7 @@ zeroize_derive = "1.3" # hack to make minimal-versions lint happy (pulled in by 
 
 [features]
 default = ["ecdsa", "fingerprint", "rand_core", "std"]
-alloc = ["zeroize/alloc"]
+alloc = ["signature", "zeroize/alloc"]
 ecdsa = ["sec1"]
 ed25519 = ["ed25519-dalek", "rand_core"]
 encryption = ["aes", "alloc", "bcrypt-pbkdf", "ctr", "rand_core"]

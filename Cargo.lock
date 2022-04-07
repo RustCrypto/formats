@@ -1167,6 +1167,7 @@ dependencies = [
  "rand_core 0.6.3",
  "sec1",
  "sha2 0.10.2",
+ "signature",
  "subtle",
  "tempfile",
  "zeroize",

@@ -63,7 +63,7 @@ impl KeypairData {
             #[cfg(feature = "alloc")]
             Self::Encrypted(_) => return Err(Error::Encrypted),
             #[cfg(feature = "alloc")]
-            Self::Rsa(_) => Algorithm::Rsa,
+            Self::Rsa(_) => Algorithm::Rsa { hash: None },
         })
     }
 
@@ -187,13 +187,13 @@ impl Decode for KeypairData {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaKeypair::decode(decoder).map(Self::Dsa),
             #[cfg(feature = "ecdsa")]
-            Algorithm::Ecdsa(curve) => match EcdsaKeypair::decode(decoder)? {
+            Algorithm::Ecdsa { curve } => match EcdsaKeypair::decode(decoder)? {
                 keypair if keypair.curve() == curve => Ok(Self::Ecdsa(keypair)),
                 _ => Err(Error::Algorithm),
             },
             Algorithm::Ed25519 => Ed25519Keypair::decode(decoder).map(Self::Ed25519),
             #[cfg(feature = "alloc")]
-            Algorithm::Rsa => RsaKeypair::decode(decoder).map(Self::Rsa),
+            Algorithm::Rsa { .. } => RsaKeypair::decode(decoder).map(Self::Rsa),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
         }
