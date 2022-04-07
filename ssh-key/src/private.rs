@@ -129,16 +129,17 @@ use crate::{
 use core::str;
 
 #[cfg(feature = "alloc")]
-use {crate::encoder::base64_encoded_len, alloc::string::String, zeroize::Zeroizing};
+use {
+    crate::encoder::base64_encoded_len,
+    alloc::{string::String, vec::Vec},
+    zeroize::Zeroizing,
+};
 
 #[cfg(feature = "fingerprint")]
 use crate::{Fingerprint, HashAlg};
 
 #[cfg(any(feature = "ed25519", feature = "encryption"))]
 use rand_core::{CryptoRng, RngCore};
-
-#[cfg(feature = "encryption")]
-use alloc::vec::Vec;
 
 #[cfg(feature = "std")]
 use std::{fs, io::Write, path::Path};
@@ -210,27 +211,26 @@ impl PrivateKey {
     /// -----BEGIN OPENSSH PRIVATE KEY-----
     /// ```
     pub fn from_openssh(input: impl AsRef<[u8]>) -> Result<Self> {
-        let mut pem_decoder = pem::Decoder::new_wrapped(input.as_ref(), PEM_LINE_WIDTH)?;
-        Self::validate_pem_label(pem_decoder.type_label())?;
+        let mut decoder = pem::Decoder::new_wrapped(input.as_ref(), PEM_LINE_WIDTH)?;
+        Self::validate_pem_label(decoder.type_label())?;
 
         let mut auth_magic = [0u8; Self::AUTH_MAGIC.len()];
-        pem_decoder.decode(&mut auth_magic)?;
+        decoder.decode(&mut auth_magic)?;
 
         if auth_magic != Self::AUTH_MAGIC {
             return Err(Error::FormatEncoding);
         }
 
-        let cipher = Cipher::decode(&mut pem_decoder)?;
-        let kdf = Kdf::decode(&mut pem_decoder)?;
-        let nkeys = pem_decoder.decode_usize()?;
+        let cipher = Cipher::decode(&mut decoder)?;
+        let kdf = Kdf::decode(&mut decoder)?;
+        let nkeys = usize::decode(&mut decoder)?;
 
         // TODO(tarcieri): support more than one key?
         if nkeys != 1 {
             return Err(Error::Length);
         }
 
-        let public_key =
-            pem_decoder.decode_length_prefixed(|decoder, _len| public::KeyData::decode(decoder))?;
+        let public_key = decoder.read_nested(|decoder, _len| public::KeyData::decode(decoder))?;
 
         // Handle encrypted private key
         #[cfg(not(feature = "alloc"))]
@@ -239,14 +239,14 @@ impl PrivateKey {
         }
         #[cfg(feature = "alloc")]
         if cipher.is_some() {
-            let ciphertext = pem_decoder.decode_byte_vec()?;
+            let ciphertext = Vec::decode(&mut decoder)?;
 
             // Ensure ciphertext is padded to the expected length
             if ciphertext.len().checked_rem(cipher.block_size()) != Some(0) {
                 return Err(Error::Crypto);
             }
 
-            if !pem_decoder.is_finished() {
+            if !decoder.is_finished() {
                 return Err(Error::Length);
             }
 
@@ -262,7 +262,7 @@ impl PrivateKey {
         // Processing unencrypted key. No KDF should be set.
         if kdf.is_some() {}
 
-        pem_decoder.decode_length_prefixed(|decoder, _len| {
+        decoder.read_nested(|decoder, _len| {
             Self::decode_privatekey_comment_pair(decoder, public_key, cipher.block_size())
         })
     }
@@ -273,32 +273,31 @@ impl PrivateKey {
         line_ending: LineEnding,
         out: &'o mut [u8],
     ) -> Result<&'o str> {
-        let mut pem_encoder =
+        let mut encoder =
             pem::Encoder::new_wrapped(Self::PEM_LABEL, PEM_LINE_WIDTH, line_ending, out)?;
 
-        pem_encoder.encode(Self::AUTH_MAGIC)?;
-        self.cipher.encode(&mut pem_encoder)?;
-        self.kdf.encode(&mut pem_encoder)?;
+        Encoder::write(&mut encoder, Self::AUTH_MAGIC)?;
+        self.cipher.encode(&mut encoder)?;
+        self.kdf.encode(&mut encoder)?;
 
         // TODO(tarcieri): support for encoding more than one private key
-        let nkeys = 1;
-        pem_encoder.encode_usize(nkeys)?;
+        1usize.encode(&mut encoder)?;
 
         // Encode public key
-        pem_encoder.encode_length_prefixed(self.public_key.key_data())?;
+        self.public_key.key_data().encode_nested(&mut encoder)?;
 
         // Encode private key
         if self.is_encrypted() {
-            pem_encoder.encode_usize(self.key_data.encoded_len()?)?;
-            self.key_data.encode(&mut pem_encoder)?;
+            self.key_data.encode_nested(&mut encoder)?;
         } else {
-            let len = self.encoded_privatekey_comment_pair_len(Cipher::None)?;
+            self.encoded_privatekey_comment_pair_len(Cipher::None)?
+                .encode(&mut encoder)?;
+
             let checkint = self.checkint.unwrap_or_else(|| self.key_data.checkint());
-            pem_encoder.encode_usize(len)?;
-            self.encode_privatekey_comment_pair(&mut pem_encoder, Cipher::None, checkint)?;
+            self.encode_privatekey_comment_pair(&mut encoder, Cipher::None, checkint)?;
         }
 
-        let encoded_len = pem_encoder.finish()?;
+        let encoded_len = encoder.finish()?;
         Ok(str::from_utf8(&out[..encoded_len])?)
     }
 
@@ -532,8 +531,8 @@ impl PrivateKey {
             return Err(Error::Length);
         }
 
-        let checkint1 = decoder.decode_u32()?;
-        let checkint2 = decoder.decode_u32()?;
+        let checkint1 = u32::decode(decoder)?;
+        let checkint2 = u32::decode(decoder)?;
 
         if checkint1 != checkint2 {
             return Err(Error::Crypto);
@@ -557,7 +556,7 @@ impl PrivateKey {
 
         if padding_len != 0 {
             let mut padding = [0u8; MAX_BLOCK_SIZE];
-            decoder.decode_raw(&mut padding[..padding_len])?;
+            decoder.read(&mut padding[..padding_len])?;
 
             if PADDING_BYTES[..padding_len] != padding[..padding_len] {
                 return Err(Error::FormatEncoding);
@@ -588,11 +587,11 @@ impl PrivateKey {
         let unpadded_len = self.unpadded_privatekey_comment_pair_len()?;
         let padding_len = cipher.padding_len(unpadded_len);
 
-        encoder.encode_u32(checkint)?;
-        encoder.encode_u32(checkint)?;
+        checkint.encode(encoder)?;
+        checkint.encode(encoder)?;
         self.key_data.encode(encoder)?;
-        encoder.encode_str(self.comment())?;
-        encoder.encode_raw(&PADDING_BYTES[..padding_len])?;
+        self.comment().encode(encoder)?;
+        encoder.write(&PADDING_BYTES[..padding_len])?;
         Ok(())
     }
 

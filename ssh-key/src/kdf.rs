@@ -136,7 +136,7 @@ impl Decode for Kdf {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         match KdfAlg::decode(decoder)? {
             KdfAlg::None => {
-                if decoder.decode_usize()? == 0 {
+                if usize::decode(decoder)? == 0 {
                     Ok(Self::None)
                 } else {
                     Err(Error::Algorithm)
@@ -147,10 +147,11 @@ impl Decode for Kdf {
                 return Err(Error::Algorithm);
 
                 #[cfg(feature = "alloc")]
-                decoder.decode_length_prefixed(|decoder, _len| {
-                    let salt = decoder.decode_byte_vec()?;
-                    let rounds = decoder.decode_u32()?;
-                    Ok(Self::Bcrypt { salt, rounds })
+                decoder.read_nested(|decoder, _len| {
+                    Ok(Self::Bcrypt {
+                        salt: Vec::decode(decoder)?,
+                        rounds: u32::decode(decoder)?,
+                    })
                 })
             }
         }
@@ -177,12 +178,12 @@ impl Encode for Kdf {
         self.algorithm().encode(encoder)?;
 
         match self {
-            Self::None => encoder.encode_usize(0),
+            Self::None => 0usize.encode(encoder),
             #[cfg(feature = "alloc")]
             Self::Bcrypt { salt, rounds } => {
-                encoder.encode_usize([8, salt.len()].checked_sum()?)?;
-                encoder.encode_byte_slice(salt)?;
-                encoder.encode_u32(*rounds)
+                [8, salt.len()].checked_sum()?.encode(encoder)?;
+                salt.encode(encoder)?;
+                rounds.encode(encoder)
             }
         }
     }

@@ -223,35 +223,22 @@ impl Certificate {
 impl Decode for Certificate {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let algorithm = CertificateAlg::decode(decoder)?;
-        let nonce = decoder.decode_byte_vec()?;
-        let public_key = KeyData::decode_algorithm(decoder, algorithm.into())?;
-        let serial = decoder.decode_u64()?;
-        let cert_type = decoder.decode_u32()?;
-        let key_id = decoder.decode_string()?;
-        let valid_principals = Vec::decode(decoder)?;
-        let valid_after = decoder.decode_u64()?;
-        let valid_before = decoder.decode_u64()?;
-        let critical_options = OptionsMap::decode(decoder)?;
-        let extensions = OptionsMap::decode(decoder)?;
-        let reserved = decoder.decode_byte_vec()?;
-        let signature_key = decoder.decode_length_prefixed(|dec, _len| KeyData::decode(dec))?;
-        let signature = decoder.decode_length_prefixed(|dec, _len| Signature::decode(dec))?;
 
         Ok(Self {
             algorithm,
-            nonce,
-            public_key,
-            serial,
-            cert_type: cert_type.try_into()?,
-            key_id,
-            valid_principals,
-            valid_after,
-            valid_before,
-            critical_options,
-            extensions,
-            reserved,
-            signature_key,
-            signature,
+            nonce: Vec::decode(decoder)?,
+            public_key: KeyData::decode_algorithm(decoder, algorithm.into())?,
+            serial: u64::decode(decoder)?,
+            cert_type: CertType::decode(decoder)?,
+            key_id: String::decode(decoder)?,
+            valid_principals: Vec::decode(decoder)?,
+            valid_after: u64::decode(decoder)?,
+            valid_before: u64::decode(decoder)?,
+            critical_options: OptionsMap::decode(decoder)?,
+            extensions: OptionsMap::decode(decoder)?,
+            reserved: Vec::decode(decoder)?,
+            signature_key: decoder.read_nested(|dec, _len| KeyData::decode(dec))?,
+            signature: decoder.read_nested(|dec, _len| Signature::decode(dec))?,
             comment: String::new(),
         })
     }
@@ -287,21 +274,19 @@ impl Encode for Certificate {
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.algorithm.encode(encoder)?;
-        encoder.encode_byte_slice(&self.nonce)?;
+        self.nonce.encode(encoder)?;
         self.public_key.encode_key_data(encoder)?;
-        encoder.encode_u64(self.serial)?;
-        encoder.encode_u32(self.cert_type.into())?;
-        encoder.encode_str(&self.key_id)?;
+        self.serial.encode(encoder)?;
+        self.cert_type.encode(encoder)?;
+        self.key_id.encode(encoder)?;
         self.valid_principals.encode(encoder)?;
-        encoder.encode_u64(self.valid_after)?;
-        encoder.encode_u64(self.valid_before)?;
+        self.valid_after.encode(encoder)?;
+        self.valid_before.encode(encoder)?;
         self.critical_options.encode(encoder)?;
         self.extensions.encode(encoder)?;
-        encoder.encode_byte_slice(&self.reserved)?;
-        encoder.encode_usize(self.signature_key.encoded_len()?)?;
-        self.signature_key.encode(encoder)?;
-        encoder.encode_usize(self.signature.encoded_len()?)?;
-        self.signature.encode(encoder)
+        self.reserved.encode(encoder)?;
+        self.signature_key.encode_nested(encoder)?;
+        self.signature.encode_nested(encoder)
     }
 }
 
@@ -356,48 +341,31 @@ impl From<CertType> for u32 {
     }
 }
 
-impl Decode for Vec<String> {
+impl Decode for CertType {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        decoder.decode_length_prefixed(|decoder, len| {
-            let mut entries = Self::new();
-            let offset = decoder.remaining_len();
-
-            while offset.saturating_sub(decoder.remaining_len()) < len {
-                entries.push(decoder.decode_string()?);
-            }
-
-            Ok(entries)
-        })
+        u32::decode(decoder)?.try_into()
     }
 }
 
-impl Encode for Vec<String> {
+impl Encode for CertType {
     fn encoded_len(&self) -> Result<usize> {
-        self.iter()
-            .try_fold(4, |acc, entry| [acc, 4, entry.len()].checked_sum())
+        Ok(4)
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        let len = self.encoded_len()?.checked_sub(4).ok_or(Error::Length)?;
-        encoder.encode_usize(len)?;
-
-        for entry in self {
-            encoder.encode_str(entry)?;
-        }
-
-        Ok(())
+        u32::from(*self).encode(encoder)
     }
 }
 
 impl Decode for OptionsMap {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        decoder.decode_length_prefixed(|decoder, len| {
+        decoder.read_nested(|decoder, len| {
             let mut entries = Vec::<(String, String)>::new();
             let offset = decoder.remaining_len();
 
             while offset.saturating_sub(decoder.remaining_len()) < len {
-                let name = decoder.decode_string()?;
-                let data = decoder.decode_string()?;
+                let name = String::decode(decoder)?;
+                let data = String::decode(decoder)?;
 
                 // Options must be lexically ordered by "name" if they appear in
                 // the sequence. Each named option may only appear once in a
@@ -424,12 +392,14 @@ impl Encode for OptionsMap {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        let len = self.encoded_len()?.checked_sub(4).ok_or(Error::Length)?;
-        encoder.encode_usize(len)?;
+        self.encoded_len()?
+            .checked_sub(4)
+            .ok_or(Error::Length)?
+            .encode(encoder)?;
 
         for (name, data) in self {
-            encoder.encode_str(name)?;
-            encoder.encode_str(data)?;
+            name.encode(encoder)?;
+            data.encode(encoder)?;
         }
 
         Ok(())

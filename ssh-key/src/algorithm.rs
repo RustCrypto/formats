@@ -77,7 +77,7 @@ impl<T: AlgString> Decode for T {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let mut buf = [0u8; MAX_ALG_NAME_SIZE];
         decoder
-            .decode_str(buf.as_mut())
+            .read_string(buf.as_mut())
             .map_err(|_| Error::Algorithm)?
             .parse()
     }
@@ -89,7 +89,7 @@ impl<T: AlgString> Encode for T {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_str(self.as_ref())
+        self.as_ref().encode(encoder)
     }
 }
 

@@ -169,7 +169,7 @@ impl Decode for Ed25519Keypair {
         // a serialization of `private_key[32] || public_key[32]` immediately
         // following the public key.
         let mut bytes = Zeroizing::new([0u8; Self::BYTE_SIZE]);
-        decoder.decode_length_prefixed(|decoder, _len| decoder.decode_raw(&mut *bytes))?;
+        decoder.read_nested(|decoder, _len| decoder.read(&mut *bytes))?;
 
         let (priv_bytes, pub_bytes) = bytes.split_at(Ed25519PrivateKey::BYTE_SIZE);
         let private = Ed25519PrivateKey(priv_bytes.try_into()?);
@@ -190,7 +190,7 @@ impl Encode for Ed25519Keypair {
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.public.encode(encoder)?;
-        encoder.encode_byte_slice(&*Zeroizing::new(self.to_bytes()))
+        Zeroizing::new(self.to_bytes()).as_ref().encode(encoder)
     }
 }
 

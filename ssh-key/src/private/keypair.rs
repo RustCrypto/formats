@@ -202,11 +202,6 @@ impl Decode for KeypairData {
 
 impl Encode for KeypairData {
     fn encoded_len(&self) -> Result<usize> {
-        #[cfg(feature = "alloc")]
-        if let Some(ciphertext) = self.encrypted() {
-            return Ok(ciphertext.len());
-        }
-
         let key_len = match self {
             #[cfg(feature = "alloc")]
             Self::Dsa(key) => key.encoded_len()?,
@@ -214,7 +209,7 @@ impl Encode for KeypairData {
             Self::Ecdsa(key) => key.encoded_len()?,
             Self::Ed25519(key) => key.encoded_len()?,
             #[cfg(feature = "alloc")]
-            Self::Encrypted(_) => return Err(Error::Encrypted),
+            Self::Encrypted(ciphertext) => return Ok(ciphertext.len()),
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encoded_len()?,
         };
@@ -234,7 +229,7 @@ impl Encode for KeypairData {
             Self::Ecdsa(key) => key.encode(encoder),
             Self::Ed25519(key) => key.encode(encoder),
             #[cfg(feature = "alloc")]
-            Self::Encrypted(ciphertext) => encoder.encode_raw(ciphertext),
+            Self::Encrypted(ciphertext) => encoder.write(ciphertext),
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encode(encoder),
         }

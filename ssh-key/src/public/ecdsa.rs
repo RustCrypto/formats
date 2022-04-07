@@ -96,7 +96,7 @@ impl Decode for EcdsaPublicKey {
         let curve = EcdsaCurve::decode(decoder)?;
 
         let mut buf = [0u8; Self::MAX_SIZE];
-        let key = Self::from_sec1_bytes(decoder.decode_byte_slice(&mut buf)?)?;
+        let key = Self::from_sec1_bytes(decoder.read_byten(&mut buf)?)?;
 
         if key.curve() == curve {
             Ok(key)
@@ -108,12 +108,17 @@ impl Decode for EcdsaPublicKey {
 
 impl Encode for EcdsaPublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        [4, self.curve().encoded_len()?, self.as_ref().len()].checked_sum()
+        [
+            self.curve().encoded_len()?,
+            4, // uint32 length prefix
+            self.as_ref().len(),
+        ]
+        .checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.curve().encode(encoder)?;
-        encoder.encode_byte_slice(self.as_ref())
+        self.as_ref().encode(encoder)
     }
 }
 
