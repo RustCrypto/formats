@@ -66,7 +66,9 @@ fn decode_dsa_openssh() {
 fn decode_ecdsa_p256_openssh() {
     let key = Certificate::from_str(ECDSA_P256_CERT_EXAMPLE).unwrap();
     assert_eq!(
-        Algorithm::Ecdsa(EcdsaCurve::NistP256),
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP256
+        },
         key.public_key().algorithm(),
     );
 
@@ -99,7 +101,7 @@ fn decode_ed25519_openssh() {
 #[test]
 fn decode_rsa_4096_openssh() {
     let key = Certificate::from_str(RSA_4096_CERT_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Rsa, key.public_key().algorithm());
+    assert_eq!(Algorithm::Rsa { hash: None }, key.public_key().algorithm());
 
     let rsa_key = key.public_key().rsa().unwrap();
     assert_eq!(&hex!("010001"), rsa_key.e.as_bytes());

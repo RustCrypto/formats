@@ -164,11 +164,11 @@ impl PublicKey {
     /// Use [`Default::default()`] to use the default hash function (SHA-256).
     #[cfg(feature = "fingerprint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    pub fn fingerprint(&self, hash_alg: HashAlg) -> Fingerprint {
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Result<Fingerprint> {
         match hash_alg {
             HashAlg::Sha256 => Sha256Fingerprint::try_from(self).map(Into::into),
+            _ => Err(Error::Algorithm),
         }
-        .expect("error calculating fingerprint")
     }
 
     /// Set the comment on the key.
@@ -253,7 +253,7 @@ impl KeyData {
             Self::Ecdsa(key) => key.algorithm(),
             Self::Ed25519(_) => Algorithm::Ed25519,
             #[cfg(feature = "alloc")]
-            Self::Rsa(_) => Algorithm::Rsa,
+            Self::Rsa(_) => Algorithm::Rsa { hash: None },
         }
     }
 
@@ -331,13 +331,13 @@ impl KeyData {
             #[cfg(feature = "alloc")]
             Algorithm::Dsa => DsaPublicKey::decode(decoder).map(Self::Dsa),
             #[cfg(feature = "ecdsa")]
-            Algorithm::Ecdsa(curve) => match EcdsaPublicKey::decode(decoder)? {
+            Algorithm::Ecdsa { curve } => match EcdsaPublicKey::decode(decoder)? {
                 key if key.curve() == curve => Ok(Self::Ecdsa(key)),
                 _ => Err(Error::Algorithm),
             },
             Algorithm::Ed25519 => Ed25519PublicKey::decode(decoder).map(Self::Ed25519),
             #[cfg(feature = "alloc")]
-            Algorithm::Rsa => RsaPublicKey::decode(decoder).map(Self::Rsa),
+            Algorithm::Rsa { .. } => RsaPublicKey::decode(decoder).map(Self::Rsa),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
         }

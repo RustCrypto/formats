@@ -5,7 +5,7 @@ use crate::{
     decoder::{Base64Decoder, Decode, Decoder},
     encoder::{base64_encoded_len, Encode, Encoder},
     public::{Encapsulation, KeyData},
-    CertificateAlg, Error, Result, Signature,
+    Algorithm, Error, Result, Signature,
 };
 use alloc::{borrow::ToOwned, string::String, vec::Vec};
 use core::{cmp::Ordering, str::FromStr};
@@ -25,7 +25,7 @@ pub type OptionsMap = alloc::collections::BTreeMap<String, String>;
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Certificate {
     /// Certificate algorithm.
-    algorithm: CertificateAlg,
+    algorithm: Algorithm,
 
     /// CA-provided random bitstring of arbitrary length
     /// (but typically 16 or 32 bytes).
@@ -73,7 +73,7 @@ pub struct Certificate {
 
 impl Certificate {
     /// Get the public key algorithm for this certificate.
-    pub fn algorithm(&self) -> CertificateAlg {
+    pub fn algorithm(&self) -> Algorithm {
         self.algorithm
     }
 
@@ -201,7 +201,7 @@ impl Certificate {
     pub fn to_string(&self) -> Result<String> {
         let encoded_len = [
             2, // interstitial spaces
-            self.algorithm().as_str().len(),
+            self.algorithm().as_certificate_str().len(),
             base64_encoded_len(self.encoded_len()?),
             self.comment.len(),
         ]
@@ -210,7 +210,7 @@ impl Certificate {
         let mut out = vec![0u8; encoded_len];
         let actual_len = Encapsulation::encode(
             &mut out,
-            self.algorithm().as_str(),
+            self.algorithm().as_certificate_str(),
             self.comment(),
             |encoder| self.encode(encoder),
         )?
@@ -222,12 +222,12 @@ impl Certificate {
 
 impl Decode for Certificate {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let algorithm = CertificateAlg::decode(decoder)?;
+        let algorithm = Algorithm::new_certificate(&String::decode(decoder)?)?;
 
         Ok(Self {
             algorithm,
             nonce: Vec::decode(decoder)?,
-            public_key: KeyData::decode_algorithm(decoder, algorithm.into())?,
+            public_key: KeyData::decode_algorithm(decoder, algorithm)?,
             serial: u64::decode(decoder)?,
             cert_type: CertType::decode(decoder)?,
             key_id: String::decode(decoder)?,
@@ -247,7 +247,7 @@ impl Decode for Certificate {
 impl Encode for Certificate {
     fn encoded_len(&self) -> Result<usize> {
         [
-            self.algorithm.encoded_len()?,
+            self.algorithm.as_certificate_str().encoded_len()?,
             4, // nonce length prefix (uint32)
             self.nonce.len(),
             self.public_key.encoded_key_data_len()?,
@@ -273,7 +273,7 @@ impl Encode for Certificate {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.algorithm.encode(encoder)?;
+        self.algorithm.as_certificate_str().encode(encoder)?;
         self.nonce.encode(encoder)?;
         self.public_key.encode_key_data(encoder)?;
         self.serial.encode(encoder)?;
@@ -303,7 +303,7 @@ impl FromStr for Certificate {
         }
 
         // Verify that the algorithm in the Base64-encoded data matches the text
-        if encapsulation.algorithm_id != certificate.algorithm().as_str() {
+        if encapsulation.algorithm_id != certificate.algorithm().as_certificate_str() {
             return Err(Error::Algorithm);
         }
 

@@ -441,7 +441,7 @@ impl PrivateKey {
     /// Use [`Default::default()`] to use the default hash function (SHA-256).
     #[cfg(feature = "fingerprint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    pub fn fingerprint(&self, hash_alg: HashAlg) -> Fingerprint {
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Result<Fingerprint> {
         self.public_key.fingerprint(hash_alg)
     }
 

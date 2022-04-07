@@ -91,7 +91,12 @@ fn decode_dsa_openssh() {
 #[test]
 fn decode_ecdsa_p256_openssh() {
     let key = PrivateKey::from_openssh(OPENSSH_ECDSA_P256_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Ecdsa(EcdsaCurve::NistP256), key.algorithm(),);
+    assert_eq!(
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP256
+        },
+        key.algorithm(),
+    );
     assert_eq!(Cipher::None, key.cipher());
     assert_eq!(KdfAlg::None, key.kdf().algorithm());
     assert!(key.kdf().is_none());
@@ -118,7 +123,12 @@ fn decode_ecdsa_p256_openssh() {
 #[test]
 fn decode_ecdsa_p384_openssh() {
     let key = PrivateKey::from_openssh(OPENSSH_ECDSA_P384_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Ecdsa(EcdsaCurve::NistP384), key.algorithm(),);
+    assert_eq!(
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP384
+        },
+        key.algorithm()
+    );
     assert_eq!(Cipher::None, key.cipher());
     assert_eq!(KdfAlg::None, key.kdf().algorithm());
     assert!(key.kdf().is_none());
@@ -149,7 +159,12 @@ fn decode_ecdsa_p384_openssh() {
 #[test]
 fn decode_ecdsa_p521_openssh() {
     let key = PrivateKey::from_openssh(OPENSSH_ECDSA_P521_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Ecdsa(EcdsaCurve::NistP521), key.algorithm(),);
+    assert_eq!(
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP521
+        },
+        key.algorithm()
+    );
     assert_eq!(Cipher::None, key.cipher());
     assert_eq!(KdfAlg::None, key.kdf().algorithm());
     assert!(key.kdf().is_none());
@@ -203,7 +218,7 @@ fn decode_ed25519_openssh() {
 #[test]
 fn decode_rsa_3072_openssh() {
     let key = PrivateKey::from_openssh(OPENSSH_RSA_3072_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Rsa, key.algorithm());
+    assert_eq!(Algorithm::Rsa { hash: None }, key.algorithm());
     assert_eq!(Cipher::None, key.cipher());
     assert_eq!(KdfAlg::None, key.kdf().algorithm());
     assert!(key.kdf().is_none());
@@ -275,7 +290,7 @@ fn decode_rsa_3072_openssh() {
 #[test]
 fn decode_rsa_4096_openssh() {
     let key = PrivateKey::from_openssh(OPENSSH_RSA_4096_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Rsa, key.algorithm());
+    assert_eq!(Algorithm::Rsa { hash: None }, key.algorithm());
     assert_eq!(Cipher::None, key.cipher());
     assert_eq!(KdfAlg::None, key.kdf().algorithm());
     assert!(key.kdf().is_none());

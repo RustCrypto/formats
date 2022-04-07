@@ -163,7 +163,9 @@ pub enum EcdsaKeypair {
 impl EcdsaKeypair {
     /// Get the [`Algorithm`] for this public key type.
     pub fn algorithm(&self) -> Algorithm {
-        Algorithm::Ecdsa(self.curve())
+        Algorithm::Ecdsa {
+            curve: self.curve(),
+        }
     }
 
     /// Get the [`EcdsaCurve`] for this key.

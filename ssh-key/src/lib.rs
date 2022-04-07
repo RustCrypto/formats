@@ -135,32 +135,28 @@ mod decoder;
 mod encoder;
 mod error;
 mod kdf;
-mod signature;
-
-#[cfg(feature = "alloc")]
-mod mpint;
 
 #[cfg(feature = "fingerprint")]
 mod fingerprint;
+#[cfg(feature = "alloc")]
+mod mpint;
+#[cfg(feature = "alloc")]
+mod signature;
 
 pub use crate::{
-    algorithm::{Algorithm, CertificateAlg, EcdsaCurve, HashAlg, KdfAlg},
+    algorithm::{Algorithm, EcdsaCurve, HashAlg, KdfAlg},
     authorized_keys::AuthorizedKeys,
     cipher::Cipher,
     error::{Error, Result},
     kdf::Kdf,
     private::PrivateKey,
     public::PublicKey,
-    signature::Signature,
 };
 pub use base64ct::LineEnding;
 pub use pem_rfc7468 as pem;
 
 #[cfg(feature = "alloc")]
-pub use crate::{
-    certificate::{CertType, Certificate, OptionsMap},
-    mpint::MPInt,
-};
+pub use crate::{certificate::Certificate, mpint::MPInt, signature::Signature};
 
 #[cfg(feature = "ecdsa")]
 pub use sec1;

@@ -73,7 +73,7 @@ fn decode_dsa_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &key.fingerprint(Default::default()).to_string(),
+        &key.fingerprint(Default::default()).unwrap().to_string(),
         "SHA256:Nh0Me49Zh9fDw/VYUfq43IJmI1T+XrjiYONPND8GzaM"
     );
 }
@@ -83,7 +83,9 @@ fn decode_dsa_openssh() {
 fn decode_ecdsa_p256_openssh() {
     let key = PublicKey::from_openssh(OPENSSH_ECDSA_P256_EXAMPLE).unwrap();
     assert_eq!(
-        Algorithm::Ecdsa(EcdsaCurve::NistP256),
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP256
+        },
         key.key_data().algorithm(),
     );
 
@@ -102,7 +104,7 @@ fn decode_ecdsa_p256_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &key.fingerprint(Default::default()).to_string(),
+        &key.fingerprint(Default::default()).unwrap().to_string(),
         "SHA256:JQ6FV0rf7qqJHZqIj4zNH8eV0oB8KLKh9Pph3FTD98g"
     );
 }
@@ -112,7 +114,9 @@ fn decode_ecdsa_p256_openssh() {
 fn decode_ecdsa_p384_openssh() {
     let key = PublicKey::from_openssh(OPENSSH_ECDSA_P384_EXAMPLE).unwrap();
     assert_eq!(
-        Algorithm::Ecdsa(EcdsaCurve::NistP384),
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP384
+        },
         key.key_data().algorithm(),
     );
 
@@ -132,7 +136,7 @@ fn decode_ecdsa_p384_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &key.fingerprint(Default::default()).to_string(),
+        &key.fingerprint(Default::default()).unwrap().to_string(),
         "SHA256:nkGE8oV7pHvOiPKHtQRs67WUPiVLRxbNu//gV/k4Vjw"
     );
 }
@@ -142,7 +146,9 @@ fn decode_ecdsa_p384_openssh() {
 fn decode_ecdsa_p521_openssh() {
     let key = PublicKey::from_openssh(OPENSSH_ECDSA_P521_EXAMPLE).unwrap();
     assert_eq!(
-        Algorithm::Ecdsa(EcdsaCurve::NistP521),
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP521
+        },
         key.key_data().algorithm(),
     );
 
@@ -163,7 +169,7 @@ fn decode_ecdsa_p521_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &key.fingerprint(Default::default()).to_string(),
+        &key.fingerprint(Default::default()).unwrap().to_string(),
         "SHA256:l3AUUMK6Q2BbuiqvMx2fs97f8LUYq7sWCAx7q5m3S6M"
     );
 }
@@ -183,7 +189,7 @@ fn decode_ed25519_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &key.fingerprint(Default::default()).to_string(),
+        &key.fingerprint(Default::default()).unwrap().to_string(),
         "SHA256:UCUiLr7Pjs9wFFJMDByLgc3NrtdU344OgUM45wZPcIQ"
     );
 }
@@ -192,7 +198,7 @@ fn decode_ed25519_openssh() {
 #[test]
 fn decode_rsa_3072_openssh() {
     let key = PublicKey::from_openssh(OPENSSH_RSA_3072_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Rsa, key.key_data().algorithm());
+    assert_eq!(Algorithm::Rsa { hash: None }, key.key_data().algorithm());
 
     let rsa_key = key.key_data().rsa().unwrap();
     assert_eq!(&hex!("010001"), rsa_key.e.as_bytes());
@@ -215,7 +221,7 @@ fn decode_rsa_3072_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &key.fingerprint(Default::default()).to_string(),
+        &key.fingerprint(Default::default()).unwrap().to_string(),
         "SHA256:Fmxts/GcV77PakFnf1Ueki5mpU4ZjUQWGRjZGAo3n/I"
     );
 }
@@ -224,7 +230,7 @@ fn decode_rsa_3072_openssh() {
 #[test]
 fn decode_rsa_4096_openssh() {
     let key = PublicKey::from_openssh(OPENSSH_RSA_4096_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Rsa, key.key_data().algorithm());
+    assert_eq!(Algorithm::Rsa { hash: None }, key.key_data().algorithm());
 
     let rsa_key = key.key_data().rsa().unwrap();
     assert_eq!(&hex!("010001"), rsa_key.e.as_bytes());
@@ -250,7 +256,7 @@ fn decode_rsa_4096_openssh() {
 
     #[cfg(feature = "fingerprint")]
     assert_eq!(
-        &key.fingerprint(Default::default()).to_string(),
+        &key.fingerprint(Default::default()).unwrap().to_string(),
         "SHA256:FKAyeywtQNZLl1YTzIzCV/ThadBlnWMaD7jHQYDseEY"
     );
 }

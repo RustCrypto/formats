@@ -6,6 +6,13 @@ use crate::{
     encoder::{Encode, Encoder},
     Algorithm, EcdsaCurve, Error, Result,
 };
+use alloc::vec::Vec;
+
+const DSA_SIGNATURE_SIZE: usize = 40;
+const ECDSA_NISTP256_SIGNATURE_SIZE: usize = 72;
+const ECDSA_NISTP384_SIGNATURE_SIZE: usize = 104;
+const ECDSA_NISTP521_SIGNATURE_SIZE: usize = 140;
+const ED25519_SIGNATURE_SIZE: usize = 64;
 
 /// Digital signature (e.g. DSA, ECDSA, Ed25519).
 ///
@@ -18,95 +25,94 @@ use crate::{
 /// > the CA's public key algorithm ([RFC4253 section 6.6] for ssh-rsa and
 /// > ssh-dss, [RFC5656] for the ECDSA types, and [RFC8032] for Ed25519).
 ///
+/// RSA signature support is implemented using the SHA2 family extensions as
+/// described in [RFC8332].
+///
 /// [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
 /// [RFC4253 section 6.6]: https://datatracker.ietf.org/doc/html/rfc4253#section-6.6
 /// [RFC5656]: https://datatracker.ietf.org/doc/html/rfc5656
 /// [RFC8032]: https://datatracker.ietf.org/doc/html/rfc8032
-// TODO(tarcieri): RSA support
+/// [RFC8332]: https://datatracker.ietf.org/doc/html/rfc8332
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub enum Signature {
-    /// DSA signature.
-    Dsa([u8; 40]),
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub struct Signature {
+    /// Signature algorithm.
+    algorithm: Algorithm,
 
-    /// ECDSA/NIST-P256 signature.
-    EcdsaSha2NistP256([u8; 64]),
+    /// Raw signature serialized as algorithm-specific byte encoding.
+    data: Vec<u8>,
+}
 
-    /// ECDSA/NIST-P384 signature.
-    EcdsaSha2NistP384([u8; 96]),
+impl Signature {
+    /// Create a new signature with the given algorithm and raw signature data.
+    ///
+    /// See specifications in toplevel [`Signature`] documentation for how to
+    /// format the raw signature data for a given algorithm.
+    ///
+    /// # Returns
+    /// - [`Error::Length`] if the signature is not the correct length.
+    pub fn new(algorithm: Algorithm, data: impl Into<Vec<u8>>) -> Result<Self> {
+        let data = data.into();
 
-    /// ECDSA/NIST-P384 signature.
-    EcdsaSha2NistP521([u8; 132]),
+        // Validate signature is well-formed per OpensSH encoding
+        match algorithm {
+            Algorithm::Dsa if data.len() == DSA_SIGNATURE_SIZE => (),
+            Algorithm::Ecdsa { curve } => {
+                let expected_len = match curve {
+                    EcdsaCurve::NistP256 => ECDSA_NISTP256_SIGNATURE_SIZE,
+                    EcdsaCurve::NistP384 => ECDSA_NISTP384_SIGNATURE_SIZE,
+                    EcdsaCurve::NistP521 => ECDSA_NISTP521_SIGNATURE_SIZE,
+                };
 
-    /// Ed25519 signature.
-    Ed25519([u8; 64]),
+                if data.len() != expected_len {
+                    return Err(Error::Length);
+                }
+
+                let component_len = expected_len.checked_sub(8).ok_or(Error::Length)? / 2;
+                let decoder = &mut data.as_slice();
+
+                for _ in 0..2 {
+                    if decoder.drain_prefixed()? != component_len {
+                        return Err(Error::Length);
+                    }
+                }
+
+                if !decoder.is_finished() {
+                    return Err(Error::Length);
+                }
+            }
+            Algorithm::Ed25519 if data.len() == ED25519_SIGNATURE_SIZE => (),
+            Algorithm::Rsa { hash: Some(_) } => (),
+            _ => return Err(Error::Length),
+        }
+
+        Ok(Self { algorithm, data })
+    }
 }
 
 impl Signature {
     /// Get the [`Algorithm`] associated with this signature.
     pub fn algorithm(&self) -> Algorithm {
-        match self {
-            Self::Dsa(_) => Algorithm::Dsa,
-            Self::EcdsaSha2NistP256(_) => Algorithm::Ecdsa(EcdsaCurve::NistP256),
-            Self::EcdsaSha2NistP384(_) => Algorithm::Ecdsa(EcdsaCurve::NistP384),
-            Self::EcdsaSha2NistP521(_) => Algorithm::Ecdsa(EcdsaCurve::NistP521),
-            Self::Ed25519(_) => Algorithm::Ed25519,
-        }
+        self.algorithm
     }
 
     /// Get the raw signature as bytes.
     pub fn as_bytes(&self) -> &[u8] {
-        match self {
-            Self::Dsa(bytes) => bytes,
-            Self::EcdsaSha2NistP256(bytes) => bytes,
-            Self::EcdsaSha2NistP384(bytes) => bytes,
-            Self::EcdsaSha2NistP521(bytes) => bytes,
-            Self::Ed25519(bytes) => bytes,
-        }
+        &self.data
     }
+}
 
-    /// Is this a DSA signature?
-    pub fn is_dsa(&self) -> bool {
-        matches!(self, Self::Dsa(_))
-    }
-
-    /// Is this an ECDSA signature?
-    pub fn is_ecdsa(&self) -> bool {
-        matches!(
-            self,
-            Self::EcdsaSha2NistP256(_) | Self::EcdsaSha2NistP384(_) | Self::EcdsaSha2NistP521(_)
-        )
-    }
-
-    /// Is this an Ed25519 signature?
-    pub fn is_ed25519(&self) -> bool {
-        matches!(self, Self::Ed25519(_))
+impl AsRef<[u8]> for Signature {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
     }
 }
 
 impl Decode for Signature {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        match Algorithm::decode(decoder)? {
-            Algorithm::Dsa => {
-                let mut bytes = [0u8; 40];
-                decoder.read_nested(|decoder, _len| decoder.read(&mut bytes))?;
-                Ok(Self::Dsa(bytes))
-            }
-            Algorithm::Ecdsa(EcdsaCurve::NistP256) => {
-                decode_ecdsa_signature(decoder).map(Self::EcdsaSha2NistP256)
-            }
-            Algorithm::Ecdsa(EcdsaCurve::NistP384) => {
-                decode_ecdsa_signature(decoder).map(Self::EcdsaSha2NistP384)
-            }
-            Algorithm::Ecdsa(EcdsaCurve::NistP521) => {
-                decode_ecdsa_signature(decoder).map(Self::EcdsaSha2NistP521)
-            }
-            Algorithm::Ed25519 => {
-                let mut bytes = [0u8; 64];
-                decoder.read_nested(|decoder, _len| decoder.read(&mut bytes))?;
-                Ok(Self::Ed25519(bytes))
-            }
-            _ => Err(Error::Algorithm),
-        }
+        let algorithm = Algorithm::decode(decoder)?;
+        let data = Vec::decode(decoder)?;
+        Self::new(algorithm, data)
     }
 }
 
@@ -116,51 +122,35 @@ impl Encode for Signature {
             self.algorithm().encoded_len()?,
             4, // signature data length prefix (uint32)
             self.as_bytes().len(),
-            8usize
-                .checked_mul(usize::from(self.is_ecdsa())) // ecdsa `r`/`s` lengths
-                .ok_or(Error::Length)?,
         ]
         .checked_sum()
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.algorithm().encode(encoder)?;
-
-        if self.is_ecdsa() {
-            [8, self.as_bytes().len()].checked_sum()?.encode(encoder)?;
-            let (r, s) = self.as_bytes().split_at(self.as_bytes().len() / 2);
-            r.encode(encoder)?;
-            s.encode(encoder)?;
-        } else {
-            self.as_bytes().encode(encoder)?;
-        }
-
-        Ok(())
+        self.as_bytes().encode(encoder)
     }
 }
 
-fn decode_ecdsa_signature<const SIZE: usize>(decoder: &mut impl Decoder) -> Result<[u8; SIZE]> {
-    decoder.read_nested(|decoder, _len| {
-        let mut bytes = [0u8; SIZE];
+/// Decode [`Signature`] from an [`Algorithm`]-prefixed OpenSSH-encoded bytestring.
+impl TryFrom<&[u8]> for Signature {
+    type Error = Error;
 
-        // Decode `r` and `s` components of the signature concatenated.
-        for chunk in bytes.chunks_mut(SIZE / 2) {
-            let len = decoder.read_byten(chunk)?.len();
+    fn try_from(mut bytes: &[u8]) -> Result<Self> {
+        Self::decode(&mut bytes)
+    }
+}
 
-            if len != SIZE / 2 {
-                return Err(Error::Crypto);
-            }
-        }
-
-        Ok(bytes)
-    })
+impl signature::Signature for Signature {
+    fn from_bytes(bytes: &[u8]) -> signature::Result<Self> {
+        Self::try_from(bytes).map_err(|_| signature::Error::new())
+    }
 }
 
 #[cfg(test)]
-#[allow(const_item_mutation)] // to use `Decode` impl on `&[u8]`
 mod tests {
     use super::Signature;
-    use crate::{decoder::Decode, Algorithm, EcdsaCurve};
+    use crate::{Algorithm, EcdsaCurve, HashAlg};
     use hex_literal::hex;
 
     #[cfg(feature = "alloc")]
@@ -169,32 +159,46 @@ mod tests {
     const DSA_SIGNATURE: &[u8] = &hex!("000000077373682d6473730000002866725bf3c56100e975e21fff28a60f73717534d285ea3e1beefc2891f7189d00bd4d94627e84c55c");
     const ECDSA_SHA2_P256_SIGNATURE: &[u8] = &hex!("0000001365636473612d736861322d6e6973747032353600000048000000201298ab320720a32139cda8a40c97a13dc54ce032ea3c6f09ea9e87501e48fa1d0000002046e4ac697a6424a9870b9ef04ca1182cd741965f989bd1f1f4a26fd83cf70348");
     const ED25519_SIGNATURE: &[u8] = &hex!("0000000b7373682d65643235353139000000403d6b9906b76875aef1e7b2f1e02078a94f439aebb9a4734da1a851a81e22ce0199bbf820387a8de9c834c9c3cc778d9972dcbe70f68d53cc6bc9e26b02b46d04");
+    const RSA_SHA512_SIGNATURE: &[u8] = &hex!("0000000c7273612d736861322d3531320000018085a4ad1a91a62c00c85de7bb511f38088ff2bce763d76f4786febbe55d47624f9e2cffce58a680183b9ad162c7f0191ea26cab001ac5f5055743eced58e9981789305c208fc98d2657954e38eb28c7e7f3fbe92393a14324ed77aebb772a41aa7a107b38cb9bd1d9ad79b275135d1d7e019bb1d56d74f2450be6db0771f48f6707d3fcf9789592ca2e55595acc16b6e8d0139b56c5d1360b3a1e060f4151a3d7841df2c2a8c94d6f8a1bf633165ee0bcadac5642763df0dd79d3235ae5506595145f199d8abe8f9980411bf70a16e30f273736324d047043317044c36374d6a5ed34cac251e01c6795e4578393f9090bf4ae3e74a0009275a197315fc9c62f1c9aec1ba3b2d37c3b207e5500df19e090e7097ebc038fb9c9e35aea9161479ba6b5190f48e89e1abe51e8ec0e120ef89776e129687ca52d1892c8e88e6ef062a7d96b8a87682ca6a42ff1df0cdf5815c3645aeed7267ca7093043db0565e0f109b796bf117b9d2bb6d6debc0c67a4c9fb3aae3e29b00c7bd70f6c11cf53c295ff");
 
     #[test]
     fn decode_dsa() {
-        let signature = Signature::decode(&mut DSA_SIGNATURE).unwrap();
+        let signature = Signature::try_from(DSA_SIGNATURE).unwrap();
         assert_eq!(Algorithm::Dsa, signature.algorithm());
     }
 
     #[test]
     fn decode_ecdsa_sha2_p256() {
-        let signature = Signature::decode(&mut ECDSA_SHA2_P256_SIGNATURE).unwrap();
+        let signature = Signature::try_from(ECDSA_SHA2_P256_SIGNATURE).unwrap();
         assert_eq!(
-            Algorithm::Ecdsa(EcdsaCurve::NistP256),
+            Algorithm::Ecdsa {
+                curve: EcdsaCurve::NistP256
+            },
             signature.algorithm()
         );
     }
 
     #[test]
     fn decode_ed25519() {
-        let signature = Signature::decode(&mut ED25519_SIGNATURE).unwrap();
+        let signature = Signature::try_from(ED25519_SIGNATURE).unwrap();
         assert_eq!(Algorithm::Ed25519, signature.algorithm());
+    }
+
+    #[test]
+    fn decode_rsa() {
+        let signature = Signature::try_from(RSA_SHA512_SIGNATURE).unwrap();
+        assert_eq!(
+            Algorithm::Rsa {
+                hash: Some(HashAlg::Sha512)
+            },
+            signature.algorithm()
+        );
     }
 
     #[test]
     #[cfg(feature = "alloc")]
     fn encode_dsa() {
-        let signature = Signature::decode(&mut DSA_SIGNATURE).unwrap();
+        let signature = Signature::try_from(DSA_SIGNATURE).unwrap();
 
         let mut result = Vec::new();
         signature.encode(&mut result).unwrap();
@@ -204,7 +208,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn encode_ecdsa_sha2_p256() {
-        let signature = Signature::decode(&mut ECDSA_SHA2_P256_SIGNATURE).unwrap();
+        let signature = Signature::try_from(ECDSA_SHA2_P256_SIGNATURE).unwrap();
 
         let mut result = Vec::new();
         signature.encode(&mut result).unwrap();
@@ -214,7 +218,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn encode_ed25519() {
-        let signature = Signature::decode(&mut ED25519_SIGNATURE).unwrap();
+        let signature = Signature::try_from(ED25519_SIGNATURE).unwrap();
 
         let mut result = Vec::new();
         signature.encode(&mut result).unwrap();
