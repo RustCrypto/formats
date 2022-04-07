@@ -1,6 +1,6 @@
 # RustCrypto: Formats [![Project Chat][chat-image]][chat-link] [![dependency status][deps-image]][deps-link]
 
-Cryptography-related format encoders/decoders: PKCS, PKIX.
+Cryptography-related format encoders/decoders (e.g. PKCS, PKIX)
 
 ## Crates
 
