@@ -400,8 +400,8 @@ fn encoding_test(private_key: &str) {
     let key = PrivateKey::from_openssh(private_key).unwrap();
 
     // Ensure key round-trips
-    let ossh_pem = key.to_openssh(LineEnding::LF).unwrap();
-    let key2 = PrivateKey::from_openssh(&*ossh_pem).unwrap();
+    let pem = key.to_openssh(LineEnding::LF).unwrap();
+    let key2 = PrivateKey::from_openssh(&*pem).unwrap();
     assert_eq!(key, key2);
 
     #[cfg(feature = "std")]

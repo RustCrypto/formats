@@ -88,7 +88,7 @@ impl Decode for Signature {
         match Algorithm::decode(decoder)? {
             Algorithm::Dsa => {
                 let mut bytes = [0u8; 40];
-                decoder.decode_length_prefixed(|decoder, _len| decoder.decode_raw(&mut bytes))?;
+                decoder.read_nested(|decoder, _len| decoder.read(&mut bytes))?;
                 Ok(Self::Dsa(bytes))
             }
             Algorithm::Ecdsa(EcdsaCurve::NistP256) => {
@@ -102,7 +102,7 @@ impl Decode for Signature {
             }
             Algorithm::Ed25519 => {
                 let mut bytes = [0u8; 64];
-                decoder.decode_length_prefixed(|decoder, _len| decoder.decode_raw(&mut bytes))?;
+                decoder.read_nested(|decoder, _len| decoder.read(&mut bytes))?;
                 Ok(Self::Ed25519(bytes))
             }
             _ => Err(Error::Algorithm),
@@ -127,12 +127,12 @@ impl Encode for Signature {
         self.algorithm().encode(encoder)?;
 
         if self.is_ecdsa() {
-            encoder.encode_usize([8, self.as_bytes().len()].checked_sum()?)?;
+            [8, self.as_bytes().len()].checked_sum()?.encode(encoder)?;
             let (r, s) = self.as_bytes().split_at(self.as_bytes().len() / 2);
-            encoder.encode_byte_slice(r)?;
-            encoder.encode_byte_slice(s)?;
+            r.encode(encoder)?;
+            s.encode(encoder)?;
         } else {
-            encoder.encode_byte_slice(self.as_bytes())?;
+            self.as_bytes().encode(encoder)?;
         }
 
         Ok(())
@@ -140,12 +140,12 @@ impl Encode for Signature {
 }
 
 fn decode_ecdsa_signature<const SIZE: usize>(decoder: &mut impl Decoder) -> Result<[u8; SIZE]> {
-    decoder.decode_length_prefixed(|decoder, _len| {
+    decoder.read_nested(|decoder, _len| {
         let mut bytes = [0u8; SIZE];
 
         // Decode `r` and `s` components of the signature concatenated.
         for chunk in bytes.chunks_mut(SIZE / 2) {
-            let len = decoder.decode_byte_slice(chunk)?.len();
+            let len = decoder.read_byten(chunk)?.len();
 
             if len != SIZE / 2 {
                 return Err(Error::Crypto);

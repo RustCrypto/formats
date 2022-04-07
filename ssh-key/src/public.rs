@@ -190,7 +190,7 @@ impl PublicKey {
     /// Decode comment (e.g. email address)
     #[cfg(feature = "alloc")]
     pub(crate) fn decode_comment(&mut self, decoder: &mut impl Decoder) -> Result<()> {
-        self.comment = decoder.decode_string()?;
+        self.comment = String::decode(decoder)?;
         Ok(())
     }
 }

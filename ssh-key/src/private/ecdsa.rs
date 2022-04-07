@@ -34,17 +34,17 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
 
     /// Decode ECDSA private key using the provided Base64 decoder.
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        decoder.decode_length_prefixed(|decoder, len| {
+        decoder.read_nested(|decoder, len| {
             if len == SIZE.checked_add(1).ok_or(Error::Length)? {
                 // Strip leading zero
                 // TODO(tarcieri): make sure leading zero was necessary
-                if decoder.decode_u8()? != 0 {
+                if u8::decode(decoder)? != 0 {
                     return Err(Error::FormatEncoding);
                 }
             }
 
             let mut bytes = [0u8; SIZE];
-            decoder.decode_raw(&mut bytes)?;
+            decoder.read(&mut bytes)?;
             Ok(Self { bytes })
         })
     }
@@ -61,13 +61,15 @@ impl<const SIZE: usize> Encode for EcdsaPrivateKey<SIZE> {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_usize([self.needs_leading_zero().into(), SIZE].checked_sum()?)?;
+        [self.needs_leading_zero().into(), SIZE]
+            .checked_sum()?
+            .encode(encoder)?;
 
         if self.needs_leading_zero() {
-            encoder.encode_raw(&[0])?;
+            encoder.write(&[0])?;
         }
 
-        encoder.encode_raw(&self.bytes)
+        encoder.write(&self.bytes)
     }
 }
 

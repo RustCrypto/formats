@@ -90,7 +90,7 @@ impl AsRef<[u8]> for MPInt {
 
 impl Decode for MPInt {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        decoder.decode_byte_vec()?.try_into()
+        Vec::decode(decoder)?.try_into()
     }
 }
 
@@ -100,7 +100,7 @@ impl Encode for MPInt {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_byte_slice(self.as_bytes())
+        self.as_bytes().encode(encoder)
     }
 }
 

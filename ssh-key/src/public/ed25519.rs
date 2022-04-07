@@ -32,7 +32,7 @@ impl AsRef<[u8; Self::BYTE_SIZE]> for Ed25519PublicKey {
 impl Decode for Ed25519PublicKey {
     fn decode(decoder: &mut impl Decoder) -> Result<Self> {
         let mut bytes = [0u8; Self::BYTE_SIZE];
-        decoder.decode_length_prefixed(|decoder, _len| decoder.decode_raw(&mut bytes))?;
+        decoder.read_nested(|decoder, _len| decoder.read(&mut bytes))?;
         Ok(Self(bytes))
     }
 }
@@ -43,7 +43,7 @@ impl Encode for Ed25519PublicKey {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_byte_slice(self.as_ref())
+        self.0.encode(encoder)
     }
 }
 
