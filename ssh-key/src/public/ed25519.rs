@@ -6,12 +6,9 @@ use crate::{
     checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    Result,
+    Error, Result,
 };
 use core::fmt;
-
-#[cfg(feature = "ed25519")]
-use crate::Error;
 
 /// Ed25519 public key.
 // TODO(tarcieri): use `ed25519::PublicKey`? (doesn't exist yet)
@@ -44,6 +41,14 @@ impl Encode for Ed25519PublicKey {
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
         self.0.encode(encoder)
+    }
+}
+
+impl TryFrom<&[u8]> for Ed25519PublicKey {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Ok(Self(bytes.try_into()?))
     }
 }
 

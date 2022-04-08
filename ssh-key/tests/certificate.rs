@@ -10,7 +10,6 @@ use std::str::FromStr;
 use ssh_key::EcdsaCurve;
 
 /// DSA OpenSSH Certificate
-#[cfg(feature = "alloc")]
 const DSA_CERT_EXAMPLE: &str = include_str!("examples/id_dsa_1024-cert.pub");
 
 /// ECDSA/P-256 OpenSSH Certificate
@@ -20,15 +19,35 @@ const ECDSA_P256_CERT_EXAMPLE: &str = include_str!("examples/id_ecdsa_p256-cert.
 /// Ed25519 OpenSSH Certificate
 const ED25519_CERT_EXAMPLE: &str = include_str!("examples/id_ed25519-cert.pub");
 
+/// Ed25519 OpenSSH Certificate with deliberately invalid signature
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+const ED25519_CERT_BADSIG_EXAMPLE: &str = include_str!("examples/id_ed25519-cert-badsig.pub");
+
 /// RSA (4096-bit) OpenSSH Certificate
 const RSA_4096_CERT_EXAMPLE: &str = include_str!("examples/id_rsa_4096-cert.pub");
 
+/// Example certificate authority fingerprint (matches `id_ed25519.pub` example)
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+const CA_FINGERPRINT: &str = "SHA256:UCUiLr7Pjs9wFFJMDByLgc3NrtdU344OgUM45wZPcIQ";
+
+/// Valid certificate timestamp.
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+const VALID_TIMESTAMP: u64 = 1750000000;
+
+/// Timestamp which is before the validity window.
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+const PAST_TIMESTAMP: u64 = 1500000000;
+
+/// Expired certificate timestamp.
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+const EXPIRED_TIMESTAMP: u64 = 2500000000;
+
 #[test]
 fn decode_dsa_openssh() {
-    let key = Certificate::from_str(DSA_CERT_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Dsa, key.public_key().algorithm());
+    let cert = Certificate::from_str(DSA_CERT_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Dsa, cert.public_key().algorithm());
 
-    let dsa_key = key.public_key().dsa().unwrap();
+    let dsa_key = cert.public_key().dsa().unwrap();
     assert_eq!(
         &hex!(
             "00dc3d89250ed9462114cb2c8d4816e3a511aaff1b06b0e01de17c1cb04e581bcab97176471d89fd7ca1817
@@ -58,21 +77,21 @@ fn decode_dsa_openssh() {
         dsa_key.y.as_bytes(),
     );
 
-    assert_eq!("user@example.com", key.comment());
+    assert_eq!("user@example.com", cert.comment());
 }
 
 #[cfg(feature = "ecdsa")]
 #[test]
 fn decode_ecdsa_p256_openssh() {
-    let key = Certificate::from_str(ECDSA_P256_CERT_EXAMPLE).unwrap();
+    let cert = Certificate::from_str(ECDSA_P256_CERT_EXAMPLE).unwrap();
     assert_eq!(
         Algorithm::Ecdsa {
             curve: EcdsaCurve::NistP256
         },
-        key.public_key().algorithm(),
+        cert.public_key().algorithm(),
     );
 
-    let ecdsa_key = key.public_key().ecdsa().unwrap();
+    let ecdsa_key = cert.public_key().ecdsa().unwrap();
     assert_eq!(EcdsaCurve::NistP256, ecdsa_key.curve());
     assert_eq!(
         &hex!(
@@ -82,28 +101,30 @@ fn decode_ecdsa_p256_openssh() {
         ecdsa_key.as_ref(),
     );
 
-    assert_eq!("user@example.com", key.comment());
+    assert_eq!("user@example.com", cert.comment());
 }
 
 #[test]
 fn decode_ed25519_openssh() {
-    let key = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
 
-    assert_eq!(Algorithm::Ed25519, key.public_key().algorithm());
+    assert_eq!(Algorithm::Ed25519, cert.public_key().algorithm());
     assert_eq!(
         &hex!("b33eaef37ea2df7caa010defdea34e241f65f1b529a4f43ed14327f5c54aab62"),
-        key.public_key().ed25519().unwrap().as_ref(),
+        cert.public_key().ed25519().unwrap().as_ref(),
     );
 
-    assert_eq!("user@example.com", key.comment());
+    assert_eq!("user@example.com", cert.comment());
+    assert_eq!(cert.valid_principals().len(), 1);
+    assert_eq!(cert.valid_principals()[0], "host.example.com");
 }
 
 #[test]
 fn decode_rsa_4096_openssh() {
-    let key = Certificate::from_str(RSA_4096_CERT_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Rsa { hash: None }, key.public_key().algorithm());
+    let cert = Certificate::from_str(RSA_4096_CERT_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Rsa { hash: None }, cert.public_key().algorithm());
 
-    let rsa_key = key.public_key().rsa().unwrap();
+    let rsa_key = cert.public_key().rsa().unwrap();
     assert_eq!(&hex!("010001"), rsa_key.e.as_bytes());
     assert_eq!(
         &hex!(
@@ -123,33 +144,100 @@ fn decode_rsa_4096_openssh() {
         rsa_key.n.as_bytes(),
     );
 
-    assert_eq!("user@example.com", key.comment());
+    assert_eq!("user@example.com", cert.comment());
 }
 
 #[test]
 fn encode_dsa_openssh() {
-    let key = Certificate::from_str(DSA_CERT_EXAMPLE).unwrap();
-    assert_eq!(DSA_CERT_EXAMPLE.trim_end(), &key.to_string().unwrap());
+    let cert = Certificate::from_str(DSA_CERT_EXAMPLE).unwrap();
+    assert_eq!(DSA_CERT_EXAMPLE.trim_end(), &cert.to_string().unwrap());
 }
 
 #[cfg(feature = "ecdsa")]
 #[test]
 fn encode_ecdsa_p256_openssh() {
-    let key = Certificate::from_str(ECDSA_P256_CERT_EXAMPLE).unwrap();
+    let cert = Certificate::from_str(ECDSA_P256_CERT_EXAMPLE).unwrap();
     assert_eq!(
         ECDSA_P256_CERT_EXAMPLE.trim_end(),
-        &key.to_string().unwrap()
+        &cert.to_string().unwrap()
     );
 }
 
 #[test]
 fn encode_ed25519_openssh() {
-    let key = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
-    assert_eq!(ED25519_CERT_EXAMPLE.trim_end(), &key.to_string().unwrap());
+    let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    assert_eq!(ED25519_CERT_EXAMPLE.trim_end(), &cert.to_string().unwrap());
 }
 
 #[test]
 fn encode_rsa_4096_openssh() {
-    let key = Certificate::from_str(RSA_4096_CERT_EXAMPLE).unwrap();
-    assert_eq!(RSA_4096_CERT_EXAMPLE.trim_end(), &key.to_string().unwrap());
+    let cert = Certificate::from_str(RSA_4096_CERT_EXAMPLE).unwrap();
+    assert_eq!(RSA_4096_CERT_EXAMPLE.trim_end(), &cert.to_string().unwrap());
+}
+
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+#[test]
+fn verify_ed25519_certificate_signature() {
+    let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    assert!(cert.verify_signature().is_ok());
+}
+
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+#[test]
+fn reject_ed25519_certificate_with_invalid_signature() {
+    let cert = Certificate::from_str(ED25519_CERT_BADSIG_EXAMPLE).unwrap();
+    assert!(cert.verify_signature().is_err());
+}
+
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+#[test]
+fn validate_certificate() {
+    let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    let ca = CA_FINGERPRINT.parse().unwrap();
+    assert!(cert.validate_at(VALID_TIMESTAMP, &[ca]).is_ok());
+}
+
+#[cfg(all(feature = "ed25519", feature = "fingerprint", feature = "std"))]
+#[test]
+fn validate_certificate_against_system_clock() {
+    let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    let ca = CA_FINGERPRINT.parse().unwrap();
+    assert!(cert.validate(&[ca]).is_ok());
+}
+
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+#[test]
+fn reject_certificate_with_invalid_signature() {
+    let cert = Certificate::from_str(ED25519_CERT_BADSIG_EXAMPLE).unwrap();
+    let ca = CA_FINGERPRINT.parse().unwrap();
+    assert!(cert.validate_at(VALID_TIMESTAMP, &[ca]).is_err());
+}
+
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+#[test]
+fn reject_certificate_with_untrusted_ca() {
+    let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    let ca = Certificate::from_str(DSA_CERT_EXAMPLE)
+        .unwrap()
+        .public_key()
+        .fingerprint(Default::default())
+        .unwrap();
+
+    assert!(cert.validate_at(VALID_TIMESTAMP, &[ca]).is_err());
+}
+
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+#[test]
+fn reject_expired_certificate() {
+    let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    let ca = CA_FINGERPRINT.parse().unwrap();
+    assert!(cert.validate_at(EXPIRED_TIMESTAMP, &[ca]).is_err());
+}
+
+#[cfg(all(feature = "ed25519", feature = "fingerprint"))]
+#[test]
+fn reject_certificate_with_future_valid_after() {
+    let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    let ca = CA_FINGERPRINT.parse().unwrap();
+    assert!(cert.validate_at(PAST_TIMESTAMP, &[ca]).is_err())
 }

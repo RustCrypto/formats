@@ -1,6 +1,6 @@
 //! SSH public key fingerprints.
 
-use crate::{encoder::Encode, Error, HashAlg, PublicKey, Result};
+use crate::{encoder::Encode, public, Error, HashAlg, Result};
 use base64ct::{Base64Unpadded, Encoding};
 use core::{fmt, str};
 use sha2::{Digest, Sha256};
@@ -111,20 +111,20 @@ impl Sha256Fingerprint {
     }
 }
 
-impl TryFrom<PublicKey> for Sha256Fingerprint {
+impl TryFrom<public::KeyData> for Sha256Fingerprint {
     type Error = Error;
 
-    fn try_from(public_key: PublicKey) -> Result<Sha256Fingerprint> {
+    fn try_from(public_key: public::KeyData) -> Result<Sha256Fingerprint> {
         Sha256Fingerprint::try_from(&public_key)
     }
 }
 
-impl TryFrom<&PublicKey> for Sha256Fingerprint {
+impl TryFrom<&public::KeyData> for Sha256Fingerprint {
     type Error = Error;
 
-    fn try_from(public_key: &PublicKey) -> Result<Sha256Fingerprint> {
+    fn try_from(public_key: &public::KeyData) -> Result<Sha256Fingerprint> {
         let mut digest = Sha256::new();
-        public_key.key_data().encode(&mut digest)?;
+        public_key.encode(&mut digest)?;
         Ok(Self::new(&digest.finalize().into()))
     }
 }

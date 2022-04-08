@@ -4,9 +4,17 @@ use crate::{
     checked::CheckedSum,
     decoder::{Decode, Decoder},
     encoder::{Encode, Encoder},
-    Algorithm, EcdsaCurve, Error, Result,
+    public, Algorithm, EcdsaCurve, Error, Result,
 };
 use alloc::vec::Vec;
+use core::fmt;
+use signature::Verifier;
+
+#[cfg(feature = "ed25519")]
+use {
+    crate::{private::Ed25519Keypair, public::Ed25519PublicKey},
+    signature::Signer,
+};
 
 const DSA_SIGNATURE_SIZE: usize = 40;
 const ECDSA_NISTP256_SIGNATURE_SIZE: usize = 72;
@@ -33,7 +41,7 @@ const ED25519_SIGNATURE_SIZE: usize = 64;
 /// [RFC5656]: https://datatracker.ietf.org/doc/html/rfc5656
 /// [RFC8032]: https://datatracker.ietf.org/doc/html/rfc8032
 /// [RFC8332]: https://datatracker.ietf.org/doc/html/rfc8332
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub struct Signature {
     /// Signature algorithm.
@@ -132,6 +140,12 @@ impl Encode for Signature {
     }
 }
 
+impl signature::Signature for Signature {
+    fn from_bytes(bytes: &[u8]) -> signature::Result<Self> {
+        Self::try_from(bytes).map_err(|_| signature::Error::new())
+    }
+}
+
 /// Decode [`Signature`] from an [`Algorithm`]-prefixed OpenSSH-encoded bytestring.
 impl TryFrom<&[u8]> for Signature {
     type Error = Error;
@@ -141,25 +155,111 @@ impl TryFrom<&[u8]> for Signature {
     }
 }
 
-impl signature::Signature for Signature {
-    fn from_bytes(bytes: &[u8]) -> signature::Result<Self> {
-        Self::try_from(bytes).map_err(|_| signature::Error::new())
+impl Verifier<Signature> for public::KeyData {
+    #[allow(unused_variables)]
+    fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
+        match self {
+            #[cfg(feature = "ed25519")]
+            Self::Ed25519(pk) => pk.verify(message, signature),
+            _ => Err(signature::Error::new()),
+        }
+    }
+}
+
+impl fmt::Debug for Signature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Signature {{ algorithm: {:?}, data: \"{:X}\" }}",
+            self.algorithm, self
+        )
+    }
+}
+
+impl fmt::LowerHex for Signature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for byte in self.as_ref() {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
+    }
+}
+
+impl fmt::UpperHex for Signature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for byte in self.as_ref() {
+            write!(f, "{:02X}", byte)?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl TryFrom<Signature> for ed25519_dalek::Signature {
+    type Error = Error;
+
+    fn try_from(signature: Signature) -> Result<ed25519_dalek::Signature> {
+        ed25519_dalek::Signature::try_from(&signature)
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl TryFrom<&Signature> for ed25519_dalek::Signature {
+    type Error = Error;
+
+    fn try_from(signature: &Signature) -> Result<ed25519_dalek::Signature> {
+        match signature.algorithm {
+            Algorithm::Ed25519 => Ok(ed25519_dalek::Signature::try_from(signature.as_bytes())?),
+            _ => Err(Error::Algorithm),
+        }
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl Signer<Signature> for Ed25519Keypair {
+    fn try_sign(&self, message: &[u8]) -> signature::Result<Signature> {
+        let signature = ed25519_dalek::Keypair::try_from(self)?.sign(message);
+
+        Ok(Signature {
+            algorithm: Algorithm::Ed25519,
+            data: signature.as_ref().to_vec(),
+        })
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl Verifier<Signature> for Ed25519PublicKey {
+    fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
+        let signature = ed25519_dalek::Signature::try_from(signature)?;
+        ed25519_dalek::PublicKey::try_from(self)?.verify(message, &signature)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Signature;
-    use crate::{Algorithm, EcdsaCurve, HashAlg};
+    use crate::{encoder::Encode, Algorithm, EcdsaCurve, HashAlg};
+    use alloc::vec::Vec;
     use hex_literal::hex;
 
-    #[cfg(feature = "alloc")]
-    use {crate::encoder::Encode, alloc::vec::Vec};
+    #[cfg(feature = "ed25519")]
+    use {
+        super::Ed25519Keypair,
+        signature::{Signer, Verifier},
+    };
 
     const DSA_SIGNATURE: &[u8] = &hex!("000000077373682d6473730000002866725bf3c56100e975e21fff28a60f73717534d285ea3e1beefc2891f7189d00bd4d94627e84c55c");
     const ECDSA_SHA2_P256_SIGNATURE: &[u8] = &hex!("0000001365636473612d736861322d6e6973747032353600000048000000201298ab320720a32139cda8a40c97a13dc54ce032ea3c6f09ea9e87501e48fa1d0000002046e4ac697a6424a9870b9ef04ca1182cd741965f989bd1f1f4a26fd83cf70348");
     const ED25519_SIGNATURE: &[u8] = &hex!("0000000b7373682d65643235353139000000403d6b9906b76875aef1e7b2f1e02078a94f439aebb9a4734da1a851a81e22ce0199bbf820387a8de9c834c9c3cc778d9972dcbe70f68d53cc6bc9e26b02b46d04");
     const RSA_SHA512_SIGNATURE: &[u8] = &hex!("0000000c7273612d736861322d3531320000018085a4ad1a91a62c00c85de7bb511f38088ff2bce763d76f4786febbe55d47624f9e2cffce58a680183b9ad162c7f0191ea26cab001ac5f5055743eced58e9981789305c208fc98d2657954e38eb28c7e7f3fbe92393a14324ed77aebb772a41aa7a107b38cb9bd1d9ad79b275135d1d7e019bb1d56d74f2450be6db0771f48f6707d3fcf9789592ca2e55595acc16b6e8d0139b56c5d1360b3a1e060f4151a3d7841df2c2a8c94d6f8a1bf633165ee0bcadac5642763df0dd79d3235ae5506595145f199d8abe8f9980411bf70a16e30f273736324d047043317044c36374d6a5ed34cac251e01c6795e4578393f9090bf4ae3e74a0009275a197315fc9c62f1c9aec1ba3b2d37c3b207e5500df19e090e7097ebc038fb9c9e35aea9161479ba6b5190f48e89e1abe51e8ec0e120ef89776e129687ca52d1892c8e88e6ef062a7d96b8a87682ca6a42ff1df0cdf5815c3645aeed7267ca7093043db0565e0f109b796bf117b9d2bb6d6debc0c67a4c9fb3aae3e29b00c7bd70f6c11cf53c295ff");
+
+    /// Example test vector for signing.
+    #[cfg(feature = "ed25519")]
+    const EXAMPLE_MSG: &[u8] = b"Hello, world!";
 
     #[test]
     fn decode_dsa() {
@@ -196,7 +296,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "alloc")]
     fn encode_dsa() {
         let signature = Signature::try_from(DSA_SIGNATURE).unwrap();
 
@@ -206,7 +305,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "alloc")]
     fn encode_ecdsa_sha2_p256() {
         let signature = Signature::try_from(ECDSA_SHA2_P256_SIGNATURE).unwrap();
 
@@ -216,12 +314,19 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "alloc")]
     fn encode_ed25519() {
         let signature = Signature::try_from(ED25519_SIGNATURE).unwrap();
 
         let mut result = Vec::new();
         signature.encode(&mut result).unwrap();
         assert_eq!(ED25519_SIGNATURE, &result);
+    }
+
+    #[cfg(feature = "ed25519")]
+    #[test]
+    fn sign_and_verify_ed25519() {
+        let keypair = Ed25519Keypair::from_seed(&[42; 32]);
+        let signature = keypair.sign(EXAMPLE_MSG);
+        assert!(keypair.public.verify(EXAMPLE_MSG, &signature).is_ok());
     }
 }

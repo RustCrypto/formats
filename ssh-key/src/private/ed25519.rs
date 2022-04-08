@@ -27,11 +27,6 @@ impl Ed25519PrivateKey {
     /// Size of an Ed25519 private key in bytes.
     pub const BYTE_SIZE: usize = 32;
 
-    /// Convert to the inner byte array.
-    pub fn into_bytes(self) -> [u8; Self::BYTE_SIZE] {
-        self.0
-    }
-
     /// Generate a random Ed25519 private key.
     #[cfg(feature = "rand_core")]
     #[cfg_attr(docsrs, doc(cfg(feature = "rand_core")))]
@@ -39,6 +34,16 @@ impl Ed25519PrivateKey {
         let mut key_bytes = [0u8; Self::BYTE_SIZE];
         rng.fill_bytes(&mut key_bytes);
         Self(key_bytes)
+    }
+
+    /// Parse Ed25519 private key from bytes.
+    pub fn from_bytes(bytes: &[u8; Self::BYTE_SIZE]) -> Self {
+        Self(*bytes)
+    }
+
+    /// Convert to the inner byte array.
+    pub fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
+        self.0
     }
 }
 
@@ -51,6 +56,14 @@ impl AsRef<[u8; Self::BYTE_SIZE]> for Ed25519PrivateKey {
 impl Drop for Ed25519PrivateKey {
     fn drop(&mut self) {
         self.0.zeroize();
+    }
+}
+
+impl TryFrom<&[u8]> for Ed25519PrivateKey {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Ok(Ed25519PrivateKey::from_bytes(bytes.try_into()?))
     }
 }
 
@@ -110,6 +123,23 @@ impl From<&ed25519_dalek::SecretKey> for Ed25519PrivateKey {
     }
 }
 
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<Ed25519PrivateKey> for Ed25519PublicKey {
+    fn from(private: Ed25519PrivateKey) -> Ed25519PublicKey {
+        Ed25519PublicKey::from(&private)
+    }
+}
+
+#[cfg(feature = "ed25519")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+impl From<&Ed25519PrivateKey> for Ed25519PublicKey {
+    fn from(private: &Ed25519PrivateKey) -> Ed25519PublicKey {
+        let secret = ed25519_dalek::SecretKey::from(private);
+        ed25519_dalek::PublicKey::from(&secret).into()
+    }
+}
+
 #[cfg(feature = "subtle")]
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl ConstantTimeEq for Ed25519PrivateKey {
@@ -151,6 +181,29 @@ impl Ed25519Keypair {
         Ed25519PrivateKey::random(rng).into()
     }
 
+    /// Expand a keypair from a 32-byte seed value.
+    #[cfg(feature = "ed25519")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
+    pub fn from_seed(seed: &[u8; Ed25519PrivateKey::BYTE_SIZE]) -> Self {
+        Ed25519PrivateKey::from_bytes(seed).into()
+    }
+
+    /// Parse Ed25519 keypair from 64-bytes which comprise the serialized
+    /// private and public keys.
+    pub fn from_bytes(bytes: &[u8; Self::BYTE_SIZE]) -> Result<Self> {
+        let (priv_bytes, pub_bytes) = bytes.split_at(Ed25519PrivateKey::BYTE_SIZE);
+        let private = Ed25519PrivateKey::try_from(priv_bytes)?;
+        let public = Ed25519PublicKey::try_from(pub_bytes)?;
+
+        // Validate the public key if possible
+        #[cfg(feature = "ed25519")]
+        if Ed25519PublicKey::from(&private) != public {
+            return Err(Error::Crypto);
+        }
+
+        Ok(Ed25519Keypair { private, public })
+    }
+
     /// Serialize an Ed25519 keypair as bytes.
     pub fn to_bytes(&self) -> [u8; Self::BYTE_SIZE] {
         let mut result = [0u8; Self::BYTE_SIZE];
@@ -171,15 +224,14 @@ impl Decode for Ed25519Keypair {
         let mut bytes = Zeroizing::new([0u8; Self::BYTE_SIZE]);
         decoder.read_nested(|decoder, _len| decoder.read(&mut *bytes))?;
 
-        let (priv_bytes, pub_bytes) = bytes.split_at(Ed25519PrivateKey::BYTE_SIZE);
-        let private = Ed25519PrivateKey(priv_bytes.try_into()?);
+        let keypair = Self::from_bytes(&*bytes)?;
 
         // Ensure public key matches the one one the keypair
-        if pub_bytes != public.as_ref() {
-            return Err(Error::Crypto);
+        if keypair.public == public {
+            Ok(keypair)
+        } else {
+            Err(Error::Crypto)
         }
-
-        Ok(Self { public, private })
     }
 }
 
@@ -203,6 +255,14 @@ impl From<Ed25519Keypair> for Ed25519PublicKey {
 impl From<&Ed25519Keypair> for Ed25519PublicKey {
     fn from(keypair: &Ed25519Keypair) -> Ed25519PublicKey {
         keypair.public
+    }
+}
+
+impl TryFrom<&[u8]> for Ed25519Keypair {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Ed25519Keypair::from_bytes(bytes.try_into()?)
     }
 }
 

@@ -10,6 +10,12 @@ use crate::{
 use alloc::{borrow::ToOwned, string::String, vec::Vec};
 use core::{cmp::Ordering, str::FromStr};
 
+#[cfg(feature = "fingerprint")]
+use {
+    crate::{Fingerprint, HashAlg},
+    signature::Verifier,
+};
+
 #[cfg(feature = "std")]
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -20,6 +26,13 @@ pub type OptionsMap = alloc::collections::BTreeMap<String, String>;
 ///
 /// OpenSSH supports X.509-like certificate authorities, but using a custom
 /// encoding format.
+///
+/// # ⚠️ Security Warning
+///
+/// Certificates must be validated before they can be trusted!
+///
+/// See documentation for [`Certificate::validate`] and
+/// [`Certificate::validate_at`] methods for more information.
 ///
 /// [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -180,12 +193,6 @@ impl Certificate {
         &self.extensions
     }
 
-    /// The reserved field is currently unused and is ignored in this version
-    /// of the protocol.
-    pub fn reserved(&self) -> &[u8] {
-        &self.reserved
-    }
-
     /// Signature key of signing CA.
     pub fn signature_key(&self) -> &KeyData {
         &self.signature_key
@@ -217,6 +224,126 @@ impl Certificate {
         .len();
         out.truncate(actual_len);
         Ok(String::from_utf8(out)?)
+    }
+
+    /// Perform certificate validation using the system clock to check that
+    /// the current time is within the certificate's validity window.
+    ///
+    /// # ⚠️ Security Warning: Some Assembly Required
+    ///
+    /// See [`Certificate::validate_at`] documentation for important notes on
+    /// how to properly validate certificates!
+    #[cfg(all(feature = "fingerprint", feature = "std"))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "fingerprint", feature = "std"))))]
+    pub fn validate<'a, I>(&self, ca_fingerprints: I) -> Result<()>
+    where
+        I: IntoIterator<Item = &'a Fingerprint>,
+    {
+        let unix_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|_| Error::CertificateValidation)?
+            .as_secs();
+
+        self.validate_at(unix_time, ca_fingerprints)
+    }
+
+    /// Perform certificate validation.
+    ///
+    /// Checks for the following:
+    ///
+    /// - Specified Unix timestamp is within the certificate's valid range
+    /// - Certificate's signature validates against the public key included in
+    ///   the certificate
+    /// - Fingerprint of the public key included in the certificate matches one
+    ///   of the trusted certificate authority (CA) fingerprints provided in
+    ///   the `ca_fingerprints` parameter.
+    ///
+    /// NOTE: only SHA-256 fingerprints are supported at this time.
+    ///
+    /// # ⚠️ Security Warning: Some Assembly Required
+    ///
+    /// This method does not perform the full set of validation checks needed
+    /// to determine if a certificate is to be trusted.
+    ///
+    /// If this method succeeds, the following properties still need to be
+    /// checked to ensure the certificate is valid:
+    ///
+    /// - `valid_principals` is empty or contains the expected principal
+    /// - `critical_options` is empty or contains *only* options which are
+    ///   recognized, and that the recognized options are all valid
+    ///
+    /// ## Returns
+    /// - `Ok` if the certificate validated successfully
+    /// - `Error::CertificateValidation` if the certificate failed to validate
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+    pub fn validate_at<'a, I>(&self, unix_timestamp: u64, ca_fingerprints: I) -> Result<()>
+    where
+        I: IntoIterator<Item = &'a Fingerprint>,
+    {
+        self.verify_signature()?;
+
+        // TODO(tarcieri): support non SHA-256 public key fingerprints?
+        let cert_fingerprint = self.signature_key.fingerprint(HashAlg::Sha256)?;
+
+        if !ca_fingerprints.into_iter().any(|f| f == &cert_fingerprint) {
+            return Err(Error::CertificateValidation);
+        }
+
+        // From PROTOCOL.certkeys:
+        //
+        //  "valid after" and "valid before" specify a validity period for the
+        //  certificate. Each represents a time in seconds since 1970-01-01
+        //  A certificate is considered valid if:
+        //
+        //     valid after <= current time < valid before
+        if self.valid_after <= unix_timestamp && unix_timestamp < self.valid_before {
+            Ok(())
+        } else {
+            Err(Error::CertificateValidation)
+        }
+    }
+
+    /// Verify the signature on the certificate against the public key in the
+    /// certificate.
+    ///
+    /// # ⚠️ Security Warning
+    ///
+    /// DON'T USE THIS!
+    ///
+    /// This function alone does not provide any security guarantees whatsoever.
+    ///
+    /// It verifies the signature in the certificate matches the CA public key
+    /// in the certificate, but does not ensure the CA is trusted.
+    ///
+    /// It is public only for testing purposes, and deliberately hidden from
+    /// the documentation for that reason.
+    #[cfg(feature = "fingerprint")]
+    #[doc(hidden)]
+    pub fn verify_signature(&self) -> Result<()> {
+        let mut tbs_certificate = Vec::new();
+        self.encode_tbs(&mut tbs_certificate)?;
+        self.public_key
+            .verify(&tbs_certificate, &self.signature)
+            .map_err(|_| Error::CertificateValidation)
+    }
+
+    /// Encode the portion of the certificate "to be signed" by the CA
+    /// (or to be verified against an existing CA signature)
+    fn encode_tbs(&self, encoder: &mut impl Encoder) -> Result<()> {
+        self.algorithm.as_certificate_str().encode(encoder)?;
+        self.nonce.encode(encoder)?;
+        self.public_key.encode_key_data(encoder)?;
+        self.serial.encode(encoder)?;
+        self.cert_type.encode(encoder)?;
+        self.key_id.encode(encoder)?;
+        self.valid_principals.encode(encoder)?;
+        self.valid_after.encode(encoder)?;
+        self.valid_before.encode(encoder)?;
+        self.critical_options.encode(encoder)?;
+        self.extensions.encode(encoder)?;
+        self.reserved.encode(encoder)?;
+        self.signature_key.encode_nested(encoder)
     }
 }
 
@@ -273,19 +400,7 @@ impl Encode for Certificate {
     }
 
     fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.algorithm.as_certificate_str().encode(encoder)?;
-        self.nonce.encode(encoder)?;
-        self.public_key.encode_key_data(encoder)?;
-        self.serial.encode(encoder)?;
-        self.cert_type.encode(encoder)?;
-        self.key_id.encode(encoder)?;
-        self.valid_principals.encode(encoder)?;
-        self.valid_after.encode(encoder)?;
-        self.valid_before.encode(encoder)?;
-        self.critical_options.encode(encoder)?;
-        self.extensions.encode(encoder)?;
-        self.reserved.encode(encoder)?;
-        self.signature_key.encode_nested(encoder)?;
+        self.encode_tbs(encoder)?;
         self.signature.encode_nested(encoder)
     }
 }
