@@ -113,6 +113,15 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! ## `serde` support
+//!
+//! When the `serde` feature of this crate is enabled, the [`Certificate`] and
+//! [`PublicKey`] types receive impls of `serde`'s `Deserialize` and
+//! `Serialize` traits.
+//!
+//! Serializing/deserializing [`PrivateKey`] using `serde` is presently
+//! unsupported.
 
 #[cfg(feature = "alloc")]
 #[macro_use]

@@ -440,7 +440,8 @@ fn encoding_integration_test(private_key: PrivateKey) {
     {
         Ok(output) => {
             assert_eq!(output.status.code().unwrap(), 0);
-            PublicKey::from_openssh(&output.stdout).unwrap()
+            let ssh_keygen_output = std::str::from_utf8(&output.stdout).unwrap();
+            PublicKey::from_openssh(ssh_keygen_output).unwrap()
         }
         Err(err) => {
             if err.kind() == io::ErrorKind::NotFound {

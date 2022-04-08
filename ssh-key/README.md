@@ -27,7 +27,8 @@ specification, certificates as specified in [PROTOCOL.certkeys]  and the
 - [x] Fingerprint support (SHA-256 only)
 - [x] `no_std` support including support for "heapless" (no-`alloc`) targets
 - [x] Parsing `authorized_keys` files
-- [x] Built-in zeroize support for private keys
+- [x] Serde support (certificates and public keys only)
+- [x] Zeroize support for private keys
 
 #### TODO
 

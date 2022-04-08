@@ -9,7 +9,11 @@ use crate::{
     writer::{base64_len, Writer},
     Algorithm, Error, Result, Signature,
 };
-use alloc::{borrow::ToOwned, string::String, vec::Vec};
+use alloc::{
+    borrow::ToOwned,
+    string::{String, ToString},
+    vec::Vec,
+};
 use core::{cmp::Ordering, str::FromStr};
 
 #[cfg(feature = "fingerprint")]
@@ -17,6 +21,9 @@ use {
     crate::{Fingerprint, HashAlg},
     signature::Verifier,
 };
+
+#[cfg(feature = "serde")]
+use serde::{de, ser, Deserialize, Serialize};
 
 #[cfg(feature = "std")]
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -87,6 +94,73 @@ pub struct Certificate {
 }
 
 impl Certificate {
+    /// Parse an OpenSSH-formatted certificate.
+    ///
+    /// OpenSSH-formatted certificates look like the following
+    /// (i.e. similar to OpenSSH public keys with `-cert-v01@openssh.com`):
+    ///
+    /// ```text
+    /// ssh-ed25519-cert-v01@openssh.com AAAAIHNzaC1lZDI1NTE5LWNlc...8REbCaAw== user@example.com
+    /// ```
+    pub fn from_openssh(certificate_str: &str) -> Result<Self> {
+        let encapsulation = Encapsulation::decode(certificate_str.trim_end().as_bytes())?;
+        let mut reader = Base64Reader::new(encapsulation.base64_data)?;
+        let mut cert = Certificate::decode(&mut reader)?;
+
+        if !reader.is_finished() {
+            return Err(Error::Length);
+        }
+
+        // Verify that the algorithm in the Base64-encoded data matches the text
+        if encapsulation.algorithm_id != cert.algorithm().as_certificate_str() {
+            return Err(Error::Algorithm);
+        }
+
+        cert.comment = encapsulation.comment.to_owned();
+        Ok(cert)
+    }
+
+    /// Parse a raw binary OpenSSH certificate.
+    pub fn from_bytes(mut bytes: &[u8]) -> Result<Self> {
+        let reader = &mut bytes;
+        let cert = Certificate::decode(reader)?;
+
+        if reader.is_finished() {
+            Ok(cert)
+        } else {
+            Err(Error::Length)
+        }
+    }
+
+    /// Encode OpenSSH certificate to a [`String`].
+    pub fn to_openssh(&self) -> Result<String> {
+        let encoded_len = [
+            2, // interstitial spaces
+            self.algorithm().as_certificate_str().len(),
+            base64_len(self.encoded_len()?),
+            self.comment.len(),
+        ]
+        .checked_sum()?;
+
+        let mut out = vec![0u8; encoded_len];
+        let actual_len = Encapsulation::encode(
+            &mut out,
+            self.algorithm().as_certificate_str(),
+            self.comment(),
+            |writer| self.encode(writer),
+        )?
+        .len();
+        out.truncate(actual_len);
+        Ok(String::from_utf8(out)?)
+    }
+
+    /// Serialize OpenSSH certificate as raw bytes.
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        let mut ret = Vec::new();
+        self.encode(&mut ret)?;
+        Ok(ret)
+    }
+
     /// Get the public key algorithm for this certificate.
     pub fn algorithm(&self) -> Algorithm {
         self.algorithm
@@ -204,28 +278,6 @@ impl Certificate {
     /// to, and including the signature key.
     pub fn signature(&self) -> &Signature {
         &self.signature
-    }
-
-    /// Encode OpenSSH certificate to a [`String`].
-    pub fn to_string(&self) -> Result<String> {
-        let encoded_len = [
-            2, // interstitial spaces
-            self.algorithm().as_certificate_str().len(),
-            base64_len(self.encoded_len()?),
-            self.comment.len(),
-        ]
-        .checked_sum()?;
-
-        let mut out = vec![0u8; encoded_len];
-        let actual_len = Encapsulation::encode(
-            &mut out,
-            self.algorithm().as_certificate_str(),
-            self.comment(),
-            |writer| self.encode(writer),
-        )?
-        .len();
-        out.truncate(actual_len);
-        Ok(String::from_utf8(out)?)
     }
 
     /// Perform certificate validation using the system clock to check that
@@ -411,21 +463,49 @@ impl FromStr for Certificate {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let encapsulation = Encapsulation::decode(s.trim_end().as_bytes())?;
-        let mut reader = Base64Reader::new(encapsulation.base64_data)?;
-        let mut certificate = Certificate::decode(&mut reader)?;
+        Self::from_openssh(s)
+    }
+}
 
-        if !reader.is_finished() {
-            return Err(Error::Length);
+impl ToString for Certificate {
+    fn to_string(&self) -> String {
+        self.to_openssh().expect("SSH certificate encoding error")
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl<'de> Deserialize<'de> for Certificate {
+    fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        if deserializer.is_human_readable() {
+            let string = String::deserialize(deserializer)?;
+            Self::from_openssh(&string).map_err(de::Error::custom)
+        } else {
+            let bytes = Vec::<u8>::deserialize(deserializer)?;
+            Self::from_bytes(&bytes).map_err(de::Error::custom)
         }
+    }
+}
 
-        // Verify that the algorithm in the Base64-encoded data matches the text
-        if encapsulation.algorithm_id != certificate.algorithm().as_certificate_str() {
-            return Err(Error::Algorithm);
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl Serialize for Certificate {
+    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        if serializer.is_human_readable() {
+            self.to_openssh()
+                .map_err(ser::Error::custom)?
+                .serialize(serializer)
+        } else {
+            self.to_bytes()
+                .map_err(ser::Error::custom)?
+                .serialize(serializer)
         }
-
-        certificate.comment = encapsulation.comment.to_owned();
-        Ok(certificate)
     }
 }
 

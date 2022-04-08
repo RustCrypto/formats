@@ -1166,6 +1166,7 @@ dependencies = [
  "pem-rfc7468",
  "rand_core 0.6.3",
  "sec1",
+ "serde",
  "sha2 0.10.2",
  "signature",
  "subtle",
