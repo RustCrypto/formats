@@ -16,6 +16,9 @@ pub enum Error {
     /// Base64-related errors.
     Base64(base64ct::Error),
 
+    /// Certificate validation failed.
+    CertificateValidation,
+
     /// Character encoding-related errors.
     CharacterEncoding,
 
@@ -59,6 +62,7 @@ impl fmt::Display for Error {
         match self {
             Error::Algorithm => f.write_str("unknown or unsupported algorithm"),
             Error::Base64(err) => write!(f, "Base64 encoding error: {}", err),
+            Error::CertificateValidation => f.write_str("certificate validation failed"),
             Error::CharacterEncoding => f.write_str("character encoding invalid"),
             Error::Crypto => f.write_str("cryptographic error"),
             Error::Decrypted => f.write_str("private key is already decrypted"),
@@ -128,6 +132,22 @@ impl From<alloc::string::FromUtf8Error> for Error {
 impl From<sec1::Error> for Error {
     fn from(err: sec1::Error) -> Error {
         Error::Ecdsa(err)
+    }
+}
+
+#[cfg(feature = "signature")]
+#[cfg_attr(docsrs, doc(cfg(feature = "signature")))]
+impl From<signature::Error> for Error {
+    fn from(_: signature::Error) -> Error {
+        Error::Crypto
+    }
+}
+
+#[cfg(feature = "signature")]
+#[cfg_attr(docsrs, doc(cfg(feature = "signature")))]
+impl From<Error> for signature::Error {
+    fn from(_: Error) -> signature::Error {
+        signature::Error::new()
     }
 }
 

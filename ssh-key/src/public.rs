@@ -165,10 +165,7 @@ impl PublicKey {
     #[cfg(feature = "fingerprint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
     pub fn fingerprint(&self, hash_alg: HashAlg) -> Result<Fingerprint> {
-        match hash_alg {
-            HashAlg::Sha256 => Sha256Fingerprint::try_from(self).map(Into::into),
-            _ => Err(Error::Algorithm),
-        }
+        self.key_data.fingerprint(hash_alg)
     }
 
     /// Set the comment on the key.
@@ -283,6 +280,18 @@ impl KeyData {
             Self::Ed25519(key) => Some(key),
             #[allow(unreachable_patterns)]
             _ => None,
+        }
+    }
+
+    /// Compute key fingerprint.
+    ///
+    /// Use [`Default::default()`] to use the default hash function (SHA-256).
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Result<Fingerprint> {
+        match hash_alg {
+            HashAlg::Sha256 => Sha256Fingerprint::try_from(self).map(Into::into),
+            _ => Err(Error::Algorithm),
         }
     }
 
