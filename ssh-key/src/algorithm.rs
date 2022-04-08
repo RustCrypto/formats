@@ -1,9 +1,6 @@
 //! Algorithm support.
 
-use crate::{
-    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Error,
-    Result,
-};
+use crate::{decode::Decode, encode::Encode, reader::Reader, writer::Writer, Error, Result};
 use core::{fmt, str};
 
 /// bcrypt-pbkdf
@@ -32,9 +29,6 @@ const CERT_SK_ECDSA_SHA2_P256: &str = "sk-ecdsa-sha2-nistp256-cert-v01@openssh.c
 
 /// OpenSSH certificate for Ed25519 U2F/FIDO security key
 const CERT_SK_SSH_ED25519: &str = "sk-ssh-ed25519-cert-v01@openssh.com";
-
-/// OpenSSH certificate algorithm suffix
-const CERT_SUFFIX: &str = "-cert-v01@openssh.com";
 
 /// ECDSA with SHA-256 + NIST P-256
 const ECDSA_SHA2_P256: &str = "ecdsa-sha2-nistp256";
@@ -95,7 +89,7 @@ impl<T: AlgString> Decode for T {
 
 impl<T: AlgString> Encode for T {
     fn encoded_len(&self) -> Result<usize> {
-        [4, self.as_ref().len()].checked_sum()
+        self.as_ref().encoded_len()
     }
 
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
@@ -197,9 +191,22 @@ impl Algorithm {
     ///
     /// [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
     pub fn new_certificate(id: &str) -> Result<Self> {
-        match id.strip_suffix(CERT_SUFFIX) {
-            Some(id) => Self::new(id),
-            None => Err(Error::Algorithm),
+        match id {
+            CERT_DSA => Ok(Algorithm::Dsa),
+            CERT_ECDSA_SHA2_P256 => Ok(Algorithm::Ecdsa {
+                curve: EcdsaCurve::NistP256,
+            }),
+            CERT_ECDSA_SHA2_P384 => Ok(Algorithm::Ecdsa {
+                curve: EcdsaCurve::NistP384,
+            }),
+            CERT_ECDSA_SHA2_P521 => Ok(Algorithm::Ecdsa {
+                curve: EcdsaCurve::NistP521,
+            }),
+            CERT_ED25519 => Ok(Algorithm::Ed25519),
+            CERT_RSA => Ok(Algorithm::Rsa { hash: None }),
+            CERT_SK_ECDSA_SHA2_P256 => Ok(Algorithm::SkEcdsaSha2NistP256),
+            CERT_SK_SSH_ED25519 => Ok(Algorithm::SkEd25519),
+            _ => Err(Error::Algorithm),
         }
     }
 

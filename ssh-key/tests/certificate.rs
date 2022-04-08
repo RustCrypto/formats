@@ -26,6 +26,13 @@ const ED25519_CERT_BADSIG_EXAMPLE: &str = include_str!("examples/id_ed25519-cert
 /// RSA (4096-bit) OpenSSH Certificate
 const RSA_4096_CERT_EXAMPLE: &str = include_str!("examples/id_rsa_4096-cert.pub");
 
+/// Security Key (FIDO/U2F) ECDSA/NIST P-256 OpenSSH Certificate
+#[cfg(feature = "ecdsa")]
+const SK_ECDSA_P256_CERT_EXAMPLE: &str = include_str!("examples/id_sk_ecdsa_p256-cert.pub");
+
+/// Security Key (FIDO/U2F) Ed25519 OpenSSH Certificate
+const SK_ED25519_CERT_EXAMPLE: &str = include_str!("examples/id_sk_ed25519-cert.pub");
+
 /// Example certificate authority fingerprint (matches `id_ed25519.pub` example)
 #[cfg(all(feature = "ed25519", feature = "fingerprint"))]
 const CA_FINGERPRINT: &str = "SHA256:UCUiLr7Pjs9wFFJMDByLgc3NrtdU344OgUM45wZPcIQ";
@@ -142,6 +149,41 @@ fn decode_rsa_4096_openssh() {
              96f898db64c5d8a0a15c6efa28b0934bf0b6f2b01950d877230fe4401078420fd6dd3"
         ),
         rsa_key.n.as_bytes(),
+    );
+
+    assert_eq!("user@example.com", cert.comment());
+}
+
+#[cfg(feature = "ecdsa")]
+#[test]
+fn decode_sk_ecdsa_p256_openssh() {
+    let cert = Certificate::from_str(SK_ECDSA_P256_CERT_EXAMPLE).unwrap();
+    assert_eq!(
+        Algorithm::SkEcdsaSha2NistP256,
+        cert.public_key().algorithm()
+    );
+
+    let ecdsa_key = cert.public_key().sk_ecdsa_p256().unwrap();
+    assert_eq!(
+        &hex!(
+            "04810b409d8382f697d72425285a247d6336b2eb9a085236aa9d1e268747ca0e8ee227f17375e944a775392
+             f1d35842d13f6237574ab03e00e9cc1799ecd8d931e"
+        ),
+        ecdsa_key.as_ref(),
+    );
+
+    assert_eq!("user@example.com", cert.comment());
+}
+
+#[test]
+fn decode_sk_ed25519_openssh() {
+    let cert = Certificate::from_str(SK_ED25519_CERT_EXAMPLE).unwrap();
+
+    assert_eq!(Algorithm::SkEd25519, cert.public_key().algorithm());
+
+    assert_eq!(
+        &hex!("2168fe4e4b53cf3adeeeba602f5e50edb5ef441dba884f5119109db2dafdd733"),
+        cert.public_key().sk_ed25519().unwrap().as_ref(),
     );
 
     assert_eq!("user@example.com", cert.comment());

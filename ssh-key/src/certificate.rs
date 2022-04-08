@@ -408,7 +408,7 @@ impl Decode for Certificate {
         Ok(Self {
             algorithm,
             nonce: Vec::decode(reader)?,
-            public_key: KeyData::decode_algorithm(reader, algorithm)?,
+            public_key: KeyData::decode_as(reader, algorithm)?,
             serial: u64::decode(reader)?,
             cert_type: CertType::decode(reader)?,
             key_id: String::decode(reader)?,

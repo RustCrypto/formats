@@ -22,6 +22,7 @@ use subtle::{Choice, ConstantTimeEq};
 ///
 /// SSH private keys contain pairs of public and private keys for various
 /// supported digital signature algorithms.
+// TODO(tarcieri): pseudo-private keys for FIDO/U2F security keys
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum KeypairData {
