@@ -7,6 +7,15 @@ use crate::{
 use core::fmt;
 use sec1::consts::{U32, U48, U66};
 
+/// ECDSA/NIST P-256 public key.
+pub type EcdsaNistP256PublicKey = sec1::EncodedPoint<U32>;
+
+/// ECDSA/NIST P-384 public key.
+pub type EcdsaNistP384PublicKey = sec1::EncodedPoint<U48>;
+
+/// ECDSA/NIST P-521 public key.
+pub type EcdsaNistP521PublicKey = sec1::EncodedPoint<U66>;
+
 /// Elliptic Curve Digital Signature Algorithm (ECDSA) public key.
 ///
 /// Public keys are represented as [`sec1::EncodedPoint`] and require the
@@ -17,13 +26,13 @@ use sec1::consts::{U32, U48, U66};
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum EcdsaPublicKey {
     /// NIST P-256 ECDSA public key.
-    NistP256(sec1::EncodedPoint<U32>),
+    NistP256(EcdsaNistP256PublicKey),
 
     /// NIST P-384 ECDSA public key.
-    NistP384(sec1::EncodedPoint<U48>),
+    NistP384(EcdsaNistP384PublicKey),
 
     /// NIST P-521 ECDSA public key.
-    NistP521(sec1::EncodedPoint<U66>),
+    NistP521(EcdsaNistP521PublicKey),
 }
 
 impl EcdsaPublicKey {
@@ -49,9 +58,9 @@ impl EcdsaPublicKey {
                 };
 
                 match point_size {
-                    32 => Ok(Self::NistP256(sec1::EncodedPoint::from_bytes(bytes)?)),
-                    48 => Ok(Self::NistP384(sec1::EncodedPoint::from_bytes(bytes)?)),
-                    66 => Ok(Self::NistP521(sec1::EncodedPoint::from_bytes(bytes)?)),
+                    32 => Ok(Self::NistP256(EcdsaNistP256PublicKey::from_bytes(bytes)?)),
+                    48 => Ok(Self::NistP384(EcdsaNistP384PublicKey::from_bytes(bytes)?)),
+                    66 => Ok(Self::NistP521(EcdsaNistP521PublicKey::from_bytes(bytes)?)),
                     _ => Err(Error::Length),
                 }
             }

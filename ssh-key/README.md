@@ -19,22 +19,24 @@ specification, certificates as specified in [PROTOCOL.certkeys]  and the
 ## Features
 
 - [x] Constant-time Base64 decoder/encoder using `base64ct`/`pem-rfc7468` crates
-- [x] Decoder/encoder support for the following OpenSSH formats:
+- [x] OpenSSH-compatible decoder/encoders for the following formats:
   - [x] OpenSSH public keys
   - [x] OpenSSH private keys (i.e. `BEGIN OPENSSH PRIVATE KEY`)
   - [x] OpenSSH certificates
+- [x] OpenSSH certificate validation (Ed25519 only)
 - [x] Private key encryption/decryption (`bcrypt-pbkdf` + `aes256-ctr` only)
+- [x] FIDO/U2F key support (`sk-*`) as specified in [PROTOCOL.u2f]
 - [x] Fingerprint support (SHA-256 only)
 - [x] `no_std` support including support for "heapless" (no-`alloc`) targets
 - [x] Parsing `authorized_keys` files
 - [x] Serde support (certificates and public keys only)
-- [x] Zeroize support for private keys
+- [x] Zeroization support for private keys
 
 #### TODO
 
-- [ ] FIDO/U2F key support (`sk-*`)
 - [ ] Key generation support (WIP - see table below)
-- [ ] OpenSSH certificate signature verification/signing
+- [ ] OpenSSH certificate builder/signer (i.e. SSH CA support)
+- [ ] FIDO/U2F private key decoder/encoder
 - [ ] Interop with digital signature crates
   - [x] `ed25519-dalek`
   - [ ] `p256` (ECDSA)
@@ -100,5 +102,6 @@ dual licensed as above, without any additional terms or conditions.
 [RFC4251]: https://datatracker.ietf.org/doc/html/rfc4251
 [RFC4253]: https://datatracker.ietf.org/doc/html/rfc4253
 [RFC4716]: https://datatracker.ietf.org/doc/html/rfc4716
-[PROTOCOL.key]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD
 [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
+[PROTOCOL.key]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD
+[PROTOCOL.u2f]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD
