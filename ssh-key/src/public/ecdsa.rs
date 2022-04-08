@@ -1,10 +1,8 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) public keys.
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    Algorithm, EcdsaCurve, Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Algorithm,
+    EcdsaCurve, Error, Result,
 };
 use core::fmt;
 use sec1::consts::{U32, U48, U66};
@@ -94,11 +92,11 @@ impl AsRef<[u8]> for EcdsaPublicKey {
 }
 
 impl Decode for EcdsaPublicKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let curve = EcdsaCurve::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let curve = EcdsaCurve::decode(reader)?;
 
         let mut buf = [0u8; Self::MAX_SIZE];
-        let key = Self::from_sec1_bytes(decoder.read_byten(&mut buf)?)?;
+        let key = Self::from_sec1_bytes(reader.read_byten(&mut buf)?)?;
 
         if key.curve() == curve {
             Ok(key)
@@ -118,9 +116,9 @@ impl Encode for EcdsaPublicKey {
         .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.curve().encode(encoder)?;
-        self.as_ref().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.curve().encode(writer)?;
+        self.as_ref().encode(writer)
     }
 }
 

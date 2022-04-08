@@ -3,10 +3,8 @@
 //! These are used for deriving an encryption key from a password.
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    Error, KdfAlg, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Error,
+    KdfAlg, Result,
 };
 
 #[cfg(feature = "alloc")]
@@ -133,10 +131,10 @@ impl Default for Kdf {
 }
 
 impl Decode for Kdf {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        match KdfAlg::decode(decoder)? {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        match KdfAlg::decode(reader)? {
             KdfAlg::None => {
-                if usize::decode(decoder)? == 0 {
+                if usize::decode(reader)? == 0 {
                     Ok(Self::None)
                 } else {
                     Err(Error::Algorithm)
@@ -147,10 +145,10 @@ impl Decode for Kdf {
                 return Err(Error::Algorithm);
 
                 #[cfg(feature = "alloc")]
-                decoder.read_nested(|decoder, _len| {
+                reader.read_nested(|reader| {
                     Ok(Self::Bcrypt {
-                        salt: Vec::decode(decoder)?,
-                        rounds: u32::decode(decoder)?,
+                        salt: Vec::decode(reader)?,
+                        rounds: u32::decode(reader)?,
                     })
                 })
             }
@@ -174,16 +172,16 @@ impl Encode for Kdf {
         .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.algorithm().encode(encoder)?;
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.algorithm().encode(writer)?;
 
         match self {
-            Self::None => 0usize.encode(encoder),
+            Self::None => 0usize.encode(writer),
             #[cfg(feature = "alloc")]
             Self::Bcrypt { salt, rounds } => {
-                [8, salt.len()].checked_sum()?.encode(encoder)?;
-                salt.encode(encoder)?;
-                rounds.encode(encoder)
+                [8, salt.len()].checked_sum()?.encode(writer)?;
+                salt.encode(writer)?;
+                rounds.encode(writer)
             }
         }
     }

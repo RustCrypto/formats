@@ -2,9 +2,11 @@
 
 use crate::{
     checked::CheckedSum,
-    decoder::{Base64Decoder, Decode, Decoder},
-    encoder::{base64_encoded_len, Encode, Encoder},
+    decode::Decode,
+    encode::Encode,
     public::{Encapsulation, KeyData},
+    reader::{Base64Reader, Reader},
+    writer::{base64_len, Writer},
     Algorithm, Error, Result, Signature,
 };
 use alloc::{borrow::ToOwned, string::String, vec::Vec};
@@ -209,7 +211,7 @@ impl Certificate {
         let encoded_len = [
             2, // interstitial spaces
             self.algorithm().as_certificate_str().len(),
-            base64_encoded_len(self.encoded_len()?),
+            base64_len(self.encoded_len()?),
             self.comment.len(),
         ]
         .checked_sum()?;
@@ -219,7 +221,7 @@ impl Certificate {
             &mut out,
             self.algorithm().as_certificate_str(),
             self.comment(),
-            |encoder| self.encode(encoder),
+            |writer| self.encode(writer),
         )?
         .len();
         out.truncate(actual_len);
@@ -330,42 +332,42 @@ impl Certificate {
 
     /// Encode the portion of the certificate "to be signed" by the CA
     /// (or to be verified against an existing CA signature)
-    fn encode_tbs(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.algorithm.as_certificate_str().encode(encoder)?;
-        self.nonce.encode(encoder)?;
-        self.public_key.encode_key_data(encoder)?;
-        self.serial.encode(encoder)?;
-        self.cert_type.encode(encoder)?;
-        self.key_id.encode(encoder)?;
-        self.valid_principals.encode(encoder)?;
-        self.valid_after.encode(encoder)?;
-        self.valid_before.encode(encoder)?;
-        self.critical_options.encode(encoder)?;
-        self.extensions.encode(encoder)?;
-        self.reserved.encode(encoder)?;
-        self.signature_key.encode_nested(encoder)
+    fn encode_tbs(&self, writer: &mut impl Writer) -> Result<()> {
+        self.algorithm.as_certificate_str().encode(writer)?;
+        self.nonce.encode(writer)?;
+        self.public_key.encode_key_data(writer)?;
+        self.serial.encode(writer)?;
+        self.cert_type.encode(writer)?;
+        self.key_id.encode(writer)?;
+        self.valid_principals.encode(writer)?;
+        self.valid_after.encode(writer)?;
+        self.valid_before.encode(writer)?;
+        self.critical_options.encode(writer)?;
+        self.extensions.encode(writer)?;
+        self.reserved.encode(writer)?;
+        self.signature_key.encode_nested(writer)
     }
 }
 
 impl Decode for Certificate {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let algorithm = Algorithm::new_certificate(&String::decode(decoder)?)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let algorithm = Algorithm::new_certificate(&String::decode(reader)?)?;
 
         Ok(Self {
             algorithm,
-            nonce: Vec::decode(decoder)?,
-            public_key: KeyData::decode_algorithm(decoder, algorithm)?,
-            serial: u64::decode(decoder)?,
-            cert_type: CertType::decode(decoder)?,
-            key_id: String::decode(decoder)?,
-            valid_principals: Vec::decode(decoder)?,
-            valid_after: u64::decode(decoder)?,
-            valid_before: u64::decode(decoder)?,
-            critical_options: OptionsMap::decode(decoder)?,
-            extensions: OptionsMap::decode(decoder)?,
-            reserved: Vec::decode(decoder)?,
-            signature_key: decoder.read_nested(|dec, _len| KeyData::decode(dec))?,
-            signature: decoder.read_nested(|dec, _len| Signature::decode(dec))?,
+            nonce: Vec::decode(reader)?,
+            public_key: KeyData::decode_algorithm(reader, algorithm)?,
+            serial: u64::decode(reader)?,
+            cert_type: CertType::decode(reader)?,
+            key_id: String::decode(reader)?,
+            valid_principals: Vec::decode(reader)?,
+            valid_after: u64::decode(reader)?,
+            valid_before: u64::decode(reader)?,
+            critical_options: OptionsMap::decode(reader)?,
+            extensions: OptionsMap::decode(reader)?,
+            reserved: Vec::decode(reader)?,
+            signature_key: reader.read_nested(KeyData::decode)?,
+            signature: reader.read_nested(Signature::decode)?,
             comment: String::new(),
         })
     }
@@ -399,9 +401,9 @@ impl Encode for Certificate {
         .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.encode_tbs(encoder)?;
-        self.signature.encode_nested(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.encode_tbs(writer)?;
+        self.signature.encode_nested(writer)
     }
 }
 
@@ -410,10 +412,10 @@ impl FromStr for Certificate {
 
     fn from_str(s: &str) -> Result<Self> {
         let encapsulation = Encapsulation::decode(s.trim_end().as_bytes())?;
-        let mut decoder = Base64Decoder::new(encapsulation.base64_data)?;
-        let mut certificate = Certificate::decode(&mut decoder)?;
+        let mut reader = Base64Reader::new(encapsulation.base64_data)?;
+        let mut certificate = Certificate::decode(&mut reader)?;
 
-        if !decoder.is_finished() {
+        if !reader.is_finished() {
             return Err(Error::Length);
         }
 
@@ -457,8 +459,8 @@ impl From<CertType> for u32 {
 }
 
 impl Decode for CertType {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        u32::decode(decoder)?.try_into()
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        u32::decode(reader)?.try_into()
     }
 }
 
@@ -467,20 +469,19 @@ impl Encode for CertType {
         Ok(4)
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        u32::from(*self).encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        u32::from(*self).encode(writer)
     }
 }
 
 impl Decode for OptionsMap {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        decoder.read_nested(|decoder, len| {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        reader.read_nested(|reader| {
             let mut entries = Vec::<(String, String)>::new();
-            let offset = decoder.remaining_len();
 
-            while offset.saturating_sub(decoder.remaining_len()) < len {
-                let name = String::decode(decoder)?;
-                let data = String::decode(decoder)?;
+            while !reader.is_finished() {
+                let name = String::decode(reader)?;
+                let data = String::decode(reader)?;
 
                 // Options must be lexically ordered by "name" if they appear in
                 // the sequence. Each named option may only appear once in a
@@ -506,15 +507,15 @@ impl Encode for OptionsMap {
         })
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.encoded_len()?
             .checked_sub(4)
             .ok_or(Error::Length)?
-            .encode(encoder)?;
+            .encode(writer)?;
 
         for (name, data) in self {
-            name.encode(encoder)?;
-            data.encode(encoder)?;
+            name.encode(writer)?;
+            data.encode(writer)?;
         }
 
         Ok(())

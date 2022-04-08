@@ -1,10 +1,8 @@
 //! Rivest–Shamir–Adleman (RSA) public keys.
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    MPInt, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, MPInt,
+    Result,
 };
 
 /// RSA public key.
@@ -21,9 +19,9 @@ pub struct RsaPublicKey {
 }
 
 impl Decode for RsaPublicKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let e = MPInt::decode(decoder)?;
-        let n = MPInt::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let e = MPInt::decode(reader)?;
+        let n = MPInt::decode(reader)?;
         Ok(Self { e, n })
     }
 }
@@ -33,8 +31,8 @@ impl Encode for RsaPublicKey {
         [self.e.encoded_len()?, self.n.encoded_len()?].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.e.encode(encoder)?;
-        self.n.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.e.encode(writer)?;
+        self.n.encode(writer)
     }
 }

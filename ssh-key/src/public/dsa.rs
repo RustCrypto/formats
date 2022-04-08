@@ -1,10 +1,8 @@
 //! Digital Signature Algorithm (DSA) public keys.
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    MPInt, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, MPInt,
+    Result,
 };
 
 /// Digital Signature Algorithm (DSA) public key.
@@ -28,11 +26,11 @@ pub struct DsaPublicKey {
 }
 
 impl Decode for DsaPublicKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let p = MPInt::decode(decoder)?;
-        let q = MPInt::decode(decoder)?;
-        let g = MPInt::decode(decoder)?;
-        let y = MPInt::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let p = MPInt::decode(reader)?;
+        let q = MPInt::decode(reader)?;
+        let g = MPInt::decode(reader)?;
+        let y = MPInt::decode(reader)?;
         Ok(Self { p, q, g, y })
     }
 }
@@ -48,10 +46,10 @@ impl Encode for DsaPublicKey {
         .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.p.encode(encoder)?;
-        self.q.encode(encoder)?;
-        self.g.encode(encoder)?;
-        self.y.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.p.encode(writer)?;
+        self.q.encode(writer)?;
+        self.g.encode(writer)?;
+        self.y.encode(writer)
     }
 }

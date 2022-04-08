@@ -3,31 +3,13 @@
 //!
 //! [RFC4251 § 5]: https://datatracker.ietf.org/doc/html/rfc4251#section-5
 
-use crate::{checked::CheckedSum, Result};
-use core::str;
-use pem_rfc7468 as pem;
+use crate::{checked::CheckedSum, writer::Writer, Result};
 
 #[cfg(feature = "alloc")]
 use {
     crate::Error,
     alloc::{string::String, vec::Vec},
 };
-
-#[cfg(feature = "fingerprint")]
-use sha2::{Digest, Sha256};
-
-/// Get the estimated length of data when encoded as Base64.
-///
-/// This is an upper bound where the actual length might be slightly shorter.
-#[cfg(feature = "alloc")]
-#[allow(clippy::integer_arithmetic)]
-pub(crate) fn base64_encoded_len(input_len: usize) -> usize {
-    // TODO(tarcieri): checked arithmetic
-    (((input_len * 4) / 3) + 3) & !3
-}
-
-/// Stateful Base64 encoder.
-pub(crate) type Base64Encoder<'o> = base64ct::Encoder<'o, base64ct::Base64>;
 
 /// Encoding trait.
 ///
@@ -37,13 +19,13 @@ pub(crate) trait Encode {
     fn encoded_len(&self) -> Result<usize>;
 
     /// Encode this value using the provided [`Encoder`].
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()>;
+    fn encode(&self, writer: &mut impl Writer) -> Result<()>;
 
     /// Encode this value, first prepending a `uint32` length prefix
     /// set to [`Encode::encoded_len`].
-    fn encode_nested(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.encoded_len()?.encode(encoder)?;
-        self.encode(encoder)
+    fn encode_nested(&self, writer: &mut impl Writer) -> Result<()> {
+        self.encoded_len()?.encode(writer)?;
+        self.encode(writer)
     }
 }
 
@@ -59,8 +41,8 @@ impl Encode for u32 {
         Ok(4)
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.write(&self.to_be_bytes())
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        writer.write(&self.to_be_bytes())
     }
 }
 
@@ -75,8 +57,8 @@ impl Encode for u64 {
         Ok(8)
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.write(&self.to_be_bytes())
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        writer.write(&self.to_be_bytes())
     }
 }
 
@@ -91,8 +73,8 @@ impl Encode for usize {
         Ok(4)
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        u32::try_from(*self)?.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        u32::try_from(*self)?.encode(writer)
     }
 }
 
@@ -108,9 +90,9 @@ impl Encode for [u8] {
         [4, self.len()].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.len().encode(encoder)?;
-        encoder.write(self)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.len().encode(writer)?;
+        writer.write(self)
     }
 }
 
@@ -126,8 +108,8 @@ impl<const N: usize> Encode for [u8; N] {
         self.as_slice().encoded_len()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.as_slice().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.as_slice().encode(writer)
     }
 }
 
@@ -153,8 +135,8 @@ impl Encode for &str {
         self.as_bytes().encoded_len()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.as_bytes().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.as_bytes().encode(writer)
     }
 }
 
@@ -165,8 +147,8 @@ impl Encode for Vec<u8> {
         self.as_slice().encoded_len()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.as_slice().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.as_slice().encode(writer)
     }
 }
 
@@ -177,8 +159,8 @@ impl Encode for String {
         self.as_str().encoded_len()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.as_str().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.as_str().encode(writer)
     }
 }
 
@@ -191,51 +173,16 @@ impl Encode for Vec<String> {
         })
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.encoded_len()?
             .checked_sub(4)
             .ok_or(Error::Length)?
-            .encode(encoder)?;
+            .encode(writer)?;
 
         for entry in self {
-            entry.encode(encoder)?;
+            entry.encode(writer)?;
         }
 
-        Ok(())
-    }
-}
-
-/// Encoder extension trait.
-pub(crate) trait Encoder: Sized {
-    /// Write the given bytes to the encoder.
-    fn write(&mut self, bytes: &[u8]) -> Result<()>;
-}
-
-impl Encoder for Base64Encoder<'_> {
-    fn write(&mut self, bytes: &[u8]) -> Result<()> {
-        Ok(self.encode(bytes)?)
-    }
-}
-
-impl Encoder for pem::Encoder<'_, '_> {
-    fn write(&mut self, bytes: &[u8]) -> Result<()> {
-        Ok(self.encode(bytes)?)
-    }
-}
-
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl Encoder for Vec<u8> {
-    fn write(&mut self, bytes: &[u8]) -> Result<()> {
-        self.extend_from_slice(bytes);
-        Ok(())
-    }
-}
-
-#[cfg(feature = "fingerprint")]
-impl Encoder for Sha256 {
-    fn write(&mut self, bytes: &[u8]) -> Result<()> {
-        self.update(bytes);
         Ok(())
     }
 }

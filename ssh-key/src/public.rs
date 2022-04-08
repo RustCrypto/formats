@@ -21,15 +21,17 @@ pub(crate) use self::openssh::Encapsulation;
 
 use crate::{
     checked::CheckedSum,
-    decoder::{Base64Decoder, Decode, Decoder},
-    encoder::{Encode, Encoder},
+    decode::Decode,
+    encode::Encode,
+    reader::{Base64Reader, Reader},
+    writer::Writer,
     Algorithm, Error, Result,
 };
 use core::str::FromStr;
 
 #[cfg(feature = "alloc")]
 use {
-    crate::encoder::base64_encoded_len,
+    crate::writer::base64_len,
     alloc::{
         borrow::ToOwned,
         string::{String, ToString},
@@ -75,10 +77,10 @@ impl PublicKey {
     /// ```
     pub fn from_openssh(input: impl AsRef<[u8]>) -> Result<Self> {
         let encapsulation = Encapsulation::decode(input.as_ref())?;
-        let mut decoder = Base64Decoder::new(encapsulation.base64_data)?;
-        let key_data = KeyData::decode(&mut decoder)?;
+        let mut reader = Base64Reader::new(encapsulation.base64_data)?;
+        let key_data = KeyData::decode(&mut reader)?;
 
-        if !decoder.is_finished() {
+        if !reader.is_finished() {
             return Err(Error::Length);
         }
 
@@ -96,8 +98,8 @@ impl PublicKey {
 
     /// Encode OpenSSH-formatted public key.
     pub fn encode_openssh<'o>(&self, out: &'o mut [u8]) -> Result<&'o str> {
-        Encapsulation::encode(out, self.algorithm().as_str(), self.comment(), |encoder| {
-            self.key_data.encode(encoder)
+        Encapsulation::encode(out, self.algorithm().as_str(), self.comment(), |writer| {
+            self.key_data.encode(writer)
         })
     }
 
@@ -109,7 +111,7 @@ impl PublicKey {
         let encoded_len = [
             2, // interstitial spaces
             self.algorithm().as_str().len(),
-            base64_encoded_len(self.key_data.encoded_len()?),
+            base64_len(self.key_data.encoded_len()?),
             self.comment.len(),
         ]
         .checked_sum()?;
@@ -179,15 +181,15 @@ impl PublicKey {
     ///
     /// This is a stub implementation that ignores the comment.
     #[cfg(not(feature = "alloc"))]
-    pub(crate) fn decode_comment(&mut self, decoder: &mut impl Decoder) -> Result<()> {
-        decoder.drain_prefixed()?;
+    pub(crate) fn decode_comment(&mut self, reader: &mut impl Reader) -> Result<()> {
+        reader.drain_prefixed()?;
         Ok(())
     }
 
     /// Decode comment (e.g. email address)
     #[cfg(feature = "alloc")]
-    pub(crate) fn decode_comment(&mut self, decoder: &mut impl Decoder) -> Result<()> {
-        self.comment = String::decode(decoder)?;
+    pub(crate) fn decode_comment(&mut self, reader: &mut impl Reader) -> Result<()> {
+        self.comment = String::decode(reader)?;
         Ok(())
     }
 }
@@ -332,21 +334,18 @@ impl KeyData {
     }
 
     /// Decode [`KeyData`] for the specified algorithm.
-    pub(crate) fn decode_algorithm(
-        decoder: &mut impl Decoder,
-        algorithm: Algorithm,
-    ) -> Result<Self> {
+    pub(crate) fn decode_algorithm(reader: &mut impl Reader, algorithm: Algorithm) -> Result<Self> {
         match algorithm {
             #[cfg(feature = "alloc")]
-            Algorithm::Dsa => DsaPublicKey::decode(decoder).map(Self::Dsa),
+            Algorithm::Dsa => DsaPublicKey::decode(reader).map(Self::Dsa),
             #[cfg(feature = "ecdsa")]
-            Algorithm::Ecdsa { curve } => match EcdsaPublicKey::decode(decoder)? {
+            Algorithm::Ecdsa { curve } => match EcdsaPublicKey::decode(reader)? {
                 key if key.curve() == curve => Ok(Self::Ecdsa(key)),
                 _ => Err(Error::Algorithm),
             },
-            Algorithm::Ed25519 => Ed25519PublicKey::decode(decoder).map(Self::Ed25519),
+            Algorithm::Ed25519 => Ed25519PublicKey::decode(reader).map(Self::Ed25519),
             #[cfg(feature = "alloc")]
-            Algorithm::Rsa { .. } => RsaPublicKey::decode(decoder).map(Self::Rsa),
+            Algorithm::Rsa { .. } => RsaPublicKey::decode(reader).map(Self::Rsa),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
         }
@@ -367,23 +366,23 @@ impl KeyData {
     }
 
     /// Encode the key data without a leading algorithm identifier.
-    pub(crate) fn encode_key_data(&self, encoder: &mut impl Encoder) -> Result<()> {
+    pub(crate) fn encode_key_data(&self, writer: &mut impl Writer) -> Result<()> {
         match self {
             #[cfg(feature = "alloc")]
-            Self::Dsa(key) => key.encode(encoder),
+            Self::Dsa(key) => key.encode(writer),
             #[cfg(feature = "ecdsa")]
-            Self::Ecdsa(key) => key.encode(encoder),
-            Self::Ed25519(key) => key.encode(encoder),
+            Self::Ecdsa(key) => key.encode(writer),
+            Self::Ed25519(key) => key.encode(writer),
             #[cfg(feature = "alloc")]
-            Self::Rsa(key) => key.encode(encoder),
+            Self::Rsa(key) => key.encode(writer),
         }
     }
 }
 
 impl Decode for KeyData {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let algorithm = Algorithm::decode(decoder)?;
-        Self::decode_algorithm(decoder, algorithm)
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let algorithm = Algorithm::decode(reader)?;
+        Self::decode_algorithm(reader, algorithm)
     }
 }
 
@@ -396,8 +395,8 @@ impl Encode for KeyData {
         .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.algorithm().encode(encoder)?;
-        self.encode_key_data(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.algorithm().encode(writer)?;
+        self.encode_key_data(writer)
     }
 }

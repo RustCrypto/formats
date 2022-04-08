@@ -1,10 +1,8 @@
 //! Multiple precision integer
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Error,
+    Result,
 };
 use alloc::vec::Vec;
 use core::fmt;
@@ -89,8 +87,8 @@ impl AsRef<[u8]> for MPInt {
 }
 
 impl Decode for MPInt {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        Vec::decode(decoder)?.try_into()
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        Vec::decode(reader)?.try_into()
     }
 }
 
@@ -99,8 +97,8 @@ impl Encode for MPInt {
         [4, self.as_bytes().len()].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.as_bytes().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.as_bytes().encode(writer)
     }
 }
 
