@@ -3,11 +3,8 @@
 //! Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    public::Ed25519PublicKey,
-    Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, public::Ed25519PublicKey, reader::Reader,
+    writer::Writer, Error, Result,
 };
 use core::fmt;
 use zeroize::{Zeroize, Zeroizing};
@@ -214,15 +211,15 @@ impl Ed25519Keypair {
 }
 
 impl Decode for Ed25519Keypair {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
         // Decode private key
-        let public = Ed25519PublicKey::decode(decoder)?;
+        let public = Ed25519PublicKey::decode(reader)?;
 
         // The OpenSSH serialization of Ed25519 keys is repetitive and includes
         // a serialization of `private_key[32] || public_key[32]` immediately
         // following the public key.
         let mut bytes = Zeroizing::new([0u8; Self::BYTE_SIZE]);
-        decoder.read_nested(|decoder, _len| decoder.read(&mut *bytes))?;
+        reader.read_nested(|reader| reader.read(&mut *bytes))?;
 
         let keypair = Self::from_bytes(&*bytes)?;
 
@@ -240,9 +237,9 @@ impl Encode for Ed25519Keypair {
         [4, self.public.encoded_len()?, Self::BYTE_SIZE].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.public.encode(encoder)?;
-        Zeroizing::new(self.to_bytes()).as_ref().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.public.encode(writer)?;
+        Zeroizing::new(self.to_bytes()).as_ref().encode(writer)
     }
 }
 

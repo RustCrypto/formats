@@ -121,16 +121,19 @@ pub use self::{
 
 use crate::{
     checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
+    decode::Decode,
+    encode::Encode,
     pem::{self, LineEnding, PemLabel},
-    public, Algorithm, Cipher, Error, Kdf, PublicKey, Result,
+    public,
+    reader::Reader,
+    writer::Writer,
+    Algorithm, Cipher, Error, Kdf, PublicKey, Result,
 };
 use core::str;
 
 #[cfg(feature = "alloc")]
 use {
-    crate::encoder::base64_encoded_len,
+    crate::writer::base64_len,
     alloc::{string::String, vec::Vec},
     zeroize::Zeroizing,
 };
@@ -211,26 +214,26 @@ impl PrivateKey {
     /// -----BEGIN OPENSSH PRIVATE KEY-----
     /// ```
     pub fn from_openssh(input: impl AsRef<[u8]>) -> Result<Self> {
-        let mut decoder = pem::Decoder::new_wrapped(input.as_ref(), PEM_LINE_WIDTH)?;
-        Self::validate_pem_label(decoder.type_label())?;
+        let mut reader = pem::Decoder::new_wrapped(input.as_ref(), PEM_LINE_WIDTH)?;
+        Self::validate_pem_label(reader.type_label())?;
 
         let mut auth_magic = [0u8; Self::AUTH_MAGIC.len()];
-        decoder.decode(&mut auth_magic)?;
+        reader.decode(&mut auth_magic)?;
 
         if auth_magic != Self::AUTH_MAGIC {
             return Err(Error::FormatEncoding);
         }
 
-        let cipher = Cipher::decode(&mut decoder)?;
-        let kdf = Kdf::decode(&mut decoder)?;
-        let nkeys = usize::decode(&mut decoder)?;
+        let cipher = Cipher::decode(&mut reader)?;
+        let kdf = Kdf::decode(&mut reader)?;
+        let nkeys = usize::decode(&mut reader)?;
 
         // TODO(tarcieri): support more than one key?
         if nkeys != 1 {
             return Err(Error::Length);
         }
 
-        let public_key = decoder.read_nested(|decoder, _len| public::KeyData::decode(decoder))?;
+        let public_key = reader.read_nested(public::KeyData::decode)?;
 
         // Handle encrypted private key
         #[cfg(not(feature = "alloc"))]
@@ -239,14 +242,14 @@ impl PrivateKey {
         }
         #[cfg(feature = "alloc")]
         if cipher.is_some() {
-            let ciphertext = Vec::decode(&mut decoder)?;
+            let ciphertext = Vec::decode(&mut reader)?;
 
             // Ensure ciphertext is padded to the expected length
             if ciphertext.len().checked_rem(cipher.block_size()) != Some(0) {
                 return Err(Error::Crypto);
             }
 
-            if !decoder.is_finished() {
+            if !reader.is_finished() {
                 return Err(Error::Length);
             }
 
@@ -262,8 +265,8 @@ impl PrivateKey {
         // Processing unencrypted key. No KDF should be set.
         if kdf.is_some() {}
 
-        decoder.read_nested(|decoder, _len| {
-            Self::decode_privatekey_comment_pair(decoder, public_key, cipher.block_size())
+        reader.read_nested(|reader| {
+            Self::decode_privatekey_comment_pair(reader, public_key, cipher.block_size())
         })
     }
 
@@ -273,31 +276,31 @@ impl PrivateKey {
         line_ending: LineEnding,
         out: &'o mut [u8],
     ) -> Result<&'o str> {
-        let mut encoder =
+        let mut writer =
             pem::Encoder::new_wrapped(Self::PEM_LABEL, PEM_LINE_WIDTH, line_ending, out)?;
 
-        Encoder::write(&mut encoder, Self::AUTH_MAGIC)?;
-        self.cipher.encode(&mut encoder)?;
-        self.kdf.encode(&mut encoder)?;
+        Writer::write(&mut writer, Self::AUTH_MAGIC)?;
+        self.cipher.encode(&mut writer)?;
+        self.kdf.encode(&mut writer)?;
 
         // TODO(tarcieri): support for encoding more than one private key
-        1usize.encode(&mut encoder)?;
+        1usize.encode(&mut writer)?;
 
         // Encode public key
-        self.public_key.key_data().encode_nested(&mut encoder)?;
+        self.public_key.key_data().encode_nested(&mut writer)?;
 
         // Encode private key
         if self.is_encrypted() {
-            self.key_data.encode_nested(&mut encoder)?;
+            self.key_data.encode_nested(&mut writer)?;
         } else {
             self.encoded_privatekey_comment_pair_len(Cipher::None)?
-                .encode(&mut encoder)?;
+                .encode(&mut writer)?;
 
             let checkint = self.checkint.unwrap_or_else(|| self.key_data.checkint());
-            self.encode_privatekey_comment_pair(&mut encoder, Cipher::None, checkint)?;
+            self.encode_privatekey_comment_pair(&mut writer, Cipher::None, checkint)?;
         }
 
-        let encoded_len = encoder.finish()?;
+        let encoded_len = writer.finish()?;
         Ok(str::from_utf8(&out[..encoded_len])?)
     }
 
@@ -520,25 +523,25 @@ impl PrivateKey {
     ///
     /// [PROTOCOL.key]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD
     fn decode_privatekey_comment_pair(
-        decoder: &mut impl Decoder,
+        reader: &mut impl Reader,
         public_key: public::KeyData,
         block_size: usize,
     ) -> Result<Self> {
         debug_assert!(block_size <= MAX_BLOCK_SIZE);
 
         // Ensure input data is padding-aligned
-        if decoder.remaining_len().checked_rem(block_size) != Some(0) {
+        if reader.remaining_len().checked_rem(block_size) != Some(0) {
             return Err(Error::Length);
         }
 
-        let checkint1 = u32::decode(decoder)?;
-        let checkint2 = u32::decode(decoder)?;
+        let checkint1 = u32::decode(reader)?;
+        let checkint2 = u32::decode(reader)?;
 
         if checkint1 != checkint2 {
             return Err(Error::Crypto);
         }
 
-        let key_data = KeypairData::decode(decoder)?;
+        let key_data = KeypairData::decode(reader)?;
 
         // Ensure public key matches private key
         if public_key != public::KeyData::try_from(&key_data)? {
@@ -546,9 +549,9 @@ impl PrivateKey {
         }
 
         let mut public_key = PublicKey::from(public_key);
-        public_key.decode_comment(decoder)?;
+        public_key.decode_comment(reader)?;
 
-        let padding_len = decoder.remaining_len();
+        let padding_len = reader.remaining_len();
 
         if padding_len >= block_size {
             return Err(Error::Length);
@@ -556,14 +559,14 @@ impl PrivateKey {
 
         if padding_len != 0 {
             let mut padding = [0u8; MAX_BLOCK_SIZE];
-            decoder.read(&mut padding[..padding_len])?;
+            reader.read(&mut padding[..padding_len])?;
 
             if PADDING_BYTES[..padding_len] != padding[..padding_len] {
                 return Err(Error::FormatEncoding);
             }
         }
 
-        if !decoder.is_finished() {
+        if !reader.is_finished() {
             return Err(Error::Length);
         }
 
@@ -580,18 +583,18 @@ impl PrivateKey {
     /// and padding.
     fn encode_privatekey_comment_pair(
         &self,
-        encoder: &mut impl Encoder,
+        writer: &mut impl Writer,
         cipher: Cipher,
         checkint: u32,
     ) -> Result<()> {
         let unpadded_len = self.unpadded_privatekey_comment_pair_len()?;
         let padding_len = cipher.padding_len(unpadded_len);
 
-        checkint.encode(encoder)?;
-        checkint.encode(encoder)?;
-        self.key_data.encode(encoder)?;
-        self.comment().encode(encoder)?;
-        encoder.write(&PADDING_BYTES[..padding_len])?;
+        checkint.encode(writer)?;
+        checkint.encode(writer)?;
+        self.key_data.encode(writer)?;
+        self.comment().encode(writer)?;
+        writer.write(&PADDING_BYTES[..padding_len])?;
         Ok(())
     }
 
@@ -644,7 +647,7 @@ impl PrivateKey {
         ]
         .checked_sum()?;
 
-        let base64_len = base64_encoded_len(bytes_len);
+        let base64_len = base64_len(bytes_len);
 
         // Add the length of the line endings which will be inserted when
         // encoded Base64 is line wrapped

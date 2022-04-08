@@ -3,10 +3,8 @@
 //! Edwards Digital Signature Algorithm (EdDSA) over Curve25519.
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Error,
+    Result,
 };
 use core::fmt;
 
@@ -27,9 +25,9 @@ impl AsRef<[u8; Self::BYTE_SIZE]> for Ed25519PublicKey {
 }
 
 impl Decode for Ed25519PublicKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
         let mut bytes = [0u8; Self::BYTE_SIZE];
-        decoder.read_nested(|decoder, _len| decoder.read(&mut bytes))?;
+        reader.read_nested(|reader| reader.read(&mut bytes))?;
         Ok(Self(bytes))
     }
 }
@@ -39,8 +37,8 @@ impl Encode for Ed25519PublicKey {
         [4, Self::BYTE_SIZE].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.0.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.0.encode(writer)
     }
 }
 

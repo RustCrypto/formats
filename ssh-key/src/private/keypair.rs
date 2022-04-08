@@ -2,10 +2,8 @@
 
 use super::ed25519::Ed25519Keypair;
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    public, Algorithm, Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, public, reader::Reader, writer::Writer,
+    Algorithm, Error, Result,
 };
 
 #[cfg(feature = "alloc")]
@@ -182,18 +180,18 @@ impl KeypairData {
 }
 
 impl Decode for KeypairData {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        match Algorithm::decode(decoder)? {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        match Algorithm::decode(reader)? {
             #[cfg(feature = "alloc")]
-            Algorithm::Dsa => DsaKeypair::decode(decoder).map(Self::Dsa),
+            Algorithm::Dsa => DsaKeypair::decode(reader).map(Self::Dsa),
             #[cfg(feature = "ecdsa")]
-            Algorithm::Ecdsa { curve } => match EcdsaKeypair::decode(decoder)? {
+            Algorithm::Ecdsa { curve } => match EcdsaKeypair::decode(reader)? {
                 keypair if keypair.curve() == curve => Ok(Self::Ecdsa(keypair)),
                 _ => Err(Error::Algorithm),
             },
-            Algorithm::Ed25519 => Ed25519Keypair::decode(decoder).map(Self::Ed25519),
+            Algorithm::Ed25519 => Ed25519Keypair::decode(reader).map(Self::Ed25519),
             #[cfg(feature = "alloc")]
-            Algorithm::Rsa { .. } => RsaKeypair::decode(decoder).map(Self::Rsa),
+            Algorithm::Rsa { .. } => RsaKeypair::decode(reader).map(Self::Rsa),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
         }
@@ -217,21 +215,21 @@ impl Encode for KeypairData {
         [self.algorithm()?.encoded_len()?, key_len].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         if !self.is_encrypted() {
-            self.algorithm()?.encode(encoder)?;
+            self.algorithm()?.encode(writer)?;
         }
 
         match self {
             #[cfg(feature = "alloc")]
-            Self::Dsa(key) => key.encode(encoder),
+            Self::Dsa(key) => key.encode(writer),
             #[cfg(feature = "ecdsa")]
-            Self::Ecdsa(key) => key.encode(encoder),
-            Self::Ed25519(key) => key.encode(encoder),
+            Self::Ecdsa(key) => key.encode(writer),
+            Self::Ed25519(key) => key.encode(writer),
             #[cfg(feature = "alloc")]
-            Self::Encrypted(ciphertext) => encoder.write(ciphertext),
+            Self::Encrypted(ciphertext) => writer.write(ciphertext),
             #[cfg(feature = "alloc")]
-            Self::Rsa(key) => key.encode(encoder),
+            Self::Rsa(key) => key.encode(writer),
         }
     }
 }

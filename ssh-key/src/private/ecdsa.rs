@@ -1,11 +1,8 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) private keys.
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    public::EcdsaPublicKey,
-    Algorithm, EcdsaCurve, Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, public::EcdsaPublicKey, reader::Reader,
+    writer::Writer, Algorithm, EcdsaCurve, Error, Result,
 };
 use core::fmt;
 use sec1::consts::{U32, U48, U66};
@@ -32,19 +29,19 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
         self.bytes
     }
 
-    /// Decode ECDSA private key using the provided Base64 decoder.
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        decoder.read_nested(|decoder, len| {
-            if len == SIZE.checked_add(1).ok_or(Error::Length)? {
+    /// Decode ECDSA private key using the provided Base64 reader.
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        reader.read_nested(|reader| {
+            if reader.remaining_len() == SIZE.checked_add(1).ok_or(Error::Length)? {
                 // Strip leading zero
                 // TODO(tarcieri): make sure leading zero was necessary
-                if u8::decode(decoder)? != 0 {
+                if u8::decode(reader)? != 0 {
                     return Err(Error::FormatEncoding);
                 }
             }
 
             let mut bytes = [0u8; SIZE];
-            decoder.read(&mut bytes)?;
+            reader.read(&mut bytes)?;
             Ok(Self { bytes })
         })
     }
@@ -60,16 +57,16 @@ impl<const SIZE: usize> Encode for EcdsaPrivateKey<SIZE> {
         [4, self.needs_leading_zero().into(), SIZE].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         [self.needs_leading_zero().into(), SIZE]
             .checked_sum()?
-            .encode(encoder)?;
+            .encode(writer)?;
 
         if self.needs_leading_zero() {
-            encoder.write(&[0])?;
+            writer.write(&[0])?;
         }
 
-        encoder.write(&self.bytes)
+        writer.write(&self.bytes)
     }
 }
 
@@ -197,18 +194,18 @@ impl EcdsaKeypair {
 }
 
 impl Decode for EcdsaKeypair {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        match EcdsaPublicKey::decode(decoder)? {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        match EcdsaPublicKey::decode(reader)? {
             EcdsaPublicKey::NistP256(public) => {
-                let private = EcdsaPrivateKey::<32>::decode(decoder)?;
+                let private = EcdsaPrivateKey::<32>::decode(reader)?;
                 Ok(Self::NistP256 { public, private })
             }
             EcdsaPublicKey::NistP384(public) => {
-                let private = EcdsaPrivateKey::<48>::decode(decoder)?;
+                let private = EcdsaPrivateKey::<48>::decode(reader)?;
                 Ok(Self::NistP384 { public, private })
             }
             EcdsaPublicKey::NistP521(public) => {
-                let private = EcdsaPrivateKey::<66>::decode(decoder)?;
+                let private = EcdsaPrivateKey::<66>::decode(reader)?;
                 Ok(Self::NistP521 { public, private })
             }
         }
@@ -228,13 +225,13 @@ impl Encode for EcdsaKeypair {
         [public_len, private_len].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        EcdsaPublicKey::from(self).encode(encoder)?;
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        EcdsaPublicKey::from(self).encode(writer)?;
 
         match self {
-            Self::NistP256 { private, .. } => private.encode(encoder)?,
-            Self::NistP384 { private, .. } => private.encode(encoder)?,
-            Self::NistP521 { private, .. } => private.encode(encoder)?,
+            Self::NistP256 { private, .. } => private.encode(writer)?,
+            Self::NistP384 { private, .. } => private.encode(writer)?,
+            Self::NistP521 { private, .. } => private.encode(writer)?,
         }
 
         Ok(())

@@ -1,10 +1,8 @@
 //! Signatures (e.g. CA signatures over SSH certificates)
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    public, Algorithm, EcdsaCurve, Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, public, reader::Reader, writer::Writer,
+    Algorithm, EcdsaCurve, Error, Result,
 };
 use alloc::vec::Vec;
 use core::fmt;
@@ -77,15 +75,15 @@ impl Signature {
                 }
 
                 let component_len = expected_len.checked_sub(8).ok_or(Error::Length)? / 2;
-                let decoder = &mut data.as_slice();
+                let reader = &mut data.as_slice();
 
                 for _ in 0..2 {
-                    if decoder.drain_prefixed()? != component_len {
+                    if reader.drain_prefixed()? != component_len {
                         return Err(Error::Length);
                     }
                 }
 
-                if !decoder.is_finished() {
+                if !reader.is_finished() {
                     return Err(Error::Length);
                 }
             }
@@ -117,9 +115,9 @@ impl AsRef<[u8]> for Signature {
 }
 
 impl Decode for Signature {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let algorithm = Algorithm::decode(decoder)?;
-        let data = Vec::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let algorithm = Algorithm::decode(reader)?;
+        let data = Vec::decode(reader)?;
         Self::new(algorithm, data)
     }
 }
@@ -134,9 +132,9 @@ impl Encode for Signature {
         .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.algorithm().encode(encoder)?;
-        self.as_bytes().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.algorithm().encode(writer)?;
+        self.as_bytes().encode(writer)
     }
 }
 
@@ -242,7 +240,7 @@ impl Verifier<Signature> for Ed25519PublicKey {
 #[cfg(test)]
 mod tests {
     use super::Signature;
-    use crate::{encoder::Encode, Algorithm, EcdsaCurve, HashAlg};
+    use crate::{encode::Encode, Algorithm, EcdsaCurve, HashAlg};
     use alloc::vec::Vec;
     use hex_literal::hex;
 

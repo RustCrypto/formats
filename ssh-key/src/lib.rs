@@ -131,10 +131,12 @@ pub mod certificate;
 mod algorithm;
 mod checked;
 mod cipher;
-mod decoder;
-mod encoder;
+mod decode;
+mod encode;
 mod error;
 mod kdf;
+mod reader;
+mod writer;
 
 #[cfg(feature = "fingerprint")]
 mod fingerprint;

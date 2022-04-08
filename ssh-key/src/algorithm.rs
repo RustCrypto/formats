@@ -1,10 +1,8 @@
 //! Algorithm support.
 
 use crate::{
-    checked::CheckedSum,
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Error,
+    Result,
 };
 use core::{fmt, str};
 
@@ -86,9 +84,9 @@ const MAX_ALG_NAME_SIZE: usize = 48;
 pub(crate) trait AlgString: AsRef<str> + str::FromStr<Err = Error> {}
 
 impl<T: AlgString> Decode for T {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
         let mut buf = [0u8; MAX_ALG_NAME_SIZE];
-        decoder
+        reader
             .read_string(buf.as_mut())
             .map_err(|_| Error::Algorithm)?
             .parse()
@@ -100,8 +98,8 @@ impl<T: AlgString> Encode for T {
         [4, self.as_ref().len()].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.as_ref().encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.as_ref().encode(writer)
     }
 }
 
