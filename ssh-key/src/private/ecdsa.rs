@@ -12,6 +12,7 @@ use zeroize::Zeroize;
 use subtle::{Choice, ConstantTimeEq};
 
 /// Elliptic Curve Digital Signature Algorithm (ECDSA) private key.
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 #[derive(Clone)]
 pub struct EcdsaPrivateKey<const SIZE: usize> {
     /// Byte array containing serialized big endian private scalar.
@@ -127,6 +128,7 @@ impl<const SIZE: usize> PartialEq for EcdsaPrivateKey<SIZE> {
 impl<const SIZE: usize> Eq for EcdsaPrivateKey<SIZE> {}
 
 /// Elliptic Curve Digital Signature Algorithm (ECDSA) private/public keypair.
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 #[derive(Clone, Debug)]
 pub enum EcdsaKeypair {
     /// NIST P-256 ECDSA keypair.

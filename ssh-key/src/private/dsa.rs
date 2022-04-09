@@ -92,6 +92,7 @@ impl PartialEq for DsaPrivateKey {
 impl Eq for DsaPrivateKey {}
 
 /// Digital Signature Algorithm (DSA) private/public keypair.
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone)]
 pub struct DsaKeypair {
     /// Public key.

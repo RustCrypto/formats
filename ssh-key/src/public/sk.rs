@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[cfg(feature = "alloc")]
-use alloc::string::String;
+use alloc::{borrow::ToOwned, string::String};
 
 #[cfg(feature = "ecdsa")]
 use {
@@ -17,12 +17,10 @@ use {
 };
 
 /// Default FIDO/U2F Security Key application string.
-#[cfg(not(feature = "alloc"))]
 const DEFAULT_APPLICATION_STRING: &str = "ssh:";
 
-/// Security Key (FIDO/U2F) using ECDSA/NIST P-256 as specified in [PROTOCOL.u2f].
-///
-/// [PROTOCOL.u2f]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD
+/// Security Key (FIDO/U2F) ECDSA/NIST P-256 public key as specified in
+/// [PROTOCOL.u2f](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD).
 #[cfg(feature = "ecdsa")]
 #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -96,9 +94,26 @@ impl Encode for SkEcdsaSha2NistP256 {
     }
 }
 
-/// Security Key (FIDO/U2F) using Ed25519 as specified in [PROTOCOL.u2f].
-///
-/// [PROTOCOL.u2f]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD
+#[cfg(feature = "ecdsa")]
+impl From<EcdsaNistP256PublicKey> for SkEcdsaSha2NistP256 {
+    fn from(ec_point: EcdsaNistP256PublicKey) -> SkEcdsaSha2NistP256 {
+        SkEcdsaSha2NistP256 {
+            ec_point,
+            #[cfg(feature = "alloc")]
+            application: DEFAULT_APPLICATION_STRING.to_owned(),
+        }
+    }
+}
+
+#[cfg(feature = "ecdsa")]
+impl From<SkEcdsaSha2NistP256> for EcdsaNistP256PublicKey {
+    fn from(sk: SkEcdsaSha2NistP256) -> EcdsaNistP256PublicKey {
+        sk.ec_point
+    }
+}
+
+/// Security Key (FIDO/U2F) Ed25519 public key as specified in
+/// [PROTOCOL.u2f](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD).
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct SkEd25519 {
     /// Ed25519 public key.
@@ -157,5 +172,21 @@ impl Encode for SkEd25519 {
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.public_key.encode(writer)?;
         self.application().encode(writer)
+    }
+}
+
+impl From<Ed25519PublicKey> for SkEd25519 {
+    fn from(public_key: Ed25519PublicKey) -> SkEd25519 {
+        SkEd25519 {
+            public_key,
+            #[cfg(feature = "alloc")]
+            application: DEFAULT_APPLICATION_STRING.to_owned(),
+        }
+    }
+}
+
+impl From<SkEd25519> for Ed25519PublicKey {
+    fn from(sk: SkEd25519) -> Ed25519PublicKey {
+        sk.public_key
     }
 }

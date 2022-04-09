@@ -89,6 +89,7 @@ impl PartialEq for RsaPrivateKey {
 impl Eq for RsaPrivateKey {}
 
 /// RSA private/public keypair.
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone)]
 pub struct RsaKeypair {
     /// Public key.

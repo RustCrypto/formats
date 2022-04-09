@@ -19,7 +19,7 @@ pub(crate) trait Decode: Sized {
     fn decode(reader: &mut impl Reader) -> Result<Self>;
 }
 
-/// Decode a single byte from the input data.
+/// Decode a single `byte` from the input data.
 impl Decode for u8 {
     fn decode(reader: &mut impl Reader) -> Result<Self> {
         let mut buf = [0];
