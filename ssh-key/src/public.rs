@@ -86,32 +86,25 @@ impl PublicKey {
         let mut reader = Base64Reader::new(encapsulation.base64_data)?;
         let key_data = KeyData::decode(&mut reader)?;
 
-        if !reader.is_finished() {
-            return Err(Error::Length);
-        }
-
         // Verify that the algorithm in the Base64-encoded data matches the text
         if encapsulation.algorithm_id != key_data.algorithm().as_str() {
             return Err(Error::Algorithm);
         }
 
-        Ok(Self {
+        let public_key = Self {
             key_data,
             #[cfg(feature = "alloc")]
             comment: encapsulation.comment.to_owned(),
-        })
+        };
+
+        reader.finish(public_key)
     }
 
     /// Parse a raw binary SSH public key.
     pub fn from_bytes(mut bytes: &[u8]) -> Result<Self> {
         let reader = &mut bytes;
         let key_data = KeyData::decode(reader)?;
-
-        if reader.is_finished() {
-            Ok(key_data.into())
-        } else {
-            Err(Error::Length)
-        }
+        reader.finish(key_data.into())
     }
 
     /// Encode OpenSSH-formatted public key.
@@ -144,9 +137,9 @@ impl PublicKey {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
-        let mut ret = Vec::new();
-        self.key_data.encode(&mut ret)?;
-        Ok(ret)
+        let mut public_key_bytes = Vec::new();
+        self.key_data.encode(&mut public_key_bytes)?;
+        Ok(public_key_bytes)
     }
 
     /// Read public key from an OpenSSH-formatted file.

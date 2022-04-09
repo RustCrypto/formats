@@ -26,7 +26,11 @@ use {
 use serde::{de, ser, Deserialize, Serialize};
 
 #[cfg(feature = "std")]
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{
+    fs,
+    path::Path,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
 /// Key/value map type used for certificate's critical options and extensions.
 pub type OptionsMap = alloc::collections::BTreeMap<String, String>;
@@ -107,29 +111,20 @@ impl Certificate {
         let mut reader = Base64Reader::new(encapsulation.base64_data)?;
         let mut cert = Certificate::decode(&mut reader)?;
 
-        if !reader.is_finished() {
-            return Err(Error::Length);
-        }
-
         // Verify that the algorithm in the Base64-encoded data matches the text
         if encapsulation.algorithm_id != cert.algorithm().as_certificate_str() {
             return Err(Error::Algorithm);
         }
 
         cert.comment = encapsulation.comment.to_owned();
-        Ok(cert)
+        reader.finish(cert)
     }
 
     /// Parse a raw binary OpenSSH certificate.
     pub fn from_bytes(mut bytes: &[u8]) -> Result<Self> {
         let reader = &mut bytes;
         let cert = Certificate::decode(reader)?;
-
-        if reader.is_finished() {
-            Ok(cert)
-        } else {
-            Err(Error::Length)
-        }
+        reader.finish(cert)
     }
 
     /// Encode OpenSSH certificate to a [`String`].
@@ -156,9 +151,26 @@ impl Certificate {
 
     /// Serialize OpenSSH certificate as raw bytes.
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
-        let mut ret = Vec::new();
-        self.encode(&mut ret)?;
-        Ok(ret)
+        let mut cert_bytes = Vec::new();
+        self.encode(&mut cert_bytes)?;
+        Ok(cert_bytes)
+    }
+
+    /// Read OpenSSH certificate from a file.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn read_file(path: &Path) -> Result<Self> {
+        let input = fs::read_to_string(path)?;
+        Self::from_openssh(&*input)
+    }
+
+    /// Write OpenSSH certificate to a file.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn write_file(&self, path: &Path) -> Result<()> {
+        let encoded = self.to_openssh()?;
+        fs::write(path, encoded.as_bytes())?;
+        Ok(())
     }
 
     /// Get the public key algorithm for this certificate.

@@ -224,58 +224,15 @@ impl PrivateKey {
     pub fn from_openssh(input: impl AsRef<[u8]>) -> Result<Self> {
         let mut reader = pem::Decoder::new_wrapped(input.as_ref(), PEM_LINE_WIDTH)?;
         Self::validate_pem_label(reader.type_label())?;
+        let private_key = Self::decode(&mut reader)?;
+        reader.finish(private_key)
+    }
 
-        let mut auth_magic = [0u8; Self::AUTH_MAGIC.len()];
-        reader.decode(&mut auth_magic)?;
-
-        if auth_magic != Self::AUTH_MAGIC {
-            return Err(Error::FormatEncoding);
-        }
-
-        let cipher = Cipher::decode(&mut reader)?;
-        let kdf = Kdf::decode(&mut reader)?;
-        let nkeys = usize::decode(&mut reader)?;
-
-        // TODO(tarcieri): support more than one key?
-        if nkeys != 1 {
-            return Err(Error::Length);
-        }
-
-        let public_key = reader.read_nested(public::KeyData::decode)?;
-
-        // Handle encrypted private key
-        #[cfg(not(feature = "alloc"))]
-        if cipher.is_some() {
-            return Err(Error::Encrypted);
-        }
-        #[cfg(feature = "alloc")]
-        if cipher.is_some() {
-            let ciphertext = Vec::decode(&mut reader)?;
-
-            // Ensure ciphertext is padded to the expected length
-            if ciphertext.len().checked_rem(cipher.block_size()) != Some(0) {
-                return Err(Error::Crypto);
-            }
-
-            if !reader.is_finished() {
-                return Err(Error::Length);
-            }
-
-            return Ok(Self {
-                cipher,
-                kdf,
-                checkint: None,
-                public_key: public_key.into(),
-                key_data: KeypairData::Encrypted(ciphertext),
-            });
-        }
-
-        // Processing unencrypted key. No KDF should be set.
-        if kdf.is_some() {}
-
-        reader.read_nested(|reader| {
-            Self::decode_privatekey_comment_pair(reader, public_key, cipher.block_size())
-        })
+    /// Parse a raw binary SSH private key.
+    pub fn from_bytes(mut bytes: &[u8]) -> Result<Self> {
+        let reader = &mut bytes;
+        let private_key = Self::decode(reader)?;
+        reader.finish(private_key)
     }
 
     /// Encode OpenSSH-formatted (PEM) private key.
@@ -287,27 +244,7 @@ impl PrivateKey {
         let mut writer =
             pem::Encoder::new_wrapped(Self::PEM_LABEL, PEM_LINE_WIDTH, line_ending, out)?;
 
-        Writer::write(&mut writer, Self::AUTH_MAGIC)?;
-        self.cipher.encode(&mut writer)?;
-        self.kdf.encode(&mut writer)?;
-
-        // TODO(tarcieri): support for encoding more than one private key
-        1usize.encode(&mut writer)?;
-
-        // Encode public key
-        self.public_key.key_data().encode_nested(&mut writer)?;
-
-        // Encode private key
-        if self.is_encrypted() {
-            self.key_data.encode_nested(&mut writer)?;
-        } else {
-            self.encoded_privatekey_comment_pair_len(Cipher::None)?
-                .encode(&mut writer)?;
-
-            let checkint = self.checkint.unwrap_or_else(|| self.key_data.checkint());
-            self.encode_privatekey_comment_pair(&mut writer, Cipher::None, checkint)?;
-        }
-
+        self.encode(&mut writer)?;
         let encoded_len = writer.finish()?;
         Ok(str::from_utf8(&out[..encoded_len])?)
     }
@@ -322,6 +259,15 @@ impl PrivateKey {
         let actual_len = self.encode_openssh(line_ending, &mut buf)?.len();
         buf.truncate(actual_len);
         Ok(Zeroizing::new(String::from_utf8(buf)?))
+    }
+
+    /// Serialize SSH private key as raw bytes.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn to_bytes(&self) -> Result<Zeroizing<Vec<u8>>> {
+        let mut private_key_bytes = Vec::with_capacity(self.encoded_len()?);
+        self.encode(&mut private_key_bytes)?;
+        Ok(Zeroizing::new(private_key_bytes))
     }
 
     /// Read private key from an OpenSSH-formatted PEM file.
@@ -575,7 +521,9 @@ impl PrivateKey {
         }
 
         if !reader.is_finished() {
-            return Err(Error::Length);
+            return Err(Error::TrailingData {
+                remaining: reader.remaining_len(),
+            });
         }
 
         Ok(Self {
@@ -636,25 +584,7 @@ impl PrivateKey {
     /// May be slightly longer than the actual result.
     #[cfg(feature = "alloc")]
     fn pem_encoded_len(&self, line_ending: LineEnding) -> Result<usize> {
-        let private_key_len = if self.is_encrypted() {
-            self.key_data.encoded_len()?
-        } else {
-            self.encoded_privatekey_comment_pair_len(Cipher::None)?
-        };
-
-        let bytes_len = [
-            Self::AUTH_MAGIC.len(),
-            self.cipher.encoded_len()?,
-            self.kdf.encoded_len()?,
-            4, // number of keys (uint32)
-            4, // public key length prefix (uint32)
-            self.public_key.key_data().encoded_len()?,
-            4, // private key length prefix (uint32)
-            private_key_len,
-        ]
-        .checked_sum()?;
-
-        let base64_len = base64_len(bytes_len);
+        let base64_len = base64_len(self.encoded_len()?);
 
         // Add the length of the line endings which will be inserted when
         // encoded Base64 is line wrapped
@@ -672,6 +602,123 @@ impl PrivateKey {
     }
 }
 
+impl Decode for PrivateKey {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let mut auth_magic = [0u8; Self::AUTH_MAGIC.len()];
+        reader.read(&mut auth_magic)?;
+
+        if auth_magic != Self::AUTH_MAGIC {
+            return Err(Error::FormatEncoding);
+        }
+
+        let cipher = Cipher::decode(reader)?;
+        let kdf = Kdf::decode(reader)?;
+        let nkeys = usize::decode(reader)?;
+
+        // TODO(tarcieri): support more than one key?
+        if nkeys != 1 {
+            return Err(Error::Length);
+        }
+
+        let public_key = reader.read_nested(public::KeyData::decode)?;
+
+        // Handle encrypted private key
+        #[cfg(not(feature = "alloc"))]
+        if cipher.is_some() {
+            return Err(Error::Encrypted);
+        }
+        #[cfg(feature = "alloc")]
+        if cipher.is_some() {
+            let ciphertext = Vec::decode(reader)?;
+
+            // Ensure ciphertext is padded to the expected length
+            if ciphertext.len().checked_rem(cipher.block_size()) != Some(0) {
+                return Err(Error::Crypto);
+            }
+
+            if !reader.is_finished() {
+                return Err(Error::Length);
+            }
+
+            return Ok(Self {
+                cipher,
+                kdf,
+                checkint: None,
+                public_key: public_key.into(),
+                key_data: KeypairData::Encrypted(ciphertext),
+            });
+        }
+
+        // Processing unencrypted key. No KDF should be set.
+        if kdf.is_some() {
+            return Err(Error::Crypto);
+        }
+
+        reader.read_nested(|reader| {
+            Self::decode_privatekey_comment_pair(reader, public_key, cipher.block_size())
+        })
+    }
+}
+
+impl Encode for PrivateKey {
+    fn encoded_len(&self) -> Result<usize> {
+        let private_key_len = if self.is_encrypted() {
+            self.key_data.encoded_len()?
+        } else {
+            self.encoded_privatekey_comment_pair_len(Cipher::None)?
+        };
+
+        [
+            Self::AUTH_MAGIC.len(),
+            self.cipher.encoded_len()?,
+            self.kdf.encoded_len()?,
+            4, // number of keys (uint32)
+            4, // public key length prefix (uint32)
+            self.public_key.key_data().encoded_len()?,
+            4, // private key length prefix (uint32)
+            private_key_len,
+        ]
+        .checked_sum()
+    }
+
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        writer.write(Self::AUTH_MAGIC)?;
+        self.cipher.encode(writer)?;
+        self.kdf.encode(writer)?;
+
+        // TODO(tarcieri): support for encoding more than one private key
+        1usize.encode(writer)?;
+
+        // Encode public key
+        self.public_key.key_data().encode_nested(writer)?;
+
+        // Encode private key
+        if self.is_encrypted() {
+            self.key_data.encode_nested(writer)?;
+        } else {
+            self.encoded_privatekey_comment_pair_len(Cipher::None)?
+                .encode(writer)?;
+
+            let checkint = self.checkint.unwrap_or_else(|| self.key_data.checkint());
+            self.encode_privatekey_comment_pair(writer, Cipher::None, checkint)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl From<PrivateKey> for PublicKey {
+    fn from(private_key: PrivateKey) -> PublicKey {
+        private_key.public_key
+    }
+}
+
+impl From<&PrivateKey> for PublicKey {
+    fn from(private_key: &PrivateKey) -> PublicKey {
+        private_key.public_key.clone()
+    }
+}
+
 impl TryFrom<KeypairData> for PrivateKey {
     type Error = Error;
 
@@ -685,18 +732,6 @@ impl TryFrom<KeypairData> for PrivateKey {
             public_key: public_key.into(),
             key_data,
         })
-    }
-}
-
-impl From<PrivateKey> for PublicKey {
-    fn from(private_key: PrivateKey) -> PublicKey {
-        private_key.public_key
-    }
-}
-
-impl From<&PrivateKey> for PublicKey {
-    fn from(private_key: &PrivateKey) -> PublicKey {
-        private_key.public_key.clone()
     }
 }
 
