@@ -429,22 +429,17 @@ impl Encode for Certificate {
     fn encoded_len(&self) -> Result<usize> {
         [
             self.algorithm.as_certificate_str().encoded_len()?,
-            4, // nonce length prefix (uint32)
-            self.nonce.len(),
+            self.nonce.encoded_len()?,
             self.public_key.encoded_key_data_len()?,
-            8, // serial (uint64)
-            4, // cert type (uint32)
-            4, // key id length prefix (uint32)
-            self.key_id.len(),
+            self.serial.encoded_len()?,
+            self.cert_type.encoded_len()?,
+            self.key_id.encoded_len()?,
             self.valid_principals.encoded_len()?,
-            8, // valid after (uint64)
-            8, // valid before (uint64)
-            4, // critical options length prefix (uint32)
+            self.valid_after.encoded_len()?,
+            self.valid_before.encoded_len()?,
             self.critical_options.encoded_len()?,
-            4, // extensions length prefix (uint32)
             self.extensions.encoded_len()?,
-            4, // reserved length prefix (uint32)
-            self.reserved.len(),
+            self.reserved.encoded_len()?,
             4, // signature key length prefix (uint32)
             self.signature_key.encoded_len()?,
             4, // signature length prefix (uint32)

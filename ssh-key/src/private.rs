@@ -617,9 +617,8 @@ impl PrivateKey {
 
         [
             8, // 2 x uint32 checkints,
-            4, // u32 length prefix for key data
             self.key_data.encoded_len()?,
-            self.comment().len(),
+            self.comment().encoded_len()?,
         ]
         .checked_sum()
     }
