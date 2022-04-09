@@ -169,9 +169,10 @@ fn decode_sk_ecdsa_p256_openssh() {
             "04810b409d8382f697d72425285a247d6336b2eb9a085236aa9d1e268747ca0e8ee227f17375e944a775392
              f1d35842d13f6237574ab03e00e9cc1799ecd8d931e"
         ),
-        ecdsa_key.as_ref(),
+        ecdsa_key.ec_point().as_ref(),
     );
 
+    assert_eq!("ssh:", ecdsa_key.application());
     assert_eq!("user@example.com", cert.comment());
 }
 
@@ -181,11 +182,13 @@ fn decode_sk_ed25519_openssh() {
 
     assert_eq!(Algorithm::SkEd25519, cert.public_key().algorithm());
 
+    let ed25519_key = cert.public_key().sk_ed25519().unwrap();
     assert_eq!(
         &hex!("2168fe4e4b53cf3adeeeba602f5e50edb5ef441dba884f5119109db2dafdd733"),
-        cert.public_key().sk_ed25519().unwrap().as_ref(),
+        ed25519_key.public_key().as_ref(),
     );
 
+    assert_eq!("ssh:", ed25519_key.application());
     assert_eq!("user@example.com", cert.comment());
 }
 

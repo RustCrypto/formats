@@ -11,13 +11,15 @@ mod key_data;
 mod openssh;
 #[cfg(feature = "alloc")]
 mod rsa;
+mod sk;
 
-pub use self::{ed25519::Ed25519PublicKey, key_data::KeyData};
+pub use self::{ed25519::Ed25519PublicKey, key_data::KeyData, sk::SkEd25519};
 
-#[cfg(feature = "ecdsa")]
-pub use self::ecdsa::EcdsaPublicKey;
 #[cfg(feature = "alloc")]
 pub use self::{dsa::DsaPublicKey, rsa::RsaPublicKey};
+
+#[cfg(feature = "ecdsa")]
+pub use self::{ecdsa::EcdsaPublicKey, sk::SkEcdsaSha2NistP256};
 
 pub(crate) use self::openssh::Encapsulation;
 
