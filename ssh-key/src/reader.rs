@@ -117,6 +117,18 @@ pub(crate) trait Reader: Sized {
             Ok(len)
         })
     }
+
+    /// Finish decoding, returning the given value if there is no remaining
+    /// data, or an error otherwise.
+    fn finish<T>(self, value: T) -> Result<T> {
+        if self.is_finished() {
+            Ok(value)
+        } else {
+            Err(Error::TrailingData {
+                remaining: self.remaining_len(),
+            })
+        }
+    }
 }
 
 impl Reader for Base64Reader<'_> {

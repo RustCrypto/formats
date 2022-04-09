@@ -55,6 +55,12 @@ pub enum Error {
 
     /// Public key does not match private key.
     PublicKey,
+
+    /// Unexpected trailing data at end of message.
+    TrailingData {
+        /// Number of bytes of remaining data at end of message.
+        remaining: usize,
+    },
 }
 
 impl fmt::Display for Error {
@@ -76,6 +82,11 @@ impl fmt::Display for Error {
             Error::Overflow => f.write_str("internal overflow error"),
             Error::Pem(err) => write!(f, "{}", err),
             Error::PublicKey => f.write_str("public key is incorrect"),
+            Error::TrailingData { remaining } => write!(
+                f,
+                "unexpected trailing data at end of message ({} bytes)",
+                remaining
+            ),
         }
     }
 }
