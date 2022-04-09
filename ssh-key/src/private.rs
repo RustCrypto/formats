@@ -108,16 +108,24 @@ mod ed25519;
 mod keypair;
 #[cfg(feature = "alloc")]
 mod rsa;
+#[cfg(feature = "alloc")]
+mod sk;
 
-#[cfg(feature = "ecdsa")]
-pub use self::ecdsa::{EcdsaKeypair, EcdsaPrivateKey};
 pub use self::ed25519::{Ed25519Keypair, Ed25519PrivateKey};
 pub use self::keypair::KeypairData;
+
 #[cfg(feature = "alloc")]
 pub use self::{
     dsa::{DsaKeypair, DsaPrivateKey},
     rsa::RsaKeypair,
+    sk::SkEd25519,
 };
+
+#[cfg(feature = "ecdsa")]
+pub use self::ecdsa::{EcdsaKeypair, EcdsaPrivateKey};
+
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+pub use self::sk::SkEcdsaSha2NistP256;
 
 use crate::{
     checked::CheckedSum,

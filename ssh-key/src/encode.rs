@@ -29,6 +29,17 @@ pub(crate) trait Encode {
     }
 }
 
+/// Encode a single `byte` to the writer.
+impl Encode for u8 {
+    fn encoded_len(&self) -> Result<usize> {
+        Ok(1)
+    }
+
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        writer.write(&[*self])
+    }
+}
+
 /// Encode a `uint32` as described in [RFC4251 § 5]:
 ///
 /// > Represents a 32-bit unsigned integer.  Stored as four bytes in the

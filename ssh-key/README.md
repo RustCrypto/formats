@@ -36,7 +36,6 @@ specification, certificates as specified in [PROTOCOL.certkeys]  and the
 
 - [ ] Key generation support (WIP - see table below)
 - [ ] OpenSSH certificate builder/signer (i.e. SSH CA support)
-- [ ] FIDO/U2F private key decoder/encoder
 - [ ] Interop with digital signature crates
   - [x] `ed25519-dalek`
   - [ ] `p256` (ECDSA)
@@ -58,8 +57,8 @@ specification, certificates as specified in [PROTOCOL.certkeys]  and the
 | `ssh-dsa`                            | ✅       | ✅       | ✅           | ⛔     | `alloc` ️  |
 | `ssh-ed25519`                        | ✅       | ✅       | ✅           | ✅️     | heapless  |
 | `ssh-rsa`                            | ✅       | ✅       | ✅           | ⛔️     | `alloc`   |
-| `sk-ecdsa-sha2-nistp256@openssh.com` | ⛔       | ⛔       | ⛔           | N/A    | -         |
-| `sk-ssh-ed25519@openssh.com`         | ⛔       | ⛔       | ⛔           | N/A    | -         |
+| `sk-ecdsa-sha2-nistp256@openssh.com` | ✅       | ✅       | ✅           | ⛔     | `alloc`   |
+| `sk-ssh-ed25519@openssh.com`         | ✅       | ✅       | ✅           | ⛔     | `alloc`   |
 
 ## Minimum Supported Rust Version
 

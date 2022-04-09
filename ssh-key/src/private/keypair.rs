@@ -8,12 +8,15 @@ use crate::{
 
 #[cfg(feature = "alloc")]
 use {
-    super::{DsaKeypair, RsaKeypair},
+    super::{DsaKeypair, RsaKeypair, SkEd25519},
     alloc::vec::Vec,
 };
 
 #[cfg(feature = "ecdsa")]
 use super::EcdsaKeypair;
+
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+use super::SkEcdsaSha2NistP256;
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
@@ -48,6 +51,20 @@ pub enum KeypairData {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     Rsa(RsaKeypair),
+
+    /// Security Key (FIDO/U2F) using ECDSA/NIST P-256 as specified in [PROTOCOL.u2f].
+    ///
+    /// [PROTOCOL.u2f]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD
+    #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "ecdsa"))))]
+    SkEcdsaSha2NistP256(SkEcdsaSha2NistP256),
+
+    /// Security Key (FIDO/U2F) using Ed25519 as specified in [PROTOCOL.u2f].
+    ///
+    /// [PROTOCOL.u2f]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    SkEd25519(SkEd25519),
 }
 
 impl KeypairData {
@@ -63,6 +80,10 @@ impl KeypairData {
             Self::Encrypted(_) => return Err(Error::Encrypted),
             #[cfg(feature = "alloc")]
             Self::Rsa(_) => Algorithm::Rsa { hash: None },
+            #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+            Self::SkEcdsaSha2NistP256(_) => Algorithm::SkEcdsaSha2NistP256,
+            #[cfg(feature = "alloc")]
+            Self::SkEd25519(_) => Algorithm::SkEd25519,
         })
     }
 
@@ -115,6 +136,26 @@ impl KeypairData {
         }
     }
 
+    /// Get FIDO/U2F ECDSA/NIST P-256 private key if this key is the correct type.
+    #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "ecdsa"))))]
+    pub fn sk_ecdsa_p256(&self) -> Option<&SkEcdsaSha2NistP256> {
+        match self {
+            Self::SkEcdsaSha2NistP256(sk) => Some(sk),
+            _ => None,
+        }
+    }
+
+    /// Get FIDO/U2F Ed25519 private key if this key is the correct type.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn sk_ed25519(&self) -> Option<&SkEd25519> {
+        match self {
+            Self::SkEd25519(sk) => Some(sk),
+            _ => None,
+        }
+    }
+
     /// Is this key a DSA key?
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
@@ -153,6 +194,20 @@ impl KeypairData {
         matches!(self, Self::Rsa(_))
     }
 
+    /// Is this key a FIDO/U2F ECDSA/NIST P-256 key?
+    #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "ecdsa"))))]
+    pub fn is_sk_ecdsa_p256(&self) -> bool {
+        matches!(self, Self::SkEcdsaSha2NistP256(_))
+    }
+
+    /// Is this key a FIDO/U2F Ed25519 key?
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn is_sk_ed25519(&self) -> bool {
+        matches!(self, Self::SkEd25519(_))
+    }
+
     /// Compute a deterministic "checkint" for this private key.
     ///
     /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
@@ -168,6 +223,10 @@ impl KeypairData {
             Self::Encrypted(ciphertext) => ciphertext.as_ref(),
             #[cfg(feature = "alloc")]
             Self::Rsa(rsa) => rsa.private.d.as_bytes(),
+            #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+            Self::SkEcdsaSha2NistP256(sk) => sk.key_handle(),
+            #[cfg(feature = "alloc")]
+            Self::SkEd25519(sk) => sk.key_handle(),
         };
 
         let mut n = 0u32;
@@ -193,6 +252,12 @@ impl Decode for KeypairData {
             Algorithm::Ed25519 => Ed25519Keypair::decode(reader).map(Self::Ed25519),
             #[cfg(feature = "alloc")]
             Algorithm::Rsa { .. } => RsaKeypair::decode(reader).map(Self::Rsa),
+            #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+            Algorithm::SkEcdsaSha2NistP256 => {
+                SkEcdsaSha2NistP256::decode(reader).map(Self::SkEcdsaSha2NistP256)
+            }
+            #[cfg(feature = "alloc")]
+            Algorithm::SkEd25519 => SkEd25519::decode(reader).map(Self::SkEd25519),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
         }
@@ -211,6 +276,10 @@ impl Encode for KeypairData {
             Self::Encrypted(ciphertext) => return Ok(ciphertext.len()),
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encoded_len()?,
+            #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+            Self::SkEcdsaSha2NistP256(sk) => sk.encoded_len()?,
+            #[cfg(feature = "alloc")]
+            Self::SkEd25519(sk) => sk.encoded_len()?,
         };
 
         [self.algorithm()?.encoded_len()?, key_len].checked_sum()
@@ -231,6 +300,10 @@ impl Encode for KeypairData {
             Self::Encrypted(ciphertext) => writer.write(ciphertext),
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encode(writer),
+            #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+            Self::SkEcdsaSha2NistP256(sk) => sk.encode(writer),
+            #[cfg(feature = "alloc")]
+            Self::SkEd25519(sk) => sk.encode(writer),
         }
     }
 }
@@ -249,6 +322,12 @@ impl TryFrom<&KeypairData> for public::KeyData {
             KeypairData::Encrypted(_) => return Err(Error::Encrypted),
             #[cfg(feature = "alloc")]
             KeypairData::Rsa(rsa) => public::KeyData::Rsa(rsa.into()),
+            #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+            KeypairData::SkEcdsaSha2NistP256(sk) => {
+                public::KeyData::SkEcdsaSha2NistP256(sk.public().clone())
+            }
+            #[cfg(feature = "alloc")]
+            KeypairData::SkEd25519(sk) => public::KeyData::SkEd25519(sk.public().clone()),
         })
     }
 }
@@ -298,6 +377,18 @@ impl ConstantTimeEq for KeypairData {
             (Self::Encrypted(a), Self::Encrypted(b)) => a.ct_eq(b),
             #[cfg(feature = "alloc")]
             (Self::Rsa(a), Self::Rsa(b)) => a.ct_eq(b),
+            #[cfg(all(feature = "alloc", feature = "ecdsa"))]
+            (Self::SkEcdsaSha2NistP256(a), Self::SkEcdsaSha2NistP256(b)) => {
+                // Security Keys store the actual private key in hardware.
+                // The key structs contain all public data.
+                Choice::from((a == b) as u8)
+            }
+            #[cfg(feature = "alloc")]
+            (Self::SkEd25519(a), Self::SkEd25519(b)) => {
+                // Security Keys store the actual private key in hardware.
+                // The key structs contain all public data.
+                Choice::from((a == b) as u8)
+            }
             _ => Choice::from(0),
         }
     }
