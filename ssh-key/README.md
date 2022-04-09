@@ -13,8 +13,14 @@
 
 Pure Rust implementation of SSH key file format decoders/encoders as described
 in [RFC4251] and [RFC4253] as well as OpenSSH's [PROTOCOL.key] format
-specification, certificates as specified in [PROTOCOL.certkeys]  and the
-`authorized_keys` file format.
+specification.
+
+Provides support for certificates as specified in [PROTOCOL.certkeys]
+(including certificate validation and certificate authority support),
+FIDO/U2F keys as specified in [PROTOCOL.u2f] (and certificates thereof),
+and the `authorized_keys` file format.
+
+Supports a minimal profile which works on heapless `no_std` targets.
 
 ## Features
 
@@ -23,7 +29,9 @@ specification, certificates as specified in [PROTOCOL.certkeys]  and the
   - [x] OpenSSH public keys
   - [x] OpenSSH private keys (i.e. `BEGIN OPENSSH PRIVATE KEY`)
   - [x] OpenSSH certificates
-- [x] OpenSSH certificate validation (Ed25519 only)
+- [x] OpenSSH certificates
+  - [x] Certificate validation (Ed25519 only)
+  - [x] Certificate builder/signer (i.e. SSH CA support)
 - [x] Private key encryption/decryption (`bcrypt-pbkdf` + `aes256-ctr` only)
 - [x] FIDO/U2F key support (`sk-*`) as specified in [PROTOCOL.u2f]
 - [x] Fingerprint support (SHA-256 only)
@@ -35,7 +43,6 @@ specification, certificates as specified in [PROTOCOL.certkeys]  and the
 #### TODO
 
 - [ ] Key generation support (WIP - see table below)
-- [ ] OpenSSH certificate builder/signer (i.e. SSH CA support)
 - [ ] Interop with digital signature crates
   - [x] `ed25519-dalek`
   - [ ] `p256` (ECDSA)

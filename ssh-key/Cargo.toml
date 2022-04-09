@@ -3,7 +3,8 @@ name = "ssh-key"
 version = "0.4.0-pre"
 description = """
 Pure Rust implementation of SSH key file format decoders/encoders as described
-in RFC4251 and RFC4253 as well as the OpenSSH key formats, certificates, and
+in RFC4251 and RFC4253 as well as the OpenSSH key formats, certificates
+(including certificate validation and certificate authority support), and
 the `authorized_keys` file format. Supports `no_std` embedded targets.
 """
 authors = ["RustCrypto Developers"]
@@ -34,6 +35,7 @@ subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
+rand_chacha = "0.3"
 tempfile = "3"
 zeroize_derive = "1.3" # hack to make minimal-versions lint happy (pulled in by `ed25519-dalek`)
 

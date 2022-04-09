@@ -1,5 +1,14 @@
 //! OpenSSH certificate support.
 
+mod builder;
+mod cert_type;
+mod options_map;
+mod signing_key;
+
+pub use self::{
+    builder::Builder, cert_type::CertType, options_map::OptionsMap, signing_key::SigningKey,
+};
+
 use crate::{
     checked::CheckedSum,
     decode::Decode,
@@ -14,7 +23,7 @@ use alloc::{
     string::{String, ToString},
     vec::Vec,
 };
-use core::{cmp::Ordering, str::FromStr};
+use core::str::FromStr;
 
 #[cfg(feature = "fingerprint")]
 use {
@@ -32,9 +41,6 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-/// Key/value map type used for certificate's critical options and extensions.
-pub type OptionsMap = alloc::collections::BTreeMap<String, String>;
-
 /// OpenSSH certificate as specified in [PROTOCOL.certkeys].
 ///
 /// OpenSSH supports X.509-like certificate authorities, but using a custom
@@ -50,9 +56,6 @@ pub type OptionsMap = alloc::collections::BTreeMap<String, String>;
 /// [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Certificate {
-    /// Certificate algorithm.
-    algorithm: Algorithm,
-
     /// CA-provided random bitstring of arbitrary length
     /// (but typically 16 or 32 bytes).
     nonce: Vec<u8>,
@@ -175,7 +178,7 @@ impl Certificate {
 
     /// Get the public key algorithm for this certificate.
     pub fn algorithm(&self) -> Algorithm {
-        self.algorithm
+        self.public_key.algorithm()
     }
 
     /// Get the comment on this certificate.
@@ -389,7 +392,7 @@ impl Certificate {
     pub fn verify_signature(&self) -> Result<()> {
         let mut tbs_certificate = Vec::new();
         self.encode_tbs(&mut tbs_certificate)?;
-        self.public_key
+        self.signature_key
             .verify(&tbs_certificate, &self.signature)
             .map_err(|_| Error::CertificateValidation)
     }
@@ -397,7 +400,7 @@ impl Certificate {
     /// Encode the portion of the certificate "to be signed" by the CA
     /// (or to be verified against an existing CA signature)
     fn encode_tbs(&self, writer: &mut impl Writer) -> Result<()> {
-        self.algorithm.as_certificate_str().encode(writer)?;
+        self.algorithm().as_certificate_str().encode(writer)?;
         self.nonce.encode(writer)?;
         self.public_key.encode_key_data(writer)?;
         self.serial.encode(writer)?;
@@ -418,7 +421,6 @@ impl Decode for Certificate {
         let algorithm = Algorithm::new_certificate(&String::decode(reader)?)?;
 
         Ok(Self {
-            algorithm,
             nonce: Vec::decode(reader)?,
             public_key: KeyData::decode_as(reader, algorithm)?,
             serial: u64::decode(reader)?,
@@ -440,7 +442,7 @@ impl Decode for Certificate {
 impl Encode for Certificate {
     fn encoded_len(&self) -> Result<usize> {
         [
-            self.algorithm.as_certificate_str().encoded_len()?,
+            self.algorithm().as_certificate_str().encoded_len()?,
             self.nonce.encoded_len()?,
             self.public_key.encoded_key_data_len()?,
             self.serial.encoded_len()?,
@@ -513,98 +515,5 @@ impl Serialize for Certificate {
                 .map_err(ser::Error::custom)?
                 .serialize(serializer)
         }
-    }
-}
-
-/// Certificate types.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
-#[repr(u32)]
-pub enum CertType {
-    /// User certificate
-    User = 1,
-
-    /// Host certificate
-    Host = 2,
-}
-
-impl TryFrom<u32> for CertType {
-    type Error = Error;
-
-    fn try_from(n: u32) -> Result<CertType> {
-        match n {
-            1 => Ok(CertType::User),
-            2 => Ok(CertType::Host),
-            _ => Err(Error::FormatEncoding),
-        }
-    }
-}
-
-impl From<CertType> for u32 {
-    fn from(cert_type: CertType) -> u32 {
-        cert_type as u32
-    }
-}
-
-impl Decode for CertType {
-    fn decode(reader: &mut impl Reader) -> Result<Self> {
-        u32::decode(reader)?.try_into()
-    }
-}
-
-impl Encode for CertType {
-    fn encoded_len(&self) -> Result<usize> {
-        Ok(4)
-    }
-
-    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
-        u32::from(*self).encode(writer)
-    }
-}
-
-impl Decode for OptionsMap {
-    fn decode(reader: &mut impl Reader) -> Result<Self> {
-        reader.read_nested(|reader| {
-            let mut entries = Vec::<(String, String)>::new();
-
-            while !reader.is_finished() {
-                let name = String::decode(reader)?;
-                let data = String::decode(reader)?;
-
-                // Options must be lexically ordered by "name" if they appear in
-                // the sequence. Each named option may only appear once in a
-                // certificate.
-                if let Some((prev_name, _)) = entries.last() {
-                    if prev_name.cmp(&name) != Ordering::Less {
-                        return Err(Error::FormatEncoding);
-                    }
-                }
-
-                entries.push((name, data));
-            }
-
-            Ok(OptionsMap::from_iter(entries))
-        })
-    }
-}
-
-impl Encode for OptionsMap {
-    fn encoded_len(&self) -> Result<usize> {
-        self.iter().try_fold(4, |acc, (name, data)| {
-            [acc, 4, name.len(), 4, data.len()].checked_sum()
-        })
-    }
-
-    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
-        self.encoded_len()?
-            .checked_sub(4)
-            .ok_or(Error::Length)?
-            .encode(writer)?;
-
-        for (name, data) in self {
-            name.encode(writer)?;
-            data.encode(writer)?;
-        }
-
-        Ok(())
     }
 }

@@ -224,6 +224,18 @@ impl From<KeyData> for PublicKey {
     }
 }
 
+impl From<PublicKey> for KeyData {
+    fn from(public_key: PublicKey) -> KeyData {
+        public_key.key_data
+    }
+}
+
+impl From<&PublicKey> for KeyData {
+    fn from(public_key: &PublicKey) -> KeyData {
+        public_key.key_data.clone()
+    }
+}
+
 impl FromStr for PublicKey {
     type Err = Error;
 

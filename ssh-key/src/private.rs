@@ -149,7 +149,7 @@ use {
 #[cfg(feature = "fingerprint")]
 use crate::{Fingerprint, HashAlg};
 
-#[cfg(any(feature = "ed25519", feature = "encryption"))]
+#[cfg(feature = "rand_core")]
 use rand_core::{CryptoRng, RngCore};
 
 #[cfg(feature = "std")]
@@ -424,6 +424,21 @@ impl PrivateKey {
     /// Get the [`PublicKey`] which corresponds to this private key.
     pub fn public_key(&self) -> &PublicKey {
         &self.public_key
+    }
+
+    /// Generate a random key which uses the given algorithm.
+    ///
+    /// # Returns
+    /// - `Error::Algorithm` if the algorithm is unsupported.
+    #[cfg(feature = "rand_core")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rand_core")))]
+    #[allow(unused_variables)]
+    pub fn random(rng: impl CryptoRng + RngCore, algorithm: Algorithm) -> Result<Self> {
+        match algorithm {
+            #[cfg(feature = "ed25519")]
+            Algorithm::Ed25519 => Ok(Self::random_ed25519(rng)),
+            _ => Err(Error::Algorithm),
+        }
     }
 
     /// Generate a random Ed25519 private key.
@@ -716,6 +731,18 @@ impl From<PrivateKey> for PublicKey {
 impl From<&PrivateKey> for PublicKey {
     fn from(private_key: &PrivateKey) -> PublicKey {
         private_key.public_key.clone()
+    }
+}
+
+impl From<PrivateKey> for public::KeyData {
+    fn from(private_key: PrivateKey) -> public::KeyData {
+        private_key.public_key.key_data
+    }
+}
+
+impl From<&PrivateKey> for public::KeyData {
+    fn from(private_key: &PrivateKey) -> public::KeyData {
+        private_key.public_key.key_data.clone()
     }
 }
 
