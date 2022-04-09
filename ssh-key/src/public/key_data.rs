@@ -1,6 +1,6 @@
 //! Public key data.
 
-use super::Ed25519PublicKey;
+use super::{Ed25519PublicKey, SkEd25519};
 use crate::{
     checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Algorithm,
     Error, Result,
@@ -10,18 +10,10 @@ use crate::{
 use super::{DsaPublicKey, RsaPublicKey};
 
 #[cfg(feature = "ecdsa")]
-use {
-    super::{ecdsa::EcdsaNistP256PublicKey, EcdsaPublicKey},
-    crate::EcdsaCurve,
-};
+use super::{EcdsaPublicKey, SkEcdsaSha2NistP256};
 
 #[cfg(feature = "fingerprint")]
 use crate::{Fingerprint, HashAlg, Sha256Fingerprint};
-
-/// FIDO/U2F Security Key application string.
-///
-/// This is not presently customizable.
-const SK_APPLICATION_STRING: &str = "ssh:";
 
 /// Public key data.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -50,12 +42,12 @@ pub enum KeyData {
     /// [PROTOCOL.u2f]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD
     #[cfg(feature = "ecdsa")]
     #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
-    SkEcdsaSha2NistP256(EcdsaNistP256PublicKey),
+    SkEcdsaSha2NistP256(SkEcdsaSha2NistP256),
 
     /// Security Key (FIDO/U2F) using Ed25519 as specified in [PROTOCOL.u2f].
     ///
     /// [PROTOCOL.u2f]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD
-    SkEd25519(Ed25519PublicKey),
+    SkEd25519(SkEd25519),
 }
 
 impl KeyData {
@@ -129,17 +121,17 @@ impl KeyData {
     /// Get FIDO/U2F ECDSA/NIST P-256 public key if this key is the correct type.
     #[cfg(feature = "ecdsa")]
     #[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
-    pub fn sk_ecdsa_p256(&self) -> Option<&EcdsaNistP256PublicKey> {
+    pub fn sk_ecdsa_p256(&self) -> Option<&SkEcdsaSha2NistP256> {
         match self {
-            Self::SkEcdsaSha2NistP256(key) => Some(key),
+            Self::SkEcdsaSha2NistP256(sk) => Some(sk),
             _ => None,
         }
     }
 
     /// Get FIDO/U2F Ed25519 public key if this key is the correct type.
-    pub fn sk_ed25519(&self) -> Option<&Ed25519PublicKey> {
+    pub fn sk_ed25519(&self) -> Option<&SkEd25519> {
         match self {
-            Self::SkEd25519(key) => Some(key),
+            Self::SkEd25519(sk) => Some(sk),
             _ => None,
         }
     }
@@ -197,28 +189,9 @@ impl KeyData {
             Algorithm::Rsa { .. } => RsaPublicKey::decode(reader).map(Self::Rsa),
             #[cfg(feature = "ecdsa")]
             Algorithm::SkEcdsaSha2NistP256 => {
-                if EcdsaCurve::decode(reader)? != EcdsaCurve::NistP256 {
-                    return Err(Error::Crypto);
-                }
-
-                let mut buf = [0u8; 65];
-                let ec_point = EcdsaNistP256PublicKey::from_bytes(reader.read_byten(&mut buf)?)?;
-
-                // application string (e.g. `ssh:`)
-                // TODO(tarcieri): support for storing these?
-                reader.drain_prefixed()?;
-
-                Ok(Self::SkEcdsaSha2NistP256(ec_point))
+                SkEcdsaSha2NistP256::decode(reader).map(Self::SkEcdsaSha2NistP256)
             }
-            Algorithm::SkEd25519 => {
-                let public_key = Ed25519PublicKey::decode(reader)?;
-
-                // application string (e.g. `ssh:`)
-                // TODO(tarcieri): support for storing these?
-                reader.drain_prefixed()?;
-
-                Ok(Self::SkEd25519(public_key))
-            }
+            Algorithm::SkEd25519 => SkEd25519::decode(reader).map(Self::SkEd25519),
             #[allow(unreachable_patterns)]
             _ => Err(Error::Algorithm),
         }
@@ -236,15 +209,8 @@ impl KeyData {
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encoded_len(),
             #[cfg(feature = "ecdsa")]
-            Self::SkEcdsaSha2NistP256(key) => [
-                EcdsaCurve::NistP256.encoded_len()?,
-                key.as_bytes().encoded_len()?,
-                SK_APPLICATION_STRING.encoded_len()?,
-            ]
-            .checked_sum(),
-            Self::SkEd25519(key) => {
-                [key.encoded_len()?, SK_APPLICATION_STRING.encoded_len()?].checked_sum()
-            }
+            Self::SkEcdsaSha2NistP256(sk) => sk.encoded_len(),
+            Self::SkEd25519(sk) => sk.encoded_len(),
         }
     }
 
@@ -259,15 +225,8 @@ impl KeyData {
             #[cfg(feature = "alloc")]
             Self::Rsa(key) => key.encode(writer),
             #[cfg(feature = "ecdsa")]
-            Self::SkEcdsaSha2NistP256(key) => {
-                EcdsaCurve::NistP256.encode(writer)?;
-                key.as_bytes().encode(writer)?;
-                SK_APPLICATION_STRING.encode(writer)
-            }
-            Self::SkEd25519(key) => {
-                key.encode(writer)?;
-                SK_APPLICATION_STRING.encode(writer)
-            }
+            Self::SkEcdsaSha2NistP256(sk) => sk.encode(writer),
+            Self::SkEd25519(sk) => sk.encode(writer),
         }
     }
 }
