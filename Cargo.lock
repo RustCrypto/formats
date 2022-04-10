@@ -1164,6 +1164,7 @@ dependencies = [
  "ed25519-dalek",
  "hex-literal",
  "pem-rfc7468",
+ "rand_chacha",
  "rand_core 0.6.3",
  "sec1",
  "serde",

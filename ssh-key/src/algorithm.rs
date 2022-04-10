@@ -281,6 +281,12 @@ impl AsRef<str> for Algorithm {
 
 impl AlgString for Algorithm {}
 
+impl Default for Algorithm {
+    fn default() -> Algorithm {
+        Algorithm::Ed25519
+    }
+}
+
 impl fmt::Display for Algorithm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())

@@ -16,6 +16,12 @@ pub enum Error {
     /// Base64-related errors.
     Base64(base64ct::Error),
 
+    /// Certificate field is invalid or already set.
+    CertificateFieldInvalid {
+        /// Name of the invalid field.
+        name: &'static str,
+    },
+
     /// Certificate validation failed.
     CertificateValidation,
 
@@ -68,6 +74,9 @@ impl fmt::Display for Error {
         match self {
             Error::Algorithm => f.write_str("unknown or unsupported algorithm"),
             Error::Base64(err) => write!(f, "Base64 encoding error: {}", err),
+            Error::CertificateFieldInvalid { name } => {
+                write!(f, "certificate field invalid: {}", name)
+            }
             Error::CertificateValidation => f.write_str("certificate validation failed"),
             Error::CharacterEncoding => f.write_str("character encoding invalid"),
             Error::Crypto => f.write_str("cryptographic error"),

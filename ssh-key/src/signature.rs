@@ -1,18 +1,15 @@
 //! Signatures (e.g. CA signatures over SSH certificates)
 
 use crate::{
-    checked::CheckedSum, decode::Decode, encode::Encode, public, reader::Reader, writer::Writer,
-    Algorithm, EcdsaCurve, Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, private, public, reader::Reader,
+    writer::Writer, Algorithm, EcdsaCurve, Error, PrivateKey, PublicKey, Result,
 };
 use alloc::vec::Vec;
 use core::fmt;
-use signature::Verifier;
+use signature::{Signer, Verifier};
 
 #[cfg(feature = "ed25519")]
-use {
-    crate::{private::Ed25519Keypair, public::Ed25519PublicKey},
-    signature::Signer,
-};
+use crate::{private::Ed25519Keypair, public::Ed25519PublicKey};
 
 const DSA_SIGNATURE_SIZE: usize = 40;
 const ECDSA_NISTP256_SIGNATURE_SIZE: usize = 72;
@@ -94,6 +91,21 @@ impl Signature {
 
         Ok(Self { algorithm, data })
     }
+
+    /// Placeholder signature used by the certificate builder.
+    ///
+    /// This is guaranteed generate an error if anything attempts to encode it.
+    pub(crate) fn placeholder() -> Self {
+        Self {
+            algorithm: Algorithm::default(),
+            data: Vec::new(),
+        }
+    }
+
+    /// Check if this signature is the placeholder signature.
+    pub(crate) fn is_placeholder(&self) -> bool {
+        self.algorithm == Algorithm::default() && self.data.is_empty()
+    }
 }
 
 impl Signature {
@@ -133,6 +145,10 @@ impl Encode for Signature {
     }
 
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        if self.is_placeholder() {
+            return Err(Error::Length);
+        }
+
         self.algorithm().encode(writer)?;
         self.as_bytes().encode(writer)
     }
@@ -153,22 +169,11 @@ impl TryFrom<&[u8]> for Signature {
     }
 }
 
-impl Verifier<Signature> for public::KeyData {
-    #[allow(unused_variables)]
-    fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
-        match self {
-            #[cfg(feature = "ed25519")]
-            Self::Ed25519(pk) => pk.verify(message, signature),
-            _ => Err(signature::Error::new()),
-        }
-    }
-}
-
 impl fmt::Debug for Signature {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Signature {{ algorithm: {:?}, data: \"{:X}\" }}",
+            "Signature {{ algorithm: {:?}, data: {:X} }}",
             self.algorithm, self
         )
     }
@@ -189,6 +194,40 @@ impl fmt::UpperHex for Signature {
             write!(f, "{:02X}", byte)?;
         }
         Ok(())
+    }
+}
+
+impl Signer<Signature> for PrivateKey {
+    fn try_sign(&self, message: &[u8]) -> signature::Result<Signature> {
+        self.key_data().try_sign(message)
+    }
+}
+
+impl Signer<Signature> for private::KeypairData {
+    #[allow(unused_variables)]
+    fn try_sign(&self, message: &[u8]) -> signature::Result<Signature> {
+        match self {
+            #[cfg(feature = "ed25519")]
+            Self::Ed25519(key) => key.try_sign(message),
+            _ => Err(signature::Error::new()),
+        }
+    }
+}
+
+impl Verifier<Signature> for PublicKey {
+    fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
+        self.key_data().verify(message, signature)
+    }
+}
+
+impl Verifier<Signature> for public::KeyData {
+    #[allow(unused_variables)]
+    fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
+        match self {
+            #[cfg(feature = "ed25519")]
+            Self::Ed25519(pk) => pk.verify(message, signature),
+            _ => Err(signature::Error::new()),
+        }
     }
 }
 
@@ -240,7 +279,7 @@ impl Verifier<Signature> for Ed25519PublicKey {
 #[cfg(test)]
 mod tests {
     use super::Signature;
-    use crate::{encode::Encode, Algorithm, EcdsaCurve, HashAlg};
+    use crate::{encode::Encode, Algorithm, EcdsaCurve, Error, HashAlg};
     use alloc::vec::Vec;
     use hex_literal::hex;
 
@@ -326,5 +365,18 @@ mod tests {
         let keypair = Ed25519Keypair::from_seed(&[42; 32]);
         let signature = keypair.sign(EXAMPLE_MSG);
         assert!(keypair.public.verify(EXAMPLE_MSG, &signature).is_ok());
+    }
+
+    #[test]
+    fn placeholder() {
+        assert!(!Signature::try_from(ED25519_SIGNATURE)
+            .unwrap()
+            .is_placeholder());
+
+        let placeholder = Signature::placeholder();
+        assert!(placeholder.is_placeholder());
+
+        let mut writer = Vec::new();
+        assert_eq!(placeholder.encode(&mut writer), Err(Error::Length));
     }
 }
