@@ -15,7 +15,6 @@ defaults:
     working-directory: ssh-key
 
 env:
-  CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-Dwarnings"
 
 jobs:

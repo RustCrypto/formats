@@ -30,7 +30,7 @@ Supports a minimal profile which works on heapless `no_std` targets.
   - [x] OpenSSH private keys (i.e. `BEGIN OPENSSH PRIVATE KEY`)
   - [x] OpenSSH certificates
 - [x] OpenSSH certificates
-  - [x] Certificate validation (Ed25519 only)
+  - [x] Certificate validation (ECDSA/NIST P-256 and Ed25519 only)
   - [x] Certificate builder/signer (i.e. SSH CA support)
 - [x] Private key encryption/decryption (`bcrypt-pbkdf` + `aes256-ctr` only)
 - [x] FIDO/U2F key support (`sk-*`) as specified in [PROTOCOL.u2f]
@@ -45,7 +45,7 @@ Supports a minimal profile which works on heapless `no_std` targets.
 - [ ] Key generation support (WIP - see table below)
 - [ ] Interop with digital signature crates
   - [x] `ed25519-dalek`
-  - [ ] `p256` (ECDSA)
+  - [x] `p256` (ECDSA)
   - [ ] `p384` (ECDSA)
   - [ ] `rsa`
 - [ ] Legacy (pre-OpenSSH) SSH key format support
@@ -56,16 +56,16 @@ Supports a minimal profile which works on heapless `no_std` targets.
 
 ## Supported algorithms
 
-| Name                                 | Decoding | Encoding | Certificates | Keygen | `no_std`  |
-|--------------------------------------|----------|----------|--------------|--------|-----------|
-| `ecdsa-sha2-nistp256`                | ✅       | ✅       | ✅           | ⛔️     | heapless  |
-| `ecdsa-sha2-nistp384`                | ✅       | ✅       | ✅           | ⛔️     | heapless  |
-| `ecdsa-sha2-nistp521`                | ✅       | ✅       | ✅           | ⛔️     | heapless  |
-| `ssh-dsa`                            | ✅       | ✅       | ✅           | ⛔     | `alloc` ️  |
-| `ssh-ed25519`                        | ✅       | ✅       | ✅           | ✅️     | heapless  |
-| `ssh-rsa`                            | ✅       | ✅       | ✅           | ⛔️     | `alloc`   |
-| `sk-ecdsa-sha2-nistp256@openssh.com` | ✅       | ✅       | ✅           | ⛔     | `alloc`   |
-| `sk-ssh-ed25519@openssh.com`         | ✅       | ✅       | ✅           | ⛔     | `alloc`   |
+| Name                                 | Decoding | Encoding | Certificates | Keygen | Sign | Verify   | `no_std` |
+|--------------------------------------|----------|----------|--------------|--------|------|----------|----------|
+| `ecdsa-sha2-nistp256`                | ✅       | ✅       | ✅           | ✅️     | ✅️   | ✅️       | heapless |
+| `ecdsa-sha2-nistp384`                | ✅       | ✅       | ✅           | ⛔️     | ⛔️   | ⛔️       | heapless |
+| `ecdsa-sha2-nistp521`                | ✅       | ✅       | ✅           | ⛔️     | ⛔ ️  | ⛔️       | heapless |
+| `ssh-dsa`                            | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc` ️ |
+| `ssh-ed25519`                        | ✅       | ✅       | ✅           | ✅️     | ✅️   | ✅       | heapless |
+| `ssh-rsa`                            | ✅       | ✅       | ✅           | ⛔️     | ⛔️   | ⛔️       | `alloc`  |
+| `sk-ecdsa-sha2-nistp256@openssh.com` | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc`  |
+| `sk-ssh-ed25519@openssh.com`         | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc`  |
 
 ## Minimum Supported Rust Version
 

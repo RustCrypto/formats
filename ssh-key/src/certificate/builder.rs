@@ -124,10 +124,9 @@ impl Builder {
 
     /// Add a principal (i.e. username or hostname) to `valid_principals`.
     pub fn valid_principal(&mut self, principal: impl Into<String>) -> Result<&mut Self> {
-        if let Some(principals) = &mut self.valid_principals {
-            principals.push(principal.into());
-        } else {
-            self.valid_principals = Some(vec![principal.into()]);
+        match &mut self.valid_principals {
+            Some(principals) => principals.push(principal.into()),
+            None => self.valid_principals = Some(vec![principal.into()]),
         }
 
         Ok(self)

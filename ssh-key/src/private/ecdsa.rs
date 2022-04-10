@@ -8,6 +8,9 @@ use core::fmt;
 use sec1::consts::{U32, U48, U66};
 use zeroize::Zeroize;
 
+#[cfg(feature = "rand_core")]
+use rand_core::{CryptoRng, RngCore};
+
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
@@ -107,6 +110,16 @@ impl<const SIZE: usize> Drop for EcdsaPrivateKey<SIZE> {
     }
 }
 
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl From<p256::SecretKey> for EcdsaPrivateKey<32> {
+    fn from(sk: p256::SecretKey) -> EcdsaPrivateKey<32> {
+        EcdsaPrivateKey {
+            bytes: sk.to_be_bytes().into(),
+        }
+    }
+}
+
 #[cfg(feature = "subtle")]
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl<const SIZE: usize> ConstantTimeEq for EcdsaPrivateKey<SIZE> {
@@ -160,6 +173,25 @@ pub enum EcdsaKeypair {
 }
 
 impl EcdsaKeypair {
+    /// Generate a random ECDSA private key.
+    #[cfg(feature = "rand_core")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rand_core")))]
+    #[allow(unused_variables)]
+    pub fn random(rng: impl CryptoRng + RngCore, curve: EcdsaCurve) -> Result<Self> {
+        match curve {
+            #[cfg(feature = "p256")]
+            EcdsaCurve::NistP256 => {
+                let private = p256::SecretKey::random(rng);
+                let public = private.public_key();
+                Ok(EcdsaKeypair::NistP256 {
+                    private: private.into(),
+                    public: public.into(),
+                })
+            }
+            _ => Err(Error::Algorithm),
+        }
+    }
+
     /// Get the [`Algorithm`] for this public key type.
     pub fn algorithm(&self) -> Algorithm {
         Algorithm::Ecdsa {
