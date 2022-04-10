@@ -8,6 +8,12 @@ use alloc::vec::Vec;
 use core::fmt;
 use signature::{Signer, Verifier};
 
+#[cfg(feature = "p256")]
+use crate::{
+    private::{EcdsaKeypair, EcdsaPrivateKey},
+    public::EcdsaPublicKey,
+};
+
 #[cfg(feature = "ed25519")]
 use crate::{private::Ed25519Keypair, public::Ed25519PublicKey};
 
@@ -207,8 +213,10 @@ impl Signer<Signature> for private::KeypairData {
     #[allow(unused_variables)]
     fn try_sign(&self, message: &[u8]) -> signature::Result<Signature> {
         match self {
+            #[cfg(feature = "p256")]
+            Self::Ecdsa(keypair) => keypair.try_sign(message),
             #[cfg(feature = "ed25519")]
-            Self::Ed25519(key) => key.try_sign(message),
+            Self::Ed25519(keypair) => keypair.try_sign(message),
             _ => Err(signature::Error::new()),
         }
     }
@@ -224,6 +232,8 @@ impl Verifier<Signature> for public::KeyData {
     #[allow(unused_variables)]
     fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
         match self {
+            #[cfg(feature = "p256")]
+            Self::Ecdsa(pk) => pk.verify(message, signature),
             #[cfg(feature = "ed25519")]
             Self::Ed25519(pk) => pk.verify(message, signature),
             _ => Err(signature::Error::new()),
@@ -273,6 +283,114 @@ impl Verifier<Signature> for Ed25519PublicKey {
     fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
         let signature = ed25519_dalek::Signature::try_from(signature)?;
         ed25519_dalek::PublicKey::try_from(self)?.verify(message, &signature)
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl TryFrom<p256::ecdsa::Signature> for Signature {
+    type Error = Error;
+
+    fn try_from(signature: p256::ecdsa::Signature) -> Result<Signature> {
+        Signature::try_from(&signature)
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl TryFrom<&p256::ecdsa::Signature> for Signature {
+    type Error = Error;
+
+    fn try_from(signature: &p256::ecdsa::Signature) -> Result<Signature> {
+        let (r, s) = signature.as_ref().split_at(32);
+
+        let mut data = Vec::with_capacity(72);
+        r.encode(&mut data)?;
+        s.encode(&mut data)?;
+
+        Ok(Signature {
+            algorithm: Algorithm::Ecdsa {
+                curve: EcdsaCurve::NistP256,
+            },
+            data,
+        })
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl TryFrom<Signature> for p256::ecdsa::Signature {
+    type Error = Error;
+
+    fn try_from(signature: Signature) -> Result<p256::ecdsa::Signature> {
+        p256::ecdsa::Signature::try_from(&signature)
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl TryFrom<&Signature> for p256::ecdsa::Signature {
+    type Error = Error;
+
+    fn try_from(signature: &Signature) -> Result<p256::ecdsa::Signature> {
+        match signature.algorithm {
+            Algorithm::Ecdsa {
+                curve: EcdsaCurve::NistP256,
+            } => {
+                let reader = &mut signature.as_bytes();
+                let mut bytes = [0u8; 64];
+
+                // Decode `r` and `s` components of the signature concatenated.
+                for chunk in bytes.chunks_mut(32) {
+                    let len = reader.read_byten(chunk)?.len();
+
+                    if len != 32 {
+                        return Err(Error::Crypto);
+                    }
+                }
+
+                Ok(p256::ecdsa::Signature::try_from(bytes.as_slice())?)
+            }
+            _ => Err(Error::Algorithm),
+        }
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl Signer<Signature> for EcdsaKeypair {
+    fn try_sign(&self, message: &[u8]) -> signature::Result<Signature> {
+        match self {
+            Self::NistP256 { private, .. } => private.try_sign(message),
+            _ => Err(signature::Error::new()),
+        }
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl Signer<Signature> for EcdsaPrivateKey<32> {
+    fn try_sign(&self, message: &[u8]) -> signature::Result<Signature> {
+        Ok(p256::ecdsa::SigningKey::from_bytes(self.as_ref())?
+            .try_sign(message)?
+            .try_into()?)
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl Verifier<Signature> for EcdsaPublicKey {
+    fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
+        match signature.algorithm {
+            Algorithm::Ecdsa {
+                curve: EcdsaCurve::NistP256,
+            } => {
+                let verifying_key = p256::ecdsa::VerifyingKey::try_from(self)?;
+                let signature = p256::ecdsa::Signature::try_from(signature)?;
+                verifying_key.verify(message, &signature)
+            }
+            _ => Err(signature::Error::new()),
+        }
     }
 }
 

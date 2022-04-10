@@ -65,10 +65,10 @@
     doc = " ```ignore"
 )]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use ssh_key::{PrivateKey, rand_core::OsRng};
+//! use ssh_key::{Algorithm, PrivateKey, rand_core::OsRng};
 //!
 //! // Generate a random key
-//! let unencrypted_key = PrivateKey::random_ed25519(&mut OsRng);
+//! let unencrypted_key = PrivateKey::random(&mut OsRng, Algorithm::Ed25519)?;
 //!
 //! // WARNING: don't hardcode passwords, and this one's bad anyway
 //! let password = "hunter42";
@@ -88,16 +88,20 @@
 //! well as the crate feature identified in backticks in the title of each
 //! example.
 //!
-//! ### `ed25519`: support for generating Ed25519 keys using `ed25519_dalek`
-//!
-#![cfg_attr(all(feature = "ed25519", feature = "getrandom"), doc = " ```")]
 #![cfg_attr(
-    not(all(feature = "ed25519", feature = "getrandom")),
+    all(feature = "ed25519", feature = "getrandom", feature = "std"),
+    doc = " ```"
+)]
+#![cfg_attr(
+    not(all(feature = "ed25519", feature = "getrandom", feature = "std")),
     doc = " ```ignore"
 )]
-//! use ssh_key::{PrivateKey, rand_core::OsRng};
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use ssh_key::{Algorithm, PrivateKey, rand_core::OsRng};
 //!
-//! let private_key = PrivateKey::random_ed25519(&mut OsRng);
+//! let private_key = PrivateKey::random(&mut OsRng, Algorithm::Ed25519)?;
+//! # Ok(())
+//! # }
 //! ```
 
 #[cfg(feature = "alloc")]
@@ -432,30 +436,25 @@ impl PrivateKey {
     /// - `Error::Algorithm` if the algorithm is unsupported.
     #[cfg(feature = "rand_core")]
     #[cfg_attr(docsrs, doc(cfg(feature = "rand_core")))]
-    #[allow(unused_variables)]
-    pub fn random(rng: impl CryptoRng + RngCore, algorithm: Algorithm) -> Result<Self> {
-        match algorithm {
-            #[cfg(feature = "ed25519")]
-            Algorithm::Ed25519 => Ok(Self::random_ed25519(rng)),
-            _ => Err(Error::Algorithm),
-        }
-    }
-
-    /// Generate a random Ed25519 private key.
-    #[cfg(feature = "ed25519")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "ed25519")))]
-    pub fn random_ed25519(mut rng: impl CryptoRng + RngCore) -> Self {
+    #[allow(unreachable_code, unused_variables)]
+    pub fn random(mut rng: impl CryptoRng + RngCore, algorithm: Algorithm) -> Result<Self> {
         let checkint = rng.next_u32();
-        let key_data = KeypairData::from(Ed25519Keypair::random(rng));
-        let public_key = public::KeyData::try_from(&key_data).expect("invalid key");
+        let key_data = match algorithm {
+            #[cfg(feature = "p256")]
+            Algorithm::Ecdsa { curve } => KeypairData::from(EcdsaKeypair::random(rng, curve)?),
+            #[cfg(feature = "ed25519")]
+            Algorithm::Ed25519 => KeypairData::from(Ed25519Keypair::random(rng)),
+            _ => return Err(Error::Algorithm),
+        };
+        let public_key = public::KeyData::try_from(&key_data)?;
 
-        Self {
+        Ok(Self {
             cipher: Cipher::None,
             kdf: Kdf::None,
             checkint: Some(checkint),
             public_key: public_key.into(),
             key_data,
-        }
+        })
     }
 
     /// Set the comment on the key.

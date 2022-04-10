@@ -154,3 +154,44 @@ impl fmt::UpperHex for EcdsaPublicKey {
         Ok(())
     }
 }
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl TryFrom<EcdsaPublicKey> for p256::ecdsa::VerifyingKey {
+    type Error = Error;
+
+    fn try_from(key: EcdsaPublicKey) -> Result<p256::ecdsa::VerifyingKey> {
+        p256::ecdsa::VerifyingKey::try_from(&key)
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl TryFrom<&EcdsaPublicKey> for p256::ecdsa::VerifyingKey {
+    type Error = Error;
+
+    fn try_from(public_key: &EcdsaPublicKey) -> Result<p256::ecdsa::VerifyingKey> {
+        match public_key {
+            EcdsaPublicKey::NistP256(key) => {
+                p256::ecdsa::VerifyingKey::from_encoded_point(key).map_err(|_| Error::Crypto)
+            }
+            _ => Err(Error::Algorithm),
+        }
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl From<p256::ecdsa::VerifyingKey> for EcdsaPublicKey {
+    fn from(key: p256::ecdsa::VerifyingKey) -> EcdsaPublicKey {
+        EcdsaPublicKey::from(&key)
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl From<&p256::ecdsa::VerifyingKey> for EcdsaPublicKey {
+    fn from(key: &p256::ecdsa::VerifyingKey) -> EcdsaPublicKey {
+        EcdsaPublicKey::NistP256(key.to_encoded_point(false))
+    }
+}

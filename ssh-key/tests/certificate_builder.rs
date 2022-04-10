@@ -1,6 +1,10 @@
 //! Certificate builder tests.
 
-#![cfg(all(feature = "alloc", feature = "fingerprint", feature = "ed25519"))]
+#![cfg(all(
+    feature = "alloc",
+    feature = "fingerprint",
+    any(feature = "ed25519", feature = "p256")
+))]
 
 use hex_literal::hex;
 use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
@@ -8,6 +12,9 @@ use ssh_key::{
     certificate::{self, CertType},
     Algorithm, PrivateKey,
 };
+
+#[cfg(feature = "p256")]
+use ssh_key::EcdsaCurve;
 
 /// Example Unix timestamp when a certificate was issued (2020-09-13 12:26:40 UTC).
 const ISSUED_AT: u64 = 1600000000;
@@ -42,9 +49,9 @@ const EXTENSION_2: (&str, &str) = ("extension name 2", "extension data 2");
 /// Example comment.
 const COMMENT: &str = "user@example.com";
 
-/// Happy path test.
+#[cfg(feature = "ed25519")]
 #[test]
-fn sign_and_verify() {
+fn ed25519_sign_and_verify() {
     let mut rng = ChaCha8Rng::from_seed([42; 32]);
 
     let ca_key = PrivateKey::random(&mut rng, Algorithm::Ed25519).unwrap();
@@ -94,6 +101,33 @@ fn sign_and_verify() {
     assert_eq!(cert.extensions().get(EXTENSION_2.0).unwrap(), EXTENSION_2.1);
     assert_eq!(cert.signature_key(), ca_key.public_key().key_data());
     assert_eq!(cert.comment(), COMMENT);
+
+    let ca_fingerprint = ca_key.fingerprint(Default::default()).unwrap();
+    assert!(cert.validate_at(VALID_AT, &[ca_fingerprint]).is_ok());
+}
+
+#[cfg(feature = "p256")]
+#[test]
+fn ecdsa_nistp256_sign_and_verify() {
+    let mut rng = ChaCha8Rng::from_seed([42; 32]);
+
+    let algorithm = Algorithm::Ecdsa {
+        curve: EcdsaCurve::NistP256,
+    };
+    let ca_key = PrivateKey::random(&mut rng, algorithm).unwrap();
+    let subject_key = PrivateKey::random(&mut rng, algorithm).unwrap();
+    let mut cert_builder = certificate::Builder::new_with_random_nonce(
+        &mut rng,
+        subject_key.public_key(),
+        ISSUED_AT,
+        EXPIRES_AT,
+    );
+    cert_builder.all_principals_valid().unwrap();
+    let cert = cert_builder.sign(&ca_key).unwrap();
+
+    assert_eq!(cert.nonce(), &hex!("321fdf7e0a2afe803308f394f54c6abe"));
+    assert_eq!(cert.public_key(), subject_key.public_key().key_data());
+    assert_eq!(cert.signature_key(), ca_key.public_key().key_data());
 
     let ca_fingerprint = ca_key.fingerprint(Default::default()).unwrap();
     assert!(cert.validate_at(VALID_AT, &[ca_fingerprint]).is_ok());
