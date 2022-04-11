@@ -19,6 +19,13 @@
 
 //! ## Usage
 //!
+//! The main types provided by this library are:
+//!
+//! - [`Certificate`]: OpenSSH certificates
+//! - [`Fingerprint`]: public key fingerprints (i.e. hashes)
+//! - [`PrivateKey`]: SSH private keys (i.e. digital signature keys)
+//! - [`PublicKey`]: SSH public keys (i.e. signature verification keys)
+//!
 //! ### Parsing OpenSSH Public Keys
 //!
 //! OpenSSH-formatted public keys have the form:
