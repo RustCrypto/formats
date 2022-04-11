@@ -233,7 +233,7 @@ impl Builder {
         #[cfg(all(debug_assertions, feature = "fingerprint"))]
         cert.validate_at(
             cert.valid_after,
-            &[cert.signature_key.fingerprint(Default::default())?],
+            &[cert.signature_key.fingerprint(Default::default())],
         )?;
 
         Ok(cert)

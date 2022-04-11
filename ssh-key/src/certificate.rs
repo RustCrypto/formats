@@ -353,7 +353,7 @@ impl Certificate {
         self.verify_signature()?;
 
         // TODO(tarcieri): support non SHA-256 public key fingerprints?
-        let cert_fingerprint = self.signature_key.fingerprint(HashAlg::Sha256)?;
+        let cert_fingerprint = self.signature_key.fingerprint(HashAlg::Sha256);
 
         if !ca_fingerprints.into_iter().any(|f| f == &cert_fingerprint) {
             return Err(Error::CertificateValidation);
