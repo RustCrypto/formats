@@ -16,6 +16,9 @@ use ssh_key::{
 #[cfg(feature = "p256")]
 use ssh_key::EcdsaCurve;
 
+#[cfg(feature = "rsa")]
+use std::str::FromStr;
+
 /// Example Unix timestamp when a certificate was issued (2020-09-13 12:26:40 UTC).
 const ISSUED_AT: u64 = 1600000000;
 
@@ -141,11 +144,39 @@ fn ecdsa_nistp256_sign_and_verify() {
 #[cfg(feature = "rsa")]
 #[test]
 fn rsa_sign_and_verify() {
-    let mut rng = ChaCha8Rng::from_seed(PRNG_SEED);
+    let ca_key = PrivateKey::from_str(
+        r#"-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn
+NhAAAAAwEAAQAAAQEAyng6J3IE5++Ji7EfVNTANDnhYH46LnZW+bwW45etzKswQkc/AvSA
+9ih2VAhE8FFUR0Z6pyl4hEn/878x50pGt1FHplbbe4wZ5aornT1hcGGYy313Glt+zyn96M
+BTAjO0yULa1RrhBBmeY3yXIEAApUIVdvxcLOvJgltSFmFURtbY5cZkweuspwnHBE/JUPBX
+9/Njb+z2R4BTnf0UrudxRKA/TJx9mL3Pb2JjkXfQ07pZqp+oEiUoGMvdfN9vYW4J5LTbXo
+n20kRt5UKSxKggBBa0rzGabF+P/BTd39ZrI27WRYhDAzeYJoLq/xfO6qCgAM3TKxe0tDeT
+gV4akFJ9CwAAA7hN/dPaTf3T2gAAAAdzc2gtcnNhAAABAQDKeDoncgTn74mLsR9U1MA0Oe
+Fgfjoudlb5vBbjl63MqzBCRz8C9ID2KHZUCETwUVRHRnqnKXiESf/zvzHnSka3UUemVtt7
+jBnlqiudPWFwYZjLfXcaW37PKf3owFMCM7TJQtrVGuEEGZ5jfJcgQAClQhV2/Fws68mCW1
+IWYVRG1tjlxmTB66ynCccET8lQ8Ff382Nv7PZHgFOd/RSu53FEoD9MnH2Yvc9vYmORd9DT
+ulmqn6gSJSgYy918329hbgnktNteifbSRG3lQpLEqCAEFrSvMZpsX4/8FN3f1msjbtZFiE
+MDN5gmgur/F87qoKAAzdMrF7S0N5OBXhqQUn0LAAAAAwEAAQAAAQAxxSgWdjK6iOl4y0t2
+YO32aJv8SksnDLQIo7HEtI5ml1Y/lJ/qrAvfdsbPlVDM+lELTEnuOYWEj2Q5mLA9uMZ1Xa
+eNPiCp2CCtkg0yk9oV9AfJTcgvVHpxllLyGgTNr8QrDSIZ7IePqHSE5CWKKfF+riX0n8hQ
+yo04XBZrpfU/jDQV8ENKiNQd3Aiy6ppSbnDhyTzZEYIxtvnh1FmvU0Ct1jQRd8p42gurEn
+sq6nAPE9pnn0otKmjRdfGCnM9X/ZbUcaUcU/X8pPYG1pW0GZR7eTO+1f9s8TS5LIqz2Eru
+L4gBQweASh9mhatsMqJX/ZRrdHvdIuH8N1VDSahf1ZTxAAAAgF1+qA6ZVBEaoCj+fAJZyU
+EYf7NMI/nPqEVxiIjg4WKmRYKC9Pb9cuGehOs/XTi3KMEHzYJIKT1K+uO0OG025XVH06qk
+9qyWcBwtRbCPVFJPSkKyGBPaUIxMI07x1+434vig6z7iwVROxy3vyhslgiJNpIkaWVUhQN
+EGEHX0oWLfAAAAgQDLd25QLAb1kngTsuwQ+xo3S6UcQvOTiDnVRvxWPaW4yn/3qO55+esd
+dzxUujFXhUO/POeUJiHv0B1QlDm/sHYL6YVI5+XRaWAst/z0T93mM4ts63Z1OoJbAtE5qH
+yGlKVPQ5ZG8SUVElbX+SZE2CcnsPx53trW8qQu/R2bPdDN7QAAAIEA/r7nlgz6D93vMVkn
+wq38d49h+PTfyBQ1bum8AhxCEfTaK94YrH9BeizO6Ma5MIjY6WHWbq7Co93J3fl8f4eTCo
+CpHJYWfbBqrf/5PUoOIjdMdfFHK6GpUCQNxhbSpnL4l75sxrhkEXtBHVKRXCNR5T4JnOcx
+R6qbyo6hPuCiV9cAAAAAAQID
+-----END OPENSSH PRIVATE KEY-----"#,
+    )
+    .unwrap();
 
-    let algorithm = Algorithm::Rsa { hash: None };
-    let ca_key = PrivateKey::random(&mut rng, algorithm).unwrap();
-    let subject_key = PrivateKey::random(&mut rng, algorithm).unwrap();
+    let mut rng = ChaCha8Rng::from_seed(PRNG_SEED);
+    let subject_key = PrivateKey::random(&mut rng, Algorithm::Ed25519).unwrap();
     let mut cert_builder = certificate::Builder::new_with_random_nonce(
         &mut rng,
         subject_key.public_key(),
@@ -155,8 +186,11 @@ fn rsa_sign_and_verify() {
     cert_builder.all_principals_valid().unwrap();
     let cert = cert_builder.sign(&ca_key).unwrap();
 
-    assert_eq!(cert.algorithm(), algorithm);
-    assert_eq!(cert.nonce(), &hex!("13e4d4c95eb914e8b1d3c0f3de757594"));
+    assert_eq!(
+        cert.signature_key().algorithm(),
+        Algorithm::Rsa { hash: None }
+    );
+    assert_eq!(cert.nonce(), &hex!("55742ecb25ee56057b9e35eae54c40a9"));
     assert_eq!(cert.public_key(), subject_key.public_key().key_data());
     assert_eq!(cert.signature_key(), ca_key.public_key().key_data());
 

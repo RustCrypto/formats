@@ -11,6 +11,7 @@ use zeroize::Zeroize;
 use {
     crate::Error,
     rand_core::{CryptoRng, RngCore},
+    rsa::PublicKeyParts,
 };
 
 #[cfg(feature = "subtle")]
@@ -106,11 +107,19 @@ pub struct RsaKeypair {
 }
 
 impl RsaKeypair {
+    /// Minimum allowed RSA key size.
+    #[cfg(feature = "rsa")]
+    pub(crate) const MIN_KEY_SIZE: usize = 2048;
+
     /// Generate a random RSA keypair of the given size.
     #[cfg(feature = "rsa")]
     #[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
     pub fn random(mut rng: impl CryptoRng + RngCore, bit_size: usize) -> Result<Self> {
-        rsa::RsaPrivateKey::new(&mut rng, bit_size)?.try_into()
+        if bit_size >= Self::MIN_KEY_SIZE {
+            rsa::RsaPrivateKey::new(&mut rng, bit_size)?.try_into()
+        } else {
+            Err(Error::Crypto)
+        }
     }
 }
 
@@ -177,7 +186,7 @@ impl TryFrom<&RsaKeypair> for rsa::RsaPrivateKey {
     type Error = Error;
 
     fn try_from(key: &RsaKeypair) -> Result<rsa::RsaPrivateKey> {
-        Ok(rsa::RsaPrivateKey::from_components(
+        let ret = rsa::RsaPrivateKey::from_components(
             rsa::BigUint::try_from(&key.public.n)?,
             rsa::BigUint::try_from(&key.public.e)?,
             rsa::BigUint::try_from(&key.private.d)?,
@@ -185,7 +194,13 @@ impl TryFrom<&RsaKeypair> for rsa::RsaPrivateKey {
                 rsa::BigUint::try_from(&key.private.p)?,
                 rsa::BigUint::try_from(&key.private.p)?,
             ],
-        ))
+        );
+
+        if ret.size().saturating_mul(8) >= RsaKeypair::MIN_KEY_SIZE {
+            Ok(ret)
+        } else {
+            Err(Error::Crypto)
+        }
     }
 }
 
