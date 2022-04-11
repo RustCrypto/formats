@@ -165,6 +165,10 @@ use std::os::unix::fs::OpenOptionsExt;
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
+/// Default key size to use for RSA keys in bits.
+#[cfg(feature = "rsa")]
+const DEFAULT_RSA_KEY_SIZE: usize = 4096;
+
 /// Maximum supported block size.
 ///
 /// This is the block size used by e.g. AES.
@@ -444,6 +448,10 @@ impl PrivateKey {
             Algorithm::Ecdsa { curve } => KeypairData::from(EcdsaKeypair::random(rng, curve)?),
             #[cfg(feature = "ed25519")]
             Algorithm::Ed25519 => KeypairData::from(Ed25519Keypair::random(rng)),
+            #[cfg(feature = "rsa")]
+            Algorithm::Rsa { .. } => {
+                KeypairData::from(RsaKeypair::random(rng, DEFAULT_RSA_KEY_SIZE)?)
+            }
             _ => return Err(Error::Algorithm),
         };
         let public_key = public::KeyData::try_from(&key_data)?;

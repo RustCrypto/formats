@@ -155,6 +155,14 @@ impl From<sec1::Error> for Error {
     }
 }
 
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl From<rsa::errors::Error> for Error {
+    fn from(_: rsa::errors::Error) -> Error {
+        Error::Crypto
+    }
+}
+
 #[cfg(feature = "signature")]
 #[cfg_attr(docsrs, doc(cfg(feature = "signature")))]
 impl From<signature::Error> for Error {
