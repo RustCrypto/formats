@@ -3,14 +3,25 @@
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/const-oid/0.9.0"
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg"
 )]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms)]
+#![forbid(unsafe_code)]
+#![warn(
+    clippy::integer_arithmetic,
+    clippy::panic,
+    clippy::panic_in_result_fn,
+    clippy::unwrap_used,
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 #[cfg(feature = "std")]
 extern crate std;
+
+#[macro_use]
+mod checked;
 
 mod arcs;
 mod encoder;
@@ -85,13 +96,7 @@ impl ObjectIdentifier {
     pub const fn new_unwrap(s: &str) -> Self {
         match Self::new(s) {
             Ok(oid) => oid,
-            Err(Error::ArcInvalid { .. } | Error::ArcTooBig) => panic!("OID contains invalid arc"),
-            Err(Error::Base128) => panic!("OID contains arc with invalid base 128 encoding"),
-            Err(Error::DigitExpected { .. }) => panic!("OID expected to start with digit"),
-            Err(Error::Empty) => panic!("OID value is empty"),
-            Err(Error::Length) => panic!("OID length invalid"),
-            Err(Error::NotEnoughArcs) => panic!("OID requires minimum of 3 arcs"),
-            Err(Error::TrailingDot) => panic!("OID ends with invalid trailing '.'"),
+            Err(err) => err.panic(),
         }
     }
 
@@ -221,8 +226,10 @@ impl fmt::Display for ObjectIdentifier {
         for (i, arc) in self.arcs().enumerate() {
             write!(f, "{}", arc)?;
 
-            if i < len - 1 {
-                write!(f, ".")?;
+            if let Some(j) = i.checked_add(1) {
+                if j < len {
+                    write!(f, ".")?;
+                }
             }
         }
 

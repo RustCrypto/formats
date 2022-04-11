@@ -1,7 +1,6 @@
 //! Buffered Base64 encoder.
 
 use crate::{
-    variant::Variant,
     Encoding,
     Error::{self, InvalidLength},
     LineEnding, MIN_LINE_WIDTH,
@@ -11,19 +10,14 @@ use core::{cmp, marker::PhantomData, str};
 #[cfg(feature = "std")]
 use std::io;
 
-#[cfg(docsrs)]
+#[cfg(doc)]
 use crate::{Base64, Base64Unpadded};
 
 /// Stateful Base64 encoder with support for buffered, incremental encoding.
 ///
 /// The `E` type parameter can be any type which impls [`Encoding`] such as
 /// [`Base64`] or [`Base64Unpadded`].
-///
-/// Internally it uses a sealed `Variant` trait which is an implementation
-/// detail of this crate, and leverages a [blanket impl] of [`Encoding`].
-///
-/// [blanket impl]: ./trait.Encoding.html#impl-Encoding
-pub struct Encoder<'o, E: Variant> {
+pub struct Encoder<'o, E: Encoding> {
     /// Output buffer.
     output: &'o mut [u8],
 
@@ -41,7 +35,7 @@ pub struct Encoder<'o, E: Variant> {
     encoding: PhantomData<E>,
 }
 
-impl<'o, E: Variant> Encoder<'o, E> {
+impl<'o, E: Encoding> Encoder<'o, E> {
     /// Create a new encoder which writes output to the given byte slice.
     ///
     /// Output constructed using this method is not line-wrapped.
@@ -96,11 +90,12 @@ impl<'o, E: Variant> Encoder<'o, E> {
 
             // When line wrapping, cap the block-aligned stride at near/at line length
             if let Some(line_wrapper) = &self.line_wrapper {
-                line_wrapper.wrap_blocks(&mut blocks);
+                line_wrapper.wrap_blocks(&mut blocks)?;
             }
 
             if blocks > 0 {
-                let (in_aligned, in_rem) = input.split_at(blocks * 3);
+                let len = blocks.checked_mul(3).ok_or(InvalidLength)?;
+                let (in_aligned, in_rem) = input.split_at(len);
                 input = in_rem;
                 self.perform_encode(in_aligned)?;
             }
@@ -146,7 +141,7 @@ impl<'o, E: Variant> Encoder<'o, E> {
     /// Fill the block buffer with data, consuming and encoding it when the
     /// buffer is full.
     fn process_buffer(&mut self, input: &mut &[u8]) -> Result<(), Error> {
-        self.block_buffer.fill(input);
+        self.block_buffer.fill(input)?;
 
         if self.block_buffer.is_full() {
             let block = self.block_buffer.take();
@@ -172,7 +167,7 @@ impl<'o, E: Variant> Encoder<'o, E> {
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl<'o, E: Variant> io::Write for Encoder<'o, E> {
+impl<'o, E: Encoding> io::Write for Encoder<'o, E> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.encode(buf)?;
         Ok(buf.len())
@@ -202,11 +197,13 @@ impl BlockBuffer {
     const SIZE: usize = 3;
 
     /// Fill the remaining space in the buffer with the input data.
-    fn fill(&mut self, input: &mut &[u8]) {
-        let len = cmp::min(Self::SIZE - self.position, input.len());
+    fn fill(&mut self, input: &mut &[u8]) -> Result<(), Error> {
+        let remaining = Self::SIZE.checked_sub(self.position).ok_or(InvalidLength)?;
+        let len = cmp::min(input.len(), remaining);
         self.bytes[self.position..][..len].copy_from_slice(&input[..len]);
-        self.position += len;
+        self.position = self.position.checked_add(len).ok_or(InvalidLength)?;
         *input = &input[len..];
+        Ok(())
     }
 
     /// Take the output buffer, resetting the position to 0.
@@ -256,10 +253,12 @@ impl LineWrapper {
     }
 
     /// Wrap the number of blocks to encode near/at EOL.
-    fn wrap_blocks(&self, blocks: &mut usize) {
-        if (*blocks * 4) >= self.remaining {
+    fn wrap_blocks(&self, blocks: &mut usize) -> Result<(), Error> {
+        if blocks.checked_mul(4).ok_or(InvalidLength)? >= self.remaining {
             *blocks = self.remaining / 4;
         }
+
+        Ok(())
     }
 
     /// Insert newlines into the output buffer as needed.
@@ -283,14 +282,18 @@ impl LineWrapper {
         // The `wrap_blocks` function should ensure the buffer is no larger than a Base64 block
         debug_assert!(buffer_len <= 4, "buffer too long: {}", buffer_len);
 
-        if buffer_len + self.ending.len() >= buffer.len() {
-            // Not enough space in buffer to add newlines
+        // Ensure space in buffer to add newlines
+        let buffer_end = buffer_len
+            .checked_add(self.ending.len())
+            .ok_or(InvalidLength)?;
+
+        if buffer_end >= buffer.len() {
             return Err(InvalidLength);
         }
 
         // Shift the buffer contents to make space for the line ending
         for i in (0..buffer_len).rev() {
-            buffer[i + self.ending.len()] = buffer[i];
+            buffer[i.checked_add(self.ending.len()).ok_or(InvalidLength)?] = buffer[i];
         }
 
         buffer[..self.ending.len()].copy_from_slice(self.ending.as_bytes());

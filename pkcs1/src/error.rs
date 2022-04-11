@@ -2,6 +2,9 @@
 
 use core::fmt;
 
+#[cfg(feature = "pem")]
+use der::pem;
+
 /// Result type
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -43,6 +46,13 @@ impl fmt::Display for Error {
 impl From<der::Error> for Error {
     fn from(err: der::Error) -> Error {
         Error::Asn1(err)
+    }
+}
+
+#[cfg(feature = "pem")]
+impl From<pem::Error> for Error {
+    fn from(err: pem::Error) -> Error {
+        der::Error::from(err).into()
     }
 }
 

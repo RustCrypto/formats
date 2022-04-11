@@ -5,8 +5,17 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg"
 )]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
+#![forbid(unsafe_code)]
+#![warn(
+    clippy::integer_arithmetic,
+    clippy::panic,
+    clippy::panic_in_result_fn,
+    clippy::unwrap_used,
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 //! ## Usage
 //!
@@ -48,6 +57,8 @@
 //! ```
 //!
 //! ### Parsing OpenSSH Private Keys
+//!
+//! *NOTE: for more private key usage examples, see the [`private`] module.*
 //!
 //! OpenSSH-formatted private keys are PEM-encoded and begin with the following:
 //!
@@ -102,6 +113,15 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! ## `serde` support
+//!
+//! When the `serde` feature of this crate is enabled, the [`Certificate`] and
+//! [`PublicKey`] types receive impls of `serde`'s `Deserialize` and
+//! `Serialize` traits.
+//!
+//! Serializing/deserializing [`PrivateKey`] using `serde` is presently
+//! unsupported.
 
 #[cfg(feature = "alloc")]
 #[macro_use]
@@ -113,31 +133,47 @@ pub mod authorized_keys;
 pub mod private;
 pub mod public;
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub mod certificate;
+
 mod algorithm;
-mod decoder;
-mod encoder;
+mod checked;
+mod cipher;
+mod decode;
+mod encode;
 mod error;
+mod kdf;
+mod reader;
+mod writer;
 
 #[cfg(feature = "fingerprint")]
 mod fingerprint;
 #[cfg(feature = "alloc")]
 mod mpint;
+#[cfg(feature = "alloc")]
+mod signature;
 
 pub use crate::{
-    algorithm::{Algorithm, CipherAlg, EcdsaCurve, HashAlg, KdfAlg, KdfOpts},
+    algorithm::{Algorithm, EcdsaCurve, HashAlg, KdfAlg},
     authorized_keys::AuthorizedKeys,
+    cipher::Cipher,
     error::{Error, Result},
+    kdf::Kdf,
     private::PrivateKey,
     public::PublicKey,
 };
 pub use base64ct::LineEnding;
+pub use pem_rfc7468 as pem;
 
 #[cfg(feature = "alloc")]
-pub use crate::mpint::MPInt;
+pub use crate::{certificate::Certificate, mpint::MPInt, signature::Signature};
 
 #[cfg(feature = "ecdsa")]
-#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 pub use sec1;
 
 #[cfg(feature = "fingerprint")]
 pub use crate::fingerprint::{Fingerprint, Sha256Fingerprint};
+
+#[cfg(feature = "rand_core")]
+pub use rand_core;

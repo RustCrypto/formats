@@ -12,29 +12,60 @@
 ## About
 
 Pure Rust implementation of SSH key file format decoders/encoders as described
-in [RFC4253] and [RFC4716] as well as OpenSSH's [PROTOCOL.key] format specification
-and `authorized_keys` files.
+in [RFC4251] and [RFC4253] as well as OpenSSH's [PROTOCOL.key] format
+specification.
+
+Provides support for certificates as specified in [PROTOCOL.certkeys]
+(including certificate validation and certificate authority support),
+FIDO/U2F keys as specified in [PROTOCOL.u2f] (and certificates thereof),
+and the `authorized_keys` file format.
+
+Supports a minimal profile which works on heapless `no_std` targets.
 
 ## Features
 
-- [x] Constant-time Base64 decoding/encoding using the `base64ct` crate
-- [x] `no_std` support including support for "heapless" (no-`alloc`) targets
-- [x] Decoding/encoding OpenSSH-formatted public & private keys:
-  - [x] DSA (`no_std` + `alloc`)
-  - [x] ECDSA (`no_std` "heapless")
-  - [x] Ed25519 (`no_std` "heapless")
-  - [x] RSA (`no_std` + `alloc`)
+- [x] Constant-time Base64 decoder/encoder using `base64ct`/`pem-rfc7468` crates
+- [x] OpenSSH-compatible decoder/encoders for the following formats:
+  - [x] OpenSSH public keys
+  - [x] OpenSSH private keys (i.e. `BEGIN OPENSSH PRIVATE KEY`)
+  - [x] OpenSSH certificates
+- [x] OpenSSH certificates
+  - [x] Certificate validation (ECDSA/NIST P-256 and Ed25519 only)
+  - [x] Certificate builder/signer (i.e. SSH CA support)
+- [x] Private key encryption/decryption (`bcrypt-pbkdf` + `aes256-ctr` only)
+- [x] FIDO/U2F key support (`sk-*`) as specified in [PROTOCOL.u2f]
 - [x] Fingerprint support (SHA-256 only)
+- [x] `no_std` support including support for "heapless" (no-`alloc`) targets
 - [x] Parsing `authorized_keys` files
-- [x] Built-in zeroize support for private keys
+- [x] Serde support (certificates and public keys only)
+- [x] Zeroization support for private keys
 
 #### TODO
 
-- [ ] Encrypted private key support
-- [ ] SSH certificate support
-- [ ] Legacy SSH key (pre-OpenSSH) format support
-- [ ] Integrations with other RustCrypto crates (e.g. `ecdsa`, `ed25519`, `rsa`)
-- [ ] FIDO2 key support
+- [ ] Key generation support (WIP - see table below)
+- [ ] Interop with digital signature crates
+  - [x] `ed25519-dalek`
+  - [x] `p256` (ECDSA)
+  - [ ] `p384` (ECDSA)
+  - [ ] `rsa`
+- [ ] Legacy (pre-OpenSSH) SSH key format support
+  - [ ] PKCS#1
+  - [ ] PKCS#8
+  - [ ] [RFC4716] public keys
+  - [ ] SEC1
+
+## Supported algorithms
+
+| Name                                 | Decoding | Encoding | Certificates | Keygen | Sign | Verify   | `no_std` |
+|--------------------------------------|----------|----------|--------------|--------|------|----------|----------|
+| `ecdsa-sha2-nistp256`                | ✅       | ✅       | ✅           | ✅️     | ✅️   | ✅️       | heapless |
+| `ecdsa-sha2-nistp384`                | ✅       | ✅       | ✅           | ⛔️     | ⛔️   | ⛔️       | heapless |
+| `ecdsa-sha2-nistp521`                | ✅       | ✅       | ✅           | ⛔️     | ⛔ ️  | ⛔️       | heapless |
+| `ssh-dsa`                            | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc` ️ |
+| `ssh-ed25519`                        | ✅       | ✅       | ✅           | ✅️     | ✅️   | ✅       | heapless |
+| `ssh-rsa`                            | ✅       | ✅       | ✅           | ⛔️     | ⛔️   | ⛔️       | `alloc`  |
+| `sk-ecdsa-sha2-nistp256@openssh.com` | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc`  |
+| `sk-ssh-ed25519@openssh.com`         | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc`  |
 
 ## Minimum Supported Rust Version
 
@@ -74,6 +105,9 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
+[RFC4251]: https://datatracker.ietf.org/doc/html/rfc4251
 [RFC4253]: https://datatracker.ietf.org/doc/html/rfc4253
 [RFC4716]: https://datatracker.ietf.org/doc/html/rfc4716
-[PROTOCOL.key]: https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.key
+[PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
+[PROTOCOL.key]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD
+[PROTOCOL.u2f]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.u2f?annotate=HEAD

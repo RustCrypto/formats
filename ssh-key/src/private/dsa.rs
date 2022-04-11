@@ -1,10 +1,8 @@
 //! Digital Signature Algorithm (DSA) private keys.
 
 use crate::{
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    public::DsaPublicKey,
-    MPInt, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, public::DsaPublicKey, reader::Reader,
+    writer::Writer, MPInt, Result,
 };
 use core::fmt;
 use zeroize::Zeroize;
@@ -44,9 +42,9 @@ impl AsRef<[u8]> for DsaPrivateKey {
 }
 
 impl Decode for DsaPrivateKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
         Ok(Self {
-            inner: MPInt::decode(decoder)?,
+            inner: MPInt::decode(reader)?,
         })
     }
 }
@@ -62,8 +60,8 @@ impl Encode for DsaPrivateKey {
         self.inner.encoded_len()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.inner.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.inner.encode(writer)
     }
 }
 
@@ -94,6 +92,7 @@ impl PartialEq for DsaPrivateKey {
 impl Eq for DsaPrivateKey {}
 
 /// Digital Signature Algorithm (DSA) private/public keypair.
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone)]
 pub struct DsaKeypair {
     /// Public key.
@@ -104,21 +103,21 @@ pub struct DsaKeypair {
 }
 
 impl Decode for DsaKeypair {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let public = DsaPublicKey::decode(decoder)?;
-        let private = DsaPrivateKey::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let public = DsaPublicKey::decode(reader)?;
+        let private = DsaPrivateKey::decode(reader)?;
         Ok(DsaKeypair { public, private })
     }
 }
 
 impl Encode for DsaKeypair {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(self.public.encoded_len()? + self.private.encoded_len()?)
+        [self.public.encoded_len()?, self.private.encoded_len()?].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.public.encode(encoder)?;
-        self.private.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.public.encode(writer)?;
+        self.private.encode(writer)
     }
 }
 

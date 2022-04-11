@@ -269,7 +269,7 @@ pub enum EncryptionScheme<'a> {
 }
 
 impl<'a> EncryptionScheme<'a> {
-    /// Get the size of a key used by this algorithm.
+    /// Get the size of a key used by this algorithm in bytes.
     pub fn key_size(&self) -> usize {
         match self {
             Self::Aes128Cbc { .. } => 16,

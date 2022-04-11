@@ -1,9 +1,8 @@
 //! Multiple precision integer
 
 use crate::{
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Error,
+    Result,
 };
 use alloc::vec::Vec;
 use core::fmt;
@@ -40,7 +39,7 @@ use subtle::{Choice, ConstantTimeEq};
 /// | 80              | `00 00 00 02 00 80`
 /// |-1234            | `00 00 00 02 ed cc`
 /// | -deadbeef       | `00 00 00 05 ff 21 52 41 11`
-// TODO(tarcieri): support for heapless platforms, constant time comparisons
+// TODO(tarcieri): support for heapless platforms
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct MPInt {
@@ -88,18 +87,18 @@ impl AsRef<[u8]> for MPInt {
 }
 
 impl Decode for MPInt {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        decoder.decode_byte_vec()?.try_into()
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        Vec::decode(reader)?.try_into()
     }
 }
 
 impl Encode for MPInt {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.as_bytes().len())
+        [4, self.as_bytes().len()].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_byte_slice(self.as_bytes())
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.as_bytes().encode(writer)
     }
 }
 

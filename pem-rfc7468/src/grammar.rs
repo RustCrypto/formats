@@ -131,7 +131,7 @@ pub(crate) fn strip_trailing_eol(bytes: &[u8]) -> Option<&[u8]> {
 /// - Whitespace MUST NOT contain more than one consecutive WSP character
 // TODO(tarcieri): evaluate whether this is too strict; support '-'
 pub(crate) fn split_label(bytes: &[u8]) -> Option<(&str, &[u8])> {
-    let mut n = 0;
+    let mut n = 0usize;
 
     // TODO(tarcieri): handle hyphens in labels as well as spaces
     let mut last_was_wsp = false;
@@ -154,7 +154,7 @@ pub(crate) fn split_label(bytes: &[u8]) -> Option<(&str, &[u8])> {
             return None;
         }
 
-        n += 1;
+        n = n.checked_add(1)?;
     }
 
     let (raw_label, rest) = bytes.split_at(n);

@@ -57,6 +57,8 @@ pub struct DateTime {
 
 impl DateTime {
     /// Create a new [`DateTime`] from the given UTC time components.
+    // TODO(tarcieri): checked arithmetic
+    #[allow(clippy::integer_arithmetic)]
     pub fn new(year: u16, month: u8, day: u8, hour: u8, minutes: u8, seconds: u8) -> Result<Self> {
         // Basic validation of the components.
         if year < MIN_YEAR
@@ -95,14 +97,14 @@ impl DateTime {
             return Err(ErrorKind::DateTime.into());
         }
 
-        ydays += day as u16 - 1;
+        ydays += u16::from(day) - 1;
 
         if is_leap_year && month > 2 {
             ydays += 1;
         }
 
-        let days = (year - 1970) as u64 * 365 + leap_years as u64 + ydays as u64;
-        let time = seconds as u64 + (minutes as u64 * 60) + (hour as u64 * 3600);
+        let days = u64::from(year - 1970) * 365 + u64::from(leap_years) + u64::from(ydays);
+        let time = u64::from(seconds) + (u64::from(minutes) * 60) + (u64::from(hour) * 3600);
         let unix_duration = Duration::from_secs(time + days * 86400);
 
         if unix_duration > MAX_UNIX_DURATION {
@@ -123,6 +125,8 @@ impl DateTime {
     /// Compute a [`DateTime`] from the given [`Duration`] since the `UNIX_EPOCH`.
     ///
     /// Returns `None` if the value is outside the supported date range.
+    // TODO(tarcieri): checked arithmetic
+    #[allow(clippy::integer_arithmetic)]
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
         if unix_duration > MAX_UNIX_DURATION {
             return Err(ErrorKind::DateTime.into());
@@ -136,7 +140,7 @@ impl DateTime {
         const DAYS_PER_100Y: i64 = 365 * 100 + 24;
         const DAYS_PER_4Y: i64 = 365 * 4 + 1;
 
-        let days = (secs_since_epoch / 86400) as i64 - LEAPOCH;
+        let days = i64::try_from(secs_since_epoch / 86400)? - LEAPOCH;
         let secs_of_day = secs_since_epoch % 86400;
 
         let mut qc_cycles = days / DAYS_PER_400Y;
@@ -190,12 +194,12 @@ impl DateTime {
         let hour = mins_of_day / 60;
 
         Self::new(
-            year as u16,
+            year.try_into()?,
             mon,
-            mday as u8,
-            hour as u8,
-            minute as u8,
-            second as u8,
+            mday.try_into()?,
+            hour.try_into()?,
+            minute.try_into()?,
+            second.try_into()?,
         )
     }
 
@@ -254,15 +258,19 @@ impl DateTime {
 impl FromStr for DateTime {
     type Err = Error;
 
+    // TODO(tarcieri): checked arithmetic
+    #[allow(clippy::integer_arithmetic)]
     fn from_str(s: &str) -> Result<Self> {
         match *s.as_bytes() {
             [year1, year2, year3, year4, b'-', month1, month2, b'-', day1, day2, b'T', hour1, hour2, b':', min1, min2, b':', sec1, sec2, b'Z'] =>
             {
                 let tag = Tag::GeneralizedTime;
-                let year = decode_decimal(tag, year1, year2).map_err(|_| ErrorKind::DateTime)?
-                    as u16
-                    * 100
-                    + decode_decimal(tag, year3, year4).map_err(|_| ErrorKind::DateTime)? as u16;
+                let year =
+                    u16::from(decode_decimal(tag, year1, year2).map_err(|_| ErrorKind::DateTime)?)
+                        * 100
+                        + u16::from(
+                            decode_decimal(tag, year3, year4).map_err(|_| ErrorKind::DateTime)?,
+                        );
                 let month = decode_decimal(tag, month1, month2).map_err(|_| ErrorKind::DateTime)?;
                 let day = decode_decimal(tag, day1, day2).map_err(|_| ErrorKind::DateTime)?;
                 let hour = decode_decimal(tag, hour1, hour2).map_err(|_| ErrorKind::DateTime)?;
@@ -328,7 +336,7 @@ impl TryFrom<DateTime> for PrimitiveDateTime {
 
     fn try_from(time: DateTime) -> Result<PrimitiveDateTime> {
         let month = (time.month() as u8).try_into()?;
-        let date = time::Date::from_calendar_date(time.year() as i32, month, time.day())?;
+        let date = time::Date::from_calendar_date(i32::from(time.year()), month, time.day())?;
         let time = time::Time::from_hms(time.hour(), time.minutes(), time.seconds())?;
 
         Ok(PrimitiveDateTime::new(date, time))
@@ -342,7 +350,7 @@ impl TryFrom<PrimitiveDateTime> for DateTime {
 
     fn try_from(time: PrimitiveDateTime) -> Result<DateTime> {
         DateTime::new(
-            time.year() as u16,
+            time.year().try_into().map_err(|_| ErrorKind::DateTime)?,
             time.month().into(),
             time.day(),
             time.hour(),
@@ -353,6 +361,8 @@ impl TryFrom<PrimitiveDateTime> for DateTime {
 }
 
 /// Decode 2-digit decimal value
+// TODO(tarcieri): checked arithmetic
+#[allow(clippy::integer_arithmetic)]
 pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u8> {
     if (b'0'..=b'9').contains(&hi) && (b'0'..=b'9').contains(&lo) {
         Ok((hi - b'0') * 10 + (lo - b'0'))
@@ -362,6 +372,8 @@ pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u8> {
 }
 
 /// Encode 2-digit decimal value
+// TODO(tarcieri): checked arithmetic
+#[allow(clippy::integer_arithmetic)]
 pub(crate) fn encode_decimal(encoder: &mut Encoder<'_>, tag: Tag, value: u8) -> Result<()> {
     let hi_val = value / 10;
 

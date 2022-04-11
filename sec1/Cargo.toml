@@ -16,7 +16,6 @@ edition = "2021"
 rust-version = "1.57"
 
 [dependencies]
-# optional dependencies
 der = { version = "=0.6.0-pre.3", optional = true, features = ["oid"], path = "../der" }
 generic-array = { version = "0.14.4", optional = true, default-features = false }
 pkcs8 = { version = "=0.9.0-pre.1", optional = true, default-features = false, path = "../pkcs8" }
@@ -26,6 +25,7 @@ zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
+tempfile = "3"
 
 [features]
 default = ["der", "point"]

@@ -1,10 +1,8 @@
 //! Rivest–Shamir–Adleman (RSA) private keys.
 
 use crate::{
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    public::RsaPublicKey,
-    MPInt, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, public::RsaPublicKey, reader::Reader,
+    writer::Writer, MPInt, Result,
 };
 use core::fmt;
 use zeroize::Zeroize;
@@ -30,27 +28,31 @@ pub struct RsaPrivateKey {
 }
 
 impl Decode for RsaPrivateKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let d = MPInt::decode(decoder)?;
-        let iqmp = MPInt::decode(decoder)?;
-        let p = MPInt::decode(decoder)?;
-        let q = MPInt::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let d = MPInt::decode(reader)?;
+        let iqmp = MPInt::decode(reader)?;
+        let p = MPInt::decode(reader)?;
+        let q = MPInt::decode(reader)?;
         Ok(Self { d, iqmp, p, q })
     }
 }
 
 impl Encode for RsaPrivateKey {
     fn encoded_len(&self) -> Result<usize> {
-        [&self.d, &self.iqmp, &self.p, &self.q]
-            .iter()
-            .fold(Ok(0), |acc, n| Ok(acc? + n.encoded_len()?))
+        [
+            self.d.encoded_len()?,
+            self.iqmp.encoded_len()?,
+            self.p.encoded_len()?,
+            self.q.encoded_len()?,
+        ]
+        .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.d.encode(encoder)?;
-        self.iqmp.encode(encoder)?;
-        self.p.encode(encoder)?;
-        self.q.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.d.encode(writer)?;
+        self.iqmp.encode(writer)?;
+        self.p.encode(writer)?;
+        self.q.encode(writer)
     }
 }
 
@@ -87,6 +89,7 @@ impl PartialEq for RsaPrivateKey {
 impl Eq for RsaPrivateKey {}
 
 /// RSA private/public keypair.
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone)]
 pub struct RsaKeypair {
     /// Public key.
@@ -97,26 +100,29 @@ pub struct RsaKeypair {
 }
 
 impl Decode for RsaKeypair {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let n = MPInt::decode(decoder)?;
-        let e = MPInt::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let n = MPInt::decode(reader)?;
+        let e = MPInt::decode(reader)?;
         let public = RsaPublicKey { n, e };
-        let private = RsaPrivateKey::decode(decoder)?;
+        let private = RsaPrivateKey::decode(reader)?;
         Ok(RsaKeypair { public, private })
     }
 }
 
 impl Encode for RsaKeypair {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(self.public.n.encoded_len()?
-            + self.public.e.encoded_len()?
-            + self.private.encoded_len()?)
+        [
+            self.public.n.encoded_len()?,
+            self.public.e.encoded_len()?,
+            self.private.encoded_len()?,
+        ]
+        .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.public.n.encode(encoder)?;
-        self.public.e.encode(encoder)?;
-        self.private.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.public.n.encode(writer)?;
+        self.public.e.encode(writer)?;
+        self.private.encode(writer)
     }
 }
 

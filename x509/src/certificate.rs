@@ -9,8 +9,6 @@ use der::asn1::{BitString, UIntBytes};
 use der::{Decode, Enumerated, Error, ErrorKind, Newtype, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
-pub mod document;
-
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
 ///
 /// ```text

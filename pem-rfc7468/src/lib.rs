@@ -1,13 +1,20 @@
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
-    html_root_url = "https://docs.rs/pem-rfc7468/0.4.0"
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg"
 )]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
-#![doc = include_str!("../README.md")]
+#![deny(unsafe_code)]
+#![warn(
+    clippy::integer_arithmetic,
+    clippy::panic,
+    clippy::panic_in_result_fn,
+    clippy::unwrap_used,
+    missing_docs,
+    rust_2018_idioms,
+    unused_qualifications
+)]
 
 //! # Usage
 //!
@@ -96,15 +103,15 @@ pub type Base64Encoder<'o> = base64ct::Encoder<'o, base64ct::Base64>;
 /// Marker trait for types with an associated PEM type label.
 pub trait PemLabel {
     /// Expected PEM type label for a given document, e.g. `"PRIVATE KEY"`
-    const TYPE_LABEL: &'static str;
+    const PEM_LABEL: &'static str;
 
     /// Validate that a given label matches the expected label.
     fn validate_pem_label(actual: &str) -> Result<()> {
-        if Self::TYPE_LABEL == actual {
+        if Self::PEM_LABEL == actual {
             Ok(())
         } else {
             Err(Error::UnexpectedTypeLabel {
-                expected: Self::TYPE_LABEL,
+                expected: Self::PEM_LABEL,
             })
         }
     }

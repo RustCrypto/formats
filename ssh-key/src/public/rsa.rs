@@ -1,9 +1,8 @@
 //! Rivest–Shamir–Adleman (RSA) public keys.
 
 use crate::{
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    MPInt, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, MPInt,
+    Result,
 };
 
 /// RSA public key.
@@ -19,30 +18,21 @@ pub struct RsaPublicKey {
     pub n: MPInt,
 }
 
-impl RsaPublicKey {
-    /// Borrow the bytes used to compute a "checkint" for this key.
-    ///
-    /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
-    pub(super) fn checkint_bytes(&self) -> &[u8] {
-        self.n.as_bytes()
-    }
-}
-
 impl Decode for RsaPublicKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let e = MPInt::decode(decoder)?;
-        let n = MPInt::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let e = MPInt::decode(reader)?;
+        let n = MPInt::decode(reader)?;
         Ok(Self { e, n })
     }
 }
 
 impl Encode for RsaPublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(self.e.encoded_len()? + self.n.encoded_len()?)
+        [self.e.encoded_len()?, self.n.encoded_len()?].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.e.encode(encoder)?;
-        self.n.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.e.encode(writer)?;
+        self.n.encode(writer)
     }
 }

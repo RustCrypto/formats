@@ -49,6 +49,8 @@ impl Parser {
                 }
                 Err(err) => Err(err),
             },
+            // TODO(tarcieri): checked arithmetic
+            #[allow(clippy::integer_arithmetic)]
             [byte @ b'0'..=b'9', remaining @ ..] => {
                 let digit = byte.saturating_sub(b'0');
                 self.current_arc = self.current_arc * 10 + digit as Arc;

@@ -210,9 +210,8 @@ impl<'a> Encapsulation<'a> {
                 return Err(Error::PostEncapsulationBoundary);
             }
 
-            body = body
-                .get(..(body.len() - slice.len()))
-                .ok_or(Error::PostEncapsulationBoundary)?;
+            let len = body.len().checked_sub(slice.len()).ok_or(Error::Length)?;
+            body = body.get(..len).ok_or(Error::PostEncapsulationBoundary)?;
         }
 
         let encapsulated_text =

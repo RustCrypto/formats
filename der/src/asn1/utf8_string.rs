@@ -13,9 +13,9 @@ use alloc::{borrow::ToOwned, string::String};
 ///
 /// Supports the full UTF-8 encoding.
 ///
-/// Note that the [`Decode`][`crate::Decodable`] and
-/// [`Encode`][`crate::Encodable`] traits are impl'd for Rust's
-/// [`str`][`prim@str`] primitive, which decodes/encodes as a [`Utf8String`].
+/// Note that the [`Decode`][`crate::Decode`] and [`Encode`][`crate::Encode`]
+/// traits are impl'd for Rust's [`str`][`prim@str`] primitive, which
+/// decodes/encodes as a [`Utf8String`].
 ///
 /// You are free to use [`str`][`prim@str`] instead of this type, however it's
 /// still provided for explicitness in cases where it might be ambiguous with

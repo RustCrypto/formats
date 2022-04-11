@@ -12,25 +12,26 @@
 //! ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti user@example.com
 //! ```
 
-use crate::{encoder::Base64Encoder, Error, Result};
+use crate::{writer::Base64Writer, Error, Result};
 use core::str;
 
 /// OpenSSH public key encapsulation parser.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct Encapsulation<'a> {
     /// Algorithm identifier
-    pub(super) algorithm_id: &'a str,
+    pub(crate) algorithm_id: &'a str,
 
     /// Base64-encoded key data
-    pub(super) base64_data: &'a [u8],
+    pub(crate) base64_data: &'a [u8],
 
     /// Comment
     #[cfg_attr(not(feature = "alloc"), allow(dead_code))]
-    pub(super) comment: &'a str,
+    pub(crate) comment: &'a str,
 }
 
 impl<'a> Encapsulation<'a> {
     /// Parse the given binary data.
-    pub(super) fn decode(mut bytes: &'a [u8]) -> Result<Self> {
+    pub(crate) fn decode(mut bytes: &'a [u8]) -> Result<Self> {
         let algorithm_id = decode_segment_str(&mut bytes)?;
         let base64_data = decode_segment(&mut bytes)?;
         let comment = str::from_utf8(bytes)
@@ -50,24 +51,24 @@ impl<'a> Encapsulation<'a> {
     }
 
     /// Encode data with OpenSSH public key encapsulation.
-    pub(super) fn encode<'o, F>(
+    pub(crate) fn encode<'o, F>(
         out: &'o mut [u8],
         algorithm_id: &str,
         comment: &str,
         f: F,
     ) -> Result<&'o str>
     where
-        F: FnOnce(&mut Base64Encoder<'_>) -> Result<()>,
+        F: FnOnce(&mut Base64Writer<'_>) -> Result<()>,
     {
         let mut offset = 0;
         encode_str(out, &mut offset, algorithm_id)?;
         encode_str(out, &mut offset, " ")?;
 
-        let mut encoder = Base64Encoder::new(&mut out[offset..])?;
-        f(&mut encoder)?;
-        let base64_len = encoder.finish()?.len();
+        let mut writer = Base64Writer::new(&mut out[offset..])?;
+        f(&mut writer)?;
+        let base64_len = writer.finish()?.len();
 
-        offset += base64_len;
+        offset = offset.checked_add(base64_len).ok_or(Error::Length)?;
         encode_str(out, &mut offset, " ")?;
         encode_str(out, &mut offset, comment)?;
         Ok(str::from_utf8(&out[..offset])?)
@@ -77,14 +78,15 @@ impl<'a> Encapsulation<'a> {
 /// Parse a segment of the public key.
 fn decode_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
     let start = *bytes;
-    let mut len = 0;
+    let mut len = 0usize;
 
     loop {
         match *bytes {
-            [b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'+' | b'-' | b'/' | b'=', rest @ ..] => {
+            [b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'+' | b'-' | b'/' | b'=' | b'@' | b'.', rest @ ..] =>
+            {
                 // Valid character; continue
                 *bytes = rest;
-                len += 1;
+                len = len.checked_add(1).ok_or(Error::Length)?;
             }
             [b' ', rest @ ..] => {
                 // Encountered space; we're done
@@ -93,7 +95,6 @@ fn decode_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
             }
             [_, ..] => {
                 // Invalid character
-                // TODO(tarcieri): better error?
                 return Err(Error::CharacterEncoding);
             }
             [] => {
@@ -113,12 +114,12 @@ fn decode_segment_str<'a>(bytes: &mut &'a [u8]) -> Result<&'a str> {
 fn encode_str(out: &mut [u8], offset: &mut usize, s: &str) -> Result<()> {
     let bytes = s.as_bytes();
 
-    if *offset + bytes.len() > out.len() {
+    if out.len() < offset.checked_add(bytes.len()).ok_or(Error::Length)? {
         return Err(Error::Length);
     }
 
     out[*offset..][..bytes.len()].copy_from_slice(bytes);
-    *offset += bytes.len();
+    *offset = offset.checked_add(bytes.len()).ok_or(Error::Length)?;
     Ok(())
 }
 

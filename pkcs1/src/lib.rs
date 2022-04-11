@@ -35,10 +35,7 @@ pub use self::{
 
 #[cfg(feature = "alloc")]
 pub use crate::{
-    private_key::{
-        document::RsaPrivateKeyDocument, other_prime_info::OtherPrimeInfo, OtherPrimeInfos,
-    },
-    public_key::document::RsaPublicKeyDocument,
+    private_key::{other_prime_info::OtherPrimeInfo, OtherPrimeInfos},
     traits::{EncodeRsaPrivateKey, EncodeRsaPublicKey},
 };
 

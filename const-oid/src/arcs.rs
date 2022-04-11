@@ -66,9 +66,15 @@ impl<'a> Arcs<'a> {
                 let mut arc_bytes = 0;
 
                 loop {
-                    match self.oid.as_bytes().get(offset + arc_bytes).cloned() {
+                    let len = checked_add!(offset, arc_bytes);
+
+                    match self.oid.as_bytes().get(len).cloned() {
+                        // The arithmetic below includes advance checks
+                        // against `ARC_MAX_BYTES` and `ARC_MAX_LAST_OCTET`
+                        // which ensure the operations will not overflow.
+                        #[allow(clippy::integer_arithmetic)]
                         Some(byte) => {
-                            arc_bytes += 1;
+                            arc_bytes = checked_add!(arc_bytes, 1);
 
                             if (arc_bytes > ARC_MAX_BYTES) && (byte & ARC_MAX_LAST_OCTET != 0) {
                                 return Err(Error::ArcTooBig);
@@ -77,7 +83,7 @@ impl<'a> Arcs<'a> {
                             result = result << 7 | (byte & 0b1111111) as Arc;
 
                             if byte & 0b10000000 == 0 {
-                                self.cursor = Some(offset + arc_bytes);
+                                self.cursor = Some(checked_add!(offset, arc_bytes));
                                 return Ok(Some(result));
                             }
                         }
@@ -123,16 +129,21 @@ impl RootArcs {
             return Err(Error::ArcInvalid { arc: second_arc });
         }
 
+        // The checks above ensure this operation will not overflow
+        #[allow(clippy::integer_arithmetic)]
         let byte = (first_arc * (ARC_MAX_SECOND + 1)) as u8 + second_arc as u8;
+
         Ok(Self(byte))
     }
 
     /// Get the value of the first arc
+    #[allow(clippy::integer_arithmetic)]
     pub(crate) const fn first_arc(self) -> Arc {
         self.0 as Arc / (ARC_MAX_SECOND + 1)
     }
 
     /// Get the value of the second arc
+    #[allow(clippy::integer_arithmetic)]
     pub(crate) const fn second_arc(self) -> Arc {
         self.0 as Arc % (ARC_MAX_SECOND + 1)
     }
@@ -141,6 +152,8 @@ impl RootArcs {
 impl TryFrom<u8> for RootArcs {
     type Error = Error;
 
+    // Ensured not to oerflow by constructor invariants
+    #[allow(clippy::integer_arithmetic)]
     fn try_from(octet: u8) -> Result<Self> {
         let first = octet as Arc / (ARC_MAX_SECOND + 1);
         let second = octet as Arc % (ARC_MAX_SECOND + 1);

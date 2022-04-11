@@ -1,9 +1,8 @@
 //! Digital Signature Algorithm (DSA) public keys.
 
 use crate::{
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    MPInt, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, MPInt,
+    Result,
 };
 
 /// Digital Signature Algorithm (DSA) public key.
@@ -26,37 +25,31 @@ pub struct DsaPublicKey {
     pub y: MPInt,
 }
 
-impl DsaPublicKey {
-    /// Borrow the bytes used to compute a "checkint" for this key.
-    ///
-    /// This is a sort of primitive pseudo-MAC used by the OpenSSH key format.
-    pub(super) fn checkint_bytes(&self) -> &[u8] {
-        self.y.as_bytes()
-    }
-}
-
 impl Decode for DsaPublicKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let p = MPInt::decode(decoder)?;
-        let q = MPInt::decode(decoder)?;
-        let g = MPInt::decode(decoder)?;
-        let y = MPInt::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let p = MPInt::decode(reader)?;
+        let q = MPInt::decode(reader)?;
+        let g = MPInt::decode(reader)?;
+        let y = MPInt::decode(reader)?;
         Ok(Self { p, q, g, y })
     }
 }
 
 impl Encode for DsaPublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(self.p.encoded_len()?
-            + self.q.encoded_len()?
-            + self.g.encoded_len()?
-            + self.y.encoded_len()?)
+        [
+            self.p.encoded_len()?,
+            self.q.encoded_len()?,
+            self.g.encoded_len()?,
+            self.y.encoded_len()?,
+        ]
+        .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.p.encode(encoder)?;
-        self.q.encode(encoder)?;
-        self.g.encode(encoder)?;
-        self.y.encode(encoder)
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.p.encode(writer)?;
+        self.q.encode(writer)?;
+        self.g.encode(writer)?;
+        self.y.encode(writer)
     }
 }

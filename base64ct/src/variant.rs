@@ -1,5 +1,8 @@
 //! Base64 variants
 
+// TODO(tarcieri): explicitly checked/wrapped arithmetic
+#![allow(clippy::integer_arithmetic)]
+
 use core::{fmt::Debug, ops::Range};
 
 pub mod bcrypt;

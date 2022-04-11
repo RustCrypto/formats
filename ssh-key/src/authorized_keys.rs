@@ -296,7 +296,7 @@ impl<'a> ConfigOptsIter<'a> {
                 _ => return Err(Error::CharacterEncoding),
             }
 
-            index += 1;
+            index = index.checked_add(1).ok_or(Error::Length)?;
         }
 
         let remaining = self.0;

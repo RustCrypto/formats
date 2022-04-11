@@ -14,6 +14,7 @@ members = [
     "pkcs7",
     "pkcs8",
     "sec1",
+    "serdect",
     "spki",
     "ssh-key",
     "tai64",

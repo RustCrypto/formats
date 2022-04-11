@@ -1,19 +1,21 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) private keys.
 
 use crate::{
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    public::EcdsaPublicKey,
-    Algorithm, EcdsaCurve, Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, public::EcdsaPublicKey, reader::Reader,
+    writer::Writer, Algorithm, EcdsaCurve, Error, Result,
 };
 use core::fmt;
 use sec1::consts::{U32, U48, U66};
 use zeroize::Zeroize;
 
+#[cfg(feature = "rand_core")]
+use rand_core::{CryptoRng, RngCore};
+
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
 /// Elliptic Curve Digital Signature Algorithm (ECDSA) private key.
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 #[derive(Clone)]
 pub struct EcdsaPrivateKey<const SIZE: usize> {
     /// Byte array containing serialized big endian private scalar.
@@ -31,21 +33,21 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
         self.bytes
     }
 
-    /// Decode ECDSA private key using the provided Base64 decoder.
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let len = decoder.decode_usize()?;
-
-        if len == SIZE + 1 {
-            // Strip leading zero
-            // TODO(tarcieri): make sure leading zero was necessary
-            if decoder.decode_u8()? != 0 {
-                return Err(Error::FormatEncoding);
+    /// Decode ECDSA private key using the provided Base64 reader.
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        reader.read_nested(|reader| {
+            if reader.remaining_len() == SIZE.checked_add(1).ok_or(Error::Length)? {
+                // Strip leading zero
+                // TODO(tarcieri): make sure leading zero was necessary
+                if u8::decode(reader)? != 0 {
+                    return Err(Error::FormatEncoding);
+                }
             }
-        }
 
-        let mut bytes = [0u8; SIZE];
-        decoder.decode_raw(&mut bytes)?;
-        Ok(Self { bytes })
+            let mut bytes = [0u8; SIZE];
+            reader.read(&mut bytes)?;
+            Ok(Self { bytes })
+        })
     }
 
     /// Does this private key need to be prefixed with a leading zero?
@@ -56,17 +58,19 @@ impl<const SIZE: usize> EcdsaPrivateKey<SIZE> {
 
 impl<const SIZE: usize> Encode for EcdsaPrivateKey<SIZE> {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4usize + usize::from(self.needs_leading_zero()) + SIZE)
+        [4, self.needs_leading_zero().into(), SIZE].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        encoder.encode_usize(usize::from(self.needs_leading_zero()) + SIZE)?;
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        [self.needs_leading_zero().into(), SIZE]
+            .checked_sum()?
+            .encode(writer)?;
 
         if self.needs_leading_zero() {
-            encoder.encode_raw(&[0])?;
+            writer.write(&[0])?;
         }
 
-        encoder.encode_raw(&self.bytes)
+        writer.write(&self.bytes)
     }
 }
 
@@ -106,6 +110,16 @@ impl<const SIZE: usize> Drop for EcdsaPrivateKey<SIZE> {
     }
 }
 
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl From<p256::SecretKey> for EcdsaPrivateKey<32> {
+    fn from(sk: p256::SecretKey) -> EcdsaPrivateKey<32> {
+        EcdsaPrivateKey {
+            bytes: sk.to_be_bytes().into(),
+        }
+    }
+}
+
 #[cfg(feature = "subtle")]
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl<const SIZE: usize> ConstantTimeEq for EcdsaPrivateKey<SIZE> {
@@ -127,6 +141,7 @@ impl<const SIZE: usize> PartialEq for EcdsaPrivateKey<SIZE> {
 impl<const SIZE: usize> Eq for EcdsaPrivateKey<SIZE> {}
 
 /// Elliptic Curve Digital Signature Algorithm (ECDSA) private/public keypair.
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
 #[derive(Clone, Debug)]
 pub enum EcdsaKeypair {
     /// NIST P-256 ECDSA keypair.
@@ -158,9 +173,30 @@ pub enum EcdsaKeypair {
 }
 
 impl EcdsaKeypair {
+    /// Generate a random ECDSA private key.
+    #[cfg(feature = "rand_core")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rand_core")))]
+    #[allow(unused_variables)]
+    pub fn random(rng: impl CryptoRng + RngCore, curve: EcdsaCurve) -> Result<Self> {
+        match curve {
+            #[cfg(feature = "p256")]
+            EcdsaCurve::NistP256 => {
+                let private = p256::SecretKey::random(rng);
+                let public = private.public_key();
+                Ok(EcdsaKeypair::NistP256 {
+                    private: private.into(),
+                    public: public.into(),
+                })
+            }
+            _ => Err(Error::Algorithm),
+        }
+    }
+
     /// Get the [`Algorithm`] for this public key type.
     pub fn algorithm(&self) -> Algorithm {
-        Algorithm::Ecdsa(self.curve())
+        Algorithm::Ecdsa {
+            curve: self.curve(),
+        }
     }
 
     /// Get the [`EcdsaCurve`] for this key.
@@ -192,18 +228,18 @@ impl EcdsaKeypair {
 }
 
 impl Decode for EcdsaKeypair {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        match EcdsaPublicKey::decode(decoder)? {
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        match EcdsaPublicKey::decode(reader)? {
             EcdsaPublicKey::NistP256(public) => {
-                let private = EcdsaPrivateKey::<32>::decode(decoder)?;
+                let private = EcdsaPrivateKey::<32>::decode(reader)?;
                 Ok(Self::NistP256 { public, private })
             }
             EcdsaPublicKey::NistP384(public) => {
-                let private = EcdsaPrivateKey::<48>::decode(decoder)?;
+                let private = EcdsaPrivateKey::<48>::decode(reader)?;
                 Ok(Self::NistP384 { public, private })
             }
             EcdsaPublicKey::NistP521(public) => {
-                let private = EcdsaPrivateKey::<66>::decode(decoder)?;
+                let private = EcdsaPrivateKey::<66>::decode(reader)?;
                 Ok(Self::NistP521 { public, private })
             }
         }
@@ -220,16 +256,16 @@ impl Encode for EcdsaKeypair {
             Self::NistP521 { private, .. } => private.encoded_len()?,
         };
 
-        Ok(public_len + private_len)
+        [public_len, private_len].checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        EcdsaPublicKey::from(self).encode(encoder)?;
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        EcdsaPublicKey::from(self).encode(writer)?;
 
         match self {
-            Self::NistP256 { private, .. } => private.encode(encoder)?,
-            Self::NistP384 { private, .. } => private.encode(encoder)?,
-            Self::NistP521 { private, .. } => private.encode(encoder)?,
+            Self::NistP256 { private, .. } => private.encode(writer)?,
+            Self::NistP384 { private, .. } => private.encode(writer)?,
+            Self::NistP521 { private, .. } => private.encode(writer)?,
         }
 
         Ok(())

@@ -8,26 +8,24 @@ use der::{
 };
 
 #[cfg(feature = "alloc")]
-use crate::PrivateKeyDocument;
+use der::SecretDocument;
 
 #[cfg(feature = "encryption")]
 use {
-    crate::EncryptedPrivateKeyDocument,
+    crate::EncryptedPrivateKeyInfo,
+    der::zeroize::Zeroizing,
+    pkcs5::pbes2,
     rand_core::{CryptoRng, RngCore},
 };
 
 #[cfg(feature = "pem")]
-use {
-    crate::{EncodePrivateKey, LineEnding},
-    alloc::string::String,
-    zeroize::Zeroizing,
-};
+use der::pem::PemLabel;
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
 /// Context-specific tag number for the public key.
-const PUBLIC_KEY_TAG: TagNumber = TagNumber::new(1);
+const PUBLIC_KEY_TAG: TagNumber = TagNumber::N1;
 
 /// PKCS#8 `PrivateKeyInfo`.
 ///
@@ -129,30 +127,34 @@ impl<'a> PrivateKeyInfo<'a> {
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password.
     ///
-    /// See [`PrivateKeyDocument::encrypt`] for more information.
+    /// Uses the following algorithms for encryption:
+    /// - PBKDF: scrypt with default parameters:
+    ///   - log₂(N): 15
+    ///   - r: 8
+    ///   - p: 1
+    /// - Cipher: AES-256-CBC (best available option for PKCS#5 encryption)
     #[cfg(feature = "encryption")]
     #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn encrypt(
         &self,
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
-    ) -> Result<EncryptedPrivateKeyDocument> {
-        self.to_der()?.encrypt(rng, password)
+    ) -> Result<SecretDocument> {
+        let der = Zeroizing::new(self.to_vec()?);
+        EncryptedPrivateKeyInfo::encrypt(rng, password, der.as_ref())
     }
 
-    /// Encode this [`PrivateKeyInfo`] as ASN.1 DER.
-    #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn to_der(&self) -> Result<PrivateKeyDocument> {
-        self.try_into()
-    }
-
-    /// Encode this [`PrivateKeyInfo`] as PEM-encoded ASN.1 DER with the given
-    /// [`LineEnding`].
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        self.to_der()?.to_pkcs8_pem(line_ending)
+    /// Encrypt this private key using a symmetric encryption key derived
+    /// from the provided password and [`pbes2::Parameters`].
+    #[cfg(feature = "encryption")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
+    pub fn encrypt_with_params(
+        &self,
+        pbes2_params: pbes2::Parameters<'_>,
+        password: impl AsRef<[u8]>,
+    ) -> Result<SecretDocument> {
+        let der = Zeroizing::new(self.to_vec()?);
+        EncryptedPrivateKeyInfo::encrypt_with(pbes2_params, password, der.as_ref())
     }
 }
 
@@ -233,6 +235,32 @@ impl<'a> fmt::Debug for PrivateKeyInfo<'a> {
     }
 }
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl TryFrom<PrivateKeyInfo<'_>> for SecretDocument {
+    type Error = Error;
+
+    fn try_from(private_key: PrivateKeyInfo<'_>) -> Result<SecretDocument> {
+        SecretDocument::try_from(&private_key)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl TryFrom<&PrivateKeyInfo<'_>> for SecretDocument {
+    type Error = Error;
+
+    fn try_from(private_key: &PrivateKeyInfo<'_>) -> Result<SecretDocument> {
+        Ok(Self::encode_msg(private_key)?)
+    }
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl PemLabel for PrivateKeyInfo<'_> {
+    const PEM_LABEL: &'static str = "PRIVATE KEY";
+}
+
 #[cfg(feature = "subtle")]
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl<'a> ConstantTimeEq for PrivateKeyInfo<'a> {
@@ -247,12 +275,12 @@ impl<'a> ConstantTimeEq for PrivateKeyInfo<'a> {
 
 #[cfg(feature = "subtle")]
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
+impl<'a> Eq for PrivateKeyInfo<'a> {}
+
+#[cfg(feature = "subtle")]
+#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl<'a> PartialEq for PrivateKeyInfo<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).into()
     }
 }
-
-#[cfg(feature = "subtle")]
-#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
-impl<'a> Eq for PrivateKeyInfo<'a> {}

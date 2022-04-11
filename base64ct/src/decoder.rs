@@ -3,7 +3,6 @@
 use crate::{
     encoding,
     line_ending::{CHAR_CR, CHAR_LF},
-    variant::Variant,
     Encoding,
     Error::{self, InvalidLength},
     MIN_LINE_WIDTH,
@@ -16,20 +15,15 @@ use {alloc::vec::Vec, core::iter};
 #[cfg(feature = "std")]
 use std::io;
 
-#[cfg(docsrs)]
+#[cfg(doc)]
 use crate::{Base64, Base64Unpadded};
 
 /// Stateful Base64 decoder with support for buffered, incremental decoding.
 ///
 /// The `E` type parameter can be any type which impls [`Encoding`] such as
 /// [`Base64`] or [`Base64Unpadded`].
-///
-/// Internally it uses a sealed `Variant` trait which is an implementation
-/// detail of this crate, and leverages a [blanket impl] of [`Encoding`].
-///
-/// [blanket impl]: ./trait.Encoding.html#impl-Encoding
 #[derive(Clone)]
-pub struct Decoder<'i, E: Variant> {
+pub struct Decoder<'i, E: Encoding> {
     /// Current line being processed.
     line: Line<'i>,
 
@@ -46,7 +40,7 @@ pub struct Decoder<'i, E: Variant> {
     encoding: PhantomData<E>,
 }
 
-impl<'i, E: Variant> Decoder<'i, E> {
+impl<'i, E: Encoding> Decoder<'i, E> {
     /// Create a new decoder for a byte slice containing contiguous
     /// (non-newline-delimited) Base64-encoded data.
     ///
@@ -121,7 +115,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
             // If there's data in the block buffer, use it
             if !self.block_buffer.is_empty() {
                 let out_rem = out.len().checked_sub(out_pos).ok_or(InvalidLength)?;
-                let bytes = self.block_buffer.take(out_rem);
+                let bytes = self.block_buffer.take(out_rem)?;
                 out[out_pos..][..bytes.len()].copy_from_slice(bytes);
                 out_pos = out_pos.checked_add(bytes.len()).ok_or(InvalidLength)?;
             }
@@ -136,10 +130,10 @@ impl<'i, E: Variant> Decoder<'i, E> {
             let out_rem = out.len().checked_sub(out_pos).ok_or(InvalidLength)?;
             let out_blocks = out_rem / 3;
             let blocks = cmp::min(in_blocks, out_blocks);
-            let in_aligned = self.line.take(blocks * 4);
+            let in_aligned = self.line.take(blocks.checked_mul(4).ok_or(InvalidLength)?);
 
             if !in_aligned.is_empty() {
-                let out_buf = &mut out[out_pos..][..(blocks * 3)];
+                let out_buf = &mut out[out_pos..][..blocks.checked_mul(3).ok_or(InvalidLength)?];
                 let decoded_len = self.perform_decode(in_aligned, out_buf)?.len();
                 out_pos = out_pos.checked_add(decoded_len).ok_or(InvalidLength)?;
             }
@@ -176,10 +170,10 @@ impl<'i, E: Variant> Decoder<'i, E> {
     pub fn decode_to_end<'o>(&mut self, buf: &'o mut Vec<u8>) -> Result<&'o [u8], Error> {
         let start_len = buf.len();
         let remaining_len = self.remaining_len();
-        let total_len = start_len + remaining_len;
+        let total_len = start_len.checked_add(remaining_len).ok_or(InvalidLength)?;
 
         if total_len > buf.capacity() {
-            buf.reserve(total_len - buf.capacity());
+            buf.reserve(total_len.checked_sub(buf.capacity()).ok_or(InvalidLength)?);
         }
 
         // Append `decoded_len` zeroes to the vector
@@ -214,7 +208,8 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
             // Advance the line and attempt to fill tmp
             self.advance_line()?;
-            let line_begin = self.line.take(4 - line_end.len());
+            let len = 4usize.checked_sub(line_end.len()).ok_or(InvalidLength)?;
+            let line_begin = self.line.take(len);
             tmp[line_end.len()..][..line_begin.len()].copy_from_slice(line_begin);
 
             let tmp_len = line_begin
@@ -255,7 +250,7 @@ impl<'i, E: Variant> Decoder<'i, E> {
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl<'i, E: Variant> io::Read for Decoder<'i, E> {
+impl<'i, E: Encoding> io::Read for Decoder<'i, E> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let slice = match buf.get_mut(..self.remaining_len()) {
             Some(bytes) => bytes,
@@ -314,17 +309,17 @@ impl BlockBuffer {
     ///
     /// Returns as many bytes as possible, or an empty slice if the buffer has
     /// already been read to completion.
-    fn take(&mut self, mut nbytes: usize) -> &[u8] {
+    fn take(&mut self, mut nbytes: usize) -> Result<&[u8], Error> {
         debug_assert!(self.position <= self.length);
         let start_pos = self.position;
-        let remaining_len = self.length - start_pos;
+        let remaining_len = self.length.checked_sub(start_pos).ok_or(InvalidLength)?;
 
         if nbytes > remaining_len {
             nbytes = remaining_len;
         }
 
-        self.position += nbytes;
-        &self.decoded[start_pos..][..nbytes]
+        self.position = self.position.checked_add(nbytes).ok_or(InvalidLength)?;
+        Ok(&self.decoded[start_pos..][..nbytes])
     }
 
     /// Have all of the bytes in this buffer been consumed?
@@ -431,7 +426,7 @@ impl<'i> LineReader<'i> {
     }
 
     /// Get the total length of the data decoded from this line reader.
-    fn decoded_len<E: Variant>(&self) -> Result<usize, Error> {
+    fn decoded_len<E: Encoding>(&self) -> Result<usize, Error> {
         let mut buffer = [0u8; 4];
         let mut lines = self.clone();
         let mut line = match lines.next().transpose()? {

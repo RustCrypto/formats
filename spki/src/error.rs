@@ -6,6 +6,9 @@ use der::asn1::ObjectIdentifier;
 /// Result type with `spki` crate's [`Error`] type.
 pub type Result<T> = core::result::Result<T, Error>;
 
+#[cfg(feature = "pem")]
+use der::pem;
+
 /// Error type
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
@@ -51,6 +54,13 @@ impl From<der::Error> for Error {
         } else {
             Error::Asn1(err)
         }
+    }
+}
+
+#[cfg(feature = "pem")]
+impl From<pem::Error> for Error {
+    fn from(err: pem::Error) -> Error {
+        der::Error::from(err).into()
     }
 }
 

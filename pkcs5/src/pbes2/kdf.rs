@@ -48,7 +48,8 @@ pub enum Kdf<'a> {
 }
 
 impl<'a> Kdf<'a> {
-    /// Get derived key length, if defined
+    /// Get derived key length in bytes, if defined.
+    // TODO(tarcieri): rename to `key_size` to match `EncryptionScheme::key_size`?
     pub fn key_length(&self) -> Option<u16> {
         match self {
             Self::Pbkdf2(params) => params.key_length,

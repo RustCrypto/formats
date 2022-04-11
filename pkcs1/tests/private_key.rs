@@ -3,9 +3,6 @@
 use hex_literal::hex;
 use pkcs1::{RsaPrivateKey, Version};
 
-#[cfg(feature = "pem")]
-use pkcs1::{der::Document, RsaPrivateKeyDocument};
-
 /// RSA-2048 PKCS#1 private key encoded as ASN.1 DER.
 ///
 /// Note: this key is extracted from the corresponding `rsa2048-priv.der`
@@ -17,14 +14,6 @@ const RSA_4096_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa4096-priv.der");
 
 /// RSA-2048 PKCS#1 private key with 3 primes encoded as ASN.1 DER
 const RSA_2048_MULTI_PRIME_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv-3prime.der");
-
-/// RSA-2048 PKCS#1 private key encoded as PEM
-#[cfg(feature = "pem")]
-const RSA_2048_PEM_EXAMPLE: &str = include_str!("examples/rsa2048-priv.pem");
-
-/// RSA-4096 PKCS#1 private key encoded as PEM
-#[cfg(feature = "pem")]
-const RSA_4096_PEM_EXAMPLE: &str = include_str!("examples/rsa4096-priv.pem");
 
 #[test]
 fn decode_rsa2048_der() {
@@ -91,28 +80,6 @@ fn decode_rsa2048_multi_prime_der() {
     assert_eq!(other_prime_infos[0].prime.as_bytes(), hex!("03EC75532FB0D2CA142632618EA698548D8489FE30A868D637A1D53895C79F16A63ADB60DB217DDC0D95694A3D95D029D1A9A2DF548ED105B2C6A84855739EDBC3CE82906500241D518A3172F8D470FADD4E1DFE5969"));
     assert_eq!(other_prime_infos[0].exponent.as_bytes(), hex!("03A11508A3E52FA4412CEF8EF34EBF39FE48690758647DCC1F5B2E890F69BC8A4BA9C73F78912B047F00038AEB1A069897D90BD0FD3AB8B6479D9F0C8115D80BB8BAEC63B9387F2F2B3BE2EF509FD7FD02F47DA3C579"));
     assert_eq!(other_prime_infos[0].coefficient.as_bytes(), hex!("39EA226CABFB317E41A5593B9168D1A0124993B45D9CD14A22BD1557CDCB43D28024AC26ED2C8530B53E9B93A878F428807C5282EBB811399F913017CDF2149013D80CDF73F609D6C692475EB7A123D0E93E6A60FC"));
-}
-
-#[cfg(feature = "pem")]
-#[test]
-fn decode_rsa_2048_pem() {
-    let pkcs1_doc: RsaPrivateKeyDocument = RSA_2048_PEM_EXAMPLE.parse().unwrap();
-    assert_eq!(pkcs1_doc.as_ref(), RSA_2048_DER_EXAMPLE);
-
-    // Ensure `RsaPrivateKeyDocument` parses successfully
-    let pk = RsaPrivateKey::try_from(RSA_2048_DER_EXAMPLE).unwrap();
-    assert_eq!(pkcs1_doc.decode().modulus.as_bytes(), pk.modulus.as_bytes());
-}
-
-#[cfg(feature = "pem")]
-#[test]
-fn decode_rsa_4096_pem() {
-    let pkcs1_doc: RsaPrivateKeyDocument = RSA_4096_PEM_EXAMPLE.parse().unwrap();
-    assert_eq!(pkcs1_doc.as_ref(), RSA_4096_DER_EXAMPLE);
-
-    // Ensure `RsaPrivateKeyDocument` parses successfully
-    let pk = RsaPrivateKey::try_from(RSA_4096_DER_EXAMPLE).unwrap();
-    assert_eq!(pkcs1_doc.decode().modulus.as_bytes(), pk.modulus.as_bytes());
 }
 
 #[test]

@@ -1,8 +1,6 @@
 //! PKCS#1 RSA Private Keys.
 
 #[cfg(feature = "alloc")]
-pub(crate) mod document;
-#[cfg(feature = "alloc")]
 pub(crate) mod other_prime_info;
 
 use crate::{Error, Result, RsaPublicKey, Version};
@@ -10,14 +8,10 @@ use core::fmt;
 use der::{asn1::UIntBytes, Decode, Decoder, Encode, Sequence, Tag};
 
 #[cfg(feature = "alloc")]
-use {self::other_prime_info::OtherPrimeInfo, crate::RsaPrivateKeyDocument, alloc::vec::Vec};
+use {self::other_prime_info::OtherPrimeInfo, alloc::vec::Vec, der::SecretDocument};
 
 #[cfg(feature = "pem")]
-use {
-    crate::{EncodeRsaPrivateKey, LineEnding},
-    alloc::string::String,
-    zeroize::Zeroizing,
-};
+use der::pem::PemLabel;
 
 /// PKCS#1 RSA Private Keys as defined in [RFC 8017 Appendix 1.2].
 ///
@@ -93,21 +87,6 @@ impl<'a> RsaPrivateKey<'a> {
             Version::TwoPrime
         }
     }
-
-    /// Encode this [`RsaPrivateKey`] as ASN.1 DER.
-    #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    pub fn to_der(&self) -> Result<RsaPrivateKeyDocument> {
-        self.try_into()
-    }
-
-    /// Encode this [`RsaPrivateKey`] as PEM-encoded ASN.1 DER using the given
-    /// [`LineEnding`].
-    #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-    pub fn to_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        self.to_der()?.to_pkcs1_pem(line_ending)
-    }
 }
 
 impl<'a> Decode<'a> for RsaPrivateKey<'a> {
@@ -178,7 +157,7 @@ impl<'a> TryFrom<&'a [u8]> for RsaPrivateKey<'a> {
     }
 }
 
-impl<'a> fmt::Debug for RsaPrivateKey<'a> {
+impl fmt::Debug for RsaPrivateKey<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RsaPrivateKey")
             .field("version", &self.version())
@@ -186,6 +165,32 @@ impl<'a> fmt::Debug for RsaPrivateKey<'a> {
             .field("public_exponent", &self.public_exponent)
             .finish_non_exhaustive()
     }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl TryFrom<RsaPrivateKey<'_>> for SecretDocument {
+    type Error = Error;
+
+    fn try_from(private_key: RsaPrivateKey<'_>) -> Result<SecretDocument> {
+        SecretDocument::try_from(&private_key)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl TryFrom<&RsaPrivateKey<'_>> for SecretDocument {
+    type Error = Error;
+
+    fn try_from(private_key: &RsaPrivateKey<'_>) -> Result<SecretDocument> {
+        Ok(Self::encode_msg(private_key)?)
+    }
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl PemLabel for RsaPrivateKey<'_> {
+    const PEM_LABEL: &'static str = "RSA PRIVATE KEY";
 }
 
 /// Placeholder struct for `OtherPrimeInfos` in the no-`alloc` case.

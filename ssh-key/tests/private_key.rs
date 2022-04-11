@@ -1,7 +1,7 @@
 //! SSH private key tests.
 
 use hex_literal::hex;
-use ssh_key::{Algorithm, PrivateKey};
+use ssh_key::{Algorithm, Cipher, KdfAlg, PrivateKey};
 
 #[cfg(feature = "ecdsa")]
 use ssh_key::EcdsaCurve;
@@ -17,38 +17,41 @@ use {
 
 /// DSA OpenSSH-formatted public key
 #[cfg(feature = "alloc")]
-const OSSH_DSA_EXAMPLE: &str = include_str!("examples/id_dsa_1024");
+const OPENSSH_DSA_EXAMPLE: &str = include_str!("examples/id_dsa_1024");
 
 /// Ed25519 OpenSSH-formatted private key
-const OSSH_ED25519_EXAMPLE: &str = include_str!("examples/id_ed25519");
+const OPENSSH_ED25519_EXAMPLE: &str = include_str!("examples/id_ed25519");
 
 /// ECDSA/P-256 OpenSSH-formatted public key
 #[cfg(feature = "ecdsa")]
-const OSSH_ECDSA_P256_EXAMPLE: &str = include_str!("examples/id_ecdsa_p256");
+const OPENSSH_ECDSA_P256_EXAMPLE: &str = include_str!("examples/id_ecdsa_p256");
 
 /// ECDSA/P-384 OpenSSH-formatted public key
 #[cfg(feature = "ecdsa")]
-const OSSH_ECDSA_P384_EXAMPLE: &str = include_str!("examples/id_ecdsa_p384");
+const OPENSSH_ECDSA_P384_EXAMPLE: &str = include_str!("examples/id_ecdsa_p384");
 
 /// ECDSA/P-521 OpenSSH-formatted public key
 #[cfg(feature = "ecdsa")]
-const OSSH_ECDSA_P521_EXAMPLE: &str = include_str!("examples/id_ecdsa_p521");
+const OPENSSH_ECDSA_P521_EXAMPLE: &str = include_str!("examples/id_ecdsa_p521");
 
 /// RSA (3072-bit) OpenSSH-formatted public key
 #[cfg(feature = "alloc")]
-const OSSH_RSA_3072_EXAMPLE: &str = include_str!("examples/id_rsa_3072");
+const OPENSSH_RSA_3072_EXAMPLE: &str = include_str!("examples/id_rsa_3072");
 
 /// RSA (4096-bit) OpenSSH-formatted public key
 #[cfg(feature = "alloc")]
-const OSSH_RSA_4096_EXAMPLE: &str = include_str!("examples/id_rsa_4096");
+const OPENSSH_RSA_4096_EXAMPLE: &str = include_str!("examples/id_rsa_4096");
 
 #[cfg(feature = "alloc")]
 #[test]
 fn decode_dsa_openssh() {
-    let ossh_key = PrivateKey::from_openssh(OSSH_DSA_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Dsa, ossh_key.key_data().algorithm());
+    let key = PrivateKey::from_openssh(OPENSSH_DSA_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Dsa, key.algorithm());
+    assert_eq!(Cipher::None, key.cipher());
+    assert_eq!(KdfAlg::None, key.kdf().algorithm());
+    assert!(key.kdf().is_none());
 
-    let dsa_keypair = ossh_key.key_data().dsa().unwrap();
+    let dsa_keypair = key.key_data().dsa().unwrap();
     assert_eq!(
         &hex!(
             "00dc3d89250ed9462114cb2c8d4816e3a511aaff1b06b0e01de17c1cb04e581bcab97176471d89fd7ca1817
@@ -81,19 +84,24 @@ fn decode_dsa_openssh() {
         &hex!("0c377ac449e770d89a3557743cbd050396114b62"),
         dsa_keypair.private.as_bytes()
     );
-    assert_eq!("user@example.com", ossh_key.comment());
+    assert_eq!("user@example.com", key.comment());
 }
 
 #[cfg(feature = "ecdsa")]
 #[test]
 fn decode_ecdsa_p256_openssh() {
-    let ossh_key = PrivateKey::from_openssh(OSSH_ECDSA_P256_EXAMPLE).unwrap();
+    let key = PrivateKey::from_openssh(OPENSSH_ECDSA_P256_EXAMPLE).unwrap();
     assert_eq!(
-        Algorithm::Ecdsa(EcdsaCurve::NistP256),
-        ossh_key.key_data().algorithm(),
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP256
+        },
+        key.algorithm(),
     );
+    assert_eq!(Cipher::None, key.cipher());
+    assert_eq!(KdfAlg::None, key.kdf().algorithm());
+    assert!(key.kdf().is_none());
 
-    let ecdsa_keypair = ossh_key.key_data().ecdsa().unwrap();
+    let ecdsa_keypair = key.key_data().ecdsa().unwrap();
     assert_eq!(EcdsaCurve::NistP256, ecdsa_keypair.curve());
     assert_eq!(
         &hex!(
@@ -108,19 +116,24 @@ fn decode_ecdsa_p256_openssh() {
     );
 
     #[cfg(feature = "alloc")]
-    assert_eq!("user@example.com", ossh_key.comment());
+    assert_eq!("user@example.com", key.comment());
 }
 
 #[cfg(feature = "ecdsa")]
 #[test]
 fn decode_ecdsa_p384_openssh() {
-    let ossh_key = PrivateKey::from_openssh(OSSH_ECDSA_P384_EXAMPLE).unwrap();
+    let key = PrivateKey::from_openssh(OPENSSH_ECDSA_P384_EXAMPLE).unwrap();
     assert_eq!(
-        Algorithm::Ecdsa(EcdsaCurve::NistP384),
-        ossh_key.key_data().algorithm(),
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP384
+        },
+        key.algorithm()
     );
+    assert_eq!(Cipher::None, key.cipher());
+    assert_eq!(KdfAlg::None, key.kdf().algorithm());
+    assert!(key.kdf().is_none());
 
-    let ecdsa_keypair = ossh_key.key_data().ecdsa().unwrap();
+    let ecdsa_keypair = key.key_data().ecdsa().unwrap();
     assert_eq!(EcdsaCurve::NistP384, ecdsa_keypair.curve());
     assert_eq!(
         &hex!(
@@ -139,19 +152,24 @@ fn decode_ecdsa_p384_openssh() {
     );
 
     #[cfg(feature = "alloc")]
-    assert_eq!("user@example.com", ossh_key.comment());
+    assert_eq!("user@example.com", key.comment());
 }
 
 #[cfg(feature = "ecdsa")]
 #[test]
 fn decode_ecdsa_p521_openssh() {
-    let ossh_key = PrivateKey::from_openssh(OSSH_ECDSA_P521_EXAMPLE).unwrap();
+    let key = PrivateKey::from_openssh(OPENSSH_ECDSA_P521_EXAMPLE).unwrap();
     assert_eq!(
-        Algorithm::Ecdsa(EcdsaCurve::NistP521),
-        ossh_key.key_data().algorithm(),
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP521
+        },
+        key.algorithm()
     );
+    assert_eq!(Cipher::None, key.cipher());
+    assert_eq!(KdfAlg::None, key.kdf().algorithm());
+    assert!(key.kdf().is_none());
 
-    let ecdsa_keypair = ossh_key.key_data().ecdsa().unwrap();
+    let ecdsa_keypair = key.key_data().ecdsa().unwrap();
     assert_eq!(EcdsaCurve::NistP521, ecdsa_keypair.curve());
     assert_eq!(
         &hex!(
@@ -171,15 +189,18 @@ fn decode_ecdsa_p521_openssh() {
     );
 
     #[cfg(feature = "alloc")]
-    assert_eq!("user@example.com", ossh_key.comment());
+    assert_eq!("user@example.com", key.comment());
 }
 
 #[test]
 fn decode_ed25519_openssh() {
-    let ossh_key = PrivateKey::from_openssh(OSSH_ED25519_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Ed25519, ossh_key.key_data().algorithm());
+    let key = PrivateKey::from_openssh(OPENSSH_ED25519_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Ed25519, key.algorithm());
+    assert_eq!(Cipher::None, key.cipher());
+    assert_eq!(KdfAlg::None, key.kdf().algorithm());
+    assert!(key.kdf().is_none());
 
-    let ed25519_keypair = ossh_key.key_data().ed25519().unwrap();
+    let ed25519_keypair = key.key_data().ed25519().unwrap();
     assert_eq!(
         &hex!("b33eaef37ea2df7caa010defdea34e241f65f1b529a4f43ed14327f5c54aab62"),
         ed25519_keypair.public.as_ref(),
@@ -190,16 +211,19 @@ fn decode_ed25519_openssh() {
     );
 
     #[cfg(feature = "alloc")]
-    assert_eq!(ossh_key.comment(), "user@example.com");
+    assert_eq!(key.comment(), "user@example.com");
 }
 
 #[cfg(feature = "alloc")]
 #[test]
 fn decode_rsa_3072_openssh() {
-    let ossh_key = PrivateKey::from_openssh(OSSH_RSA_3072_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Rsa, ossh_key.key_data().algorithm());
+    let key = PrivateKey::from_openssh(OPENSSH_RSA_3072_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Rsa { hash: None }, key.algorithm());
+    assert_eq!(Cipher::None, key.cipher());
+    assert_eq!(KdfAlg::None, key.kdf().algorithm());
+    assert!(key.kdf().is_none());
 
-    let rsa_keypair = ossh_key.key_data().rsa().unwrap();
+    let rsa_keypair = key.key_data().rsa().unwrap();
     assert_eq!(&hex!("010001"), rsa_keypair.public.e.as_bytes());
     assert_eq!(
         &hex!(
@@ -259,16 +283,19 @@ fn decode_rsa_3072_openssh() {
         ),
         rsa_keypair.private.q.as_bytes()
     );
-    assert_eq!("user@example.com", ossh_key.comment());
+    assert_eq!("user@example.com", key.comment());
 }
 
 #[cfg(feature = "alloc")]
 #[test]
 fn decode_rsa_4096_openssh() {
-    let ossh_key = PrivateKey::from_openssh(OSSH_RSA_4096_EXAMPLE).unwrap();
-    assert_eq!(Algorithm::Rsa, ossh_key.key_data().algorithm());
+    let key = PrivateKey::from_openssh(OPENSSH_RSA_4096_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Rsa { hash: None }, key.algorithm());
+    assert_eq!(Cipher::None, key.cipher());
+    assert_eq!(KdfAlg::None, key.kdf().algorithm());
+    assert!(key.kdf().is_none());
 
-    let rsa_keypair = ossh_key.key_data().rsa().unwrap();
+    let rsa_keypair = key.key_data().rsa().unwrap();
     assert_eq!(&hex!("010001"), rsa_keypair.public.e.as_bytes());
     assert_eq!(
         &hex!(
@@ -337,63 +364,63 @@ fn decode_rsa_4096_openssh() {
         ),
         rsa_keypair.private.q.as_bytes()
     );
-    assert_eq!("user@example.com", ossh_key.comment());
+    assert_eq!("user@example.com", key.comment());
 }
 
 #[cfg(all(feature = "alloc", feature = "subtle"))]
 #[test]
 fn encode_dsa_openssh() {
-    encoding_test(OSSH_DSA_EXAMPLE)
+    encoding_test(OPENSSH_DSA_EXAMPLE)
 }
 
 #[cfg(all(feature = "alloc", feature = "ecdsa", feature = "subtle"))]
 #[test]
 fn encode_ecdsa_p256_openssh() {
-    encoding_test(OSSH_ECDSA_P256_EXAMPLE)
+    encoding_test(OPENSSH_ECDSA_P256_EXAMPLE)
 }
 
 #[cfg(all(feature = "alloc", feature = "ecdsa", feature = "subtle"))]
 #[test]
 fn encode_ecdsa_p384_openssh() {
-    encoding_test(OSSH_ECDSA_P384_EXAMPLE)
+    encoding_test(OPENSSH_ECDSA_P384_EXAMPLE)
 }
 
 #[cfg(all(feature = "alloc", feature = "ecdsa", feature = "subtle"))]
 #[test]
 fn encode_ecdsa_p521_openssh() {
-    encoding_test(OSSH_ECDSA_P521_EXAMPLE)
+    encoding_test(OPENSSH_ECDSA_P521_EXAMPLE)
 }
 
 #[cfg(all(feature = "alloc", feature = "subtle"))]
 #[test]
 fn encode_ed25519_openssh() {
-    encoding_test(OSSH_ED25519_EXAMPLE)
+    encoding_test(OPENSSH_ED25519_EXAMPLE)
 }
 
 #[cfg(all(feature = "alloc", feature = "subtle"))]
 #[test]
 fn encode_rsa_3072_openssh() {
-    encoding_test(OSSH_RSA_3072_EXAMPLE)
+    encoding_test(OPENSSH_RSA_3072_EXAMPLE)
 }
 
 #[cfg(all(feature = "alloc", feature = "subtle"))]
 #[test]
 fn encode_rsa_4096_openssh() {
-    encoding_test(OSSH_RSA_4096_EXAMPLE)
+    encoding_test(OPENSSH_RSA_4096_EXAMPLE)
 }
 
 /// Common behavior of all encoding tests
 #[cfg(all(feature = "alloc", feature = "subtle"))]
 fn encoding_test(private_key: &str) {
-    let ossh_key = PrivateKey::from_openssh(private_key).unwrap();
+    let key = PrivateKey::from_openssh(private_key).unwrap();
 
     // Ensure key round-trips
-    let ossh_pem = ossh_key.to_openssh(LineEnding::LF).unwrap();
-    let ossh_key2 = PrivateKey::from_openssh(&*ossh_pem).unwrap();
-    assert_eq!(ossh_key, ossh_key2);
+    let pem = key.to_openssh(LineEnding::LF).unwrap();
+    let key2 = PrivateKey::from_openssh(&*pem).unwrap();
+    assert_eq!(key, key2);
 
     #[cfg(feature = "std")]
-    encoding_integration_test(ossh_key)
+    encoding_integration_test(key)
 }
 
 /// Parse PEM encoded using `PrivateKey::to_openssh` using the `ssh-keygen` utility.
@@ -413,7 +440,8 @@ fn encoding_integration_test(private_key: PrivateKey) {
     {
         Ok(output) => {
             assert_eq!(output.status.code().unwrap(), 0);
-            PublicKey::from_openssh(&output.stdout).unwrap()
+            let ssh_keygen_output = std::str::from_utf8(&output.stdout).unwrap();
+            PublicKey::from_openssh(ssh_keygen_output).unwrap()
         }
         Err(err) => {
             if err.kind() == io::ErrorKind::NotFound {
@@ -426,5 +454,5 @@ fn encoding_integration_test(private_key: PrivateKey) {
     };
 
     // Ensure ssh-keygen successfully parsed our public key
-    assert_eq!(public_key, private_key.public_key());
+    assert_eq!(&public_key, private_key.public_key());
 }

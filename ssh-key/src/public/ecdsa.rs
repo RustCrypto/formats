@@ -1,12 +1,20 @@
 //! Elliptic Curve Digital Signature Algorithm (ECDSA) public keys.
 
 use crate::{
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
-    Algorithm, EcdsaCurve, Error, Result,
+    checked::CheckedSum, decode::Decode, encode::Encode, reader::Reader, writer::Writer, Algorithm,
+    EcdsaCurve, Error, Result,
 };
 use core::fmt;
 use sec1::consts::{U32, U48, U66};
+
+/// ECDSA/NIST P-256 public key.
+pub type EcdsaNistP256PublicKey = sec1::EncodedPoint<U32>;
+
+/// ECDSA/NIST P-384 public key.
+pub type EcdsaNistP384PublicKey = sec1::EncodedPoint<U48>;
+
+/// ECDSA/NIST P-521 public key.
+pub type EcdsaNistP521PublicKey = sec1::EncodedPoint<U66>;
 
 /// Elliptic Curve Digital Signature Algorithm (ECDSA) public key.
 ///
@@ -18,13 +26,13 @@ use sec1::consts::{U32, U48, U66};
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum EcdsaPublicKey {
     /// NIST P-256 ECDSA public key.
-    NistP256(sec1::EncodedPoint<U32>),
+    NistP256(EcdsaNistP256PublicKey),
 
     /// NIST P-384 ECDSA public key.
-    NistP384(sec1::EncodedPoint<U48>),
+    NistP384(EcdsaNistP384PublicKey),
 
     /// NIST P-521 ECDSA public key.
-    NistP521(sec1::EncodedPoint<U66>),
+    NistP521(EcdsaNistP521PublicKey),
 }
 
 impl EcdsaPublicKey {
@@ -50,9 +58,9 @@ impl EcdsaPublicKey {
                 };
 
                 match point_size {
-                    32 => Ok(Self::NistP256(sec1::EncodedPoint::from_bytes(bytes)?)),
-                    48 => Ok(Self::NistP384(sec1::EncodedPoint::from_bytes(bytes)?)),
-                    66 => Ok(Self::NistP521(sec1::EncodedPoint::from_bytes(bytes)?)),
+                    32 => Ok(Self::NistP256(EcdsaNistP256PublicKey::from_bytes(bytes)?)),
+                    48 => Ok(Self::NistP384(EcdsaNistP384PublicKey::from_bytes(bytes)?)),
+                    66 => Ok(Self::NistP521(EcdsaNistP521PublicKey::from_bytes(bytes)?)),
                     _ => Err(Error::Length),
                 }
             }
@@ -71,7 +79,9 @@ impl EcdsaPublicKey {
 
     /// Get the [`Algorithm`] for this public key type.
     pub fn algorithm(&self) -> Algorithm {
-        Algorithm::Ecdsa(self.curve())
+        Algorithm::Ecdsa {
+            curve: self.curve(),
+        }
     }
 
     /// Get the [`EcdsaCurve`] for this key.
@@ -91,11 +101,11 @@ impl AsRef<[u8]> for EcdsaPublicKey {
 }
 
 impl Decode for EcdsaPublicKey {
-    fn decode(decoder: &mut impl Decoder) -> Result<Self> {
-        let curve = EcdsaCurve::decode(decoder)?;
+    fn decode(reader: &mut impl Reader) -> Result<Self> {
+        let curve = EcdsaCurve::decode(reader)?;
 
         let mut buf = [0u8; Self::MAX_SIZE];
-        let key = Self::from_sec1_bytes(decoder.decode_byte_slice(&mut buf)?)?;
+        let key = Self::from_sec1_bytes(reader.read_byten(&mut buf)?)?;
 
         if key.curve() == curve {
             Ok(key)
@@ -107,12 +117,17 @@ impl Decode for EcdsaPublicKey {
 
 impl Encode for EcdsaPublicKey {
     fn encoded_len(&self) -> Result<usize> {
-        Ok(4 + self.curve().encoded_len()? + self.as_ref().len())
+        [
+            self.curve().encoded_len()?,
+            4, // uint32 length prefix
+            self.as_ref().len(),
+        ]
+        .checked_sum()
     }
 
-    fn encode(&self, encoder: &mut impl Encoder) -> Result<()> {
-        self.curve().encode(encoder)?;
-        encoder.encode_byte_slice(self.as_ref())
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        self.curve().encode(writer)?;
+        self.as_ref().encode(writer)
     }
 }
 
@@ -137,5 +152,46 @@ impl fmt::UpperHex for EcdsaPublicKey {
             write!(f, "{:02X}", byte)?;
         }
         Ok(())
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl TryFrom<EcdsaPublicKey> for p256::ecdsa::VerifyingKey {
+    type Error = Error;
+
+    fn try_from(key: EcdsaPublicKey) -> Result<p256::ecdsa::VerifyingKey> {
+        p256::ecdsa::VerifyingKey::try_from(&key)
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl TryFrom<&EcdsaPublicKey> for p256::ecdsa::VerifyingKey {
+    type Error = Error;
+
+    fn try_from(public_key: &EcdsaPublicKey) -> Result<p256::ecdsa::VerifyingKey> {
+        match public_key {
+            EcdsaPublicKey::NistP256(key) => {
+                p256::ecdsa::VerifyingKey::from_encoded_point(key).map_err(|_| Error::Crypto)
+            }
+            _ => Err(Error::Algorithm),
+        }
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl From<p256::ecdsa::VerifyingKey> for EcdsaPublicKey {
+    fn from(key: p256::ecdsa::VerifyingKey) -> EcdsaPublicKey {
+        EcdsaPublicKey::from(&key)
+    }
+}
+
+#[cfg(feature = "p256")]
+#[cfg_attr(docsrs, doc(cfg(feature = "p256")))]
+impl From<&p256::ecdsa::VerifyingKey> for EcdsaPublicKey {
+    fn from(key: &p256::ecdsa::VerifyingKey) -> EcdsaPublicKey {
+        EcdsaPublicKey::NistP256(key.to_encoded_point(false))
     }
 }

@@ -23,6 +23,7 @@ base64ct = { version = "1", path = "../base64ct", optional = true, default-featu
 
 [dev-dependencies]
 hex-literal = "0.3"
+tempfile = "3"
 
 [features]
 alloc = ["base64ct/alloc", "der/alloc"]

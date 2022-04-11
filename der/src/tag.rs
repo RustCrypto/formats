@@ -67,6 +67,9 @@ pub enum Tag {
     /// `OBJECT IDENTIFIER` tag: `6`.
     ObjectIdentifier,
 
+    /// `REAL` tag: `9`.
+    Real,
+
     /// `ENUMERATED` tag: `10`.
     Enumerated,
 
@@ -189,6 +192,7 @@ impl Tag {
             Tag::OctetString => 0x04,
             Tag::Null => 0x05,
             Tag::ObjectIdentifier => 0x06,
+            Tag::Real => 0x09,
             Tag::Enumerated => 0x0A,
             Tag::Utf8String => 0x0C,
             Tag::Sequence => 0x10 | CONSTRUCTED_FLAG,
@@ -257,6 +261,7 @@ impl TryFrom<u8> for Tag {
             0x04 => Ok(Tag::OctetString),
             0x05 => Ok(Tag::Null),
             0x06 => Ok(Tag::ObjectIdentifier),
+            0x09 => Ok(Tag::Real),
             0x0A => Ok(Tag::Enumerated),
             0x0C => Ok(Tag::Utf8String),
             0x12 => Ok(Tag::NumericString),
@@ -330,6 +335,7 @@ impl fmt::Display for Tag {
             Tag::OctetString => f.write_str("OCTET STRING"),
             Tag::Null => f.write_str("NULL"),
             Tag::ObjectIdentifier => f.write_str("OBJECT IDENTIFIER"),
+            Tag::Real => f.write_str("REAL"),
             Tag::Enumerated => f.write_str("ENUMERATED"),
             Tag::Utf8String => f.write_str("UTF8String"),
             Tag::Set => f.write_str("SET"),
@@ -347,7 +353,8 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "APPLICATION [{}] ({})",
-                number, FIELD_TYPE[constructed as usize]
+                number,
+                FIELD_TYPE[usize::from(constructed)]
             ),
             Tag::ContextSpecific {
                 constructed,
@@ -355,7 +362,8 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "CONTEXT-SPECIFIC [{}] ({})",
-                number, FIELD_TYPE[constructed as usize]
+                number,
+                FIELD_TYPE[usize::from(constructed)]
             ),
             Tag::Private {
                 constructed,
@@ -363,7 +371,8 @@ impl fmt::Display for Tag {
             } => write!(
                 f,
                 "PRIVATE [{}] ({})",
-                number, FIELD_TYPE[constructed as usize]
+                number,
+                FIELD_TYPE[usize::from(constructed)]
             ),
         }
     }
@@ -388,6 +397,7 @@ mod tests {
         assert_eq!(Tag::OctetString.class(), Class::Universal);
         assert_eq!(Tag::Null.class(), Class::Universal);
         assert_eq!(Tag::ObjectIdentifier.class(), Class::Universal);
+        assert_eq!(Tag::Real.class(), Class::Universal);
         assert_eq!(Tag::Enumerated.class(), Class::Universal);
         assert_eq!(Tag::Utf8String.class(), Class::Universal);
         assert_eq!(Tag::Set.class(), Class::Universal);

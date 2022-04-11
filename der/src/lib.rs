@@ -6,8 +6,19 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_root_url = "https://docs.rs/der/0.6.0-pre.2"
 )]
-#![forbid(unsafe_code, clippy::unwrap_used)]
+#![forbid(unsafe_code)]
 #![warn(
+    clippy::cast_lossless,
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
+    clippy::checked_conversions,
+    clippy::implicit_saturating_sub,
+    clippy::integer_arithmetic,
+    clippy::panic,
+    clippy::panic_in_result_fn,
+    clippy::unwrap_used,
     missing_docs,
     rust_2018_idioms,
     unused_lifetimes,
@@ -25,6 +36,7 @@
 //! - [`bool`]: ASN.1 `BOOLEAN`.
 //! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`.
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`.
+//! - [`f64`]: ASN.1 `REAL`
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`.
 //!   `String` requires `alloc` feature. See also [`Utf8String`].
 //!   Requires `alloc` feature. See also [`SetOf`].
@@ -175,7 +187,7 @@
 //! //
 //! // When the `alloc` feature of this crate is enabled, any type that impls
 //! // the `Encode` trait including all ASN.1 built-in types and any type
-//! // which impls `Sequence` can be serialized by calling `Encode::to_vec()`.
+//! // which impls `Sequence` can be serialized by calling `Encode::to_der()`.
 //! //
 //! // If you would prefer to avoid allocations, you can create a byte array
 //! // as backing storage instead, pass that to `der::Encoder::new`, and then
@@ -336,9 +348,9 @@ pub mod asn1;
 pub(crate) mod arrayvec;
 mod byte_slice;
 mod datetime;
-mod decodable;
+mod decode;
 mod decoder;
-mod encodable;
+mod encode;
 mod encoder;
 mod error;
 mod header;
@@ -346,7 +358,6 @@ mod length;
 mod ord;
 mod str_slice;
 mod tag;
-mod value;
 
 #[cfg(feature = "alloc")]
 mod document;
@@ -354,20 +365,19 @@ mod document;
 pub use crate::{
     asn1::{Any, Choice, Sequence},
     datetime::DateTime,
-    decodable::Decode,
+    decode::{Decode, DecodeOwned, DecodeValue},
     decoder::Decoder,
-    encodable::Encode,
+    encode::{Encode, EncodeValue},
     encoder::Encoder,
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
     ord::{DerOrd, ValueOrd},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
-    value::{DecodeValue, EncodeValue},
 };
 
 #[cfg(feature = "alloc")]
-pub use document::Document;
+pub use crate::document::Document;
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
@@ -379,10 +389,19 @@ pub use der_derive::{Choice, Enumerated, Newtype, Sequence, ValueOrd};
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub use pem_rfc7468 as pem;
+pub use {
+    crate::{decode::DecodePem, encode::EncodePem},
+    pem_rfc7468 as pem,
+};
 
 #[cfg(feature = "time")]
 #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 pub use time;
+
+#[cfg(feature = "zeroize")]
+pub use zeroize;
+
+#[cfg(all(feature = "alloc", feature = "zeroize"))]
+pub use crate::document::SecretDocument;
 
 pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
