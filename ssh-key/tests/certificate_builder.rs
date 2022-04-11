@@ -49,10 +49,13 @@ const EXTENSION_2: (&str, &str) = ("extension name 2", "extension data 2");
 /// Example comment.
 const COMMENT: &str = "user@example.com";
 
+/// Seed to use for PRNG.
+const PRNG_SEED: [u8; 32] = [42; 32];
+
 #[cfg(feature = "ed25519")]
 #[test]
 fn ed25519_sign_and_verify() {
-    let mut rng = ChaCha8Rng::from_seed([42; 32]);
+    let mut rng = ChaCha8Rng::from_seed(PRNG_SEED);
 
     let ca_key = PrivateKey::random(&mut rng, Algorithm::Ed25519).unwrap();
     let subject_key = PrivateKey::random(&mut rng, Algorithm::Ed25519).unwrap();
@@ -81,6 +84,7 @@ fn ed25519_sign_and_verify() {
     cert_builder.comment(COMMENT).unwrap();
 
     let cert = cert_builder.sign(&ca_key).unwrap();
+    assert_eq!(cert.algorithm(), Algorithm::Ed25519);
     assert_eq!(cert.nonce(), &hex!("321fdf7e0a2afe803308f394f54c6abe"));
     assert_eq!(cert.public_key(), subject_key.public_key().key_data());
     assert_eq!(cert.serial(), SERIAL);
@@ -109,7 +113,7 @@ fn ed25519_sign_and_verify() {
 #[cfg(feature = "p256")]
 #[test]
 fn ecdsa_nistp256_sign_and_verify() {
-    let mut rng = ChaCha8Rng::from_seed([42; 32]);
+    let mut rng = ChaCha8Rng::from_seed(PRNG_SEED);
 
     let algorithm = Algorithm::Ecdsa {
         curve: EcdsaCurve::NistP256,
@@ -125,7 +129,34 @@ fn ecdsa_nistp256_sign_and_verify() {
     cert_builder.all_principals_valid().unwrap();
     let cert = cert_builder.sign(&ca_key).unwrap();
 
+    assert_eq!(cert.algorithm(), algorithm);
     assert_eq!(cert.nonce(), &hex!("321fdf7e0a2afe803308f394f54c6abe"));
+    assert_eq!(cert.public_key(), subject_key.public_key().key_data());
+    assert_eq!(cert.signature_key(), ca_key.public_key().key_data());
+
+    let ca_fingerprint = ca_key.fingerprint(Default::default()).unwrap();
+    assert!(cert.validate_at(VALID_AT, &[ca_fingerprint]).is_ok());
+}
+
+#[cfg(feature = "rsa")]
+#[test]
+fn rsa_sign_and_verify() {
+    let mut rng = ChaCha8Rng::from_seed(PRNG_SEED);
+
+    let algorithm = Algorithm::Rsa { hash: None };
+    let ca_key = PrivateKey::random(&mut rng, algorithm).unwrap();
+    let subject_key = PrivateKey::random(&mut rng, algorithm).unwrap();
+    let mut cert_builder = certificate::Builder::new_with_random_nonce(
+        &mut rng,
+        subject_key.public_key(),
+        ISSUED_AT,
+        EXPIRES_AT,
+    );
+    cert_builder.all_principals_valid().unwrap();
+    let cert = cert_builder.sign(&ca_key).unwrap();
+
+    assert_eq!(cert.algorithm(), algorithm);
+    assert_eq!(cert.nonce(), &hex!("13e4d4c95eb914e8b1d3c0f3de757594"));
     assert_eq!(cert.public_key(), subject_key.public_key().key_data());
     assert_eq!(cert.signature_key(), ca_key.public_key().key_data());
 

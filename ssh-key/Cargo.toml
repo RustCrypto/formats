@@ -28,6 +28,7 @@ bcrypt-pbkdf = { version = "0.9", optional = true, default-features = false }
 ed25519-dalek = { version = "1.0.1", optional = true, default-features = false, features = ["u64_backend"] }
 p256 = { version = "0.10", optional = true, default-features = false, features = ["ecdsa"] }
 rand_core = { version = "0.6", optional = true, default-features = false }
+rsa = { version = "0.6.1", optional = true }
 sec1 = { version = "0.2", optional = true, default-features = false }
 serde = { version = "1", optional = true }
 sha2 = { version = "0.10", optional = true, default-features = false }

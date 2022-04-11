@@ -8,14 +8,21 @@ use alloc::vec::Vec;
 use core::fmt;
 use signature::{Signer, Verifier};
 
+#[cfg(feature = "ed25519")]
+use crate::{private::Ed25519Keypair, public::Ed25519PublicKey};
+
 #[cfg(feature = "p256")]
 use crate::{
     private::{EcdsaKeypair, EcdsaPrivateKey},
     public::EcdsaPublicKey,
 };
 
-#[cfg(feature = "ed25519")]
-use crate::{private::Ed25519Keypair, public::Ed25519PublicKey};
+#[cfg(feature = "rsa")]
+use {
+    crate::{private::RsaKeypair, public::RsaPublicKey, HashAlg},
+    rsa::PublicKey as _,
+    sha2::{Digest, Sha256, Sha512},
+};
 
 const DSA_SIGNATURE_SIZE: usize = 40;
 const ECDSA_NISTP256_SIGNATURE_SIZE: usize = 72;
@@ -217,6 +224,8 @@ impl Signer<Signature> for private::KeypairData {
             Self::Ecdsa(keypair) => keypair.try_sign(message),
             #[cfg(feature = "ed25519")]
             Self::Ed25519(keypair) => keypair.try_sign(message),
+            #[cfg(feature = "rsa")]
+            Self::Rsa(keypair) => keypair.try_sign(message),
             _ => Err(signature::Error::new()),
         }
     }
@@ -236,6 +245,8 @@ impl Verifier<Signature> for public::KeyData {
             Self::Ecdsa(pk) => pk.verify(message, signature),
             #[cfg(feature = "ed25519")]
             Self::Ed25519(pk) => pk.verify(message, signature),
+            #[cfg(feature = "rsa")]
+            Self::Rsa(pk) => pk.verify(message, signature),
             _ => Err(signature::Error::new()),
         }
     }
@@ -388,6 +399,59 @@ impl Verifier<Signature> for EcdsaPublicKey {
                 let verifying_key = p256::ecdsa::VerifyingKey::try_from(self)?;
                 let signature = p256::ecdsa::Signature::try_from(signature)?;
                 verifying_key.verify(message, &signature)
+            }
+            _ => Err(signature::Error::new()),
+        }
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl Signer<Signature> for RsaKeypair {
+    fn try_sign(&self, message: &[u8]) -> signature::Result<Signature> {
+        let padding = rsa::padding::PaddingScheme::PKCS1v15Sign {
+            hash: Some(rsa::hash::Hash::SHA2_512),
+        };
+        let digest = sha2::Sha512::digest(message);
+        let data = rsa::RsaPrivateKey::try_from(self)?
+            .sign(padding, digest.as_ref())
+            .map_err(|_| signature::Error::new())?;
+
+        Ok(Signature {
+            algorithm: Algorithm::Rsa {
+                hash: Some(HashAlg::Sha512),
+            },
+            data,
+        })
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl Verifier<Signature> for RsaPublicKey {
+    fn verify(&self, message: &[u8], signature: &Signature) -> signature::Result<()> {
+        let key = rsa::RsaPublicKey::try_from(self)?;
+
+        match signature.algorithm {
+            Algorithm::Rsa {
+                hash: Some(HashAlg::Sha256),
+            } => {
+                let digest = Sha256::digest(message);
+                let padding = rsa::padding::PaddingScheme::PKCS1v15Sign {
+                    hash: Some(rsa::hash::Hash::SHA2_256),
+                };
+                key.verify(padding, digest.as_ref(), signature.as_bytes())
+                    .map_err(|_| signature::Error::new())
+            }
+            Algorithm::Rsa {
+                hash: Some(HashAlg::Sha512),
+            } => {
+                let padding = rsa::padding::PaddingScheme::PKCS1v15Sign {
+                    hash: Some(rsa::hash::Hash::SHA2_512),
+                };
+                let digest = Sha512::digest(message);
+                key.verify(padding, digest.as_ref(), signature.as_bytes())
+                    .map_err(|_| signature::Error::new())
             }
             _ => Err(signature::Error::new()),
         }

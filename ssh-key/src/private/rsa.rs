@@ -7,6 +7,12 @@ use crate::{
 use core::fmt;
 use zeroize::Zeroize;
 
+#[cfg(feature = "rsa")]
+use {
+    crate::Error,
+    rand_core::{CryptoRng, RngCore},
+};
+
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
@@ -99,6 +105,15 @@ pub struct RsaKeypair {
     pub private: RsaPrivateKey,
 }
 
+impl RsaKeypair {
+    /// Generate a random RSA keypair of the given size.
+    #[cfg(feature = "rsa")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+    pub fn random(mut rng: impl CryptoRng + RngCore, bit_size: usize) -> Result<Self> {
+        rsa::RsaPrivateKey::new(&mut rng, bit_size)?.try_into()
+    }
+}
+
 impl Decode for RsaKeypair {
     fn decode(reader: &mut impl Reader) -> Result<Self> {
         let n = MPInt::decode(reader)?;
@@ -143,6 +158,72 @@ impl fmt::Debug for RsaKeypair {
         f.debug_struct("RsaKeypair")
             .field("public", &self.public)
             .finish_non_exhaustive()
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl TryFrom<RsaKeypair> for rsa::RsaPrivateKey {
+    type Error = Error;
+
+    fn try_from(key: RsaKeypair) -> Result<rsa::RsaPrivateKey> {
+        rsa::RsaPrivateKey::try_from(&key)
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl TryFrom<&RsaKeypair> for rsa::RsaPrivateKey {
+    type Error = Error;
+
+    fn try_from(key: &RsaKeypair) -> Result<rsa::RsaPrivateKey> {
+        Ok(rsa::RsaPrivateKey::from_components(
+            rsa::BigUint::try_from(&key.public.n)?,
+            rsa::BigUint::try_from(&key.public.e)?,
+            rsa::BigUint::try_from(&key.private.d)?,
+            vec![
+                rsa::BigUint::try_from(&key.private.p)?,
+                rsa::BigUint::try_from(&key.private.p)?,
+            ],
+        ))
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl TryFrom<rsa::RsaPrivateKey> for RsaKeypair {
+    type Error = Error;
+
+    fn try_from(key: rsa::RsaPrivateKey) -> Result<RsaKeypair> {
+        RsaKeypair::try_from(&key)
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl TryFrom<&rsa::RsaPrivateKey> for RsaKeypair {
+    type Error = Error;
+
+    fn try_from(key: &rsa::RsaPrivateKey) -> Result<RsaKeypair> {
+        // Multi-prime keys are not supported
+        if key.primes().len() > 2 {
+            return Err(Error::Crypto);
+        }
+
+        let public = RsaPublicKey::try_from(key.to_public_key())?;
+
+        let p = &key.primes()[0];
+        let q = &key.primes()[1];
+        let iqmp = key.crt_coefficient().ok_or(Error::Crypto)?;
+
+        let private = RsaPrivateKey {
+            d: key.d().try_into()?,
+            iqmp: iqmp.try_into()?,
+            p: p.try_into()?,
+            q: q.try_into()?,
+        };
+
+        Ok(RsaKeypair { public, private })
     }
 }
 
