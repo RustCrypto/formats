@@ -9,6 +9,9 @@ use std::str::FromStr;
 #[cfg(feature = "ecdsa")]
 use ssh_key::EcdsaCurve;
 
+#[cfg(feature = "rsa")]
+use ssh_key::HashAlg;
+
 /// DSA OpenSSH Certificate
 const DSA_CERT_EXAMPLE: &str = include_str!("examples/id_dsa_1024-cert.pub");
 
@@ -22,6 +25,16 @@ const ED25519_CERT_EXAMPLE: &str = include_str!("examples/id_ed25519-cert.pub");
 /// Ed25519 OpenSSH Certificate with deliberately invalid signature
 #[cfg(all(feature = "ed25519", feature = "fingerprint"))]
 const ED25519_CERT_BADSIG_EXAMPLE: &str = include_str!("examples/id_ed25519-cert-badsig.pub");
+
+/// Ed25519 OpenSSH Certificate with P-256 certificate authority
+#[cfg(all(feature = "p256", feature = "fingerprint"))]
+const ED25519_CERT_WITH_P256_CA_EXAMPLE: &str =
+    include_str!("examples/id_ed25519-cert-with-p256-ca.pub");
+
+/// Ed25519 OpenSSH Certificate with RSA certificate authority
+#[cfg(all(feature = "p256", feature = "fingerprint"))]
+const ED25519_CERT_WITH_RSA_CA_EXAMPLE: &str =
+    include_str!("examples/id_ed25519-cert-with-rsa-ca.pub");
 
 /// RSA (4096-bit) OpenSSH Certificate
 const RSA_4096_CERT_EXAMPLE: &str = include_str!("examples/id_rsa_4096-cert.pub");
@@ -227,6 +240,7 @@ fn encode_rsa_4096_openssh() {
 #[test]
 fn verify_ed25519_certificate_signature() {
     let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
+    assert_eq!(Algorithm::Ed25519, cert.signature_key().algorithm());
     assert!(cert.verify_signature().is_ok());
 }
 
@@ -288,4 +302,34 @@ fn reject_certificate_with_future_valid_after() {
     let cert = Certificate::from_str(ED25519_CERT_EXAMPLE).unwrap();
     let ca = CA_FINGERPRINT.parse().unwrap();
     assert!(cert.validate_at(PAST_TIMESTAMP, &[ca]).is_err())
+}
+
+#[cfg(all(feature = "p256", feature = "fingerprint"))]
+#[test]
+fn verify_p256_certificate_signature() {
+    let cert = Certificate::from_str(ED25519_CERT_WITH_P256_CA_EXAMPLE).unwrap();
+    assert_eq!(
+        Algorithm::Ecdsa {
+            curve: EcdsaCurve::NistP256
+        },
+        cert.signature_key().algorithm()
+    );
+    assert!(cert.verify_signature().is_ok());
+}
+
+#[cfg(all(feature = "rsa", feature = "fingerprint"))]
+#[test]
+fn verify_rsa_certificate_signature() {
+    let cert = Certificate::from_str(ED25519_CERT_WITH_RSA_CA_EXAMPLE).unwrap();
+    assert_eq!(
+        Algorithm::Rsa { hash: None },
+        cert.signature_key().algorithm()
+    );
+    assert!(cert.verify_signature().is_ok());
+    assert_eq!(
+        Algorithm::Rsa {
+            hash: Some(HashAlg::Sha512)
+        },
+        cert.signature().algorithm()
+    );
 }

@@ -2,7 +2,7 @@
 
 use crate::{
     checked::CheckedSum, decode::Decode, encode::Encode, private, public, reader::Reader,
-    writer::Writer, Algorithm, EcdsaCurve, Error, PrivateKey, PublicKey, Result,
+    writer::Writer, Algorithm, Error, MPInt, PrivateKey, PublicKey, Result,
 };
 use alloc::vec::Vec;
 use core::fmt;
@@ -15,6 +15,7 @@ use crate::{private::Ed25519Keypair, public::Ed25519PublicKey};
 use crate::{
     private::{EcdsaKeypair, EcdsaPrivateKey},
     public::EcdsaPublicKey,
+    EcdsaCurve,
 };
 
 #[cfg(feature = "rsa")]
@@ -25,9 +26,6 @@ use {
 };
 
 const DSA_SIGNATURE_SIZE: usize = 40;
-const ECDSA_NISTP256_SIGNATURE_SIZE: usize = 72;
-const ECDSA_NISTP384_SIGNATURE_SIZE: usize = 104;
-const ECDSA_NISTP521_SIGNATURE_SIZE: usize = 140;
 const ED25519_SIGNATURE_SIZE: usize = 64;
 
 /// Digital signature (e.g. DSA, ECDSA, Ed25519).
@@ -74,21 +72,14 @@ impl Signature {
         match algorithm {
             Algorithm::Dsa if data.len() == DSA_SIGNATURE_SIZE => (),
             Algorithm::Ecdsa { curve } => {
-                let expected_len = match curve {
-                    EcdsaCurve::NistP256 => ECDSA_NISTP256_SIGNATURE_SIZE,
-                    EcdsaCurve::NistP384 => ECDSA_NISTP384_SIGNATURE_SIZE,
-                    EcdsaCurve::NistP521 => ECDSA_NISTP521_SIGNATURE_SIZE,
-                };
-
-                if data.len() != expected_len {
-                    return Err(Error::Length);
-                }
-
-                let component_len = expected_len.checked_sub(8).ok_or(Error::Length)? / 2;
                 let reader = &mut data.as_slice();
 
                 for _ in 0..2 {
-                    if reader.drain_prefixed()? != component_len {
+                    let component = MPInt::decode(reader)?;
+
+                    if component.as_positive_bytes().ok_or(Error::Crypto)?.len()
+                        != curve.field_size()
+                    {
                         return Err(Error::Length);
                     }
                 }
@@ -314,10 +305,9 @@ impl TryFrom<&p256::ecdsa::Signature> for Signature {
 
     fn try_from(signature: &p256::ecdsa::Signature) -> Result<Signature> {
         let (r, s) = signature.as_ref().split_at(32);
-
-        let mut data = Vec::with_capacity(72);
-        r.encode(&mut data)?;
-        s.encode(&mut data)?;
+        let mut data = Vec::with_capacity(74); // 32 * 2 + 4 * 2 + 1 * 2
+        MPInt::from_positive_bytes(r)?.encode(&mut data)?;
+        MPInt::from_positive_bytes(s)?.encode(&mut data)?;
 
         Ok(Signature {
             algorithm: Algorithm::Ecdsa {
@@ -349,18 +339,18 @@ impl TryFrom<&Signature> for p256::ecdsa::Signature {
                 curve: EcdsaCurve::NistP256,
             } => {
                 let reader = &mut signature.as_bytes();
-                let mut bytes = [0u8; 64];
+                let r = MPInt::decode(reader)?;
+                let s = MPInt::decode(reader)?;
 
-                // Decode `r` and `s` components of the signature concatenated.
-                for chunk in bytes.chunks_mut(32) {
-                    let len = reader.read_byten(chunk)?.len();
-
-                    if len != 32 {
-                        return Err(Error::Crypto);
+                match (r.as_positive_bytes(), s.as_positive_bytes()) {
+                    (Some(r), Some(s)) if r.len() == 32 && s.len() == 32 => {
+                        Ok(p256::ecdsa::Signature::from_scalars(
+                            *p256::FieldBytes::from_slice(r),
+                            *p256::FieldBytes::from_slice(s),
+                        )?)
                     }
+                    _ => Err(Error::Crypto),
                 }
-
-                Ok(p256::ecdsa::Signature::try_from(bytes.as_slice())?)
             }
             _ => Err(Error::Algorithm),
         }

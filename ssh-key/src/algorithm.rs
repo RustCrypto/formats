@@ -339,6 +339,16 @@ impl EcdsaCurve {
             EcdsaCurve::NistP521 => "nistp521",
         }
     }
+
+    /// Get the number of bytes needed to encode a field element for this curve.
+    #[cfg(feature = "alloc")]
+    pub(crate) fn field_size(self) -> usize {
+        match self {
+            EcdsaCurve::NistP256 => 32,
+            EcdsaCurve::NistP384 => 48,
+            EcdsaCurve::NistP521 => 66,
+        }
+    }
 }
 
 impl AsRef<str> for EcdsaCurve {
