@@ -36,24 +36,22 @@ respective SSH key algorithm.
   - [x] OpenSSH private keys (i.e. `BEGIN OPENSSH PRIVATE KEY`)
   - [x] OpenSSH certificates
 - [x] OpenSSH certificates
-  - [x] Certificate validation (ECDSA/NIST P-256 and Ed25519 only)
+  - [x] Certificate validation
   - [x] Certificate authority (CA) support i.e. cert builder/signer
 - [x] Private key encryption/decryption (`bcrypt-pbkdf` + `aes256-ctr` only)
+- [x] Private key generation support: Ed25519, ECDSA/P-256, and RSA
 - [x] FIDO/U2F key support (`sk-*`) as specified in [PROTOCOL.u2f]
-- [x] Fingerprint support (SHA-256 only)
+- [x] Fingerprint support
 - [x] `no_std` support including support for "heapless" (no-`alloc`) targets
 - [x] Parsing `authorized_keys` files
-- [x] Serde support (certificates and public keys only)
-- [x] Zeroization support for private keys
+- [x] `serde` support
+- [x] `zeroize` support for private keys
 
 #### TODO
 
-- [ ] Key generation support (WIP - see table below)
-- [ ] Interop with digital signature crates
-  - [x] `ed25519-dalek`
-  - [x] `p256` (ECDSA)
-  - [ ] `p384` (ECDSA)
-  - [ ] `rsa`
+- [ ] ECDSA/P-384 support
+- [ ] ECDSA/P-512 support
+- [ ] FIDO/U2F signature support
 - [ ] Legacy (pre-OpenSSH) SSH key format support
   - [ ] PKCS#1
   - [ ] PKCS#8

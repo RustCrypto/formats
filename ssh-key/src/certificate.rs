@@ -53,6 +53,15 @@ use std::{
 /// See documentation for [`Certificate::validate`] and
 /// [`Certificate::validate_at`] methods for more information.
 ///
+/// # `serde` support
+///
+/// When the `serde` feature of this crate is enabled, this type receives impls
+/// of [`Deserialize`][`serde::Deserialize`] and [`Serialize`][`serde::Serialize`].
+///
+/// The serialization uses a binary encoding with binary formats like bincode
+/// and CBOR, and the OpenSSH string serialization when used with
+/// human-readable formats like JSON and TOML.
+///
 /// [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Certificate {

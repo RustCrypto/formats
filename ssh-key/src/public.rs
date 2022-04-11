@@ -51,6 +51,19 @@ use serde::{de, ser, Deserialize, Serialize};
 use std::{fs, path::Path};
 
 /// SSH public key.
+///
+/// # OpenSSH encoding
+///
+/// The OpenSSH encoding of an SSH public key looks like following:
+///
+/// # `serde` support
+///
+/// When the `serde` feature of this crate is enabled, this type receives impls
+/// of [`Deserialize`][`serde::Deserialize`] and [`Serialize`][`serde::Serialize`].
+///
+/// The serialization uses a binary encoding with binary formats like bincode
+/// and CBOR, and the OpenSSH string serialization when used with
+/// human-readable formats like JSON and TOML.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct PublicKey {
     /// Key data.
