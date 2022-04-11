@@ -106,7 +106,7 @@ fn ed25519_sign_and_verify() {
     assert_eq!(cert.signature_key(), ca_key.public_key().key_data());
     assert_eq!(cert.comment(), COMMENT);
 
-    let ca_fingerprint = ca_key.fingerprint(Default::default()).unwrap();
+    let ca_fingerprint = ca_key.fingerprint(Default::default());
     assert!(cert.validate_at(VALID_AT, &[ca_fingerprint]).is_ok());
 }
 
@@ -134,7 +134,7 @@ fn ecdsa_nistp256_sign_and_verify() {
     assert_eq!(cert.public_key(), subject_key.public_key().key_data());
     assert_eq!(cert.signature_key(), ca_key.public_key().key_data());
 
-    let ca_fingerprint = ca_key.fingerprint(Default::default()).unwrap();
+    let ca_fingerprint = ca_key.fingerprint(Default::default());
     assert!(cert.validate_at(VALID_AT, &[ca_fingerprint]).is_ok());
 }
 
@@ -160,6 +160,6 @@ fn rsa_sign_and_verify() {
     assert_eq!(cert.public_key(), subject_key.public_key().key_data());
     assert_eq!(cert.signature_key(), ca_key.public_key().key_data());
 
-    let ca_fingerprint = ca_key.fingerprint(Default::default()).unwrap();
+    let ca_fingerprint = ca_key.fingerprint(Default::default());
     assert!(cert.validate_at(VALID_AT, &[ca_fingerprint]).is_ok());
 }

@@ -282,8 +282,7 @@ fn reject_certificate_with_untrusted_ca() {
     let ca = Certificate::from_str(DSA_CERT_EXAMPLE)
         .unwrap()
         .public_key()
-        .fingerprint(Default::default())
-        .unwrap();
+        .fingerprint(Default::default());
 
     assert!(cert.validate_at(VALID_TIMESTAMP, &[ca]).is_err());
 }

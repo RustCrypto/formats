@@ -173,7 +173,7 @@ pub use crate::{certificate::Certificate, mpint::MPInt, signature::Signature};
 pub use sec1;
 
 #[cfg(feature = "fingerprint")]
-pub use crate::fingerprint::{Fingerprint, Sha256Fingerprint};
+pub use crate::fingerprint::Fingerprint;
 
 #[cfg(feature = "rand_core")]
 pub use rand_core;

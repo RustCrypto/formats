@@ -375,6 +375,7 @@ impl str::FromStr for EcdsaCurve {
 
 /// Hashing algorithms a.k.a. digest functions.
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[non_exhaustive]
 pub enum HashAlg {
     /// SHA-256
     Sha256,

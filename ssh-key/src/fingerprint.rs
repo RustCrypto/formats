@@ -3,20 +3,7 @@
 use crate::{encode::Encode, public, Error, HashAlg, Result};
 use base64ct::{Base64Unpadded, Encoding};
 use core::{fmt, str};
-use sha2::{Digest, Sha256};
-
-/// Error message for malformed encoded strings which are expected to be
-/// well-formed according to type-level invariants.
-const ENCODING_ERR_MSG: &str = "Base64 encoding error";
-
-/// Size of a SHA-256 hash encoded as Base64.
-const SHA256_BASE64_LEN: usize = 43;
-
-/// Size of a SHA-256 hash serialized as binary.
-const SHA256_BIN_LEN: usize = 32;
-
-/// Prefix of SHA-256 fingerprints.
-const SHA256_PREFIX: &str = "SHA256:";
+use sha2::{Digest, Sha256, Sha512};
 
 /// SSH public key fingerprints.
 ///
@@ -24,35 +11,88 @@ const SHA256_PREFIX: &str = "SHA256:";
 /// function which is used to compute the fingerprint.
 #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[non_exhaustive]
 pub enum Fingerprint {
     /// Fingerprints computed using SHA-256.
-    Sha256(Sha256Fingerprint),
+    Sha256([u8; Self::SHA256_SIZE]),
+
+    /// Fingerprints computed using SHA-512.
+    Sha512([u8; Self::SHA512_SIZE]),
 }
 
 impl Fingerprint {
+    /// Size of a SHA-256 hash serialized as binary.
+    const SHA256_SIZE: usize = 32;
+
+    /// Size of a SHA-512 hash serialized as binary.
+    const SHA512_SIZE: usize = 64;
+
+    /// Size of a SHA-512 hash encoded as Base64.
+    const SHA512_BASE64_SIZE: usize = 86;
+
+    /// Create a fingerprint of the given public key data using the provided
+    /// hash algorithm.
+    pub fn new(algorithm: HashAlg, public_key: &public::KeyData) -> Self {
+        match algorithm {
+            HashAlg::Sha256 => {
+                let mut digest = Sha256::new();
+                public_key.encode(&mut digest).expect("fingerprint error");
+                Self::Sha256(digest.finalize().into())
+            }
+            HashAlg::Sha512 => {
+                let mut digest = Sha512::new();
+                public_key.encode(&mut digest).expect("fingerprint error");
+                Self::Sha512(digest.finalize().into())
+            }
+        }
+    }
+
     /// Get the hash algorithm used for this fingerprint.
     pub fn algorithm(self) -> HashAlg {
         match self {
             Self::Sha256(_) => HashAlg::Sha256,
+            Self::Sha512(_) => HashAlg::Sha512,
+        }
+    }
+
+    /// Get the raw digest output for the fingerprint as bytes.
+    pub fn as_bytes(&self) -> &[u8] {
+        match self {
+            Self::Sha256(bytes) => bytes.as_slice(),
+            Self::Sha512(bytes) => bytes.as_slice(),
         }
     }
 
     /// Get the SHA-256 fingerprint, if this is one.
-    pub fn sha256(self) -> Option<Sha256Fingerprint> {
+    pub fn sha256(self) -> Option<[u8; Self::SHA256_SIZE]> {
         match self {
             Self::Sha256(fingerprint) => Some(fingerprint),
+            _ => None,
+        }
+    }
+
+    /// Get the SHA-512 fingerprint, if this is one.
+    pub fn sha512(self) -> Option<[u8; Self::SHA512_SIZE]> {
+        match self {
+            Self::Sha512(fingerprint) => Some(fingerprint),
+            _ => None,
         }
     }
 
     /// Is this fingerprint SHA-256?
     pub fn is_sha256(self) -> bool {
-        self.sha256().is_some()
+        matches!(self, Self::Sha256(_))
+    }
+
+    /// Is this fingerprint SHA-512?
+    pub fn is_sha512(self) -> bool {
+        matches!(self, Self::Sha512(_))
     }
 }
 
-impl From<Sha256Fingerprint> for Fingerprint {
-    fn from(fingerprint: Sha256Fingerprint) -> Fingerprint {
-        Fingerprint::Sha256(fingerprint)
+impl AsRef<[u8]> for Fingerprint {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
     }
 }
 
@@ -60,95 +100,24 @@ impl str::FromStr for Fingerprint {
     type Err = Error;
 
     fn from_str(id: &str) -> Result<Self> {
-        if id.starts_with(SHA256_PREFIX) {
-            Sha256Fingerprint::from_str(id).map(Into::into)
-        } else {
-            Err(Error::Algorithm)
+        let (algorithm, base64) = id.split_once(':').ok_or(Error::Algorithm)?;
+
+        // Buffer size is the largest digest size of of any supported hash function
+        let mut buf = [0u8; Self::SHA512_SIZE];
+        let decoded_bytes = Base64Unpadded::decode(base64, &mut buf)?;
+
+        match algorithm.parse()? {
+            HashAlg::Sha256 => Ok(Self::Sha256(decoded_bytes.try_into()?)),
+            HashAlg::Sha512 => Ok(Self::Sha512(decoded_bytes.try_into()?)),
         }
     }
 }
 
 impl fmt::Display for Fingerprint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Sha256(fingerprint) => write!(f, "{}", fingerprint),
-        }
-    }
-}
-
-/// SSH key fingerprints calculated using the SHA-256 hash function.
-#[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct Sha256Fingerprint([u8; SHA256_BASE64_LEN]);
-
-impl Sha256Fingerprint {
-    /// Create a new SHA-256 fingerprint from the given binary digest.
-    ///
-    /// Use [`FromStr`][`str::FromStr`] to parse an existing Base64-encoded
-    /// fingerprint.
-    pub fn new(digest_bytes: &[u8; SHA256_BIN_LEN]) -> Self {
-        let mut base64 = [0u8; SHA256_BASE64_LEN];
-        Base64Unpadded::encode(digest_bytes, &mut base64).expect(ENCODING_ERR_MSG);
-        Self(base64)
-    }
-
-    /// Borrow the Base64 encoding of the digest as a string.
-    ///
-    /// Does not include the `SHA256:` algorithm prefix.
-    pub fn as_base64(&self) -> &str {
-        str::from_utf8(&self.0).expect("invalid Base64 encoding")
-    }
-
-    /// Decode a Base64-encoded fingerprint to binary.
-    pub fn to_bytes(&self) -> [u8; SHA256_BIN_LEN] {
-        let mut decoded_bytes = [0u8; SHA256_BIN_LEN];
-        let decoded_len = Base64Unpadded::decode(&self.0, &mut decoded_bytes)
-            .expect(ENCODING_ERR_MSG)
-            .len();
-
-        assert_eq!(SHA256_BIN_LEN, decoded_len);
-        decoded_bytes
-    }
-}
-
-impl TryFrom<public::KeyData> for Sha256Fingerprint {
-    type Error = Error;
-
-    fn try_from(public_key: public::KeyData) -> Result<Sha256Fingerprint> {
-        Sha256Fingerprint::try_from(&public_key)
-    }
-}
-
-impl TryFrom<&public::KeyData> for Sha256Fingerprint {
-    type Error = Error;
-
-    fn try_from(public_key: &public::KeyData) -> Result<Sha256Fingerprint> {
-        let mut digest = Sha256::new();
-        public_key.encode(&mut digest)?;
-        Ok(Self::new(&digest.finalize().into()))
-    }
-}
-
-impl fmt::Display for Sha256Fingerprint {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", SHA256_PREFIX, self.as_base64())
-    }
-}
-
-impl str::FromStr for Sha256Fingerprint {
-    type Err = Error;
-
-    fn from_str(id: &str) -> Result<Self> {
-        let id = id.strip_prefix(SHA256_PREFIX).ok_or(Error::Algorithm)?;
-
-        let mut decoded_bytes = [0u8; SHA256_BIN_LEN];
-        match Base64Unpadded::decode(id, &mut decoded_bytes)?.len() {
-            SHA256_BIN_LEN => id
-                .as_bytes()
-                .try_into()
-                .map(Self)
-                .map_err(|_| Error::Length),
-            _ => Err(Error::Length),
-        }
+        // Buffer size is the largest digest size of of any supported hash function
+        let mut buf = [0u8; Self::SHA512_BASE64_SIZE];
+        let base64 = Base64Unpadded::encode(self.as_bytes(), &mut buf).map_err(|_| fmt::Error)?;
+        write!(f, "{}:{}", self.algorithm(), base64)
     }
 }
