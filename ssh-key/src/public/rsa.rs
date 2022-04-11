@@ -6,7 +6,10 @@ use crate::{
 };
 
 #[cfg(feature = "rsa")]
-use {crate::Error, rsa::PublicKeyParts};
+use {
+    crate::{private::RsaKeypair, Error},
+    rsa::PublicKeyParts,
+};
 
 /// RSA public key.
 ///
@@ -19,6 +22,12 @@ pub struct RsaPublicKey {
 
     /// RSA modulus.
     pub n: MPInt,
+}
+
+impl RsaPublicKey {
+    /// Minimum allowed RSA key size.
+    #[cfg(feature = "rsa")]
+    pub(crate) const MIN_KEY_SIZE: usize = RsaKeypair::MIN_KEY_SIZE;
 }
 
 impl Decode for RsaPublicKey {
@@ -56,11 +65,17 @@ impl TryFrom<&RsaPublicKey> for rsa::RsaPublicKey {
     type Error = Error;
 
     fn try_from(key: &RsaPublicKey) -> Result<rsa::RsaPublicKey> {
-        rsa::RsaPublicKey::new(
+        let ret = rsa::RsaPublicKey::new(
             rsa::BigUint::try_from(&key.n)?,
             rsa::BigUint::try_from(&key.e)?,
         )
-        .map_err(|_| Error::Crypto)
+        .map_err(|_| Error::Crypto)?;
+
+        if ret.size().saturating_mul(8) >= RsaPublicKey::MIN_KEY_SIZE {
+            Ok(ret)
+        } else {
+            Err(Error::Crypto)
+        }
     }
 }
 
