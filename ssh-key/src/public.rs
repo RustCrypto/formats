@@ -56,6 +56,20 @@ use std::{fs, path::Path};
 ///
 /// The OpenSSH encoding of an SSH public key looks like following:
 ///
+/// ```text
+/// ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti user@example.com
+/// ```
+///
+/// It consists of the following three parts:
+///
+/// 1. Algorithm identifier (in this example `ssh-ed25519`)
+/// 2. Key data encoded as Base64
+/// 3. Comment (optional): arbitrary label describing a key. Usually an email address
+///
+/// The [`PublicKey::from_openssh`] and [`PublicKey::to_openssh`] methods can be
+/// used to decode/encode public keys, or alternatively, the [`FromStr`] and
+/// [`ToString`] impls.
+///
 /// # `serde` support
 ///
 /// When the `serde` feature of this crate is enabled, this type receives impls
