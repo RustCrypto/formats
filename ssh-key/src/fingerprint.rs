@@ -42,19 +42,13 @@ use {
 #[non_exhaustive]
 pub enum Fingerprint {
     /// Fingerprints computed using SHA-256.
-    Sha256([u8; Self::SHA256_SIZE]),
+    Sha256([u8; HashAlg::Sha256.digest_size()]),
 
     /// Fingerprints computed using SHA-512.
-    Sha512([u8; Self::SHA512_SIZE]),
+    Sha512([u8; HashAlg::Sha512.digest_size()]),
 }
 
 impl Fingerprint {
-    /// Size of a SHA-256 hash serialized as binary.
-    const SHA256_SIZE: usize = 32;
-
-    /// Size of a SHA-512 hash serialized as binary.
-    const SHA512_SIZE: usize = 64;
-
     /// Size of a SHA-512 hash encoded as Base64.
     const SHA512_BASE64_SIZE: usize = 86;
 
@@ -92,7 +86,7 @@ impl Fingerprint {
     }
 
     /// Get the SHA-256 fingerprint, if this is one.
-    pub fn sha256(self) -> Option<[u8; Self::SHA256_SIZE]> {
+    pub fn sha256(self) -> Option<[u8; HashAlg::Sha256.digest_size()]> {
         match self {
             Self::Sha256(fingerprint) => Some(fingerprint),
             _ => None,
@@ -100,7 +94,7 @@ impl Fingerprint {
     }
 
     /// Get the SHA-512 fingerprint, if this is one.
-    pub fn sha512(self) -> Option<[u8; Self::SHA512_SIZE]> {
+    pub fn sha512(self) -> Option<[u8; HashAlg::Sha512.digest_size()]> {
         match self {
             Self::Sha512(fingerprint) => Some(fingerprint),
             _ => None,
@@ -140,7 +134,7 @@ impl FromStr for Fingerprint {
         let (algorithm, base64) = id.split_once(':').ok_or(Error::Algorithm)?;
 
         // Buffer size is the largest digest size of of any supported hash function
-        let mut buf = [0u8; Self::SHA512_SIZE];
+        let mut buf = [0u8; HashAlg::Sha512.digest_size()];
         let decoded_bytes = Base64Unpadded::decode(base64, &mut buf)?;
 
         match algorithm.parse()? {
