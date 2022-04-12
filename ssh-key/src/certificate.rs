@@ -2,11 +2,13 @@
 
 mod builder;
 mod cert_type;
+mod field;
 mod options_map;
 mod signing_key;
 
 pub use self::{
-    builder::Builder, cert_type::CertType, options_map::OptionsMap, signing_key::SigningKey,
+    builder::Builder, cert_type::CertType, field::Field, options_map::OptionsMap,
+    signing_key::SigningKey,
 };
 
 use crate::{
@@ -78,14 +80,8 @@ use std::{
 /// The following example walks through how to implement the steps outlined
 /// above for validating a certificate:
 ///
-#[cfg_attr(
-    all(feature = "alloc", feature = "p256", feature = "std"),
-    doc = " ```"
-)]
-#[cfg_attr(
-    not(all(feature = "alloc", feature = "p256", feature = "std")),
-    doc = " ```ignore"
-)]
+#[cfg_attr(all(feature = "p256", feature = "std"), doc = " ```")]
+#[cfg_attr(not(all(feature = "p256", feature = "std")), doc = " ```ignore")]
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// use ssh_key::{Certificate, Fingerprint};
 /// use std::str::FromStr;
