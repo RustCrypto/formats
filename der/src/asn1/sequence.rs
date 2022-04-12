@@ -30,7 +30,7 @@ where
         self.fields(|fields| {
             fields
                 .iter()
-                .fold(Ok(Length::ZERO), |len, field| len + field.encoded_len()?)
+                .try_fold(Length::ZERO, |acc, field| acc + field.encoded_len()?)
         })
     }
 
