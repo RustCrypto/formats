@@ -3,7 +3,7 @@
 
 use crate::{
     str_slice::StrSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, Header, Length,
-    Result,
+    Result, Writer,
 };
 use core::cmp::Ordering;
 
@@ -67,7 +67,7 @@ impl EncodeValue for ByteSlice<'_> {
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.bytes(self.as_ref())
+        encoder.write(self.as_ref())
     }
 }
 

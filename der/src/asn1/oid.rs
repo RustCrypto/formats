@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    FixedTag, Header, Length, Result, Tag, Tagged,
+    FixedTag, Header, Length, Result, Tag, Tagged, Writer,
 };
 use const_oid::ObjectIdentifier;
 
@@ -19,7 +19,7 @@ impl EncodeValue for ObjectIdentifier {
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.bytes(self.as_bytes())
+        encoder.write(self.as_bytes())
     }
 }
 

@@ -1,6 +1,6 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Result};
+use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Result, Writer};
 use core::{
     cmp::Ordering,
     fmt,
@@ -241,17 +241,17 @@ impl Encode for Length {
     #[allow(clippy::cast_possible_truncation)]
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         if let Some(tag_byte) = self.initial_octet() {
-            encoder.byte(tag_byte)?;
+            encoder.write_byte(tag_byte)?;
 
             // Strip leading zeroes
             match self.0.to_be_bytes() {
-                [0, 0, 0, byte] => encoder.byte(byte),
-                [0, 0, bytes @ ..] => encoder.bytes(&bytes),
-                [0, bytes @ ..] => encoder.bytes(&bytes),
-                bytes => encoder.bytes(&bytes),
+                [0, 0, 0, byte] => encoder.write_byte(byte),
+                [0, 0, bytes @ ..] => encoder.write(&bytes),
+                [0, bytes @ ..] => encoder.write(&bytes),
+                bytes => encoder.write(&bytes),
             }
         } else {
-            encoder.byte(self.0 as u8)
+            encoder.write_byte(self.0 as u8)
         }
     }
 }

@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::*, ByteSlice, Choice, Decode, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd,
+    ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -168,7 +168,7 @@ impl EncodeValue for Any<'_> {
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.bytes(self.value())
+        encoder.write(self.value())
     }
 }
 

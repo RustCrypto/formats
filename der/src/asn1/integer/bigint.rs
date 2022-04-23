@@ -3,7 +3,7 @@
 use super::uint;
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
-    Header, Length, Result, Tag,
+    Header, Length, Result, Tag, Writer,
 };
 
 /// "Big" unsigned ASN.1 `INTEGER` type.
@@ -67,10 +67,10 @@ impl<'a> EncodeValue for UIntBytes<'a> {
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
         // Add leading `0x00` byte if required
         if self.value_len()? > self.len() {
-            encoder.byte(0)?;
+            encoder.write_byte(0)?;
         }
 
-        encoder.bytes(self.as_bytes())
+        encoder.write(self.as_bytes())
     }
 }
 

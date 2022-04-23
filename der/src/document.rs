@@ -1,6 +1,6 @@
 //! ASN.1 DER-encoded documents stored on the heap.
 
-use crate::{Decode, Decoder, Encode, Encoder, Error, FixedTag, Length, Result, Tag};
+use crate::{Decode, Decoder, Encode, Encoder, Error, FixedTag, Length, Result, Tag, Writer};
 use alloc::vec::Vec;
 use core::fmt::{self, Debug};
 
@@ -166,7 +166,7 @@ impl Encode for Document {
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.bytes(self.as_bytes())
+        encoder.write(self.as_bytes())
     }
 }
 
