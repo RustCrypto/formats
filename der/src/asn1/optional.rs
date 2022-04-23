@@ -18,27 +18,6 @@ where
     }
 }
 
-impl<T> Encode for Option<T>
-where
-    T: Encode,
-{
-    fn encoded_len(&self) -> Result<Length> {
-        if let Some(encodable) = self {
-            encodable.encoded_len()
-        } else {
-            Ok(0u8.into())
-        }
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        if let Some(encodable) = self {
-            encodable.encode(encoder)
-        } else {
-            Ok(())
-        }
-    }
-}
-
 impl<T> DerOrd for Option<T>
 where
     T: DerOrd,
@@ -56,15 +35,25 @@ where
     }
 }
 
-/// A reference to an ASN.1 `OPTIONAL` type, used for encoding only.
-pub struct OptionalRef<'a, T>(pub Option<&'a T>);
-
-impl<'a, T> Encode for OptionalRef<'a, T>
+impl<T> Encode for Option<T>
 where
     T: Encode,
 {
     fn encoded_len(&self) -> Result<Length> {
-        if let Some(encodable) = self.0 {
+        (&self).encoded_len()
+    }
+
+    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+        (&self).encode(encoder)
+    }
+}
+
+impl<T> Encode for &Option<T>
+where
+    T: Encode,
+{
+    fn encoded_len(&self) -> Result<Length> {
+        if let Some(encodable) = self {
             encodable.encoded_len()
         } else {
             Ok(0u8.into())
@@ -72,7 +61,7 @@ where
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        if let Some(encodable) = self.0 {
+        if let Some(encodable) = self {
             encodable.encode(encoder)
         } else {
             Ok(())
