@@ -5,7 +5,7 @@ use crate::{
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
     ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag, Header,
-    Length, Result, Tag,
+    Length, Result, Tag, Writer,
 };
 use core::time::Duration;
 
@@ -115,7 +115,7 @@ impl EncodeValue for GeneralizedTime {
         datetime::encode_decimal(encoder, Self::TAG, self.0.hour())?;
         datetime::encode_decimal(encoder, Self::TAG, self.0.minutes())?;
         datetime::encode_decimal(encoder, Self::TAG, self.0.seconds())?;
-        encoder.byte(b'Z')
+        encoder.write_byte(b'Z')
     }
 }
 

@@ -1,7 +1,9 @@
 //! Common handling for types backed by `str` slices with enforcement of a
 //! library-level length limitation i.e. `Length::max()`.
 
-use crate::{ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Header, Length, Result};
+use crate::{
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Header, Length, Result, Writer,
+};
 use core::str;
 
 /// String slice newtype which respects the [`Length::max`] limit.
@@ -74,6 +76,6 @@ impl<'a> EncodeValue for StrSlice<'a> {
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.bytes(self.as_ref())
+        encoder.write(self.as_ref())
     }
 }

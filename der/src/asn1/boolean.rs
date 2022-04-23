@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Header, Length, Result, Tag,
+    ErrorKind, FixedTag, Header, Length, Result, Tag, Writer,
 };
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
@@ -34,7 +34,7 @@ impl EncodeValue for bool {
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.byte(if *self { TRUE_OCTET } else { FALSE_OCTET })
+        encoder.write_byte(if *self { TRUE_OCTET } else { FALSE_OCTET })
     }
 }
 

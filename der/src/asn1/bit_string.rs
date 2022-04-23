@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, ErrorKind,
-    FixedTag, Header, Length, Result, Tag, ValueOrd,
+    FixedTag, Header, Length, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
@@ -134,8 +134,8 @@ impl EncodeValue for BitString<'_> {
     }
 
     fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.byte(self.unused_bits)?;
-        encoder.bytes(self.raw_bytes())
+        encoder.write_byte(self.unused_bits)?;
+        encoder.write(self.raw_bytes())
     }
 }
 

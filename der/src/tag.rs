@@ -6,7 +6,7 @@ mod number;
 
 pub use self::{class::Class, mode::TagMode, number::TagNumber};
 
-use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Length, Result};
+use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Length, Result, Writer};
 use core::{cmp::Ordering, fmt};
 
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
@@ -314,7 +314,7 @@ impl Encode for Tag {
     }
 
     fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.byte(self.into())
+        encoder.write_byte(self.into())
     }
 }
 

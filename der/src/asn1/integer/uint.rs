@@ -1,6 +1,6 @@
 //! Unsigned integer decoders/encoders.
 
-use crate::{Encoder, Length, Result, Tag};
+use crate::{Encoder, Length, Result, Tag, Writer};
 
 /// Decode an unsigned integer into a big endian byte slice with all leading
 /// zeroes removed.
@@ -44,10 +44,10 @@ pub(crate) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()
     let bytes = strip_leading_zeroes(bytes);
 
     if needs_leading_zero(bytes) {
-        encoder.byte(0)?;
+        encoder.write_byte(0)?;
     }
 
-    encoder.bytes(bytes)
+    encoder.write(bytes)
 }
 
 /// Get the encoded length for the given unsigned integer serialized as bytes.

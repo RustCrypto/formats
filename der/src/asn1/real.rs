@@ -9,7 +9,7 @@
 
 use crate::{
     str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header,
-    Length, Result, Tag,
+    Length, Result, Tag, Writer,
 };
 
 use super::integer::uint::strip_leading_zeroes;
@@ -136,18 +136,18 @@ impl EncodeValue for f64 {
                 return Ok(());
             } else if self.is_nan() {
                 // Not a number
-                encoder.bytes(&[0b0100_0010])?;
+                encoder.write_byte(0b0100_0010)?;
             } else if self.is_infinite() {
                 if self.is_sign_negative() {
                     // Negative infinity
-                    encoder.bytes(&[0b0100_0001])?;
+                    encoder.write_byte(0b0100_0001)?;
                 } else {
                     // Plus infinity
-                    encoder.bytes(&[0b0100_0000])?;
+                    encoder.write_byte(0b0100_0000)?;
                 }
             } else {
                 // Minus zero
-                encoder.bytes(&[0b0100_0011])?;
+                encoder.write_byte(0b0100_0011)?;
             }
         } else {
             // Always use binary encoding, set bit 8 to 1
@@ -178,16 +178,16 @@ impl EncodeValue for f64 {
                 }
             }
 
-            encoder.bytes(&[first_byte])?;
+            encoder.write_byte(first_byte)?;
 
             // Encode both bytes or just the last one, handled by encode_bytes directly
             // Rust already encodes the data as two's complement, so no further processing is needed
-            encoder.bytes(ebytes)?;
+            encoder.write(ebytes)?;
 
             // Now, encode the mantissa as unsigned binary number
             let mantissa_bytes = mantissa.to_be_bytes();
             let mbytes = strip_leading_zeroes(&mantissa_bytes);
-            encoder.bytes(mbytes)?;
+            encoder.write(mbytes)?;
         }
         Ok(())
     }

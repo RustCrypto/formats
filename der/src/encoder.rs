@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::*, Encode, EncodeRef, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag,
-    TagMode, TagNumber, Tagged,
+    TagMode, TagNumber, Tagged, Writer,
 };
 
 /// DER encoder.
@@ -213,23 +213,6 @@ impl<'a> Encoder<'a> {
         Ok(slice)
     }
 
-    /// Encode a single byte into the backing buffer.
-    pub(crate) fn byte(&mut self, byte: u8) -> Result<()> {
-        match self.reserve(1u8)?.first_mut() {
-            Some(b) => {
-                *b = byte;
-                Ok(())
-            }
-            None => self.error(ErrorKind::Overlength),
-        }
-    }
-
-    /// Encode the provided byte slice into the backing buffer.
-    pub(crate) fn bytes(&mut self, slice: &[u8]) -> Result<()> {
-        self.reserve(slice.len())?.copy_from_slice(slice);
-        Ok(())
-    }
-
     /// Get the size of the buffer in bytes.
     fn buffer_len(&self) -> Result<Length> {
         self.bytes
@@ -247,6 +230,13 @@ impl<'a> Encoder<'a> {
             .checked_sub(self.position.try_into()?)
             .ok_or_else(|| ErrorKind::Overlength.at(self.position))
             .and_then(TryInto::try_into)
+    }
+}
+
+impl<'a> Writer for Encoder<'a> {
+    fn write(&mut self, slice: &[u8]) -> Result<()> {
+        self.reserve(slice.len())?.copy_from_slice(slice);
+        Ok(())
     }
 }
 

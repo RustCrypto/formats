@@ -359,6 +359,7 @@ mod length;
 mod ord;
 mod str_slice;
 mod tag;
+mod writer;
 
 #[cfg(feature = "alloc")]
 mod document;
@@ -376,6 +377,7 @@ pub use crate::{
     length::Length,
     ord::{DerOrd, ValueOrd},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
+    writer::Writer,
 };
 
 #[cfg(feature = "alloc")]
