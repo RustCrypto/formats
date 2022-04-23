@@ -351,6 +351,7 @@ mod datetime;
 mod decode;
 mod decoder;
 mod encode;
+mod encode_ref;
 mod encoder;
 mod error;
 mod header;
@@ -368,6 +369,7 @@ pub use crate::{
     decode::{Decode, DecodeOwned, DecodeValue},
     decoder::Decoder,
     encode::{Encode, EncodeValue},
+    encode_ref::{EncodeRef, EncodeValueRef},
     encoder::Encoder,
     error::{Error, ErrorKind, Result},
     header::Header,

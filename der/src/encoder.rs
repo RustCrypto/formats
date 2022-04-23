@@ -1,8 +1,8 @@
 //! DER encoder.
 
 use crate::{
-    asn1::*, Encode, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag, TagMode,
-    TagNumber, Tagged,
+    asn1::*, Encode, EncodeRef, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag,
+    TagMode, TagNumber, Tagged,
 };
 
 /// DER encoder.
@@ -78,7 +78,7 @@ impl<'a> Encoder<'a> {
             .and_then(|value| self.encode(&value))
     }
 
-    /// Encode a `CONTEXT-SPECIFIC` field with `EXPLICIT` tagging.
+    /// Encode a `CONTEXT-SPECIFIC` field with the provided tag number and mode.
     pub fn context_specific<T>(
         &mut self,
         tag_number: TagNumber,
@@ -96,7 +96,7 @@ impl<'a> Encoder<'a> {
         .encode(self)
     }
 
-    /// Encode the provided value as an ASN.1 `GeneralizedTime`
+    /// Encode the provided value as an ASN.1 `GeneralizedTime`.
     pub fn generalized_time(&mut self, value: impl TryInto<GeneralizedTime>) -> Result<()> {
         value
             .try_into()
@@ -133,6 +133,11 @@ impl<'a> Encoder<'a> {
             .try_into()
             .map_err(|_| self.value_error(Tag::ObjectIdentifier))
             .and_then(|value| self.encode(&value))
+    }
+
+    /// Encode an ASN.1 `OPTIONAL` for the given option reference.
+    pub fn optional<T: Encode>(&mut self, value: Option<&T>) -> Result<()> {
+        value.map(EncodeRef).encode(self)
     }
 
     /// Encode the provided value as an ASN.1 `PrintableString`

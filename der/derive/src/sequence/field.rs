@@ -98,7 +98,7 @@ impl SequenceField {
                 !attrs.optional,
                 "`default`, and `optional` are mutually exclusive"
             );
-            lowerer.apply_default(&self.ident, default, attrs.context_specific.is_none());
+            lowerer.apply_default(&self.ident, default);
         }
 
         lowerer.into_tokens()
@@ -191,8 +191,8 @@ impl LowerFieldEncoder {
     }
 
     /// Handle default value for a type.
-    fn apply_default(&mut self, ident: &Ident, default: &Path, is_bare: bool) {
-        let mut encoder = &self.encoder;
+    fn apply_default(&mut self, ident: &Ident, default: &Path) {
+        let encoder = &self.encoder;
 
         self.encoder = quote! {
             if &self.#ident == &#default() {
@@ -201,13 +201,6 @@ impl LowerFieldEncoder {
                 Some(#encoder)
             }
         };
-
-        if is_bare {
-            encoder = &self.encoder;
-            self.encoder = quote! {
-                ::der::asn1::OptionalRef(#encoder.as_ref())
-            };
-        }
     }
 
     /// Make this field context-specific.
