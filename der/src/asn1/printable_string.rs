@@ -108,7 +108,7 @@ impl AsRef<[u8]> for PrintableString<'_> {
 
 impl<'a> DecodeValue<'a> for PrintableString<'a> {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(decoder, header)?.as_bytes())
+        Self::new(ByteSlice::decode_value(decoder, header)?.as_slice())
     }
 }
 

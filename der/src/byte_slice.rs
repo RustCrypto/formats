@@ -34,7 +34,7 @@ impl<'a> ByteSlice<'a> {
     }
 
     /// Borrow the inner byte slice
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_slice(&self) -> &'a [u8] {
         self.inner
     }
 
@@ -51,7 +51,7 @@ impl<'a> ByteSlice<'a> {
 
 impl AsRef<[u8]> for ByteSlice<'_> {
     fn as_ref(&self) -> &[u8] {
-        self.as_bytes()
+        self.as_slice()
     }
 }
 
@@ -82,7 +82,7 @@ impl Default for ByteSlice<'_> {
 
 impl DerOrd for ByteSlice<'_> {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        Ok(self.as_bytes().cmp(other.as_bytes()))
+        Ok(self.as_slice().cmp(other.as_slice()))
     }
 }
 

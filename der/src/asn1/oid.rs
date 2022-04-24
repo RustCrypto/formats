@@ -8,7 +8,7 @@ use const_oid::ObjectIdentifier;
 
 impl DecodeValue<'_> for ObjectIdentifier {
     fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
+        let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
         Ok(Self::from_bytes(bytes)?)
     }
 }

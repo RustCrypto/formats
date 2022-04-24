@@ -15,7 +15,7 @@ macro_rules! impl_int_encoding {
         $(
             impl<'a> DecodeValue<'a> for $int {
                 fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-                    let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
+                    let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
 
                     let result = if is_highest_bit_set(bytes) {
                         <$uint>::from_be_bytes(int::decode_to_array(bytes)?) as $int
@@ -76,7 +76,7 @@ macro_rules! impl_uint_encoding {
         $(
             impl<'a> DecodeValue<'a> for $uint {
                 fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-                    let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
+                    let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
                     let result = Self::from_be_bytes(uint::decode_to_array(bytes)?);
 
                     // Ensure we compute the same encoded length as the original any value

@@ -75,7 +75,7 @@ impl GeneralizedTime {
 
 impl DecodeValue<'_> for GeneralizedTime {
     fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        match *ByteSlice::decode_value(decoder, header)?.as_bytes() {
+        match *ByteSlice::decode_value(decoder, header)?.as_slice() {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
                 let year = u16::from(datetime::decode_decimal(Self::TAG, y1, y2)?)

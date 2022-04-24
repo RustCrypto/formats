@@ -103,7 +103,7 @@ impl<'a> BitString<'a> {
     /// octet. If the number of unused bits is expected to be 0, the
     /// [`BitString::as_bytes`] function can be used instead.
     pub fn raw_bytes(&self) -> &'a [u8] {
-        self.inner.as_bytes()
+        self.inner.as_slice()
     }
 
     /// Iterator over the bits of this `BIT STRING`.
@@ -124,7 +124,7 @@ impl<'a> DecodeValue<'a> for BitString<'a> {
 
         let unused_bits = decoder.read_byte()?;
         let inner = ByteSlice::decode_value(decoder, header)?;
-        Self::new(unused_bits, inner.as_bytes())
+        Self::new(unused_bits, inner.as_slice())
     }
 }
 
