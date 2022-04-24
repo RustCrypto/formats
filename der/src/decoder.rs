@@ -213,14 +213,13 @@ impl<'a> Decoder<'a> {
     /// position.
     fn remaining(&self) -> Result<&'a [u8]> {
         if self.is_failed() {
-            return Err(ErrorKind::Failed.at(self.position));
+            Err(ErrorKind::Failed.at(self.position))
+        } else {
+            self.bytes
+                .as_slice()
+                .get(self.position.try_into()?..)
+                .ok_or_else(|| Error::incomplete(self.input_len()))
         }
-
-        let pos = usize::try_from(self.position)?;
-        self.bytes
-            .as_bytes()
-            .get(pos..)
-            .ok_or_else(|| Error::incomplete(self.input_len()))
     }
 }
 

@@ -66,7 +66,7 @@ impl AsRef<[u8]> for StrSlice<'_> {
 
 impl<'a> DecodeValue<'a> for StrSlice<'a> {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        Self::from_bytes(ByteSlice::decode_value(decoder, header)?.as_bytes())
+        Self::from_bytes(ByteSlice::decode_value(decoder, header)?.as_slice())
     }
 }
 

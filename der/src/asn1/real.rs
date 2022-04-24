@@ -18,7 +18,7 @@ use super::integer::uint::strip_leading_zeroes;
 #[allow(clippy::panic_in_result_fn)]
 impl DecodeValue<'_> for f64 {
     fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
+        let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
 
         if header.length == Length::ZERO {
             Ok(0.0)

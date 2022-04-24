@@ -75,7 +75,7 @@ impl AsRef<[u8]> for Ia5String<'_> {
 
 impl<'a> DecodeValue<'a> for Ia5String<'a> {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(decoder, header)?.as_bytes())
+        Self::new(ByteSlice::decode_value(decoder, header)?.as_slice())
     }
 }
 
