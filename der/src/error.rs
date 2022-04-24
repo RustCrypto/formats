@@ -33,9 +33,18 @@ impl Error {
         }
     }
 
-    /// If the error's `kind` is an [`ErrorKind::Incomplete`], return the `expected_len`.
-    pub fn incomplete(self) -> Option<usize> {
-        self.kind().incomplete()
+    /// Create a new [`ErrorKind::Incomplete`] for the given length.
+    ///
+    /// Computes the expected len as being one greater than `actual_len`.
+    pub fn incomplete(actual_len: Length) -> Self {
+        match actual_len + Length::ONE {
+            Ok(expected_len) => ErrorKind::Incomplete {
+                expected_len,
+                actual_len,
+            }
+            .at(actual_len),
+            Err(err) => err.kind().at(actual_len),
+        }
     }
 
     /// Get the [`ErrorKind`] which occurred.
@@ -284,14 +293,6 @@ impl ErrorKind {
     /// returning an error.
     pub fn at(self, position: Length) -> Error {
         Error::new(self, position)
-    }
-
-    /// If this is an [`ErrorKind::Incomplete`], return the `expected_len`.
-    pub fn incomplete(self) -> Option<usize> {
-        match self {
-            ErrorKind::Incomplete { expected_len, .. } => usize::try_from(expected_len).ok(),
-            _ => None,
-        }
     }
 }
 
