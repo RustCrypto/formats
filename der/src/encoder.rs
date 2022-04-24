@@ -9,7 +9,10 @@ use crate::{
 #[derive(Debug)]
 pub struct Encoder<'a> {
     /// Buffer into which DER-encoded message is written
-    bytes: Option<&'a mut [u8]>,
+    bytes: &'a mut [u8],
+
+    /// Has the encoding operation failed?
+    failed: bool,
 
     /// Total number of bytes written to buffer so far
     position: Length,
@@ -19,7 +22,8 @@ impl<'a> Encoder<'a> {
     /// Create a new encoder with the given byte slice as a backing buffer.
     pub fn new(bytes: &'a mut [u8]) -> Self {
         Self {
-            bytes: Some(bytes),
+            bytes,
+            failed: false,
             position: Length::ZERO,
         }
     }
@@ -31,7 +35,7 @@ impl<'a> Encoder<'a> {
         }
 
         encodable.encode(self).map_err(|e| {
-            self.bytes.take();
+            self.failed = true;
             e.nested(self.position)
         })
     }
@@ -40,34 +44,34 @@ impl<'a> Encoder<'a> {
     /// context about where the error occurred.
     // TODO(tarcieri): change return type to `Error`
     pub fn error<T>(&mut self, kind: ErrorKind) -> Result<T> {
-        self.bytes.take();
+        self.failed = true;
         Err(kind.at(self.position))
     }
 
     /// Return an error for an invalid value with the given tag.
     // TODO(tarcieri): compose this with `Encoder::error` after changing its return type
     pub fn value_error(&mut self, tag: Tag) -> Error {
-        self.bytes.take();
+        self.failed = true;
         tag.value_error().kind().at(self.position)
     }
 
     /// Did the decoding operation fail due to an error?
     pub fn is_failed(&self) -> bool {
-        self.bytes.is_none()
+        self.failed
     }
 
     /// Finish encoding to the buffer, returning a slice containing the data
     /// written to the buffer.
     pub fn finish(self) -> Result<&'a [u8]> {
-        let pos = self.position;
-        let range = ..usize::try_from(self.position)?;
+        let position = self.position;
 
-        match self.bytes {
-            Some(bytes) => bytes
-                .get(range)
-                .ok_or_else(|| ErrorKind::Overlength.at(pos)),
-            None => Err(ErrorKind::Failed.at(pos)),
+        if self.is_failed() {
+            return Err(ErrorKind::Failed.at(position));
         }
+
+        self.bytes
+            .get(..usize::try_from(position)?)
+            .ok_or_else(|| ErrorKind::Overlength.at(position))
     }
 
     /// Encode the provided value as an ASN.1 `BIT STRING`.
@@ -187,49 +191,23 @@ impl<'a> Encoder<'a> {
     /// Reserve a portion of the internal buffer, updating the internal cursor
     /// position and returning a mutable slice.
     fn reserve(&mut self, len: impl TryInto<Length>) -> Result<&mut [u8]> {
+        if self.is_failed() {
+            return Err(ErrorKind::Failed.at(self.position));
+        }
+
         let len = len
             .try_into()
             .or_else(|_| self.error(ErrorKind::Overflow))?;
 
-        if len > self.remaining_len()? {
-            self.error(ErrorKind::Overlength)?;
-        }
-
         let end = (self.position + len).or_else(|e| self.error(e.kind()))?;
         let range = self.position.try_into()?..end.try_into()?;
-        let position = &mut self.position;
+        let slice = self
+            .bytes
+            .get_mut(range)
+            .ok_or_else(|| ErrorKind::Overlength.at(end))?;
 
-        // TODO(tarcieri): non-panicking version of this code
-        // We ensure above that the buffer is untainted and there is sufficient
-        // space to perform this slicing operation, however it would be nice to
-        // have fully panic-free code.
-        //
-        // Unfortunately tainting the buffer on error is tricky to do when
-        // potentially holding a reference to the buffer, and failure to taint
-        // it would not uphold the invariant that any errors should taint it.
-        let slice = &mut self.bytes.as_mut().expect("DER encoder tainted")[range];
-        *position = end;
-
+        self.position = end;
         Ok(slice)
-    }
-
-    /// Get the size of the buffer in bytes.
-    fn buffer_len(&self) -> Result<Length> {
-        self.bytes
-            .as_ref()
-            .map(|bytes| bytes.len())
-            .ok_or_else(|| ErrorKind::Failed.at(self.position))
-            .and_then(TryInto::try_into)
-    }
-
-    /// Get the number of bytes still remaining in the buffer.
-    fn remaining_len(&self) -> Result<Length> {
-        let buffer_len = usize::try_from(self.buffer_len()?)?;
-
-        buffer_len
-            .checked_sub(self.position.try_into()?)
-            .ok_or_else(|| ErrorKind::Overlength.at(self.position))
-            .and_then(TryInto::try_into)
     }
 }
 
@@ -242,11 +220,9 @@ impl<'a> Writer for Encoder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use hex_literal::hex;
-
-    use crate::{asn1::BitString, Encode, ErrorKind, Length, TagMode, TagNumber};
-
     use super::Encoder;
+    use crate::{asn1::BitString, Encode, ErrorKind, Length, TagMode, TagNumber};
+    use hex_literal::hex;
 
     #[test]
     fn overlength_message() {
@@ -254,7 +230,7 @@ mod tests {
         let mut encoder = Encoder::new(&mut buffer);
         let err = false.encode(&mut encoder).err().unwrap();
         assert_eq!(err.kind(), ErrorKind::Overlength);
-        assert_eq!(err.position(), Some(Length::ZERO));
+        assert_eq!(err.position(), Some(Length::ONE));
     }
 
     #[test]
