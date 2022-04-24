@@ -19,12 +19,9 @@ pub trait Reader<'i>: Clone + Sized {
     /// Get the position within the buffer.
     fn position(&self) -> Length;
 
-    /// Get the number of bytes still remaining in the buffer.
-    fn remaining_len(&self) -> Result<Length>;
-
     /// Have we read all of the input data?
     fn is_finished(&self) -> bool {
-        self.remaining_len() == Ok(Length::ZERO)
+        self.remaining_len().is_zero()
     }
 
     /// Peek at the next byte in the decoder and attempt to decode it as a
@@ -64,5 +61,11 @@ pub trait Reader<'i>: Clone + Sized {
         let mut buf = [0];
         self.read_into(&mut buf)?;
         Ok(buf[0])
+    }
+
+    /// Get the number of bytes still remaining in the buffer.
+    fn remaining_len(&self) -> Length {
+        debug_assert!(self.position() <= self.input_len());
+        self.input_len().saturating_sub(self.position())
     }
 }
