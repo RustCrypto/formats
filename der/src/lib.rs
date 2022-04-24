@@ -357,6 +357,7 @@ mod error;
 mod header;
 mod length;
 mod ord;
+mod reader;
 mod str_slice;
 mod tag;
 mod writer;
@@ -376,6 +377,7 @@ pub use crate::{
     header::Header,
     length::Length,
     ord::{DerOrd, ValueOrd},
+    reader::Reader,
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     writer::Writer,
 };

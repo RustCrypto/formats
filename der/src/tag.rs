@@ -6,7 +6,9 @@ mod number;
 
 pub use self::{class::Class, mode::TagMode, number::TagNumber};
 
-use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Length, Result, Writer};
+use crate::{
+    Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Length, Reader, Result, Writer,
+};
 use core::{cmp::Ordering, fmt};
 
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
@@ -304,7 +306,7 @@ impl From<&Tag> for u8 {
 
 impl Decode<'_> for Tag {
     fn decode(decoder: &mut Decoder<'_>) -> Result<Self> {
-        decoder.byte().and_then(Self::try_from)
+        decoder.read_byte().and_then(Self::try_from)
     }
 }
 

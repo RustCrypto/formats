@@ -2,7 +2,7 @@
 
 use crate::{
     arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue,
-    Encoder, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
+    Encoder, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd,
 };
 use core::cmp::Ordering;
 

@@ -3,7 +3,7 @@
 
 use crate::{
     str_slice::StrSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, Header, Length,
-    Result, Writer,
+    Reader, Result, Writer,
 };
 use core::cmp::Ordering;
 
@@ -57,7 +57,7 @@ impl AsRef<[u8]> for ByteSlice<'_> {
 
 impl<'a> DecodeValue<'a> for ByteSlice<'a> {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        decoder.bytes(header.length).and_then(Self::new)
+        decoder.read_slice(header.length).and_then(Self::new)
     }
 }
 

@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::*, ByteSlice, Choice, Decode, DecodeValue, Encode, Error, ErrorKind, FixedTag, Header,
-    Length, Result, Tag, TagMode, TagNumber,
+    Length, Reader, Result, Tag, TagMode, TagNumber,
 };
 
 /// DER decoder.
@@ -74,46 +74,6 @@ impl<'a> Decoder<'a> {
         self.bytes.is_none()
     }
 
-    /// Get the position within the buffer.
-    pub fn position(&self) -> Length {
-        // TODO(tarcieri): avoid potential panic here
-        (self.position + self.offset).expect("overflow")
-    }
-
-    /// Peek at the next byte in the decoder without modifying the cursor.
-    pub fn peek_byte(&self) -> Option<u8> {
-        self.remaining()
-            .ok()
-            .and_then(|bytes| bytes.get(0).cloned())
-    }
-
-    /// Peek at the next byte in the decoder and attempt to decode it as a
-    /// [`Tag`] value.
-    ///
-    /// Does not modify the decoder's state.
-    pub fn peek_tag(&self) -> Result<Tag> {
-        match self.peek_byte() {
-            Some(byte) => byte.try_into(),
-            None => {
-                let actual_len = self.input_len()?;
-                let expected_len = (actual_len + Length::ONE)?;
-                Err(ErrorKind::Incomplete {
-                    expected_len,
-                    actual_len,
-                }
-                .into())
-            }
-        }
-    }
-
-    /// Peek forward in the decoder, attempting to decode a [`Header`] from
-    /// the data at the current position in the decoder.
-    ///
-    /// Does not modify the decoder's state.
-    pub fn peek_header(&self) -> Result<Header> {
-        Header::decode(&mut self.clone())
-    }
-
     /// Finish decoding, returning the given value if there is no
     /// remaining data, or an error otherwise
     pub fn finish<T>(self, value: T) -> Result<T> {
@@ -128,14 +88,6 @@ impl<'a> Decoder<'a> {
         } else {
             Ok(value)
         }
-    }
-
-    /// Have we decoded all of the bytes in this [`Decoder`]?
-    ///
-    /// Returns `false` if we're not finished decoding or if a fatal error
-    /// has occurred.
-    pub fn is_finished(&self) -> bool {
-        self.remaining().map(|rem| rem.is_empty()).unwrap_or(false)
     }
 
     /// Attempt to decode an ASN.1 `ANY` value.
@@ -253,24 +205,58 @@ impl<'a> Decoder<'a> {
         SequenceRef::decode(self)?.decode_body(f)
     }
 
-    /// Decode a single byte, updating the internal cursor.
-    pub(crate) fn byte(&mut self) -> Result<u8> {
-        match self.bytes(1u8)? {
-            [byte] => Ok(*byte),
-            _ => {
+    /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
+    pub fn tlv_bytes(&mut self) -> Result<&'a [u8]> {
+        let header = self.peek_header()?;
+        let header_len = header.encoded_len()?;
+        self.read_slice((header_len + header.length)?)
+    }
+
+    /// Obtain the remaining bytes in this decoder from the current cursor
+    /// position.
+    fn remaining(&self) -> Result<&'a [u8]> {
+        let pos = usize::try_from(self.position)?;
+
+        match self.bytes.and_then(|slice| slice.as_bytes().get(pos..)) {
+            Some(result) => Ok(result),
+            None => {
                 let actual_len = self.input_len()?;
                 let expected_len = (actual_len + Length::ONE)?;
-                Err(self.error(ErrorKind::Incomplete {
+                Err(ErrorKind::Incomplete {
                     expected_len,
                     actual_len,
-                }))
+                }
+                .at(self.position))
             }
         }
     }
+}
 
-    /// Obtain a slice of bytes of the given length from the current cursor
-    /// position, or return an error if we have insufficient data.
-    pub(crate) fn bytes(&mut self, len: impl TryInto<Length>) -> Result<&'a [u8]> {
+impl<'a> Reader<'a> for Decoder<'a> {
+    fn input_len(&self) -> Result<Length> {
+        Ok(self.bytes.ok_or(ErrorKind::Failed)?.len())
+    }
+
+    fn peek_byte(&self) -> Option<u8> {
+        self.remaining()
+            .ok()
+            .and_then(|bytes| bytes.get(0).cloned())
+    }
+
+    fn peek_header(&self) -> Result<Header> {
+        Header::decode(&mut self.clone())
+    }
+
+    fn position(&self) -> Length {
+        // TODO(tarcieri): avoid potential panic here
+        (self.position + self.offset).expect("overflow")
+    }
+
+    fn remaining_len(&self) -> Result<Length> {
+        self.remaining()?.len().try_into()
+    }
+
+    fn read_slice(&mut self, len: impl TryInto<Length>) -> Result<&'a [u8]> {
         if self.is_failed() {
             return Err(self.error(ErrorKind::Failed));
         }
@@ -295,38 +281,16 @@ impl<'a> Decoder<'a> {
         }
     }
 
-    /// Get the length of the input, if decoding hasn't failed.
-    pub(crate) fn input_len(&self) -> Result<Length> {
-        Ok(self.bytes.ok_or(ErrorKind::Failed)?.len())
-    }
-
-    /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
-    pub fn tlv_bytes(&mut self) -> Result<&'a [u8]> {
-        let header = self.peek_header()?;
-        let header_len = header.encoded_len()?;
-        self.bytes((header_len + header.length)?)
-    }
-
-    /// Get the number of bytes still remaining in the buffer.
-    pub(crate) fn remaining_len(&self) -> Result<Length> {
-        self.remaining()?.len().try_into()
-    }
-
-    /// Obtain the remaining bytes in this decoder from the current cursor
-    /// position.
-    fn remaining(&self) -> Result<&'a [u8]> {
-        let pos = usize::try_from(self.position)?;
-
-        match self.bytes.and_then(|slice| slice.as_bytes().get(pos..)) {
-            Some(result) => Ok(result),
-            None => {
+    fn read_byte(&mut self) -> Result<u8> {
+        match self.read_slice(1u8)? {
+            [byte] => Ok(*byte),
+            _ => {
                 let actual_len = self.input_len()?;
                 let expected_len = (actual_len + Length::ONE)?;
-                Err(ErrorKind::Incomplete {
+                Err(self.error(ErrorKind::Incomplete {
                     expected_len,
                     actual_len,
-                }
-                .at(self.position))
+                }))
             }
         }
     }
@@ -335,7 +299,7 @@ impl<'a> Decoder<'a> {
 #[cfg(test)]
 mod tests {
     use super::Decoder;
-    use crate::{Decode, ErrorKind, Length, Tag};
+    use crate::{Decode, ErrorKind, Length, Reader, Tag};
     use hex_literal::hex;
 
     // INTEGER: 42

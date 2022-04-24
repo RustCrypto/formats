@@ -3,7 +3,7 @@
 
 use crate::{
     ByteSlice, Decode, DecodeValue, Decoder, Encode, EncodeValue, Encoder, FixedTag, Header,
-    Length, Result, Tag,
+    Length, Reader, Result, Tag,
 };
 
 /// ASN.1 `SEQUENCE` trait.
