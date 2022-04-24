@@ -1,7 +1,7 @@
 //! ASN.1 `ANY` type.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decode, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error,
+    asn1::*, ByteSlice, Choice, Decode, DecodeValue, Decoder, DerOrd, EncodeValue, Error,
     ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
@@ -167,8 +167,8 @@ impl EncodeValue for Any<'_> {
         Ok(self.value.len())
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.write(self.value())
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write(self.value())
     }
 }
 

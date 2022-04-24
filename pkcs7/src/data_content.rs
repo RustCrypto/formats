@@ -2,7 +2,7 @@
 
 use core::convert::{From, TryFrom};
 use der::{
-    asn1::OctetString, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header, Length, Tag,
+    asn1::OctetString, DecodeValue, Decoder, EncodeValue, FixedTag, Header, Length, Tag, Writer,
 };
 
 /// The content that is just an octet string.
@@ -43,8 +43,8 @@ impl<'a> EncodeValue for DataContent<'a> {
         Length::try_from(self.content.len())
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        OctetString::new(self.content)?.encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        OctetString::new(self.content)?.encode_value(writer)
     }
 }
 

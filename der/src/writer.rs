@@ -3,7 +3,7 @@
 use crate::Result;
 
 /// Writer trait which outputs encoded DER.
-pub trait Writer: Sized {
+pub trait Writer {
     /// Write the given DER-encoded bytes as output.
     fn write(&mut self, slice: &[u8]) -> Result<()>;
 

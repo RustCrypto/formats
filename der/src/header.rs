@@ -1,6 +1,6 @@
 //! ASN.1 DER headers.
 
-use crate::{Decode, Decoder, DerOrd, Encode, Encoder, ErrorKind, Length, Result, Tag};
+use crate::{Decode, Decoder, DerOrd, Encode, ErrorKind, Length, Result, Tag, Writer};
 use core::cmp::Ordering;
 
 /// ASN.1 DER headers: tag + length component of TLV-encoded values
@@ -44,9 +44,9 @@ impl Encode for Header {
         self.tag.encoded_len()? + self.length.encoded_len()?
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.tag.encode(encoder)?;
-        self.length.encode(encoder)
+    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+        self.tag.encode(writer)?;
+        self.length.encode(writer)
     }
 }
 

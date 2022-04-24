@@ -2,8 +2,8 @@
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{
-    ByteSlice, Decode, DecodeValue, Decoder, Encode, EncodeValue, Encoder, FixedTag, Header,
-    Length, Reader, Result, Tag,
+    ByteSlice, Decode, DecodeValue, Decoder, Encode, EncodeValue, FixedTag, Header, Length, Reader,
+    Result, Tag, Writer,
 };
 
 /// ASN.1 `SEQUENCE` trait.
@@ -34,10 +34,10 @@ where
         })
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         self.fields(|fields| {
             for &field in fields {
-                field.encode(encoder)?;
+                field.encode(writer)?;
             }
 
             Ok(())
@@ -87,8 +87,8 @@ impl EncodeValue for SequenceRef<'_> {
         Ok(self.body.len())
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.body.encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        self.body.encode_value(writer)
     }
 }
 

@@ -1,8 +1,8 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Header, Length, Result, Tag,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, ErrorKind,
+    FixedTag, Header, Length, Result, Tag, Writer,
 };
 
 /// ASN.1 `OCTET STRING` type.
@@ -54,8 +54,8 @@ impl EncodeValue for OctetString<'_> {
         self.inner.value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.inner.encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        self.inner.encode_value(writer)
     }
 }
 

@@ -1,8 +1,8 @@
 //! ASN.1 `BOOLEAN` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, ErrorKind,
+    FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
@@ -33,8 +33,8 @@ impl EncodeValue for bool {
         Ok(Length::ONE)
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.write_byte(if *self { TRUE_OCTET } else { FALSE_OCTET })
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write_byte(if *self { TRUE_OCTET } else { FALSE_OCTET })
     }
 }
 

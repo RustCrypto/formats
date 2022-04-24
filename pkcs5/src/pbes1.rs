@@ -4,8 +4,8 @@
 
 use crate::AlgorithmIdentifier;
 use der::{
-    asn1::{ObjectIdentifier, OctetString},
-    Decode, Decoder, Encode, Encoder, ErrorKind, FixedTag, Length, Tag,
+    asn1::{Any, ObjectIdentifier, OctetString},
+    Decode, Decoder, Encode, ErrorKind, Length, Sequence, Tag, Writer,
 };
 
 /// `pbeWithMD2AndDES-CBC` Object Identifier (OID).
@@ -35,6 +35,70 @@ pub const PBE_WITH_SHA1_AND_RC2_CBC_OID: ObjectIdentifier =
 /// Length of a PBES1 salt (as defined in the `PBEParameter` ASN.1 message).
 pub const SALT_LENGTH: usize = 8;
 
+/// Password-Based Encryption Scheme 1 algorithms as defined in [RFC 8018 Appendix A.C].
+///
+/// ```text
+/// PBES1Algorithms ALGORITHM-IDENTIFIER ::= {
+///    {PBEParameter IDENTIFIED BY pbeWithMD2AndDES-CBC}  |
+///    {PBEParameter IDENTIFIED BY pbeWithMD2AndRC2-CBC}  |
+///    {PBEParameter IDENTIFIED BY pbeWithMD5AndDES-CBC}  |
+///    {PBEParameter IDENTIFIED BY pbeWithMD5AndRC2-CBC}  |
+///    {PBEParameter IDENTIFIED BY pbeWithSHA1AndDES-CBC} |
+///    {PBEParameter IDENTIFIED BY pbeWithSHA1AndRC2-CBC},
+///    ...
+/// }
+/// ```
+///
+/// [RFC 8018 Appendix A.C]: https://datatracker.ietf.org/doc/html/rfc8018#appendix-C
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Algorithm {
+    /// Encryption scheme.
+    pub encryption: EncryptionScheme,
+
+    /// Scheme parameters.
+    pub parameters: Parameters,
+}
+
+impl Algorithm {
+    /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
+    pub fn oid(&self) -> ObjectIdentifier {
+        self.encryption.oid()
+    }
+}
+
+impl Decode<'_> for Algorithm {
+    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
+        AlgorithmIdentifier::decode(decoder)?.try_into()
+    }
+}
+
+impl Sequence<'_> for Algorithm {
+    fn fields<F, T>(&self, f: F) -> der::Result<T>
+    where
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
+    {
+        f(&[&self.encryption, &self.parameters])
+    }
+}
+
+impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Algorithm {
+    type Error = der::Error;
+
+    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
+        // Ensure that we have a supported PBES1 algorithm identifier
+        let encryption = EncryptionScheme::try_from(alg.oid)
+            .map_err(|_| der::Tag::ObjectIdentifier.value_error())?;
+
+        match alg.parameters {
+            Some(any) => Ok(Self {
+                encryption,
+                parameters: any.try_into()?,
+            }),
+            None => Err(Tag::OctetString.value_error()),
+        }
+    }
+}
+
 /// Password-Based Encryption Scheme 1 parameters as defined in [RFC 8018 Appendix A.3].
 ///
 /// ```text
@@ -43,15 +107,9 @@ pub const SALT_LENGTH: usize = 8;
 ///    iterationCount INTEGER }
 /// ```
 ///
-/// Note that this struct additionally stores an [`EncryptionScheme`] parameter
-/// parsed from the [`ObjectIdentifier`].
-///
 /// [RFC 8018 Appendix A.3]: https://tools.ietf.org/html/rfc8018#appendix-A.3
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Parameters {
-    /// Encryption scheme
-    pub encryption: EncryptionScheme,
-
     /// Salt value
     pub salt: [u8; SALT_LENGTH],
 
@@ -59,87 +117,43 @@ pub struct Parameters {
     pub iteration_count: u16,
 }
 
-impl Parameters {
-    /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
-    pub fn oid(&self) -> ObjectIdentifier {
-        self.encryption.oid()
-    }
-
-    /// Get the inner length of the encoded sequence
-    fn inner_len(&self) -> der::Result<Length> {
-        let oid_len = self.encryption.oid().encoded_len()?;
-        let params_len = (self.salt_string()?.encoded_len()?
-            + self.iteration_count.encoded_len()?)?
-        .for_tlv()?;
-        oid_len + params_len
-    }
-
-    /// Get an [`OctetString`] wrapper for the salt
-    fn salt_string(&self) -> der::Result<OctetString<'_>> {
-        OctetString::new(&self.salt)
-    }
-}
-
 impl Decode<'_> for Parameters {
     fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
-        AlgorithmIdentifier::decode(decoder)?.try_into()
+        Any::decode(decoder)?.try_into()
     }
 }
 
-impl Encode for Parameters {
-    fn encoded_len(&self) -> der::Result<Length> {
-        self.inner_len()?.for_tlv()
+impl Sequence<'_> for Parameters {
+    fn fields<F, T>(&self, f: F) -> der::Result<T>
+    where
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
+    {
+        f(&[&OctetString::new(&self.salt)?, &self.iteration_count])
     }
+}
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        encoder.sequence(self.inner_len()?, |encoder| {
-            encoder.oid(self.encryption.oid())?;
+impl TryFrom<Any<'_>> for Parameters {
+    type Error = der::Error;
 
-            let salt_string = self.salt_string()?;
-            let seq_len = (salt_string.encoded_len()? + self.iteration_count.encoded_len()?)?;
-            encoder.sequence(seq_len, |seq| {
-                seq.encode(&salt_string)?;
-                seq.encode(&self.iteration_count)
+    fn try_from(any: Any<'_>) -> der::Result<Parameters> {
+        any.sequence(|params| {
+            let salt = params
+                .octet_string()?
+                .as_bytes()
+                .try_into()
+                .map_err(|_| der::Tag::OctetString.value_error())?;
+
+            let iteration_count = params.decode()?;
+
+            Ok(Parameters {
+                salt,
+                iteration_count,
             })
         })
     }
 }
 
-impl FixedTag for Parameters {
-    const TAG: Tag = Tag::Sequence;
-}
-
-impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Parameters {
-    type Error = der::Error;
-
-    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
-        // Ensure that we have a supported PBES1 algorithm identifier
-        let encryption = EncryptionScheme::try_from(alg.oid)
-            .map_err(|_| der::Tag::ObjectIdentifier.value_error())?;
-
-        if let Some(any) = alg.parameters {
-            any.sequence(|params| {
-                let salt = params
-                    .octet_string()?
-                    .as_bytes()
-                    .try_into()
-                    .map_err(|_| der::Tag::OctetString.value_error())?;
-
-                let iteration_count = params.decode()?;
-
-                Ok(Self {
-                    encryption,
-                    salt,
-                    iteration_count,
-                })
-            })
-        } else {
-            Err(Tag::OctetString.value_error())
-        }
-    }
-}
-
-/// Password-Based Encryption Scheme 1 algorithms as defined in [RFC 8018 Appendix A.3].
+/// Password-Based Encryption Scheme 1 ciphersuites as defined in [RFC 8018 Appendix A.3].
 ///
 /// [RFC 8018 Appendix A.3]: https://tools.ietf.org/html/rfc8018#appendix-A.3
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -222,8 +236,8 @@ impl Encode for EncryptionScheme {
         self.oid().encoded_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        self.oid().encode(encoder)
+    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        self.oid().encode(writer)
     }
 }
 

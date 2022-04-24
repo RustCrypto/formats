@@ -1,5 +1,5 @@
 use der::asn1::ObjectIdentifier;
-use der::{DecodeValue, Decoder, EncodeValue, Encoder, ErrorKind, FixedTag, Header, Length, Tag};
+use der::{DecodeValue, Decoder, EncodeValue, ErrorKind, FixedTag, Header, Length, Tag, Writer};
 
 /// Indicates the type of content.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -57,8 +57,8 @@ impl EncodeValue for ContentType {
         self.to_oid().value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        self.to_oid().encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        self.to_oid().encode_value(writer)
     }
 }
 

@@ -6,7 +6,7 @@ pub(super) mod uint;
 
 use crate::{
     asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, FixedTag, Header,
-    Length, Result, Tag, ValueOrd,
+    Length, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, mem};
 
@@ -41,11 +41,11 @@ macro_rules! impl_int_encoding {
                     }
                 }
 
-                fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+                fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
                     if *self < 0 {
-                        int::encode_bytes(encoder, &(*self as $uint).to_be_bytes())
+                        int::encode_bytes(writer, &(*self as $uint).to_be_bytes())
                     } else {
-                        uint::encode_bytes(encoder, &self.to_be_bytes())
+                        uint::encode_bytes(writer, &self.to_be_bytes())
                     }
                 }
             }
@@ -93,8 +93,8 @@ macro_rules! impl_uint_encoding {
                     uint::encoded_len(&self.to_be_bytes())
                 }
 
-                fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-                    uint::encode_bytes(encoder, &self.to_be_bytes())
+                fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+                    uint::encode_bytes(writer, &self.to_be_bytes())
                 }
             }
 

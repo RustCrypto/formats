@@ -1,7 +1,7 @@
 //! Support for encoding negative integers
 
 use super::is_highest_bit_set;
-use crate::{Encoder, ErrorKind, Length, Result, Writer};
+use crate::{ErrorKind, Length, Result, Writer};
 
 /// Decode an unsigned integer of the specified size.
 ///
@@ -27,8 +27,11 @@ pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
 }
 
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.
-pub(super) fn encode_bytes(encoder: &mut Encoder<'_>, bytes: &[u8]) -> Result<()> {
-    encoder.write(strip_leading_ones(bytes))
+pub(super) fn encode_bytes<W>(writer: &mut W, bytes: &[u8]) -> Result<()>
+where
+    W: Writer + ?Sized,
+{
+    writer.write(strip_leading_ones(bytes))
 }
 
 /// Get the encoded length for the given unsigned integer serialized as bytes.

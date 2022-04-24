@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, Choice, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue, EncodeValueRef,
-    Encoder, Error, Header, Length, Reader, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd,
+    Error, Header, Length, Reader, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -141,10 +141,10 @@ where
         }
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         match self.tag_mode {
-            TagMode::Explicit => self.value.encode(encoder),
-            TagMode::Implicit => self.value.encode_value(encoder),
+            TagMode::Explicit => self.value.encode(writer),
+            TagMode::Implicit => self.value.encode_value(writer),
         }
     }
 }
@@ -235,8 +235,8 @@ where
         self.encoder().value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.encoder().encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        self.encoder().encode_value(writer)
     }
 }
 
