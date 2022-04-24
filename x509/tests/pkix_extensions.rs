@@ -1020,8 +1020,8 @@ fn decode_idp() {
     let err = reason_flags.err().unwrap();
     assert_eq!(
         ErrorKind::Incomplete {
-            expected_len: 3u8.into(),
-            actual_len: 2u8.into()
+            expected_len: 6u8.into(),
+            actual_len: 5u8.into()
         },
         err.kind()
     );
@@ -1032,8 +1032,8 @@ fn decode_idp() {
     let err = idp.err().unwrap();
     assert_eq!(
         ErrorKind::Incomplete {
-            expected_len: 3u8.into(),
-            actual_len: 2u8.into()
+            expected_len: 104u8.into(),
+            actual_len: 103u8.into()
         },
         err.kind()
     );
@@ -1043,8 +1043,8 @@ fn decode_idp() {
     let err = reason_flags.err().unwrap();
     assert_eq!(
         ErrorKind::Incomplete {
-            expected_len: 2u8.into(),
-            actual_len: 1u8.into()
+            expected_len: 5u8.into(),
+            actual_len: 4u8.into()
         },
         err.kind()
     );

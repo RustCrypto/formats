@@ -9,10 +9,10 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct Decoder<'a> {
     /// Byte slice being decoded.
-    ///
-    /// In the event an error was previously encountered this will be set to
-    /// `None` to prevent further decoding while in a bad state.
-    bytes: Option<ByteSlice<'a>>,
+    bytes: ByteSlice<'a>,
+
+    /// Did the decoding operation fail?
+    failed: bool,
 
     /// Position within the decoded slice.
     position: Length,
@@ -26,11 +26,7 @@ pub struct Decoder<'a> {
 impl<'a> Decoder<'a> {
     /// Create a new decoder for the given byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
-        Ok(Self {
-            bytes: Some(ByteSlice::new(bytes)?),
-            position: Length::ZERO,
-            offset: Length::ZERO,
-        })
+        Ok(Self::new_with_offset(ByteSlice::new(bytes)?, Length::ZERO))
     }
 
     /// Create a new decoder where `bytes` begins at a specified offset within
@@ -39,7 +35,8 @@ impl<'a> Decoder<'a> {
     /// This is used for calculating positions when decoding nested documents.
     pub(crate) fn new_with_offset(bytes: ByteSlice<'a>, offset: Length) -> Self {
         Self {
-            bytes: Some(bytes),
+            bytes,
+            failed: false,
             position: Length::ZERO,
             offset,
         }
@@ -52,7 +49,7 @@ impl<'a> Decoder<'a> {
         }
 
         T::decode(self).map_err(|e| {
-            self.bytes.take();
+            self.failed = true;
             e.nested(self.position)
         })
     }
@@ -60,7 +57,7 @@ impl<'a> Decoder<'a> {
     /// Return an error with the given [`ErrorKind`], annotating it with
     /// context about where the error occurred.
     pub fn error(&mut self, kind: ErrorKind) -> Error {
-        self.bytes.take();
+        self.failed = true;
         kind.at(self.position)
     }
 
@@ -71,7 +68,7 @@ impl<'a> Decoder<'a> {
 
     /// Did the decoding operation fail due to an error?
     pub fn is_failed(&self) -> bool {
-        self.bytes.is_none()
+        self.failed
     }
 
     /// Finish decoding, returning the given value if there is no
@@ -215,26 +212,21 @@ impl<'a> Decoder<'a> {
     /// Obtain the remaining bytes in this decoder from the current cursor
     /// position.
     fn remaining(&self) -> Result<&'a [u8]> {
-        let pos = usize::try_from(self.position)?;
-
-        match self.bytes.and_then(|slice| slice.as_bytes().get(pos..)) {
-            Some(result) => Ok(result),
-            None => {
-                let actual_len = self.input_len()?;
-                let expected_len = (actual_len + Length::ONE)?;
-                Err(ErrorKind::Incomplete {
-                    expected_len,
-                    actual_len,
-                }
-                .at(self.position))
-            }
+        if self.is_failed() {
+            return Err(ErrorKind::Failed.at(self.position));
         }
+
+        let pos = usize::try_from(self.position)?;
+        self.bytes
+            .as_bytes()
+            .get(pos..)
+            .ok_or_else(|| Error::incomplete(self.input_len()))
     }
 }
 
 impl<'a> Reader<'a> for Decoder<'a> {
-    fn input_len(&self) -> Result<Length> {
-        Ok(self.bytes.ok_or(ErrorKind::Failed)?.len())
+    fn input_len(&self) -> Length {
+        self.bytes.len()
     }
 
     fn peek_byte(&self) -> Option<u8> {
@@ -270,28 +262,10 @@ impl<'a> Reader<'a> for Decoder<'a> {
                 self.position = (self.position + len)?;
                 Ok(result)
             }
-            None => {
-                let actual_len = (self.input_len()? - self.position)?;
-                let expected_len = len;
-                Err(self.error(ErrorKind::Incomplete {
-                    expected_len,
-                    actual_len,
-                }))
-            }
-        }
-    }
-
-    fn read_byte(&mut self) -> Result<u8> {
-        match self.read_slice(1u8)? {
-            [byte] => Ok(*byte),
-            _ => {
-                let actual_len = self.input_len()?;
-                let expected_len = (actual_len + Length::ONE)?;
-                Err(self.error(ErrorKind::Incomplete {
-                    expected_len,
-                    actual_len,
-                }))
-            }
+            None => Err(self.error(ErrorKind::Incomplete {
+                expected_len: (self.position + len)?,
+                actual_len: self.input_len(),
+            })),
         }
     }
 }
@@ -316,8 +290,8 @@ mod tests {
                 expected_len,
                 actual_len,
             } => {
-                assert_eq!(expected_len, 1u8.into());
                 assert_eq!(actual_len, 0u8.into());
+                assert_eq!(expected_len, 1u8.into());
             }
             other => panic!("unexpected error kind: {:?}", other),
         }
@@ -325,7 +299,9 @@ mod tests {
 
     #[test]
     fn invalid_field_length() {
-        let mut decoder = Decoder::new(&EXAMPLE_MSG[..2]).unwrap();
+        const MSG_LEN: usize = 2;
+
+        let mut decoder = Decoder::new(&EXAMPLE_MSG[..MSG_LEN]).unwrap();
         let err = i8::decode(&mut decoder).err().unwrap();
         assert_eq!(Some(Length::from(2u8)), err.position());
 
@@ -334,8 +310,8 @@ mod tests {
                 expected_len,
                 actual_len,
             } => {
-                assert_eq!(expected_len, 1u8.into());
-                assert_eq!(actual_len, 0u8.into());
+                assert_eq!(actual_len, MSG_LEN.try_into().unwrap());
+                assert_eq!(expected_len, (MSG_LEN + 1).try_into().unwrap());
             }
             other => panic!("unexpected error kind: {:?}", other),
         }

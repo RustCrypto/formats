@@ -1,11 +1,11 @@
 //! Reader trait.
 
-use crate::{ErrorKind, Header, Length, Result, Tag};
+use crate::{Error, Header, Length, Result, Tag};
 
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'i>: Clone + Sized {
     /// Get the length of the input.
-    fn input_len(&self) -> Result<Length>;
+    fn input_len(&self) -> Length;
 
     /// Peek at the next byte of input without modifying the cursor.
     fn peek_byte(&self) -> Option<u8>;
@@ -34,15 +34,7 @@ pub trait Reader<'i>: Clone + Sized {
     fn peek_tag(&self) -> Result<Tag> {
         match self.peek_byte() {
             Some(byte) => byte.try_into(),
-            None => {
-                let actual_len = self.input_len()?;
-                let expected_len = (actual_len + Length::ONE)?;
-                Err(ErrorKind::Incomplete {
-                    expected_len,
-                    actual_len,
-                }
-                .into())
-            }
+            None => Err(Error::incomplete(self.input_len())),
         }
     }
 
