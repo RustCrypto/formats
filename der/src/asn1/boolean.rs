@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Header, Length, Result, Tag, Writer,
+    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
@@ -20,7 +20,7 @@ impl<'a> DecodeValue<'a> for bool {
             return Err(decoder.error(ErrorKind::Length { tag: Self::TAG }));
         }
 
-        match decoder.byte()? {
+        match decoder.read_byte()? {
             FALSE_OCTET => Ok(false),
             TRUE_OCTET => Ok(true),
             _ => Err(Self::TAG.non_canonical_error()),

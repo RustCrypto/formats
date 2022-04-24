@@ -4,7 +4,7 @@ use crate::{AlgorithmIdentifier, Error, Result, Version};
 use core::fmt;
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decode, Decoder, Encode, Sequence, TagMode, TagNumber,
+    Decode, Decoder, Encode, Reader, Sequence, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]

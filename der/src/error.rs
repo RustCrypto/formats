@@ -229,6 +229,9 @@ pub enum ErrorKind {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     PermissionDenied,
 
+    /// Reader does not support the requested operation.
+    Reader,
+
     /// Unknown tag mode.
     TagModeUnknown,
 
@@ -298,7 +301,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::DateTime => write!(f, "date/time error"),
             ErrorKind::Failed => write!(f, "operation failed"),
             #[cfg(feature = "std")]
-            ErrorKind::FileNotFound => f.write_str("file not found"),
+            ErrorKind::FileNotFound => write!(f, "file not found"),
             ErrorKind::Incomplete {
                 expected_len,
                 actual_len,
@@ -318,13 +321,14 @@ impl fmt::Display for ErrorKind {
             ErrorKind::OidUnknown { oid } => {
                 write!(f, "unknown/unsupported OID: {}", oid)
             }
-            ErrorKind::SetOrdering => write!(f, "ordering error"),
+            ErrorKind::SetOrdering => write!(f, "SET OF ordering error"),
             ErrorKind::Overflow => write!(f, "integer overflow"),
             ErrorKind::Overlength => write!(f, "ASN.1 DER message is too long"),
             #[cfg(feature = "pem")]
             ErrorKind::Pem(e) => write!(f, "PEM error: {}", e),
             #[cfg(feature = "std")]
-            ErrorKind::PermissionDenied => f.write_str("permission denied"),
+            ErrorKind::PermissionDenied => write!(f, "permission denied"),
+            ErrorKind::Reader => write!(f, "reader does not support the requested operation"),
             ErrorKind::TagModeUnknown => write!(f, "unknown tag mode"),
             ErrorKind::TagNumberInvalid => write!(f, "invalid tag number"),
             ErrorKind::TagUnexpected { expected, actual } => {

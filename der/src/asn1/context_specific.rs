@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::Any, Choice, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue, EncodeValueRef,
-    Encoder, Error, Header, Length, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd,
+    Encoder, Error, Header, Length, Reader, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd,
 };
 use core::cmp::Ordering;
 

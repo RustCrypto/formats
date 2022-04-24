@@ -1,6 +1,6 @@
 //! ASN.1 `OPTIONAL` as mapped to Rust's `Option` type
 
-use crate::{Choice, Decode, Decoder, DerOrd, Encode, Encoder, Length, Result, Tag};
+use crate::{Choice, Decode, Decoder, DerOrd, Encode, Encoder, Length, Reader, Result, Tag};
 use core::cmp::Ordering;
 
 impl<'a, T> Decode<'a> for Option<T>
