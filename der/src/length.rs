@@ -30,18 +30,28 @@ impl Length {
     ///
     /// This function is const-safe and therefore useful for [`Length`] constants.
     pub const fn new(value: u16) -> Self {
-        Length(value as u32)
+        Self(value as u32)
     }
 
     /// Is this length equal to zero?
     pub fn is_zero(self) -> bool {
-        self == Length::ZERO
+        self == Self::ZERO
     }
 
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`
     /// is the length of the inner "value" portion of the message.
     pub fn for_tlv(self) -> Result<Self> {
-        Length(1) + self.encoded_len()? + self
+        Self::ONE + self.encoded_len()? + self
+    }
+
+    /// Perform saturating addition of two lengths.
+    pub fn saturating_add(self, rhs: Self) -> Self {
+        Self(self.0.saturating_add(rhs.0))
+    }
+
+    /// Perform saturating subtraction of two lengths.
+    pub fn saturating_sub(self, rhs: Self) -> Self {
+        Self(self.0.saturating_sub(rhs.0))
     }
 
     /// Get initial octet of the encoded length (if one is required).

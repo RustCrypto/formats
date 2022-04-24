@@ -79,7 +79,7 @@ impl<'a> Decoder<'a> {
         } else if !self.is_finished() {
             Err(ErrorKind::TrailingData {
                 decoded: self.position,
-                remaining: self.remaining_len()?,
+                remaining: self.remaining_len(),
             }
             .at(self.position))
         } else {
@@ -240,12 +240,7 @@ impl<'a> Reader<'a> for Decoder<'a> {
     }
 
     fn position(&self) -> Length {
-        // TODO(tarcieri): avoid potential panic here
-        (self.position + self.offset).expect("overflow")
-    }
-
-    fn remaining_len(&self) -> Result<Length> {
-        self.remaining()?.len().try_into()
+        self.position.saturating_add(self.offset)
     }
 
     fn read_slice(&mut self, len: impl TryInto<Length>) -> Result<&'a [u8]> {
@@ -267,6 +262,11 @@ impl<'a> Reader<'a> for Decoder<'a> {
                 actual_len: self.input_len(),
             })),
         }
+    }
+
+    fn remaining_len(&self) -> Length {
+        debug_assert!(self.position <= self.input_len());
+        self.input_len().saturating_sub(self.position)
     }
 }
 
