@@ -1,6 +1,6 @@
 //! OpenSSH certificate builder.
 
-use super::{CertType, Certificate, Field, OptionsMap, SigningKey};
+use super::{unix_time::UnixTime, CertType, Certificate, Field, OptionsMap, SigningKey};
 use crate::{public, Result, Signature};
 use alloc::{string::String, vec::Vec};
 
@@ -8,7 +8,7 @@ use alloc::{string::String, vec::Vec};
 use rand_core::{CryptoRng, RngCore};
 
 #[cfg(feature = "std")]
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
 #[cfg(doc)]
 use crate::PrivateKey;
@@ -84,8 +84,8 @@ pub struct Builder {
     cert_type: Option<CertType>,
     key_id: Option<String>,
     valid_principals: Option<Vec<String>>,
-    valid_after: u64,
-    valid_before: u64,
+    valid_after: UnixTime,
+    valid_before: UnixTime,
     critical_options: OptionsMap,
     extensions: OptionsMap,
     comment: Option<String>,
@@ -105,6 +105,11 @@ impl Builder {
         valid_after: u64,
         valid_before: u64,
     ) -> Self {
+        // TODO(tarcieri): return a `Result` instead of using `expect`
+        // Breaking change; needs to be done in the next release
+        let valid_after = UnixTime::new(valid_after).expect("valid_after time overflow");
+        let valid_before = UnixTime::new(valid_before).expect("valid_before time overflow");
+
         Self {
             nonce: nonce.into(),
             public_key: public_key.into(),
@@ -130,21 +135,23 @@ impl Builder {
         valid_after: SystemTime,
         valid_before: SystemTime,
     ) -> Result<Self> {
-        let valid_after = valid_after
-            .duration_since(UNIX_EPOCH)
-            .map_err(|_| Field::ValidAfter.invalid_error())?
-            .as_secs();
+        let valid_after =
+            UnixTime::try_from(valid_after).map_err(|_| Field::ValidAfter.invalid_error())?;
 
-        let valid_before = valid_before
-            .duration_since(UNIX_EPOCH)
-            .map_err(|_| Field::ValidBefore.invalid_error())?
-            .as_secs();
+        let valid_before =
+            UnixTime::try_from(valid_before).map_err(|_| Field::ValidBefore.invalid_error())?;
 
+        // TODO(tarcieri): move this check into `Builder::new`
         if valid_before < valid_after {
             return Err(Field::ValidBefore.invalid_error());
         }
 
-        Ok(Self::new(nonce, public_key, valid_before, valid_after))
+        Ok(Self::new(
+            nonce,
+            public_key,
+            valid_before.into(),
+            valid_after.into(),
+        ))
     }
 
     /// Create a new certificate builder, generating a random nonce using the
@@ -304,7 +311,7 @@ impl Builder {
 
         #[cfg(all(debug_assertions, feature = "fingerprint"))]
         cert.validate_at(
-            cert.valid_after,
+            cert.valid_after.into(),
             &[cert.signature_key.fingerprint(Default::default())],
         )?;
 

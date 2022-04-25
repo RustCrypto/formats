@@ -64,6 +64,9 @@ pub enum Error {
     /// Public key does not match private key.
     PublicKey,
 
+    /// Invalid timestamp (e.g. in a certificate)
+    Time,
+
     /// Unexpected trailing data at end of message.
     TrailingData {
         /// Number of bytes of remaining data at end of message.
@@ -74,26 +77,27 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Algorithm => f.write_str("unknown or unsupported algorithm"),
+            Error::Algorithm => write!(f, "unknown or unsupported algorithm"),
             Error::Base64(err) => write!(f, "Base64 encoding error: {}", err),
             #[cfg(feature = "alloc")]
             Error::CertificateFieldInvalid(field) => {
                 write!(f, "certificate field invalid: {}", field)
             }
-            Error::CertificateValidation => f.write_str("certificate validation failed"),
-            Error::CharacterEncoding => f.write_str("character encoding invalid"),
-            Error::Crypto => f.write_str("cryptographic error"),
-            Error::Decrypted => f.write_str("private key is already decrypted"),
+            Error::CertificateValidation => write!(f, "certificate validation failed"),
+            Error::CharacterEncoding => write!(f, "character encoding invalid"),
+            Error::Crypto => write!(f, "cryptographic error"),
+            Error::Decrypted => write!(f, "private key is already decrypted"),
             #[cfg(feature = "ecdsa")]
             Error::Ecdsa(err) => write!(f, "ECDSA encoding error: {}", err),
-            Error::Encrypted => f.write_str("private key is encrypted"),
-            Error::FormatEncoding => f.write_str("format encoding error"),
+            Error::Encrypted => write!(f, "private key is encrypted"),
+            Error::FormatEncoding => write!(f, "format encoding error"),
             #[cfg(feature = "std")]
             Error::Io(err) => write!(f, "I/O error: {}", std::io::Error::from(*err)),
-            Error::Length => f.write_str("length invalid"),
-            Error::Overflow => f.write_str("internal overflow error"),
+            Error::Length => write!(f, "length invalid"),
+            Error::Overflow => write!(f, "internal overflow error"),
             Error::Pem(err) => write!(f, "{}", err),
-            Error::PublicKey => f.write_str("public key is incorrect"),
+            Error::PublicKey => write!(f, "public key is incorrect"),
+            Error::Time => write!(f, "invalid time"),
             Error::TrailingData { remaining } => write!(
                 f,
                 "unexpected trailing data at end of message ({} bytes)",
@@ -102,9 +106,6 @@ impl fmt::Display for Error {
         }
     }
 }
-
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
 
 impl From<base64ct::Error> for Error {
     fn from(err: base64ct::Error) -> Error {
@@ -189,3 +190,13 @@ impl From<std::io::Error> for Error {
         Error::Io(err.kind())
     }
 }
+
+#[cfg(feature = "std")]
+impl From<std::time::SystemTimeError> for Error {
+    fn from(_: std::time::SystemTimeError) -> Error {
+        Error::Time
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}

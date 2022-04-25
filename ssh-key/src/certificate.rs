@@ -5,12 +5,14 @@ mod cert_type;
 mod field;
 mod options_map;
 mod signing_key;
+mod unix_time;
 
 pub use self::{
     builder::Builder, cert_type::CertType, field::Field, options_map::OptionsMap,
     signing_key::SigningKey,
 };
 
+use self::unix_time::UnixTime;
 use crate::{
     checked::CheckedSum,
     decode::Decode,
@@ -37,11 +39,7 @@ use {
 use serde::{de, ser, Deserialize, Serialize};
 
 #[cfg(feature = "std")]
-use std::{
-    fs,
-    path::Path,
-    time::{Duration, SystemTime, UNIX_EPOCH},
-};
+use std::{fs, path::Path, time::SystemTime};
 
 /// OpenSSH certificate as specified in [PROTOCOL.certkeys].
 ///
@@ -151,11 +149,11 @@ pub struct Certificate {
     /// Valid principals.
     valid_principals: Vec<String>,
 
-    /// Valid after (Unix time).
-    valid_after: u64,
+    /// Valid after.
+    valid_after: UnixTime,
 
-    /// Valid before (Unix time).
-    valid_before: u64,
+    /// Valid before.
+    valid_before: UnixTime,
 
     /// Critical options.
     critical_options: OptionsMap,
@@ -313,30 +311,26 @@ impl Certificate {
 
     /// Valid after (Unix time).
     pub fn valid_after(&self) -> u64 {
-        self.valid_after
+        self.valid_after.into()
     }
 
     /// Valid before (Unix time).
     pub fn valid_before(&self) -> u64 {
-        self.valid_before
+        self.valid_before.into()
     }
 
     /// Valid after (system time).
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn valid_after_time(&self) -> SystemTime {
-        UNIX_EPOCH
-            .checked_add(Duration::from_secs(self.valid_after))
-            .expect("time overflow")
+        self.valid_after.into()
     }
 
     /// Valid before (system time).
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn valid_before_time(&self) -> SystemTime {
-        UNIX_EPOCH
-            .checked_add(Duration::from_secs(self.valid_before))
-            .expect("time overflow")
+        self.valid_before.into()
     }
 
     /// The critical options section of the certificate specifies zero or more
@@ -384,12 +378,7 @@ impl Certificate {
     where
         I: IntoIterator<Item = &'a Fingerprint>,
     {
-        let unix_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_err(|_| Error::CertificateValidation)?
-            .as_secs();
-
-        self.validate_at(unix_time, ca_fingerprints)
+        self.validate_at(UnixTime::now()?.into(), ca_fingerprints)
     }
 
     /// Perform certificate validation.
@@ -434,6 +423,8 @@ impl Certificate {
         if !ca_fingerprints.into_iter().any(|f| f == &cert_fingerprint) {
             return Err(Error::CertificateValidation);
         }
+
+        let unix_timestamp = UnixTime::new(unix_timestamp)?;
 
         // From PROTOCOL.certkeys:
         //
@@ -503,8 +494,8 @@ impl Decode for Certificate {
             cert_type: CertType::decode(reader)?,
             key_id: String::decode(reader)?,
             valid_principals: Vec::decode(reader)?,
-            valid_after: u64::decode(reader)?,
-            valid_before: u64::decode(reader)?,
+            valid_after: UnixTime::decode(reader)?,
+            valid_before: UnixTime::decode(reader)?,
             critical_options: OptionsMap::decode(reader)?,
             extensions: OptionsMap::decode(reader)?,
             reserved: Vec::decode(reader)?,
