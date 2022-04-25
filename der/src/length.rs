@@ -7,6 +7,10 @@ use core::{
     ops::{Add, Sub},
 };
 
+/// Maximum number of octets in a DER encoding of a [`Length`] using the
+/// rules implemented by this crate.
+const MAX_DER_OCTETS: usize = 5;
+
 /// Maximum length as a `u32` (256 MiB).
 const MAX_U32: u32 = 0xfff_ffff;
 
@@ -248,28 +252,29 @@ impl Encode for Length {
         }
     }
 
-    #[allow(clippy::cast_possible_truncation)]
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        if let Some(tag_byte) = self.initial_octet() {
-            encoder.write_byte(tag_byte)?;
+    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+        match self.initial_octet() {
+            Some(tag_byte) => {
+                writer.write_byte(tag_byte)?;
 
-            // Strip leading zeroes
-            match self.0.to_be_bytes() {
-                [0, 0, 0, byte] => encoder.write_byte(byte),
-                [0, 0, bytes @ ..] => encoder.write(&bytes),
-                [0, bytes @ ..] => encoder.write(&bytes),
-                bytes => encoder.write(&bytes),
+                // Strip leading zeroes
+                match self.0.to_be_bytes() {
+                    [0, 0, 0, byte] => writer.write_byte(byte),
+                    [0, 0, bytes @ ..] => writer.write(&bytes),
+                    [0, bytes @ ..] => writer.write(&bytes),
+                    bytes => writer.write(&bytes),
+                }
             }
-        } else {
-            encoder.write_byte(self.0 as u8)
+            #[allow(clippy::cast_possible_truncation)]
+            None => writer.write_byte(self.0 as u8),
         }
     }
 }
 
 impl DerOrd for Length {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        let mut buf1 = [0u8; 5];
-        let mut buf2 = [0u8; 5];
+        let mut buf1 = [0u8; MAX_DER_OCTETS];
+        let mut buf2 = [0u8; MAX_DER_OCTETS];
 
         let mut encoder1 = Encoder::new(&mut buf1);
         encoder1.encode(self)?;

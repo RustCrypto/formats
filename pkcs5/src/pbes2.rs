@@ -15,7 +15,7 @@ pub use self::kdf::{
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decode, Decoder, Encode, Encoder, ErrorKind, Length, Sequence, Tag,
+    Decode, Decoder, Encode, ErrorKind, Length, Sequence, Tag, Writer,
 };
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -378,7 +378,7 @@ impl<'a> Encode for EncryptionScheme<'a> {
         AlgorithmIdentifier::try_from(*self)?.encoded_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        AlgorithmIdentifier::try_from(*self)?.encode(encoder)
+    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        AlgorithmIdentifier::try_from(*self)?.encode(writer)
     }
 }

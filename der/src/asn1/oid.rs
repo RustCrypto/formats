@@ -1,8 +1,8 @@
 //! ASN.1 `OBJECT IDENTIFIER`
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error,
-    FixedTag, Header, Length, Result, Tag, Tagged, Writer,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, FixedTag,
+    Header, Length, Result, Tag, Tagged, Writer,
 };
 use const_oid::ObjectIdentifier;
 
@@ -18,8 +18,8 @@ impl EncodeValue for ObjectIdentifier {
         Length::try_from(self.as_bytes().len())
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.write(self.as_bytes())
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write(self.as_bytes())
     }
 }
 

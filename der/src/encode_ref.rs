@@ -1,7 +1,7 @@
 //! Wrapper object for encoding reference types.
 // TODO(tarcieri): replace with blanket impls of `Encode(Value)` for reference types?
 
-use crate::{Encode, EncodeValue, Encoder, Length, Result, Tag, Tagged, ValueOrd};
+use crate::{Encode, EncodeValue, Length, Result, Tag, Tagged, ValueOrd, Writer};
 use core::cmp::Ordering;
 
 /// Reference encoder: wrapper type which impls `Encode` for any reference to a
@@ -22,8 +22,8 @@ where
         self.0.encoded_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.0.encode(encoder)
+    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+        self.0.encode(writer)
     }
 }
 
@@ -47,8 +47,8 @@ where
         self.0.value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.0.encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        self.0.encode_value(writer)
     }
 }
 

@@ -3,7 +3,7 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decode, Decoder, Encode, Encoder, ErrorKind, Length, Sequence, Tag, Tagged,
+    Decode, Decoder, Encode, ErrorKind, Length, Sequence, Tag, Tagged, Writer,
 };
 
 /// Password-Based Key Derivation Function (PBKDF2) OID.
@@ -342,8 +342,8 @@ impl Encode for Pbkdf2Prf {
         AlgorithmIdentifier::try_from(*self)?.encoded_len()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        AlgorithmIdentifier::try_from(*self)?.encode(encoder)
+    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        AlgorithmIdentifier::try_from(*self)?.encode(writer)
     }
 }
 

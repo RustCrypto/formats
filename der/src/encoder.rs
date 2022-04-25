@@ -1,8 +1,8 @@
 //! DER encoder.
 
 use crate::{
-    asn1::*, Encode, EncodeRef, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag,
-    TagMode, TagNumber, Tagged, Writer,
+    asn1::*, Encode, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag, TagMode,
+    TagNumber, Tagged, Writer,
 };
 
 /// DER encoder.
@@ -74,14 +74,6 @@ impl<'a> Encoder<'a> {
             .ok_or_else(|| ErrorKind::Overlength.at(position))
     }
 
-    /// Encode the provided value as an ASN.1 `BIT STRING`.
-    pub fn bit_string(&mut self, value: impl TryInto<BitString<'a>>) -> Result<()> {
-        value
-            .try_into()
-            .map_err(|_| self.value_error(Tag::BitString))
-            .and_then(|value| self.encode(&value))
-    }
-
     /// Encode a `CONTEXT-SPECIFIC` field with the provided tag number and mode.
     pub fn context_specific<T>(
         &mut self,
@@ -98,58 +90,6 @@ impl<'a> Encoder<'a> {
             value,
         }
         .encode(self)
-    }
-
-    /// Encode the provided value as an ASN.1 `GeneralizedTime`.
-    pub fn generalized_time(&mut self, value: impl TryInto<GeneralizedTime>) -> Result<()> {
-        value
-            .try_into()
-            .map_err(|_| self.value_error(Tag::GeneralizedTime))
-            .and_then(|value| self.encode(&value))
-    }
-
-    /// Encode the provided value as an ASN.1 `IA5String`.
-    pub fn ia5_string(&mut self, value: impl TryInto<Ia5String<'a>>) -> Result<()> {
-        value
-            .try_into()
-            .map_err(|_| self.value_error(Tag::Ia5String))
-            .and_then(|value| self.encode(&value))
-    }
-
-    /// Encode an ASN.1 `NULL` value.
-    pub fn null(&mut self) -> Result<()> {
-        self.encode(&Null)
-    }
-
-    /// Encode the provided value as an ASN.1 `OCTET STRING`
-    pub fn octet_string(&mut self, value: impl TryInto<OctetString<'a>>) -> Result<()> {
-        value
-            .try_into()
-            .map_err(|_| self.value_error(Tag::OctetString))
-            .and_then(|value| self.encode(&value))
-    }
-
-    /// Encode an ASN.1 [`ObjectIdentifier`]
-    #[cfg(feature = "oid")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
-    pub fn oid(&mut self, value: impl TryInto<ObjectIdentifier>) -> Result<()> {
-        value
-            .try_into()
-            .map_err(|_| self.value_error(Tag::ObjectIdentifier))
-            .and_then(|value| self.encode(&value))
-    }
-
-    /// Encode an ASN.1 `OPTIONAL` for the given option reference.
-    pub fn optional<T: Encode>(&mut self, value: Option<&T>) -> Result<()> {
-        value.map(EncodeRef).encode(self)
-    }
-
-    /// Encode the provided value as an ASN.1 `PrintableString`
-    pub fn printable_string(&mut self, value: impl TryInto<PrintableString<'a>>) -> Result<()> {
-        value
-            .try_into()
-            .map_err(|_| self.value_error(Tag::PrintableString))
-            .and_then(|value| self.encode(&value))
     }
 
     /// Encode an ASN.1 `SEQUENCE` of the given length.
@@ -172,22 +112,6 @@ impl<'a> Encoder<'a> {
         }
     }
 
-    /// Encode the provided value as an ASN.1 `UTCTime`
-    pub fn utc_time(&mut self, value: impl TryInto<UtcTime>) -> Result<()> {
-        value
-            .try_into()
-            .map_err(|_| self.value_error(Tag::UtcTime))
-            .and_then(|value| self.encode(&value))
-    }
-
-    /// Encode the provided value as an ASN.1 `Utf8String`
-    pub fn utf8_string(&mut self, value: impl TryInto<Utf8String<'a>>) -> Result<()> {
-        value
-            .try_into()
-            .map_err(|_| self.value_error(Tag::Utf8String))
-            .and_then(|value| self.encode(&value))
-    }
-
     /// Reserve a portion of the internal buffer, updating the internal cursor
     /// position and returning a mutable slice.
     fn reserve(&mut self, len: impl TryInto<Length>) -> Result<&mut [u8]> {
@@ -200,10 +124,9 @@ impl<'a> Encoder<'a> {
             .or_else(|_| self.error(ErrorKind::Overflow))?;
 
         let end = (self.position + len).or_else(|e| self.error(e.kind()))?;
-        let range = self.position.try_into()?..end.try_into()?;
         let slice = self
             .bytes
-            .get_mut(range)
+            .get_mut(self.position.try_into()?..end.try_into()?)
             .ok_or_else(|| ErrorKind::Overlength.at(end))?;
 
         self.position = end;
@@ -221,8 +144,7 @@ impl<'a> Writer for Encoder<'a> {
 #[cfg(test)]
 mod tests {
     use super::Encoder;
-    use crate::{asn1::BitString, Encode, ErrorKind, Length, TagMode, TagNumber};
-    use hex_literal::hex;
+    use crate::{Encode, ErrorKind, Length};
 
     #[test]
     fn overlength_message() {
@@ -231,28 +153,5 @@ mod tests {
         let err = false.encode(&mut encoder).err().unwrap();
         assert_eq!(err.kind(), ErrorKind::Overlength);
         assert_eq!(err.position(), Some(Length::ONE));
-    }
-
-    #[test]
-    fn context_specific_with_implicit_field() {
-        // From RFC8410 Section 10.3:
-        // <https://datatracker.ietf.org/doc/html/rfc8410#section-10.3>
-        //
-        //    81  33:   [1] 00 19 BF 44 09 69 84 CD FE 85 41 BA C1 67 DC 3B
-        //                  96 C8 50 86 AA 30 B6 B6 CB 0C 5C 38 AD 70 31 66
-        //                  E1
-        const EXPECTED_BYTES: &[u8] =
-            &hex!("81210019BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
-
-        let tag_number = TagNumber::new(1);
-        let bit_string = BitString::from_bytes(&EXPECTED_BYTES[3..]).unwrap();
-
-        let mut buf = [0u8; EXPECTED_BYTES.len()];
-        let mut encoder = Encoder::new(&mut buf);
-        encoder
-            .context_specific(tag_number, TagMode::Implicit, &bit_string)
-            .unwrap();
-
-        assert_eq!(EXPECTED_BYTES, encoder.finish().unwrap());
     }
 }

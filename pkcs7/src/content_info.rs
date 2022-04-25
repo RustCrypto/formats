@@ -132,7 +132,7 @@ mod tests {
 
         let mut encoder = Encoder::new(&mut in_buf);
         encoder.sequence(crate::PKCS_7_DATA_OID.encoded_len()?, |encoder| {
-            encoder.oid(crate::PKCS_7_DATA_OID)
+            crate::PKCS_7_DATA_OID.encode(encoder)
         })?;
         let encoded_der = encoder.finish().expect("encoding success");
 
@@ -156,7 +156,7 @@ mod tests {
 
         let mut encoder = Encoder::new(&mut in_buf);
         encoder.sequence(crate::PKCS_7_ENCRYPTED_DATA_OID.encoded_len()?, |encoder| {
-            encoder.oid(crate::PKCS_7_ENCRYPTED_DATA_OID)
+            (crate::PKCS_7_ENCRYPTED_DATA_OID).encode(encoder)
         })?;
         let encoded_der = encoder.finish().expect("encoding success");
 
@@ -195,7 +195,7 @@ mod tests {
 
         let mut encoder = Encoder::new(&mut in_buf);
         encoder.sequence(inner_len, |encoder| {
-            encoder.oid(crate::PKCS_7_DATA_OID)?;
+            crate::PKCS_7_DATA_OID.encode(encoder)?;
             encoder.context_specific(
                 TagNumber::new(0),
                 TagMode::Explicit,

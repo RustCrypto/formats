@@ -2,8 +2,8 @@
 
 use crate::enveloped_data_content::EncryptedContentInfo;
 use der::{
-    Decode, DecodeValue, Decoder, Encode, EncodeValue, Encoder, FixedTag, Header, Length, Sequence,
-    Tag,
+    Decode, DecodeValue, Decoder, Encode, EncodeValue, FixedTag, Header, Length, Sequence, Tag,
+    Writer,
 };
 
 /// Syntax version of the `encrypted-data` content type.
@@ -51,8 +51,8 @@ impl EncodeValue for Version {
         u8::from(*self).value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        u8::from(*self).encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        u8::from(*self).encode_value(writer)
     }
 }
 

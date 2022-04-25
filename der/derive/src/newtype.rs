@@ -103,7 +103,7 @@ impl DeriveNewtype {
             }
 
             #limpl ::der::EncodeValue for #ltype {
-                fn encode_value(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
+                fn encode_value(&self, encoder: &mut dyn ::der::Writer) -> ::der::Result<()> {
                     self.0.encode_value(encoder)
                 }
 

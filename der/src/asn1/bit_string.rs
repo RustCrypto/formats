@@ -1,8 +1,8 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, ErrorKind,
-    FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Error, ErrorKind, FixedTag,
+    Header, Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
@@ -133,9 +133,9 @@ impl EncodeValue for BitString<'_> {
         self.byte_len() + Length::ONE
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.write_byte(self.unused_bits)?;
-        encoder.write(self.raw_bytes())
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write_byte(self.unused_bits)?;
+        writer.write(self.raw_bytes())
     }
 }
 
@@ -290,10 +290,10 @@ where
         BitString::new((lead % 8) as u8, buff)?.value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         let (lead, buff) = encode_flagset(self);
         let buff = &buff[..buff.len() - lead / 8];
-        BitString::new((lead % 8) as u8, buff)?.encode_value(encoder)
+        BitString::new((lead % 8) as u8, buff)?.encode_value(writer)
     }
 }
 

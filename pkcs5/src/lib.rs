@@ -29,7 +29,7 @@ pub use crate::error::{Error, Result};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::AlgorithmIdentifier;
 
-use der::{Decode, Decoder, Encode, Encoder, Length, Tag};
+use der::{Decode, Decoder, Encode, Sequence, Tag};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
@@ -42,7 +42,7 @@ pub enum EncryptionScheme<'a> {
     /// Password-Based Encryption Scheme 1 as defined in [RFC 8018 Section 6.1].
     ///
     /// [RFC 8018 Section 6.1]: https://tools.ietf.org/html/rfc8018#section-6.1
-    Pbes1(pbes1::Parameters),
+    Pbes1(pbes1::Algorithm),
 
     /// Password-Based Encryption Scheme 2 as defined in [RFC 8018 Section 6.2].
     ///
@@ -119,9 +119,9 @@ impl<'a> EncryptionScheme<'a> {
     }
 
     /// Get [`pbes1::Parameters`] if it is the selected algorithm.
-    pub fn pbes1(&self) -> Option<&pbes1::Parameters> {
+    pub fn pbes1(&self) -> Option<&pbes1::Algorithm> {
         match self {
-            Self::Pbes1(params) => Some(params),
+            Self::Pbes1(alg) => Some(alg),
             _ => None,
         }
     }
@@ -141,33 +141,21 @@ impl<'a> Decode<'a> for EncryptionScheme<'a> {
     }
 }
 
-impl<'a> Encode for EncryptionScheme<'a> {
-    fn encoded_len(&self) -> der::Result<Length> {
+impl<'a> Sequence<'a> for EncryptionScheme<'a> {
+    fn fields<F, T>(&self, f: F) -> der::Result<T>
+    where
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
+    {
         match self {
-            Self::Pbes1(pbes1) => pbes1.encoded_len(),
-            Self::Pbes2(pbes2) => {
-                (pbes2::PBES2_OID.encoded_len()? + pbes2.encoded_len()?)?.for_tlv()
-            }
-        }
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        match self {
-            Self::Pbes1(pbes1) => pbes1.encode(encoder),
-            Self::Pbes2(pbes2) => {
-                let seq_len = (pbes2::PBES2_OID.encoded_len()? + pbes2.encoded_len()?)?;
-                encoder.sequence(seq_len, |seq| {
-                    seq.encode(&pbes2::PBES2_OID)?;
-                    seq.encode(pbes2)
-                })
-            }
+            Self::Pbes1(pbes1) => f(&[&pbes1.oid(), &pbes1.parameters]),
+            Self::Pbes2(pbes2) => f(&[&pbes2::PBES2_OID, pbes2]),
         }
     }
 }
 
-impl<'a> From<pbes1::Parameters> for EncryptionScheme<'a> {
-    fn from(params: pbes1::Parameters) -> EncryptionScheme<'a> {
-        Self::Pbes1(params)
+impl<'a> From<pbes1::Algorithm> for EncryptionScheme<'a> {
+    fn from(alg: pbes1::Algorithm) -> EncryptionScheme<'a> {
+        Self::Pbes1(alg)
     }
 }
 
@@ -182,13 +170,12 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
 
     fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<EncryptionScheme<'_>> {
         if alg.oid == pbes2::PBES2_OID {
-            if let Some(params) = alg.parameters {
-                pbes2::Parameters::try_from(params).map(Into::into)
-            } else {
-                Err(Tag::OctetString.value_error())
+            match alg.parameters {
+                Some(params) => pbes2::Parameters::try_from(params).map(Into::into),
+                None => Err(Tag::OctetString.value_error()),
             }
         } else {
-            pbes1::Parameters::try_from(alg).map(Into::into)
+            pbes1::Algorithm::try_from(alg).map(Into::into)
         }
     }
 }

@@ -129,7 +129,7 @@ impl DeriveEnumerated {
                     ::der::EncodeValue::value_len(&(*self as #repr))
                 }
 
-                fn encode_value(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
+                fn encode_value(&self, encoder: &mut dyn ::der::Writer) -> ::der::Result<()> {
                     ::der::EncodeValue::encode_value(&(*self as #repr), encoder)
                 }
             }

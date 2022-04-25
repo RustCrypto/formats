@@ -2,8 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    str_slice::StrSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, Header, Length,
-    Reader, Result, Writer,
+    str_slice::StrSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Error, Header, Length, Reader,
+    Result, Writer,
 };
 use core::cmp::Ordering;
 
@@ -66,8 +66,8 @@ impl EncodeValue for ByteSlice<'_> {
         Ok(self.length)
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.write(self.as_ref())
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write(self.as_ref())
     }
 }
 
