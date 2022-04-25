@@ -157,10 +157,10 @@ use crate::{Fingerprint, HashAlg};
 use rand_core::{CryptoRng, RngCore};
 
 #[cfg(feature = "std")]
-use std::{fs, io::Write, path::Path};
+use std::{fs, path::Path};
 
 #[cfg(all(unix, feature = "std"))]
-use std::os::unix::fs::OpenOptionsExt;
+use std::{io::Write, os::unix::fs::OpenOptionsExt};
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
