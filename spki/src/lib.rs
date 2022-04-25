@@ -38,6 +38,9 @@ mod error;
 mod spki;
 mod traits;
 
+#[cfg(feature = "fingerprint")]
+mod fingerprint;
+
 pub use crate::{
     algorithm::AlgorithmIdentifier,
     error::{Error, Result},
@@ -48,3 +51,6 @@ pub use der::{self, asn1::ObjectIdentifier};
 
 #[cfg(feature = "alloc")]
 pub use {crate::traits::EncodePublicKey, der::Document};
+
+#[cfg(feature = "fingerprint")]
+pub use crate::fingerprint::FingerprintBytes;

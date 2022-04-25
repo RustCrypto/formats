@@ -8,7 +8,7 @@ use der::{asn1::BitString, Decode, Decoder, DerOrd, Encode, Sequence, ValueOrd};
 use der::Document;
 
 #[cfg(feature = "fingerprint")]
-use sha2::{digest, Digest, Sha256};
+use crate::{fingerprint, FingerprintBytes};
 
 #[cfg(all(feature = "alloc", feature = "fingerprint"))]
 use {
@@ -19,7 +19,7 @@ use {
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
 
-/// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 Section 4.1.2.7].
+/// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 § 4.1.2.7].
 ///
 /// ASN.1 structure containing an [`AlgorithmIdentifier`] and public key
 /// data in an algorithm specific format.
@@ -30,7 +30,7 @@ use der::pem::PemLabel;
 ///         subjectPublicKey     BIT STRING  }
 /// ```
 ///
-/// [RFC 5280 Section 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
+/// [RFC 5280 § 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct SubjectPublicKeyInfo<'a> {
     /// X.509 [`AlgorithmIdentifier`] for the public key type
@@ -41,24 +41,34 @@ pub struct SubjectPublicKeyInfo<'a> {
 }
 
 impl<'a> SubjectPublicKeyInfo<'a> {
-    /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`].
-    #[cfg(feature = "fingerprint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    pub fn fingerprint(&self) -> Result<digest::Output<Sha256>> {
-        let mut buf = [0u8; 4096];
-        Ok(Sha256::digest(self.encode_to_slice(&mut buf)?))
-    }
-
     /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] and
     /// encode it as a Base64 string.
+    ///
+    /// See [RFC7469 § 2.1.1] for more information.
+    ///
+    /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
     #[cfg(all(feature = "fingerprint", feature = "alloc"))]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "fingerprint", feature = "alloc"))))]
     pub fn fingerprint_base64(&self) -> Result<String> {
-        Ok(Base64::encode_string(self.fingerprint()?.as_slice()))
+        Ok(Base64::encode_string(&self.fingerprint_bytes()?))
+    }
+
+    /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] as
+    /// a raw byte array.
+    ///
+    /// See [RFC7469 § 2.1.1] for more information.
+    ///
+    /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
+    #[cfg(feature = "fingerprint")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
+    pub fn fingerprint_bytes(&self) -> Result<FingerprintBytes> {
+        let mut builder = fingerprint::Builder::new();
+        self.encode(&mut builder)?;
+        Ok(builder.finish())
     }
 
     /// Get a [`BitString`] representing the `subject_public_key`
-    fn subject_public_key_bitstring(&self) -> der::Result<BitString<'a>> {
+    fn bitstring(&self) -> der::Result<BitString<'a>> {
         BitString::from_bytes(self.subject_public_key)
     }
 }
@@ -85,7 +95,7 @@ impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
     where
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
-        f(&[&self.algorithm, &self.subject_public_key_bitstring()?])
+        f(&[&self.algorithm, &self.bitstring()?])
     }
 }
 
@@ -100,9 +110,7 @@ impl<'a> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a> {
 impl ValueOrd for SubjectPublicKeyInfo<'_> {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         match self.algorithm.der_cmp(&other.algorithm)? {
-            Ordering::Equal => self
-                .subject_public_key_bitstring()?
-                .der_cmp(&other.subject_public_key_bitstring()?),
+            Ordering::Equal => self.bitstring()?.der_cmp(&other.bitstring()?),
             other => Ok(other),
         }
     }
