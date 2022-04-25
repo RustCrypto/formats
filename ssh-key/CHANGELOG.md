@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.4.0 (2022-04-12)
+### Added
+- Private key decryption support ([#535], [#539])
+- Private key encryption support ([#536], [#546])
+- Ed25519 keygen/sign/verify support using `ed25519-dalek` ([#551])
+- Private key encryption ([#560])
+- Certificate decoder ([#574])
+- Certificate encoder ([#578])
+- Certificate validation support ([#584])
+- FIDO/U2F (`sk-*`) certificate and key support ([#575], [#587], [#590])
+- `certificate::Builder` (i.e. SSH CA support) ([#592])
+- ECDSA/NIST P-256 keygen/sign/verify support using `p256` crate ([#593])
+- RSA keygen/sign/verify support using `rsa` crate ([#583], [#594])
+- SHA-512 fingerprint support ([#596])
+- `serde` support ([#586], [#597])
+
+### Changed
+- Consolidate `KdfAlg` and `KdfOpts` into `Kdf` ([#541])
+- Rename `CipherAlg` => `Cipher` ([#544])
+
+### Removed
+- `PrivateKey::kdf_alg` ([#542])
+
+[#535]: https://github.com/RustCrypto/formats/pull/535
+[#536]: https://github.com/RustCrypto/formats/pull/536
+[#539]: https://github.com/RustCrypto/formats/pull/539
+[#541]: https://github.com/RustCrypto/formats/pull/541
+[#542]: https://github.com/RustCrypto/formats/pull/542
+[#544]: https://github.com/RustCrypto/formats/pull/544
+[#546]: https://github.com/RustCrypto/formats/pull/546
+[#551]: https://github.com/RustCrypto/formats/pull/551
+[#560]: https://github.com/RustCrypto/formats/pull/560
+[#574]: https://github.com/RustCrypto/formats/pull/574
+[#575]: https://github.com/RustCrypto/formats/pull/575
+[#578]: https://github.com/RustCrypto/formats/pull/578
+[#583]: https://github.com/RustCrypto/formats/pull/583
+[#584]: https://github.com/RustCrypto/formats/pull/584
+[#586]: https://github.com/RustCrypto/formats/pull/586
+[#587]: https://github.com/RustCrypto/formats/pull/587
+[#590]: https://github.com/RustCrypto/formats/pull/590
+[#592]: https://github.com/RustCrypto/formats/pull/592
+[#593]: https://github.com/RustCrypto/formats/pull/593
+[#594]: https://github.com/RustCrypto/formats/pull/594
+[#596]: https://github.com/RustCrypto/formats/pull/596
+[#597]: https://github.com/RustCrypto/formats/pull/597
+
 ## 0.3.0 (2022-03-16)
 ### Added
 - `FromStr` impls for key types ([#368])

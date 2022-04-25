@@ -4,8 +4,8 @@ use crate::{
     asn1::Any,
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
-    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag, Header,
-    Length, Result, Tag,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Error, ErrorKind, FixedTag, Header, Length,
+    Result, Tag, Writer,
 };
 use core::time::Duration;
 
@@ -75,7 +75,7 @@ impl GeneralizedTime {
 
 impl DecodeValue<'_> for GeneralizedTime {
     fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        match *ByteSlice::decode_value(decoder, header)?.as_bytes() {
+        match *ByteSlice::decode_value(decoder, header)?.as_slice() {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
                 let year = u16::from(datetime::decode_decimal(Self::TAG, y1, y2)?)
@@ -104,18 +104,18 @@ impl EncodeValue for GeneralizedTime {
         Ok(Self::LENGTH)
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         let year_hi = u8::try_from(self.0.year() / 100)?;
         let year_lo = u8::try_from(self.0.year() % 100)?;
 
-        datetime::encode_decimal(encoder, Self::TAG, year_hi)?;
-        datetime::encode_decimal(encoder, Self::TAG, year_lo)?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.month())?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.day())?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.hour())?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.minutes())?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.seconds())?;
-        encoder.byte(b'Z')
+        datetime::encode_decimal(writer, Self::TAG, year_hi)?;
+        datetime::encode_decimal(writer, Self::TAG, year_lo)?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.month())?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.day())?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.hour())?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.minutes())?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.seconds())?;
+        writer.write_byte(b'Z')
     }
 }
 
@@ -174,8 +174,8 @@ impl EncodeValue for DateTime {
         GeneralizedTime::from(self).value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        GeneralizedTime::from(self).encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        GeneralizedTime::from(self).encode_value(writer)
     }
 }
 
@@ -200,8 +200,8 @@ impl EncodeValue for SystemTime {
         GeneralizedTime::try_from(self)?.value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        GeneralizedTime::try_from(self)?.encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        GeneralizedTime::try_from(self)?.encode_value(writer)
     }
 }
 
@@ -276,8 +276,8 @@ impl EncodeValue for PrimitiveDateTime {
         GeneralizedTime::try_from(self)?.value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        GeneralizedTime::try_from(self)?.encode_value(encoder)
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        GeneralizedTime::try_from(self)?.encode_value(writer)
     }
 }
 

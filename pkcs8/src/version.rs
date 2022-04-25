@@ -1,7 +1,7 @@
 //! PKCS#8 version identifier.
 
 use crate::Error;
-use der::{Decode, Decoder, Encode, Encoder, FixedTag, Tag};
+use der::{Decode, Decoder, Encode, FixedTag, Tag, Writer};
 
 /// Version identifier for PKCS#8 documents.
 ///
@@ -36,8 +36,8 @@ impl Encode for Version {
         der::Length::from(1u8).for_tlv()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        u8::from(*self).encode(encoder)
+    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        u8::from(*self).encode(writer)
     }
 }
 

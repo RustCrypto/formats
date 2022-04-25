@@ -339,6 +339,16 @@ impl EcdsaCurve {
             EcdsaCurve::NistP521 => "nistp521",
         }
     }
+
+    /// Get the number of bytes needed to encode a field element for this curve.
+    #[cfg(feature = "alloc")]
+    pub(crate) const fn field_size(self) -> usize {
+        match self {
+            EcdsaCurve::NistP256 => 32,
+            EcdsaCurve::NistP384 => 48,
+            EcdsaCurve::NistP521 => 66,
+        }
+    }
 }
 
 impl AsRef<str> for EcdsaCurve {
@@ -365,6 +375,7 @@ impl str::FromStr for EcdsaCurve {
 
 /// Hashing algorithms a.k.a. digest functions.
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[non_exhaustive]
 pub enum HashAlg {
     /// SHA-256
     Sha256,
@@ -393,6 +404,14 @@ impl HashAlg {
         match self {
             HashAlg::Sha256 => SHA256,
             HashAlg::Sha512 => SHA512,
+        }
+    }
+
+    /// Get the size of a digest produced by this hash function.
+    pub const fn digest_size(self) -> usize {
+        match self {
+            HashAlg::Sha256 => 32,
+            HashAlg::Sha512 => 64,
         }
     }
 }

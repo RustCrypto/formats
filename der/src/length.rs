@@ -1,11 +1,15 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Result};
+use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Reader, Result, Writer};
 use core::{
     cmp::Ordering,
     fmt,
     ops::{Add, Sub},
 };
+
+/// Maximum number of octets in a DER encoding of a [`Length`] using the
+/// rules implemented by this crate.
+const MAX_DER_OCTETS: usize = 5;
 
 /// Maximum length as a `u32` (256 MiB).
 const MAX_U32: u32 = 0xfff_ffff;
@@ -30,18 +34,28 @@ impl Length {
     ///
     /// This function is const-safe and therefore useful for [`Length`] constants.
     pub const fn new(value: u16) -> Self {
-        Length(value as u32)
+        Self(value as u32)
     }
 
     /// Is this length equal to zero?
     pub fn is_zero(self) -> bool {
-        self == Length::ZERO
+        self == Self::ZERO
     }
 
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`
     /// is the length of the inner "value" portion of the message.
     pub fn for_tlv(self) -> Result<Self> {
-        Length(1) + self.encoded_len()? + self
+        Self::ONE + self.encoded_len()? + self
+    }
+
+    /// Perform saturating addition of two lengths.
+    pub fn saturating_add(self, rhs: Self) -> Self {
+        Self(self.0.saturating_add(rhs.0))
+    }
+
+    /// Perform saturating subtraction of two lengths.
+    pub fn saturating_sub(self, rhs: Self) -> Self {
+        Self(self.0.saturating_sub(rhs.0))
     }
 
     /// Get initial octet of the encoded length (if one is required).
@@ -193,7 +207,7 @@ impl TryFrom<Length> for usize {
 
 impl Decode<'_> for Length {
     fn decode(decoder: &mut Decoder<'_>) -> Result<Length> {
-        match decoder.byte()? {
+        match decoder.read_byte()? {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
             // lengths, which are not allowed in DER, so disallow that byte.
             len if len < 0x80 => Ok(len.into()),
@@ -205,7 +219,7 @@ impl Decode<'_> for Length {
                 let mut decoded_len = 0u32;
                 for _ in 0..nbytes {
                     decoded_len = decoded_len.checked_shl(8).ok_or(ErrorKind::Overflow)?
-                        | u32::from(decoder.byte()?);
+                        | u32::from(decoder.read_byte()?);
                 }
 
                 let length = Length::try_from(decoded_len)?;
@@ -238,28 +252,29 @@ impl Encode for Length {
         }
     }
 
-    #[allow(clippy::cast_possible_truncation)]
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        if let Some(tag_byte) = self.initial_octet() {
-            encoder.byte(tag_byte)?;
+    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+        match self.initial_octet() {
+            Some(tag_byte) => {
+                writer.write_byte(tag_byte)?;
 
-            // Strip leading zeroes
-            match self.0.to_be_bytes() {
-                [0, 0, 0, byte] => encoder.byte(byte),
-                [0, 0, bytes @ ..] => encoder.bytes(&bytes),
-                [0, bytes @ ..] => encoder.bytes(&bytes),
-                bytes => encoder.bytes(&bytes),
+                // Strip leading zeroes
+                match self.0.to_be_bytes() {
+                    [0, 0, 0, byte] => writer.write_byte(byte),
+                    [0, 0, bytes @ ..] => writer.write(&bytes),
+                    [0, bytes @ ..] => writer.write(&bytes),
+                    bytes => writer.write(&bytes),
+                }
             }
-        } else {
-            encoder.byte(self.0 as u8)
+            #[allow(clippy::cast_possible_truncation)]
+            None => writer.write_byte(self.0 as u8),
         }
     }
 }
 
 impl DerOrd for Length {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        let mut buf1 = [0u8; 5];
-        let mut buf2 = [0u8; 5];
+        let mut buf1 = [0u8; MAX_DER_OCTETS];
+        let mut buf2 = [0u8; MAX_DER_OCTETS];
 
         let mut encoder1 = Encoder::new(&mut buf1);
         encoder1.encode(self)?;

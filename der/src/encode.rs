@@ -1,6 +1,6 @@
 //! Trait definition for [`Encode`].
 
-use crate::{Encoder, Header, Length, Result, Tagged};
+use crate::{Encoder, Header, Length, Result, Tagged, Writer};
 
 #[cfg(feature = "alloc")]
 use {crate::ErrorKind, alloc::vec::Vec, core::iter};
@@ -21,7 +21,7 @@ pub trait Encode {
     fn encoded_len(&self) -> Result<Length>;
 
     /// Encode this value as ASN.1 DER using the provided [`Encoder`].
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()>;
+    fn encode(&self, encoder: &mut dyn Writer) -> Result<()>;
 
     /// Encode this value to the provided byte slice, returning a sub-slice
     /// containing the encoded message.
@@ -75,9 +75,9 @@ where
     }
 
     /// Encode this value as ASN.1 DER using the provided [`Encoder`].
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        self.header()?.encode(encoder)?;
-        self.encode_value(encoder)
+    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+        self.header()?.encode(writer)?;
+        self.encode_value(writer)
     }
 }
 
@@ -119,5 +119,5 @@ pub trait EncodeValue {
 
     /// Encode value (sans [`Tag`]+[`Length`] header) as ASN.1 DER using the
     /// provided [`Encoder`].
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()>;
+    fn encode_value(&self, encoder: &mut dyn Writer) -> Result<()>;
 }

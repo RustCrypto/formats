@@ -8,8 +8,8 @@
 )]
 
 use crate::{
-    str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, FixedTag, Header,
-    Length, Result, Tag,
+    str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, FixedTag, Header, Length,
+    Result, Tag, Writer,
 };
 
 use super::integer::uint::strip_leading_zeroes;
@@ -18,7 +18,7 @@ use super::integer::uint::strip_leading_zeroes;
 #[allow(clippy::panic_in_result_fn)]
 impl DecodeValue<'_> for f64 {
     fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
+        let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
 
         if header.length == Length::ZERO {
             Ok(0.0)
@@ -122,7 +122,7 @@ impl EncodeValue for f64 {
         }
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         // Check if special value
         // Encode zero first, if it's zero
         // Special value from section 8.5.9 if non zero
@@ -136,28 +136,30 @@ impl EncodeValue for f64 {
                 return Ok(());
             } else if self.is_nan() {
                 // Not a number
-                encoder.bytes(&[0b0100_0010])?;
+                writer.write_byte(0b0100_0010)?;
             } else if self.is_infinite() {
                 if self.is_sign_negative() {
                     // Negative infinity
-                    encoder.bytes(&[0b0100_0001])?;
+                    writer.write_byte(0b0100_0001)?;
                 } else {
                     // Plus infinity
-                    encoder.bytes(&[0b0100_0000])?;
+                    writer.write_byte(0b0100_0000)?;
                 }
             } else {
                 // Minus zero
-                encoder.bytes(&[0b0100_0011])?;
+                writer.write_byte(0b0100_0011)?;
             }
         } else {
             // Always use binary encoding, set bit 8 to 1
             let mut first_byte = 0b1000_0000;
+
             if self.is_sign_negative() {
                 // Section 8.5.7.1: set bit 7 to 1 if negative
                 first_byte |= 0b0100_0000;
             }
-            // Bits 6 and 5 are set to 0 to specify that binary encoding is used
 
+            // Bits 6 and 5 are set to 0 to specify that binary encoding is used
+            //
             // NOTE: the scaling factor is only used to align the implicit point of the mantissa.
             // This is unnecessary in DER because the base is 2, and therefore necessarily aligned.
             // Therefore, we do not modify the mantissa in anyway after this function call, which
@@ -178,17 +180,18 @@ impl EncodeValue for f64 {
                 }
             }
 
-            encoder.bytes(&[first_byte])?;
+            writer.write_byte(first_byte)?;
 
             // Encode both bytes or just the last one, handled by encode_bytes directly
             // Rust already encodes the data as two's complement, so no further processing is needed
-            encoder.bytes(ebytes)?;
+            writer.write(ebytes)?;
 
             // Now, encode the mantissa as unsigned binary number
             let mantissa_bytes = mantissa.to_be_bytes();
             let mbytes = strip_leading_zeroes(&mantissa_bytes);
-            encoder.bytes(mbytes)?;
+            writer.write(mbytes)?;
         }
+
         Ok(())
     }
 }

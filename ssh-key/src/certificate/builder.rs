@@ -1,6 +1,6 @@
 //! OpenSSH certificate builder.
 
-use super::{CertType, Certificate, OptionsMap, SigningKey};
+use super::{CertType, Certificate, Field, OptionsMap, SigningKey};
 use crate::{public, Error, Result, Signature};
 use alloc::{string::String, vec::Vec};
 
@@ -28,6 +28,52 @@ use crate::PrivateKey;
 /// by calling [`Builder::valid_principal`] one or more times, or explicitly
 /// marking a certificate as valid for all principals (i.e. "golden ticket")
 /// using the [`Builder::all_principals_valid`] method.
+///
+/// ## Example
+///
+#[cfg_attr(
+    all(feature = "ed25519", feature = "getrandom", feature = "std"),
+    doc = " ```"
+)]
+#[cfg_attr(
+    not(all(feature = "ed25519", feature = "getrandom", feature = "std")),
+    doc = " ```ignore"
+)]
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// use ssh_key::{Algorithm, PrivateKey, certificate, rand_core::OsRng};
+/// use std::time::{SystemTime, UNIX_EPOCH};
+///
+/// // Generate the certificate authority's private key
+/// let ca_key = PrivateKey::random(&mut OsRng, Algorithm::Ed25519)?;
+///
+/// // Generate a "subject" key to be signed by the certificate authority.
+/// // Normally a user or host would do this locally and give the certificate
+/// // authority the public key.
+/// let subject_private_key = PrivateKey::random(&mut OsRng, Algorithm::Ed25519)?;
+/// let subject_public_key = subject_private_key.public_key();
+///
+/// // Create certificate validity window
+/// let valid_after = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+/// let valid_before = valid_after + (365 * 86400); // e.g. 1 year
+///
+/// // Initialize certificate builder
+/// let mut cert_builder = certificate::Builder::new_with_random_nonce(
+///     &mut OsRng,
+///     subject_public_key,
+///     valid_after,
+///     valid_before,
+/// );
+/// cert_builder.serial(42)?; // Optional: serial number chosen by the CA
+/// cert_builder.key_id("nobody-cert-02")?; // Optional: CA-specific key identifier
+/// cert_builder.cert_type(certificate::CertType::User)?; // User or host certificate
+/// cert_builder.valid_principal("nobody")?; // Unix username or hostname
+/// cert_builder.comment("nobody@example.com")?; // Comment (typically an email address)
+///
+/// // Sign and return the `Certificate` for `subject_public_key`
+/// let cert = cert_builder.sign(&ca_key)?;
+/// # Ok(())
+/// # }
+/// ```
 pub struct Builder {
     public_key: public::KeyData,
     nonce: Vec<u8>,
@@ -91,7 +137,7 @@ impl Builder {
     /// Default: `0`.
     pub fn serial(&mut self, serial: u64) -> Result<&mut Self> {
         if self.serial.is_some() {
-            field_invalid("serial")?;
+            return Err(Error::CertificateFieldInvalid(Field::Serial));
         }
 
         self.serial = Some(serial);
@@ -103,7 +149,7 @@ impl Builder {
     /// Default: [`CertType::User`].
     pub fn cert_type(&mut self, cert_type: CertType) -> Result<&mut Self> {
         if self.cert_type.is_some() {
-            field_invalid("cert_type")?;
+            return Err(Error::CertificateFieldInvalid(Field::Type));
         }
 
         self.cert_type = Some(cert_type);
@@ -115,7 +161,7 @@ impl Builder {
     /// Default `""`
     pub fn key_id(&mut self, key_id: impl Into<String>) -> Result<&mut Self> {
         if self.key_id.is_some() {
-            field_invalid("key_id")?;
+            return Err(Error::CertificateFieldInvalid(Field::KeyId));
         }
 
         self.key_id = Some(key_id.into());
@@ -156,7 +202,7 @@ impl Builder {
         let data = data.into();
 
         if self.critical_options.contains_key(&name) {
-            field_invalid("critical_options")?;
+            return Err(Error::CertificateFieldInvalid(Field::CriticalOptions));
         }
 
         self.critical_options.insert(name, data);
@@ -175,7 +221,7 @@ impl Builder {
         let data = data.into();
 
         if self.extensions.contains_key(&name) {
-            field_invalid("extensions")?;
+            return Err(Error::CertificateFieldInvalid(Field::Extensions));
         }
 
         self.extensions.insert(name, data);
@@ -187,7 +233,7 @@ impl Builder {
     /// Default `""`
     pub fn comment(&mut self, comment: impl Into<String>) -> Result<&mut Self> {
         if self.comment.is_some() {
-            field_invalid("comment")?;
+            return Err(Error::CertificateFieldInvalid(Field::Comment));
         }
 
         self.comment = Some(comment.into());
@@ -202,11 +248,7 @@ impl Builder {
         // ensures that was explicitly configured via `all_principals_valid`.
         let valid_principals = match self.valid_principals {
             Some(principals) => principals,
-            None => {
-                return Err(Error::CertificateFieldInvalid {
-                    name: "valid_principals",
-                })
-            }
+            None => return Err(Error::CertificateFieldInvalid(Field::ValidPrincipals)),
         };
 
         let mut cert = Certificate {
@@ -233,14 +275,9 @@ impl Builder {
         #[cfg(all(debug_assertions, feature = "fingerprint"))]
         cert.validate_at(
             cert.valid_after,
-            &[cert.signature_key.fingerprint(Default::default())?],
+            &[cert.signature_key.fingerprint(Default::default())],
         )?;
 
         Ok(cert)
     }
-}
-
-/// Return an error for an invalid certificate field.
-fn field_invalid(name: &'static str) -> Result<()> {
-    Err(Error::CertificateFieldInvalid { name })
 }

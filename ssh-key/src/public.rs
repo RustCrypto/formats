@@ -51,6 +51,33 @@ use serde::{de, ser, Deserialize, Serialize};
 use std::{fs, path::Path};
 
 /// SSH public key.
+///
+/// # OpenSSH encoding
+///
+/// The OpenSSH encoding of an SSH public key looks like following:
+///
+/// ```text
+/// ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti user@example.com
+/// ```
+///
+/// It consists of the following three parts:
+///
+/// 1. Algorithm identifier (in this example `ssh-ed25519`)
+/// 2. Key data encoded as Base64
+/// 3. Comment (optional): arbitrary label describing a key. Usually an email address
+///
+/// The [`PublicKey::from_openssh`] and [`PublicKey::to_openssh`] methods can be
+/// used to decode/encode public keys, or alternatively, the [`FromStr`] and
+/// [`ToString`] impls.
+///
+/// # `serde` support
+///
+/// When the `serde` feature of this crate is enabled, this type receives impls
+/// of [`Deserialize`][`serde::Deserialize`] and [`Serialize`][`serde::Serialize`].
+///
+/// The serialization uses a binary encoding with binary formats like bincode
+/// and CBOR, and the OpenSSH string serialization when used with
+/// human-readable formats like JSON and TOML.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct PublicKey {
     /// Key data.
@@ -186,7 +213,7 @@ impl PublicKey {
     /// Use [`Default::default()`] to use the default hash function (SHA-256).
     #[cfg(feature = "fingerprint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    pub fn fingerprint(&self, hash_alg: HashAlg) -> Result<Fingerprint> {
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Fingerprint {
         self.key_data.fingerprint(hash_alg)
     }
 

@@ -2,8 +2,8 @@
 
 use super::uint;
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag,
-    Header, Length, Result, Tag,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, ErrorKind, FixedTag, Header,
+    Length, Result, Tag, Writer,
 };
 
 /// "Big" unsigned ASN.1 `INTEGER` type.
@@ -31,7 +31,7 @@ impl<'a> UIntBytes<'a> {
     /// Borrow the inner byte slice which contains the least significant bytes
     /// of a big endian integer value with all leading zeros stripped.
     pub fn as_bytes(&self) -> &'a [u8] {
-        self.inner.as_bytes()
+        self.inner.as_slice()
     }
 
     /// Get the length of this [`UIntBytes`] in bytes.
@@ -47,7 +47,7 @@ impl<'a> UIntBytes<'a> {
 
 impl<'a> DecodeValue<'a> for UIntBytes<'a> {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, header)?.as_bytes();
+        let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
         let result = Self::new(uint::decode_to_slice(bytes)?)?;
 
         // Ensure we compute the same encoded length as the original any value.
@@ -61,16 +61,16 @@ impl<'a> DecodeValue<'a> for UIntBytes<'a> {
 
 impl<'a> EncodeValue for UIntBytes<'a> {
     fn value_len(&self) -> Result<Length> {
-        uint::encoded_len(self.inner.as_bytes())
+        uint::encoded_len(self.inner.as_slice())
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         // Add leading `0x00` byte if required
         if self.value_len()? > self.len() {
-            encoder.byte(0)?;
+            writer.write_byte(0)?;
         }
 
-        encoder.bytes(self.as_bytes())
+        writer.write(self.as_bytes())
     }
 }
 

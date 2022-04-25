@@ -5,7 +5,7 @@
 // Copyright (c) 2016 The humantime Developers
 // Released under the MIT OR Apache 2.0 licenses
 
-use crate::{Encoder, Error, ErrorKind, Result, Tag};
+use crate::{Error, ErrorKind, Result, Tag, Writer};
 use core::{fmt, str::FromStr, time::Duration};
 
 #[cfg(feature = "std")]
@@ -372,17 +372,18 @@ pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u8> {
 }
 
 /// Encode 2-digit decimal value
-// TODO(tarcieri): checked arithmetic
-#[allow(clippy::integer_arithmetic)]
-pub(crate) fn encode_decimal(encoder: &mut Encoder<'_>, tag: Tag, value: u8) -> Result<()> {
+pub(crate) fn encode_decimal<W>(writer: &mut W, tag: Tag, value: u8) -> Result<()>
+where
+    W: Writer + ?Sized,
+{
     let hi_val = value / 10;
 
     if hi_val >= 10 {
         return Err(tag.value_error());
     }
 
-    encoder.byte(hi_val + b'0')?;
-    encoder.byte((value % 10) + b'0')
+    writer.write_byte(b'0'.checked_add(hi_val).ok_or(ErrorKind::Overflow)?)?;
+    writer.write_byte(b'0'.checked_add(value % 10).ok_or(ErrorKind::Overflow)?)
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 //! ASN.1 DER-encoded documents stored on the heap.
 
-use crate::{Decode, Decoder, Encode, Encoder, Error, FixedTag, Length, Result, Tag};
+use crate::{Decode, Decoder, Encode, Error, FixedTag, Length, Reader, Result, Tag, Writer};
 use alloc::vec::Vec;
 use core::fmt::{self, Debug};
 
@@ -152,7 +152,7 @@ impl Decode<'_> for Document {
     fn decode(decoder: &mut Decoder<'_>) -> Result<Document> {
         let header = decoder.peek_header()?;
         let length = (header.encoded_len()? + header.length)?;
-        let bytes = decoder.bytes(length)?;
+        let bytes = decoder.read_slice(length)?;
         Ok(Self {
             der_bytes: bytes.into(),
             length,
@@ -165,8 +165,8 @@ impl Encode for Document {
         Ok(self.len())
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.bytes(self.as_bytes())
+    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write(self.as_bytes())
     }
 }
 
@@ -335,7 +335,7 @@ fn decode_sequence<'a>(decoder: &mut Decoder<'a>) -> Result<&'a [u8]> {
     header.tag.assert_eq(Tag::Sequence)?;
 
     let len = (header.encoded_len()? + header.length)?;
-    decoder.bytes(len)
+    decoder.read_slice(len)
 }
 
 /// Write a file containing secret data to the filesystem, restricting the

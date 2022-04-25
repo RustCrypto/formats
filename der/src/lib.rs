@@ -351,13 +351,16 @@ mod datetime;
 mod decode;
 mod decoder;
 mod encode;
+mod encode_ref;
 mod encoder;
 mod error;
 mod header;
 mod length;
 mod ord;
+mod reader;
 mod str_slice;
 mod tag;
+mod writer;
 
 #[cfg(feature = "alloc")]
 mod document;
@@ -368,12 +371,15 @@ pub use crate::{
     decode::{Decode, DecodeOwned, DecodeValue},
     decoder::Decoder,
     encode::{Encode, EncodeValue},
+    encode_ref::{EncodeRef, EncodeValueRef},
     encoder::Encoder,
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
     ord::{DerOrd, ValueOrd},
+    reader::Reader,
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
+    writer::Writer,
 };
 
 #[cfg(feature = "alloc")]

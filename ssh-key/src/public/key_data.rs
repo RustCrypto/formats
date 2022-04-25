@@ -13,7 +13,7 @@ use super::{DsaPublicKey, RsaPublicKey};
 use super::{EcdsaPublicKey, SkEcdsaSha2NistP256};
 
 #[cfg(feature = "fingerprint")]
-use crate::{Fingerprint, HashAlg, Sha256Fingerprint};
+use crate::{Fingerprint, HashAlg};
 
 /// Public key data.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -101,11 +101,8 @@ impl KeyData {
     /// Use [`Default::default()`] to use the default hash function (SHA-256).
     #[cfg(feature = "fingerprint")]
     #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
-    pub fn fingerprint(&self, hash_alg: HashAlg) -> Result<Fingerprint> {
-        match hash_alg {
-            HashAlg::Sha256 => Sha256Fingerprint::try_from(self).map(Into::into),
-            _ => Err(Error::Algorithm),
-        }
+    pub fn fingerprint(&self, hash_alg: HashAlg) -> Fingerprint {
+        Fingerprint::new(hash_alg, self)
     }
 
     /// Get RSA public key if this key is the correct type.

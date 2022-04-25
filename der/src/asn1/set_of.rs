@@ -2,7 +2,7 @@
 
 use crate::{
     arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue,
-    Encoder, Error, ErrorKind, FixedTag, Header, Length, Result, Tag, ValueOrd,
+    Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -110,9 +110,9 @@ where
             .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         for elem in self.iter() {
-            elem.encode(encoder)?;
+            elem.encode(writer)?;
         }
 
         Ok(())
@@ -299,9 +299,9 @@ where
             .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         for elem in self.iter() {
-            elem.encode(encoder)?;
+            elem.encode(writer)?;
         }
 
         Ok(())

@@ -19,6 +19,13 @@
 
 //! ## Usage
 //!
+//! The main types provided by this library are:
+//!
+//! - [`Certificate`]: OpenSSH certificates
+//! - [`Fingerprint`]: public key fingerprints (i.e. hashes)
+//! - [`PrivateKey`]: SSH private keys (i.e. digital signature keys)
+//! - [`PublicKey`]: SSH public keys (i.e. signature verification keys)
+//!
 //! ### Parsing OpenSSH Public Keys
 //!
 //! OpenSSH-formatted public keys have the form:
@@ -116,9 +123,10 @@
 //!
 //! ## `serde` support
 //!
-//! When the `serde` feature of this crate is enabled, the [`Certificate`] and
-//! [`PublicKey`] types receive impls of `serde`'s `Deserialize` and
-//! `Serialize` traits.
+//! When the `serde` feature of this crate is enabled, the [`Certificate`],
+//! [`Fingerprint`], and [`PublicKey`] types receive impls of `serde`'s
+//! [`Deserialize`][`serde::Deserialize`] and [`Serialize`][`serde::Serialize`]
+//! traits.
 //!
 //! Serializing/deserializing [`PrivateKey`] using `serde` is presently
 //! unsupported.
@@ -173,7 +181,7 @@ pub use crate::{certificate::Certificate, mpint::MPInt, signature::Signature};
 pub use sec1;
 
 #[cfg(feature = "fingerprint")]
-pub use crate::fingerprint::{Fingerprint, Sha256Fingerprint};
+pub use crate::fingerprint::Fingerprint;
 
 #[cfg(feature = "rand_core")]
 pub use rand_core;

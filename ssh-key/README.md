@@ -1,4 +1,4 @@
-# [RustCrypto]: SSH Key Formats
+# [RustCrypto]: SSH Key and Certificate Formats
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
@@ -15,12 +15,18 @@ Pure Rust implementation of SSH key file format decoders/encoders as described
 in [RFC4251] and [RFC4253] as well as OpenSSH's [PROTOCOL.key] format
 specification.
 
-Provides support for certificates as specified in [PROTOCOL.certkeys]
-(including certificate validation and certificate authority support),
-FIDO/U2F keys as specified in [PROTOCOL.u2f] (and certificates thereof),
-and the `authorized_keys` file format.
+Additionally provides support for OpenSSH certificates as specified in
+[PROTOCOL.certkeys] including certificate validation and certificate authority
+(CA) support, as well as FIDO/U2F keys as specified in [PROTOCOL.u2f] (and
+certificates thereof), and also the `authorized_keys` file format.
 
-Supports a minimal profile which works on heapless `no_std` targets.
+Supports a minimal profile which works on heapless `no_std` targets. See
+"Supported algorithms" table below for which key formats work on heapless
+targets and which algorithms require `alloc`.
+
+When the `ed25519`, `p256`, and/or `rsa` features of this crate are enabled,
+provides key generation and certificate signing/verification support for that
+respective SSH key algorithm.
 
 ## Features
 
@@ -30,24 +36,22 @@ Supports a minimal profile which works on heapless `no_std` targets.
   - [x] OpenSSH private keys (i.e. `BEGIN OPENSSH PRIVATE KEY`)
   - [x] OpenSSH certificates
 - [x] OpenSSH certificates
-  - [x] Certificate validation (ECDSA/NIST P-256 and Ed25519 only)
-  - [x] Certificate builder/signer (i.e. SSH CA support)
+  - [x] Certificate validation
+  - [x] Certificate authority (CA) support i.e. cert builder/signer
 - [x] Private key encryption/decryption (`bcrypt-pbkdf` + `aes256-ctr` only)
+- [x] Private key generation support: Ed25519, ECDSA/P-256, and RSA
 - [x] FIDO/U2F key support (`sk-*`) as specified in [PROTOCOL.u2f]
-- [x] Fingerprint support (SHA-256 only)
+- [x] Fingerprint support
 - [x] `no_std` support including support for "heapless" (no-`alloc`) targets
 - [x] Parsing `authorized_keys` files
-- [x] Serde support (certificates and public keys only)
-- [x] Zeroization support for private keys
+- [x] `serde` support
+- [x] `zeroize` support for private keys
 
 #### TODO
 
-- [ ] Key generation support (WIP - see table below)
-- [ ] Interop with digital signature crates
-  - [x] `ed25519-dalek`
-  - [x] `p256` (ECDSA)
-  - [ ] `p384` (ECDSA)
-  - [ ] `rsa`
+- [ ] ECDSA/P-384 support
+- [ ] ECDSA/P-512 support
+- [ ] FIDO/U2F signature support
 - [ ] Legacy (pre-OpenSSH) SSH key format support
   - [ ] PKCS#1
   - [ ] PKCS#8
@@ -56,16 +60,20 @@ Supports a minimal profile which works on heapless `no_std` targets.
 
 ## Supported algorithms
 
-| Name                                 | Decoding | Encoding | Certificates | Keygen | Sign | Verify   | `no_std` |
-|--------------------------------------|----------|----------|--------------|--------|------|----------|----------|
-| `ecdsa-sha2-nistp256`                | ✅       | ✅       | ✅           | ✅️     | ✅️   | ✅️       | heapless |
-| `ecdsa-sha2-nistp384`                | ✅       | ✅       | ✅           | ⛔️     | ⛔️   | ⛔️       | heapless |
-| `ecdsa-sha2-nistp521`                | ✅       | ✅       | ✅           | ⛔️     | ⛔ ️  | ⛔️       | heapless |
-| `ssh-dsa`                            | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc` ️ |
-| `ssh-ed25519`                        | ✅       | ✅       | ✅           | ✅️     | ✅️   | ✅       | heapless |
-| `ssh-rsa`                            | ✅       | ✅       | ✅           | ⛔️     | ⛔️   | ⛔️       | `alloc`  |
-| `sk-ecdsa-sha2-nistp256@openssh.com` | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc`  |
-| `sk-ssh-ed25519@openssh.com`         | ✅       | ✅       | ✅           | ⛔     | ⛔️   | ⛔️       | `alloc`  |
+| Name                                 | Decode | Encode | Cert | Keygen | Sign | Verify | Feature   | `no_std` |
+|--------------------------------------|--------|--------|------|--------|------|--------|-----------|----------|
+| `ecdsa‑sha2‑nistp256`                | ✅     | ✅     | ✅   | ✅️     | ✅️   | ✅️     | `p256`    | heapless |
+| `ecdsa‑sha2‑nistp384`                | ✅     | ✅     | ✅   | ⛔️     | ⛔️   | ⛔️     | ⛔        | heapless |
+| `ecdsa‑sha2‑nistp521`                | ✅     | ✅     | ✅   | ⛔️     | ⛔ ️  | ⛔️     | ⛔        | heapless |
+| `ssh‑dsa`                            | ✅     | ✅     | ✅   | ⛔     | ⛔️   | ⛔️     | ⛔        | `alloc` ️ |
+| `ssh‑ed25519`                        | ✅     | ✅     | ✅   | ✅️     | ✅️   | ✅     | `ed25519` | heapless |
+| `ssh‑rsa`                            | ✅     | ✅     | ✅   | ✅️     | ✅️   | ✅     | `rsa`     | `alloc`  |
+| `sk‑ecdsa‑sha2‑nistp256@openssh.com` | ✅     | ✅     | ✅   | ⛔     | ⛔️   | ⛔️     | ⛔        | `alloc`  |
+| `sk‑ssh‑ed25519@openssh.com`         | ✅     | ✅     | ✅   | ⛔     | ⛔️   | ⛔️     | ⛔        | `alloc`  |
+
+Note: the "Feature" section lists the name of `ssh-key` crate features which can
+be enabled to provide full support for the "Keygen", "Sign", and "Verify"
+functionality for a particular SSH key algorithm.
 
 ## Minimum Supported Rust Version
 

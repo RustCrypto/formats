@@ -1,8 +1,8 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error, ErrorKind,
-    FixedTag, Header, Length, Result, Tag, ValueOrd,
+    asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Error, ErrorKind, FixedTag,
+    Header, Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
@@ -103,7 +103,7 @@ impl<'a> BitString<'a> {
     /// octet. If the number of unused bits is expected to be 0, the
     /// [`BitString::as_bytes`] function can be used instead.
     pub fn raw_bytes(&self) -> &'a [u8] {
-        self.inner.as_bytes()
+        self.inner.as_slice()
     }
 
     /// Iterator over the bits of this `BIT STRING`.
@@ -122,9 +122,9 @@ impl<'a> DecodeValue<'a> for BitString<'a> {
             length: (header.length - Length::ONE)?,
         };
 
-        let unused_bits = decoder.byte()?;
+        let unused_bits = decoder.read_byte()?;
         let inner = ByteSlice::decode_value(decoder, header)?;
-        Self::new(unused_bits, inner.as_bytes())
+        Self::new(unused_bits, inner.as_slice())
     }
 }
 
@@ -133,9 +133,9 @@ impl EncodeValue for BitString<'_> {
         self.byte_len() + Length::ONE
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.byte(self.unused_bits)?;
-        encoder.bytes(self.raw_bytes())
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write_byte(self.unused_bits)?;
+        writer.write(self.raw_bytes())
     }
 }
 
@@ -290,10 +290,10 @@ where
         BitString::new((lead % 8) as u8, buff)?.value_len()
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         let (lead, buff) = encode_flagset(self);
         let buff = &buff[..buff.len() - lead / 8];
-        BitString::new((lead % 8) as u8, buff)?.encode_value(encoder)
+        BitString::new((lead % 8) as u8, buff)?.encode_value(writer)
     }
 }
 

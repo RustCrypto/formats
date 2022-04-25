@@ -1,8 +1,8 @@
 //! ASN.1 `ANY` type.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decode, DecodeValue, Decoder, DerOrd, EncodeValue, Encoder, Error,
-    ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd,
+    asn1::*, ByteSlice, Choice, Decode, DecodeValue, Decoder, DerOrd, EncodeValue, Error,
+    ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -47,7 +47,7 @@ impl<'a> Any<'a> {
 
     /// Get the raw value for this [`Any`] type as a byte slice.
     pub fn value(self) -> &'a [u8] {
-        self.value.as_bytes()
+        self.value.as_slice()
     }
 
     /// Attempt to decode this [`Any`] type into the inner value.
@@ -130,7 +130,7 @@ impl<'a> Any<'a> {
         F: FnOnce(&mut Decoder<'a>) -> Result<T>,
     {
         self.tag.assert_eq(Tag::Sequence)?;
-        let mut seq_decoder = Decoder::new(self.value.as_bytes())?;
+        let mut seq_decoder = Decoder::new(self.value.as_slice())?;
         let result = f(&mut seq_decoder)?;
         seq_decoder.finish(result)
     }
@@ -167,8 +167,8 @@ impl EncodeValue for Any<'_> {
         Ok(self.value.len())
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        encoder.bytes(self.value())
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write(self.value())
     }
 }
 

@@ -3,6 +3,9 @@
 use crate::pem;
 use core::fmt;
 
+#[cfg(feature = "alloc")]
+use crate::certificate;
+
 /// Result type with `ssh-key`'s [`Error`] as the error type.
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -17,10 +20,9 @@ pub enum Error {
     Base64(base64ct::Error),
 
     /// Certificate field is invalid or already set.
-    CertificateFieldInvalid {
-        /// Name of the invalid field.
-        name: &'static str,
-    },
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    CertificateFieldInvalid(certificate::Field),
 
     /// Certificate validation failed.
     CertificateValidation,
@@ -74,8 +76,9 @@ impl fmt::Display for Error {
         match self {
             Error::Algorithm => f.write_str("unknown or unsupported algorithm"),
             Error::Base64(err) => write!(f, "Base64 encoding error: {}", err),
-            Error::CertificateFieldInvalid { name } => {
-                write!(f, "certificate field invalid: {}", name)
+            #[cfg(feature = "alloc")]
+            Error::CertificateFieldInvalid(field) => {
+                write!(f, "certificate field invalid: {}", field)
             }
             Error::CertificateValidation => f.write_str("certificate validation failed"),
             Error::CharacterEncoding => f.write_str("character encoding invalid"),
@@ -152,6 +155,14 @@ impl From<alloc::string::FromUtf8Error> for Error {
 impl From<sec1::Error> for Error {
     fn from(err: sec1::Error) -> Error {
         Error::Ecdsa(err)
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl From<rsa::errors::Error> for Error {
+    fn from(_: rsa::errors::Error) -> Error {
+        Error::Crypto
     }
 }
 

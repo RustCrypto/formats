@@ -1,6 +1,6 @@
 //! ASN.1 `OPTIONAL` as mapped to Rust's `Option` type
 
-use crate::{Choice, Decode, Decoder, DerOrd, Encode, Encoder, Length, Result, Tag};
+use crate::{Choice, Decode, Decoder, DerOrd, Encode, Length, Reader, Result, Tag, Writer};
 use core::cmp::Ordering;
 
 impl<'a, T> Decode<'a> for Option<T>
@@ -18,64 +18,49 @@ where
     }
 }
 
-impl<T> Encode for Option<T>
-where
-    T: Encode,
-{
-    fn encoded_len(&self) -> Result<Length> {
-        if let Some(encodable) = self {
-            encodable.encoded_len()
-        } else {
-            Ok(0u8.into())
-        }
-    }
-
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        if let Some(encodable) = self {
-            encodable.encode(encoder)
-        } else {
-            Ok(())
-        }
-    }
-}
-
 impl<T> DerOrd for Option<T>
 where
     T: DerOrd,
 {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        if let Some(a) = self {
-            if let Some(b) = other {
-                a.der_cmp(b)
-            } else {
-                Ok(Ordering::Greater)
-            }
-        } else {
-            Ok(Ordering::Less)
+        match self {
+            Some(a) => match other {
+                Some(b) => a.der_cmp(b),
+                None => Ok(Ordering::Greater),
+            },
+            None => Ok(Ordering::Less),
         }
     }
 }
 
-/// A reference to an ASN.1 `OPTIONAL` type, used for encoding only.
-pub struct OptionalRef<'a, T>(pub Option<&'a T>);
-
-impl<'a, T> Encode for OptionalRef<'a, T>
+impl<T> Encode for Option<T>
 where
     T: Encode,
 {
     fn encoded_len(&self) -> Result<Length> {
-        if let Some(encodable) = self.0 {
-            encodable.encoded_len()
-        } else {
-            Ok(0u8.into())
+        (&self).encoded_len()
+    }
+
+    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+        (&self).encode(writer)
+    }
+}
+
+impl<T> Encode for &Option<T>
+where
+    T: Encode,
+{
+    fn encoded_len(&self) -> Result<Length> {
+        match self {
+            Some(encodable) => encodable.encoded_len(),
+            None => Ok(0u8.into()),
         }
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> Result<()> {
-        if let Some(encodable) = self.0 {
-            encodable.encode(encoder)
-        } else {
-            Ok(())
+    fn encode(&self, encoder: &mut dyn Writer) -> Result<()> {
+        match self {
+            Some(encodable) => encodable.encode(encoder),
+            None => Ok(()),
         }
     }
 }

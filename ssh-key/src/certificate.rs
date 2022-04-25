@@ -2,11 +2,13 @@
 
 mod builder;
 mod cert_type;
+mod field;
 mod options_map;
 mod signing_key;
 
 pub use self::{
-    builder::Builder, cert_type::CertType, options_map::OptionsMap, signing_key::SigningKey,
+    builder::Builder, cert_type::CertType, field::Field, options_map::OptionsMap,
+    signing_key::SigningKey,
 };
 
 use crate::{
@@ -50,8 +52,82 @@ use std::{
 ///
 /// Certificates must be validated before they can be trusted!
 ///
-/// See documentation for [`Certificate::validate`] and
-/// [`Certificate::validate_at`] methods for more information.
+/// The [`Certificate`] type does not automatically perform validation checks
+/// and supports parsing certificates which may potentially be invalid.
+/// Just because a [`Certificate`] parses successfully does not mean that it
+/// can be trusted.
+///
+/// See "Certificate Validation" documentation below for more information on
+/// how to properly validate certificates.
+///
+/// # Certificate Validation
+///
+/// For a certificate to be trusted, the following properties MUST be
+/// validated:
+///
+/// - Certificate is signed by a trusted certificate authority (CA)
+/// - Signature over the certificate verifies successfully
+/// - Current time is within the certificate's validity window
+/// - Certificate authorizes the expected principal
+/// - All critical extensions to the certificate are recognized and validate
+///   successfully.
+///
+/// The [`Certificate::validate`] and [`Certificate::validate_at`] methods can
+/// be used to validate a certificate.
+///
+/// ## Example
+///
+/// The following example walks through how to implement the steps outlined
+/// above for validating a certificate:
+///
+#[cfg_attr(all(feature = "p256", feature = "std"), doc = " ```")]
+#[cfg_attr(not(all(feature = "p256", feature = "std")), doc = " ```ignore")]
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// use ssh_key::{Certificate, Fingerprint};
+/// use std::str::FromStr;
+///
+/// // List of trusted certificate authority (CA) fingerprints
+/// let ca_fingerprints = [
+///     Fingerprint::from_str("SHA256:JQ6FV0rf7qqJHZqIj4zNH8eV0oB8KLKh9Pph3FTD98g")?
+/// ];
+///
+/// // Certificate to be validated
+/// let certificate = Certificate::from_str(
+///     "ssh-ed25519-cert-v01@openssh.com AAAAIHNzaC1lZDI1NTE5LWNlcnQtdjAxQG9wZW5zc2guY29tAAAAIE7x9ln6uZLLkfXM8iatrnAAuytVHeCznU8VlEgx7TvLAAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqtiAAAAAAAAAAAAAAABAAAAFGVkMjU1MTktd2l0aC1wMjU2LWNhAAAAAAAAAABiUZm7AAAAAPTaMrsAAAAAAAAAggAAABVwZXJtaXQtWDExLWZvcndhcmRpbmcAAAAAAAAAF3Blcm1pdC1hZ2VudC1mb3J3YXJkaW5nAAAAAAAAABZwZXJtaXQtcG9ydC1mb3J3YXJkaW5nAAAAAAAAAApwZXJtaXQtcHR5AAAAAAAAAA5wZXJtaXQtdXNlci1yYwAAAAAAAAAAAAAAaAAAABNlY2RzYS1zaGEyLW5pc3RwMjU2AAAACG5pc3RwMjU2AAAAQQR8H9hzDOU0V76NkkCY7DZIgw+SqoojY6xlb91FIfpjE+UR8YkbTp5ar44ULQatFaZqQlfz8FHYTooOL5G6gHBHAAAAZAAAABNlY2RzYS1zaGEyLW5pc3RwMjU2AAAASQAAACEA/0Cwxhkac5AeNYE958j8GgvmkIESDH1TE7QYIqxsFsIAAAAgTEw8WVjlz8AnvyaKGOUELMpyFFJagtD2JFAIAJvilrc= user@example.com"
+/// )?;
+///
+/// // Perform basic certificate validation, ensuring that the certificate is
+/// // signed by a trusted certificate authority (CA) and checking that the
+/// // current system clock time is within the certificate's validity window
+/// certificate.validate(&ca_fingerprints)?;
+///
+/// // Check that the certificate includes the expected principal name
+/// // (i.e. username or hostname)
+/// // if !certificate.principals().contains(expected_principal) { return Err(...) }
+///
+/// // Check that all of the critical extensions are recognized
+/// // if !certificate.critical_options.iter().all(|critical| ...) { return Err(...) }
+///
+/// // If we've made it this far, the certificate can be trusted
+/// Ok(())
+/// # }
+/// ```
+///
+/// # Certificate Builder (SSH CA support)
+///
+/// This crate implements all of the functionality needed for a pure Rust
+/// SSH certificate authority which can build and sign OpenSSH certificates.
+///
+/// See the [`Builder`] type's documentation for more information.
+///
+/// # `serde` support
+///
+/// When the `serde` feature of this crate is enabled, this type receives impls
+/// of [`Deserialize`][`serde::Deserialize`] and [`Serialize`][`serde::Serialize`].
+///
+/// The serialization uses a binary encoding with binary formats like bincode
+/// and CBOR, and the OpenSSH string serialization when used with
+/// human-readable formats like JSON and TOML.
 ///
 /// [PROTOCOL.certkeys]: https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -353,7 +429,7 @@ impl Certificate {
         self.verify_signature()?;
 
         // TODO(tarcieri): support non SHA-256 public key fingerprints?
-        let cert_fingerprint = self.signature_key.fingerprint(HashAlg::Sha256)?;
+        let cert_fingerprint = self.signature_key.fingerprint(HashAlg::Sha256);
 
         if !ca_fingerprints.into_iter().any(|f| f == &cert_fingerprint) {
             return Err(Error::CertificateValidation);

@@ -1,7 +1,7 @@
 //! PKCS#1 version identifier.
 
 use crate::Error;
-use der::{Decode, Decoder, Encode, Encoder, FixedTag, Tag};
+use der::{Decode, Decoder, Encode, FixedTag, Tag, Writer};
 
 /// Version identifier for PKCS#1 documents as defined in
 /// [RFC 8017 Appendix 1.2].
@@ -62,8 +62,8 @@ impl Encode for Version {
         der::Length::ONE.for_tlv()
     }
 
-    fn encode(&self, encoder: &mut Encoder<'_>) -> der::Result<()> {
-        u8::from(*self).encode(encoder)
+    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        u8::from(*self).encode(writer)
     }
 }
 

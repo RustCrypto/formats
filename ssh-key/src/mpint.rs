@@ -8,6 +8,9 @@ use alloc::vec::Vec;
 use core::fmt;
 use zeroize::Zeroize;
 
+#[cfg(feature = "rsa")]
+use zeroize::Zeroizing;
+
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
@@ -55,6 +58,23 @@ impl MPInt {
     /// MSB is set, but does *NOT* expect a 4-byte length prefix.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
         bytes.try_into()
+    }
+
+    /// Create a new multiple precision integer from the given big endian
+    /// encoded byte slice representing a positive integer.
+    ///
+    /// The integer should not start with any leading zeroes.
+    pub fn from_positive_bytes(bytes: &[u8]) -> Result<Self> {
+        let mut inner = Vec::with_capacity(bytes.len());
+
+        match bytes.get(0).cloned() {
+            Some(0) => return Err(Error::FormatEncoding),
+            Some(n) if n >= 0x80 => inner.push(0),
+            _ => (),
+        }
+
+        inner.extend_from_slice(bytes);
+        inner.try_into()
     }
 
     /// Get the big integer data encoded as big endian bytes.
@@ -157,6 +177,50 @@ impl fmt::UpperHex for MPInt {
             write!(f, "{:02X}", byte)?;
         }
         Ok(())
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl TryFrom<rsa::BigUint> for MPInt {
+    type Error = Error;
+
+    fn try_from(uint: rsa::BigUint) -> Result<MPInt> {
+        MPInt::try_from(&uint)
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl TryFrom<&rsa::BigUint> for MPInt {
+    type Error = Error;
+
+    fn try_from(uint: &rsa::BigUint) -> Result<MPInt> {
+        let bytes = Zeroizing::new(uint.to_bytes_be());
+        MPInt::from_positive_bytes(bytes.as_slice())
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl TryFrom<MPInt> for rsa::BigUint {
+    type Error = Error;
+
+    fn try_from(mpint: MPInt) -> Result<rsa::BigUint> {
+        rsa::BigUint::try_from(&mpint)
+    }
+}
+
+#[cfg(feature = "rsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rsa")))]
+impl TryFrom<&MPInt> for rsa::BigUint {
+    type Error = Error;
+
+    fn try_from(mpint: &MPInt) -> Result<rsa::BigUint> {
+        mpint
+            .as_positive_bytes()
+            .map(rsa::BigUint::from_bytes_be)
+            .ok_or(Error::Crypto)
     }
 }
 

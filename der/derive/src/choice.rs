@@ -96,6 +96,7 @@ impl DeriveChoice {
 
             impl<#lt_params> ::der::Decode<#lifetime> for #ident<#lt_params> {
                 fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
+                    use der::Reader as _;
                     match decoder.peek_tag()? {
                         #(#decode_body)*
                         actual => Err(der::ErrorKind::TagUnexpected {
@@ -108,7 +109,7 @@ impl DeriveChoice {
             }
 
             impl<#lt_params> ::der::EncodeValue for #ident<#lt_params> {
-                fn encode_value(&self, encoder: &mut ::der::Encoder<'_>) -> ::der::Result<()> {
+                fn encode_value(&self, encoder: &mut dyn ::der::Writer) -> ::der::Result<()> {
                     match self {
                         #(#encode_body)*
                     }

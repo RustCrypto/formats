@@ -4,8 +4,8 @@ use crate::{
     asn1::Any,
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
-    ByteSlice, DecodeValue, Decoder, EncodeValue, Encoder, Error, ErrorKind, FixedTag, Header,
-    Length, Result, Tag,
+    ByteSlice, DecodeValue, Decoder, EncodeValue, Error, ErrorKind, FixedTag, Header, Length,
+    Result, Tag, Writer,
 };
 use core::time::Duration;
 
@@ -81,7 +81,7 @@ impl UtcTime {
 
 impl DecodeValue<'_> for UtcTime {
     fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        match *ByteSlice::decode_value(decoder, header)?.as_bytes() {
+        match *ByteSlice::decode_value(decoder, header)?.as_slice() {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [year1, year2, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
                 let year = u16::from(datetime::decode_decimal(Self::TAG, year1, year2)?);
@@ -113,7 +113,7 @@ impl EncodeValue for UtcTime {
         Ok(Self::LENGTH)
     }
 
-    fn encode_value(&self, encoder: &mut Encoder<'_>) -> Result<()> {
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         let year = match self.0.year() {
             y @ 1950..=1999 => y.checked_sub(1900),
             y @ 2000..=2049 => y.checked_sub(2000),
@@ -122,13 +122,13 @@ impl EncodeValue for UtcTime {
         .and_then(|y| u8::try_from(y).ok())
         .ok_or(ErrorKind::DateTime)?;
 
-        datetime::encode_decimal(encoder, Self::TAG, year)?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.month())?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.day())?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.hour())?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.minutes())?;
-        datetime::encode_decimal(encoder, Self::TAG, self.0.seconds())?;
-        encoder.byte(b'Z')
+        datetime::encode_decimal(writer, Self::TAG, year)?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.month())?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.day())?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.hour())?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.minutes())?;
+        datetime::encode_decimal(writer, Self::TAG, self.0.seconds())?;
+        writer.write_byte(b'Z')
     }
 }
 
