@@ -1,5 +1,6 @@
 //! Certificate fields.
 
+use crate::Error;
 use core::fmt;
 
 /// Certificate fields.
@@ -66,6 +67,11 @@ impl Field {
             Self::Signature => "signature",
             Self::Comment => "comment",
         }
+    }
+
+    /// Get an [`Error`] that this field is invalid.
+    pub fn invalid_error(self) -> Error {
+        Error::CertificateFieldInvalid(self)
     }
 }
 
