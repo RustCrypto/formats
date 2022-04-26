@@ -62,7 +62,7 @@ mod grammar;
 
 pub use crate::{
     decoder::{decode, decode_label, Decoder},
-    encoder::{encapsulated_len, encode, encoded_len, Encoder},
+    encoder::{encapsulated_len, encapsulated_len_wrapped, encode, encoded_len, Encoder},
     error::{Error, Result},
 };
 pub use base64ct::LineEnding;
@@ -83,16 +83,18 @@ const POST_ENCAPSULATION_BOUNDARY: &[u8] = b"-----END ";
 /// Delimiter of encapsulation boundaries.
 const ENCAPSULATION_BOUNDARY_DELIMITER: &[u8] = b"-----";
 
-/// Width at which Base64 must be wrapped.
+/// Width at which the Base64 body of RFC7468-compliant PEM is wrapped.
 ///
-/// From RFC 7468 Section 2:
+/// From [RFC7468 § 2]:
 ///
 /// > Generators MUST wrap the base64-encoded lines so that each line
 /// > consists of exactly 64 characters except for the final line, which
 /// > will encode the remainder of the data (within the 64-character line
 /// > boundary), and they MUST NOT emit extraneous whitespace.  Parsers MAY
 /// > handle other line sizes.
-const BASE64_WRAP_WIDTH: usize = 64;
+///
+/// [RFC7468 § 2]: https://datatracker.ietf.org/doc/html/rfc7468#section-2
+pub const BASE64_WRAP_WIDTH: usize = 64;
 
 /// Buffered Base64 decoder type.
 pub type Base64Decoder<'i> = base64ct::Decoder<'i, base64ct::Base64>;
