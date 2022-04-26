@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.0 (2022-04-26)
+### Added
+- `encapsulated_len_wrapped` ([#619])
+
+### Changed
+- `encapsulated_len` now accepts the length of the raw input bytes prior to
+  Base64 encoding, and computes the length of the full PEM encoded document
+  including newlines when the resulting Base64 is linewrapped ([#619])
+
+[#619]: https://github.com/RustCrypto/formats/pull/619
+
 ## 0.5.1 (2022-03-30)
 ### Changed
 - Rename `PemLabel::TYPE_LABEL` => `::PEM_LABEL` ([#568])
