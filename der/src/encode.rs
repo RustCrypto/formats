@@ -98,22 +98,9 @@ pub trait EncodePem: Encode + PemLabel {
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl<T: Encode + PemLabel> EncodePem for T {
-    #[allow(clippy::integer_arithmetic)]
     fn to_pem(&self, line_ending: LineEnding) -> Result<String> {
-        // TODO(tarcieri): checked arithmetic, maybe extract this into `base64ct::base64_len`?
         let der_len = usize::try_from(self.encoded_len()?)?;
-        let mut base64_len = (((der_len * 4) / 3) + 3) & !3;
-
-        // Add the length of the line endings which will be inserted when
-        // encoded Base64 is line wrapped
-        // TODO(tarcieri): factor this logic into `pem-rfc7468`
-        base64_len += base64_len
-            .saturating_sub(1)
-            .checked_div(64)
-            .and_then(|len| len.checked_add(line_ending.len()))
-            .ok_or(ErrorKind::Overflow)?;
-
-        let pem_len = pem::encapsulated_len(Self::PEM_LABEL, line_ending, base64_len)?;
+        let pem_len = pem::encapsulated_len(Self::PEM_LABEL, line_ending, der_len)?;
 
         let mut buf = vec![0u8; pem_len];
         let mut writer = PemWriter::new(Self::PEM_LABEL, line_ending, &mut buf)?;
