@@ -338,7 +338,8 @@
 //! [`Utf8String`]: asn1::Utf8String
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(test, macro_use)]
+#[allow(unused_imports)]
+#[macro_use]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
@@ -396,7 +397,7 @@ pub use der_derive::{Choice, Enumerated, Newtype, Sequence, ValueOrd};
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub use {
-    crate::{decode::DecodePem, encode::EncodePem},
+    crate::{decode::DecodePem, encode::EncodePem, writer::PemWriter},
     pem_rfc7468 as pem,
 };
 
