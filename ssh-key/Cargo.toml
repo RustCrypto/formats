@@ -1,6 +1,6 @@
 [package]
 name = "ssh-key"
-version = "0.4.0"
+version = "0.4.1"
 description = """
 Pure Rust implementation of SSH key file format decoders/encoders as described
 in RFC4251 and RFC4253 as well as the OpenSSH key formats, certificates
