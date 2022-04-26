@@ -14,8 +14,7 @@ use crate::{
 
 use super::integer::uint::strip_leading_zeroes;
 
-// TODO: panic-free implementation
-#[allow(clippy::panic_in_result_fn)]
+#[cfg_attr(docsrs, doc(cfg(feature = "real")))]
 impl DecodeValue<'_> for f64 {
     fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
         let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
@@ -72,23 +71,20 @@ impl DecodeValue<'_> for f64 {
                 1 => Ok(f64::NEG_INFINITY),
                 2 => Ok(f64::NAN),
                 3 => Ok(-0.0_f64),
-                _ => {
-                    unreachable!()
-                }
+                _ => Err(Tag::Real.value_error()),
             }
         } else {
             let astr = StrSlice::from_bytes(&bytes[1..])?;
             match astr.inner.parse::<f64>() {
                 Ok(val) => Ok(val),
-                Err(_) => {
-                    // Real related error: encoding not supported or malformed
-                    Err(Tag::Real.value_error())
-                }
+                // Real related error: encoding not supported or malformed
+                Err(_) => Err(Tag::Real.value_error()),
             }
         }
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "real")))]
 impl EncodeValue for f64 {
     fn value_len(&self) -> Result<Length> {
         if self.is_sign_positive() && (*self) < f64::MIN_POSITIVE {
@@ -196,6 +192,7 @@ impl EncodeValue for f64 {
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "real")))]
 impl FixedTag for f64 {
     const TAG: Tag = Tag::Real;
 }
