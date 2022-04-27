@@ -1,4 +1,14 @@
 //! ASN.1 `SET OF` support.
+//!
+//! # Ordering Notes
+//!
+//! Some DER serializer implementations fail to properly sort elements of a
+//! `SET OF`. This is technically non-canonical, but occurs frequently
+//! enough that most DER decoders tolerate it. Unfortunately because
+//! of that, we must also follow suit.
+//!
+//! However, all types in this module sort elements of a set at decode-time,
+//! ensuring they'll be in the proper order if reserialized.
 
 use crate::{
     arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue,
@@ -90,13 +100,15 @@ where
         let mut result = Self::new();
 
         while decoder.position() < end_pos {
-            result.add(decoder.decode()?)?;
+            result.inner.add(decoder.decode()?)?;
         }
 
         if decoder.position() != end_pos {
             decoder.error(ErrorKind::Length { tag: Self::TAG });
         }
 
+        der_sort(result.inner.as_mut())?;
+        validate(result.inner.as_ref())?;
         Ok(result)
     }
 }
@@ -274,17 +286,19 @@ where
 {
     fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
         let end_pos = (decoder.position() + header.length)?;
-        let mut result = Self::new();
+        let mut inner = Vec::new();
 
         while decoder.position() < end_pos {
-            result.add(decoder.decode()?)?;
+            inner.push(decoder.decode()?);
         }
 
         if decoder.position() != end_pos {
             decoder.error(ErrorKind::Length { tag: Self::TAG });
         }
 
-        Ok(result)
+        der_sort(inner.as_mut())?;
+        validate(inner.as_ref())?;
+        Ok(Self { inner })
     }
 }
 
@@ -384,6 +398,27 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
         while j > 0 && slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
             slice.swap(j - 1, j);
             j -= 1;
+        }
+    }
+
+    Ok(())
+}
+
+/// Validate the elements of a `SET OF`, ensuring that they are all in order
+/// and that there are no duplicates.
+fn validate<T: DerOrd>(slice: &[T]) -> Result<()> {
+    if let Some(len) = slice.len().checked_sub(1) {
+        for i in 0..len {
+            let j = i.checked_add(1).ok_or(ErrorKind::Overflow)?;
+
+            match slice.get(i..=j) {
+                Some([a, b]) => {
+                    if a.der_cmp(b)? != Ordering::Less {
+                        return Err(ErrorKind::SetOrdering.into());
+                    }
+                }
+                _ => return Err(Tag::Set.value_error()),
+            }
         }
     }
 
