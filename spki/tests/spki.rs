@@ -73,7 +73,7 @@ fn decode_ed25519_and_fingerprint_spki() {
 
     // Check the fingerprint
     assert_eq!(
-        spki.fingerprint().unwrap().as_slice(),
+        spki.fingerprint_bytes().unwrap().as_slice(),
         ED25519_SPKI_FINGERPRINT
     );
 }

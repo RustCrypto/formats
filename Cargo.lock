@@ -431,7 +431,7 @@ dependencies = [
  "der_derive",
  "flagset",
  "hex-literal",
- "pem-rfc7468 0.5.1",
+ "pem-rfc7468 0.6.0",
  "proptest",
  "time",
  "zeroize",
@@ -841,7 +841,7 @@ dependencies = [
 
 [[package]]
 name = "pem-rfc7468"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "base64ct 1.5.0",
 ]
@@ -1421,7 +1421,7 @@ dependencies = [
 
 [[package]]
 name = "ssh-key"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "aes",
  "base64ct 1.5.0",
@@ -1430,7 +1430,7 @@ dependencies = [
  "ed25519-dalek",
  "hex-literal",
  "p256",
- "pem-rfc7468 0.5.1",
+ "pem-rfc7468 0.6.0",
  "rand_chacha",
  "rand_core 0.6.3",
  "rsa",

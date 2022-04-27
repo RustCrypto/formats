@@ -145,7 +145,6 @@ use core::str;
 
 #[cfg(feature = "alloc")]
 use {
-    crate::writer::base64_len,
     alloc::{string::String, vec::Vec},
     zeroize::Zeroizing,
 };
@@ -157,10 +156,10 @@ use crate::{Fingerprint, HashAlg};
 use rand_core::{CryptoRng, RngCore};
 
 #[cfg(feature = "std")]
-use std::{fs, io::Write, path::Path};
+use std::{fs, path::Path};
 
 #[cfg(all(unix, feature = "std"))]
-use std::os::unix::fs::OpenOptionsExt;
+use std::{io::Write, os::unix::fs::OpenOptionsExt};
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
@@ -262,7 +261,13 @@ impl PrivateKey {
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn to_openssh(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
-        let encoded_len = self.pem_encoded_len(line_ending)?;
+        let encoded_len = pem::encapsulated_len_wrapped(
+            Self::PEM_LABEL,
+            PEM_LINE_WIDTH,
+            line_ending,
+            self.encoded_len()?,
+        )?;
+
         let mut buf = vec![0u8; encoded_len];
         let actual_len = self.encode_openssh(line_ending, &mut buf)?.len();
         buf.truncate(actual_len);
@@ -599,28 +604,6 @@ impl PrivateKey {
             self.comment().encoded_len()?,
         ]
         .checked_sum()
-    }
-
-    /// Estimated length of a PEM-encoded key in OpenSSH format.
-    ///
-    /// May be slightly longer than the actual result.
-    #[cfg(feature = "alloc")]
-    fn pem_encoded_len(&self, line_ending: LineEnding) -> Result<usize> {
-        let base64_len = base64_len(self.encoded_len()?);
-
-        // Add the length of the line endings which will be inserted when
-        // encoded Base64 is line wrapped
-        let newline_len = base64_len
-            .saturating_sub(1)
-            .checked_div(PEM_LINE_WIDTH)
-            .and_then(|len| len.checked_add(line_ending.len()))
-            .ok_or(Error::Length)?;
-
-        Ok(pem::encapsulated_len(
-            Self::PEM_LABEL,
-            line_ending,
-            [base64_len, newline_len].checked_sum()?,
-        )?)
     }
 }
 

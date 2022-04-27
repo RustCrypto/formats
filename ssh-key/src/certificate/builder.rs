@@ -1,11 +1,14 @@
 //! OpenSSH certificate builder.
 
-use super::{CertType, Certificate, Field, OptionsMap, SigningKey};
-use crate::{public, Error, Result, Signature};
+use super::{unix_time::UnixTime, CertType, Certificate, Field, OptionsMap, SigningKey};
+use crate::{public, Result, Signature};
 use alloc::{string::String, vec::Vec};
 
 #[cfg(feature = "rand_core")]
 use rand_core::{CryptoRng, RngCore};
+
+#[cfg(feature = "std")]
+use std::time::SystemTime;
 
 #[cfg(doc)]
 use crate::PrivateKey;
@@ -81,8 +84,8 @@ pub struct Builder {
     cert_type: Option<CertType>,
     key_id: Option<String>,
     valid_principals: Option<Vec<String>>,
-    valid_after: u64,
-    valid_before: u64,
+    valid_after: UnixTime,
+    valid_before: UnixTime,
     critical_options: OptionsMap,
     extensions: OptionsMap,
     comment: Option<String>,
@@ -102,6 +105,11 @@ impl Builder {
         valid_after: u64,
         valid_before: u64,
     ) -> Self {
+        // TODO(tarcieri): return a `Result` instead of using `expect`
+        // Breaking change; needs to be done in the next release
+        let valid_after = UnixTime::new(valid_after).expect("valid_after time overflow");
+        let valid_before = UnixTime::new(valid_before).expect("valid_before time overflow");
+
         Self {
             nonce: nonce.into(),
             public_key: public_key.into(),
@@ -115,6 +123,35 @@ impl Builder {
             extensions: OptionsMap::new(),
             comment: None,
         }
+    }
+
+    /// Create a new certificate builder with the validity window specified
+    /// using [`SystemTime`] values.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    pub fn new_with_validity_times(
+        nonce: impl Into<Vec<u8>>,
+        public_key: impl Into<public::KeyData>,
+        valid_after: SystemTime,
+        valid_before: SystemTime,
+    ) -> Result<Self> {
+        let valid_after =
+            UnixTime::try_from(valid_after).map_err(|_| Field::ValidAfter.invalid_error())?;
+
+        let valid_before =
+            UnixTime::try_from(valid_before).map_err(|_| Field::ValidBefore.invalid_error())?;
+
+        // TODO(tarcieri): move this check into `Builder::new`
+        if valid_before < valid_after {
+            return Err(Field::ValidBefore.invalid_error());
+        }
+
+        Ok(Self::new(
+            nonce,
+            public_key,
+            valid_before.into(),
+            valid_after.into(),
+        ))
     }
 
     /// Create a new certificate builder, generating a random nonce using the
@@ -137,7 +174,7 @@ impl Builder {
     /// Default: `0`.
     pub fn serial(&mut self, serial: u64) -> Result<&mut Self> {
         if self.serial.is_some() {
-            return Err(Error::CertificateFieldInvalid(Field::Serial));
+            return Err(Field::Serial.invalid_error());
         }
 
         self.serial = Some(serial);
@@ -149,7 +186,7 @@ impl Builder {
     /// Default: [`CertType::User`].
     pub fn cert_type(&mut self, cert_type: CertType) -> Result<&mut Self> {
         if self.cert_type.is_some() {
-            return Err(Error::CertificateFieldInvalid(Field::Type));
+            return Err(Field::Type.invalid_error());
         }
 
         self.cert_type = Some(cert_type);
@@ -161,7 +198,7 @@ impl Builder {
     /// Default `""`
     pub fn key_id(&mut self, key_id: impl Into<String>) -> Result<&mut Self> {
         if self.key_id.is_some() {
-            return Err(Error::CertificateFieldInvalid(Field::KeyId));
+            return Err(Field::KeyId.invalid_error());
         }
 
         self.key_id = Some(key_id.into());
@@ -202,7 +239,7 @@ impl Builder {
         let data = data.into();
 
         if self.critical_options.contains_key(&name) {
-            return Err(Error::CertificateFieldInvalid(Field::CriticalOptions));
+            return Err(Field::CriticalOptions.invalid_error());
         }
 
         self.critical_options.insert(name, data);
@@ -221,7 +258,7 @@ impl Builder {
         let data = data.into();
 
         if self.extensions.contains_key(&name) {
-            return Err(Error::CertificateFieldInvalid(Field::Extensions));
+            return Err(Field::Extensions.invalid_error());
         }
 
         self.extensions.insert(name, data);
@@ -233,7 +270,7 @@ impl Builder {
     /// Default `""`
     pub fn comment(&mut self, comment: impl Into<String>) -> Result<&mut Self> {
         if self.comment.is_some() {
-            return Err(Error::CertificateFieldInvalid(Field::Comment));
+            return Err(Field::Comment.invalid_error());
         }
 
         self.comment = Some(comment.into());
@@ -248,7 +285,7 @@ impl Builder {
         // ensures that was explicitly configured via `all_principals_valid`.
         let valid_principals = match self.valid_principals {
             Some(principals) => principals,
-            None => return Err(Error::CertificateFieldInvalid(Field::ValidPrincipals)),
+            None => return Err(Field::ValidPrincipals.invalid_error()),
         };
 
         let mut cert = Certificate {
@@ -274,7 +311,7 @@ impl Builder {
 
         #[cfg(all(debug_assertions, feature = "fingerprint"))]
         cert.validate_at(
-            cert.valid_after,
+            cert.valid_after.into(),
             &[cert.signature_key.fingerprint(Default::default())],
         )?;
 

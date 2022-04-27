@@ -15,6 +15,7 @@ mod octet_string;
 mod oid;
 mod optional;
 mod printable_string;
+#[cfg(feature = "real")]
 mod real;
 mod sequence;
 mod sequence_of;

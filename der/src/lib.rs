@@ -36,7 +36,7 @@
 //! - [`bool`]: ASN.1 `BOOLEAN`.
 //! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`.
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`.
-//! - [`f64`]: ASN.1 `REAL`
+//! - [`f64`]: ASN.1 `REAL` (gated on `real` crate feature)
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`.
 //!   `String` requires `alloc` feature. See also [`Utf8String`].
 //!   Requires `alloc` feature. See also [`SetOf`].
@@ -338,7 +338,8 @@
 //! [`Utf8String`]: asn1::Utf8String
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(test, macro_use)]
+#[allow(unused_imports)]
+#[macro_use]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
@@ -396,7 +397,7 @@ pub use der_derive::{Choice, Enumerated, Newtype, Sequence, ValueOrd};
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub use {
-    crate::{decode::DecodePem, encode::EncodePem},
+    crate::{decode::DecodePem, encode::EncodePem, writer::PemWriter},
     pem_rfc7468 as pem,
 };
 

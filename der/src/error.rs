@@ -118,6 +118,13 @@ impl From<Utf8Error> for Error {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl From<alloc::string::FromUtf8Error> for Error {
+    fn from(err: alloc::string::FromUtf8Error) -> Error {
+        ErrorKind::Utf8(err.utf8_error()).into()
+    }
+}
+
 #[cfg(feature = "oid")]
 impl From<const_oid::Error> for Error {
     fn from(_: const_oid::Error) -> Error {
@@ -150,6 +157,7 @@ impl From<time::error::ComponentRange> for Error {
         ErrorKind::DateTime.into()
     }
 }
+
 /// Error type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
