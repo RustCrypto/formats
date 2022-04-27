@@ -138,6 +138,9 @@ extern crate alloc;
 extern crate std;
 
 pub mod authorized_keys;
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub mod known_hosts;
 pub mod private;
 pub mod public;
 
