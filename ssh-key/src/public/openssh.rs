@@ -37,12 +37,10 @@ impl<'a> Encapsulation<'a> {
         let comment = str::from_utf8(bytes)
             .map_err(|_| Error::CharacterEncoding)?
             .trim_end();
-
-        if algorithm_id.is_empty() || base64_data.is_empty() || comment.is_empty() {
+        if algorithm_id.is_empty() || base64_data.is_empty() {
             // TODO(tarcieri): better errors for these cases?
             return Err(Error::Length);
         }
-
         Ok(Self {
             algorithm_id,
             base64_data,
@@ -98,8 +96,8 @@ fn decode_segment<'a>(bytes: &mut &'a [u8]) -> Result<&'a [u8]> {
                 return Err(Error::CharacterEncoding);
             }
             [] => {
-                // Truncated public key
-                return Err(Error::Length);
+                // End of input, could be truncated or could be no comment
+                return start.get(..len).ok_or(Error::Length);
             }
         }
     }
