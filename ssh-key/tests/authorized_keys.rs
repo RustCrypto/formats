@@ -11,11 +11,11 @@ fn read_example_file() {
     assert_eq!(authorized_keys.len(), 4);
 
     assert_eq!(authorized_keys[0].config_opts().to_string(), "");
-    assert_eq!(authorized_keys[0].public_key().to_string(), "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti");
     assert_eq!(
-        authorized_keys[0].public_key().comment(),
-        ""
+        authorized_keys[0].public_key().to_string(),
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILM+rvN+ot98qgEN796jTiQfZfG1KaT0PtFDJ/XFSqti"
     );
+    assert_eq!(authorized_keys[0].public_key().comment(), "");
 
     assert_eq!(
         authorized_keys[1].config_opts().to_string(),

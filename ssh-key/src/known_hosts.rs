@@ -25,7 +25,7 @@ const MAGIC_HASH_PREFIX: &str = "|1|";
 /// For a full description of the format, see:
 /// <https://man7.org/linux/man-pages/man8/sshd.8.html#SSH_KNOWN_HOSTS_FILE_FORMAT>
 ///
-/// Each line of the file consists of a single public key tied to one or more hosts. 
+/// Each line of the file consists of a single public key tied to one or more hosts.
 /// Blank lines are ignored.
 ///
 /// Public keys consist of the following space-separated fields:
@@ -153,17 +153,13 @@ impl str::FromStr for Entry {
         // the optional marker field starts with an @, so look for that
         // and act accordingly.
         let (marker, line) = if line.starts_with('@') {
-            let (marker_str, line) = line
-                .split_once(' ')
-                .ok_or(Error::FormatEncoding)?;
+            let (marker_str, line) = line.split_once(' ').ok_or(Error::FormatEncoding)?;
             (Some(marker_str.parse()?), line)
         } else {
             (None, line)
         };
-        let (hosts_str, public_key_str) = line
-            .split_once(' ')
-            .ok_or(Error::FormatEncoding)?;
-        
+        let (hosts_str, public_key_str) = line.split_once(' ').ok_or(Error::FormatEncoding)?;
+
         let host_patterns = hosts_str.parse()?;
         let public_key = public_key_str.parse()?;
 
@@ -294,12 +290,12 @@ impl ToString for HostPatterns {
 
 #[cfg(test)]
 mod tests {
-    use core::str::FromStr;
     use alloc::string::ToString;
+    use core::str::FromStr;
 
-    use super::Marker;
-    use super::HostPatterns;
     use super::Entry;
+    use super::HostPatterns;
+    use super::Marker;
 
     #[test]
     fn simple_markers() {
@@ -319,7 +315,10 @@ mod tests {
 
     #[test]
     fn single_host_pattern() {
-        assert_eq!(Ok(HostPatterns::Patterns(vec!["cvs.example.net".to_string()])), "cvs.example.net".parse());
+        assert_eq!(
+            Ok(HostPatterns::Patterns(vec!["cvs.example.net".to_string()])),
+            "cvs.example.net".parse()
+        );
     }
     #[test]
     fn multiple_host_patterns() {
@@ -335,12 +334,16 @@ mod tests {
     #[test]
     fn single_hashed_host() {
         assert_eq!(
-            Ok(
-                HostPatterns::HashedName {
-                    salt: vec![37, 242, 147, 116, 24, 123, 172, 214, 215, 145, 80, 16, 9, 26, 120, 57, 10, 15, 126, 98],
-                    hash: [81, 33, 2, 175, 116, 150, 127, 82, 84, 62, 201, 172, 228, 10, 159, 15, 148, 31, 198, 67],
-                }
-            ), 
+            Ok(HostPatterns::HashedName {
+                salt: vec![
+                    37, 242, 147, 116, 24, 123, 172, 214, 215, 145, 80, 16, 9, 26, 120, 57, 10, 15,
+                    126, 98
+                ],
+                hash: [
+                    81, 33, 2, 175, 116, 150, 127, 82, 84, 62, 201, 172, 228, 10, 159, 15, 148, 31,
+                    198, 67
+                ],
+            }),
             "|1|JfKTdBh7rNbXkVAQCRp4OQoPfmI=|USECr3SWf1JUPsms5AqfD5QfxkM=".parse()
         );
     }
@@ -350,10 +353,19 @@ mod tests {
         let line = "@revoked |1|lcY/In3lsGnkJikLENb0DM70B/I=|Qs4e9Nr7mM6avuEv02fw2uFnwQo= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB9dG4kjRhQTtWTVzd2t27+t0DEHBPW7iOD23TUiYLio comment";
         let entry = Entry::from_str(line).expect("Valid entry");
         assert_eq!(entry.marker(), Some(&Marker::Revoked));
-        assert_eq!(entry.host_patterns(), &HostPatterns::HashedName {
-            salt: vec![149, 198, 63, 34, 125, 229, 176, 105, 228, 38, 41, 11, 16, 214, 244, 12, 206, 244, 7, 242],
-            hash: [66, 206, 30, 244, 218, 251, 152, 206, 154, 190, 225, 47, 211, 103, 240, 218, 225, 103, 193, 10],
-        });
+        assert_eq!(
+            entry.host_patterns(),
+            &HostPatterns::HashedName {
+                salt: vec![
+                    149, 198, 63, 34, 125, 229, 176, 105, 228, 38, 41, 11, 16, 214, 244, 12, 206,
+                    244, 7, 242
+                ],
+                hash: [
+                    66, 206, 30, 244, 218, 251, 152, 206, 154, 190, 225, 47, 211, 103, 240, 218,
+                    225, 103, 193, 10
+                ],
+            }
+        );
         // key parsing is tested elsewhere
     }
 }

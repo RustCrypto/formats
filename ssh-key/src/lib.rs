@@ -178,7 +178,9 @@ pub use base64ct::LineEnding;
 pub use pem_rfc7468 as pem;
 
 #[cfg(feature = "alloc")]
-pub use crate::{certificate::Certificate, known_hosts::KnownHosts, mpint::MPInt, signature::Signature};
+pub use crate::{
+    certificate::Certificate, known_hosts::KnownHosts, mpint::MPInt, signature::Signature,
+};
 
 #[cfg(feature = "ecdsa")]
 pub use sec1;
