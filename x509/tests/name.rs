@@ -126,11 +126,11 @@ fn decode_rdn() {
     // fails when caller adds items not in DER lexicographical order
     assert!(from_scratch2.0.add(*atav1a).is_err());
 
-    //parsing fails due to incorrect order
+    // allow out-of-order RDNs (see: RustCrypto/formats#625)
     assert!(RelativeDistinguishedName::from_der(
         &hex!("311F301106035504030C0A4A4F484E20534D495448300A060355040A0C03313233")[..],
     )
-    .is_err());
+    .is_ok());
 }
 
 // #[test]

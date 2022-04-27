@@ -1,12 +1,10 @@
 //! `SetOf` tests.
 
-#[cfg(feature = "alloc")]
-use {
-    der::{asn1::SetOfVec, DerOrd},
-    proptest::{prelude::*, string::*},
-};
+#![cfg(feature = "alloc")]
 
-#[cfg(feature = "alloc")]
+use der::{asn1::SetOfVec, DerOrd};
+use proptest::{prelude::*, string::*};
+
 proptest! {
     #[test]
     fn sort_equiv(bytes in bytes_regex(".{0,64}").unwrap()) {
@@ -18,36 +16,36 @@ proptest! {
     }
 }
 
+/// Set ordering tests.
 #[cfg(all(feature = "derive", feature = "oid"))]
-mod attr_regression {
-    #![cfg(all(feature = "derive", feature = "oid"))]
-
-    use core::cmp::Ordering;
+mod ordering {
     use der::{
-        asn1::{Any, ObjectIdentifier, SetOf},
-        Decode, Result, Sequence, ValueOrd,
+        asn1::{Any, ObjectIdentifier, SetOf, SetOfVec},
+        Decode, Sequence, ValueOrd,
     };
     use hex_literal::hex;
 
-    /// Attribute type/value pairs as defined in [RFC 5280 Section 4.1.2.4].
-    ///
-    /// [RFC 5280 Section 4.1.2.4]: https://tools.ietf.org/html/rfc5280#section-4.1.2.4
-    #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence)]
+    /// X.501 `AttributeTypeAndValue`
+    #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
     pub struct AttributeTypeAndValue<'a> {
-        /// OID describing the type of the attribute
         pub oid: ObjectIdentifier,
-
-        /// Value of the attribute
         pub value: Any<'a>,
     }
 
-    impl ValueOrd for AttributeTypeAndValue<'_> {
-        fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-            match self.oid.value_cmp(&other.oid)? {
-                Ordering::Equal => self.value.value_cmp(&other.value),
-                other => Ok(other),
-            }
-        }
+    const OUT_OF_ORDER_RDN_EXAMPLE: &[u8] =
+        &hex!("311F301106035504030C0A4A4F484E20534D495448300A060355040A0C03313233");
+
+    /// For compatibility reasons, we allow non-canonical DER with out-of-order
+    /// sets in order to match the behavior of other implementations.
+    #[test]
+    fn allow_out_of_order_setof() {
+        assert!(SetOf::<AttributeTypeAndValue<'_>, 2>::from_der(OUT_OF_ORDER_RDN_EXAMPLE).is_ok());
+    }
+
+    /// Same as above, with `SetOfVec` instead of `SetOf`.
+    #[test]
+    fn allow_out_of_order_setofvec() {
+        assert!(SetOfVec::<AttributeTypeAndValue<'_>>::from_der(OUT_OF_ORDER_RDN_EXAMPLE).is_ok());
     }
 
     /// Test to ensure ordering is handled correctly.
