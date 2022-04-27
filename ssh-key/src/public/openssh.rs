@@ -67,8 +67,10 @@ impl<'a> Encapsulation<'a> {
         let base64_len = writer.finish()?.len();
 
         offset = offset.checked_add(base64_len).ok_or(Error::Length)?;
-        encode_str(out, &mut offset, " ")?;
-        encode_str(out, &mut offset, comment)?;
+        if !comment.is_empty() {
+            encode_str(out, &mut offset, " ")?;
+            encode_str(out, &mut offset, comment)?;
+        }
         Ok(str::from_utf8(&out[..offset])?)
     }
 }
