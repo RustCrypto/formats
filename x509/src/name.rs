@@ -1,10 +1,9 @@
 //! Name-related definitions as defined in X.501 (and updated by RFC 5280).
 
-use alloc::vec::Vec;
-
 use crate::attr::AttributeTypeAndValue;
-
-use der::{asn1::SetOfVec, Decode, Encode, Newtype};
+use alloc::vec::Vec;
+use core::fmt;
+use der::{asn1::SetOfVec, Decode, Encode};
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
 ///
@@ -22,8 +21,46 @@ pub type Name<'a> = RdnSequence<'a>;
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
-#[derive(Clone, Debug, Default, PartialEq, Eq, Newtype)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RdnSequence<'a>(pub Vec<RelativeDistinguishedName<'a>>);
+
+impl RdnSequence<'_> {
+    /// Converts an RDNSequence string into an encoded RDNSequence
+    ///
+    /// This function follows the rules in [RFC 4514].
+    ///
+    /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+    pub fn encode_from_string(s: &str) -> Result<Vec<u8>, der::Error> {
+        let ders = split(s, b',')
+            .map(RelativeDistinguishedName::encode_from_string)
+            .collect::<Result<Vec<_>, der::Error>>()?;
+
+        let mut out = Vec::new();
+        for der in ders.iter() {
+            out.push(RelativeDistinguishedName::from_der(der)?);
+        }
+
+        RdnSequence(out).to_vec()
+    }
+}
+
+/// Serializes the structure according to the rules in [RFC 4514].
+///
+/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+impl fmt::Display for RdnSequence<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, atv) in self.0.iter().enumerate() {
+            match i {
+                0 => write!(f, "{}", atv)?,
+                _ => write!(f, ",{}", atv)?,
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl_newtype!(RdnSequence<'a>, Vec<RelativeDistinguishedName<'a>>);
 
 /// Find the indices of all non-escaped separators.
 fn find(s: &str, b: u8) -> impl '_ + Iterator<Item = usize> {
@@ -52,42 +89,6 @@ fn split(s: &str, b: u8) -> impl '_ + Iterator<Item = &'_ str> {
         prev = i + 1;
         x
     })
-}
-
-impl RdnSequence<'_> {
-    /// Converts an RDNSequence string into an encoded RDNSequence
-    ///
-    /// This function follows the rules in [RFC 4514].
-    ///
-    /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
-    pub fn encode_from_string(s: &str) -> Result<Vec<u8>, der::Error> {
-        let ders = split(s, b',')
-            .map(RelativeDistinguishedName::encode_from_string)
-            .collect::<Result<Vec<_>, der::Error>>()?;
-
-        let mut out = Vec::new();
-        for der in ders.iter() {
-            out.push(RelativeDistinguishedName::from_der(der)?);
-        }
-
-        RdnSequence(out).to_vec()
-    }
-}
-
-/// Serializes the structure according to the rules in [RFC 4514].
-///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
-impl core::fmt::Display for RdnSequence<'_> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        for (i, atv) in self.0.iter().enumerate() {
-            match i {
-                0 => write!(f, "{}", atv)?,
-                _ => write!(f, ",{}", atv)?,
-            }
-        }
-
-        Ok(())
-    }
 }
 
 /// X.501 DistinguishedName as defined in [RFC 5280 Section 4.1.2.4].
@@ -123,7 +124,7 @@ pub type DistinguishedName<'a> = RdnSequence<'a>;
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
-#[derive(Clone, Debug, Default, PartialEq, Eq, Newtype)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RelativeDistinguishedName<'a>(pub SetOfVec<AttributeTypeAndValue<'a>>);
 
 impl RelativeDistinguishedName<'_> {
@@ -149,8 +150,8 @@ impl RelativeDistinguishedName<'_> {
 /// Serializes the structure according to the rules in [RFC 4514].
 ///
 /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
-impl core::fmt::Display for RelativeDistinguishedName<'_> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl fmt::Display for RelativeDistinguishedName<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (i, atv) in self.0.iter().enumerate() {
             match i {
                 0 => write!(f, "{}", atv)?,
@@ -161,3 +162,8 @@ impl core::fmt::Display for RelativeDistinguishedName<'_> {
         Ok(())
     }
 }
+
+impl_newtype!(
+    RelativeDistinguishedName<'a>,
+    SetOfVec<AttributeTypeAndValue<'a>>
+);

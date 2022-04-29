@@ -5,7 +5,7 @@ use const_oid::db::rfc5280::{
 };
 use const_oid::AssociatedOid;
 use der::asn1::{GeneralizedTime, ObjectIdentifier};
-use der::{Newtype, Sequence};
+use der::Sequence;
 use flagset::{flags, FlagSet};
 
 flags! {
@@ -44,12 +44,14 @@ flags! {
 /// KeyUsage as defined in [RFC 5280 Section 4.2.1.3].
 ///
 /// [RFC 5280 Section 4.2.1.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Newtype)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct KeyUsage(pub FlagSet<KeyUsages>);
 
 impl AssociatedOid for KeyUsage {
     const OID: ObjectIdentifier = ID_CE_KEY_USAGE;
 }
+
+impl_newtype!(KeyUsage, FlagSet<KeyUsages>);
 
 /// ExtKeyUsageSyntax as defined in [RFC 5280 Section 4.2.1.12].
 ///
@@ -67,12 +69,14 @@ impl AssociatedOid for KeyUsage {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
-#[derive(Clone, Debug, PartialEq, Eq, Newtype)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExtendedKeyUsage(pub Vec<ObjectIdentifier>);
 
 impl AssociatedOid for ExtendedKeyUsage {
     const OID: ObjectIdentifier = ID_CE_EXT_KEY_USAGE;
 }
+
+impl_newtype!(ExtendedKeyUsage, Vec<ObjectIdentifier>);
 
 /// PrivateKeyUsagePeriod as defined in [RFC 3280 Section 4.2.1.4].
 ///

@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 
 use const_oid::AssociatedOid;
 use der::asn1::{BitString, UIntBytes};
-use der::{Decode, Enumerated, Error, ErrorKind, Newtype, Sequence};
+use der::{Decode, Enumerated, Error, ErrorKind, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
@@ -154,5 +154,4 @@ pub struct Certificate<'a> {
 /// ```
 ///
 /// [RFC 6066]: https://datatracker.ietf.org/doc/html/rfc6066#section-10.1
-#[derive(Clone, Debug, PartialEq, Eq, Default, Newtype)]
-pub struct PkiPath<'a>(pub Vec<Certificate<'a>>);
+pub type PkiPath<'a> = Vec<Certificate<'a>>;

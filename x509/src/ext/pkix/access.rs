@@ -6,7 +6,7 @@ use const_oid::{
     db::rfc5280::{ID_PE_AUTHORITY_INFO_ACCESS, ID_PE_SUBJECT_INFO_ACCESS},
     AssociatedOid,
 };
-use der::{asn1::ObjectIdentifier, Newtype, Sequence};
+use der::{asn1::ObjectIdentifier, Sequence};
 
 /// AuthorityInfoAccessSyntax as defined in [RFC 5280 Section 4.2.2.1].
 ///
@@ -15,12 +15,14 @@ use der::{asn1::ObjectIdentifier, Newtype, Sequence};
 /// ```
 ///
 /// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
-#[derive(Clone, Debug, Default, PartialEq, Eq, Newtype)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct AuthorityInfoAccessSyntax<'a>(pub Vec<AccessDescription<'a>>);
 
 impl<'a> AssociatedOid for AuthorityInfoAccessSyntax<'a> {
     const OID: ObjectIdentifier = ID_PE_AUTHORITY_INFO_ACCESS;
 }
+
+impl_newtype!(AuthorityInfoAccessSyntax<'a>, Vec<AccessDescription<'a>>);
 
 /// SubjectInfoAccessSyntax as defined in [RFC 5280 Section 4.2.2.2].
 ///
@@ -29,12 +31,14 @@ impl<'a> AssociatedOid for AuthorityInfoAccessSyntax<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.2.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.2
-#[derive(Clone, Debug, Default, PartialEq, Eq, Newtype)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SubjectInfoAccessSyntax<'a>(pub Vec<AccessDescription<'a>>);
 
 impl<'a> AssociatedOid for SubjectInfoAccessSyntax<'a> {
     const OID: ObjectIdentifier = ID_PE_SUBJECT_INFO_ACCESS;
 }
+
+impl_newtype!(SubjectInfoAccessSyntax<'a>, Vec<AccessDescription<'a>>);
 
 /// AccessDescription as defined in [RFC 5280 Section 4.2.2.1].
 ///
