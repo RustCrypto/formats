@@ -5,7 +5,7 @@ use alloc::vec::Vec;
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 use const_oid::AssociatedOid;
 use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, UIntBytes, Utf8String};
-use der::{Any, Choice, Newtype, Sequence};
+use der::{Any, Choice, Sequence};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -14,12 +14,14 @@ use der::{Any, Choice, Newtype, Sequence};
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-#[derive(Clone, Debug, PartialEq, Eq, Newtype)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CertificatePolicies<'a>(pub Vec<PolicyInformation<'a>>);
 
 impl<'a> AssociatedOid for CertificatePolicies<'a> {
     const OID: ObjectIdentifier = ID_CE_CERTIFICATE_POLICIES;
 }
+
+impl_newtype!(CertificatePolicies<'a>, Vec<PolicyInformation<'a>>);
 
 /// PolicyInformation as defined in [RFC 5280 Section 4.2.1.4].
 ///

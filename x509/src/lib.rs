@@ -19,7 +19,8 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-pub use der;
+#[macro_use]
+mod macros;
 
 pub mod anchor;
 pub mod attr;
@@ -31,3 +32,4 @@ pub mod request;
 pub mod time;
 
 pub use certificate::{Certificate, PkiPath, TbsCertificate, Version};
+pub use der;
