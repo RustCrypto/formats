@@ -85,6 +85,18 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 }
 
+impl<T, const N: usize> AsRef<[Option<T>]> for ArrayVec<T, N> {
+    fn as_ref(&self) -> &[Option<T>] {
+        &self.elements[..self.length]
+    }
+}
+
+impl<T, const N: usize> AsMut<[Option<T>]> for ArrayVec<T, N> {
+    fn as_mut(&mut self) -> &mut [Option<T>] {
+        &mut self.elements[..self.length]
+    }
+}
+
 impl<T, const N: usize> Default for ArrayVec<T, N> {
     fn default() -> Self {
         Self::new()
@@ -114,11 +126,12 @@ impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-        if let Some(Some(res)) = self.elements.get(self.position) {
-            self.position = self.position.checked_add(1)?;
-            Some(res)
-        } else {
-            None
+        match self.elements.get(self.position) {
+            Some(Some(res)) => {
+                self.position = self.position.checked_add(1)?;
+                Some(res)
+            }
+            _ => None,
         }
     }
 

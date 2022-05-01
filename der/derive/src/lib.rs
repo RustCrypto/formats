@@ -120,7 +120,6 @@ mod asn1_type;
 mod attributes;
 mod choice;
 mod enumerated;
-mod newtype;
 mod sequence;
 mod tag;
 mod value_ord;
@@ -130,7 +129,6 @@ use crate::{
     attributes::{FieldAttrs, TypeAttrs, ATTR_NAME},
     choice::DeriveChoice,
     enumerated::DeriveEnumerated,
-    newtype::DeriveNewtype,
     sequence::DeriveSequence,
     tag::{Tag, TagMode, TagNumber},
     value_ord::DeriveValueOrd,
@@ -270,16 +268,4 @@ pub fn derive_sequence(input: TokenStream) -> TokenStream {
 pub fn derive_value_ord(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     DeriveValueOrd::new(input).to_tokens().into()
-}
-
-/// Wraps a der type in a newtype.
-///
-/// The newtype receives implementations of `der::FixedTag`,
-/// `der::DecodeValue`, `der::EncodeValue`, `Deref`, `DerefMut`, and
-/// bi-directional `From`.
-#[proc_macro_derive(Newtype)]
-#[proc_macro_error]
-pub fn derive_newtype(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    DeriveNewtype::new(input).to_tokens().into()
 }

@@ -18,7 +18,8 @@ specification.
 Additionally provides support for OpenSSH certificates as specified in
 [PROTOCOL.certkeys] including certificate validation and certificate authority
 (CA) support, as well as FIDO/U2F keys as specified in [PROTOCOL.u2f] (and
-certificates thereof), and also the `authorized_keys` file format.
+certificates thereof), and also the `authorized_keys` and `known_hosts`
+file formats.
 
 Supports a minimal profile which works on heapless `no_std` targets. See
 "Supported algorithms" table below for which key formats work on heapless
@@ -44,6 +45,7 @@ respective SSH key algorithm.
 - [x] Fingerprint support
 - [x] `no_std` support including support for "heapless" (no-`alloc`) targets
 - [x] Parsing `authorized_keys` files
+- [x] Parsing `known_hosts` files
 - [x] `serde` support
 - [x] `zeroize` support for private keys
 

@@ -138,6 +138,9 @@ extern crate alloc;
 extern crate std;
 
 pub mod authorized_keys;
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub mod known_hosts;
 pub mod private;
 pub mod public;
 
@@ -175,7 +178,9 @@ pub use base64ct::LineEnding;
 pub use pem_rfc7468 as pem;
 
 #[cfg(feature = "alloc")]
-pub use crate::{certificate::Certificate, mpint::MPInt, signature::Signature};
+pub use crate::{
+    certificate::Certificate, known_hosts::KnownHosts, mpint::MPInt, signature::Signature,
+};
 
 #[cfg(feature = "ecdsa")]
 pub use sec1;
