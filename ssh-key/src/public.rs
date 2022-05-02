@@ -263,6 +263,50 @@ impl From<&PublicKey> for KeyData {
     }
 }
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<DsaPublicKey> for PublicKey {
+    fn from(public_key: DsaPublicKey) -> PublicKey {
+        KeyData::from(public_key).into()
+    }
+}
+
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+impl From<EcdsaPublicKey> for PublicKey {
+    fn from(public_key: EcdsaPublicKey) -> PublicKey {
+        KeyData::from(public_key).into()
+    }
+}
+
+impl From<Ed25519PublicKey> for PublicKey {
+    fn from(public_key: Ed25519PublicKey) -> PublicKey {
+        KeyData::from(public_key).into()
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<RsaPublicKey> for PublicKey {
+    fn from(public_key: RsaPublicKey) -> PublicKey {
+        KeyData::from(public_key).into()
+    }
+}
+
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+impl From<SkEcdsaSha2NistP256> for PublicKey {
+    fn from(public_key: SkEcdsaSha2NistP256) -> PublicKey {
+        KeyData::from(public_key).into()
+    }
+}
+
+impl From<SkEd25519> for PublicKey {
+    fn from(public_key: SkEd25519) -> PublicKey {
+        KeyData::from(public_key).into()
+    }
+}
+
 impl FromStr for PublicKey {
     type Err = Error;
 
