@@ -1,11 +1,12 @@
 [package]
 name = "ssh-key"
-version = "0.4.1"
+version = "0.4.2"
 description = """
 Pure Rust implementation of SSH key file format decoders/encoders as described
 in RFC4251 and RFC4253 as well as the OpenSSH key formats, certificates
 (including certificate validation and certificate authority support), and
-the `authorized_keys` file format. Supports `no_std` embedded targets.
+the `authorized_keys` and `known_hosts` file formats. Supports a `no_std`
+profile for embedded targets.
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
