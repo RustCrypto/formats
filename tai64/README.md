@@ -36,7 +36,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/tai64.svg
+[crate-image]: https://buildstats.info/crate/tai64
 [crate-link]: https://crates.io/crates/tai64
 [docs-image]: https://docs.rs/tai64/badge.svg
 [docs-link]: https://docs.rs/tai64/
