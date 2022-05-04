@@ -396,7 +396,7 @@ pub use const_oid as oid;
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub use {
-    crate::{decode::DecodePem, encode::EncodePem, writer::PemWriter},
+    crate::{decode::DecodePem, encode::EncodePem, writer::pem::PemWriter},
     pem_rfc7468 as pem,
 };
 
