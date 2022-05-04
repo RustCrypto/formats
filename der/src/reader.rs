@@ -2,6 +2,9 @@
 
 mod nested;
 
+#[cfg(feature = "pem")]
+pub(crate) mod pem;
+
 pub(crate) use nested::NestedReader;
 
 use crate::{

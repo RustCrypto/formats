@@ -3,10 +3,7 @@
 use crate::{Decoder, FixedTag, Header, Reader, Result};
 
 #[cfg(feature = "pem")]
-use {
-    crate::pem::{self, PemLabel},
-    zeroize::Zeroize,
-};
+use crate::{pem::PemLabel, PemReader};
 
 #[cfg(doc)]
 use crate::{Length, Tag};
@@ -65,13 +62,9 @@ pub trait DecodePem: DecodeOwned + PemLabel {
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl<T: DecodeOwned + PemLabel> DecodePem for T {
     fn from_pem(pem: impl AsRef<[u8]>) -> Result<Self> {
-        // TODO(tarcieri): support for decoding directly from PEM (instead of two-pass)
-        let (label, mut der_bytes) = pem::decode_vec(pem.as_ref())?;
-        Self::validate_pem_label(label)?;
-
-        let result = T::from_der(&der_bytes);
-        der_bytes.zeroize();
-        result
+        let mut reader = PemReader::new(pem.as_ref())?;
+        Self::validate_pem_label(reader.type_label())?;
+        T::decode(&mut reader)
     }
 }
 
