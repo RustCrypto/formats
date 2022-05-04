@@ -66,22 +66,9 @@ impl<T, const N: usize> ArrayVec<T, N> {
         self.length.checked_sub(1).and_then(|n| self.get(n))
     }
 
-    /// Try to convert this [`ArrayVec`] into a `[T; N]`.
-    ///
-    /// Returns `None` if the [`ArrayVec`] does not contain `N` elements.
-    pub fn try_into_array(self) -> Result<[T; N]> {
-        if self.length != N {
-            return Err(ErrorKind::Incomplete {
-                expected_len: N.try_into()?,
-                actual_len: self.length.try_into()?,
-            }
-            .into());
-        }
-
-        Ok(self.elements.map(|elem| match elem {
-            Some(e) => e,
-            None => unreachable!(),
-        }))
+    /// Extract the inner array.
+    pub fn into_array(self) -> [Option<T>; N] {
+        self.elements
     }
 }
 

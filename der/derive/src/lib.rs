@@ -134,8 +134,16 @@ use crate::{
     value_ord::DeriveValueOrd,
 };
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use proc_macro_error::proc_macro_error;
-use syn::{parse_macro_input, DeriveInput};
+use quote::quote;
+use syn::{parse_macro_input, DeriveInput, Lifetime};
+
+/// Get the default lifetime.
+fn default_lifetime() -> proc_macro2::TokenStream {
+    let lifetime = Lifetime::new("'__der_lifetime", Span::call_site());
+    quote!(#lifetime)
+}
 
 /// Derive the [`Choice`][1] trait on an `enum`.
 ///

@@ -1,8 +1,8 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Error, ErrorKind, FixedTag,
-    Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    asn1::Any, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
+    Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
@@ -116,14 +116,14 @@ impl<'a> BitString<'a> {
 }
 
 impl<'a> DecodeValue<'a> for BitString<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let header = Header {
             tag: header.tag,
             length: (header.length - Length::ONE)?,
         };
 
-        let unused_bits = decoder.read_byte()?;
-        let inner = ByteSlice::decode_value(decoder, header)?;
+        let unused_bits = reader.read_byte()?;
+        let inner = ByteSlice::decode_value(reader, header)?;
         Self::new(unused_bits, inner.as_slice())
     }
 }
@@ -239,12 +239,12 @@ where
     T::Type: From<bool>,
     T::Type: core::ops::Shl<usize, Output = T::Type>,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let position = decoder.position();
-
-        let bits = BitString::decode_value(decoder, header)?;
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        let position = reader.position();
+        let bits = BitString::decode_value(reader, header)?;
 
         let mut flags = T::none().bits();
+
         if bits.bit_len() > core::mem::size_of_val(&flags) * 8 {
             return Err(Error::new(ErrorKind::Overlength, position));
         }

@@ -2,8 +2,8 @@
 
 use super::uint;
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, ErrorKind, FixedTag, Header,
-    Length, Result, Tag, Writer,
+    asn1::Any, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length,
+    Reader, Result, Tag, Writer,
 };
 
 /// "Big" unsigned ASN.1 `INTEGER` type.
@@ -46,8 +46,8 @@ impl<'a> UIntBytes<'a> {
 }
 
 impl<'a> DecodeValue<'a> for UIntBytes<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        let bytes = ByteSlice::decode_value(reader, header)?.as_slice();
         let result = Self::new(uint::decode_to_slice(bytes)?)?;
 
         // Ensure we compute the same encoded length as the original any value.

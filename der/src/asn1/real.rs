@@ -8,16 +8,16 @@
 )]
 
 use crate::{
-    str_slice::StrSlice, ByteSlice, DecodeValue, Decoder, EncodeValue, FixedTag, Header, Length,
+    str_slice::StrSlice, ByteSlice, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader,
     Result, Tag, Writer,
 };
 
 use super::integer::uint::strip_leading_zeroes;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "real")))]
-impl DecodeValue<'_> for f64 {
-    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
+impl<'a> DecodeValue<'a> for f64 {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        let bytes = ByteSlice::decode_value(reader, header)?.as_slice();
 
         if header.length == Length::ZERO {
             Ok(0.0)
@@ -99,6 +99,7 @@ impl EncodeValue for f64 {
         } else {
             // The length is that of the first octets plus those needed for the exponent plus those needed for the mantissa
             let (_sign, exponent, mantissa) = decode_f64(*self);
+
             let exponent_len = if exponent == 0 {
                 // Section 8.5.7.4: there must be at least one octet for exponent encoding
                 // But, if the exponent is zero, it'll be skipped, so we make sure force it to 1
@@ -107,13 +108,14 @@ impl EncodeValue for f64 {
                 let ebytes = exponent.to_be_bytes();
                 Length::try_from(strip_leading_zeroes(&ebytes).len())?
             };
+
             let mantissa_len = if mantissa == 0 {
                 Length::ONE
             } else {
                 let mbytes = mantissa.to_be_bytes();
-                // encoded_len(&mbytes)?
                 Length::try_from(strip_leading_zeroes(&mbytes).len())?
             };
+
             exponent_len + mantissa_len + Length::ONE
         }
     }

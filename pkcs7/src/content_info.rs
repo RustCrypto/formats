@@ -2,7 +2,7 @@ use crate::{data_content::DataContent, encrypted_data_content::EncryptedDataCont
 
 use der::{
     asn1::{ContextSpecific, OctetString},
-    Decode, Decoder, Encode, Sequence, TagMode, TagNumber,
+    DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
 };
 
 const CONTENT_TAG: TagNumber = TagNumber::new(0);
@@ -65,21 +65,20 @@ impl<'a> ContentInfo<'a> {
     }
 }
 
-impl<'a> Decode<'a> for ContentInfo<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<ContentInfo<'a>> {
-        decoder.sequence(|decoder| {
-            let content_type = decoder.decode()?;
+impl<'a> DecodeValue<'a> for ContentInfo<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<ContentInfo<'a>> {
+        reader.read_nested(header.length, |reader| {
+            let content_type = reader.decode()?;
             match content_type {
                 ContentType::Data => Ok(ContentInfo::Data(
-                    decoder.context_specific::<DataContent<'_>>(CONTENT_TAG, TagMode::Explicit)?,
+                    reader.context_specific::<DataContent<'_>>(CONTENT_TAG, TagMode::Explicit)?,
                 )),
                 ContentType::EncryptedData => Ok(ContentInfo::EncryptedData(
-                    ContextSpecific::decode_explicit(decoder, CONTENT_TAG)?
-                        .map(|field| field.value),
+                    reader.context_specific(CONTENT_TAG, TagMode::Explicit)?,
                 )),
                 _ => Ok(ContentInfo::Other((
                     content_type,
-                    decoder.context_specific::<OctetString<'_>>(CONTENT_TAG, TagMode::Explicit)?,
+                    reader.context_specific::<OctetString<'_>>(CONTENT_TAG, TagMode::Explicit)?,
                 ))),
             }
         })

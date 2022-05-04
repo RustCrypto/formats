@@ -1,7 +1,7 @@
 //! PKCS#1 RSA Public Keys.
 
 use crate::{Error, Result};
-use der::{asn1::UIntBytes, Decode, Decoder, Encode, Sequence};
+use der::{asn1::UIntBytes, Decode, DecodeValue, Encode, Header, Reader, Sequence};
 
 #[cfg(feature = "alloc")]
 use der::Document;
@@ -30,12 +30,12 @@ pub struct RsaPublicKey<'a> {
     pub public_exponent: UIntBytes<'a>,
 }
 
-impl<'a> Decode<'a> for RsaPublicKey<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
+impl<'a> DecodeValue<'a> for RsaPublicKey<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
+        reader.read_nested(header.length, |reader| {
             Ok(Self {
-                modulus: decoder.decode()?,
-                public_exponent: decoder.decode()?,
+                modulus: reader.decode()?,
+                public_exponent: reader.decode()?,
             })
         })
     }

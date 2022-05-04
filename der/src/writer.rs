@@ -22,18 +22,18 @@ pub trait Writer {
 /// `Writer` type which outputs PEM-encoded data.
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-pub struct PemWriter<'o>(pem::Encoder<'static, 'o>);
+pub struct PemWriter<'w>(pem::Encoder<'static, 'w>);
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-impl<'o> PemWriter<'o> {
+impl<'w> PemWriter<'w> {
     /// Create a new PEM writer which outputs into the provided buffer.
     ///
     /// Uses the default 64-character line wrapping.
     pub fn new(
         type_label: &'static str,
         line_ending: pem::LineEnding,
-        out: &'o mut [u8],
+        out: &'w mut [u8],
     ) -> Result<Self> {
         Ok(Self(pem::Encoder::new(type_label, line_ending, out)?))
     }

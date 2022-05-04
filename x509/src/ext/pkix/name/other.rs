@@ -1,4 +1,4 @@
-use der::{asn1::ObjectIdentifier, Any, Decode, Sequence};
+use der::{asn1::ObjectIdentifier, Any, Sequence};
 
 /// OtherName as defined in [RFC 5280 Section 4.2.1.6].
 ///

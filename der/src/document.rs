@@ -148,11 +148,12 @@ impl Debug for Document {
     }
 }
 
-impl Decode<'_> for Document {
-    fn decode(decoder: &mut Decoder<'_>) -> Result<Document> {
-        let header = decoder.peek_header()?;
+impl<'a> Decode<'a> for Document {
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Document> {
+        let header = reader.peek_header()?;
         let length = (header.encoded_len()? + header.length)?;
-        let bytes = decoder.read_slice(length)?;
+        let bytes = reader.read_slice(length)?;
+
         Ok(Self {
             der_bytes: bytes.into(),
             length,

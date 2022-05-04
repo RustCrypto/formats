@@ -2,7 +2,7 @@
 //! the purposes of decoding/encoding ASN.1 `ENUMERATED` types as mapped to
 //! enum variants.
 
-use crate::ATTR_NAME;
+use crate::{default_lifetime, ATTR_NAME};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
@@ -102,6 +102,7 @@ impl DeriveEnumerated {
 
     /// Lower the derived output into a [`TokenStream`].
     pub fn to_tokens(&self) -> TokenStream {
+        let default_lifetime = default_lifetime();
         let ident = &self.ident;
         let repr = &self.repr;
         let tag = match self.integer {
@@ -115,12 +116,12 @@ impl DeriveEnumerated {
         }
 
         quote! {
-            impl ::der::DecodeValue<'_> for #ident {
-                fn decode_value(
-                    decoder: &mut ::der::Decoder<'_>,
+            impl<#default_lifetime> ::der::DecodeValue<#default_lifetime> for #ident {
+                fn decode_value<R: ::der::Reader<#default_lifetime>>(
+                    reader: &mut R,
                     header: ::der::Header
                 ) -> ::der::Result<Self> {
-                    <#repr as ::der::DecodeValue>::decode_value(decoder, header)?.try_into()
+                    <#repr as ::der::DecodeValue>::decode_value(reader, header)?.try_into()
                 }
             }
 
