@@ -11,8 +11,8 @@
 //! ensuring they'll be in the proper order if reserialized.
 
 use crate::{
-    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue,
-    Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error,
+    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -95,21 +95,18 @@ impl<'a, T, const N: usize> DecodeValue<'a> for SetOf<T, N>
 where
     T: Decode<'a> + DerOrd,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let end_pos = (decoder.position() + header.length)?;
-        let mut result = Self::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            let mut result = Self::new();
 
-        while decoder.position() < end_pos {
-            result.inner.add(decoder.decode()?)?;
-        }
+            while !reader.is_finished() {
+                result.inner.add(T::decode(reader)?)?;
+            }
 
-        if decoder.position() != end_pos {
-            decoder.error(ErrorKind::Length { tag: Self::TAG });
-        }
-
-        der_sort(result.inner.as_mut())?;
-        validate(result.inner.as_ref())?;
-        Ok(result)
+            der_sort(result.inner.as_mut())?;
+            validate(result.inner.as_ref())?;
+            Ok(result)
+        })
     }
 }
 
@@ -284,21 +281,18 @@ impl<'a, T> DecodeValue<'a> for SetOfVec<T>
 where
     T: Decode<'a> + DerOrd,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let end_pos = (decoder.position() + header.length)?;
-        let mut inner = Vec::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            let mut inner = Vec::new();
 
-        while decoder.position() < end_pos {
-            inner.push(decoder.decode()?);
-        }
+            while !reader.is_finished() {
+                inner.push(T::decode(reader)?);
+            }
 
-        if decoder.position() != end_pos {
-            decoder.error(ErrorKind::Length { tag: Self::TAG });
-        }
-
-        der_sort(inner.as_mut())?;
-        validate(inner.as_ref())?;
-        Ok(Self { inner })
+            der_sort(inner.as_mut())?;
+            validate(inner.as_ref())?;
+            Ok(Self { inner })
+        })
     }
 }
 

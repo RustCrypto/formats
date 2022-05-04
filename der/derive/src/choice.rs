@@ -5,7 +5,7 @@
 mod variant;
 
 use self::variant::ChoiceVariant;
-use crate::TypeAttrs;
+use crate::{default_lifetime, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
@@ -59,10 +59,9 @@ impl DeriveChoice {
     pub fn to_tokens(&self) -> TokenStream {
         let ident = &self.ident;
 
-        // Explicit lifetime or `'_`
         let lifetime = match self.lifetime {
             Some(ref lifetime) => quote!(#lifetime),
-            None => quote!('_),
+            None => default_lifetime(),
         };
 
         // Lifetime parameters
@@ -88,16 +87,16 @@ impl DeriveChoice {
         }
 
         quote! {
-            impl<#lt_params> ::der::Choice<#lifetime> for #ident<#lt_params> {
+            impl<#lifetime> ::der::Choice<#lifetime> for #ident<#lt_params> {
                 fn can_decode(tag: ::der::Tag) -> bool {
                     matches!(tag, #(#can_decode_body)|*)
                 }
             }
 
-            impl<#lt_params> ::der::Decode<#lifetime> for #ident<#lt_params> {
-                fn decode(decoder: &mut ::der::Decoder<#lifetime>) -> ::der::Result<Self> {
+            impl<#lifetime> ::der::Decode<#lifetime> for #ident<#lt_params> {
+                fn decode<R: ::der::Reader<#lifetime>>(reader: &mut R) -> ::der::Result<Self> {
                     use der::Reader as _;
-                    match decoder.peek_tag()? {
+                    match reader.peek_tag()? {
                         #(#decode_body)*
                         actual => Err(der::ErrorKind::TagUnexpected {
                             expected: None,

@@ -33,10 +33,6 @@ pub(crate) trait Reader: Sized {
     /// Decodes a `uint32` which identifies the length of some encapsulated
     /// data, then calls the given nested reader function with the length of
     /// the remaining data.
-    ///
-    /// As a postcondition, this function checks that the total amount of data
-    /// consumed matches the length prefix.
-    // TODO(tarcieri): enforce that data can't be read past the given length
     fn read_nested<'r, T, F>(&'r mut self, f: F) -> Result<T>
     where
         F: FnOnce(&mut NestedReader<'r, Self>) -> Result<T>,

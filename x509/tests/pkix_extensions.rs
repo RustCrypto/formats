@@ -1030,10 +1030,11 @@ fn decode_idp() {
     let idp =
         IssuingDistributionPoint::from_der(&hex!("3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8304079F80"));
     let err = idp.err().unwrap();
+    assert_eq!(err.position().unwrap(), 103u8.into());
     assert_eq!(
         ErrorKind::Incomplete {
-            expected_len: 104u8.into(),
-            actual_len: 103u8.into()
+            expected_len: 106u8.into(),
+            actual_len: 105u8.into()
         },
         err.kind()
     );

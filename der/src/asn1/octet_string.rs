@@ -1,8 +1,8 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, ErrorKind,
-    FixedTag, Header, Length, Result, Tag, Writer,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag,
+    Header, Length, Reader, Result, Tag, Writer,
 };
 
 /// ASN.1 `OCTET STRING` type.
@@ -43,8 +43,8 @@ impl AsRef<[u8]> for OctetString<'_> {
 }
 
 impl<'a> DecodeValue<'a> for OctetString<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let inner = ByteSlice::decode_value(decoder, header)?;
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        let inner = ByteSlice::decode_value(reader, header)?;
         Ok(Self { inner })
     }
 }

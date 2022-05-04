@@ -169,7 +169,7 @@ mod tests {
             variant.to_decode_tokens().to_string(),
             quote! {
                 ::der::Tag::Utf8String => Ok(Self::ExampleVariant(
-                    decoder.decode()?
+                    reader.decode()?
                 )),
             }
             .to_string()
@@ -214,7 +214,7 @@ mod tests {
             variant.to_decode_tokens().to_string(),
             quote! {
                 ::der::Tag::Utf8String => Ok(Self::ExampleVariant(
-                    decoder.utf8_string()?
+                    ::der::asn1::Utf8String::decode(reader)?
                     .try_into()?
                 )),
             }
@@ -273,7 +273,7 @@ mod tests {
                             constructed: #constructed,
                             number: #tag_number,
                         } => Ok(Self::ExplicitVariant(
-                            match ::der::asn1::ContextSpecific::<>::decode(decoder)? {
+                            match ::der::asn1::ContextSpecific::<>::decode(reader)? {
                                 field if field.tag_number == #tag_number => Some(field),
                                 _ => None
                             }
@@ -359,7 +359,7 @@ mod tests {
                             number: #tag_number,
                         } => Ok(Self::ImplicitVariant(
                             ::der::asn1::ContextSpecific::<>::decode_implicit(
-                                decoder,
+                                reader,
                                 #tag_number
                             )?
                             .ok_or_else(|| {

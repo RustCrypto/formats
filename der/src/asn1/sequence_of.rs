@@ -1,8 +1,8 @@
 //! ASN.1 `SEQUENCE OF` support.
 
 use crate::{
-    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue,
-    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, FixedTag,
+    Header, Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -66,19 +66,16 @@ impl<'a, T, const N: usize> DecodeValue<'a> for SequenceOf<T, N>
 where
     T: Decode<'a>,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let end_pos = (decoder.position() + header.length)?;
-        let mut sequence_of = Self::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            let mut sequence_of = Self::new();
 
-        while decoder.position() < end_pos {
-            sequence_of.add(decoder.decode()?)?;
-        }
+            while !reader.is_finished() {
+                sequence_of.add(T::decode(reader)?)?;
+            }
 
-        if decoder.position() != end_pos {
-            decoder.error(ErrorKind::Length { tag: Self::TAG });
-        }
-
-        Ok(sequence_of)
+            Ok(sequence_of)
+        })
     }
 }
 
@@ -134,10 +131,18 @@ impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
 where
     T: Decode<'a>,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        SequenceOf::decode_value(decoder, header)?
-            .inner
-            .try_into_array()
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        let sequence_of = SequenceOf::<T, N>::decode_value(reader, header)?;
+
+        // TODO(tarcieri): use `[T; N]::try_map` instead of `expect` when stable
+        if sequence_of.inner.len() == N {
+            Ok(sequence_of
+                .inner
+                .into_array()
+                .map(|elem| elem.expect("arrayvec length mismatch")))
+        } else {
+            Err(Self::TAG.length_error())
+        }
     }
 }
 
@@ -178,19 +183,16 @@ impl<'a, T> DecodeValue<'a> for Vec<T>
 where
     T: Decode<'a>,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let end_pos = (decoder.position() + header.length)?;
-        let mut sequence_of = Self::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            let mut sequence_of = Self::new();
 
-        while decoder.position() < end_pos {
-            sequence_of.push(decoder.decode()?);
-        }
+            while !reader.is_finished() {
+                sequence_of.push(T::decode(reader)?);
+            }
 
-        if decoder.position() != end_pos {
-            decoder.error(ErrorKind::Length { tag: Self::TAG });
-        }
-
-        Ok(sequence_of)
+            Ok(sequence_of)
+        })
     }
 }
 

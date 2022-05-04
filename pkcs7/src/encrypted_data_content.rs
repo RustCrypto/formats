@@ -2,8 +2,7 @@
 
 use crate::enveloped_data_content::EncryptedContentInfo;
 use der::{
-    Decode, DecodeValue, Decoder, Encode, EncodeValue, FixedTag, Header, Length, Sequence, Tag,
-    Writer,
+    DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, Tag, Writer,
 };
 
 /// Syntax version of the `encrypted-data` content type.
@@ -41,8 +40,8 @@ impl TryFrom<u8> for Version {
 }
 
 impl<'a> DecodeValue<'a> for Version {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> der::Result<Version> {
-        Version::try_from(u8::decode_value(decoder, header)?)
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Version> {
+        Version::try_from(u8::decode_value(reader, header)?)
     }
 }
 
@@ -82,12 +81,15 @@ pub struct EncryptedDataContent<'a> {
     pub encrypted_content_info: EncryptedContentInfo<'a>,
 }
 
-impl<'a> Decode<'a> for EncryptedDataContent<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<EncryptedDataContent<'a>> {
-        decoder.sequence(|decoder| {
+impl<'a> DecodeValue<'a> for EncryptedDataContent<'a> {
+    fn decode_value<R: Reader<'a>>(
+        reader: &mut R,
+        header: Header,
+    ) -> der::Result<EncryptedDataContent<'a>> {
+        reader.read_nested(header.length, |reader| {
             Ok(EncryptedDataContent {
-                version: decoder.decode()?,
-                encrypted_content_info: decoder.decode()?,
+                version: reader.decode()?,
+                encrypted_content_info: reader.decode()?,
             })
         })
     }

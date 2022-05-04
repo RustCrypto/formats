@@ -1,6 +1,6 @@
 use der::{
     asn1::{Any, ObjectIdentifier},
-    DecodeValue, Decoder, EncodeValue, FixedTag, Header, Length, Tag, Writer,
+    DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Tag, Writer,
 };
 
 /// Elliptic curve parameters as described in
@@ -28,8 +28,8 @@ pub enum EcParameters {
     NamedCurve(ObjectIdentifier),
 }
 
-impl DecodeValue<'_> for EcParameters {
-    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> der::Result<Self> {
+impl<'a> DecodeValue<'a> for EcParameters {
+    fn decode_value<R: Reader<'a>>(decoder: &mut R, header: Header) -> der::Result<Self> {
         ObjectIdentifier::decode_value(decoder, header).map(Self::NamedCurve)
     }
 }

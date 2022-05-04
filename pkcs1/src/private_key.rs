@@ -5,7 +5,7 @@ pub(crate) mod other_prime_info;
 
 use crate::{Error, Result, RsaPublicKey, Version};
 use core::fmt;
-use der::{asn1::UIntBytes, Decode, Decoder, Encode, Sequence, Tag};
+use der::{asn1::UIntBytes, Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag};
 
 #[cfg(feature = "alloc")]
 use {self::other_prime_info::OtherPrimeInfo, alloc::vec::Vec, der::SecretDocument};
@@ -89,26 +89,26 @@ impl<'a> RsaPrivateKey<'a> {
     }
 }
 
-impl<'a> Decode<'a> for RsaPrivateKey<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
-            let version = Version::decode(decoder)?;
+impl<'a> DecodeValue<'a> for RsaPrivateKey<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            let version = Version::decode(reader)?;
 
             let result = Self {
-                modulus: decoder.decode()?,
-                public_exponent: decoder.decode()?,
-                private_exponent: decoder.decode()?,
-                prime1: decoder.decode()?,
-                prime2: decoder.decode()?,
-                exponent1: decoder.decode()?,
-                exponent2: decoder.decode()?,
-                coefficient: decoder.decode()?,
-                other_prime_infos: decoder.decode()?,
+                modulus: reader.decode()?,
+                public_exponent: reader.decode()?,
+                private_exponent: reader.decode()?,
+                prime1: reader.decode()?,
+                prime2: reader.decode()?,
+                exponent1: reader.decode()?,
+                exponent2: reader.decode()?,
+                coefficient: reader.decode()?,
+                other_prime_infos: reader.decode()?,
             };
 
             // Ensure version is set correctly for two-prime vs multi-prime key.
             if version.is_multi() != result.other_prime_infos.is_some() {
-                return Err(decoder.error(der::ErrorKind::Value { tag: Tag::Integer }));
+                return Err(reader.error(der::ErrorKind::Value { tag: Tag::Integer }));
             }
 
             Ok(result)
@@ -203,10 +203,10 @@ pub struct OtherPrimeInfos<'a> {
 
 #[cfg(not(feature = "alloc"))]
 impl<'a> Decode<'a> for OtherPrimeInfos<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
+    fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
         // Placeholder decoder that always returns an error.
         // Use `Tag::Integer` to signal an unsupported version.
-        Err(decoder.error(der::ErrorKind::Value { tag: Tag::Integer }))
+        Err(reader.error(der::ErrorKind::Value { tag: Tag::Integer }))
     }
 }
 

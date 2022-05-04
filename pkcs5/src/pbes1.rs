@@ -5,7 +5,7 @@
 use crate::AlgorithmIdentifier;
 use der::{
     asn1::{Any, ObjectIdentifier, OctetString},
-    Decode, Decoder, Encode, ErrorKind, Length, Sequence, Tag, Writer,
+    Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Writer,
 };
 
 /// `pbeWithMD2AndDES-CBC` Object Identifier (OID).
@@ -66,8 +66,8 @@ impl Algorithm {
     }
 }
 
-impl Decode<'_> for Algorithm {
-    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
+impl<'a> Decode<'a> for Algorithm {
+    fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
         AlgorithmIdentifier::decode(decoder)?.try_into()
     }
 }
@@ -117,8 +117,8 @@ pub struct Parameters {
     pub iteration_count: u16,
 }
 
-impl Decode<'_> for Parameters {
-    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
+impl<'a> Decode<'a> for Parameters {
+    fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
         Any::decode(decoder)?.try_into()
     }
 }
@@ -136,18 +136,13 @@ impl TryFrom<Any<'_>> for Parameters {
     type Error = der::Error;
 
     fn try_from(any: Any<'_>) -> der::Result<Parameters> {
-        any.sequence(|params| {
-            let salt = params
-                .octet_string()?
-                .as_bytes()
-                .try_into()
-                .map_err(|_| der::Tag::OctetString.value_error())?;
-
-            let iteration_count = params.decode()?;
-
+        any.sequence(|reader| {
             Ok(Parameters {
-                salt,
-                iteration_count,
+                salt: OctetString::decode(reader)?
+                    .as_bytes()
+                    .try_into()
+                    .map_err(|_| der::Tag::OctetString.value_error())?,
+                iteration_count: reader.decode()?,
             })
         })
     }

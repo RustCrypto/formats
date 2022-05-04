@@ -2,7 +2,7 @@
 
 use crate::{Error, Result};
 use core::fmt;
-use der::{asn1::OctetString, Decode, Decoder, Encode, Sequence};
+use der::{asn1::OctetString, Decode, DecodeValue, Encode, Header, Reader, Sequence};
 use pkcs5::EncryptionScheme;
 
 #[cfg(feature = "alloc")]
@@ -97,12 +97,15 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> Decode<'a> for EncryptedPrivateKeyInfo<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<EncryptedPrivateKeyInfo<'a>> {
-        decoder.sequence(|decoder| {
+impl<'a> DecodeValue<'a> for EncryptedPrivateKeyInfo<'a> {
+    fn decode_value<R: Reader<'a>>(
+        reader: &mut R,
+        header: Header,
+    ) -> der::Result<EncryptedPrivateKeyInfo<'a>> {
+        reader.read_nested(header.length, |reader| {
             Ok(Self {
-                encryption_algorithm: decoder.decode()?,
-                encrypted_data: decoder.octet_string()?.as_bytes(),
+                encryption_algorithm: reader.decode()?,
+                encrypted_data: OctetString::decode(reader)?.as_bytes(),
             })
         })
     }

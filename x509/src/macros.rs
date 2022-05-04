@@ -40,8 +40,8 @@ macro_rules! impl_newtype {
         }
 
         impl<'a> ::der::DecodeValue<'a> for $newtype {
-            fn decode_value(
-                decoder: &mut ::der::Decoder<'a>,
+            fn decode_value<R: ::der::Reader<'a>>(
+                decoder: &mut R,
                 header: ::der::Header,
             ) -> ::der::Result<Self> {
                 Ok(Self(<$inner as ::der::DecodeValue>::decode_value(

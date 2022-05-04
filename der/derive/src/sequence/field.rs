@@ -146,8 +146,8 @@ impl LowerFieldDecoder {
     /// Handle default value for a type.
     fn apply_default(&mut self, default: &Path, field_type: &Type) {
         self.decoder = quote! {
-            decoder.decode::<Option<#field_type>>()?.unwrap_or_else(#default);
-        }
+            Option::<#field_type>::decode(reader)?.unwrap_or_else(#default);
+        };
     }
 }
 
@@ -287,7 +287,7 @@ mod tests {
         assert_eq!(
             field.to_decode_tokens().to_string(),
             quote! {
-                let example_field = decoder.decode()?;
+                let example_field = reader.decode()?;
             }
             .to_string()
         );
@@ -328,7 +328,7 @@ mod tests {
             field.to_decode_tokens().to_string(),
             quote! {
                 let implicit_field = ::der::asn1::ContextSpecific::<>::decode_implicit(
-                        decoder,
+                        reader,
                         ::der::TagNumber::N0
                     )?
                     .ok_or_else(|| {

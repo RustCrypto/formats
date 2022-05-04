@@ -4,7 +4,7 @@ use crate::{AlgorithmIdentifier, Error, Result, Version};
 use core::fmt;
 use der::{
     asn1::{Any, BitString, ContextSpecific, OctetString},
-    Decode, Decoder, Encode, Reader, Sequence, TagMode, TagNumber,
+    Decode, DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -158,14 +158,17 @@ impl<'a> PrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> Decode<'a> for PrivateKeyInfo<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<PrivateKeyInfo<'a>> {
-        decoder.sequence(|decoder| {
+impl<'a> DecodeValue<'a> for PrivateKeyInfo<'a> {
+    fn decode_value<R: Reader<'a>>(
+        reader: &mut R,
+        header: Header,
+    ) -> der::Result<PrivateKeyInfo<'a>> {
+        reader.read_nested(header.length, |reader| {
             // Parse and validate `version` INTEGER.
-            let version = Version::decode(decoder)?;
-            let algorithm = decoder.decode()?;
-            let private_key = decoder.octet_string()?.into();
-            let public_key = decoder
+            let version = Version::decode(reader)?;
+            let algorithm = reader.decode()?;
+            let private_key = OctetString::decode(reader)?.into();
+            let public_key = reader
                 .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Implicit)?
                 .map(|bs| {
                     bs.as_bytes()
@@ -174,15 +177,19 @@ impl<'a> Decode<'a> for PrivateKeyInfo<'a> {
                 .transpose()?;
 
             if version.has_public_key() != public_key.is_some() {
-                return Err(decoder.value_error(der::Tag::ContextSpecific {
-                    constructed: true,
-                    number: PUBLIC_KEY_TAG,
-                }));
+                return Err(reader.error(
+                    der::Tag::ContextSpecific {
+                        constructed: true,
+                        number: PUBLIC_KEY_TAG,
+                    }
+                    .value_error()
+                    .kind(),
+                ));
             }
 
             // Ignore any remaining extension fields
-            while !decoder.is_finished() {
-                decoder.decode::<ContextSpecific<Any<'_>>>()?;
+            while !reader.is_finished() {
+                reader.decode::<ContextSpecific<Any<'_>>>()?;
             }
 
             Ok(Self {

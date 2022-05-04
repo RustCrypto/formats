@@ -1,7 +1,7 @@
 //! PKCS#8 version identifier.
 
 use crate::Error;
-use der::{Decode, Decoder, Encode, FixedTag, Tag, Writer};
+use der::{Decode, Encode, FixedTag, Reader, Tag, Writer};
 
 /// Version identifier for PKCS#8 documents.
 ///
@@ -25,8 +25,8 @@ impl Version {
     }
 }
 
-impl Decode<'_> for Version {
-    fn decode(decoder: &mut Decoder<'_>) -> der::Result<Self> {
+impl<'a> Decode<'a> for Version {
+    fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
         Version::try_from(u8::decode(decoder)?).map_err(|_| Self::TAG.value_error())
     }
 }

@@ -3,7 +3,7 @@
 
 mod field;
 
-use crate::TypeAttrs;
+use crate::{default_lifetime, TypeAttrs};
 use field::SequenceField;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
@@ -59,10 +59,9 @@ impl DeriveSequence {
     pub fn to_tokens(&self) -> TokenStream {
         let ident = &self.ident;
 
-        // Explicit lifetime or `'_`
         let lifetime = match self.lifetime {
             Some(ref lifetime) => quote!(#lifetime),
-            None => quote!('_),
+            None => default_lifetime(),
         };
 
         // Lifetime parameters
@@ -84,13 +83,14 @@ impl DeriveSequence {
         }
 
         quote! {
-            impl<#lt_params> ::der::DecodeValue<#lifetime> for #ident<#lt_params> {
-                fn decode_value(
-                    decoder: &mut ::der::Decoder<#lifetime>,
+            impl<#lifetime> ::der::DecodeValue<#lifetime> for #ident<#lt_params> {
+                fn decode_value<R: ::der::Reader<#lifetime>>(
+                    reader: &mut R,
                     header: ::der::Header,
                 ) -> ::der::Result<Self> {
-                    use ::der::DecodeValue;
-                    ::der::asn1::SequenceRef::decode_value(decoder, header)?.decode_body(|decoder| {
+                    use ::der::{Decode as _, DecodeValue as _, Reader as _};
+
+                    reader.read_nested(header.length, |reader| {
                         #(#decode_body)*
 
                         Ok(Self {
@@ -100,7 +100,7 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lt_params> ::der::Sequence<#lifetime> for #ident<#lt_params> {
+            impl<#lifetime> ::der::Sequence<#lifetime> for #ident<#lt_params> {
                 fn fields<F, T>(&self, f: F) -> ::der::Result<T>
                 where
                     F: FnOnce(&[&dyn der::Encode]) -> ::der::Result<T>,
