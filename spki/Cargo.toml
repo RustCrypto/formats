@@ -15,7 +15,7 @@ edition = "2021"
 rust-version = "1.57"
 
 [dependencies]
-der = { version = "=0.6.0-pre.3", features = ["oid"], path = "../der" }
+der = { version = "=0.6.0-pre.4", features = ["oid"], path = "../der" }
 
 # Optional dependencies
 sha2 = { version = "0.10", optional = true, default-features = false }
