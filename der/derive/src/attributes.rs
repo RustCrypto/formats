@@ -95,7 +95,6 @@ impl FieldAttrs {
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
         let mut asn1_type = None;
         let mut context_specific = None;
-
         let mut default = None;
         let mut extensible = None;
         let mut optional = None;
@@ -203,13 +202,13 @@ impl FieldAttrs {
                     if self.extensible || self.is_optional() {
                         quote! {
                             ::der::asn1::ContextSpecific::<#type_params>::decode_explicit(
-                                decoder,
+                                reader,
                                 #tag_number
                             )?
                         }
                     } else {
                         quote! {
-                            match ::der::asn1::ContextSpecific::<#type_params>::decode(decoder)? {
+                            match ::der::asn1::ContextSpecific::<#type_params>::decode(reader)? {
                                 field if field.tag_number == #tag_number => Some(field),
                                 _ => None
                             }
@@ -219,7 +218,7 @@ impl FieldAttrs {
                 TagMode::Implicit => {
                     quote! {
                         ::der::asn1::ContextSpecific::<#type_params>::decode_implicit(
-                            decoder,
+                            reader,
                             #tag_number
                         )?
                     }
@@ -246,13 +245,15 @@ impl FieldAttrs {
             }
         } else if let Some(default) = &self.default {
             let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
-            self.asn1_type.map(|ty| ty.decoder()).unwrap_or_else(
-                || quote!(decoder.decode::<Option<#type_params>>()?.unwrap_or_else(#default)),
-            )
+            self.asn1_type.map(|ty| ty.decoder()).unwrap_or_else(|| {
+                quote! {
+                    Option::<#type_params>::decode(reader)?.unwrap_or_else(#default),
+                }
+            })
         } else {
             self.asn1_type
                 .map(|ty| ty.decoder())
-                .unwrap_or_else(|| quote!(decoder.decode()?))
+                .unwrap_or_else(|| quote!(reader.decode()?))
         }
     }
 

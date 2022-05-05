@@ -1,6 +1,9 @@
 //! Certificate tests
-use der::asn1::{BitString, ObjectIdentifier, UIntBytes};
-use der::{Decode, Decoder, Encode, Tag, Tagged};
+
+use der::{
+    asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes},
+    Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
+};
 use hex_literal::hex;
 use spki::AlgorithmIdentifier;
 use x509_cert::Certificate;
@@ -30,23 +33,27 @@ pub struct DeferDecodeCertificate<'a> {
     pub signature: &'a [u8],
 }
 
-impl<'a> Decode<'a> for DeferDecodeCertificate<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<DeferDecodeCertificate<'a>> {
-        decoder.sequence(|decoder| {
-            let tbs_certificate = decoder.tlv_bytes()?;
-            let signature_algorithm = decoder.tlv_bytes()?;
-            let signature = decoder.tlv_bytes()?;
+impl<'a> DecodeValue<'a> for DeferDecodeCertificate<'a> {
+    fn decode_value<R: Reader<'a>>(
+        reader: &mut R,
+        header: Header,
+    ) -> der::Result<DeferDecodeCertificate<'a>> {
+        reader.read_nested(header.length, |reader| {
             Ok(Self {
-                tbs_certificate,
-                signature_algorithm,
-                signature,
+                tbs_certificate: reader.tlv_bytes()?,
+                signature_algorithm: reader.tlv_bytes()?,
+                signature: reader.tlv_bytes()?,
             })
         })
     }
 }
 
+impl FixedTag for DeferDecodeCertificate<'_> {
+    const TAG: Tag = Tag::Sequence;
+}
+
 ///Structure supporting deferred decoding of fields in the TBSCertificate SEQUENCE
-pub struct DeferDecodeTBSCertificate<'a> {
+pub struct DeferDecodeTbsCertificate<'a> {
     /// Decoded field
     pub version: u8,
     /// Defer decoded field
@@ -69,36 +76,34 @@ pub struct DeferDecodeTBSCertificate<'a> {
     pub extensions: &'a [u8],
 }
 
-impl<'a> Decode<'a> for DeferDecodeTBSCertificate<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<DeferDecodeTBSCertificate<'a>> {
-        decoder.sequence(|decoder| {
-            let version =
-                ::der::asn1::ContextSpecific::decode_explicit(decoder, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value)
-                    .unwrap_or_else(Default::default);
-            let serial_number = decoder.tlv_bytes()?;
-            let signature = decoder.tlv_bytes()?;
-            let issuer = decoder.tlv_bytes()?;
-            let validity = decoder.tlv_bytes()?;
-            let subject = decoder.tlv_bytes()?;
-            let subject_public_key_info = decoder.tlv_bytes()?;
-            let issuer_unique_id = decoder.decode()?;
-            let subject_unique_id = decoder.decode()?;
-            let extensions = decoder.tlv_bytes()?;
+impl<'a> DecodeValue<'a> for DeferDecodeTbsCertificate<'a> {
+    fn decode_value<R: Reader<'a>>(
+        reader: &mut R,
+        header: Header,
+    ) -> der::Result<DeferDecodeTbsCertificate<'a>> {
+        reader.read_nested(header.length, |reader| {
+            let version = ContextSpecific::decode_explicit(reader, ::der::TagNumber::N0)?
+                .map(|cs| cs.value)
+                .unwrap_or_else(Default::default);
+
             Ok(Self {
                 version,
-                serial_number,
-                signature,
-                issuer,
-                validity,
-                subject,
-                subject_public_key_info,
-                issuer_unique_id,
-                subject_unique_id,
-                extensions,
+                serial_number: reader.tlv_bytes()?,
+                signature: reader.tlv_bytes()?,
+                issuer: reader.tlv_bytes()?,
+                validity: reader.tlv_bytes()?,
+                subject: reader.tlv_bytes()?,
+                subject_public_key_info: reader.tlv_bytes()?,
+                issuer_unique_id: reader.decode()?,
+                subject_unique_id: reader.decode()?,
+                extensions: reader.tlv_bytes()?,
             })
         })
     }
+}
+
+impl FixedTag for DeferDecodeTbsCertificate<'_> {
+    const TAG: Tag = Tag::Sequence;
 }
 
 #[test]
@@ -120,7 +125,7 @@ fn reencode_cert() {
     assert_eq!(defer_cert.signature, reencoded_sig);
 
     let parsed_coverage_tbs =
-        DeferDecodeTBSCertificate::from_der(defer_cert.tbs_certificate).unwrap();
+        DeferDecodeTbsCertificate::from_der(defer_cert.tbs_certificate).unwrap();
 
     // TODO - defer decode then reencode version field
 

@@ -2,7 +2,6 @@
 
 [![Crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
-[![Downloads][downloads-image]][crate-link]
 [![Build Status][build-image]][build-link]
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
@@ -72,11 +71,10 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/der.svg
+[crate-image]: https://buildstats.info/crate/der
 [crate-link]: https://crates.io/crates/der
 [docs-image]: https://docs.rs/der/badge.svg
 [docs-link]: https://docs.rs/der/
-[downloads-image]: https://img.shields.io/crates/d/der.svg
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/der.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/der.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg

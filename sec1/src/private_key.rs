@@ -9,7 +9,7 @@ use crate::{EcParameters, Error, Result};
 use core::fmt;
 use der::{
     asn1::{BitString, ContextSpecific, OctetString},
-    Decode, Decoder, Encode, Sequence, Tag, TagMode, TagNumber,
+    Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -70,16 +70,16 @@ pub struct EcPrivateKey<'a> {
     pub public_key: Option<&'a [u8]>,
 }
 
-impl<'a> Decode<'a> for EcPrivateKey<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        decoder.sequence(|decoder| {
-            if decoder.uint8()? != VERSION {
+impl<'a> DecodeValue<'a> for EcPrivateKey<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            if u8::decode(reader)? != VERSION {
                 return Err(der::Tag::Integer.value_error());
             }
 
-            let private_key = decoder.octet_string()?.as_bytes();
-            let parameters = decoder.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
-            let public_key = decoder
+            let private_key = OctetString::decode(reader)?.as_bytes();
+            let parameters = reader.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
+            let public_key = reader
                 .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?
                 .map(|bs| bs.as_bytes().ok_or_else(|| Tag::BitString.value_error()))
                 .transpose()?;

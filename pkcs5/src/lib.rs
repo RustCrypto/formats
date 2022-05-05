@@ -29,7 +29,7 @@ pub use crate::error::{Error, Result};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::AlgorithmIdentifier;
 
-use der::{Decode, Decoder, Encode, Sequence, Tag};
+use der::{Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
@@ -135,9 +135,9 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> Decode<'a> for EncryptionScheme<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-        AlgorithmIdentifier::decode(decoder)?.try_into()
+impl<'a> DecodeValue<'a> for EncryptionScheme<'a> {
+    fn decode_value<R: Reader<'a>>(decoder: &mut R, header: Header) -> der::Result<Self> {
+        AlgorithmIdentifier::decode_value(decoder, header)?.try_into()
     }
 }
 

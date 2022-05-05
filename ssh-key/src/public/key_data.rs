@@ -249,3 +249,47 @@ impl Encode for KeyData {
         self.encode_key_data(writer)
     }
 }
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<DsaPublicKey> for KeyData {
+    fn from(public_key: DsaPublicKey) -> KeyData {
+        Self::Dsa(public_key)
+    }
+}
+
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+impl From<EcdsaPublicKey> for KeyData {
+    fn from(public_key: EcdsaPublicKey) -> KeyData {
+        Self::Ecdsa(public_key)
+    }
+}
+
+impl From<Ed25519PublicKey> for KeyData {
+    fn from(public_key: Ed25519PublicKey) -> KeyData {
+        Self::Ed25519(public_key)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<RsaPublicKey> for KeyData {
+    fn from(public_key: RsaPublicKey) -> KeyData {
+        Self::Rsa(public_key)
+    }
+}
+
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+impl From<SkEcdsaSha2NistP256> for KeyData {
+    fn from(public_key: SkEcdsaSha2NistP256) -> KeyData {
+        Self::SkEcdsaSha2NistP256(public_key)
+    }
+}
+
+impl From<SkEd25519> for KeyData {
+    fn from(public_key: SkEd25519) -> KeyData {
+        Self::SkEd25519(public_key)
+    }
+}

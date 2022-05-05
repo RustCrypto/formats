@@ -1,10 +1,13 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, Decoder, DerOrd, EncodeValue, Error, ErrorKind, FixedTag,
-    Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    asn1::Any, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
+    Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 /// ASN.1 `BIT STRING` type.
 ///
@@ -116,14 +119,14 @@ impl<'a> BitString<'a> {
 }
 
 impl<'a> DecodeValue<'a> for BitString<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let header = Header {
             tag: header.tag,
             length: (header.length - Length::ONE)?,
         };
 
-        let unused_bits = decoder.read_byte()?;
-        let inner = ByteSlice::decode_value(decoder, header)?;
+        let unused_bits = reader.read_byte()?;
+        let inner = ByteSlice::decode_value(reader, header)?;
         Self::new(unused_bits, inner.as_slice())
     }
 }
@@ -239,12 +242,12 @@ where
     T::Type: From<bool>,
     T::Type: core::ops::Shl<usize, Output = T::Type>,
 {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let position = decoder.position();
-
-        let bits = BitString::decode_value(decoder, header)?;
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        let position = reader.position();
+        let bits = BitString::decode_value(reader, header)?;
 
         let mut flags = T::none().bits();
+
         if bits.bit_len() > core::mem::size_of_val(&flags) * 8 {
             return Err(Error::new(ErrorKind::Overlength, position));
         }
@@ -294,6 +297,95 @@ where
         let (lead, buff) = encode_flagset(self);
         let buff = &buff[..buff.len() - lead / 8];
         BitString::new((lead % 8) as u8, buff)?.encode_value(writer)
+    }
+}
+
+/// Owned form of ASN.1 `BIT STRING` type.
+///
+/// This type provides the same functionality as [`BitString`] but owns the
+/// backing data.
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct BitStringOwned {
+    /// Number of unused bits in the final octet.
+    unused_bits: u8,
+
+    /// Length of this `BIT STRING` in bits.
+    bit_length: usize,
+
+    /// Bitstring represented as a slice of bytes.
+    inner: Vec<u8>,
+}
+
+#[cfg(feature = "alloc")]
+impl BitStringOwned {
+    /// Get the number of unused bits in the octet serialization of this
+    /// `BIT STRING`.
+    pub fn unused_bits(&self) -> u8 {
+        self.unused_bits
+    }
+
+    /// Borrow the raw bytes of this `BIT STRING`.
+    pub fn raw_bytes(&self) -> &[u8] {
+        self.inner.as_slice()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> DecodeValue<'a> for BitStringOwned {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        let unused_bits = reader.read_byte()?;
+        let inner_len: usize = (header.length - Length::ONE)?.try_into()?;
+
+        if (unused_bits > BitString::MAX_UNUSED_BITS) || (unused_bits != 0 && inner_len == 0) {
+            return Err(Self::TAG.value_error());
+        }
+
+        let bit_length = inner_len
+            .checked_mul(8)
+            .and_then(|n| n.checked_sub(usize::from(unused_bits)))
+            .ok_or(ErrorKind::Overflow)?;
+
+        let mut inner = vec![0u8; inner_len];
+        let actual_len = reader.read_into(&mut inner)?.len();
+
+        if inner_len == actual_len {
+            Ok(Self {
+                unused_bits,
+                bit_length,
+                inner,
+            })
+        } else {
+            Err(Self::TAG.length_error())
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl EncodeValue for BitStringOwned {
+    fn value_len(&self) -> Result<Length> {
+        Length::ONE + Length::try_from(self.inner.len())?
+    }
+
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write_byte(self.unused_bits)?;
+        writer.write(&self.inner)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl FixedTag for BitStringOwned {
+    const TAG: Tag = Tag::BitString;
+}
+
+#[cfg(feature = "alloc")]
+impl ValueOrd for BitStringOwned {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        match self.unused_bits.cmp(&other.unused_bits) {
+            Ordering::Equal => self.inner.der_cmp(&other.inner),
+            ordering => Ok(ordering),
+        }
     }
 }
 

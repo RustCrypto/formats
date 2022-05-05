@@ -1,6 +1,6 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decode, Decoder, DerOrd, Encode, Encoder, Error, ErrorKind, Reader, Result, Writer};
+use crate::{Decode, DerOrd, Encode, Encoder, Error, ErrorKind, Reader, Result, Writer};
 use core::{
     cmp::Ordering,
     fmt,
@@ -138,13 +138,7 @@ impl Sub for Length {
     fn sub(self, other: Length) -> Result<Self> {
         self.0
             .checked_sub(other.0)
-            .ok_or_else(|| {
-                ErrorKind::Incomplete {
-                    expected_len: other,
-                    actual_len: self,
-                }
-                .into()
-            })
+            .ok_or_else(|| ErrorKind::Overflow.into())
             .and_then(TryInto::try_into)
     }
 }
@@ -205,9 +199,9 @@ impl TryFrom<Length> for usize {
     }
 }
 
-impl Decode<'_> for Length {
-    fn decode(decoder: &mut Decoder<'_>) -> Result<Length> {
-        match decoder.read_byte()? {
+impl<'a> Decode<'a> for Length {
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Length> {
+        match reader.read_byte()? {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
             // lengths, which are not allowed in DER, so disallow that byte.
             len if len < 0x80 => Ok(len.into()),
@@ -219,7 +213,7 @@ impl Decode<'_> for Length {
                 let mut decoded_len = 0u32;
                 for _ in 0..nbytes {
                     decoded_len = decoded_len.checked_shl(8).ok_or(ErrorKind::Overflow)?
-                        | u32::from(decoder.read_byte()?);
+                        | u32::from(reader.read_byte()?);
                 }
 
                 let length = Length::try_from(decoded_len)?;

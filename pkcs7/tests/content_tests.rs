@@ -1,6 +1,9 @@
 //! PKCS#7 example tests
 
-use der::{asn1::ObjectIdentifier, Decode, Encoder};
+use der::{
+    asn1::{ObjectIdentifier, OctetString},
+    Decode, Encoder,
+};
 use hex_literal::hex;
 use pkcs7::{
     encrypted_data_content::EncryptedDataContent, enveloped_data_content::EncryptedContentInfo,
@@ -60,8 +63,8 @@ fn decode_encrypted_key_example() {
 
             let (salt, iter) = any
                 .sequence(|decoder| {
-                    let salt = decoder.octet_string()?;
-                    let iter = decoder.uint16()?;
+                    let salt = OctetString::decode(decoder)?;
+                    let iter = u16::decode(decoder)?;
                     Ok((salt, iter))
                 })
                 .expect("salt and iters parameters");

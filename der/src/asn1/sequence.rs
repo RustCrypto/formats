@@ -2,8 +2,8 @@
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{
-    ByteSlice, Decode, DecodeValue, Decoder, Encode, EncodeValue, FixedTag, Header, Length, Reader,
-    Result, Tag, Writer,
+    ByteSlice, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Result,
+    Tag, Writer,
 };
 
 /// ASN.1 `SEQUENCE` trait.
@@ -57,28 +57,13 @@ where
 pub struct SequenceRef<'a> {
     /// Body of the `SEQUENCE`.
     body: ByteSlice<'a>,
-
-    /// Offset location in the outer document where this `SEQUENCE` begins.
-    offset: Length,
-}
-
-impl<'a> SequenceRef<'a> {
-    /// Decode the body of this sequence.
-    pub fn decode_body<F, T>(&self, f: F) -> Result<T>
-    where
-        F: FnOnce(&mut Decoder<'a>) -> Result<T>,
-    {
-        let mut nested_decoder = Decoder::new_with_offset(self.body, self.offset);
-        let result = f(&mut nested_decoder)?;
-        nested_decoder.finish(result)
-    }
 }
 
 impl<'a> DecodeValue<'a> for SequenceRef<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        let offset = decoder.position();
-        let body = ByteSlice::decode_value(decoder, header)?;
-        Ok(Self { body, offset })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        Ok(Self {
+            body: ByteSlice::decode_value(reader, header)?,
+        })
     }
 }
 

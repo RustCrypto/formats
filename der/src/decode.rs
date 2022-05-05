@@ -1,12 +1,9 @@
 //! Trait definition for [`Decode`].
 
-use crate::{Decoder, FixedTag, Header, Result};
+use crate::{Decoder, FixedTag, Header, Reader, Result};
 
 #[cfg(feature = "pem")]
-use {
-    crate::pem::{self, PemLabel},
-    zeroize::Zeroize,
-};
+use crate::{pem::PemLabel, PemReader};
 
 #[cfg(doc)]
 use crate::{Length, Tag};
@@ -15,15 +12,9 @@ use crate::{Length, Tag};
 ///
 /// This trait provides the core abstraction upon which all decoding operations
 /// are based.
-///
-/// # Blanket impl for `TryFrom<Any>`
-///
-/// In almost all cases you do not need to impl this trait yourself, but rather
-/// can instead impl `TryFrom<Any<'a>, Error = Error>` and receive a blanket
-/// impl of this trait.
 pub trait Decode<'a>: Sized {
     /// Attempt to decode this message using the provided decoder.
-    fn decode(decoder: &mut Decoder<'a>) -> Result<Self>;
+    fn decode<R: Reader<'a>>(decoder: &mut R) -> Result<Self>;
 
     /// Parse `Self` from the provided DER-encoded byte slice.
     fn from_der(bytes: &'a [u8]) -> Result<Self> {
@@ -37,10 +28,10 @@ impl<'a, T> Decode<'a> for T
 where
     T: DecodeValue<'a> + FixedTag,
 {
-    fn decode(decoder: &mut Decoder<'a>) -> Result<T> {
-        let header = Header::decode(decoder)?;
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<T> {
+        let header = Header::decode(reader)?;
         header.tag.assert_eq(T::TAG)?;
-        T::decode_value(decoder, header)
+        T::decode_value(reader, header)
     }
 }
 
@@ -64,20 +55,16 @@ impl<T> DecodeOwned for T where T: for<'a> Decode<'a> {}
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub trait DecodePem: DecodeOwned + PemLabel {
     /// Try to decode this type from PEM.
-    fn from_pem(pem: &str) -> Result<Self>;
+    fn from_pem(pem: impl AsRef<[u8]>) -> Result<Self>;
 }
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl<T: DecodeOwned + PemLabel> DecodePem for T {
-    fn from_pem(pem: &str) -> Result<Self> {
-        // TODO(tarcieri): support for decoding directly from PEM (instead of two-pass)
-        let (label, mut der_bytes) = pem::decode_vec(pem.as_bytes())?;
-        Self::validate_pem_label(label)?;
-
-        let result = T::from_der(&der_bytes);
-        der_bytes.zeroize();
-        result
+    fn from_pem(pem: impl AsRef<[u8]>) -> Result<Self> {
+        let mut reader = PemReader::new(pem.as_ref())?;
+        Self::validate_pem_label(reader.type_label())?;
+        T::decode(&mut reader)
     }
 }
 
@@ -85,5 +72,5 @@ impl<T: DecodeOwned + PemLabel> DecodePem for T {
 /// and [`Length`].
 pub trait DecodeValue<'a>: Sized {
     /// Attempt to decode this message using the provided [`Decoder`].
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self>;
+    fn decode_value<R: Reader<'a>>(decoder: &mut R, header: Header) -> Result<Self>;
 }

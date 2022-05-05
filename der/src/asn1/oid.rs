@@ -1,15 +1,21 @@
 //! ASN.1 `OBJECT IDENTIFIER`
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, FixedTag,
-    Header, Length, Result, Tag, Tagged, Writer,
+    asn1::Any, ord::OrdIsValueOrd, DecodeValue, EncodeValue, Error, FixedTag, Header, Length,
+    Reader, Result, Tag, Tagged, Writer,
 };
 use const_oid::ObjectIdentifier;
 
-impl DecodeValue<'_> for ObjectIdentifier {
-    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(decoder, header)?.as_slice();
-        Ok(Self::from_bytes(bytes)?)
+impl<'a> DecodeValue<'a> for ObjectIdentifier {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        let mut buf = [0u8; ObjectIdentifier::MAX_SIZE];
+        let slice = buf
+            .get_mut(..header.length.try_into()?)
+            .ok_or_else(|| Self::TAG.length_error())?;
+
+        let actual_len = reader.read_into(slice)?.len();
+        debug_assert_eq!(actual_len, header.length.try_into()?);
+        Ok(Self::from_bytes(slice)?)
     }
 }
 

@@ -1,8 +1,8 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::Any, Choice, Decode, DecodeValue, Decoder, DerOrd, Encode, EncodeValue, EncodeValueRef,
-    Error, Header, Length, Reader, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer,
+    asn1::Any, Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error,
+    Header, Length, Reader, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -39,22 +39,14 @@ impl<T> ContextSpecific<T> {
     ///   higher numbered field consumed as a follow-up.
     /// - Returns `Ok(None)` if anything other than a [`ContextSpecific`] field
     ///   is encountered.
-    pub fn decode_explicit<'a>(
-        decoder: &mut Decoder<'a>,
+    pub fn decode_explicit<'a, R: Reader<'a>>(
+        reader: &mut R,
         tag_number: TagNumber,
     ) -> Result<Option<Self>>
     where
         T: Decode<'a>,
     {
-        Self::decode_with(decoder, tag_number, |decoder| {
-            let any = Any::decode(decoder)?;
-
-            if !any.tag().is_constructed() {
-                return Err(any.tag().non_canonical_error());
-            }
-
-            Self::try_from(any)
-        })
+        Self::decode_with(reader, tag_number, |reader| Self::decode(reader))
     }
 
     /// Attempt to decode an `IMPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
@@ -63,16 +55,16 @@ impl<T> ContextSpecific<T> {
     /// This method otherwise behaves the same as `decode_explicit`,
     /// but should be used in cases where the particular fields are `IMPLICIT`
     /// as opposed to `EXPLICIT`.
-    pub fn decode_implicit<'a>(
-        decoder: &mut Decoder<'a>,
+    pub fn decode_implicit<'a, R: Reader<'a>>(
+        reader: &mut R,
         tag_number: TagNumber,
     ) -> Result<Option<Self>>
     where
         T: DecodeValue<'a> + Tagged,
     {
-        Self::decode_with(decoder, tag_number, |decoder| {
-            let header = Header::decode(decoder)?;
-            let value = T::decode_value(decoder, header)?;
+        Self::decode_with(reader, tag_number, |reader| {
+            let header = Header::decode(reader)?;
+            let value = T::decode_value(reader, header)?;
 
             if header.tag.is_constructed() != value.tag().is_constructed() {
                 return Err(header.tag.non_canonical_error());
@@ -88,23 +80,23 @@ impl<T> ContextSpecific<T> {
 
     /// Attempt to decode a context-specific field with the given
     /// helper callback.
-    fn decode_with<'a, F>(
-        decoder: &mut Decoder<'a>,
+    fn decode_with<'a, F, R: Reader<'a>>(
+        reader: &mut R,
         tag_number: TagNumber,
         f: F,
     ) -> Result<Option<Self>>
     where
-        F: FnOnce(&mut Decoder<'a>) -> Result<Self>,
+        F: FnOnce(&mut R) -> Result<Self>,
     {
-        while let Some(octet) = decoder.peek_byte() {
+        while let Some(octet) = reader.peek_byte() {
             let tag = Tag::try_from(octet)?;
 
             if !tag.is_context_specific() || (tag.number() > tag_number) {
                 break;
             } else if tag.number() == tag_number {
-                return Some(f(decoder)).transpose();
+                return Some(f(reader)).transpose();
             } else {
-                decoder.any()?;
+                Any::decode(reader)?;
             }
         }
 
@@ -125,8 +117,20 @@ impl<'a, T> Decode<'a> for ContextSpecific<T>
 where
     T: Decode<'a>,
 {
-    fn decode(decoder: &mut Decoder<'a>) -> Result<Self> {
-        Any::decode(decoder)?.try_into()
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
+        let header = Header::decode(reader)?;
+
+        match header.tag {
+            Tag::ContextSpecific {
+                number,
+                constructed: true,
+            } => Ok(Self {
+                tag_number: number,
+                tag_mode: TagMode::default(),
+                value: reader.read_nested(header.length, |reader| T::decode(reader))?,
+            }),
+            tag => Err(tag.unexpected_error(None)),
+        }
     }
 }
 

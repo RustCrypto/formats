@@ -362,6 +362,22 @@ impl From<RsaKeypair> for KeypairData {
     }
 }
 
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "ecdsa"))))]
+impl From<SkEcdsaSha2NistP256> for KeypairData {
+    fn from(keypair: SkEcdsaSha2NistP256) -> KeypairData {
+        Self::SkEcdsaSha2NistP256(keypair)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<SkEd25519> for KeypairData {
+    fn from(keypair: SkEd25519) -> KeypairData {
+        Self::SkEd25519(keypair)
+    }
+}
+
 #[cfg(feature = "subtle")]
 #[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl ConstantTimeEq for KeypairData {

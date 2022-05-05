@@ -1,4 +1,4 @@
-use der::{Decode, Sequence};
+use der::Sequence;
 
 use super::DirectoryString;
 

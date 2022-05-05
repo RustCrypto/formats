@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::*, ByteSlice, Choice, Decode, DecodeValue, Decoder, DerOrd, EncodeValue, Error,
-    ErrorKind, FixedTag, Header, Length, Result, Tag, Tagged, ValueOrd, Writer,
+    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -153,11 +153,12 @@ impl<'a> Choice<'a> for Any<'a> {
 }
 
 impl<'a> Decode<'a> for Any<'a> {
-    fn decode(decoder: &mut Decoder<'a>) -> Result<Any<'a>> {
-        let header = Header::decode(decoder)?;
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Any<'a>> {
+        let header = Header::decode(reader)?;
+
         Ok(Self {
             tag: header.tag,
-            value: ByteSlice::decode_value(decoder, header)?,
+            value: ByteSlice::decode_value(reader, header)?,
         })
     }
 }

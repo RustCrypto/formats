@@ -76,7 +76,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/pkcs8.svg
+[crate-image]: https://buildstats.info/crate/pkcs8
 [crate-link]: https://crates.io/crates/pkcs8
 [docs-image]: https://docs.rs/pkcs8/badge.svg
 [docs-link]: https://docs.rs/pkcs8/

@@ -121,7 +121,7 @@ pub use self::keypair::KeypairData;
 #[cfg(feature = "alloc")]
 pub use self::{
     dsa::{DsaKeypair, DsaPrivateKey},
-    rsa::RsaKeypair,
+    rsa::{RsaKeypair, RsaPrivateKey},
     sk::SkEd25519,
 };
 
@@ -163,6 +163,9 @@ use std::{io::Write, os::unix::fs::OpenOptionsExt};
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
+
+/// Error message for infallible conversions (used by `expect`)
+const CONVERSION_ERROR_MSG: &str = "SSH private key conversion error";
 
 /// Default key size to use for RSA keys in bits.
 #[cfg(feature = "rsa")]
@@ -733,6 +736,64 @@ impl From<PrivateKey> for public::KeyData {
 impl From<&PrivateKey> for public::KeyData {
     fn from(private_key: &PrivateKey) -> public::KeyData {
         private_key.public_key.key_data.clone()
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<DsaKeypair> for PrivateKey {
+    fn from(keypair: DsaKeypair) -> PrivateKey {
+        KeypairData::from(keypair)
+            .try_into()
+            .expect(CONVERSION_ERROR_MSG)
+    }
+}
+
+#[cfg(feature = "ecdsa")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ecdsa")))]
+impl From<EcdsaKeypair> for PrivateKey {
+    fn from(keypair: EcdsaKeypair) -> PrivateKey {
+        KeypairData::from(keypair)
+            .try_into()
+            .expect(CONVERSION_ERROR_MSG)
+    }
+}
+
+impl From<Ed25519Keypair> for PrivateKey {
+    fn from(keypair: Ed25519Keypair) -> PrivateKey {
+        KeypairData::from(keypair)
+            .try_into()
+            .expect(CONVERSION_ERROR_MSG)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<RsaKeypair> for PrivateKey {
+    fn from(keypair: RsaKeypair) -> PrivateKey {
+        KeypairData::from(keypair)
+            .try_into()
+            .expect(CONVERSION_ERROR_MSG)
+    }
+}
+
+#[cfg(all(feature = "alloc", feature = "ecdsa"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "ecdsa"))))]
+impl From<SkEcdsaSha2NistP256> for PrivateKey {
+    fn from(keypair: SkEcdsaSha2NistP256) -> PrivateKey {
+        KeypairData::from(keypair)
+            .try_into()
+            .expect(CONVERSION_ERROR_MSG)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl From<SkEd25519> for PrivateKey {
+    fn from(keypair: SkEd25519) -> PrivateKey {
+        KeypairData::from(keypair)
+            .try_into()
+            .expect(CONVERSION_ERROR_MSG)
     }
 }
 

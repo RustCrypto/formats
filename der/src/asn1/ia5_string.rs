@@ -1,8 +1,8 @@
 //! ASN.1 `IA5String` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, FixedTag,
-    Header, Length, Result, StrSlice, Tag, Writer,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
+    Length, Reader, Result, StrSlice, Tag, Writer,
 };
 use core::{fmt, str};
 
@@ -74,8 +74,8 @@ impl AsRef<[u8]> for Ia5String<'_> {
 }
 
 impl<'a> DecodeValue<'a> for Ia5String<'a> {
-    fn decode_value(decoder: &mut Decoder<'a>, header: Header) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(decoder, header)?.as_slice())
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
     }
 }
 

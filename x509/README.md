@@ -1,4 +1,4 @@
-# [RustCrypto]: X.509
+# [RustCrypto]: X.509 Certificates
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
@@ -43,7 +43,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/x509.svg
+[crate-image]: https://buildstats.info/crate/x509-cert
 [crate-link]: https://crates.io/crates/x509-cert
 [docs-image]: https://docs.rs/x509-cert/badge.svg
 [docs-link]: https://docs.rs/x509-cert/

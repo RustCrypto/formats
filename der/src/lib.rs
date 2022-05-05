@@ -98,7 +98,7 @@
 //! // "heapless" usage when the `alloc` feature is disabled.
 //! use der::{
 //!     asn1::{Any, ObjectIdentifier},
-//!     Decode, Decoder, Encode, Sequence
+//!     DecodeValue, Decode, Decoder, Encode, Header, Reader, Sequence
 //! };
 //!
 //! /// X.509 `AlgorithmIdentifier`.
@@ -112,40 +112,35 @@
 //!     pub parameters: Option<Any<'a>>
 //! }
 //!
-//! impl<'a> Decode<'a> for AlgorithmIdentifier<'a> {
-//!     fn decode(decoder: &mut Decoder<'a>) -> der::Result<Self> {
-//!         // The `Decoder::sequence` method decodes an ASN.1 `SEQUENCE` tag
-//!         // and length then calls the provided `FnOnce` with a nested
-//!         // `der::Decoder` which can be used to decode it.
-//!         decoder.sequence(|decoder| {
-//!             // The `der::Decoder::Decode` method can be used to decode any
-//!             // type which impls the `Decode` trait, which is impl'd for
-//!             // all of the ASN.1 built-in types in the `der` crate.
-//!             //
-//!             // Note that if your struct's fields don't contain an ASN.1
-//!             // built-in type specifically, there are also helper methods
-//!             // for all of the built-in types supported by this library
-//!             // which can be used to select a specific type.
-//!             //
-//!             // For example, another way of decoding this particular field,
-//!             // which contains an ASN.1 `OBJECT IDENTIFIER`, is by calling
-//!             // `decoder.oid()`. Similar methods are defined for other
-//!             // ASN.1 built-in types.
-//!             let algorithm = decoder.decode()?;
+//! impl<'a> DecodeValue<'a> for AlgorithmIdentifier<'a> {
+//!     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+//!        // The `der::Decoder::Decode` method can be used to decode any
+//!        // type which impls the `Decode` trait, which is impl'd for
+//!        // all of the ASN.1 built-in types in the `der` crate.
+//!        //
+//!        // Note that if your struct's fields don't contain an ASN.1
+//!        // built-in type specifically, there are also helper methods
+//!        // for all of the built-in types supported by this library
+//!        // which can be used to select a specific type.
+//!        //
+//!        // For example, another way of decoding this particular field,
+//!        // which contains an ASN.1 `OBJECT IDENTIFIER`, is by calling
+//!        // `decoder.oid()`. Similar methods are defined for other
+//!        // ASN.1 built-in types.
+//!        let algorithm = reader.decode()?;
 //!
-//!             // This field contains an ASN.1 `OPTIONAL` type. The `der` crate
-//!             // maps this directly to Rust's `Option` type and provides
-//!             // impls of the `Decode` and `Encode` traits for `Option`.
-//!             // To explicitly request an `OPTIONAL` type be decoded, use the
-//!             // `decoder.optional()` method.
-//!             let parameters = decoder.decode()?;
+//!        // This field contains an ASN.1 `OPTIONAL` type. The `der` crate
+//!        // maps this directly to Rust's `Option` type and provides
+//!        // impls of the `Decode` and `Encode` traits for `Option`.
+//!        // To explicitly request an `OPTIONAL` type be decoded, use the
+//!        // `decoder.optional()` method.
+//!        let parameters = reader.decode()?;
 //!
-//!             // The value returned from the provided `FnOnce` will be
-//!             // returned from the `any.sequence(...)` call above.
-//!             // Note that the entire sequence body *MUST* be consumed
-//!             // or an error will be returned.
-//!             Ok(Self { algorithm, parameters })
-//!         })
+//!        // The value returned from the provided `FnOnce` will be
+//!        // returned from the `any.sequence(...)` call above.
+//!        // Note that the entire sequence body *MUST* be consumed
+//!        // or an error will be returned.
+//!        Ok(Self { algorithm, parameters })
 //!     }
 //! }
 //!
@@ -401,7 +396,7 @@ pub use const_oid as oid;
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub use {
-    crate::{decode::DecodePem, encode::EncodePem, writer::PemWriter},
+    crate::{decode::DecodePem, encode::EncodePem, reader::pem::PemReader, writer::pem::PemWriter},
     pem_rfc7468 as pem,
 };
 

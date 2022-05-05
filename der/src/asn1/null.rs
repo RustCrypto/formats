@@ -1,20 +1,20 @@
 //! ASN.1 `NULL` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, Decoder, EncodeValue, Error, ErrorKind,
-    FixedTag, Header, Length, Result, Tag, Writer,
+    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag,
+    Header, Length, Reader, Result, Tag, Writer,
 };
 
 /// ASN.1 `NULL` type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Null;
 
-impl DecodeValue<'_> for Null {
-    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
+impl<'a> DecodeValue<'a> for Null {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         if header.length.is_zero() {
             Ok(Null)
         } else {
-            Err(decoder.error(ErrorKind::Length { tag: Self::TAG }))
+            Err(reader.error(ErrorKind::Length { tag: Self::TAG }))
         }
     }
 }
@@ -63,9 +63,9 @@ impl<'a> From<()> for Any<'a> {
     }
 }
 
-impl DecodeValue<'_> for () {
-    fn decode_value(decoder: &mut Decoder<'_>, header: Header) -> Result<Self> {
-        Null::decode_value(decoder, header)?;
+impl<'a> DecodeValue<'a> for () {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        Null::decode_value(reader, header)?;
         Ok(())
     }
 }
