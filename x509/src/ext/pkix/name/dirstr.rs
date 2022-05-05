@@ -1,4 +1,4 @@
-use der::asn1::{PrintableString, Utf8String};
+use der::asn1::{PrintableStringRef, Utf8StringRef};
 use der::Choice;
 
 /// DirectoryString as defined in [RFC 5280 Section 4.2.1.4].
@@ -42,8 +42,8 @@ use der::Choice;
 #[allow(missing_docs)]
 pub enum DirectoryString<'a> {
     #[asn1(type = "PrintableString")]
-    PrintableString(PrintableString<'a>),
+    PrintableString(PrintableStringRef<'a>),
 
     #[asn1(type = "UTF8String")]
-    Utf8String(Utf8String<'a>),
+    Utf8String(Utf8StringRef<'a>),
 }

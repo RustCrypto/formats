@@ -1,4 +1,4 @@
-use der::{asn1::ObjectIdentifier, Any, Sequence};
+use der::{asn1::ObjectIdentifier, AnyRef, Sequence};
 
 /// OtherName as defined in [RFC 5280 Section 4.2.1.6].
 ///
@@ -16,7 +16,7 @@ pub struct OtherName<'a> {
     pub type_id: ObjectIdentifier,
 
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
-    pub value: Any<'a>,
+    pub value: AnyRef<'a>,
 }
 
 #[test]

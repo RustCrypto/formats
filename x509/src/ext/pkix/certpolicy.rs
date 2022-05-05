@@ -4,8 +4,8 @@ use alloc::vec::Vec;
 
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 use const_oid::AssociatedOid;
-use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, UIntBytes, Utf8String};
-use der::{Any, Choice, Sequence};
+use der::asn1::{GeneralizedTime, Ia5StringRef, ObjectIdentifier, UIntRef, Utf8StringRef};
+use der::{AnyRef, Choice, Sequence};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -56,7 +56,7 @@ pub struct PolicyInformation<'a> {
 #[allow(missing_docs)]
 pub struct PolicyQualifierInfo<'a> {
     pub policy_qualifier_id: ObjectIdentifier,
-    pub qualifier: Option<Any<'a>>,
+    pub qualifier: Option<AnyRef<'a>>,
 }
 
 /// CpsUri as defined in [RFC 5280 Section 4.2.1.4].
@@ -66,7 +66,7 @@ pub struct PolicyQualifierInfo<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-pub type CpsUri<'a> = Ia5String<'a>;
+pub type CpsUri<'a> = Ia5StringRef<'a>;
 
 /// UserNotice as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -98,7 +98,7 @@ pub struct UserNotice<'a> {
 #[allow(missing_docs)]
 pub struct NoticeReference<'a> {
     pub organization: DisplayText<'a>,
-    pub notice_numbers: Option<Vec<UIntBytes<'a>>>,
+    pub notice_numbers: Option<Vec<UIntRef<'a>>>,
 }
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4].
@@ -119,8 +119,8 @@ pub struct NoticeReference<'a> {
 #[allow(missing_docs)]
 pub enum DisplayText<'a> {
     #[asn1(type = "IA5String")]
-    Ia5String(Ia5String<'a>),
+    Ia5String(Ia5StringRef<'a>),
 
     #[asn1(type = "UTF8String")]
-    Utf8String(Utf8String<'a>),
+    Utf8String(Utf8StringRef<'a>),
 }

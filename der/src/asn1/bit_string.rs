@@ -1,7 +1,7 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
+    asn1::AnyRef, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
     Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
@@ -13,8 +13,10 @@ use alloc::vec::Vec;
 ///
 /// This type contains a sequence of any number of bits, modeled internally as
 /// a sequence of bytes with a known number of "unused bits".
+///
+/// This is a zero-copy reference type which borrows from the input data.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct BitString<'a> {
+pub struct BitStringRef<'a> {
     /// Number of unused bits in the final octet.
     unused_bits: u8,
 
@@ -25,7 +27,7 @@ pub struct BitString<'a> {
     inner: ByteSlice<'a>,
 }
 
-impl<'a> BitString<'a> {
+impl<'a> BitStringRef<'a> {
     /// Maximum number of unused bits allowed.
     pub const MAX_UNUSED_BITS: u8 = 7;
 
@@ -104,7 +106,7 @@ impl<'a> BitString<'a> {
     ///
     /// Note that the byte string may contain extra unused bits in the final
     /// octet. If the number of unused bits is expected to be 0, the
-    /// [`BitString::as_bytes`] function can be used instead.
+    /// [`BitStringRef::as_bytes`] function can be used instead.
     pub fn raw_bytes(&self) -> &'a [u8] {
         self.inner.as_slice()
     }
@@ -118,7 +120,7 @@ impl<'a> BitString<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for BitString<'a> {
+impl<'a> DecodeValue<'a> for BitStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let header = Header {
             tag: header.tag,
@@ -131,7 +133,7 @@ impl<'a> DecodeValue<'a> for BitString<'a> {
     }
 }
 
-impl EncodeValue for BitString<'_> {
+impl EncodeValue for BitStringRef<'_> {
     fn value_len(&self) -> Result<Length> {
         self.byte_len() + Length::ONE
     }
@@ -142,7 +144,7 @@ impl EncodeValue for BitString<'_> {
     }
 }
 
-impl ValueOrd for BitString<'_> {
+impl ValueOrd for BitStringRef<'_> {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         match self.unused_bits.cmp(&other.unused_bits) {
             Ordering::Equal => self.inner.der_cmp(&other.inner),
@@ -151,55 +153,55 @@ impl ValueOrd for BitString<'_> {
     }
 }
 
-impl<'a> From<&BitString<'a>> for BitString<'a> {
-    fn from(value: &BitString<'a>) -> BitString<'a> {
+impl<'a> From<&BitStringRef<'a>> for BitStringRef<'a> {
+    fn from(value: &BitStringRef<'a>) -> BitStringRef<'a> {
         *value
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for BitString<'a> {
+impl<'a> TryFrom<AnyRef<'a>> for BitStringRef<'a> {
     type Error = Error;
 
-    fn try_from(any: Any<'a>) -> Result<BitString<'a>> {
+    fn try_from(any: AnyRef<'a>) -> Result<BitStringRef<'a>> {
         any.decode_into()
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for BitString<'a> {
+impl<'a> TryFrom<&'a [u8]> for BitStringRef<'a> {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<BitString<'a>> {
-        BitString::from_bytes(bytes)
+    fn try_from(bytes: &'a [u8]) -> Result<BitStringRef<'a>> {
+        BitStringRef::from_bytes(bytes)
     }
 }
 
 /// Hack for simplifying the custom derive use case.
-impl<'a> TryFrom<&&'a [u8]> for BitString<'a> {
+impl<'a> TryFrom<&&'a [u8]> for BitStringRef<'a> {
     type Error = Error;
 
-    fn try_from(bytes: &&'a [u8]) -> Result<BitString<'a>> {
-        BitString::from_bytes(*bytes)
+    fn try_from(bytes: &&'a [u8]) -> Result<BitStringRef<'a>> {
+        BitStringRef::from_bytes(*bytes)
     }
 }
 
-impl<'a> TryFrom<BitString<'a>> for &'a [u8] {
+impl<'a> TryFrom<BitStringRef<'a>> for &'a [u8] {
     type Error = Error;
 
-    fn try_from(bit_string: BitString<'a>) -> Result<&'a [u8]> {
+    fn try_from(bit_string: BitStringRef<'a>) -> Result<&'a [u8]> {
         bit_string
             .as_bytes()
             .ok_or_else(|| Tag::BitString.value_error())
     }
 }
 
-impl<'a> FixedTag for BitString<'a> {
+impl<'a> FixedTag for BitStringRef<'a> {
     const TAG: Tag = Tag::BitString;
 }
 
 /// Iterator over the bits of a [`BitString`].
 pub struct BitStringIter<'a> {
     /// [`BitString`] being iterated over.
-    bit_string: BitString<'a>,
+    bit_string: BitStringRef<'a>,
 
     /// Current bit position within the iterator.
     position: usize,
@@ -231,7 +233,7 @@ impl<'a> FusedIterator for BitStringIter<'a> {}
 
 #[cfg(feature = "flagset")]
 impl<T: flagset::Flags> FixedTag for flagset::FlagSet<T> {
-    const TAG: Tag = BitString::TAG;
+    const TAG: Tag = BitStringRef::TAG;
 }
 
 #[cfg(feature = "flagset")]
@@ -244,7 +246,7 @@ where
 {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let position = reader.position();
-        let bits = BitString::decode_value(reader, header)?;
+        let bits = BitStringRef::decode_value(reader, header)?;
 
         let mut flags = T::none().bits();
 
@@ -290,13 +292,13 @@ where
     fn value_len(&self) -> Result<Length> {
         let (lead, buff) = encode_flagset(self);
         let buff = &buff[..buff.len() - lead / 8];
-        BitString::new((lead % 8) as u8, buff)?.value_len()
+        BitStringRef::new((lead % 8) as u8, buff)?.value_len()
     }
 
     fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
         let (lead, buff) = encode_flagset(self);
         let buff = &buff[..buff.len() - lead / 8];
-        BitString::new((lead % 8) as u8, buff)?.encode_value(writer)
+        BitStringRef::new((lead % 8) as u8, buff)?.encode_value(writer)
     }
 }
 
@@ -307,7 +309,7 @@ where
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct BitStringOwned {
+pub struct BitString {
     /// Number of unused bits in the final octet.
     unused_bits: u8,
 
@@ -319,7 +321,7 @@ pub struct BitStringOwned {
 }
 
 #[cfg(feature = "alloc")]
-impl BitStringOwned {
+impl BitString {
     /// Get the number of unused bits in the octet serialization of this
     /// `BIT STRING`.
     pub fn unused_bits(&self) -> u8 {
@@ -333,12 +335,12 @@ impl BitStringOwned {
 }
 
 #[cfg(feature = "alloc")]
-impl<'a> DecodeValue<'a> for BitStringOwned {
+impl<'a> DecodeValue<'a> for BitString {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let unused_bits = reader.read_byte()?;
         let inner_len: usize = (header.length - Length::ONE)?.try_into()?;
 
-        if (unused_bits > BitString::MAX_UNUSED_BITS) || (unused_bits != 0 && inner_len == 0) {
+        if (unused_bits > BitStringRef::MAX_UNUSED_BITS) || (unused_bits != 0 && inner_len == 0) {
             return Err(Self::TAG.value_error());
         }
 
@@ -363,7 +365,7 @@ impl<'a> DecodeValue<'a> for BitStringOwned {
 }
 
 #[cfg(feature = "alloc")]
-impl EncodeValue for BitStringOwned {
+impl EncodeValue for BitString {
     fn value_len(&self) -> Result<Length> {
         Length::ONE + Length::try_from(self.inner.len())?
     }
@@ -375,12 +377,12 @@ impl EncodeValue for BitStringOwned {
 }
 
 #[cfg(feature = "alloc")]
-impl FixedTag for BitStringOwned {
+impl FixedTag for BitString {
     const TAG: Tag = Tag::BitString;
 }
 
 #[cfg(feature = "alloc")]
-impl ValueOrd for BitStringOwned {
+impl ValueOrd for BitString {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         match self.unused_bits.cmp(&other.unused_bits) {
             Ordering::Equal => self.inner.der_cmp(&other.inner),
@@ -391,13 +393,13 @@ impl ValueOrd for BitStringOwned {
 
 #[cfg(test)]
 mod tests {
-    use super::{BitString, Result, Tag};
-    use crate::asn1::Any;
+    use super::{BitStringRef, Result, Tag};
+    use crate::asn1::AnyRef;
     use hex_literal::hex;
 
     /// Parse a `BitString` from an ASN.1 `Any` value to test decoding behaviors.
-    fn parse_bitstring(bytes: &[u8]) -> Result<BitString<'_>> {
-        Any::new(Tag::BitString, bytes)?.try_into()
+    fn parse_bitstring(bytes: &[u8]) -> Result<BitStringRef<'_>> {
+        AnyRef::new(Tag::BitString, bytes)?.try_into()
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::Any, Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error,
+    asn1::AnyRef, Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error,
     Header, Length, Reader, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
@@ -96,7 +96,7 @@ impl<T> ContextSpecific<T> {
             } else if tag.number() == tag_number {
                 return Some(f(reader)).transpose();
             } else {
-                Any::decode(reader)?;
+                AnyRef::decode(reader)?;
             }
         }
 
@@ -170,13 +170,13 @@ where
     }
 }
 
-impl<'a, T> TryFrom<Any<'a>> for ContextSpecific<T>
+impl<'a, T> TryFrom<AnyRef<'a>> for ContextSpecific<T>
 where
     T: Decode<'a>,
 {
     type Error = Error;
 
-    fn try_from(any: Any<'a>) -> Result<ContextSpecific<T>> {
+    fn try_from(any: AnyRef<'a>) -> Result<ContextSpecific<T>> {
         match any.tag() {
             Tag::ContextSpecific {
                 number,
@@ -256,7 +256,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::ContextSpecific;
-    use crate::{asn1::BitString, Decode, Decoder, Encode, TagMode, TagNumber};
+    use crate::{asn1::BitStringRef, Decode, Decoder, Encode, TagMode, TagNumber};
     use hex_literal::hex;
 
     // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`
@@ -265,11 +265,11 @@ mod tests {
 
     #[test]
     fn round_trip() {
-        let field = ContextSpecific::<BitString<'_>>::from_der(EXAMPLE_BYTES).unwrap();
+        let field = ContextSpecific::<BitStringRef<'_>>::from_der(EXAMPLE_BYTES).unwrap();
         assert_eq!(field.tag_number.value(), 1);
         assert_eq!(
             field.value,
-            BitString::from_bytes(&EXAMPLE_BYTES[5..]).unwrap()
+            BitStringRef::from_bytes(&EXAMPLE_BYTES[5..]).unwrap()
         );
 
         let mut buf = [0u8; 128];
@@ -320,7 +320,7 @@ mod tests {
         let tag_number = TagNumber::new(1);
 
         let mut decoder = Decoder::new(&context_specific_implicit_bytes).unwrap();
-        let field = ContextSpecific::<BitString<'_>>::decode_implicit(&mut decoder, tag_number)
+        let field = ContextSpecific::<BitStringRef<'_>>::decode_implicit(&mut decoder, tag_number)
             .unwrap()
             .unwrap();
 

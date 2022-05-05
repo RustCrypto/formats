@@ -1,7 +1,7 @@
 use crate::{data_content::DataContent, encrypted_data_content::EncryptedDataContent, ContentType};
 
 use der::{
-    asn1::{ContextSpecific, OctetString},
+    asn1::{ContextSpecific, OctetStringRef},
     DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
 };
 
@@ -27,7 +27,7 @@ pub enum ContentInfo<'a> {
     ///   - enveloped-data
     ///   - signed-and-enveloped-data
     ///   - digested-data
-    Other((ContentType, Option<OctetString<'a>>)),
+    Other((ContentType, Option<OctetStringRef<'a>>)),
 }
 
 impl<'a> ContentInfo<'a> {
@@ -60,7 +60,7 @@ impl<'a> ContentInfo<'a> {
     pub fn new_raw(content_type: ContentType, content: &'a [u8]) -> der::Result<Self> {
         Ok(ContentInfo::Other((
             content_type,
-            Some(OctetString::new(content)?),
+            Some(OctetStringRef::new(content)?),
         )))
     }
 }
@@ -78,7 +78,8 @@ impl<'a> DecodeValue<'a> for ContentInfo<'a> {
                 )),
                 _ => Ok(ContentInfo::Other((
                     content_type,
-                    reader.context_specific::<OctetString<'_>>(CONTENT_TAG, TagMode::Explicit)?,
+                    reader
+                        .context_specific::<OctetStringRef<'_>>(CONTENT_TAG, TagMode::Explicit)?,
                 ))),
             }
         })
@@ -123,7 +124,7 @@ impl<'a> Sequence<'a> for ContentInfo<'a> {
 mod tests {
     use super::{ContentInfo, DataContent};
     use core::convert::TryFrom;
-    use der::{asn1::OctetString, Decode, Encode, Encoder, Length, TagMode, TagNumber};
+    use der::{asn1::OctetStringRef, Decode, Encode, Encoder, Length, TagMode, TagNumber};
 
     #[test]
     fn empty_data() -> der::Result<()> {
@@ -198,7 +199,7 @@ mod tests {
             encoder.context_specific(
                 TagNumber::new(0),
                 TagMode::Explicit,
-                &OctetString::new(hello)?,
+                &OctetStringRef::new(hello)?,
             )
         })?;
         let encoded_der = encoder.finish().expect("encoding success");

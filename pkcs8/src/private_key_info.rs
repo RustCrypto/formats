@@ -3,7 +3,7 @@
 use crate::{AlgorithmIdentifier, Error, Result, Version};
 use core::fmt;
 use der::{
-    asn1::{Any, BitString, ContextSpecific, OctetString},
+    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
     Decode, DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
 };
 
@@ -167,9 +167,9 @@ impl<'a> DecodeValue<'a> for PrivateKeyInfo<'a> {
             // Parse and validate `version` INTEGER.
             let version = Version::decode(reader)?;
             let algorithm = reader.decode()?;
-            let private_key = OctetString::decode(reader)?.into();
+            let private_key = OctetStringRef::decode(reader)?.into();
             let public_key = reader
-                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Implicit)?
+                .context_specific::<BitStringRef<'_>>(PUBLIC_KEY_TAG, TagMode::Implicit)?
                 .map(|bs| {
                     bs.as_bytes()
                         .ok_or_else(|| der::Tag::BitString.value_error())
@@ -189,7 +189,7 @@ impl<'a> DecodeValue<'a> for PrivateKeyInfo<'a> {
 
             // Ignore any remaining extension fields
             while !reader.is_finished() {
-                reader.decode::<ContextSpecific<Any<'_>>>()?;
+                reader.decode::<ContextSpecific<AnyRef<'_>>>()?;
             }
 
             Ok(Self {
@@ -209,11 +209,11 @@ impl<'a> Sequence<'a> for PrivateKeyInfo<'a> {
         f(&[
             &u8::from(self.version()),
             &self.algorithm,
-            &OctetString::new(self.private_key)?,
+            &OctetStringRef::new(self.private_key)?,
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::from_bytes(pk).map(|value| ContextSpecific {
+                    BitStringRef::from_bytes(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
                         tag_mode: TagMode::Implicit,
                         value,

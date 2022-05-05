@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
 use const_oid::db::DB;
-use der::asn1::{Any, ObjectIdentifier, SetOfVec};
+use der::asn1::{AnyRef, ObjectIdentifier, SetOfVec};
 use der::{Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd};
 
 /// X.501 `AttributeType` as defined in [RFC 5280 Appendix A.1].
@@ -23,7 +23,7 @@ pub type AttributeType = ObjectIdentifier;
 /// ```
 ///
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
-pub type AttributeValue<'a> = Any<'a>;
+pub type AttributeValue<'a> = AnyRef<'a>;
 
 /// X.501 `Attribute` as defined in [RFC 5280 Appendix A.1].
 ///
@@ -85,7 +85,7 @@ pub type Attributes<'a> = SetOfVec<Attribute<'a>>;
 #[allow(missing_docs)]
 pub struct AttributeTypeAndValue<'a> {
     pub oid: AttributeType,
-    pub value: Any<'a>,
+    pub value: AnyRef<'a>,
 }
 
 #[derive(Copy, Clone)]
@@ -168,7 +168,7 @@ impl AttributeTypeAndValue<'_> {
         }
 
         // Serialize.
-        let value = Any::from_der(&bytes)?;
+        let value = AnyRef::from_der(&bytes)?;
         let atv = AttributeTypeAndValue { oid, value };
         atv.to_vec()
     }
@@ -182,7 +182,7 @@ impl AttributeTypeAndValue<'_> {
         }
 
         // Serialize.
-        let value = Any::new(Tag::Utf8String, parser.as_bytes())?;
+        let value = AnyRef::new(Tag::Utf8String, parser.as_bytes())?;
         let atv = AttributeTypeAndValue { oid, value };
         atv.to_vec()
     }

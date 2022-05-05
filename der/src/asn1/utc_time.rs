@@ -1,7 +1,7 @@
 //! ASN.1 `UTCTime` support.
 
 use crate::{
-    asn1::Any,
+    asn1::AnyRef,
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
     ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
@@ -180,10 +180,10 @@ impl From<UtcTime> for SystemTime {
     }
 }
 
-impl TryFrom<Any<'_>> for UtcTime {
+impl TryFrom<AnyRef<'_>> for UtcTime {
     type Error = Error;
 
-    fn try_from(any: Any<'_>) -> Result<UtcTime> {
+    fn try_from(any: AnyRef<'_>) -> Result<UtcTime> {
         any.decode_into()
     }
 }

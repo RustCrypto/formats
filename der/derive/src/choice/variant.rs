@@ -214,7 +214,7 @@ mod tests {
             variant.to_decode_tokens().to_string(),
             quote! {
                 ::der::Tag::Utf8String => Ok(Self::ExampleVariant(
-                    ::der::asn1::Utf8String::decode(reader)?
+                    ::der::asn1::Utf8StringRef::decode(reader)?
                     .try_into()?
                 )),
             }
@@ -224,7 +224,7 @@ mod tests {
         assert_eq!(
             variant.to_encode_value_tokens().to_string(),
             quote! {
-                Self::ExampleVariant(variant) => ::der::asn1::Utf8String::new(variant)?.encode_value(encoder),
+                Self::ExampleVariant(variant) => ::der::asn1::Utf8StringRef::new(variant)?.encode_value(encoder),
             }
             .to_string()
         );

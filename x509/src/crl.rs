@@ -7,7 +7,7 @@ use crate::Version;
 
 use alloc::vec::Vec;
 
-use der::asn1::{BitString, UIntBytes};
+use der::asn1::{BitStringRef, UIntRef};
 use der::Sequence;
 use spki::AlgorithmIdentifier;
 
@@ -27,7 +27,7 @@ use spki::AlgorithmIdentifier;
 pub struct CertificateList<'a> {
     pub tbs_cert_list: TbsCertList<'a>,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    pub signature: BitString<'a>,
+    pub signature: BitStringRef<'a>,
 }
 
 /// Implicit intermediate structure from the ASN.1 definition of `TBSCertList`.
@@ -47,7 +47,7 @@ pub struct CertificateList<'a> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct RevokedCert<'a> {
-    pub serial_number: UIntBytes<'a>,
+    pub serial_number: UIntRef<'a>,
     pub revocation_date: Time,
     pub crl_entry_extensions: Option<Extensions<'a>>,
 }

@@ -3,7 +3,7 @@
 #![cfg(all(feature = "derive", feature = "oid", feature = "pem"))]
 
 use der::{
-    asn1::{BitStringOwned, ObjectIdentifier},
+    asn1::{BitString, ObjectIdentifier},
     pem::{LineEnding, PemLabel},
     Decode, DecodePem, EncodePem, Sequence,
 };
@@ -37,7 +37,7 @@ impl PemLabel for SpkiBorrowed<'_> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct SpkiOwned {
     pub algorithm: AlgorithmIdentifier,
-    pub subject_public_key: BitStringOwned,
+    pub subject_public_key: BitString,
 }
 
 impl PemLabel for SpkiOwned {

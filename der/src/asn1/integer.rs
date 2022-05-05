@@ -5,7 +5,7 @@ pub(super) mod int;
 pub(super) mod uint;
 
 use crate::{
-    asn1::Any, ByteSlice, DecodeValue, EncodeValue, Encoder, Error, FixedTag, Header, Length,
+    asn1::AnyRef, ByteSlice, DecodeValue, EncodeValue, Encoder, Error, FixedTag, Header, Length,
     Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, mem};
@@ -60,10 +60,10 @@ macro_rules! impl_int_encoding {
                 }
             }
 
-            impl TryFrom<Any<'_>> for $int {
+            impl TryFrom<AnyRef<'_>> for $int {
                 type Error = Error;
 
-                fn try_from(any: Any<'_>) -> Result<Self> {
+                fn try_from(any: AnyRef<'_>) -> Result<Self> {
                     any.decode_into()
                 }
             }
@@ -108,10 +108,10 @@ macro_rules! impl_uint_encoding {
                 }
             }
 
-            impl TryFrom<Any<'_>> for $uint {
+            impl TryFrom<AnyRef<'_>> for $uint {
                 type Error = Error;
 
-                fn try_from(any: Any<'_>) -> Result<Self> {
+                fn try_from(any: AnyRef<'_>) -> Result<Self> {
                     any.decode_into()
                 }
             }

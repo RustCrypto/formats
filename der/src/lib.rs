@@ -38,7 +38,7 @@
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`.
 //! - [`f64`]: ASN.1 `REAL` (gated on `real` crate feature)
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`.
-//!   `String` requires `alloc` feature. See also [`Utf8String`].
+//!   `String` requires `alloc` feature. See also [`Utf8StringRef`].
 //!   Requires `alloc` feature. See also [`SetOf`].
 //! - [`Option`]: ASN.1 `OPTIONAL`.
 //! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime`. Requires `std` feature.
@@ -46,19 +46,19 @@
 //! - `[T; N]`: ASN.1 `SEQUENCE OF`. See also [`SequenceOf`].
 //!
 //! The following ASN.1 types provided by this crate also impl these traits:
-//! - [`Any`]: ASN.1 `ANY`
-//! - [`BitString`]: ASN.1 `BIT STRING`
+//! - [`AnyRef`]: ASN.1 `ANY`
+//! - [`BitStringRef`]: ASN.1 `BIT STRING`
 //! - [`GeneralizedTime`]: ASN.1 `GeneralizedTime`
-//! - [`Ia5String`]: ASN.1 `IA5String`
+//! - [`Ia5StringRef`]: ASN.1 `IA5String`
 //! - [`Null`]: ASN.1 `NULL`
 //! - [`ObjectIdentifier`]: ASN.1 `OBJECT IDENTIFIER`
-//! - [`OctetString`]: ASN.1 `OCTET STRING`
-//! - [`PrintableString`]: ASN.1 `PrintableString` (ASCII subset)
+//! - [`OctetStringRef`]: ASN.1 `OCTET STRING`
+//! - [`PrintableStringRef`]: ASN.1 `PrintableString` (ASCII subset)
 //! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`
 //! - [`SetOf`], [`SetOfVec`]: ASN.1 `SET OF`
-//! - [`UIntBytes`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes
+//! - [`UIntRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes
 //! - [`UtcTime`]: ASN.1 `UTCTime`
-//! - [`Utf8String`]: ASN.1 `UTF8String`
+//! - [`Utf8StringRef`]: ASN.1 `UTF8String`
 //!
 //! Context specific fields can be modeled using these generic types:
 //! - [`ContextSpecific`]: decoder/encoder for owned context-specific fields
@@ -97,7 +97,7 @@
 //! // It does leverage the `alloc` feature, but also provides instructions for
 //! // "heapless" usage when the `alloc` feature is disabled.
 //! use der::{
-//!     asn1::{Any, ObjectIdentifier},
+//!     asn1::{AnyRef, ObjectIdentifier},
 //!     DecodeValue, Decode, Decoder, Encode, Header, Reader, Sequence
 //! };
 //!
@@ -109,7 +109,7 @@
 //!
 //!     /// This field is `OPTIONAL` and contains the ASN.1 `ANY` type, which
 //!     /// in this example allows arbitrary algorithm-defined parameters.
-//!     pub parameters: Option<Any<'a>>
+//!     pub parameters: Option<AnyRef<'a>>
 //! }
 //!
 //! impl<'a> DecodeValue<'a> for AlgorithmIdentifier<'a> {
@@ -178,7 +178,7 @@
 //! // `&'a [u8]` byte slice.
 //! //
 //! // To do that, we need owned DER-encoded data so that we can have
-//! // `Any` borrow a reference to it, so we have to serialize the OID.
+//! // `AnyRef` borrow a reference to it, so we have to serialize the OID.
 //! //
 //! // When the `alloc` feature of this crate is enabled, any type that impls
 //! // the `Encode` trait including all ASN.1 built-in types and any type
@@ -234,7 +234,7 @@
 //! ```
 //! # #[cfg(all(feature = "alloc", feature = "derive", feature = "oid"))]
 //! # {
-//! use der::{asn1::{Any, ObjectIdentifier}, Encode, Decode, Sequence};
+//! use der::{asn1::{AnyRef, ObjectIdentifier}, Encode, Decode, Sequence};
 //!
 //! /// X.509 `AlgorithmIdentifier` (same as above)
 //! #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)] // NOTE: added `Sequence`
@@ -244,7 +244,7 @@
 //!
 //!     /// This field is `OPTIONAL` and contains the ASN.1 `ANY` type, which
 //!     /// in this example allows arbitrary algorithm-defined parameters.
-//!     pub parameters: Option<Any<'a>>
+//!     pub parameters: Option<AnyRef<'a>>
 //! }
 //!
 //! // Example parameters value: OID for the NIST P-256 elliptic curve.
@@ -255,8 +255,8 @@
 //!     algorithm: "1.2.840.10045.2.1".parse().unwrap(),
 //!
 //!     // `Any<'a>` impls `From<&'a ObjectIdentifier>`, allowing OID constants to
-//!     // be directly converted to an `Any` type for this use case.
-//!     parameters: Some(Any::from(&parameters_oid))
+//!     // be directly converted to an `AnyRef` type for this use case.
+//!     parameters: Some(AnyRef::from(&parameters_oid))
 //! };
 //!
 //! // Encode
@@ -286,12 +286,12 @@
 //! ```rust
 //! # #[cfg(all(feature = "alloc", feature = "derive", feature = "oid"))]
 //! # {
-//! # use der::{asn1::{Any, BitString, ObjectIdentifier}, Sequence};
+//! # use der::{asn1::{AnyRef, BitStringRef, ObjectIdentifier}, Sequence};
 //! #
 //! # #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
 //! # pub struct AlgorithmIdentifier<'a> {
 //! #     pub algorithm: ObjectIdentifier,
-//! #     pub parameters: Option<Any<'a>>
+//! #     pub parameters: Option<AnyRef<'a>>
 //! # }
 //! /// X.509 `SubjectPublicKeyInfo` (SPKI)
 //! #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
@@ -300,7 +300,7 @@
 //!     pub algorithm: AlgorithmIdentifier<'a>,
 //!
 //!     /// Public key data
-//!     pub subject_public_key: BitString<'a>,
+//!     pub subject_public_key: BitStringRef<'a>,
 //! }
 //! # }
 //! ```
@@ -315,22 +315,22 @@
 //! [A Layman's Guide to a Subset of ASN.1, BER, and DER]: https://luca.ntop.org/Teaching/Appunti/asn1.html
 //! [A Warm Welcome to ASN.1 and DER]: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/
 //!
-//! [`Any`]: asn1::Any
+//! [`AnyRef`]: asn1::AnyRef
 //! [`ContextSpecific`]: asn1::ContextSpecific
 //! [`ContextSpecificRef`]: asn1::ContextSpecificRef
-//! [`BitString`]: asn1::BitString
+//! [`BitStringRef`]: asn1::BitStringRef
 //! [`GeneralizedTime`]: asn1::GeneralizedTime
-//! [`Ia5String`]: asn1::Ia5String
+//! [`Ia5StringRef`]: asn1::Ia5StringRef
 //! [`Null`]: asn1::Null
 //! [`ObjectIdentifier`]: asn1::ObjectIdentifier
-//! [`OctetString`]: asn1::OctetString
-//! [`PrintableString`]: asn1::PrintableString
+//! [`OctetStringRef`]: asn1::OctetStringRef
+//! [`PrintableStringRef`]: asn1::PrintableStringRef
 //! [`SequenceOf`]: asn1::SequenceOf
 //! [`SetOf`]: asn1::SetOf
 //! [`SetOfVec`]: asn1::SetOfVec
-//! [`UIntBytes`]: asn1::UIntBytes
+//! [`UIntRef`]: asn1::UIntRef
 //! [`UtcTime`]: asn1::UtcTime
-//! [`Utf8String`]: asn1::Utf8String
+//! [`Utf8StringRef`]: asn1::Utf8StringRef
 
 #[cfg(feature = "alloc")]
 #[allow(unused_imports)]
@@ -362,7 +362,7 @@ mod writer;
 mod document;
 
 pub use crate::{
-    asn1::{Any, Choice, Sequence},
+    asn1::{AnyRef, Choice, Sequence},
     datetime::DateTime,
     decode::{Decode, DecodeOwned, DecodeValue},
     decoder::Decoder,
