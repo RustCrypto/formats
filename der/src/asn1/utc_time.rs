@@ -4,8 +4,8 @@ use crate::{
     asn1::AnyRef,
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
-    ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
-    Result, Tag, Writer,
+    DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
+    Writer,
 };
 use core::time::Duration;
 
@@ -35,7 +35,7 @@ pub struct UtcTime(DateTime);
 
 impl UtcTime {
     /// Length of an RFC 5280-flavored ASN.1 DER-encoded [`UtcTime`].
-    pub const LENGTH: Length = Length::new(13);
+    pub const LENGTH: usize = 13;
 
     /// Create a [`UtcTime`] from a [`DateTime`].
     pub fn from_date_time(datetime: DateTime) -> Result<Self> {
@@ -81,7 +81,14 @@ impl UtcTime {
 
 impl<'a> DecodeValue<'a> for UtcTime {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        match *ByteSlice::decode_value(reader, header)?.as_slice() {
+        if Self::LENGTH != usize::try_from(header.length)? {
+            return Err(Self::TAG.value_error());
+        }
+
+        let mut bytes = [0u8; Self::LENGTH];
+        reader.read_into(&mut bytes)?;
+
+        match bytes {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
             [year1, year2, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
                 let year = u16::from(datetime::decode_decimal(Self::TAG, year1, year2)?);
@@ -110,7 +117,7 @@ impl<'a> DecodeValue<'a> for UtcTime {
 
 impl EncodeValue for UtcTime {
     fn value_len(&self) -> Result<Length> {
-        Ok(Self::LENGTH)
+        Self::LENGTH.try_into()
     }
 
     fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
