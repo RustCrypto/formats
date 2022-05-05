@@ -859,18 +859,18 @@ dependencies = [
 
 [[package]]
 name = "pkcs1"
-version = "0.4.0-pre"
+version = "0.4.0-pre.2"
 dependencies = [
  "der 0.6.0-pre.4",
  "hex-literal",
- "pkcs8 0.9.0-pre.1",
+ "pkcs8 0.9.0-pre.2",
  "tempfile",
  "zeroize",
 ]
 
 [[package]]
 name = "pkcs5"
-version = "0.5.0-pre.1"
+version = "0.5.0-pre.2"
 dependencies = [
  "aes",
  "cbc",
@@ -907,7 +907,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.9.0-pre.1"
+version = "0.9.0-pre.2"
 dependencies = [
  "der 0.6.0-pre.4",
  "hex-literal",
@@ -1256,12 +1256,12 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.3.0-pre.1"
+version = "0.3.0-pre.2"
 dependencies = [
  "der 0.6.0-pre.4",
  "generic-array",
  "hex-literal",
- "pkcs8 0.9.0-pre.1",
+ "pkcs8 0.9.0-pre.2",
  "serde",
  "subtle",
  "tempfile",
