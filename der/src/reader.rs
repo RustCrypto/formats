@@ -12,6 +12,9 @@ use crate::{
     Result, Tag, TagMode, TagNumber,
 };
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Sized {
     /// Get the length of the input.
@@ -128,6 +131,15 @@ pub trait Reader<'r>: Sized {
         let mut reader = NestedReader::new(self, len)?;
         let ret = f(&mut reader)?;
         reader.finish(ret)
+    }
+
+    /// Read a byte vector of the given length.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    fn read_vec(&mut self, len: Length) -> Result<Vec<u8>> {
+        let mut bytes = vec![0u8; usize::try_from(len)?];
+        self.read_into(&mut bytes)?;
+        Ok(bytes)
     }
 
     /// Get the number of bytes still remaining in the buffer.
