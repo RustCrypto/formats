@@ -1,6 +1,6 @@
 [package]
 name = "pkcs1"
-version = "0.4.0-pre" # Also update html_root_url in lib.rs when bumping this
+version = "0.4.0-pre.2" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #1:
 RSA Cryptography Specifications Version 2.2 (RFC 8017)
@@ -18,7 +18,7 @@ rust-version = "1.57"
 der = { version = "=0.6.0-pre.4", features = ["oid"], path = "../der" }
 
 # optional dependencies
-pkcs8 = { version = "=0.9.0-pre.1", optional = true, default-features = false, path = "../pkcs8" }
+pkcs8 = { version = "=0.9.0-pre.2", optional = true, default-features = false, path = "../pkcs8" }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
