@@ -11,15 +11,17 @@ use crate::asn1::ObjectIdentifier;
 
 /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
 ///
+/// This is a zero-copy reference type which borrows from the input data.
+///
 /// Technically `ANY` hasn't been a recommended part of ASN.1 since the X.209
 /// revision from 1988. It was deprecated and replaced by Information Object
 /// Classes in X.680 in 1994, and X.690 no longer refers to it whatsoever.
 ///
-/// Nevertheless, this crate defines an [`Any`] type as it remains a familiar
+/// Nevertheless, this crate defines an `ANY` type as it remains a familiar
 /// and useful concept which is still extensively used in things like
 /// PKI-related RFCs.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct Any<'a> {
+pub struct AnyRef<'a> {
     /// Tag representing the type of the encoded value.
     tag: Tag,
 
@@ -27,30 +29,30 @@ pub struct Any<'a> {
     value: ByteSlice<'a>,
 }
 
-impl<'a> Any<'a> {
-    /// [`Any`] representation of the ASN.1 `NULL` type.
+impl<'a> AnyRef<'a> {
+    /// [`AnyRef`] representation of the ASN.1 `NULL` type.
     pub const NULL: Self = Self {
         tag: Tag::Null,
         value: ByteSlice::EMPTY,
     };
 
-    /// Create a new [`Any`] from the provided [`Tag`] and byte slice.
+    /// Create a new [`AnyRef`] from the provided [`Tag`] and byte slice.
     pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self> {
         let value = ByteSlice::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
         Ok(Self { tag, value })
     }
 
-    /// Infallible creation of an [`Any`] from a [`ByteSlice`].
+    /// Infallible creation of an [`AnyRef`] from a [`ByteSlice`].
     pub(crate) fn from_tag_and_value(tag: Tag, value: ByteSlice<'a>) -> Self {
         Self { tag, value }
     }
 
-    /// Get the raw value for this [`Any`] type as a byte slice.
+    /// Get the raw value for this [`AnyRef`] type as a byte slice.
     pub fn value(self) -> &'a [u8] {
         self.value.as_slice()
     }
 
-    /// Attempt to decode this [`Any`] type into the inner value.
+    /// Attempt to decode this [`AnyRef`] type into the inner value.
     pub fn decode_into<T>(self) -> Result<T>
     where
         T: DecodeValue<'a> + FixedTag,
@@ -72,7 +74,7 @@ impl<'a> Any<'a> {
     }
 
     /// Attempt to decode an ASN.1 `BIT STRING`.
-    pub fn bit_string(self) -> Result<BitString<'a>> {
+    pub fn bit_string(self) -> Result<BitStringRef<'a>> {
         self.try_into()
     }
 
@@ -90,12 +92,12 @@ impl<'a> Any<'a> {
     }
 
     /// Attempt to decode an ASN.1 `IA5String`.
-    pub fn ia5_string(self) -> Result<Ia5String<'a>> {
+    pub fn ia5_string(self) -> Result<Ia5StringRef<'a>> {
         self.try_into()
     }
 
     /// Attempt to decode an ASN.1 `OCTET STRING`.
-    pub fn octet_string(self) -> Result<OctetString<'a>> {
+    pub fn octet_string(self) -> Result<OctetStringRef<'a>> {
         self.try_into()
     }
 
@@ -119,7 +121,7 @@ impl<'a> Any<'a> {
     }
 
     /// Attempt to decode an ASN.1 `PrintableString`.
-    pub fn printable_string(self) -> Result<PrintableString<'a>> {
+    pub fn printable_string(self) -> Result<PrintableStringRef<'a>> {
         self.try_into()
     }
 
@@ -141,19 +143,19 @@ impl<'a> Any<'a> {
     }
 
     /// Attempt to decode an ASN.1 `UTF8String`.
-    pub fn utf8_string(self) -> Result<Utf8String<'a>> {
+    pub fn utf8_string(self) -> Result<Utf8StringRef<'a>> {
         self.try_into()
     }
 }
 
-impl<'a> Choice<'a> for Any<'a> {
+impl<'a> Choice<'a> for AnyRef<'a> {
     fn can_decode(_: Tag) -> bool {
         true
     }
 }
 
-impl<'a> Decode<'a> for Any<'a> {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Any<'a>> {
+impl<'a> Decode<'a> for AnyRef<'a> {
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<AnyRef<'a>> {
         let header = Header::decode(reader)?;
 
         Ok(Self {
@@ -163,7 +165,7 @@ impl<'a> Decode<'a> for Any<'a> {
     }
 }
 
-impl EncodeValue for Any<'_> {
+impl EncodeValue for AnyRef<'_> {
     fn value_len(&self) -> Result<Length> {
         Ok(self.value.len())
     }
@@ -173,28 +175,28 @@ impl EncodeValue for Any<'_> {
     }
 }
 
-impl Tagged for Any<'_> {
+impl Tagged for AnyRef<'_> {
     fn tag(&self) -> Tag {
         self.tag
     }
 }
 
-impl ValueOrd for Any<'_> {
+impl ValueOrd for AnyRef<'_> {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         self.value.der_cmp(&other.value)
     }
 }
 
-impl<'a> From<Any<'a>> for ByteSlice<'a> {
-    fn from(any: Any<'a>) -> ByteSlice<'a> {
+impl<'a> From<AnyRef<'a>> for ByteSlice<'a> {
+    fn from(any: AnyRef<'a>) -> ByteSlice<'a> {
         any.value
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for Any<'a> {
+impl<'a> TryFrom<&'a [u8]> for AnyRef<'a> {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<Any<'a>> {
-        Any::from_der(bytes)
+    fn try_from(bytes: &'a [u8]) -> Result<AnyRef<'a>> {
+        AnyRef::from_der(bytes)
     }
 }

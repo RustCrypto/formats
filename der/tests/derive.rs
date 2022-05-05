@@ -81,7 +81,7 @@ mod choice {
     /// `Choice` with `IMPLICIT` tagging.
     mod implicit {
         use der::{
-            asn1::{BitString, GeneralizedTime},
+            asn1::{BitStringRef, GeneralizedTime},
             Choice, Decode, Encode, Encoder,
         };
         use hex_literal::hex;
@@ -91,7 +91,7 @@ mod choice {
         #[asn1(tag_mode = "IMPLICIT")]
         pub enum ImplicitChoice<'a> {
             #[asn1(context_specific = "0", type = "BIT STRING")]
-            BitString(BitString<'a>),
+            BitString(BitStringRef<'a>),
 
             #[asn1(context_specific = "1", type = "GeneralizedTime")]
             Time(GeneralizedTime),
@@ -101,7 +101,7 @@ mod choice {
         }
 
         impl<'a> ImplicitChoice<'a> {
-            pub fn bit_string(&self) -> Option<BitString<'a>> {
+            pub fn bit_string(&self) -> Option<BitStringRef<'a>> {
                 match self {
                     Self::BitString(bs) => Some(*bs),
                     _ => None,
@@ -202,7 +202,7 @@ mod enumerated {
 #[cfg(feature = "oid")]
 mod sequence {
     use der::{
-        asn1::{Any, ObjectIdentifier, SetOf},
+        asn1::{AnyRef, ObjectIdentifier, SetOf},
         Decode, Encode, Sequence, ValueOrd,
     };
     use hex_literal::hex;
@@ -303,7 +303,7 @@ mod sequence {
     #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
     pub struct AlgorithmIdentifier<'a> {
         pub algorithm: ObjectIdentifier,
-        pub parameters: Option<Any<'a>>,
+        pub parameters: Option<AnyRef<'a>>,
     }
 
     /// X.509 `SubjectPublicKeyInfo` (SPKI)
@@ -322,7 +322,7 @@ mod sequence {
         #[asn1(type = "OCTET STRING")]
         pub private_key: &'a [u8],
         #[asn1(context_specific = "0", extensible = "true", optional = "true")]
-        pub attributes: Option<SetOf<Any<'a>, 1>>,
+        pub attributes: Option<SetOf<AnyRef<'a>, 1>>,
         #[asn1(
             context_specific = "1",
             extensible = "true",
@@ -448,7 +448,7 @@ mod sequence {
 
         let algorithm_identifier = AlgorithmIdentifier {
             algorithm: ID_EC_PUBLIC_KEY_OID,
-            parameters: Some(Any::from(&parameters_oid)),
+            parameters: Some(AnyRef::from(&parameters_oid)),
         };
 
         assert_eq!(

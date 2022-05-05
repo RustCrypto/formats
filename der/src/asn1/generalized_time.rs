@@ -1,7 +1,7 @@
 //! ASN.1 `GeneralizedTime` support.
 
 use crate::{
-    asn1::Any,
+    asn1::AnyRef,
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
     ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
@@ -155,10 +155,10 @@ impl From<&DateTime> for GeneralizedTime {
     }
 }
 
-impl TryFrom<Any<'_>> for GeneralizedTime {
+impl TryFrom<AnyRef<'_>> for GeneralizedTime {
     type Error = Error;
 
-    fn try_from(any: Any<'_>) -> Result<GeneralizedTime> {
+    fn try_from(any: AnyRef<'_>) -> Result<GeneralizedTime> {
         any.decode_into()
     }
 }
@@ -243,10 +243,10 @@ impl TryFrom<&SystemTime> for GeneralizedTime {
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl<'a> TryFrom<Any<'a>> for SystemTime {
+impl<'a> TryFrom<AnyRef<'a>> for SystemTime {
     type Error = Error;
 
-    fn try_from(any: Any<'a>) -> Result<SystemTime> {
+    fn try_from(any: AnyRef<'a>) -> Result<SystemTime> {
         GeneralizedTime::try_from(any).map(|s| s.to_system_time())
     }
 }

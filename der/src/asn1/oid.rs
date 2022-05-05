@@ -1,7 +1,7 @@
 //! ASN.1 `OBJECT IDENTIFIER`
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, DecodeValue, EncodeValue, Error, FixedTag, Header, Length,
+    asn1::AnyRef, ord::OrdIsValueOrd, DecodeValue, EncodeValue, Error, FixedTag, Header, Length,
     Reader, Result, Tag, Tagged, Writer,
 };
 use const_oid::ObjectIdentifier;
@@ -35,8 +35,8 @@ impl FixedTag for ObjectIdentifier {
 
 impl OrdIsValueOrd for ObjectIdentifier {}
 
-impl<'a> From<&'a ObjectIdentifier> for Any<'a> {
-    fn from(oid: &'a ObjectIdentifier) -> Any<'a> {
+impl<'a> From<&'a ObjectIdentifier> for AnyRef<'a> {
+    fn from(oid: &'a ObjectIdentifier) -> AnyRef<'a> {
         // Note: ensuring an infallible conversion is possible relies on the
         // invariant that `const_oid::MAX_LEN <= Length::max()`.
         //
@@ -46,14 +46,14 @@ impl<'a> From<&'a ObjectIdentifier> for Any<'a> {
             .try_into()
             .expect("OID length invariant violated");
 
-        Any::from_tag_and_value(Tag::ObjectIdentifier, value)
+        AnyRef::from_tag_and_value(Tag::ObjectIdentifier, value)
     }
 }
 
-impl TryFrom<Any<'_>> for ObjectIdentifier {
+impl TryFrom<AnyRef<'_>> for ObjectIdentifier {
     type Error = Error;
 
-    fn try_from(any: Any<'_>) -> Result<ObjectIdentifier> {
+    fn try_from(any: AnyRef<'_>) -> Result<ObjectIdentifier> {
         any.tag().assert_eq(Tag::ObjectIdentifier)?;
         Ok(ObjectIdentifier::from_bytes(any.value())?)
     }

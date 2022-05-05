@@ -3,7 +3,7 @@
 use crate::ContentType;
 
 use der::{
-    asn1::{ContextSpecific, OctetString},
+    asn1::{ContextSpecific, OctetStringRef},
     DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
 };
 use spki::AlgorithmIdentifier;
@@ -59,7 +59,10 @@ impl<'a> DecodeValue<'a> for EncryptedContentInfo<'a> {
                 content_type: reader.decode()?,
                 content_encryption_algorithm: reader.decode()?,
                 encrypted_content: reader
-                    .context_specific::<OctetString<'_>>(ENCRYPTED_CONTENT_TAG, TagMode::Implicit)?
+                    .context_specific::<OctetStringRef<'_>>(
+                        ENCRYPTED_CONTENT_TAG,
+                        TagMode::Implicit,
+                    )?
                     .map(|o| o.as_bytes()),
             })
         })
@@ -71,7 +74,10 @@ impl<'a> Sequence<'a> for EncryptedContentInfo<'a> {
     where
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
-        let opt_octet = self.encrypted_content.map(OctetString::new).transpose()?;
+        let opt_octet = self
+            .encrypted_content
+            .map(OctetStringRef::new)
+            .transpose()?;
         f(&[
             &self.content_type,
             &self.content_encryption_algorithm,

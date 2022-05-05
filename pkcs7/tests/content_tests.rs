@@ -1,7 +1,7 @@
 //! PKCS#7 example tests
 
 use der::{
-    asn1::{ObjectIdentifier, OctetString},
+    asn1::{ObjectIdentifier, OctetStringRef},
     Decode, Encoder,
 };
 use hex_literal::hex;
@@ -63,7 +63,7 @@ fn decode_encrypted_key_example() {
 
             let (salt, iter) = any
                 .sequence(|decoder| {
-                    let salt = OctetString::decode(decoder)?;
+                    let salt = OctetStringRef::decode(decoder)?;
                     let iter = u16::decode(decoder)?;
                     Ok((salt, iter))
                 })

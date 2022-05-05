@@ -20,7 +20,7 @@ proptest! {
 #[cfg(all(feature = "derive", feature = "oid"))]
 mod ordering {
     use der::{
-        asn1::{Any, ObjectIdentifier, SetOf, SetOfVec},
+        asn1::{AnyRef, ObjectIdentifier, SetOf, SetOfVec},
         Decode, Sequence, ValueOrd,
     };
     use hex_literal::hex;
@@ -29,7 +29,7 @@ mod ordering {
     #[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
     pub struct AttributeTypeAndValue<'a> {
         pub oid: ObjectIdentifier,
-        pub value: Any<'a>,
+        pub value: AnyRef<'a>,
     }
 
     const OUT_OF_ORDER_RDN_EXAMPLE: &[u8] =

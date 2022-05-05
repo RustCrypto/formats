@@ -1,7 +1,7 @@
 //! Certificate tests
 
 use der::{
-    asn1::{BitString, ContextSpecific, ObjectIdentifier, UIntBytes},
+    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, UIntRef},
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
 };
 use hex_literal::hex;
@@ -69,9 +69,9 @@ pub struct DeferDecodeTbsCertificate<'a> {
     /// Defer decoded field
     pub subject_public_key_info: &'a [u8],
     /// Decoded field (never present)
-    pub issuer_unique_id: Option<BitString<'a>>,
+    pub issuer_unique_id: Option<BitStringRef<'a>>,
     /// Decoded field (never present)
-    pub subject_unique_id: Option<BitString<'a>>,
+    pub subject_unique_id: Option<BitStringRef<'a>>,
     /// Defer decoded field
     pub extensions: &'a [u8],
 }
@@ -120,7 +120,7 @@ fn reencode_cert() {
     let reencoded_sigalg = parsed_sigalg.to_vec().unwrap();
     assert_eq!(defer_cert.signature_algorithm, reencoded_sigalg);
 
-    let parsed_sig = BitString::from_der(defer_cert.signature).unwrap();
+    let parsed_sig = BitStringRef::from_der(defer_cert.signature).unwrap();
     let reencoded_sig = parsed_sig.to_vec().unwrap();
     assert_eq!(defer_cert.signature, reencoded_sig);
 
@@ -207,7 +207,7 @@ fn decode_cert() {
     ];
     assert_eq!(
         cert.tbs_certificate.serial_number,
-        UIntBytes::new(&target_serial).unwrap()
+        UIntRef::new(&target_serial).unwrap()
     );
     assert_eq!(
         cert.tbs_certificate.signature.oid.to_string(),

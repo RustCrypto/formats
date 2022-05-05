@@ -47,13 +47,13 @@ impl Asn1Type {
     /// Get a `der::Decoder` object for a particular ASN.1 type
     pub fn decoder(self) -> TokenStream {
         match self {
-            Asn1Type::BitString => quote!(::der::asn1::BitString::decode(reader)?),
-            Asn1Type::Ia5String => quote!(::der::asn1::Ia5String::decode(reader)?),
+            Asn1Type::BitString => quote!(::der::asn1::BitStringRef::decode(reader)?),
+            Asn1Type::Ia5String => quote!(::der::asn1::Ia5StringRef::decode(reader)?),
             Asn1Type::GeneralizedTime => quote!(::der::asn1::GeneralizedTime::decode(reader)?),
-            Asn1Type::OctetString => quote!(::der::asn1::OctetString::decode(reader)?),
-            Asn1Type::PrintableString => quote!(::der::asn1::PrintableString::decode(reader)?),
+            Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef::decode(reader)?),
+            Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef::decode(reader)?),
             Asn1Type::UtcTime => quote!(::der::asn1::UtcTime::decode(reader)?),
-            Asn1Type::Utf8String => quote!(::der::asn1::Utf8String::decode(reader)?),
+            Asn1Type::Utf8String => quote!(::der::asn1::Utf8StringRef::decode(reader)?),
         }
     }
 
@@ -74,13 +74,13 @@ impl Asn1Type {
     /// Get a `der::Encoder` object for a particular ASN.1 type
     pub fn type_path(self) -> TokenStream {
         match self {
-            Asn1Type::BitString => quote!(::der::asn1::BitString),
-            Asn1Type::Ia5String => quote!(::der::asn1::Ia5String),
+            Asn1Type::BitString => quote!(::der::asn1::BitStringRef),
+            Asn1Type::Ia5String => quote!(::der::asn1::Ia5StringRef),
             Asn1Type::GeneralizedTime => quote!(::der::asn1::GeneralizedTime),
-            Asn1Type::OctetString => quote!(::der::asn1::OctetString),
-            Asn1Type::PrintableString => quote!(::der::asn1::PrintableString),
+            Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef),
+            Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef),
             Asn1Type::UtcTime => quote!(::der::asn1::UtcTime),
-            Asn1Type::Utf8String => quote!(::der::asn1::Utf8String),
+            Asn1Type::Utf8String => quote!(::der::asn1::Utf8StringRef),
         }
     }
 }

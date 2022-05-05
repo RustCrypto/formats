@@ -2,7 +2,7 @@
 
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
-    asn1::{Any, ObjectIdentifier, OctetString},
+    asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Tagged, Writer,
 };
 
@@ -206,7 +206,7 @@ impl<'a> Pbkdf2Params<'a> {
 
 impl<'a> Decode<'a> for Pbkdf2Params<'a> {
     fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        Any::decode(reader)?.try_into()
+        AnyRef::decode(reader)?.try_into()
     }
 }
 
@@ -217,13 +217,13 @@ impl<'a> Sequence<'a> for Pbkdf2Params<'a> {
     {
         if self.prf == Pbkdf2Prf::default() {
             f(&[
-                &OctetString::new(self.salt)?,
+                &OctetStringRef::new(self.salt)?,
                 &self.iteration_count,
                 &self.key_length,
             ])
         } else {
             f(&[
-                &OctetString::new(self.salt)?,
+                &OctetStringRef::new(self.salt)?,
                 &self.iteration_count,
                 &self.key_length,
                 &self.prf,
@@ -232,14 +232,14 @@ impl<'a> Sequence<'a> for Pbkdf2Params<'a> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for Pbkdf2Params<'a> {
+impl<'a> TryFrom<AnyRef<'a>> for Pbkdf2Params<'a> {
     type Error = der::Error;
 
-    fn try_from(any: Any<'a>) -> der::Result<Self> {
+    fn try_from(any: AnyRef<'a>) -> der::Result<Self> {
         any.sequence(|reader| {
             // TODO(tarcieri): support salt `CHOICE` w\ `AlgorithmIdentifier`
             Ok(Self {
-                salt: OctetString::decode(reader)?.as_bytes(),
+                salt: OctetStringRef::decode(reader)?.as_bytes(),
                 iteration_count: reader.decode()?,
                 key_length: reader.decode()?,
                 prf: Option::<AlgorithmIdentifier<'_>>::decode(reader)?
@@ -397,7 +397,7 @@ impl<'a> ScryptParams<'a> {
 
 impl<'a> Decode<'a> for ScryptParams<'a> {
     fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        Any::decode(reader)?.try_into()
+        AnyRef::decode(reader)?.try_into()
     }
 }
 
@@ -407,7 +407,7 @@ impl<'a> Sequence<'a> for ScryptParams<'a> {
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
         f(&[
-            &OctetString::new(self.salt)?,
+            &OctetStringRef::new(self.salt)?,
             &self.cost_parameter,
             &self.block_size,
             &self.parallelization,
@@ -416,13 +416,13 @@ impl<'a> Sequence<'a> for ScryptParams<'a> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for ScryptParams<'a> {
+impl<'a> TryFrom<AnyRef<'a>> for ScryptParams<'a> {
     type Error = der::Error;
 
-    fn try_from(any: Any<'a>) -> der::Result<Self> {
+    fn try_from(any: AnyRef<'a>) -> der::Result<Self> {
         any.sequence(|reader| {
             Ok(Self {
-                salt: OctetString::decode(reader)?.as_bytes(),
+                salt: OctetStringRef::decode(reader)?.as_bytes(),
                 cost_parameter: reader.decode()?,
                 block_size: reader.decode()?,
                 parallelization: reader.decode()?,

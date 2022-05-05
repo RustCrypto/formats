@@ -4,7 +4,7 @@
 
 use crate::AlgorithmIdentifier;
 use der::{
-    asn1::{Any, ObjectIdentifier, OctetString},
+    asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Writer,
 };
 
@@ -119,7 +119,7 @@ pub struct Parameters {
 
 impl<'a> Decode<'a> for Parameters {
     fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
-        Any::decode(decoder)?.try_into()
+        AnyRef::decode(decoder)?.try_into()
     }
 }
 
@@ -128,17 +128,17 @@ impl Sequence<'_> for Parameters {
     where
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
-        f(&[&OctetString::new(&self.salt)?, &self.iteration_count])
+        f(&[&OctetStringRef::new(&self.salt)?, &self.iteration_count])
     }
 }
 
-impl TryFrom<Any<'_>> for Parameters {
+impl TryFrom<AnyRef<'_>> for Parameters {
     type Error = der::Error;
 
-    fn try_from(any: Any<'_>) -> der::Result<Parameters> {
+    fn try_from(any: AnyRef<'_>) -> der::Result<Parameters> {
         any.sequence(|reader| {
             Ok(Parameters {
-                salt: OctetString::decode(reader)?
+                salt: OctetStringRef::decode(reader)?
                     .as_bytes()
                     .try_into()
                     .map_err(|_| der::Tag::OctetString.value_error())?,

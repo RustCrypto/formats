@@ -8,7 +8,7 @@
 use crate::{EcParameters, Error, Result};
 use core::fmt;
 use der::{
-    asn1::{BitString, ContextSpecific, OctetString},
+    asn1::{BitStringRef, ContextSpecific, OctetStringRef},
     Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag, TagMode, TagNumber,
 };
 
@@ -77,10 +77,10 @@ impl<'a> DecodeValue<'a> for EcPrivateKey<'a> {
                 return Err(der::Tag::Integer.value_error());
             }
 
-            let private_key = OctetString::decode(reader)?.as_bytes();
+            let private_key = OctetStringRef::decode(reader)?.as_bytes();
             let parameters = reader.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
             let public_key = reader
-                .context_specific::<BitString<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?
+                .context_specific::<BitStringRef<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?
                 .map(|bs| bs.as_bytes().ok_or_else(|| Tag::BitString.value_error()))
                 .transpose()?;
 
@@ -100,7 +100,7 @@ impl<'a> Sequence<'a> for EcPrivateKey<'a> {
     {
         f(&[
             &VERSION,
-            &OctetString::new(self.private_key)?,
+            &OctetStringRef::new(self.private_key)?,
             &self.parameters.as_ref().map(|params| ContextSpecific {
                 tag_number: EC_PARAMETERS_TAG,
                 tag_mode: TagMode::Explicit,
@@ -109,7 +109,7 @@ impl<'a> Sequence<'a> for EcPrivateKey<'a> {
             &self
                 .public_key
                 .map(|pk| {
-                    BitString::from_bytes(pk).map(|value| ContextSpecific {
+                    BitStringRef::from_bytes(pk).map(|value| ContextSpecific {
                         tag_number: PUBLIC_KEY_TAG,
                         tag_mode: TagMode::Explicit,
                         value,

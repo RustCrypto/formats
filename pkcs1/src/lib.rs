@@ -22,7 +22,7 @@ mod version;
 
 pub use der::{
     self,
-    asn1::{ObjectIdentifier, UIntBytes},
+    asn1::{ObjectIdentifier, UIntRef},
 };
 
 pub use self::{
@@ -53,5 +53,5 @@ pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.84
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
 pub const ALGORITHM_ID: pkcs8::AlgorithmIdentifier<'static> = pkcs8::AlgorithmIdentifier {
     oid: ALGORITHM_OID,
-    parameters: Some(der::asn1::Any::NULL),
+    parameters: Some(der::asn1::AnyRef::NULL),
 };

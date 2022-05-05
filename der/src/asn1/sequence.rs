@@ -54,6 +54,8 @@ where
 
 /// The [`SequenceRef`] type provides raw access to the octets which comprise a
 /// DER-encoded `SEQUENCE`.
+///
+/// This is a zero-copy reference type which borrows from the input data.
 pub struct SequenceRef<'a> {
     /// Body of the `SEQUENCE`.
     body: ByteSlice<'a>,

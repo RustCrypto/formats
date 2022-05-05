@@ -1,7 +1,7 @@
 //! ASN.1 `PrintableString` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
+    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
     Length, Reader, Result, StrSlice, Tag, Writer,
 };
 use core::{fmt, str};
@@ -10,8 +10,11 @@ use core::{fmt, str};
 ///
 /// Supports a subset the ASCII character set (desribed below).
 ///
-/// For UTF-8, use [`Utf8String`][`crate::asn1::Utf8String`] instead. For the
-/// full ASCII character set, use [`Ia5String`][`crate::asn1::Ia5String`].
+/// For UTF-8, use [`Utf8StringRef`][`crate::asn1::Utf8StringRef`] instead.
+/// For the full ASCII character set, use
+/// [`Ia5StringRef`][`crate::asn1::Ia5StringRef`].
+///
+/// This is a zero-copy reference type which borrows from the input data.
 ///
 /// # Supported characters
 ///
@@ -33,12 +36,12 @@ use core::{fmt, str};
 /// - `=`
 /// - `?`
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
-pub struct PrintableString<'a> {
+pub struct PrintableStringRef<'a> {
     /// Inner value
     inner: StrSlice<'a>,
 }
 
-impl<'a> PrintableString<'a> {
+impl<'a> PrintableStringRef<'a> {
     /// Create a new ASN.1 `PrintableString`.
     pub fn new<T>(input: &'a T) -> Result<Self>
     where
@@ -94,25 +97,25 @@ impl<'a> PrintableString<'a> {
     }
 }
 
-impl AsRef<str> for PrintableString<'_> {
+impl AsRef<str> for PrintableStringRef<'_> {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
-impl AsRef<[u8]> for PrintableString<'_> {
+impl AsRef<[u8]> for PrintableStringRef<'_> {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
-impl<'a> DecodeValue<'a> for PrintableString<'a> {
+impl<'a> DecodeValue<'a> for PrintableStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
     }
 }
 
-impl<'a> EncodeValue for PrintableString<'a> {
+impl<'a> EncodeValue for PrintableStringRef<'a> {
     fn value_len(&self) -> Result<Length> {
         self.inner.value_len()
     }
@@ -122,45 +125,45 @@ impl<'a> EncodeValue for PrintableString<'a> {
     }
 }
 
-impl FixedTag for PrintableString<'_> {
+impl FixedTag for PrintableStringRef<'_> {
     const TAG: Tag = Tag::PrintableString;
 }
 
-impl OrdIsValueOrd for PrintableString<'_> {}
+impl OrdIsValueOrd for PrintableStringRef<'_> {}
 
-impl<'a> From<&PrintableString<'a>> for PrintableString<'a> {
-    fn from(value: &PrintableString<'a>) -> PrintableString<'a> {
+impl<'a> From<&PrintableStringRef<'a>> for PrintableStringRef<'a> {
+    fn from(value: &PrintableStringRef<'a>) -> PrintableStringRef<'a> {
         *value
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for PrintableString<'a> {
+impl<'a> TryFrom<AnyRef<'a>> for PrintableStringRef<'a> {
     type Error = Error;
 
-    fn try_from(any: Any<'a>) -> Result<PrintableString<'a>> {
+    fn try_from(any: AnyRef<'a>) -> Result<PrintableStringRef<'a>> {
         any.decode_into()
     }
 }
 
-impl<'a> From<PrintableString<'a>> for Any<'a> {
-    fn from(printable_string: PrintableString<'a>) -> Any<'a> {
-        Any::from_tag_and_value(Tag::PrintableString, printable_string.inner.into())
+impl<'a> From<PrintableStringRef<'a>> for AnyRef<'a> {
+    fn from(printable_string: PrintableStringRef<'a>) -> AnyRef<'a> {
+        AnyRef::from_tag_and_value(Tag::PrintableString, printable_string.inner.into())
     }
 }
 
-impl<'a> From<PrintableString<'a>> for &'a [u8] {
-    fn from(printable_string: PrintableString<'a>) -> &'a [u8] {
+impl<'a> From<PrintableStringRef<'a>> for &'a [u8] {
+    fn from(printable_string: PrintableStringRef<'a>) -> &'a [u8] {
         printable_string.as_bytes()
     }
 }
 
-impl<'a> fmt::Display for PrintableString<'a> {
+impl<'a> fmt::Display for PrintableStringRef<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }
 
-impl<'a> fmt::Debug for PrintableString<'a> {
+impl<'a> fmt::Debug for PrintableStringRef<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "PrintableString({:?})", self.as_str())
     }
@@ -168,7 +171,7 @@ impl<'a> fmt::Debug for PrintableString<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::PrintableString;
+    use super::PrintableStringRef;
     use crate::Decode;
 
     #[test]
@@ -177,7 +180,7 @@ mod tests {
             0x13, 0x0b, 0x54, 0x65, 0x73, 0x74, 0x20, 0x55, 0x73, 0x65, 0x72, 0x20, 0x31,
         ];
 
-        let printable_string = PrintableString::from_der(example_bytes).unwrap();
+        let printable_string = PrintableStringRef::from_der(example_bytes).unwrap();
         assert_eq!(printable_string.as_str(), "Test User 1");
     }
 }

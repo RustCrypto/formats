@@ -5,7 +5,7 @@ use crate::{name::Name, time::Validity};
 use alloc::vec::Vec;
 
 use const_oid::AssociatedOid;
-use der::asn1::{BitString, UIntBytes};
+use der::asn1::{BitStringRef, UIntRef};
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
@@ -73,7 +73,7 @@ pub struct TbsCertificate<'a> {
     #[asn1(context_specific = "0", default = "Default::default")]
     pub version: Version,
 
-    pub serial_number: UIntBytes<'a>,
+    pub serial_number: UIntRef<'a>,
     pub signature: AlgorithmIdentifier<'a>,
     pub issuer: Name<'a>,
     pub validity: Validity,
@@ -81,10 +81,10 @@ pub struct TbsCertificate<'a> {
     pub subject_public_key_info: SubjectPublicKeyInfo<'a>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub issuer_unique_id: Option<BitString<'a>>,
+    pub issuer_unique_id: Option<BitStringRef<'a>>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub subject_unique_id: Option<BitString<'a>>,
+    pub subject_unique_id: Option<BitStringRef<'a>>,
 
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
     pub extensions: Option<crate::ext::Extensions<'a>>,
@@ -140,7 +140,7 @@ impl<'a> TbsCertificate<'a> {
 pub struct Certificate<'a> {
     pub tbs_certificate: TbsCertificate<'a>,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
-    pub signature: BitString<'a>,
+    pub signature: BitStringRef<'a>,
 }
 
 /// `PkiPath` as defined by X.509 and referenced by [RFC 6066].

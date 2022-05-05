@@ -1,8 +1,8 @@
 //! ASN.1 `BOOLEAN` support.
 
 use crate::{
-    asn1::Any, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag,
-    Header, Length, Reader, Result, Tag, Writer,
+    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind,
+    FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
 /// Byte used to encode `true` in ASN.1 DER. From X.690 Section 11.1:
@@ -44,21 +44,21 @@ impl FixedTag for bool {
 
 impl OrdIsValueOrd for bool {}
 
-impl From<bool> for Any<'static> {
-    fn from(value: bool) -> Any<'static> {
+impl From<bool> for AnyRef<'static> {
+    fn from(value: bool) -> AnyRef<'static> {
         let value = ByteSlice::from(match value {
             false => &[FALSE_OCTET],
             true => &[TRUE_OCTET],
         });
 
-        Any::from_tag_and_value(Tag::Boolean, value)
+        AnyRef::from_tag_and_value(Tag::Boolean, value)
     }
 }
 
-impl TryFrom<Any<'_>> for bool {
+impl TryFrom<AnyRef<'_>> for bool {
     type Error = Error;
 
-    fn try_from(any: Any<'_>) -> Result<bool> {
+    fn try_from(any: AnyRef<'_>) -> Result<bool> {
         any.try_into()
     }
 }

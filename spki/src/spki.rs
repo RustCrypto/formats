@@ -3,7 +3,7 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::BitString, Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
+    asn1::BitStringRef, Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
 };
 
 #[cfg(feature = "alloc")]
@@ -70,8 +70,8 @@ impl<'a> SubjectPublicKeyInfo<'a> {
     }
 
     /// Get a [`BitString`] representing the `subject_public_key`
-    fn bitstring(&self) -> der::Result<BitString<'a>> {
-        BitString::from_bytes(self.subject_public_key)
+    fn bitstring(&self) -> der::Result<BitStringRef<'a>> {
+        BitStringRef::from_bytes(self.subject_public_key)
     }
 }
 
@@ -80,7 +80,7 @@ impl<'a> DecodeValue<'a> for SubjectPublicKeyInfo<'a> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 algorithm: reader.decode()?,
-                subject_public_key: BitString::decode(reader)?
+                subject_public_key: BitStringRef::decode(reader)?
                     .as_bytes()
                     .ok_or_else(|| der::Tag::BitString.value_error())?,
             })

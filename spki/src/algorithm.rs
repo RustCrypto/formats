@@ -2,7 +2,7 @@
 
 use crate::{Error, Result};
 use core::cmp::Ordering;
-use der::asn1::{Any, ObjectIdentifier};
+use der::asn1::{AnyRef, ObjectIdentifier};
 use der::{Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd};
 
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
@@ -21,7 +21,7 @@ pub struct AlgorithmIdentifier<'a> {
     pub oid: ObjectIdentifier,
 
     /// Algorithm `parameters`.
-    pub parameters: Option<Any<'a>>,
+    pub parameters: Option<AnyRef<'a>>,
 }
 
 impl<'a> AlgorithmIdentifier<'a> {
@@ -59,10 +59,10 @@ impl<'a> AlgorithmIdentifier<'a> {
         Ok(())
     }
 
-    /// Get the `parameters` field as an [`Any`].
+    /// Get the `parameters` field as an [`AnyRef`].
     ///
     /// Returns an error if `parameters` are `None`.
-    pub fn parameters_any(&self) -> Result<Any<'a>> {
+    pub fn parameters_any(&self) -> Result<AnyRef<'a>> {
         self.parameters.ok_or(Error::AlgorithmParametersMissing)
     }
 
@@ -86,7 +86,7 @@ impl<'a> AlgorithmIdentifier<'a> {
             match self.parameters {
                 None => None,
                 Some(p) => match p {
-                    Any::NULL => None,
+                    AnyRef::NULL => None,
                     _ => Some(p.oid()?),
                 },
             },

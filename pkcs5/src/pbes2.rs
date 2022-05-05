@@ -14,7 +14,7 @@ pub use self::kdf::{
 
 use crate::{AlgorithmIdentifier, Error, Result};
 use der::{
-    asn1::{Any, ObjectIdentifier, OctetString},
+    asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Writer,
 };
 
@@ -202,7 +202,7 @@ impl<'a> Parameters<'a> {
 
 impl<'a> Decode<'a> for Parameters<'a> {
     fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        Any::decode(reader)?.try_into()
+        AnyRef::decode(reader)?.try_into()
     }
 }
 
@@ -215,10 +215,10 @@ impl<'a> Sequence<'a> for Parameters<'a> {
     }
 }
 
-impl<'a> TryFrom<Any<'a>> for Parameters<'a> {
+impl<'a> TryFrom<AnyRef<'a>> for Parameters<'a> {
     type Error = der::Error;
 
-    fn try_from(any: Any<'a>) -> der::Result<Self> {
+    fn try_from(any: AnyRef<'a>) -> der::Result<Self> {
         any.sequence(|params| {
             let kdf = AlgorithmIdentifier::decode(params)?;
             let encryption = AlgorithmIdentifier::decode(params)?;
@@ -356,7 +356,7 @@ impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
     type Error = der::Error;
 
     fn try_from(scheme: EncryptionScheme<'a>) -> der::Result<Self> {
-        let parameters = OctetString::new(match scheme {
+        let parameters = OctetStringRef::new(match scheme {
             EncryptionScheme::Aes128Cbc { iv } => iv,
             EncryptionScheme::Aes192Cbc { iv } => iv,
             EncryptionScheme::Aes256Cbc { iv } => iv,

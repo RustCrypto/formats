@@ -3,7 +3,7 @@
 use super::{EdiPartyName, OtherName};
 use crate::name::Name;
 
-use der::asn1::{Ia5String, ObjectIdentifier, OctetString};
+use der::asn1::{Ia5StringRef, ObjectIdentifier, OctetStringRef};
 use der::Choice;
 
 /// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
@@ -41,10 +41,10 @@ pub enum GeneralName<'a> {
     OtherName(OtherName<'a>),
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT")]
-    Rfc822Name(Ia5String<'a>),
+    Rfc822Name(Ia5StringRef<'a>),
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT")]
-    DnsName(Ia5String<'a>),
+    DnsName(Ia5StringRef<'a>),
 
     #[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
     DirectoryName(Name<'a>),
@@ -53,10 +53,10 @@ pub enum GeneralName<'a> {
     EdiPartyName(EdiPartyName<'a>),
 
     #[asn1(context_specific = "6", tag_mode = "IMPLICIT")]
-    UniformResourceIdentifier(Ia5String<'a>),
+    UniformResourceIdentifier(Ia5StringRef<'a>),
 
     #[asn1(context_specific = "7", tag_mode = "IMPLICIT")]
-    IpAddress(OctetString<'a>),
+    IpAddress(OctetStringRef<'a>),
 
     #[asn1(context_specific = "8", tag_mode = "IMPLICIT")]
     RegisteredId(ObjectIdentifier),

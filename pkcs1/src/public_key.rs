@@ -1,7 +1,7 @@
 //! PKCS#1 RSA Public Keys.
 
 use crate::{Error, Result};
-use der::{asn1::UIntBytes, Decode, DecodeValue, Encode, Header, Reader, Sequence};
+use der::{asn1::UIntRef, Decode, DecodeValue, Encode, Header, Reader, Sequence};
 
 #[cfg(feature = "alloc")]
 use der::Document;
@@ -24,10 +24,10 @@ use der::pem::PemLabel;
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct RsaPublicKey<'a> {
     /// `n`: RSA modulus
-    pub modulus: UIntBytes<'a>,
+    pub modulus: UIntRef<'a>,
 
     /// `e`: RSA public exponent
-    pub public_exponent: UIntBytes<'a>,
+    pub public_exponent: UIntRef<'a>,
 }
 
 impl<'a> DecodeValue<'a> for RsaPublicKey<'a> {
