@@ -175,6 +175,14 @@ impl<'a> TryFrom<AnyRef<'a>> for String {
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<'a> DecodeValue<'a> for String {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        Ok(String::from_utf8(reader.read_vec(header.length)?)?)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl EncodeValue for String {
     fn value_len(&self) -> Result<Length> {
         Utf8StringRef::new(self)?.value_len()

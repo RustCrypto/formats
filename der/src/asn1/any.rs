@@ -6,6 +6,9 @@ use crate::{
 };
 use core::cmp::Ordering;
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
 
@@ -36,7 +39,7 @@ impl<'a> AnyRef<'a> {
         value: ByteSlice::EMPTY,
     };
 
-    /// Create a new [`AnyRef`] from the provided [`Tag`] and byte slice.
+    /// Create a new [`AnyRef`] from the provided [`Tag`] and DER bytes.
     pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self> {
         let value = ByteSlice::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
         Ok(Self { tag, value })
@@ -198,5 +201,74 @@ impl<'a> TryFrom<&'a [u8]> for AnyRef<'a> {
 
     fn try_from(bytes: &'a [u8]) -> Result<AnyRef<'a>> {
         AnyRef::from_der(bytes)
+    }
+}
+
+/// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
+///
+/// This type provides the same functionality as [`AnyRef`] but owns the
+/// backing data.
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct Any {
+    /// Tag representing the type of the encoded value.
+    tag: Tag,
+
+    /// Inner value encoded as bytes.
+    value: Vec<u8>,
+}
+
+#[cfg(feature = "alloc")]
+impl Any {
+    /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
+    pub fn new(tag: Tag, bytes: impl Into<Vec<u8>>) -> Result<Self> {
+        let value = bytes.into();
+
+        // Ensure the tag and value are a valid `AnyRef`.
+        AnyRef::new(tag, &value)?;
+        Ok(Self { tag, value })
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl Choice<'_> for Any {
+    fn can_decode(_: Tag) -> bool {
+        true
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> Decode<'a> for Any {
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
+        let header = Header::decode(reader)?;
+        let value = reader.read_vec(header.length)?;
+        Self::new(header.tag, value)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl EncodeValue for Any {
+    fn value_len(&self) -> Result<Length> {
+        self.value.len().try_into()
+    }
+
+    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        writer.write(&self.value)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> From<&'a Any> for AnyRef<'a> {
+    fn from(any: &'a Any) -> AnyRef<'a> {
+        // Ensured to parse successfully in constructor
+        AnyRef::new(any.tag, &any.value).expect("invalid ANY")
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl Tagged for Any {
+    fn tag(&self) -> Tag {
+        self.tag
     }
 }
