@@ -148,6 +148,17 @@ pub trait Reader<'r>: Sized {
         self.input_len().saturating_sub(self.position())
     }
 
+    /// Read an ASN.1 `SEQUENCE`, creating a nested [`Reader`] for the body and
+    /// calling the provided closure with it.
+    fn sequence<'n, F, T>(&'n mut self, f: F) -> Result<T>
+    where
+        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T>,
+    {
+        let header = Header::decode(self)?;
+        header.tag.assert_eq(Tag::Sequence)?;
+        self.read_nested(header.length, f)
+    }
+
     /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
     fn tlv_bytes(&mut self) -> Result<&'r [u8]> {
         let header = self.peek_header()?;
