@@ -39,26 +39,25 @@
 //! - [`f64`]: ASN.1 `REAL` (gated on `real` crate feature)
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`.
 //!   `String` requires `alloc` feature. See also [`Utf8StringRef`].
-//!   Requires `alloc` feature. See also [`SetOf`].
 //! - [`Option`]: ASN.1 `OPTIONAL`.
 //! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime`. Requires `std` feature.
 //! - [`Vec`][`alloc::vec::Vec`]: ASN.1 `SEQUENCE OF`. Requires `alloc` feature.
 //! - `[T; N]`: ASN.1 `SEQUENCE OF`. See also [`SequenceOf`].
 //!
 //! The following ASN.1 types provided by this crate also impl these traits:
-//! - [`AnyRef`]: ASN.1 `ANY`
-//! - [`BitStringRef`]: ASN.1 `BIT STRING`
-//! - [`GeneralizedTime`]: ASN.1 `GeneralizedTime`
-//! - [`Ia5StringRef`]: ASN.1 `IA5String`
-//! - [`Null`]: ASN.1 `NULL`
-//! - [`ObjectIdentifier`]: ASN.1 `OBJECT IDENTIFIER`
-//! - [`OctetStringRef`]: ASN.1 `OCTET STRING`
-//! - [`PrintableStringRef`]: ASN.1 `PrintableString` (ASCII subset)
-//! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`
-//! - [`SetOf`], [`SetOfVec`]: ASN.1 `SET OF`
-//! - [`UIntRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes
-//! - [`UtcTime`]: ASN.1 `UTCTime`
-//! - [`Utf8StringRef`]: ASN.1 `UTF8String`
+//! - [`Any`], [`AnyRef`]: ASN.1 `ANY`.
+//! - [`BitString`], [`BitStringRef`]: ASN.1 `BIT STRING`
+//! - [`GeneralizedTime`]: ASN.1 `GeneralizedTime`.
+//! - [`Ia5StringRef`]: ASN.1 `IA5String`.
+//! - [`Null`]: ASN.1 `NULL`.
+//! - [`ObjectIdentifier`]: ASN.1 `OBJECT IDENTIFIER`.
+//! - [`OctetString`], [`OctetStringRef`]: ASN.1 `OCTET STRING`.
+//! - [`PrintableStringRef`]: ASN.1 `PrintableString` (ASCII subset).
+//! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`.
+//! - [`SetOf`], [`SetOfVec`]: ASN.1 `SET OF`.
+//! - [`UIntRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes.
+//! - [`UtcTime`]: ASN.1 `UTCTime`.
+//! - [`Utf8StringRef`]: ASN.1 `UTF8String`.
 //!
 //! Context specific fields can be modeled using these generic types:
 //! - [`ContextSpecific`]: decoder/encoder for owned context-specific fields
@@ -315,14 +314,17 @@
 //! [A Layman's Guide to a Subset of ASN.1, BER, and DER]: https://luca.ntop.org/Teaching/Appunti/asn1.html
 //! [A Warm Welcome to ASN.1 and DER]: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/
 //!
+//! [`Any`]: asn1::AnyRef
 //! [`AnyRef`]: asn1::AnyRef
 //! [`ContextSpecific`]: asn1::ContextSpecific
 //! [`ContextSpecificRef`]: asn1::ContextSpecificRef
+//! [`BitString`]: asn1::BitStringRef
 //! [`BitStringRef`]: asn1::BitStringRef
 //! [`GeneralizedTime`]: asn1::GeneralizedTime
 //! [`Ia5StringRef`]: asn1::Ia5StringRef
 //! [`Null`]: asn1::Null
 //! [`ObjectIdentifier`]: asn1::ObjectIdentifier
+//! [`OctetString`]: asn1::OctetStringRef
 //! [`OctetStringRef`]: asn1::OctetStringRef
 //! [`PrintableStringRef`]: asn1::PrintableStringRef
 //! [`SequenceOf`]: asn1::SequenceOf
