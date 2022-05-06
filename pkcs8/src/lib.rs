@@ -83,7 +83,7 @@ pub use crate::{
     traits::DecodePrivateKey,
     version::Version,
 };
-pub use der::{self, asn1::ObjectIdentifier};
+pub use der::{self, asn1::ObjectIdentifier, oid::AssociatedOid};
 pub use spki::{self, AlgorithmIdentifier, DecodePublicKey, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
