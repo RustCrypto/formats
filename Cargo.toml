@@ -7,7 +7,6 @@ members = [
     "const-oid",
     "der",
     "der/derive",
-    "ocsp",
     "pem-rfc7468",
     "pkcs1",
     "pkcs5",
@@ -20,7 +19,8 @@ members = [
     "tai64",
     "tls_codec",
     "tls_codec/derive",
-    "x509"
+    "x509",
+    "x509-ocsp"
 ]
 
 [profile.dev]

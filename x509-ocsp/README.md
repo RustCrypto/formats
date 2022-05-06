@@ -1,4 +1,4 @@
-# [RustCrypto]: X.509
+# [RustCrypto]: X.509 Online Certificate Status Protocol (OCSP)
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
