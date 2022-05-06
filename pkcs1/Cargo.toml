@@ -18,7 +18,7 @@ rust-version = "1.57"
 der = { version = "=0.6.0-pre.4", features = ["oid"], path = "../der" }
 
 # optional dependencies
-pkcs8 = { version = "=0.9.0-pre.2", optional = true, default-features = false, path = "../pkcs8" }
+pkcs8 = { version = "=0.9.0-pre.3", optional = true, default-features = false, path = "../pkcs8" }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
