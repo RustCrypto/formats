@@ -1256,7 +1256,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.3.0-pre.2"
+version = "0.3.0-pre.3"
 dependencies = [
  "der 0.6.0-pre.4",
  "generic-array",
