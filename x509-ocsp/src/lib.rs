@@ -61,9 +61,9 @@ pub struct OcspRequest<'a> {
 #[allow(missing_docs)]
 pub struct TbsRequest<'a> {
     #[asn1(
-    context_specific = "0",
-    default = "Default::default",
-    tag_mode = "EXPLICIT"
+        context_specific = "0",
+        default = "Default::default",
+        tag_mode = "EXPLICIT"
     )]
     pub version: Version,
 
@@ -254,9 +254,9 @@ pub struct BasicOcspResponse<'a> {
 #[allow(missing_docs)]
 pub struct ResponseData<'a> {
     #[asn1(
-    context_specific = "0",
-    default = "Default::default",
-    tag_mode = "EXPLICIT"
+        context_specific = "0",
+        default = "Default::default",
+        tag_mode = "EXPLICIT"
     )]
     pub version: Version,
     pub responder_id: ResponderId<'a>,
