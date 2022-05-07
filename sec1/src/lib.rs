@@ -63,6 +63,9 @@ pub use pkcs8;
 #[cfg(feature = "pkcs8")]
 use pkcs8::ObjectIdentifier;
 
+#[cfg(all(doc, feature = "serde"))]
+use serdect::serde;
+
 /// Algorithm [`ObjectIdentifier`] for elliptic curve public key cryptography
 /// (`id-ecPublicKey`).
 ///

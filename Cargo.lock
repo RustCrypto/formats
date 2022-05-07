@@ -1258,11 +1258,12 @@ dependencies = [
 name = "sec1"
 version = "0.3.0-pre.3"
 dependencies = [
+ "base16ct 0.1.1",
  "der 0.6.0-pre.4",
  "generic-array",
  "hex-literal",
  "pkcs8 0.9.0-pre.3",
- "serde",
+ "serdect",
  "subtle",
  "tempfile",
  "zeroize",
@@ -1329,7 +1330,7 @@ dependencies = [
 name = "serdect"
 version = "0.1.0"
 dependencies = [
- "base16ct 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base16ct 0.1.1",
  "bincode",
  "ciborium",
  "hex-literal",
