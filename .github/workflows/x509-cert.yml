@@ -1,4 +1,4 @@
-name: x509
+name: x509-cert
 
 on:
   pull_request:
@@ -6,14 +6,14 @@ on:
       - "const-oid/**"
       - "der/**"
       - "spki/**"
-      - "x509/**"
+      - "x509-cert/**"
       - "Cargo.*"
   push:
     branches: master
 
 defaults:
   run:
-    working-directory: x509
+    working-directory: x509-cert
 
 env:
   CARGO_INCREMENTAL: 0

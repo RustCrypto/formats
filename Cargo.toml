@@ -19,7 +19,7 @@ members = [
     "tai64",
     "tls_codec",
     "tls_codec/derive",
-    "x509",
+    "x509-cert",
     "x509-ocsp"
 ]
 
