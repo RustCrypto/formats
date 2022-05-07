@@ -1711,6 +1711,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "x509-ocsp"
+version = "0.0.1"
+dependencies = [
+ "const-oid 0.9.0",
+ "der 0.6.0-pre.4",
+ "hex-literal",
+ "spki 0.6.0-pre.3",
+ "x509-cert",
+]
+
+[[package]]
 name = "zeroize"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
