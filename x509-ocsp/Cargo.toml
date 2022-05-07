@@ -18,8 +18,8 @@ rust-version = "1.57"
 
 [dependencies]
 der = { version = "0.6.0-pre.3", features = ["oid", "derive", "alloc"], path = "../der" }
-x509-cert = { version = "0.0.2", path = "../x509" }
-const-oid = { version = "0.9.0", path = "../const-oid" }
+x509-cert = { version = "0.0.2", path = "../x509-cert" }
+const-oid = { version = "0.9", path = "../const-oid" }
 spki = { version = "=0.6.0-pre.3", path = "../spki" }
 
 [dev-dependencies]
