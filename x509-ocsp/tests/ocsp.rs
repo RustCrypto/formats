@@ -3,8 +3,8 @@ use der::asn1::{Null, ObjectIdentifier};
 use der::{Decode, Encode};
 use hex_literal::hex;
 use x509_cert::ext::pkix::CrlReason;
-use x509_ocsp::ocsp::Version::V1;
-use x509_ocsp::ocsp::*;
+use x509_ocsp::Version::V1;
+use x509_ocsp::*;
 
 #[test]
 fn decode_ocsp_req_ca_signed() {
