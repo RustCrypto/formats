@@ -882,7 +882,7 @@ dependencies = [
  "scrypt",
  "sha1",
  "sha2 0.10.2",
- "spki 0.6.0-pre.3",
+ "spki 0.6.0",
 ]
 
 [[package]]
@@ -891,7 +891,7 @@ version = "0.4.0-pre"
 dependencies = [
  "der 0.6.0",
  "hex-literal",
- "spki 0.6.0-pre.3",
+ "spki 0.6.0",
 ]
 
 [[package]]
@@ -913,7 +913,7 @@ dependencies = [
  "hex-literal",
  "pkcs5",
  "rand_core 0.6.3",
- "spki 0.6.0-pre.3",
+ "spki 0.6.0",
  "subtle",
  "tempfile",
 ]
@@ -1411,7 +1411,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.6.0-pre.3"
+version = "0.6.0"
 dependencies = [
  "base64ct 1.5.0",
  "der 0.6.0",
@@ -1708,7 +1708,7 @@ dependencies = [
  "flagset",
  "hex-literal",
  "rstest",
- "spki 0.6.0-pre.3",
+ "spki 0.6.0",
 ]
 
 [[package]]
@@ -1718,7 +1718,7 @@ dependencies = [
  "const-oid 0.9.0",
  "der 0.6.0",
  "hex-literal",
- "spki 0.6.0-pre.3",
+ "spki 0.6.0",
  "x509-cert",
 ]
 

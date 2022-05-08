@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.0 (2022-05-08)
+### Added
+- `AlgorithmIdentifier::oids()` helper function ([#443])
+- Impl `PartialOrd` for `AlgorithmIdentifier` ([#476])
+- Impl `DecodeValue` for `AlgorithmIdentifier` ([#449])
+- Impl `ValueOrd` for `SubjectPublicKeyInfo` ([#522])
+
+### Changed
+- Replace `PublicKeyDocument` with `der` crate's `Document` type ([#571])
+- Streaming fingerprint builder ([#616])
+- Bump `der` crate dependency to v0.6 ([#653])
+
+### Removed
+- `PublicKeyDocument` ([#571])
+
+[#443]: https://github.com/RustCrypto/formats/pull/443
+[#449]: https://github.com/RustCrypto/formats/pull/449
+[#476]: https://github.com/RustCrypto/formats/pull/476
+[#522]: https://github.com/RustCrypto/formats/pull/522
+[#571]: https://github.com/RustCrypto/formats/pull/571
+[#616]: https://github.com/RustCrypto/formats/pull/616
+[#653]: https://github.com/RustCrypto/formats/pull/653
+
 ## 0.5.4 (2022-01-05)
 ### Added
 - `Error::KeyMalformed` variant ([#318])
