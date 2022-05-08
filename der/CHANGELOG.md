@@ -4,6 +4,79 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.0 (2022-05-08)
+### Added
+- Impl `ValueOrd` for `SetOf` and `SetOfVec` ([#362])
+- `SequenceRef` type ([#374])
+- Support for `SetOf` sorting on heapless `no_std` targets ([#401])
+- Support for mapping `BitString` to/from a `FlagSet` ([#412])
+- `DecodeOwned` marker trait ([#529])
+- Support for the ASN.1 `REAL` type ([#346])
+- `DecodePem` and `EncodePem` traits ([#571])
+- `Document` and `SecretDocument` types ([#571])
+- `EncodeRef`/`EncodeValueRef` wrapper types ([#604])
+- `Writer` trait ([#605])
+- `Reader` trait ([#606])
+- Streaming on-the-fly `PemReader` and `PemWriter` ([#618], [#636])
+- Owned `BitString` ([#636])
+- Owned `Any` and `OctetString` types ([#640])
+
+### Changed
+- Pass `Header` to `DecodeValue` ([#392])
+- Bump `const-oid` dependency to v0.9 ([#507])
+- Renamed `Decodable`/`Encodable` => `Decode`/`Encode` ([#523])
+- Enable arithmetic, casting, and panic `clippy` lints ([#556], [#579])
+- Use `&mut dyn Writer` as output for `Encode::encode` and `EncodeValue::encode_value` ([#611])
+- Bump `pem-rfc7468` dependency to v0.6 ([#620])
+- Use `Reader<'a>` as input for `Decode::decode` and `DecodeValue::decode_value` ([#633])
+- Renamed `Any` => `AnyRef` ([#637])
+- Renamed `BitString` => `BitStringRef` ([#637])
+- Renamed `Ia5String` => `Ia5StringRef` ([#637])
+- Renamed `OctetString` => `OctetStringRef` ([#637])
+- Renamed `PrintableString` => `PrintableStringRef` ([#637])
+- Renamed `Utf8String` => `Utf8StringRef` ([#637])
+- Renamed `UIntBytes` => `UIntRef` ([#637])
+- Renamed `Decoder` => `SliceReader` ([#651])
+- Renamed `Encoder` => `SliceWriter` ([#651])
+
+### Fixed
+- Handling of oversized unsigned `INTEGER` inputs ([#447])
+
+### Removed
+- `bigint` feature ([#344])
+- `OrdIsValueOrd` trait ([#359])
+- `Document` trait ([#571])
+- `OptionalRef` ([#604])
+- Decode-time SET OF ordering checks ([#625])
+
+[#344]: https://github.com/RustCrypto/formats/pull/344
+[#346]: https://github.com/RustCrypto/formats/pull/346
+[#359]: https://github.com/RustCrypto/formats/pull/359
+[#362]: https://github.com/RustCrypto/formats/pull/362
+[#374]: https://github.com/RustCrypto/formats/pull/374
+[#392]: https://github.com/RustCrypto/formats/pull/392
+[#401]: https://github.com/RustCrypto/formats/pull/401
+[#412]: https://github.com/RustCrypto/formats/pull/412
+[#447]: https://github.com/RustCrypto/formats/pull/447
+[#507]: https://github.com/RustCrypto/formats/pull/507
+[#523]: https://github.com/RustCrypto/formats/pull/523
+[#529]: https://github.com/RustCrypto/formats/pull/529
+[#556]: https://github.com/RustCrypto/formats/pull/556
+[#571]: https://github.com/RustCrypto/formats/pull/571
+[#579]: https://github.com/RustCrypto/formats/pull/579
+[#604]: https://github.com/RustCrypto/formats/pull/604
+[#605]: https://github.com/RustCrypto/formats/pull/605
+[#606]: https://github.com/RustCrypto/formats/pull/606
+[#611]: https://github.com/RustCrypto/formats/pull/611
+[#618]: https://github.com/RustCrypto/formats/pull/618
+[#620]: https://github.com/RustCrypto/formats/pull/620
+[#625]: https://github.com/RustCrypto/formats/pull/625
+[#633]: https://github.com/RustCrypto/formats/pull/633
+[#636]: https://github.com/RustCrypto/formats/pull/636
+[#637]: https://github.com/RustCrypto/formats/pull/637
+[#640]: https://github.com/RustCrypto/formats/pull/640
+[#651]: https://github.com/RustCrypto/formats/pull/651
+
 ## 0.5.1 (2021-11-17)
 ### Added
 - `Any::NULL` constant ([#226])
