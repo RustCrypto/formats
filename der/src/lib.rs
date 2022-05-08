@@ -27,9 +27,9 @@
 
 //! # Usage
 //! ## [`Decode`] and [`Encode`] traits
-//! The [`Decode`] and [`Encode`] traits are the core abstractions on
-//! which this crate is built and control what types can be (de)serialized
-//! as ASN.1 DER.
+//! The [`Decode`] and [`Encode`] traits provide the decoding/encoding API
+//! respectively, and are designed to work in conjunction with concrete ASN.1
+//! types, including all types which impl the [`Sequence`] trait.
 //!
 //! The traits are impl'd for the following Rust core types:
 //! - `()`: ASN.1 `NULL`. See also [`Null`].
@@ -81,11 +81,6 @@
 //! of the [`Encode`] trait, so any type which impls [`Sequence`] can be
 //! used for both decoding and encoding.
 //!
-//! The [`Decoder`] and [`Encoder`] types provide the decoding/encoding API
-//! respectively, and are designed to work in conjunction with concrete ASN.1
-//! types which impl the [`Decode`] and [`Encode`] traits, including
-//! all types which impl the [`Sequence`] trait.
-//!
 //! The following code example shows how to define a struct which maps to the
 //! above schema, as well as impl the [`Sequence`] trait for that struct:
 //!
@@ -97,7 +92,7 @@
 //! // "heapless" usage when the `alloc` feature is disabled.
 //! use der::{
 //!     asn1::{AnyRef, ObjectIdentifier},
-//!     DecodeValue, Decode, Decoder, Encode, Header, Reader, Sequence
+//!     DecodeValue, Decode, SliceReader, Encode, Header, Reader, Sequence
 //! };
 //!
 //! /// X.509 `AlgorithmIdentifier`.
@@ -347,10 +342,8 @@ pub(crate) mod arrayvec;
 mod byte_slice;
 mod datetime;
 mod decode;
-mod decoder;
 mod encode;
 mod encode_ref;
-mod encoder;
 mod error;
 mod header;
 mod length;
@@ -367,17 +360,15 @@ pub use crate::{
     asn1::{AnyRef, Choice, Sequence},
     datetime::DateTime,
     decode::{Decode, DecodeOwned, DecodeValue},
-    decoder::Decoder,
     encode::{Encode, EncodeValue},
     encode_ref::{EncodeRef, EncodeValueRef},
-    encoder::Encoder,
     error::{Error, ErrorKind, Result},
     header::Header,
     length::Length,
     ord::{DerOrd, ValueOrd},
-    reader::Reader,
+    reader::{slice::SliceReader, Reader},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
-    writer::Writer,
+    writer::{slice::SliceWriter, Writer},
 };
 
 #[cfg(feature = "alloc")]

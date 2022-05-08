@@ -1,8 +1,8 @@
 //! ASN.1 `ANY` type.
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decode, DecodeValue, Decoder, DerOrd, EncodeValue, Error,
-    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, Tagged, ValueOrd, Writer,
+    asn1::*, ByteSlice, Choice, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind,
+    FixedTag, Header, Length, Reader, Result, SliceReader, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -66,7 +66,7 @@ impl<'a> AnyRef<'a> {
             length: self.value.len(),
         };
 
-        let mut decoder = Decoder::new(self.value())?;
+        let mut decoder = SliceReader::new(self.value())?;
         let result = T::decode_value(&mut decoder, header)?;
         decoder.finish(result)
     }
@@ -129,15 +129,15 @@ impl<'a> AnyRef<'a> {
     }
 
     /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
-    /// nested [`Decoder`] and calling the provided argument with it.
+    /// nested reader and calling the provided argument with it.
     pub fn sequence<F, T>(self, f: F) -> Result<T>
     where
-        F: FnOnce(&mut Decoder<'a>) -> Result<T>,
+        F: FnOnce(&mut SliceReader<'a>) -> Result<T>,
     {
         self.tag.assert_eq(Tag::Sequence)?;
-        let mut seq_decoder = Decoder::new(self.value.as_slice())?;
-        let result = f(&mut seq_decoder)?;
-        seq_decoder.finish(result)
+        let mut reader = SliceReader::new(self.value.as_slice())?;
+        let result = f(&mut reader)?;
+        reader.finish(result)
     }
 
     /// Attempt to decode an ASN.1 `UTCTime`.

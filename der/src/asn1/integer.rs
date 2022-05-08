@@ -5,8 +5,8 @@ pub(super) mod int;
 pub(super) mod uint;
 
 use crate::{
-    asn1::AnyRef, ByteSlice, DecodeValue, EncodeValue, Encoder, Error, FixedTag, Header, Length,
-    Reader, Result, Tag, ValueOrd, Writer,
+    asn1::AnyRef, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader,
+    Result, SliceWriter, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, mem};
 
@@ -140,11 +140,11 @@ where
     debug_assert!(mem::size_of::<T>() <= MAX_INT_SIZE);
 
     let mut buf1 = [0u8; MAX_INT_SIZE];
-    let mut encoder1 = Encoder::new(&mut buf1);
+    let mut encoder1 = SliceWriter::new(&mut buf1);
     a.encode_value(&mut encoder1)?;
 
     let mut buf2 = [0u8; MAX_INT_SIZE];
-    let mut encoder2 = Encoder::new(&mut buf2);
+    let mut encoder2 = SliceWriter::new(&mut buf2);
     b.encode_value(&mut encoder2)?;
 
     Ok(encoder1.finish()?.cmp(encoder2.finish()?))

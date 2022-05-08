@@ -1,13 +1,13 @@
-//! DER encoder.
+//! Slice writer.
 
 use crate::{
-    asn1::*, Encode, EncodeValue, Error, ErrorKind, Header, Length, Result, Tag, TagMode,
-    TagNumber, Tagged, Writer,
+    asn1::*, Encode, EncodeValue, ErrorKind, Header, Length, Result, Tag, TagMode, TagNumber,
+    Tagged, Writer,
 };
 
-/// DER encoder.
+/// [`Writer`] which encodes DER into a mutable output byte slice.
 #[derive(Debug)]
-pub struct Encoder<'a> {
+pub struct SliceWriter<'a> {
     /// Buffer into which DER-encoded message is written
     bytes: &'a mut [u8],
 
@@ -18,7 +18,7 @@ pub struct Encoder<'a> {
     position: Length,
 }
 
-impl<'a> Encoder<'a> {
+impl<'a> SliceWriter<'a> {
     /// Create a new encoder with the given byte slice as a backing buffer.
     pub fn new(bytes: &'a mut [u8]) -> Self {
         Self {
@@ -42,17 +42,9 @@ impl<'a> Encoder<'a> {
 
     /// Return an error with the given [`ErrorKind`], annotating it with
     /// context about where the error occurred.
-    // TODO(tarcieri): change return type to `Error`
     pub fn error<T>(&mut self, kind: ErrorKind) -> Result<T> {
         self.failed = true;
         Err(kind.at(self.position))
-    }
-
-    /// Return an error for an invalid value with the given tag.
-    // TODO(tarcieri): compose this with `Encoder::error` after changing its return type
-    pub fn value_error(&mut self, tag: Tag) -> Error {
-        self.failed = true;
-        tag.value_error().kind().at(self.position)
     }
 
     /// Did the decoding operation fail due to an error?
@@ -94,15 +86,15 @@ impl<'a> Encoder<'a> {
 
     /// Encode an ASN.1 `SEQUENCE` of the given length.
     ///
-    /// Spawns a nested [`Encoder`] which is expected to be exactly the
+    /// Spawns a nested slice writer which is expected to be exactly the
     /// specified length upon completion.
     pub fn sequence<F>(&mut self, length: Length, f: F) -> Result<()>
     where
-        F: FnOnce(&mut Encoder<'_>) -> Result<()>,
+        F: FnOnce(&mut SliceWriter<'_>) -> Result<()>,
     {
         Header::new(Tag::Sequence, length).and_then(|header| header.encode(self))?;
 
-        let mut nested_encoder = Encoder::new(self.reserve(length)?);
+        let mut nested_encoder = SliceWriter::new(self.reserve(length)?);
         f(&mut nested_encoder)?;
 
         if nested_encoder.finish()?.len() == usize::try_from(length)? {
@@ -134,7 +126,7 @@ impl<'a> Encoder<'a> {
     }
 }
 
-impl<'a> Writer for Encoder<'a> {
+impl<'a> Writer for SliceWriter<'a> {
     fn write(&mut self, slice: &[u8]) -> Result<()> {
         self.reserve(slice.len())?.copy_from_slice(slice);
         Ok(())
@@ -143,14 +135,14 @@ impl<'a> Writer for Encoder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::Encoder;
+    use super::SliceWriter;
     use crate::{Encode, ErrorKind, Length};
 
     #[test]
     fn overlength_message() {
         let mut buffer = [];
-        let mut encoder = Encoder::new(&mut buffer);
-        let err = false.encode(&mut encoder).err().unwrap();
+        let mut writer = SliceWriter::new(&mut buffer);
+        let err = false.encode(&mut writer).err().unwrap();
         assert_eq!(err.kind(), ErrorKind::Overlength);
         assert_eq!(err.position(), Some(Length::ONE));
     }

@@ -124,13 +124,13 @@ impl<'a> Sequence<'a> for ContentInfo<'a> {
 mod tests {
     use super::{ContentInfo, DataContent};
     use core::convert::TryFrom;
-    use der::{asn1::OctetStringRef, Decode, Encode, Encoder, Length, TagMode, TagNumber};
+    use der::{asn1::OctetStringRef, Decode, Encode, Length, SliceWriter, TagMode, TagNumber};
 
     #[test]
     fn empty_data() -> der::Result<()> {
         let mut in_buf = [0u8; 32];
 
-        let mut encoder = Encoder::new(&mut in_buf);
+        let mut encoder = SliceWriter::new(&mut in_buf);
         encoder.sequence(crate::PKCS_7_DATA_OID.encoded_len()?, |encoder| {
             crate::PKCS_7_DATA_OID.encode(encoder)
         })?;
@@ -154,7 +154,7 @@ mod tests {
     fn empty_encrypted_data() -> der::Result<()> {
         let mut in_buf = [0u8; 32];
 
-        let mut encoder = Encoder::new(&mut in_buf);
+        let mut encoder = SliceWriter::new(&mut in_buf);
         encoder.sequence(crate::PKCS_7_ENCRYPTED_DATA_OID.encoded_len()?, |encoder| {
             (crate::PKCS_7_ENCRYPTED_DATA_OID).encode(encoder)
         })?;
@@ -193,7 +193,7 @@ mod tests {
         let inner_len = (oid_len + tagged_hello_len)?;
         assert_eq!(Length::new(20), inner_len);
 
-        let mut encoder = Encoder::new(&mut in_buf);
+        let mut encoder = SliceWriter::new(&mut in_buf);
         encoder.sequence(inner_len, |encoder| {
             crate::PKCS_7_DATA_OID.encode(encoder)?;
             encoder.context_specific(

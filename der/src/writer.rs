@@ -2,6 +2,7 @@
 
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
+pub(crate) mod slice;
 
 use crate::Result;
 

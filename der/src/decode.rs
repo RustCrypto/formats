@@ -1,6 +1,6 @@
 //! Trait definition for [`Decode`].
 
-use crate::{Decoder, FixedTag, Header, Reader, Result};
+use crate::{FixedTag, Header, Reader, Result, SliceReader};
 
 #[cfg(feature = "pem")]
 use crate::{pem::PemLabel, PemReader};
@@ -18,9 +18,9 @@ pub trait Decode<'a>: Sized {
 
     /// Parse `Self` from the provided DER-encoded byte slice.
     fn from_der(bytes: &'a [u8]) -> Result<Self> {
-        let mut decoder = Decoder::new(bytes)?;
-        let result = Self::decode(&mut decoder)?;
-        decoder.finish(result)
+        let mut reader = SliceReader::new(bytes)?;
+        let result = Self::decode(&mut reader)?;
+        reader.finish(result)
     }
 }
 
@@ -71,6 +71,6 @@ impl<T: DecodeOwned + PemLabel> DecodePem for T {
 /// Decode the value part of a Tag-Length-Value encoded field, sans the [`Tag`]
 /// and [`Length`].
 pub trait DecodeValue<'a>: Sized {
-    /// Attempt to decode this message using the provided [`Decoder`].
-    fn decode_value<R: Reader<'a>>(decoder: &mut R, header: Header) -> Result<Self>;
+    /// Attempt to decode this message using the provided [`Reader`].
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self>;
 }
