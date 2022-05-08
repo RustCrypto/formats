@@ -1,6 +1,6 @@
 //! Trait definition for [`Encode`].
 
-use crate::{Encoder, Header, Length, Result, Tagged, Writer};
+use crate::{Header, Length, Result, SliceWriter, Tagged, Writer};
 
 #[cfg(feature = "alloc")]
 use {alloc::vec::Vec, core::iter};
@@ -23,15 +23,15 @@ pub trait Encode {
     /// Compute the length of this value in bytes when encoded as ASN.1 DER.
     fn encoded_len(&self) -> Result<Length>;
 
-    /// Encode this value as ASN.1 DER using the provided [`Encoder`].
+    /// Encode this value as ASN.1 DER using the provided [`Writer`].
     fn encode(&self, encoder: &mut dyn Writer) -> Result<()>;
 
     /// Encode this value to the provided byte slice, returning a sub-slice
     /// containing the encoded message.
     fn encode_to_slice<'a>(&self, buf: &'a mut [u8]) -> Result<&'a [u8]> {
-        let mut encoder = Encoder::new(buf);
-        self.encode(&mut encoder)?;
-        encoder.finish()
+        let mut writer = SliceWriter::new(buf);
+        self.encode(&mut writer)?;
+        writer.finish()
     }
 
     /// Encode this message as ASN.1 DER, appending it to the provided
@@ -43,7 +43,7 @@ pub trait Encode {
         buf.reserve(expected_len);
         buf.extend(iter::repeat(0).take(expected_len));
 
-        let mut encoder = Encoder::new(buf);
+        let mut encoder = SliceWriter::new(buf);
         self.encode(&mut encoder)?;
         let actual_len = encoder.finish()?.len();
 
@@ -77,7 +77,7 @@ where
         self.value_len().and_then(|len| len.for_tlv())
     }
 
-    /// Encode this value as ASN.1 DER using the provided [`Encoder`].
+    /// Encode this value as ASN.1 DER using the provided [`Writer`].
     fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
         self.header()?.encode(writer)?;
         self.encode_value(writer)
@@ -128,6 +128,6 @@ pub trait EncodeValue {
     fn value_len(&self) -> Result<Length>;
 
     /// Encode value (sans [`Tag`]+[`Length`] header) as ASN.1 DER using the
-    /// provided [`Encoder`].
+    /// provided [`Writer`].
     fn encode_value(&self, encoder: &mut dyn Writer) -> Result<()>;
 }

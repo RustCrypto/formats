@@ -2,7 +2,7 @@
 
 use der::{
     asn1::{ObjectIdentifier, OctetStringRef},
-    Decode, Encoder,
+    Decode, SliceWriter,
 };
 use hex_literal::hex;
 use pkcs7::{
@@ -13,7 +13,7 @@ use spki::AlgorithmIdentifier;
 use std::fs;
 
 fn encode_content_info<'a>(content_info: &ContentInfo<'a>, buf: &'a mut [u8]) -> &'a [u8] {
-    let mut encoder = Encoder::new(buf);
+    let mut encoder = SliceWriter::new(buf);
     encoder.encode(content_info).expect("encoded content info");
     encoder.finish().expect("encoding success")
 }

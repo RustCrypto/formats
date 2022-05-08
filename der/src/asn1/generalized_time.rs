@@ -331,7 +331,7 @@ impl TryFrom<GeneralizedTime> for PrimitiveDateTime {
 #[cfg(test)]
 mod tests {
     use super::GeneralizedTime;
-    use crate::{Decode, Encode, Encoder};
+    use crate::{Decode, Encode, SliceWriter};
     use hex_literal::hex;
 
     #[test]
@@ -341,7 +341,7 @@ mod tests {
         assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
 
         let mut buf = [0u8; 128];
-        let mut encoder = Encoder::new(&mut buf);
+        let mut encoder = SliceWriter::new(&mut buf);
         utc_time.encode(&mut encoder).unwrap();
         assert_eq!(example_bytes, encoder.finish().unwrap());
     }

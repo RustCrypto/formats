@@ -1,10 +1,10 @@
-//! DER decoder.
+//! Slice reader.
 
 use crate::{ByteSlice, Decode, Error, ErrorKind, Header, Length, Reader, Result, Tag};
 
-/// DER decoder.
+/// [`Reader`] which consumes an input byte slice.
 #[derive(Clone, Debug)]
-pub struct Decoder<'a> {
+pub struct SliceReader<'a> {
     /// Byte slice being decoded.
     bytes: ByteSlice<'a>,
 
@@ -15,8 +15,8 @@ pub struct Decoder<'a> {
     position: Length,
 }
 
-impl<'a> Decoder<'a> {
-    /// Create a new decoder for the given byte slice.
+impl<'a> SliceReader<'a> {
+    /// Create a new slice reader for the given byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
         Ok(Self {
             bytes: ByteSlice::new(bytes)?,
@@ -42,7 +42,7 @@ impl<'a> Decoder<'a> {
         self.failed
     }
 
-    /// Obtain the remaining bytes in this decoder from the current cursor
+    /// Obtain the remaining bytes in this slice reader from the current cursor
     /// position.
     fn remaining(&self) -> Result<&'a [u8]> {
         if self.is_failed() {
@@ -56,7 +56,7 @@ impl<'a> Decoder<'a> {
     }
 }
 
-impl<'a> Reader<'a> for Decoder<'a> {
+impl<'a> Reader<'a> for SliceReader<'a> {
     fn input_len(&self) -> Length {
         self.bytes.len()
     }
@@ -130,7 +130,7 @@ impl<'a> Reader<'a> for Decoder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::Decoder;
+    use super::SliceReader;
     use crate::{Decode, ErrorKind, Length, Reader, Tag};
     use hex_literal::hex;
 
@@ -139,8 +139,8 @@ mod tests {
 
     #[test]
     fn empty_message() {
-        let mut decoder = Decoder::new(&[]).unwrap();
-        let err = bool::decode(&mut decoder).err().unwrap();
+        let mut reader = SliceReader::new(&[]).unwrap();
+        let err = bool::decode(&mut reader).err().unwrap();
         assert_eq!(Some(Length::ZERO), err.position());
 
         match err.kind() {
@@ -159,8 +159,8 @@ mod tests {
     fn invalid_field_length() {
         const MSG_LEN: usize = 2;
 
-        let mut decoder = Decoder::new(&EXAMPLE_MSG[..MSG_LEN]).unwrap();
-        let err = i8::decode(&mut decoder).err().unwrap();
+        let mut reader = SliceReader::new(&EXAMPLE_MSG[..MSG_LEN]).unwrap();
+        let err = i8::decode(&mut reader).err().unwrap();
         assert_eq!(Some(Length::from(2u8)), err.position());
 
         match err.kind() {
@@ -177,11 +177,11 @@ mod tests {
 
     #[test]
     fn trailing_data() {
-        let mut decoder = Decoder::new(EXAMPLE_MSG).unwrap();
-        let x = i8::decode(&mut decoder).unwrap();
+        let mut reader = SliceReader::new(EXAMPLE_MSG).unwrap();
+        let x = i8::decode(&mut reader).unwrap();
         assert_eq!(42i8, x);
 
-        let err = decoder.finish(x).err().unwrap();
+        let err = reader.finish(x).err().unwrap();
         assert_eq!(Some(Length::from(3u8)), err.position());
 
         assert_eq!(
@@ -195,20 +195,20 @@ mod tests {
 
     #[test]
     fn peek_tag() {
-        let decoder = Decoder::new(EXAMPLE_MSG).unwrap();
-        assert_eq!(decoder.position(), Length::ZERO);
-        assert_eq!(decoder.peek_tag().unwrap(), Tag::Integer);
-        assert_eq!(decoder.position(), Length::ZERO); // Position unchanged
+        let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
+        assert_eq!(reader.position(), Length::ZERO);
+        assert_eq!(reader.peek_tag().unwrap(), Tag::Integer);
+        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
 
     #[test]
     fn peek_header() {
-        let decoder = Decoder::new(EXAMPLE_MSG).unwrap();
-        assert_eq!(decoder.position(), Length::ZERO);
+        let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
+        assert_eq!(reader.position(), Length::ZERO);
 
-        let header = decoder.peek_header().unwrap();
+        let header = reader.peek_header().unwrap();
         assert_eq!(header.tag, Tag::Integer);
         assert_eq!(header.length, Length::ONE);
-        assert_eq!(decoder.position(), Length::ZERO); // Position unchanged
+        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
 }

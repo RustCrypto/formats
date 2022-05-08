@@ -1,6 +1,6 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decode, DerOrd, Encode, Encoder, Error, ErrorKind, Reader, Result, Writer};
+use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Reader, Result, SliceWriter, Writer};
 use core::{
     cmp::Ordering,
     fmt,
@@ -270,10 +270,10 @@ impl DerOrd for Length {
         let mut buf1 = [0u8; MAX_DER_OCTETS];
         let mut buf2 = [0u8; MAX_DER_OCTETS];
 
-        let mut encoder1 = Encoder::new(&mut buf1);
+        let mut encoder1 = SliceWriter::new(&mut buf1);
         encoder1.encode(self)?;
 
-        let mut encoder2 = Encoder::new(&mut buf2);
+        let mut encoder2 = SliceWriter::new(&mut buf2);
         encoder2.encode(other)?;
 
         Ok(encoder1.finish()?.cmp(encoder2.finish()?))

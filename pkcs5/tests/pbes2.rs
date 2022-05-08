@@ -165,7 +165,7 @@ fn encode_pbes2_pbkdf2_sha1_aes128cbc() {
     let mut buffer = [0u8; 1024];
 
     let scheme = pkcs5::EncryptionScheme::try_from(PBES2_PBKDF2_SHA1_AES128CBC_ALG_ID).unwrap();
-    let mut encoder = der::Encoder::new(&mut buffer);
+    let mut encoder = der::SliceWriter::new(&mut buffer);
     scheme.encode(&mut encoder).unwrap();
 
     let encoded_der = encoder.finish().unwrap();
@@ -178,7 +178,7 @@ fn encode_pbes2_pbkdf2_sha256_aes256cbc() {
     let mut buffer = [0u8; 1024];
 
     let scheme = pkcs5::EncryptionScheme::try_from(PBES2_PBKDF2_SHA256_AES256CBC_ALG_ID).unwrap();
-    let mut encoder = der::Encoder::new(&mut buffer);
+    let mut encoder = der::SliceWriter::new(&mut buffer);
     scheme.encode(&mut encoder).unwrap();
 
     let encoded_der = encoder.finish().unwrap();
@@ -191,7 +191,7 @@ fn encode_pbes2_scrypt_aes256cbc() {
     let mut buffer = [0u8; 1024];
 
     let scheme = pkcs5::EncryptionScheme::try_from(PBES2_SCRYPT_AES256CBC_ALG_ID).unwrap();
-    let mut encoder = der::Encoder::new(&mut buffer);
+    let mut encoder = der::SliceWriter::new(&mut buffer);
     scheme.encode(&mut encoder).unwrap();
 
     let encoded_der = encoder.finish().unwrap();

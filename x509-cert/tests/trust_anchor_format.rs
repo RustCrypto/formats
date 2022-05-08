@@ -1,4 +1,4 @@
-use der::{Decode, Decoder, Encode};
+use der::{Decode, Encode, SliceReader};
 use hex_literal::hex;
 use x509_cert::anchor::{CertPolicies, TrustAnchorChoice};
 use x509_cert::ext::pkix::name::GeneralName;
@@ -10,7 +10,7 @@ fn decode_ta1() {
     let der_encoded_tac = include_bytes!("examples/eca_policies.ta");
     let der_encoded_cert = include_bytes!("examples/eca.der");
 
-    let mut decoder = Decoder::new(der_encoded_tac).unwrap();
+    let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
@@ -125,7 +125,7 @@ fn decode_ta2() {
     let der_encoded_tac = include_bytes!("examples/entrust_dnConstraint.ta");
     let der_encoded_cert = include_bytes!("examples/entrust.der");
 
-    let mut decoder = Decoder::new(der_encoded_tac).unwrap();
+    let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
@@ -228,7 +228,7 @@ fn decode_ta3() {
     let der_encoded_tac = include_bytes!("examples/exostar_policyFlags.ta");
     let der_encoded_cert = include_bytes!("examples/exostar.der");
 
-    let mut decoder = Decoder::new(der_encoded_tac).unwrap();
+    let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
@@ -338,7 +338,7 @@ fn decode_ta4() {
     let der_encoded_tac = include_bytes!("examples/raytheon_pathLenConstraint.ta");
     let der_encoded_cert = include_bytes!("examples/raytheon.der");
 
-    let mut decoder = Decoder::new(der_encoded_tac).unwrap();
+    let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_vec().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);

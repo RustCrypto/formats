@@ -15,7 +15,7 @@ mod choice {
     mod explicit {
         use der::{
             asn1::{GeneralizedTime, UtcTime},
-            Choice, Decode, Encode, Encoder,
+            Choice, Decode, Encode, SliceWriter,
         };
         use hex_literal::hex;
         use std::time::Duration;
@@ -67,12 +67,12 @@ mod choice {
             let mut buf = [0u8; 128];
 
             let utc_time = Time::from_der(UTC_TIMESTAMP_DER).unwrap();
-            let mut encoder = Encoder::new(&mut buf);
+            let mut encoder = SliceWriter::new(&mut buf);
             utc_time.encode(&mut encoder).unwrap();
             assert_eq!(UTC_TIMESTAMP_DER, encoder.finish().unwrap());
 
             let general_time = Time::from_der(GENERAL_TIMESTAMP_DER).unwrap();
-            let mut encoder = Encoder::new(&mut buf);
+            let mut encoder = SliceWriter::new(&mut buf);
             general_time.encode(&mut encoder).unwrap();
             assert_eq!(GENERAL_TIMESTAMP_DER, encoder.finish().unwrap());
         }
@@ -82,7 +82,7 @@ mod choice {
     mod implicit {
         use der::{
             asn1::{BitStringRef, GeneralizedTime},
-            Choice, Decode, Encode, Encoder,
+            Choice, Decode, Encode, SliceWriter,
         };
         use hex_literal::hex;
 
@@ -139,12 +139,12 @@ mod choice {
             let mut buf = [0u8; 128];
 
             let cs_bit_string = ImplicitChoice::from_der(BITSTRING_DER).unwrap();
-            let mut encoder = Encoder::new(&mut buf);
+            let mut encoder = SliceWriter::new(&mut buf);
             cs_bit_string.encode(&mut encoder).unwrap();
             assert_eq!(BITSTRING_DER, encoder.finish().unwrap());
 
             let cs_time = ImplicitChoice::from_der(TIME_DER).unwrap();
-            let mut encoder = Encoder::new(&mut buf);
+            let mut encoder = SliceWriter::new(&mut buf);
             cs_time.encode(&mut encoder).unwrap();
             assert_eq!(TIME_DER, encoder.finish().unwrap());
         }
@@ -153,7 +153,7 @@ mod choice {
 
 /// Custom derive test cases for the `Enumerated` macro.
 mod enumerated {
-    use der::{Decode, Encode, Encoder, Enumerated};
+    use der::{Decode, Encode, Enumerated, SliceWriter};
     use hex_literal::hex;
 
     /// X.509 `CRLReason`.
@@ -188,11 +188,11 @@ mod enumerated {
     fn encode() {
         let mut buf = [0u8; 128];
 
-        let mut encoder = Encoder::new(&mut buf);
+        let mut encoder = SliceWriter::new(&mut buf);
         CrlReason::Unspecified.encode(&mut encoder).unwrap();
         assert_eq!(UNSPECIFIED_DER, encoder.finish().unwrap());
 
-        let mut encoder = Encoder::new(&mut buf);
+        let mut encoder = SliceWriter::new(&mut buf);
         CrlReason::KeyCompromise.encode(&mut encoder).unwrap();
         assert_eq!(KEY_COMPROMISE_DER, encoder.finish().unwrap());
     }

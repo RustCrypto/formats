@@ -97,7 +97,7 @@ mod tests {
     use super::UIntRef;
     use crate::{
         asn1::{integer::tests::*, AnyRef},
-        Decode, Encode, Encoder, ErrorKind, Tag,
+        Decode, Encode, ErrorKind, SliceWriter, Tag,
     };
 
     #[test]
@@ -131,7 +131,7 @@ mod tests {
             let uint = UIntRef::from_der(example).unwrap();
 
             let mut buf = [0u8; 128];
-            let mut encoder = Encoder::new(&mut buf);
+            let mut encoder = SliceWriter::new(&mut buf);
             uint.encode(&mut encoder).unwrap();
 
             let result = encoder.finish().unwrap();
