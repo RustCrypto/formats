@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.0 (2022-05-08)
+### Added
+- Make `der` feature optional but on-by-default ([#497])
+- Make `point` feature optional but on-by-default ([#516])
+
+### Changed
+- Use `base16ct` and `serdect` crates ([#648])
+- Bump `der` to v0.6 ([#653])
+- Bump `pkcs8` to v0.9 ([#656])
+
+[#497]: https://github.com/RustCrypto/formats/pull/497
+[#516]: https://github.com/RustCrypto/formats/pull/516
+[#648]: https://github.com/RustCrypto/formats/pull/648
+[#653]: https://github.com/RustCrypto/formats/pull/653
+[#656]: https://github.com/RustCrypto/formats/pull/656
+
 ## 0.2.1 (2021-11-18)
 ### Added
 - `serde` feature ([#248])

@@ -1256,7 +1256,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.3.0-pre.4"
+version = "0.3.0"
 dependencies = [
  "base16ct 0.1.1",
  "der 0.6.0",
