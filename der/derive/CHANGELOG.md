@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.0 (2022-05-08)
+### Added
+- Support for Context-Specific fields with default values ([#246])
+- Context-Specific tags on `#[derive(Sequence)]` ([#349])
+- `#[asn1(constructed = "true")]` ([#398])
+
+### Changed
+- Have `Sequence` macro derive `DecodeValue` ([#375])
+- Pass `Header` to `DecodeValue` ([#392])
+- Have `Choice` macro derive `EncodeValue` ([#395])
+- Only emit `.try_into()?` when a type is specified ([#397])
+- Use type's tag by default on `derive(Choice)` ([#416])
+
+### Fixed
+- Length calculation for explicit tags ([#400])
+
+### Removed
+- Static lifetime from ENUMERATED's derived `DecodeValue` ([#367])
+
+[#246]: https://github.com/RustCrypto/formats/pull/246
+[#349]: https://github.com/RustCrypto/formats/pull/349
+[#367]: https://github.com/RustCrypto/formats/pull/367
+[#375]: https://github.com/RustCrypto/formats/pull/375
+[#392]: https://github.com/RustCrypto/formats/pull/392
+[#395]: https://github.com/RustCrypto/formats/pull/395
+[#397]: https://github.com/RustCrypto/formats/pull/397
+[#398]: https://github.com/RustCrypto/formats/pull/398
+[#400]: https://github.com/RustCrypto/formats/pull/400
+[#416]: https://github.com/RustCrypto/formats/pull/416
+
 ## 0.5.0 (2021-11-15)
 ### Added
 - `asn1(tag_mode = "...")` derive attribute ([#150])

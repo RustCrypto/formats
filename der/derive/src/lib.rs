@@ -113,8 +113,13 @@
 //! [`der::asn1::Utf8String`]: https://docs.rs/der/latest/der/asn1/struct.Utf8String.html
 
 #![crate_type = "proc-macro"]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(rust_2018_idioms, trivial_casts, unused_qualifications)]
+#![forbid(unsafe_code)]
+#![warn(
+    clippy::unwrap_used,
+    rust_2018_idioms,
+    trivial_casts,
+    unused_qualifications
+)]
 
 mod asn1_type;
 mod attributes;
