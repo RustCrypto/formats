@@ -43,9 +43,9 @@ pub trait Encode {
         buf.reserve(expected_len);
         buf.extend(iter::repeat(0).take(expected_len));
 
-        let mut encoder = SliceWriter::new(buf);
-        self.encode(&mut encoder)?;
-        let actual_len = encoder.finish()?.len();
+        let mut writer = SliceWriter::new(buf);
+        self.encode(&mut writer)?;
+        let actual_len = writer.finish()?.len();
 
         if expected_len != actual_len {
             return Err(ErrorKind::Incomplete {
