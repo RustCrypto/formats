@@ -859,7 +859,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs1"
-version = "0.4.0-pre.2"
+version = "0.4.0"
 dependencies = [
  "der 0.6.0",
  "hex-literal",

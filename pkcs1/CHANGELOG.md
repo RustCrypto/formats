@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.4.0 (2022-05-08)
+### Changed
+- Replace document types with `doc::{Document, SecretDocument}` types ([#571])
+- Bump `der` to v0.6 ([#653])
+- Bump `pkcs8` to v0.9 ([#656])
+
+[#571]: https://github.com/RustCrypto/formats/pull/571
+[#653]: https://github.com/RustCrypto/formats/pull/653
+[#656]: https://github.com/RustCrypto/formats/pull/656
+
 ## 0.3.3 (2022-01-16)
 ### Added
 - Error conversion support to `pkcs8::spki::Error` ([#333])
