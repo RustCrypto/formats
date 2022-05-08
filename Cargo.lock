@@ -863,7 +863,7 @@ version = "0.4.0-pre.2"
 dependencies = [
  "der 0.6.0",
  "hex-literal",
- "pkcs8 0.9.0-pre.3",
+ "pkcs8 0.9.0",
  "tempfile",
  "zeroize",
 ]
@@ -907,7 +907,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.9.0-pre.3"
+version = "0.9.0"
 dependencies = [
  "der 0.6.0",
  "hex-literal",
@@ -1262,7 +1262,7 @@ dependencies = [
  "der 0.6.0",
  "generic-array",
  "hex-literal",
- "pkcs8 0.9.0-pre.3",
+ "pkcs8 0.9.0",
  "serdect",
  "subtle",
  "tempfile",

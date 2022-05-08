@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.0 (2022-05-08)
+### Added
+- Error conversion support to `pkcs8::spki::Error` ([#335])
+- Re-export `AssociatedOid` ([#645])
+
+### Changed
+- Use `finish_non_exhaustive` in `Debug` impls ([#245])
+- Replace `PrivateKeyDocument` with `der::SecretDocument` ([#571])
+- Bump `der` to v0.6 ([#653])
+- Bump `spki` to v0.6 ([#654])
+- Bump `pkcs5` to v0.5 ([#655])
+
+### Removed
+- `PrivateKeyDocument` ([#571])
+
+[#245]: https://github.com/RustCrypto/formats/pull/245
+[#335]: https://github.com/RustCrypto/formats/pull/335
+[#571]: https://github.com/RustCrypto/formats/pull/571
+[#645]: https://github.com/RustCrypto/formats/pull/645
+[#653]: https://github.com/RustCrypto/formats/pull/653
+[#654]: https://github.com/RustCrypto/formats/pull/654
+[#655]: https://github.com/RustCrypto/formats/pull/655
+
 ## 0.8.0 (2021-11-16)
 ### Added
 - Re-export `spki` crate ([#210])
