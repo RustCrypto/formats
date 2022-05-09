@@ -47,8 +47,8 @@ dual licensed as above, without any additional terms or conditions.
 [crate-link]: https://crates.io/crates/x509-cert
 [docs-image]: https://docs.rs/x509-cert/badge.svg
 [docs-link]: https://docs.rs/x509-cert/
-[build-image]: https://github.com/RustCrypto/formats/actions/workflows/x509.yml/badge.svg
-[build-link]: https://github.com/RustCrypto/formats/actions/workflows/x509.yml
+[build-image]: https://github.com/RustCrypto/formats/actions/workflows/x509-cert.yml/badge.svg
+[build-link]: https://github.com/RustCrypto/formats/actions/workflows/x509-cert.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.57+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
