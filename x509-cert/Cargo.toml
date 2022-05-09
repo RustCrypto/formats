@@ -1,6 +1,6 @@
 [package]
 name = "x509-cert"
-version = "0.0.2" # Also update html_root_url in lib.rs when bumping this
+version = "0.1.0-pre.0" # Also update html_root_url in lib.rs when bumping this
 description = """
 Pure Rust implementation of the X.509 Public Key Infrastructure Certificate
 format as described in RFC 5280
