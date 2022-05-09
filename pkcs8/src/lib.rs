@@ -87,6 +87,7 @@ pub use der::{self, asn1::ObjectIdentifier, oid::AssociatedOid};
 pub use spki::{self, AlgorithmIdentifier, DecodePublicKey, SubjectPublicKeyInfo};
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use {
     crate::traits::EncodePrivateKey,
     der::{Document, SecretDocument},
@@ -98,6 +99,7 @@ pub use {
 pub use der::pem::LineEnding;
 
 #[cfg(feature = "pkcs5")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pkcs5")))]
 pub use {encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
 
 #[cfg(feature = "rand_core")]
