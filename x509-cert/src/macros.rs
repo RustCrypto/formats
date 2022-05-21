@@ -1,6 +1,13 @@
 //! Macros used by this crate
 
-/// macro_rules implementation of former newtype proc macro. See `<https://github.com/RustCrypto/formats/pull/626>`.
+/// Implements the following traits for a newtype of a `der` decodable/encodable type:
+///
+/// - `From` conversions to/from the inner type
+/// - `AsRef` and `AsMut`
+/// - `DecodeValue` and `EncodeValue`
+/// - `FixedTag` mapping to the inner value's `FixedTag::TAG`
+///
+/// The main case is simplifying newtypes which need an `AssociatedOid`
 #[macro_export]
 macro_rules! impl_newtype {
     ($newtype:ty, $inner:ty) => {
