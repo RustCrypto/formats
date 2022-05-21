@@ -1,6 +1,6 @@
 //! Macros used by this crate
 
-/// macro_rules implementation of former newtype proc macro. See https://github.com/RustCrypto/formats/pull/626.
+/// macro_rules implementation of former newtype proc macro. See `<https://github.com/RustCrypto/formats/pull/626>`.
 #[macro_export]
 macro_rules! impl_newtype {
     ($newtype:ty, $inner:ty) => {
