@@ -20,7 +20,7 @@ extern crate alloc;
 extern crate std;
 
 #[macro_use]
-pub mod macros;
+mod macros;
 
 pub mod anchor;
 pub mod attr;
