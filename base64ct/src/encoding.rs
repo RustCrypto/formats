@@ -339,8 +339,7 @@ fn validate_padding<T: Variant>(encoded: &[u8], decoded: &[u8]) -> Result<(), Er
 }
 
 /// Get the length of the output from decoding the provided *unpadded*
-/// Base64-encoded input (use [`unpadded_len_ct`] to compute this value for
-/// a padded input)
+/// Base64-encoded input.
 ///
 /// Note that this function does not fully validate the Base64 is well-formed
 /// and may return incorrect results for malformed Base64.

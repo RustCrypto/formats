@@ -3,6 +3,7 @@
 resolver = "2"
 members = [
     "base16ct",
+    "base32ct",
     "base64ct",
     "const-oid",
     "der",
