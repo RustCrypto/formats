@@ -1,6 +1,6 @@
 //! URL-safe Base64 encoding.
 
-use super::{Decode, Encode, Variant};
+use super::{Alphabet, Decode, Encode};
 
 /// URL-safe Base64 encoding with `=` padding.
 ///
@@ -11,7 +11,7 @@ use super::{Decode, Encode, Variant};
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Base64Url;
 
-impl Variant for Base64Url {
+impl Alphabet for Base64Url {
     type Unpadded = Base64UrlUnpadded;
     const PADDED: bool = true;
     const BASE: u8 = b'A';
@@ -28,7 +28,7 @@ impl Variant for Base64Url {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Base64UrlUnpadded;
 
-impl Variant for Base64UrlUnpadded {
+impl Alphabet for Base64UrlUnpadded {
     type Unpadded = Self;
     const PADDED: bool = false;
     const BASE: u8 = b'A';

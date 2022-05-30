@@ -1,8 +1,8 @@
 //! Base64 encodings
 
 use crate::{
+    alphabet::Alphabet,
     errors::{Error, InvalidEncodingError, InvalidLengthError},
-    variant::Variant,
 };
 use core::str;
 
@@ -17,7 +17,7 @@ const PAD: u8 = b'=';
 
 /// Base64 encoding trait.
 ///
-/// This trait must be imported to make use of any Base64 variant defined
+/// This trait must be imported to make use of any Base64 alphabet defined
 /// in this crate.
 ///
 /// The following encoding types impl this trait:
@@ -28,7 +28,7 @@ const PAD: u8 = b'=';
 /// - [`Base64Unpadded`]: standard Base64 encoding *without* padding.
 /// - [`Base64Url`]: URL-safe Base64 encoding with `=` padding.
 /// - [`Base64UrlUnpadded`]: URL-safe Base64 encoding *without* padding.
-pub trait Encoding: Variant {
+pub trait Encoding: Alphabet {
     /// Decode a Base64 string into the provided destination buffer.
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error>;
 
@@ -63,7 +63,7 @@ pub trait Encoding: Variant {
     fn encoded_len(bytes: &[u8]) -> usize;
 }
 
-impl<T: Variant> Encoding for T {
+impl<T: Alphabet> Encoding for T {
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error> {
         let (src_unpadded, mut err) = if T::PADDED {
             let (unpadded_len, e) = decode_padding(src.as_ref())?;
@@ -300,7 +300,7 @@ pub(crate) fn decode_padding(input: &[u8]) -> Result<(usize, i16), InvalidEncodi
 
 /// Check that the padding of a Base64 encoding string is valid given
 /// the decoded buffer.
-fn validate_padding<T: Variant>(encoded: &[u8], decoded: &[u8]) -> Result<(), Error> {
+fn validate_padding<T: Alphabet>(encoded: &[u8], decoded: &[u8]) -> Result<(), Error> {
     if !T::PADDED || (encoded.is_empty() && decoded.is_empty()) {
         return Ok(());
     }

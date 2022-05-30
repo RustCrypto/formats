@@ -76,28 +76,28 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+mod alphabet;
 mod decoder;
 mod encoder;
 mod encoding;
 mod errors;
 mod line_ending;
-mod variant;
 
 #[cfg(test)]
 mod test_vectors;
 
 pub use crate::{
-    decoder::Decoder,
-    encoder::Encoder,
-    encoding::Encoding,
-    errors::{Error, InvalidEncodingError, InvalidLengthError},
-    line_ending::LineEnding,
-    variant::{
+    alphabet::{
         bcrypt::Base64Bcrypt,
         crypt::Base64Crypt,
         standard::{Base64, Base64Unpadded},
         url::{Base64Url, Base64UrlUnpadded},
     },
+    decoder::Decoder,
+    encoder::Encoder,
+    encoding::Encoding,
+    errors::{Error, InvalidEncodingError, InvalidLengthError},
+    line_ending::LineEnding,
 };
 
 /// Minimum supported line width.
