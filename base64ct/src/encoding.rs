@@ -17,7 +17,7 @@ const PAD: u8 = b'=';
 
 /// Base64 encoding trait.
 ///
-/// This trait must be imported to make use of any Base64 variant defined
+/// This trait must be imported to make use of any Base64 alphabet defined
 /// in this crate.
 ///
 /// The following encoding types impl this trait:

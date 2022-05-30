@@ -1,18 +1,38 @@
 //! Base32 encoding trait.
 
-use crate::{Error, Result};
-use core::{fmt::Debug, str};
+use crate::{alphabet::Alphabet, Error, Result};
+use core::str;
 
 #[cfg(feature = "alloc")]
 use alloc::{string::String, vec::Vec};
 
-/// Core encoder/decoder functions for a particular Base32 variant
-pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
-    /// Is this encoding padded?
-    const PADDED: bool;
-
+/// Core encoder/decoder functions for a particular Base32 alphabet
+pub trait Encoding: Alphabet {
     /// Decode a Base32-encoded string into the provided output buffer,
     /// returning a slice containing the decoded data.
+    fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8]>;
+
+    /// Decode a Base32 string into a byte vector.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    fn decode_vec(input: &str) -> Result<Vec<u8>>;
+
+    /// Encode the input byte slice as Base32.
+    ///
+    /// Writes the result into the provided destination slice, returning an
+    /// ASCII-encoded Base32 string value.
+    fn encode<'a>(src: &[u8], dst: &'a mut [u8]) -> Result<&'a str>;
+
+    /// Encode input byte slice into a [`String`] containing Base32.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    fn encode_string(input: &[u8]) -> String;
+
+    /// Get the length of Base32 produced by encoding the given bytes.
+    fn encoded_len(bytes: &[u8]) -> usize;
+}
+
+impl<T: Alphabet> Encoding for T {
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8]> {
         let src = if Self::PADDED {
             remove_padding(src.as_ref())?
@@ -108,7 +128,6 @@ pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         }
     }
 
-    /// Decode a Base32 string into a byte vector.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn decode_vec(input: &str) -> Result<Vec<u8>> {
@@ -123,10 +142,6 @@ pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         }
     }
 
-    /// Encode the input byte slice as Base32.
-    ///
-    /// Writes the result into the provided destination slice, returning an
-    /// ASCII-encoded Base32 string value.
     fn encode<'a>(src: &[u8], dst: &'a mut [u8]) -> Result<&'a str> {
         let elen = Self::encoded_len(src);
         let dst = dst.get_mut(..elen).ok_or(Error::InvalidLength)?;
@@ -192,7 +207,6 @@ pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         )
     }
 
-    /// Encode input byte slice into a [`String`] containing Base32.
     #[cfg(feature = "alloc")]
     #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn encode_string(input: &[u8]) -> String {
@@ -210,7 +224,6 @@ pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         }
     }
 
-    /// Get the length of Base32 produced by encoding the given bytes.
     fn encoded_len(bytes: &[u8]) -> usize {
         if bytes.is_empty() {
             0
@@ -220,14 +233,6 @@ pub trait Encoding: 'static + Copy + Debug + Eq + Send + Sized + Sync {
             (bytes.len() * 8) / 5 + 1
         }
     }
-
-    /// Uses bitwise operators instead of table-lookups to turn 5-bit integers
-    /// into 8-bit integers.
-    fn decode_5bits(byte: u8) -> i16;
-
-    /// Uses bitwise operators instead of table-lookups to turn 8-bit integers
-    /// into 5-bit integers.
-    fn encode_5bits(src: u8) -> u8;
 }
 
 /// Get the length of the output from decoding the provided *unpadded*
