@@ -1,6 +1,6 @@
 //! Standard Base64 encoding.
 
-use super::{Alphabet, Decode, Encode};
+use super::{Alphabet, DecodeStep, EncodeStep};
 
 /// Standard Base64 encoding with `=` padding.
 ///
@@ -12,11 +12,11 @@ use super::{Alphabet, Decode, Encode};
 pub struct Base64;
 
 impl Alphabet for Base64 {
-    type Unpadded = Base64Unpadded;
-    const PADDED: bool = true;
     const BASE: u8 = b'A';
-    const DECODER: &'static [Decode] = DECODER;
-    const ENCODER: &'static [Encode] = ENCODER;
+    const DECODER: &'static [DecodeStep] = DECODER;
+    const ENCODER: &'static [EncodeStep] = ENCODER;
+    const PADDED: bool = true;
+    type Unpadded = Base64Unpadded;
 }
 
 /// Standard Base64 encoding *without* padding.
@@ -29,26 +29,26 @@ impl Alphabet for Base64 {
 pub struct Base64Unpadded;
 
 impl Alphabet for Base64Unpadded {
-    type Unpadded = Self;
-    const PADDED: bool = false;
     const BASE: u8 = b'A';
-    const DECODER: &'static [Decode] = DECODER;
-    const ENCODER: &'static [Encode] = ENCODER;
+    const DECODER: &'static [DecodeStep] = DECODER;
+    const ENCODER: &'static [EncodeStep] = ENCODER;
+    const PADDED: bool = false;
+    type Unpadded = Self;
 }
 
 /// Standard Base64 decoder
-const DECODER: &[Decode] = &[
-    Decode::Range(b'A'..b'Z', -64),
-    Decode::Range(b'a'..b'z', -70),
-    Decode::Range(b'0'..b'9', 5),
-    Decode::Eq(b'+', 63),
-    Decode::Eq(b'/', 64),
+const DECODER: &[DecodeStep] = &[
+    DecodeStep::Range(b'A'..b'Z', -64),
+    DecodeStep::Range(b'a'..b'z', -70),
+    DecodeStep::Range(b'0'..b'9', 5),
+    DecodeStep::Eq(b'+', 63),
+    DecodeStep::Eq(b'/', 64),
 ];
 
 /// Standard Base64 encoder
-const ENCODER: &[Encode] = &[
-    Encode::Diff(25, 6),
-    Encode::Diff(51, -75),
-    Encode::Diff(61, -(b'+' as i16 - 0x1c)),
-    Encode::Diff(62, b'/' as i16 - b'+' as i16 - 1),
+const ENCODER: &[EncodeStep] = &[
+    EncodeStep::Diff(25, 6),
+    EncodeStep::Diff(51, -75),
+    EncodeStep::Diff(61, -(b'+' as i16 - 0x1c)),
+    EncodeStep::Diff(62, b'/' as i16 - b'+' as i16 - 1),
 ];
