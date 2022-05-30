@@ -1,4 +1,4 @@
-//! Base64 variants
+//! Base64 alphabets.
 
 // TODO(tarcieri): explicitly checked/wrapped arithmetic
 #![allow(clippy::integer_arithmetic)]
@@ -10,12 +10,12 @@ pub mod crypt;
 pub mod standard;
 pub mod url;
 
-/// Core encoder/decoder functions for a particular Base64 variant
-pub trait Variant: 'static + Copy + Debug + Eq + Send + Sized + Sync {
-    /// Unpadded equivalent of this variant.
+/// Core encoder/decoder functions for a particular Base64 alphabet.
+pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
+    /// Unpadded equivalent of this alphabet.
     ///
-    /// For variants that are unpadded to begin with, this should be `Self`.
-    type Unpadded: Variant;
+    /// For alphabets that are unpadded to begin with, this should be `Self`.
+    type Unpadded: Alphabet;
 
     /// Is this encoding padded?
     const PADDED: bool;
@@ -47,7 +47,7 @@ pub trait Variant: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         ((c0 | c1 | c2 | c3) >> 8) & 1
     }
 
-    /// Decode 6-bits of a Base64 message
+    /// Decode 6-bits of a Base64 message.
     fn decode_6bits(src: u8) -> i16 {
         let mut res: i16 = -1;
 
@@ -70,7 +70,7 @@ pub trait Variant: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         res
     }
 
-    /// Encode 3-bytes of a Base64 message
+    /// Encode 3-bytes of a Base64 message.
     #[inline(always)]
     fn encode_3bytes(src: &[u8], dst: &mut [u8]) {
         debug_assert_eq!(src.len(), 3);
@@ -86,7 +86,7 @@ pub trait Variant: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         dst[3] = Self::encode_6bits(b2 & 63);
     }
 
-    /// Encode 6-bits of a Base64 message
+    /// Encode 6-bits of a Base64 message.
     #[inline(always)]
     fn encode_6bits(src: i16) -> u8 {
         let mut diff = src + Self::BASE as i16;
@@ -102,22 +102,22 @@ pub trait Variant: 'static + Copy + Debug + Eq + Send + Sized + Sync {
     }
 }
 
-/// Constant-time decoder step
+/// Constant-time decoder step.
 #[derive(Debug)]
 pub enum Decode {
-    /// Match the given range, offsetting the input on match
+    /// Match the given range, offsetting the input on match.
     Range(Range<u8>, i16),
 
-    /// Match the given value, returning the associated offset on match
+    /// Match the given value, returning the associated offset on match.
     Eq(u8, i16),
 }
 
-/// Constant-time encoder step
+/// Constant-time encoder step.
 #[derive(Copy, Clone, Debug)]
 pub enum Encode {
-    /// Apply the given offset to the cumulative result on match
+    /// Apply the given offset to the cumulative result on match.
     Apply(u8, i16),
 
-    /// Compute a difference using the given offset on match
+    /// Compute a difference using the given offset on match.
     Diff(u8, i16),
 }

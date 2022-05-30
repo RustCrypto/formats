@@ -1,6 +1,6 @@
 //! bcrypt Base64 encoding.
 
-use super::{Decode, Encode, Variant};
+use super::{Alphabet, Decode, Encode};
 
 /// bcrypt Base64 encoding.
 ///
@@ -11,7 +11,7 @@ use super::{Decode, Encode, Variant};
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Base64Bcrypt;
 
-impl Variant for Base64Bcrypt {
+impl Alphabet for Base64Bcrypt {
     type Unpadded = Self;
     const PADDED: bool = false;
     const BASE: u8 = b'.';

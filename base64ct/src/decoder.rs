@@ -540,7 +540,7 @@ impl<'i> Iterator for LineReader<'i> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{test_vectors::*, variant::Variant, Base64, Base64Unpadded, Decoder};
+    use crate::{alphabet::Alphabet, test_vectors::*, Base64, Base64Unpadded, Decoder};
 
     #[cfg(feature = "std")]
     use {alloc::vec::Vec, std::io::Read};
@@ -591,7 +591,7 @@ mod tests {
     fn decode_test<'a, F, V>(expected: &[u8], f: F)
     where
         F: Fn() -> Decoder<'a, V>,
-        V: Variant,
+        V: Alphabet,
     {
         for chunk_size in 1..expected.len() {
             let mut decoder = f();

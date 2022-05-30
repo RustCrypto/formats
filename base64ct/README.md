@@ -9,7 +9,7 @@
 
 Pure Rust implementation of Base64 ([RFC 4648]).
 
-Implements multiple Base64 variants without data-dependent branches or lookup
+Implements multiple Base64 alphabets without data-dependent branches or lookup
 tables, thereby providing portable "best effort" constant-time operation.
 
 Supports `no_std` environments and avoids heap allocations in the core API
@@ -19,9 +19,9 @@ Supports `no_std` environments and avoids heap allocations in the core API
 
 ## About
 
-This crate implements several Base64 variants in constant-time for sidechannel
+This crate implements several Base64 alphabets in constant-time for sidechannel
 resistance, aimed at purposes like encoding/decoding the "PEM" format used to
-store things like cryptographic private keys.
+store things like cryptographic private keys (i.e. in the [`pem-rfc7468`] crate).
 
 The paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Util::Lookup]
 demonstrates how the leakage from non-constant-time Base64 parsers can be used
@@ -30,7 +30,9 @@ to practically extract RSA private keys from SGX enclaves.
 The padded variants require (`=`) padding. Unpadded variants expressly
 reject such padding.
 
-Whitespace is expressly disallowed.
+Whitespace is expressly disallowed, with the exception of the
+[`Decoder::new_wrapped`] and [`Encoder::new_wrapped`] modes which provide
+fixed-width line wrapping.
 
 ## Supported Base64 variants
 
@@ -78,4 +80,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [RFC 4648]: https://tools.ietf.org/html/rfc4648
+[`pem-rfc7468`]: https://github.com/RustCrypto/formats/tree/master/pem-rfc7468
 [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf
+[`Decoder::new_wrapped`]: https://docs.rs/base64ct/latest/base64ct/struct.Decoder.html#method.new_wrapped
+[`Encoder::new_wrapped`]: https://docs.rs/base64ct/latest/base64ct/struct.Encoder.html#method.new_wrapped

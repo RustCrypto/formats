@@ -1,6 +1,6 @@
 //! Standard Base64 encoding.
 
-use super::{Decode, Encode, Variant};
+use super::{Alphabet, Decode, Encode};
 
 /// Standard Base64 encoding with `=` padding.
 ///
@@ -11,7 +11,7 @@ use super::{Decode, Encode, Variant};
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Base64;
 
-impl Variant for Base64 {
+impl Alphabet for Base64 {
     type Unpadded = Base64Unpadded;
     const PADDED: bool = true;
     const BASE: u8 = b'A';
@@ -28,7 +28,7 @@ impl Variant for Base64 {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Base64Unpadded;
 
-impl Variant for Base64Unpadded {
+impl Alphabet for Base64Unpadded {
     type Unpadded = Self;
     const PADDED: bool = false;
     const BASE: u8 = b'A';
