@@ -1,6 +1,6 @@
 //! bcrypt Base64 encoding.
 
-use super::{Alphabet, Decode, Encode};
+use super::{Alphabet, DecodeStep, EncodeStep};
 
 /// bcrypt Base64 encoding.
 ///
@@ -12,20 +12,22 @@ use super::{Alphabet, Decode, Encode};
 pub struct Base64Bcrypt;
 
 impl Alphabet for Base64Bcrypt {
-    type Unpadded = Self;
-    const PADDED: bool = false;
     const BASE: u8 = b'.';
 
-    const DECODER: &'static [Decode] = &[
-        Decode::Range(b'.'..b'/', -45),
-        Decode::Range(b'A'..b'Z', -62),
-        Decode::Range(b'a'..b'z', -68),
-        Decode::Range(b'0'..b'9', 7),
+    const DECODER: &'static [DecodeStep] = &[
+        DecodeStep::Range(b'.'..b'/', -45),
+        DecodeStep::Range(b'A'..b'Z', -62),
+        DecodeStep::Range(b'a'..b'z', -68),
+        DecodeStep::Range(b'0'..b'9', 7),
     ];
 
-    const ENCODER: &'static [Encode] = &[
-        Encode::Apply(b'/', 17),
-        Encode::Apply(b'Z', 6),
-        Encode::Apply(b'z', -75),
+    const ENCODER: &'static [EncodeStep] = &[
+        EncodeStep::Apply(b'/', 17),
+        EncodeStep::Apply(b'Z', 6),
+        EncodeStep::Apply(b'z', -75),
     ];
+
+    const PADDED: bool = false;
+
+    type Unpadded = Self;
 }

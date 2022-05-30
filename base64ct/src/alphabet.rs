@@ -12,22 +12,22 @@ pub mod url;
 
 /// Core encoder/decoder functions for a particular Base64 alphabet.
 pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
-    /// Unpadded equivalent of this alphabet.
-    ///
-    /// For alphabets that are unpadded to begin with, this should be `Self`.
-    type Unpadded: Alphabet;
+    /// First character in this Base64 alphabet.
+    const BASE: u8;
+
+    /// Decoder passes
+    const DECODER: &'static [DecodeStep];
+
+    /// Encoder passes
+    const ENCODER: &'static [EncodeStep];
 
     /// Is this encoding padded?
     const PADDED: bool;
 
-    /// First character in this Base64 alphabet
-    const BASE: u8;
-
-    /// Decoder passes
-    const DECODER: &'static [Decode];
-
-    /// Encoder passes
-    const ENCODER: &'static [Encode];
+    /// Unpadded equivalent of this alphabet.
+    ///
+    /// For alphabets that are unpadded to begin with, this should be `Self`.
+    type Unpadded: Alphabet;
 
     /// Decode 3 bytes of a Base64 message.
     #[inline(always)]
@@ -49,17 +49,17 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
 
     /// Decode 6-bits of a Base64 message.
     fn decode_6bits(src: u8) -> i16 {
-        let mut res: i16 = -1;
+        let mut ret: i16 = -1;
 
-        for decoder in Self::DECODER {
-            res += match decoder {
-                Decode::Range(range, offset) => {
+        for step in Self::DECODER {
+            ret += match step {
+                DecodeStep::Range(range, offset) => {
                     // Compute exclusive range from inclusive one
                     let start = range.start as i16 - 1;
                     let end = range.end as i16 + 1;
                     (((start - src as i16) & (src as i16 - end)) >> 8) & (src as i16 + *offset)
                 }
-                Decode::Eq(value, offset) => {
+                DecodeStep::Eq(value, offset) => {
                     let start = *value as i16 - 1;
                     let end = *value as i16 + 1;
                     (((start - src as i16) & (src as i16 - end)) >> 8) & *offset
@@ -67,7 +67,7 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
             };
         }
 
-        res
+        ret
     }
 
     /// Encode 3-bytes of a Base64 message.
@@ -91,10 +91,10 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
     fn encode_6bits(src: i16) -> u8 {
         let mut diff = src + Self::BASE as i16;
 
-        for &encoder in Self::ENCODER {
-            diff += match encoder {
-                Encode::Apply(threshold, offset) => ((threshold as i16 - diff) >> 8) & offset,
-                Encode::Diff(threshold, offset) => ((threshold as i16 - src) >> 8) & offset,
+        for &step in Self::ENCODER {
+            diff += match step {
+                EncodeStep::Apply(threshold, offset) => ((threshold as i16 - diff) >> 8) & offset,
+                EncodeStep::Diff(threshold, offset) => ((threshold as i16 - src) >> 8) & offset,
             };
         }
 
@@ -104,7 +104,7 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
 
 /// Constant-time decoder step.
 #[derive(Debug)]
-pub enum Decode {
+pub enum DecodeStep {
     /// Match the given range, offsetting the input on match.
     Range(Range<u8>, i16),
 
@@ -114,7 +114,7 @@ pub enum Decode {
 
 /// Constant-time encoder step.
 #[derive(Copy, Clone, Debug)]
-pub enum Encode {
+pub enum EncodeStep {
     /// Apply the given offset to the cumulative result on match.
     Apply(u8, i16),
 
