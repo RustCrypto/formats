@@ -1,6 +1,6 @@
 [package]
 name = "base32ct"
-version = "0.0.0"
+version = "0.1.0"
 description = """
 Pure Rust implementation of Base32 (RFC 4648) which avoids any usages of
 data-dependent branches/LUTs and thereby provides portable "best effort"
