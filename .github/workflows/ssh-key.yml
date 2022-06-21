@@ -76,7 +76,7 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - uses: RustCrypto/actions/cargo-hack-install@master
-      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features default,getrandom,std
+      - run: cargo hack build --locked --target ${{ matrix.target }} --feature-powerset --exclude-features default,getrandom,std
 
   test:
     runs-on: ubuntu-latest
@@ -94,4 +94,4 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
       - uses: RustCrypto/actions/cargo-hack-install@master
-      - run: cargo hack test --feature-powerset
+      - run: cargo hack test --locked --feature-powerset
