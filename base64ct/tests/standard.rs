@@ -129,4 +129,14 @@ mod unpadded {
             Err(Error::InvalidEncoding)
         );
     }
+
+    #[test]
+    fn reject_non_canonical_encoding() {
+        let input = "Mi";
+        let mut buf = [0u8; 8];
+        assert_eq!(
+            Base64Unpadded::decode(input, &mut buf),
+            Err(Error::InvalidEncoding)
+        );
+    }
 }
