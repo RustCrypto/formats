@@ -63,16 +63,16 @@ checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
 [[package]]
 name = "base64ct"
 version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dea908e7347a8c64e378c17e30ef880ad73e3b4498346b055c2c00ea342f3179"
+
+[[package]]
+name = "base64ct"
+version = "1.5.1"
 dependencies = [
  "base64",
  "proptest",
 ]
-
-[[package]]
-name = "base64ct"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dea908e7347a8c64e378c17e30ef880ad73e3b4498346b055c2c00ea342f3179"
 
 [[package]]
 name = "bcrypt-pbkdf"
@@ -850,14 +850,14 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "01de5d978f34aa4b2296576379fcc416034702fd94117c56ffd8a1a767cefb30"
 dependencies = [
- "base64ct 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base64ct 1.5.0",
 ]
 
 [[package]]
 name = "pem-rfc7468"
 version = "0.6.0"
 dependencies = [
- "base64ct 1.5.0",
+ "base64ct 1.5.1",
 ]
 
 [[package]]
@@ -1419,7 +1419,7 @@ version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44d01ac02a6ccf3e07db148d2be087da624fea0221a16152ed01f0496a6b0a27"
 dependencies = [
- "base64ct 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base64ct 1.5.0",
  "der 0.5.1",
 ]
 
@@ -1427,7 +1427,7 @@ dependencies = [
 name = "spki"
 version = "0.6.0"
 dependencies = [
- "base64ct 1.5.0",
+ "base64ct 1.5.1",
  "der 0.6.0",
  "hex-literal",
  "sha2 0.10.2",
@@ -1439,7 +1439,7 @@ name = "ssh-key"
 version = "0.4.2"
 dependencies = [
  "aes",
- "base64ct 1.5.0",
+ "base64ct 1.5.1",
  "bcrypt-pbkdf",
  "ctr",
  "ed25519-dalek",
