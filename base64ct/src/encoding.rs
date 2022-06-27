@@ -96,7 +96,7 @@ impl<T: Alphabet> Encoding for T {
         dst_rem.copy_from_slice(&tmp_out[..dst_rem.len()]);
 
         if err == 0 {
-            validate_padding::<T>(src.as_ref(), dst)?;
+            validate_last_block::<T>(src.as_ref(), dst)?;
             Ok(dst)
         } else {
             Err(Error::InvalidEncoding)
@@ -257,7 +257,7 @@ impl<T: Alphabet> Encoding for T {
 /// Validate padding is of the expected length compute unpadded length.
 ///
 /// Note that this method does not explicitly check that the padded data
-/// is valid in and of itself: that is performed by `validate_padding` as a
+/// is valid in and of itself: that is performed by `validate_last_block` as a
 /// final step.
 ///
 /// Returns length-related errors eagerly as a [`Result`], and data-dependent
@@ -298,37 +298,37 @@ pub(crate) fn decode_padding(input: &[u8]) -> Result<(usize, i16), InvalidEncodi
     Ok((unpadded_len, err))
 }
 
-/// Check that the padding of a Base64 encoding string is valid given
-/// the decoded buffer.
-fn validate_padding<T: Alphabet>(encoded: &[u8], decoded: &[u8]) -> Result<(), Error> {
-    if !T::PADDED || (encoded.is_empty() && decoded.is_empty()) {
+/// Validate that the last block of the decoded data round-trips back to the
+/// encoded data.
+fn validate_last_block<T: Alphabet>(encoded: &[u8], decoded: &[u8]) -> Result<(), Error> {
+    if encoded.is_empty() && decoded.is_empty() {
         return Ok(());
     }
 
-    let padding_start = encoded.len().checked_sub(4).ok_or(Error::InvalidEncoding)?;
-    let padding = encoded.get(padding_start..).ok_or(Error::InvalidEncoding)?;
+    // TODO(tarcieri): explicitly checked/wrapped arithmetic
+    #[allow(clippy::integer_arithmetic)]
+    fn last_block_start(bytes: &[u8], block_size: usize) -> usize {
+        (bytes.len().saturating_sub(1) / block_size) * block_size
+    }
 
-    let decoded_start = if decoded.len() % 3 != 0 {
-        decoded
-            .len()
-            .checked_sub(decoded.len() % 3)
-            .ok_or(Error::InvalidEncoding)?
-    } else if decoded.len() == 3 {
-        0
-    } else {
-        decoded.len().checked_sub(3).ok_or(Error::InvalidEncoding)?
-    };
+    let enc_block = encoded
+        .get(last_block_start(encoded, 4)..)
+        .ok_or(Error::InvalidEncoding)?;
 
-    let decoded = decoded.get(decoded_start..).ok_or(Error::InvalidEncoding)?;
+    let dec_block = decoded
+        .get(last_block_start(decoded, 3)..)
+        .ok_or(Error::InvalidEncoding)?;
 
+    // Round-trip encode the decoded block
     let mut buf = [0u8; 4];
-    T::encode(decoded, &mut buf)?;
+    let block = T::encode(dec_block, &mut buf)?;
 
     // Non-short-circuiting comparison of padding
-    // TODO(tarcieri): better constant-time mechanisms?
-    if padding
+    // TODO(tarcieri): better constant-time mechanisms (e.g. `subtle`)?
+    if block
+        .as_bytes()
         .iter()
-        .zip(buf.iter())
+        .zip(enc_block.iter())
         .fold(0, |acc, (a, b)| acc | (a ^ b))
         == 0
     {
