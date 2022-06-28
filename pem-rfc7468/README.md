@@ -31,7 +31,7 @@ MC4CAQAwBQYDK2VwBCIEIBftnHPp22SewYmmEoMcX8VwI4IHwaqd+9LFPj/15eqF
 ```
 
 However, all of these formats actually implement a text-based encoding that is
-similar to, but *not* identical with, the legacy PEM encoding as described in
+similar but *not* identical to the legacy PEM encoding as described in
 [RFC 1421].
 
 For this reason, [RFC 7468] was created to describe a stricter form of
@@ -39,19 +39,18 @@ For this reason, [RFC 7468] was created to describe a stricter form of
 de facto rules that most implementations operate by, and makes recommendations
 to promote interoperability.
 
-This crate attempts to implement a strict interpretation of the [RFC 7468]
-rules, implementing all of the MUSTs and SHOULDs while avoiding the MAYs,
-and targeting the "ABNF (Strict)" subset of the grammar as described in
+This crate provides a strict interpretation of the [RFC 7468] rules,
+implementing MUSTs and SHOULDs while avoiding the MAYs, targeting the
+"ABNF (Strict)" subset of the grammar as described in
 [RFC 7468 Section 3 Figure 3 (p6)][RFC 7468 p6].
 
 ## Implementation notes
 
-- Core PEM implementation is `no_std`-friendly and requires no heap allocations.
-- Avoids use of copies and temporary buffers.
+- `no_std`-friendly core implementation which requires no heap allocations
+  and avoids copies and temporary buffers.
+- Optional `alloc`-dependent convenience features and buffered decoder/encoder.
 - Uses the [`base64ct`] crate to decode/encode Base64 in constant-time.
 - PEM parser avoids branching on potentially secret data as much as possible.
-  In the happy path, only 1-byte of secret data is potentially
-  branched upon.
 
 The paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Util::Lookup]
 demonstrates how the leakage from non-constant-time PEM parsers can be used
@@ -68,8 +67,8 @@ version bump.
 
 Licensed under either of:
 
- * [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
- * [MIT license](http://opensource.org/licenses/MIT)
+- [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+- [MIT license](http://opensource.org/licenses/MIT)
 
 at your option.
 
