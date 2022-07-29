@@ -91,6 +91,9 @@ pub enum Tag {
     /// `TeletexString` tag: `20`.
     TeletexString,
 
+    /// `VideotexString` tag: `21`.
+    VideotexString,
+
     /// `IA5String` tag: `22`.
     Ia5String,
 
@@ -203,6 +206,7 @@ impl Tag {
             Tag::NumericString => 0x12,
             Tag::PrintableString => 0x13,
             Tag::TeletexString => 0x14,
+            Tag::VideotexString => 0x15,
             Tag::Ia5String => 0x16,
             Tag::UtcTime => 0x17,
             Tag::GeneralizedTime => 0x18,
@@ -271,6 +275,7 @@ impl TryFrom<u8> for Tag {
             0x12 => Ok(Tag::NumericString),
             0x13 => Ok(Tag::PrintableString),
             0x14 => Ok(Tag::TeletexString),
+            0x15 => Ok(Tag::VideotexString),
             0x16 => Ok(Tag::Ia5String),
             0x17 => Ok(Tag::UtcTime),
             0x18 => Ok(Tag::GeneralizedTime),
@@ -347,6 +352,7 @@ impl fmt::Display for Tag {
             Tag::NumericString => f.write_str("NumericString"),
             Tag::PrintableString => f.write_str("PrintableString"),
             Tag::TeletexString => f.write_str("TeletexString"),
+            Tag::VideotexString => f.write_str("VideotexString"),
             Tag::Ia5String => f.write_str("IA5String"),
             Tag::UtcTime => f.write_str("UTCTime"),
             Tag::GeneralizedTime => f.write_str("GeneralizedTime"),
@@ -410,6 +416,7 @@ mod tests {
         assert_eq!(Tag::NumericString.class(), Class::Universal);
         assert_eq!(Tag::PrintableString.class(), Class::Universal);
         assert_eq!(Tag::TeletexString.class(), Class::Universal);
+        assert_eq!(Tag::VideotexString.class(), Class::Universal);
         assert_eq!(Tag::Ia5String.class(), Class::Universal);
         assert_eq!(Tag::UtcTime.class(), Class::Universal);
         assert_eq!(Tag::GeneralizedTime.class(), Class::Universal);

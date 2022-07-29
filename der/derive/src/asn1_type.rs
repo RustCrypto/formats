@@ -26,6 +26,9 @@ pub(crate) enum Asn1Type {
     /// ASN.1 `TeletexString`.
     TeletexString,
 
+    /// ASN.1 `VideotexString`.
+    VideotexString,
+
     /// ASN.1 `UTCTime`.
     UtcTime,
 
@@ -43,6 +46,7 @@ impl Asn1Type {
             Asn1Type::OctetString => quote!(::der::Tag::OctetString),
             Asn1Type::PrintableString => quote!(::der::Tag::PrintableString),
             Asn1Type::TeletexString => quote!(::der::Tag::TeletexString),
+            Asn1Type::VideotexString => quote!(::der::Tag::VideotexString),
             Asn1Type::UtcTime => quote!(::der::Tag::UtcTime),
             Asn1Type::Utf8String => quote!(::der::Tag::Utf8String),
         }
@@ -57,6 +61,7 @@ impl Asn1Type {
             Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef::decode(reader)?),
             Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef::decode(reader)?),
             Asn1Type::TeletexString => quote!(::der::asn1::TeletexStringRef::decode(reader)?),
+            Asn1Type::VideotexString => quote!(::der::asn1::VideotexStringRef::decode(reader)?),
             Asn1Type::UtcTime => quote!(::der::asn1::UtcTime::decode(reader)?),
             Asn1Type::Utf8String => quote!(::der::asn1::Utf8StringRef::decode(reader)?),
         }
@@ -71,6 +76,7 @@ impl Asn1Type {
             | Asn1Type::OctetString
             | Asn1Type::PrintableString
             | Asn1Type::TeletexString
+            | Asn1Type::VideotexString
             | Asn1Type::Utf8String => quote!(#type_path::new(#binding)?),
             _ => quote!(#type_path::try_from(#binding)?),
         }
@@ -86,6 +92,7 @@ impl Asn1Type {
             Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef),
             Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef),
             Asn1Type::TeletexString => quote!(::der::asn1::TeletexStringRef),
+            Asn1Type::VideotexString => quote!(::der::asn1::VideotexStringRef),
             Asn1Type::UtcTime => quote!(::der::asn1::UtcTime),
             Asn1Type::Utf8String => quote!(::der::asn1::Utf8StringRef),
         }
@@ -103,6 +110,7 @@ impl FromStr for Asn1Type {
             "OCTET STRING" => Ok(Self::OctetString),
             "PrintableString" => Ok(Self::PrintableString),
             "TeletexString" => Ok(Self::TeletexString),
+            "VideotexString" => Ok(Self::VideotexString),
             "UTCTime" => Ok(Self::UtcTime),
             "UTF8String" => Ok(Self::Utf8String),
             _ => Err(ParseError),
@@ -119,6 +127,7 @@ impl fmt::Display for Asn1Type {
             Asn1Type::OctetString => "OCTET STRING",
             Asn1Type::PrintableString => "PrintableString",
             Asn1Type::TeletexString => "TeletexString",
+            Asn1Type::VideotexString => "VideotexString",
             Asn1Type::UtcTime => "UTCTime",
             Asn1Type::Utf8String => "UTF8String",
         })

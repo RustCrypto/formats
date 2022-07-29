@@ -23,6 +23,7 @@ mod set_of;
 mod teletex_string;
 mod utc_time;
 mod utf8_string;
+mod videotex_string;
 
 pub use self::{
     any::AnyRef,
@@ -41,6 +42,7 @@ pub use self::{
     teletex_string::TeletexStringRef,
     utc_time::UtcTime,
     utf8_string::Utf8StringRef,
+    videotex_string::VideotexStringRef,
 };
 
 #[cfg(feature = "alloc")]

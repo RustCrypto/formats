@@ -53,6 +53,7 @@
 //! - [`OctetString`], [`OctetStringRef`]: ASN.1 `OCTET STRING`.
 //! - [`PrintableStringRef`]: ASN.1 `PrintableString` (ASCII subset).
 //! - [`TeletexStringRef`]: ASN.1 `TeletexString`.
+//! - [`VideotexStringRef`]: ASN.1 `VideotexString`.
 //! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`.
 //! - [`SetOf`], [`SetOfVec`]: ASN.1 `SET OF`.
 //! - [`UIntRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes.
@@ -323,6 +324,7 @@
 //! [`OctetStringRef`]: asn1::OctetStringRef
 //! [`PrintableStringRef`]: asn1::PrintableStringRef
 //! [`TeletexStringRef`]: asn1::TeletexStringRef
+//! [`VideotexStringRef`]: asn1::VideotexStringRef
 //! [`SequenceOf`]: asn1::SequenceOf
 //! [`SetOf`]: asn1::SetOf
 //! [`SetOfVec`]: asn1::SetOfVec
