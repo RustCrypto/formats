@@ -20,6 +20,7 @@ mod real;
 mod sequence;
 mod sequence_of;
 mod set_of;
+mod teletex_string;
 mod utc_time;
 mod utf8_string;
 
@@ -37,6 +38,7 @@ pub use self::{
     sequence::{Sequence, SequenceRef},
     sequence_of::{SequenceOf, SequenceOfIter},
     set_of::{SetOf, SetOfIter},
+    teletex_string::TeletexStringRef,
     utc_time::UtcTime,
     utf8_string::Utf8StringRef,
 };

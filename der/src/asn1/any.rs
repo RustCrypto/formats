@@ -128,6 +128,11 @@ impl<'a> AnyRef<'a> {
         self.try_into()
     }
 
+    /// Attempt to decode an ASN.1 `TeletexString`.
+    pub fn teletex_string(self) -> Result<TeletexStringRef<'a>> {
+        self.try_into()
+    }
+
     /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
     /// nested reader and calling the provided argument with it.
     pub fn sequence<F, T>(self, f: F) -> Result<T>
