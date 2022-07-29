@@ -49,7 +49,7 @@ impl<'a> PrintableStringRef<'a> {
     {
         let input = input.as_ref();
 
-        // Validate all characters are within PrintedString's allowed set
+        // Validate all characters are within PrintableString's allowed set
         for &c in input.iter() {
             match c {
                 b'A'..=b'Z'
