@@ -220,6 +220,7 @@ impl fmt::Display for AttributeTypeAndValue<'_> {
             Tag::PrintableString => self.value.printable_string().ok().map(|s| s.as_str()),
             Tag::Utf8String => self.value.utf8_string().ok().map(|s| s.as_str()),
             Tag::Ia5String => self.value.ia5_string().ok().map(|s| s.as_str()),
+            Tag::TeletexString => self.value.teletex_string().ok().map(|s| s.as_str()),
             _ => None,
         };
 
