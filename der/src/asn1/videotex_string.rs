@@ -1,4 +1,4 @@
-//! ASN.1 `PrintableString` support.
+//! ASN.1 `VideotexString` support.
 
 use crate::{
     asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
@@ -6,7 +6,7 @@ use crate::{
 };
 use core::{fmt, str};
 
-/// ASN.1 `PrintableString` type.
+/// ASN.1 `VideotexString` type.
 ///
 /// Supports a subset the ASCII character set (desribed below).
 ///
@@ -18,57 +18,26 @@ use core::{fmt, str};
 ///
 /// # Supported characters
 ///
-/// The following ASCII characters/ranges are supported:
+/// For the practical purposes VideotexString is treated as IA5string, disallowing non-ASCII chars.
 ///
-/// - `A..Z`
-/// - `a..z`
-/// - `0..9`
-/// - "` `" (i.e. space)
-/// - `\`
-/// - `(`
-/// - `)`
-/// - `+`
-/// - `,`
-/// - `-`
-/// - `.`
-/// - `/`
-/// - `:`
-/// - `=`
-/// - `?`
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
-pub struct PrintableStringRef<'a> {
+pub struct VideotexStringRef<'a> {
     /// Inner value
     inner: StrSlice<'a>,
 }
 
-impl<'a> PrintableStringRef<'a> {
-    /// Create a new ASN.1 `PrintableString`.
+impl<'a> VideotexStringRef<'a> {
+    /// Create a new ASN.1 `VideotexString`.
     pub fn new<T>(input: &'a T) -> Result<Self>
     where
         T: AsRef<[u8]> + ?Sized,
     {
         let input = input.as_ref();
 
-        // Validate all characters are within PrintableString's allowed set
-        for &c in input.iter() {
-            match c {
-                b'A'..=b'Z'
-                | b'a'..=b'z'
-                | b'0'..=b'9'
-                | b' '
-                | b'\''
-                | b'('
-                | b')'
-                | b'+'
-                | b','
-                | b'-'
-                | b'.'
-                | b'/'
-                | b':'
-                | b'='
-                | b'?' => (),
-                _ => return Err(Self::TAG.value_error()),
-            }
+        // Validate all characters are within VideotexString's allowed set
+        // FIXME: treat as if it were IA5String
+        if input.iter().any(|&c| c > 0x7F) {
+            return Err(Self::TAG.value_error());
         }
 
         StrSlice::from_bytes(input)
@@ -97,25 +66,25 @@ impl<'a> PrintableStringRef<'a> {
     }
 }
 
-impl AsRef<str> for PrintableStringRef<'_> {
+impl AsRef<str> for VideotexStringRef<'_> {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
-impl AsRef<[u8]> for PrintableStringRef<'_> {
+impl AsRef<[u8]> for VideotexStringRef<'_> {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
-impl<'a> DecodeValue<'a> for PrintableStringRef<'a> {
+impl<'a> DecodeValue<'a> for VideotexStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
     }
 }
 
-impl<'a> EncodeValue for PrintableStringRef<'a> {
+impl<'a> EncodeValue for VideotexStringRef<'a> {
     fn value_len(&self) -> Result<Length> {
         self.inner.value_len()
     }
@@ -125,62 +94,62 @@ impl<'a> EncodeValue for PrintableStringRef<'a> {
     }
 }
 
-impl FixedTag for PrintableStringRef<'_> {
-    const TAG: Tag = Tag::PrintableString;
+impl FixedTag for VideotexStringRef<'_> {
+    const TAG: Tag = Tag::VideotexString;
 }
 
-impl OrdIsValueOrd for PrintableStringRef<'_> {}
+impl OrdIsValueOrd for VideotexStringRef<'_> {}
 
-impl<'a> From<&PrintableStringRef<'a>> for PrintableStringRef<'a> {
-    fn from(value: &PrintableStringRef<'a>) -> PrintableStringRef<'a> {
+impl<'a> From<&VideotexStringRef<'a>> for VideotexStringRef<'a> {
+    fn from(value: &VideotexStringRef<'a>) -> VideotexStringRef<'a> {
         *value
     }
 }
 
-impl<'a> TryFrom<AnyRef<'a>> for PrintableStringRef<'a> {
+impl<'a> TryFrom<AnyRef<'a>> for VideotexStringRef<'a> {
     type Error = Error;
 
-    fn try_from(any: AnyRef<'a>) -> Result<PrintableStringRef<'a>> {
+    fn try_from(any: AnyRef<'a>) -> Result<VideotexStringRef<'a>> {
         any.decode_into()
     }
 }
 
-impl<'a> From<PrintableStringRef<'a>> for AnyRef<'a> {
-    fn from(printable_string: PrintableStringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::PrintableString, printable_string.inner.into())
+impl<'a> From<VideotexStringRef<'a>> for AnyRef<'a> {
+    fn from(printable_string: VideotexStringRef<'a>) -> AnyRef<'a> {
+        AnyRef::from_tag_and_value(Tag::VideotexString, printable_string.inner.into())
     }
 }
 
-impl<'a> From<PrintableStringRef<'a>> for &'a [u8] {
-    fn from(printable_string: PrintableStringRef<'a>) -> &'a [u8] {
+impl<'a> From<VideotexStringRef<'a>> for &'a [u8] {
+    fn from(printable_string: VideotexStringRef<'a>) -> &'a [u8] {
         printable_string.as_bytes()
     }
 }
 
-impl<'a> fmt::Display for PrintableStringRef<'a> {
+impl<'a> fmt::Display for VideotexStringRef<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }
 
-impl<'a> fmt::Debug for PrintableStringRef<'a> {
+impl<'a> fmt::Debug for VideotexStringRef<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "PrintableString({:?})", self.as_str())
+        write!(f, "VideotexString({:?})", self.as_str())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::PrintableStringRef;
+    use super::VideotexStringRef;
     use crate::Decode;
 
     #[test]
     fn parse_bytes() {
         let example_bytes = &[
-            0x13, 0x0b, 0x54, 0x65, 0x73, 0x74, 0x20, 0x55, 0x73, 0x65, 0x72, 0x20, 0x31,
+            0x15, 0x0b, 0x54, 0x65, 0x73, 0x74, 0x20, 0x55, 0x73, 0x65, 0x72, 0x20, 0x31,
         ];
 
-        let printable_string = PrintableStringRef::from_der(example_bytes).unwrap();
+        let printable_string = VideotexStringRef::from_der(example_bytes).unwrap();
         assert_eq!(printable_string.as_str(), "Test User 1");
     }
 }
