@@ -4,7 +4,7 @@ use crate::{
     asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
     Length, Reader, Result, StrSlice, Tag, Writer,
 };
-use core::{fmt, str};
+use core::{fmt, ops::Deref, str};
 
 /// ASN.1 `PrintableString` type.
 ///
@@ -75,25 +75,13 @@ impl<'a> PrintableStringRef<'a> {
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error())
     }
+}
 
-    /// Borrow the string as a `str`.
-    pub fn as_str(&self) -> &'a str {
-        self.inner.as_str()
-    }
+impl<'a> Deref for PrintableStringRef<'a> {
+    type Target = StrSlice<'a>;
 
-    /// Borrow the string as bytes.
-    pub fn as_bytes(&self) -> &'a [u8] {
-        self.inner.as_bytes()
-    }
-
-    /// Get the length of the inner byte slice.
-    pub fn len(&self) -> Length {
-        self.inner.len()
-    }
-
-    /// Is the inner string empty?
-    pub fn is_empty(&self) -> bool {
-        self.inner.is_empty()
+    fn deref(&self) -> &Self::Target {
+        &self.inner
     }
 }
 
@@ -148,12 +136,6 @@ impl<'a> TryFrom<AnyRef<'a>> for PrintableStringRef<'a> {
 impl<'a> From<PrintableStringRef<'a>> for AnyRef<'a> {
     fn from(printable_string: PrintableStringRef<'a>) -> AnyRef<'a> {
         AnyRef::from_tag_and_value(Tag::PrintableString, printable_string.inner.into())
-    }
-}
-
-impl<'a> From<PrintableStringRef<'a>> for &'a [u8] {
-    fn from(printable_string: PrintableStringRef<'a>) -> &'a [u8] {
-        printable_string.as_bytes()
     }
 }
 
