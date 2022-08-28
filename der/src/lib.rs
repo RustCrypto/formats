@@ -310,17 +310,17 @@
 //! [A Layman's Guide to a Subset of ASN.1, BER, and DER]: https://luca.ntop.org/Teaching/Appunti/asn1.html
 //! [A Warm Welcome to ASN.1 and DER]: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/
 //!
-//! [`Any`]: asn1::AnyRef
+//! [`Any`]: asn1::Any
 //! [`AnyRef`]: asn1::AnyRef
 //! [`ContextSpecific`]: asn1::ContextSpecific
 //! [`ContextSpecificRef`]: asn1::ContextSpecificRef
-//! [`BitString`]: asn1::BitStringRef
+//! [`BitString`]: asn1::BitString
 //! [`BitStringRef`]: asn1::BitStringRef
 //! [`GeneralizedTime`]: asn1::GeneralizedTime
 //! [`Ia5StringRef`]: asn1::Ia5StringRef
 //! [`Null`]: asn1::Null
 //! [`ObjectIdentifier`]: asn1::ObjectIdentifier
-//! [`OctetString`]: asn1::OctetStringRef
+//! [`OctetString`]: asn1::OctetString
 //! [`OctetStringRef`]: asn1::OctetStringRef
 //! [`PrintableStringRef`]: asn1::PrintableStringRef
 //! [`TeletexStringRef`]: asn1::TeletexStringRef
