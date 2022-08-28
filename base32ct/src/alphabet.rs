@@ -2,7 +2,7 @@
 
 pub(crate) mod rfc4648;
 
-use core::{fmt::Debug, ops::Range};
+use core::{fmt::Debug, ops::RangeInclusive};
 
 /// Core encoder/decoder functions for a particular Base64 alphabet
 pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
@@ -26,8 +26,8 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
 
         for DecodeStep(range, offset) in Self::DECODER {
             // Compute exclusive range from inclusive one
-            let start = range.start as i16 - 1;
-            let end = range.end as i16 + 1;
+            let start = *range.start() as i16 - 1;
+            let end = *range.end() as i16 + 1;
             ret += (((start - src as i16) & (src as i16 - end)) >> 8) & (src as i16 + *offset);
         }
 
@@ -50,7 +50,7 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
 
 /// Constant-time decoder step.
 #[derive(Debug)]
-pub struct DecodeStep(Range<u8>, i16);
+pub struct DecodeStep(RangeInclusive<u8>, i16);
 
 /// Compute a difference using the given offset on match.
 #[derive(Copy, Clone, Debug)]

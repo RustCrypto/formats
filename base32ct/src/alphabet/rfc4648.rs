@@ -35,7 +35,7 @@ impl Alphabet for Base32Unpadded {
 }
 
 /// Lower-case Base32 decoder.
-const DECODE_LOWER: &[DecodeStep] = &[DecodeStep(b'a'..b'z', -96), DecodeStep(b'2'..b'7', -23)];
+const DECODE_LOWER: &[DecodeStep] = &[DecodeStep(b'a'..=b'z', -96), DecodeStep(b'2'..=b'7', -23)];
 
 /// Standard Base64 encoder
 const ENCODE_LOWER: &[EncodeStep] = &[EncodeStep(25, 73)];
@@ -52,7 +52,7 @@ pub struct Base32Upper;
 impl Alphabet for Base32Upper {
     const BASE: u8 = b'A';
     const DECODER: &'static [DecodeStep] =
-        &[DecodeStep(b'A'..b'Z', -64), DecodeStep(b'2'..b'7', -23)];
+        &[DecodeStep(b'A'..=b'Z', -64), DecodeStep(b'2'..=b'7', -23)];
     const ENCODER: &'static [EncodeStep] = &[EncodeStep(25, 41)];
     const PADDED: bool = true;
 }

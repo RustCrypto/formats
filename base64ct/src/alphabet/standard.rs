@@ -38,9 +38,9 @@ impl Alphabet for Base64Unpadded {
 
 /// Standard Base64 decoder
 const DECODER: &[DecodeStep] = &[
-    DecodeStep::Range(b'A'..b'Z', -64),
-    DecodeStep::Range(b'a'..b'z', -70),
-    DecodeStep::Range(b'0'..b'9', 5),
+    DecodeStep::Range(b'A'..=b'Z', -64),
+    DecodeStep::Range(b'a'..=b'z', -70),
+    DecodeStep::Range(b'0'..=b'9', 5),
     DecodeStep::Eq(b'+', 63),
     DecodeStep::Eq(b'/', 64),
 ];
