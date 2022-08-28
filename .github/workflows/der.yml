@@ -3,6 +3,7 @@ name: der
 on:
   pull_request:
     paths:
+      - ".github/workflows/der.yml"
       - "const-oid/**"
       - "der/**"
       - "Cargo.*"

@@ -3,6 +3,7 @@ name: x509-cert
 on:
   pull_request:
     paths:
+      - ".github/workflows/x509-cert.yml"
       - "const-oid/**"
       - "der/**"
       - "spki/**"

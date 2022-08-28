@@ -3,6 +3,7 @@ name: sec1
 on:
   pull_request:
     paths:
+      - ".github/workflows/sec1.yml"
       - "base64ct/**"
       - "const-oid/**"
       - "der/**"

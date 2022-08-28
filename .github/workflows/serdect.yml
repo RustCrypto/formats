@@ -3,7 +3,7 @@ name: serdect
 on:
   pull_request:
     paths:
-      - ".github/workflows/serdect"
+      - ".github/workflows/serdect.yml"
       - "base16ct/**"
       - "serdect/**"
       - "Cargo.*"

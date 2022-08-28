@@ -3,6 +3,7 @@ name: tls_codec
 on:
   pull_request:
     paths:
+      - ".github/workflows/tls_codec.yml"
       - "tls_codec/**"
       - "Cargo.*"
   push:

@@ -3,6 +3,7 @@ name: pkcs5
 on:
   pull_request:
     paths:
+      - ".github/workflows/pkcs5.yml"
       - "const-oid/**"
       - "der/**"
       - "pkcs5/**"

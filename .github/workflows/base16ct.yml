@@ -3,6 +3,7 @@ name: base16ct
 on:
   pull_request:
     paths:
+      - ".github/workflows/base16ct.yml"
       - "base16ct/**"
       - "Cargo.*"
   push:

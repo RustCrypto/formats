@@ -3,6 +3,7 @@ name: const-oid
 on:
   pull_request:
     paths:
+      - ".github/workflows/const-oid.yml"
       - "const-oid/**"
       - "Cargo.*"
   push:
