@@ -14,6 +14,7 @@ extern crate alloc;
 extern crate std;
 
 mod error;
+mod params;
 mod private_key;
 mod public_key;
 mod traits;
@@ -26,6 +27,7 @@ pub use der::{
 
 pub use self::{
     error::{Error, Result},
+    params::{RsaPSSParameters, TrailerField},
     private_key::RsaPrivateKey,
     public_key::RsaPublicKey,
     traits::{DecodeRsaPrivateKey, DecodeRsaPublicKey},
