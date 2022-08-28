@@ -30,7 +30,6 @@ jobs:
           - wasm32-unknown-unknown
     steps:
       - uses: actions/checkout@v2
-      - uses: RustCrypto/actions/cargo-cache@master
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -54,7 +53,6 @@ jobs:
           - stable
     steps:
       - uses: actions/checkout@v2
-      - uses: RustCrypto/actions/cargo-cache@master
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
