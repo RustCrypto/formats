@@ -3,7 +3,7 @@
 use const_oid::db;
 use der::{asn1::ObjectIdentifier, Decode, Encode};
 use hex_literal::hex;
-use pkcs1::RsaPSSParameters;
+use pkcs1::RsaPssParams;
 use pkcs1::TrailerField;
 
 /// Default PSS parameters using all default values (SHA1, MGF1)
@@ -13,7 +13,7 @@ const RSA_PSS_PARAMETERS_SHA2_256: &[u8] = &hex!("3030a00d300b060960864801650304
 
 #[test]
 fn decode_pss_param() {
-    let param = RsaPSSParameters::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
+    let param = RsaPssParams::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
 
     assert!(param
         .hash
@@ -40,7 +40,7 @@ fn decode_pss_param() {
 #[test]
 fn encode_pss_param() {
     let mut buf = [0_u8; 256];
-    let param = RsaPSSParameters::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
+    let param = RsaPssParams::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
     assert_eq!(
         param.encode_to_slice(&mut buf).unwrap(),
         RSA_PSS_PARAMETERS_SHA2_256
@@ -49,7 +49,7 @@ fn encode_pss_param() {
 
 #[test]
 fn decode_pss_param_default() {
-    let param = RsaPSSParameters::try_from(RSA_PSS_PARAMETERS_DEFAULTS).unwrap();
+    let param = RsaPssParams::try_from(RSA_PSS_PARAMETERS_DEFAULTS).unwrap();
 
     assert!(param
         .hash
@@ -78,9 +78,7 @@ fn decode_pss_param_default() {
 fn encode_pss_param_default() {
     let mut buf = [0_u8; 256];
     assert_eq!(
-        RsaPSSParameters::default()
-            .encode_to_slice(&mut buf)
-            .unwrap(),
+        RsaPssParams::default().encode_to_slice(&mut buf).unwrap(),
         RSA_PSS_PARAMETERS_DEFAULTS
     );
 }
