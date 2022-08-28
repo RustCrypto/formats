@@ -3,6 +3,7 @@ name: base64ct
 on:
   pull_request:
     paths:
+      - ".github/workflows/base64ct.yml"
       - "base64ct/**"
       - "Cargo.*"
   push:

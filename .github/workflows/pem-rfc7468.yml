@@ -3,6 +3,7 @@ name: pem-rfc7468
 on:
   pull_request:
     paths:
+      - ".github/workflows/pem-rfc7468.yml"
       - "base64ct/**"
       - "pem-rfc7468/**"
       - "Cargo.*"

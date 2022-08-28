@@ -3,6 +3,7 @@ name: tai64
 on:
   pull_request:
     paths:
+      - ".github/workflows/tai64.yml"
       - "tai64/**"
       - "Cargo.*"
   push:

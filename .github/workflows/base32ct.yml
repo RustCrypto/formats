@@ -3,6 +3,7 @@ name: base32ct
 on:
   pull_request:
     paths:
+      - ".github/workflows/base32ct.yml"
       - "base32ct/**"
       - "Cargo.*"
   push:

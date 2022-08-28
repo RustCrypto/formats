@@ -3,6 +3,7 @@ name: spki
 on:
   pull_request:
     paths:
+      - ".github/workflows/spki.yml"
       - "base64ct/**"
       - "const-oid/**"
       - "der/**"
