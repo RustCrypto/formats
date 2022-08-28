@@ -25,9 +25,9 @@ pub use der::{
     asn1::{ObjectIdentifier, UIntRef},
 };
 
-pub use self::{
+pub use crate::{
     error::{Error, Result},
-    params::{RsaPSSParameters, TrailerField},
+    params::{RsaPssParams, TrailerField},
     private_key::RsaPrivateKey,
     public_key::RsaPublicKey,
     traits::{DecodeRsaPrivateKey, DecodeRsaPublicKey},

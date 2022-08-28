@@ -1,17 +1,32 @@
-//! PKCS#1 RSA parameters
+//! PKCS#1 RSA parameters.
 
 use crate::{Error, Result};
 use der::asn1::{AnyRef, ObjectIdentifier};
-use der::{Decode, Enumerated, Sequence, Tag};
+use der::{
+    asn1::ContextSpecificRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Reader, Sequence,
+    Tag, TagMode, TagNumber, Writer,
+};
 use spki::AlgorithmIdentifier;
+
+const OID_SHA_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
+const OID_MGF_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.8");
+
+// TODO(tarcieri): make `AlgorithmIdentifier` generic around params; use `OID_SHA_1`
+const SEQ_OID_SHA_1_DER: &[u8] = &[0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a];
+
+const SHA_1_AI: AlgorithmIdentifier<'_> = AlgorithmIdentifier {
+    oid: OID_SHA_1,
+    parameters: None,
+};
+
+const SALT_LEN_DEFAULT: u8 = 20;
 
 /// `TrailerField` as defined in [RFC 8017 Appendix 2.3].
 /// ```text
 /// TrailerField ::= INTEGER { trailerFieldBC(1) }
 /// ```
 /// [RFC 8017 Appendix 2.3]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.3
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
-#[asn1(type = "INTEGER")]
+#[derive(Clone, Debug, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum TrailerField {
     /// the only supported value (0xbc, default)
@@ -24,32 +39,27 @@ impl Default for TrailerField {
     }
 }
 
-const OID_SHA_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
-const OID_MGF_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.8");
-
-const SHA_1_AI: AlgorithmIdentifier<'_> = AlgorithmIdentifier {
-    oid: OID_SHA_1,
-    parameters: None,
-};
-
-const SALT_LEN_DEFAULT: u8 = 20;
-
-fn default_sha1<'a>() -> AlgorithmIdentifier<'a> {
-    SHA_1_AI
-}
-
-fn default_mgf1_sha1<'a>() -> AlgorithmIdentifier<'a> {
-    AlgorithmIdentifier {
-        oid: OID_MGF_1,
-        parameters: Some(
-            AnyRef::new(Tag::Sequence, &[0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a])
-                .expect("Internal error inside default generation"),
-        ),
+impl<'a> DecodeValue<'a> for TrailerField {
+    fn decode_value<R: Reader<'a>>(decoder: &mut R, header: der::Header) -> der::Result<Self> {
+        match u8::decode_value(decoder, header)? {
+            1 => Ok(TrailerField::BC),
+            _ => Err(Self::TAG.value_error()),
+        }
     }
 }
 
-fn default_salt_len() -> u8 {
-    SALT_LEN_DEFAULT
+impl EncodeValue for TrailerField {
+    fn value_len(&self) -> der::Result<der::Length> {
+        Ok(der::Length::ONE)
+    }
+
+    fn encode_value(&self, writer: &mut dyn Writer) -> der::Result<()> {
+        (*self as u8).encode_value(writer)
+    }
+}
+
+impl FixedTag for TrailerField {
+    const TAG: Tag = Tag::Integer;
 }
 
 /// PKCS#1 RSASSA-PSS parameters as defined in [RFC 8017 Appendix 2.3]
@@ -67,31 +77,22 @@ fn default_salt_len() -> u8 {
 /// ```
 ///
 /// [RFC 8017 Appendix 2.3]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.3
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct RsaPSSParameters<'a> {
-    /// `hash`: Hash Algorithm
-    #[asn1(context_specific = "0", default = "default_sha1")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RsaPssParams<'a> {
+    /// Hash Algorithm
     pub hash: AlgorithmIdentifier<'a>,
-    /// Mask Generation Function Algorithm
-    #[asn1(context_specific = "1", default = "default_mgf1_sha1")]
+
+    /// Mask Generation Function (MGF)
     pub mask_gen: AlgorithmIdentifier<'a>,
-    /// used salt length
-    #[asn1(context_specific = "2", default = "default_salt_len")]
+
+    /// Salt length
     pub salt_len: u8,
-    /// Trailer field, should be TrailerField::BC
-    #[asn1(context_specific = "3", default = "Default::default")]
+
+    /// Trailer field (i.e. [`TrailerField::BC`])
     pub trailer_field: TrailerField,
 }
 
-impl<'a> TryFrom<&'a [u8]> for RsaPSSParameters<'a> {
-    type Error = Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
-        Ok(Self::from_der(bytes)?)
-    }
-}
-
-impl<'a> Default for RsaPSSParameters<'a> {
+impl<'a> Default for RsaPssParams<'a> {
     fn default() -> Self {
         Self {
             hash: SHA_1_AI,
@@ -99,5 +100,91 @@ impl<'a> Default for RsaPSSParameters<'a> {
             salt_len: SALT_LEN_DEFAULT,
             trailer_field: Default::default(),
         }
+    }
+}
+
+impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            Ok(Self {
+                hash: reader
+                    .context_specific(TagNumber::N0, TagMode::Explicit)?
+                    .unwrap_or(SHA_1_AI),
+                mask_gen: reader
+                    .context_specific(TagNumber::N1, TagMode::Explicit)?
+                    .unwrap_or_else(default_mgf1_sha1),
+                salt_len: reader
+                    .context_specific(TagNumber::N2, TagMode::Explicit)?
+                    .unwrap_or(SALT_LEN_DEFAULT),
+                trailer_field: reader
+                    .context_specific(TagNumber::N3, TagMode::Explicit)?
+                    .unwrap_or_default(),
+            })
+        })
+    }
+}
+
+impl<'a> Sequence<'a> for RsaPssParams<'a> {
+    fn fields<F, T>(&self, f: F) -> der::Result<T>
+    where
+        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
+    {
+        f(&[
+            &if self.hash == SHA_1_AI {
+                None
+            } else {
+                Some(ContextSpecificRef {
+                    tag_number: TagNumber::N0,
+                    tag_mode: TagMode::Explicit,
+                    value: &self.hash,
+                })
+            },
+            &if self.mask_gen == default_mgf1_sha1() {
+                None
+            } else {
+                Some(ContextSpecificRef {
+                    tag_number: TagNumber::N1,
+                    tag_mode: TagMode::Explicit,
+                    value: &self.mask_gen,
+                })
+            },
+            &if self.salt_len == SALT_LEN_DEFAULT {
+                None
+            } else {
+                Some(ContextSpecificRef {
+                    tag_number: TagNumber::N2,
+                    tag_mode: TagMode::Explicit,
+                    value: &self.salt_len,
+                })
+            },
+            &if self.trailer_field == TrailerField::default() {
+                None
+            } else {
+                Some(ContextSpecificRef {
+                    tag_number: TagNumber::N3,
+                    tag_mode: TagMode::Explicit,
+                    value: &self.trailer_field,
+                })
+            },
+        ])
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for RsaPssParams<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+        Ok(Self::from_der(bytes)?)
+    }
+}
+
+/// Default Mask Generation Function (MGF): SHA-1.
+fn default_mgf1_sha1<'a>() -> AlgorithmIdentifier<'a> {
+    AlgorithmIdentifier {
+        oid: OID_MGF_1,
+        parameters: Some(
+            AnyRef::new(Tag::Sequence, SEQ_OID_SHA_1_DER)
+                .expect("error creating default MGF1 params"),
+        ),
     }
 }
