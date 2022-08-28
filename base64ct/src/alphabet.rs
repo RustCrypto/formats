@@ -3,7 +3,7 @@
 // TODO(tarcieri): explicitly checked/wrapped arithmetic
 #![allow(clippy::integer_arithmetic)]
 
-use core::{fmt::Debug, ops::Range};
+use core::{fmt::Debug, ops::RangeInclusive};
 
 pub mod bcrypt;
 pub mod crypt;
@@ -55,8 +55,8 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
             ret += match step {
                 DecodeStep::Range(range, offset) => {
                     // Compute exclusive range from inclusive one
-                    let start = range.start as i16 - 1;
-                    let end = range.end as i16 + 1;
+                    let start = *range.start() as i16 - 1;
+                    let end = *range.end() as i16 + 1;
                     (((start - src as i16) & (src as i16 - end)) >> 8) & (src as i16 + *offset)
                 }
                 DecodeStep::Eq(value, offset) => {
@@ -106,7 +106,7 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
 #[derive(Debug)]
 pub enum DecodeStep {
     /// Match the given range, offsetting the input on match.
-    Range(Range<u8>, i16),
+    Range(RangeInclusive<u8>, i16),
 
     /// Match the given value, returning the associated offset on match.
     Eq(u8, i16),

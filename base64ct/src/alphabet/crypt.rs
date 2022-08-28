@@ -15,9 +15,9 @@ impl Alphabet for Base64Crypt {
     const BASE: u8 = b'.';
 
     const DECODER: &'static [DecodeStep] = &[
-        DecodeStep::Range(b'.'..b'9', -45),
-        DecodeStep::Range(b'A'..b'Z', -52),
-        DecodeStep::Range(b'a'..b'z', -58),
+        DecodeStep::Range(b'.'..=b'9', -45),
+        DecodeStep::Range(b'A'..=b'Z', -52),
+        DecodeStep::Range(b'a'..=b'z', -58),
     ];
 
     const ENCODER: &'static [EncodeStep] =
