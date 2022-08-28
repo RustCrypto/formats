@@ -27,7 +27,7 @@ pub use der::{
 
 pub use crate::{
     error::{Error, Result},
-    params::{RsaPssParams, TrailerField},
+    params::{RsaOaepParams, RsaPssParams, TrailerField},
     private_key::RsaPrivateKey,
     public_key::RsaPublicKey,
     traits::{DecodeRsaPrivateKey, DecodeRsaPublicKey},
