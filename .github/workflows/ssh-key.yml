@@ -60,7 +60,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.57.0 # MSRV
+          - 1.60.0 # MSRV
           - stable
         target:
           - thumbv7em-none-eabi
@@ -81,7 +81,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.57.0 # MSRV
+          - 1.60.0 # MSRV
           - stable
     steps:
       - uses: actions/checkout@v3
