@@ -376,6 +376,17 @@ impl<T: flagset::Flags> FixedTag for flagset::FlagSet<T> {
 }
 
 #[cfg(feature = "flagset")]
+impl<T> ValueOrd for flagset::FlagSet<T>
+where
+    T: flagset::Flags,
+    T::Type: Ord,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        Ok(self.bits().cmp(&other.bits()))
+    }
+}
+
+#[cfg(feature = "flagset")]
 #[allow(clippy::integer_arithmetic)]
 impl<'a, T> DecodeValue<'a> for flagset::FlagSet<T>
 where
