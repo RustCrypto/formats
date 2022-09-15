@@ -2,8 +2,8 @@
 
 use super::uint;
 use crate::{
-    asn1::AnyRef, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length,
-    Reader, Result, Tag, Writer,
+    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind,
+    FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
 /// "Big" unsigned ASN.1 `INTEGER` type.
@@ -13,7 +13,7 @@ use crate::{
 ///
 /// Intended for use cases like very large integers that are used in
 /// cryptographic applications (e.g. keys, signatures).
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct UIntRef<'a> {
     /// Inner value
     inner: ByteSlice<'a>,
@@ -91,6 +91,8 @@ impl<'a> TryFrom<AnyRef<'a>> for UIntRef<'a> {
 impl<'a> FixedTag for UIntRef<'a> {
     const TAG: Tag = Tag::Integer;
 }
+
+impl<'a> OrdIsValueOrd for UIntRef<'a> {}
 
 #[cfg(test)]
 mod tests {
