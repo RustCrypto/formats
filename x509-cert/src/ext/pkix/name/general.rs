@@ -4,7 +4,7 @@ use super::{EdiPartyName, OtherName};
 use crate::name::Name;
 
 use der::asn1::{Ia5StringRef, ObjectIdentifier, OctetStringRef};
-use der::Choice;
+use der::{Choice, ValueOrd};
 
 /// GeneralNames as defined in [RFC 5280 Section 4.2.1.6].
 ///
@@ -34,7 +34,7 @@ pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
 /// This implementation does not currently support the `x400Address` choice.
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
-#[derive(Clone, Debug, Eq, PartialEq, Choice)]
+#[derive(Clone, Debug, Eq, PartialEq, Choice, ValueOrd)]
 #[allow(missing_docs)]
 pub enum GeneralName<'a> {
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]

@@ -6,7 +6,7 @@ use const_oid::{
     db::rfc5280::{ID_PE_AUTHORITY_INFO_ACCESS, ID_PE_SUBJECT_INFO_ACCESS},
     AssociatedOid,
 };
-use der::{asn1::ObjectIdentifier, Sequence};
+use der::{asn1::ObjectIdentifier, Sequence, ValueOrd};
 
 /// AuthorityInfoAccessSyntax as defined in [RFC 5280 Section 4.2.2.1].
 ///
@@ -50,7 +50,7 @@ impl_newtype!(SubjectInfoAccessSyntax<'a>, Vec<AccessDescription<'a>>);
 /// ```
 ///
 /// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct AccessDescription<'a> {
     pub access_method: ObjectIdentifier,

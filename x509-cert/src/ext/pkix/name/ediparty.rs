@@ -1,4 +1,4 @@
-use der::Sequence;
+use der::{Sequence, ValueOrd};
 
 use super::DirectoryString;
 
@@ -25,7 +25,7 @@ use super::DirectoryString;
 ///
 /// [this OpenSSL bug]: https://github.com/openssl/openssl/issues/6859
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct EdiPartyName<'a> {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]

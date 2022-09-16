@@ -69,5 +69,12 @@ macro_rules! impl_newtype {
                 self.0.value_len()
             }
         }
+
+        #[allow(unused_lifetimes)]
+        impl<'a> ::der::ValueOrd for $newtype {
+            fn value_cmp(&self, other: &Self) -> ::der::Result<::core::cmp::Ordering> {
+                self.0.value_cmp(&other.0)
+            }
+        }
     };
 }
