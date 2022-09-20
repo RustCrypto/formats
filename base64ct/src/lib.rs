@@ -75,6 +75,8 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+pub mod stream;
+
 mod alphabet;
 mod decoder;
 mod encoder;
