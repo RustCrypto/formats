@@ -152,7 +152,7 @@ impl RootArcs {
 impl TryFrom<u8> for RootArcs {
     type Error = Error;
 
-    // Ensured not to oerflow by constructor invariants
+    // Ensured not to overflow by constructor invariants
     #[allow(clippy::integer_arithmetic)]
     fn try_from(octet: u8) -> Result<Self> {
         let first = octet as Arc / (ARC_MAX_SECOND + 1);
