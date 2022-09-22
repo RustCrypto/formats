@@ -127,7 +127,7 @@ fn reencode_cert() {
     let parsed_coverage_tbs =
         DeferDecodeTbsCertificate::from_der(defer_cert.tbs_certificate).unwrap();
 
-    // TODO - defer decode then reencode version field
+    // TODO - defer decode then re-encode version field
 
     let encoded_serial = parsed_tbs.serial_number.to_vec().unwrap();
     assert_eq!(parsed_coverage_tbs.serial_number, encoded_serial);

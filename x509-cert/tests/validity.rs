@@ -89,7 +89,7 @@ fn decode_validity() {
 
 #[test]
 fn encode_validity() {
-    // Decode Validity from GoodCACert.crt in NIST's PKITS certificate collection then reencode
+    // Decode Validity from GoodCACert.crt in NIST's PKITS certificate collection then re-encode
     // 102  30:     SEQUENCE {
     // 104  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 119  13:       UTCTime 31/12/2030 08:30:00 GMT

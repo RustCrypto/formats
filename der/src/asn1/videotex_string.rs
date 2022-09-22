@@ -8,7 +8,7 @@ use core::{fmt, ops::Deref, str};
 
 /// ASN.1 `VideotexString` type.
 ///
-/// Supports a subset the ASCII character set (desribed below).
+/// Supports a subset the ASCII character set (described below).
 ///
 /// For UTF-8, use [`Utf8StringRef`][`crate::asn1::Utf8StringRef`] instead.
 /// For the full ASCII character set, use

@@ -256,7 +256,7 @@ pub enum EncryptionScheme<'a> {
     /// 3-Key Triple DES in CBC mode
     #[cfg(feature = "3des")]
     DesEde3Cbc {
-        /// Intialisation vector
+        /// Initialisation vector
         iv: &'a [u8; DES_BLOCK_SIZE],
     },
 
