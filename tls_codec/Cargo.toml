@@ -19,7 +19,7 @@ tls_codec_derive = { version = "=0.2.0", path = "derive", optional = true }
 
 [dev-dependencies]
 criterion = "0.4"
-regex = "1.5.1"
+regex = "1.6"
 
 [features]
 default = [ "std" ]
