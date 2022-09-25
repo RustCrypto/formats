@@ -16,7 +16,6 @@ members = [
     "sec1",
     "serdect",
     "spki",
-    "ssh-key",
     "tai64",
     "tls_codec",
     "tls_codec/derive",
