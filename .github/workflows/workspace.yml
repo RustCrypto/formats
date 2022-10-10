@@ -37,7 +37,7 @@ jobs:
           toolchain: stable
           override: true
           profile: minimal
-      - run: cargo doc --workspace --exclude ssh-key --all-features
+      - run: cargo doc --workspace --all-features
 
   rustfmt:
     runs-on: ubuntu-latest

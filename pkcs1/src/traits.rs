@@ -191,7 +191,7 @@ impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T {
 }
 
 #[cfg(all(feature = "alloc", feature = "pkcs8"))]
-#[cfg_attr(docsrs, doc(all(feature = "alloc", feature = "pkcs8")))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "pkcs8"))))]
 impl<T: pkcs8::EncodePrivateKey> EncodeRsaPrivateKey for T {
     fn to_pkcs1_der(&self) -> Result<SecretDocument> {
         let pkcs8_doc = self.to_pkcs8_der()?;
@@ -202,7 +202,7 @@ impl<T: pkcs8::EncodePrivateKey> EncodeRsaPrivateKey for T {
 }
 
 #[cfg(all(feature = "alloc", feature = "pkcs8"))]
-#[cfg_attr(docsrs, doc(all(feature = "alloc", feature = "pkcs8")))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "pkcs8"))))]
 impl<T: pkcs8::EncodePublicKey> EncodeRsaPublicKey for T {
     fn to_pkcs1_der(&self) -> Result<Document> {
         let doc = self.to_public_key_der()?;
