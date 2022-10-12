@@ -7,6 +7,7 @@ use core::{fmt::Debug, ops::RangeInclusive};
 
 pub mod bcrypt;
 pub mod crypt;
+pub mod shacrypt;
 pub mod standard;
 pub mod url;
 
@@ -27,8 +28,10 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
     /// Unpadded equivalent of this alphabet.
     ///
     /// For alphabets that are unpadded to begin with, this should be `Self`.
-    type Unpadded: Alphabet;
+    type Unpadded: AlphabetEncoding;
+}
 
+pub trait AlphabetEncoding: Alphabet {
     /// Decode 3 bytes of a Base64 message.
     #[inline(always)]
     fn decode_3bytes(src: &[u8], dst: &mut [u8]) -> i16 {
@@ -70,7 +73,7 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         ret
     }
 
-    /// Encode 3-bytes of a Base64 message.
+    // Encode 3-bytes of a Base64 message.
     #[inline(always)]
     fn encode_3bytes(src: &[u8], dst: &mut [u8]) {
         debug_assert_eq!(src.len(), 3);
@@ -80,6 +83,11 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
         let b1 = src[1] as i16;
         let b2 = src[2] as i16;
 
+        // dst[0] = Self::encode_6bits(b0 >> 2);
+        // dst[1] = Self::encode_6bits(((b0 & 0x03)<< 4) | (b1 >> 4));
+        // dst[2] = Self::encode_6bits(((b1 & 0x0f)<< 2) | (b2 >> 6));
+        // dst[3] = Self::encode_6bits(b2 & 63);
+
         dst[0] = Self::encode_6bits(b0 >> 2);
         dst[1] = Self::encode_6bits(((b0 << 4) | (b1 >> 4)) & 63);
         dst[2] = Self::encode_6bits(((b1 << 2) | (b2 >> 6)) & 63);
@@ -87,6 +95,79 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
     }
 
     /// Encode 6-bits of a Base64 message.
+    #[inline(always)]
+    fn encode_6bits(src: i16) -> u8 {
+        let mut diff = src + Self::BASE as i16;
+
+        for &step in Self::ENCODER {
+            diff += match step {
+                EncodeStep::Apply(threshold, offset) => ((threshold as i16 - diff) >> 8) & offset,
+                EncodeStep::Diff(threshold, offset) => ((threshold as i16 - src) >> 8) & offset,
+            };
+        }
+
+        diff as u8
+    }
+}
+
+pub trait LittleEndianAlphabetEncoding {}
+
+impl<T: LittleEndianAlphabetEncoding + Alphabet> AlphabetEncoding for T {
+    #[inline(always)]
+    fn decode_3bytes(src: &[u8], dst: &mut [u8]) -> i16 {
+        debug_assert_eq!(src.len(), 4);
+        debug_assert!(dst.len() >= 3, "dst too short: {}", dst.len());
+
+        let c0 = Self::decode_6bits(src[0]);
+        let c1 = Self::decode_6bits(src[1]);
+        let c2 = Self::decode_6bits(src[2]);
+        let c3 = Self::decode_6bits(src[3]);
+
+        dst[0] = (c0 | ((c1 & 0x3) << 6)) as u8;
+        dst[1] = ((c1 >> 2) | ((c2 & 0xF) << 4)) as u8;
+        dst[2] = ((c2 >> 4) | (c3 << 2)) as u8;
+
+        ((c0 | c1 | c2 | c3) >> 8) & 1
+    }
+
+    #[inline(always)]
+    fn decode_6bits(src: u8) -> i16 {
+        let mut ret: i16 = -1;
+
+        for step in Self::DECODER {
+            ret += match step {
+                DecodeStep::Range(range, offset) => {
+                    // Compute exclusive range from inclusive one
+                    let start = *range.start() as i16 - 1;
+                    let end = *range.end() as i16 + 1;
+                    (((start - src as i16) & (src as i16 - end)) >> 8) & (src as i16 + *offset)
+                }
+                DecodeStep::Eq(value, offset) => {
+                    let start = *value as i16 - 1;
+                    let end = *value as i16 + 1;
+                    (((start - src as i16) & (src as i16 - end)) >> 8) & *offset
+                }
+            };
+        }
+
+        ret
+    }
+
+    #[inline(always)]
+    fn encode_3bytes(src: &[u8], dst: &mut [u8]) {
+        debug_assert_eq!(src.len(), 3);
+        debug_assert!(dst.len() >= 4, "dst too short: {}", dst.len());
+
+        let b0 = src[0] as i16;
+        let b1 = src[1] as i16;
+        let b2 = src[2] as i16;
+
+        dst[0] = Self::encode_6bits(b0 & 63);
+        dst[1] = Self::encode_6bits(((b1 << 2) | (b0 >> 6)) & 63);
+        dst[2] = Self::encode_6bits(((b2 << 4) | (b1 >> 4)) & 63);
+        dst[3] = Self::encode_6bits(b2 >> 2);
+    }
+
     #[inline(always)]
     fn encode_6bits(src: i16) -> u8 {
         let mut diff = src + Self::BASE as i16;

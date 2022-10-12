@@ -1,6 +1,6 @@
 //! bcrypt Base64 encoding.
 
-use super::{Alphabet, DecodeStep, EncodeStep};
+use super::{Alphabet, AlphabetEncoding, DecodeStep, EncodeStep};
 
 /// bcrypt Base64 encoding.
 ///
@@ -31,3 +31,5 @@ impl Alphabet for Base64Bcrypt {
 
     type Unpadded = Self;
 }
+
+impl AlphabetEncoding for Base64Bcrypt {}

@@ -1,6 +1,6 @@
 //! Standard Base64 encoding.
 
-use super::{Alphabet, DecodeStep, EncodeStep};
+use super::{Alphabet, AlphabetEncoding, DecodeStep, EncodeStep};
 
 /// Standard Base64 encoding with `=` padding.
 ///
@@ -18,6 +18,7 @@ impl Alphabet for Base64 {
     const PADDED: bool = true;
     type Unpadded = Base64Unpadded;
 }
+impl AlphabetEncoding for Base64 {}
 
 /// Standard Base64 encoding *without* padding.
 ///
@@ -52,3 +53,5 @@ const ENCODER: &[EncodeStep] = &[
     EncodeStep::Diff(61, -(b'+' as i16 - 0x1c)),
     EncodeStep::Diff(62, b'/' as i16 - b'+' as i16 - 1),
 ];
+
+impl AlphabetEncoding for Base64Unpadded {}

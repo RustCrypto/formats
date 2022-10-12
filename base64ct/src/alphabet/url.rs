@@ -1,6 +1,6 @@
 //! URL-safe Base64 encoding.
 
-use super::{Alphabet, DecodeStep, EncodeStep};
+use super::{Alphabet, AlphabetEncoding, DecodeStep, EncodeStep};
 
 /// URL-safe Base64 encoding with `=` padding.
 ///
@@ -18,6 +18,8 @@ impl Alphabet for Base64Url {
     const PADDED: bool = true;
     type Unpadded = Base64UrlUnpadded;
 }
+
+impl AlphabetEncoding for Base64Url {}
 
 /// URL-safe Base64 encoding *without* padding.
 ///
@@ -52,3 +54,5 @@ const ENCODER: &[EncodeStep] = &[
     EncodeStep::Diff(61, -(b'-' as i16 - 0x20)),
     EncodeStep::Diff(62, b'_' as i16 - b'-' as i16 - 1),
 ];
+
+impl AlphabetEncoding for Base64UrlUnpadded {}

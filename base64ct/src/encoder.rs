@@ -306,7 +306,9 @@ impl LineWrapper {
 
 #[cfg(test)]
 mod tests {
-    use crate::{alphabet::Alphabet, test_vectors::*, Base64, Base64Unpadded, Encoder, LineEnding};
+    use crate::{
+        alphabet::AlphabetEncoding, test_vectors::*, Base64, Base64Unpadded, Encoder, LineEnding,
+    };
 
     #[test]
     fn encode_padded() {
@@ -342,7 +344,7 @@ mod tests {
     }
 
     /// Core functionality of an encoding test.
-    fn encode_test<V: Alphabet>(input: &[u8], expected: &str, wrapped: Option<usize>) {
+    fn encode_test<V: AlphabetEncoding>(input: &[u8], expected: &str, wrapped: Option<usize>) {
         let mut buffer = [0u8; 1024];
 
         for chunk_size in 1..input.len() {

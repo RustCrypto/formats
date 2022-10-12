@@ -1,17 +1,21 @@
-//! `crypt(3)` Base64 encoding.
+//! `crypt(3)` Base64 encoding for sha* family.
 
-use super::{Alphabet, AlphabetEncoding, DecodeStep, EncodeStep};
+use super::{Alphabet, DecodeStep, EncodeStep, LittleEndianAlphabetEncoding};
 
-/// `crypt(3)` Base64 encoding.
+/// `crypt(3)` Base64 encoding for the following schemes.
+///  * sha1_crypt,
+///  * sha256_crypt,
+///  * sha512_crypt,
+///  * md5_crypt
 ///
 /// ```text
 /// [.-9]      [A-Z]      [a-z]
 /// 0x2e-0x39, 0x41-0x5a, 0x61-0x7a
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct Base64Crypt;
+pub struct Base64ShaCrypt;
 
-impl Alphabet for Base64Crypt {
+impl Alphabet for Base64ShaCrypt {
     const BASE: u8 = b'.';
 
     const DECODER: &'static [DecodeStep] = &[
@@ -28,4 +32,4 @@ impl Alphabet for Base64Crypt {
     type Unpadded = Self;
 }
 
-impl AlphabetEncoding for Base64Crypt {}
+impl LittleEndianAlphabetEncoding for Base64ShaCrypt {}

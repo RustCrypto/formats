@@ -1,7 +1,7 @@
 //! Base64 encodings
 
 use crate::{
-    alphabet::Alphabet,
+    alphabet::AlphabetEncoding,
     errors::{Error, InvalidEncodingError, InvalidLengthError},
 };
 use core::str;
@@ -10,7 +10,9 @@ use core::str;
 use alloc::{string::String, vec::Vec};
 
 #[cfg(doc)]
-use crate::{Base64, Base64Bcrypt, Base64Crypt, Base64Unpadded, Base64Url, Base64UrlUnpadded};
+use crate::{
+    Base64, Base64Bcrypt, Base64Crypt, Base64ShaCrypt, Base64Unpadded, Base64Url, Base64UrlUnpadded,
+};
 
 /// Padding character
 const PAD: u8 = b'=';
@@ -25,10 +27,11 @@ const PAD: u8 = b'=';
 /// - [`Base64`]: standard Base64 encoding with `=` padding.
 /// - [`Base64Bcrypt`]: bcrypt Base64 encoding.
 /// - [`Base64Crypt`]: `crypt(3)` Base64 encoding.
+/// - [`Base64ShaCrypt`]: `crypt(3)` Base64 encoding (Little-Endian).
 /// - [`Base64Unpadded`]: standard Base64 encoding *without* padding.
 /// - [`Base64Url`]: URL-safe Base64 encoding with `=` padding.
 /// - [`Base64UrlUnpadded`]: URL-safe Base64 encoding *without* padding.
-pub trait Encoding: Alphabet {
+pub trait Encoding: AlphabetEncoding {
     /// Decode a Base64 string into the provided destination buffer.
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error>;
 
@@ -63,7 +66,7 @@ pub trait Encoding: Alphabet {
     fn encoded_len(bytes: &[u8]) -> usize;
 }
 
-impl<T: Alphabet> Encoding for T {
+impl<T: AlphabetEncoding> Encoding for T {
     fn decode(src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], Error> {
         let (src_unpadded, mut err) = if T::PADDED {
             let (unpadded_len, e) = decode_padding(src.as_ref())?;
@@ -300,7 +303,7 @@ pub(crate) fn decode_padding(input: &[u8]) -> Result<(usize, i16), InvalidEncodi
 
 /// Validate that the last block of the decoded data round-trips back to the
 /// encoded data.
-fn validate_last_block<T: Alphabet>(encoded: &[u8], decoded: &[u8]) -> Result<(), Error> {
+fn validate_last_block<T: AlphabetEncoding>(encoded: &[u8], decoded: &[u8]) -> Result<(), Error> {
     if encoded.is_empty() && decoded.is_empty() {
         return Ok(());
     }
