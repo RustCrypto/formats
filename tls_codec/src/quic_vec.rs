@@ -9,6 +9,9 @@
 
 use alloc::vec::Vec;
 
+#[cfg(feature = "serde_serialize")]
+use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
+
 use crate::{Deserialize, Error, Serialize, Size};
 
 const MAX_LEN: u64 = 0x3fff_ffff_ffff_ffff; // <= (1<<62)-1
@@ -163,7 +166,8 @@ impl<T: Size> Size for &[T] {
 /// Variable-length encoded byte vectors.
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde_serialize", derive(SerdeSerialize, SerdeDeserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct VLBytes {
     vec: Vec<u8>,
 }
@@ -177,6 +181,26 @@ impl VLBytes {
     /// Get a reference to the vlbytes's vec.
     pub fn as_slice(&self) -> &[u8] {
         self.vec.as_ref()
+    }
+}
+
+impl From<Vec<u8>> for VLBytes {
+    fn from(vec: Vec<u8>) -> Self {
+        Self { vec }
+    }
+}
+
+impl From<&[u8]> for VLBytes {
+    fn from(slice: &[u8]) -> Self {
+        Self {
+            vec: slice.to_vec(),
+        }
+    }
+}
+
+impl AsRef<[u8]> for VLBytes {
+    fn as_ref(&self) -> &[u8] {
+        &self.vec
     }
 }
 
