@@ -51,7 +51,7 @@ pub use quic_vec::{VLByteSlice, VLBytes};
 pub use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 
 /// Errors that are thrown by this crate.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Error {
     /// An error occurred during encoding.
     EncodingError(String),
@@ -70,6 +70,9 @@ pub enum Error {
 
     /// Reached the end of a byte stream.
     EndOfStream,
+
+    /// An internal library error that indicates a bug.
+    LibraryError,
 }
 
 #[cfg(feature = "std")]
