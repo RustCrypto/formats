@@ -161,3 +161,9 @@ fn deserialize_tls_vl_bytes() {
     assert_eq!(long_vector.len(), deserialized_long_vec.as_slice().len());
     assert_eq!(long_vector.as_slice(), deserialized_long_vec.as_slice());
 }
+
+#[test]
+fn deserialize_empty_vl_bytes() {
+    let mut b: &[u8] = &[];
+    VLBytes::tls_deserialize(&mut b).expect("Error parsing empty bytes");
+}
