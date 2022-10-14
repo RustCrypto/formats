@@ -167,7 +167,7 @@ impl<T: Size> Size for &[T] {
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde_serialize", derive(SerdeSerialize, SerdeDeserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
     vec: Vec<u8>,
 }
