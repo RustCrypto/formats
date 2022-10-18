@@ -89,6 +89,7 @@ pub use crate::{
     alphabet::{
         bcrypt::Base64Bcrypt,
         crypt::Base64Crypt,
+        shacrypt::Base64ShaCrypt,
         standard::{Base64, Base64Unpadded},
         url::{Base64Url, Base64UrlUnpadded},
     },

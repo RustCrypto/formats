@@ -7,6 +7,7 @@ use core::{fmt::Debug, ops::RangeInclusive};
 
 pub mod bcrypt;
 pub mod crypt;
+pub mod shacrypt;
 pub mod standard;
 pub mod url;
 
