@@ -200,6 +200,18 @@ impl VLBytes {
     pub fn as_slice(&self) -> &[u8] {
         self.vec.as_ref()
     }
+
+    /// Add an element to this.
+    #[inline]
+    pub fn push(&mut self, value: u8) {
+        self.vec.push(value);
+    }
+
+    /// Remove the last element.
+    #[inline]
+    pub fn pop(&mut self) -> Option<u8> {
+        self.vec.pop()
+    }
 }
 
 impl From<Vec<u8>> for VLBytes {
@@ -227,6 +239,12 @@ impl<const N: usize> From<&[u8; N]> for VLBytes {
 impl AsRef<[u8]> for VLBytes {
     fn as_ref(&self) -> &[u8] {
         &self.vec
+    }
+}
+
+impl From<VLBytes> for Vec<u8> {
+    fn from(b: VLBytes) -> Self {
+        b.vec
     }
 }
 
