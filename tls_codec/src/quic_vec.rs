@@ -6,7 +6,11 @@
 //! Note that we require, as the MLS specification does, that vectors have to
 //! use the minimum number of bytes necessary for the encoding.
 //! This ensures that encodings are unique.
-
+//!
+//! With the `mls` feature the length of variable length vectors can be limited
+//! to 30-bit values.
+//! This is in contrast to the default behaviour defined by RFC 9000 that allows
+//! up to 62-bit length values.
 use alloc::vec::Vec;
 
 #[cfg(feature = "serde_serialize")]
@@ -14,7 +18,14 @@ use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
 use crate::{Deserialize, Error, Serialize, Size};
 
-const MAX_LEN: u64 = 0x3fff_ffff_ffff_ffff; // <= (1<<62)-1
+#[cfg(not(feature = "mls"))]
+const MAX_LEN: u64 = (1 << 62) - 1;
+#[cfg(not(feature = "mls"))]
+const MAX_LEN_LEN: usize = 8;
+#[cfg(feature = "mls")]
+const MAX_LEN: u64 = (1 << 30) - 1;
+#[cfg(feature = "mls")]
+const MAX_LEN_LEN: usize = 4;
 
 /// Read the length of a variable-length vector.
 ///
@@ -27,17 +38,18 @@ fn read_variable_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize
     // The length is encoded in the first two bits of the first byte.
     let mut len_len_byte = [0u8; 1];
     if bytes.read(&mut len_len_byte)? == 0 {
-        // Return in case there's nothing to read and this is just an
-        // empty vector.
-        return Ok((0, 0));
+        // There must be at least one byte for the length.
+        // If we don't even have a length byte, this is not a valid
+        // variable-length encoded vector.
+        return Err(Error::InvalidVectorLength);
     }
 
     let mut length: usize = (len_len_byte[0] & 0x3F).into();
     let len_len = (len_len_byte[0] >> 6).into();
     if !cfg!(fuzzing) {
-        debug_assert!(len_len <= 3);
+        debug_assert!(len_len <= MAX_LEN_LEN);
     }
-    if len_len > 3 {
+    if len_len > MAX_LEN_LEN {
         return Err(Error::InvalidVectorLength);
     }
     for _ in 0..len_len {
@@ -89,6 +101,7 @@ impl<T: Deserialize> Deserialize for Vec<T> {
     #[inline(always)]
     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
         let (length, len_len) = read_variable_length(bytes)?;
+
         if length == 0 {
             // An empty vector.
             return Ok(Vec::new());
@@ -321,17 +334,16 @@ impl Deserialize for VLBytes {
 
         if !cfg!(fuzzing) {
             debug_assert!(
-                length <= u16::MAX as usize,
+                length <= MAX_LEN as usize,
                 "Trying to allocate {} bytes. Only {} allowed.",
                 length,
-                u16::MAX
+                MAX_LEN
             );
         }
-        if length > u16::MAX as usize {
+        if length > MAX_LEN as usize {
             return Err(Error::DecodingError(format!(
                 "Trying to allocate {} bytes. Only {} allowed.",
-                length,
-                u16::MAX
+                length, MAX_LEN
             )));
         }
         let mut result = Self {
