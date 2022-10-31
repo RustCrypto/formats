@@ -164,6 +164,9 @@ fn deserialize_tls_vl_bytes() {
 
 #[test]
 fn deserialize_empty_vl_bytes() {
-    let mut b: &[u8] = &[];
+    let mut b: &[u8] = &[0x00];
     VLBytes::tls_deserialize(&mut b).expect("Error parsing empty bytes");
+
+    let mut b: &[u8] = &[];
+    VLBytes::tls_deserialize(&mut b).expect_err("Empty bytes were parsed successfully");
 }
