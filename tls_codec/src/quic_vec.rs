@@ -19,11 +19,11 @@ use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use crate::{Deserialize, Error, Serialize, Size};
 
 #[cfg(not(feature = "mls"))]
-const MAX_LEN: u64 = 0x3fff_ffff_ffff_ffff; // <= (1<<62)-1
+const MAX_LEN: u64 = (1 << 62) - 1;
 #[cfg(not(feature = "mls"))]
 const MAX_LEN_LEN: usize = 8;
 #[cfg(feature = "mls")]
-const MAX_LEN: u64 = 0x3fff_ffff; // <= (1<<30)-1
+const MAX_LEN: u64 = (1 << 30) - 1;
 #[cfg(feature = "mls")]
 const MAX_LEN_LEN: usize = 4;
 
