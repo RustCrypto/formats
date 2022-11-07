@@ -1,0 +1,19 @@
+[package]
+name = "pkcs12"
+version = "0.0.0"
+description = """
+Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #12:
+Personal Information Exchange Syntax v1.1 (RFC7292)
+"""
+authors = ["RustCrypto Developers"]
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/RustCrypto/formats/tree/master/pkcs12"
+categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
+keywords = ["crypto", "key", "pkcs", "private"]
+readme = "README.md"
+edition = "2021"
+rust-version = "1.57"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
