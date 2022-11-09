@@ -23,3 +23,18 @@ fn that_skip_attribute_does_not_compile_on_enums() {
     //     B,
     // }
 }
+
+#[test]
+fn that_non_default_field_does_not_compile() {
+    // TODO: It works. But how to test this?
+    // use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
+    //
+    // struct NonDefaultField {}
+    //
+    // #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+    // struct StructWithNonDefaultField {
+    //     #[tls_codec(skip)]
+    //     a: NonDefaultField,
+    //     b: u8,
+    // }
+}
