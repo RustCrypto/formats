@@ -119,6 +119,7 @@ struct Struct {
     generics: Generics,
     members: Vec<Member>,
     member_prefixes: Vec<Prefix>,
+    member_skips: Vec<bool>,
 }
 
 #[derive(Clone)]
@@ -151,6 +152,12 @@ enum TlsAttr {
     With(ExprPath),
     /// Custom discriminant for an enum variant
     Discriminant(u32),
+    /// Skip this attribute during (de)serialization.
+    ///
+    /// Note: The type of the attribute needs to implement [Default].
+    ///       This is required to populate the field with a known
+    ///       value during deserialization.
+    Skip,
 }
 
 impl TlsAttr {
@@ -158,6 +165,7 @@ impl TlsAttr {
         match self {
             TlsAttr::With(_) => "with",
             TlsAttr::Discriminant(_) => "discriminant",
+            TlsAttr::Skip => "skip",
         }
     }
 
@@ -204,6 +212,20 @@ impl TlsAttr {
                     .unwrap_or_else(|| {
                         Err(syn::Error::new_spanned(&kv.path, "Expected identifier"))
                     }),
+                NestedMeta::Meta(Meta::Path(path)) => {
+                    if let Some(ident) = path.get_ident() {
+                        // TODO: Should we accept "skip" case-insensitive?
+                        match ident.to_string().to_ascii_lowercase().as_ref() {
+                            "skip" => Ok(TlsAttr::Skip),
+                            _ => Err(syn::Error::new_spanned(
+                                ident,
+                                format!("Unexpected identifier {}", ident),
+                            )),
+                        }
+                    } else {
+                        Err(syn::Error::new_spanned(path, "Expected identifier"))
+                    }
+                }
                 _ => Err(syn::Error::new_spanned(item, "Invalid attribute syntax")),
             })
             .collect()
@@ -232,14 +254,27 @@ fn function_prefix(field: &Field) -> Result<Prefix> {
                 p,
                 "Attribute `with` specified more than once",
             )),
-            (_, attr) => Err(syn::Error::new(
-                Span::call_site(),
-                format!("Unrecognized field attribute `{}`", attr.name()),
-            )),
+            (path, _) => Ok(path),
         })?
         .map(Prefix::Custom)
         .unwrap_or_else(|| Prefix::Type(field.ty.clone()));
     Ok(prefix)
+}
+
+fn function_skip(field: &Field) -> Result<bool> {
+    let skip = TlsAttr::parse_multi(&field.attrs)?
+        .into_iter()
+        .try_fold(None, |skip, attr| match (skip, attr) {
+            (None, TlsAttr::Skip) => Ok(Some(true)),
+            (Some(_), TlsAttr::Skip) => Err(syn::Error::new(
+                Span::call_site(),
+                "Attribute `skip` specified more than once",
+            )),
+            (skip, _) => Ok(skip),
+        })?
+        .unwrap_or(false);
+
+    Ok(skip)
 }
 
 /// Gets the serialization discriminant if specified.
@@ -278,6 +313,10 @@ fn fields_to_member_prefixes(fields: &syn::Fields) -> Result<Vec<Prefix>> {
     fields.iter().map(function_prefix).collect()
 }
 
+fn fields_to_member_skips(fields: &syn::Fields) -> Result<Vec<bool>> {
+    fields.iter().map(function_skip).collect()
+}
+
 fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
     let call_site = Span::call_site();
     let ident = ast.ident.clone();
@@ -286,12 +325,14 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
         Data::Struct(st) => {
             let members = fields_to_members(&st.fields);
             let member_prefixes = fields_to_member_prefixes(&st.fields)?;
+            let member_skips = fields_to_member_skips(&st.fields)?;
             Ok(TlsStruct::Struct(Struct {
                 call_site,
                 ident,
                 generics,
                 members,
                 member_prefixes,
+                member_skips,
             }))
         }
         // Enums.
@@ -424,7 +465,27 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
             generics,
             members,
             member_prefixes,
+            member_skips,
         }) => {
+            // Filter out skipped members.
+            let (members, member_prefixes) = {
+                let mut tmp_members: Vec<Member> = Vec::new();
+                let mut tmp_member_prefixes: Vec<Prefix> = Vec::new();
+
+                for ((member, prefix), skip) in members
+                    .into_iter()
+                    .zip(member_prefixes.into_iter())
+                    .zip(member_skips.into_iter())
+                {
+                    if !skip {
+                        tmp_members.push(member);
+                        tmp_member_prefixes.push(prefix);
+                    }
+                }
+
+                (tmp_members, tmp_member_prefixes)
+            };
+
             let prefixes = member_prefixes
                 .iter()
                 .map(|p| p.for_trait("Size"))
@@ -497,7 +558,27 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
             generics,
             members,
             member_prefixes,
+            member_skips,
         }) => {
+            // Filter out skipped members.
+            let (members, member_prefixes) = {
+                let mut tmp_members: Vec<Member> = Vec::new();
+                let mut tmp_member_prefixes: Vec<Prefix> = Vec::new();
+
+                for ((member, prefix), skip) in members
+                    .into_iter()
+                    .zip(member_prefixes.into_iter())
+                    .zip(member_skips.into_iter())
+                {
+                    if !skip {
+                        tmp_members.push(member);
+                        tmp_member_prefixes.push(prefix);
+                    }
+                }
+
+                (tmp_members, tmp_member_prefixes)
+            };
+
             let prefixes = member_prefixes
                 .iter()
                 .map(|p| p.for_trait("Serialize"))
@@ -587,7 +668,37 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             generics,
             members,
             member_prefixes,
+            member_skips,
         }) => {
+            // Partition skipped and non-skipped members.
+            let (members, member_prefixes, members_default, member_prefixes_default) = {
+                let mut tmp_members: Vec<Member> = Vec::new();
+                let mut tmp_member_prefixes: Vec<Prefix> = Vec::new();
+                let mut tmp_members_default: Vec<Member> = Vec::new();
+                let mut tmp_member_prefixes_default: Vec<Prefix> = Vec::new();
+
+                for ((member, prefix), skip) in members
+                    .into_iter()
+                    .zip(member_prefixes.into_iter())
+                    .zip(member_skips.into_iter())
+                {
+                    if !skip {
+                        tmp_members.push(member);
+                        tmp_member_prefixes.push(prefix);
+                    } else {
+                        tmp_members_default.push(member);
+                        tmp_member_prefixes_default.push(prefix);
+                    }
+                }
+
+                (
+                    tmp_members,
+                    tmp_member_prefixes,
+                    tmp_members_default,
+                    tmp_member_prefixes_default,
+                )
+            };
+
             let prefixes = member_prefixes
                 .iter()
                 .map(|p| p.for_trait("Deserialize"))
@@ -597,6 +708,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
                         Ok(Self {
                             #(#members: #prefixes::tls_deserialize(bytes)?,)*
+                            #(#members_default: Default::default(),)*
                         })
                     }
                 }

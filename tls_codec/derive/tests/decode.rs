@@ -345,3 +345,46 @@ fn simple_variable_length_struct() {
     let deserialized = MyByteContainer::tls_deserialize(&mut &*serialized).unwrap();
     assert_eq!(deserialized, val);
 }
+
+#[test]
+fn that_skip_attribute_on_struct_works() {
+    fn test<T>(test: &[u8], expected: T)
+    where
+        T: std::fmt::Debug + PartialEq + Deserialize,
+    {
+        let mut test = test;
+
+        // Check deserialization.
+        let got = T::tls_deserialize(&mut test).unwrap();
+        assert!(test.is_empty());
+        assert_eq!(expected, got);
+    }
+
+    #[derive(Debug, PartialEq, TlsDeserialize, TlsSize)]
+    struct StructWithSkip1 {
+        #[tls_codec(skip)]
+        a: u8,
+        b: u8,
+        c: u8,
+    }
+
+    #[derive(Debug, PartialEq, TlsDeserialize, TlsSize)]
+    struct StructWithSkip2 {
+        a: u8,
+        #[tls_codec(skip)]
+        b: u8,
+        c: u8,
+    }
+
+    #[derive(Debug, PartialEq, TlsDeserialize, TlsSize)]
+    struct StructWithSkip3 {
+        a: u8,
+        b: u8,
+        #[tls_codec(skip)]
+        c: u8,
+    }
+
+    test(&[25, 3], StructWithSkip1 { a: 0, b: 25, c: 3 });
+    test(&[13, 3], StructWithSkip2 { a: 13, b: 0, c: 3 });
+    test(&[13, 55], StructWithSkip3 { a: 13, b: 55, c: 0 });
+}

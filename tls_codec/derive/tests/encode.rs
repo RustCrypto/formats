@@ -1,4 +1,4 @@
-use tls_codec::{SecretTlsVecU16, Serialize, TlsSliceU16, TlsVecU16, TlsVecU32};
+use tls_codec::{SecretTlsVecU16, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32};
 use tls_codec_derive::{TlsSerialize, TlsSize};
 
 #[derive(TlsSerialize, TlsSize, Debug)]
@@ -222,4 +222,67 @@ fn enum_with_custom_serialized_field() {
     let x = EnumWithCustomSerializedField::A(vec![1, 2, 3]);
     let serialized = x.tls_serialize_detached().unwrap();
     assert_eq!(vec![0, 0, 0, 0, 3, 1, 2, 3], serialized);
+}
+
+#[test]
+fn that_skip_attribute_on_struct_works() {
+    fn test<T>(test: T, expected: &[u8])
+    where
+        T: std::fmt::Debug + PartialEq + Serialize + Size,
+    {
+        // Check precalculated length.
+        assert_eq!(test.tls_serialized_len(), expected.len());
+
+        // Check serialization.
+        assert_eq!(test.tls_serialize_detached().unwrap(), expected);
+    }
+
+    #[derive(Debug, PartialEq, TlsSerialize, TlsSize)]
+    struct StructWithSkip1 {
+        #[tls_codec(skip)]
+        a: u8,
+        b: u8,
+        c: u8,
+    }
+
+    #[derive(Debug, PartialEq, TlsSerialize, TlsSize)]
+    struct StructWithSkip2 {
+        a: u8,
+        #[tls_codec(skip)]
+        b: u8,
+        c: u8,
+    }
+
+    #[derive(Debug, PartialEq, TlsSerialize, TlsSize)]
+    struct StructWithSkip3 {
+        a: u8,
+        b: u8,
+        #[tls_codec(skip)]
+        c: u8,
+    }
+
+    test(
+        StructWithSkip1 {
+            a: 123,
+            b: 13,
+            c: 42,
+        },
+        &[13, 42],
+    );
+    test(
+        StructWithSkip2 {
+            a: 123,
+            b: 13,
+            c: 42,
+        },
+        &[123, 42],
+    );
+    test(
+        StructWithSkip3 {
+            a: 123,
+            b: 13,
+            c: 42,
+        },
+        &[123, 13],
+    );
 }
