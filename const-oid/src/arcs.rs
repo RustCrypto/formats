@@ -1,7 +1,10 @@
 //! Arcs are integer values which exist within an OID's hierarchy.
 
-use crate::{Error, ObjectIdentifier, Result};
+use crate::{Error, Result};
 use core::mem;
+
+#[cfg(doc)]
+use crate::ObjectIdentifier;
 
 /// Type alias used to represent an "arc" (i.e. integer identifier value).
 ///
@@ -31,17 +34,20 @@ const ARC_MAX_LAST_OCTET: u8 = 0b11110000; // Max bytes of leading 1-bits
 ///
 /// This iterates over all arcs in an OID, including the root.
 pub struct Arcs<'a> {
-    /// OID we're iterating over
-    oid: &'a ObjectIdentifier,
+    /// OID bytes we're iterating over.
+    bytes: &'a [u8],
 
-    /// Current position within the serialized DER bytes of this OID
+    /// Current position within the serialized BER bytes of this OID.
     cursor: Option<usize>,
 }
 
 impl<'a> Arcs<'a> {
-    /// Create a new iterator over the arcs of this OID
-    pub(crate) fn new(oid: &'a ObjectIdentifier) -> Self {
-        Self { oid, cursor: None }
+    /// Create a new iterator over an OID encoded as BER bytes.
+    pub(crate) fn new(bytes: &'a [u8]) -> Self {
+        Self {
+            bytes,
+            cursor: None,
+        }
     }
 
     /// Try to parse the next arc in this OID.
@@ -50,14 +56,14 @@ impl<'a> Arcs<'a> {
     /// that the arcs in the OID are well-formed.
     pub(crate) fn try_next(&mut self) -> Result<Option<Arc>> {
         match self.cursor {
-            // Indicates we're on the root OID
+            // Indicates we're on the root arc
             None => {
-                let root = RootArcs::try_from(self.oid.as_bytes()[0])?;
+                let root = RootArcs::try_from(self.bytes[0])?;
                 self.cursor = Some(0);
                 Ok(Some(root.first_arc()))
             }
             Some(0) => {
-                let root = RootArcs::try_from(self.oid.as_bytes()[0])?;
+                let root = RootArcs::try_from(self.bytes[0])?;
                 self.cursor = Some(1);
                 Ok(Some(root.second_arc()))
             }
@@ -68,7 +74,7 @@ impl<'a> Arcs<'a> {
                 loop {
                     let len = checked_add!(offset, arc_bytes);
 
-                    match self.oid.as_bytes().get(len).cloned() {
+                    match self.bytes.get(len).cloned() {
                         // The arithmetic below includes advance checks
                         // against `ARC_MAX_BYTES` and `ARC_MAX_LAST_OCTET`
                         // which ensure the operations will not overflow.

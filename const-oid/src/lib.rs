@@ -5,6 +5,7 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
+#![allow(clippy::len_without_is_empty)]
 #![forbid(unsafe_code)]
 #![warn(
     clippy::integer_arithmetic,
@@ -24,6 +25,7 @@ extern crate std;
 mod checked;
 
 mod arcs;
+mod buffer;
 mod encoder;
 mod error;
 mod parser;
@@ -34,11 +36,17 @@ pub mod db;
 
 pub use crate::{
     arcs::{Arc, Arcs},
+    buffer::Buffer,
     error::{Error, Result},
 };
 
 use crate::encoder::Encoder;
 use core::{fmt, str::FromStr};
+
+/// Default maximum size.
+///
+/// Makes `ObjectIdentifier` 40-bytes total w\ 1-byte length.
+const MAX_SIZE: usize = 39;
 
 /// A trait which associates an OID with a type.
 pub trait AssociatedOid {
@@ -78,18 +86,14 @@ impl<T: AssociatedOid> DynAssociatedOid for T {
 /// - The BER/DER encoding of the OID MUST be shorter than
 ///   [`ObjectIdentifier::MAX_SIZE`]
 #[derive(Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
-pub struct ObjectIdentifier {
-    /// Length in bytes
-    length: u8,
-
-    /// Array containing BER/DER-serialized bytes (no header)
-    bytes: [u8; Self::MAX_SIZE],
+pub struct ObjectIdentifier<B: AsRef<[u8]> = Buffer<MAX_SIZE>> {
+    /// Buffer containing BER/DER-serialized bytes (sans ASN.1 tag/length)
+    buffer: B,
 }
 
-#[allow(clippy::len_without_is_empty)]
 impl ObjectIdentifier {
     /// Maximum size of a BER/DER-encoded OID in bytes.
-    pub const MAX_SIZE: usize = 39; // makes `ObjectIdentifier` 40-bytes total w\ 1-byte length
+    pub const MAX_SIZE: usize = MAX_SIZE;
 
     /// Parse an [`ObjectIdentifier`] from the dot-delimited string form,
     /// panicking on parse errors.
@@ -145,44 +149,22 @@ impl ObjectIdentifier {
             3..=Self::MAX_SIZE => (),
             _ => return Err(Error::NotEnoughArcs),
         }
+
         let mut bytes = [0u8; Self::MAX_SIZE];
         bytes[..len].copy_from_slice(ber_bytes);
 
-        let oid = Self {
+        let bytes = Buffer {
             bytes,
             length: len as u8,
         };
+
+        let oid = Self { buffer: bytes };
 
         // Ensure arcs are well-formed
         let mut arcs = oid.arcs();
         while arcs.try_next()?.is_some() {}
 
         Ok(oid)
-    }
-
-    /// Get the BER/DER serialization of this OID as bytes.
-    ///
-    /// Note that this encoding omits the tag/length, and only contains the
-    /// value portion of the encoded OID.
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes[..self.length as usize]
-    }
-
-    /// Return the arc with the given index, if it exists.
-    pub fn arc(&self, index: usize) -> Option<Arc> {
-        self.arcs().nth(index)
-    }
-
-    /// Iterate over the arcs (a.k.a. nodes) of an [`ObjectIdentifier`].
-    ///
-    /// Returns [`Arcs`], an iterator over [`Arc`] values.
-    pub fn arcs(&self) -> Arcs<'_> {
-        Arcs::new(self)
-    }
-
-    /// Get the length of this [`ObjectIdentifier`] in arcs.
-    pub fn len(&self) -> usize {
-        self.arcs().count()
     }
 
     /// Get the parent OID of this one (if applicable).
@@ -201,7 +183,50 @@ impl ObjectIdentifier {
     }
 }
 
-impl AsRef<[u8]> for ObjectIdentifier {
+impl<'a> ObjectIdentifier<&'a [u8]> {
+    /// Initialize OID from a byte slice without validating that it contains
+    /// a well-formed BER-encoded OID.
+    ///
+    /// Use with care, e.g. to define compact constants.
+    pub const fn from_bytes_unchecked(buffer: &'a [u8]) -> Self {
+        Self { buffer }
+    }
+}
+
+impl<B> ObjectIdentifier<B>
+where
+    B: AsRef<[u8]>,
+{
+    /// Get the BER/DER serialization of this OID as bytes.
+    ///
+    /// Note that this encoding omits the tag/length, and only contains the
+    /// value portion of the encoded OID.
+    pub fn as_bytes(&self) -> &[u8] {
+        self.buffer.as_ref()
+    }
+
+    /// Return the arc with the given index, if it exists.
+    pub fn arc(&self, index: usize) -> Option<Arc> {
+        self.arcs().nth(index)
+    }
+
+    /// Iterate over the arcs (a.k.a. nodes) of an [`ObjectIdentifier`].
+    ///
+    /// Returns [`Arcs`], an iterator over [`Arc`] values.
+    pub fn arcs(&self) -> Arcs<'_> {
+        Arcs::new(self.buffer.as_ref())
+    }
+
+    /// Get the length of this [`ObjectIdentifier`] in arcs.
+    pub fn len(&self) -> usize {
+        self.arcs().count()
+    }
+}
+
+impl<B> AsRef<[u8]> for ObjectIdentifier<B>
+where
+    B: AsRef<[u8]>,
+{
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
     }
@@ -220,12 +245,6 @@ impl TryFrom<&[u8]> for ObjectIdentifier {
 
     fn try_from(ber_bytes: &[u8]) -> Result<Self> {
         Self::from_bytes(ber_bytes)
-    }
-}
-
-impl From<&ObjectIdentifier> for ObjectIdentifier {
-    fn from(oid: &ObjectIdentifier) -> ObjectIdentifier {
-        *oid
     }
 }
 
