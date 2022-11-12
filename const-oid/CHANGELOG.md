@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.1 (2022-11-12)
+### Added
+- clippy lints for checked arithmetic and panics ([#561])
+- `DynAssociatedOid` trait ([#758])
+
+[#561]: https://github.com/RustCrypto/formats/pull/561
+[#758]: https://github.com/RustCrypto/formats/pull/758
+
 ## 0.9.0 (2022-03-11)
 ### Added
 - Fallible `const fn` parser + `::new_unwrap` ([#458], [#459])
