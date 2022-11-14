@@ -249,7 +249,6 @@ impl TlsAttr {
                     }),
                 NestedMeta::Meta(Meta::Path(path)) => {
                     if let Some(ident) = path.get_ident() {
-                        // TODO: Should we accept "skip" case-insensitive?
                         match ident.to_string().to_ascii_lowercase().as_ref() {
                             "skip" => Ok(TlsAttr::Skip),
                             _ => Err(syn::Error::new_spanned(
