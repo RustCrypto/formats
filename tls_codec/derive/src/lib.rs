@@ -295,6 +295,8 @@ fn function_prefix(field: &Field) -> Result<Prefix> {
     Ok(prefix)
 }
 
+/// Process all attributes of a field and return a single, true or false, `skip` value.
+/// This function will return an error in the case of multiple `skip` attributes.
 fn function_skip(field: &Field) -> Result<bool> {
     let skip = TlsAttr::parse_multi(&field.attrs)?
         .into_iter()
