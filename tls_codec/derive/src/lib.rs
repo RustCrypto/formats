@@ -206,10 +206,8 @@ impl TlsAttr {
         }
     }
 
-    /// Parses attributes of the form:
-    /// ```text
-    /// #[tls_codec(with = "module")]
-    /// ```
+    /// Parses attributes of the form, `#[tls_codec(with = <string>)]`,
+    /// `#[tls_codec(discriminant = <number>)]`, and `#[tls_codec(skip)]`.
     fn parse(attr: &Attribute) -> Result<Vec<TlsAttr>> {
         if attr.path.get_ident().map_or(true, |id| id != ATTR_IDENT) {
             return Ok(Vec::new());
