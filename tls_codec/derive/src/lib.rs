@@ -1,6 +1,7 @@
 //! # Derive macros for traits in `tls_codec`
 //!
 //! ## Warning
+//!
 //! The derive macros support deriving the `tls_codec` traits for enumerations and the resulting
 //! serialized format complies with [the "variants" section of the TLS RFC](https://datatracker.ietf.org/doc/html/rfc8446#section-3.8).
 //! However support is limited to enumerations that are serialized with their discriminant
@@ -9,11 +10,13 @@
 //! implemented manually.
 //!
 //! ## Available attributes
+//!
 //! ### `with`
 //!
 //! ```text
 //! #[tls_codec(with = "prefix")]
 //! ```
+//!
 //! This attribute may be applied to a struct field. It indicates that deriving any of the
 //! `tls_codec` traits for the containing struct calls the following functions:
 //! - `prefix::tls_deserialize` when deriving `Deserialize`
@@ -52,6 +55,7 @@
 //! ```text
 //! #[tls_codec(discriminant = 123)]
 //! ```
+//!
 //! This attribute may be applied to an enum variant to specify the discriminant to use when
 //! serializing it. If all variants are units (e.g. they do not have any data), this attribute
 //! must not be used and the desired discriminants should be assigned to the variants using
@@ -72,6 +76,39 @@
 //!     Int(u32),
 //!     Bytes([u8; 16]),
 //! }
+//! ```
+//!
+//! ### `skip`
+//!
+//! ```text
+//! #[tls_codec(skip)]
+//! ```
+//!
+//! This attribute may be applied to a struct field to specify that it should be skipped. Skipping
+//! means that the field at hand will neither be serialized into TLS bytes nor deserialized from TLS
+//! bytes. For deserialization, it is required to populate the field with a known value. Thus, when
+//! `skip` is used, the field type needs to implement the [Default] trait so it can be populated
+//! with a default value.
+//!
+//! ```
+//! use tls_codec_derive::{TlsSerialize, TlsDeserialize, TlsSize};
+//!
+//! struct CustomStruct;
+//!
+//! impl Default for CustomStruct {
+//!     fn default() -> Self {
+//!         CustomStruct {}
+//!     }
+//! }
+//!
+//! #[derive(TlsSerialize, TlsDeserialize, TlsSize)]
+//! struct StructWithSkip {
+//!     a: u8,
+//!     #[tls_codec(skip)]
+//!     b: CustomStruct,
+//!     c: u8,
+//! }
+//! ```
 
 extern crate proc_macro;
 extern crate proc_macro2;
