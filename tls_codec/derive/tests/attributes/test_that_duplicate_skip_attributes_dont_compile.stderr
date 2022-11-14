@@ -1,0 +1,23 @@
+error: proc-macro derive panicked
+ --> tests/attributes/test_that_duplicate_skip_attributes_dont_compile.rs:3:10
+  |
+3 | #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+  |          ^^^^^^^^^^^^^^
+  |
+  = help: message: called `Result::unwrap()` on an `Err` value: Error("Attribute `skip` specified more than once")
+
+error: proc-macro derive panicked
+ --> tests/attributes/test_that_duplicate_skip_attributes_dont_compile.rs:3:26
+  |
+3 | #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+  |                          ^^^^^^^^^^^^
+  |
+  = help: message: called `Result::unwrap()` on an `Err` value: Error("Attribute `skip` specified more than once")
+
+error: proc-macro derive panicked
+ --> tests/attributes/test_that_duplicate_skip_attributes_dont_compile.rs:3:40
+  |
+3 | #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+  |                                        ^^^^^^^
+  |
+  = help: message: called `Result::unwrap()` on an `Err` value: Error("Attribute `skip` specified more than once")
