@@ -501,24 +501,8 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
             member_prefixes,
             member_skips,
         }) => {
-            // Filter out skipped members.
-            let (members, member_prefixes) = {
-                let mut tmp_members: Vec<Member> = Vec::new();
-                let mut tmp_member_prefixes: Vec<Prefix> = Vec::new();
-
-                for ((member, prefix), skip) in members
-                    .into_iter()
-                    .zip(member_prefixes.into_iter())
-                    .zip(member_skips.into_iter())
-                {
-                    if !skip {
-                        tmp_members.push(member);
-                        tmp_member_prefixes.push(prefix);
-                    }
-                }
-
-                (tmp_members, tmp_member_prefixes)
-            };
+            let ((members, member_prefixes), _) =
+                partition_skipped(members, member_prefixes, member_skips);
 
             let prefixes = member_prefixes
                 .iter()
@@ -594,24 +578,8 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
             member_prefixes,
             member_skips,
         }) => {
-            // Filter out skipped members.
-            let (members, member_prefixes) = {
-                let mut tmp_members: Vec<Member> = Vec::new();
-                let mut tmp_member_prefixes: Vec<Prefix> = Vec::new();
-
-                for ((member, prefix), skip) in members
-                    .into_iter()
-                    .zip(member_prefixes.into_iter())
-                    .zip(member_skips.into_iter())
-                {
-                    if !skip {
-                        tmp_members.push(member);
-                        tmp_member_prefixes.push(prefix);
-                    }
-                }
-
-                (tmp_members, tmp_member_prefixes)
-            };
+            let ((members, member_prefixes), _) =
+                partition_skipped(members, member_prefixes, member_skips);
 
             let prefixes = member_prefixes
                 .iter()
@@ -704,34 +672,8 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             member_prefixes,
             member_skips,
         }) => {
-            // Partition skipped and non-skipped members.
-            let (members, member_prefixes, members_default, member_prefixes_default) = {
-                let mut tmp_members: Vec<Member> = Vec::new();
-                let mut tmp_member_prefixes: Vec<Prefix> = Vec::new();
-                let mut tmp_members_default: Vec<Member> = Vec::new();
-                let mut tmp_member_prefixes_default: Vec<Prefix> = Vec::new();
-
-                for ((member, prefix), skip) in members
-                    .into_iter()
-                    .zip(member_prefixes.into_iter())
-                    .zip(member_skips.into_iter())
-                {
-                    if !skip {
-                        tmp_members.push(member);
-                        tmp_member_prefixes.push(prefix);
-                    } else {
-                        tmp_members_default.push(member);
-                        tmp_member_prefixes_default.push(prefix);
-                    }
-                }
-
-                (
-                    tmp_members,
-                    tmp_member_prefixes,
-                    tmp_members_default,
-                    tmp_member_prefixes_default,
-                )
-            };
+            let ((members, member_prefixes), (members_default, member_prefixes_default)) =
+                partition_skipped(members, member_prefixes, member_skips);
 
             let prefixes = member_prefixes
                 .iter()
@@ -791,4 +733,35 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             }
         }
     }
+}
+
+fn partition_skipped(
+    members: Vec<Member>,
+    member_prefixes: Vec<Prefix>,
+    member_skips: Vec<bool>,
+) -> ((Vec<Member>, Vec<Prefix>), (Vec<Member>, Vec<Prefix>)) {
+    let mut members_not_skip: Vec<Member> = Vec::new();
+    let mut member_prefixes_not_skip: Vec<Prefix> = Vec::new();
+
+    let mut members_skip: Vec<Member> = Vec::new();
+    let mut member_prefixes_skip: Vec<Prefix> = Vec::new();
+
+    for ((member, prefix), skip) in members
+        .into_iter()
+        .zip(member_prefixes.into_iter())
+        .zip(member_skips.into_iter())
+    {
+        if !skip {
+            members_not_skip.push(member);
+            member_prefixes_not_skip.push(prefix);
+        } else {
+            members_skip.push(member);
+            member_prefixes_skip.push(prefix);
+        }
+    }
+
+    (
+        (members_not_skip, member_prefixes_not_skip),
+        (members_skip, member_prefixes_skip),
+    )
 }
