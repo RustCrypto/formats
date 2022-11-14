@@ -1,7 +1,7 @@
 //! Name tests
 
 use const_oid::ObjectIdentifier;
-use der::asn1::{OctetStringRef, SetOfVec, Utf8StringRef};
+use der::asn1::{OctetStringRef, PrintableStringRef, SetOfVec, Utf8StringRef};
 use der::{AnyRef, Decode, Encode, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::attr::AttributeTypeAndValue;
@@ -207,7 +207,7 @@ fn rdns_serde() {
                 &[
                     AttributeTypeAndValue {
                         oid: const_oid::db::rfc4519::C,
-                        value: AnyRef::from(Utf8StringRef::new("baz").unwrap()),
+                        value: AnyRef::from(PrintableStringRef::new("baz").unwrap()),
                     },
                     AttributeTypeAndValue {
                         oid: const_oid::db::rfc4519::L,
