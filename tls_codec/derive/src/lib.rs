@@ -737,6 +737,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn partition_skipped(
     members: Vec<Member>,
     member_prefixes: Vec<Prefix>,
