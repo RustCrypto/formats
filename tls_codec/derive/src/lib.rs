@@ -1,6 +1,7 @@
 //! # Derive macros for traits in `tls_codec`
 //!
 //! ## Warning
+//!
 //! The derive macros support deriving the `tls_codec` traits for enumerations and the resulting
 //! serialized format complies with [the "variants" section of the TLS RFC](https://datatracker.ietf.org/doc/html/rfc8446#section-3.8).
 //! However support is limited to enumerations that are serialized with their discriminant
@@ -9,11 +10,13 @@
 //! implemented manually.
 //!
 //! ## Available attributes
+//!
 //! ### `with`
 //!
 //! ```text
 //! #[tls_codec(with = "prefix")]
 //! ```
+//!
 //! This attribute may be applied to a struct field. It indicates that deriving any of the
 //! `tls_codec` traits for the containing struct calls the following functions:
 //! - `prefix::tls_deserialize` when deriving `Deserialize`
@@ -52,6 +55,7 @@
 //! ```text
 //! #[tls_codec(discriminant = 123)]
 //! ```
+//!
 //! This attribute may be applied to an enum variant to specify the discriminant to use when
 //! serializing it. If all variants are units (e.g. they do not have any data), this attribute
 //! must not be used and the desired discriminants should be assigned to the variants using
@@ -72,6 +76,39 @@
 //!     Int(u32),
 //!     Bytes([u8; 16]),
 //! }
+//! ```
+//!
+//! ### `skip`
+//!
+//! ```text
+//! #[tls_codec(skip)]
+//! ```
+//!
+//! This attribute may be applied to a struct field to specify that it should be skipped. Skipping
+//! means that the field at hand will neither be serialized into TLS bytes nor deserialized from TLS
+//! bytes. For deserialization, it is required to populate the field with a known value. Thus, when
+//! `skip` is used, the field type needs to implement the [Default] trait so it can be populated
+//! with a default value.
+//!
+//! ```
+//! use tls_codec_derive::{TlsSerialize, TlsDeserialize, TlsSize};
+//!
+//! struct CustomStruct;
+//!
+//! impl Default for CustomStruct {
+//!     fn default() -> Self {
+//!         CustomStruct {}
+//!     }
+//! }
+//!
+//! #[derive(TlsSerialize, TlsDeserialize, TlsSize)]
+//! struct StructWithSkip {
+//!     a: u8,
+//!     #[tls_codec(skip)]
+//!     b: CustomStruct,
+//!     c: u8,
+//! }
+//! ```
 
 extern crate proc_macro;
 extern crate proc_macro2;
@@ -119,6 +156,7 @@ struct Struct {
     generics: Generics,
     members: Vec<Member>,
     member_prefixes: Vec<Prefix>,
+    member_skips: Vec<bool>,
 }
 
 #[derive(Clone)]
@@ -151,6 +189,12 @@ enum TlsAttr {
     With(ExprPath),
     /// Custom discriminant for an enum variant
     Discriminant(u32),
+    /// Skip this attribute during (de)serialization.
+    ///
+    /// Note: The type of the attribute needs to implement [Default].
+    ///       This is required to populate the field with a known
+    ///       value during deserialization.
+    Skip,
 }
 
 impl TlsAttr {
@@ -158,13 +202,12 @@ impl TlsAttr {
         match self {
             TlsAttr::With(_) => "with",
             TlsAttr::Discriminant(_) => "discriminant",
+            TlsAttr::Skip => "skip",
         }
     }
 
-    /// Parses attributes of the form:
-    /// ```text
-    /// #[tls_codec(with = "module")]
-    /// ```
+    /// Parses attributes of the form, `#[tls_codec(with = <string>)]`,
+    /// `#[tls_codec(discriminant = <number>)]`, and `#[tls_codec(skip)]`.
     fn parse(attr: &Attribute) -> Result<Vec<TlsAttr>> {
         if attr.path.get_ident().map_or(true, |id| id != ATTR_IDENT) {
             return Ok(Vec::new());
@@ -204,6 +247,19 @@ impl TlsAttr {
                     .unwrap_or_else(|| {
                         Err(syn::Error::new_spanned(&kv.path, "Expected identifier"))
                     }),
+                NestedMeta::Meta(Meta::Path(path)) => {
+                    if let Some(ident) = path.get_ident() {
+                        match ident.to_string().to_ascii_lowercase().as_ref() {
+                            "skip" => Ok(TlsAttr::Skip),
+                            _ => Err(syn::Error::new_spanned(
+                                ident,
+                                format!("Unexpected identifier {}", ident),
+                            )),
+                        }
+                    } else {
+                        Err(syn::Error::new_spanned(path, "Expected identifier"))
+                    }
+                }
                 _ => Err(syn::Error::new_spanned(item, "Invalid attribute syntax")),
             })
             .collect()
@@ -232,14 +288,29 @@ fn function_prefix(field: &Field) -> Result<Prefix> {
                 p,
                 "Attribute `with` specified more than once",
             )),
-            (_, attr) => Err(syn::Error::new(
-                Span::call_site(),
-                format!("Unrecognized field attribute `{}`", attr.name()),
-            )),
+            (path, _) => Ok(path),
         })?
         .map(Prefix::Custom)
         .unwrap_or_else(|| Prefix::Type(field.ty.clone()));
     Ok(prefix)
+}
+
+/// Process all attributes of a field and return a single, true or false, `skip` value.
+/// This function will return an error in the case of multiple `skip` attributes.
+fn function_skip(field: &Field) -> Result<bool> {
+    let skip = TlsAttr::parse_multi(&field.attrs)?
+        .into_iter()
+        .try_fold(None, |skip, attr| match (skip, attr) {
+            (None, TlsAttr::Skip) => Ok(Some(true)),
+            (Some(_), TlsAttr::Skip) => Err(syn::Error::new(
+                Span::call_site(),
+                "Attribute `skip` specified more than once",
+            )),
+            (skip, _) => Ok(skip),
+        })?
+        .unwrap_or(false);
+
+    Ok(skip)
 }
 
 /// Gets the serialization discriminant if specified.
@@ -278,6 +349,10 @@ fn fields_to_member_prefixes(fields: &syn::Fields) -> Result<Vec<Prefix>> {
     fields.iter().map(function_prefix).collect()
 }
 
+fn fields_to_member_skips(fields: &syn::Fields) -> Result<Vec<bool>> {
+    fields.iter().map(function_skip).collect()
+}
+
 fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
     let call_site = Span::call_site();
     let ident = ast.ident.clone();
@@ -286,12 +361,14 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
         Data::Struct(st) => {
             let members = fields_to_members(&st.fields);
             let member_prefixes = fields_to_member_prefixes(&st.fields)?;
+            let member_skips = fields_to_member_skips(&st.fields)?;
             Ok(TlsStruct::Struct(Struct {
                 call_site,
                 ident,
                 generics,
                 members,
                 member_prefixes,
+                member_skips,
             }))
         }
         // Enums.
@@ -424,7 +501,11 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
             generics,
             members,
             member_prefixes,
+            member_skips,
         }) => {
+            let ((members, member_prefixes), _) =
+                partition_skipped(members, member_prefixes, member_skips);
+
             let prefixes = member_prefixes
                 .iter()
                 .map(|p| p.for_trait("Size"))
@@ -497,7 +578,11 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
             generics,
             members,
             member_prefixes,
+            member_skips,
         }) => {
+            let ((members, member_prefixes), _) =
+                partition_skipped(members, member_prefixes, member_skips);
+
             let prefixes = member_prefixes
                 .iter()
                 .map(|p| p.for_trait("Serialize"))
@@ -587,7 +672,11 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             generics,
             members,
             member_prefixes,
+            member_skips,
         }) => {
+            let ((members, member_prefixes), (members_default, member_prefixes_default)) =
+                partition_skipped(members, member_prefixes, member_skips);
+
             let prefixes = member_prefixes
                 .iter()
                 .map(|p| p.for_trait("Deserialize"))
@@ -597,6 +686,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
                         Ok(Self {
                             #(#members: #prefixes::tls_deserialize(bytes)?,)*
+                            #(#members_default: Default::default(),)*
                         })
                     }
                 }
@@ -645,4 +735,36 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             }
         }
     }
+}
+
+#[allow(clippy::type_complexity)]
+fn partition_skipped(
+    members: Vec<Member>,
+    member_prefixes: Vec<Prefix>,
+    member_skips: Vec<bool>,
+) -> ((Vec<Member>, Vec<Prefix>), (Vec<Member>, Vec<Prefix>)) {
+    let mut members_not_skip: Vec<Member> = Vec::new();
+    let mut member_prefixes_not_skip: Vec<Prefix> = Vec::new();
+
+    let mut members_skip: Vec<Member> = Vec::new();
+    let mut member_prefixes_skip: Vec<Prefix> = Vec::new();
+
+    for ((member, prefix), skip) in members
+        .into_iter()
+        .zip(member_prefixes.into_iter())
+        .zip(member_skips.into_iter())
+    {
+        if !skip {
+            members_not_skip.push(member);
+            member_prefixes_not_skip.push(prefix);
+        } else {
+            members_skip.push(member);
+            member_prefixes_skip.push(prefix);
+        }
+    }
+
+    (
+        (members_not_skip, member_prefixes_not_skip),
+        (members_skip, member_prefixes_skip),
+    )
 }

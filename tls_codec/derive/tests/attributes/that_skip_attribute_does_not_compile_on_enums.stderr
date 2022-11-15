@@ -1,0 +1,23 @@
+error: proc-macro derive panicked
+ --> tests/attributes/that_skip_attribute_does_not_compile_on_enums.rs:3:10
+  |
+3 | #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+  |          ^^^^^^^^^^^^^^
+  |
+  = help: message: called `Result::unwrap()` on an `Err` value: Error("Unrecognized variant attribute `skip`")
+
+error: proc-macro derive panicked
+ --> tests/attributes/that_skip_attribute_does_not_compile_on_enums.rs:3:26
+  |
+3 | #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+  |                          ^^^^^^^^^^^^
+  |
+  = help: message: called `Result::unwrap()` on an `Err` value: Error("Unrecognized variant attribute `skip`")
+
+error: proc-macro derive panicked
+ --> tests/attributes/that_skip_attribute_does_not_compile_on_enums.rs:3:40
+  |
+3 | #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+  |                                        ^^^^^^^
+  |
+  = help: message: called `Result::unwrap()` on an `Err` value: Error("Unrecognized variant attribute `skip`")
