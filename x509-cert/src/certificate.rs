@@ -9,6 +9,9 @@ use der::asn1::{BitStringRef, UIntRef};
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
+#[cfg(feature = "pem")]
+use der::pem::PemLabel;
+
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
 ///
 /// ```text
@@ -141,6 +144,12 @@ pub struct Certificate<'a> {
     pub tbs_certificate: TbsCertificate<'a>,
     pub signature_algorithm: AlgorithmIdentifier<'a>,
     pub signature: BitStringRef<'a>,
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl PemLabel for Certificate<'_> {
+    const PEM_LABEL: &'static str = "CERTIFICATE";
 }
 
 /// `PkiPath` as defined by X.509 and referenced by [RFC 6066].
