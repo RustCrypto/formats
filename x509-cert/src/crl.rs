@@ -13,7 +13,7 @@ use spki::AlgorithmIdentifier;
 
 /// `CertificateList` as defined in [RFC 5280 Section 5.1].
 ///
-///```text
+/// ```text
 /// CertificateList  ::=  SEQUENCE  {
 ///     tbsCertList          TBSCertList,
 ///     signatureAlgorithm   AlgorithmIdentifier,
@@ -35,7 +35,7 @@ pub struct CertificateList<'a> {
 /// This type is used for the `revoked_certificates` field of `TbsCertList`.
 /// See [RFC 5280 Section 5.1].
 ///
-///```text
+/// ```text
 /// RevokedCert ::= SEQUENCE {
 ///     userCertificate         CertificateSerialNumber,
 ///     revocationDate          Time,
