@@ -17,8 +17,11 @@ pub trait Decode<'a>: Sized {
     fn decode<R: Reader<'a>>(decoder: &mut R) -> Result<Self>;
 
     /// Parse `Self` from the provided DER-encoded byte slice.
-    fn from_der(bytes: &'a [u8]) -> Result<Self> {
-        let mut reader = SliceReader::new(bytes)?;
+    fn from_der<T>(bytes: &'a T) -> Result<Self>
+    where
+        T: AsRef<[u8]> + ?Sized,
+    {
+        let mut reader = SliceReader::new(bytes.as_ref())?;
         let result = Self::decode(&mut reader)?;
         reader.finish(result)
     }

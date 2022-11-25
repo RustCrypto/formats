@@ -1,7 +1,7 @@
 //! Certificate tests
 
 use der::{
-    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, UIntRef},
+    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, UInt},
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
 };
 use hex_literal::hex;
@@ -207,19 +207,27 @@ fn decode_cert() {
     ];
     assert_eq!(
         cert.tbs_certificate.serial_number,
-        UIntRef::new(&target_serial).unwrap()
+        UInt::new(&target_serial).unwrap()
     );
     assert_eq!(
         cert.tbs_certificate.signature.oid.to_string(),
         "1.2.840.113549.1.1.11"
     );
     assert_eq!(
-        cert.tbs_certificate.signature.parameters.unwrap().tag(),
-        Tag::Null
+        cert.tbs_certificate
+            .signature
+            .parameters
+            .as_ref()
+            .map(|p| p.tag()),
+        Some(Tag::Null)
     );
     assert_eq!(
-        cert.tbs_certificate.signature.parameters.unwrap().is_null(),
-        true
+        cert.tbs_certificate
+            .signature
+            .parameters
+            .as_ref()
+            .map(|p| p.is_null()),
+        Some(true)
     );
 
     let mut counter = 0;
@@ -312,6 +320,7 @@ fn decode_cert() {
             .subject_public_key_info
             .algorithm
             .parameters
+            .as_ref()
             .unwrap()
             .tag(),
         Tag::Null
@@ -321,6 +330,7 @@ fn decode_cert() {
             .subject_public_key_info
             .algorithm
             .parameters
+            .as_ref()
             .unwrap()
             .is_null(),
         true
@@ -339,10 +349,17 @@ fn decode_cert() {
         "1.2.840.113549.1.1.11"
     );
     assert_eq!(
-        cert.signature_algorithm.parameters.unwrap().tag(),
+        cert.signature_algorithm.parameters.as_ref().unwrap().tag(),
         Tag::Null
     );
-    assert_eq!(cert.signature_algorithm.parameters.unwrap().is_null(), true);
+    assert_eq!(
+        cert.signature_algorithm
+            .parameters
+            .as_ref()
+            .unwrap()
+            .is_null(),
+        true
+    );
 
     assert_eq!(
         &hex!("2A892F357BF3EF19E1211986106803FA18E66237802F1B1B0C6756CE678DB01D72CD0A4EB7171C2CDDF110ACD38AA65C35699E869C219AD7550AA4F287BB784F72EF8C9EA0E3DD103EFE5BF182EA36FFBCB45AAE65840263680534789C4F3215AF5454AD48CBC4B7A881E0135401A0BD5A849C11101DD1C66178E762C00DF59DD50F8DE9ED46FC6A0D742AE5697D87DD08DAC5291A75FB13C82FF2865C9E36799EA726137E1814E6A878C9532E8FC3D0A2A942D1CCC668FFCEAC255E6002FDE5ACDF2CE47556BB141C3A797A4BFDB673F6F1C229D7914FFEEF1505EE36F8038137D1B8F90106994BAB3E6FF0F60360A2E32F7A30B7ECEC1502DF3CC725BD6E436BA8F96A1847C9CEBB3F5A5906472292501D59BE1A98475BB1F30B677FAA8A45E351640C85B1B22661D33BD23EC6C0CA33DDD79E1120C7FC869EC4D0175ADB4A258AEAC5E8D2F0F578B8BF4B2C5DCC3269768AAA5B9E26D0592C5BB09C702C72E0A60F66D3EEB2B4983279634D59B0A2011B0E26AE796CC95D3243DF49615434E5CC06C374C3F936C005D360CAE6101F3AE7E97E29A157F5020770D4648D7877EBF8248CF3F3E68F9957A36F92D50616F2C60D3842327EF9BC0312CFF03A48C78E97254C2ADEADCA05069168443D833831FF66295A2EED685F164F1DBE01F8C897E1F63D42851682CBEE7B5A64D7BA2923D33644DBF1F7B3EDCE996F9928F043"),

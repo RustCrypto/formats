@@ -24,9 +24,9 @@ use crate::ext::pkix::name::{DistributionPointName, GeneralNames};
 /// [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct IssuingDistributionPoint<'a> {
+pub struct IssuingDistributionPoint {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
-    pub distribution_point: Option<DistributionPointName<'a>>,
+    pub distribution_point: Option<DistributionPointName>,
 
     #[asn1(
         context_specific = "1",
@@ -60,7 +60,7 @@ pub struct IssuingDistributionPoint<'a> {
     pub only_contains_attribute_certs: bool,
 }
 
-impl<'a> AssociatedOid for IssuingDistributionPoint<'a> {
+impl AssociatedOid for IssuingDistributionPoint {
     const OID: ObjectIdentifier = ID_PE_SUBJECT_INFO_ACCESS;
 }
 
@@ -76,15 +76,15 @@ impl<'a> AssociatedOid for IssuingDistributionPoint<'a> {
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 #[allow(missing_docs)]
-pub struct DistributionPoint<'a> {
+pub struct DistributionPoint {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
-    pub distribution_point: Option<DistributionPointName<'a>>,
+    pub distribution_point: Option<DistributionPointName>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub reasons: Option<ReasonFlags>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub crl_issuer: Option<GeneralNames<'a>>,
+    pub crl_issuer: Option<GeneralNames>,
 }
 
 /// ReasonFlags as defined in [RFC 5280 Section 4.2.1.13].

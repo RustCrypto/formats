@@ -15,9 +15,7 @@ use {
 use std::path::Path;
 
 /// Parse a public key object from an encoded SPKI document.
-pub trait DecodePublicKey:
-    for<'a> TryFrom<SubjectPublicKeyInfo<'a>, Error = Error> + Sized
-{
+pub trait DecodePublicKey: TryFrom<SubjectPublicKeyInfo, Error = Error> + Sized {
     /// Deserialize object from ASN.1 DER-encoded [`SubjectPublicKeyInfo`]
     /// (binary format).
     fn from_public_key_der(bytes: &[u8]) -> Result<Self> {

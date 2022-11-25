@@ -9,6 +9,9 @@ use der::{
 #[cfg(feature = "alloc")]
 use der::Document;
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 #[cfg(feature = "fingerprint")]
 use crate::{fingerprint, FingerprintBytes};
 
@@ -33,16 +36,16 @@ use der::pem::PemLabel;
 /// ```
 ///
 /// [RFC 5280 § 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct SubjectPublicKeyInfo<'a> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SubjectPublicKeyInfo {
     /// X.509 [`AlgorithmIdentifier`] for the public key type
-    pub algorithm: AlgorithmIdentifier<'a>,
+    pub algorithm: AlgorithmIdentifier,
 
     /// Public key data
-    pub subject_public_key: &'a [u8],
+    pub subject_public_key: Vec<u8>,
 }
 
-impl<'a> SubjectPublicKeyInfo<'a> {
+impl SubjectPublicKeyInfo {
     /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] and
     /// encode it as a Base64 string.
     ///
@@ -70,25 +73,26 @@ impl<'a> SubjectPublicKeyInfo<'a> {
     }
 
     /// Get a [`BitString`] representing the `subject_public_key`
-    fn bitstring(&self) -> der::Result<BitStringRef<'a>> {
-        BitStringRef::from_bytes(self.subject_public_key)
+    fn bitstring<'a>(&'a self) -> der::Result<BitStringRef<'a>> {
+        BitStringRef::from_bytes(&self.subject_public_key)
     }
 }
 
-impl<'a> DecodeValue<'a> for SubjectPublicKeyInfo<'a> {
+impl<'a> DecodeValue<'a> for SubjectPublicKeyInfo {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 algorithm: reader.decode()?,
                 subject_public_key: BitStringRef::decode(reader)?
                     .as_bytes()
-                    .ok_or_else(|| der::Tag::BitString.value_error())?,
+                    .ok_or_else(|| der::Tag::BitString.value_error())?
+                    .to_vec(),
             })
         })
     }
 }
 
-impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
+impl<'a> Sequence<'a> for SubjectPublicKeyInfo {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
@@ -97,15 +101,15 @@ impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a> {
+impl TryFrom<&[u8]> for SubjectPublicKeyInfo {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+    fn try_from(bytes: &[u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }
 }
 
-impl ValueOrd for SubjectPublicKeyInfo<'_> {
+impl ValueOrd for SubjectPublicKeyInfo {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         match self.algorithm.der_cmp(&other.algorithm)? {
             Ordering::Equal => self.bitstring()?.der_cmp(&other.bitstring()?),
@@ -116,26 +120,26 @@ impl ValueOrd for SubjectPublicKeyInfo<'_> {
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl TryFrom<SubjectPublicKeyInfo<'_>> for Document {
+impl TryFrom<SubjectPublicKeyInfo> for Document {
     type Error = Error;
 
-    fn try_from(spki: SubjectPublicKeyInfo<'_>) -> Result<Document> {
+    fn try_from(spki: SubjectPublicKeyInfo) -> Result<Document> {
         Self::try_from(&spki)
     }
 }
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl TryFrom<&SubjectPublicKeyInfo<'_>> for Document {
+impl TryFrom<&SubjectPublicKeyInfo> for Document {
     type Error = Error;
 
-    fn try_from(spki: &SubjectPublicKeyInfo<'_>) -> Result<Document> {
+    fn try_from(spki: &SubjectPublicKeyInfo) -> Result<Document> {
         Ok(Self::encode_msg(spki)?)
     }
 }
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-impl PemLabel for SubjectPublicKeyInfo<'_> {
+impl PemLabel for SubjectPublicKeyInfo {
     const PEM_LABEL: &'static str = "PUBLIC KEY";
 }

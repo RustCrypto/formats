@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 
 use const_oid::db::rfc5912::ID_EXTENSION_REQ;
 use const_oid::{AssociatedOid, ObjectIdentifier};
-use der::asn1::BitStringRef;
+use der::asn1::BitString;
 use der::{Decode, Enumerated, Sequence};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
@@ -35,25 +35,25 @@ pub enum Version {
 ///
 /// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
-pub struct CertReqInfo<'a> {
+pub struct CertReqInfo {
     /// Certification request version.
     pub version: Version,
 
     /// Subject name.
-    pub subject: Name<'a>,
+    pub subject: Name,
 
     /// Subject public key info.
-    pub public_key: SubjectPublicKeyInfo<'a>,
+    pub public_key: SubjectPublicKeyInfo,
 
     /// Request attributes.
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
-    pub attributes: Attributes<'a>,
+    pub attributes: Attributes,
 }
 
-impl<'a> TryFrom<&'a [u8]> for CertReqInfo<'a> {
+impl TryFrom<&[u8]> for CertReqInfo {
     type Error = der::Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         Self::from_der(bytes)
     }
 }
@@ -70,21 +70,21 @@ impl<'a> TryFrom<&'a [u8]> for CertReqInfo<'a> {
 ///
 /// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
-pub struct CertReq<'a> {
+pub struct CertReq {
     /// Certification request information.
-    pub info: CertReqInfo<'a>,
+    pub info: CertReqInfo,
 
     /// Signature algorithm identifier.
-    pub algorithm: AlgorithmIdentifier<'a>,
+    pub algorithm: AlgorithmIdentifier,
 
     /// Signature.
-    pub signature: BitStringRef<'a>,
+    pub signature: BitString,
 }
 
-impl<'a> TryFrom<&'a [u8]> for CertReq<'a> {
+impl TryFrom<&[u8]> for CertReq {
     type Error = der::Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         Self::from_der(bytes)
     }
 }
@@ -97,10 +97,10 @@ impl<'a> TryFrom<&'a [u8]> for CertReq<'a> {
 ///
 /// [RFC 5272 Section 3.1]: https://datatracker.ietf.org/doc/html/rfc5272#section-3.1
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ExtensionReq<'a>(pub Vec<Extension<'a>>);
+pub struct ExtensionReq(pub Vec<Extension>);
 
-impl<'a> AssociatedOid for ExtensionReq<'a> {
+impl AssociatedOid for ExtensionReq {
     const OID: ObjectIdentifier = ID_EXTENSION_REQ;
 }
 
-impl_newtype!(ExtensionReq<'a>, Vec<Extension<'a>>);
+impl_newtype!(ExtensionReq, Vec<Extension>);

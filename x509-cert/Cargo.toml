@@ -18,7 +18,7 @@ rust-version = "1.56"
 const-oid = { version = "0.9", features = ["db"], path = "../const-oid" }
 der = { version = "0.6", features = ["derive", "alloc", "flagset"], path = "../der" }
 flagset = { version = "0.4.3" }
-spki = { version = "0.6", path = "../spki" }
+spki = { version = "0.6", path = "../spki", features = [ "alloc" ] }
 
 [dev-dependencies]
 hex-literal = "0.3"

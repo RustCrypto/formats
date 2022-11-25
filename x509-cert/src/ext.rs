@@ -1,6 +1,6 @@
 //! Standardized X.509 Certificate Extensions
 
-use der::Sequence;
+use der::{asn1::OctetString, Sequence};
 use spki::ObjectIdentifier;
 
 pub mod pkix;
@@ -24,14 +24,14 @@ pub mod pkix;
 /// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct Extension<'a> {
+pub struct Extension {
     pub extn_id: ObjectIdentifier,
 
     #[asn1(default = "Default::default")]
     pub critical: bool,
 
-    #[asn1(type = "OCTET STRING")]
-    pub extn_value: &'a [u8],
+    //#[asn1(type = "OCTET STRING")]
+    pub extn_value: OctetString,
 }
 
 /// Extensions as defined in [RFC 5280 Section 4.1.2.9].
@@ -41,4 +41,4 @@ pub struct Extension<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
-pub type Extensions<'a> = alloc::vec::Vec<Extension<'a>>;
+pub type Extensions = alloc::vec::Vec<Extension>;

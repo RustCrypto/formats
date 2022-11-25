@@ -2,7 +2,7 @@
 
 use crate::{Error, Result};
 use core::cmp::Ordering;
-use der::asn1::{AnyRef, ObjectIdentifier};
+use der::asn1::{Any, AnyRef, ObjectIdentifier};
 use der::{Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd};
 
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
@@ -14,17 +14,17 @@ use der::{Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOr
 /// ```
 ///
 /// [RFC 5280 Section 4.1.1.2]: https://tools.ietf.org/html/rfc5280#section-4.1.1.2
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct AlgorithmIdentifier<'a> {
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct AlgorithmIdentifier {
     /// Algorithm OID, i.e. the `algorithm` field in the `AlgorithmIdentifier`
     /// ASN.1 schema.
     pub oid: ObjectIdentifier,
 
     /// Algorithm `parameters`.
-    pub parameters: Option<AnyRef<'a>>,
+    pub parameters: Option<Any>,
 }
 
-impl<'a> AlgorithmIdentifier<'a> {
+impl AlgorithmIdentifier {
     /// Assert the `algorithm` OID is an expected value.
     pub fn assert_algorithm_oid(&self, expected_oid: ObjectIdentifier) -> Result<ObjectIdentifier> {
         if self.oid == expected_oid {
@@ -62,8 +62,11 @@ impl<'a> AlgorithmIdentifier<'a> {
     /// Get the `parameters` field as an [`AnyRef`].
     ///
     /// Returns an error if `parameters` are `None`.
-    pub fn parameters_any(&self) -> Result<AnyRef<'a>> {
-        self.parameters.ok_or(Error::AlgorithmParametersMissing)
+    pub fn parameters_any<'a>(&'a self) -> Result<AnyRef<'a>> {
+        self.parameters
+            .as_ref()
+            .ok_or(Error::AlgorithmParametersMissing)
+            .map(AnyRef::from)
     }
 
     /// Get the `parameters` field as an [`ObjectIdentifier`].
@@ -83,7 +86,7 @@ impl<'a> AlgorithmIdentifier<'a> {
     pub fn oids(&self) -> der::Result<(ObjectIdentifier, Option<ObjectIdentifier>)> {
         Ok((
             self.oid,
-            match self.parameters {
+            match self.parameters.as_ref().map(AnyRef::from) {
                 None => None,
                 Some(p) => match p {
                     AnyRef::NULL => None,
@@ -94,7 +97,7 @@ impl<'a> AlgorithmIdentifier<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for AlgorithmIdentifier<'a> {
+impl<'a> DecodeValue<'a> for AlgorithmIdentifier {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
@@ -105,7 +108,7 @@ impl<'a> DecodeValue<'a> for AlgorithmIdentifier<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for AlgorithmIdentifier<'a> {
+impl<'a> Sequence<'a> for AlgorithmIdentifier {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
@@ -114,15 +117,15 @@ impl<'a> Sequence<'a> for AlgorithmIdentifier<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for AlgorithmIdentifier<'a> {
+impl TryFrom<&[u8]> for AlgorithmIdentifier {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+    fn try_from(bytes: &[u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }
 }
 
-impl ValueOrd for AlgorithmIdentifier<'_> {
+impl ValueOrd for AlgorithmIdentifier {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         match self.oid.der_cmp(&other.oid)? {
             Ordering::Equal => self.parameters.der_cmp(&other.parameters),

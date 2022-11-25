@@ -121,6 +121,130 @@ impl<'a> fmt::Debug for TeletexStringRef<'a> {
     }
 }
 
+#[cfg(feature = "alloc")]
+pub use self::alloc::TeletexString;
+
+#[cfg(feature = "alloc")]
+mod alloc {
+    use super::TeletexStringRef;
+    use crate::{
+        asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag,
+        Header, Length, Reader, Result, Str, Tag, Writer,
+    };
+    use core::{fmt, ops::Deref, str};
+
+    /// ASN.1 `TeletexString` type.
+    ///
+    /// Supports a subset the ASCII character set (described below).
+    ///
+    /// For UTF-8, use [`Utf8StringRef`][`crate::asn1::Utf8StringRef`] instead.
+    /// For the full ASCII character set, use
+    /// [`Ia5StringRef`][`crate::asn1::Ia5StringRef`].
+    ///
+    /// This is a zero-copy reference type which borrows from the input data.
+    ///
+    /// # Supported characters
+    ///
+    /// The standard defines a complex character set allowed in this type. However, quoting the ASN.1
+    /// mailing list, "a sizable volume of software in the world treats TeletexString (T61String) as a
+    /// simple 8-bit string with mostly Windows Latin 1 (superset of iso-8859-1) encoding".
+    ///
+    #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
+    pub struct TeletexString {
+        /// Inner value
+        inner: Str,
+    }
+
+    impl TeletexString {
+        /// Create a new ASN.1 `TeletexString`.
+        pub fn new<T>(input: &T) -> Result<Self>
+        where
+            T: AsRef<[u8]> + ?Sized,
+        {
+            let input = input.as_ref();
+
+            // FIXME: support higher part of the charset
+            if input.iter().any(|&c| c > 0x7F) {
+                return Err(Self::TAG.value_error());
+            }
+
+            Str::from_bytes(input)
+                .map(|inner| Self { inner })
+                .map_err(|_| Self::TAG.value_error())
+        }
+    }
+
+    impl Deref for TeletexString {
+        type Target = Str;
+
+        fn deref(&self) -> &Self::Target {
+            &self.inner
+        }
+    }
+
+    impl AsRef<str> for TeletexString {
+        fn as_ref(&self) -> &str {
+            self.as_str()
+        }
+    }
+
+    impl AsRef<[u8]> for TeletexString {
+        fn as_ref(&self) -> &[u8] {
+            self.as_bytes()
+        }
+    }
+
+    impl<'a> DecodeValue<'a> for TeletexString {
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+            Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
+        }
+    }
+
+    impl EncodeValue for TeletexString {
+        fn value_len(&self) -> Result<Length> {
+            self.inner.value_len()
+        }
+
+        fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+            self.inner.encode_value(writer)
+        }
+    }
+
+    impl FixedTag for TeletexString {
+        const TAG: Tag = Tag::TeletexString;
+    }
+
+    impl OrdIsValueOrd for TeletexString {}
+
+    impl TryFrom<AnyRef<'_>> for TeletexString {
+        type Error = Error;
+
+        fn try_from(any: AnyRef<'_>) -> Result<TeletexString> {
+            any.decode_into()
+        }
+    }
+
+    impl fmt::Display for TeletexString {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.write_str(self.as_str())
+        }
+    }
+
+    impl fmt::Debug for TeletexString {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "TeletexString({:?})", self.as_str())
+        }
+    }
+
+    impl<'a> From<TeletexStringRef<'a>> for TeletexString {
+        fn from(teletex_string: TeletexStringRef<'a>) -> TeletexString {
+            TeletexString {
+                inner: teletex_string.inner.into(),
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::TeletexStringRef;

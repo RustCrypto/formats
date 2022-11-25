@@ -7,7 +7,7 @@ use crate::{
 use core::{fmt, ops::Deref, str};
 
 #[cfg(feature = "alloc")]
-use alloc::{borrow::ToOwned, string::String};
+use ::alloc::{borrow::ToOwned, string::String};
 
 /// ASN.1 `UTF8String` type.
 ///
@@ -184,6 +184,117 @@ impl FixedTag for String {
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl OrdIsValueOrd for String {}
+
+#[cfg(feature = "alloc")]
+pub use self::alloc::Utf8String;
+
+#[cfg(feature = "alloc")]
+mod alloc {
+    use super::Utf8StringRef;
+    use crate::{
+        ord::OrdIsValueOrd, Any, ByteSlice, DecodeValue, EncodeValue, FixedTag, Header, Length,
+        Reader, Result, Str, Tag, Writer,
+    };
+    use core::{fmt, ops::Deref, str};
+
+    /// ASN.1 `UTF8String` type.
+    ///
+    /// Supports the full UTF-8 encoding.
+    ///
+    /// Note that the [`Decode`][`crate::Decode`] and [`Encode`][`crate::Encode`]
+    /// traits are impl'd for Rust's [`str`][`prim@str`] primitive, which
+    /// decodes/encodes as a [`Utf8StringRef`].
+    ///
+    /// You are free to use [`str`][`prim@str`] instead of this type, however it's
+    /// still provided for explicitness in cases where it might be ambiguous with
+    /// other ASN.1 string encodings such as
+    /// [`PrintableStringRef`][`crate::asn1::PrintableStringRef`].
+    ///
+    /// This is a zero-copy reference type which borrows from the input data.
+    #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
+    pub struct Utf8String {
+        /// Inner value
+        inner: Str,
+    }
+
+    impl Utf8String {
+        /// Create a new ASN.1 `UTF8String`.
+        pub fn new<T>(input: &T) -> Result<Self>
+        where
+            T: AsRef<[u8]> + ?Sized,
+        {
+            Str::from_bytes(input.as_ref()).map(|inner| Self { inner })
+        }
+    }
+
+    impl Deref for Utf8String {
+        type Target = Str;
+
+        fn deref(&self) -> &Self::Target {
+            &self.inner
+        }
+    }
+
+    impl AsRef<str> for Utf8String {
+        fn as_ref(&self) -> &str {
+            self.as_str()
+        }
+    }
+
+    impl AsRef<[u8]> for Utf8String {
+        fn as_ref(&self) -> &[u8] {
+            self.as_bytes()
+        }
+    }
+
+    impl<'a> DecodeValue<'a> for Utf8String {
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+            Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
+        }
+    }
+
+    impl EncodeValue for Utf8String {
+        fn value_len(&self) -> Result<Length> {
+            self.inner.value_len()
+        }
+
+        fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+            self.inner.encode_value(writer)
+        }
+    }
+
+    impl FixedTag for Utf8String {
+        const TAG: Tag = Tag::Utf8String;
+    }
+
+    impl OrdIsValueOrd for Utf8String {}
+
+    impl fmt::Display for Utf8String {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.write_str(self.as_str())
+        }
+    }
+
+    impl fmt::Debug for Utf8String {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "Utf8String({:?})", self.as_str())
+        }
+    }
+
+    impl<'a> From<Utf8StringRef<'a>> for Utf8String {
+        fn from(utf_string: Utf8StringRef<'a>) -> Utf8String {
+            Utf8String {
+                inner: utf_string.inner.into(),
+            }
+        }
+    }
+
+    impl<'a> From<Utf8StringRef<'a>> for Any {
+        fn from(utf_string: Utf8StringRef<'a>) -> Any {
+            Any::from_tag_and_value(Tag::Utf8String, utf_string.inner.into())
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

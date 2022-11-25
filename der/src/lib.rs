@@ -358,6 +358,8 @@ mod writer;
 
 #[cfg(feature = "alloc")]
 mod document;
+#[cfg(feature = "alloc")]
+mod str;
 
 pub use crate::{
     asn1::{AnyRef, Choice, Sequence},
@@ -407,3 +409,12 @@ pub use zeroize;
 pub use crate::document::SecretDocument;
 
 pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
+
+#[cfg(feature = "alloc")]
+pub(crate) use crate::byte_slice::ByteVec;
+
+#[cfg(feature = "alloc")]
+pub(crate) use crate::str::Str;
+
+#[cfg(feature = "alloc")]
+pub use crate::asn1::Any;

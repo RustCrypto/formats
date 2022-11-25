@@ -19,15 +19,15 @@ use super::super::name::GeneralName;
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct NameConstraints<'a> {
+pub struct NameConstraints {
     #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
-    pub permitted_subtrees: Option<GeneralSubtrees<'a>>,
+    pub permitted_subtrees: Option<GeneralSubtrees>,
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
-    pub excluded_subtrees: Option<GeneralSubtrees<'a>>,
+    pub excluded_subtrees: Option<GeneralSubtrees>,
 }
 
-impl<'a> AssociatedOid for NameConstraints<'a> {
+impl AssociatedOid for NameConstraints {
     const OID: ObjectIdentifier = ID_CE_NAME_CONSTRAINTS;
 }
 
@@ -38,7 +38,7 @@ impl<'a> AssociatedOid for NameConstraints<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
-pub type GeneralSubtrees<'a> = Vec<GeneralSubtree<'a>>;
+pub type GeneralSubtrees = Vec<GeneralSubtree>;
 
 /// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10].
 ///
@@ -53,8 +53,8 @@ pub type GeneralSubtrees<'a> = Vec<GeneralSubtree<'a>>;
 /// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct GeneralSubtree<'a> {
-    pub base: GeneralName<'a>,
+pub struct GeneralSubtree {
+    pub base: GeneralName,
 
     #[asn1(
         context_specific = "0",

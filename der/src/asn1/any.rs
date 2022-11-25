@@ -7,7 +7,7 @@ use crate::{
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use {crate::ByteVec, alloc::vec::Vec};
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
@@ -226,18 +226,79 @@ pub struct Any {
     tag: Tag,
 
     /// Inner value encoded as bytes.
-    value: Vec<u8>,
+    value: ByteVec,
 }
 
 #[cfg(feature = "alloc")]
 impl Any {
     /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
     pub fn new(tag: Tag, bytes: impl Into<Vec<u8>>) -> Result<Self> {
-        let value = bytes.into();
+        let value = ByteVec::new(&bytes.into())?;
 
         // Ensure the tag and value are a valid `AnyRef`.
-        AnyRef::new(tag, &value)?;
+        AnyRef::new(tag, value.as_slice())?;
         Ok(Self { tag, value })
+    }
+
+    /// Infallible creation of an [`AnyRef`] from a [`ByteSlice`].
+    pub(crate) fn from_tag_and_value(tag: Tag, value: ByteSlice<'_>) -> Self {
+        Self {
+            tag,
+            value: value.into(),
+        }
+    }
+
+    /// Attempt to decode an ASN.1 `OBJECT IDENTIFIER`.
+    #[cfg(feature = "oid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
+    pub fn oid(&self) -> Result<ObjectIdentifier> {
+        AnyRef::from(self).try_into()
+    }
+
+    /// Attempt to decode an ASN.1 `UTCTime`.
+    pub fn utc_time(&self) -> Result<UtcTime> {
+        AnyRef::from(self).try_into()
+    }
+
+    /// Attempt to decode an ASN.1 `UTF8String`.
+    pub fn utf8_string<'a>(&'a self) -> Result<Utf8StringRef<'a>> {
+        AnyRef::from(self).try_into()
+    }
+
+    /// Attempt to decode an ASN.1 `IA5String`.
+    pub fn ia5_string<'a>(&'a self) -> Result<Ia5StringRef<'a>> {
+        AnyRef::from(self).try_into()
+    }
+
+    /// Attempt to decode an ASN.1 `PrintableString`.
+    pub fn printable_string<'a>(&'a self) -> Result<PrintableStringRef<'a>> {
+        AnyRef::from(self).try_into()
+    }
+
+    /// Attempt to decode an ASN.1 `TeletexString`.
+    pub fn teletex_string<'a>(&'a self) -> Result<TeletexStringRef<'a>> {
+        AnyRef::from(self).try_into()
+    }
+
+    /// Is this value an ASN.1 `NULL` value?
+    pub fn is_null(&self) -> bool {
+        AnyRef::from(self).is_null()
+    }
+
+    /// Attempt to decode this [`AnyRef`] type into the inner value.
+    pub fn decode_into<'a, T>(&'a self) -> Result<T>
+    where
+        T: DecodeValue<'a> + FixedTag,
+    {
+        self.tag.assert_eq(T::TAG)?;
+        let header = Header {
+            tag: self.tag,
+            length: self.value.len(),
+        };
+
+        let mut decoder = SliceReader::new(self.value.as_slice())?;
+        let result = T::decode_value(&mut decoder, header)?;
+        decoder.finish(result)
     }
 }
 
@@ -260,11 +321,11 @@ impl<'a> Decode<'a> for Any {
 #[cfg(feature = "alloc")]
 impl EncodeValue for Any {
     fn value_len(&self) -> Result<Length> {
-        self.value.len().try_into()
+        Ok(self.value.len())
     }
 
     fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
-        writer.write(&self.value)
+        writer.write(self.value.as_slice())
     }
 }
 
@@ -272,7 +333,7 @@ impl EncodeValue for Any {
 impl<'a> From<&'a Any> for AnyRef<'a> {
     fn from(any: &'a Any) -> AnyRef<'a> {
         // Ensured to parse successfully in constructor
-        AnyRef::new(any.tag, &any.value).expect("invalid ANY")
+        AnyRef::new(any.tag, any.value.as_slice()).expect("invalid ANY")
     }
 }
 
@@ -280,5 +341,11 @@ impl<'a> From<&'a Any> for AnyRef<'a> {
 impl Tagged for Any {
     fn tag(&self) -> Tag {
         self.tag
+    }
+}
+
+impl ValueOrd for Any {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        self.value.der_cmp(&other.value)
     }
 }

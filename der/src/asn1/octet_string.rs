@@ -1,7 +1,7 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind,
+    asn1::AnyRef, ord::OrdIsValueOrd, Any, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind,
     FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
@@ -98,6 +98,13 @@ impl<'a> From<OctetStringRef<'a>> for &'a [u8] {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl<'a> From<OctetStringRef<'a>> for Vec<u8> {
+    fn from(octet_string: OctetStringRef<'a>) -> Vec<u8> {
+        octet_string.as_bytes().to_vec()
+    }
+}
+
 /// ASN.1 `OCTET STRING` type: owned form..
 ///
 /// Octet strings represent contiguous sequences of octets, a.k.a. bytes.
@@ -175,5 +182,12 @@ impl<'a> From<&'a OctetString> for OctetStringRef<'a> {
     fn from(octet_string: &'a OctetString) -> OctetStringRef<'a> {
         // Ensured to parse successfully in constructor
         OctetStringRef::new(&octet_string.inner).expect("invalid OCTET STRING")
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> From<OctetStringRef<'a>> for Any {
+    fn from(octet_string: OctetStringRef<'a>) -> Any {
+        Any::from_tag_and_value(Tag::OctetString, octet_string.inner)
     }
 }

@@ -57,13 +57,13 @@ impl_newtype!(SubjectKeyIdentifier<'a>, OctetStringRef<'a>);
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct SubjectAltName<'a>(pub name::GeneralNames<'a>);
+pub struct SubjectAltName(pub name::GeneralNames);
 
-impl<'a> AssociatedOid for SubjectAltName<'a> {
+impl AssociatedOid for SubjectAltName {
     const OID: ObjectIdentifier = ID_CE_SUBJECT_ALT_NAME;
 }
 
-impl_newtype!(SubjectAltName<'a>, name::GeneralNames<'a>);
+impl_newtype!(SubjectAltName, name::GeneralNames);
 
 /// IssuerAltName as defined in [RFC 5280 Section 4.2.1.7].
 ///
@@ -73,13 +73,13 @@ impl_newtype!(SubjectAltName<'a>, name::GeneralNames<'a>);
 ///
 /// [RFC 5280 Section 4.2.1.7]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.7
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct IssuerAltName<'a>(pub name::GeneralNames<'a>);
+pub struct IssuerAltName(pub name::GeneralNames);
 
-impl<'a> AssociatedOid for IssuerAltName<'a> {
+impl AssociatedOid for IssuerAltName {
     const OID: ObjectIdentifier = ID_CE_ISSUER_ALT_NAME;
 }
 
-impl_newtype!(IssuerAltName<'a>, name::GeneralNames<'a>);
+impl_newtype!(IssuerAltName, name::GeneralNames);
 
 /// SubjectDirectoryAttributes as defined in [RFC 5280 Section 4.2.1.8].
 ///
@@ -89,16 +89,13 @@ impl_newtype!(IssuerAltName<'a>, name::GeneralNames<'a>);
 ///
 /// [RFC 5280 Section 4.2.1.8]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.8
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct SubjectDirectoryAttributes<'a>(pub Vec<AttributeTypeAndValue<'a>>);
+pub struct SubjectDirectoryAttributes(pub Vec<AttributeTypeAndValue>);
 
-impl<'a> AssociatedOid for SubjectDirectoryAttributes<'a> {
+impl AssociatedOid for SubjectDirectoryAttributes {
     const OID: ObjectIdentifier = ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES;
 }
 
-impl_newtype!(
-    SubjectDirectoryAttributes<'a>,
-    Vec<AttributeTypeAndValue<'a>>
-);
+impl_newtype!(SubjectDirectoryAttributes, Vec<AttributeTypeAndValue>);
 
 /// InhibitAnyPolicy as defined in [RFC 5280 Section 4.2.1.14].
 ///
