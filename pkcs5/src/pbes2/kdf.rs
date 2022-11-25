@@ -1,6 +1,6 @@
 //! Key derivation functions.
 
-use crate::{AlgorithmIdentifier, Error, Result};
+use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
     asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Tagged, Writer,
@@ -100,7 +100,7 @@ impl<'a> Kdf<'a> {
 
 impl<'a> Decode<'a> for Kdf<'a> {
     fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        AlgorithmIdentifier::decode(reader)?.try_into()
+        AlgorithmIdentifierRef::decode(reader)?.try_into()
     }
 }
 
@@ -128,10 +128,10 @@ impl<'a> From<ScryptParams<'a>> for Kdf<'a> {
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Kdf<'a> {
+impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Kdf<'a> {
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
+    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
         if let Some(params) = alg.parameters {
             match alg.oid {
                 PBKDF2_OID => params.try_into().map(Self::Pbkdf2),
@@ -242,7 +242,7 @@ impl<'a> TryFrom<AnyRef<'a>> for Pbkdf2Params<'a> {
                 salt: OctetStringRef::decode(reader)?.as_bytes(),
                 iteration_count: reader.decode()?,
                 key_length: reader.decode()?,
-                prf: Option::<AlgorithmIdentifier<'_>>::decode(reader)?
+                prf: Option::<AlgorithmIdentifierRef<'_>>::decode(reader)?
                     .map(TryInto::try_into)
                     .transpose()?
                     .unwrap_or_default(),
@@ -298,10 +298,10 @@ impl Default for Pbkdf2Prf {
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Pbkdf2Prf {
+impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Pbkdf2Prf {
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
+    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
         if let Some(params) = alg.parameters {
             // TODO(tarcieri): support non-NULL parameters?
             if !params.is_null() {
@@ -323,12 +323,12 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Pbkdf2Prf {
     }
 }
 
-impl<'a> From<Pbkdf2Prf> for AlgorithmIdentifier<'a> {
+impl<'a> From<Pbkdf2Prf> for AlgorithmIdentifierRef<'a> {
     fn from(prf: Pbkdf2Prf) -> Self {
         // TODO(tarcieri): support non-NULL parameters?
         let parameters = der::asn1::Null;
 
-        AlgorithmIdentifier {
+        AlgorithmIdentifierRef {
             oid: prf.oid(),
             parameters: Some(parameters.into()),
         }
@@ -337,11 +337,11 @@ impl<'a> From<Pbkdf2Prf> for AlgorithmIdentifier<'a> {
 
 impl Encode for Pbkdf2Prf {
     fn encoded_len(&self) -> der::Result<Length> {
-        AlgorithmIdentifier::try_from(*self)?.encoded_len()
+        AlgorithmIdentifierRef::try_from(*self)?.encoded_len()
     }
 
     fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
-        AlgorithmIdentifier::try_from(*self)?.encode(writer)
+        AlgorithmIdentifierRef::try_from(*self)?.encode(writer)
     }
 }
 

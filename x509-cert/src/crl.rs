@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 
 use der::asn1::{BitStringRef, UIntRef};
 use der::{Sequence, ValueOrd};
-use spki::AlgorithmIdentifier;
+use spki::AlgorithmIdentifierRef;
 
 /// `CertificateList` as defined in [RFC 5280 Section 5.1].
 ///
@@ -26,7 +26,7 @@ use spki::AlgorithmIdentifier;
 #[allow(missing_docs)]
 pub struct CertificateList<'a> {
     pub tbs_cert_list: TbsCertList<'a>,
-    pub signature_algorithm: AlgorithmIdentifier<'a>,
+    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
     pub signature: BitStringRef<'a>,
 }
 
@@ -75,7 +75,7 @@ pub struct RevokedCert<'a> {
 #[allow(missing_docs)]
 pub struct TbsCertList<'a> {
     pub version: Version,
-    pub signature: AlgorithmIdentifier<'a>,
+    pub signature: AlgorithmIdentifierRef<'a>,
     pub issuer: Name<'a>,
     pub this_update: Time,
     pub next_update: Option<Time>,

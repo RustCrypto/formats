@@ -1,6 +1,6 @@
 //! X.509 `SubjectPublicKeyInfo`
 
-use crate::{AlgorithmIdentifier, Error, Result};
+use crate::{AlgorithmIdentifierRef, Error, Result};
 use core::cmp::Ordering;
 use der::{
     asn1::BitStringRef, Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
@@ -21,6 +21,9 @@ use {
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
 
+#[cfg(doc)]
+use crate::AlgorithmIdentifier;
+
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 § 4.1.2.7].
 ///
 /// ASN.1 structure containing an [`AlgorithmIdentifier`] and public key
@@ -36,7 +39,7 @@ use der::pem::PemLabel;
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct SubjectPublicKeyInfo<'a> {
     /// X.509 [`AlgorithmIdentifier`] for the public key type
-    pub algorithm: AlgorithmIdentifier<'a>,
+    pub algorithm: AlgorithmIdentifierRef<'a>,
 
     /// Public key data
     pub subject_public_key: &'a [u8],

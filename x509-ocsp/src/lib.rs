@@ -6,7 +6,7 @@ extern crate alloc;
 use der::asn1::{BitStringRef, Ia5StringRef, ObjectIdentifier, OctetStringRef, UIntRef};
 use der::asn1::{GeneralizedTime, Null};
 use der::{AnyRef, Choice, Enumerated, Sequence};
-use spki::AlgorithmIdentifier;
+use spki::AlgorithmIdentifierRef;
 use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::ext::pkix::{AuthorityInfoAccessSyntax, CrlReason};
 use x509_cert::ext::Extensions;
@@ -89,7 +89,7 @@ pub struct TbsRequest<'a> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct Signature<'a> {
-    pub signature_algorithm: AlgorithmIdentifier<'a>,
+    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
     pub signature: BitStringRef<'a>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
@@ -149,7 +149,7 @@ pub struct Request<'a> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct CertId<'a> {
-    pub hash_algorithm: AlgorithmIdentifier<'a>,
+    pub hash_algorithm: AlgorithmIdentifierRef<'a>,
     pub issuer_name_hash: OctetStringRef<'a>,
     pub issuer_key_hash: OctetStringRef<'a>,
     pub serial_number: UIntRef<'a>,
@@ -231,7 +231,7 @@ pub struct ResponseBytes<'a> {
 #[allow(missing_docs)]
 pub struct BasicOcspResponse<'a> {
     pub tbs_response_data: ResponseData<'a>,
-    pub signature_algorithm: AlgorithmIdentifier<'a>,
+    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
     pub signature: BitStringRef<'a>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
@@ -453,6 +453,6 @@ pub type PreferredSignatureAlgorithms<'a> = Vec<PreferredSignatureAlgorithm<'a>>
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct PreferredSignatureAlgorithm<'a> {
-    pub sig_identifier: AlgorithmIdentifier<'a>,
-    pub cert_identifier: Option<AlgorithmIdentifier<'a>>,
+    pub sig_identifier: AlgorithmIdentifierRef<'a>,
+    pub cert_identifier: Option<AlgorithmIdentifierRef<'a>>,
 }
