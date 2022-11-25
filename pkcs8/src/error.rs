@@ -26,7 +26,7 @@ pub enum Error {
     /// or [`SubjectPublicKeyInfo::subject_public_key`][`crate::SubjectPublicKeyInfo::subject_public_key`].
     KeyMalformed,
 
-    /// [`AlgorithmIdentifier::parameters`][`crate::AlgorithmIdentifier::parameters`]
+    /// [`AlgorithmIdentifier::parameters`][`crate::AlgorithmIdentifierRef::parameters`]
     /// is malformed or otherwise encoded in an unexpected manner.
     ParametersMalformed,
 

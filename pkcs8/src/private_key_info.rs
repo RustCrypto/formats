@@ -1,6 +1,6 @@
 //! PKCS#8 `PrivateKeyInfo`.
 
-use crate::{AlgorithmIdentifier, Error, Result, Version};
+use crate::{AlgorithmIdentifierRef, Error, Result, Version};
 use core::fmt;
 use der::{
     asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
@@ -29,7 +29,7 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber::N1;
 
 /// PKCS#8 `PrivateKeyInfo`.
 ///
-/// ASN.1 structure containing an [`AlgorithmIdentifier`], private key
+/// ASN.1 structure containing an `AlgorithmIdentifier`, private key
 /// data in an algorithm specific format, and optional attributes
 /// (ignored by this implementation).
 ///
@@ -90,8 +90,8 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber::N1;
 /// [RFC 5958 Section 2]: https://datatracker.ietf.org/doc/html/rfc5958#section-2
 #[derive(Clone)]
 pub struct PrivateKeyInfo<'a> {
-    /// X.509 [`AlgorithmIdentifier`] for the private key type.
-    pub algorithm: AlgorithmIdentifier<'a>,
+    /// X.509 `AlgorithmIdentifier` for the private key type.
+    pub algorithm: AlgorithmIdentifierRef<'a>,
 
     /// Private key data.
     pub private_key: &'a [u8],
@@ -105,7 +105,7 @@ impl<'a> PrivateKeyInfo<'a> {
     ///
     /// This is a helper method which initializes `attributes` and `public_key`
     /// to `None`, helpful if you aren't using those.
-    pub fn new(algorithm: AlgorithmIdentifier<'a>, private_key: &'a [u8]) -> Self {
+    pub fn new(algorithm: AlgorithmIdentifierRef<'a>, private_key: &'a [u8]) -> Self {
         Self {
             algorithm,
             private_key,

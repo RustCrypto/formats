@@ -106,7 +106,7 @@ where
             .parameters
             .and_then(|params| params.named_curve());
 
-        let algorithm = pkcs8::AlgorithmIdentifier {
+        let algorithm = pkcs8::AlgorithmIdentifierRef {
             oid: ALGORITHM_OID,
             parameters: params_oid.as_ref().map(Into::into),
         };

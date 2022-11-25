@@ -12,7 +12,7 @@ pub use self::kdf::{
     PBKDF2_OID, SCRYPT_OID,
 };
 
-use crate::{AlgorithmIdentifier, Error, Result};
+use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
     asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Writer,
@@ -220,8 +220,8 @@ impl<'a> TryFrom<AnyRef<'a>> for Parameters<'a> {
 
     fn try_from(any: AnyRef<'a>) -> der::Result<Self> {
         any.sequence(|params| {
-            let kdf = AlgorithmIdentifier::decode(params)?;
-            let encryption = AlgorithmIdentifier::decode(params)?;
+            let kdf = AlgorithmIdentifierRef::decode(params)?;
+            let encryption = AlgorithmIdentifierRef::decode(params)?;
 
             Ok(Self {
                 kdf: kdf.try_into()?,
@@ -305,14 +305,14 @@ impl<'a> EncryptionScheme<'a> {
 
 impl<'a> Decode<'a> for EncryptionScheme<'a> {
     fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        AlgorithmIdentifier::decode(reader).and_then(TryInto::try_into)
+        AlgorithmIdentifierRef::decode(reader).and_then(TryInto::try_into)
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
+impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
+    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
         // TODO(tarcieri): support for non-AES algorithms?
         let iv = match alg.parameters {
             Some(params) => params.octet_string()?.as_bytes(),
@@ -352,7 +352,7 @@ impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
     }
 }
 
-impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
+impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifierRef<'a> {
     type Error = der::Error;
 
     fn try_from(scheme: EncryptionScheme<'a>) -> der::Result<Self> {
@@ -366,7 +366,7 @@ impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
             EncryptionScheme::DesEde3Cbc { iv } => iv,
         })?;
 
-        Ok(AlgorithmIdentifier {
+        Ok(AlgorithmIdentifierRef {
             oid: scheme.oid(),
             parameters: Some(parameters.into()),
         })
@@ -375,10 +375,10 @@ impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifier<'a> {
 
 impl<'a> Encode for EncryptionScheme<'a> {
     fn encoded_len(&self) -> der::Result<Length> {
-        AlgorithmIdentifier::try_from(*self)?.encoded_len()
+        AlgorithmIdentifierRef::try_from(*self)?.encoded_len()
     }
 
     fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
-        AlgorithmIdentifier::try_from(*self)?.encode(writer)
+        AlgorithmIdentifierRef::try_from(*self)?.encode(writer)
     }
 }

@@ -6,9 +6,9 @@ use der::{
     asn1::{ContextSpecific, OctetStringRef},
     DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
 };
-use spki::AlgorithmIdentifier;
+use spki::AlgorithmIdentifierRef;
 
-type ContentEncryptionAlgorithmIdentifier<'a> = AlgorithmIdentifier<'a>;
+type ContentEncryptionAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
 
 const ENCRYPTED_CONTENT_TAG: TagNumber = TagNumber::new(0);
 

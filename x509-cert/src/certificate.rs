@@ -8,7 +8,7 @@ use core::cmp::Ordering;
 use const_oid::AssociatedOid;
 use der::asn1::{BitStringRef, UintRef};
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
-use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfo};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -84,7 +84,7 @@ pub struct TbsCertificate<'a> {
     pub version: Version,
 
     pub serial_number: UintRef<'a>,
-    pub signature: AlgorithmIdentifier<'a>,
+    pub signature: AlgorithmIdentifierRef<'a>,
     pub issuer: Name<'a>,
     pub validity: Validity,
     pub subject: Name<'a>,
@@ -149,7 +149,7 @@ impl<'a> TbsCertificate<'a> {
 #[allow(missing_docs)]
 pub struct Certificate<'a> {
     pub tbs_certificate: TbsCertificate<'a>,
-    pub signature_algorithm: AlgorithmIdentifier<'a>,
+    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
     pub signature: BitStringRef<'a>,
 }
 
