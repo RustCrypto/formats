@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use der::asn1::{BitStringRef, UIntRef};
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence};
-use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfo};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -77,7 +77,7 @@ pub struct TbsCertificate<'a> {
     pub version: Version,
 
     pub serial_number: UIntRef<'a>,
-    pub signature: AlgorithmIdentifier<'a>,
+    pub signature: AlgorithmIdentifierRef<'a>,
     pub issuer: Name<'a>,
     pub validity: Validity,
     pub subject: Name<'a>,
@@ -142,7 +142,7 @@ impl<'a> TbsCertificate<'a> {
 #[allow(missing_docs)]
 pub struct Certificate<'a> {
     pub tbs_certificate: TbsCertificate<'a>,
-    pub signature_algorithm: AlgorithmIdentifier<'a>,
+    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
     pub signature: BitStringRef<'a>,
 }
 

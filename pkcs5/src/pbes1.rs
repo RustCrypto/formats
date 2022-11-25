@@ -2,7 +2,7 @@
 //!
 //! [RFC 8018 Section 6.1]: https://tools.ietf.org/html/rfc8018#section-6.1
 
-use crate::AlgorithmIdentifier;
+use crate::AlgorithmIdentifierRef;
 use der::{
     asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Writer,
@@ -68,7 +68,7 @@ impl Algorithm {
 
 impl<'a> Decode<'a> for Algorithm {
     fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
-        AlgorithmIdentifier::decode(decoder)?.try_into()
+        AlgorithmIdentifierRef::decode(decoder)?.try_into()
     }
 }
 
@@ -81,10 +81,10 @@ impl Sequence<'_> for Algorithm {
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifier<'a>> for Algorithm {
+impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Algorithm {
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<Self> {
+    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
         // Ensure that we have a supported PBES1 algorithm identifier
         let encryption = EncryptionScheme::try_from(alg.oid)
             .map_err(|_| der::Tag::ObjectIdentifier.value_error())?;

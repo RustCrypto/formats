@@ -9,7 +9,7 @@ use pkcs7::{
     encrypted_data_content::EncryptedDataContent, enveloped_data_content::EncryptedContentInfo,
     ContentInfo, ContentType,
 };
-use spki::AlgorithmIdentifier;
+use spki::AlgorithmIdentifierRef;
 use std::fs;
 
 fn encode_content_info<'a>(content_info: &ContentInfo<'a>, buf: &'a mut [u8]) -> &'a [u8] {
@@ -52,7 +52,7 @@ fn decode_encrypted_key_example() {
                 EncryptedContentInfo {
                     content_type: ContentType::Data,
                     content_encryption_algorithm:
-                        AlgorithmIdentifier {
+                        AlgorithmIdentifierRef {
                             oid,
                             parameters: Some(any),
                         },
