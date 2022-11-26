@@ -1,7 +1,7 @@
 //! `SubjectPublicKeyInfo` tests.
 
 use hex_literal::hex;
-use spki::SubjectPublicKeyInfo;
+use spki::SubjectPublicKeyInfoRef;
 
 #[cfg(feature = "alloc")]
 use der::Encode;
@@ -46,7 +46,7 @@ const ED25519_SPKI_FINGERPRINT: &[u8] =
 
 #[test]
 fn decode_ec_p256_der() {
-    let spki = SubjectPublicKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
+    let spki = SubjectPublicKeyInfoRef::try_from(EC_P256_DER_EXAMPLE).unwrap();
 
     assert_eq!(spki.algorithm.oid, "1.2.840.10045.2.1".parse().unwrap());
 
@@ -62,7 +62,7 @@ fn decode_ec_p256_der() {
 #[cfg(feature = "fingerprint")]
 fn decode_ed25519_and_fingerprint_spki() {
     // Repeat the decode test from the pkcs8 crate
-    let spki = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
+    let spki = SubjectPublicKeyInfoRef::try_from(ED25519_DER_EXAMPLE).unwrap();
 
     assert_eq!(spki.algorithm.oid, "1.3.101.112".parse().unwrap());
     assert_eq!(spki.algorithm.parameters, None);
@@ -82,7 +82,7 @@ fn decode_ed25519_and_fingerprint_spki() {
 #[cfg(all(feature = "fingerprint", feature = "alloc"))]
 fn decode_ed25519_and_fingerprint_base64() {
     // Repeat the decode test from the pkcs8 crate
-    let spki = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
+    let spki = SubjectPublicKeyInfoRef::try_from(ED25519_DER_EXAMPLE).unwrap();
 
     assert_eq!(spki.algorithm.oid, "1.3.101.112".parse().unwrap());
     assert_eq!(spki.algorithm.parameters, None);
@@ -100,7 +100,7 @@ fn decode_ed25519_and_fingerprint_base64() {
 
 #[test]
 fn decode_rsa_2048_der() {
-    let spki = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let spki = SubjectPublicKeyInfoRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
 
     assert_eq!(spki.algorithm.oid, "1.2.840.113549.1.1.1".parse().unwrap());
     assert!(spki.algorithm.parameters.unwrap().is_null());
@@ -110,7 +110,7 @@ fn decode_rsa_2048_der() {
 #[test]
 #[cfg(feature = "alloc")]
 fn encode_ec_p256_der() {
-    let pk = SubjectPublicKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
+    let pk = SubjectPublicKeyInfoRef::try_from(EC_P256_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_vec().unwrap();
     assert_eq!(EC_P256_DER_EXAMPLE, pk_encoded.as_slice());
 }
@@ -118,7 +118,7 @@ fn encode_ec_p256_der() {
 #[test]
 #[cfg(feature = "alloc")]
 fn encode_ed25519_der() {
-    let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
+    let pk = SubjectPublicKeyInfoRef::try_from(ED25519_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_vec().unwrap();
     assert_eq!(ED25519_DER_EXAMPLE, pk_encoded.as_slice());
 }
@@ -126,7 +126,7 @@ fn encode_ed25519_der() {
 #[test]
 #[cfg(feature = "alloc")]
 fn encode_rsa_2048_der() {
-    let pk = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let pk = SubjectPublicKeyInfoRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_vec().unwrap();
     assert_eq!(RSA_2048_DER_EXAMPLE, pk_encoded.as_slice());
 }
@@ -134,7 +134,7 @@ fn encode_rsa_2048_der() {
 #[test]
 #[cfg(feature = "pem")]
 fn encode_ec_p256_pem() {
-    let pk = SubjectPublicKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
+    let pk = SubjectPublicKeyInfoRef::try_from(EC_P256_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_pem(LineEnding::LF).unwrap();
     assert_eq!(EC_P256_PEM_EXAMPLE, pk_encoded);
 }
@@ -142,7 +142,7 @@ fn encode_ec_p256_pem() {
 #[test]
 #[cfg(feature = "pem")]
 fn encode_ed25519_pem() {
-    let pk = SubjectPublicKeyInfo::try_from(ED25519_DER_EXAMPLE).unwrap();
+    let pk = SubjectPublicKeyInfoRef::try_from(ED25519_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_pem(LineEnding::LF).unwrap();
     assert_eq!(ED25519_PEM_EXAMPLE, pk_encoded);
 }
@@ -150,7 +150,7 @@ fn encode_ed25519_pem() {
 #[test]
 #[cfg(feature = "pem")]
 fn encode_rsa_2048_pem() {
-    let pk = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let pk = SubjectPublicKeyInfoRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_pem(LineEnding::LF).unwrap();
     assert_eq!(RSA_2048_PEM_EXAMPLE, pk_encoded);
 }
