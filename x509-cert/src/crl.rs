@@ -8,7 +8,7 @@ use crate::Version;
 use alloc::vec::Vec;
 
 use der::asn1::{BitStringRef, UIntRef};
-use der::Sequence;
+use der::{Sequence, ValueOrd};
 use spki::AlgorithmIdentifier;
 
 /// `CertificateList` as defined in [RFC 5280 Section 5.1].
@@ -22,7 +22,7 @@ use spki::AlgorithmIdentifier;
 /// ```
 ///
 /// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct CertificateList<'a> {
     pub tbs_cert_list: TbsCertList<'a>,
@@ -44,7 +44,7 @@ pub struct CertificateList<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct RevokedCert<'a> {
     pub serial_number: UIntRef<'a>,
@@ -71,7 +71,7 @@ pub struct RevokedCert<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct TbsCertList<'a> {
     pub version: Version,

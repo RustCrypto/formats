@@ -3,10 +3,11 @@
 use crate::{name::Name, time::Validity};
 
 use alloc::vec::Vec;
+use core::cmp::Ordering;
 
 use const_oid::AssociatedOid;
 use der::asn1::{BitStringRef, UIntRef};
-use der::{Decode, Enumerated, Error, ErrorKind, Sequence};
+use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 #[cfg(feature = "pem")]
@@ -31,6 +32,12 @@ pub enum Version {
 
     /// Version 3
     V3 = 2,
+}
+
+impl ValueOrd for Version {
+    fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
+        (&(*self as u8)).value_cmp(&(*other as u8))
+    }
 }
 
 impl Default for Version {
@@ -64,7 +71,7 @@ impl Default for Version {
 /// ```
 ///
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct TbsCertificate<'a> {
     /// The certificate version
@@ -138,7 +145,7 @@ impl<'a> TbsCertificate<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct Certificate<'a> {
     pub tbs_certificate: TbsCertificate<'a>,

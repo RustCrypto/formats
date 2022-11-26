@@ -1,7 +1,7 @@
 //! PKIX distribution point types
 
 use const_oid::{db::rfc5280::ID_PE_SUBJECT_INFO_ACCESS, AssociatedOid, ObjectIdentifier};
-use der::Sequence;
+use der::{Sequence, ValueOrd};
 use flagset::{flags, FlagSet};
 
 use crate::ext::pkix::name::{DistributionPointName, GeneralNames};
@@ -74,7 +74,7 @@ impl<'a> AssociatedOid for IssuingDistributionPoint<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
-#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
+#[derive(Clone, Debug, PartialEq, Eq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct DistributionPoint<'a> {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]

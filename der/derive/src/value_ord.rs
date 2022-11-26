@@ -21,6 +21,8 @@ pub(crate) struct DeriveValueOrd {
 
     /// Fields of structs or enum variants.
     fields: Vec<ValueField>,
+
+    is_enum: bool,
 }
 
 impl DeriveValueOrd {
@@ -36,17 +38,21 @@ impl DeriveValueOrd {
             .next()
             .map(|lt| lt.lifetime.clone());
 
-        let fields = match input.data {
-            syn::Data::Enum(data) => data
-                .variants
-                .into_iter()
-                .map(|variant| ValueField::new_enum(variant, &type_attrs))
-                .collect(),
-            syn::Data::Struct(data) => data
-                .fields
-                .into_iter()
-                .map(|field| ValueField::new_struct(field, &type_attrs))
-                .collect(),
+        let (fields, is_enum) = match input.data {
+            syn::Data::Enum(data) => (
+                data.variants
+                    .into_iter()
+                    .map(|variant| ValueField::new_enum(variant, &type_attrs))
+                    .collect(),
+                true,
+            ),
+            syn::Data::Struct(data) => (
+                data.fields
+                    .into_iter()
+                    .map(|field| ValueField::new_struct(field, &type_attrs))
+                    .collect(),
+                false,
+            ),
             _ => abort!(
                 ident,
                 "can't derive `ValueOrd` on this type: \
@@ -58,6 +64,7 @@ impl DeriveValueOrd {
             ident,
             lifetime,
             fields,
+            is_enum,
         }
     }
 
@@ -79,15 +86,30 @@ impl DeriveValueOrd {
             body.push(field.to_tokens());
         }
 
+        let body = if self.is_enum {
+            quote! {
+                #[allow(unused_imports)]
+                use ::der::ValueOrd;
+                match (self, other) {
+                    #(#body)*
+                    _ => unreachable!(),
+                }
+            }
+        } else {
+            quote! {
+                #[allow(unused_imports)]
+                use ::der::{DerOrd, ValueOrd};
+
+                #(#body)*
+
+                Ok(::core::cmp::Ordering::Equal)
+            }
+        };
+
         quote! {
             impl<#(#lt_params)*> ::der::ValueOrd for #ident<#(#lt_params)*> {
                 fn value_cmp(&self, other: &Self) -> ::der::Result<::core::cmp::Ordering> {
-                    #[allow(unused_imports)]
-                    use ::der::DerOrd;
-
-                    #(#body)*
-
-                    Ok(::core::cmp::Ordering::Equal)
+                    #body
                 }
             }
         }
@@ -100,15 +122,21 @@ struct ValueField {
 
     /// Field-level attributes.
     attrs: FieldAttrs,
+
+    is_enum: bool,
 }
 
 impl ValueField {
     /// Create from an `enum` variant.
-    fn new_enum(variant: Variant, _: &TypeAttrs) -> Self {
-        abort!(
-            variant,
-            "deriving `ValueOrd` only presently supported for structs"
-        );
+    fn new_enum(variant: Variant, type_attrs: &TypeAttrs) -> Self {
+        let ident = variant.ident;
+
+        let attrs = FieldAttrs::parse(&variant.attrs, type_attrs);
+        Self {
+            ident,
+            attrs,
+            is_enum: true,
+        }
     }
 
     /// Create from a `struct` field.
@@ -120,24 +148,37 @@ impl ValueField {
             .unwrap_or_else(|| abort!(&field, "tuple structs are not supported"));
 
         let attrs = FieldAttrs::parse(&field.attrs, type_attrs);
-        Self { ident, attrs }
+        Self {
+            ident,
+            attrs,
+            is_enum: false,
+        }
     }
 
     /// Lower to [`TokenStream`].
     fn to_tokens(&self) -> TokenStream {
         let ident = &self.ident;
-        let mut binding1 = quote!(self.#ident);
-        let mut binding2 = quote!(other.#ident);
 
-        if let Some(ty) = &self.attrs.asn1_type {
-            binding1 = ty.encoder(&binding1);
-            binding2 = ty.encoder(&binding2);
-        }
+        if self.is_enum {
+            let binding1 = quote!(Self::#ident(this));
+            let binding2 = quote!(Self::#ident(other));
+            quote! {
+                (#binding1, #binding2) => this.value_cmp(other),
+            }
+        } else {
+            let mut binding1 = quote!(self.#ident);
+            let mut binding2 = quote!(other.#ident);
 
-        quote! {
-            match #binding1.der_cmp(&#binding2)? {
-                ::core::cmp::Ordering::Equal => (),
-                other => return Ok(other),
+            if let Some(ty) = &self.attrs.asn1_type {
+                binding1 = ty.encoder(&binding1);
+                binding2 = ty.encoder(&binding2);
+            }
+
+            quote! {
+                match #binding1.der_cmp(&#binding2)? {
+                    ::core::cmp::Ordering::Equal => (),
+                    other => return Ok(other),
+                }
             }
         }
     }
