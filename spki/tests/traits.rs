@@ -3,7 +3,7 @@
 #![cfg(any(feature = "pem", feature = "std"))]
 
 use der::{Decode, Encode};
-use spki::{DecodePublicKey, Document, EncodePublicKey, Error, Result, SubjectPublicKeyInfo};
+use spki::{DecodePublicKey, Document, EncodePublicKey, Error, Result, SubjectPublicKeyInfoRef};
 
 #[cfg(feature = "pem")]
 use spki::der::pem::LineEnding;
@@ -42,10 +42,10 @@ impl EncodePublicKey for MockKey {
     }
 }
 
-impl TryFrom<SubjectPublicKeyInfo<'_>> for MockKey {
+impl TryFrom<SubjectPublicKeyInfoRef<'_>> for MockKey {
     type Error = Error;
 
-    fn try_from(spki: SubjectPublicKeyInfo<'_>) -> Result<MockKey> {
+    fn try_from(spki: SubjectPublicKeyInfoRef<'_>) -> Result<MockKey> {
         Ok(MockKey(spki.to_vec()?))
     }
 }

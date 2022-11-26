@@ -183,7 +183,7 @@ impl<T: pkcs8::DecodePrivateKey> DecodeRsaPrivateKey for T {
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
 impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T {
     fn from_pkcs1_der(public_key: &[u8]) -> Result<Self> {
-        Ok(Self::try_from(pkcs8::SubjectPublicKeyInfo {
+        Ok(Self::try_from(pkcs8::SubjectPublicKeyInfoRef {
             algorithm: ALGORITHM_ID,
             subject_public_key: public_key,
         })?)
@@ -206,7 +206,7 @@ impl<T: pkcs8::EncodePrivateKey> EncodeRsaPrivateKey for T {
 impl<T: pkcs8::EncodePublicKey> EncodeRsaPublicKey for T {
     fn to_pkcs1_der(&self) -> Result<Document> {
         let doc = self.to_public_key_der()?;
-        let spki = pkcs8::SubjectPublicKeyInfo::from_der(doc.as_bytes())?;
+        let spki = pkcs8::SubjectPublicKeyInfoRef::from_der(doc.as_bytes())?;
         spki.algorithm.assert_algorithm_oid(ALGORITHM_OID)?;
         RsaPublicKey::from_der(spki.subject_public_key)?.try_into()
     }

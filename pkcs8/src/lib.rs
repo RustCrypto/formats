@@ -83,7 +83,9 @@ pub use crate::{
     version::Version,
 };
 pub use der::{self, asn1::ObjectIdentifier, oid::AssociatedOid};
-pub use spki::{self, AlgorithmIdentifierRef, DecodePublicKey, SubjectPublicKeyInfo};
+pub use spki::{
+    self, AlgorithmIdentifierRef, DecodePublicKey, SubjectPublicKeyInfo, SubjectPublicKeyInfoRef,
+};
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
