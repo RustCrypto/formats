@@ -43,9 +43,25 @@ jobs:
       - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features std
 
   minimal-versions:
-    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@6a9eb41cc3746f73b439fc6577076ea4fc47b86b
-    with:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
         working-directory: ${{ github.workflow }}
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: RustCrypto/actions/cargo-cache@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2022-11-21
+          override: true
+          profile: minimal
+      - uses: RustCrypto/actions/cargo-hack-install@master
+      - name: Test benches build
+        run: cargo build --benches
+      - run: rm ../Cargo.toml
+      - run: cargo update -Z minimal-versions
+      - run: cargo hack test --release --feature-powerset
 
   test:
     runs-on: ubuntu-latest
