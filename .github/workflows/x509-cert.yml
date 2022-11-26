@@ -43,7 +43,7 @@ jobs:
       - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features std
 
   minimal-versions:
-    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@pull/20/head
+    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@6a9eb41cc3746f73b439fc6577076ea4fc47b86b
     with:
         working-directory: ${{ github.workflow }}
 
