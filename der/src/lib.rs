@@ -357,6 +357,8 @@ mod tag;
 mod writer;
 
 #[cfg(feature = "alloc")]
+mod byte_vec;
+#[cfg(feature = "alloc")]
 mod document;
 
 pub use crate::{
@@ -406,4 +408,6 @@ pub use zeroize;
 #[cfg(all(feature = "alloc", feature = "zeroize"))]
 pub use crate::document::SecretDocument;
 
+#[cfg(feature = "alloc")]
+pub(crate) use crate::byte_vec::ByteVec;
 pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
