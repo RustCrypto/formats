@@ -194,6 +194,13 @@ impl Tagged for AnyRef<'_> {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl ValueOrd for Any {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        self.value.der_cmp(&other.value)
+    }
+}
+
 impl ValueOrd for AnyRef<'_> {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         self.value.der_cmp(&other.value)
