@@ -85,9 +85,9 @@ pub struct TbsCertificate<'a> {
 
     pub serial_number: UintRef<'a>,
     pub signature: AlgorithmIdentifierRef<'a>,
-    pub issuer: Name<'a>,
+    pub issuer: Name,
     pub validity: Validity,
-    pub subject: Name<'a>,
+    pub subject: Name,
     pub subject_public_key_info: SubjectPublicKeyInfoRef<'a>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]

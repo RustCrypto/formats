@@ -2,7 +2,7 @@
 
 use der::{
     asn1::{
-        BitStringRef, ContextSpecific, ObjectIdentifier, PrintableStringRef, UIntRef, Utf8StringRef,
+        BitStringRef, ContextSpecific, ObjectIdentifier, PrintableStringRef, UintRef, Utf8StringRef,
     },
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
 };

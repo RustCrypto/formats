@@ -47,7 +47,7 @@ pub enum GeneralName<'a> {
     DnsName(Ia5StringRef<'a>),
 
     #[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
-    DirectoryName(Name<'a>),
+    DirectoryName(Name),
 
     #[asn1(context_specific = "5", tag_mode = "IMPLICIT", constructed = "true")]
     EdiPartyName(EdiPartyName<'a>),

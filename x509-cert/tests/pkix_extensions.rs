@@ -1,6 +1,6 @@
 //! Certificate tests
 use const_oid::AssociatedOid;
-use der::asn1::{Ia5StringRef, PrintableStringRef, UIntRef, Utf8StringRef};
+use der::asn1::{Ia5StringRef, PrintableStringRef, UintRef, Utf8StringRef};
 use der::{Decode, Encode, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
