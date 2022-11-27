@@ -7,7 +7,7 @@ use crate::{
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use crate::ByteVec;
+use crate::Bytes;
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
@@ -208,14 +208,14 @@ pub struct Any {
     tag: Tag,
 
     /// Inner value encoded as bytes.
-    value: ByteVec,
+    value: Bytes,
 }
 
 #[cfg(feature = "alloc")]
 impl Any {
     /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
     pub fn new(tag: Tag, bytes: &[u8]) -> Result<Self> {
-        let value = ByteVec::new(bytes)?;
+        let value = Bytes::new(bytes)?;
 
         // Ensure the tag and value are a valid `AnyRef`.
         AnyRef::new(tag, value.as_slice())?;
@@ -290,7 +290,7 @@ where
         let anyref: AnyRef<'a> = input.into();
         Self {
             tag: anyref.tag(),
-            value: ByteVec::new(anyref.value()).expect("invalid ANY"),
+            value: Bytes::new(anyref.value()).expect("invalid ANY"),
         }
     }
 }
