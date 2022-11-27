@@ -23,13 +23,13 @@ pub struct OtherName<'a> {
 #[cfg(test)]
 fn test() {
     use alloc::string::ToString;
-    use der::{Decode, Encode};
+    use der::{asn1::Utf8StringRef, Decode, Encode};
     use hex_literal::hex;
 
     let input = hex!("3021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");
     let decoded = OtherName::from_der(&input).unwrap();
 
-    let onval = decoded.value.utf8_string().unwrap();
+    let onval = Utf8StringRef::try_from(decoded.value).unwrap();
     assert_eq!(onval.to_string(), "Upn_214950130@mil");
 
     let encoded = decoded.to_vec().unwrap();

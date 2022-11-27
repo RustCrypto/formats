@@ -6,6 +6,9 @@ use crate::{
 };
 use core::{fmt, ops::Deref, str};
 
+#[cfg(feature = "alloc")]
+use crate::asn1::Any;
+
 /// ASN.1 `PrintableString` type.
 ///
 /// Supports a subset the ASCII character set (described below).
@@ -129,6 +132,15 @@ impl<'a> TryFrom<AnyRef<'a>> for PrintableStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<PrintableStringRef<'a>> {
+        any.decode_into()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> TryFrom<&'a Any> for PrintableStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(any: &'a Any) -> Result<PrintableStringRef<'a>> {
         any.decode_into()
     }
 }

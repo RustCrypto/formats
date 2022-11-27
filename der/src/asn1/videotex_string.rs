@@ -6,6 +6,9 @@ use crate::{
 };
 use core::{fmt, ops::Deref, str};
 
+#[cfg(feature = "alloc")]
+use crate::asn1::Any;
+
 /// ASN.1 `VideotexString` type.
 ///
 /// Supports a subset the ASCII character set (described below).
@@ -98,6 +101,15 @@ impl<'a> TryFrom<AnyRef<'a>> for VideotexStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<VideotexStringRef<'a>> {
+        any.decode_into()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> TryFrom<&'a Any> for VideotexStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(any: &'a Any) -> Result<VideotexStringRef<'a>> {
         any.decode_into()
     }
 }

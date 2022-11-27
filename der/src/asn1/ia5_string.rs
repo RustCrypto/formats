@@ -6,6 +6,9 @@ use crate::{
 };
 use core::{fmt, ops::Deref, str};
 
+#[cfg(feature = "alloc")]
+use crate::asn1::Any;
+
 /// ASN.1 `IA5String` type.
 ///
 /// Supports the [International Alphabet No. 5 (IA5)] character encoding, i.e.
@@ -95,6 +98,15 @@ impl<'a> TryFrom<AnyRef<'a>> for Ia5StringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<Ia5StringRef<'a>> {
+        any.decode_into()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> TryFrom<&'a Any> for Ia5StringRef<'a> {
+    type Error = Error;
+
+    fn try_from(any: &'a Any) -> Result<Ia5StringRef<'a>> {
         any.decode_into()
     }
 }

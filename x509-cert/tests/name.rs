@@ -40,17 +40,26 @@ fn decode_name() {
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                assert_eq!(
+                    PrintableStringRef::try_from(atav.value)
+                        .unwrap()
+                        .to_string(),
+                    "US"
+                );
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Test Certificates 2011"
                 );
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Good CA"
                 );
             }
@@ -75,7 +84,7 @@ fn decode_rdn() {
         assert_eq!(oid.to_string(), "2.5.4.6");
         let value = atav.value;
         assert_eq!(value.tag(), Tag::PrintableString);
-        let ps = value.printable_string().unwrap();
+        let ps = PrintableStringRef::try_from(value).unwrap();
         assert_eq!(ps.to_string(), "US");
     }
 
@@ -101,7 +110,7 @@ fn decode_rdn() {
     assert_eq!(oid2.to_string(), "2.5.4.10");
     let value2 = atav1a.value;
     assert_eq!(value2.tag(), Tag::Utf8String);
-    let utf8b = value2.utf8_string().unwrap();
+    let utf8b = Utf8StringRef::try_from(value2).unwrap();
     assert_eq!(utf8b.to_string(), "123");
 
     let atav2a = i.next().unwrap();
@@ -109,7 +118,7 @@ fn decode_rdn() {
     assert_eq!(oid1.to_string(), "2.5.4.3");
     let value1 = atav2a.value;
     assert_eq!(value1.tag(), Tag::Utf8String);
-    let utf8a = value1.utf8_string().unwrap();
+    let utf8a = Utf8StringRef::try_from(value1).unwrap();
     assert_eq!(utf8a.to_string(), "JOHN SMITH");
 
     let mut from_scratch = RelativeDistinguishedName::default();

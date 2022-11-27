@@ -1,6 +1,9 @@
 //! Certification request (`CertReq`) tests
 
-use der::{Encode, Tag, Tagged};
+use der::{
+    asn1::{PrintableStringRef, Utf8StringRef},
+    Encode, Tag, Tagged,
+};
 use hex_literal::hex;
 use x509_cert::request::{CertReq, Version};
 
@@ -38,8 +41,8 @@ fn decode_rsa_2048_der() {
     for (name, (oid, val)) in cr.info.subject.0.iter().zip(NAMES) {
         let kind = name.0.get(0).unwrap();
         let value = match kind.value.tag() {
-            Tag::Utf8String => kind.value.utf8_string().unwrap().as_str(),
-            Tag::PrintableString => kind.value.printable_string().unwrap().as_str(),
+            Tag::Utf8String => Utf8StringRef::try_from(kind.value).unwrap().as_str(),
+            Tag::PrintableString => PrintableStringRef::try_from(kind.value).unwrap().as_str(),
             _ => panic!("unexpected tag"),
         };
 
