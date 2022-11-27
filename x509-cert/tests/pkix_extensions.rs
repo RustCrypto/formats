@@ -1,6 +1,6 @@
 //! Certificate tests
 use const_oid::AssociatedOid;
-use der::asn1::UintRef;
+use der::asn1::{Ia5StringRef, PrintableStringRef, UIntRef, Utf8StringRef};
 use der::{Decode, Encode, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
@@ -138,7 +138,7 @@ fn decode_general_name() {
     let bytes = hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");
     match GeneralName::from_der(&bytes).unwrap() {
         GeneralName::OtherName(other_name) => {
-            let onval = other_name.value.utf8_string().unwrap();
+            let onval = Utf8StringRef::try_from(other_name.value).unwrap();
             assert_eq!(onval.to_string(), "Upn_214950130@mil");
         }
         _ => panic!("Failed to parse OtherName from GeneralName"),
@@ -285,7 +285,7 @@ fn decode_cert() {
                     for pqi in pq.iter() {
                         if 0 == counter_pq {
                             assert_eq!("1.3.6.1.5.5.7.2.1", pqi.policy_qualifier_id.to_string());
-                            let cpsval = pqi.qualifier.unwrap().ia5_string().unwrap();
+                            let cpsval = Ia5StringRef::try_from(pqi.qualifier.unwrap()).unwrap();
                             assert_eq!(
                                 "https://secure.identrust.com/certificates/policy/IGC/index.html",
                                 cpsval.to_string()
@@ -508,17 +508,26 @@ fn decode_cert() {
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                assert_eq!(
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
+                    "US"
+                );
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Test Certificates 2011"
                 );
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Trust Anchor"
                 );
             }
@@ -550,17 +559,26 @@ fn decode_cert() {
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                assert_eq!(
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
+                    "US"
+                );
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Test Certificates 2011"
                 );
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Good CA"
                 );
             }

@@ -7,7 +7,10 @@ use crate::{
 use core::{fmt, ops::Deref, str};
 
 #[cfg(feature = "alloc")]
-use alloc::{borrow::ToOwned, string::String};
+use {
+    crate::asn1::Any,
+    alloc::{borrow::ToOwned, string::String},
+};
 
 /// ASN.1 `UTF8String` type.
 ///
@@ -95,9 +98,18 @@ impl<'a> TryFrom<AnyRef<'a>> for Utf8StringRef<'a> {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl<'a> TryFrom<&'a Any> for Utf8StringRef<'a> {
+    type Error = Error;
+
+    fn try_from(any: &'a Any) -> Result<Utf8StringRef<'a>> {
+        any.decode_into()
+    }
+}
+
 impl<'a> From<Utf8StringRef<'a>> for AnyRef<'a> {
-    fn from(printable_string: Utf8StringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::Utf8String, printable_string.inner.into())
+    fn from(utf_string: Utf8StringRef<'a>) -> AnyRef<'a> {
+        AnyRef::from_tag_and_value(Tag::Utf8String, utf_string.inner.into())
     }
 }
 

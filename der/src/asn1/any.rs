@@ -94,11 +94,6 @@ impl<'a> AnyRef<'a> {
         self.try_into()
     }
 
-    /// Attempt to decode an ASN.1 `IA5String`.
-    pub fn ia5_string(self) -> Result<Ia5StringRef<'a>> {
-        self.try_into()
-    }
-
     /// Attempt to decode an ASN.1 `OCTET STRING`.
     pub fn octet_string(self) -> Result<OctetStringRef<'a>> {
         self.try_into()
@@ -123,21 +118,6 @@ impl<'a> AnyRef<'a> {
         }
     }
 
-    /// Attempt to decode an ASN.1 `PrintableString`.
-    pub fn printable_string(self) -> Result<PrintableStringRef<'a>> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `TeletexString`.
-    pub fn teletex_string(self) -> Result<TeletexStringRef<'a>> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `VideotexString`.
-    pub fn videotex_string(self) -> Result<VideotexStringRef<'a>> {
-        self.try_into()
-    }
-
     /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
     /// nested reader and calling the provided argument with it.
     pub fn sequence<F, T>(self, f: F) -> Result<T>
@@ -152,11 +132,6 @@ impl<'a> AnyRef<'a> {
 
     /// Attempt to decode an ASN.1 `UTCTime`.
     pub fn utc_time(self) -> Result<UtcTime> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `UTF8String`.
-    pub fn utf8_string(self) -> Result<Utf8StringRef<'a>> {
         self.try_into()
     }
 }
@@ -303,5 +278,19 @@ impl<'a> From<&'a Any> for AnyRef<'a> {
 impl Tagged for Any {
     fn tag(&self) -> Tag {
         self.tag
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a, T> From<T> for Any
+where
+    T: Into<AnyRef<'a>>,
+{
+    fn from(input: T) -> Any {
+        let anyref: AnyRef<'a> = input.into();
+        Self {
+            tag: anyref.tag(),
+            value: ByteVec::new(anyref.value()).expect("invalid ANY"),
+        }
     }
 }
