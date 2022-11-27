@@ -232,7 +232,7 @@ fn decode_cert() {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "US"
@@ -240,7 +240,7 @@ fn decode_cert() {
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "Mock"
@@ -248,13 +248,13 @@ fn decode_cert() {
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    Utf8StringRef::try_from(atav.value).unwrap().to_string(),
+                    Utf8StringRef::try_from(&atav.value).unwrap().to_string(),
                     "IdenTrust Services LLC"
                 );
             } else if 3 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    Utf8StringRef::try_from(atav.value).unwrap().to_string(),
+                    Utf8StringRef::try_from(&atav.value).unwrap().to_string(),
                     "PTE IdenTrust Global Common Root CA 1"
                 );
             }
@@ -288,7 +288,7 @@ fn decode_cert() {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "Test Federal Bridge CA"
@@ -296,7 +296,7 @@ fn decode_cert() {
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.11");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "TestFPKI"
@@ -304,7 +304,7 @@ fn decode_cert() {
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "U.S. Government"
@@ -312,7 +312,7 @@ fn decode_cert() {
             } else if 3 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "US"

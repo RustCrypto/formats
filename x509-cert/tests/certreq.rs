@@ -41,8 +41,8 @@ fn decode_rsa_2048_der() {
     for (name, (oid, val)) in cr.info.subject.0.iter().zip(NAMES) {
         let kind = name.0.get(0).unwrap();
         let value = match kind.value.tag() {
-            Tag::Utf8String => Utf8StringRef::try_from(kind.value).unwrap().as_str(),
-            Tag::PrintableString => PrintableStringRef::try_from(kind.value).unwrap().as_str(),
+            Tag::Utf8String => Utf8StringRef::try_from(&kind.value).unwrap().as_str(),
+            Tag::PrintableString => PrintableStringRef::try_from(&kind.value).unwrap().as_str(),
             _ => panic!("unexpected tag"),
         };
 

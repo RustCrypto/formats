@@ -75,7 +75,7 @@ pub struct TrustAnchorInfo<'a> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct CertPathControls<'a> {
-    pub ta_name: Name<'a>,
+    pub ta_name: Name,
 
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
     pub certificate: Option<Certificate<'a>>,

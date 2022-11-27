@@ -76,7 +76,7 @@ pub struct RevokedCert<'a> {
 pub struct TbsCertList<'a> {
     pub version: Version,
     pub signature: AlgorithmIdentifierRef<'a>,
-    pub issuer: Name<'a>,
+    pub issuer: Name,
     pub this_update: Time,
     pub next_update: Option<Time>,
     pub revoked_certificates: Option<Vec<RevokedCert<'a>>>,

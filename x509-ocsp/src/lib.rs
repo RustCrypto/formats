@@ -280,7 +280,7 @@ pub struct ResponseData<'a> {
 #[allow(missing_docs)]
 pub enum ResponderId<'a> {
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
-    ByName(Name<'a>),
+    ByName(Name),
 
     #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
     ByKey(KeyHash<'a>),
@@ -405,7 +405,7 @@ pub type AcceptableResponses = Vec<ObjectIdentifier>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct ServiceLocator<'a> {
-    pub issuer: Name<'a>,
+    pub issuer: Name,
     pub locator: AuthorityInfoAccessSyntax<'a>,
 }
 

@@ -94,7 +94,7 @@ fn decode_ta1() {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "US"
@@ -102,7 +102,7 @@ fn decode_ta1() {
                     } else if 1 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.10");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "U.S. Government"
@@ -110,7 +110,7 @@ fn decode_ta1() {
                     } else if 2 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "ECA"
@@ -118,7 +118,7 @@ fn decode_ta1() {
                     } else if 3 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.3");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "ECA Root CA 4"
@@ -171,7 +171,7 @@ fn decode_ta2() {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "US"
@@ -179,7 +179,7 @@ fn decode_ta2() {
                     } else if 1 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.10");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "Entrust"
@@ -187,7 +187,7 @@ fn decode_ta2() {
                     } else if 2 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "Certification Authorities"
@@ -195,7 +195,7 @@ fn decode_ta2() {
                     } else if 3 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "Entrust Managed Services NFI Root CA"
@@ -218,7 +218,7 @@ fn decode_ta2() {
                                 if 0 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.6");
                                     assert_eq!(
-                                        PrintableStringRef::try_from(atav.value)
+                                        PrintableStringRef::try_from(&atav.value)
                                             .unwrap()
                                             .to_string(),
                                         "US"
@@ -226,7 +226,7 @@ fn decode_ta2() {
                                 } else if 1 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.10");
                                     assert_eq!(
-                                        PrintableStringRef::try_from(atav.value)
+                                        PrintableStringRef::try_from(&atav.value)
                                             .unwrap()
                                             .to_string(),
                                         "U.S. Government"
@@ -234,7 +234,7 @@ fn decode_ta2() {
                                 } else if 2 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.11");
                                     assert_eq!(
-                                        PrintableStringRef::try_from(atav.value)
+                                        PrintableStringRef::try_from(&atav.value)
                                             .unwrap()
                                             .to_string(),
                                         "DoD"
@@ -298,7 +298,7 @@ fn decode_ta3() {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "US"
@@ -306,7 +306,7 @@ fn decode_ta3() {
                     } else if 1 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.10");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "Exostar LLC"
@@ -314,7 +314,7 @@ fn decode_ta3() {
                     } else if 2 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "Certification Authorities"
@@ -322,7 +322,7 @@ fn decode_ta3() {
                     } else if 3 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.3");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "Exostar Federated Identity Service Root CA 1"
@@ -345,7 +345,7 @@ fn decode_ta3() {
                                 if 0 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.6");
                                     assert_eq!(
-                                        PrintableStringRef::try_from(atav.value)
+                                        PrintableStringRef::try_from(&atav.value)
                                             .unwrap()
                                             .to_string(),
                                         "US"
@@ -353,7 +353,7 @@ fn decode_ta3() {
                                 } else if 1 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.10");
                                     assert_eq!(
-                                        PrintableStringRef::try_from(atav.value)
+                                        PrintableStringRef::try_from(&atav.value)
                                             .unwrap()
                                             .to_string(),
                                         "U.S. Government"
@@ -361,7 +361,7 @@ fn decode_ta3() {
                                 } else if 2 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.11");
                                     assert_eq!(
-                                        PrintableStringRef::try_from(atav.value)
+                                        PrintableStringRef::try_from(&atav.value)
                                             .unwrap()
                                             .to_string(),
                                         "DoD"
@@ -418,19 +418,19 @@ fn decode_ta4() {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");
                         assert_eq!(
-                            Ia5StringRef::try_from(atav.value).unwrap().to_string(),
+                            Ia5StringRef::try_from(&atav.value).unwrap().to_string(),
                             "com"
                         );
                     } else if 1 == counter {
                         assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");
                         assert_eq!(
-                            Ia5StringRef::try_from(atav.value).unwrap().to_string(),
+                            Ia5StringRef::try_from(&atav.value).unwrap().to_string(),
                             "raytheon"
                         );
                     } else if 2 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.10");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "CAs"
@@ -438,7 +438,7 @@ fn decode_ta4() {
                     } else if 3 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            PrintableStringRef::try_from(atav.value)
+                            PrintableStringRef::try_from(&atav.value)
                                 .unwrap()
                                 .to_string(),
                             "RaytheonRoot"

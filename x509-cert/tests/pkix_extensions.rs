@@ -509,7 +509,7 @@ fn decode_cert() {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "US"
@@ -517,7 +517,7 @@ fn decode_cert() {
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "Test Certificates 2011"
@@ -525,7 +525,7 @@ fn decode_cert() {
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "Trust Anchor"
@@ -560,7 +560,7 @@ fn decode_cert() {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "US"
@@ -568,7 +568,7 @@ fn decode_cert() {
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "Test Certificates 2011"
@@ -576,7 +576,7 @@ fn decode_cert() {
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    PrintableStringRef::try_from(atav.value)
+                    PrintableStringRef::try_from(&atav.value)
                         .unwrap()
                         .to_string(),
                     "Good CA"
