@@ -377,7 +377,7 @@ pub use crate::{
 };
 
 #[cfg(feature = "alloc")]
-pub use crate::document::Document;
+pub use crate::{asn1::Any, document::Document};
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
