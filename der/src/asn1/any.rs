@@ -7,7 +7,7 @@ use crate::{
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use crate::ByteVec;
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
@@ -226,18 +226,34 @@ pub struct Any {
     tag: Tag,
 
     /// Inner value encoded as bytes.
-    value: Vec<u8>,
+    value: ByteVec,
 }
 
 #[cfg(feature = "alloc")]
 impl Any {
     /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
-    pub fn new(tag: Tag, bytes: impl Into<Vec<u8>>) -> Result<Self> {
-        let value = bytes.into();
+    pub fn new(tag: Tag, bytes: &[u8]) -> Result<Self> {
+        let value = ByteVec::new(bytes)?;
 
         // Ensure the tag and value are a valid `AnyRef`.
-        AnyRef::new(tag, &value)?;
+        AnyRef::new(tag, value.as_slice())?;
         Ok(Self { tag, value })
+    }
+
+    /// Attempt to decode this [`Any`] type into the inner value.
+    pub fn decode_into<'a, T>(&'a self) -> Result<T>
+    where
+        T: DecodeValue<'a> + FixedTag,
+    {
+        self.tag.assert_eq(T::TAG)?;
+        let header = Header {
+            tag: self.tag,
+            length: self.value.len(),
+        };
+
+        let mut decoder = SliceReader::new(self.value.as_slice())?;
+        let result = T::decode_value(&mut decoder, header)?;
+        decoder.finish(result)
     }
 }
 
@@ -253,18 +269,18 @@ impl<'a> Decode<'a> for Any {
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
         let header = Header::decode(reader)?;
         let value = reader.read_vec(header.length)?;
-        Self::new(header.tag, value)
+        Self::new(header.tag, &value)
     }
 }
 
 #[cfg(feature = "alloc")]
 impl EncodeValue for Any {
     fn value_len(&self) -> Result<Length> {
-        self.value.len().try_into()
+        Ok(self.value.len())
     }
 
     fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
-        writer.write(&self.value)
+        writer.write(self.value.as_slice())
     }
 }
 
@@ -272,7 +288,7 @@ impl EncodeValue for Any {
 impl<'a> From<&'a Any> for AnyRef<'a> {
     fn from(any: &'a Any) -> AnyRef<'a> {
         // Ensured to parse successfully in constructor
-        AnyRef::new(any.tag, &any.value).expect("invalid ANY")
+        AnyRef::new(any.tag, any.value.as_slice()).expect("invalid ANY")
     }
 }
 
