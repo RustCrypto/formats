@@ -5,7 +5,7 @@ use alloc::{string::String, vec::Vec};
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 use const_oid::AssociatedOid;
 use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, UintRef};
-use der::{AnyRef, Choice, Sequence, ValueOrd};
+use der::{Any, Choice, Sequence, ValueOrd};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -15,13 +15,13 @@ use der::{AnyRef, Choice, Sequence, ValueOrd};
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CertificatePolicies<'a>(pub Vec<PolicyInformation<'a>>);
+pub struct CertificatePolicies(pub Vec<PolicyInformation>);
 
-impl<'a> AssociatedOid for CertificatePolicies<'a> {
+impl AssociatedOid for CertificatePolicies {
     const OID: ObjectIdentifier = ID_CE_CERTIFICATE_POLICIES;
 }
 
-impl_newtype!(CertificatePolicies<'a>, Vec<PolicyInformation<'a>>);
+impl_newtype!(CertificatePolicies, Vec<PolicyInformation>);
 
 /// PolicyInformation as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -37,9 +37,9 @@ impl_newtype!(CertificatePolicies<'a>, Vec<PolicyInformation<'a>>);
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct PolicyInformation<'a> {
+pub struct PolicyInformation {
     pub policy_identifier: ObjectIdentifier,
-    pub policy_qualifiers: Option<Vec<PolicyQualifierInfo<'a>>>,
+    pub policy_qualifiers: Option<Vec<PolicyQualifierInfo>>,
 }
 
 /// PolicyQualifierInfo as defined in [RFC 5280 Section 4.2.1.4].
@@ -54,9 +54,9 @@ pub struct PolicyInformation<'a> {
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct PolicyQualifierInfo<'a> {
+pub struct PolicyQualifierInfo {
     pub policy_qualifier_id: ObjectIdentifier,
-    pub qualifier: Option<AnyRef<'a>>,
+    pub qualifier: Option<Any>,
 }
 
 /// CpsUri as defined in [RFC 5280 Section 4.2.1.4].

@@ -341,7 +341,8 @@ fn decode_cert() {
                     for pqi in pq.iter() {
                         if 0 == counter_pq {
                             assert_eq!("1.3.6.1.5.5.7.2.1", pqi.policy_qualifier_id.to_string());
-                            let cpsval = Ia5StringRef::try_from(pqi.qualifier.unwrap()).unwrap();
+                            let cpsval =
+                                Ia5StringRef::try_from(pqi.qualifier.as_ref().unwrap()).unwrap();
                             assert_eq!(
                                 "https://secure.identrust.com/certificates/policy/IGC/index.html",
                                 cpsval.to_string()
