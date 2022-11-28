@@ -99,7 +99,7 @@ pub struct TbsCertificate<'a> {
     pub subject_unique_id: Option<BitStringRef<'a>>,
 
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
-    pub extensions: Option<crate::ext::Extensions<'a>>,
+    pub extensions: Option<crate::ext::Extensions>,
 }
 
 impl<'a> TbsCertificate<'a> {
@@ -132,7 +132,7 @@ impl<'a> TbsCertificate<'a> {
             .unwrap_or(&[])
             .iter()
             .filter(|e| e.extn_id == T::OID)
-            .map(|e| Ok((e.critical, T::from_der(e.extn_value)?)))
+            .map(|e| Ok((e.critical, T::from_der(e.extn_value.as_bytes())?)))
     }
 }
 

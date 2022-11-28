@@ -56,7 +56,7 @@ pub struct TrustAnchorInfo<'a> {
     pub cert_path: Option<CertPathControls<'a>>,
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", optional = "true")]
-    pub extensions: Option<Extensions<'a>>,
+    pub extensions: Option<Extensions>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub ta_title_lang_tag: Option<Utf8StringRef<'a>>,
