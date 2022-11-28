@@ -1,4 +1,5 @@
-use der::asn1::{PrintableStringRef, TeletexStringRef, Utf8StringRef};
+use alloc::string::String;
+use der::asn1::{PrintableStringRef, TeletexStringRef};
 use der::{Choice, ValueOrd};
 
 /// DirectoryString as defined in [RFC 5280 Section 4.2.1.4].
@@ -48,5 +49,5 @@ pub enum DirectoryString<'a> {
     TeletexString(TeletexStringRef<'a>),
 
     #[asn1(type = "UTF8String")]
-    Utf8String(Utf8StringRef<'a>),
+    Utf8String(String),
 }
