@@ -53,7 +53,7 @@ jobs:
       - uses: RustCrypto/actions/cargo-cache@master
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-11-21
+          toolchain: nightly-2022-11-29
           override: true
           profile: minimal
       - uses: RustCrypto/actions/cargo-hack-install@master
