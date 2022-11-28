@@ -74,7 +74,7 @@ pub struct TbsRequest<'a> {
     pub request_list: alloc::vec::Vec<Request<'a>>,
 
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub request_extensions: Option<Extensions<'a>>,
+    pub request_extensions: Option<Extensions>,
 }
 
 /// Signature structure as defined in [RFC 6960 Section 4.1.1].
@@ -133,7 +133,7 @@ pub struct Request<'a> {
     pub req_cert: CertId<'a>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
-    pub single_request_extensions: Option<Extensions<'a>>,
+    pub single_request_extensions: Option<Extensions>,
 }
 
 /// CertID structure as defined in [RFC 6960 Section 4.1.1].
@@ -265,7 +265,7 @@ pub struct ResponseData<'a> {
     pub responses: Vec<SingleResponse<'a>>,
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
-    pub response_extensions: Option<Extensions<'a>>,
+    pub response_extensions: Option<Extensions>,
 }
 
 /// ResponderID structure as defined in [RFC 6960 Section 4.2.1].
@@ -323,7 +323,7 @@ pub struct SingleResponse<'a> {
     pub next_update: Option<GeneralizedTime>,
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
-    pub single_request_extensions: Option<Extensions<'a>>,
+    pub single_request_extensions: Option<Extensions>,
 }
 
 /// CertStatus structure as defined in [RFC 6960 Section 4.2.1].

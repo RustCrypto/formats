@@ -97,10 +97,10 @@ impl<'a> TryFrom<&'a [u8]> for CertReq<'a> {
 ///
 /// [RFC 5272 Section 3.1]: https://datatracker.ietf.org/doc/html/rfc5272#section-3.1
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ExtensionReq<'a>(pub Vec<Extension<'a>>);
+pub struct ExtensionReq(pub Vec<Extension>);
 
-impl<'a> AssociatedOid for ExtensionReq<'a> {
+impl AssociatedOid for ExtensionReq {
     const OID: ObjectIdentifier = ID_EXTENSION_REQ;
 }
 
-impl_newtype!(ExtensionReq<'a>, Vec<Extension<'a>>);
+impl_newtype!(ExtensionReq, Vec<Extension>);
