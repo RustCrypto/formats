@@ -50,7 +50,7 @@ pub enum GeneralName<'a> {
     DirectoryName(Name),
 
     #[asn1(context_specific = "5", tag_mode = "IMPLICIT", constructed = "true")]
-    EdiPartyName(EdiPartyName<'a>),
+    EdiPartyName(EdiPartyName),
 
     #[asn1(context_specific = "6", tag_mode = "IMPLICIT")]
     UniformResourceIdentifier(Ia5String),
