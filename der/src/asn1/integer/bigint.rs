@@ -94,6 +94,107 @@ impl<'a> FixedTag for UIntRef<'a> {
 
 impl<'a> OrdIsValueOrd for UIntRef<'a> {}
 
+#[cfg(feature = "alloc")]
+pub use self::alloc::UInt;
+
+#[cfg(feature = "alloc")]
+mod alloc {
+    use super::{super::uint, UIntRef};
+    use crate::{
+        asn1::AnyRef, ord::OrdIsValueOrd, Bytes, DecodeValue, EncodeValue, Error, ErrorKind,
+        FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    };
+
+    /// "Big" unsigned ASN.1 `INTEGER` type.
+    ///
+    /// Provides direct storage for the big endian bytes which comprise an
+    /// unsigned integer value.
+    ///
+    /// Intended for use cases like very large integers that are used in
+    /// cryptographic applications (e.g. keys, signatures).
+    #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+    pub struct UInt {
+        /// Inner value
+        inner: Bytes,
+    }
+
+    impl UInt {
+        /// Create a new [`UIntRef`] from a byte slice.
+        pub fn new(bytes: &[u8]) -> Result<Self> {
+            let inner = Bytes::new(uint::strip_leading_zeroes(bytes))
+                .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
+
+            Ok(Self { inner })
+        }
+
+        /// Borrow the inner byte slice which contains the least significant bytes
+        /// of a big endian integer value with all leading zeros stripped.
+        pub fn as_bytes(&self) -> &[u8] {
+            self.inner.as_slice()
+        }
+
+        /// Get the length of this [`UIntRef`] in bytes.
+        pub fn len(&self) -> Length {
+            self.inner.len()
+        }
+
+        /// Is the inner byte slice empty?
+        pub fn is_empty(&self) -> bool {
+            self.inner.is_empty()
+        }
+    }
+
+    impl<'a> DecodeValue<'a> for UInt {
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+            let bytes = Bytes::decode_value(reader, header)?;
+            let result = Self::new(uint::decode_to_slice(bytes.as_slice())?)?;
+
+            // Ensure we compute the same encoded length as the original any value.
+            if result.value_len()? != header.length {
+                return Err(Self::TAG.non_canonical_error());
+            }
+
+            Ok(result)
+        }
+    }
+
+    impl EncodeValue for UInt {
+        fn value_len(&self) -> Result<Length> {
+            uint::encoded_len(self.inner.as_slice())
+        }
+
+        fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+            // Add leading `0x00` byte if required
+            if self.value_len()? > self.len() {
+                writer.write_byte(0)?;
+            }
+
+            writer.write(self.as_bytes())
+        }
+    }
+
+    impl<'a> From<&UIntRef<'a>> for UInt {
+        fn from(value: &UIntRef<'a>) -> UInt {
+            let inner = Bytes::new(value.as_bytes()).expect("Invalid UInt");
+            UInt { inner }
+        }
+    }
+
+    impl<'a> TryFrom<AnyRef<'a>> for UInt {
+        type Error = Error;
+
+        fn try_from(any: AnyRef<'a>) -> Result<UInt> {
+            any.decode_into()
+        }
+    }
+
+    impl FixedTag for UInt {
+        const TAG: Tag = Tag::Integer;
+    }
+
+    impl OrdIsValueOrd for UInt {}
+}
+
 #[cfg(test)]
 mod tests {
     use super::UIntRef;
