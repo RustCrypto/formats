@@ -49,7 +49,7 @@ pub use self::{
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use self::{
     any::Any, bit_string::BitString, ia5_string::Ia5String, integer::bigint::Uint,
-    octet_string::OctetString, set_of::SetOfVec,
+    octet_string::OctetString, set_of::SetOfVec, teletex_string::TeletexString,
 };
 
 #[cfg(feature = "oid")]
