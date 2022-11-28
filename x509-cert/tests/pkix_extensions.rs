@@ -525,7 +525,7 @@ fn decode_cert() {
             let akid = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(
                 &hex!("7C4C863AB80BD589870BEDB7E11BBD2A08BB3D23FF"),
-                akid.key_identifier.unwrap().as_bytes()
+                akid.key_identifier.as_ref().unwrap().as_bytes()
             );
 
             let reencoded = akid.to_vec().and_then(OctetString::new).unwrap();
