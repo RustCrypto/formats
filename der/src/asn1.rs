@@ -37,6 +37,7 @@ pub use const_oid::ObjectIdentifier;
 pub use self::{
     any::Any, bit_string::BitString, ia5_string::Ia5String, integer::bigint::Int,
     integer::bigint::Uint, octet_string::OctetString, set_of::SetOfVec,
+    teletex_string::TeletexString,
 };
 pub use self::{
     any::AnyRef,
