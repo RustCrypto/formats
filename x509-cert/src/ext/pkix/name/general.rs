@@ -38,7 +38,7 @@ pub type GeneralNames<'a> = alloc::vec::Vec<GeneralName<'a>>;
 #[allow(missing_docs)]
 pub enum GeneralName<'a> {
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
-    OtherName(OtherName<'a>),
+    OtherName(OtherName),
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT")]
     Rfc822Name(Ia5StringRef<'a>),

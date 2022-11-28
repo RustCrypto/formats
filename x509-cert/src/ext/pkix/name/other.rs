@@ -1,4 +1,4 @@
-use der::{asn1::ObjectIdentifier, AnyRef, Sequence, ValueOrd};
+use der::{asn1::ObjectIdentifier, Any, Sequence, ValueOrd};
 
 /// OtherName as defined in [RFC 5280 Section 4.2.1.6].
 ///
@@ -12,11 +12,11 @@ use der::{asn1::ObjectIdentifier, AnyRef, Sequence, ValueOrd};
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct OtherName<'a> {
+pub struct OtherName {
     pub type_id: ObjectIdentifier,
 
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
-    pub value: AnyRef<'a>,
+    pub value: Any,
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn test() {
     let input = hex!("3021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");
     let decoded = OtherName::from_der(&input).unwrap();
 
-    let onval = Utf8StringRef::try_from(decoded.value).unwrap();
+    let onval = Utf8StringRef::try_from(&decoded.value).unwrap();
     assert_eq!(onval.to_string(), "Upn_214950130@mil");
 
     let encoded = decoded.to_vec().unwrap();
