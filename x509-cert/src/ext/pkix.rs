@@ -31,7 +31,7 @@ pub use const_oid::db::rfc5280::{
 
 use alloc::vec::Vec;
 
-use der::asn1::OctetStringRef;
+use der::asn1::OctetString;
 
 /// SubjectKeyIdentifier as defined in [RFC 5280 Section 4.2.1.2].
 ///
@@ -40,14 +40,14 @@ use der::asn1::OctetStringRef;
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct SubjectKeyIdentifier<'a>(pub OctetStringRef<'a>);
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SubjectKeyIdentifier(pub OctetString);
 
-impl<'a> AssociatedOid for SubjectKeyIdentifier<'a> {
+impl AssociatedOid for SubjectKeyIdentifier {
     const OID: ObjectIdentifier = ID_CE_SUBJECT_KEY_IDENTIFIER;
 }
 
-impl_newtype!(SubjectKeyIdentifier<'a>, OctetStringRef<'a>);
+impl_newtype!(SubjectKeyIdentifier, OctetString);
 
 /// SubjectAltName as defined in [RFC 5280 Section 4.2.1.6].
 ///
