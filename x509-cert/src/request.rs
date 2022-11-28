@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 
 use const_oid::db::rfc5912::ID_EXTENSION_REQ;
 use const_oid::{AssociatedOid, ObjectIdentifier};
-use der::asn1::BitStringRef;
+use der::asn1::BitString;
 use der::{Decode, Enumerated, Sequence};
 use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfoRef};
 
@@ -78,7 +78,7 @@ pub struct CertReq<'a> {
     pub algorithm: AlgorithmIdentifierRef<'a>,
 
     /// Signature.
-    pub signature: BitStringRef<'a>,
+    pub signature: BitString,
 }
 
 impl<'a> TryFrom<&'a [u8]> for CertReq<'a> {
