@@ -27,10 +27,10 @@ use super::DirectoryString;
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct EdiPartyName<'a> {
+pub struct EdiPartyName {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
-    pub name_assigner: Option<DirectoryString<'a>>,
+    pub name_assigner: Option<DirectoryString>,
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT")]
-    pub party_name: DirectoryString<'a>,
+    pub party_name: DirectoryString,
 }
