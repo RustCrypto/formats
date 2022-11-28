@@ -69,7 +69,7 @@ pub struct TbsRequest<'a> {
     pub version: Version,
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
-    pub requestor_name: Option<GeneralName<'a>>,
+    pub requestor_name: Option<GeneralName>,
 
     pub request_list: alloc::vec::Vec<Request<'a>>,
 
@@ -405,9 +405,9 @@ pub type AcceptableResponses = Vec<ObjectIdentifier>;
 /// [RFC 6960 Section 4.4.6]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.6
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct ServiceLocator<'a> {
+pub struct ServiceLocator {
     pub issuer: Name,
-    pub locator: AuthorityInfoAccessSyntax<'a>,
+    pub locator: AuthorityInfoAccessSyntax,
 }
 
 /// CrlID structure as defined in [RFC 6960 Section 4.4.2].
