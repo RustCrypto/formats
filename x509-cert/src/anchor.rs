@@ -4,7 +4,8 @@ use crate::ext::pkix::{certpolicy::CertificatePolicies, NameConstraints};
 use crate::{ext::Extensions, name::Name};
 use crate::{Certificate, TbsCertificate};
 
-use der::asn1::{OctetStringRef, Utf8StringRef};
+use alloc::string::String;
+use der::asn1::OctetString;
 use der::{Choice, Enumerated, Sequence};
 use flagset::{flags, FlagSet};
 use spki::SubjectPublicKeyInfoRef;
@@ -47,10 +48,10 @@ pub struct TrustAnchorInfo<'a> {
 
     pub pub_key: SubjectPublicKeyInfoRef<'a>,
 
-    pub key_id: OctetStringRef<'a>,
+    pub key_id: OctetString,
 
     #[asn1(optional = "true")]
-    pub ta_title: Option<Utf8StringRef<'a>>,
+    pub ta_title: Option<String>,
 
     #[asn1(optional = "true")]
     pub cert_path: Option<CertPathControls<'a>>,
@@ -59,7 +60,7 @@ pub struct TrustAnchorInfo<'a> {
     pub extensions: Option<Extensions>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub ta_title_lang_tag: Option<Utf8StringRef<'a>>,
+    pub ta_title_lang_tag: Option<String>,
 }
 
 /// ```text
