@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 use const_oid::AssociatedOid;
-use der::asn1::{GeneralizedTime, Ia5StringRef, ObjectIdentifier, UintRef, Utf8StringRef};
+use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, UintRef, Utf8StringRef};
 use der::{AnyRef, Choice, Sequence, ValueOrd};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
@@ -66,7 +66,7 @@ pub struct PolicyQualifierInfo<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-pub type CpsUri<'a> = Ia5StringRef<'a>;
+pub type CpsUri = Ia5String;
 
 /// UserNotice as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -119,7 +119,7 @@ pub struct NoticeReference<'a> {
 #[allow(missing_docs)]
 pub enum DisplayText<'a> {
     #[asn1(type = "IA5String")]
-    Ia5String(Ia5StringRef<'a>),
+    Ia5String(Ia5String),
 
     #[asn1(type = "UTF8String")]
     Utf8String(Utf8StringRef<'a>),
