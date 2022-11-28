@@ -1,6 +1,6 @@
 //! Certificate tests
 use const_oid::AssociatedOid;
-use der::asn1::{Ia5StringRef, PrintableStringRef, UintRef, Utf8StringRef};
+use der::asn1::{Ia5StringRef, PrintableStringRef, Utf8StringRef};
 use der::{Decode, Encode, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
@@ -8,7 +8,7 @@ use x509_cert::ext::pkix::name::{DistributionPointName, GeneralName, GeneralName
 use x509_cert::ext::pkix::*;
 use x509_cert::ext::Extensions;
 use x509_cert::name::Name;
-use x509_cert::{Certificate, Version};
+use x509_cert::{serial_number::SerialNumber, Certificate, Version};
 
 use const_oid::db::rfc5280::*;
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
@@ -486,7 +486,7 @@ fn decode_cert() {
     let target_serial: [u8; 1] = [2];
     assert_eq!(
         cert.tbs_certificate.serial_number,
-        UintRef::new(&target_serial).unwrap()
+        SerialNumber::new(&target_serial).unwrap()
     );
     assert_eq!(
         cert.tbs_certificate.signature.oid.to_string(),
