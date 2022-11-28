@@ -39,6 +39,11 @@ impl Bytes {
     pub fn len(&self) -> Length {
         self.length
     }
+
+    /// Is this [`Bytes`] empty?
+    pub fn is_empty(&self) -> bool {
+        self.len() == Length::ZERO
+    }
 }
 
 impl AsRef<[u8]> for Bytes {
