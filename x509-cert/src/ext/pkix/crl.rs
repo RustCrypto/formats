@@ -53,13 +53,13 @@ impl_newtype!(BaseCrlNumber<'a>, UIntRef<'a>);
 ///
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct CrlDistributionPoints<'a>(pub Vec<dp::DistributionPoint<'a>>);
+pub struct CrlDistributionPoints(pub Vec<dp::DistributionPoint>);
 
-impl<'a> AssociatedOid for CrlDistributionPoints<'a> {
+impl AssociatedOid for CrlDistributionPoints {
     const OID: ObjectIdentifier = ID_CE_CRL_DISTRIBUTION_POINTS;
 }
 
-impl_newtype!(CrlDistributionPoints<'a>, Vec<dp::DistributionPoint<'a>>);
+impl_newtype!(CrlDistributionPoints, Vec<dp::DistributionPoint>);
 
 /// FreshestCrl as defined in [RFC 5280 Section 5.2.6].
 ///
@@ -69,13 +69,13 @@ impl_newtype!(CrlDistributionPoints<'a>, Vec<dp::DistributionPoint<'a>>);
 ///
 /// [RFC 5280 Section 5.2.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.6
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct FreshestCrl<'a>(pub Vec<dp::DistributionPoint<'a>>);
+pub struct FreshestCrl(pub Vec<dp::DistributionPoint>);
 
-impl<'a> AssociatedOid for FreshestCrl<'a> {
+impl AssociatedOid for FreshestCrl {
     const OID: ObjectIdentifier = ID_CE_FRESHEST_CRL;
 }
 
-impl_newtype!(FreshestCrl<'a>, Vec<dp::DistributionPoint<'a>>);
+impl_newtype!(FreshestCrl, Vec<dp::DistributionPoint>);
 
 /// CRLReason as defined in [RFC 5280 Section 5.3.1].
 ///

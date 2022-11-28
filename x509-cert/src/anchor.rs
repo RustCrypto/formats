@@ -87,7 +87,7 @@ pub struct CertPathControls<'a> {
     pub policy_flags: Option<CertPolicyFlags>,
 
     #[asn1(context_specific = "3", tag_mode = "IMPLICIT", optional = "true")]
-    pub name_constr: Option<NameConstraints<'a>>,
+    pub name_constr: Option<NameConstraints>,
 
     #[asn1(context_specific = "4", tag_mode = "IMPLICIT", optional = "true")]
     pub path_len_constraint: Option<u32>,

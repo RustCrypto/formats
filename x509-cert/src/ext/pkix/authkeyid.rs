@@ -26,7 +26,7 @@ pub struct AuthorityKeyIdentifier<'a> {
     pub key_identifier: Option<OctetStringRef<'a>>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub authority_cert_issuer: Option<GeneralNames<'a>>,
+    pub authority_cert_issuer: Option<GeneralNames>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub authority_cert_serial_number: Option<SerialNumber>,
