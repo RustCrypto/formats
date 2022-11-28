@@ -7,6 +7,9 @@ use crate::{
 };
 use core::cmp::Ordering;
 
+#[cfg(feature = "alloc")]
+use crate::string::String;
+
 /// Byte slice newtype which respects the `Length::max()` limit.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub(crate) struct ByteSlice<'a> {
@@ -88,6 +91,19 @@ impl DerOrd for ByteSlice<'_> {
 
 impl<'a> From<StrSlice<'a>> for ByteSlice<'a> {
     fn from(s: StrSlice<'a>) -> ByteSlice<'a> {
+        let bytes = s.as_bytes();
+        debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
+
+        ByteSlice {
+            inner: bytes,
+            length: s.length,
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> From<&'a String> for ByteSlice<'a> {
+    fn from(s: &'a String) -> ByteSlice<'a> {
         let bytes = s.as_bytes();
         debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
 

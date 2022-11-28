@@ -361,6 +361,8 @@ mod writer;
 mod bytes;
 #[cfg(feature = "alloc")]
 mod document;
+#[cfg(feature = "alloc")]
+mod string;
 
 pub use crate::{
     asn1::{AnyRef, Choice, Sequence},
@@ -409,6 +411,6 @@ pub use zeroize;
 #[cfg(all(feature = "alloc", feature = "zeroize"))]
 pub use crate::document::SecretDocument;
 
-#[cfg(feature = "alloc")]
-pub(crate) use crate::bytes::Bytes;
 pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
+#[cfg(feature = "alloc")]
+pub(crate) use crate::{bytes::Bytes, string::String};
