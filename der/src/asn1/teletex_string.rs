@@ -133,6 +133,145 @@ impl<'a> fmt::Debug for TeletexStringRef<'a> {
     }
 }
 
+#[cfg(feature = "alloc")]
+pub use self::alloc::TeletexString;
+
+#[cfg(feature = "alloc")]
+mod alloc {
+    use super::TeletexStringRef;
+
+    use crate::{
+        asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag,
+        Header, Length, Reader, Result, String, Tag, Writer,
+    };
+    use core::{fmt, ops::Deref, str};
+
+    #[cfg(feature = "alloc")]
+    use crate::asn1::Any;
+
+    /// ASN.1 `TeletexString` type.
+    ///
+    /// Supports a subset the ASCII character set (described below).
+    ///
+    /// For UTF-8, use [`Utf8StringRef`][`crate::asn1::Utf8StringRef`] instead.
+    /// For the full ASCII character set, use
+    /// [`Ia5StringRef`][`crate::asn1::Ia5StringRef`].
+    ///
+    /// # Supported characters
+    ///
+    /// The standard defines a complex character set allowed in this type. However, quoting the ASN.1
+    /// mailing list, "a sizable volume of software in the world treats TeletexString (T61String) as a
+    /// simple 8-bit string with mostly Windows Latin 1 (superset of iso-8859-1) encoding".
+    ///
+    #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
+    pub struct TeletexString {
+        /// Inner value
+        inner: String,
+    }
+
+    impl TeletexString {
+        /// Create a new ASN.1 `TeletexString`.
+        pub fn new<T>(input: &T) -> Result<Self>
+        where
+            T: AsRef<[u8]> + ?Sized,
+        {
+            let input = input.as_ref();
+
+            TeletexStringRef::new(input)?;
+
+            String::from_bytes(input)
+                .map(|inner| Self { inner })
+                .map_err(|_| Self::TAG.value_error())
+        }
+    }
+
+    impl Deref for TeletexString {
+        type Target = String;
+
+        fn deref(&self) -> &Self::Target {
+            &self.inner
+        }
+    }
+
+    impl AsRef<str> for TeletexString {
+        fn as_ref(&self) -> &str {
+            self.as_str()
+        }
+    }
+
+    impl AsRef<[u8]> for TeletexString {
+        fn as_ref(&self) -> &[u8] {
+            self.as_bytes()
+        }
+    }
+
+    impl<'a> DecodeValue<'a> for TeletexString {
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+            Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
+        }
+    }
+
+    impl EncodeValue for TeletexString {
+        fn value_len(&self) -> Result<Length> {
+            self.inner.value_len()
+        }
+
+        fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+            self.inner.encode_value(writer)
+        }
+    }
+
+    impl FixedTag for TeletexString {
+        const TAG: Tag = Tag::TeletexString;
+    }
+
+    impl OrdIsValueOrd for TeletexString {}
+
+    impl<'a> From<TeletexStringRef<'a>> for TeletexString {
+        fn from(value: TeletexStringRef<'a>) -> TeletexString {
+            let inner = String::from_bytes(value.inner.as_bytes()).expect("Invalid TeletexString");
+            Self { inner }
+        }
+    }
+
+    impl<'a> TryFrom<&AnyRef<'a>> for TeletexString {
+        type Error = Error;
+
+        fn try_from(any: &AnyRef<'a>) -> Result<TeletexString> {
+            (*any).decode_into()
+        }
+    }
+
+    impl<'a> TryFrom<&'a Any> for TeletexString {
+        type Error = Error;
+
+        fn try_from(any: &'a Any) -> Result<TeletexString> {
+            any.decode_into()
+        }
+    }
+
+    impl<'a> From<&'a TeletexString> for AnyRef<'a> {
+        fn from(teletex_string: &'a TeletexString) -> AnyRef<'a> {
+            AnyRef::from_tag_and_value(
+                Tag::TeletexString,
+                ByteSlice::new(teletex_string.inner.as_bytes()).expect("Invalid TeletexString"),
+            )
+        }
+    }
+
+    impl fmt::Display for TeletexString {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.write_str(self.as_str())
+        }
+    }
+
+    impl fmt::Debug for TeletexString {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "TeletexString({:?})", self.as_str())
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::TeletexStringRef;
