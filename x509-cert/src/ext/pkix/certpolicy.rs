@@ -4,7 +4,7 @@ use alloc::{string::String, vec::Vec};
 
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 use const_oid::AssociatedOid;
-use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, UIntRef};
+use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, UInt};
 use der::{Any, Choice, Sequence, ValueOrd};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
@@ -96,9 +96,9 @@ pub struct UserNotice {
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct NoticeReference<'a> {
+pub struct NoticeReference {
     pub organization: DisplayText,
-    pub notice_numbers: Option<Vec<UIntRef<'a>>>,
+    pub notice_numbers: Option<Vec<UInt>>,
 }
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4].
