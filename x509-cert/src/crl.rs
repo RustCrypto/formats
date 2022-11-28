@@ -8,7 +8,7 @@ use crate::Version;
 
 use alloc::vec::Vec;
 
-use der::asn1::BitStringRef;
+use der::asn1::BitString;
 use der::{Sequence, ValueOrd};
 use spki::AlgorithmIdentifierRef;
 
@@ -28,7 +28,7 @@ use spki::AlgorithmIdentifierRef;
 pub struct CertificateList<'a> {
     pub tbs_cert_list: TbsCertList<'a>,
     pub signature_algorithm: AlgorithmIdentifierRef<'a>,
-    pub signature: BitStringRef<'a>,
+    pub signature: BitString,
 }
 
 /// Implicit intermediate structure from the ASN.1 definition of `TBSCertList`.
