@@ -194,7 +194,7 @@ fn decode_general_name() {
     let bytes = hex!("A021060A2B060104018237140203A0130C1155706E5F323134393530313330406D696C");
     match GeneralName::from_der(&bytes).unwrap() {
         GeneralName::OtherName(other_name) => {
-            let onval = Utf8StringRef::try_from(other_name.value).unwrap();
+            let onval = Utf8StringRef::try_from(&other_name.value).unwrap();
             assert_eq!(onval.to_string(), "Upn_214950130@mil");
         }
         _ => panic!("Failed to parse OtherName from GeneralName"),
