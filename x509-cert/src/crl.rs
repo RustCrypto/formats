@@ -2,12 +2,13 @@
 
 use crate::ext::Extensions;
 use crate::name::Name;
+use crate::serial_number::SerialNumber;
 use crate::time::Time;
 use crate::Version;
 
 use alloc::vec::Vec;
 
-use der::asn1::{BitStringRef, UIntRef};
+use der::asn1::BitStringRef;
 use der::{Sequence, ValueOrd};
 use spki::AlgorithmIdentifierRef;
 
@@ -47,7 +48,7 @@ pub struct CertificateList<'a> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct RevokedCert<'a> {
-    pub serial_number: UIntRef<'a>,
+    pub serial_number: SerialNumber,
     pub revocation_date: Time,
     pub crl_entry_extensions: Option<Extensions<'a>>,
 }

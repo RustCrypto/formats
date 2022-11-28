@@ -11,6 +11,7 @@ use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::ext::pkix::{AuthorityInfoAccessSyntax, CrlReason};
 use x509_cert::ext::Extensions;
 use x509_cert::name::Name;
+use x509_cert::serial_number::SerialNumber;
 use x509_cert::Certificate;
 
 use alloc::vec::Vec;
@@ -152,7 +153,7 @@ pub struct CertId<'a> {
     pub hash_algorithm: AlgorithmIdentifierRef<'a>,
     pub issuer_name_hash: OctetStringRef<'a>,
     pub issuer_key_hash: OctetStringRef<'a>,
-    pub serial_number: UIntRef<'a>,
+    pub serial_number: SerialNumber,
 }
 
 /// OCSPResponse structure as defined in [RFC 6960 Section 4.2.1].

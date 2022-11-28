@@ -1,12 +1,12 @@
 //! Certificate types
 
-use crate::{name::Name, time::Validity};
+use crate::{name::Name, serial_number::SerialNumber, time::Validity};
 
 use alloc::vec::Vec;
 use core::cmp::Ordering;
 
 use const_oid::AssociatedOid;
-use der::asn1::{BitStringRef, UIntRef};
+use der::asn1::BitStringRef;
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
 use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfoRef};
 
@@ -83,7 +83,7 @@ pub struct TbsCertificate<'a> {
     #[asn1(context_specific = "0", default = "Default::default")]
     pub version: Version,
 
-    pub serial_number: UIntRef<'a>,
+    pub serial_number: SerialNumber,
     pub signature: AlgorithmIdentifierRef<'a>,
     pub issuer: Name,
     pub validity: Validity,

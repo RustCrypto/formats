@@ -1,13 +1,12 @@
 //! Certificate tests
 
 use der::{
-    asn1::{
-        BitStringRef, ContextSpecific, ObjectIdentifier, PrintableStringRef, UIntRef, Utf8StringRef,
-    },
+    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, PrintableStringRef, Utf8StringRef},
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
 };
 use hex_literal::hex;
 use spki::AlgorithmIdentifierRef;
+use x509_cert::serial_number::SerialNumber;
 use x509_cert::Certificate;
 use x509_cert::*;
 
@@ -209,7 +208,7 @@ fn decode_cert() {
     ];
     assert_eq!(
         cert.tbs_certificate.serial_number,
-        UIntRef::new(&target_serial).unwrap()
+        SerialNumber::new(&target_serial).unwrap()
     );
     assert_eq!(
         cert.tbs_certificate.signature.oid.to_string(),
