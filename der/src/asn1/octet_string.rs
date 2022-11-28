@@ -177,3 +177,6 @@ impl<'a> From<&'a OctetString> for OctetStringRef<'a> {
         OctetStringRef::new(&octet_string.inner).expect("invalid OCTET STRING")
     }
 }
+
+#[cfg(feature = "alloc")]
+impl OrdIsValueOrd for OctetString {}
