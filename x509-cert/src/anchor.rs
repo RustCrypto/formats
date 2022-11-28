@@ -81,7 +81,7 @@ pub struct CertPathControls<'a> {
     pub certificate: Option<Certificate<'a>>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub policy_set: Option<CertificatePolicies<'a>>,
+    pub policy_set: Option<CertificatePolicies>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub policy_flags: Option<CertPolicyFlags>,
