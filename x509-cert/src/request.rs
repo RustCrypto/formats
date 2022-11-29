@@ -9,7 +9,7 @@ use const_oid::db::rfc5912::ID_EXTENSION_REQ;
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::BitStringRef;
 use der::{Decode, Enumerated, Sequence};
-use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfo};
+use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfoRef};
 
 /// Version identifier for certification request information.
 ///
@@ -43,7 +43,7 @@ pub struct CertReqInfo<'a> {
     pub subject: Name<'a>,
 
     /// Subject public key info.
-    pub public_key: SubjectPublicKeyInfo<'a>,
+    pub public_key: SubjectPublicKeyInfoRef<'a>,
 
     /// Request attributes.
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]

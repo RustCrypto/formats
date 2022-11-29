@@ -1,6 +1,6 @@
 //! Traits for encoding/decoding SPKI public keys.
 
-use crate::{Error, Result, SubjectPublicKeyInfo};
+use crate::{Error, Result, SubjectPublicKeyInfoRef};
 
 #[cfg(feature = "alloc")]
 use der::Document;
@@ -31,7 +31,7 @@ pub trait DecodePublicKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn from_public_key_pem(s: &str) -> Result<Self> {
         let (label, doc) = Document::from_pem(s)?;
-        SubjectPublicKeyInfo::validate_pem_label(label)?;
+        SubjectPublicKeyInfoRef::validate_pem_label(label)?;
         Self::from_public_key_der(doc.as_bytes())
     }
 
@@ -49,17 +49,17 @@ pub trait DecodePublicKey: Sized {
     #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     fn read_public_key_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         let (label, doc) = Document::read_pem_file(path)?;
-        SubjectPublicKeyInfo::validate_pem_label(&label)?;
+        SubjectPublicKeyInfoRef::validate_pem_label(&label)?;
         Self::from_public_key_der(doc.as_bytes())
     }
 }
 
 impl<T> DecodePublicKey for T
 where
-    T: for<'a> TryFrom<SubjectPublicKeyInfo<'a>, Error = Error>,
+    T: for<'a> TryFrom<SubjectPublicKeyInfoRef<'a>, Error = Error>,
 {
     fn from_public_key_der(bytes: &[u8]) -> Result<Self> {
-        Self::try_from(SubjectPublicKeyInfo::try_from(bytes)?)
+        Self::try_from(SubjectPublicKeyInfoRef::try_from(bytes)?)
     }
 }
 
@@ -75,7 +75,7 @@ pub trait EncodePublicKey {
     #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     fn to_public_key_pem(&self, line_ending: LineEnding) -> Result<String> {
         let doc = self.to_public_key_der()?;
-        Ok(doc.to_pem(SubjectPublicKeyInfo::PEM_LABEL, line_ending)?)
+        Ok(doc.to_pem(SubjectPublicKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path
@@ -94,6 +94,6 @@ pub trait EncodePublicKey {
         line_ending: LineEnding,
     ) -> Result<()> {
         let doc = self.to_public_key_der()?;
-        Ok(doc.write_pem_file(path, SubjectPublicKeyInfo::PEM_LABEL, line_ending)?)
+        Ok(doc.write_pem_file(path, SubjectPublicKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 }
