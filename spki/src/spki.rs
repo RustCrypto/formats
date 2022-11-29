@@ -3,7 +3,7 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, BitStringRef},
+    asn1::{AnyRef, BitString, BitStringRef},
     Choice, Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
 };
 
@@ -23,7 +23,7 @@ use {
 use der::pem::PemLabel;
 
 /// [`SubjectPublicKeyInfo`] with [`AnyRef`] algorithm parameters.
-pub type SubjectPublicKeyInfoRef<'a> = SubjectPublicKeyInfo<'a, AnyRef<'a>>;
+pub type SubjectPublicKeyInfoRef<'a> = SubjectPublicKeyInfo<AnyRef<'a>>;
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 § 4.1.2.7].
 ///
@@ -37,23 +37,23 @@ pub type SubjectPublicKeyInfoRef<'a> = SubjectPublicKeyInfo<'a, AnyRef<'a>>;
 /// ```
 ///
 /// [RFC 5280 § 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct SubjectPublicKeyInfo<'a, Params> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SubjectPublicKeyInfo<Params> {
     /// X.509 [`AlgorithmIdentifier`] for the public key type
     pub algorithm: AlgorithmIdentifier<Params>,
 
     /// Public key data
-    pub subject_public_key: &'a [u8],
+    pub subject_public_key: BitString,
 }
 
-impl<'a, Params> SubjectPublicKeyInfo<'a, Params> {
+impl<Params> SubjectPublicKeyInfo<Params> {
     /// Get a [`BitString`] representing the `subject_public_key`
-    fn bitstring(&self) -> der::Result<BitStringRef<'a>> {
-        BitStringRef::from_bytes(self.subject_public_key)
+    fn bitstring(&self) -> BitStringRef<'_> {
+        BitStringRef::from(&self.subject_public_key)
     }
 }
 
-impl<'a, Params> SubjectPublicKeyInfo<'a, Params>
+impl<'a, Params> SubjectPublicKeyInfo<Params>
 where
     Params: Choice<'a> + Encode,
 {
@@ -84,7 +84,7 @@ where
     }
 }
 
-impl<'a, Params> DecodeValue<'a> for SubjectPublicKeyInfo<'a, Params>
+impl<'a, Params> DecodeValue<'a> for SubjectPublicKeyInfo<Params>
 where
     Params: Choice<'a> + Encode,
 {
@@ -92,15 +92,13 @@ where
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 algorithm: reader.decode()?,
-                subject_public_key: BitStringRef::decode(reader)?
-                    .as_bytes()
-                    .ok_or_else(|| der::Tag::BitString.value_error())?,
+                subject_public_key: BitString::decode(reader)?,
             })
         })
     }
 }
 
-impl<'a, Params> Sequence<'a> for SubjectPublicKeyInfo<'a, Params>
+impl<'a, Params> Sequence<'a> for SubjectPublicKeyInfo<Params>
 where
     Params: Choice<'a> + Encode,
 {
@@ -108,11 +106,11 @@ where
     where
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
-        f(&[&self.algorithm, &self.bitstring()?])
+        f(&[&self.algorithm, &self.bitstring()])
     }
 }
 
-impl<'a, Params> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a, Params>
+impl<'a, Params> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params>
 where
     Params: Choice<'a> + Encode,
 {
@@ -123,13 +121,13 @@ where
     }
 }
 
-impl<'a, Params> ValueOrd for SubjectPublicKeyInfo<'a, Params>
+impl<'a, Params> ValueOrd for SubjectPublicKeyInfo<Params>
 where
     Params: Choice<'a> + DerOrd + Encode,
 {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         match self.algorithm.der_cmp(&other.algorithm)? {
-            Ordering::Equal => self.bitstring()?.der_cmp(&other.bitstring()?),
+            Ordering::Equal => self.bitstring().der_cmp(&other.bitstring()),
             other => Ok(other),
         }
     }
@@ -137,32 +135,32 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, Params> TryFrom<SubjectPublicKeyInfo<'a, Params>> for Document
+impl<'a, Params> TryFrom<SubjectPublicKeyInfo<Params>> for Document
 where
     Params: Choice<'a> + Encode,
 {
     type Error = Error;
 
-    fn try_from(spki: SubjectPublicKeyInfo<'a, Params>) -> Result<Document> {
+    fn try_from(spki: SubjectPublicKeyInfo<Params>) -> Result<Document> {
         Self::try_from(&spki)
     }
 }
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, Params> TryFrom<&SubjectPublicKeyInfo<'a, Params>> for Document
+impl<'a, Params> TryFrom<&SubjectPublicKeyInfo<Params>> for Document
 where
     Params: Choice<'a> + Encode,
 {
     type Error = Error;
 
-    fn try_from(spki: &SubjectPublicKeyInfo<'a, Params>) -> Result<Document> {
+    fn try_from(spki: &SubjectPublicKeyInfo<Params>) -> Result<Document> {
         Ok(Self::encode_msg(spki)?)
     }
 }
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-impl<Params> PemLabel for SubjectPublicKeyInfo<'_, Params> {
+impl<Params> PemLabel for SubjectPublicKeyInfo<Params> {
     const PEM_LABEL: &'static str = "PUBLIC KEY";
 }
