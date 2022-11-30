@@ -1,8 +1,8 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::AnyRef, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
-    Length, Reader, Result, Tag, ValueOrd, Writer,
+    asn1::AnyRef, ByteSlice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind,
+    FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
@@ -153,8 +153,8 @@ impl ValueOrd for BitStringRef<'_> {
     }
 }
 
-impl<'a> From<&BitStringRef<'a>> for BitStringRef<'a> {
-    fn from(value: &BitStringRef<'a>) -> BitStringRef<'a> {
+impl<'a, 'k> From<&'k BitStringRef<'a>> for BitStringRef<'a> {
+    fn from(value: &'k BitStringRef<'a>) -> BitStringRef<'a> {
         *value
     }
 }
@@ -451,6 +451,18 @@ where
         BitStringRef::new((lead % 8) as u8, buff)?.encode_value(writer)
     }
 }
+
+/// Trait used as a marker to ensure the type can hold the content of a Bit String
+pub trait BitStringLike<'pointer, 'slice: 'pointer>
+where
+    Self: Decode<'slice> + Encode + FixedTag + 'pointer,
+{
+}
+
+impl<'slice: 'pointer, 'pointer> BitStringLike<'pointer, 'slice> for BitStringRef<'slice> {}
+
+#[cfg(feature = "alloc")]
+impl<'a> BitStringLike<'a, 'a> for BitString {}
 
 #[cfg(test)]
 mod tests {

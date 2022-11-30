@@ -49,7 +49,10 @@ pub use crate::{
 pub use der::{self, asn1::ObjectIdentifier};
 
 #[cfg(feature = "alloc")]
-pub use {crate::traits::EncodePublicKey, der::Document};
+pub use {
+    crate::{spki::SubjectPublicKeyInfoOwned, traits::EncodePublicKey},
+    der::Document,
+};
 
 #[cfg(feature = "fingerprint")]
 pub use crate::fingerprint::FingerprintBytes;

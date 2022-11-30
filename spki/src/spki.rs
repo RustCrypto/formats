@@ -3,12 +3,15 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, BitString, BitStringRef},
+    asn1::{AnyRef, BitStringLike, BitStringRef},
     Choice, Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
 };
 
 #[cfg(feature = "alloc")]
-use der::Document;
+use der::{
+    asn1::{Any, BitString},
+    Document,
+};
 
 #[cfg(feature = "fingerprint")]
 use crate::{fingerprint, FingerprintBytes};
@@ -22,8 +25,12 @@ use {
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
 
-/// [`SubjectPublicKeyInfo`] with [`AnyRef`] algorithm parameters.
-pub type SubjectPublicKeyInfoRef<'a> = SubjectPublicKeyInfo<AnyRef<'a>>;
+/// [`SubjectPublicKeyInfo`] with [`AnyRef`] algorithm parameters, and [`BitStringRef`] params.
+pub type SubjectPublicKeyInfoRef<'a> = SubjectPublicKeyInfo<AnyRef<'a>, BitStringRef<'a>>;
+
+/// [`SubjectPublicKeyInfo`] with [`Any`] algorithm parameters, and [`BitString`] params.
+#[cfg(feature = "alloc")]
+pub type SubjectPublicKeyInfoOwned = SubjectPublicKeyInfo<Any, BitString>;
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 § 4.1.2.7].
 ///
@@ -38,24 +45,19 @@ pub type SubjectPublicKeyInfoRef<'a> = SubjectPublicKeyInfo<AnyRef<'a>>;
 ///
 /// [RFC 5280 § 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SubjectPublicKeyInfo<Params> {
+pub struct SubjectPublicKeyInfo<Params, Key> {
     /// X.509 [`AlgorithmIdentifier`] for the public key type
     pub algorithm: AlgorithmIdentifier<Params>,
 
     /// Public key data
-    pub subject_public_key: BitString,
+    pub subject_public_key: Key,
 }
 
-impl<Params> SubjectPublicKeyInfo<Params> {
-    /// Get a [`BitString`] representing the `subject_public_key`
-    fn bitstring(&self) -> BitStringRef<'_> {
-        BitStringRef::from(&self.subject_public_key)
-    }
-}
-
-impl<'a, Params> SubjectPublicKeyInfo<Params>
+impl<'a: 'k, 'k, Params, Key: 'k> SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
+    Key: BitStringLike<'k, 'a>,
+    BitStringRef<'a>: From<&'k Key>,
 {
     /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] and
     /// encode it as a Base64 string.
@@ -84,35 +86,40 @@ where
     }
 }
 
-impl<'a, Params> DecodeValue<'a> for SubjectPublicKeyInfo<Params>
+impl<'a: 'k, 'k, Params, Key: 'k> DecodeValue<'a> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
+    Key: Decode<'a>,
 {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 algorithm: reader.decode()?,
-                subject_public_key: BitString::decode(reader)?,
+                subject_public_key: Key::decode(reader)?,
             })
         })
     }
 }
 
-impl<'a, Params> Sequence<'a> for SubjectPublicKeyInfo<Params>
+impl<'a: 'k, 'k, Params, Key: 'k> Sequence<'a> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
+    Key: BitStringLike<'k, 'a>,
+    BitStringRef<'a>: From<&'k Key>,
 {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
-        f(&[&self.algorithm, &self.bitstring()])
+        f(&[&self.algorithm, &self.subject_public_key])
     }
 }
 
-impl<'a, Params> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params>
+impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
+    Key: BitStringLike<'k, 'a>,
+    BitStringRef<'a>: From<&'k Key>,
 {
     type Error = Error;
 
@@ -121,13 +128,14 @@ where
     }
 }
 
-impl<'a, Params> ValueOrd for SubjectPublicKeyInfo<Params>
+impl<'a, Params, Key> ValueOrd for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + DerOrd + Encode,
+    Key: ValueOrd,
 {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         match self.algorithm.der_cmp(&other.algorithm)? {
-            Ordering::Equal => self.bitstring().der_cmp(&other.bitstring()),
+            Ordering::Equal => self.subject_public_key.value_cmp(&other.subject_public_key),
             other => Ok(other),
         }
     }
@@ -135,32 +143,36 @@ where
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, Params> TryFrom<SubjectPublicKeyInfo<Params>> for Document
+impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<SubjectPublicKeyInfo<Params, Key>> for Document
 where
     Params: Choice<'a> + Encode,
+    Key: BitStringLike<'k, 'a>,
+    BitStringRef<'a>: From<&'k Key>,
 {
     type Error = Error;
 
-    fn try_from(spki: SubjectPublicKeyInfo<Params>) -> Result<Document> {
+    fn try_from(spki: SubjectPublicKeyInfo<Params, Key>) -> Result<Document> {
         Self::try_from(&spki)
     }
 }
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl<'a, Params> TryFrom<&SubjectPublicKeyInfo<Params>> for Document
+impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<&SubjectPublicKeyInfo<Params, Key>> for Document
 where
     Params: Choice<'a> + Encode,
+    Key: BitStringLike<'k, 'a>,
+    BitStringRef<'a>: From<&'k Key>,
 {
     type Error = Error;
 
-    fn try_from(spki: &SubjectPublicKeyInfo<Params>) -> Result<Document> {
+    fn try_from(spki: &SubjectPublicKeyInfo<Params, Key>) -> Result<Document> {
         Ok(Self::encode_msg(spki)?)
     }
 }
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-impl<Params> PemLabel for SubjectPublicKeyInfo<Params> {
+impl<Params, Key> PemLabel for SubjectPublicKeyInfo<Params, Key> {
     const PEM_LABEL: &'static str = "PUBLIC KEY";
 }
