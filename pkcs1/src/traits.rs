@@ -18,7 +18,7 @@ use {
 #[cfg(feature = "pkcs8")]
 use {
     crate::{ALGORITHM_ID, ALGORITHM_OID},
-    der::asn1::BitString,
+    der::asn1::BitStringRef,
 };
 
 #[cfg(feature = "std")]
@@ -188,7 +188,7 @@ impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T {
     fn from_pkcs1_der(public_key: &[u8]) -> Result<Self> {
         Ok(Self::try_from(pkcs8::SubjectPublicKeyInfoRef {
             algorithm: ALGORITHM_ID,
-            subject_public_key: BitString::from_bytes(public_key)?,
+            subject_public_key: BitStringRef::from_bytes(public_key)?,
         })?)
     }
 }
