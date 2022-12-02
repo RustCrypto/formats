@@ -2,7 +2,7 @@
 
 use crate::ext::pkix::{certpolicy::CertificatePolicies, NameConstraints};
 use crate::{ext::Extensions, name::Name};
-use crate::{Certificate, TbsCertificate};
+use crate::{CertificateRef, TbsCertificateRef};
 
 use alloc::string::String;
 use der::asn1::OctetString;
@@ -79,7 +79,7 @@ pub struct CertPathControls<'a> {
     pub ta_name: Name,
 
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
-    pub certificate: Option<Certificate<'a>>,
+    pub certificate: Option<CertificateRef<'a>>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub policy_set: Option<CertificatePolicies>,
@@ -130,10 +130,10 @@ pub type CertPolicyFlags = FlagSet<CertPolicies>;
 #[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
 pub enum TrustAnchorChoice<'a> {
-    Certificate(Certificate<'a>),
+    Certificate(CertificateRef<'a>),
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
-    TbsCertificate(TbsCertificate<'a>),
+    TbsCertificate(TbsCertificateRef<'a>),
 
     #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
     TaInfo(TrustAnchorInfo<'a>),

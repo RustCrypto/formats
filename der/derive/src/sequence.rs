@@ -8,6 +8,7 @@ use field::SequenceField;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
+use std::cmp::Ordering;
 use syn::{DeriveInput, Ident, Lifetime};
 
 /// Derive the `Sequence` trait for a struct
@@ -20,6 +21,12 @@ pub(crate) struct DeriveSequence {
 
     /// Fields of the struct.
     fields: Vec<SequenceField>,
+
+    /// Type parameters of the struct.
+    type_parameters: Vec<Ident>,
+
+    /// Type attributes of the struct.
+    type_attrs: TypeAttrs,
 }
 
 impl DeriveSequence {
@@ -32,6 +39,12 @@ impl DeriveSequence {
                 "can't derive `Sequence` on this type: only `struct` types are allowed",
             ),
         };
+
+        let type_parameters = input
+            .generics
+            .type_params()
+            .map(|g| g.ident.clone())
+            .collect::<Vec<_>>();
 
         // TODO(tarcieri): properly handle multiple lifetimes
         let lifetime = input
@@ -52,6 +65,8 @@ impl DeriveSequence {
             ident: input.ident,
             lifetime,
             fields,
+            type_parameters,
+            type_attrs,
         }
     }
 
@@ -82,8 +97,27 @@ impl DeriveSequence {
             encode_body.push(field.to_encode_tokens());
         }
 
+        let mut type_parameters = Vec::new();
+        let mut type_parameters_bounds = Vec::new();
+        for param in &self.type_parameters {
+            type_parameters.push(param.clone());
+
+            if let Some(bound) = param.to_bind_tokens(&lifetime, &self.type_attrs) {
+                type_parameters_bounds.push(bound);
+            }
+        }
+
+        let maybe_where_token = if !self.type_parameters.is_empty() {
+            quote! {where}
+        } else {
+            quote! {}
+        };
+
         quote! {
-            impl<#lifetime> ::der::DecodeValue<#lifetime> for #ident<#lt_params> {
+            impl<#lifetime, #(#type_parameters),*> ::der::DecodeValue<#lifetime> for #ident<#lt_params #(#type_parameters),*>
+                #maybe_where_token
+                #(#type_parameters_bounds),*
+            {
                 fn decode_value<R: ::der::Reader<#lifetime>>(
                     reader: &mut R,
                     header: ::der::Header,
@@ -100,7 +134,10 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lifetime> ::der::Sequence<#lifetime> for #ident<#lt_params> {
+            impl<#lifetime, #(#type_parameters),*> ::der::Sequence<#lifetime> for #ident<#lt_params #(#type_parameters),*>
+                #maybe_where_token
+                #(#type_parameters_bounds),*
+            {
                 fn fields<F, T>(&self, f: F) -> ::der::Result<T>
                 where
                     F: FnOnce(&[&dyn der::Encode]) -> ::der::Result<T>,
@@ -111,6 +148,55 @@ impl DeriveSequence {
                 }
             }
         }
+    }
+}
+
+/// Trait for extending `syn::Ident` with a helper to generate the TokenStream for binding the type
+trait BindToken {
+    fn to_bind_tokens(&self, lifetime: &TokenStream, attrs: &TypeAttrs) -> Option<TokenStream>;
+}
+
+impl BindToken for Ident {
+    fn to_bind_tokens(&self, lifetime: &TokenStream, attrs: &TypeAttrs) -> Option<TokenStream> {
+        let ident = self;
+
+        let mut bounds = Vec::new();
+
+        if attrs.choice.iter().any(|i| ident.ident_eq(i)) {
+            bounds.push(quote! {
+                ::der::Choice<#lifetime>
+            });
+        }
+        if attrs.encode.iter().any(|i| ident.ident_eq(i)) {
+            bounds.push(quote! {
+                ::der::Encode
+            });
+        }
+        if attrs.bitstringlike.iter().any(|i| ident.ident_eq(i)) {
+            bounds.push(quote! {
+                ::der::asn1::BitStringLike<#lifetime>
+            });
+        }
+
+        if !bounds.is_empty() {
+            Some(quote! {
+                #ident: #(#bounds)+*
+            })
+        } else {
+            None
+        }
+    }
+}
+
+/// A small helper for `Ident` to do comparison of `Ident` ignoring its callsite
+trait IdentEq {
+    fn ident_eq(&self, ident: &Ident) -> bool;
+}
+
+impl IdentEq for Ident {
+    fn ident_eq(&self, ident: &Ident) -> bool {
+        // Implementation detail, ordering comparison only compares the name
+        self.cmp(ident) == Ordering::Equal
     }
 }
 

@@ -31,6 +31,8 @@ pub mod request;
 pub mod serial_number;
 pub mod time;
 
-pub use certificate::{Certificate, PkiPath, TbsCertificate, Version};
+pub use certificate::{
+    Certificate, CertificateRef, PkiPath, TbsCertificate, TbsCertificateRef, Version,
+};
 pub use der;
 pub use spki;
