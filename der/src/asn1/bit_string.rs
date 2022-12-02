@@ -442,16 +442,16 @@ where
 }
 
 /// Trait used as a marker to ensure the type can hold the content of a Bit String
-pub trait BitStringLike<'pointer, 'slice: 'pointer>
+pub trait BitStringLike<'der>
 where
-    Self: Decode<'slice> + Encode + FixedTag + 'pointer,
+    Self: Decode<'der> + Encode + FixedTag,
 {
 }
 
-impl<'slice: 'pointer, 'pointer> BitStringLike<'pointer, 'slice> for BitStringRef<'slice> {}
+impl<'der> BitStringLike<'der> for BitStringRef<'der> {}
 
 #[cfg(feature = "alloc")]
-impl<'a> BitStringLike<'a, 'a> for BitString {}
+impl<'a> BitStringLike<'a> for BitString {}
 
 #[cfg(test)]
 mod tests {
