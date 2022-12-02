@@ -53,11 +53,10 @@ pub struct SubjectPublicKeyInfo<Params, Key> {
     pub subject_public_key: Key,
 }
 
-impl<'a: 'k, 'k, Params, Key: 'k> SubjectPublicKeyInfo<Params, Key>
+impl<'a, Params, Key> SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'k, 'a>,
-    BitStringRef<'a>: From<&'k Key>,
+    Key: BitStringLike<'a>,
 {
     /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] and
     /// encode it as a Base64 string.
@@ -101,11 +100,10 @@ where
     }
 }
 
-impl<'a: 'k, 'k, Params, Key: 'k> Sequence<'a> for SubjectPublicKeyInfo<Params, Key>
+impl<'a, Params, Key> Sequence<'a> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'k, 'a>,
-    BitStringRef<'a>: From<&'k Key>,
+    Key: BitStringLike<'a>,
 {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
@@ -115,11 +113,10 @@ where
     }
 }
 
-impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params, Key>
+impl<'a, Params, Key> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'k, 'a>,
-    BitStringRef<'a>: From<&'k Key>,
+    Key: BitStringLike<'a>,
 {
     type Error = Error;
 
@@ -146,7 +143,7 @@ where
 impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<SubjectPublicKeyInfo<Params, Key>> for Document
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'k, 'a>,
+    Key: BitStringLike<'a>,
     BitStringRef<'a>: From<&'k Key>,
 {
     type Error = Error;
@@ -161,7 +158,7 @@ where
 impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<&SubjectPublicKeyInfo<Params, Key>> for Document
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'k, 'a>,
+    Key: BitStringLike<'a>,
     BitStringRef<'a>: From<&'k Key>,
 {
     type Error = Error;
