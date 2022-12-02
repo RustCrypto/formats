@@ -36,7 +36,7 @@ pub enum Version {
 
 impl ValueOrd for Version {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
-        (&(*self as u8)).value_cmp(&(*other as u8))
+        (*self as u8).value_cmp(&(*other as u8))
     }
 }
 
