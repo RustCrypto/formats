@@ -6,9 +6,9 @@ use alloc::vec::Vec;
 use core::cmp::Ordering;
 
 use const_oid::AssociatedOid;
-use der::asn1::BitString;
+use der::asn1::{AnyRef, BitString, BitStringRef};
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
-use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfoRef};
+use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -73,7 +73,8 @@ impl Default for Version {
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertificate<'a> {
+#[asn1(params = "SignParams", params = "KeyParams", key = "Key")]
+pub struct TbsCertificate<SignParams, KeyParams, Key> {
     /// The certificate version
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
@@ -84,11 +85,11 @@ pub struct TbsCertificate<'a> {
     pub version: Version,
 
     pub serial_number: SerialNumber,
-    pub signature: AlgorithmIdentifierRef<'a>,
+    pub signature: AlgorithmIdentifier<SignParams>,
     pub issuer: Name,
     pub validity: Validity,
     pub subject: Name,
-    pub subject_public_key_info: SubjectPublicKeyInfoRef<'a>,
+    pub subject_public_key_info: SubjectPublicKeyInfo<KeyParams, Key>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub issuer_unique_id: Option<BitString>,
@@ -100,13 +101,13 @@ pub struct TbsCertificate<'a> {
     pub extensions: Option<crate::ext::Extensions>,
 }
 
-impl<'a> TbsCertificate<'a> {
+impl<SignParams, KeyParams, Key> TbsCertificate<SignParams, KeyParams, Key> {
     /// Decodes a single extension
     ///
     /// Returns an error if multiple of these extensions is present. Returns
     /// `Ok(None)` if the extension is not present. Returns a decoding error
     /// if decoding failed. Otherwise returns the extension.
-    pub fn get<'b: 'a, T: Decode<'a> + AssociatedOid>(
+    pub fn get<'a, 'b: 'a, T: Decode<'a> + AssociatedOid>(
         &'b self,
     ) -> Result<Option<(bool, T)>, Error> {
         let mut iter = self.filter::<T>().peekable();
@@ -122,7 +123,7 @@ impl<'a> TbsCertificate<'a> {
     /// Filters extensions by an associated OID
     ///
     /// Returns a filtered iterator over all the extensions with the OID.
-    pub fn filter<'b: 'a, T: Decode<'a> + AssociatedOid>(
+    pub fn filter<'a, 'b: 'a, T: Decode<'a> + AssociatedOid>(
         &'b self,
     ) -> impl 'b + Iterator<Item = Result<(bool, T), Error>> {
         self.extensions
@@ -147,15 +148,16 @@ impl<'a> TbsCertificate<'a> {
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct Certificate<'a> {
-    pub tbs_certificate: TbsCertificate<'a>,
-    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
+#[asn1(params = "SignParams", params = "KeyParams", key = "Key")]
+pub struct Certificate<SignParams, KeyParams, Key> {
+    pub tbs_certificate: TbsCertificate<SignParams, KeyParams, Key>,
+    pub signature_algorithm: AlgorithmIdentifier<SignParams>,
     pub signature: BitString,
 }
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-impl PemLabel for Certificate<'_> {
+impl<SignParams, KeyParams, Key> PemLabel for Certificate<SignParams, KeyParams, Key> {
     const PEM_LABEL: &'static str = "CERTIFICATE";
 }
 
@@ -170,4 +172,9 @@ impl PemLabel for Certificate<'_> {
 /// ```
 ///
 /// [RFC 6066]: https://datatracker.ietf.org/doc/html/rfc6066#section-10.1
-pub type PkiPath<'a> = Vec<Certificate<'a>>;
+pub type PkiPath<'a> = Vec<CertificateRef<'a>>;
+
+/// `Certificate` reference which has `AnyRef` and `BitStringRef` parameters.
+pub type CertificateRef<'a> = Certificate<AnyRef<'a>, AnyRef<'a>, BitStringRef<'a>>;
+/// `TbsCertificate` reference which has `AnyRef` and `BitStringRef` parameters.
+pub type TbsCertificateRef<'a> = TbsCertificate<AnyRef<'a>, AnyRef<'a>, BitStringRef<'a>>;

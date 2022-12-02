@@ -7,7 +7,7 @@ use der::{
 use hex_literal::hex;
 use spki::AlgorithmIdentifierRef;
 use x509_cert::serial_number::SerialNumber;
-use x509_cert::Certificate;
+use x509_cert::CertificateRef;
 use x509_cert::*;
 
 // TODO - parse and compare extension values
@@ -113,7 +113,7 @@ fn reencode_cert() {
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
     let defer_cert = DeferDecodeCertificate::from_der(der_encoded_cert).unwrap();
 
-    let parsed_tbs = TbsCertificate::from_der(defer_cert.tbs_certificate).unwrap();
+    let parsed_tbs = TbsCertificateRef::from_der(defer_cert.tbs_certificate).unwrap();
     let reencoded_tbs = parsed_tbs.to_vec().unwrap();
     assert_eq!(defer_cert.tbs_certificate, reencoded_tbs);
 
@@ -189,8 +189,8 @@ fn decode_cert() {
     // extensions otherwise
     let der_encoded_cert =
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
-    let result = Certificate::from_der(der_encoded_cert);
-    let cert: Certificate = result.unwrap();
+    let result = CertificateRef::from_der(der_encoded_cert);
+    let cert: CertificateRef = result.unwrap();
     println!("{:?}", cert);
     let exts = cert.tbs_certificate.extensions.unwrap();
     for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
@@ -198,8 +198,8 @@ fn decode_cert() {
         assert_eq!(ext.critical, *crit);
     }
 
-    let result = Certificate::from_der(der_encoded_cert);
-    let cert: Certificate = result.unwrap();
+    let result = CertificateRef::from_der(der_encoded_cert);
+    let cert: CertificateRef = result.unwrap();
 
     assert_eq!(cert.tbs_certificate.version, Version::V3);
     let target_serial: [u8; 16] = [

@@ -12,7 +12,7 @@ use x509_cert::ext::pkix::{AuthorityInfoAccessSyntax, CrlReason};
 use x509_cert::ext::Extensions;
 use x509_cert::name::Name;
 use x509_cert::serial_number::SerialNumber;
-use x509_cert::Certificate;
+use x509_cert::CertificateRef;
 
 use alloc::vec::Vec;
 use core::default::Default;
@@ -94,7 +94,7 @@ pub struct Signature<'a> {
     pub signature: BitStringRef<'a>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
-    pub certs: Option<Vec<Certificate<'a>>>,
+    pub certs: Option<Vec<CertificateRef<'a>>>,
 }
 
 /// OCSP `Version` as defined in [RFC 6960 Section 4.1.1].

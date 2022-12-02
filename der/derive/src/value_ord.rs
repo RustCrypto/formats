@@ -5,7 +5,7 @@
 
 // TODO(tarcieri): enum support
 
-use crate::{FieldAttrs, TypeAttrs};
+use crate::{bind_tokens::BindTokens, default_lifetime, FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
@@ -24,6 +24,12 @@ pub(crate) struct DeriveValueOrd {
 
     /// Type of input provided (`enum` or `struct`).
     input_type: InputType,
+
+    /// Type parameters of the struct.
+    type_parameters: Vec<Ident>,
+
+    /// Type attributes of the struct.
+    type_attrs: TypeAttrs,
 }
 
 impl DeriveValueOrd {
@@ -31,6 +37,12 @@ impl DeriveValueOrd {
     pub fn new(input: DeriveInput) -> Self {
         let ident = input.ident;
         let type_attrs = TypeAttrs::parse(&input.attrs);
+
+        let type_parameters = input
+            .generics
+            .type_params()
+            .map(|g| g.ident.clone())
+            .collect::<Vec<_>>();
 
         // TODO(tarcieri): properly handle multiple lifetimes
         let lifetime = input
@@ -66,6 +78,8 @@ impl DeriveValueOrd {
             lifetime,
             fields,
             input_type,
+            type_parameters,
+            type_attrs,
         }
     }
 
@@ -73,12 +87,17 @@ impl DeriveValueOrd {
     pub fn to_tokens(&self) -> TokenStream {
         let ident = &self.ident;
 
+        let lifetime = match self.lifetime {
+            Some(ref lifetime) => quote!(#lifetime),
+            None => default_lifetime(),
+        };
+
         // Lifetime parameters
         // TODO(tarcieri): support multiple lifetimes
         let lt_params = self
             .lifetime
             .as_ref()
-            .map(|lt| vec![lt.clone()])
+            .map(|_| lifetime.clone())
             .unwrap_or_default();
 
         let mut body = Vec::new();
@@ -86,6 +105,22 @@ impl DeriveValueOrd {
         for field in &self.fields {
             body.push(field.to_tokens());
         }
+
+        let mut type_parameters = Vec::new();
+        let mut type_parameters_bounds = Vec::new();
+        for param in &self.type_parameters {
+            type_parameters.push(param.clone());
+
+            if let Some(bound) = param.to_bind_tokens(&lifetime, &self.type_attrs) {
+                type_parameters_bounds.push(bound);
+            }
+        }
+
+        let maybe_where_token = if !self.type_parameters.is_empty() {
+            quote! {where}
+        } else {
+            quote! {}
+        };
 
         let body = match self.input_type {
             InputType::Enum => {
@@ -111,7 +146,10 @@ impl DeriveValueOrd {
         };
 
         quote! {
-            impl<#(#lt_params)*> ::der::ValueOrd for #ident<#(#lt_params)*> {
+            impl<#lifetime, #(#type_parameters),*> ::der::ValueOrd for #ident<#lt_params #(#type_parameters),*>
+                #maybe_where_token
+                #(#type_parameters_bounds),*
+            {
                 fn value_cmp(&self, other: &Self) -> ::der::Result<::core::cmp::Ordering> {
                     #body
                 }

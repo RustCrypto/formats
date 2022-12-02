@@ -3,7 +3,7 @@
 
 mod field;
 
-use crate::{default_lifetime, TypeAttrs};
+use crate::{bind_tokens::BindTokens, default_lifetime, TypeAttrs};
 use field::SequenceField;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
@@ -20,6 +20,12 @@ pub(crate) struct DeriveSequence {
 
     /// Fields of the struct.
     fields: Vec<SequenceField>,
+
+    /// Type parameters of the struct.
+    type_parameters: Vec<Ident>,
+
+    /// Type attributes of the struct.
+    type_attrs: TypeAttrs,
 }
 
 impl DeriveSequence {
@@ -32,6 +38,12 @@ impl DeriveSequence {
                 "can't derive `Sequence` on this type: only `struct` types are allowed",
             ),
         };
+
+        let type_parameters = input
+            .generics
+            .type_params()
+            .map(|g| g.ident.clone())
+            .collect::<Vec<_>>();
 
         // TODO(tarcieri): properly handle multiple lifetimes
         let lifetime = input
@@ -52,6 +64,8 @@ impl DeriveSequence {
             ident: input.ident,
             lifetime,
             fields,
+            type_parameters,
+            type_attrs,
         }
     }
 
@@ -82,8 +96,27 @@ impl DeriveSequence {
             encode_body.push(field.to_encode_tokens());
         }
 
+        let mut type_parameters = Vec::new();
+        let mut type_parameters_bounds = Vec::new();
+        for param in &self.type_parameters {
+            type_parameters.push(param.clone());
+
+            if let Some(bound) = param.to_bind_tokens(&lifetime, &self.type_attrs) {
+                type_parameters_bounds.push(bound);
+            }
+        }
+
+        let maybe_where_token = if !self.type_parameters.is_empty() {
+            quote! {where}
+        } else {
+            quote! {}
+        };
+
         quote! {
-            impl<#lifetime> ::der::DecodeValue<#lifetime> for #ident<#lt_params> {
+            impl<#lifetime, #(#type_parameters),*> ::der::DecodeValue<#lifetime> for #ident<#lt_params #(#type_parameters),*>
+                #maybe_where_token
+                #(#type_parameters_bounds),*
+            {
                 fn decode_value<R: ::der::Reader<#lifetime>>(
                     reader: &mut R,
                     header: ::der::Header,
@@ -100,7 +133,10 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lifetime> ::der::Sequence<#lifetime> for #ident<#lt_params> {
+            impl<#lifetime, #(#type_parameters),*> ::der::Sequence<#lifetime> for #ident<#lt_params #(#type_parameters),*>
+                #maybe_where_token
+                #(#type_parameters_bounds),*
+            {
                 fn fields<F, T>(&self, f: F) -> ::der::Result<T>
                 where
                     F: FnOnce(&[&dyn der::Encode]) -> ::der::Result<T>,

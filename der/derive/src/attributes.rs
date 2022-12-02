@@ -1,11 +1,11 @@
 //! Attribute-related types used by the proc macro
 
 use crate::{Asn1Type, Tag, TagMode, TagNumber};
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
 use std::{fmt::Debug, str::FromStr};
-use syn::{Attribute, Lit, LitStr, Meta, MetaList, MetaNameValue, NestedMeta, Path};
+use syn::{Attribute, Ident, Lit, LitStr, Meta, MetaList, MetaNameValue, NestedMeta, Path};
 
 /// Attribute name.
 pub(crate) const ATTR_NAME: &str = "asn1";
@@ -21,12 +21,19 @@ pub(crate) struct TypeAttrs {
     ///
     /// The default value is `EXPLICIT`.
     pub tag_mode: TagMode,
+
+    /// The type parameters that needs to implement `der::Choice<'_> + der::Encode`
+    pub params: Vec<Ident>,
+    /// The type parameters that needs to implement `der::Decode<'_> + der::Encode + der::FixedTag`
+    pub key: Vec<Ident>,
 }
 
 impl TypeAttrs {
     /// Parse attributes from a struct field or enum variant.
     pub fn parse(attrs: &[Attribute]) -> Self {
         let mut tag_mode = None;
+        let mut params = Vec::new();
+        let mut key = Vec::new();
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
@@ -39,6 +46,10 @@ impl TypeAttrs {
                 }
 
                 tag_mode = Some(mode);
+            } else if let Some(ident) = attr.parse_value::<String>("params") {
+                params.push(Ident::new(&ident, Span::call_site()));
+            } else if let Some(ident) = attr.parse_value::<String>("key") {
+                key.push(Ident::new(&ident, Span::call_site()));
             } else {
                 abort!(
                     attr.name,
@@ -49,6 +60,8 @@ impl TypeAttrs {
 
         Self {
             tag_mode: tag_mode.unwrap_or_default(),
+            params,
+            key,
         }
     }
 }
