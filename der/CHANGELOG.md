@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.1 (2022-12-05)
+### Added
+- Rudimentary implementation of `TeletexString` and `VideotexString` ([#691])
+- Impl `ValueOrd` for `FlagSet<T>` and `UIntRef` ([#723])
+
+### Changed
+- Eliminate some boilerplate code by using `Deref` ([#697])
+
+[#691]: https://github.com/RustCrypto/formats/pull/691
+[#697]: https://github.com/RustCrypto/formats/pull/697
+[#723]: https://github.com/RustCrypto/formats/pull/723
+
 ## 0.6.0 (2022-05-08)
 ### Added
 - Impl `ValueOrd` for `SetOf` and `SetOfVec` ([#362])
