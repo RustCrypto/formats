@@ -22,7 +22,8 @@ pub(crate) struct DeriveValueOrd {
     /// Fields of structs or enum variants.
     fields: Vec<ValueField>,
 
-    is_enum: bool,
+    /// Type of input provided (`enum` or `struct`).
+    input_type: InputType,
 }
 
 impl DeriveValueOrd {
@@ -38,20 +39,20 @@ impl DeriveValueOrd {
             .next()
             .map(|lt| lt.lifetime.clone());
 
-        let (fields, is_enum) = match input.data {
+        let (fields, input_type) = match input.data {
             syn::Data::Enum(data) => (
                 data.variants
                     .into_iter()
                     .map(|variant| ValueField::new_enum(variant, &type_attrs))
                     .collect(),
-                true,
+                InputType::Enum,
             ),
             syn::Data::Struct(data) => (
                 data.fields
                     .into_iter()
                     .map(|field| ValueField::new_struct(field, &type_attrs))
                     .collect(),
-                false,
+                InputType::Struct,
             ),
             _ => abort!(
                 ident,
@@ -64,7 +65,7 @@ impl DeriveValueOrd {
             ident,
             lifetime,
             fields,
-            is_enum,
+            input_type,
         }
     }
 
@@ -86,23 +87,26 @@ impl DeriveValueOrd {
             body.push(field.to_tokens());
         }
 
-        let body = if self.is_enum {
-            quote! {
-                #[allow(unused_imports)]
-                use ::der::ValueOrd;
-                match (self, other) {
-                    #(#body)*
-                    _ => unreachable!(),
+        let body = match self.input_type {
+            InputType::Enum => {
+                quote! {
+                    #[allow(unused_imports)]
+                    use ::der::ValueOrd;
+                    match (self, other) {
+                        #(#body)*
+                        _ => unreachable!(),
+                    }
                 }
             }
-        } else {
-            quote! {
-                #[allow(unused_imports)]
-                use ::der::{DerOrd, ValueOrd};
+            InputType::Struct => {
+                quote! {
+                    #[allow(unused_imports)]
+                    use ::der::{DerOrd, ValueOrd};
 
-                #(#body)*
+                    #(#body)*
 
-                Ok(::core::cmp::Ordering::Equal)
+                    Ok(::core::cmp::Ordering::Equal)
+                }
             }
         };
 
@@ -114,6 +118,16 @@ impl DeriveValueOrd {
             }
         }
     }
+}
+
+/// What kind of input was provided (i.e. `enum` or `struct`).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum InputType {
+    /// Input is an `enum`.
+    Enum,
+
+    /// Input is a `struct`.
+    Struct,
 }
 
 struct ValueField {
