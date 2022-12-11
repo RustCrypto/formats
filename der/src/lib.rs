@@ -56,7 +56,7 @@
 //! - [`VideotexStringRef`]: ASN.1 `VideotexString`.
 //! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`.
 //! - [`SetOf`], [`SetOfVec`]: ASN.1 `SET OF`.
-//! - [`UIntRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes.
+//! - [`UintRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes.
 //! - [`UtcTime`]: ASN.1 `UTCTime`.
 //! - [`Utf8StringRef`]: ASN.1 `UTF8String`.
 //!
@@ -328,7 +328,7 @@
 //! [`SequenceOf`]: asn1::SequenceOf
 //! [`SetOf`]: asn1::SetOf
 //! [`SetOfVec`]: asn1::SetOfVec
-//! [`UIntRef`]: asn1::UIntRef
+//! [`UintRef`]: asn1::UintRef
 //! [`UtcTime`]: asn1::UtcTime
 //! [`Utf8StringRef`]: asn1::Utf8StringRef
 

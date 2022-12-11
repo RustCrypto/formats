@@ -5,7 +5,7 @@ pub(crate) mod other_prime_info;
 
 use crate::{Error, Result, RsaPublicKey, Version};
 use core::fmt;
-use der::{asn1::UIntRef, Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag};
+use der::{asn1::UintRef, Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag};
 
 #[cfg(feature = "alloc")]
 use {self::other_prime_info::OtherPrimeInfo, alloc::vec::Vec, der::SecretDocument};
@@ -39,28 +39,28 @@ use der::pem::PemLabel;
 #[derive(Clone)]
 pub struct RsaPrivateKey<'a> {
     /// `n`: RSA modulus.
-    pub modulus: UIntRef<'a>,
+    pub modulus: UintRef<'a>,
 
     /// `e`: RSA public exponent.
-    pub public_exponent: UIntRef<'a>,
+    pub public_exponent: UintRef<'a>,
 
     /// `d`: RSA private exponent.
-    pub private_exponent: UIntRef<'a>,
+    pub private_exponent: UintRef<'a>,
 
     /// `p`: first prime factor of `n`.
-    pub prime1: UIntRef<'a>,
+    pub prime1: UintRef<'a>,
 
     /// `q`: Second prime factor of `n`.
-    pub prime2: UIntRef<'a>,
+    pub prime2: UintRef<'a>,
 
     /// First exponent: `d mod (p-1)`.
-    pub exponent1: UIntRef<'a>,
+    pub exponent1: UintRef<'a>,
 
     /// Second exponent: `d mod (q-1)`.
-    pub exponent2: UIntRef<'a>,
+    pub exponent2: UintRef<'a>,
 
     /// CRT coefficient: `(inverse of q) mod p`.
-    pub coefficient: UIntRef<'a>,
+    pub coefficient: UintRef<'a>,
 
     /// Additional primes `r_3`, ..., `r_u`, in order, if this is a multi-prime
     /// RSA key (i.e. `version` is `multi`).

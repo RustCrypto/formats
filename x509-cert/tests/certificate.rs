@@ -1,7 +1,7 @@
 //! Certificate tests
 
 use der::{
-    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, UIntRef},
+    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, UintRef},
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
 };
 use hex_literal::hex;
@@ -207,7 +207,7 @@ fn decode_cert() {
     ];
     assert_eq!(
         cert.tbs_certificate.serial_number,
-        UIntRef::new(&target_serial).unwrap()
+        UintRef::new(&target_serial).unwrap()
     );
     assert_eq!(
         cert.tbs_certificate.signature.oid.to_string(),

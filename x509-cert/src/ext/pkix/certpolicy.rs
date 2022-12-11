@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 use const_oid::AssociatedOid;
-use der::asn1::{GeneralizedTime, Ia5StringRef, ObjectIdentifier, UIntRef, Utf8StringRef};
+use der::asn1::{GeneralizedTime, Ia5StringRef, ObjectIdentifier, UintRef, Utf8StringRef};
 use der::{AnyRef, Choice, Sequence, ValueOrd};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
@@ -98,7 +98,7 @@ pub struct UserNotice<'a> {
 #[allow(missing_docs)]
 pub struct NoticeReference<'a> {
     pub organization: DisplayText<'a>,
-    pub notice_numbers: Option<Vec<UIntRef<'a>>>,
+    pub notice_numbers: Option<Vec<UintRef<'a>>>,
 }
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4].

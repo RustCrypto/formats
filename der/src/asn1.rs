@@ -32,7 +32,7 @@ pub use self::{
     context_specific::{ContextSpecific, ContextSpecificRef},
     generalized_time::GeneralizedTime,
     ia5_string::Ia5StringRef,
-    integer::bigint::UIntRef,
+    integer::bigint::UintRef,
     null::Null,
     octet_string::OctetStringRef,
     printable_string::PrintableStringRef,

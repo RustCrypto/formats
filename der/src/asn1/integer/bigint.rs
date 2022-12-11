@@ -14,13 +14,13 @@ use crate::{
 /// Intended for use cases like very large integers that are used in
 /// cryptographic applications (e.g. keys, signatures).
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct UIntRef<'a> {
+pub struct UintRef<'a> {
     /// Inner value
     inner: ByteSlice<'a>,
 }
 
-impl<'a> UIntRef<'a> {
-    /// Create a new [`UIntRef`] from a byte slice.
+impl<'a> UintRef<'a> {
+    /// Create a new [`UintRef`] from a byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
         let inner = ByteSlice::new(uint::strip_leading_zeroes(bytes))
             .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
@@ -34,7 +34,7 @@ impl<'a> UIntRef<'a> {
         self.inner.as_slice()
     }
 
-    /// Get the length of this [`UIntRef`] in bytes.
+    /// Get the length of this [`UintRef`] in bytes.
     pub fn len(&self) -> Length {
         self.inner.len()
     }
@@ -45,7 +45,7 @@ impl<'a> UIntRef<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for UIntRef<'a> {
+impl<'a> DecodeValue<'a> for UintRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = ByteSlice::decode_value(reader, header)?.as_slice();
         let result = Self::new(uint::decode_to_slice(bytes)?)?;
@@ -59,7 +59,7 @@ impl<'a> DecodeValue<'a> for UIntRef<'a> {
     }
 }
 
-impl<'a> EncodeValue for UIntRef<'a> {
+impl<'a> EncodeValue for UintRef<'a> {
     fn value_len(&self) -> Result<Length> {
         uint::encoded_len(self.inner.as_slice())
     }
@@ -74,29 +74,29 @@ impl<'a> EncodeValue for UIntRef<'a> {
     }
 }
 
-impl<'a> From<&UIntRef<'a>> for UIntRef<'a> {
-    fn from(value: &UIntRef<'a>) -> UIntRef<'a> {
+impl<'a> From<&UintRef<'a>> for UintRef<'a> {
+    fn from(value: &UintRef<'a>) -> UintRef<'a> {
         *value
     }
 }
 
-impl<'a> TryFrom<AnyRef<'a>> for UIntRef<'a> {
+impl<'a> TryFrom<AnyRef<'a>> for UintRef<'a> {
     type Error = Error;
 
-    fn try_from(any: AnyRef<'a>) -> Result<UIntRef<'a>> {
+    fn try_from(any: AnyRef<'a>) -> Result<UintRef<'a>> {
         any.decode_into()
     }
 }
 
-impl<'a> FixedTag for UIntRef<'a> {
+impl<'a> FixedTag for UintRef<'a> {
     const TAG: Tag = Tag::Integer;
 }
 
-impl<'a> OrdIsValueOrd for UIntRef<'a> {}
+impl<'a> OrdIsValueOrd for UintRef<'a> {}
 
 #[cfg(test)]
 mod tests {
-    use super::UIntRef;
+    use super::UintRef;
     use crate::{
         asn1::{integer::tests::*, AnyRef},
         Decode, Encode, ErrorKind, SliceWriter, Tag,
@@ -104,19 +104,19 @@ mod tests {
 
     #[test]
     fn decode_uint_bytes() {
-        assert_eq!(&[0], UIntRef::from_der(I0_BYTES).unwrap().as_bytes());
-        assert_eq!(&[127], UIntRef::from_der(I127_BYTES).unwrap().as_bytes());
-        assert_eq!(&[128], UIntRef::from_der(I128_BYTES).unwrap().as_bytes());
-        assert_eq!(&[255], UIntRef::from_der(I255_BYTES).unwrap().as_bytes());
+        assert_eq!(&[0], UintRef::from_der(I0_BYTES).unwrap().as_bytes());
+        assert_eq!(&[127], UintRef::from_der(I127_BYTES).unwrap().as_bytes());
+        assert_eq!(&[128], UintRef::from_der(I128_BYTES).unwrap().as_bytes());
+        assert_eq!(&[255], UintRef::from_der(I255_BYTES).unwrap().as_bytes());
 
         assert_eq!(
             &[0x01, 0x00],
-            UIntRef::from_der(I256_BYTES).unwrap().as_bytes()
+            UintRef::from_der(I256_BYTES).unwrap().as_bytes()
         );
 
         assert_eq!(
             &[0x7F, 0xFF],
-            UIntRef::from_der(I32767_BYTES).unwrap().as_bytes()
+            UintRef::from_der(I32767_BYTES).unwrap().as_bytes()
         );
     }
 
@@ -130,7 +130,7 @@ mod tests {
             I256_BYTES,
             I32767_BYTES,
         ] {
-            let uint = UIntRef::from_der(example).unwrap();
+            let uint = UintRef::from_der(example).unwrap();
 
             let mut buf = [0u8; 128];
             let mut encoder = SliceWriter::new(&mut buf);
@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn reject_oversize_without_extra_zero() {
-        let err = UIntRef::try_from(AnyRef::new(Tag::Integer, &[0x81]).unwrap())
+        let err = UintRef::try_from(AnyRef::new(Tag::Integer, &[0x81]).unwrap())
             .err()
             .unwrap();
 
