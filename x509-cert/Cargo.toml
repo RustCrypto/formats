@@ -1,6 +1,6 @@
 [package]
 name = "x509-cert"
-version = "0.1.1"
+version = "0.2.0-pre"
 description = """
 Pure Rust implementation of the X.509 Public Key Infrastructure Certificate
 format as described in RFC 5280
@@ -15,10 +15,10 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-const-oid = { version = "0.9", features = ["db"], path = "../const-oid" }
-der = { version = "0.6", features = ["derive", "alloc", "flagset"], path = "../der" }
+const-oid = { version = "=0.10.0-pre", features = ["db"], path = "../const-oid" }
+der = { version = "=0.7.0-pre", features = ["derive", "alloc", "flagset"], path = "../der" }
 flagset = { version = "0.4.3" }
-spki = { version = "0.6", path = "../spki" }
+spki = { version = "=0.7.0-pre", path = "../spki" }
 
 [dev-dependencies]
 hex-literal = "0.3"
