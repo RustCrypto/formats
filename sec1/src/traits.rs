@@ -97,7 +97,10 @@ pub trait EncodeEcPrivateKey {
 
 #[cfg(feature = "pkcs8")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-impl<T: pkcs8::DecodePrivateKey> DecodeEcPrivateKey for T {
+impl<T> DecodeEcPrivateKey for T
+where
+    T: for<'a> TryFrom<pkcs8::PrivateKeyInfo<'a>, Error = pkcs8::Error>,
+{
     fn from_sec1_der(private_key: &[u8]) -> Result<Self> {
         let params_oid = EcPrivateKey::from_der(private_key)?
             .parameters

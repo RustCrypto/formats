@@ -169,7 +169,10 @@ pub trait EncodeRsaPublicKey {
 
 #[cfg(feature = "pkcs8")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-impl<T: pkcs8::DecodePrivateKey> DecodeRsaPrivateKey for T {
+impl<T> DecodeRsaPrivateKey for T
+where
+    T: for<'a> TryFrom<pkcs8::PrivateKeyInfo<'a>, Error = pkcs8::Error>,
+{
     fn from_pkcs1_der(private_key: &[u8]) -> Result<Self> {
         Ok(Self::try_from(pkcs8::PrivateKeyInfo {
             algorithm: ALGORITHM_ID,
@@ -181,7 +184,10 @@ impl<T: pkcs8::DecodePrivateKey> DecodeRsaPrivateKey for T {
 
 #[cfg(feature = "pkcs8")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pkcs8")))]
-impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T {
+impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T
+where
+    T: for<'a> TryFrom<pkcs8::SubjectPublicKeyInfo<'a>, Error = pkcs8::Error>,
+{
     fn from_pkcs1_der(public_key: &[u8]) -> Result<Self> {
         Ok(Self::try_from(pkcs8::SubjectPublicKeyInfo {
             algorithm: ALGORITHM_ID,
