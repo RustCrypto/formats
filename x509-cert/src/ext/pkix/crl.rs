@@ -11,7 +11,7 @@ pub use dp::IssuingDistributionPoint;
 
 use alloc::vec::Vec;
 
-use der::{asn1::UIntRef, Enumerated};
+use der::{asn1::UintRef, Enumerated};
 
 /// CrlNumber as defined in [RFC 5280 Section 5.2.3].
 ///
@@ -21,13 +21,13 @@ use der::{asn1::UIntRef, Enumerated};
 ///
 /// [RFC 5280 Section 5.2.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.3
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct CrlNumber<'a>(pub UIntRef<'a>);
+pub struct CrlNumber<'a>(pub UintRef<'a>);
 
 impl<'a> AssociatedOid for CrlNumber<'a> {
     const OID: ObjectIdentifier = ID_CE_CRL_NUMBER;
 }
 
-impl_newtype!(CrlNumber<'a>, UIntRef<'a>);
+impl_newtype!(CrlNumber<'a>, UintRef<'a>);
 
 /// BaseCRLNumber as defined in [RFC 5280 Section 5.2.4].
 ///
@@ -37,13 +37,13 @@ impl_newtype!(CrlNumber<'a>, UIntRef<'a>);
 ///
 /// [RFC 5280 Section 5.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.4
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct BaseCrlNumber<'a>(pub UIntRef<'a>);
+pub struct BaseCrlNumber<'a>(pub UintRef<'a>);
 
 impl<'a> AssociatedOid for BaseCrlNumber<'a> {
     const OID: ObjectIdentifier = ID_CE_DELTA_CRL_INDICATOR;
 }
 
-impl_newtype!(BaseCrlNumber<'a>, UIntRef<'a>);
+impl_newtype!(BaseCrlNumber<'a>, UintRef<'a>);
 
 /// CrlDistributionPoints as defined in [RFC 5280 Section 4.2.1.13].
 ///

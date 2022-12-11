@@ -3,7 +3,7 @@
 
 extern crate alloc;
 
-use der::asn1::{BitStringRef, Ia5StringRef, ObjectIdentifier, OctetStringRef, UIntRef};
+use der::asn1::{BitStringRef, Ia5StringRef, ObjectIdentifier, OctetStringRef, UintRef};
 use der::asn1::{GeneralizedTime, Null};
 use der::{AnyRef, Choice, Enumerated, Sequence};
 use spki::AlgorithmIdentifier;
@@ -152,7 +152,7 @@ pub struct CertId<'a> {
     pub hash_algorithm: AlgorithmIdentifier<'a>,
     pub issuer_name_hash: OctetStringRef<'a>,
     pub issuer_key_hash: OctetStringRef<'a>,
-    pub serial_number: UIntRef<'a>,
+    pub serial_number: UintRef<'a>,
 }
 
 /// OCSPResponse structure as defined in [RFC 6960 Section 4.2.1].
@@ -426,7 +426,7 @@ pub struct CrlId<'a> {
     pub crl_url: Option<Ia5StringRef<'a>>,
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
-    pub crl_num: Option<UIntRef<'a>>,
+    pub crl_num: Option<UintRef<'a>>,
 
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
     pub crl_time: Option<GeneralizedTime>,

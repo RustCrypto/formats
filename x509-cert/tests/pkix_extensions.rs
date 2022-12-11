@@ -1,6 +1,6 @@
 //! Certificate tests
 use const_oid::AssociatedOid;
-use der::asn1::UIntRef;
+use der::asn1::UintRef;
 use der::{Decode, Encode, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
@@ -486,7 +486,7 @@ fn decode_cert() {
     let target_serial: [u8; 1] = [2];
     assert_eq!(
         cert.tbs_certificate.serial_number,
-        UIntRef::new(&target_serial).unwrap()
+        UintRef::new(&target_serial).unwrap()
     );
     assert_eq!(
         cert.tbs_certificate.signature.oid.to_string(),

@@ -22,7 +22,7 @@ mod version;
 
 pub use der::{
     self,
-    asn1::{ObjectIdentifier, UIntRef},
+    asn1::{ObjectIdentifier, UintRef},
 };
 
 pub use crate::{

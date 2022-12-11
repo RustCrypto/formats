@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 use core::cmp::Ordering;
 
 use const_oid::AssociatedOid;
-use der::asn1::{BitStringRef, UIntRef};
+use der::asn1::{BitStringRef, UintRef};
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
 use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 
@@ -83,7 +83,7 @@ pub struct TbsCertificate<'a> {
     #[asn1(context_specific = "0", default = "Default::default")]
     pub version: Version,
 
-    pub serial_number: UIntRef<'a>,
+    pub serial_number: UintRef<'a>,
     pub signature: AlgorithmIdentifier<'a>,
     pub issuer: Name<'a>,
     pub validity: Validity,
