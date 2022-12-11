@@ -1,27 +1,30 @@
-# Trigger a full workspace run
 [workspace]
 resolver = "2"
 members = [
-    "base16ct",
-    "base32ct",
-    "base64ct",
     "const-oid",
     "der",
     "der/derive",
-    "pem-rfc7468",
     "pkcs1",
     "pkcs5",
     "pkcs7",
     "pkcs8",
     "pkcs12",
     "sec1",
-    "serdect",
     "spki",
+    "x509-cert",
+    "x509-ocsp"
+]
+
+# TODO(tarcieri): add back to `members` when MSRV is 1.60+
+exclude = [
+    "base16ct",
+    "base32ct",
+    "base64ct",
+    "pem-rfc7468",
+    "serdect",
     "tai64",
     "tls_codec",
     "tls_codec/derive",
-    "x509-cert",
-    "x509-ocsp"
 ]
 
 [profile.dev]

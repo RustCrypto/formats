@@ -10,6 +10,10 @@ repository = "https://github.com/RustCrypto/formats/tree/master/tls_codec"
 edition = "2021"
 rust-version = "1.57"
 
+# TODO(tarcieri): re-unify workspace when MSRV is 1.60+
+[workspace]
+members = [".", "derive"]
+
 [dependencies]
 zeroize = { version = "1", default-features = false, features = ["alloc"] }
 
