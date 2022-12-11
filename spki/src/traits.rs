@@ -15,14 +15,10 @@ use {
 use std::path::Path;
 
 /// Parse a public key object from an encoded SPKI document.
-pub trait DecodePublicKey:
-    for<'a> TryFrom<SubjectPublicKeyInfo<'a>, Error = Error> + Sized
-{
+pub trait DecodePublicKey: Sized {
     /// Deserialize object from ASN.1 DER-encoded [`SubjectPublicKeyInfo`]
     /// (binary format).
-    fn from_public_key_der(bytes: &[u8]) -> Result<Self> {
-        Self::try_from(SubjectPublicKeyInfo::try_from(bytes)?)
-    }
+    fn from_public_key_der(bytes: &[u8]) -> Result<Self>;
 
     /// Deserialize PEM-encoded [`SubjectPublicKeyInfo`].
     ///
@@ -55,6 +51,15 @@ pub trait DecodePublicKey:
         let (label, doc) = Document::read_pem_file(path)?;
         SubjectPublicKeyInfo::validate_pem_label(&label)?;
         Self::from_public_key_der(doc.as_bytes())
+    }
+}
+
+impl<T> DecodePublicKey for T
+where
+    T: for<'a> TryFrom<SubjectPublicKeyInfo<'a>, Error = Error>,
+{
+    fn from_public_key_der(bytes: &[u8]) -> Result<Self> {
+        Self::try_from(SubjectPublicKeyInfo::try_from(bytes)?)
     }
 }
 

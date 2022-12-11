@@ -21,12 +21,10 @@ use der::pem::PemLabel;
 use std::path::Path;
 
 /// Parse a private key object from a PKCS#8 encoded document.
-pub trait DecodePrivateKey: for<'a> TryFrom<PrivateKeyInfo<'a>, Error = Error> + Sized {
+pub trait DecodePrivateKey: Sized {
     /// Deserialize PKCS#8 private key from ASN.1 DER-encoded data
     /// (binary format).
-    fn from_pkcs8_der(bytes: &[u8]) -> Result<Self> {
-        Self::try_from(PrivateKeyInfo::try_from(bytes)?)
-    }
+    fn from_pkcs8_der(bytes: &[u8]) -> Result<Self>;
 
     /// Deserialize encrypted PKCS#8 private key from ASN.1 DER-encoded data
     /// (binary format) and attempt to decrypt it using the provided password.
@@ -84,6 +82,15 @@ pub trait DecodePrivateKey: for<'a> TryFrom<PrivateKeyInfo<'a>, Error = Error> +
         let (label, doc) = SecretDocument::read_pem_file(path)?;
         PrivateKeyInfo::validate_pem_label(&label)?;
         Self::from_pkcs8_der(doc.as_bytes())
+    }
+}
+
+impl<T> DecodePrivateKey for T
+where
+    T: for<'a> TryFrom<PrivateKeyInfo<'a>, Error = Error>,
+{
+    fn from_pkcs8_der(bytes: &[u8]) -> Result<Self> {
+        Self::try_from(PrivateKeyInfo::try_from(bytes)?)
     }
 }
 

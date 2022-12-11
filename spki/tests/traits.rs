@@ -30,12 +30,6 @@ impl AsRef<[u8]> for MockKey {
     }
 }
 
-impl DecodePublicKey for MockKey {
-    fn from_public_key_der(bytes: &[u8]) -> Result<MockKey> {
-        Ok(MockKey(bytes.to_vec()))
-    }
-}
-
 impl EncodePublicKey for MockKey {
     fn to_public_key_der(&self) -> Result<Document> {
         Ok(Document::from_der(self.as_ref())?)
