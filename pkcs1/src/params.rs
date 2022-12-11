@@ -6,7 +6,7 @@ use der::{
     asn1::ContextSpecificRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Reader, Sequence,
     Tag, TagMode, TagNumber, Writer,
 };
-use spki::AlgorithmIdentifier;
+use spki::AlgorithmIdentifierRef;
 
 const OID_SHA_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
 const OID_MGF_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.8");
@@ -15,7 +15,7 @@ const OID_PSPECIFIED: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.1
 // TODO(tarcieri): make `AlgorithmIdentifier` generic around params; use `OID_SHA_1`
 const SEQ_OID_SHA_1_DER: &[u8] = &[0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a];
 
-const SHA_1_AI: AlgorithmIdentifier<'_> = AlgorithmIdentifier {
+const SHA_1_AI: AlgorithmIdentifierRef<'_> = AlgorithmIdentifierRef {
     oid: OID_SHA_1,
     parameters: None,
 };
@@ -81,10 +81,10 @@ impl FixedTag for TrailerField {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RsaPssParams<'a> {
     /// Hash Algorithm
-    pub hash: AlgorithmIdentifier<'a>,
+    pub hash: AlgorithmIdentifierRef<'a>,
 
     /// Mask Generation Function (MGF)
-    pub mask_gen: AlgorithmIdentifier<'a>,
+    pub mask_gen: AlgorithmIdentifierRef<'a>,
 
     /// Salt length
     pub salt_len: u8,
@@ -180,8 +180,8 @@ impl<'a> TryFrom<&'a [u8]> for RsaPssParams<'a> {
 }
 
 /// Default Mask Generation Function (MGF): SHA-1.
-fn default_mgf1_sha1<'a>() -> AlgorithmIdentifier<'a> {
-    AlgorithmIdentifier {
+fn default_mgf1_sha1<'a>() -> AlgorithmIdentifierRef<'a> {
+    AlgorithmIdentifierRef {
         oid: OID_MGF_1,
         parameters: Some(
             AnyRef::new(Tag::Sequence, SEQ_OID_SHA_1_DER)
@@ -208,13 +208,13 @@ fn default_mgf1_sha1<'a>() -> AlgorithmIdentifier<'a> {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RsaOaepParams<'a> {
     /// Hash Algorithm
-    pub hash: AlgorithmIdentifier<'a>,
+    pub hash: AlgorithmIdentifierRef<'a>,
 
     /// Mask Generation Function (MGF)
-    pub mask_gen: AlgorithmIdentifier<'a>,
+    pub mask_gen: AlgorithmIdentifierRef<'a>,
 
     /// The source (and possibly the value) of the label L
-    pub p_source: AlgorithmIdentifier<'a>,
+    pub p_source: AlgorithmIdentifierRef<'a>,
 }
 
 impl<'a> Default for RsaOaepParams<'a> {
@@ -291,8 +291,8 @@ impl<'a> TryFrom<&'a [u8]> for RsaOaepParams<'a> {
 }
 
 /// Default Source Algorithm, empty string
-fn default_pempty_string<'a>() -> AlgorithmIdentifier<'a> {
-    AlgorithmIdentifier {
+fn default_pempty_string<'a>() -> AlgorithmIdentifierRef<'a> {
+    AlgorithmIdentifierRef {
         oid: OID_PSPECIFIED,
         parameters: Some(
             AnyRef::new(Tag::OctetString, &[]).expect("error creating default OAEP params"),

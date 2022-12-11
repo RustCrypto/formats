@@ -12,7 +12,7 @@
 //!
 //! The main API for this crate is the [`EncryptionScheme`] enum, which impls
 //! the [`Decode`] and [`Encode`] traits from the [`der`] crate, and can be
-//! used for decoding/encoding PKCS#5 [`AlgorithmIdentifier`] fields.
+//! used for decoding/encoding PKCS#5 `AlgorithmIdentifier` fields.
 //!
 //! [RFC 8018]: https://tools.ietf.org/html/rfc8018
 
@@ -26,7 +26,7 @@ pub mod pbes2;
 
 pub use crate::error::{Error, Result};
 pub use der::{self, asn1::ObjectIdentifier};
-pub use spki::AlgorithmIdentifier;
+pub use spki::AlgorithmIdentifierRef;
 
 use der::{Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag};
 
@@ -136,7 +136,7 @@ impl<'a> EncryptionScheme<'a> {
 
 impl<'a> DecodeValue<'a> for EncryptionScheme<'a> {
     fn decode_value<R: Reader<'a>>(decoder: &mut R, header: Header) -> der::Result<Self> {
-        AlgorithmIdentifier::decode_value(decoder, header)?.try_into()
+        AlgorithmIdentifierRef::decode_value(decoder, header)?.try_into()
     }
 }
 
@@ -164,10 +164,10 @@ impl<'a> From<pbes2::Parameters<'a>> for EncryptionScheme<'a> {
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifier<'a>> for EncryptionScheme<'a> {
+impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifier<'a>) -> der::Result<EncryptionScheme<'_>> {
+    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<EncryptionScheme<'_>> {
         if alg.oid == pbes2::PBES2_OID {
             match alg.parameters {
                 Some(params) => pbes2::Parameters::try_from(params).map(Into::into),
@@ -183,6 +183,6 @@ impl<'a> TryFrom<&'a [u8]> for EncryptionScheme<'a> {
     type Error = der::Error;
 
     fn try_from(bytes: &'a [u8]) -> der::Result<EncryptionScheme<'a>> {
-        AlgorithmIdentifier::from_der(bytes)?.try_into()
+        AlgorithmIdentifierRef::from_der(bytes)?.try_into()
     }
 }

@@ -5,7 +5,7 @@ use der::{
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
 };
 use hex_literal::hex;
-use spki::AlgorithmIdentifier;
+use spki::AlgorithmIdentifierRef;
 use x509_cert::Certificate;
 use x509_cert::*;
 
@@ -116,7 +116,7 @@ fn reencode_cert() {
     let reencoded_tbs = parsed_tbs.to_vec().unwrap();
     assert_eq!(defer_cert.tbs_certificate, reencoded_tbs);
 
-    let parsed_sigalg = AlgorithmIdentifier::from_der(defer_cert.signature_algorithm).unwrap();
+    let parsed_sigalg = AlgorithmIdentifierRef::from_der(defer_cert.signature_algorithm).unwrap();
     let reencoded_sigalg = parsed_sigalg.to_vec().unwrap();
     assert_eq!(defer_cert.signature_algorithm, reencoded_sigalg);
 

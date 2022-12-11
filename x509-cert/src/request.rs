@@ -9,7 +9,7 @@ use const_oid::db::rfc5912::ID_EXTENSION_REQ;
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::BitStringRef;
 use der::{Decode, Enumerated, Sequence};
-use spki::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfo};
 
 /// Version identifier for certification request information.
 ///
@@ -75,7 +75,7 @@ pub struct CertReq<'a> {
     pub info: CertReqInfo<'a>,
 
     /// Signature algorithm identifier.
-    pub algorithm: AlgorithmIdentifier<'a>,
+    pub algorithm: AlgorithmIdentifierRef<'a>,
 
     /// Signature.
     pub signature: BitStringRef<'a>,
