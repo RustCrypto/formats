@@ -8,11 +8,7 @@ description = "A pure Rust implementation of the TLS (de)serialization"
 readme = "README.md"
 repository = "https://github.com/RustCrypto/formats/tree/master/tls_codec"
 edition = "2021"
-rust-version = "1.57"
-
-# TODO(tarcieri): re-unify workspace when MSRV is 1.60+
-[workspace]
-members = [".", "derive"]
+rust-version = "1.60"
 
 [dependencies]
 zeroize = { version = "1", default-features = false, features = ["alloc"] }
@@ -28,7 +24,7 @@ regex = "1.7"
 [features]
 default = [ "std" ]
 derive = [ "std", "tls_codec_derive" ]
-serde_serialize = [ "std", "serde" ]
+serde = [ "std", "dep:serde" ]
 mls = [] # In MLS variable length vectors are limited compared to QUIC.
 std = []
 
