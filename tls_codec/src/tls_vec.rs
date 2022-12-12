@@ -7,7 +7,7 @@
 use alloc::vec::Vec;
 use core::ops::Drop;
 
-#[cfg(feature = "serde_serialize")]
+#[cfg(feature = "serde")]
 use serde::ser::SerializeStruct;
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
@@ -444,7 +444,7 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        #[cfg(feature = "serde_serialize")]
+        #[cfg(feature = "serde")]
         impl<T> serde::Serialize for $name<T>
         where
             T: $($bounds + )* serde::Serialize,
@@ -459,7 +459,7 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        #[cfg(feature = "serde_serialize")]
+        #[cfg(feature = "serde")]
         impl<'de, T> serde::de::Deserialize<'de> for $name<T>
         where
             T: $($bounds + )* serde::de::Deserialize<'de>,
@@ -642,7 +642,7 @@ macro_rules! impl_tls_vec {
             }
         }
 
-        #[cfg(feature = "serde_serialize")]
+        #[cfg(feature = "serde")]
         impl serde::Serialize for $name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
@@ -654,7 +654,7 @@ macro_rules! impl_tls_vec {
             }
         }
 
-        #[cfg(feature = "serde_serialize")]
+        #[cfg(feature = "serde")]
         impl<'de> serde::de::Deserialize<'de> for $name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
