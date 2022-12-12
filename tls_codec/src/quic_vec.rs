@@ -13,7 +13,7 @@
 //! up to 62-bit length values.
 use alloc::vec::Vec;
 
-#[cfg(feature = "serde_serialize")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
 use crate::{Deserialize, Error, Serialize, Size};
@@ -197,7 +197,7 @@ impl<T: Size> Size for &[T] {
 /// Variable-length encoded byte vectors.
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
-#[cfg_attr(feature = "serde_serialize", derive(SerdeSerialize, SerdeDeserialize))]
+#[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
     vec: Vec<u8>,
