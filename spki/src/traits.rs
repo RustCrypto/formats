@@ -14,6 +14,9 @@ use {
 #[cfg(feature = "std")]
 use std::path::Path;
 
+#[cfg(doc)]
+use crate::SubjectPublicKeyInfo;
+
 /// Parse a public key object from an encoded SPKI document.
 pub trait DecodePublicKey: Sized {
     /// Deserialize object from ASN.1 DER-encoded [`SubjectPublicKeyInfo`]
