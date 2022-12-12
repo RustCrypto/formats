@@ -11,6 +11,8 @@ members = [
     "pkcs12",
     "sec1",
     "spki",
+    "tls_codec",
+    "tls_codec/derive",
     "x509-cert",
     "x509-ocsp"
 ]
@@ -23,8 +25,6 @@ exclude = [
     "pem-rfc7468",
     "serdect",
     "tai64",
-    "tls_codec",
-    "tls_codec/derive",
 ]
 
 [profile.dev]
