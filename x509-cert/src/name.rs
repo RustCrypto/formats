@@ -12,7 +12,7 @@ use der::{asn1::SetOfVec, Decode, Encode};
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
-pub type Name<'a> = RdnSequence<'a>;
+pub type Name = RdnSequence;
 
 /// X.501 RDNSequence as defined in [RFC 5280 Section 4.1.2.4].
 ///
@@ -22,9 +22,9 @@ pub type Name<'a> = RdnSequence<'a>;
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct RdnSequence<'a>(pub Vec<RelativeDistinguishedName<'a>>);
+pub struct RdnSequence(pub Vec<RelativeDistinguishedName>);
 
-impl RdnSequence<'_> {
+impl RdnSequence {
     /// Converts an RDNSequence string into an encoded RDNSequence
     ///
     /// This function follows the rules in [RFC 4514].
@@ -47,7 +47,7 @@ impl RdnSequence<'_> {
 /// Serializes the structure according to the rules in [RFC 4514].
 ///
 /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
-impl fmt::Display for RdnSequence<'_> {
+impl fmt::Display for RdnSequence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (i, atv) in self.0.iter().enumerate() {
             match i {
@@ -60,7 +60,7 @@ impl fmt::Display for RdnSequence<'_> {
     }
 }
 
-impl_newtype!(RdnSequence<'a>, Vec<RelativeDistinguishedName<'a>>);
+impl_newtype!(RdnSequence, Vec<RelativeDistinguishedName>);
 
 /// Find the indices of all non-escaped separators.
 fn find(s: &str, b: u8) -> impl '_ + Iterator<Item = usize> {
@@ -98,7 +98,7 @@ fn split(s: &str, b: u8) -> impl '_ + Iterator<Item = &'_ str> {
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
-pub type DistinguishedName<'a> = RdnSequence<'a>;
+pub type DistinguishedName = RdnSequence;
 
 /// RelativeDistinguishedName as defined in [RFC 5280 Section 4.1.2.4].
 ///
@@ -125,9 +125,9 @@ pub type DistinguishedName<'a> = RdnSequence<'a>;
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct RelativeDistinguishedName<'a>(pub SetOfVec<AttributeTypeAndValue<'a>>);
+pub struct RelativeDistinguishedName(pub SetOfVec<AttributeTypeAndValue>);
 
-impl RelativeDistinguishedName<'_> {
+impl RelativeDistinguishedName {
     /// Converts an RelativeDistinguishedName string into an encoded RelativeDistinguishedName
     ///
     /// This function follows the rules in [RFC 4514].
@@ -150,7 +150,7 @@ impl RelativeDistinguishedName<'_> {
 /// Serializes the structure according to the rules in [RFC 4514].
 ///
 /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
-impl fmt::Display for RelativeDistinguishedName<'_> {
+impl fmt::Display for RelativeDistinguishedName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (i, atv) in self.0.iter().enumerate() {
             match i {
@@ -163,7 +163,4 @@ impl fmt::Display for RelativeDistinguishedName<'_> {
     }
 }
 
-impl_newtype!(
-    RelativeDistinguishedName<'a>,
-    SetOfVec<AttributeTypeAndValue<'a>>
-);
+impl_newtype!(RelativeDistinguishedName, SetOfVec<AttributeTypeAndValue>);

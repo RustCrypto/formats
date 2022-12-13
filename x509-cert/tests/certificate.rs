@@ -1,7 +1,9 @@
 //! Certificate tests
 
 use der::{
-    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, UintRef},
+    asn1::{
+        BitStringRef, ContextSpecific, ObjectIdentifier, PrintableStringRef, UintRef, Utf8StringRef,
+    },
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
 };
 use hex_literal::hex;
@@ -229,20 +231,30 @@ fn decode_cert() {
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                assert_eq!(
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
+                    "US"
+                );
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                assert_eq!(atav.value.printable_string().unwrap().to_string(), "Mock");
+                assert_eq!(
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
+                    "Mock"
+                );
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    atav.value.utf8_string().unwrap().to_string(),
+                    Utf8StringRef::try_from(&atav.value).unwrap().to_string(),
                     "IdenTrust Services LLC"
                 );
             } else if 3 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    atav.value.utf8_string().unwrap().to_string(),
+                    Utf8StringRef::try_from(&atav.value).unwrap().to_string(),
                     "PTE IdenTrust Global Common Root CA 1"
                 );
             }
@@ -276,24 +288,35 @@ fn decode_cert() {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Test Federal Bridge CA"
                 );
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.11");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "TestFPKI"
                 );
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "U.S. Government"
                 );
             } else if 3 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                assert_eq!(
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
+                    "US"
+                );
             }
             counter += 1;
         }

@@ -1,4 +1,7 @@
-use der::{Decode, Encode, SliceReader};
+use der::{
+    asn1::{Ia5StringRef, PrintableStringRef},
+    Decode, Encode, SliceReader,
+};
 use hex_literal::hex;
 use x509_cert::anchor::{CertPolicies, TrustAnchorChoice};
 use x509_cert::ext::pkix::name::GeneralName;
@@ -90,20 +93,34 @@ fn decode_ta1() {
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                        assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                        assert_eq!(
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
+                            "US"
+                        );
                     } else if 1 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.10");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "U.S. Government"
                         );
                     } else if 2 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                        assert_eq!(atav.value.printable_string().unwrap().to_string(), "ECA");
+                        assert_eq!(
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
+                            "ECA"
+                        );
                     } else if 3 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.3");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "ECA Root CA 4"
                         );
                     }
@@ -153,23 +170,34 @@ fn decode_ta2() {
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                        assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                        assert_eq!(
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
+                            "US"
+                        );
                     } else if 1 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.10");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "Entrust"
                         );
                     } else if 2 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "Certification Authorities"
                         );
                     } else if 3 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "Entrust Managed Services NFI Root CA"
                         );
                     }
@@ -190,19 +218,25 @@ fn decode_ta2() {
                                 if 0 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.6");
                                     assert_eq!(
-                                        atav.value.printable_string().unwrap().to_string(),
+                                        PrintableStringRef::try_from(&atav.value)
+                                            .unwrap()
+                                            .to_string(),
                                         "US"
                                     );
                                 } else if 1 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.10");
                                     assert_eq!(
-                                        atav.value.printable_string().unwrap().to_string(),
+                                        PrintableStringRef::try_from(&atav.value)
+                                            .unwrap()
+                                            .to_string(),
                                         "U.S. Government"
                                     );
                                 } else if 2 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.11");
                                     assert_eq!(
-                                        atav.value.printable_string().unwrap().to_string(),
+                                        PrintableStringRef::try_from(&atav.value)
+                                            .unwrap()
+                                            .to_string(),
                                         "DoD"
                                     );
                                 }
@@ -263,23 +297,34 @@ fn decode_ta3() {
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                        assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                        assert_eq!(
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
+                            "US"
+                        );
                     } else if 1 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.10");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "Exostar LLC"
                         );
                     } else if 2 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "Certification Authorities"
                         );
                     } else if 3 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.3");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "Exostar Federated Identity Service Root CA 1"
                         );
                     }
@@ -300,19 +345,25 @@ fn decode_ta3() {
                                 if 0 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.6");
                                     assert_eq!(
-                                        atav.value.printable_string().unwrap().to_string(),
+                                        PrintableStringRef::try_from(&atav.value)
+                                            .unwrap()
+                                            .to_string(),
                                         "US"
                                     );
                                 } else if 1 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.10");
                                     assert_eq!(
-                                        atav.value.printable_string().unwrap().to_string(),
+                                        PrintableStringRef::try_from(&atav.value)
+                                            .unwrap()
+                                            .to_string(),
                                         "U.S. Government"
                                     );
                                 } else if 2 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.11");
                                     assert_eq!(
-                                        atav.value.printable_string().unwrap().to_string(),
+                                        PrintableStringRef::try_from(&atav.value)
+                                            .unwrap()
+                                            .to_string(),
                                         "DoD"
                                     );
                                 }
@@ -366,17 +417,30 @@ fn decode_ta4() {
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");
-                        assert_eq!(atav.value.ia5_string().unwrap().to_string(), "com");
+                        assert_eq!(
+                            Ia5StringRef::try_from(&atav.value).unwrap().to_string(),
+                            "com"
+                        );
                     } else if 1 == counter {
                         assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");
-                        assert_eq!(atav.value.ia5_string().unwrap().to_string(), "raytheon");
+                        assert_eq!(
+                            Ia5StringRef::try_from(&atav.value).unwrap().to_string(),
+                            "raytheon"
+                        );
                     } else if 2 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                        assert_eq!(atav.value.printable_string().unwrap().to_string(), "CAs");
+                        assert_eq!(
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
+                            "CAs"
+                        );
                     } else if 3 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.11");
                         assert_eq!(
-                            atav.value.printable_string().unwrap().to_string(),
+                            PrintableStringRef::try_from(&atav.value)
+                                .unwrap()
+                                .to_string(),
                             "RaytheonRoot"
                         );
                     }

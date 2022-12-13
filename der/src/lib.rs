@@ -357,6 +357,8 @@ mod tag;
 mod writer;
 
 #[cfg(feature = "alloc")]
+mod bytes;
+#[cfg(feature = "alloc")]
 mod document;
 
 pub use crate::{
@@ -375,7 +377,7 @@ pub use crate::{
 };
 
 #[cfg(feature = "alloc")]
-pub use crate::document::Document;
+pub use crate::{asn1::Any, document::Document};
 
 #[cfg(feature = "bigint")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
@@ -406,4 +408,6 @@ pub use zeroize;
 #[cfg(all(feature = "alloc", feature = "zeroize"))]
 pub use crate::document::SecretDocument;
 
+#[cfg(feature = "alloc")]
+pub(crate) use crate::bytes::Bytes;
 pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};

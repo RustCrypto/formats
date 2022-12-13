@@ -40,14 +40,14 @@ pub struct CertReqInfo<'a> {
     pub version: Version,
 
     /// Subject name.
-    pub subject: Name<'a>,
+    pub subject: Name,
 
     /// Subject public key info.
     pub public_key: SubjectPublicKeyInfoRef<'a>,
 
     /// Request attributes.
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
-    pub attributes: Attributes<'a>,
+    pub attributes: Attributes,
 }
 
 impl<'a> TryFrom<&'a [u8]> for CertReqInfo<'a> {

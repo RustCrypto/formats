@@ -20,5 +20,5 @@ pub enum DistributionPointName<'a> {
     FullName(GeneralNames<'a>),
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
-    NameRelativeToCRLIssuer(RelativeDistinguishedName<'a>),
+    NameRelativeToCRLIssuer(RelativeDistinguishedName),
 }

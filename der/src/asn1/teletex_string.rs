@@ -6,6 +6,9 @@ use crate::{
 };
 use core::{fmt, ops::Deref, str};
 
+#[cfg(feature = "alloc")]
+use crate::asn1::Any;
+
 /// ASN.1 `TeletexString` type.
 ///
 /// Supports a subset the ASCII character set (described below).
@@ -99,6 +102,15 @@ impl<'a> TryFrom<AnyRef<'a>> for TeletexStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<TeletexStringRef<'a>> {
+        any.decode_into()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> TryFrom<&'a Any> for TeletexStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(any: &'a Any) -> Result<TeletexStringRef<'a>> {
         any.decode_into()
     }
 }

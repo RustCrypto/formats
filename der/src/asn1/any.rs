@@ -7,7 +7,7 @@ use crate::{
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use crate::Bytes;
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
@@ -94,11 +94,6 @@ impl<'a> AnyRef<'a> {
         self.try_into()
     }
 
-    /// Attempt to decode an ASN.1 `IA5String`.
-    pub fn ia5_string(self) -> Result<Ia5StringRef<'a>> {
-        self.try_into()
-    }
-
     /// Attempt to decode an ASN.1 `OCTET STRING`.
     pub fn octet_string(self) -> Result<OctetStringRef<'a>> {
         self.try_into()
@@ -123,21 +118,6 @@ impl<'a> AnyRef<'a> {
         }
     }
 
-    /// Attempt to decode an ASN.1 `PrintableString`.
-    pub fn printable_string(self) -> Result<PrintableStringRef<'a>> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `TeletexString`.
-    pub fn teletex_string(self) -> Result<TeletexStringRef<'a>> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `VideotexString`.
-    pub fn videotex_string(self) -> Result<VideotexStringRef<'a>> {
-        self.try_into()
-    }
-
     /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
     /// nested reader and calling the provided argument with it.
     pub fn sequence<F, T>(self, f: F) -> Result<T>
@@ -152,11 +132,6 @@ impl<'a> AnyRef<'a> {
 
     /// Attempt to decode an ASN.1 `UTCTime`.
     pub fn utc_time(self) -> Result<UtcTime> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `UTF8String`.
-    pub fn utf8_string(self) -> Result<Utf8StringRef<'a>> {
         self.try_into()
     }
 }
@@ -194,6 +169,13 @@ impl Tagged for AnyRef<'_> {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl ValueOrd for Any {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        self.value.der_cmp(&other.value)
+    }
+}
+
 impl ValueOrd for AnyRef<'_> {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         self.value.der_cmp(&other.value)
@@ -226,18 +208,34 @@ pub struct Any {
     tag: Tag,
 
     /// Inner value encoded as bytes.
-    value: Vec<u8>,
+    value: Bytes,
 }
 
 #[cfg(feature = "alloc")]
 impl Any {
     /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
-    pub fn new(tag: Tag, bytes: impl Into<Vec<u8>>) -> Result<Self> {
-        let value = bytes.into();
+    pub fn new(tag: Tag, bytes: &[u8]) -> Result<Self> {
+        let value = Bytes::new(bytes)?;
 
         // Ensure the tag and value are a valid `AnyRef`.
-        AnyRef::new(tag, &value)?;
+        AnyRef::new(tag, value.as_slice())?;
         Ok(Self { tag, value })
+    }
+
+    /// Attempt to decode this [`Any`] type into the inner value.
+    pub fn decode_into<'a, T>(&'a self) -> Result<T>
+    where
+        T: DecodeValue<'a> + FixedTag,
+    {
+        self.tag.assert_eq(T::TAG)?;
+        let header = Header {
+            tag: self.tag,
+            length: self.value.len(),
+        };
+
+        let mut decoder = SliceReader::new(self.value.as_slice())?;
+        let result = T::decode_value(&mut decoder, header)?;
+        decoder.finish(result)
     }
 }
 
@@ -253,18 +251,18 @@ impl<'a> Decode<'a> for Any {
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
         let header = Header::decode(reader)?;
         let value = reader.read_vec(header.length)?;
-        Self::new(header.tag, value)
+        Self::new(header.tag, &value)
     }
 }
 
 #[cfg(feature = "alloc")]
 impl EncodeValue for Any {
     fn value_len(&self) -> Result<Length> {
-        self.value.len().try_into()
+        Ok(self.value.len())
     }
 
     fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
-        writer.write(&self.value)
+        writer.write(self.value.as_slice())
     }
 }
 
@@ -272,7 +270,7 @@ impl EncodeValue for Any {
 impl<'a> From<&'a Any> for AnyRef<'a> {
     fn from(any: &'a Any) -> AnyRef<'a> {
         // Ensured to parse successfully in constructor
-        AnyRef::new(any.tag, &any.value).expect("invalid ANY")
+        AnyRef::new(any.tag, any.value.as_slice()).expect("invalid ANY")
     }
 }
 
@@ -280,5 +278,19 @@ impl<'a> From<&'a Any> for AnyRef<'a> {
 impl Tagged for Any {
     fn tag(&self) -> Tag {
         self.tag
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a, T> From<T> for Any
+where
+    T: Into<AnyRef<'a>>,
+{
+    fn from(input: T) -> Any {
+        let anyref: AnyRef<'a> = input.into();
+        Self {
+            tag: anyref.tag(),
+            value: Bytes::from(anyref.value),
+        }
     }
 }

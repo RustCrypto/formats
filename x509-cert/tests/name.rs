@@ -2,7 +2,7 @@
 
 use const_oid::ObjectIdentifier;
 use der::asn1::{Ia5StringRef, OctetStringRef, PrintableStringRef, SetOfVec, Utf8StringRef};
-use der::{AnyRef, Decode, Encode, Tag, Tagged};
+use der::{Any, Decode, Encode, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::attr::AttributeTypeAndValue;
 use x509_cert::name::{Name, RdnSequence, RelativeDistinguishedName};
@@ -40,17 +40,26 @@ fn decode_name() {
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(atav.value.printable_string().unwrap().to_string(), "US");
+                assert_eq!(
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
+                    "US"
+                );
             } else if 1 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.10");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Test Certificates 2011"
                 );
             } else if 2 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.3");
                 assert_eq!(
-                    atav.value.printable_string().unwrap().to_string(),
+                    PrintableStringRef::try_from(&atav.value)
+                        .unwrap()
+                        .to_string(),
                     "Good CA"
                 );
             }
@@ -73,9 +82,9 @@ fn decode_rdn() {
     for atav in i {
         let oid = atav.oid;
         assert_eq!(oid.to_string(), "2.5.4.6");
-        let value = atav.value;
+        let value = &atav.value;
         assert_eq!(value.tag(), Tag::PrintableString);
-        let ps = value.printable_string().unwrap();
+        let ps = PrintableStringRef::try_from(value).unwrap();
         assert_eq!(ps.to_string(), "US");
     }
 
@@ -99,22 +108,22 @@ fn decode_rdn() {
     let atav1a = i.next().unwrap();
     let oid2 = atav1a.oid;
     assert_eq!(oid2.to_string(), "2.5.4.10");
-    let value2 = atav1a.value;
+    let value2 = &atav1a.value;
     assert_eq!(value2.tag(), Tag::Utf8String);
-    let utf8b = value2.utf8_string().unwrap();
+    let utf8b = Utf8StringRef::try_from(value2).unwrap();
     assert_eq!(utf8b.to_string(), "123");
 
     let atav2a = i.next().unwrap();
     let oid1 = atav2a.oid;
     assert_eq!(oid1.to_string(), "2.5.4.3");
-    let value1 = atav2a.value;
+    let value1 = &atav2a.value;
     assert_eq!(value1.tag(), Tag::Utf8String);
-    let utf8a = value1.utf8_string().unwrap();
+    let utf8a = Utf8StringRef::try_from(value1).unwrap();
     assert_eq!(utf8a.to_string(), "JOHN SMITH");
 
     let mut from_scratch = RelativeDistinguishedName::default();
-    assert!(from_scratch.0.add(*atav1a).is_ok());
-    assert!(from_scratch.0.add(*atav2a).is_ok());
+    assert!(from_scratch.0.add(atav1a.clone()).is_ok());
+    assert!(from_scratch.0.add(atav2a.clone()).is_ok());
     let reencoded = from_scratch.to_vec().unwrap();
     assert_eq!(
         reencoded,
@@ -122,9 +131,9 @@ fn decode_rdn() {
     );
 
     let mut from_scratch2 = RelativeDistinguishedName::default();
-    assert!(from_scratch2.0.add(*atav2a).is_ok());
+    assert!(from_scratch2.0.add(atav2a.clone()).is_ok());
     // fails when caller adds items not in DER lexicographical order
-    assert!(from_scratch2.0.add(*atav1a).is_err());
+    assert!(from_scratch2.0.add(atav1a.clone()).is_err());
 
     // allow out-of-order RDNs (see: RustCrypto/formats#625)
     assert!(RelativeDistinguishedName::from_der(
@@ -198,20 +207,20 @@ fn rdns_serde() {
             &[
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::CN,
-                    value: AnyRef::from(Utf8StringRef::new("foo").unwrap()),
+                    value: Any::from(Utf8StringRef::new("foo").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::SN,
-                    value: AnyRef::from(Utf8StringRef::new("bar").unwrap()),
+                    value: Any::from(Utf8StringRef::new("bar").unwrap()),
                 }],
                 &[
                     AttributeTypeAndValue {
                         oid: const_oid::db::rfc4519::C,
-                        value: AnyRef::from(PrintableStringRef::new("baz").unwrap()),
+                        value: Any::from(PrintableStringRef::new("baz").unwrap()),
                     },
                     AttributeTypeAndValue {
                         oid: const_oid::db::rfc4519::L,
-                        value: AnyRef::from(Utf8StringRef::new("bat").unwrap()),
+                        value: Any::from(Utf8StringRef::new("bat").unwrap()),
                     },
                 ],
             ],
@@ -222,15 +231,15 @@ fn rdns_serde() {
             &[
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::UID,
-                    value: AnyRef::from(Utf8StringRef::new("jsmith").unwrap()),
+                    value: Any::from(Utf8StringRef::new("jsmith").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
-                    value: AnyRef::from(Ia5StringRef::new("example").unwrap()),
+                    value: Any::from(Ia5StringRef::new("example").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
-                    value: AnyRef::from(Ia5StringRef::new("net").unwrap()),
+                    value: Any::from(Ia5StringRef::new("net").unwrap()),
                 }],
             ],
         ),
@@ -241,20 +250,20 @@ fn rdns_serde() {
                 &[
                     AttributeTypeAndValue {
                         oid: const_oid::db::rfc4519::OU,
-                        value: AnyRef::from(Utf8StringRef::new("Sales").unwrap()),
+                        value: Any::from(Utf8StringRef::new("Sales").unwrap()),
                     },
                     AttributeTypeAndValue {
                         oid: const_oid::db::rfc4519::CN,
-                        value: AnyRef::from(Utf8StringRef::new("J.  Smith").unwrap()),
+                        value: Any::from(Utf8StringRef::new("J.  Smith").unwrap()),
                     },
                 ],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
-                    value: AnyRef::from(Ia5StringRef::new("example").unwrap()),
+                    value: Any::from(Ia5StringRef::new("example").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
-                    value: AnyRef::from(Ia5StringRef::new("net").unwrap()),
+                    value: Any::from(Ia5StringRef::new("net").unwrap()),
                 }],
             ],
         ),
@@ -264,15 +273,15 @@ fn rdns_serde() {
             &[
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::CN,
-                    value: AnyRef::from(Utf8StringRef::new(r#"James "Jim" Smith, III"#).unwrap()),
+                    value: Any::from(Utf8StringRef::new(r#"James "Jim" Smith, III"#).unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
-                    value: AnyRef::from(Ia5StringRef::new("example").unwrap()),
+                    value: Any::from(Ia5StringRef::new("example").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
-                    value: AnyRef::from(Ia5StringRef::new("net").unwrap()),
+                    value: Any::from(Ia5StringRef::new("net").unwrap()),
                 }],
             ],
         ),
@@ -282,15 +291,15 @@ fn rdns_serde() {
             &[
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::CN,
-                    value: AnyRef::from(Utf8StringRef::new("Before\rAfter").unwrap()),
+                    value: Any::from(Utf8StringRef::new("Before\rAfter").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
-                    value: AnyRef::from(Ia5StringRef::new("example").unwrap()),
+                    value: Any::from(Ia5StringRef::new("example").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
-                    value: AnyRef::from(Ia5StringRef::new("net").unwrap()),
+                    value: Any::from(Ia5StringRef::new("net").unwrap()),
                 }],
             ],
         ),
@@ -299,7 +308,7 @@ fn rdns_serde() {
             "1.3.6.1.4.1.1466.0=#04024869",
             &[&[AttributeTypeAndValue {
                 oid: ObjectIdentifier::new("1.3.6.1.4.1.1466.0").unwrap(),
-                value: AnyRef::from(OctetStringRef::new(&[b'H', b'i']).unwrap()),
+                value: Any::from(OctetStringRef::new(&[b'H', b'i']).unwrap()),
             }]],
         ),
     ];

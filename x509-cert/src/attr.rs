@@ -5,7 +5,10 @@ use const_oid::db::rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT, SERIAL_NUMBER};
 use core::fmt::{self, Write};
 
 use const_oid::db::DB;
-use der::asn1::{AnyRef, ObjectIdentifier, SetOfVec};
+use der::asn1::{
+    Any, Ia5StringRef, ObjectIdentifier, PrintableStringRef, SetOfVec, TeletexStringRef,
+    Utf8StringRef,
+};
 use der::{Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd};
 
 /// X.501 `AttributeType` as defined in [RFC 5280 Appendix A.1].
@@ -24,7 +27,7 @@ pub type AttributeType = ObjectIdentifier;
 /// ```
 ///
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
-pub type AttributeValue<'a> = AnyRef<'a>;
+pub type AttributeValue = Any;
 
 /// X.501 `Attribute` as defined in [RFC 5280 Appendix A.1].
 ///
@@ -50,15 +53,15 @@ pub type AttributeValue<'a> = AnyRef<'a>;
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
 #[derive(Clone, Debug, PartialEq, Eq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct Attribute<'a> {
+pub struct Attribute {
     pub oid: AttributeType,
-    pub values: SetOfVec<AttributeValue<'a>>,
+    pub values: SetOfVec<AttributeValue>,
 }
 
-impl<'a> TryFrom<&'a [u8]> for Attribute<'a> {
+impl TryFrom<&[u8]> for Attribute {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         Self::from_der(bytes)
     }
 }
@@ -70,7 +73,7 @@ impl<'a> TryFrom<&'a [u8]> for Attribute<'a> {
 /// ```
 ///
 /// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
-pub type Attributes<'a> = SetOfVec<Attribute<'a>>;
+pub type Attributes = SetOfVec<Attribute>;
 
 /// X.501 `AttributeTypeAndValue` as defined in [RFC 5280 Appendix A.1].
 ///
@@ -82,11 +85,11 @@ pub type Attributes<'a> = SetOfVec<Attribute<'a>>;
 /// ```
 ///
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct AttributeTypeAndValue<'a> {
+pub struct AttributeTypeAndValue {
     pub oid: AttributeType,
-    pub value: AnyRef<'a>,
+    pub value: AttributeValue,
 }
 
 #[derive(Copy, Clone)]
@@ -141,7 +144,7 @@ impl Parser {
     }
 }
 
-impl AttributeTypeAndValue<'_> {
+impl AttributeTypeAndValue {
     /// Parses the hex value in the `OID=#HEX` format.
     fn encode_hex(oid: ObjectIdentifier, val: &str) -> Result<Vec<u8>, Error> {
         // Ensure an even number of hex bytes.
@@ -169,7 +172,7 @@ impl AttributeTypeAndValue<'_> {
         }
 
         // Serialize.
-        let value = AnyRef::from_der(&bytes)?;
+        let value = Any::from_der(&bytes)?;
         let atv = AttributeTypeAndValue { oid, value };
         atv.to_vec()
     }
@@ -192,7 +195,7 @@ impl AttributeTypeAndValue<'_> {
         };
 
         // Serialize.
-        let value = AnyRef::new(tag, parser.as_bytes())?;
+        let value = Any::new(tag, parser.as_bytes())?;
         let atv = AttributeTypeAndValue { oid, value };
         atv.to_vec()
     }
@@ -224,13 +227,19 @@ impl AttributeTypeAndValue<'_> {
 /// Serializes the structure according to the rules in [RFC 4514].
 ///
 /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
-impl fmt::Display for AttributeTypeAndValue<'_> {
+impl fmt::Display for AttributeTypeAndValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let val = match self.value.tag() {
-            Tag::PrintableString => self.value.printable_string().ok().map(|s| s.as_str()),
-            Tag::Utf8String => self.value.utf8_string().ok().map(|s| s.as_str()),
-            Tag::Ia5String => self.value.ia5_string().ok().map(|s| s.as_str()),
-            Tag::TeletexString => self.value.teletex_string().ok().map(|s| s.as_str()),
+            Tag::PrintableString => PrintableStringRef::try_from(&self.value)
+                .ok()
+                .map(|s| s.as_str()),
+            Tag::Utf8String => Utf8StringRef::try_from(&self.value)
+                .ok()
+                .map(|s| s.as_str()),
+            Tag::Ia5String => Ia5StringRef::try_from(&self.value).ok().map(|s| s.as_str()),
+            Tag::TeletexString => TeletexStringRef::try_from(&self.value)
+                .ok()
+                .map(|s| s.as_str()),
             _ => None,
         };
 

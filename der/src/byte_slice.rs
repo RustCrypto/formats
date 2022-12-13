@@ -11,10 +11,10 @@ use core::cmp::Ordering;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub(crate) struct ByteSlice<'a> {
     /// Precomputed `Length` (avoids possible panicking conversions)
-    length: Length,
+    pub length: Length,
 
     /// Inner value
-    inner: &'a [u8],
+    pub inner: &'a [u8],
 }
 
 impl<'a> ByteSlice<'a> {
