@@ -21,10 +21,12 @@ pub(crate) struct Bytes {
 impl Bytes {
     /// Create a new [`Bytes`], ensuring that the provided `slice` value
     /// is shorter than `Length::max()`.
-    pub fn new(slice: &[u8]) -> Result<Self> {
+    pub fn new(data: impl Into<Box<[u8]>>) -> Result<Self> {
+        let inner: Box<[u8]> = data.into();
+
         Ok(Self {
-            length: Length::try_from(slice.len())?,
-            inner: Box::from(slice),
+            length: Length::try_from(inner.len())?,
+            inner,
         })
     }
 
@@ -47,7 +49,7 @@ impl AsRef<[u8]> for Bytes {
 
 impl<'a> DecodeValue<'a> for Bytes {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        reader.read_slice(header.length).and_then(Self::new)
+        reader.read_vec(header.length).and_then(Self::new)
     }
 }
 
