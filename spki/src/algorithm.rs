@@ -7,6 +7,9 @@ use der::{
     Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
 };
 
+#[cfg(feature = "alloc")]
+use der::asn1::Any;
+
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
 ///
 /// ```text
@@ -78,6 +81,10 @@ where
 /// `AlgorithmIdentifier` reference which has `AnyRef` parameters.
 pub type AlgorithmIdentifierRef<'a> = AlgorithmIdentifier<AnyRef<'a>>;
 
+/// `AlgorithmIdentifierOwned` reference which has `Any` parameters.
+#[cfg(feature = "alloc")]
+pub type AlgorithmIdentifierOwned = AlgorithmIdentifier<Any>;
+
 impl<'a> AlgorithmIdentifierRef<'a> {
     /// Assert the `algorithm` OID is an expected value.
     pub fn assert_algorithm_oid(&self, expected_oid: ObjectIdentifier) -> Result<ObjectIdentifier> {
@@ -145,5 +152,14 @@ impl<'a> AlgorithmIdentifierRef<'a> {
                 },
             },
         ))
+    }
+
+    /// Convert to an [`AlgorithmIdentifierOwned`]
+    #[cfg(feature = "alloc")]
+    pub fn to_owned(&self) -> AlgorithmIdentifierOwned {
+        AlgorithmIdentifier {
+            oid: self.oid,
+            parameters: self.parameters.map(|p| p.into()),
+        }
     }
 }
