@@ -290,7 +290,7 @@ where
         let anyref: AnyRef<'a> = input.into();
         Self {
             tag: anyref.tag(),
-            value: Bytes::new(anyref.value()).expect("invalid ANY"),
+            value: Bytes::from(anyref.value),
         }
     }
 }
