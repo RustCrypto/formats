@@ -153,8 +153,8 @@ impl ValueOrd for BitStringRef<'_> {
     }
 }
 
-impl<'a, 'k> From<&'k BitStringRef<'a>> for BitStringRef<'a> {
-    fn from(value: &'k BitStringRef<'a>) -> BitStringRef<'a> {
+impl<'a> From<&BitStringRef<'a>> for BitStringRef<'a> {
+    fn from(value: &BitStringRef<'a>) -> BitStringRef<'a> {
         *value
     }
 }
