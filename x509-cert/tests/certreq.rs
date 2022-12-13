@@ -52,7 +52,7 @@ fn decode_rsa_2048_der() {
     let alg = cr.info.public_key.algorithm;
     assert_eq!(alg.oid, "1.2.840.113549.1.1.1".parse().unwrap());
     assert!(alg.parameters.unwrap().is_null());
-    assert_eq!(cr.info.public_key.subject_public_key, RSA_KEY);
+    assert_eq!(cr.info.public_key.subject_public_key.raw_bytes(), RSA_KEY);
 
     // Check the attributes (just one; contains extensions).
     assert_eq!(cr.info.attributes.len(), 1);

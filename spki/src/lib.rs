@@ -43,13 +43,16 @@ mod fingerprint;
 pub use crate::{
     algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef},
     error::{Error, Result},
-    spki::SubjectPublicKeyInfo,
+    spki::{SubjectPublicKeyInfo, SubjectPublicKeyInfoRef},
     traits::DecodePublicKey,
 };
 pub use der::{self, asn1::ObjectIdentifier};
 
 #[cfg(feature = "alloc")]
-pub use {crate::traits::EncodePublicKey, der::Document};
+pub use {
+    crate::{spki::SubjectPublicKeyInfoOwned, traits::EncodePublicKey},
+    der::Document,
+};
 
 #[cfg(feature = "fingerprint")]
 pub use crate::fingerprint::FingerprintBytes;

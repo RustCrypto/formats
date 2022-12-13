@@ -1,13 +1,17 @@
 //! X.509 `SubjectPublicKeyInfo`
 
-use crate::{AlgorithmIdentifierRef, Error, Result};
+use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::BitStringRef, Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
+    asn1::{AnyRef, BitStringRef},
+    Choice, Decode, DecodeValue, DerOrd, Encode, FixedTag, Header, Reader, Sequence, ValueOrd,
 };
 
 #[cfg(feature = "alloc")]
-use der::Document;
+use der::{
+    asn1::{Any, BitString},
+    Document,
+};
 
 #[cfg(feature = "fingerprint")]
 use crate::{fingerprint, FingerprintBytes};
@@ -15,8 +19,12 @@ use crate::{fingerprint, FingerprintBytes};
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
 
-#[cfg(doc)]
-use crate::AlgorithmIdentifier;
+/// [`SubjectPublicKeyInfo`] with [`AnyRef`] algorithm parameters, and [`BitStringRef`] params.
+pub type SubjectPublicKeyInfoRef<'a> = SubjectPublicKeyInfo<AnyRef<'a>, BitStringRef<'a>>;
+
+/// [`SubjectPublicKeyInfo`] with [`Any`] algorithm parameters, and [`BitString`] params.
+#[cfg(feature = "alloc")]
+pub type SubjectPublicKeyInfoOwned = SubjectPublicKeyInfo<Any, BitString>;
 
 /// X.509 `SubjectPublicKeyInfo` (SPKI) as defined in [RFC 5280 § 4.1.2.7].
 ///
@@ -30,16 +38,22 @@ use crate::AlgorithmIdentifier;
 /// ```
 ///
 /// [RFC 5280 § 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct SubjectPublicKeyInfo<'a> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SubjectPublicKeyInfo<Params, Key> {
     /// X.509 [`AlgorithmIdentifier`] for the public key type
-    pub algorithm: AlgorithmIdentifierRef<'a>,
+    pub algorithm: AlgorithmIdentifier<Params>,
 
     /// Public key data
-    pub subject_public_key: &'a [u8],
+    pub subject_public_key: Key,
 }
 
-impl<'a> SubjectPublicKeyInfo<'a> {
+impl<'a, Params, Key> SubjectPublicKeyInfo<Params, Key>
+where
+    Params: Choice<'a> + Encode,
+    // TODO: replace FixedTag with FixedTag<TAG = { Tag::BitString }> once
+    // https://github.com/rust-lang/rust/issues/92827 is fixed
+    Key: Decode<'a> + Encode + FixedTag,
+{
     /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] and
     /// encode it as a Base64 string.
     ///
@@ -69,36 +83,41 @@ impl<'a> SubjectPublicKeyInfo<'a> {
         self.encode(&mut builder)?;
         Ok(builder.finish())
     }
-
-    /// Get a [`BitString`] representing the `subject_public_key`
-    fn bitstring(&self) -> der::Result<BitStringRef<'a>> {
-        BitStringRef::from_bytes(self.subject_public_key)
-    }
 }
 
-impl<'a> DecodeValue<'a> for SubjectPublicKeyInfo<'a> {
+impl<'a: 'k, 'k, Params, Key: 'k> DecodeValue<'a> for SubjectPublicKeyInfo<Params, Key>
+where
+    Params: Choice<'a> + Encode,
+    Key: Decode<'a>,
+{
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 algorithm: reader.decode()?,
-                subject_public_key: BitStringRef::decode(reader)?
-                    .as_bytes()
-                    .ok_or_else(|| der::Tag::BitString.value_error())?,
+                subject_public_key: Key::decode(reader)?,
             })
         })
     }
 }
 
-impl<'a> Sequence<'a> for SubjectPublicKeyInfo<'a> {
+impl<'a, Params, Key> Sequence<'a> for SubjectPublicKeyInfo<Params, Key>
+where
+    Params: Choice<'a> + Encode,
+    Key: Decode<'a> + Encode + FixedTag,
+{
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
     {
-        f(&[&self.algorithm, &self.bitstring()?])
+        f(&[&self.algorithm, &self.subject_public_key])
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a> {
+impl<'a, Params, Key> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params, Key>
+where
+    Params: Choice<'a> + Encode,
+    Key: Decode<'a> + Encode + FixedTag,
+{
     type Error = Error;
 
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
@@ -106,10 +125,14 @@ impl<'a> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<'a> {
     }
 }
 
-impl ValueOrd for SubjectPublicKeyInfo<'_> {
+impl<'a, Params, Key> ValueOrd for SubjectPublicKeyInfo<Params, Key>
+where
+    Params: Choice<'a> + DerOrd + Encode,
+    Key: ValueOrd,
+{
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         match self.algorithm.der_cmp(&other.algorithm)? {
-            Ordering::Equal => self.bitstring()?.der_cmp(&other.bitstring()?),
+            Ordering::Equal => self.subject_public_key.value_cmp(&other.subject_public_key),
             other => Ok(other),
         }
     }
@@ -117,26 +140,36 @@ impl ValueOrd for SubjectPublicKeyInfo<'_> {
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl TryFrom<SubjectPublicKeyInfo<'_>> for Document {
+impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<SubjectPublicKeyInfo<Params, Key>> for Document
+where
+    Params: Choice<'a> + Encode,
+    Key: Decode<'a> + Encode + FixedTag,
+    BitStringRef<'a>: From<&'k Key>,
+{
     type Error = Error;
 
-    fn try_from(spki: SubjectPublicKeyInfo<'_>) -> Result<Document> {
+    fn try_from(spki: SubjectPublicKeyInfo<Params, Key>) -> Result<Document> {
         Self::try_from(&spki)
     }
 }
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-impl TryFrom<&SubjectPublicKeyInfo<'_>> for Document {
+impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<&SubjectPublicKeyInfo<Params, Key>> for Document
+where
+    Params: Choice<'a> + Encode,
+    Key: Decode<'a> + Encode + FixedTag,
+    BitStringRef<'a>: From<&'k Key>,
+{
     type Error = Error;
 
-    fn try_from(spki: &SubjectPublicKeyInfo<'_>) -> Result<Document> {
+    fn try_from(spki: &SubjectPublicKeyInfo<Params, Key>) -> Result<Document> {
         Ok(Self::encode_msg(spki)?)
     }
 }
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-impl PemLabel for SubjectPublicKeyInfo<'_> {
+impl<Params, Key> PemLabel for SubjectPublicKeyInfo<Params, Key> {
     const PEM_LABEL: &'static str = "PUBLIC KEY";
 }
