@@ -50,7 +50,7 @@ pub struct SubjectPublicKeyInfo<Params, Key> {
 impl<'a, Params, Key> SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
-    // TODO: replace FixedTag with FixedTag<TAG = Tag::BitString> once
+    // TODO: replace FixedTag with FixedTag<TAG = { Tag::BitString }> once
     // https://github.com/rust-lang/rust/issues/92827 is fixed
     Key: Decode<'a> + Encode + FixedTag,
 {
