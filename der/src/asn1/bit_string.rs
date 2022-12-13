@@ -1,8 +1,8 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::AnyRef, ByteSlice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind,
-    FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    asn1::AnyRef, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
+    Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
@@ -451,18 +451,6 @@ where
         BitStringRef::new((lead % 8) as u8, buff)?.encode_value(writer)
     }
 }
-
-/// Trait used as a marker to ensure the type can hold the content of a Bit String
-pub trait BitStringLike<'der>
-where
-    Self: Decode<'der> + Encode + FixedTag,
-{
-}
-
-impl<'der> BitStringLike<'der> for BitStringRef<'der> {}
-
-#[cfg(feature = "alloc")]
-impl<'a> BitStringLike<'a> for BitString {}
 
 #[cfg(test)]
 mod tests {

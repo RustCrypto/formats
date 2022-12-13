@@ -3,8 +3,8 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, BitStringLike, BitStringRef},
-    Choice, Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
+    asn1::{AnyRef, BitStringRef},
+    Choice, Decode, DecodeValue, DerOrd, Encode, FixedTag, Header, Reader, Sequence, ValueOrd,
 };
 
 #[cfg(feature = "alloc")]
@@ -50,7 +50,9 @@ pub struct SubjectPublicKeyInfo<Params, Key> {
 impl<'a, Params, Key> SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'a>,
+    // TODO: replace FixedTag with FixedTag<TAG = Tag::BitString> once
+    // https://github.com/rust-lang/rust/issues/92827 is fixed
+    Key: Decode<'a> + Encode + FixedTag,
 {
     /// Calculate the SHA-256 fingerprint of this [`SubjectPublicKeyInfo`] and
     /// encode it as a Base64 string.
@@ -101,7 +103,7 @@ where
 impl<'a, Params, Key> Sequence<'a> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'a>,
+    Key: Decode<'a> + Encode + FixedTag,
 {
     fn fields<F, T>(&self, f: F) -> der::Result<T>
     where
@@ -114,7 +116,7 @@ where
 impl<'a, Params, Key> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'a>,
+    Key: Decode<'a> + Encode + FixedTag,
 {
     type Error = Error;
 
@@ -141,7 +143,7 @@ where
 impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<SubjectPublicKeyInfo<Params, Key>> for Document
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'a>,
+    Key: Decode<'a> + Encode + FixedTag,
     BitStringRef<'a>: From<&'k Key>,
 {
     type Error = Error;
@@ -156,7 +158,7 @@ where
 impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<&SubjectPublicKeyInfo<Params, Key>> for Document
 where
     Params: Choice<'a> + Encode,
-    Key: BitStringLike<'a>,
+    Key: Decode<'a> + Encode + FixedTag,
     BitStringRef<'a>: From<&'k Key>,
 {
     type Error = Error;
