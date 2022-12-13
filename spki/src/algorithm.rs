@@ -146,4 +146,13 @@ impl<'a> AlgorithmIdentifierRef<'a> {
             },
         ))
     }
+
+    /// Convert to an [`AlgorithmIdentifierOwned`]
+    #[cfg(feature = "alloc")]
+    pub fn to_owned(&self) -> AlgorithmIdentifierOwned {
+        AlgorithmIdentifier {
+            oid: self.oid,
+            parameters: self.parameters.map(|p| p.into()),
+        }
+    }
 }
