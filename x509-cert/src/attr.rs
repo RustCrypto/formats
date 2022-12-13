@@ -185,9 +185,8 @@ impl AttributeTypeAndValue<'_> {
         let tag = match oid {
             COUNTRY_NAME => Tag::PrintableString,
             DOMAIN_COMPONENT => Tag::Ia5String,
-            /// Serial numbers are formated as Printable String as per [RFC 5280 Appendix A.1]
-            ///
-            /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+            // Serial numbers are formated as Printable String as per RFC 5280 Appendix A.1:
+            // https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
             SERIAL_NUMBER => Tag::PrintableString,
             _ => Tag::Utf8String,
         };
