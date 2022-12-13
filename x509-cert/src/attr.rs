@@ -1,7 +1,7 @@
 //! Attribute-related definitions as defined in X.501 (and updated by RFC 5280).
 
 use alloc::vec::Vec;
-use const_oid::db::rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT};
+use const_oid::db::rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT, SERIAL_NUMBER};
 use core::fmt::{self, Write};
 
 use const_oid::db::DB;
@@ -185,6 +185,9 @@ impl AttributeTypeAndValue<'_> {
         let tag = match oid {
             COUNTRY_NAME => Tag::PrintableString,
             DOMAIN_COMPONENT => Tag::Ia5String,
+            // Serial numbers are formated as Printable String as per RFC 5280 Appendix A.1:
+            // https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+            SERIAL_NUMBER => Tag::PrintableString,
             _ => Tag::Utf8String,
         };
 
