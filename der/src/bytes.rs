@@ -2,8 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    str_slice::StrSlice, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result,
-    Writer,
+    str_slice::StrSlice, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, Header, Length,
+    Reader, Result, Writer,
 };
 use alloc::boxed::Box;
 use core::cmp::Ordering;
@@ -93,6 +93,15 @@ impl From<StrSlice<'_>> for Bytes {
         Bytes {
             inner: Box::from(bytes),
             length: s.length,
+        }
+    }
+}
+
+impl From<ByteSlice<'_>> for Bytes {
+    fn from(s: ByteSlice<'_>) -> Bytes {
+        Bytes {
+            length: s.length,
+            inner: Box::from(s.inner),
         }
     }
 }
