@@ -337,6 +337,31 @@ impl ValueOrd for BitString {
     }
 }
 
+#[cfg(feature = "alloc")]
+mod feature_alloc {
+    use super::*;
+    use crate::referenced::*;
+    use alloc::vec::Vec;
+
+    impl<'a> RefToOwned<'a> for BitStringRef<'a> {
+        type Owned = BitString;
+        fn to_owned(&self) -> Self::Owned {
+            BitString {
+                unused_bits: self.unused_bits,
+                bit_length: self.bit_length,
+                inner: Vec::from(self.inner.as_slice()),
+            }
+        }
+    }
+
+    impl OwnedToRef for BitString {
+        type Borrowed<'a> = BitStringRef<'a>;
+        fn to_ref<'a>(&'a self) -> Self::Borrowed<'a> {
+            self.into()
+        }
+    }
+}
+
 /// Iterator over the bits of a [`BitString`].
 pub struct BitStringIter<'a> {
     /// [`BitString`] being iterated over.
