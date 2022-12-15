@@ -180,7 +180,7 @@ impl<'a> TryFrom<&&'a [u8]> for BitStringRef<'a> {
     type Error = Error;
 
     fn try_from(bytes: &&'a [u8]) -> Result<BitStringRef<'a>> {
-        BitStringRef::from_bytes(*bytes)
+        BitStringRef::from_bytes(bytes)
     }
 }
 

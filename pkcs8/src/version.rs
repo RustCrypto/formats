@@ -6,7 +6,7 @@ use der::{Decode, Encode, FixedTag, Reader, Tag, Writer};
 /// Version identifier for PKCS#8 documents.
 ///
 /// (RFC 5958 designates `0` and `1` as the only valid versions for PKCS#8 documents)
-#[derive(Clone, Debug, Copy, PartialEq)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq)]
 pub enum Version {
     /// Denotes PKCS#8 v1: no public key field.
     V1 = 0,

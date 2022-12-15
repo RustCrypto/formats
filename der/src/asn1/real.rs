@@ -23,7 +23,7 @@ impl<'a> DecodeValue<'a> for f64 {
             Ok(0.0)
         } else if is_nth_bit_one::<7>(bytes) {
             // Binary encoding from section 8.5.7 applies
-            let sign: u64 = if is_nth_bit_one::<6>(bytes) { 1 } else { 0 };
+            let sign: u64 = u64::from(is_nth_bit_one::<6>(bytes));
 
             // Section 8.5.7.2: Check the base -- the DER specs say that only base 2 should be supported in DER
             let base = mnth_bits_to_u8::<5, 4>(bytes);
@@ -204,7 +204,7 @@ impl FixedTag for f64 {
 pub(crate) fn is_nth_bit_one<const N: usize>(bytes: &[u8]) -> bool {
     if N < 8 {
         bytes
-            .get(0)
+            .first()
             .map(|byte| byte & (1 << N) != 0)
             .unwrap_or(false)
     } else {
