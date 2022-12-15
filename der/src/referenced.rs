@@ -33,6 +33,7 @@ where
 {
     // TODO: when upgrading to rust 1.65, we can use the new syntax
     //       MSRV 1.60 requires us to use the old syntax
+    #[allow(unknown_lints)]
     #[allow(deprecated_where_clause_location)]
     type Borrowed<'a>
     where
