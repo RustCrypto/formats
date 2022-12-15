@@ -9,7 +9,7 @@ pub trait OwnedToRef {
         Self: 'a;
 
     /// Creates a new object referencing back to the self for storage
-    fn to_ref<'a>(&'a self) -> Self::Borrowed<'a>;
+    fn to_ref(&self) -> Self::Borrowed<'_>;
 }
 
 /// A trait for cloning a referenced structure and getting owned objects
@@ -36,7 +36,7 @@ where
         T: 'a,
     = Option<T::Borrowed<'a>>;
 
-    fn to_ref<'a>(&'a self) -> Self::Borrowed<'a> {
+    fn to_ref(&self) -> Self::Borrowed<'_> {
         self.as_ref().map(|o| o.to_ref())
     }
 }

@@ -192,7 +192,7 @@ mod feature_alloc {
 
     impl OwnedToRef for SubjectPublicKeyInfoOwned {
         type Borrowed<'a> = SubjectPublicKeyInfoRef<'a>;
-        fn to_ref<'a>(&'a self) -> Self::Borrowed<'a> {
+        fn to_ref(&self) -> Self::Borrowed<'_> {
             SubjectPublicKeyInfo {
                 algorithm: self.algorithm.to_ref(),
                 subject_public_key: self.subject_public_key.to_ref(),

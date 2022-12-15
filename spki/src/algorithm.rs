@@ -175,7 +175,7 @@ mod feature_alloc {
 
     impl OwnedToRef for AlgorithmIdentifierOwned {
         type Borrowed<'a> = AlgorithmIdentifierRef<'a>;
-        fn to_ref<'a>(&'a self) -> Self::Borrowed<'a> {
+        fn to_ref(&self) -> Self::Borrowed<'_> {
             AlgorithmIdentifier {
                 oid: self.oid,
                 parameters: self.parameters.to_ref(),

@@ -357,7 +357,7 @@ mod feature_alloc {
 
     impl OwnedToRef for BitString {
         type Borrowed<'a> = BitStringRef<'a>;
-        fn to_ref<'a>(&'a self) -> Self::Borrowed<'a> {
+        fn to_ref(&self) -> Self::Borrowed<'_> {
             self.into()
         }
     }
