@@ -173,3 +173,29 @@ where
 impl<Params, Key> PemLabel for SubjectPublicKeyInfo<Params, Key> {
     const PEM_LABEL: &'static str = "PUBLIC KEY";
 }
+
+#[cfg(feature = "alloc")]
+mod feature_alloc {
+    use super::*;
+    use der::referenced::*;
+
+    impl<'a> RefToOwned<'a> for SubjectPublicKeyInfoRef<'a> {
+        type Owned = SubjectPublicKeyInfoOwned;
+        fn to_owned(&self) -> Self::Owned {
+            SubjectPublicKeyInfo {
+                algorithm: self.algorithm.to_owned(),
+                subject_public_key: self.subject_public_key.to_owned(),
+            }
+        }
+    }
+
+    impl OwnedToRef for SubjectPublicKeyInfoOwned {
+        type Borrowed<'a> = SubjectPublicKeyInfoRef<'a>;
+        fn to_ref<'a>(&'a self) -> Self::Borrowed<'a> {
+            SubjectPublicKeyInfo {
+                algorithm: self.algorithm.to_ref(),
+                subject_public_key: self.subject_public_key.to_ref(),
+            }
+        }
+    }
+}
