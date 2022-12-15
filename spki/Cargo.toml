@@ -16,6 +16,7 @@ rust-version = "1.57"
 
 [dependencies]
 der = { version = "=0.7.0-pre", features = ["oid"], path = "../der" }
+rustversion = "1.0"
 
 # Optional dependencies
 sha2 = { version = "0.10", optional = true, default-features = false }

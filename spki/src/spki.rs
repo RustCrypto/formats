@@ -174,6 +174,7 @@ impl<Params, Key> PemLabel for SubjectPublicKeyInfo<Params, Key> {
     const PEM_LABEL: &'static str = "PUBLIC KEY";
 }
 
+#[rustversion::since(1.65)] // Generic associated types support is required
 #[cfg(feature = "alloc")]
 mod feature_alloc {
     use super::*;
