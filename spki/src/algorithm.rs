@@ -157,7 +157,6 @@ impl<'a> AlgorithmIdentifierRef<'a> {
     }
 }
 
-#[rustversion::since(1.65)] // Generic associated types support is required
 #[cfg(feature = "alloc")]
 mod feature_alloc {
     use super::*;
