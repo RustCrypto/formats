@@ -338,7 +338,7 @@ impl ValueOrd for BitString {
 }
 
 #[cfg(feature = "alloc")]
-mod feature_alloc {
+mod allocating {
     use super::*;
     use crate::referenced::*;
     use alloc::vec::Vec;

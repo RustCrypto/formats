@@ -296,7 +296,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
-mod feature_alloc {
+mod allocating {
     use super::*;
     use crate::referenced::*;
 
