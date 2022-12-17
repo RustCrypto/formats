@@ -294,3 +294,26 @@ where
         }
     }
 }
+
+#[cfg(feature = "alloc")]
+mod allocating {
+    use super::*;
+    use crate::referenced::*;
+
+    impl<'a> RefToOwned<'a> for AnyRef<'a> {
+        type Owned = Any;
+        fn to_owned(&self) -> Self::Owned {
+            Any {
+                tag: self.tag(),
+                value: Bytes::from(self.value),
+            }
+        }
+    }
+
+    impl OwnedToRef for Any {
+        type Borrowed<'a> = AnyRef<'a>;
+        fn to_ref(&self) -> Self::Borrowed<'_> {
+            self.into()
+        }
+    }
+}

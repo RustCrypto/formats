@@ -180,7 +180,7 @@ impl<'a> TryFrom<&&'a [u8]> for BitStringRef<'a> {
     type Error = Error;
 
     fn try_from(bytes: &&'a [u8]) -> Result<BitStringRef<'a>> {
-        BitStringRef::from_bytes(*bytes)
+        BitStringRef::from_bytes(bytes)
     }
 }
 
@@ -333,6 +333,31 @@ impl ValueOrd for BitString {
         match self.unused_bits.cmp(&other.unused_bits) {
             Ordering::Equal => self.inner.der_cmp(&other.inner),
             ordering => Ok(ordering),
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+mod allocating {
+    use super::*;
+    use crate::referenced::*;
+    use alloc::vec::Vec;
+
+    impl<'a> RefToOwned<'a> for BitStringRef<'a> {
+        type Owned = BitString;
+        fn to_owned(&self) -> Self::Owned {
+            BitString {
+                unused_bits: self.unused_bits,
+                bit_length: self.bit_length,
+                inner: Vec::from(self.inner.as_slice()),
+            }
+        }
+    }
+
+    impl OwnedToRef for BitString {
+        type Borrowed<'a> = BitStringRef<'a>;
+        fn to_ref(&self) -> Self::Borrowed<'_> {
+            self.into()
         }
     }
 }

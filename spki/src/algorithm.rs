@@ -7,6 +7,9 @@ use der::{
     Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
 };
 
+#[cfg(feature = "alloc")]
+use der::asn1::Any;
+
 /// X.509 `AlgorithmIdentifier` as defined in [RFC 5280 Section 4.1.1.2].
 ///
 /// ```text
@@ -78,6 +81,10 @@ where
 /// `AlgorithmIdentifier` reference which has `AnyRef` parameters.
 pub type AlgorithmIdentifierRef<'a> = AlgorithmIdentifier<AnyRef<'a>>;
 
+/// `AlgorithmIdentifier` reference which has `Any` parameters.
+#[cfg(feature = "alloc")]
+pub type AlgorithmIdentifierOwned = AlgorithmIdentifier<Any>;
+
 impl<Params> AlgorithmIdentifier<Params> {
     /// Assert the `algorithm` OID is an expected value.
     pub fn assert_algorithm_oid(&self, expected_oid: ObjectIdentifier) -> Result<ObjectIdentifier> {
@@ -147,5 +154,31 @@ impl<'a> AlgorithmIdentifierRef<'a> {
                 },
             },
         ))
+    }
+}
+
+#[cfg(feature = "alloc")]
+mod allocating {
+    use super::*;
+    use der::referenced::*;
+
+    impl<'a> RefToOwned<'a> for AlgorithmIdentifierRef<'a> {
+        type Owned = AlgorithmIdentifierOwned;
+        fn to_owned(&self) -> Self::Owned {
+            AlgorithmIdentifier {
+                oid: self.oid,
+                parameters: self.parameters.to_owned(),
+            }
+        }
+    }
+
+    impl OwnedToRef for AlgorithmIdentifierOwned {
+        type Borrowed<'a> = AlgorithmIdentifierRef<'a>;
+        fn to_ref(&self) -> Self::Borrowed<'_> {
+            AlgorithmIdentifier {
+                oid: self.oid,
+                parameters: self.parameters.to_ref(),
+            }
+        }
     }
 }

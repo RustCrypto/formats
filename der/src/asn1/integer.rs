@@ -126,7 +126,7 @@ impl_uint_encoding!(u8, u16, u32, u64, u128);
 #[inline]
 fn is_highest_bit_set(bytes: &[u8]) -> bool {
     bytes
-        .get(0)
+        .first()
         .map(|byte| byte & 0b10000000 != 0)
         .unwrap_or(false)
 }

@@ -64,7 +64,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
     fn peek_byte(&self) -> Option<u8> {
         self.remaining()
             .ok()
-            .and_then(|bytes| bytes.get(0).cloned())
+            .and_then(|bytes| bytes.first().cloned())
     }
 
     fn peek_header(&self) -> Result<Header> {

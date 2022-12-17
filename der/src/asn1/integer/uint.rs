@@ -75,7 +75,7 @@ pub(crate) fn strip_leading_zeroes(mut bytes: &[u8]) -> &[u8] {
 
 /// Does the given integer need a leading zero?
 fn needs_leading_zero(bytes: &[u8]) -> bool {
-    matches!(bytes.get(0), Some(byte) if *byte >= 0x80)
+    matches!(bytes.first(), Some(byte) if *byte >= 0x80)
 }
 
 #[cfg(test)]

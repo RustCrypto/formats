@@ -340,6 +340,7 @@ extern crate alloc;
 extern crate std;
 
 pub mod asn1;
+pub mod referenced;
 
 pub(crate) mod arrayvec;
 mod byte_slice;
