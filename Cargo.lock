@@ -47,17 +47,34 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "base16ct"
-version = "0.1.1"
+version = "0.2.0-pre"
 
 [[package]]
-name = "base16ct"
-version = "0.1.1"
+name = "base32"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "349a06037c7bf932dd7e7d1f653678b2038b9ad46a74102f1fc7bd7872678cce"
+checksum = "23ce669cd6c8588f79e15cf450314f9638f967fc5770ff1c7c1deb0925ea7cfa"
+
+[[package]]
+name = "base32ct"
+version = "0.2.0-pre"
+dependencies = [
+ "base32",
+ "proptest",
+]
 
 [[package]]
 name = "base64ct"
 version = "1.5.3"
+
+[[package]]
+name = "bincode"
+version = "1.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "bit-set"
@@ -669,7 +686,7 @@ dependencies = [
 
 [[package]]
 name = "pem-rfc7468"
-version = "0.6.0"
+version = "0.7.0-pre"
 dependencies = [
  "base64ct",
 ]
@@ -1039,7 +1056,7 @@ dependencies = [
 name = "sec1"
 version = "0.4.0-pre"
 dependencies = [
- "base16ct 0.1.1",
+ "base16ct",
  "der",
  "generic-array",
  "hex-literal",
@@ -1066,6 +1083,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-json-core"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58ec3c8fe427f45ee3aaa0ebb9f0d9ab8ae9ad05d12047fe7249ae5ea9374ff0"
+dependencies = [
+ "ryu",
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.145"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1089,10 +1116,18 @@ dependencies = [
 
 [[package]]
 name = "serdect"
-version = "0.1.0"
+version = "0.2.0-pre"
 dependencies = [
- "base16ct 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base16ct",
+ "bincode",
+ "ciborium",
+ "hex-literal",
+ "proptest",
  "serde",
+ "serde-json-core",
+ "serde_json",
+ "toml",
+ "zeroize",
 ]
 
 [[package]]
@@ -1152,6 +1187,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tai64"
+version = "5.0.0-pre"
+dependencies = [
+ "serde",
+ "zeroize",
 ]
 
 [[package]]

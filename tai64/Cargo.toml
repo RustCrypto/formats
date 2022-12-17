@@ -1,7 +1,7 @@
 [package]
 name = "tai64"
 description = "TAI64 and TAI64N (i.e. Temps Atomique International) timestamp support for Rust"
-version = "4.0.0"
+version = "5.0.0-pre"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/tai64"
@@ -9,7 +9,7 @@ readme = "README.md"
 categories = ["date-and-time", "internationalization", "network-programming", "no-std", "parser-implementations"]
 keywords = ["tai64", "time", "timestamps"]
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.60"
 
 [dependencies]
 serde = { version = "1", optional = true, default-features = false }

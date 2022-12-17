@@ -32,7 +32,7 @@ help reduce the overall timing variability.
 
 ## Minimum Supported Rust Version
 
-Rust **1.56** or newer.
+Rust **1.60** or newer.
 
 In the future, we reserve the right to change MSRV (i.e. MSRV is out-of-scope
 for this crate's SemVer guarantees), however when we do it will be accompanied by
@@ -60,7 +60,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/serdect/badge.svg
 [docs-link]: https://docs.rs/serdect/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[msrv-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
+[msrv-image]: https://img.shields.io/badge/rustc-1.60+-blue.svg
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/serdect.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/serdect.yml
 
