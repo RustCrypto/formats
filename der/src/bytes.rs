@@ -78,15 +78,6 @@ impl DerOrd for Bytes {
     }
 }
 
-impl From<&[u8; 1]> for Bytes {
-    fn from(byte: &[u8; 1]) -> Bytes {
-        Self {
-            length: Length::ONE,
-            inner: Box::new([byte[0]]),
-        }
-    }
-}
-
 impl From<StrSlice<'_>> for Bytes {
     fn from(s: StrSlice<'_>) -> Bytes {
         let bytes = s.as_bytes();

@@ -86,15 +86,6 @@ impl DerOrd for ByteSlice<'_> {
     }
 }
 
-impl<'a> From<&'a [u8; 1]> for ByteSlice<'a> {
-    fn from(byte: &'a [u8; 1]) -> ByteSlice<'a> {
-        Self {
-            length: Length::ONE,
-            inner: byte,
-        }
-    }
-}
-
 impl<'a> From<StrSlice<'a>> for ByteSlice<'a> {
     fn from(s: StrSlice<'a>) -> ByteSlice<'a> {
         let bytes = s.as_bytes();
