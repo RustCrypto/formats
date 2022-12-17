@@ -6,14 +6,11 @@ use der::{
     asn1::ContextSpecificRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Reader, Sequence,
     Tag, TagMode, TagNumber, Writer,
 };
-use spki::AlgorithmIdentifierRef;
+use spki::{AlgorithmIdentifier, AlgorithmIdentifierRef};
 
 const OID_SHA_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
 const OID_MGF_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.8");
 const OID_PSPECIFIED: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.9");
-
-// TODO(tarcieri): make `AlgorithmIdentifier` generic around params; use `OID_SHA_1`
-const SEQ_OID_SHA_1_DER: &[u8] = &[0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a];
 
 const SHA_1_AI: AlgorithmIdentifierRef<'_> = AlgorithmIdentifierRef {
     oid: OID_SHA_1,
@@ -84,7 +81,7 @@ pub struct RsaPssParams<'a> {
     pub hash: AlgorithmIdentifierRef<'a>,
 
     /// Mask Generation Function (MGF)
-    pub mask_gen: AlgorithmIdentifierRef<'a>,
+    pub mask_gen: AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>,
 
     /// Salt length
     pub salt_len: u8,
@@ -180,13 +177,10 @@ impl<'a> TryFrom<&'a [u8]> for RsaPssParams<'a> {
 }
 
 /// Default Mask Generation Function (MGF): SHA-1.
-fn default_mgf1_sha1<'a>() -> AlgorithmIdentifierRef<'a> {
-    AlgorithmIdentifierRef {
+fn default_mgf1_sha1<'a>() -> AlgorithmIdentifier<AlgorithmIdentifierRef<'a>> {
+    AlgorithmIdentifier::<AlgorithmIdentifierRef<'a>> {
         oid: OID_MGF_1,
-        parameters: Some(
-            AnyRef::new(Tag::Sequence, SEQ_OID_SHA_1_DER)
-                .expect("error creating default MGF1 params"),
-        ),
+        parameters: Some(SHA_1_AI),
     }
 }
 
@@ -211,7 +205,7 @@ pub struct RsaOaepParams<'a> {
     pub hash: AlgorithmIdentifierRef<'a>,
 
     /// Mask Generation Function (MGF)
-    pub mask_gen: AlgorithmIdentifierRef<'a>,
+    pub mask_gen: AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>,
 
     /// The source (and possibly the value) of the label L
     pub p_source: AlgorithmIdentifierRef<'a>,

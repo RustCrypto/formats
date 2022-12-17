@@ -1,10 +1,7 @@
 //! PKCS#1 algorithm params tests
 
 use const_oid::db;
-use der::{
-    asn1::{ObjectIdentifier, OctetStringRef},
-    Decode, Encode,
-};
+use der::{asn1::OctetStringRef, Encode};
 use hex_literal::hex;
 use pkcs1::{RsaOaepParams, RsaPssParams, TrailerField};
 
@@ -31,15 +28,12 @@ fn decode_pss_param() {
         .mask_gen
         .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
         .is_ok());
-    assert_eq!(
-        param
-            .mask_gen
-            .parameters_any()
-            .unwrap()
-            .sequence(|reader| Ok(ObjectIdentifier::decode(reader)?))
-            .unwrap(),
-        db::rfc5912::ID_SHA_256
-    );
+    assert!(param
+        .mask_gen
+        .parameters
+        .unwrap()
+        .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
+        .is_ok());
     assert_eq!(param.salt_len, 32);
     assert_eq!(param.trailer_field, TrailerField::BC);
 }
@@ -67,15 +61,12 @@ fn decode_pss_param_default() {
         .mask_gen
         .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
         .is_ok());
-    assert_eq!(
-        param
-            .mask_gen
-            .parameters_any()
-            .unwrap()
-            .sequence(|reader| Ok(ObjectIdentifier::decode(reader)?))
-            .unwrap(),
-        db::rfc5912::ID_SHA_1
-    );
+    assert!(param
+        .mask_gen
+        .parameters
+        .unwrap()
+        .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
+        .is_ok());
     assert_eq!(param.salt_len, 20);
     assert_eq!(param.trailer_field, TrailerField::BC);
     assert_eq!(param, Default::default())
@@ -103,15 +94,12 @@ fn decode_oaep_param() {
         .mask_gen
         .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
         .is_ok());
-    assert_eq!(
-        param
-            .mask_gen
-            .parameters_any()
-            .unwrap()
-            .sequence(|reader| Ok(ObjectIdentifier::decode(reader)?))
-            .unwrap(),
-        db::rfc5912::ID_SHA_256
-    );
+    assert!(param
+        .mask_gen
+        .parameters
+        .unwrap()
+        .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
+        .is_ok());
     assert!(param
         .p_source
         .assert_algorithm_oid(db::rfc5912::ID_P_SPECIFIED)
@@ -145,15 +133,12 @@ fn decode_oaep_param_default() {
         .mask_gen
         .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
         .is_ok());
-    assert_eq!(
-        param
-            .mask_gen
-            .parameters_any()
-            .unwrap()
-            .sequence(|reader| Ok(ObjectIdentifier::decode(reader)?))
-            .unwrap(),
-        db::rfc5912::ID_SHA_1
-    );
+    assert!(param
+        .mask_gen
+        .parameters
+        .unwrap()
+        .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
+        .is_ok());
     assert!(param
         .p_source
         .assert_algorithm_oid(db::rfc5912::ID_P_SPECIFIED)
