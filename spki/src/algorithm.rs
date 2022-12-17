@@ -78,7 +78,7 @@ where
 /// `AlgorithmIdentifier` reference which has `AnyRef` parameters.
 pub type AlgorithmIdentifierRef<'a> = AlgorithmIdentifier<AnyRef<'a>>;
 
-impl<'a> AlgorithmIdentifierRef<'a> {
+impl<Params> AlgorithmIdentifier<Params> {
     /// Assert the `algorithm` OID is an expected value.
     pub fn assert_algorithm_oid(&self, expected_oid: ObjectIdentifier) -> Result<ObjectIdentifier> {
         if self.oid == expected_oid {
@@ -87,7 +87,9 @@ impl<'a> AlgorithmIdentifierRef<'a> {
             Err(Error::OidUnknown { oid: expected_oid })
         }
     }
+}
 
+impl<'a> AlgorithmIdentifierRef<'a> {
     /// Assert `parameters` is an OID and has the expected value.
     pub fn assert_parameters_oid(
         &self,
