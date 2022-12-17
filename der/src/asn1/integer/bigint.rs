@@ -98,7 +98,7 @@ impl<'a> OrdIsValueOrd for UintRef<'a> {}
 pub use self::alloc::Uint;
 
 #[cfg(feature = "alloc")]
-mod alloc {
+mod allocating {
     use super::{super::uint, UintRef};
     use crate::{
         asn1::AnyRef, ord::OrdIsValueOrd, Bytes, DecodeValue, EncodeValue, Error, ErrorKind,
