@@ -2,10 +2,12 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    StrRef, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result,
-    Writer,
+    DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StrRef, Writer,
 };
 use core::cmp::Ordering;
+
+#[cfg(feature = "alloc")]
+use crate::StrOwned;
 
 /// Byte slice newtype which respects the `Length::max()` limit.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -88,6 +90,19 @@ impl DerOrd for BytesRef<'_> {
 
 impl<'a> From<StrRef<'a>> for BytesRef<'a> {
     fn from(s: StrRef<'a>) -> BytesRef<'a> {
+        let bytes = s.as_bytes();
+        debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
+
+        BytesRef {
+            inner: bytes,
+            length: s.length,
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> From<&'a StrOwned> for BytesRef<'a> {
+    fn from(s: &'a StrOwned) -> BytesRef<'a> {
         let bytes = s.as_bytes();
         debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
 

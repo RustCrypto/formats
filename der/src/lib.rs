@@ -362,6 +362,8 @@ mod writer;
 mod bytes_owned;
 #[cfg(feature = "alloc")]
 mod document;
+#[cfg(feature = "alloc")]
+mod str_owned;
 
 pub use crate::{
     asn1::{AnyRef, Choice, Sequence},
@@ -410,6 +412,6 @@ pub use zeroize;
 #[cfg(all(feature = "alloc", feature = "zeroize"))]
 pub use crate::document::SecretDocument;
 
-#[cfg(feature = "alloc")]
-pub(crate) use crate::bytes_owned::BytesOwned;
 pub(crate) use crate::{arrayvec::ArrayVec, bytes_ref::BytesRef, str_ref::StrRef};
+#[cfg(feature = "alloc")]
+pub(crate) use crate::{bytes_owned::BytesOwned, str_owned::StrOwned};

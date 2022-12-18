@@ -77,3 +77,16 @@ impl<'a> EncodeValue for StrRef<'a> {
         writer.write(self.as_ref())
     }
 }
+
+#[cfg(feature = "alloc")]
+mod allocating {
+    use super::StrRef;
+    use crate::{referenced::RefToOwned, StrOwned};
+
+    impl<'a> RefToOwned<'a> for StrRef<'a> {
+        type Owned = StrOwned;
+        fn to_owned(&self) -> Self::Owned {
+            StrOwned::from(*self)
+        }
+    }
+}
