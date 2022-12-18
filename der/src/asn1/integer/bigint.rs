@@ -95,14 +95,17 @@ impl<'a> FixedTag for UintRef<'a> {
 impl<'a> OrdIsValueOrd for UintRef<'a> {}
 
 #[cfg(feature = "alloc")]
-pub use self::alloc::Uint;
+pub use self::allocating::Uint;
 
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::{super::uint, UintRef};
     use crate::{
-        asn1::AnyRef, ord::OrdIsValueOrd, Bytes, DecodeValue, EncodeValue, Error, ErrorKind,
-        FixedTag, Header, Length, Reader, Result, Tag, Writer,
+        asn1::AnyRef,
+        ord::OrdIsValueOrd,
+        referenced::{OwnedToRef, RefToOwned},
+        Bytes, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
+        Result, Tag, Writer,
     };
 
     /// "Big" unsigned ASN.1 `INTEGER` type.
@@ -193,6 +196,24 @@ mod allocating {
     }
 
     impl OrdIsValueOrd for Uint {}
+
+    impl<'a> RefToOwned<'a> for UintRef<'a> {
+        type Owned = Uint;
+        fn to_owned(&self) -> Self::Owned {
+            let inner = self.inner.to_owned();
+
+            Uint { inner }
+        }
+    }
+
+    impl OwnedToRef for Uint {
+        type Borrowed<'a> = UintRef<'a>;
+        fn to_ref(&self) -> Self::Borrowed<'_> {
+            let inner = self.inner.to_ref();
+
+            UintRef { inner }
+        }
+    }
 }
 
 #[cfg(test)]
