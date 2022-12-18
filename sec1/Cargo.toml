@@ -13,7 +13,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-i
 keywords = ["crypto", "key", "elliptic-curve", "secg"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.57"
+rust-version = "1.65"
 
 [dependencies]
 base16ct = { version = "=0.2.0-pre", optional = true, default-features = false, path = "../base16ct" }
