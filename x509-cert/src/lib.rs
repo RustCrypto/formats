@@ -28,6 +28,7 @@ pub mod crl;
 pub mod ext;
 pub mod name;
 pub mod request;
+pub mod serial_number;
 pub mod time;
 
 pub use certificate::{Certificate, PkiPath, TbsCertificate, Version};

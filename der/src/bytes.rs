@@ -2,8 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    str_slice::StrSlice, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, Header, Length,
-    Reader, Result, Writer,
+    referenced::OwnedToRef, str_slice::StrSlice, ByteSlice, DecodeValue, DerOrd, EncodeValue,
+    Error, Header, Length, Reader, Result, Writer,
 };
 use alloc::boxed::Box;
 use core::cmp::Ordering;
@@ -38,6 +38,11 @@ impl Bytes {
     /// Get the [`Length`] of this [`ByteSlice`]
     pub fn len(&self) -> Length {
         self.length
+    }
+
+    /// Is this [`Bytes`] empty?
+    pub fn is_empty(&self) -> bool {
+        self.len() == Length::ZERO
     }
 }
 
@@ -86,6 +91,16 @@ impl From<StrSlice<'_>> for Bytes {
         Bytes {
             inner: Box::from(bytes),
             length: s.length,
+        }
+    }
+}
+
+impl OwnedToRef for Bytes {
+    type Borrowed<'a> = ByteSlice<'a>;
+    fn to_ref(&self) -> Self::Borrowed<'_> {
+        ByteSlice {
+            length: self.length,
+            inner: self.inner.as_ref(),
         }
     }
 }

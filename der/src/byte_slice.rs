@@ -105,3 +105,16 @@ impl<'a> TryFrom<&'a [u8]> for ByteSlice<'a> {
         Self::new(slice)
     }
 }
+
+#[cfg(feature = "alloc")]
+mod allocating {
+    use super::ByteSlice;
+    use crate::{referenced::RefToOwned, Bytes};
+
+    impl<'a> RefToOwned<'a> for ByteSlice<'a> {
+        type Owned = Bytes;
+        fn to_owned(&self) -> Self::Owned {
+            Bytes::from(*self)
+        }
+    }
+}
