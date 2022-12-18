@@ -5,8 +5,6 @@ use der::{
     ValueOrd, Writer,
 };
 
-const SERIAL_NUMBER_MAX_LEN: Length = Length::new(20);
-
 /// [RFC 5280 Section 4.1.2.2.]  Serial Number
 ///
 ///   The serial number MUST be a positive integer assigned by the CA to
@@ -29,11 +27,14 @@ pub struct SerialNumber {
 }
 
 impl SerialNumber {
+    /// Maximum length in bytes for a [`SerialNumber`]
+    pub const MAX_LEN: Length = Length::new(20);
+
     /// Create a new [`SerialNumber`] from a byte slice.
     pub fn new(bytes: &[u8]) -> Result<Self> {
         let inner = Uint::new(bytes)?;
 
-        if inner.len() > SERIAL_NUMBER_MAX_LEN {
+        if inner.len() > SerialNumber::MAX_LEN {
             return Err(ErrorKind::Overlength.into());
         }
 
@@ -61,7 +62,7 @@ impl<'a> DecodeValue<'a> for SerialNumber {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let inner = Uint::decode_value(reader, header)?;
 
-        if inner.len() > SERIAL_NUMBER_MAX_LEN {
+        if inner.len() > SerialNumber::MAX_LEN {
             return Err(ErrorKind::Overlength.into());
         }
 
