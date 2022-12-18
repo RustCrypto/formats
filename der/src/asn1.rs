@@ -1,6 +1,9 @@
 //! Module containing all of the various ASN.1 built-in types supported by
 //! this library.
 
+#[macro_use]
+mod internal_macros;
+
 mod any;
 mod bit_string;
 mod boolean;
