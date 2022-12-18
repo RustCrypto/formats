@@ -8,7 +8,7 @@
 )]
 
 use crate::{
-    ByteSlice, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, StrRef, Tag,
+    BytesRef, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, StrRef, Tag,
     Writer,
 };
 
@@ -17,7 +17,7 @@ use super::integer::uint::strip_leading_zeroes;
 #[cfg_attr(docsrs, doc(cfg(feature = "real")))]
 impl<'a> DecodeValue<'a> for f64 {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(reader, header)?.as_slice();
+        let bytes = BytesRef::decode_value(reader, header)?.as_slice();
 
         if header.length == Length::ZERO {
             Ok(0.0)

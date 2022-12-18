@@ -1,7 +1,7 @@
 //! ASN.1 `NULL` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind,
+    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind,
     FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
@@ -37,7 +37,7 @@ impl OrdIsValueOrd for Null {}
 
 impl<'a> From<Null> for AnyRef<'a> {
     fn from(_: Null) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::Null, ByteSlice::default())
+        AnyRef::from_tag_and_value(Tag::Null, BytesRef::default())
     }
 }
 

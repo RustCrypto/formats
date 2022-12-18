@@ -1,7 +1,7 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
+    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header,
     Length, Reader, Result, StrRef, Tag, Writer,
 };
 use core::{fmt, ops::Deref, str};
@@ -64,7 +64,7 @@ impl AsRef<[u8]> for Utf8StringRef<'_> {
 
 impl<'a> DecodeValue<'a> for Utf8StringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
+        Self::new(BytesRef::decode_value(reader, header)?.as_slice())
     }
 }
 

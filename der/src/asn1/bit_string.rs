@@ -1,7 +1,7 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::AnyRef, ByteSlice, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
+    asn1::AnyRef, BytesRef, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
     Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
@@ -24,7 +24,7 @@ pub struct BitStringRef<'a> {
     bit_length: usize,
 
     /// Bitstring represented as a slice of bytes.
-    inner: ByteSlice<'a>,
+    inner: BytesRef<'a>,
 }
 
 impl<'a> BitStringRef<'a> {
@@ -40,7 +40,7 @@ impl<'a> BitStringRef<'a> {
             return Err(Self::TAG.value_error());
         }
 
-        let inner = ByteSlice::new(bytes).map_err(|_| Self::TAG.length_error())?;
+        let inner = BytesRef::new(bytes).map_err(|_| Self::TAG.length_error())?;
 
         let bit_length = usize::try_from(inner.len())?
             .checked_mul(8)
@@ -128,7 +128,7 @@ impl<'a> DecodeValue<'a> for BitStringRef<'a> {
         };
 
         let unused_bits = reader.read_byte()?;
-        let inner = ByteSlice::decode_value(reader, header)?;
+        let inner = BytesRef::decode_value(reader, header)?;
         Self::new(unused_bits, inner.as_slice())
     }
 }
@@ -205,13 +205,13 @@ impl<'a> arbitrary::Arbitrary<'a> for BitStringRef<'a> {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         Self::new(
             u.int_in_range(0..=Self::MAX_UNUSED_BITS)?,
-            ByteSlice::arbitrary(u)?.as_slice(),
+            BytesRef::arbitrary(u)?.as_slice(),
         )
         .map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
-        arbitrary::size_hint::and(u8::size_hint(depth), ByteSlice::size_hint(depth))
+        arbitrary::size_hint::and(u8::size_hint(depth), BytesRef::size_hint(depth))
     }
 }
 

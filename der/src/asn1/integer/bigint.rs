@@ -2,7 +2,7 @@
 
 use super::{int, uint};
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind,
+    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind,
     FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
@@ -16,13 +16,13 @@ use crate::{
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct IntRef<'a> {
     /// Inner value
-    inner: ByteSlice<'a>,
+    inner: BytesRef<'a>,
 }
 
 impl<'a> IntRef<'a> {
     /// Create a new [`IntRef`] from a byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
-        let inner = ByteSlice::new(int::strip_leading_ones(bytes))
+        let inner = BytesRef::new(int::strip_leading_ones(bytes))
             .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
 
         Ok(Self { inner })
@@ -47,7 +47,7 @@ impl<'a> IntRef<'a> {
 
 impl<'a> DecodeValue<'a> for IntRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(reader, header)?.as_slice();
+        let bytes = BytesRef::decode_value(reader, header)?.as_slice();
         let result = Self::new(int::decode_to_slice(bytes)?)?;
 
         // Ensure we compute the same encoded length as the original any value.
@@ -99,13 +99,13 @@ impl<'a> OrdIsValueOrd for IntRef<'a> {}
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct UintRef<'a> {
     /// Inner value
-    inner: ByteSlice<'a>,
+    inner: BytesRef<'a>,
 }
 
 impl<'a> UintRef<'a> {
     /// Create a new [`UintRef`] from a byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
-        let inner = ByteSlice::new(uint::strip_leading_zeroes(bytes))
+        let inner = BytesRef::new(uint::strip_leading_zeroes(bytes))
             .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
 
         Ok(Self { inner })
@@ -130,7 +130,7 @@ impl<'a> UintRef<'a> {
 
 impl<'a> DecodeValue<'a> for UintRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(reader, header)?.as_slice();
+        let bytes = BytesRef::decode_value(reader, header)?.as_slice();
         let result = Self::new(uint::decode_to_slice(bytes)?)?;
 
         // Ensure we compute the same encoded length as the original any value.

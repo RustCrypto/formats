@@ -1,7 +1,7 @@
 //! ASN.1 `TeletexString` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
+    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header,
     Length, Reader, Result, StrRef, Tag, Writer,
 };
 use core::{fmt, ops::Deref, str};
@@ -72,7 +72,7 @@ impl AsRef<[u8]> for TeletexStringRef<'_> {
 
 impl<'a> DecodeValue<'a> for TeletexStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
+        Self::new(BytesRef::decode_value(reader, header)?.as_slice())
     }
 }
 

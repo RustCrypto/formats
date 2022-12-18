@@ -2,7 +2,7 @@
 #![cfg_attr(feature = "arbitrary", allow(clippy::integer_arithmetic))]
 
 use crate::{
-    asn1::*, ByteSlice, Choice, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind,
+    asn1::*, BytesRef, Choice, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind,
     FixedTag, Header, Length, Reader, Result, SliceReader, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
@@ -31,24 +31,24 @@ pub struct AnyRef<'a> {
     tag: Tag,
 
     /// Inner value encoded as bytes.
-    value: ByteSlice<'a>,
+    value: BytesRef<'a>,
 }
 
 impl<'a> AnyRef<'a> {
     /// [`AnyRef`] representation of the ASN.1 `NULL` type.
     pub const NULL: Self = Self {
         tag: Tag::Null,
-        value: ByteSlice::EMPTY,
+        value: BytesRef::EMPTY,
     };
 
     /// Create a new [`AnyRef`] from the provided [`Tag`] and DER bytes.
     pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self> {
-        let value = ByteSlice::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
+        let value = BytesRef::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
         Ok(Self { tag, value })
     }
 
-    /// Infallible creation of an [`AnyRef`] from a [`ByteSlice`].
-    pub(crate) fn from_tag_and_value(tag: Tag, value: ByteSlice<'a>) -> Self {
+    /// Infallible creation of an [`AnyRef`] from a [`BytesRef`].
+    pub(crate) fn from_tag_and_value(tag: Tag, value: BytesRef<'a>) -> Self {
         Self { tag, value }
     }
 
@@ -150,7 +150,7 @@ impl<'a> Decode<'a> for AnyRef<'a> {
 
         Ok(Self {
             tag: header.tag,
-            value: ByteSlice::decode_value(reader, header)?,
+            value: BytesRef::decode_value(reader, header)?,
         })
     }
 }
@@ -184,8 +184,8 @@ impl ValueOrd for AnyRef<'_> {
     }
 }
 
-impl<'a> From<AnyRef<'a>> for ByteSlice<'a> {
-    fn from(any: AnyRef<'a>) -> ByteSlice<'a> {
+impl<'a> From<AnyRef<'a>> for BytesRef<'a> {
+    fn from(any: AnyRef<'a>) -> BytesRef<'a> {
         any.value
     }
 }

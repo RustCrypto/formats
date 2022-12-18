@@ -2,8 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    referenced::OwnedToRef, StrRef, ByteSlice, DecodeValue, DerOrd, EncodeValue,
-    Error, Header, Length, Reader, Result, Writer,
+    referenced::OwnedToRef, BytesRef, DecodeValue, DerOrd, EncodeValue, Error, Header, Length,
+    Reader, Result, StrRef, Writer,
 };
 use alloc::boxed::Box;
 use core::cmp::Ordering;
@@ -35,7 +35,7 @@ impl Bytes {
         &self.inner
     }
 
-    /// Get the [`Length`] of this [`ByteSlice`]
+    /// Get the [`Length`] of this [`BytesRef`]
     pub fn len(&self) -> Length {
         self.length
     }
@@ -96,17 +96,17 @@ impl From<StrRef<'_>> for Bytes {
 }
 
 impl OwnedToRef for Bytes {
-    type Borrowed<'a> = ByteSlice<'a>;
+    type Borrowed<'a> = BytesRef<'a>;
     fn to_ref(&self) -> Self::Borrowed<'_> {
-        ByteSlice {
+        BytesRef {
             length: self.length,
             inner: self.inner.as_ref(),
         }
     }
 }
 
-impl From<ByteSlice<'_>> for Bytes {
-    fn from(s: ByteSlice<'_>) -> Bytes {
+impl From<BytesRef<'_>> for Bytes {
+    fn from(s: BytesRef<'_>) -> Bytes {
         Bytes {
             length: s.length,
             inner: Box::from(s.inner),

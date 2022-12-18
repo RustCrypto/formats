@@ -344,7 +344,7 @@ pub mod asn1;
 pub mod referenced;
 
 pub(crate) mod arrayvec;
-mod byte_slice;
+mod bytes_ref;
 mod datetime;
 mod decode;
 mod encode;
@@ -412,4 +412,4 @@ pub use crate::document::SecretDocument;
 
 #[cfg(feature = "alloc")]
 pub(crate) use crate::bytes::Bytes;
-pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_ref::StrRef};
+pub(crate) use crate::{arrayvec::ArrayVec, bytes_ref::BytesRef, str_ref::StrRef};
