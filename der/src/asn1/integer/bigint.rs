@@ -187,7 +187,7 @@ mod allocating {
         asn1::AnyRef,
         ord::OrdIsValueOrd,
         referenced::{OwnedToRef, RefToOwned},
-        Bytes, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
+        BytesOwned, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
         Result, Tag, Writer,
     };
 
@@ -201,13 +201,13 @@ mod allocating {
     #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     pub struct Int {
         /// Inner value
-        inner: Bytes,
+        inner: BytesOwned,
     }
 
     impl Int {
         /// Create a new [`Int`] from a byte slice.
         pub fn new(bytes: &[u8]) -> Result<Self> {
-            let inner = Bytes::new(int::strip_leading_ones(bytes))
+            let inner = BytesOwned::new(int::strip_leading_ones(bytes))
                 .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
 
             Ok(Self { inner })
@@ -232,7 +232,7 @@ mod allocating {
 
     impl<'a> DecodeValue<'a> for Int {
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            let bytes = Bytes::decode_value(reader, header)?;
+            let bytes = BytesOwned::decode_value(reader, header)?;
             let result = Self::new(int::decode_to_slice(bytes.as_slice())?)?;
 
             // Ensure we compute the same encoded length as the original any value.
@@ -256,7 +256,7 @@ mod allocating {
 
     impl<'a> From<&IntRef<'a>> for Int {
         fn from(value: &IntRef<'a>) -> Int {
-            let inner = Bytes::new(value.as_bytes()).expect("Invalid Int");
+            let inner = BytesOwned::new(value.as_bytes()).expect("Invalid Int");
             Int { inner }
         }
     }
@@ -303,13 +303,13 @@ mod allocating {
     #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     pub struct Uint {
         /// Inner value
-        inner: Bytes,
+        inner: BytesOwned,
     }
 
     impl Uint {
         /// Create a new [`Uint`] from a byte slice.
         pub fn new(bytes: &[u8]) -> Result<Self> {
-            let inner = Bytes::new(uint::strip_leading_zeroes(bytes))
+            let inner = BytesOwned::new(uint::strip_leading_zeroes(bytes))
                 .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
 
             Ok(Self { inner })
@@ -334,7 +334,7 @@ mod allocating {
 
     impl<'a> DecodeValue<'a> for Uint {
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            let bytes = Bytes::decode_value(reader, header)?;
+            let bytes = BytesOwned::decode_value(reader, header)?;
             let result = Self::new(uint::decode_to_slice(bytes.as_slice())?)?;
 
             // Ensure we compute the same encoded length as the original any value.
@@ -363,7 +363,7 @@ mod allocating {
 
     impl<'a> From<&UintRef<'a>> for Uint {
         fn from(value: &UintRef<'a>) -> Uint {
-            let inner = Bytes::new(value.as_bytes()).expect("Invalid Uint");
+            let inner = BytesOwned::new(value.as_bytes()).expect("Invalid Uint");
             Uint { inner }
         }
     }

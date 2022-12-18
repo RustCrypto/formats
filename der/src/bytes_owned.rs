@@ -10,7 +10,7 @@ use core::cmp::Ordering;
 
 /// Byte slice newtype which respects the `Length::max()` limit.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub(crate) struct Bytes {
+pub(crate) struct BytesOwned {
     /// Precomputed `Length` (avoids possible panicking conversions)
     length: Length,
 
@@ -18,8 +18,8 @@ pub(crate) struct Bytes {
     inner: Box<[u8]>,
 }
 
-impl Bytes {
-    /// Create a new [`Bytes`], ensuring that the provided `slice` value
+impl BytesOwned {
+    /// Create a new [`BytesOwned`], ensuring that the provided `slice` value
     /// is shorter than `Length::max()`.
     pub fn new(data: impl Into<Box<[u8]>>) -> Result<Self> {
         let inner: Box<[u8]> = data.into();
@@ -40,25 +40,25 @@ impl Bytes {
         self.length
     }
 
-    /// Is this [`Bytes`] empty?
+    /// Is this [`BytesOwned`] empty?
     pub fn is_empty(&self) -> bool {
         self.len() == Length::ZERO
     }
 }
 
-impl AsRef<[u8]> for Bytes {
+impl AsRef<[u8]> for BytesOwned {
     fn as_ref(&self) -> &[u8] {
         self.as_slice()
     }
 }
 
-impl<'a> DecodeValue<'a> for Bytes {
+impl<'a> DecodeValue<'a> for BytesOwned {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         reader.read_vec(header.length).and_then(Self::new)
     }
 }
 
-impl EncodeValue for Bytes {
+impl EncodeValue for BytesOwned {
     fn value_len(&self) -> Result<Length> {
         Ok(self.length)
     }
@@ -68,7 +68,7 @@ impl EncodeValue for Bytes {
     }
 }
 
-impl Default for Bytes {
+impl Default for BytesOwned {
     fn default() -> Self {
         Self {
             length: Length::ZERO,
@@ -77,25 +77,25 @@ impl Default for Bytes {
     }
 }
 
-impl DerOrd for Bytes {
+impl DerOrd for BytesOwned {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
         Ok(self.as_slice().cmp(other.as_slice()))
     }
 }
 
-impl From<StrRef<'_>> for Bytes {
-    fn from(s: StrRef<'_>) -> Bytes {
+impl From<StrRef<'_>> for BytesOwned {
+    fn from(s: StrRef<'_>) -> BytesOwned {
         let bytes = s.as_bytes();
         debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
 
-        Bytes {
+        BytesOwned {
             inner: Box::from(bytes),
             length: s.length,
         }
     }
 }
 
-impl OwnedToRef for Bytes {
+impl OwnedToRef for BytesOwned {
     type Borrowed<'a> = BytesRef<'a>;
     fn to_ref(&self) -> Self::Borrowed<'_> {
         BytesRef {
@@ -105,16 +105,16 @@ impl OwnedToRef for Bytes {
     }
 }
 
-impl From<BytesRef<'_>> for Bytes {
-    fn from(s: BytesRef<'_>) -> Bytes {
-        Bytes {
+impl From<BytesRef<'_>> for BytesOwned {
+    fn from(s: BytesRef<'_>) -> BytesOwned {
+        BytesOwned {
             length: s.length,
             inner: Box::from(s.inner),
         }
     }
 }
 
-impl TryFrom<&[u8]> for Bytes {
+impl TryFrom<&[u8]> for BytesOwned {
     type Error = Error;
 
     fn try_from(slice: &[u8]) -> Result<Self> {
@@ -125,7 +125,7 @@ impl TryFrom<&[u8]> for Bytes {
 // Implement by hand because the derive would create invalid values.
 // Make sure the length and the inner.len matches.
 #[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for Bytes {
+impl<'a> arbitrary::Arbitrary<'a> for BytesOwned {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         let length = u.arbitrary()?;
         Ok(Self {

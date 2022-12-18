@@ -126,12 +126,12 @@ impl<'a> arbitrary::Arbitrary<'a> for BytesRef<'a> {
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::BytesRef;
-    use crate::{referenced::RefToOwned, Bytes};
+    use crate::{referenced::RefToOwned, BytesOwned};
 
     impl<'a> RefToOwned<'a> for BytesRef<'a> {
-        type Owned = Bytes;
+        type Owned = BytesOwned;
         fn to_owned(&self) -> Self::Owned {
-            Bytes::from(*self)
+            BytesOwned::from(*self)
         }
     }
 }

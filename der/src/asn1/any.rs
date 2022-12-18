@@ -8,7 +8,7 @@ use crate::{
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use crate::Bytes;
+use crate::BytesOwned;
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
@@ -211,14 +211,14 @@ pub struct Any {
     tag: Tag,
 
     /// Inner value encoded as bytes.
-    value: Bytes,
+    value: BytesOwned,
 }
 
 #[cfg(feature = "alloc")]
 impl Any {
     /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
     pub fn new(tag: Tag, bytes: &[u8]) -> Result<Self> {
-        let value = Bytes::new(bytes)?;
+        let value = BytesOwned::new(bytes)?;
 
         // Ensure the tag and value are a valid `AnyRef`.
         AnyRef::new(tag, value.as_slice())?;
@@ -293,7 +293,7 @@ where
         let anyref: AnyRef<'a> = input.into();
         Self {
             tag: anyref.tag(),
-            value: Bytes::from(anyref.value),
+            value: BytesOwned::from(anyref.value),
         }
     }
 }
@@ -308,7 +308,7 @@ mod allocating {
         fn to_owned(&self) -> Self::Owned {
             Any {
                 tag: self.tag(),
-                value: Bytes::from(self.value),
+                value: BytesOwned::from(self.value),
             }
         }
     }

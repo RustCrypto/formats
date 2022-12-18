@@ -359,7 +359,7 @@ mod tag;
 mod writer;
 
 #[cfg(feature = "alloc")]
-mod bytes;
+mod bytes_owned;
 #[cfg(feature = "alloc")]
 mod document;
 
@@ -411,5 +411,5 @@ pub use zeroize;
 pub use crate::document::SecretDocument;
 
 #[cfg(feature = "alloc")]
-pub(crate) use crate::bytes::Bytes;
+pub(crate) use crate::bytes_owned::BytesOwned;
 pub(crate) use crate::{arrayvec::ArrayVec, bytes_ref::BytesRef, str_ref::StrRef};
