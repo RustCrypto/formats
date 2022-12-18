@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
-    Length, Reader, Result, StrSlice, Tag, Writer,
+    Length, Reader, Result, StrRef, Tag, Writer,
 };
 use core::{fmt, ops::Deref, str};
 
@@ -29,7 +29,7 @@ use {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Utf8StringRef<'a> {
     /// Inner value
-    inner: StrSlice<'a>,
+    inner: StrRef<'a>,
 }
 
 impl<'a> Utf8StringRef<'a> {
@@ -38,12 +38,12 @@ impl<'a> Utf8StringRef<'a> {
     where
         T: AsRef<[u8]> + ?Sized,
     {
-        StrSlice::from_bytes(input.as_ref()).map(|inner| Self { inner })
+        StrRef::from_bytes(input.as_ref()).map(|inner| Self { inner })
     }
 }
 
 impl<'a> Deref for Utf8StringRef<'a> {
-    type Target = StrSlice<'a>;
+    type Target = StrRef<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

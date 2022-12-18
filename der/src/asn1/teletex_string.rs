@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
-    Length, Reader, Result, StrSlice, Tag, Writer,
+    Length, Reader, Result, StrRef, Tag, Writer,
 };
 use core::{fmt, ops::Deref, str};
 
@@ -28,7 +28,7 @@ use crate::asn1::Any;
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct TeletexStringRef<'a> {
     /// Inner value
-    inner: StrSlice<'a>,
+    inner: StrRef<'a>,
 }
 
 impl<'a> TeletexStringRef<'a> {
@@ -44,14 +44,14 @@ impl<'a> TeletexStringRef<'a> {
             return Err(Self::TAG.value_error());
         }
 
-        StrSlice::from_bytes(input)
+        StrRef::from_bytes(input)
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error())
     }
 }
 
 impl<'a> Deref for TeletexStringRef<'a> {
-    type Target = StrSlice<'a>;
+    type Target = StrRef<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

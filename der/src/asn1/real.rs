@@ -8,8 +8,8 @@
 )]
 
 use crate::{
-    str_slice::StrSlice, ByteSlice, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader,
-    Result, Tag, Writer,
+    ByteSlice, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, StrRef, Tag,
+    Writer,
 };
 
 use super::integer::uint::strip_leading_zeroes;
@@ -74,7 +74,7 @@ impl<'a> DecodeValue<'a> for f64 {
                 _ => Err(Tag::Real.value_error()),
             }
         } else {
-            let astr = StrSlice::from_bytes(&bytes[1..])?;
+            let astr = StrRef::from_bytes(&bytes[1..])?;
             match astr.inner.parse::<f64>() {
                 Ok(val) => Ok(val),
                 // Real related error: encoding not supported or malformed

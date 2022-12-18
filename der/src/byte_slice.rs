@@ -2,7 +2,7 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    str_slice::StrSlice, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result,
+    StrRef, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result,
     Writer,
 };
 use core::cmp::Ordering;
@@ -86,8 +86,8 @@ impl DerOrd for ByteSlice<'_> {
     }
 }
 
-impl<'a> From<StrSlice<'a>> for ByteSlice<'a> {
-    fn from(s: StrSlice<'a>) -> ByteSlice<'a> {
+impl<'a> From<StrRef<'a>> for ByteSlice<'a> {
+    fn from(s: StrRef<'a>) -> ByteSlice<'a> {
         let bytes = s.as_bytes();
         debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
 

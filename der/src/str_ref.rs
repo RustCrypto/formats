@@ -6,7 +6,7 @@ use core::str;
 
 /// String slice newtype which respects the [`Length::max`] limit.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct StrSlice<'a> {
+pub struct StrRef<'a> {
     /// Inner value
     pub(crate) inner: &'a str,
 
@@ -14,8 +14,8 @@ pub struct StrSlice<'a> {
     pub(crate) length: Length,
 }
 
-impl<'a> StrSlice<'a> {
-    /// Create a new [`StrSlice`], ensuring that the byte representation of
+impl<'a> StrRef<'a> {
+    /// Create a new [`StrRef`], ensuring that the byte representation of
     /// the provided `str` value is shorter than `Length::max()`.
     pub fn new(s: &'a str) -> Result<Self> {
         Ok(Self {
@@ -24,7 +24,7 @@ impl<'a> StrSlice<'a> {
         })
     }
 
-    /// Parse a [`StrSlice`] from UTF-8 encoded bytes.
+    /// Parse a [`StrRef`] from UTF-8 encoded bytes.
     pub fn from_bytes(bytes: &'a [u8]) -> Result<Self> {
         Self::new(str::from_utf8(bytes)?)
     }
@@ -39,36 +39,36 @@ impl<'a> StrSlice<'a> {
         self.inner.as_bytes()
     }
 
-    /// Get the [`Length`] of this [`StrSlice`]
+    /// Get the [`Length`] of this [`StrRef`]
     pub fn len(self) -> Length {
         self.length
     }
 
-    /// Is this [`StrSlice`] empty?
+    /// Is this [`StrRef`] empty?
     pub fn is_empty(self) -> bool {
         self.len() == Length::ZERO
     }
 }
 
-impl AsRef<str> for StrSlice<'_> {
+impl AsRef<str> for StrRef<'_> {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
-impl AsRef<[u8]> for StrSlice<'_> {
+impl AsRef<[u8]> for StrRef<'_> {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
-impl<'a> DecodeValue<'a> for StrSlice<'a> {
+impl<'a> DecodeValue<'a> for StrRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Self::from_bytes(ByteSlice::decode_value(reader, header)?.as_slice())
     }
 }
 
-impl<'a> EncodeValue for StrSlice<'a> {
+impl<'a> EncodeValue for StrRef<'a> {
     fn value_len(&self) -> Result<Length> {
         Ok(self.length)
     }

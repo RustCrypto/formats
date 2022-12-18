@@ -354,7 +354,7 @@ mod header;
 mod length;
 mod ord;
 mod reader;
-mod str_slice;
+mod str_ref;
 mod tag;
 mod writer;
 
@@ -412,4 +412,4 @@ pub use crate::document::SecretDocument;
 
 #[cfg(feature = "alloc")]
 pub(crate) use crate::bytes::Bytes;
-pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
+pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_ref::StrRef};

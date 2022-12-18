@@ -2,7 +2,7 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    referenced::OwnedToRef, str_slice::StrSlice, ByteSlice, DecodeValue, DerOrd, EncodeValue,
+    referenced::OwnedToRef, StrRef, ByteSlice, DecodeValue, DerOrd, EncodeValue,
     Error, Header, Length, Reader, Result, Writer,
 };
 use alloc::boxed::Box;
@@ -83,8 +83,8 @@ impl DerOrd for Bytes {
     }
 }
 
-impl From<StrSlice<'_>> for Bytes {
-    fn from(s: StrSlice<'_>) -> Bytes {
+impl From<StrRef<'_>> for Bytes {
+    fn from(s: StrRef<'_>) -> Bytes {
         let bytes = s.as_bytes();
         debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
 
