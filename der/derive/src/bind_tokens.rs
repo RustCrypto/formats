@@ -16,28 +16,53 @@ impl IdentEq for Ident {
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) enum BindMode {
+    ValueOrd,
+    Sequence,
+}
+
 /// Trait for extending `syn::Ident` with a helper to generate the TokenStream for binding the type
 pub(crate) trait BindTokens {
-    fn to_bind_tokens(&self, lifetime: &TokenStream, attrs: &TypeAttrs) -> Option<TokenStream>;
+    fn to_bind_tokens(
+        &self,
+        lifetime: &TokenStream,
+        attrs: &TypeAttrs,
+        bind_mode: BindMode,
+    ) -> Option<TokenStream>;
 }
 
 impl BindTokens for Ident {
-    fn to_bind_tokens(&self, lifetime: &TokenStream, attrs: &TypeAttrs) -> Option<TokenStream> {
+    fn to_bind_tokens(
+        &self,
+        lifetime: &TokenStream,
+        attrs: &TypeAttrs,
+        bind_mode: BindMode,
+    ) -> Option<TokenStream> {
         let ident = self;
 
         let mut bounds = Vec::new();
 
         if attrs.params.iter().any(|i| ident.ident_eq(i)) {
-            bounds.push(quote! {
-                ::der::Choice<#lifetime> + ::der::Encode
-                    + ::der::ValueOrd + ::der::DerOrd
-            });
+            match bind_mode {
+                BindMode::ValueOrd => bounds.push(quote! {
+                    ::der::Decode<#lifetime> + ::der::Encode + ::der::FixedTag + ::der::ValueOrd + ::der::DerOrd
+                }),
+
+                BindMode::Sequence => bounds.push(quote! {
+                    ::der::Choice<#lifetime> + ::der::Encode
+                }),
+            }
         }
         if attrs.key.iter().any(|i| ident.ident_eq(i)) {
-            bounds.push(quote! {
-                ::der::Decode<#lifetime> + ::der::Encode + ::der::FixedTag
-                    + ::der::ValueOrd + ::der::DerOrd
-            });
+            match bind_mode {
+                BindMode::ValueOrd => bounds.push(quote! {
+                    ::der::Decode<#lifetime> + ::der::Encode + ::der::FixedTag + ::der::ValueOrd + ::der::DerOrd
+                }),
+                BindMode::Sequence => bounds.push(quote! {
+                    ::der::Decode<#lifetime> + ::der::Encode + ::der::FixedTag
+                }),
+            }
         }
 
         if !bounds.is_empty() {

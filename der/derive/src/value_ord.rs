@@ -5,7 +5,10 @@
 
 // TODO(tarcieri): enum support
 
-use crate::{bind_tokens::BindTokens, default_lifetime, FieldAttrs, TypeAttrs};
+use crate::{
+    bind_tokens::{BindMode, BindTokens},
+    default_lifetime, FieldAttrs, TypeAttrs,
+};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
@@ -111,7 +114,9 @@ impl DeriveValueOrd {
         for param in &self.type_parameters {
             type_parameters.push(param.clone());
 
-            if let Some(bound) = param.to_bind_tokens(&lifetime, &self.type_attrs) {
+            if let Some(bound) =
+                param.to_bind_tokens(&lifetime, &self.type_attrs, BindMode::ValueOrd)
+            {
                 type_parameters_bounds.push(bound);
             }
         }

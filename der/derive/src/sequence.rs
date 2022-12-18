@@ -3,7 +3,10 @@
 
 mod field;
 
-use crate::{bind_tokens::BindTokens, default_lifetime, TypeAttrs};
+use crate::{
+    bind_tokens::{BindMode, BindTokens},
+    default_lifetime, TypeAttrs,
+};
 use field::SequenceField;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
@@ -101,7 +104,9 @@ impl DeriveSequence {
         for param in &self.type_parameters {
             type_parameters.push(param.clone());
 
-            if let Some(bound) = param.to_bind_tokens(&lifetime, &self.type_attrs) {
+            if let Some(bound) =
+                param.to_bind_tokens(&lifetime, &self.type_attrs, BindMode::Sequence)
+            {
                 type_parameters_bounds.push(bound);
             }
         }
