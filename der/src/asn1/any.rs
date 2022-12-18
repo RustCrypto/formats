@@ -319,4 +319,11 @@ mod allocating {
             self.into()
         }
     }
+
+    impl Any {
+        /// Is this value an ASN.1 `NULL` value?
+        pub fn is_null(&self) -> bool {
+            self.to_ref() == AnyRef::NULL
+        }
+    }
 }

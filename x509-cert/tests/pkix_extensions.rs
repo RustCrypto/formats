@@ -550,11 +550,21 @@ fn decode_cert() {
         "1.2.840.113549.1.1.11"
     );
     assert_eq!(
-        cert.tbs_certificate.signature.parameters.unwrap().tag(),
+        cert.tbs_certificate
+            .signature
+            .parameters
+            .as_ref()
+            .unwrap()
+            .tag(),
         Tag::Null
     );
     assert_eq!(
-        cert.tbs_certificate.signature.parameters.unwrap().is_null(),
+        cert.tbs_certificate
+            .signature
+            .parameters
+            .as_ref()
+            .unwrap()
+            .is_null(),
         true
     );
 
@@ -656,6 +666,7 @@ fn decode_cert() {
             .subject_public_key_info
             .algorithm
             .parameters
+            .as_ref()
             .unwrap()
             .tag(),
         Tag::Null
@@ -665,6 +676,7 @@ fn decode_cert() {
             .subject_public_key_info
             .algorithm
             .parameters
+            .as_ref()
             .unwrap()
             .is_null(),
         true
@@ -730,7 +742,7 @@ fn decode_cert() {
         "1.2.840.113549.1.1.11"
     );
     assert_eq!(
-        cert.signature_algorithm.parameters.unwrap().tag(),
+        cert.signature_algorithm.parameters.as_ref().unwrap().tag(),
         Tag::Null
     );
     assert_eq!(cert.signature_algorithm.parameters.unwrap().is_null(), true);

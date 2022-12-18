@@ -104,7 +104,7 @@ pub struct Signature<'a> {
     pub signature: BitStringRef<'a>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
-    pub certs: Option<Vec<Certificate<'a>>>,
+    pub certs: Option<Vec<Certificate>>,
 }
 
 /// OCSP `Version` as defined in [RFC 6960 Section 4.1.1].
