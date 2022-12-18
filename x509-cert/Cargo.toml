@@ -19,7 +19,7 @@ arbitrary = { version = "1.2.0", features = ["derive"], optional = true }
 const-oid = { version = "=0.10.0-pre", features = ["db"], path = "../const-oid" }
 der = { version = "=0.7.0-pre", features = ["derive", "alloc", "flagset"], path = "../der" }
 flagset = { version = "0.4.3" }
-spki = { version = "=0.7.0-pre", path = "../spki" }
+spki = { version = "=0.7.0-pre", path = "../spki", features = ["alloc"] }
 
 [dev-dependencies]
 hex-literal = "0.3"
