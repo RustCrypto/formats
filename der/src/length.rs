@@ -205,6 +205,10 @@ impl<'a> Decode<'a> for Length {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
             // lengths, which are not allowed in DER, so disallow that byte.
             len if len < 0x80 => Ok(len.into()),
+            // Note: we don't know the length so we set it to zero. Consumers like
+            // Header should make sure to use the correct length.
+            #[cfg(feature = "lax")]
+            _len @ 0x80 => Ok(Self::ZERO),
             // 1-4 byte variable-sized length prefix
             tag @ 0x81..=0x84 => {
                 let nbytes = tag.checked_sub(0x80).ok_or(ErrorKind::Overlength)? as usize;
@@ -355,6 +359,8 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "lax"))]
+    // Note: lax mode allows for reading BER-style indefinte length
     fn reject_indefinite_lengths() {
         assert!(Length::from_der(&[0x80]).is_err());
     }

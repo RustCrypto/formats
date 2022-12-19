@@ -8,6 +8,9 @@ use crate::{
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
+#[cfg(feature = "lax")]
+use crate::decode::Decode;
+
 /// ASN.1 `OCTET STRING` type: borrowed form.
 ///
 /// Octet strings represent contiguous sequences of octets, a.k.a. bytes.
@@ -51,6 +54,14 @@ impl AsRef<[u8]> for OctetStringRef<'_> {
 
 impl<'a> DecodeValue<'a> for OctetStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        #[cfg(feature = "lax")]
+        /// only reads a single value of a constructed OctetString
+        if header.length == Length::ZERO {
+            let header = Header::decode(reader)?;
+            let inner = ByteSlice::decode_value(reader, header)?;
+            return Ok(Self { inner });
+        }
+       
         let inner = ByteSlice::decode_value(reader, header)?;
         Ok(Self { inner })
     }

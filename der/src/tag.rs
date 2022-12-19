@@ -281,6 +281,8 @@ impl TryFrom<u8> for Tag {
             0x18 => Ok(Tag::GeneralizedTime),
             0x1A => Ok(Tag::VisibleString),
             0x1d => Ok(Tag::BmpString),
+            #[cfg(feature = "lax")]
+            0x24 => Ok(Tag::OctetString), // constructed
             0x30 => Ok(Tag::Sequence), // constructed
             0x31 => Ok(Tag::Set),      // constructed
             0x40..=0x7E => Ok(Tag::Application {

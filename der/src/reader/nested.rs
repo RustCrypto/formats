@@ -12,16 +12,32 @@ pub struct NestedReader<'i, R> {
 
     /// Position within the nested input.
     position: Length,
+
+    /// Keeps track if the reader has indefinite length
+    indefinite: bool,
 }
 
 impl<'i, 'r, R: Reader<'r>> NestedReader<'i, R> {
     /// Create a new nested reader which can read the given [`Length`].
     pub(crate) fn new(inner: &'i mut R, len: Length) -> Result<Self> {
+
+        #[cfg(feature = "lax")]
+        if len.is_zero() {
+
+            return Ok(Self {
+                inner: inner,
+                input_len: len,
+                position: Length::ZERO,
+                indefinite: true,
+            })
+        }
+
         if len <= inner.remaining_len() {
             Ok(Self {
                 inner,
                 input_len: len,
                 position: Length::ZERO,
+                indefinite: false,
             })
         } else {
             Err(ErrorKind::Incomplete {
@@ -37,7 +53,7 @@ impl<'i, 'r, R: Reader<'r>> NestedReader<'i, R> {
     fn advance_position(&mut self, len: Length) -> Result<()> {
         let new_position = (self.position + len)?;
 
-        if new_position <= self.input_len {
+        if self.indefinite | (new_position <= self.input_len) {
             self.position = new_position;
             Ok(())
         } else {
@@ -53,6 +69,16 @@ impl<'i, 'r, R: Reader<'r>> NestedReader<'i, R> {
 impl<'i, 'r, R: Reader<'r>> Reader<'r> for NestedReader<'i, R> {
     fn input_len(&self) -> Length {
         self.input_len
+    }
+
+    /// Get the number of bytes still remaining in the buffer or inner buffer remaining_len when indefinire
+    fn remaining_len(&self) -> Length {
+        if self.indefinite {
+            return self.inner.remaining_len()
+        }
+        
+        debug_assert!(self.position() <= self.input_len());
+        self.input_len().saturating_sub(self.position())
     }
 
     fn peek_byte(&self) -> Option<u8> {

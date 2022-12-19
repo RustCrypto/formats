@@ -15,6 +15,9 @@ use crate::{
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
+#[cfg(feature = "lax")]
+const EOC_LENGTH: Length = Length::new(2);
+
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Sized {
     /// Get the length of the input.
@@ -56,7 +59,12 @@ pub trait Reader<'r>: Sized {
 
     /// Decode a value which impls the [`Decode`] trait.
     fn decode<T: Decode<'r>>(&mut self) -> Result<T> {
-        T::decode(self).map_err(|e| e.nested(self.position()))
+        let value = T::decode(self).map_err(|e| e.nested(self.position()));
+
+        #[cfg(feature = "lax")]
+        self.read_eoc()?;
+
+        value
     }
 
     /// Return an error with the given [`ErrorKind`], annotating it with
@@ -67,8 +75,18 @@ pub trait Reader<'r>: Sized {
 
     /// Finish decoding, returning the given value if there is no
     /// remaining data, or an error otherwise
-    fn finish<T>(self, value: T) -> Result<T> {
+    fn finish<T>(&mut self, value: T) -> Result<T> {
+        #[cfg(feature = "lax")]
+        self.read_eoc()?;
+
         if !self.is_finished() {
+            // Note: lax mode never finishes
+            #[cfg(feature = "lax")]
+            {
+                return Ok(value);
+            }
+            
+
             Err(ErrorKind::TrailingData {
                 decoded: self.position(),
                 remaining: self.remaining_len(),
@@ -109,6 +127,20 @@ pub trait Reader<'r>: Sized {
         let mut buf = [0];
         self.read_into(&mut buf)?;
         Ok(buf[0])
+    }
+
+    #[cfg(feature = "lax")]
+    /// Read a end-of-content value and verify it.
+    fn read_eoc(&mut self) -> Result<()> {
+        let next = self.peek_byte();
+        if next == Some(0) {
+            let eoc = self.read_slice(EOC_LENGTH)?;
+            if eoc.ne(&[0u8, 0]) {
+                return Err(ErrorKind::EndOfContent.at(self.position()))
+            }
+        }
+
+        Ok(())
     }
 
     /// Attempt to read input data, writing it into the provided buffer, and

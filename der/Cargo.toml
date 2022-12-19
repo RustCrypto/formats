@@ -30,6 +30,7 @@ proptest = "1"
 [features]
 alloc = []
 derive = ["der_derive"]
+lax = []
 oid = ["const-oid"]
 pem = ["alloc", "pem-rfc7468/alloc", "zeroize"]
 real = []

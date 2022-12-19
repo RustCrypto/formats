@@ -97,10 +97,16 @@ impl<'a> Reader<'a> for SliceReader<'a> {
             return Err(self.error(ErrorKind::Failed));
         }
 
-        T::decode(self).map_err(|e| {
+        let value = T::decode(self).map_err(|e| {
             self.failed = true;
             e.nested(self.position)
-        })
+        });
+
+        // Note: peek to see if BER-style indefinite length sections ends now
+        #[cfg(feature = "lax")]
+        self.read_eoc()?;
+
+        value
     }
 
     fn error(&mut self, kind: ErrorKind) -> Error {
@@ -108,7 +114,10 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         kind.at(self.position)
     }
 
-    fn finish<T>(self, value: T) -> Result<T> {
+    fn finish<T>(&mut self, value: T) -> Result<T> {
+        #[cfg(feature = "lax")]
+        self.read_eoc()?;
+
         if self.is_failed() {
             Err(ErrorKind::Failed.at(self.position))
         } else if !self.is_finished() {
