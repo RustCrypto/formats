@@ -15,6 +15,7 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
+arbitrary = { version = "1.2.0", features = ["derive"], optional = true }
 const-oid = { version = "=0.10.0-pre", features = ["db"], path = "../const-oid" }
 der = { version = "=0.7.0-pre", features = ["derive", "alloc", "flagset"], path = "../der" }
 flagset = { version = "0.4.3" }
@@ -26,8 +27,9 @@ rstest = "0.16"
 
 [features]
 alloc = ["der/alloc"]
-std = ["der/std", "spki/std"]
+arbitrary = ["std", "dep:arbitrary", "const-oid/arbitrary", "der/arbitrary", "spki/arbitrary"]
 pem = ["alloc", "der/pem"]
+std = ["der/std", "spki/std"]
 
 [package.metadata.docs.rs]
 all-features = true

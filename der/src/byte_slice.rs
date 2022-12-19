@@ -106,6 +106,23 @@ impl<'a> TryFrom<&'a [u8]> for ByteSlice<'a> {
     }
 }
 
+// Implement by hand because the derive would create invalid values.
+// Make sure the length and the inner.len matches.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for ByteSlice<'a> {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let length = u.arbitrary()?;
+        Ok(Self {
+            length,
+            inner: u.bytes(u32::from(length) as usize)?,
+        })
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        arbitrary::size_hint::and(Length::size_hint(depth), (0, None))
+    }
+}
+
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::ByteSlice;

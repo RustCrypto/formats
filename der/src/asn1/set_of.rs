@@ -375,6 +375,26 @@ where
     }
 }
 
+// Implement by hand because the derive would create invalid values.
+// Use the conversion from Vec to create a valid value.
+#[cfg(feature = "arbitrary")]
+impl<'a, T> arbitrary::Arbitrary<'a> for SetOfVec<T>
+where
+    T: DerOrd + arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Self::try_from(
+            u.arbitrary_iter()?
+                .collect::<std::result::Result<Vec<_>, _>>()?,
+        )
+        .map_err(|_| arbitrary::Error::IncorrectFormat)
+    }
+
+    fn size_hint(_depth: usize) -> (usize, Option<usize>) {
+        (0, None)
+    }
+}
+
 /// Sort a mut slice according to its [`DerOrd`], returning any errors which
 /// might occur during the comparison.
 ///

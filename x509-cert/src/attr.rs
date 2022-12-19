@@ -85,6 +85,7 @@ pub type Attributes = SetOfVec<Attribute>;
 /// ```
 ///
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct AttributeTypeAndValue {

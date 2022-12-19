@@ -122,7 +122,7 @@ mod allocating {
     }
 
     impl Uint {
-        /// Create a new [`UintRef`] from a byte slice.
+        /// Create a new [`Uint`] from a byte slice.
         pub fn new(bytes: &[u8]) -> Result<Self> {
             let inner = Bytes::new(uint::strip_leading_zeroes(bytes))
                 .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
@@ -136,7 +136,7 @@ mod allocating {
             self.inner.as_slice()
         }
 
-        /// Get the length of this [`UintRef`] in bytes.
+        /// Get the length of this [`Uint`] in bytes.
         pub fn len(&self) -> Length {
             self.inner.len()
         }
