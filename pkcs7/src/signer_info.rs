@@ -1,4 +1,4 @@
-//! `encrypted-data` content type [RFC 5652 § 8](https://datatracker.ietf.org/doc/html/rfc5652#section-8)
+//! `SignerInfo` data type [RFC 5652 § 5.3](https://datatracker.ietf.org/doc/html/rfc5652#section-5.3)
 
 use core::cmp::Ordering;
 
@@ -8,10 +8,24 @@ use der::{Sequence, Choice, asn1::{OctetStringRef, SetOfVec}, ValueOrd,
 use spki::{AlgorithmIdentifierRef};
 use x509_cert::{ext::pkix::{SubjectKeyIdentifier}, attr::{Attribute}, name::Name};
 
+/// ```text
+/// DigestAlgorithmIdentifier ::= AlgorithmIdentifier
+/// ```
 type DigestAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
+
+/// ```text
+/// SignatureAlgorithmIdentifier ::= AlgorithmIdentifier
+/// ```
 type SignatureAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
 
+/// ```text
+/// SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+/// ```
 type SignedAttributes<'a>  = SetOfVec<Attribute>;
+
+/// ```text
+/// UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+/// ```
 type UnsignedAttributes<'a>  = SetOfVec<Attribute>;
 
 /// ```text
@@ -44,23 +58,18 @@ pub struct IssuerAndSerialNumber {
 pub type SignerInfos<'a> = SetOfVec<SignerInfo<'a>>;
 
 
-/// Encrypted-data content type [RFC 5652 § 8](https://datatracker.ietf.org/doc/html/rfc5652#section-8)
+/// `SignerInfo` data type [RFC 5652 § 5.3](https://datatracker.ietf.org/doc/html/rfc5652#section-5.3)
 ///
 /// ```text
-/// EncryptedData ::= SEQUENCE {
-///   version Version,
-///   encryptedContentInfo EncryptedContentInfo }
+/// SignerInfo ::= SEQUENCE {
+///     version CMSVersion,
+///     sid SignerIdentifier,
+///     digestAlgorithm DigestAlgorithmIdentifier,
+///     signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
+///     signatureAlgorithm SignatureAlgorithmIdentifier,
+///     signature SignatureValue,
+///     unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
 /// ```
-///
-/// The encrypted-data content type consists of encrypted content of any
-/// type. Unlike the enveloped-data content type, the encrypted-data
-/// content type has neither recipients nor encrypted content-encryption
-/// keys. Keys are assumed to be managed by other means.
-///
-/// The fields of type EncryptedData have the following meanings:
-///   - [`version`](EncryptedDataContent::version) is the syntax version number.
-///   - [`encrypted_content_info`](EncryptedDataContent::encrypted_content_info) is the encrypted content
-///     information, as in [EncryptedContentInfo].
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct SignerInfo<'a> {
     /// the syntax version number.
