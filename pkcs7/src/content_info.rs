@@ -26,7 +26,6 @@ pub enum ContentInfo<'a> {
     SignedData(Option<SignedDataContent<'a>>),
 
     /// Catch-all case for content types that are not explicitly supported
-    ///   - signed-data
     ///   - enveloped-data
     ///   - signed-and-enveloped-data
     ///   - digested-data
