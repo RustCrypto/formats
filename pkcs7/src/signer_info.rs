@@ -2,7 +2,7 @@
 
 use core::cmp::Ordering;
 
-use crate::{cms_version::CMSVersion};
+use crate::{cms_version::{CmsVersion}};
 use der::{Sequence, Choice, asn1::{OctetStringRef, SetOfVec}, ValueOrd,
 };
 use spki::{AlgorithmIdentifierRef};
@@ -73,7 +73,7 @@ pub type SignerInfos<'a> = SetOfVec<SignerInfo<'a>>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct SignerInfo<'a> {
     /// the syntax version number.
-    pub version: CMSVersion,
+    pub version: CmsVersion,
 
     /// the signer identifier
     pub sid: SignerIdentifier<'a>,

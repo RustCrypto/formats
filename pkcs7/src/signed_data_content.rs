@@ -1,6 +1,6 @@
 //! `signed-data` content type [RFC 5652 § 5](https://datatracker.ietf.org/doc/html/rfc5652#section-5)
 
-use crate::{signer_info::{SignerInfos}, encapsulated_content_info::EncapsulatedContentInfo, certificate_choices::CertificateChoices, revocation_info_choices::RevocationInfoChoices, cms_version::CMSVersion};
+use crate::{signer_info::{SignerInfos}, encapsulated_content_info::EncapsulatedContentInfo, certificate_choices::CertificateChoices, revocation_info_choices::RevocationInfoChoices, cms_version::{CmsVersion}};
 use der::{Sequence, asn1::{SetOfVec}};
 use spki::{AlgorithmIdentifierRef};
 
@@ -33,7 +33,7 @@ type CertificateSet<'a> = SetOfVec<CertificateChoices<'a>>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct SignedDataContent<'a> {
     /// the syntax version number.
-    pub version: CMSVersion,
+    pub version: CmsVersion,
 
     /// digest algorithm
     pub digest_algorithms: DigestAlgorithmIdentifiers<'a>,
