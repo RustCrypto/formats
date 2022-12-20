@@ -13,6 +13,8 @@
 //! up to 62-bit length values.
 use alloc::vec::Vec;
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
@@ -197,6 +199,7 @@ impl<T: Size> Size for &[T] {
 /// Variable-length encoded byte vectors.
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
@@ -381,6 +384,7 @@ impl Size for &VLBytes {
     }
 }
 
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct VLByteSlice<'a>(pub &'a [u8]);
 
 impl<'a> VLByteSlice<'a> {
