@@ -3,7 +3,7 @@
 use core::cmp::Ordering;
 
 use crate::{cms_version::{CmsVersion}};
-use der::{Sequence, Choice, asn1::{OctetStringRef, SetOfVec}, ValueOrd,
+use der::{Sequence, Choice, asn1::{OctetStringRef, SetOfVec, UintRef}, ValueOrd,
 };
 use spki::{AlgorithmIdentifierRef};
 use x509_cert::{ext::pkix::{SubjectKeyIdentifier}, attr::{Attribute}, name::Name};
@@ -35,7 +35,7 @@ type UnsignedAttributes<'a>  = SetOfVec<Attribute>;
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 pub enum SignerIdentifier<'a> {
-    IssuerAndSerialNumber(IssuerAndSerialNumber),
+    IssuerAndSerialNumber(IssuerAndSerialNumber<'a>),
 
     #[asn1(context_specific = "0")]
     SubjectKeyIdentifier(SubjectKeyIdentifier<'a>),
@@ -44,9 +44,9 @@ pub enum SignerIdentifier<'a> {
 
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct IssuerAndSerialNumber {
+pub struct IssuerAndSerialNumber<'a> {
     pub name: Name,
-    pub serial_number: u8,
+    pub serial_number: UintRef<'a>,
 }
 
 
