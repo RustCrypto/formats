@@ -1,6 +1,5 @@
 //! `encapsulated-data` content type [RFC 5652 § 5.2](https://datatracker.ietf.org/doc/html/rfc5652#section-5.2)
 
-use crate::{ContentType};
 use der::{Sequence, AnyRef};
 use spki::ObjectIdentifier;
 
