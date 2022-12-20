@@ -37,6 +37,7 @@ pub struct OtherCertificateFormat<'a> {
 ///     otherCert ANY DEFINED BY otherCertFormat }
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
+#[allow(clippy::large_enum_variant)]
 pub enum CertificateChoices<'a> {
     Certificate(Certificate<'a>),
 

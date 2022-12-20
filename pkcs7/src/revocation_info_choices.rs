@@ -17,6 +17,7 @@ use x509_cert::{crl::CertificateList};
 ///   otherRevInfo ANY DEFINED BY otherRevInfoFormat }
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
+#[allow(clippy::large_enum_variant)]
 pub enum RevocationInfoChoice<'a> {
     Crl(CertificateList<'a>),
 
