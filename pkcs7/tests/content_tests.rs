@@ -1,13 +1,13 @@
 //! PKCS#7 example tests
 
 use der::{
-    asn1::{ObjectIdentifier, OctetStringRef},
-    Decode, SliceWriter,
+    asn1::{ObjectIdentifier, OctetStringRef, SequenceRef},
+    Decode, SliceWriter
 };
 use hex_literal::hex;
 use pkcs7::{
     encrypted_data_content::EncryptedDataContent, enveloped_data_content::EncryptedContentInfo,
-    ContentInfo, ContentType,
+    ContentInfo, ContentType, signed_data_content::SignedDataContent, encapsulated_content_info::EncapsulatedContentInfo
 };
 use spki::AlgorithmIdentifierRef;
 use std::fs;
@@ -80,4 +80,59 @@ fn decode_encrypted_key_example() {
     let encoded_content = encode_content_info(&content, &mut buf);
 
     assert_eq!(encoded_content, bytes)
+}
+
+#[test]
+fn decode_signed_mdm_example() {
+    let path = "./tests/examples/apple_mdm_signature_der.bin";
+    let bytes = fs::read(&path).expect(&format!("Failed to read from {}", &path));
+
+    let content = ContentInfo::from_der(&bytes).expect("expected valid data");
+
+    match content {
+        ContentInfo::SignedData(Some(SignedDataContent{
+            version: _,
+            digest_algorithms: _,
+            encap_content_info: EncapsulatedContentInfo {
+                e_content_type: _,
+                e_content: Some(content),
+            },
+            certificates: _,
+            crls: _,
+            signer_infos: _,
+        })) => {
+            let _content  = content.decode_into::<SequenceRef>().expect("Content should be in the correct format: SequenceRef");
+            
+        },
+        _ => panic!("expected ContentInfo::SignedData(Some(_))"),
+    }
+
+}
+
+#[test]
+fn decode_signed_scep_example() {
+    let path = "./tests/examples/scep_der.bin";
+    let bytes = fs::read(&path).expect(&format!("Failed to read from {}", &path));
+
+    let content = ContentInfo::from_der(&bytes).expect("expected valid data");
+
+    match content {
+        ContentInfo::SignedData(Some(SignedDataContent{
+            version: _,
+            digest_algorithms: _,
+            encap_content_info: EncapsulatedContentInfo {
+                e_content_type: _,
+                e_content: Some(content),
+            },
+            certificates: _,
+            crls: _,
+            signer_infos: _,
+        })) => {
+            let _content  = content.decode_into::<OctetStringRef>().expect("Content should be in the correct format: OctetStringRef");
+            
+            // assert_eq!(data.signer_infos.get(0).unwrap().unsigned_attributes, None)
+        },
+        _ => panic!("expected ContentInfo::SignedData(Some(_))"),
+    }
+
 }

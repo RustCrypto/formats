@@ -8,14 +8,20 @@
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
+mod certificate_choices;
+mod cms_version;
 mod content_info;
 mod content_type;
+mod revocation_info_choices;
+mod signer_info;
 
 pub use crate::{content_info::ContentInfo, content_type::ContentType};
 
 pub mod data_content;
+pub mod encapsulated_content_info;
 pub mod encrypted_data_content;
 pub mod enveloped_data_content;
+pub mod signed_data_content;
 
 use der::asn1::ObjectIdentifier;
 
