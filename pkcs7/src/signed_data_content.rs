@@ -1,8 +1,12 @@
 //! `signed-data` content type [RFC 5652 § 5](https://datatracker.ietf.org/doc/html/rfc5652#section-5)
 
-use crate::{signer_info::{SignerInfos}, encapsulated_content_info::EncapsulatedContentInfo, certificate_choices::CertificateChoices, revocation_info_choices::RevocationInfoChoices, cms_version::{CmsVersion}};
-use der::{Sequence, asn1::{SetOfVec}};
-use spki::{AlgorithmIdentifierRef};
+use crate::{
+    certificate_choices::CertificateChoices, cms_version::CmsVersion,
+    encapsulated_content_info::EncapsulatedContentInfo,
+    revocation_info_choices::RevocationInfoChoices, signer_info::SignerInfos,
+};
+use der::{asn1::SetOfVec, Sequence};
+use spki::AlgorithmIdentifierRef;
 
 /// ```text
 /// DigestAlgorithmIdentifier ::= AlgorithmIdentifier
@@ -50,5 +54,5 @@ pub struct SignedDataContent<'a> {
     pub crls: Option<RevocationInfoChoices<'a>>,
 
     /// signer info
-    pub signer_infos: SignerInfos<'a>
+    pub signer_infos: SignerInfos<'a>,
 }

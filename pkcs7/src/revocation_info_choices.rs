@@ -2,10 +2,9 @@
 
 use core::cmp::Ordering;
 
-use der::{Choice,  Sequence,  asn1::{SetOfVec}, ValueOrd, AnyRef,
-};
-use spki::{ObjectIdentifier};
-use x509_cert::{crl::CertificateList};
+use der::{asn1::SetOfVec, AnyRef, Choice, Sequence, ValueOrd};
+use spki::ObjectIdentifier;
+use x509_cert::crl::CertificateList;
 
 /// ```text
 /// RevocationInfoChoices ::= SET OF RevocationInfoChoice
@@ -38,11 +37,11 @@ pub type RevocationInfoChoices<'a> = SetOfVec<RevocationInfoChoice<'a>>;
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 pub struct OtherRevocationInfoFormat<'a> {
     other_rev_info_format: ObjectIdentifier,
-    other_rev_info: AnyRef<'a>
+    other_rev_info: AnyRef<'a>,
 }
 
 // TODO: figure out what ordering makes sense - if any
-impl ValueOrd for RevocationInfoChoice<'_>  {
+impl ValueOrd for RevocationInfoChoice<'_> {
     fn value_cmp(&self, _other: &Self) -> der::Result<Ordering> {
         Ok(Ordering::Equal)
     }

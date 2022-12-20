@@ -2,11 +2,13 @@
 
 use core::cmp::Ordering;
 
-use crate::{cms_version::{CmsVersion}};
-use der::{Sequence, Choice, asn1::{OctetStringRef, SetOfVec, UintRef}, ValueOrd,
+use crate::cms_version::CmsVersion;
+use der::{
+    asn1::{OctetStringRef, SetOfVec, UintRef},
+    Choice, Sequence, ValueOrd,
 };
-use spki::{AlgorithmIdentifierRef};
-use x509_cert::{ext::pkix::{SubjectKeyIdentifier}, attr::{Attribute}, name::Name};
+use spki::AlgorithmIdentifierRef;
+use x509_cert::{attr::Attribute, ext::pkix::SubjectKeyIdentifier, name::Name};
 
 /// ```text
 /// DigestAlgorithmIdentifier ::= AlgorithmIdentifier
@@ -21,12 +23,12 @@ type SignatureAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
 /// ```text
 /// SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 /// ```
-type SignedAttributes<'a>  = SetOfVec<Attribute>;
+type SignedAttributes<'a> = SetOfVec<Attribute>;
 
 /// ```text
 /// UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 /// ```
-type UnsignedAttributes<'a>  = SetOfVec<Attribute>;
+type UnsignedAttributes<'a> = SetOfVec<Attribute>;
 
 /// ```text
 /// SignerIdentifier ::= CHOICE {
@@ -41,7 +43,6 @@ pub enum SignerIdentifier<'a> {
     SubjectKeyIdentifier(SubjectKeyIdentifier<'a>),
 }
 
-
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct IssuerAndSerialNumber<'a> {
@@ -49,14 +50,10 @@ pub struct IssuerAndSerialNumber<'a> {
     pub serial_number: UintRef<'a>,
 }
 
-
-
-
 /// ```text
 /// SignerInfos ::= SET OF SignerInfo
 /// ```
 pub type SignerInfos<'a> = SetOfVec<SignerInfo<'a>>;
-
 
 /// `SignerInfo` data type [RFC 5652 § 5.3](https://datatracker.ietf.org/doc/html/rfc5652#section-5.3)
 ///
@@ -94,7 +91,6 @@ pub struct SignerInfo<'a> {
     /// the unsigned attributes
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub unsigned_attributes: Option<UnsignedAttributes<'a>>,
-
 }
 
 impl<'a> SignerInfo<'a> {
@@ -104,7 +100,7 @@ impl<'a> SignerInfo<'a> {
 }
 
 // TODO: figure out what ordering makes sense - if any
-impl ValueOrd for SignerInfo<'_>  {
+impl ValueOrd for SignerInfo<'_> {
     fn value_cmp(&self, _other: &Self) -> der::Result<Ordering> {
         Ok(Ordering::Equal)
     }

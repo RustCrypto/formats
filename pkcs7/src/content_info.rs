@@ -1,4 +1,7 @@
-use crate::{data_content::DataContent, encrypted_data_content::EncryptedDataContent, ContentType, signed_data_content::SignedDataContent};
+use crate::{
+    data_content::DataContent, encrypted_data_content::EncryptedDataContent,
+    signed_data_content::SignedDataContent, ContentType,
+};
 
 use der::{
     asn1::{ContextSpecific, OctetStringRef},
@@ -81,7 +84,10 @@ impl<'a> DecodeValue<'a> for ContentInfo<'a> {
                     reader.context_specific(CONTENT_TAG, TagMode::Explicit)?,
                 )),
                 ContentType::SignedData => Ok(ContentInfo::SignedData(
-                    reader.context_specific::<SignedDataContent<'_>>(CONTENT_TAG, TagMode::Explicit)?,
+                    reader.context_specific::<SignedDataContent<'_>>(
+                        CONTENT_TAG,
+                        TagMode::Explicit,
+                    )?,
                 )),
                 _ => Ok(ContentInfo::Other((
                     content_type,

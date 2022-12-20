@@ -1,6 +1,4 @@
-use der::{FixedTag, Tag, DecodeValue, EncodeValue, Length, Writer, Reader, Header};
-
-
+use der::{DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Tag, Writer};
 
 /// The CMSVersion type gives a syntax version number, for compatibility
 /// with future revisions of this specification.
@@ -17,7 +15,7 @@ pub enum CmsVersion {
     V2 = 2,
     V3 = 3,
     V4 = 4,
-    V5 = 5
+    V5 = 5,
 }
 
 impl FixedTag for CmsVersion {

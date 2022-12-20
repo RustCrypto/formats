@@ -1,6 +1,6 @@
 //! `encapsulated-data` content type [RFC 5652 § 5.2](https://datatracker.ietf.org/doc/html/rfc5652#section-5.2)
 
-use der::{Sequence, AnyRef};
+use der::{AnyRef, Sequence};
 use spki::ObjectIdentifier;
 
 /// Encapsulated content information [RFC 5652 § 5.2](https://datatracker.ietf.org/doc/html/rfc5652#section-5.2)
@@ -26,5 +26,4 @@ pub struct EncapsulatedContentInfo<'a> {
     /// encapsulated content
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub e_content: Option<AnyRef<'a>>,
-
 }
