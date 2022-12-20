@@ -1,7 +1,5 @@
 //! `CertificateChoices` [RFC 5652 10.2.2](https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.2)
 
-use core::cmp::Ordering;
-
 use der::{Choice, asn1::{BitStringRef}, ValueOrd, Sequence, AnyRef,
 };
 use spki::ObjectIdentifier;
@@ -18,7 +16,7 @@ pub type ExtendedCertificate<'a> = BitStringRef<'a>;
 ///     otherCertFormat OBJECT IDENTIFIER,
 ///     otherCert ANY DEFINED BY otherCertFormat }
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Sequence)]
+#[derive(Clone, Debug, PartialEq, Eq, Sequence, ValueOrd)]
 pub struct OtherCertificateFormat<'a> {
     other_cert_format: ObjectIdentifier,
     other_cert: AnyRef<'a>
@@ -36,7 +34,7 @@ pub struct OtherCertificateFormat<'a> {
 ///     otherCertFormat OBJECT IDENTIFIER,
 ///     otherCert ANY DEFINED BY otherCertFormat }
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Choice)]
+#[derive(Clone, Debug, PartialEq, Eq, Choice, ValueOrd)]
 #[allow(clippy::large_enum_variant)]
 pub enum CertificateChoices<'a> {
     Certificate(Certificate<'a>),
@@ -54,11 +52,4 @@ pub enum CertificateChoices<'a> {
 
     #[asn1(context_specific = "3", tag_mode = "IMPLICIT")]
     Other(OtherCertificateFormat<'a>),
-}
-
-// TODO: figure out what ordering makes sense - if any
-impl ValueOrd for CertificateChoices<'_>  {
-    fn value_cmp(&self, _other: &Self) -> der::Result<Ordering> {
-        Ok(Ordering::Equal)
-    }
 }
