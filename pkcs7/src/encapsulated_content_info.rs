@@ -2,6 +2,7 @@
 
 use crate::{ContentType};
 use der::{Sequence, AnyRef};
+use spki::ObjectIdentifier;
 
 /// Encapsulated content information [RFC 5652 § 5.2](https://datatracker.ietf.org/doc/html/rfc5652#section-5.2)
 ///
@@ -21,7 +22,7 @@ use der::{Sequence, AnyRef};
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Sequence)]
 pub struct EncapsulatedContentInfo<'a> {
     /// indicates the type of content.
-    pub e_content_type: ContentType,
+    pub e_content_type: ObjectIdentifier,
 
     /// encapsulated content
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
