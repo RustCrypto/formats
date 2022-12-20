@@ -2,12 +2,13 @@
 
 use der::{
     asn1::{ObjectIdentifier, OctetStringRef, SequenceRef},
-    Decode, SliceWriter
+    Decode, SliceWriter,
 };
 use hex_literal::hex;
 use pkcs7::{
+    encapsulated_content_info::EncapsulatedContentInfo,
     encrypted_data_content::EncryptedDataContent, enveloped_data_content::EncryptedContentInfo,
-    ContentInfo, ContentType, signed_data_content::SignedDataContent, encapsulated_content_info::EncapsulatedContentInfo
+    signed_data_content::SignedDataContent, ContentInfo, ContentType,
 };
 use spki::AlgorithmIdentifierRef;
 use std::fs;
@@ -90,23 +91,24 @@ fn decode_signed_mdm_example() {
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
     match content {
-        ContentInfo::SignedData(Some(SignedDataContent{
+        ContentInfo::SignedData(Some(SignedDataContent {
             version: _,
             digest_algorithms: _,
-            encap_content_info: EncapsulatedContentInfo {
-                e_content_type: _,
-                e_content: Some(content),
-            },
+            encap_content_info:
+                EncapsulatedContentInfo {
+                    e_content_type: _,
+                    e_content: Some(content),
+                },
             certificates: _,
             crls: _,
             signer_infos: _,
         })) => {
-            let _content  = content.decode_into::<SequenceRef>().expect("Content should be in the correct format: SequenceRef");
-            
-        },
+            let _content = content
+                .decode_into::<SequenceRef>()
+                .expect("Content should be in the correct format: SequenceRef");
+        }
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
     }
-
 }
 
 #[test]
@@ -117,22 +119,22 @@ fn decode_signed_scep_example() {
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
     match content {
-        ContentInfo::SignedData(Some(SignedDataContent{
+        ContentInfo::SignedData(Some(SignedDataContent {
             version: _,
             digest_algorithms: _,
-            encap_content_info: EncapsulatedContentInfo {
-                e_content_type: _,
-                e_content: Some(content),
-            },
+            encap_content_info:
+                EncapsulatedContentInfo {
+                    e_content_type: _,
+                    e_content: Some(content),
+                },
             certificates: _,
             crls: _,
             signer_infos: _,
         })) => {
-            let _content  = content.decode_into::<OctetStringRef>().expect("Content should be in the correct format: OctetStringRef");
-            
-            // assert_eq!(data.signer_infos.get(0).unwrap().unsigned_attributes, None)
-        },
+            let _content = content
+                .decode_into::<OctetStringRef>()
+                .expect("Content should be in the correct format: OctetStringRef");
+        }
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
     }
-
 }
