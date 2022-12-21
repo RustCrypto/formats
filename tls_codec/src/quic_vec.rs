@@ -14,7 +14,7 @@
 use alloc::vec::Vec;
 
 #[cfg(feature = "arbitrary")]
-use arbitrary::Arbitrary;
+use arbitrary::{Arbitrary, Unstructured};
 #[cfg(feature = "serde")]
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
@@ -199,7 +199,6 @@ impl<T: Size> Size for &[T] {
 /// Variable-length encoded byte vectors.
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
@@ -384,7 +383,6 @@ impl Size for &VLBytes {
     }
 }
 
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct VLByteSlice<'a>(pub &'a [u8]);
 
 impl<'a> VLByteSlice<'a> {
@@ -418,5 +416,19 @@ impl<'a> Size for VLByteSlice<'a> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.0)
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a> Arbitrary<'a> for VLBytes {
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        // We generate an arbitrary `Vec<u8>` ...
+        let mut vec = Vec::arbitrary(u)?;
+        // ... and truncate it to `MAX_LEN`.
+        vec.truncate(MAX_LEN as usize);
+        // We probably won't exceed `MAX_LEN` in practice, e.g., during fuzzing,
+        // but better make sure that we generate valid instances.
+
+        Ok(Self { vec })
     }
 }
