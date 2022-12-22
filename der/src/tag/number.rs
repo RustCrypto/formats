@@ -186,3 +186,16 @@ impl fmt::Display for TagNumber {
         write!(f, "{}", self.0)
     }
 }
+
+// Implement by hand because the derive would create invalid values.
+// Use the constructor to create a valid value.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for TagNumber {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Ok(Self::new(u.int_in_range(0..=Self::MAX)?))
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        u8::size_hint(depth)
+    }
+}

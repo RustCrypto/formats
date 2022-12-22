@@ -21,6 +21,7 @@ pub type Name = RdnSequence;
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RdnSequence(pub Vec<RelativeDistinguishedName>);
 
@@ -124,6 +125,7 @@ pub type DistinguishedName = RdnSequence;
 /// ```
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RelativeDistinguishedName(pub SetOfVec<AttributeTypeAndValue>);
 

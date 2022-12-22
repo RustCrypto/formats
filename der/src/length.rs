@@ -286,6 +286,19 @@ impl fmt::Display for Length {
     }
 }
 
+// Implement by hand because the derive would create invalid values.
+// Generate a u32 with a valid range.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for Length {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Ok(Self(u.int_in_range(0..=MAX_U32)?))
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        u32::size_hint(depth)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Length;

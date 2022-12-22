@@ -195,6 +195,40 @@ impl TryFrom<AnyRef<'_>> for UtcTime {
     }
 }
 
+// Implement by hand because the derive would create invalid values.
+// Use the conversion from DateTime to create a valid value.
+// The DateTime type has a way bigger range of valid years than UtcTime,
+// so the DateTime year is mapped into a valid range to throw away less inputs.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for UtcTime {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        const MIN_YEAR: u16 = 1970;
+        const VALID_YEAR_COUNT: u16 = MAX_YEAR - MIN_YEAR + 1;
+        const AVERAGE_SECONDS_IN_YEAR: u64 = 31_556_952;
+
+        let datetime = DateTime::arbitrary(u)?;
+        let year = datetime.year();
+        let duration = datetime.unix_duration();
+
+        // Clamp the year into a valid range to not throw away too much input
+        let valid_year = (year.saturating_sub(MIN_YEAR))
+            .rem_euclid(VALID_YEAR_COUNT)
+            .saturating_add(MIN_YEAR);
+        let year_to_remove = year.saturating_sub(valid_year);
+        let valid_duration = duration
+            - Duration::from_secs(
+                u64::from(year_to_remove).saturating_mul(AVERAGE_SECONDS_IN_YEAR),
+            );
+
+        Self::from_date_time(DateTime::from_unix_duration(valid_duration).expect("supported range"))
+            .map_err(|_| arbitrary::Error::IncorrectFormat)
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        DateTime::size_hint(depth)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::UtcTime;

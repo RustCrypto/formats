@@ -1,4 +1,5 @@
 //! ASN.1 `ANY` type.
+#![cfg_attr(feature = "arbitrary", allow(clippy::integer_arithmetic))]
 
 use crate::{
     asn1::*, ByteSlice, Choice, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind,
@@ -23,6 +24,7 @@ use crate::asn1::ObjectIdentifier;
 /// Nevertheless, this crate defines an `ANY` type as it remains a familiar
 /// and useful concept which is still extensively used in things like
 /// PKI-related RFCs.
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct AnyRef<'a> {
     /// Tag representing the type of the encoded value.
@@ -202,6 +204,7 @@ impl<'a> TryFrom<&'a [u8]> for AnyRef<'a> {
 /// backing data.
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Any {
     /// Tag representing the type of the encoded value.

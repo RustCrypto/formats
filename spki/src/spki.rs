@@ -38,6 +38,7 @@ pub type SubjectPublicKeyInfoOwned = SubjectPublicKeyInfo<Any, BitString>;
 /// ```
 ///
 /// [RFC 5280 § 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SubjectPublicKeyInfo<Params, Key> {
     /// X.509 [`AlgorithmIdentifier`] for the public key type

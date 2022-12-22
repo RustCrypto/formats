@@ -1,4 +1,5 @@
 //! ASN.1 `GeneralizedTime` support.
+#![cfg_attr(feature = "arbitrary", allow(clippy::integer_arithmetic))]
 
 use crate::{
     asn1::AnyRef,
@@ -26,6 +27,7 @@ use time::PrimitiveDateTime;
 /// > is zero.  GeneralizedTime values MUST NOT include fractional seconds.
 ///
 /// [1]: https://tools.ietf.org/html/rfc5280#section-4.1.2.5.2
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct GeneralizedTime(DateTime);
 

@@ -121,3 +121,20 @@ impl TryFrom<&[u8]> for Bytes {
         Self::new(slice)
     }
 }
+
+// Implement by hand because the derive would create invalid values.
+// Make sure the length and the inner.len matches.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for Bytes {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let length = u.arbitrary()?;
+        Ok(Self {
+            length,
+            inner: Box::from(u.bytes(u32::from(length) as usize)?),
+        })
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        arbitrary::size_hint::and(Length::size_hint(depth), (0, None))
+    }
+}

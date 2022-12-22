@@ -198,6 +198,23 @@ impl<'a> FixedTag for BitStringRef<'a> {
     const TAG: Tag = Tag::BitString;
 }
 
+// Implement by hand because the derive would create invalid values.
+// Use the constructor to create a valid value.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for BitStringRef<'a> {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Self::new(
+            u.int_in_range(0..=Self::MAX_UNUSED_BITS)?,
+            ByteSlice::arbitrary(u)?.as_slice(),
+        )
+        .map_err(|_| arbitrary::Error::IncorrectFormat)
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        arbitrary::size_hint::and(u8::size_hint(depth), ByteSlice::size_hint(depth))
+    }
+}
+
 /// Owned form of ASN.1 `BIT STRING` type.
 ///
 /// This type provides the same functionality as [`BitStringRef`] but owns the

@@ -19,6 +19,7 @@ use der::asn1::Any;
 /// ```
 ///
 /// [RFC 5280 Section 4.1.1.2]: https://tools.ietf.org/html/rfc5280#section-4.1.1.2
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct AlgorithmIdentifier<Params> {
     /// Algorithm OID, i.e. the `algorithm` field in the `AlgorithmIdentifier`

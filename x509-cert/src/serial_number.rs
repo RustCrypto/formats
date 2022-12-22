@@ -73,3 +73,18 @@ impl<'a> DecodeValue<'a> for SerialNumber {
 impl FixedTag for SerialNumber {
     const TAG: Tag = <Uint as FixedTag>::TAG;
 }
+
+// Implement by hand because the derive would create invalid values.
+// Use the constructor to create a valid value.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for SerialNumber {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let len = u.int_in_range(0u32..=Self::MAX_LEN.into())?;
+
+        Self::new(u.bytes(len as usize)?).map_err(|_| arbitrary::Error::IncorrectFormat)
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        arbitrary::size_hint::and(u32::size_hint(depth), (0, None))
+    }
+}
