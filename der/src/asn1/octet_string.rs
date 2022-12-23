@@ -1,8 +1,8 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, ErrorKind,
-    FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, Decode, DecodeValue, EncodeValue, Error,
+    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -40,6 +40,11 @@ impl<'a> OctetStringRef<'a> {
     /// Is the inner byte slice empty?
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
+    }
+
+    /// Parse `T` from this `OCTET STRING`'s contents.
+    pub fn decode_into<T: Decode<'a>>(&self) -> Result<T> {
+        Decode::from_der(self.as_bytes())
     }
 }
 
@@ -180,3 +185,18 @@ impl<'a> From<&'a OctetString> for OctetStringRef<'a> {
 
 #[cfg(feature = "alloc")]
 impl OrdIsValueOrd for OctetString {}
+
+#[cfg(test)]
+mod tests {
+    use crate::asn1::{OctetStringRef, PrintableStringRef};
+
+    #[test]
+    fn octet_string_decode_into() {
+        // PrintableString "hi"
+        let der = b"\x13\x02\x68\x69";
+        let oct = OctetStringRef::new(der).unwrap();
+
+        let res = oct.decode_into::<PrintableStringRef<'_>>().unwrap();
+        assert_eq!(AsRef::<str>::as_ref(&res), "hi");
+    }
+}
