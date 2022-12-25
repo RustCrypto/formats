@@ -11,6 +11,9 @@ use der::asn1::BitStringRef;
 use der::{Decode, Enumerated, Sequence};
 use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfoRef};
 
+#[cfg(feature = "pem")]
+use der::pem::PemLabel;
+
 /// Version identifier for certification request information.
 ///
 /// (RFC 2986 designates `0` as the only valid version)
@@ -79,6 +82,12 @@ pub struct CertReq<'a> {
 
     /// Signature.
     pub signature: BitStringRef<'a>,
+}
+
+#[cfg(feature = "pem")]
+#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
+impl PemLabel for CertReq<'_> {
+    const PEM_LABEL: &'static str = "CERTIFICATE REQUEST";
 }
 
 impl<'a> TryFrom<&'a [u8]> for CertReq<'a> {
