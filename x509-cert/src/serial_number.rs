@@ -1,5 +1,7 @@
 //! X.509 serial number
 
+use core::fmt::Display;
+
 use der::{
     asn1::Uint, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
     ValueOrd, Writer,
@@ -74,6 +76,21 @@ impl FixedTag for SerialNumber {
     const TAG: Tag = <Uint as FixedTag>::TAG;
 }
 
+impl Display for SerialNumber {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut iter = self.as_bytes().iter().peekable();
+
+        while let Some(byte) = iter.next() {
+            match iter.peek() {
+                Some(_) => write!(f, "{:02X}:", byte)?,
+                None => write!(f, "{:02X}", byte)?,
+            }
+        }
+
+        Ok(())
+    }
+}
+
 // Implement by hand because the derive would create invalid values.
 // Use the constructor to create a valid value.
 #[cfg(feature = "arbitrary")]
@@ -86,5 +103,19 @@ impl<'a> arbitrary::Arbitrary<'a> for SerialNumber {
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
         arbitrary::size_hint::and(u32::size_hint(depth), (0, None))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use alloc::string::ToString;
+
+    use super::*;
+
+    #[test]
+    fn serial_number_display() {
+        let sn = SerialNumber::new(&[0xAA, 0xBB, 0xCC, 0x01, 0x10, 0x00, 0x11]).unwrap();
+
+        assert_eq!(sn.to_string(), "AA:BB:CC:01:10:00:11")
     }
 }
