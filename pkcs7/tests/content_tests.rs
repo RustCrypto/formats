@@ -135,7 +135,7 @@ fn decode_signed_scep_example() {
                 .decode_into::<OctetStringRef>()
                 .expect("Content should be in the correct format: OctetStringRef");
 
-            assert_eq!(ver, CmsVersion::V3)
+            assert_eq!(ver, CmsVersion::V1)
         }
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
     }

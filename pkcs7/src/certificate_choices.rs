@@ -38,17 +38,17 @@ pub enum CertificateChoices<'a> {
     /// X.509 certificate
     Certificate(Certificate<'a>),
 
-    /// PKCS #6 extended certificate [PKCS#6] (obsolete)
+    /// PKCS #6 extended certificate (obsolete)
     #[deprecated]
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
     ExtendedCertificate(ExtendedCertificate<'a>),
 
-    /// version 1 X.509 attribute certificate (ACv1) [X.509-97] (obsolete)
+    /// version 1 X.509 attribute certificate (ACv1) X.509-97 (obsolete)
     #[deprecated]
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT")]
     V1AttrCert(AttributeCertificateV1<'a>),
 
-    /// version 2 X.509 attribute certificate (ACv2) [X.509-00]
+    /// version 2 X.509 attribute certificate (ACv2) X.509-00
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT")]
     V2AttrCert(AttributeCertificateV2<'a>),
 
