@@ -1,3 +1,5 @@
+//! `CMSVersion` [RFC 5652 § 10.2.5](https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.5)
+
 use der::{DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Tag, Writer};
 
 /// The CMSVersion type gives a syntax version number, for compatibility
@@ -10,11 +12,17 @@ use der::{DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Tag, Write
 /// See [RFC 5652 10.2.5](https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.5).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum CmsVersion {
+    /// syntax version 0
     V0 = 0,
+    /// syntax version 1
     V1 = 1,
+    /// syntax version 2
     V2 = 2,
+    /// syntax version 3
     V3 = 3,
+    /// syntax version 4
     V4 = 4,
+    /// syntax version 5
     V5 = 5,
 }
 

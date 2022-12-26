@@ -5,9 +5,9 @@ use spki::ObjectIdentifier;
 use x509_cert::Certificate;
 
 // TODO (smndtrl): Should come from x509 - for now I haven't found a test case in real world
-pub type AttributeCertificateV1<'a> = BitStringRef<'a>;
-pub type AttributeCertificateV2<'a> = BitStringRef<'a>;
-pub type ExtendedCertificate<'a> = BitStringRef<'a>;
+type AttributeCertificateV1<'a> = BitStringRef<'a>;
+type AttributeCertificateV2<'a> = BitStringRef<'a>;
+type ExtendedCertificate<'a> = BitStringRef<'a>;
 
 /// ```text
 /// OtherCertificateFormat ::= SEQUENCE {
@@ -35,19 +35,24 @@ pub struct OtherCertificateFormat<'a> {
 #[derive(Clone, Debug, PartialEq, Eq, Choice, ValueOrd)]
 #[allow(clippy::large_enum_variant)]
 pub enum CertificateChoices<'a> {
+    /// X.509 certificate
     Certificate(Certificate<'a>),
 
+    /// PKCS #6 extended certificate [PKCS#6] (obsolete)
     #[deprecated]
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
     ExtendedCertificate(ExtendedCertificate<'a>),
 
+    /// version 1 X.509 attribute certificate (ACv1) [X.509-97] (obsolete)
     #[deprecated]
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT")]
     V1AttrCert(AttributeCertificateV1<'a>),
 
+    /// version 2 X.509 attribute certificate (ACv2) [X.509-00]
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT")]
     V2AttrCert(AttributeCertificateV2<'a>),
 
+    /// any other certificate forma
     #[asn1(context_specific = "3", tag_mode = "IMPLICIT")]
     Other(OtherCertificateFormat<'a>),
 }

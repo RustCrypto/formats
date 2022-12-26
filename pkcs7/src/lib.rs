@@ -8,18 +8,18 @@
 #![forbid(unsafe_code, clippy::unwrap_used)]
 #![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
 
-mod certificate_choices;
-mod cms_version;
 mod content_info;
 mod content_type;
-mod revocation_info_choices;
 
 pub use crate::{content_info::ContentInfo, content_type::ContentType};
 
+pub mod certificate_choices;
+pub mod cms_version;
 pub mod data_content;
 pub mod encapsulated_content_info;
 pub mod encrypted_data_content;
 pub mod enveloped_data_content;
+pub mod revocation_info_choices;
 pub mod signed_data_content;
 pub mod signer_info;
 

@@ -6,7 +6,7 @@ use der::{
 };
 use hex_literal::hex;
 use pkcs7::{
-    encapsulated_content_info::EncapsulatedContentInfo,
+    cms_version::CmsVersion, encapsulated_content_info::EncapsulatedContentInfo,
     encrypted_data_content::EncryptedDataContent, enveloped_data_content::EncryptedContentInfo,
     signed_data_content::SignedDataContent, ContentInfo, ContentType,
 };
@@ -120,7 +120,7 @@ fn decode_signed_scep_example() {
 
     match content {
         ContentInfo::SignedData(Some(SignedDataContent {
-            version: _,
+            version: ver,
             digest_algorithms: _,
             encap_content_info:
                 EncapsulatedContentInfo {
@@ -134,6 +134,8 @@ fn decode_signed_scep_example() {
             let _content = content
                 .decode_into::<OctetStringRef>()
                 .expect("Content should be in the correct format: OctetStringRef");
+
+            assert_eq!(ver, CmsVersion::V3)
         }
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
     }
