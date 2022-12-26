@@ -4,11 +4,13 @@ use core::cmp::Ordering;
 
 use crate::cms_version::CmsVersion;
 use der::{
-    asn1::{OctetStringRef, SetOfVec, UintRef},
+    asn1::{OctetStringRef, SetOfVec},
     Choice, Sequence, ValueOrd,
 };
 use spki::AlgorithmIdentifierRef;
-use x509_cert::{attr::Attribute, ext::pkix::SubjectKeyIdentifier, name::Name};
+use x509_cert::{
+    attr::Attribute, ext::pkix::SubjectKeyIdentifier, name::Name, serial_number::SerialNumber,
+};
 
 /// ```text
 /// DigestAlgorithmIdentifier ::= AlgorithmIdentifier
@@ -37,17 +39,19 @@ type UnsignedAttributes<'a> = SetOfVec<Attribute>;
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 pub enum SignerIdentifier<'a> {
-    IssuerAndSerialNumber(IssuerAndSerialNumber<'a>),
+    /// issuer and serial number
+    IssuerAndSerialNumber(IssuerAndSerialNumber),
 
+    /// subject key identifier
     #[asn1(context_specific = "0")]
     SubjectKeyIdentifier(SubjectKeyIdentifier<'a>),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct IssuerAndSerialNumber<'a> {
+pub struct IssuerAndSerialNumber {
     pub name: Name,
-    pub serial_number: UintRef<'a>,
+    pub serial_number: SerialNumber,
 }
 
 /// ```text
@@ -91,12 +95,6 @@ pub struct SignerInfo<'a> {
     /// the unsigned attributes
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub unsigned_attributes: Option<UnsignedAttributes<'a>>,
-}
-
-impl<'a> SignerInfo<'a> {
-    pub fn get_signature(&self) -> &[u8] {
-        self.signature.as_bytes()
-    }
 }
 
 // TODO: figure out what ordering makes sense - if any

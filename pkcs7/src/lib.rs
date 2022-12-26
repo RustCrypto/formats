@@ -13,7 +13,6 @@ mod cms_version;
 mod content_info;
 mod content_type;
 mod revocation_info_choices;
-mod signer_info;
 
 pub use crate::{content_info::ContentInfo, content_type::ContentType};
 
@@ -22,6 +21,7 @@ pub mod encapsulated_content_info;
 pub mod encrypted_data_content;
 pub mod enveloped_data_content;
 pub mod signed_data_content;
+pub mod signer_info;
 
 use der::asn1::ObjectIdentifier;
 
