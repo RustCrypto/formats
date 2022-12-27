@@ -287,6 +287,14 @@ impl SecretDocument {
         write_secret_file(path, self.to_pem(label, line_ending)?.as_bytes())
     }
 }
+
+#[cfg(feature = "zeroize")]
+impl AsRef<[u8]> for SecretDocument {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
 #[cfg(feature = "zeroize")]
 impl Debug for SecretDocument {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
