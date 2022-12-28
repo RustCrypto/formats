@@ -3,7 +3,7 @@
 use core::fmt::Display;
 
 use der::{
-    asn1::Uint, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
+    asn1::Int, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
     ValueOrd, Writer,
 };
 
@@ -25,7 +25,7 @@ use der::{
 ///   gracefully handle such certificates.
 #[derive(Clone, Debug, Eq, PartialEq, ValueOrd, PartialOrd, Ord)]
 pub struct SerialNumber {
-    inner: Uint,
+    inner: Int,
 }
 
 impl SerialNumber {
@@ -34,7 +34,7 @@ impl SerialNumber {
 
     /// Create a new [`SerialNumber`] from a byte slice.
     pub fn new(bytes: &[u8]) -> Result<Self> {
-        let inner = Uint::new(bytes)?;
+        let inner = Int::new(bytes)?;
 
         if inner.len() > SerialNumber::MAX_LEN {
             return Err(ErrorKind::Overlength.into());
@@ -62,7 +62,7 @@ impl EncodeValue for SerialNumber {
 
 impl<'a> DecodeValue<'a> for SerialNumber {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let inner = Uint::decode_value(reader, header)?;
+        let inner = Int::decode_value(reader, header)?;
 
         if inner.len() > SerialNumber::MAX_LEN {
             return Err(ErrorKind::Overlength.into());
@@ -73,7 +73,7 @@ impl<'a> DecodeValue<'a> for SerialNumber {
 }
 
 impl FixedTag for SerialNumber {
-    const TAG: Tag = <Uint as FixedTag>::TAG;
+    const TAG: Tag = <Int as FixedTag>::TAG;
 }
 
 impl Display for SerialNumber {
