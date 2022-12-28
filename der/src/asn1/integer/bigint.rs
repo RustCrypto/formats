@@ -405,9 +405,72 @@ mod allocating {
 mod tests {
     use super::UintRef;
     use crate::{
-        asn1::{integer::tests::*, AnyRef},
+        asn1::{integer::tests::*, AnyRef, IntRef},
         Decode, Encode, ErrorKind, SliceWriter, Tag,
     };
+
+    #[test]
+    fn decode_int_bytes() {
+        // Positive numbers decode, but have zero extensions as necessary
+        // (to distinguish them from negative representations).
+        assert_eq!(&[0], IntRef::from_der(I0_BYTES).unwrap().as_bytes());
+        assert_eq!(&[127], IntRef::from_der(I127_BYTES).unwrap().as_bytes());
+        assert_eq!(&[0, 128], IntRef::from_der(I128_BYTES).unwrap().as_bytes());
+        assert_eq!(&[0, 255], IntRef::from_der(I255_BYTES).unwrap().as_bytes());
+
+        assert_eq!(
+            &[0x01, 0x00],
+            IntRef::from_der(I256_BYTES).unwrap().as_bytes()
+        );
+
+        assert_eq!(
+            &[0x7F, 0xFF],
+            IntRef::from_der(I32767_BYTES).unwrap().as_bytes()
+        );
+
+        // Negative integers decode.
+        assert_eq!(&[128], IntRef::from_der(INEG128_BYTES).unwrap().as_bytes());
+        assert_eq!(
+            &[255, 127],
+            IntRef::from_der(INEG129_BYTES).unwrap().as_bytes()
+        );
+        assert_eq!(
+            &[128, 0],
+            IntRef::from_der(INEG32768_BYTES).unwrap().as_bytes()
+        );
+    }
+
+    #[test]
+    fn encode_int_bytes() {
+        for &example in &[
+            I0_BYTES,
+            I127_BYTES,
+            I128_BYTES,
+            I255_BYTES,
+            I256_BYTES,
+            I32767_BYTES,
+        ] {
+            let uint = IntRef::from_der(example).unwrap();
+
+            let mut buf = [0u8; 128];
+            let mut encoder = SliceWriter::new(&mut buf);
+            uint.encode(&mut encoder).unwrap();
+
+            let result = encoder.finish().unwrap();
+            assert_eq!(example, result);
+        }
+
+        for &example in &[INEG128_BYTES, INEG129_BYTES, INEG32768_BYTES] {
+            let uint = IntRef::from_der(example).unwrap();
+
+            let mut buf = [0u8; 128];
+            let mut encoder = SliceWriter::new(&mut buf);
+            uint.encode(&mut encoder).unwrap();
+
+            let result = encoder.finish().unwrap();
+            assert_eq!(example, result);
+        }
+    }
 
     #[test]
     fn decode_uint_bytes() {
