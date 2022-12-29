@@ -1,4 +1,7 @@
-use crate::{data_content::DataContent, encrypted_data_content::EncryptedDataContent, ContentType};
+use crate::{
+    data_content::DataContent, encrypted_data_content::EncryptedDataContent,
+    signed_data_content::SignedDataContent, ContentType,
+};
 
 use der::{
     asn1::{ContextSpecific, OctetStringRef},
@@ -22,8 +25,10 @@ pub enum ContentInfo<'a> {
     /// Content type `encrypted-data`
     EncryptedData(Option<EncryptedDataContent<'a>>),
 
+    /// Content type `signed-data`
+    SignedData(Option<SignedDataContent<'a>>),
+
     /// Catch-all case for content types that are not explicitly supported
-    ///   - signed-data
     ///   - enveloped-data
     ///   - signed-and-enveloped-data
     ///   - digested-data
@@ -36,6 +41,7 @@ impl<'a> ContentInfo<'a> {
         match self {
             Self::Data(_) => ContentType::Data,
             Self::EncryptedData(_) => ContentType::EncryptedData,
+            Self::SignedData(_) => ContentType::SignedData,
             Self::Other((content_type, _)) => *content_type,
         }
     }
@@ -52,6 +58,7 @@ impl<'a> ContentInfo<'a> {
         match content_type {
             ContentType::Data => ContentInfo::Data(None),
             ContentType::EncryptedData => ContentInfo::EncryptedData(None),
+            ContentType::SignedData => ContentInfo::SignedData(None),
             _ => ContentInfo::Other((content_type, None)),
         }
     }
@@ -75,6 +82,12 @@ impl<'a> DecodeValue<'a> for ContentInfo<'a> {
                 )),
                 ContentType::EncryptedData => Ok(ContentInfo::EncryptedData(
                     reader.context_specific(CONTENT_TAG, TagMode::Explicit)?,
+                )),
+                ContentType::SignedData => Ok(ContentInfo::SignedData(
+                    reader.context_specific::<SignedDataContent<'_>>(
+                        CONTENT_TAG,
+                        TagMode::Explicit,
+                    )?,
                 )),
                 _ => Ok(ContentInfo::Other((
                     content_type,
@@ -106,6 +119,14 @@ impl<'a> Sequence<'a> for ContentInfo<'a> {
                     tag_number: CONTENT_TAG,
                     tag_mode: TagMode::Explicit,
                     value: *d,
+                }),
+            ]),
+            Self::SignedData(data) => f(&[
+                &self.content_type(),
+                &data.as_ref().map(|d| ContextSpecific {
+                    tag_number: CONTENT_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value: d.clone(),
                 }),
             ]),
             Self::Other((content_type, opt_oct_str)) => f(&[
