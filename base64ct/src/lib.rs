@@ -7,6 +7,7 @@
 #![doc = include_str!("../README.md")]
 #![warn(
     clippy::integer_arithmetic,
+    clippy::mod_module_files,
     clippy::panic,
     clippy::panic_in_result_fn,
     clippy::unwrap_used,

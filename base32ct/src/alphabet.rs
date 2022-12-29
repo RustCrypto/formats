@@ -28,7 +28,7 @@ pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
             // Compute exclusive range from inclusive one
             let start = *range.start() as i16 - 1;
             let end = *range.end() as i16 + 1;
-            ret += (((start - src as i16) & (src as i16 - end)) >> 8) & (src as i16 + *offset);
+            ret += (((start - src) & (src - end)) >> 8) & (src + *offset);
         }
 
         ret
