@@ -1,7 +1,5 @@
 //! `SignerInfo` data type [RFC 5652 § 5.3](https://datatracker.ietf.org/doc/html/rfc5652#section-5.3)
 
-use core::cmp::Ordering;
-
 use crate::cms_version::CmsVersion;
 use der::{
     asn1::{OctetStringRef, SetOfVec},
@@ -37,7 +35,7 @@ type UnsignedAttributes<'a> = SetOfVec<Attribute>;
 //    issuerAndSerialNumber IssuerAndSerialNumber,
 //    subjectKeyIdentifier [0] SubjectKeyIdentifier }
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Choice)]
+#[derive(Clone, Debug, PartialEq, Eq, Choice, ValueOrd)]
 pub enum SignerIdentifier<'a> {
     /// issuer and serial number
     IssuerAndSerialNumber(IssuerAndSerialNumber),
@@ -47,7 +45,7 @@ pub enum SignerIdentifier<'a> {
     SubjectKeyIdentifier(SubjectKeyIdentifier<'a>),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct IssuerAndSerialNumber {
     pub name: Name,
@@ -71,7 +69,7 @@ pub type SignerInfos<'a> = SetOfVec<SignerInfo<'a>>;
 ///     signature SignatureValue,
 ///     unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
 /// ```
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 pub struct SignerInfo<'a> {
     /// the syntax version number.
     pub version: CmsVersion,
@@ -95,11 +93,4 @@ pub struct SignerInfo<'a> {
     /// the unsigned attributes
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub unsigned_attributes: Option<UnsignedAttributes<'a>>,
-}
-
-// TODO: figure out what ordering makes sense - if any
-impl ValueOrd for SignerInfo<'_> {
-    fn value_cmp(&self, _other: &Self) -> der::Result<Ordering> {
-        Ok(Ordering::Equal)
-    }
 }
