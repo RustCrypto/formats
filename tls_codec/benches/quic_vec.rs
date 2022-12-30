@@ -73,7 +73,7 @@ fn slice(c: &mut Criterion) {
         b.iter_batched(
             || vec![77u8; 65535],
             |long_vector| {
-                let _serialized_long_vec = (&long_vector).tls_serialize_detached().unwrap();
+                let _serialized_long_vec = long_vector.tls_serialize_detached().unwrap();
             },
             BatchSize::SmallInput,
         )
