@@ -186,6 +186,19 @@ impl<'a> From<&'a OctetString> for OctetStringRef<'a> {
 #[cfg(feature = "alloc")]
 impl OrdIsValueOrd for OctetString {}
 
+// Implement by hand because the derive would create invalid values.
+// Use the constructor to create a valid value.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for OctetString {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Self::new(Vec::arbitrary(u)?).map_err(|_| arbitrary::Error::IncorrectFormat)
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        arbitrary::size_hint::and(u8::size_hint(depth), Vec::<u8>::size_hint(depth))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::asn1::{OctetStringRef, PrintableStringRef};
