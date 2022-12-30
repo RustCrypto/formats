@@ -2,7 +2,7 @@
 
 use der::{
     asn1::{ObjectIdentifier, OctetStringRef, SequenceRef},
-    Decode, SliceWriter,
+    Decode, Encode, Length, SliceWriter,
 };
 use hex_literal::hex;
 use pkcs7::{
@@ -136,6 +136,30 @@ fn decode_signed_scep_example() {
                 .expect("Content should be in the correct format: OctetStringRef");
 
             assert_eq!(ver, CmsVersion::V1)
+        }
+        _ => panic!("expected ContentInfo::SignedData(Some(_))"),
+    }
+}
+
+#[test]
+fn decode_signed_ber() {
+    let path = "./tests/examples/cms_der.bin";
+    let bytes = fs::read(&path).expect(&format!("Failed to read from {}", &path));
+
+    let content = ContentInfo::from_der(&bytes).expect("expected valid data");
+
+    match content {
+        ContentInfo::SignedData(Some(data)) => {
+            assert_eq!(
+                data.encap_content_info
+                    .e_content
+                    .unwrap()
+                    .decode_into::<OctetStringRef>()
+                    .unwrap()
+                    .as_bytes()
+                    .len(),
+                10034
+            )
         }
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
     }
