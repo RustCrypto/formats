@@ -4,11 +4,12 @@ pub(super) mod bigint;
 pub(super) mod int;
 pub(super) mod uint;
 
+use core::{cmp::Ordering, mem};
+
 use crate::{
     asn1::AnyRef, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader,
     Result, SliceWriter, Tag, ValueOrd, Writer,
 };
-use core::{cmp::Ordering, mem};
 
 macro_rules! impl_int_encoding {
     ($($int:ty => $uint:ty),+) => {

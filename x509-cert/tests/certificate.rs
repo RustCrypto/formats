@@ -371,3 +371,18 @@ fn decode_cert() {
         cert.signature.raw_bytes()
     );
 }
+
+#[test]
+fn decode_cert_negative_serial_number() {
+    let der_encoded_cert = include_bytes!("examples/28903a635b5280fae6774c0b6da7d6baa64af2e8.der");
+
+    let cert = Certificate::from_der(der_encoded_cert).unwrap();
+    assert_eq!(
+        cert.tbs_certificate.serial_number.as_bytes(),
+        // INTEGER (125 bit) -2.370157924795571e+37
+        &[238, 43, 61, 235, 212, 33, 222, 20, 168, 98, 172, 4, 243, 221, 196, 1]
+    );
+
+    let reencoded = cert.to_vec().unwrap();
+    assert_eq!(der_encoded_cert, reencoded.as_slice());
+}
