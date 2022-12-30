@@ -5,13 +5,15 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
-#![forbid(unsafe_code, clippy::unwrap_used)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
-
-mod content_info;
-mod content_type;
-
-pub use crate::{content_info::ContentInfo, content_type::ContentType};
+#![forbid(unsafe_code)]
+#![warn(
+    clippy::mod_module_files,
+    clippy::unwrap_used,
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 pub mod certificate_choices;
 pub mod cms_version;
@@ -22,6 +24,11 @@ pub mod enveloped_data_content;
 pub mod revocation_info_choices;
 pub mod signed_data_content;
 pub mod signer_info;
+
+mod content_info;
+mod content_type;
+
+pub use crate::{content_info::ContentInfo, content_type::ContentType};
 
 use der::asn1::ObjectIdentifier;
 

@@ -30,7 +30,7 @@ fn deserialize_tls_vec() {
     let a = u8::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
     assert_eq!(1, a);
     assert_eq!(1, a.tls_serialized_len());
-    println!("b: {:?}", b);
+    println!("b: {b:?}");
     let v = TlsVecU8::<u8>::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
     assert_eq!(5, v.tls_serialized_len());
     assert_eq!(&[77, 88, 1, 99], v.as_slice());
@@ -57,7 +57,7 @@ fn deserialize_tls_byte_vec() {
     let a = u8::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
     assert_eq!(1, a);
     assert_eq!(1, a.tls_serialized_len());
-    println!("b: {:?}", b);
+    println!("b: {b:?}");
     let v = TlsByteVecU8::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
     assert_eq!(5, v.tls_serialized_len());
     assert_eq!(&[77, 88, 1, 99], v.as_slice());
@@ -117,7 +117,7 @@ fn deserialize_var_len_vec() {
 
     let v = vec![9u8, 2, 98, 34, 55, 90, 54];
     let serialized = v.tls_serialize_detached().expect("Error encoding vector");
-    assert_eq!(serialized, vec![0b00 << 6 | 7, 9, 2, 98, 34, 55, 90, 54]);
+    assert_eq!(serialized, vec![7, 9, 2, 98, 34, 55, 90, 54]);
     test_it(v);
 
     let v  = b"Geilo is a centre in the municipality of Hol in Viken county, Norway. Geilo is primarily a ski resort town, with around 2,500 inhabitants. It is situated in the valley of Hallingdal, 250 km from Oslo and 260 km from Bergen. The Bergen Line facilitated Geilo's development as the first skiing resort in the country, and it is still one of the largest. It is also known for having some of the most luxurious and expensive holiday cabins in Norway. The center of the town lies at 800 meters above sea level, and its highest point is 1178 meters above sea level.".to_vec();

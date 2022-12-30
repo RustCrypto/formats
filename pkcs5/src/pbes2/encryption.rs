@@ -171,7 +171,7 @@ impl EncryptionKey {
         pbkdf2::<Hmac<D>>(
             password,
             params.salt,
-            params.iteration_count as u32,
+            params.iteration_count,
             &mut buffer[..length],
         );
 

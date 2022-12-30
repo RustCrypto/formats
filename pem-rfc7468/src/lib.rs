@@ -8,11 +8,13 @@
 #![deny(unsafe_code)]
 #![warn(
     clippy::integer_arithmetic,
+    clippy::mod_module_files,
     clippy::panic,
     clippy::panic_in_result_fn,
     clippy::unwrap_used,
     missing_docs,
     rust_2018_idioms,
+    unused_lifetimes,
     unused_qualifications
 )]
 
