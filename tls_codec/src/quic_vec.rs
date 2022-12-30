@@ -111,7 +111,7 @@ impl<T: Deserialize> Deserialize for Vec<T> {
 
         let mut result = Vec::new();
         let mut read = len_len;
-        while (read - len_len) < length as usize {
+        while (read - len_len) < length {
             let element = T::tls_deserialize(bytes)?;
             read += element.tls_serialized_len();
             result.push(element);

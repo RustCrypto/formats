@@ -1,5 +1,15 @@
-//! The ocsp module features encoders and decoders for the structures defined in [RFC 6960](https://datatracker.ietf.org/doc/html/rfc6960).
 #![no_std]
+#![warn(
+    clippy::mod_module_files,
+    clippy::unwrap_used,
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
+
+//! The ocsp module features encoders and decoders for the structures defined in
+//! [RFC 6960](https://datatracker.ietf.org/doc/html/rfc6960).
 
 extern crate alloc;
 
@@ -71,7 +81,7 @@ pub struct TbsRequest<'a> {
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub requestor_name: Option<GeneralName<'a>>,
 
-    pub request_list: alloc::vec::Vec<Request<'a>>,
+    pub request_list: Vec<Request<'a>>,
 
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
     pub request_extensions: Option<Extensions<'a>>,
@@ -236,7 +246,7 @@ pub struct BasicOcspResponse<'a> {
     pub signature: BitStringRef<'a>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
-    pub certs: Option<alloc::vec::Vec<AnyRef<'a>>>,
+    pub certs: Option<Vec<AnyRef<'a>>>,
 }
 
 /// ResponseData structure as defined in [RFC 6960 Section 4.2.1].

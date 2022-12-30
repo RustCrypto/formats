@@ -5,7 +5,14 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
 #![forbid(unsafe_code)]
-#![warn(missing_docs, rust_2018_idioms, unused_qualifications)]
+#![warn(
+    clippy::mod_module_files,
+    clippy::unwrap_used,
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 #[cfg(feature = "std")]
 extern crate std;
@@ -181,6 +188,7 @@ impl Tai64N {
             let s = (self.0).0 - carry - (other.0).0;
             Ok(Duration::new(s, n))
         } else {
+            #[allow(clippy::unwrap_used)]
             Err(other.duration_since(self).unwrap())
         }
     }

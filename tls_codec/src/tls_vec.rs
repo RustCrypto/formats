@@ -484,7 +484,7 @@ macro_rules! impl_tls_vec_generic {
 
                             fn expecting(
                                 &self,
-                                formatter: &mut core::fmt::Formatter,
+                                formatter: &mut core::fmt::Formatter<'_>,
                             ) -> core::fmt::Result {
                                 formatter.write_str("`vec`")
                             }
@@ -513,7 +513,7 @@ macro_rules! impl_tls_vec_generic {
                     T: $($bounds + )* serde::de::Deserialize<'de>,
                 {
                     type Value = $name<T>;
-                    fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                         formatter.write_fmt(format_args!("struct {}<T>", stringify!($name)))
                     }
                     fn visit_seq<V>(self, mut seq: V) -> Result<$name<T>, V::Error>
@@ -676,7 +676,7 @@ macro_rules! impl_tls_vec {
 
                             fn expecting(
                                 &self,
-                                formatter: &mut core::fmt::Formatter,
+                                formatter: &mut core::fmt::Formatter<'_>,
                             ) -> core::fmt::Result {
                                 formatter.write_str("`vec`")
                             }
@@ -702,7 +702,10 @@ macro_rules! impl_tls_vec {
 
                 impl<'de> serde::de::Visitor<'de> for TlsVecVisitor {
                     type Value = $name;
-                    fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    fn expecting(
+                        &self,
+                        formatter: &mut core::fmt::Formatter<'_>,
+                    ) -> core::fmt::Result {
                         formatter.write_fmt(format_args!("struct {}", stringify!($name)))
                     }
                     fn visit_seq<V>(self, mut seq: V) -> Result<$name, V::Error>

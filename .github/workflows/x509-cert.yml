@@ -73,7 +73,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: nightly-2022-12-25 # Pinned due to rust-lang/rust#106247
           override: true
       - run: cargo install cargo-fuzz
       - run: cargo fuzz run certreq -- -max_total_time=30 -seed_inputs="fuzz/inputs/rsa2048-csr.der"

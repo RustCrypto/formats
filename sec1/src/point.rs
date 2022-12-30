@@ -405,7 +405,7 @@ where
         D: de::Deserializer<'de>,
     {
         let bytes = serdect::slice::deserialize_hex_or_bin_vec(deserializer)?;
-        Self::from_bytes(&bytes).map_err(de::Error::custom)
+        Self::from_bytes(bytes).map_err(de::Error::custom)
     }
 }
 
