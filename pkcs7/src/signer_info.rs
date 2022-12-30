@@ -36,13 +36,13 @@ type UnsignedAttributes<'a> = SetOfVec<Attribute>;
 //    subjectKeyIdentifier [0] SubjectKeyIdentifier }
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Choice, ValueOrd)]
-pub enum SignerIdentifier<'a> {
+pub enum SignerIdentifier {
     /// issuer and serial number
     IssuerAndSerialNumber(IssuerAndSerialNumber),
 
     /// subject key identifier
     #[asn1(context_specific = "0")]
-    SubjectKeyIdentifier(SubjectKeyIdentifier<'a>),
+    SubjectKeyIdentifier(SubjectKeyIdentifier),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
@@ -75,7 +75,7 @@ pub struct SignerInfo<'a> {
     pub version: CmsVersion,
 
     /// the signer identifier
-    pub sid: SignerIdentifier<'a>,
+    pub sid: SignerIdentifier,
 
     /// the message digest algorithm
     pub digest_algorithm: DigestAlgorithmIdentifier<'a>,
