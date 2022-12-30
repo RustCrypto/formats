@@ -2,7 +2,7 @@
 
 use der::{
     asn1::{ObjectIdentifier, OctetStringRef, SequenceRef},
-    Decode, Encode, Length, SliceWriter,
+    Decode, SliceWriter,
 };
 use hex_literal::hex;
 use pkcs7::{
