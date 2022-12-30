@@ -1,6 +1,7 @@
 //! `CMSVersion` [RFC 5652 § 10.2.5](https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.5)
 
-use der::Enumerated;
+use core::cmp::Ordering;
+use der::{Enumerated, ValueOrd};
 
 /// The CMSVersion type gives a syntax version number, for compatibility
 /// with future revisions of this specification.
@@ -10,7 +11,7 @@ use der::Enumerated;
 /// ```
 ///
 /// See [RFC 5652 10.2.5](https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.5).
-#[derive(Clone, Copy, Debug, Enumerated, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Enumerated, Eq, PartialEq, PartialOrd, Ord)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]
 pub enum CmsVersion {
@@ -26,4 +27,17 @@ pub enum CmsVersion {
     V4 = 4,
     /// syntax version 5
     V5 = 5,
+}
+
+impl From<CmsVersion> for u8 {
+    fn from(version: CmsVersion) -> u8 {
+        version as u8
+    }
+}
+
+// TODO(tarcieri): fix `ValueOrd` derive for this case (`asn1` attribute is clashing)
+impl ValueOrd for CmsVersion {
+    fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
+        Ok(self.cmp(other))
+    }
 }
