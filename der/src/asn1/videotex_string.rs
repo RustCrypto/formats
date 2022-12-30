@@ -1,8 +1,8 @@
 //! ASN.1 `VideotexString` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
-    Length, Reader, Result, StrSlice, Tag, Writer,
+    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header,
+    Length, Reader, Result, StrRef, Tag, Writer,
 };
 use core::{fmt, ops::Deref, str};
 
@@ -26,7 +26,7 @@ use crate::asn1::Any;
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct VideotexStringRef<'a> {
     /// Inner value
-    inner: StrSlice<'a>,
+    inner: StrRef<'a>,
 }
 
 impl<'a> VideotexStringRef<'a> {
@@ -43,14 +43,14 @@ impl<'a> VideotexStringRef<'a> {
             return Err(Self::TAG.value_error());
         }
 
-        StrSlice::from_bytes(input)
+        StrRef::from_bytes(input)
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error())
     }
 }
 
 impl<'a> Deref for VideotexStringRef<'a> {
-    type Target = StrSlice<'a>;
+    type Target = StrRef<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -71,7 +71,7 @@ impl AsRef<[u8]> for VideotexStringRef<'_> {
 
 impl<'a> DecodeValue<'a> for VideotexStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
+        Self::new(BytesRef::decode_value(reader, header)?.as_slice())
     }
 }
 

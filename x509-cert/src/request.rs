@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 
 use const_oid::db::rfc5912::ID_EXTENSION_REQ;
 use const_oid::{AssociatedOid, ObjectIdentifier};
-use der::asn1::BitStringRef;
+use der::asn1::BitString;
 use der::{Decode, Enumerated, Sequence};
 use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfoRef};
 
@@ -81,7 +81,7 @@ pub struct CertReq<'a> {
     pub algorithm: AlgorithmIdentifierRef<'a>,
 
     /// Signature.
-    pub signature: BitStringRef<'a>,
+    pub signature: BitString,
 }
 
 #[cfg(feature = "pem")]
@@ -106,10 +106,10 @@ impl<'a> TryFrom<&'a [u8]> for CertReq<'a> {
 ///
 /// [RFC 5272 Section 3.1]: https://datatracker.ietf.org/doc/html/rfc5272#section-3.1
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ExtensionReq<'a>(pub Vec<Extension<'a>>);
+pub struct ExtensionReq(pub Vec<Extension>);
 
-impl<'a> AssociatedOid for ExtensionReq<'a> {
+impl AssociatedOid for ExtensionReq {
     const OID: ObjectIdentifier = ID_EXTENSION_REQ;
 }
 
-impl_newtype!(ExtensionReq<'a>, Vec<Extension<'a>>);
+impl_newtype!(ExtensionReq, Vec<Extension>);

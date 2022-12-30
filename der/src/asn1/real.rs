@@ -8,8 +8,8 @@
 )]
 
 use crate::{
-    str_slice::StrSlice, ByteSlice, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader,
-    Result, Tag, Writer,
+    BytesRef, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, StrRef, Tag,
+    Writer,
 };
 
 use super::integer::uint::strip_leading_zeroes;
@@ -17,7 +17,7 @@ use super::integer::uint::strip_leading_zeroes;
 #[cfg_attr(docsrs, doc(cfg(feature = "real")))]
 impl<'a> DecodeValue<'a> for f64 {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = ByteSlice::decode_value(reader, header)?.as_slice();
+        let bytes = BytesRef::decode_value(reader, header)?.as_slice();
 
         if header.length == Length::ZERO {
             Ok(0.0)
@@ -74,7 +74,7 @@ impl<'a> DecodeValue<'a> for f64 {
                 _ => Err(Tag::Real.value_error()),
             }
         } else {
-            let astr = StrSlice::from_bytes(&bytes[1..])?;
+            let astr = StrRef::from_bytes(&bytes[1..])?;
             match astr.inner.parse::<f64>() {
                 Ok(val) => Ok(val),
                 // Real related error: encoding not supported or malformed

@@ -31,7 +31,7 @@ pub use const_oid::db::rfc5280::{
 
 use alloc::vec::Vec;
 
-use der::asn1::OctetStringRef;
+use der::asn1::OctetString;
 
 /// SubjectKeyIdentifier as defined in [RFC 5280 Section 4.2.1.2].
 ///
@@ -40,14 +40,14 @@ use der::asn1::OctetStringRef;
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct SubjectKeyIdentifier<'a>(pub OctetStringRef<'a>);
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SubjectKeyIdentifier(pub OctetString);
 
-impl<'a> AssociatedOid for SubjectKeyIdentifier<'a> {
+impl AssociatedOid for SubjectKeyIdentifier {
     const OID: ObjectIdentifier = ID_CE_SUBJECT_KEY_IDENTIFIER;
 }
 
-impl_newtype!(SubjectKeyIdentifier<'a>, OctetStringRef<'a>);
+impl_newtype!(SubjectKeyIdentifier, OctetString);
 
 /// SubjectAltName as defined in [RFC 5280 Section 4.2.1.6].
 ///
@@ -57,13 +57,13 @@ impl_newtype!(SubjectKeyIdentifier<'a>, OctetStringRef<'a>);
 ///
 /// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct SubjectAltName<'a>(pub name::GeneralNames<'a>);
+pub struct SubjectAltName(pub name::GeneralNames);
 
-impl<'a> AssociatedOid for SubjectAltName<'a> {
+impl AssociatedOid for SubjectAltName {
     const OID: ObjectIdentifier = ID_CE_SUBJECT_ALT_NAME;
 }
 
-impl_newtype!(SubjectAltName<'a>, name::GeneralNames<'a>);
+impl_newtype!(SubjectAltName, name::GeneralNames);
 
 /// IssuerAltName as defined in [RFC 5280 Section 4.2.1.7].
 ///
@@ -73,13 +73,13 @@ impl_newtype!(SubjectAltName<'a>, name::GeneralNames<'a>);
 ///
 /// [RFC 5280 Section 4.2.1.7]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.7
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct IssuerAltName<'a>(pub name::GeneralNames<'a>);
+pub struct IssuerAltName(pub name::GeneralNames);
 
-impl<'a> AssociatedOid for IssuerAltName<'a> {
+impl AssociatedOid for IssuerAltName {
     const OID: ObjectIdentifier = ID_CE_ISSUER_ALT_NAME;
 }
 
-impl_newtype!(IssuerAltName<'a>, name::GeneralNames<'a>);
+impl_newtype!(IssuerAltName, name::GeneralNames);
 
 /// SubjectDirectoryAttributes as defined in [RFC 5280 Section 4.2.1.8].
 ///

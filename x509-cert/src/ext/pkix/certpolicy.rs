@@ -1,11 +1,11 @@
 //! PKIX Certificate Policies extension
 
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
 
 use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 use const_oid::AssociatedOid;
-use der::asn1::{GeneralizedTime, Ia5StringRef, ObjectIdentifier, UintRef, Utf8StringRef};
-use der::{AnyRef, Choice, Sequence, ValueOrd};
+use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, Uint};
+use der::{Any, Choice, Sequence, ValueOrd};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -15,13 +15,13 @@ use der::{AnyRef, Choice, Sequence, ValueOrd};
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CertificatePolicies<'a>(pub Vec<PolicyInformation<'a>>);
+pub struct CertificatePolicies(pub Vec<PolicyInformation>);
 
-impl<'a> AssociatedOid for CertificatePolicies<'a> {
+impl AssociatedOid for CertificatePolicies {
     const OID: ObjectIdentifier = ID_CE_CERTIFICATE_POLICIES;
 }
 
-impl_newtype!(CertificatePolicies<'a>, Vec<PolicyInformation<'a>>);
+impl_newtype!(CertificatePolicies, Vec<PolicyInformation>);
 
 /// PolicyInformation as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -37,9 +37,9 @@ impl_newtype!(CertificatePolicies<'a>, Vec<PolicyInformation<'a>>);
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct PolicyInformation<'a> {
+pub struct PolicyInformation {
     pub policy_identifier: ObjectIdentifier,
-    pub policy_qualifiers: Option<Vec<PolicyQualifierInfo<'a>>>,
+    pub policy_qualifiers: Option<Vec<PolicyQualifierInfo>>,
 }
 
 /// PolicyQualifierInfo as defined in [RFC 5280 Section 4.2.1.4].
@@ -54,9 +54,9 @@ pub struct PolicyInformation<'a> {
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct PolicyQualifierInfo<'a> {
+pub struct PolicyQualifierInfo {
     pub policy_qualifier_id: ObjectIdentifier,
-    pub qualifier: Option<AnyRef<'a>>,
+    pub qualifier: Option<Any>,
 }
 
 /// CpsUri as defined in [RFC 5280 Section 4.2.1.4].
@@ -66,7 +66,7 @@ pub struct PolicyQualifierInfo<'a> {
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
-pub type CpsUri<'a> = Ia5StringRef<'a>;
+pub type CpsUri = Ia5String;
 
 /// UserNotice as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -80,9 +80,9 @@ pub type CpsUri<'a> = Ia5StringRef<'a>;
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct UserNotice<'a> {
+pub struct UserNotice {
     pub notice_ref: Option<GeneralizedTime>,
-    pub explicit_text: Option<DisplayText<'a>>,
+    pub explicit_text: Option<DisplayText>,
 }
 
 /// NoticeReference as defined in [RFC 5280 Section 4.2.1.4].
@@ -96,9 +96,9 @@ pub struct UserNotice<'a> {
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct NoticeReference<'a> {
-    pub organization: DisplayText<'a>,
-    pub notice_numbers: Option<Vec<UintRef<'a>>>,
+pub struct NoticeReference {
+    pub organization: DisplayText,
+    pub notice_numbers: Option<Vec<Uint>>,
 }
 
 /// DisplayText as defined in [RFC 5280 Section 4.2.1.4].
@@ -117,10 +117,10 @@ pub struct NoticeReference<'a> {
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
 #[derive(Choice, Clone, Debug, Eq, PartialEq)]
 #[allow(missing_docs)]
-pub enum DisplayText<'a> {
+pub enum DisplayText {
     #[asn1(type = "IA5String")]
-    Ia5String(Ia5StringRef<'a>),
+    Ia5String(Ia5String),
 
     #[asn1(type = "UTF8String")]
-    Utf8String(Utf8StringRef<'a>),
+    Utf8String(String),
 }

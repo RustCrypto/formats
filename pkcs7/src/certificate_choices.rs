@@ -36,7 +36,7 @@ pub struct OtherCertificateFormat<'a> {
 #[allow(clippy::large_enum_variant)]
 pub enum CertificateChoices<'a> {
     /// X.509 certificate
-    Certificate(Certificate<'a>),
+    Certificate(Certificate),
 
     /// PKCS #6 extended certificate (obsolete)
     #[deprecated]

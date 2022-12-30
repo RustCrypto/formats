@@ -15,9 +15,9 @@ use der::{Choice, ValueOrd};
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 #[derive(Clone, Debug, Eq, PartialEq, Choice, ValueOrd)]
 #[allow(missing_docs)]
-pub enum DistributionPointName<'a> {
+pub enum DistributionPointName {
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
-    FullName(GeneralNames<'a>),
+    FullName(GeneralNames),
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
     NameRelativeToCRLIssuer(RelativeDistinguishedName),

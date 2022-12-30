@@ -1,8 +1,8 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, DecodeValue, EncodeValue, Error, FixedTag, Header,
-    Length, Reader, Result, StrSlice, Tag, Writer,
+    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header,
+    Length, Reader, Result, StrRef, Tag, Writer,
 };
 use core::{fmt, ops::Deref, str};
 
@@ -29,7 +29,7 @@ use {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Utf8StringRef<'a> {
     /// Inner value
-    inner: StrSlice<'a>,
+    inner: StrRef<'a>,
 }
 
 impl<'a> Utf8StringRef<'a> {
@@ -38,12 +38,12 @@ impl<'a> Utf8StringRef<'a> {
     where
         T: AsRef<[u8]> + ?Sized,
     {
-        StrSlice::from_bytes(input.as_ref()).map(|inner| Self { inner })
+        StrRef::from_bytes(input.as_ref()).map(|inner| Self { inner })
     }
 }
 
 impl<'a> Deref for Utf8StringRef<'a> {
-    type Target = StrSlice<'a>;
+    type Target = StrRef<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -64,7 +64,7 @@ impl AsRef<[u8]> for Utf8StringRef<'_> {
 
 impl<'a> DecodeValue<'a> for Utf8StringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        Self::new(ByteSlice::decode_value(reader, header)?.as_slice())
+        Self::new(BytesRef::decode_value(reader, header)?.as_slice())
     }
 }
 

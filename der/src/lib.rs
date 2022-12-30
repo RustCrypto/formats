@@ -344,7 +344,7 @@ pub mod asn1;
 pub mod referenced;
 
 pub(crate) mod arrayvec;
-mod byte_slice;
+mod bytes_ref;
 mod datetime;
 mod decode;
 mod encode;
@@ -354,14 +354,16 @@ mod header;
 mod length;
 mod ord;
 mod reader;
-mod str_slice;
+mod str_ref;
 mod tag;
 mod writer;
 
 #[cfg(feature = "alloc")]
-mod bytes;
+mod bytes_owned;
 #[cfg(feature = "alloc")]
 mod document;
+#[cfg(feature = "alloc")]
+mod str_owned;
 
 pub use crate::{
     asn1::{AnyRef, Choice, Sequence},
@@ -410,6 +412,6 @@ pub use zeroize;
 #[cfg(all(feature = "alloc", feature = "zeroize"))]
 pub use crate::document::SecretDocument;
 
+pub(crate) use crate::{arrayvec::ArrayVec, bytes_ref::BytesRef, str_ref::StrRef};
 #[cfg(feature = "alloc")]
-pub(crate) use crate::bytes::Bytes;
-pub(crate) use crate::{arrayvec::ArrayVec, byte_slice::ByteSlice, str_slice::StrSlice};
+pub(crate) use crate::{bytes_owned::BytesOwned, str_owned::StrOwned};

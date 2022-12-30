@@ -1,6 +1,9 @@
 //! Module containing all of the various ASN.1 built-in types supported by
 //! this library.
 
+#[macro_use]
+mod internal_macros;
+
 mod any;
 mod bit_string;
 mod boolean;
@@ -32,8 +35,9 @@ pub use const_oid::ObjectIdentifier;
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use self::{
-    any::Any, bit_string::BitString, integer::bigint::Int, integer::bigint::Uint,
-    octet_string::OctetString, set_of::SetOfVec,
+    any::Any, bit_string::BitString, ia5_string::Ia5String, integer::bigint::Int,
+    integer::bigint::Uint, octet_string::OctetString, printable_string::PrintableString,
+    set_of::SetOfVec, teletex_string::TeletexString,
 };
 pub use self::{
     any::AnyRef,

@@ -6,9 +6,9 @@ use alloc::vec::Vec;
 use core::cmp::Ordering;
 
 use const_oid::AssociatedOid;
-use der::asn1::BitStringRef;
+use der::asn1::BitString;
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
-use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfoRef};
+use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -75,7 +75,7 @@ impl Default for Version {
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertificate<'a> {
+pub struct TbsCertificate {
     /// The certificate version
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
@@ -86,31 +86,29 @@ pub struct TbsCertificate<'a> {
     pub version: Version,
 
     pub serial_number: SerialNumber,
-    pub signature: AlgorithmIdentifierRef<'a>,
+    pub signature: AlgorithmIdentifierOwned,
     pub issuer: Name,
     pub validity: Validity,
     pub subject: Name,
-    pub subject_public_key_info: SubjectPublicKeyInfoRef<'a>,
+    pub subject_public_key_info: SubjectPublicKeyInfoOwned,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub issuer_unique_id: Option<BitStringRef<'a>>,
+    pub issuer_unique_id: Option<BitString>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub subject_unique_id: Option<BitStringRef<'a>>,
+    pub subject_unique_id: Option<BitString>,
 
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
-    pub extensions: Option<crate::ext::Extensions<'a>>,
+    pub extensions: Option<crate::ext::Extensions>,
 }
 
-impl<'a> TbsCertificate<'a> {
+impl TbsCertificate {
     /// Decodes a single extension
     ///
     /// Returns an error if multiple of these extensions is present. Returns
     /// `Ok(None)` if the extension is not present. Returns a decoding error
     /// if decoding failed. Otherwise returns the extension.
-    pub fn get<'b: 'a, T: Decode<'a> + AssociatedOid>(
-        &'b self,
-    ) -> Result<Option<(bool, T)>, Error> {
+    pub fn get<'a, T: Decode<'a> + AssociatedOid>(&'a self) -> Result<Option<(bool, T)>, Error> {
         let mut iter = self.filter::<T>().peekable();
         match iter.next() {
             None => Ok(None),
@@ -124,15 +122,15 @@ impl<'a> TbsCertificate<'a> {
     /// Filters extensions by an associated OID
     ///
     /// Returns a filtered iterator over all the extensions with the OID.
-    pub fn filter<'b: 'a, T: Decode<'a> + AssociatedOid>(
-        &'b self,
-    ) -> impl 'b + Iterator<Item = Result<(bool, T), Error>> {
+    pub fn filter<'a, T: Decode<'a> + AssociatedOid>(
+        &'a self,
+    ) -> impl 'a + Iterator<Item = Result<(bool, T), Error>> {
         self.extensions
             .as_deref()
             .unwrap_or(&[])
             .iter()
             .filter(|e| e.extn_id == T::OID)
-            .map(|e| Ok((e.critical, T::from_der(e.extn_value)?)))
+            .map(|e| Ok((e.critical, T::from_der(e.extn_value.as_bytes())?)))
     }
 }
 
@@ -150,15 +148,15 @@ impl<'a> TbsCertificate<'a> {
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct Certificate<'a> {
-    pub tbs_certificate: TbsCertificate<'a>,
-    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
-    pub signature: BitStringRef<'a>,
+pub struct Certificate {
+    pub tbs_certificate: TbsCertificate,
+    pub signature_algorithm: AlgorithmIdentifierOwned,
+    pub signature: BitString,
 }
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-impl PemLabel for Certificate<'_> {
+impl PemLabel for Certificate {
     const PEM_LABEL: &'static str = "CERTIFICATE";
 }
 
@@ -173,4 +171,4 @@ impl PemLabel for Certificate<'_> {
 /// ```
 ///
 /// [RFC 6066]: https://datatracker.ietf.org/doc/html/rfc6066#section-10.1
-pub type PkiPath<'a> = Vec<Certificate<'a>>;
+pub type PkiPath = Vec<Certificate>;

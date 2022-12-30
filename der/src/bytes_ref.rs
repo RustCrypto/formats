@@ -2,14 +2,16 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    str_slice::StrSlice, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result,
-    Writer,
+    DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StrRef, Writer,
 };
 use core::cmp::Ordering;
 
+#[cfg(feature = "alloc")]
+use crate::StrOwned;
+
 /// Byte slice newtype which respects the `Length::max()` limit.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub(crate) struct ByteSlice<'a> {
+pub(crate) struct BytesRef<'a> {
     /// Precomputed `Length` (avoids possible panicking conversions)
     pub length: Length,
 
@@ -17,14 +19,14 @@ pub(crate) struct ByteSlice<'a> {
     pub inner: &'a [u8],
 }
 
-impl<'a> ByteSlice<'a> {
+impl<'a> BytesRef<'a> {
     /// Constant value representing an empty byte slice.
     pub const EMPTY: Self = Self {
         length: Length::ZERO,
         inner: &[],
     };
 
-    /// Create a new [`ByteSlice`], ensuring that the provided `slice` value
+    /// Create a new [`BytesRef`], ensuring that the provided `slice` value
     /// is shorter than `Length::max()`.
     pub fn new(slice: &'a [u8]) -> Result<Self> {
         Ok(Self {
@@ -38,30 +40,30 @@ impl<'a> ByteSlice<'a> {
         self.inner
     }
 
-    /// Get the [`Length`] of this [`ByteSlice`]
+    /// Get the [`Length`] of this [`BytesRef`]
     pub fn len(self) -> Length {
         self.length
     }
 
-    /// Is this [`ByteSlice`] empty?
+    /// Is this [`BytesRef`] empty?
     pub fn is_empty(self) -> bool {
         self.len() == Length::ZERO
     }
 }
 
-impl AsRef<[u8]> for ByteSlice<'_> {
+impl AsRef<[u8]> for BytesRef<'_> {
     fn as_ref(&self) -> &[u8] {
         self.as_slice()
     }
 }
 
-impl<'a> DecodeValue<'a> for ByteSlice<'a> {
+impl<'a> DecodeValue<'a> for BytesRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         reader.read_slice(header.length).and_then(Self::new)
     }
 }
 
-impl EncodeValue for ByteSlice<'_> {
+impl EncodeValue for BytesRef<'_> {
     fn value_len(&self) -> Result<Length> {
         Ok(self.length)
     }
@@ -71,7 +73,7 @@ impl EncodeValue for ByteSlice<'_> {
     }
 }
 
-impl Default for ByteSlice<'_> {
+impl Default for BytesRef<'_> {
     fn default() -> Self {
         Self {
             length: Length::ZERO,
@@ -80,25 +82,38 @@ impl Default for ByteSlice<'_> {
     }
 }
 
-impl DerOrd for ByteSlice<'_> {
+impl DerOrd for BytesRef<'_> {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
         Ok(self.as_slice().cmp(other.as_slice()))
     }
 }
 
-impl<'a> From<StrSlice<'a>> for ByteSlice<'a> {
-    fn from(s: StrSlice<'a>) -> ByteSlice<'a> {
+impl<'a> From<StrRef<'a>> for BytesRef<'a> {
+    fn from(s: StrRef<'a>) -> BytesRef<'a> {
         let bytes = s.as_bytes();
         debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
 
-        ByteSlice {
+        BytesRef {
             inner: bytes,
             length: s.length,
         }
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for ByteSlice<'a> {
+#[cfg(feature = "alloc")]
+impl<'a> From<&'a StrOwned> for BytesRef<'a> {
+    fn from(s: &'a StrOwned) -> BytesRef<'a> {
+        let bytes = s.as_bytes();
+        debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
+
+        BytesRef {
+            inner: bytes,
+            length: s.length,
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for BytesRef<'a> {
     type Error = Error;
 
     fn try_from(slice: &'a [u8]) -> Result<Self> {
@@ -109,7 +124,7 @@ impl<'a> TryFrom<&'a [u8]> for ByteSlice<'a> {
 // Implement by hand because the derive would create invalid values.
 // Make sure the length and the inner.len matches.
 #[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for ByteSlice<'a> {
+impl<'a> arbitrary::Arbitrary<'a> for BytesRef<'a> {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         let length = u.arbitrary()?;
         Ok(Self {
@@ -125,13 +140,13 @@ impl<'a> arbitrary::Arbitrary<'a> for ByteSlice<'a> {
 
 #[cfg(feature = "alloc")]
 mod allocating {
-    use super::ByteSlice;
-    use crate::{referenced::RefToOwned, Bytes};
+    use super::BytesRef;
+    use crate::{referenced::RefToOwned, BytesOwned};
 
-    impl<'a> RefToOwned<'a> for ByteSlice<'a> {
-        type Owned = Bytes;
+    impl<'a> RefToOwned<'a> for BytesRef<'a> {
+        type Owned = BytesOwned;
         fn to_owned(&self) -> Self::Owned {
-            Bytes::from(*self)
+            BytesOwned::from(*self)
         }
     }
 }

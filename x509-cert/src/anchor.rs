@@ -4,10 +4,11 @@ use crate::ext::pkix::{certpolicy::CertificatePolicies, NameConstraints};
 use crate::{ext::Extensions, name::Name};
 use crate::{Certificate, TbsCertificate};
 
-use der::asn1::{OctetStringRef, Utf8StringRef};
+use alloc::string::String;
+use der::asn1::OctetString;
 use der::{Choice, Enumerated, Sequence};
 use flagset::{flags, FlagSet};
-use spki::SubjectPublicKeyInfoRef;
+use spki::SubjectPublicKeyInfoOwned;
 
 /// Version identifier for TrustAnchorInfo
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
@@ -41,25 +42,25 @@ impl Default for Version {
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 #[allow(missing_docs)]
-pub struct TrustAnchorInfo<'a> {
+pub struct TrustAnchorInfo {
     #[asn1(default = "Default::default")]
     pub version: Version,
 
-    pub pub_key: SubjectPublicKeyInfoRef<'a>,
+    pub pub_key: SubjectPublicKeyInfoOwned,
 
-    pub key_id: OctetStringRef<'a>,
-
-    #[asn1(optional = "true")]
-    pub ta_title: Option<Utf8StringRef<'a>>,
+    pub key_id: OctetString,
 
     #[asn1(optional = "true")]
-    pub cert_path: Option<CertPathControls<'a>>,
+    pub ta_title: Option<String>,
+
+    #[asn1(optional = "true")]
+    pub cert_path: Option<CertPathControls>,
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", optional = "true")]
-    pub extensions: Option<Extensions<'a>>,
+    pub extensions: Option<Extensions>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub ta_title_lang_tag: Option<Utf8StringRef<'a>>,
+    pub ta_title_lang_tag: Option<String>,
 }
 
 /// ```text
@@ -74,20 +75,20 @@ pub struct TrustAnchorInfo<'a> {
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct CertPathControls<'a> {
+pub struct CertPathControls {
     pub ta_name: Name,
 
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
-    pub certificate: Option<Certificate<'a>>,
+    pub certificate: Option<Certificate>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub policy_set: Option<CertificatePolicies<'a>>,
+    pub policy_set: Option<CertificatePolicies>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub policy_flags: Option<CertPolicyFlags>,
 
     #[asn1(context_specific = "3", tag_mode = "IMPLICIT", optional = "true")]
-    pub name_constr: Option<NameConstraints<'a>>,
+    pub name_constr: Option<NameConstraints>,
 
     #[asn1(context_specific = "4", tag_mode = "IMPLICIT", optional = "true")]
     pub path_len_constraint: Option<u32>,
@@ -128,12 +129,12 @@ pub type CertPolicyFlags = FlagSet<CertPolicies>;
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 #[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
-pub enum TrustAnchorChoice<'a> {
-    Certificate(Certificate<'a>),
+pub enum TrustAnchorChoice {
+    Certificate(Certificate),
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
-    TbsCertificate(TbsCertificate<'a>),
+    TbsCertificate(TbsCertificate),
 
     #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
-    TaInfo(TrustAnchorInfo<'a>),
+    TaInfo(TrustAnchorInfo),
 }

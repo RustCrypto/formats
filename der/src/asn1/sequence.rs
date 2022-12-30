@@ -2,7 +2,7 @@
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{
-    ByteSlice, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Result,
+    BytesRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Result,
     Tag, Writer,
 };
 
@@ -58,13 +58,13 @@ where
 /// This is a zero-copy reference type which borrows from the input data.
 pub struct SequenceRef<'a> {
     /// Body of the `SEQUENCE`.
-    body: ByteSlice<'a>,
+    body: BytesRef<'a>,
 }
 
 impl<'a> DecodeValue<'a> for SequenceRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Ok(Self {
-            body: ByteSlice::decode_value(reader, header)?,
+            body: BytesRef::decode_value(reader, header)?,
         })
     }
 }

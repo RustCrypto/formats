@@ -1,8 +1,8 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, ByteSlice, Decode, DecodeValue, EncodeValue, Error,
-    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, Decode, DecodeValue, EncodeValue, Error, ErrorKind,
+    FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -16,13 +16,13 @@ use alloc::vec::Vec;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct OctetStringRef<'a> {
     /// Inner value
-    inner: ByteSlice<'a>,
+    inner: BytesRef<'a>,
 }
 
 impl<'a> OctetStringRef<'a> {
     /// Create a new ASN.1 `OCTET STRING` from a byte slice.
     pub fn new(slice: &'a [u8]) -> Result<Self> {
-        ByteSlice::new(slice)
+        BytesRef::new(slice)
             .map(|inner| Self { inner })
             .map_err(|_| ErrorKind::Length { tag: Self::TAG }.into())
     }
@@ -56,7 +56,7 @@ impl AsRef<[u8]> for OctetStringRef<'_> {
 
 impl<'a> DecodeValue<'a> for OctetStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let inner = ByteSlice::decode_value(reader, header)?;
+        let inner = BytesRef::decode_value(reader, header)?;
         Ok(Self { inner })
     }
 }
@@ -185,6 +185,19 @@ impl<'a> From<&'a OctetString> for OctetStringRef<'a> {
 
 #[cfg(feature = "alloc")]
 impl OrdIsValueOrd for OctetString {}
+
+// Implement by hand because the derive would create invalid values.
+// Use the constructor to create a valid value.
+#[cfg(feature = "arbitrary")]
+impl<'a> arbitrary::Arbitrary<'a> for OctetString {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Self::new(Vec::arbitrary(u)?).map_err(|_| arbitrary::Error::IncorrectFormat)
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        arbitrary::size_hint::and(u8::size_hint(depth), Vec::<u8>::size_hint(depth))
+    }
+}
 
 #[cfg(test)]
 mod tests {
