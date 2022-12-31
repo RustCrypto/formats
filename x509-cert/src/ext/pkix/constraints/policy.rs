@@ -24,3 +24,5 @@ pub struct PolicyConstraints {
 impl AssociatedOid for PolicyConstraints {
     const OID: ObjectIdentifier = ID_CE_POLICY_CONSTRAINTS;
 }
+
+impl_extension!(PolicyConstraints, critical = true);

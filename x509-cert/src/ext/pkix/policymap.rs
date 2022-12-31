@@ -20,6 +20,7 @@ impl AssociatedOid for PolicyMappings {
 }
 
 impl_newtype!(PolicyMappings, Vec<PolicyMapping>);
+impl_extension!(PolicyMappings, critical = true);
 
 /// PolicyMapping as defined in [RFC 5280 Section 4.2.1.5].
 ///

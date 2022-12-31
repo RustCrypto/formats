@@ -58,6 +58,20 @@ impl Time {
             Time::GeneralTime(t) => t.to_system_time(),
         }
     }
+
+    /// Convert time to UTCTime representation
+    /// As per RFC 5280: 4.1.2.5, date through 2049 should be expressed as UTC Time.
+    #[cfg(feature = "builder")]
+    pub(crate) fn rfc5280_adjust_utc_time(&mut self) -> der::Result<()> {
+        if let Time::GeneralTime(t) = self {
+            let date = t.to_date_time();
+            if date.year() <= UtcTime::MAX_YEAR {
+                *self = Time::UtcTime(UtcTime::from_date_time(date)?);
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl fmt::Display for Time {

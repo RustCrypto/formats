@@ -26,12 +26,16 @@ mod macros;
 pub mod anchor;
 pub mod attr;
 pub mod certificate;
+pub mod constants;
 pub mod crl;
 pub mod ext;
 pub mod name;
 pub mod request;
 pub mod serial_number;
 pub mod time;
+
+#[cfg(feature = "builder")]
+pub mod builder;
 
 pub use certificate::{Certificate, PkiPath, TbsCertificate, Version};
 pub use der;

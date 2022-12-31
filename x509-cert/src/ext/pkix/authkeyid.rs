@@ -35,3 +35,5 @@ pub struct AuthorityKeyIdentifier {
 impl AssociatedOid for AuthorityKeyIdentifier {
     const OID: ObjectIdentifier = ID_CE_AUTHORITY_KEY_IDENTIFIER;
 }
+
+impl_extension!(AuthorityKeyIdentifier, critical = false);

@@ -48,6 +48,7 @@ impl AssociatedOid for SubjectKeyIdentifier {
 }
 
 impl_newtype!(SubjectKeyIdentifier, OctetString);
+impl_extension!(SubjectKeyIdentifier, critical = false);
 
 /// SubjectAltName as defined in [RFC 5280 Section 4.2.1.6].
 ///
@@ -65,6 +66,23 @@ impl AssociatedOid for SubjectAltName {
 
 impl_newtype!(SubjectAltName, name::GeneralNames);
 
+impl crate::ext::AsExtension for SubjectAltName {
+    fn critical(&self, tbs: &crate::certificate::TbsCertificate) -> bool {
+        // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
+        //   Further, if the only subject identity included in the certificate is
+        //   an alternative name form (e.g., an electronic mail address), then the
+        //   subject distinguished name MUST be empty (an empty sequence), and the
+        //   subjectAltName extension MUST be present.  If the subject field
+        //   contains an empty sequence, then the issuing CA MUST include a
+        //   subjectAltName extension that is marked as critical.  When including
+        //   the subjectAltName extension in a certificate that has a non-empty
+        //   subject distinguished name, conforming CAs SHOULD mark the
+        //   subjectAltName extension as non-critical.
+
+        tbs.subject.is_empty()
+    }
+}
+
 /// IssuerAltName as defined in [RFC 5280 Section 4.2.1.7].
 ///
 /// ```text
@@ -80,6 +98,7 @@ impl AssociatedOid for IssuerAltName {
 }
 
 impl_newtype!(IssuerAltName, name::GeneralNames);
+impl_extension!(IssuerAltName, critical = false);
 
 /// SubjectDirectoryAttributes as defined in [RFC 5280 Section 4.2.1.8].
 ///
@@ -96,6 +115,7 @@ impl AssociatedOid for SubjectDirectoryAttributes {
 }
 
 impl_newtype!(SubjectDirectoryAttributes, Vec<AttributeTypeAndValue>);
+impl_extension!(SubjectDirectoryAttributes, critical = false);
 
 /// InhibitAnyPolicy as defined in [RFC 5280 Section 4.2.1.14].
 ///
@@ -112,3 +132,4 @@ impl AssociatedOid for InhibitAnyPolicy {
 }
 
 impl_newtype!(InhibitAnyPolicy, u32);
+impl_extension!(InhibitAnyPolicy, critical = true);

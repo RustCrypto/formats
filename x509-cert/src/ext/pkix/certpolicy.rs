@@ -14,6 +14,10 @@ use der::{Any, Choice, Sequence, ValueOrd};
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+//  If this extension is
+//  critical, the path validation software MUST be able to interpret this
+//  extension (including the optional qualifier), or MUST reject the
+//  certificate.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CertificatePolicies(pub Vec<PolicyInformation>);
 
@@ -22,6 +26,7 @@ impl AssociatedOid for CertificatePolicies {
 }
 
 impl_newtype!(CertificatePolicies, Vec<PolicyInformation>);
+impl_extension!(CertificatePolicies);
 
 /// PolicyInformation as defined in [RFC 5280 Section 4.2.1.4].
 ///

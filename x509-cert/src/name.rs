@@ -31,6 +31,11 @@ impl RdnSequence {
     pub fn encode_from_string(s: &str) -> Result<Vec<u8>, der::Error> {
         Self::from_str(s)?.to_der()
     }
+
+    /// Is this [`RdnSequence`] empty?
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 /// Parse an [`RdnSequence`] string.

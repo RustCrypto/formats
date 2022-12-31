@@ -78,3 +78,17 @@ macro_rules! impl_newtype {
         }
     };
 }
+
+/// Implements the AsExtension traits for every defined Extension paylooad
+macro_rules! impl_extension {
+    ($newtype:ty) => {
+        impl_extension!($newtype, critical = false);
+    };
+    ($newtype:ty, critical = $critical:expr) => {
+        impl crate::ext::AsExtension for $newtype {
+            fn critical(&self, _tbs: &crate::certificate::TbsCertificate) -> bool {
+                $critical
+            }
+        }
+    };
+}
