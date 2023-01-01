@@ -101,7 +101,7 @@ impl<'a> TryFrom<AnyRef<'a>> for VideotexStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<VideotexStringRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 
@@ -110,7 +110,7 @@ impl<'a> TryFrom<&'a Any> for VideotexStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: &'a Any) -> Result<VideotexStringRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 

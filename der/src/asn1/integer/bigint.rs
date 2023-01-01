@@ -79,7 +79,7 @@ impl<'a> TryFrom<AnyRef<'a>> for IntRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<IntRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 
@@ -167,7 +167,7 @@ impl<'a> TryFrom<AnyRef<'a>> for UintRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<UintRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 
@@ -265,7 +265,7 @@ mod allocating {
         type Error = Error;
 
         fn try_from(any: AnyRef<'a>) -> Result<Int> {
-            any.decode_into()
+            any.decode_as()
         }
     }
 
@@ -372,7 +372,7 @@ mod allocating {
         type Error = Error;
 
         fn try_from(any: AnyRef<'a>) -> Result<Uint> {
-            any.decode_into()
+            any.decode_as()
         }
     }
 

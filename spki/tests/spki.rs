@@ -1,5 +1,6 @@
 //! `SubjectPublicKeyInfo` tests.
 
+use der::asn1::ObjectIdentifier;
 use hex_literal::hex;
 use spki::SubjectPublicKeyInfoRef;
 
@@ -51,7 +52,11 @@ fn decode_ec_p256_der() {
     assert_eq!(spki.algorithm.oid, "1.2.840.10045.2.1".parse().unwrap());
 
     assert_eq!(
-        spki.algorithm.parameters.unwrap().oid().unwrap(),
+        spki.algorithm
+            .parameters
+            .unwrap()
+            .decode_as::<ObjectIdentifier>()
+            .unwrap(),
         "1.2.840.10045.3.1.7".parse().unwrap()
     );
 

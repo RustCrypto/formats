@@ -45,7 +45,7 @@ impl TryFrom<AnyRef<'_>> for Null {
     type Error = Error;
 
     fn try_from(any: AnyRef<'_>) -> Result<Null> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 

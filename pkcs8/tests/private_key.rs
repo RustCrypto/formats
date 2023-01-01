@@ -1,5 +1,6 @@
 //! PKCS#8 private key tests
 
+use der::asn1::ObjectIdentifier;
 use hex_literal::hex;
 use pkcs8::{PrivateKeyInfo, Version};
 
@@ -48,7 +49,11 @@ fn decode_ec_p256_der() {
     assert_eq!(pk.algorithm.oid, "1.2.840.10045.2.1".parse().unwrap());
 
     assert_eq!(
-        pk.algorithm.parameters.unwrap().oid().unwrap(),
+        pk.algorithm
+            .parameters
+            .unwrap()
+            .decode_as::<ObjectIdentifier>()
+            .unwrap(),
         "1.2.840.10045.3.1.7".parse().unwrap()
     );
 

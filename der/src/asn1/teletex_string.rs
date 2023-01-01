@@ -83,7 +83,7 @@ impl<'a> TryFrom<AnyRef<'a>> for TeletexStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<TeletexStringRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 impl<'a> From<TeletexStringRef<'a>> for AnyRef<'a> {
@@ -164,7 +164,7 @@ mod allocation {
         type Error = Error;
 
         fn try_from(any: &AnyRef<'a>) -> Result<TeletexString> {
-            (*any).decode_into()
+            (*any).decode_as()
         }
     }
 

@@ -1,17 +1,15 @@
 //! ASN.1 `ANY` type.
+
 #![cfg_attr(feature = "arbitrary", allow(clippy::integer_arithmetic))]
 
 use crate::{
-    asn1::*, BytesRef, Choice, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind,
-    FixedTag, Header, Length, Reader, Result, SliceReader, Tag, Tagged, ValueOrd, Writer,
+    BytesRef, Choice, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, Header, Length,
+    Reader, Result, SliceReader, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
 use {crate::BytesOwned, alloc::boxed::Box};
-
-#[cfg(feature = "oid")]
-use crate::asn1::ObjectIdentifier;
 
 /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
 ///
@@ -58,11 +56,14 @@ impl<'a> AnyRef<'a> {
     }
 
     /// Attempt to decode this [`AnyRef`] type into the inner value.
-    pub fn decode_into<T>(self) -> Result<T>
+    pub fn decode_as<T>(self) -> Result<T>
     where
-        T: DecodeValue<'a> + FixedTag,
+        T: Choice<'a> + DecodeValue<'a>,
     {
-        self.tag.assert_eq(T::TAG)?;
+        if !T::can_decode(self.tag) {
+            return Err(self.tag.unexpected_error(None));
+        }
+
         let header = Header {
             tag: self.tag,
             length: self.value.len(),
@@ -78,48 +79,6 @@ impl<'a> AnyRef<'a> {
         self == Self::NULL
     }
 
-    /// Attempt to decode an ASN.1 `BIT STRING`.
-    pub fn bit_string(self) -> Result<BitStringRef<'a>> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `CONTEXT-SPECIFIC` field.
-    pub fn context_specific<T>(self) -> Result<ContextSpecific<T>>
-    where
-        T: Decode<'a>,
-    {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `GeneralizedTime`.
-    pub fn generalized_time(self) -> Result<GeneralizedTime> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `OCTET STRING`.
-    pub fn octet_string(self) -> Result<OctetStringRef<'a>> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `OBJECT IDENTIFIER`.
-    #[cfg(feature = "oid")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
-    pub fn oid(self) -> Result<ObjectIdentifier> {
-        self.try_into()
-    }
-
-    /// Attempt to decode an ASN.1 `OPTIONAL` value.
-    pub fn optional<T>(self) -> Result<Option<T>>
-    where
-        T: Choice<'a> + TryFrom<Self, Error = Error>,
-    {
-        if T::can_decode(self.tag) {
-            T::try_from(self).map(Some)
-        } else {
-            Ok(None)
-        }
-    }
-
     /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
     /// nested reader and calling the provided argument with it.
     pub fn sequence<F, T>(self, f: F) -> Result<T>
@@ -130,11 +89,6 @@ impl<'a> AnyRef<'a> {
         let mut reader = SliceReader::new(self.value.as_slice())?;
         let result = f(&mut reader)?;
         reader.finish(result)
-    }
-
-    /// Attempt to decode an ASN.1 `UTCTime`.
-    pub fn utc_time(self) -> Result<UtcTime> {
-        self.try_into()
     }
 }
 
@@ -231,19 +185,20 @@ impl Any {
     }
 
     /// Attempt to decode this [`Any`] type into the inner value.
-    pub fn decode_into<'a, T>(&'a self) -> Result<T>
+    pub fn decode_as<'a, T>(&'a self) -> Result<T>
     where
-        T: DecodeValue<'a> + FixedTag,
+        T: Choice<'a> + DecodeValue<'a>,
     {
-        self.tag.assert_eq(T::TAG)?;
-        let header = Header {
-            tag: self.tag,
-            length: self.value.len(),
-        };
+        AnyRef::from(self).decode_as()
+    }
 
-        let mut decoder = SliceReader::new(self.value.as_slice())?;
-        let result = T::decode_value(&mut decoder, header)?;
-        decoder.finish(result)
+    /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
+    /// nested reader and calling the provided argument with it.
+    pub fn sequence<'a, F, T>(&'a self, f: F) -> Result<T>
+    where
+        F: FnOnce(&mut SliceReader<'a>) -> Result<T>,
+    {
+        AnyRef::from(self).sequence(f)
     }
 }
 

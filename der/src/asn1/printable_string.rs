@@ -112,7 +112,7 @@ impl<'a> TryFrom<AnyRef<'a>> for PrintableStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<PrintableStringRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 
@@ -206,7 +206,7 @@ mod allocation {
         type Error = Error;
 
         fn try_from(any: &AnyRef<'a>) -> Result<PrintableString> {
-            (*any).decode_into()
+            (*any).decode_as()
         }
     }
 

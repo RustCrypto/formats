@@ -65,7 +65,7 @@ fn decode_rsa_2048_der() {
 
     // Check the extensions.
     let extensions: x509_cert::ext::Extensions =
-        attribute.values.get(0).unwrap().decode_into().unwrap();
+        attribute.values.get(0).unwrap().decode_as().unwrap();
     for (ext, (oid, val)) in extensions.iter().zip(EXTENSIONS) {
         assert_eq!(ext.extn_id, oid.parse().unwrap());
         assert_eq!(ext.extn_value.as_bytes(), *val);

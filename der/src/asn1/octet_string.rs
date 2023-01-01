@@ -87,7 +87,7 @@ impl<'a> TryFrom<AnyRef<'a>> for OctetStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<OctetStringRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 

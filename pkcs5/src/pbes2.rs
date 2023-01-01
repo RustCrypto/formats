@@ -320,7 +320,7 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
     fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
         // TODO(tarcieri): support for non-AES algorithms?
         let iv = match alg.parameters {
-            Some(params) => params.octet_string()?.as_bytes(),
+            Some(params) => params.decode_as::<OctetStringRef<'a>>()?.as_bytes(),
             None => return Err(Tag::OctetString.value_error()),
         };
 
