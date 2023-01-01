@@ -4,7 +4,8 @@ use crate::{Error, Result};
 use core::cmp::Ordering;
 use der::{
     asn1::{AnyRef, Choice, ObjectIdentifier},
-    Decode, DecodeValue, DerOrd, Encode, Header, Reader, Sequence, ValueOrd,
+    Decode, DecodeValue, DerOrd, Encode, EncodeValue, Header, Length, Reader, Sequence, ValueOrd,
+    Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -44,17 +45,22 @@ where
     }
 }
 
-impl<'a, Params> Sequence<'a> for AlgorithmIdentifier<Params>
+impl<Params> EncodeValue for AlgorithmIdentifier<Params>
 where
-    Params: Choice<'a> + Encode,
+    Params: Encode,
 {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[&self.oid, &self.parameters])
+    fn value_len(&self) -> der::Result<Length> {
+        self.oid.encoded_len()? + self.parameters.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.oid.encode(writer)?;
+        self.parameters.encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a, Params> Sequence<'a> for AlgorithmIdentifier<Params> where Params: Choice<'a> + Encode {}
 
 impl<'a, Params> TryFrom<&'a [u8]> for AlgorithmIdentifier<Params>
 where

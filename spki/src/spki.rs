@@ -4,7 +4,8 @@ use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
     asn1::{AnyRef, BitStringRef},
-    Choice, Decode, DecodeValue, DerOrd, Encode, FixedTag, Header, Reader, Sequence, ValueOrd,
+    Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, FixedTag, Header, Length, Reader,
+    Sequence, ValueOrd, Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -101,17 +102,27 @@ where
     }
 }
 
+impl<'a, Params, Key> EncodeValue for SubjectPublicKeyInfo<Params, Key>
+where
+    Params: Choice<'a> + Encode,
+    Key: Encode,
+{
+    fn value_len(&self) -> der::Result<Length> {
+        self.algorithm.encoded_len()? + self.subject_public_key.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.algorithm.encode(writer)?;
+        self.subject_public_key.encode(writer)?;
+        Ok(())
+    }
+}
+
 impl<'a, Params, Key> Sequence<'a> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a> + Encode,
     Key: Decode<'a> + Encode + FixedTag,
 {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[&self.algorithm, &self.subject_public_key])
-    }
 }
 
 impl<'a, Params, Key> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params, Key>
