@@ -168,7 +168,7 @@ impl TryFrom<AnyRef<'_>> for GeneralizedTime {
     type Error = Error;
 
     fn try_from(any: AnyRef<'_>) -> Result<GeneralizedTime> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 

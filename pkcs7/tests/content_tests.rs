@@ -104,7 +104,7 @@ fn decode_signed_mdm_example() {
             signer_infos: _,
         })) => {
             let _content = content
-                .decode_into::<SequenceRef>()
+                .decode_as::<SequenceRef>()
                 .expect("Content should be in the correct format: SequenceRef");
         }
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
@@ -132,7 +132,7 @@ fn decode_signed_scep_example() {
             signer_infos: _,
         })) => {
             let _content = content
-                .decode_into::<OctetStringRef>()
+                .decode_as::<OctetStringRef>()
                 .expect("Content should be in the correct format: OctetStringRef");
 
             assert_eq!(ver, CmsVersion::V1)

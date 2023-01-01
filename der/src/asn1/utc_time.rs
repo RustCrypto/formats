@@ -191,7 +191,7 @@ impl TryFrom<AnyRef<'_>> for UtcTime {
     type Error = Error;
 
     fn try_from(any: AnyRef<'_>) -> Result<UtcTime> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 

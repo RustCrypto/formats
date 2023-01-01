@@ -157,7 +157,7 @@ impl<'a> AlgorithmIdentifierRef<'a> {
                 None => None,
                 Some(p) => match p {
                     AnyRef::NULL => None,
-                    _ => Some(p.oid()?),
+                    _ => Some(p.decode_as::<ObjectIdentifier>()?),
                 },
             },
         ))

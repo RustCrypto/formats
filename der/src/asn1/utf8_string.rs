@@ -94,7 +94,7 @@ impl<'a> TryFrom<AnyRef<'a>> for Utf8StringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<Utf8StringRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 
@@ -103,7 +103,7 @@ impl<'a> TryFrom<&'a Any> for Utf8StringRef<'a> {
     type Error = Error;
 
     fn try_from(any: &'a Any) -> Result<Utf8StringRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 

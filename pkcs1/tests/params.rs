@@ -105,7 +105,11 @@ fn decode_oaep_param() {
         .assert_algorithm_oid(db::rfc5912::ID_P_SPECIFIED)
         .is_ok());
     assert_eq!(
-        param.p_source.parameters_any().unwrap().octet_string(),
+        param
+            .p_source
+            .parameters_any()
+            .unwrap()
+            .decode_as::<OctetStringRef<'_>>(),
         OctetStringRef::new(&[0xab, 0xcd, 0xef])
     );
 }
@@ -147,7 +151,7 @@ fn decode_oaep_param_default() {
         .p_source
         .parameters_any()
         .unwrap()
-        .octet_string()
+        .decode_as::<OctetStringRef<'_>>()
         .unwrap()
         .is_empty(),);
     assert_eq!(param, Default::default())

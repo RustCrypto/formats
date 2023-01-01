@@ -53,7 +53,7 @@ macro_rules! impl_string_type {
                 type Error = Error;
 
                 fn try_from(any: &'__der Any) -> Result<$type> {
-                    any.decode_into()
+                    any.decode_as()
                 }
             }
         }

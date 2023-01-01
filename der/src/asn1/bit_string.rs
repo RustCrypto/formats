@@ -163,7 +163,7 @@ impl<'a> TryFrom<AnyRef<'a>> for BitStringRef<'a> {
     type Error = Error;
 
     fn try_from(any: AnyRef<'a>) -> Result<BitStringRef<'a>> {
-        any.decode_into()
+        any.decode_as()
     }
 }
 

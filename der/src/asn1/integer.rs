@@ -65,7 +65,7 @@ macro_rules! impl_int_encoding {
                 type Error = Error;
 
                 fn try_from(any: AnyRef<'_>) -> Result<Self> {
-                    any.decode_into()
+                    any.decode_as()
                 }
             }
         )+
@@ -113,7 +113,7 @@ macro_rules! impl_uint_encoding {
                 type Error = Error;
 
                 fn try_from(any: AnyRef<'_>) -> Result<Self> {
-                    any.decode_into()
+                    any.decode_as()
                 }
             }
         )+
