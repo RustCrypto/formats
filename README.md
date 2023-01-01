@@ -1,4 +1,4 @@
-# RustCrypto: Formats [![Project Chat][chat-image]][chat-link] [![dependency status][deps-image]][deps-link]
+# [RustCrypto]: Formats [![Project Chat][chat-image]][chat-link] [![dependency status][deps-image]][deps-link]
 
 Cryptography-related format encoders/decoders (e.g. PKCS, PKIX)
 
@@ -45,6 +45,7 @@ dual licensed as above, without any additional terms or conditions.
 [deps-link]: https://deps.rs/repo/github/RustCrypto/formats
 
 [//]: # "links"
+[rustcrypto]: https://github.com/rustcrypto
 [itu x.660]: https://www.itu.int/rec/T-REC-X.660
 [itu x.690]: https://www.itu.int/rec/T-REC-X.690
 [rfc 2986]: https://datatracker.ietf.org/doc/html/rfc2986
