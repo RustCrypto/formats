@@ -15,7 +15,7 @@ pub use self::kdf::{
 use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
     asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
-    Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Writer,
+    Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Writer,
 };
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -200,20 +200,25 @@ impl<'a> Parameters<'a> {
     }
 }
 
-impl<'a> Decode<'a> for Parameters<'a> {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        AnyRef::decode(reader)?.try_into()
+impl<'a> DecodeValue<'a> for Parameters<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        AnyRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl<'a> Sequence<'a> for Parameters<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[&self.kdf, &self.encryption])
+impl EncodeValue for Parameters<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.kdf.encoded_len()? + self.encryption.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.kdf.encode(writer)?;
+        self.encryption.encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for Parameters<'a> {}
 
 impl<'a> TryFrom<AnyRef<'a>> for Parameters<'a> {
     type Error = der::Error;

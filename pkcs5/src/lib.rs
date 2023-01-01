@@ -35,7 +35,9 @@ pub use crate::error::{Error, Result};
 pub use der::{self, asn1::ObjectIdentifier};
 pub use spki::AlgorithmIdentifierRef;
 
-use der::{Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag};
+use der::{
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, Writer,
+};
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
@@ -147,17 +149,31 @@ impl<'a> DecodeValue<'a> for EncryptionScheme<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for EncryptionScheme<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
+impl EncodeValue for EncryptionScheme<'_> {
+    fn value_len(&self) -> der::Result<Length> {
         match self {
-            Self::Pbes1(pbes1) => f(&[&pbes1.oid(), &pbes1.parameters]),
-            Self::Pbes2(pbes2) => f(&[&pbes2::PBES2_OID, pbes2]),
+            Self::Pbes1(pbes1) => pbes1.oid().encoded_len()? + pbes1.parameters.encoded_len()?,
+            Self::Pbes2(pbes2) => pbes2::PBES2_OID.encoded_len()? + pbes2.encoded_len()?,
         }
     }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        match self {
+            Self::Pbes1(pbes1) => {
+                pbes1.oid().encode(writer)?;
+                pbes1.parameters.encode(writer)?;
+            }
+            Self::Pbes2(pbes2) => {
+                pbes2::PBES2_OID.encode(writer)?;
+                pbes2.encode(writer)?;
+            }
+        }
+
+        Ok(())
+    }
 }
+
+impl<'a> Sequence<'a> for EncryptionScheme<'a> {}
 
 impl<'a> From<pbes1::Algorithm> for EncryptionScheme<'a> {
     fn from(alg: pbes1::Algorithm) -> EncryptionScheme<'a> {

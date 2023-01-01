@@ -5,7 +5,7 @@
 use crate::AlgorithmIdentifierRef;
 use der::{
     asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
-    Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Writer,
+    Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Writer,
 };
 
 /// `pbeWithMD2AndDES-CBC` Object Identifier (OID).
@@ -66,20 +66,25 @@ impl Algorithm {
     }
 }
 
-impl<'a> Decode<'a> for Algorithm {
-    fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
-        AlgorithmIdentifierRef::decode(decoder)?.try_into()
+impl<'a> DecodeValue<'a> for Algorithm {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        AlgorithmIdentifierRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl Sequence<'_> for Algorithm {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[&self.encryption, &self.parameters])
+impl EncodeValue for Algorithm {
+    fn value_len(&self) -> der::Result<Length> {
+        self.encryption.encoded_len()? + self.parameters.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.encryption.encode(writer)?;
+        self.parameters.encode(writer)?;
+        Ok(())
     }
 }
+
+impl Sequence<'_> for Algorithm {}
 
 impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Algorithm {
     type Error = der::Error;
@@ -89,13 +94,15 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Algorithm {
         let encryption = EncryptionScheme::try_from(alg.oid)
             .map_err(|_| der::Tag::ObjectIdentifier.value_error())?;
 
-        match alg.parameters {
-            Some(any) => Ok(Self {
-                encryption,
-                parameters: any.try_into()?,
-            }),
-            None => Err(Tag::OctetString.value_error()),
-        }
+        let parameters = alg
+            .parameters
+            .ok_or_else(|| Tag::OctetString.value_error())?
+            .try_into()?;
+
+        Ok(Self {
+            encryption,
+            parameters,
+        })
     }
 }
 
@@ -117,20 +124,25 @@ pub struct Parameters {
     pub iteration_count: u16,
 }
 
-impl<'a> Decode<'a> for Parameters {
-    fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
-        AnyRef::decode(decoder)?.try_into()
+impl<'a> DecodeValue<'a> for Parameters {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        AnyRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl Sequence<'_> for Parameters {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[&OctetStringRef::new(&self.salt)?, &self.iteration_count])
+impl EncodeValue for Parameters {
+    fn value_len(&self) -> der::Result<Length> {
+        OctetStringRef::new(&self.salt)?.encoded_len()? + self.iteration_count.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        OctetStringRef::new(&self.salt)?.encode(writer)?;
+        self.iteration_count.encode(writer)?;
+        Ok(())
     }
 }
+
+impl Sequence<'_> for Parameters {}
 
 impl TryFrom<AnyRef<'_>> for Parameters {
     type Error = der::Error;

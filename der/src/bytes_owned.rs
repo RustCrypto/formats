@@ -5,7 +5,7 @@ use crate::{
     referenced::OwnedToRef, BytesRef, DecodeValue, DerOrd, EncodeValue, Error, Header, Length,
     Reader, Result, StrRef, Writer,
 };
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 use core::cmp::Ordering;
 
 /// Byte slice newtype which respects the `Length::max()` limit.
@@ -117,8 +117,24 @@ impl From<BytesRef<'_>> for BytesOwned {
 impl TryFrom<&[u8]> for BytesOwned {
     type Error = Error;
 
-    fn try_from(slice: &[u8]) -> Result<Self> {
-        Self::new(slice)
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Self::new(bytes)
+    }
+}
+
+impl TryFrom<Box<[u8]>> for BytesOwned {
+    type Error = Error;
+
+    fn try_from(bytes: Box<[u8]>) -> Result<Self> {
+        Self::new(bytes)
+    }
+}
+
+impl TryFrom<Vec<u8>> for BytesOwned {
+    type Error = Error;
+
+    fn try_from(bytes: Vec<u8>) -> Result<Self> {
+        Self::new(bytes)
     }
 }
 
