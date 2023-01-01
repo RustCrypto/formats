@@ -3,8 +3,8 @@
 use crate::{Error, Result};
 use der::asn1::{AnyRef, ObjectIdentifier};
 use der::{
-    asn1::ContextSpecificRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Reader, Sequence,
-    Tag, TagMode, TagNumber, Writer,
+    asn1::ContextSpecificRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Length, Reader,
+    Sequence, Tag, TagMode, TagNumber, Writer,
 };
 use spki::{AlgorithmIdentifier, AlgorithmIdentifierRef};
 
@@ -47,8 +47,8 @@ impl<'a> DecodeValue<'a> for TrailerField {
 }
 
 impl EncodeValue for TrailerField {
-    fn value_len(&self) -> der::Result<der::Length> {
-        Ok(der::Length::ONE)
+    fn value_len(&self) -> der::Result<Length> {
+        Ok(Length::ONE)
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
@@ -90,6 +90,58 @@ pub struct RsaPssParams<'a> {
     pub trailer_field: TrailerField,
 }
 
+impl<'a> RsaPssParams<'a> {
+    fn opt_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+        if self.hash == SHA_1_AI {
+            None
+        } else {
+            Some(ContextSpecificRef {
+                tag_number: TagNumber::N0,
+                tag_mode: TagMode::Explicit,
+                value: &self.hash,
+            })
+        }
+    }
+
+    fn opt_mask_gen(
+        &self,
+    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>>> {
+        if self.mask_gen == default_mgf1_sha1() {
+            None
+        } else {
+            Some(ContextSpecificRef {
+                tag_number: TagNumber::N1,
+                tag_mode: TagMode::Explicit,
+                value: &self.mask_gen,
+            })
+        }
+    }
+
+    fn opt_salt_len(&self) -> Option<ContextSpecificRef<'_, u8>> {
+        if self.salt_len == SALT_LEN_DEFAULT {
+            None
+        } else {
+            Some(ContextSpecificRef {
+                tag_number: TagNumber::N2,
+                tag_mode: TagMode::Explicit,
+                value: &self.salt_len,
+            })
+        }
+    }
+
+    fn opt_trailer_field(&self) -> Option<ContextSpecificRef<'_, TrailerField>> {
+        if self.trailer_field == TrailerField::default() {
+            None
+        } else {
+            Some(ContextSpecificRef {
+                tag_number: TagNumber::N3,
+                tag_mode: TagMode::Explicit,
+                value: &self.trailer_field,
+            })
+        }
+    }
+}
+
 impl<'a> Default for RsaPssParams<'a> {
     fn default() -> Self {
         Self {
@@ -122,51 +174,24 @@ impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for RsaPssParams<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[
-            &if self.hash == SHA_1_AI {
-                None
-            } else {
-                Some(ContextSpecificRef {
-                    tag_number: TagNumber::N0,
-                    tag_mode: TagMode::Explicit,
-                    value: &self.hash,
-                })
-            },
-            &if self.mask_gen == default_mgf1_sha1() {
-                None
-            } else {
-                Some(ContextSpecificRef {
-                    tag_number: TagNumber::N1,
-                    tag_mode: TagMode::Explicit,
-                    value: &self.mask_gen,
-                })
-            },
-            &if self.salt_len == SALT_LEN_DEFAULT {
-                None
-            } else {
-                Some(ContextSpecificRef {
-                    tag_number: TagNumber::N2,
-                    tag_mode: TagMode::Explicit,
-                    value: &self.salt_len,
-                })
-            },
-            &if self.trailer_field == TrailerField::default() {
-                None
-            } else {
-                Some(ContextSpecificRef {
-                    tag_number: TagNumber::N3,
-                    tag_mode: TagMode::Explicit,
-                    value: &self.trailer_field,
-                })
-            },
-        ])
+impl EncodeValue for RsaPssParams<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.opt_hash().encoded_len()?
+            + self.opt_mask_gen().encoded_len()?
+            + self.opt_salt_len().encoded_len()?
+            + self.opt_trailer_field().encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.opt_hash().encode(writer)?;
+        self.opt_mask_gen().encode(writer)?;
+        self.opt_salt_len().encode(writer)?;
+        self.opt_trailer_field().encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for RsaPssParams<'a> {}
 
 impl<'a> TryFrom<&'a [u8]> for RsaPssParams<'a> {
     type Error = Error;
@@ -211,6 +236,46 @@ pub struct RsaOaepParams<'a> {
     pub p_source: AlgorithmIdentifierRef<'a>,
 }
 
+impl<'a> RsaOaepParams<'a> {
+    fn opt_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+        if self.hash == SHA_1_AI {
+            None
+        } else {
+            Some(ContextSpecificRef {
+                tag_number: TagNumber::N0,
+                tag_mode: TagMode::Explicit,
+                value: &self.hash,
+            })
+        }
+    }
+
+    fn opt_mask_gen(
+        &self,
+    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>>> {
+        if self.mask_gen == default_mgf1_sha1() {
+            None
+        } else {
+            Some(ContextSpecificRef {
+                tag_number: TagNumber::N1,
+                tag_mode: TagMode::Explicit,
+                value: &self.mask_gen,
+            })
+        }
+    }
+
+    fn opt_p_source(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+        if self.p_source == default_pempty_string() {
+            None
+        } else {
+            Some(ContextSpecificRef {
+                tag_number: TagNumber::N2,
+                tag_mode: TagMode::Explicit,
+                value: &self.p_source,
+            })
+        }
+    }
+}
+
 impl<'a> Default for RsaOaepParams<'a> {
     fn default() -> Self {
         Self {
@@ -239,42 +304,22 @@ impl<'a> DecodeValue<'a> for RsaOaepParams<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for RsaOaepParams<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[
-            &if self.hash == SHA_1_AI {
-                None
-            } else {
-                Some(ContextSpecificRef {
-                    tag_number: TagNumber::N0,
-                    tag_mode: TagMode::Explicit,
-                    value: &self.hash,
-                })
-            },
-            &if self.mask_gen == default_mgf1_sha1() {
-                None
-            } else {
-                Some(ContextSpecificRef {
-                    tag_number: TagNumber::N1,
-                    tag_mode: TagMode::Explicit,
-                    value: &self.mask_gen,
-                })
-            },
-            &if self.p_source == default_pempty_string() {
-                None
-            } else {
-                Some(ContextSpecificRef {
-                    tag_number: TagNumber::N2,
-                    tag_mode: TagMode::Explicit,
-                    value: &self.p_source,
-                })
-            },
-        ])
+impl EncodeValue for RsaOaepParams<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.opt_hash().encoded_len()?
+            + self.opt_mask_gen().encoded_len()?
+            + self.opt_p_source().encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.opt_hash().encode(writer)?;
+        self.opt_mask_gen().encode(writer)?;
+        self.opt_p_source().encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for RsaOaepParams<'a> {}
 
 impl<'a> TryFrom<&'a [u8]> for RsaOaepParams<'a> {
     type Error = Error;
