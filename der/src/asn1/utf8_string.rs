@@ -73,7 +73,7 @@ impl EncodeValue for Utf8StringRef<'_> {
         self.inner.value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         self.inner.encode_value(writer)
     }
 }
@@ -138,7 +138,7 @@ impl EncodeValue for str {
         Utf8StringRef::new(self)?.value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         Utf8StringRef::new(self)?.encode_value(writer)
     }
 }
@@ -182,7 +182,7 @@ impl EncodeValue for String {
         Utf8StringRef::new(self)?.value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         Utf8StringRef::new(self)?.encode_value(writer)
     }
 }

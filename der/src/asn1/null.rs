@@ -24,7 +24,7 @@ impl EncodeValue for Null {
         Ok(Length::ZERO)
     }
 
-    fn encode_value(&self, _writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, _writer: &mut impl Writer) -> Result<()> {
         Ok(())
     }
 }
@@ -75,7 +75,7 @@ impl EncodeValue for () {
         Ok(Length::ZERO)
     }
 
-    fn encode_value(&self, _writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, _writer: &mut impl Writer) -> Result<()> {
         Ok(())
     }
 }

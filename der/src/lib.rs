@@ -140,32 +140,19 @@
 //!     }
 //! }
 //!
-//! impl<'a> Sequence<'a> for AlgorithmIdentifier<'a> {
-//!     // The `Sequence::fields` method is used for encoding and functions as
-//!     // a visitor for all of the fields in a message.
-//!     //
-//!     // To implement it, you must define a slice containing `Encode`
-//!     // trait objects, then pass it to the provided `field_encoder`
-//!     // function, which is implemented by the `der` crate and handles
-//!     // message serialization.
-//!     //
-//!     // Trait objects are used because they allow for slices containing
-//!     // heterogeneous field types, and a callback is used to allow for the
-//!     // construction of temporary field encoder types. The latter means
-//!     // that the fields of your Rust struct don't necessarily need to
-//!     // impl the `Encode` trait, but if they don't you must construct
-//!     // a temporary wrapper value which does.
-//!     //
-//!     // Types which impl the `Sequence` trait receive blanket impls of both
-//!     // the `Encode` and `Tagged` traits (where the latter is impl'd as
-//!     // `Tagged::TAG = der::Tag::Sequence`.
-//!     fn fields<F, T>(&self, field_encoder: F) -> der::Result<T>
-//!     where
-//!         F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-//!     {
-//!         field_encoder(&[&self.algorithm, &self.parameters])
+//! impl<'a> ::der::EncodeValue for AlgorithmIdentifier<'a> {
+//!     fn value_len(&self) -> ::der::Result<::der::Length> {
+//!         self.algorithm.encoded_len()? + self.parameters.encoded_len()?
+//!     }
+//!
+//!     fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+//!         self.algorithm.encode(writer)?;
+//!         self.parameters.encode(writer)?;
+//!         Ok(())
 //!     }
 //! }
+//!
+//! impl<'a> Sequence<'a> for AlgorithmIdentifier<'a> {}
 //!
 //! // Example parameters value: OID for the NIST P-256 elliptic curve.
 //! let parameters = "1.2.840.10045.3.1.7".parse::<ObjectIdentifier>().unwrap();

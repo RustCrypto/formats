@@ -44,7 +44,7 @@ impl Encode for Header {
         self.tag.encoded_len()? + self.length.encoded_len()?
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.tag.encode(writer)?;
         self.length.encode(writer)
     }

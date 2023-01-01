@@ -246,7 +246,7 @@ impl Encode for Length {
         }
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         match self.initial_octet() {
             Some(tag_byte) => {
                 writer.write_byte(tag_byte)?;

@@ -231,7 +231,7 @@ impl Encode for EncryptionScheme {
         self.oid().encoded_len()
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {
         self.oid().encode(writer)
     }
 }

@@ -64,7 +64,7 @@ impl<'a> EncodeValue for IntRef<'a> {
         int::encoded_len(self.inner.as_slice())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(self.as_bytes())
     }
 }
@@ -147,7 +147,7 @@ impl<'a> EncodeValue for UintRef<'a> {
         uint::encoded_len(self.inner.as_slice())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         // Add leading `0x00` byte if required
         if self.value_len()? > self.len() {
             writer.write_byte(0)?;
@@ -249,7 +249,7 @@ mod allocating {
             int::encoded_len(self.inner.as_slice())
         }
 
-        fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
             writer.write(self.as_bytes())
         }
     }
@@ -351,7 +351,7 @@ mod allocating {
             uint::encoded_len(self.inner.as_slice())
         }
 
-        fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+        fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
             // Add leading `0x00` byte if required
             if self.value_len()? > self.len() {
                 writer.write_byte(0)?;

@@ -42,7 +42,7 @@ macro_rules! impl_int_encoding {
                     }
                 }
 
-                fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+                fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
                     if *self < 0 {
                         int::encode_bytes(writer, &(*self as $uint).to_be_bytes())
                     } else {
@@ -94,7 +94,7 @@ macro_rules! impl_uint_encoding {
                     uint::encoded_len(&self.to_be_bytes())
                 }
 
-                fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+                fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
                     uint::encode_bytes(writer, &self.to_be_bytes())
                 }
             }

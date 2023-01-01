@@ -340,7 +340,7 @@ impl Encode for Pbkdf2Prf {
         AlgorithmIdentifierRef::try_from(*self)?.encoded_len()
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {
         AlgorithmIdentifierRef::try_from(*self)?.encode(writer)
     }
 }

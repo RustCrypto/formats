@@ -24,7 +24,7 @@ impl EncodeValue for ObjectIdentifier {
         Length::try_from(self.as_bytes().len())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(self.as_bytes())
     }
 }

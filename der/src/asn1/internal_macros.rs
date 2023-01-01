@@ -35,7 +35,7 @@ macro_rules! impl_string_type {
                     self.inner.value_len()
                 }
 
-                fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+                fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
                     self.inner.encode_value(writer)
                 }
             }

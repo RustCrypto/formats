@@ -119,7 +119,7 @@ where
             .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         for elem in self.iter() {
             elem.encode(writer)?;
         }
@@ -307,7 +307,7 @@ where
             .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         for elem in self.iter() {
             elem.encode(writer)?;
         }

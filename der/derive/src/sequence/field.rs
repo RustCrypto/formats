@@ -167,8 +167,7 @@ impl LowerFieldEncoder {
 
     ///  the field encoder to tokens.
     fn into_tokens(self) -> TokenStream {
-        let encoder = self.encoder;
-        quote! { &#encoder }
+        self.encoder
     }
 
     /// Apply the ASN.1 type (if defined).
@@ -295,7 +294,7 @@ mod tests {
         assert_eq!(
             field.to_encode_tokens().to_string(),
             quote! {
-                &self.example_field
+                self.example_field
             }
             .to_string()
         );
@@ -346,7 +345,7 @@ mod tests {
         assert_eq!(
             field.to_encode_tokens().to_string(),
             quote! {
-                &::der::asn1::ContextSpecificRef {
+                ::der::asn1::ContextSpecificRef {
                     tag_number: ::der::TagNumber::N0,
                     tag_mode: ::der::TagMode::Implicit,
                     value: &self.implicit_field,

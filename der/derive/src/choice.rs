@@ -108,7 +108,7 @@ impl DeriveChoice {
             }
 
             impl<#lt_params> ::der::EncodeValue for #ident<#lt_params> {
-                fn encode_value(&self, encoder: &mut dyn ::der::Writer) -> ::der::Result<()> {
+                fn encode_value(&self, encoder: &mut impl ::der::Writer) -> ::der::Result<()> {
                     match self {
                         #(#encode_body)*
                     }

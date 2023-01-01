@@ -51,7 +51,7 @@ impl EncodeValue for TrailerField {
         Ok(der::Length::ONE)
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> der::Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
         (*self as u8).encode_value(writer)
     }
 }

@@ -74,12 +74,16 @@ impl DeriveSequence {
 
         let mut decode_body = Vec::new();
         let mut decode_result = Vec::new();
-        let mut encode_body = Vec::new();
+        let mut encoded_lengths = Vec::new();
+        let mut encode_fields = Vec::new();
 
         for field in &self.fields {
             decode_body.push(field.to_decode_tokens());
             decode_result.push(&field.ident);
-            encode_body.push(field.to_encode_tokens());
+
+            let field = field.to_encode_tokens();
+            encoded_lengths.push(quote!(#field.encoded_len()?));
+            encode_fields.push(quote!(#field.encode(writer)?;));
         }
 
         quote! {
@@ -100,16 +104,25 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lifetime> ::der::Sequence<#lifetime> for #ident<#lt_params> {
-                fn fields<F, T>(&self, f: F) -> ::der::Result<T>
-                where
-                    F: FnOnce(&[&dyn der::Encode]) -> ::der::Result<T>,
-                {
-                    f(&[
-                        #(#encode_body),*
-                    ])
+            impl<#lifetime> ::der::EncodeValue for #ident<#lt_params> {
+                fn value_len(&self) -> ::der::Result<::der::Length> {
+                    use ::der::Encode as _;
+
+                    [
+                        #(#encoded_lengths),*
+                    ]
+                        .into_iter()
+                        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
+                }
+
+                fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+                    use ::der::Encode as _;
+                    #(#encode_fields)*
+                    Ok(())
                 }
             }
+
+            impl<#lifetime> ::der::Sequence<#lifetime> for #ident<#lt_params> {}
         }
     }
 }

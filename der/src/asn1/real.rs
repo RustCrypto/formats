@@ -120,7 +120,7 @@ impl EncodeValue for f64 {
         }
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         // Check if special value
         // Encode zero first, if it's zero
         // Special value from section 8.5.9 if non zero

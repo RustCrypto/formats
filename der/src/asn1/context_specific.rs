@@ -145,7 +145,7 @@ where
         }
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         match self.tag_mode {
             TagMode::Explicit => self.value.encode(writer),
             TagMode::Implicit => self.value.encode_value(writer),
@@ -239,7 +239,7 @@ where
         self.encoder().value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         self.encoder().encode_value(writer)
     }
 }

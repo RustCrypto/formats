@@ -62,7 +62,7 @@ impl Encode for Version {
         der::Length::ONE.for_tlv()
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {
         u8::from(*self).encode(writer)
     }
 }

@@ -34,7 +34,7 @@ impl EncodeValue for ContentType {
         ObjectIdentifier::from(*self).value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> der::Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
         ObjectIdentifier::from(*self).encode_value(writer)
     }
 }

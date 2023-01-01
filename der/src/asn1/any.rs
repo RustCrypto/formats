@@ -160,7 +160,7 @@ impl EncodeValue for AnyRef<'_> {
         Ok(self.value.len())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(self.value())
     }
 }
@@ -264,7 +264,7 @@ impl EncodeValue for Any {
         Ok(self.value.len())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(self.value.as_slice())
     }
 }

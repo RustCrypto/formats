@@ -24,7 +24,7 @@ pub trait Encode {
     fn encoded_len(&self) -> Result<Length>;
 
     /// Encode this value as ASN.1 DER using the provided [`Writer`].
-    fn encode(&self, encoder: &mut dyn Writer) -> Result<()>;
+    fn encode(&self, encoder: &mut impl Writer) -> Result<()>;
 
     /// Encode this value to the provided byte slice, returning a sub-slice
     /// containing the encoded message.
@@ -78,7 +78,7 @@ where
     }
 
     /// Encode this value as ASN.1 DER using the provided [`Writer`].
-    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.header()?.encode(writer)?;
         self.encode_value(writer)
     }
@@ -129,5 +129,5 @@ pub trait EncodeValue {
 
     /// Encode value (sans [`Tag`]+[`Length`] header) as ASN.1 DER using the
     /// provided [`Writer`].
-    fn encode_value(&self, encoder: &mut dyn Writer) -> Result<()>;
+    fn encode_value(&self, encoder: &mut impl Writer) -> Result<()>;
 }

@@ -120,7 +120,7 @@ impl EncodeValue for UtcTime {
         Self::LENGTH.try_into()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         let year = match self.0.year() {
             y @ 1950..=1999 => y.checked_sub(1900),
             y @ 2000..=2049 => y.checked_sub(2000),
