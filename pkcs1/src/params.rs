@@ -91,7 +91,7 @@ pub struct RsaPssParams<'a> {
 }
 
 impl<'a> RsaPssParams<'a> {
-    fn opt_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
         if self.hash == SHA_1_AI {
             None
         } else {
@@ -103,7 +103,7 @@ impl<'a> RsaPssParams<'a> {
         }
     }
 
-    fn opt_mask_gen(
+    fn context_specific_mask_gen(
         &self,
     ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>>> {
         if self.mask_gen == default_mgf1_sha1() {
@@ -117,7 +117,7 @@ impl<'a> RsaPssParams<'a> {
         }
     }
 
-    fn opt_salt_len(&self) -> Option<ContextSpecificRef<'_, u8>> {
+    fn context_specific_salt_len(&self) -> Option<ContextSpecificRef<'_, u8>> {
         if self.salt_len == SALT_LEN_DEFAULT {
             None
         } else {
@@ -129,7 +129,7 @@ impl<'a> RsaPssParams<'a> {
         }
     }
 
-    fn opt_trailer_field(&self) -> Option<ContextSpecificRef<'_, TrailerField>> {
+    fn context_specific_trailer_field(&self) -> Option<ContextSpecificRef<'_, TrailerField>> {
         if self.trailer_field == TrailerField::default() {
             None
         } else {
@@ -176,17 +176,17 @@ impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
 
 impl EncodeValue for RsaPssParams<'_> {
     fn value_len(&self) -> der::Result<Length> {
-        self.opt_hash().encoded_len()?
-            + self.opt_mask_gen().encoded_len()?
-            + self.opt_salt_len().encoded_len()?
-            + self.opt_trailer_field().encoded_len()?
+        self.context_specific_hash().encoded_len()?
+            + self.context_specific_mask_gen().encoded_len()?
+            + self.context_specific_salt_len().encoded_len()?
+            + self.context_specific_trailer_field().encoded_len()?
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
-        self.opt_hash().encode(writer)?;
-        self.opt_mask_gen().encode(writer)?;
-        self.opt_salt_len().encode(writer)?;
-        self.opt_trailer_field().encode(writer)?;
+        self.context_specific_hash().encode(writer)?;
+        self.context_specific_mask_gen().encode(writer)?;
+        self.context_specific_salt_len().encode(writer)?;
+        self.context_specific_trailer_field().encode(writer)?;
         Ok(())
     }
 }
@@ -237,7 +237,7 @@ pub struct RsaOaepParams<'a> {
 }
 
 impl<'a> RsaOaepParams<'a> {
-    fn opt_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
         if self.hash == SHA_1_AI {
             None
         } else {
@@ -249,7 +249,7 @@ impl<'a> RsaOaepParams<'a> {
         }
     }
 
-    fn opt_mask_gen(
+    fn context_specific_mask_gen(
         &self,
     ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>>> {
         if self.mask_gen == default_mgf1_sha1() {
@@ -263,7 +263,9 @@ impl<'a> RsaOaepParams<'a> {
         }
     }
 
-    fn opt_p_source(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    fn context_specific_p_source(
+        &self,
+    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
         if self.p_source == default_pempty_string() {
             None
         } else {
@@ -306,15 +308,15 @@ impl<'a> DecodeValue<'a> for RsaOaepParams<'a> {
 
 impl EncodeValue for RsaOaepParams<'_> {
     fn value_len(&self) -> der::Result<Length> {
-        self.opt_hash().encoded_len()?
-            + self.opt_mask_gen().encoded_len()?
-            + self.opt_p_source().encoded_len()?
+        self.context_specific_hash().encoded_len()?
+            + self.context_specific_mask_gen().encoded_len()?
+            + self.context_specific_p_source().encoded_len()?
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
-        self.opt_hash().encode(writer)?;
-        self.opt_mask_gen().encode(writer)?;
-        self.opt_p_source().encode(writer)?;
+        self.context_specific_hash().encode(writer)?;
+        self.context_specific_mask_gen().encode(writer)?;
+        self.context_specific_p_source().encode(writer)?;
         Ok(())
     }
 }

@@ -8,8 +8,9 @@
 use crate::{EcParameters, Error, Result};
 use core::fmt;
 use der::{
-    asn1::{BitStringRef, ContextSpecific, OctetStringRef},
-    Decode, DecodeValue, Encode, Header, Reader, Sequence, Tag, TagMode, TagNumber,
+    asn1::{BitStringRef, ContextSpecific, ContextSpecificRef, OctetStringRef},
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, TagMode,
+    TagNumber, Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -70,6 +71,30 @@ pub struct EcPrivateKey<'a> {
     pub public_key: Option<&'a [u8]>,
 }
 
+impl<'a> EcPrivateKey<'a> {
+    fn context_specific_parameters(&self) -> Option<ContextSpecificRef<'_, EcParameters>> {
+        self.parameters.as_ref().map(|params| ContextSpecificRef {
+            tag_number: EC_PARAMETERS_TAG,
+            tag_mode: TagMode::Explicit,
+            value: params,
+        })
+    }
+
+    fn context_specific_public_key(
+        &self,
+    ) -> der::Result<Option<ContextSpecific<BitStringRef<'a>>>> {
+        self.public_key
+            .map(|pk| {
+                BitStringRef::from_bytes(pk).map(|value| ContextSpecific {
+                    tag_number: PUBLIC_KEY_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value,
+                })
+            })
+            .transpose()
+    }
+}
+
 impl<'a> DecodeValue<'a> for EcPrivateKey<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
@@ -93,32 +118,22 @@ impl<'a> DecodeValue<'a> for EcPrivateKey<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for EcPrivateKey<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[
-            &VERSION,
-            &OctetStringRef::new(self.private_key)?,
-            &self.parameters.as_ref().map(|params| ContextSpecific {
-                tag_number: EC_PARAMETERS_TAG,
-                tag_mode: TagMode::Explicit,
-                value: *params,
-            }),
-            &self
-                .public_key
-                .map(|pk| {
-                    BitStringRef::from_bytes(pk).map(|value| ContextSpecific {
-                        tag_number: PUBLIC_KEY_TAG,
-                        tag_mode: TagMode::Explicit,
-                        value,
-                    })
-                })
-                .transpose()?,
-        ])
+impl EncodeValue for EcPrivateKey<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        OctetStringRef::new(self.private_key)?.encoded_len()?
+            + self.context_specific_parameters().encoded_len()?
+            + self.context_specific_public_key()?.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        OctetStringRef::new(self.private_key)?.encode(writer)?;
+        self.context_specific_parameters().encode(writer)?;
+        self.context_specific_public_key()?.encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for EcPrivateKey<'a> {}
 
 impl<'a> TryFrom<&'a [u8]> for EcPrivateKey<'a> {
     type Error = Error;
