@@ -224,7 +224,7 @@ impl<'a> DecodeValue<'a> for Pbkdf2Params<'a> {
 
 impl EncodeValue for Pbkdf2Params<'_> {
     fn value_len(&self) -> der::Result<Length> {
-        let len = OctetStringRef::new(&self.salt)?.encoded_len()?
+        let len = OctetStringRef::new(self.salt)?.encoded_len()?
             + self.iteration_count.encoded_len()?
             + self.key_length.encoded_len()?;
 
@@ -236,7 +236,7 @@ impl EncodeValue for Pbkdf2Params<'_> {
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
-        OctetStringRef::new(&self.salt)?.encode(writer)?;
+        OctetStringRef::new(self.salt)?.encode(writer)?;
         self.iteration_count.encode(writer)?;
         self.key_length.encode(writer)?;
 
@@ -421,7 +421,7 @@ impl<'a> DecodeValue<'a> for ScryptParams<'a> {
 
 impl EncodeValue for ScryptParams<'_> {
     fn value_len(&self) -> der::Result<Length> {
-        OctetStringRef::new(&self.salt)?.encoded_len()?
+        OctetStringRef::new(self.salt)?.encoded_len()?
             + self.cost_parameter.encoded_len()?
             + self.block_size.encoded_len()?
             + self.parallelization.encoded_len()?
@@ -429,7 +429,7 @@ impl EncodeValue for ScryptParams<'_> {
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
-        OctetStringRef::new(&self.salt)?.encode(writer)?;
+        OctetStringRef::new(self.salt)?.encode(writer)?;
         self.cost_parameter.encode(writer)?;
         self.block_size.encode(writer)?;
         self.parallelization.encode(writer)?;
