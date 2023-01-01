@@ -5,7 +5,7 @@ use crate::{
 
 use der::{
     asn1::{ContextSpecific, OctetStringRef},
-    DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
+    DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, TagMode, TagNumber, Writer,
 };
 
 const CONTENT_TAG: TagNumber = TagNumber::new(0);
@@ -18,6 +18,7 @@ const CONTENT_TAG: TagNumber = TagNumber::new(0);
 ///   content
 ///     [0] EXPLICIT ANY DEFINED BY contentType OPTIONAL }
 /// ```
+#[derive(Clone, Debug)]
 pub enum ContentInfo<'a> {
     /// Content type `data`
     Data(Option<DataContent<'a>>),
@@ -99,47 +100,88 @@ impl<'a> DecodeValue<'a> for ContentInfo<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for ContentInfo<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
+impl EncodeValue for ContentInfo<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.content_type().encoded_len()?
+            + match self {
+                Self::Data(data) => data
+                    .as_ref()
+                    .map(|d| ContextSpecific {
+                        tag_number: CONTENT_TAG,
+                        tag_mode: TagMode::Explicit,
+                        value: *d,
+                    })
+                    .encoded_len(),
+                Self::EncryptedData(data) => data
+                    .as_ref()
+                    .map(|d| ContextSpecific {
+                        tag_number: CONTENT_TAG,
+                        tag_mode: TagMode::Explicit,
+                        value: *d,
+                    })
+                    .encoded_len(),
+                Self::SignedData(data) => data
+                    .as_ref()
+                    .map(|d| ContextSpecific {
+                        tag_number: CONTENT_TAG,
+                        tag_mode: TagMode::Explicit,
+                        value: d.clone(),
+                    })
+                    .encoded_len(),
+                Self::Other((_, opt_oct_str)) => opt_oct_str
+                    .as_ref()
+                    .map(|d| ContextSpecific {
+                        tag_number: CONTENT_TAG,
+                        tag_mode: TagMode::Explicit,
+                        value: *d,
+                    })
+                    .encoded_len(),
+            }?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.content_type().encode(writer)?;
+
         match self {
-            Self::Data(data) => f(&[
-                &self.content_type(),
-                &data.as_ref().map(|d| ContextSpecific {
+            Self::Data(data) => data
+                .as_ref()
+                .map(|d| ContextSpecific {
                     tag_number: CONTENT_TAG,
                     tag_mode: TagMode::Explicit,
                     value: *d,
-                }),
-            ]),
-            Self::EncryptedData(data) => f(&[
-                &self.content_type(),
-                &data.as_ref().map(|d| ContextSpecific {
+                })
+                .encode(writer)?,
+            Self::EncryptedData(data) => data
+                .as_ref()
+                .map(|d| ContextSpecific {
                     tag_number: CONTENT_TAG,
                     tag_mode: TagMode::Explicit,
                     value: *d,
-                }),
-            ]),
-            Self::SignedData(data) => f(&[
-                &self.content_type(),
-                &data.as_ref().map(|d| ContextSpecific {
+                })
+                .encode(writer)?,
+            Self::SignedData(data) => data
+                .as_ref()
+                .map(|d| ContextSpecific {
                     tag_number: CONTENT_TAG,
                     tag_mode: TagMode::Explicit,
                     value: d.clone(),
-                }),
-            ]),
-            Self::Other((content_type, opt_oct_str)) => f(&[
-                content_type,
-                &opt_oct_str.as_ref().map(|d| ContextSpecific {
+                })
+                .encode(writer)?,
+            Self::Other((_, opt_oct_str)) => opt_oct_str
+                .as_ref()
+                .map(|d| ContextSpecific {
                     tag_number: CONTENT_TAG,
                     tag_mode: TagMode::Explicit,
                     value: *d,
-                }),
-            ]),
+                })
+                .encode(writer)?,
         }
+
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for ContentInfo<'a> {}
 
 #[cfg(test)]
 mod tests {
