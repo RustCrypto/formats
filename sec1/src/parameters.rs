@@ -41,7 +41,7 @@ impl EncodeValue for EcParameters {
         }
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> der::Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
         match self {
             Self::NamedCurve(oid) => oid.encode_value(writer),
         }

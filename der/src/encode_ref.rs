@@ -22,7 +22,7 @@ where
         self.0.encoded_len()
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.0.encode(writer)
     }
 }
@@ -47,7 +47,7 @@ where
         self.0.value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         self.0.encode_value(writer)
     }
 }

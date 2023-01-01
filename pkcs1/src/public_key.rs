@@ -1,7 +1,10 @@
 //! PKCS#1 RSA Public Keys.
 
 use crate::{Error, Result};
-use der::{asn1::UintRef, Decode, DecodeValue, Encode, Header, Reader, Sequence};
+use der::{
+    asn1::UintRef, Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence,
+    Writer,
+};
 
 #[cfg(feature = "alloc")]
 use der::Document;
@@ -41,14 +44,19 @@ impl<'a> DecodeValue<'a> for RsaPublicKey<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for RsaPublicKey<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[&self.modulus, &self.public_exponent])
+impl EncodeValue for RsaPublicKey<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.modulus.encoded_len()? + self.public_exponent.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.modulus.encode(writer)?;
+        self.public_exponent.encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for RsaPublicKey<'a> {}
 
 impl<'a> TryFrom<&'a [u8]> for RsaPublicKey<'a> {
     type Error = Error;

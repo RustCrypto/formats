@@ -8,7 +8,7 @@ use crate::{
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use crate::BytesOwned;
+use {crate::BytesOwned, alloc::boxed::Box};
 
 #[cfg(feature = "oid")]
 use crate::asn1::ObjectIdentifier;
@@ -147,7 +147,12 @@ impl<'a> Choice<'a> for AnyRef<'a> {
 impl<'a> Decode<'a> for AnyRef<'a> {
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<AnyRef<'a>> {
         let header = Header::decode(reader)?;
+        Self::decode_value(reader, header)
+    }
+}
 
+impl<'a> DecodeValue<'a> for AnyRef<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Ok(Self {
             tag: header.tag,
             value: BytesRef::decode_value(reader, header)?,
@@ -160,7 +165,7 @@ impl EncodeValue for AnyRef<'_> {
         Ok(self.value.len())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(self.value())
     }
 }
@@ -217,7 +222,7 @@ pub struct Any {
 #[cfg(feature = "alloc")]
 impl Any {
     /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
-    pub fn new(tag: Tag, bytes: &[u8]) -> Result<Self> {
+    pub fn new(tag: Tag, bytes: impl Into<Box<[u8]>>) -> Result<Self> {
         let value = BytesOwned::new(bytes)?;
 
         // Ensure the tag and value are a valid `AnyRef`.
@@ -253,8 +258,15 @@ impl Choice<'_> for Any {
 impl<'a> Decode<'a> for Any {
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
         let header = Header::decode(reader)?;
+        Self::decode_value(reader, header)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> DecodeValue<'a> for Any {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let value = reader.read_vec(header.length)?;
-        Self::new(header.tag, &value)
+        Self::new(header.tag, value)
     }
 }
 
@@ -264,7 +276,7 @@ impl EncodeValue for Any {
         Ok(self.value.len())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(self.value.as_slice())
     }
 }

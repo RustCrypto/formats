@@ -66,7 +66,7 @@ impl EncodeValue for OctetStringRef<'_> {
         self.inner.value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         self.inner.encode_value(writer)
     }
 }
@@ -165,7 +165,7 @@ impl EncodeValue for OctetString {
         self.inner.len().try_into()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(&self.inner)
     }
 }

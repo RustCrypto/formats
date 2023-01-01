@@ -80,7 +80,7 @@ impl EncodeValue for StrOwned {
         Ok(self.length)
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(self.as_ref())
     }
 }

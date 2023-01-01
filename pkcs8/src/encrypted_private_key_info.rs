@@ -2,7 +2,10 @@
 
 use crate::{Error, Result};
 use core::fmt;
-use der::{asn1::OctetStringRef, Decode, DecodeValue, Encode, Header, Reader, Sequence};
+use der::{
+    asn1::OctetStringRef, Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader,
+    Sequence, Writer,
+};
 use pkcs5::EncryptionScheme;
 
 #[cfg(feature = "alloc")]
@@ -111,17 +114,20 @@ impl<'a> DecodeValue<'a> for EncryptedPrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for EncryptedPrivateKeyInfo<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[
-            &self.encryption_algorithm,
-            &OctetStringRef::new(self.encrypted_data)?,
-        ])
+impl EncodeValue for EncryptedPrivateKeyInfo<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.encryption_algorithm.encoded_len()?
+            + OctetStringRef::new(self.encrypted_data)?.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.encryption_algorithm.encode(writer)?;
+        OctetStringRef::new(self.encrypted_data)?.encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for EncryptedPrivateKeyInfo<'a> {}
 
 impl<'a> TryFrom<&'a [u8]> for EncryptedPrivateKeyInfo<'a> {
     type Error = Error;

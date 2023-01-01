@@ -138,7 +138,7 @@ impl EncodeValue for BitStringRef<'_> {
         self.byte_len() + Length::ONE
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write_byte(self.unused_bits)?;
         writer.write(self.raw_bytes())
     }
@@ -325,7 +325,7 @@ impl EncodeValue for BitString {
         Length::ONE + Length::try_from(self.inner.len())?
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write_byte(self.unused_bits)?;
         writer.write(&self.inner)
     }
@@ -504,7 +504,7 @@ where
         BitStringRef::new((lead % 8) as u8, buff)?.value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         let (lead, buff) = encode_flagset(self);
         let buff = &buff[..buff.len() - lead / 8];
         BitStringRef::new((lead % 8) as u8, buff)?.encode_value(writer)

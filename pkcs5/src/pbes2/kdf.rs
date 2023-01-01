@@ -3,7 +3,8 @@
 use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
     asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
-    Decode, Encode, ErrorKind, Length, Reader, Sequence, Tag, Tagged, Writer,
+    Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Tagged,
+    Writer,
 };
 
 /// Password-Based Key Derivation Function (PBKDF2) OID.
@@ -98,23 +99,34 @@ impl<'a> Kdf<'a> {
     }
 }
 
-impl<'a> Decode<'a> for Kdf<'a> {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        AlgorithmIdentifierRef::decode(reader)?.try_into()
+impl<'a> DecodeValue<'a> for Kdf<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        AlgorithmIdentifierRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl<'a> Sequence<'a> for Kdf<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
+impl EncodeValue for Kdf<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.oid().encoded_len()?
+            + match self {
+                Self::Pbkdf2(params) => params.encoded_len()?,
+                Self::Scrypt(params) => params.encoded_len()?,
+            }
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.oid().encode(writer)?;
+
         match self {
-            Self::Pbkdf2(params) => f(&[&self.oid(), params]),
-            Self::Scrypt(params) => f(&[&self.oid(), params]),
+            Self::Pbkdf2(params) => params.encode(writer)?,
+            Self::Scrypt(params) => params.encode(writer)?,
         }
+
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for Kdf<'a> {}
 
 impl<'a> From<Pbkdf2Params<'a>> for Kdf<'a> {
     fn from(params: Pbkdf2Params<'a>) -> Self {
@@ -204,33 +216,39 @@ impl<'a> Pbkdf2Params<'a> {
     }
 }
 
-impl<'a> Decode<'a> for Pbkdf2Params<'a> {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        AnyRef::decode(reader)?.try_into()
+impl<'a> DecodeValue<'a> for Pbkdf2Params<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        AnyRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl<'a> Sequence<'a> for Pbkdf2Params<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
+impl EncodeValue for Pbkdf2Params<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        let len = OctetStringRef::new(self.salt)?.encoded_len()?
+            + self.iteration_count.encoded_len()?
+            + self.key_length.encoded_len()?;
+
         if self.prf == Pbkdf2Prf::default() {
-            f(&[
-                &OctetStringRef::new(self.salt)?,
-                &self.iteration_count,
-                &self.key_length,
-            ])
+            len
         } else {
-            f(&[
-                &OctetStringRef::new(self.salt)?,
-                &self.iteration_count,
-                &self.key_length,
-                &self.prf,
-            ])
+            len + self.prf.encoded_len()?
+        }
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        OctetStringRef::new(self.salt)?.encode(writer)?;
+        self.iteration_count.encode(writer)?;
+        self.key_length.encode(writer)?;
+
+        if self.prf == Pbkdf2Prf::default() {
+            Ok(())
+        } else {
+            self.prf.encode(writer)
         }
     }
 }
+
+impl<'a> Sequence<'a> for Pbkdf2Params<'a> {}
 
 impl<'a> TryFrom<AnyRef<'a>> for Pbkdf2Params<'a> {
     type Error = der::Error;
@@ -340,7 +358,7 @@ impl Encode for Pbkdf2Prf {
         AlgorithmIdentifierRef::try_from(*self)?.encoded_len()
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> der::Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {
         AlgorithmIdentifierRef::try_from(*self)?.encode(writer)
     }
 }
@@ -395,26 +413,32 @@ impl<'a> ScryptParams<'a> {
     }
 }
 
-impl<'a> Decode<'a> for ScryptParams<'a> {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
-        AnyRef::decode(reader)?.try_into()
+impl<'a> DecodeValue<'a> for ScryptParams<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        AnyRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl<'a> Sequence<'a> for ScryptParams<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[
-            &OctetStringRef::new(self.salt)?,
-            &self.cost_parameter,
-            &self.block_size,
-            &self.parallelization,
-            &self.key_length,
-        ])
+impl EncodeValue for ScryptParams<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        OctetStringRef::new(self.salt)?.encoded_len()?
+            + self.cost_parameter.encoded_len()?
+            + self.block_size.encoded_len()?
+            + self.parallelization.encoded_len()?
+            + self.key_length.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        OctetStringRef::new(self.salt)?.encode(writer)?;
+        self.cost_parameter.encode(writer)?;
+        self.block_size.encode(writer)?;
+        self.parallelization.encode(writer)?;
+        self.key_length.encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for ScryptParams<'a> {}
 
 impl<'a> TryFrom<AnyRef<'a>> for ScryptParams<'a> {
     type Error = der::Error;

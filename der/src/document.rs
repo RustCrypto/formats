@@ -166,7 +166,7 @@ impl Encode for Document {
         Ok(self.len())
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write(self.as_bytes())
     }
 }

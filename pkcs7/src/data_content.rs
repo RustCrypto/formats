@@ -43,7 +43,7 @@ impl<'a> EncodeValue for DataContent<'a> {
         Length::try_from(self.content.len())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> der::Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
         OctetStringRef::new(self.content)?.encode_value(writer)
     }
 }

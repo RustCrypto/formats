@@ -72,7 +72,7 @@ fn decode_encrypted_key_example() {
             assert_eq!(salt.as_bytes(), expected_salt);
             assert_eq!(iter, 2048);
 
-            assert_eq!(bytes.len(), 552)
+            assert_eq!(552u32, bytes.len().into())
         }
         _ => panic!("expected ContentInfo::Data(Some(_))"),
     }

@@ -113,7 +113,7 @@ impl EncodeValue for GeneralizedTime {
         Self::LENGTH.try_into()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         let year_hi = u8::try_from(self.0.year() / 100)?;
         let year_lo = u8::try_from(self.0.year() % 100)?;
 
@@ -183,7 +183,7 @@ impl EncodeValue for DateTime {
         GeneralizedTime::from(self).value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         GeneralizedTime::from(self).encode_value(writer)
     }
 }
@@ -209,7 +209,7 @@ impl EncodeValue for SystemTime {
         GeneralizedTime::try_from(self)?.value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         GeneralizedTime::try_from(self)?.encode_value(writer)
     }
 }
@@ -285,7 +285,7 @@ impl EncodeValue for PrimitiveDateTime {
         GeneralizedTime::try_from(self)?.value_len()
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         GeneralizedTime::try_from(self)?.encode_value(writer)
     }
 }

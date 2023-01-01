@@ -2,52 +2,17 @@
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{
-    BytesRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Result,
-    Tag, Writer,
+    BytesRef, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
-/// ASN.1 `SEQUENCE` trait.
+/// Marker trait for ASN.1 `SEQUENCE`s.
 ///
-/// Types which impl this trait receive blanket impls for the [`Decode`],
-/// [`Encode`], and [`FixedTag`] traits.
-pub trait Sequence<'a>: Decode<'a> {
-    /// Call the provided function with a slice of [`Encode`] trait objects
-    /// representing the fields of this `SEQUENCE`.
-    ///
-    /// This method uses a callback because structs with fields which aren't
-    /// directly [`Encode`] may need to construct temporary values from
-    /// their fields prior to encoding.
-    fn fields<F, T>(&self, f: F) -> Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> Result<T>;
-}
+/// This is mainly used for custom derive.
+pub trait Sequence<'a>: DecodeValue<'a> + EncodeValue {}
 
-impl<'a, M> EncodeValue for M
+impl<'a, S> FixedTag for S
 where
-    M: Sequence<'a>,
-{
-    fn value_len(&self) -> Result<Length> {
-        self.fields(|fields| {
-            fields
-                .iter()
-                .try_fold(Length::ZERO, |acc, field| acc + field.encoded_len()?)
-        })
-    }
-
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
-        self.fields(|fields| {
-            for &field in fields {
-                field.encode(writer)?;
-            }
-
-            Ok(())
-        })
-    }
-}
-
-impl<'a, M> FixedTag for M
-where
-    M: Sequence<'a>,
+    S: Sequence<'a>,
 {
     const TAG: Tag = Tag::Sequence;
 }
@@ -74,11 +39,9 @@ impl EncodeValue for SequenceRef<'_> {
         Ok(self.body.len())
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         self.body.encode_value(writer)
     }
 }
 
-impl<'a> FixedTag for SequenceRef<'a> {
-    const TAG: Tag = Tag::Sequence;
-}
+impl<'a> Sequence<'a> for SequenceRef<'a> {}

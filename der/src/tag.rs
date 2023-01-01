@@ -325,7 +325,7 @@ impl Encode for Tag {
         Ok(Length::ONE)
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write_byte(self.into())
     }
 }

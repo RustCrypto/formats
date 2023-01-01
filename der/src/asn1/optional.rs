@@ -41,7 +41,7 @@ where
         (&self).encoded_len()
     }
 
-    fn encode(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         (&self).encode(writer)
     }
 }
@@ -57,7 +57,7 @@ where
         }
     }
 
-    fn encode(&self, encoder: &mut dyn Writer) -> Result<()> {
+    fn encode(&self, encoder: &mut impl Writer) -> Result<()> {
         match self {
             Some(encodable) => encodable.encode(encoder),
             None => Ok(()),

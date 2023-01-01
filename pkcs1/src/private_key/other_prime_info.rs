@@ -1,6 +1,8 @@
 //! PKCS#1 OtherPrimeInfo support.
 
-use der::{asn1::UintRef, DecodeValue, Encode, Header, Reader, Sequence};
+use der::{
+    asn1::UintRef, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer,
+};
 
 /// PKCS#1 OtherPrimeInfo as defined in [RFC 8017 Appendix 1.2].
 ///
@@ -40,11 +42,17 @@ impl<'a> DecodeValue<'a> for OtherPrimeInfo<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for OtherPrimeInfo<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[&self.prime, &self.exponent, &self.coefficient])
+impl EncodeValue for OtherPrimeInfo<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.prime.encoded_len()? + self.exponent.encoded_len()? + self.coefficient.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.prime.encode(writer)?;
+        self.exponent.encode(writer)?;
+        self.coefficient.encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for OtherPrimeInfo<'a> {}

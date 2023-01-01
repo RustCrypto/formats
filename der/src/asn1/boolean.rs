@@ -33,7 +33,7 @@ impl EncodeValue for bool {
         Ok(Length::ONE)
     }
 
-    fn encode_value(&self, writer: &mut dyn Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         writer.write_byte(if *self { TRUE_OCTET } else { FALSE_OCTET })
     }
 }

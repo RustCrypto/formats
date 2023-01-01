@@ -2,15 +2,10 @@
 
 use crate::ContentType;
 
-use der::{
-    asn1::{ContextSpecific, OctetStringRef},
-    DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
-};
+use der::{asn1::OctetStringRef, Sequence};
 use spki::AlgorithmIdentifierRef;
 
 type ContentEncryptionAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
-
-const ENCRYPTED_CONTENT_TAG: TagNumber = TagNumber::new(0);
 
 /// Encrypted content information [RFC 5652 § 6](https://datatracker.ietf.org/doc/html/rfc5652#section-6)
 ///
@@ -37,55 +32,17 @@ const ENCRYPTED_CONTENT_TAG: TagNumber = TagNumber::new(0);
 ///   - [`encrypted_content`](EncryptedContentInfo::encrypted_content) is the result of
 ///     encrypting the content. The field is optional, and if the field is not present,
 ///     its intended value must be supplied by other means.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Sequence)]
 pub struct EncryptedContentInfo<'a> {
     /// indicates the type of content.
     pub content_type: ContentType,
+
     /// identifies the content-encryption algorithm (and any associated parameters) under
     /// which the content is encrypted.
     pub content_encryption_algorithm: ContentEncryptionAlgorithmIdentifier<'a>,
+
     /// the encrypted contents;
     /// when not present, its intended value must be supplied by other means.
-    pub encrypted_content: Option<&'a [u8]>,
-}
-
-impl<'a> DecodeValue<'a> for EncryptedContentInfo<'a> {
-    fn decode_value<R: Reader<'a>>(
-        reader: &mut R,
-        header: Header,
-    ) -> der::Result<EncryptedContentInfo<'a>> {
-        reader.read_nested(header.length, |reader| {
-            Ok(EncryptedContentInfo {
-                content_type: reader.decode()?,
-                content_encryption_algorithm: reader.decode()?,
-                encrypted_content: reader
-                    .context_specific::<OctetStringRef<'_>>(
-                        ENCRYPTED_CONTENT_TAG,
-                        TagMode::Implicit,
-                    )?
-                    .map(|o| o.as_bytes()),
-            })
-        })
-    }
-}
-
-impl<'a> Sequence<'a> for EncryptedContentInfo<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        let opt_octet = self
-            .encrypted_content
-            .map(OctetStringRef::new)
-            .transpose()?;
-        f(&[
-            &self.content_type,
-            &self.content_encryption_algorithm,
-            &opt_octet.as_ref().map(|d| ContextSpecific {
-                tag_number: ENCRYPTED_CONTENT_TAG,
-                tag_mode: TagMode::Implicit,
-                value: *d,
-            }),
-        ])
-    }
+    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
+    pub encrypted_content: Option<OctetStringRef<'a>>,
 }

@@ -61,7 +61,7 @@ macro_rules! impl_newtype {
 
         #[allow(unused_lifetimes)]
         impl<'a> ::der::EncodeValue for $newtype {
-            fn encode_value(&self, encoder: &mut dyn ::der::Writer) -> ::der::Result<()> {
+            fn encode_value(&self, encoder: &mut impl ::der::Writer) -> ::der::Result<()> {
                 self.0.encode_value(encoder)
             }
 
