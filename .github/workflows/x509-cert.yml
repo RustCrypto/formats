@@ -44,6 +44,7 @@ jobs:
     uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
     with:
         working-directory: ${{ github.workflow }}
+        install-zlint: true
 
   test:
     runs-on: ubuntu-latest
@@ -59,6 +60,8 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
       - uses: RustCrypto/actions/cargo-hack-install@master
+      - name: Install zlint
+        uses: RustCrypto/actions/zlint-install@master
       - run: cargo hack test --feature-powerset
 
   fuzz:
