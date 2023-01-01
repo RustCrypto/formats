@@ -4,7 +4,8 @@ use crate::{AlgorithmIdentifierRef, Error, Result, Version};
 use core::fmt;
 use der::{
     asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
-    Decode, DecodeValue, Encode, Header, Reader, Sequence, TagMode, TagNumber,
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, TagMode, TagNumber,
+    Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -156,6 +157,19 @@ impl<'a> PrivateKeyInfo<'a> {
         let der = Zeroizing::new(self.to_vec()?);
         EncryptedPrivateKeyInfo::encrypt_with(pbes2_params, password, der.as_ref())
     }
+
+    /// Get a `BIT STRING` representation of the public key, if present.
+    fn public_key_bit_string(&self) -> der::Result<Option<ContextSpecific<BitStringRef<'a>>>> {
+        self.public_key
+            .map(|pk| {
+                BitStringRef::from_bytes(pk).map(|value| ContextSpecific {
+                    tag_number: PUBLIC_KEY_TAG,
+                    tag_mode: TagMode::Implicit,
+                    value,
+                })
+            })
+            .transpose()
+    }
 }
 
 impl<'a> DecodeValue<'a> for PrivateKeyInfo<'a> {
@@ -201,28 +215,24 @@ impl<'a> DecodeValue<'a> for PrivateKeyInfo<'a> {
     }
 }
 
-impl<'a> Sequence<'a> for PrivateKeyInfo<'a> {
-    fn fields<F, T>(&self, f: F) -> der::Result<T>
-    where
-        F: FnOnce(&[&dyn Encode]) -> der::Result<T>,
-    {
-        f(&[
-            &u8::from(self.version()),
-            &self.algorithm,
-            &OctetStringRef::new(self.private_key)?,
-            &self
-                .public_key
-                .map(|pk| {
-                    BitStringRef::from_bytes(pk).map(|value| ContextSpecific {
-                        tag_number: PUBLIC_KEY_TAG,
-                        tag_mode: TagMode::Implicit,
-                        value,
-                    })
-                })
-                .transpose()?,
-        ])
+impl EncodeValue for PrivateKeyInfo<'_> {
+    fn value_len(&self) -> der::Result<Length> {
+        self.version().encoded_len()?
+            + self.algorithm.encoded_len()?
+            + OctetStringRef::new(self.private_key)?.encoded_len()?
+            + self.public_key_bit_string()?.encoded_len()?
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+        self.version().encode(writer)?;
+        self.algorithm.encode(writer)?;
+        OctetStringRef::new(self.private_key)?.encode(writer)?;
+        self.public_key_bit_string()?.encode(writer)?;
+        Ok(())
     }
 }
+
+impl<'a> Sequence<'a> for PrivateKeyInfo<'a> {}
 
 impl<'a> TryFrom<&'a [u8]> for PrivateKeyInfo<'a> {
     type Error = Error;
