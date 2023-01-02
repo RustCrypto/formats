@@ -16,7 +16,7 @@ extern crate alloc;
 use der::asn1::{BitStringRef, Ia5StringRef, ObjectIdentifier, OctetStringRef, UintRef};
 use der::asn1::{GeneralizedTime, Null};
 use der::{AnyRef, Choice, Enumerated, Sequence};
-use spki::AlgorithmIdentifierRef;
+use spki::{AlgorithmIdentifierOwned, AlgorithmIdentifierRef};
 use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::ext::pkix::{AuthorityInfoAccessSyntax, CrlReason};
 use x509_cert::ext::Extensions;
@@ -242,7 +242,7 @@ pub struct ResponseBytes<'a> {
 #[allow(missing_docs)]
 pub struct BasicOcspResponse<'a> {
     pub tbs_response_data: ResponseData<'a>,
-    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
+    pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitStringRef<'a>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]

@@ -184,6 +184,11 @@ impl Any {
         Ok(Self { tag, value })
     }
 
+    /// Allow access to value
+    pub fn value<'a>(&'a self) -> &'a [u8] {
+        self.value.as_slice()
+    }
+
     /// Attempt to decode this [`Any`] type into the inner value.
     pub fn decode_as<'a, T>(&'a self) -> Result<T>
     where
