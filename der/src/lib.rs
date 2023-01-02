@@ -360,7 +360,7 @@ pub use crate::{
     encode_ref::{EncodeRef, EncodeValueRef},
     error::{Error, ErrorKind, Result},
     header::Header,
-    length::Length,
+    length::{IndefiniteLength, Length},
     ord::{DerOrd, ValueOrd},
     reader::{slice::SliceReader, Reader},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},

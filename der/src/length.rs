@@ -14,6 +14,13 @@ const MAX_DER_OCTETS: usize = 5;
 /// Maximum length as a `u32` (256 MiB).
 const MAX_U32: u32 = 0xfff_ffff;
 
+/// Octet identifying an indefinite length as described in X.690 Section
+/// 8.1.3.6.1:
+///
+/// > The single octet shall have bit 8 set to one, and bits 7 to
+/// > 1 set to zero.
+const INDEFINITE_LENGTH_OCTET: u8 = 0b10000000; // 0x80
+
 /// ASN.1-encoded length.
 ///
 /// Maximum length is defined by the [`Length::MAX`] constant (256 MiB).
@@ -204,7 +211,8 @@ impl<'a> Decode<'a> for Length {
         match reader.read_byte()? {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
             // lengths, which are not allowed in DER, so disallow that byte.
-            len if len < 0x80 => Ok(len.into()),
+            len if len < INDEFINITE_LENGTH_OCTET => Ok(len.into()),
+            INDEFINITE_LENGTH_OCTET => Err(ErrorKind::IndefiniteLength.into()),
             // 1-4 byte variable-sized length prefix
             tag @ 0x81..=0x84 => {
                 let nbytes = tag.checked_sub(0x80).ok_or(ErrorKind::Overlength)? as usize;
@@ -299,9 +307,113 @@ impl<'a> arbitrary::Arbitrary<'a> for Length {
     }
 }
 
+/// Length type with support for indefinite lengths as used by ASN.1 BER,
+/// as described in X.690 Section 8.1.3.6:
+///
+/// > 8.1.3.6 For the indefinite form, the length octets indicate that the
+/// > contents octets are terminated by end-of-contents
+/// > octets (see 8.1.5), and shall consist of a single octet.
+/// >
+/// > 8.1.3.6.1 The single octet shall have bit 8 set to one, and bits 7 to
+/// > 1 set to zero.
+/// >
+/// > 8.1.3.6.2 If this form of length is used, then end-of-contents octets
+/// > (see 8.1.5) shall be present in the encoding following the contents
+/// > octets.
+///
+/// Indefinite lengths are non-canonical and therefore invalid DER, however
+/// there are interoperability corner cases where we have little choice but to
+/// tolerate some BER productions where this is helpful.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct IndefiniteLength(Option<Length>);
+
+impl IndefiniteLength {
+    /// Length of `0`.
+    pub const ZERO: Self = Self(Some(Length::ZERO));
+
+    /// Length of `1`.
+    pub const ONE: Self = Self(Some(Length::ONE));
+
+    /// Indefinite length.
+    pub const INDEFINITE: Self = Self(None);
+}
+
+impl IndefiniteLength {
+    /// Create a definite length from a type which can be converted into a
+    /// `Length`.
+    pub fn new(length: impl Into<Length>) -> Self {
+        Self(Some(length.into()))
+    }
+
+    /// Is this length definite?
+    pub fn is_definite(self) -> bool {
+        self.0.is_some()
+    }
+    /// Is this length indefinite?
+    pub fn is_indefinite(self) -> bool {
+        self.0.is_none()
+    }
+}
+
+impl<'a> Decode<'a> for IndefiniteLength {
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<IndefiniteLength> {
+        if reader.peek_byte() == Some(INDEFINITE_LENGTH_OCTET) {
+            // Consume the byte we already peeked at.
+            let byte = reader.read_byte()?;
+            debug_assert_eq!(byte, INDEFINITE_LENGTH_OCTET);
+
+            Ok(Self::INDEFINITE)
+        } else {
+            Length::decode(reader).map(Into::into)
+        }
+    }
+}
+
+impl Encode for IndefiniteLength {
+    fn encoded_len(&self) -> Result<Length> {
+        match self.0 {
+            Some(length) => length.encoded_len(),
+            None => Ok(Length::ONE),
+        }
+    }
+
+    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        match self.0 {
+            Some(length) => length.encode(writer),
+            None => writer.write_byte(INDEFINITE_LENGTH_OCTET),
+        }
+    }
+}
+
+impl From<Length> for IndefiniteLength {
+    fn from(length: Length) -> IndefiniteLength {
+        Self(Some(length))
+    }
+}
+
+impl From<Option<Length>> for IndefiniteLength {
+    fn from(length: Option<Length>) -> IndefiniteLength {
+        IndefiniteLength(length)
+    }
+}
+
+impl From<IndefiniteLength> for Option<Length> {
+    fn from(length: IndefiniteLength) -> Option<Length> {
+        length.0
+    }
+}
+
+impl TryFrom<IndefiniteLength> for Length {
+    type Error = Error;
+
+    fn try_from(length: IndefiniteLength) -> Result<Length> {
+        length.0.ok_or_else(|| ErrorKind::IndefiniteLength.into())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::Length;
+    use super::{IndefiniteLength, Length};
     use crate::{Decode, DerOrd, Encode, ErrorKind};
     use core::cmp::Ordering;
 
@@ -368,8 +480,22 @@ mod tests {
     }
 
     #[test]
-    fn reject_indefinite_lengths() {
+    fn indefinite_lengths() {
+        // DER disallows indefinite lengths
         assert!(Length::from_der(&[0x80]).is_err());
+
+        // The `IndefiniteLength` type supports them
+        let indefinite_length = IndefiniteLength::from_der(&[0x80]).unwrap();
+        assert!(indefinite_length.is_indefinite());
+        assert_eq!(indefinite_length, IndefiniteLength::INDEFINITE);
+
+        // It also supports definite lengths.
+        let length = IndefiniteLength::from_der(&[0x83, 0x01, 0x00, 0x00]).unwrap();
+        assert!(length.is_definite());
+        assert_eq!(
+            Length::try_from(0x10000u32).unwrap(),
+            length.try_into().unwrap()
+        );
     }
 
     #[test]
