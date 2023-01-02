@@ -185,7 +185,7 @@ impl Any {
     }
 
     /// Allow access to value
-    pub fn value<'a>(&'a self) -> &'a [u8] {
+    pub fn value(&self) -> &[u8] {
         self.value.as_slice()
     }
 
