@@ -8,9 +8,6 @@ use crate::{
 };
 use core::cmp::Ordering;
 
-#[cfg(feature = "alloc")]
-use {crate::BytesOwned, alloc::boxed::Box};
-
 /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
 ///
 /// This is a zero-copy reference type which borrows from the input data.
@@ -130,13 +127,6 @@ impl Tagged for AnyRef<'_> {
     }
 }
 
-#[cfg(feature = "alloc")]
-impl ValueOrd for Any {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-        self.value.der_cmp(&other.value)
-    }
-}
-
 impl ValueOrd for AnyRef<'_> {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         self.value.der_cmp(&other.value)
@@ -157,123 +147,124 @@ impl<'a> TryFrom<&'a [u8]> for AnyRef<'a> {
     }
 }
 
-/// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
-///
-/// This type provides the same functionality as [`AnyRef`] but owns the
-/// backing data.
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct Any {
-    /// Tag representing the type of the encoded value.
-    tag: Tag,
-
-    /// Inner value encoded as bytes.
-    value: BytesOwned,
-}
-
-#[cfg(feature = "alloc")]
-impl Any {
-    /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
-    pub fn new(tag: Tag, bytes: impl Into<Box<[u8]>>) -> Result<Self> {
-        let value = BytesOwned::new(bytes)?;
-
-        // Ensure the tag and value are a valid `AnyRef`.
-        AnyRef::new(tag, value.as_slice())?;
-        Ok(Self { tag, value })
-    }
-
-    /// Allow access to value
-    pub fn value(&self) -> &[u8] {
-        self.value.as_slice()
-    }
-
-    /// Attempt to decode this [`Any`] type into the inner value.
-    pub fn decode_as<'a, T>(&'a self) -> Result<T>
-    where
-        T: Choice<'a> + DecodeValue<'a>,
-    {
-        AnyRef::from(self).decode_as()
-    }
-
-    /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
-    /// nested reader and calling the provided argument with it.
-    pub fn sequence<'a, F, T>(&'a self, f: F) -> Result<T>
-    where
-        F: FnOnce(&mut SliceReader<'a>) -> Result<T>,
-    {
-        AnyRef::from(self).sequence(f)
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl Choice<'_> for Any {
-    fn can_decode(_: Tag) -> bool {
-        true
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl<'a> Decode<'a> for Any {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
-        let header = Header::decode(reader)?;
-        Self::decode_value(reader, header)
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl<'a> DecodeValue<'a> for Any {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let value = reader.read_vec(header.length)?;
-        Self::new(header.tag, value)
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl EncodeValue for Any {
-    fn value_len(&self) -> Result<Length> {
-        Ok(self.value.len())
-    }
-
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
-        writer.write(self.value.as_slice())
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl<'a> From<&'a Any> for AnyRef<'a> {
-    fn from(any: &'a Any) -> AnyRef<'a> {
-        // Ensured to parse successfully in constructor
-        AnyRef::new(any.tag, any.value.as_slice()).expect("invalid ANY")
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl Tagged for Any {
-    fn tag(&self) -> Tag {
-        self.tag
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl<'a, T> From<T> for Any
-where
-    T: Into<AnyRef<'a>>,
-{
-    fn from(input: T) -> Any {
-        let anyref: AnyRef<'a> = input.into();
-        Self {
-            tag: anyref.tag(),
-            value: BytesOwned::from(anyref.value),
-        }
-    }
-}
+pub use self::allocating::Any;
 
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::referenced::*;
+    use crate::{referenced::*, BytesOwned};
+    use alloc::boxed::Box;
+
+    /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
+    ///
+    /// This type provides the same functionality as [`AnyRef`] but owns the
+    /// backing data.
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
+    #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+    pub struct Any {
+        /// Tag representing the type of the encoded value.
+        tag: Tag,
+
+        /// Inner value encoded as bytes.
+        value: BytesOwned,
+    }
+
+    impl Any {
+        /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
+        pub fn new(tag: Tag, bytes: impl Into<Box<[u8]>>) -> Result<Self> {
+            let value = BytesOwned::new(bytes)?;
+
+            // Ensure the tag and value are a valid `AnyRef`.
+            AnyRef::new(tag, value.as_slice())?;
+            Ok(Self { tag, value })
+        }
+
+        /// Allow access to value
+        pub fn value(&self) -> &[u8] {
+            self.value.as_slice()
+        }
+
+        /// Attempt to decode this [`Any`] type into the inner value.
+        pub fn decode_as<'a, T>(&'a self) -> Result<T>
+        where
+            T: Choice<'a> + DecodeValue<'a>,
+        {
+            AnyRef::from(self).decode_as()
+        }
+
+        /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
+        /// nested reader and calling the provided argument with it.
+        pub fn sequence<'a, F, T>(&'a self, f: F) -> Result<T>
+        where
+            F: FnOnce(&mut SliceReader<'a>) -> Result<T>,
+        {
+            AnyRef::from(self).sequence(f)
+        }
+    }
+
+    impl Choice<'_> for Any {
+        fn can_decode(_: Tag) -> bool {
+            true
+        }
+    }
+
+    impl<'a> Decode<'a> for Any {
+        fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
+            let header = Header::decode(reader)?;
+            Self::decode_value(reader, header)
+        }
+    }
+
+    impl<'a> DecodeValue<'a> for Any {
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+            let value = reader.read_vec(header.length)?;
+            Self::new(header.tag, value)
+        }
+    }
+
+    impl EncodeValue for Any {
+        fn value_len(&self) -> Result<Length> {
+            Ok(self.value.len())
+        }
+
+        fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+            writer.write(self.value.as_slice())
+        }
+    }
+
+    impl<'a> From<&'a Any> for AnyRef<'a> {
+        fn from(any: &'a Any) -> AnyRef<'a> {
+            // Ensured to parse successfully in constructor
+            AnyRef::new(any.tag, any.value.as_slice()).expect("invalid ANY")
+        }
+    }
+
+    impl Tagged for Any {
+        fn tag(&self) -> Tag {
+            self.tag
+        }
+    }
+
+    impl ValueOrd for Any {
+        fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+            self.value.der_cmp(&other.value)
+        }
+    }
+
+    impl<'a, T> From<T> for Any
+    where
+        T: Into<AnyRef<'a>>,
+    {
+        fn from(input: T) -> Any {
+            let anyref: AnyRef<'a> = input.into();
+            Self {
+                tag: anyref.tag(),
+                value: BytesOwned::from(anyref.value),
+            }
+        }
+    }
 
     impl<'a> RefToOwned<'a> for AnyRef<'a> {
         type Owned = Any;

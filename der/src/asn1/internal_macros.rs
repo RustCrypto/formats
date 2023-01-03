@@ -1,4 +1,7 @@
 macro_rules! impl_type {
+    ($type: ty) => {
+        impl_type!($type, );
+    };
     ($type: ty, $($li: lifetime)?) => {
         mod __impl {
             use super::*;
