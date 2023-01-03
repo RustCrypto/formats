@@ -44,7 +44,7 @@ impl SerialNumber {
         // The user might give us a 20 byte unsigned integer with a high MSB,
         // which we'd then encode with 21 octets to preserve the sign bit.
         // RFC 5280 is ambiguous about whether this is valid, so we limit
-        // `SerialNumber` *encodings* tp 20 bytes or fewer while permitting
+        // `SerialNumber` *encodings* to 20 bytes or fewer while permitting
         // `SerialNumber` *decodings* to have up to 21 bytes below.
         if inner.value_len()? > SerialNumber::MAX_LEN {
             return Err(ErrorKind::Overlength.into());
