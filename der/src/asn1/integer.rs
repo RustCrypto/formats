@@ -36,7 +36,7 @@ macro_rules! impl_int_encoding {
             impl EncodeValue for $int {
                 fn value_len(&self) -> Result<Length> {
                     if *self < 0 {
-                        int::encoded_len(&(*self as $uint).to_be_bytes())
+                        int::negative_encoded_len(&(*self as $uint).to_be_bytes())
                     } else {
                         uint::encoded_len(&self.to_be_bytes())
                     }

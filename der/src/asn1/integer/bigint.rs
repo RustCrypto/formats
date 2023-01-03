@@ -61,7 +61,8 @@ impl<'a> DecodeValue<'a> for IntRef<'a> {
 
 impl<'a> EncodeValue for IntRef<'a> {
     fn value_len(&self) -> Result<Length> {
-        int::encoded_len(self.inner.as_slice())
+        // Signed integers always hold their full encoded form.
+        Ok(self.inner.len())
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
@@ -182,6 +183,8 @@ pub use self::allocating::{Int, Uint};
 
 #[cfg(feature = "alloc")]
 mod allocating {
+    use alloc::vec::Vec;
+
     use super::{super::int, super::uint, IntRef, UintRef};
     use crate::{
         asn1::AnyRef,
@@ -246,7 +249,8 @@ mod allocating {
 
     impl EncodeValue for Int {
         fn value_len(&self) -> Result<Length> {
-            int::encoded_len(self.inner.as_slice())
+            // Signed integers always hold their full encoded form.
+            Ok(self.inner.len())
         }
 
         fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
@@ -257,6 +261,22 @@ mod allocating {
     impl<'a> From<&IntRef<'a>> for Int {
         fn from(value: &IntRef<'a>) -> Int {
             let inner = BytesOwned::new(value.as_bytes()).expect("Invalid Int");
+            Int { inner }
+        }
+    }
+
+    impl From<Uint> for Int {
+        fn from(value: Uint) -> Self {
+            let mut inner: Vec<u8> = Vec::new();
+
+            // Add leading `0x00` byte if required
+            if value.value_len().expect("invalid Uint") > value.len() {
+                inner.push(0x00);
+            }
+
+            inner.extend_from_slice(value.as_bytes());
+            let inner = BytesOwned::new(inner).expect("invalid Uint");
+
             Int { inner }
         }
     }
