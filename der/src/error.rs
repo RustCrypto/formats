@@ -18,7 +18,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Error {
     /// Kind of error.
-    pub(crate) kind: ErrorKind,
+    kind: ErrorKind,
 
     /// Position inside of message where error occurred.
     position: Option<Length>,

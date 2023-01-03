@@ -58,7 +58,6 @@
 //! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`.
 //! - [`SetOf`], [`SetOfVec`]: ASN.1 `SET OF`.
 //! - [`UintRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes.
-//! - [`IntRef`]: ASN.1 positive or negative `INTEGER` with raw access to encoded bytes.
 //! - [`UtcTime`]: ASN.1 `UTCTime`.
 //! - [`Utf8StringRef`]: ASN.1 `UTF8String`.
 //!
@@ -307,7 +306,6 @@
 //! [`BitStringRef`]: asn1::BitStringRef
 //! [`GeneralizedTime`]: asn1::GeneralizedTime
 //! [`Ia5StringRef`]: asn1::Ia5StringRef
-//! [`IntRef`]: asn1::IntRef
 //! [`Null`]: asn1::Null
 //! [`ObjectIdentifier`]: asn1::ObjectIdentifier
 //! [`OctetString`]: asn1::OctetString

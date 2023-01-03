@@ -36,8 +36,8 @@ pub use const_oid::ObjectIdentifier;
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use self::{
     any::Any, bit_string::BitString, ia5_string::Ia5String, integer::bigint::Int,
-    integer::bigint::Sint, integer::bigint::Uint, octet_string::OctetString,
-    printable_string::PrintableString, set_of::SetOfVec, teletex_string::TeletexString,
+    integer::bigint::Uint, octet_string::OctetString, printable_string::PrintableString,
+    set_of::SetOfVec, teletex_string::TeletexString,
 };
 pub use self::{
     any::AnyRef,
@@ -47,7 +47,6 @@ pub use self::{
     generalized_time::GeneralizedTime,
     ia5_string::Ia5StringRef,
     integer::bigint::IntRef,
-    integer::bigint::SintRef,
     integer::bigint::UintRef,
     null::Null,
     octet_string::OctetStringRef,

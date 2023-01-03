@@ -3,8 +3,8 @@
 use core::fmt::Display;
 
 use der::{
-    asn1::Int, asn1::Uint, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader,
-    Result, Tag, ValueOrd, Writer,
+    asn1::Int, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
+    ValueOrd, Writer,
 };
 
 /// [RFC 5280 Section 4.1.2.2.]  Serial Number
@@ -34,15 +34,13 @@ impl SerialNumber {
 
     /// Create a new [`SerialNumber`] from a byte slice.
     pub fn new(bytes: &[u8]) -> Result<Self> {
-        let inner = Uint::new(bytes)?;
+        let inner = Int::new(bytes)?;
 
         if inner.len() > SerialNumber::MAX_LEN {
             return Err(ErrorKind::Overlength.into());
         }
 
-        Ok(Self {
-            inner: inner.into(),
-        })
+        Ok(Self { inner })
     }
 
     /// Borrow the inner byte slice which contains the least significant bytes
