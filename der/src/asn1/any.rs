@@ -287,7 +287,7 @@ mod allocating {
 
     impl OwnedToRef for Any {
         type Borrowed<'a> = AnyRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             self.into()
         }
     }
@@ -295,7 +295,7 @@ mod allocating {
     impl Any {
         /// Is this value an ASN.1 `NULL` value?
         pub fn is_null(&self) -> bool {
-            self.to_ref() == AnyRef::NULL
+            self.owned_to_ref() == AnyRef::NULL
         }
     }
 }

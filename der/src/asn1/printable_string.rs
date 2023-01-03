@@ -230,9 +230,9 @@ mod allocation {
 
     impl OwnedToRef for PrintableString {
         type Borrowed<'a> = PrintableStringRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             PrintableStringRef {
-                inner: self.inner.to_ref(),
+                inner: self.inner.owned_to_ref(),
             }
         }
     }

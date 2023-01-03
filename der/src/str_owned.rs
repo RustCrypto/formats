@@ -96,7 +96,7 @@ impl From<StrRef<'_>> for StrOwned {
 
 impl OwnedToRef for StrOwned {
     type Borrowed<'a> = StrRef<'a>;
-    fn to_ref(&self) -> Self::Borrowed<'_> {
+    fn owned_to_ref(&self) -> Self::Borrowed<'_> {
         StrRef {
             length: self.length,
             inner: self.inner.as_ref(),
