@@ -21,7 +21,7 @@ pub trait RefToOwned<'a> {
         Self: 'a;
 
     /// Creates a new object taking ownership of the data
-    fn to_owned(&self) -> Self::Owned;
+    fn ref_to_owned(&self) -> Self::Owned;
 }
 
 impl<T> OwnedToRef for Option<T>
@@ -41,7 +41,7 @@ where
     T::Owned: OwnedToRef,
 {
     type Owned = Option<T::Owned>;
-    fn to_owned(&self) -> Self::Owned {
-        self.as_ref().map(|o| o.to_owned())
+    fn ref_to_owned(&self) -> Self::Owned {
+        self.as_ref().map(|o| o.ref_to_owned())
     }
 }

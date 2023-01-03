@@ -145,7 +145,7 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for BytesRef<'a> {
         type Owned = BytesOwned;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             BytesOwned::from(*self)
         }
     }

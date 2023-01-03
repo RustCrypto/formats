@@ -277,8 +277,8 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for IntRef<'a> {
         type Owned = Int;
-        fn to_owned(&self) -> Self::Owned {
-            let inner = self.inner.to_owned();
+        fn ref_to_owned(&self) -> Self::Owned {
+            let inner = self.inner.ref_to_owned();
 
             Int { inner }
         }
@@ -384,8 +384,8 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for UintRef<'a> {
         type Owned = Uint;
-        fn to_owned(&self) -> Self::Owned {
-            let inner = self.inner.to_owned();
+        fn ref_to_owned(&self) -> Self::Owned {
+            let inner = self.inner.ref_to_owned();
 
             Uint { inner }
         }

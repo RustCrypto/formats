@@ -277,7 +277,7 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for AnyRef<'a> {
         type Owned = Any;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             Any {
                 tag: self.tag(),
                 value: BytesOwned::from(self.value),

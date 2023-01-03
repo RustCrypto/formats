@@ -171,10 +171,10 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for AlgorithmIdentifierRef<'a> {
         type Owned = AlgorithmIdentifierOwned;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             AlgorithmIdentifier {
                 oid: self.oid,
-                parameters: self.parameters.to_owned(),
+                parameters: self.parameters.ref_to_owned(),
             }
         }
     }
