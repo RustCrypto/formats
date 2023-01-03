@@ -379,7 +379,7 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for BitStringRef<'a> {
         type Owned = BitString;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             BitString {
                 unused_bits: self.unused_bits,
                 bit_length: self.bit_length,
@@ -390,7 +390,7 @@ mod allocating {
 
     impl OwnedToRef for BitString {
         type Borrowed<'a> = BitStringRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             self.into()
         }
     }

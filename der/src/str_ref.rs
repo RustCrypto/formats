@@ -85,7 +85,7 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for StrRef<'a> {
         type Owned = StrOwned;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             StrOwned::from(*self)
         }
     }

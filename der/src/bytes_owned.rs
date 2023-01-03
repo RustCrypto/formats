@@ -97,7 +97,7 @@ impl From<StrRef<'_>> for BytesOwned {
 
 impl OwnedToRef for BytesOwned {
     type Borrowed<'a> = BytesRef<'a>;
-    fn to_ref(&self) -> Self::Borrowed<'_> {
+    fn owned_to_ref(&self) -> Self::Borrowed<'_> {
         BytesRef {
             length: self.length,
             inner: self.inner.as_ref(),

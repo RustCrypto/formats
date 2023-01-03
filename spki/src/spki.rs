@@ -193,20 +193,20 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for SubjectPublicKeyInfoRef<'a> {
         type Owned = SubjectPublicKeyInfoOwned;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             SubjectPublicKeyInfo {
-                algorithm: self.algorithm.to_owned(),
-                subject_public_key: self.subject_public_key.to_owned(),
+                algorithm: self.algorithm.ref_to_owned(),
+                subject_public_key: self.subject_public_key.ref_to_owned(),
             }
         }
     }
 
     impl OwnedToRef for SubjectPublicKeyInfoOwned {
         type Borrowed<'a> = SubjectPublicKeyInfoRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             SubjectPublicKeyInfo {
-                algorithm: self.algorithm.to_ref(),
-                subject_public_key: self.subject_public_key.to_ref(),
+                algorithm: self.algorithm.owned_to_ref(),
+                subject_public_key: self.subject_public_key.owned_to_ref(),
             }
         }
     }
