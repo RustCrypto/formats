@@ -1,6 +1,39 @@
-macro_rules! impl_string_type {
+macro_rules! impl_type {
     ($type: ty, $($li: lifetime)?) => {
         mod __impl {
+            use super::*;
+
+            use crate::{asn1::AnyRef, Error, Result};
+
+            #[cfg(feature = "alloc")]
+            use crate::asn1::Any;
+
+            #[cfg(feature = "alloc")]
+            impl<'__der: $($li),*, $($li),*> TryFrom<&'__der Any> for $type {
+                type Error = Error;
+
+                fn try_from(any: &'__der Any) -> Result<$type> {
+                    any.decode_as()
+                }
+            }
+
+            impl<'__der: $($li),*, $($li),*> TryFrom<AnyRef<'__der>> for $type {
+                type Error = Error;
+
+                fn try_from(any: AnyRef<'__der>) -> Result<$type> {
+                    any.decode_as()
+                }
+            }
+
+        }
+    };
+}
+
+macro_rules! impl_string_type {
+    ($type: ty, $($li: lifetime)?) => {
+        impl_type!($type, $($li),*);
+
+        mod __impl_string {
             use super::*;
 
             use crate::{
@@ -8,9 +41,6 @@ macro_rules! impl_string_type {
                 Result, Writer,
             };
             use core::{fmt, str};
-
-            #[cfg(feature = "alloc")]
-            use crate::{asn1::Any, Error};
 
             impl<$($li),*> AsRef<str> for $type {
                 fn as_ref(&self) -> &str {
@@ -45,15 +75,6 @@ macro_rules! impl_string_type {
             impl<$($li),*> fmt::Display for $type {
                 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                     f.write_str(self.as_str())
-                }
-            }
-
-            #[cfg(feature = "alloc")]
-            impl<'__der: $($li),*, $($li),*> TryFrom<&'__der Any> for $type {
-                type Error = Error;
-
-                fn try_from(any: &'__der Any) -> Result<$type> {
-                    any.decode_as()
                 }
             }
         }
