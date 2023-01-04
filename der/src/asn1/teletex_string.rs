@@ -1,6 +1,6 @@
 //! ASN.1 `TeletexString` support.
 //!
-use crate::{asn1::AnyRef, Error, FixedTag, Result, StrRef, Tag};
+use crate::{asn1::AnyRef, FixedTag, Result, StrRef, Tag};
 use core::{fmt, ops::Deref};
 
 macro_rules! impl_teletex_string {
@@ -79,13 +79,6 @@ impl<'a> From<&TeletexStringRef<'a>> for TeletexStringRef<'a> {
     }
 }
 
-impl<'a> TryFrom<AnyRef<'a>> for TeletexStringRef<'a> {
-    type Error = Error;
-
-    fn try_from(any: AnyRef<'a>) -> Result<TeletexStringRef<'a>> {
-        any.decode_as()
-    }
-}
 impl<'a> From<TeletexStringRef<'a>> for AnyRef<'a> {
     fn from(teletex_string: TeletexStringRef<'a>) -> AnyRef<'a> {
         AnyRef::from_tag_and_value(Tag::TeletexString, teletex_string.inner.into())
@@ -102,7 +95,7 @@ mod allocation {
     use crate::{
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
-        BytesRef, Error, FixedTag, Result, StrOwned, Tag,
+        BytesRef, FixedTag, Result, StrOwned, Tag,
     };
     use core::{fmt, ops::Deref};
 
@@ -157,14 +150,6 @@ mod allocation {
             let inner =
                 StrOwned::from_bytes(value.inner.as_bytes()).expect("Invalid TeletexString");
             Self { inner }
-        }
-    }
-
-    impl<'a> TryFrom<&AnyRef<'a>> for TeletexString {
-        type Error = Error;
-
-        fn try_from(any: &AnyRef<'a>) -> Result<TeletexString> {
-            (*any).decode_as()
         }
     }
 
