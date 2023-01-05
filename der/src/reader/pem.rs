@@ -6,7 +6,7 @@ use core::cell::RefCell;
 
 #[allow(clippy::integer_arithmetic)]
 mod utils {
-    use crate::Result;
+    use crate::{Error, Length, Result};
     use pem_rfc7468::Decoder;
 
     #[derive(Clone)]
@@ -57,8 +57,15 @@ mod utils {
 
             let end = (self.cap + self.remaining).min(Self::CAPACITY);
             let writable_slice = &mut self.buf[self.cap..end];
+            if writable_slice.is_empty() {
+                return Ok(());
+            }
 
             let wrote = self.decoder.decode(writable_slice)?.len();
+            if wrote == 0 {
+                return Err(Error::incomplete(Length::try_from(self.pos)?));
+            }
+
             self.cap += wrote;
             self.remaining -= wrote;
             debug_assert!(self.cap <= Self::CAPACITY);
@@ -84,11 +91,12 @@ mod utils {
     impl<'i> BufReader<'i> {
         pub fn peek_byte(&self) -> Option<u8> {
             let s = self.as_slice();
-            s.get(0).copied()
+            s.first().copied()
         }
 
         pub fn copy_to_slice<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8]> {
             let mut output_pos = 0;
+
             while output_pos < buf.len() {
                 if self.is_empty() {
                     self.fill_buffer()?;
@@ -101,6 +109,11 @@ mod utils {
                 window.copy_from_slice(&available[..window_len]);
                 self.pos += window_len;
                 output_pos += window_len;
+            }
+
+            // Don't leave the read buffer empty for peek_byte()
+            if self.is_empty() && self.decoder.remaining_len() != 0 {
+                self.fill_buffer()?
             }
 
             debug_assert_eq!(output_pos, buf.len());
