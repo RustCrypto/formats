@@ -10,6 +10,9 @@ use x509_cert::serial_number::SerialNumber;
 use x509_cert::Certificate;
 use x509_cert::*;
 
+#[cfg(feature = "pem")]
+use der::DecodePem;
+
 // TODO - parse and compare extension values
 const EXTENSIONS: &[(&str, bool)] = &[
     ("2.5.29.15", true),
@@ -362,7 +365,7 @@ fn decode_cert() {
 
     // TODO - parse and compare public key
 
-    let exts = cert.tbs_certificate.extensions.unwrap();
+    let exts = cert.tbs_certificate.extensions.as_ref().unwrap();
     for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
         assert_eq!(ext.extn_id.to_string(), *oid);
         assert_eq!(ext.critical, *crit);
@@ -376,12 +379,29 @@ fn decode_cert() {
         cert.signature_algorithm.parameters.as_ref().unwrap().tag(),
         Tag::Null
     );
-    assert_eq!(cert.signature_algorithm.parameters.unwrap().is_null(), true);
+    assert_eq!(
+        cert.signature_algorithm
+            .parameters
+            .as_ref()
+            .unwrap()
+            .is_null(),
+        true
+    );
 
     assert_eq!(
         &hex!("2A892F357BF3EF19E1211986106803FA18E66237802F1B1B0C6756CE678DB01D72CD0A4EB7171C2CDDF110ACD38AA65C35699E869C219AD7550AA4F287BB784F72EF8C9EA0E3DD103EFE5BF182EA36FFBCB45AAE65840263680534789C4F3215AF5454AD48CBC4B7A881E0135401A0BD5A849C11101DD1C66178E762C00DF59DD50F8DE9ED46FC6A0D742AE5697D87DD08DAC5291A75FB13C82FF2865C9E36799EA726137E1814E6A878C9532E8FC3D0A2A942D1CCC668FFCEAC255E6002FDE5ACDF2CE47556BB141C3A797A4BFDB673F6F1C229D7914FFEEF1505EE36F8038137D1B8F90106994BAB3E6FF0F60360A2E32F7A30B7ECEC1502DF3CC725BD6E436BA8F96A1847C9CEBB3F5A5906472292501D59BE1A98475BB1F30B677FAA8A45E351640C85B1B22661D33BD23EC6C0CA33DDD79E1120C7FC869EC4D0175ADB4A258AEAC5E8D2F0F578B8BF4B2C5DCC3269768AAA5B9E26D0592C5BB09C702C72E0A60F66D3EEB2B4983279634D59B0A2011B0E26AE796CC95D3243DF49615434E5CC06C374C3F936C005D360CAE6101F3AE7E97E29A157F5020770D4648D7877EBF8248CF3F3E68F9957A36F92D50616F2C60D3842327EF9BC0312CFF03A48C78E97254C2ADEADCA05069168443D833831FF66295A2EED685F164F1DBE01F8C897E1F63D42851682CBEE7B5A64D7BA2923D33644DBF1F7B3EDCE996F9928F043"),
         cert.signature.raw_bytes()
     );
+
+    #[cfg(feature = "pem")]
+    {
+        let pem_encoded_cert =
+            include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.pem");
+        let result = Certificate::from_pem(pem_encoded_cert);
+        let pem_cert: Certificate = result.unwrap();
+
+        assert_eq!(pem_cert, cert);
+    }
 }
 
 #[test]
