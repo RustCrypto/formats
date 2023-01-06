@@ -3,7 +3,7 @@
 use core::fmt;
 use core::time::Duration;
 use der::asn1::{GeneralizedTime, UtcTime};
-use der::{Choice, DateTime, Decode, Error, Result, Sequence, ValueOrd};
+use der::{Choice, DateTime, Error, Result, Sequence, ValueOrd};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -136,13 +136,5 @@ impl Validity {
             not_before: Time::try_from(now)?,
             not_after: Time::try_from(then)?,
         })
-    }
-}
-
-impl<'a> TryFrom<&'a [u8]> for Validity {
-    type Error = Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
-        Self::from_der(bytes)
     }
 }

@@ -53,14 +53,6 @@ pub struct CertReqInfo<'a> {
     pub attributes: Attributes,
 }
 
-impl<'a> TryFrom<&'a [u8]> for CertReqInfo<'a> {
-    type Error = der::Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        Self::from_der(bytes)
-    }
-}
-
 /// PKCS#10 `CertificationRequest` as defined in [RFC 2986 Section 4].
 ///
 /// ```text

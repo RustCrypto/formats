@@ -1,9 +1,7 @@
 //! Certification request (`CertReq`) tests
 
-use der::{
-    asn1::{PrintableStringRef, Utf8StringRef},
-    Encode, Tag, Tagged,
-};
+use der::asn1::{PrintableStringRef, Utf8StringRef};
+use der::{Decode, Encode, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::request::{CertReq, Version};
 
@@ -31,7 +29,7 @@ const EXTENSIONS: &[(&str, &[u8])] = &[
 
 #[test]
 fn decode_rsa_2048_der() {
-    let cr = CertReq::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let cr = CertReq::from_der(RSA_2048_DER_EXAMPLE).unwrap();
 
     // Check the version.
     assert_eq!(cr.info.version, Version::V1);
@@ -83,7 +81,7 @@ fn decode_rsa_2048_der() {
 
 #[test]
 fn encode_rsa_2048_der() {
-    let cr = CertReq::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let cr = CertReq::from_der(RSA_2048_DER_EXAMPLE).unwrap();
     let cr_encoded = cr.to_vec().unwrap();
     assert_eq!(RSA_2048_DER_EXAMPLE, cr_encoded.as_slice());
 }
