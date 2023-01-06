@@ -10,7 +10,7 @@ use alloc::vec::Vec;
 
 use der::asn1::BitString;
 use der::{Sequence, ValueOrd};
-use spki::AlgorithmIdentifierRef;
+use spki::AlgorithmIdentifierOwned;
 
 /// `CertificateList` as defined in [RFC 5280 Section 5.1].
 ///
@@ -25,9 +25,9 @@ use spki::AlgorithmIdentifierRef;
 /// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct CertificateList<'a> {
-    pub tbs_cert_list: TbsCertList<'a>,
-    pub signature_algorithm: AlgorithmIdentifierRef<'a>,
+pub struct CertificateList {
+    pub tbs_cert_list: TbsCertList,
+    pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitString,
 }
 
@@ -74,9 +74,9 @@ pub struct RevokedCert {
 /// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertList<'a> {
+pub struct TbsCertList {
     pub version: Version,
-    pub signature: AlgorithmIdentifierRef<'a>,
+    pub signature: AlgorithmIdentifierOwned,
     pub issuer: Name,
     pub this_update: Time,
     pub next_update: Option<Time>,

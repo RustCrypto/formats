@@ -19,7 +19,7 @@ use x509_cert::crl::CertificateList;
 #[allow(clippy::large_enum_variant)]
 pub enum RevocationInfoChoice<'a> {
     /// The CertificateList type gives a certificate revocation list (CRL).
-    Crl(CertificateList<'a>),
+    Crl(CertificateList),
 
     /// The OtherRevocationInfoFormat alternative is provided to support any
     /// other revocation information format without further modifications to
