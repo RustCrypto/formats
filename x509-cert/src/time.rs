@@ -3,7 +3,7 @@
 use core::fmt;
 use core::time::Duration;
 use der::asn1::{GeneralizedTime, UtcTime};
-use der::{Choice, DateTime, Error, Result, Sequence, ValueOrd};
+use der::{Choice, DateTime, Sequence, ValueOrd};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -62,7 +62,7 @@ impl Time {
 }
 
 impl fmt::Display for Time {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> core::result::Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.to_date_time())
     }
 }
@@ -98,9 +98,9 @@ impl From<&Time> for SystemTime {
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl TryFrom<SystemTime> for Time {
-    type Error = Error;
+    type Error = der::Error;
 
-    fn try_from(time: SystemTime) -> Result<Time> {
+    fn try_from(time: SystemTime) -> der::Result<Time> {
         Ok(GeneralizedTime::try_from(time)?.into())
     }
 }
@@ -128,7 +128,7 @@ impl Validity {
     /// Creates a `Validity` which starts now and lasts for `duration`.
     #[cfg(feature = "std")]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-    pub fn from_now(duration: Duration) -> Result<Self> {
+    pub fn from_now(duration: Duration) -> der::Result<Self> {
         let now = SystemTime::now();
         let then = now + duration;
 
