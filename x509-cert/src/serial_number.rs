@@ -114,7 +114,8 @@ mod tests {
 
     #[test]
     fn serial_number_display() {
-        let sn = SerialNumber::new(&[0xAA, 0xBB, 0xCC, 0x01, 0x10, 0x00, 0x11]).unwrap();
+        let sn = SerialNumber::new(&[0xAA, 0xBB, 0xCC, 0x01, 0x10, 0x00, 0x11])
+            .expect("unexpected error");
 
         assert_eq!(sn.to_string(), "AA:BB:CC:01:10:00:11")
     }
