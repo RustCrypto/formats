@@ -140,3 +140,49 @@ fn decode_signed_scep_example() {
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
     }
 }
+
+// TODO(tarcieri): BER support
+#[test]
+#[ignore]
+fn decode_signed_ber() {
+    let bytes = include_bytes!("examples/cms_ber.bin");
+
+    let content = match ContentInfo::from_der(bytes) {
+        Ok(ContentInfo::SignedData(Some(data))) => data,
+        other => panic!("unexpected result: {:?}", other),
+    };
+
+    assert_eq!(
+        content
+            .encap_content_info
+            .e_content
+            .unwrap()
+            .decode_as::<OctetStringRef>()
+            .unwrap()
+            .as_bytes()
+            .len(),
+        10034
+    );
+}
+
+#[test]
+fn decode_signed_der() {
+    let bytes = include_bytes!("examples/cms_der.bin");
+
+    let content = match ContentInfo::from_der(bytes) {
+        Ok(ContentInfo::SignedData(Some(data))) => data,
+        other => panic!("unexpected result: {:?}", other),
+    };
+
+    assert_eq!(
+        content
+            .encap_content_info
+            .e_content
+            .unwrap()
+            .decode_as::<OctetStringRef>()
+            .unwrap()
+            .as_bytes()
+            .len(),
+        10034
+    );
+}
