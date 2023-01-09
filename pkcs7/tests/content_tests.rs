@@ -141,26 +141,48 @@ fn decode_signed_scep_example() {
     }
 }
 
+// TODO(tarcieri): BER support
 #[test]
+#[ignore]
 fn decode_signed_ber() {
-    let path = "./tests/examples/cms_der.bin";
-    let bytes = fs::read(&path).expect(&format!("Failed to read from {}", &path));
+    let bytes = include_bytes!("examples/cms_ber.bin");
 
-    let content = ContentInfo::from_der(&bytes).expect("expected valid data");
+    let content = match ContentInfo::from_der(bytes) {
+        Ok(ContentInfo::SignedData(Some(data))) => data,
+        other => panic!("unexpected result: {:?}", other),
+    };
 
-    match content {
-        ContentInfo::SignedData(Some(data)) => {
-            assert_eq!(
-                data.encap_content_info
-                    .e_content
-                    .unwrap()
-                    .decode_into::<OctetStringRef>()
-                    .unwrap()
-                    .as_bytes()
-                    .len(),
-                10034
-            )
-        }
-        _ => panic!("expected ContentInfo::SignedData(Some(_))"),
-    }
+    assert_eq!(
+        content
+            .encap_content_info
+            .e_content
+            .unwrap()
+            .decode_as::<OctetStringRef>()
+            .unwrap()
+            .as_bytes()
+            .len(),
+        10034
+    );
+}
+
+#[test]
+fn decode_signed_der() {
+    let bytes = include_bytes!("examples/cms_der.bin");
+
+    let content = match ContentInfo::from_der(bytes) {
+        Ok(ContentInfo::SignedData(Some(data))) => data,
+        other => panic!("unexpected result: {:?}", other),
+    };
+
+    assert_eq!(
+        content
+            .encap_content_info
+            .e_content
+            .unwrap()
+            .decode_as::<OctetStringRef>()
+            .unwrap()
+            .as_bytes()
+            .len(),
+        10034
+    );
 }
