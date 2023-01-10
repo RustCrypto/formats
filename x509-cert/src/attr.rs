@@ -58,14 +58,6 @@ pub struct Attribute {
     pub values: SetOfVec<AttributeValue>,
 }
 
-impl TryFrom<&[u8]> for Attribute {
-    type Error = Error;
-
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        Self::from_der(bytes)
-    }
-}
-
 /// X.501 `Attributes` as defined in [RFC 2986 Section 4].
 ///
 /// ```text

@@ -26,9 +26,8 @@ hex-literal = "0.3"
 rstest = "0.16"
 
 [features]
-alloc = ["der/alloc"]
 arbitrary = ["std", "dep:arbitrary", "const-oid/arbitrary", "der/arbitrary", "spki/arbitrary"]
-pem = ["alloc", "der/pem"]
+pem = ["der/pem"]
 std = ["der/std", "spki/std"]
 
 [package.metadata.docs.rs]

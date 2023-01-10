@@ -9,7 +9,7 @@ use const_oid::db::rfc5912::ID_EXTENSION_REQ;
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::BitString;
 use der::{Decode, Enumerated, Sequence};
-use spki::{AlgorithmIdentifierRef, SubjectPublicKeyInfoRef};
+use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -38,7 +38,7 @@ pub enum Version {
 ///
 /// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
-pub struct CertReqInfo<'a> {
+pub struct CertReqInfo {
     /// Certification request version.
     pub version: Version,
 
@@ -46,19 +46,11 @@ pub struct CertReqInfo<'a> {
     pub subject: Name,
 
     /// Subject public key info.
-    pub public_key: SubjectPublicKeyInfoRef<'a>,
+    pub public_key: SubjectPublicKeyInfoOwned,
 
     /// Request attributes.
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
     pub attributes: Attributes,
-}
-
-impl<'a> TryFrom<&'a [u8]> for CertReqInfo<'a> {
-    type Error = der::Error;
-
-    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        Self::from_der(bytes)
-    }
 }
 
 /// PKCS#10 `CertificationRequest` as defined in [RFC 2986 Section 4].
@@ -73,12 +65,12 @@ impl<'a> TryFrom<&'a [u8]> for CertReqInfo<'a> {
 ///
 /// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
-pub struct CertReq<'a> {
+pub struct CertReq {
     /// Certification request information.
-    pub info: CertReqInfo<'a>,
+    pub info: CertReqInfo,
 
     /// Signature algorithm identifier.
-    pub algorithm: AlgorithmIdentifierRef<'a>,
+    pub algorithm: AlgorithmIdentifierOwned,
 
     /// Signature.
     pub signature: BitString,
@@ -86,11 +78,11 @@ pub struct CertReq<'a> {
 
 #[cfg(feature = "pem")]
 #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
-impl PemLabel for CertReq<'_> {
+impl PemLabel for CertReq {
     const PEM_LABEL: &'static str = "CERTIFICATE REQUEST";
 }
 
-impl<'a> TryFrom<&'a [u8]> for CertReq<'a> {
+impl<'a> TryFrom<&'a [u8]> for CertReq {
     type Error = der::Error;
 
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
