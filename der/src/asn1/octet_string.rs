@@ -132,6 +132,11 @@ mod allocating {
             self.inner.as_slice()
         }
 
+        /// Take ownership of the octet string.
+        pub fn into_bytes(self) -> Vec<u8> {
+            self.inner
+        }
+
         /// Get the length of the inner byte slice.
         pub fn len(&self) -> Length {
             self.value_len().expect("invalid OCTET STRING length")
