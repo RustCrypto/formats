@@ -9,6 +9,8 @@ use crate::{
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Null;
 
+impl_type!(Null);
+
 impl<'a> DecodeValue<'a> for Null {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         if header.length.is_zero() {
@@ -38,14 +40,6 @@ impl OrdIsValueOrd for Null {}
 impl<'a> From<Null> for AnyRef<'a> {
     fn from(_: Null) -> AnyRef<'a> {
         AnyRef::from_tag_and_value(Tag::Null, BytesRef::default())
-    }
-}
-
-impl TryFrom<AnyRef<'_>> for Null {
-    type Error = Error;
-
-    fn try_from(any: AnyRef<'_>) -> Result<Null> {
-        any.decode_as()
     }
 }
 

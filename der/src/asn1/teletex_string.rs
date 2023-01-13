@@ -1,6 +1,6 @@
 //! ASN.1 `TeletexString` support.
 //!
-use crate::{asn1::AnyRef, Error, FixedTag, Result, StrRef, Tag};
+use crate::{asn1::AnyRef, FixedTag, Result, StrRef, Tag};
 use core::{fmt, ops::Deref};
 
 macro_rules! impl_teletex_string {
@@ -79,13 +79,6 @@ impl<'a> From<&TeletexStringRef<'a>> for TeletexStringRef<'a> {
     }
 }
 
-impl<'a> TryFrom<AnyRef<'a>> for TeletexStringRef<'a> {
-    type Error = Error;
-
-    fn try_from(any: AnyRef<'a>) -> Result<TeletexStringRef<'a>> {
-        any.decode_as()
-    }
-}
 impl<'a> From<TeletexStringRef<'a>> for AnyRef<'a> {
     fn from(teletex_string: TeletexStringRef<'a>) -> AnyRef<'a> {
         AnyRef::from_tag_and_value(Tag::TeletexString, teletex_string.inner.into())
@@ -102,7 +95,7 @@ mod allocation {
     use crate::{
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
-        BytesRef, Error, FixedTag, Result, StrOwned, Tag,
+        BytesRef, FixedTag, Result, StrOwned, Tag,
     };
     use core::{fmt, ops::Deref};
 
@@ -160,14 +153,6 @@ mod allocation {
         }
     }
 
-    impl<'a> TryFrom<&AnyRef<'a>> for TeletexString {
-        type Error = Error;
-
-        fn try_from(any: &AnyRef<'a>) -> Result<TeletexString> {
-            (*any).decode_as()
-        }
-    }
-
     impl<'a> From<&'a TeletexString> for AnyRef<'a> {
         fn from(teletex_string: &'a TeletexString) -> AnyRef<'a> {
             AnyRef::from_tag_and_value(
@@ -179,18 +164,18 @@ mod allocation {
 
     impl<'a> RefToOwned<'a> for TeletexStringRef<'a> {
         type Owned = TeletexString;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             TeletexString {
-                inner: self.inner.to_owned(),
+                inner: self.inner.ref_to_owned(),
             }
         }
     }
 
     impl OwnedToRef for TeletexString {
         type Borrowed<'a> = TeletexStringRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             TeletexStringRef {
-                inner: self.inner.to_ref(),
+                inner: self.inner.owned_to_ref(),
             }
         }
     }

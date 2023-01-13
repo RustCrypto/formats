@@ -2,16 +2,17 @@
 #![cfg_attr(feature = "arbitrary", allow(clippy::integer_arithmetic))]
 
 use crate::{
-    asn1::AnyRef,
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
-    DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
-    Writer,
+    DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 use core::time::Duration;
 
 #[cfg(feature = "std")]
-use std::time::SystemTime;
+use {
+    crate::{asn1::AnyRef, Error},
+    std::time::SystemTime,
+};
 
 #[cfg(feature = "time")]
 use time::PrimitiveDateTime;
@@ -74,6 +75,8 @@ impl GeneralizedTime {
         self.0.to_system_time()
     }
 }
+
+impl_type!(GeneralizedTime);
 
 impl<'a> DecodeValue<'a> for GeneralizedTime {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
@@ -161,14 +164,6 @@ impl From<DateTime> for GeneralizedTime {
 impl From<&DateTime> for GeneralizedTime {
     fn from(datetime: &DateTime) -> Self {
         Self::from_date_time(*datetime)
-    }
-}
-
-impl TryFrom<AnyRef<'_>> for GeneralizedTime {
-    type Error = Error;
-
-    fn try_from(any: AnyRef<'_>) -> Result<GeneralizedTime> {
-        any.decode_as()
     }
 }
 

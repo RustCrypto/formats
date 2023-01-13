@@ -1,6 +1,6 @@
 //! ASN.1 `PrintableString` support.
 
-use crate::{asn1::AnyRef, Error, FixedTag, Result, StrRef, Tag};
+use crate::{asn1::AnyRef, FixedTag, Result, StrRef, Tag};
 use core::{fmt, ops::Deref};
 
 macro_rules! impl_printable_string {
@@ -108,14 +108,6 @@ impl<'a> From<&PrintableStringRef<'a>> for PrintableStringRef<'a> {
     }
 }
 
-impl<'a> TryFrom<AnyRef<'a>> for PrintableStringRef<'a> {
-    type Error = Error;
-
-    fn try_from(any: AnyRef<'a>) -> Result<PrintableStringRef<'a>> {
-        any.decode_as()
-    }
-}
-
 impl<'a> From<PrintableStringRef<'a>> for AnyRef<'a> {
     fn from(printable_string: PrintableStringRef<'a>) -> AnyRef<'a> {
         AnyRef::from_tag_and_value(Tag::PrintableString, printable_string.inner.into())
@@ -132,7 +124,7 @@ mod allocation {
     use crate::{
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
-        BytesRef, Error, FixedTag, Result, StrOwned, Tag,
+        BytesRef, FixedTag, Result, StrOwned, Tag,
     };
     use core::{fmt, ops::Deref};
 
@@ -202,14 +194,6 @@ mod allocation {
         }
     }
 
-    impl<'a> TryFrom<&AnyRef<'a>> for PrintableString {
-        type Error = Error;
-
-        fn try_from(any: &AnyRef<'a>) -> Result<PrintableString> {
-            (*any).decode_as()
-        }
-    }
-
     impl<'a> From<&'a PrintableString> for AnyRef<'a> {
         fn from(printable_string: &'a PrintableString) -> AnyRef<'a> {
             AnyRef::from_tag_and_value(
@@ -221,18 +205,18 @@ mod allocation {
 
     impl<'a> RefToOwned<'a> for PrintableStringRef<'a> {
         type Owned = PrintableString;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             PrintableString {
-                inner: self.inner.to_owned(),
+                inner: self.inner.ref_to_owned(),
             }
         }
     }
 
     impl OwnedToRef for PrintableString {
         type Borrowed<'a> = PrintableStringRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             PrintableStringRef {
-                inner: self.inner.to_ref(),
+                inner: self.inner.owned_to_ref(),
             }
         }
     }
