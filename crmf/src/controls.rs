@@ -4,9 +4,9 @@ use alloc::vec::Vec;
 use der::asn1::{BitString, OctetString, Utf8StringRef};
 use der::{Choice, Enumerated, Sequence};
 
-//use cms::enveloped_data::EnvelopedData;
+use cms::enveloped_data::EnvelopedData;
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
-use x509_cert::attr::Attribute;
+use x509_cert::attr::AttributeTypeAndValue;
 use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::serial_number::SerialNumber;
 
@@ -18,7 +18,7 @@ use x509_cert::serial_number::SerialNumber;
 /// ```
 ///
 /// [RFC 4211 Section 6]: https://www.rfc-editor.org/rfc/rfc4211#section-6
-pub type Controls = Vec<Attribute>;
+pub type Controls = Vec<AttributeTypeAndValue>;
 
 /// The `RegToken` control is defined in [RFC 4211 Section 6.1].
 ///
@@ -150,9 +150,8 @@ pub enum PKIArchiveOptions {
 #[allow(missing_docs)]
 pub enum EncryptedKey {
     EncryptedValue(EncryptedValue),
-    // todo omit for now (was leaning on cms crate)
-    // #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
-    // EnvelopedData(EnvelopedData),
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
+    EnvelopedData(EnvelopedData),
 }
 
 /// The `EncryptedValue` type is defined in [RFC 4211 Section 6.4].

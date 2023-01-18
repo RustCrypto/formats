@@ -8,7 +8,7 @@ use crmf::controls::CertId;
 use x509_cert::{crl::CertificateList, ext::Extensions};
 
 use crate::header::CMPCertificate;
-use crate::status::PKIStatus;
+use crate::status::PkiStatus;
 
 /// The `CAKeyUpdAnnContent` announcement is defined in [RFC 4210 Section 5.3.13].
 ///
@@ -54,7 +54,7 @@ pub type CertAnnContent = CMPCertificate;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct RevAnnContent {
-    pub status: PKIStatus,
+    pub status: PkiStatus,
     pub cert_id: CertId,
     pub will_be_revoked_at: GeneralizedTime,
     pub bad_since_date: GeneralizedTime,

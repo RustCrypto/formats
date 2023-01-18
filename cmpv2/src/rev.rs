@@ -56,8 +56,8 @@ pub struct RevDetails {
 #[allow(missing_docs)]
 pub struct RevRepContent<'a> {
     pub status: Vec<PkiStatusInfo<'a>>,
-    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub rev_certs: Option<Vec<CertId>>,
-    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
+    #[asn1(context_specific = "1", tag_mode = "EXPLICIT", optional = "true")]
     pub crls: Option<Vec<CertificateList>>,
 }

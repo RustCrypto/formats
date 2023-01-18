@@ -272,6 +272,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cms"
+version = "0.1.0"
+dependencies = [
+ "const-oid",
+ "der",
+ "flagset",
+ "hex-literal",
+ "pkcs5",
+ "rstest 0.12.0",
+ "spki",
+ "x509-cert",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.10.0-pre"
 dependencies = [
@@ -344,6 +358,7 @@ dependencies = [
 name = "crmf"
 version = "0.1.0"
 dependencies = [
+ "cms",
  "const-oid",
  "der",
  "flagset",

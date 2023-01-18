@@ -5,6 +5,7 @@ use flagset::{flags, FlagSet};
 
 use der::asn1::OctetString;
 use der::{Enumerated, Sequence};
+use x509_cert::serial_number::SerialNumber;
 
 use crate::header::PkiFreeText;
 
@@ -41,7 +42,7 @@ use crate::header::PkiFreeText;
 #[asn1(type = "INTEGER")]
 #[repr(u8)]
 #[allow(missing_docs)]
-pub enum PKIStatus {
+pub enum PkiStatus {
     Accepted = 0,
     GrantedWithMods = 1,
     Rejection = 2,
@@ -174,9 +175,9 @@ pub type PkiFailureInfo = FlagSet<PkiFailureInfoValues>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct PkiStatusInfo<'a> {
-    status: PKIStatus,
-    status_string: Option<PkiFreeText<'a>>,
-    fail_info: Option<PkiFailureInfo>,
+    pub status: PkiStatus,
+    pub status_string: Option<PkiFreeText<'a>>,
+    pub fail_info: Option<PkiFailureInfo>,
 }
 
 /// The `ErrorMsgContent` type is defined in [RFC 4210 Section 5.2.21].
@@ -225,7 +226,8 @@ pub type CertConfirmContent<'a> = Vec<CertStatus<'a>>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct CertStatus<'a> {
-    cert_hash: OctetString,
-    cert_req_id: u64,
-    status_info: Option<PkiStatusInfo<'a>>,
+    pub cert_hash: OctetString,
+    // using serial number to allow for large integers here
+    pub cert_req_id: SerialNumber,
+    pub status_info: Option<PkiStatusInfo<'a>>,
 }

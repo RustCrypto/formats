@@ -4,6 +4,7 @@ members = [
     "base16ct",
     "base32ct",
     "cmpv2",
+    "cms",
     "const-oid",
     "crmf",
     "der",

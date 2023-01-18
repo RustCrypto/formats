@@ -68,7 +68,8 @@ pub type AttributeSeq = Vec<Attribute>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct CertRequest {
-    pub cert_req_id: u64,
+    // using serial number to allow for large integers here
+    pub cert_req_id: SerialNumber,
     pub cert_template: CertTemplate,
     pub controls: Option<Controls>,
 }

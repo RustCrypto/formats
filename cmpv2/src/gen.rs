@@ -1,6 +1,7 @@
 //! General purpose message-related types
 
-use x509_cert::attr::AttributeTypeAndValue;
+use der::{Sequence, ValueOrd};
+use x509_cert::attr::{AttributeType, AttributeValue};
 
 /// The `InfoTypeAndValue` type is defined in [RFC 4210 Section 5.3.19]
 ///
@@ -13,7 +14,12 @@ use x509_cert::attr::AttributeTypeAndValue;
 /// ```
 ///
 /// [RFC 4210 Section 5.3.19]: https://www.rfc-editor.org/rfc/rfc4210#section-5.3.19
-pub type InfoTypeAndValue = AttributeTypeAndValue;
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd)]
+#[allow(missing_docs)]
+pub struct InfoTypeAndValue {
+    pub oid: AttributeType,
+    pub value: Option<AttributeValue>,
+}
 
 /// The `GenMsgContent` type is defined in [RFC 4210 Section 5.3.19]
 ///

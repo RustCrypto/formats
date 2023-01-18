@@ -7,7 +7,7 @@ use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 use x509_cert::attr::Attributes;
 use x509_cert::ext::pkix::name::GeneralName;
 
-// use cms::enveloped_data::EnvelopedData;
+use cms::enveloped_data::EnvelopedData;
 
 /// The `ProofOfPossession` type is defined in [RFC 4211 Section 4].
 ///
@@ -30,7 +30,7 @@ pub enum ProofOfPossession {
     RaVerified(Null),
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
     Signature(PopoSigningKey),
-    //todo review EXPLICIT tag here
+    //todo review EXPLICIT tag here (does not compile as IMPLICIT)
     #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
     KeyEncipherment(POPOPrivKey),
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", constructed = "true")]
@@ -163,9 +163,8 @@ pub enum POPOPrivKey {
     DhMac(BitString),
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", constructed = "true")]
     AgreeMac(PkMacValue),
-    //todo omit for now (was leaning on cms crate)
-    // #[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
-    // EncryptedKey(EnvelopedData),
+    #[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
+    EncryptedKey(EnvelopedData),
 }
 
 /// The `SubsequentMessage` type is defined in [RFC 4211 Section 4.2].
@@ -226,7 +225,7 @@ pub enum EncKeyWithIdChoice<'a> {
 
 impl<'a> ::der::Choice<'a> for EncKeyWithIdChoice<'a> {
     fn can_decode(tag: ::der::Tag) -> bool {
-        <Utf8StringRef<'a> as ::der::FixedTag>::TAG == tag || tag.is_constructed()
+        <Utf8StringRef<'a> as ::der::FixedTag>::TAG == tag || tag.is_context_specific()
     }
 }
 impl<'a> ::der::Decode<'a> for EncKeyWithIdChoice<'a> {
@@ -234,7 +233,7 @@ impl<'a> ::der::Decode<'a> for EncKeyWithIdChoice<'a> {
         let t = reader.peek_tag()?;
         if t == <Utf8StringRef<'a> as ::der::FixedTag>::TAG {
             Ok(Self::String(reader.decode()?))
-        } else if t.is_constructed() {
+        } else if t.is_context_specific() {
             Ok(Self::GeneralName(reader.decode()?))
         } else {
             Err(der::ErrorKind::TagUnexpected {
@@ -267,37 +266,44 @@ impl<'a> ::der::Tagged for EncKeyWithIdChoice<'a> {
         }
     }
 }
-// TODO DEFER add support for nested CHOICEs
-// // Nested CHOICEs are not currently supported by the Choice procedural macro, so it is avoided here
-// // in favor of manually implemented traits that avoid a FixedTag requirement
+
+// TODO address requirement for fixed tag for CHOICE
+// This nested CHOICE does not currently work via the Choice procedural macro, so it is avoided here
+// in favor of manually implemented traits that avoid a FixedTag requirement. Generated code is below.
+// Manually modified code is above.
 // impl<'a> ::der::Choice<'a> for EncKeyWithIdChoice<'a> {
 //     fn can_decode(tag: ::der::Tag) -> bool {
-//         if <Utf8StringRef<'a> as ::der::FixedTag>::TAG == tag || tag.is_constructed() == true {
-//             true
-//         } else {
-//             false
+//         match tag {
+//             <Utf8StringRef<'a> as ::der::FixedTag>::TAG
+//             | <GeneralName as ::der::FixedTag>::TAG => true,
+//             _ => false,
 //         }
 //     }
 // }
 // impl<'a> ::der::Decode<'a> for EncKeyWithIdChoice<'a> {
 //     fn decode<R: ::der::Reader<'a>>(reader: &mut R) -> ::der::Result<Self> {
-//         let t = reader.peek_tag()?;
-//         if t == <Utf8StringRef<'a> as ::der::FixedTag>::TAG {
-//             Ok(Self::String(reader.decode()?))
-//         } else if t.is_constructed() {
-//             Ok(Self::GeneralName(reader.decode()?))
-//         } else {
-//             Err(der::ErrorKind::TagUnexpected {
-//                 expected: None,
-//                 actual: t,
+//         use der::Reader as _;
+//         match reader.peek_tag()? {
+//             <Utf8StringRef<'a> as ::der::FixedTag>::TAG => {
+//                 Ok(Self::String(reader.decode()?))
 //             }
-//             .into())
+//             <GeneralName as ::der::FixedTag>::TAG => {
+//                 Ok(Self::GeneralName(reader.decode()?))
+//             }
+//             actual => {
+//                 Err(
+//                     der::ErrorKind::TagUnexpected {
+//                         expected: None,
+//                         actual,
+//                     }
+//                         .into(),
+//                 )
+//             }
 //         }
 //     }
 // }
-//
 // impl<'a> ::der::EncodeValue for EncKeyWithIdChoice<'a> {
-//     fn encode_value(&self, encoder: &mut dyn ::der::Writer) -> ::der::Result<()> {
+//     fn encode_value(&self, encoder: &mut impl ::der::Writer) -> ::der::Result<()> {
 //         match self {
 //             Self::String(variant) => variant.encode_value(encoder),
 //             Self::GeneralName(variant) => variant.encode_value(encoder),
@@ -314,7 +320,7 @@ impl<'a> ::der::Tagged for EncKeyWithIdChoice<'a> {
 //     fn tag(&self) -> ::der::Tag {
 //         match self {
 //             Self::String(_) => <Utf8StringRef<'a> as ::der::FixedTag>::TAG,
-//             Self::GeneralName(_) => self.tag(),
+//             Self::GeneralName(_) => <GeneralName as ::der::FixedTag>::TAG,
 //         }
 //     }
 // }
