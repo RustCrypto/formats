@@ -4,6 +4,7 @@ members = [
     "base16ct",
     "base32ct",
     "const-oid",
+    "crmf",
     "der",
     "der/derive",
     "pem-rfc7468",
