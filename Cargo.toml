@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "base16ct",
     "base32ct",
+    "cmpv2",
     "const-oid",
     "crmf",
     "der",
