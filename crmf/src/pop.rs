@@ -205,6 +205,9 @@ pub struct EncKeyWithID<'a> {
     pub identifier: Option<EncKeyWithIdChoice<'a>>,
 }
 
+// TODO address requirement for fixed tag for CHOICE
+// This nested CHOICE does not currently work via the Choice procedural macro, so it is avoided here
+// in favor of manually implemented traits that avoid a FixedTag requirement. Generated code is below.
 /// The `SubsequentMessage` type defined in [RFC 4211 Section 4.2.1] features an inline CHOICE
 /// definition that is implemented as EncKeyWithIdChoice.
 ///
@@ -266,64 +269,6 @@ impl<'a> ::der::Tagged for EncKeyWithIdChoice<'a> {
         }
     }
 }
-
-// TODO address requirement for fixed tag for CHOICE
-// This nested CHOICE does not currently work via the Choice procedural macro, so it is avoided here
-// in favor of manually implemented traits that avoid a FixedTag requirement. Generated code is below.
-// Manually modified code is above.
-// impl<'a> ::der::Choice<'a> for EncKeyWithIdChoice<'a> {
-//     fn can_decode(tag: ::der::Tag) -> bool {
-//         match tag {
-//             <Utf8StringRef<'a> as ::der::FixedTag>::TAG
-//             | <GeneralName as ::der::FixedTag>::TAG => true,
-//             _ => false,
-//         }
-//     }
-// }
-// impl<'a> ::der::Decode<'a> for EncKeyWithIdChoice<'a> {
-//     fn decode<R: ::der::Reader<'a>>(reader: &mut R) -> ::der::Result<Self> {
-//         use der::Reader as _;
-//         match reader.peek_tag()? {
-//             <Utf8StringRef<'a> as ::der::FixedTag>::TAG => {
-//                 Ok(Self::String(reader.decode()?))
-//             }
-//             <GeneralName as ::der::FixedTag>::TAG => {
-//                 Ok(Self::GeneralName(reader.decode()?))
-//             }
-//             actual => {
-//                 Err(
-//                     der::ErrorKind::TagUnexpected {
-//                         expected: None,
-//                         actual,
-//                     }
-//                         .into(),
-//                 )
-//             }
-//         }
-//     }
-// }
-// impl<'a> ::der::EncodeValue for EncKeyWithIdChoice<'a> {
-//     fn encode_value(&self, encoder: &mut impl ::der::Writer) -> ::der::Result<()> {
-//         match self {
-//             Self::String(variant) => variant.encode_value(encoder),
-//             Self::GeneralName(variant) => variant.encode_value(encoder),
-//         }
-//     }
-//     fn value_len(&self) -> ::der::Result<::der::Length> {
-//         match self {
-//             Self::String(variant) => variant.value_len(),
-//             Self::GeneralName(variant) => variant.value_len(),
-//         }
-//     }
-// }
-// impl<'a> ::der::Tagged for EncKeyWithIdChoice<'a> {
-//     fn tag(&self) -> ::der::Tag {
-//         match self {
-//             Self::String(_) => <Utf8StringRef<'a> as ::der::FixedTag>::TAG,
-//             Self::GeneralName(_) => <GeneralName as ::der::FixedTag>::TAG,
-//         }
-//     }
-// }
 
 /// The `PrivateKeyInfo` type is defined in [RFC 4211 Section 4.2.1].
 ///
