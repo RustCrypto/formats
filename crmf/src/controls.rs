@@ -125,7 +125,7 @@ pub enum SinglePubInfoMethod {
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 #[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
-pub enum PKIArchiveOptions {
+pub enum PkiArchiveOptions {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
     EncryptedPrivKey(EncryptedKey),
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]

@@ -270,12 +270,9 @@ dependencies = [
 
 [[package]]
 name = "crmf"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
- "const-oid",
  "der",
- "flagset",
- "hex-literal",
  "spki",
  "x509-cert",
 ]
