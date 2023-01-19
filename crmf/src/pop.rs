@@ -7,7 +7,7 @@ use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 use x509_cert::attr::Attributes;
 use x509_cert::ext::pkix::name::GeneralName;
 
-use cms::enveloped_data::EnvelopedData;
+//use cms::enveloped_data::EnvelopedData;
 
 /// The `ProofOfPossession` type is defined in [RFC 4211 Section 4].
 ///
@@ -163,8 +163,8 @@ pub enum POPOPrivKey {
     DhMac(BitString),
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", constructed = "true")]
     AgreeMac(PkMacValue),
-    #[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
-    EncryptedKey(EnvelopedData),
+    //#[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
+    //EncryptedKey(EnvelopedData),
 }
 
 /// The `SubsequentMessage` type is defined in [RFC 4211 Section 4.2].
