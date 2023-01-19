@@ -30,7 +30,7 @@ pub struct SerialNumber {
 
 impl SerialNumber {
     /// Maximum length in bytes for a [`SerialNumber`]
-    pub const MAX_LEN: Length = Length::new(20);
+    pub const MAX_LEN: Length = Length::new(30);
 
     /// Create a new [`SerialNumber`] from a byte slice.
     pub fn new(bytes: &[u8]) -> Result<Self> {
