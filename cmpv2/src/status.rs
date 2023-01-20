@@ -226,7 +226,6 @@ pub type CertConfirmContent<'a> = Vec<CertStatus<'a>>;
 #[allow(missing_docs)]
 pub struct CertStatus<'a> {
     pub cert_hash: OctetString,
-    // using serial number to allow for large integers here
     pub cert_req_id: Int,
     pub status_info: Option<PkiStatusInfo<'a>>,
 }

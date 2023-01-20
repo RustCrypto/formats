@@ -57,7 +57,6 @@ pub type CertResponses<'a> = Vec<CertResponse<'a>>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct CertResponse<'a> {
-    // using serial number to allow for large integers here
     pub cert_req_id: Int,
     pub status: PkiStatusInfo<'a>,
     pub certified_key_pair: Option<CertifiedKeyPair>,

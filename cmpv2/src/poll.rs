@@ -27,7 +27,6 @@ pub struct PollReqContent {
 ///
 /// [RFC 4210 Section 5.3.22]: https://www.rfc-editor.org/rfc/rfc4210#section-5.3.22
 pub type PollReqContentId = Int;
-// using serial number to allow for large integers here
 
 /// The `PollRepContent` type is defined in [RFC 4210 Section 5.3.22].
 ///
