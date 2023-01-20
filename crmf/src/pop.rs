@@ -208,7 +208,6 @@ pub struct PbmParameter {
 ///
 /// [RFC 4211 Section 4.2]: https://www.rfc-editor.org/rfc/rfc4211#section-4.2
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
-#[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
 pub enum POPOPrivKey {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "false")]

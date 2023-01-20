@@ -53,7 +53,6 @@ use crate::status::{CertConfirmContent, ErrorMsgContent};
 /// [RFC 4210 Section 5.1.2]: https://datatracker.ietf.org/doc/html/rfc4210#section-5.1.2
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
-#[allow(clippy::large_enum_variant)]
 pub enum PkiBody<'a> {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
     Ir(CertReqMessages),

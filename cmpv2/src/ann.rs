@@ -1,5 +1,6 @@
 //! Announcement-related types
 
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 use der::asn1::GeneralizedTime;
 use der::Sequence;
@@ -24,9 +25,9 @@ use crate::status::PkiStatus;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct CaKeyUpdAnnContent {
-    pub old_with_new: CmpCertificate,
-    pub new_with_old: CmpCertificate,
-    pub new_with_new: CmpCertificate,
+    pub old_with_new: Box<CmpCertificate>,
+    pub new_with_old: Box<CmpCertificate>,
+    pub new_with_new: Box<CmpCertificate>,
 }
 
 /// The `CertAnnContent` announcement is defined in [RFC 4210 Section 5.3.14].

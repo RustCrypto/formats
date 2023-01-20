@@ -123,6 +123,7 @@ pub enum SinglePubInfoMethod {
 ///
 /// [RFC 4211 Section 6.4]: https://www.rfc-editor.org/rfc/rfc4211#section-6.4
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
+//todo remove large_enum_variant when EnvelopedData is added back to EncryptedKey
 #[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
 pub enum PkiArchiveOptions {
@@ -146,7 +147,6 @@ pub enum PkiArchiveOptions {
 ///
 /// [RFC 4211 Section 6.4]: https://www.rfc-editor.org/rfc/rfc4211#section-6.4
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
-#[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
 pub enum EncryptedKey {
     EncryptedValue(EncryptedValue),
