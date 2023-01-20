@@ -1,7 +1,7 @@
 //! Request-related types
 
 use alloc::vec::Vec;
-use der::asn1::BitString;
+use der::asn1::{BitString, Int};
 use der::Sequence;
 
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
@@ -69,7 +69,7 @@ pub type AttributeSeq = Vec<Attribute>;
 #[allow(missing_docs)]
 pub struct CertRequest {
     // using serial number to allow for large integers here
-    pub cert_req_id: SerialNumber,
+    pub cert_req_id: Int,
     pub cert_template: CertTemplate,
     pub controls: Option<Controls>,
 }

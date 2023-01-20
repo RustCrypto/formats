@@ -3,9 +3,8 @@
 use alloc::vec::Vec;
 use flagset::{flags, FlagSet};
 
-use der::asn1::OctetString;
+use der::asn1::{Int, OctetString};
 use der::{Enumerated, Sequence};
-use x509_cert::serial_number::SerialNumber;
 
 use crate::header::PkiFreeText;
 
@@ -228,6 +227,6 @@ pub type CertConfirmContent<'a> = Vec<CertStatus<'a>>;
 pub struct CertStatus<'a> {
     pub cert_hash: OctetString,
     // using serial number to allow for large integers here
-    pub cert_req_id: SerialNumber,
+    pub cert_req_id: Int,
     pub status_info: Option<PkiStatusInfo<'a>>,
 }

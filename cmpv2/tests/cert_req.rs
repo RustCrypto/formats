@@ -59,7 +59,7 @@ fn cr_req_message_test() {
         PkiBody::Cr(crs) => {
             assert_eq!(1, crs.len());
             let cr = &crs[0];
-            assert_eq!("00", cr.cert_req.cert_req_id.to_string());
+            assert_eq!([0x00], cr.cert_req.cert_req_id.as_bytes());
             assert_eq!(
                 "CN=MyName",
                 cr.cert_req
@@ -162,7 +162,7 @@ fn cr_rsp_message_test() {
         PkiBody::Cp(cp) => {
             assert_eq!(1, cp.response.len());
             let cr = &cp.response[0];
-            assert_eq!("00", cr.cert_req_id.to_string());
+            assert_eq!([0x00], cr.cert_req_id.as_bytes());
             let status = &cr.status;
             assert_eq!(PkiStatus::Accepted, status.status);
         }

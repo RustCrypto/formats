@@ -176,7 +176,7 @@ fn ir_req_message_test() {
         PkiBody::Ir(irs) => {
             assert_eq!(1, irs.len());
             let ir = &irs[0];
-            assert_eq!("00", ir.cert_req.cert_req_id.to_string());
+            assert_eq!([0x00], ir.cert_req.cert_req_id.as_bytes());
             assert_eq!(
                 "CN=MyName",
                 ir.cert_req
@@ -354,7 +354,7 @@ fn ir_rsp_message_test() {
         PkiBody::Ip(ip) => {
             assert_eq!(1, ip.response.len());
             let cr = &ip.response[0];
-            assert_eq!("00", cr.cert_req_id.to_string());
+            assert_eq!([0x00], cr.cert_req_id.as_bytes());
             let status = &cr.status;
             assert_eq!(PkiStatus::Accepted, status.status);
         }

@@ -1,6 +1,6 @@
 //! Certificate key pair-related types
 
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use der::{Choice, Sequence};
 
 use crmf::controls::{EncryptedValue, PkiPublicationInfo};
@@ -49,13 +49,12 @@ pub struct CertifiedKeyPair {
 /// [RFC 4210 Section 5.3.4]: https://www.rfc-editor.org/rfc/rfc4210#section-5.3.4
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
-#[allow(clippy::large_enum_variant)]
 pub enum CertOrEncCert {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
-    Certificate(CmpCertificate),
+    Certificate(Box<CmpCertificate>),
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
-    EncryptedCert(EncryptedValue),
+    EncryptedCert(Box<EncryptedValue>),
 }
 
 /// The `KeyRecRepContent` type is defined in [RFC 4210 Section 5.3.8]
