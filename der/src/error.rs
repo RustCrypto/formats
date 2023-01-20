@@ -197,6 +197,9 @@ pub enum ErrorKind {
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     Io(std::io::ErrorKind),
 
+    /// Indefinite length disallowed.
+    IndefiniteLength,
+
     /// Incorrect length for a given field.
     Length {
         /// Tag of the value being decoded.
@@ -321,6 +324,7 @@ impl fmt::Display for ErrorKind {
             ),
             #[cfg(feature = "std")]
             ErrorKind::Io(err) => write!(f, "I/O error: {:?}", err),
+            ErrorKind::IndefiniteLength => write!(f, "indefinite length disallowed"),
             ErrorKind::Length { tag } => write!(f, "incorrect length for {}", tag),
             ErrorKind::Noncanonical { tag } => {
                 write!(f, "ASN.1 {} not canonically encoded as DER", tag)

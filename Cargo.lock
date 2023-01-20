@@ -269,6 +269,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crmf"
+version = "0.0.0"
+dependencies = [
+ "der",
+ "spki",
+ "x509-cert",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"

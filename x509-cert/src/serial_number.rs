@@ -134,6 +134,11 @@ mod tests {
             let too_big = [0x80; 20];
             assert!(SerialNumber::new(&too_big).is_err());
         }
+    }
+
+    fn serial_number_display() {
+        let sn = SerialNumber::new(&[0xAA, 0xBB, 0xCC, 0x01, 0x10, 0x00, 0x11])
+            .expect("unexpected error");
 
         // Creating a new serial with the maximum encoding succeeds.
         {

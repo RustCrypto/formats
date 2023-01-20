@@ -171,20 +171,20 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for AlgorithmIdentifierRef<'a> {
         type Owned = AlgorithmIdentifierOwned;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             AlgorithmIdentifier {
                 oid: self.oid,
-                parameters: self.parameters.to_owned(),
+                parameters: self.parameters.ref_to_owned(),
             }
         }
     }
 
     impl OwnedToRef for AlgorithmIdentifierOwned {
         type Borrowed<'a> = AlgorithmIdentifierRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             AlgorithmIdentifier {
                 oid: self.oid,
-                parameters: self.parameters.to_ref(),
+                parameters: self.parameters.owned_to_ref(),
             }
         }
     }

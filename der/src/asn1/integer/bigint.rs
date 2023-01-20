@@ -2,8 +2,8 @@
 
 use super::{int, uint};
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind,
-    FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length,
+    Reader, Result, Tag, Writer,
 };
 
 /// "Big" signed ASN.1 `INTEGER` type.
@@ -45,6 +45,11 @@ impl<'a> IntRef<'a> {
     }
 }
 
+mod int_impl {
+    use super::*;
+    impl_type!(IntRef<'a>, 'a);
+}
+
 impl<'a> DecodeValue<'a> for IntRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = BytesRef::decode_value(reader, header)?.as_slice();
@@ -73,14 +78,6 @@ impl<'a> EncodeValue for IntRef<'a> {
 impl<'a> From<&IntRef<'a>> for IntRef<'a> {
     fn from(value: &IntRef<'a>) -> IntRef<'a> {
         *value
-    }
-}
-
-impl<'a> TryFrom<AnyRef<'a>> for IntRef<'a> {
-    type Error = Error;
-
-    fn try_from(any: AnyRef<'a>) -> Result<IntRef<'a>> {
-        any.decode_as()
     }
 }
 
@@ -129,6 +126,11 @@ impl<'a> UintRef<'a> {
     }
 }
 
+mod uint_impl {
+    use super::*;
+    impl_type!(UintRef<'a>, 'a);
+}
+
 impl<'a> DecodeValue<'a> for UintRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = BytesRef::decode_value(reader, header)?.as_slice();
@@ -164,14 +166,6 @@ impl<'a> From<&UintRef<'a>> for UintRef<'a> {
     }
 }
 
-impl<'a> TryFrom<AnyRef<'a>> for UintRef<'a> {
-    type Error = Error;
-
-    fn try_from(any: AnyRef<'a>) -> Result<UintRef<'a>> {
-        any.decode_as()
-    }
-}
-
 impl<'a> FixedTag for UintRef<'a> {
     const TAG: Tag = Tag::Integer;
 }
@@ -187,11 +181,10 @@ mod allocating {
 
     use super::{super::int, super::uint, IntRef, UintRef};
     use crate::{
-        asn1::AnyRef,
         ord::OrdIsValueOrd,
         referenced::{OwnedToRef, RefToOwned},
-        BytesOwned, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
-        Result, Tag, Writer,
+        BytesOwned, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result,
+        Tag, Writer,
     };
 
     /// "Big" signed ASN.1 `INTEGER` type.
@@ -231,6 +224,11 @@ mod allocating {
         pub fn is_empty(&self) -> bool {
             self.inner.is_empty()
         }
+    }
+
+    mod int_impl {
+        use super::*;
+        impl_type!(Int);
     }
 
     impl<'a> DecodeValue<'a> for Int {
@@ -281,14 +279,6 @@ mod allocating {
         }
     }
 
-    impl<'a> TryFrom<AnyRef<'a>> for Int {
-        type Error = Error;
-
-        fn try_from(any: AnyRef<'a>) -> Result<Int> {
-            any.decode_as()
-        }
-    }
-
     impl FixedTag for Int {
         const TAG: Tag = Tag::Integer;
     }
@@ -297,8 +287,8 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for IntRef<'a> {
         type Owned = Int;
-        fn to_owned(&self) -> Self::Owned {
-            let inner = self.inner.to_owned();
+        fn ref_to_owned(&self) -> Self::Owned {
+            let inner = self.inner.ref_to_owned();
 
             Int { inner }
         }
@@ -306,8 +296,8 @@ mod allocating {
 
     impl OwnedToRef for Int {
         type Borrowed<'a> = IntRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
-            let inner = self.inner.to_ref();
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+            let inner = self.inner.owned_to_ref();
 
             IntRef { inner }
         }
@@ -352,6 +342,11 @@ mod allocating {
         }
     }
 
+    mod uint_impl {
+        use super::*;
+        impl_type!(Uint);
+    }
+
     impl<'a> DecodeValue<'a> for Uint {
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             let bytes = BytesOwned::decode_value(reader, header)?;
@@ -388,14 +383,6 @@ mod allocating {
         }
     }
 
-    impl<'a> TryFrom<AnyRef<'a>> for Uint {
-        type Error = Error;
-
-        fn try_from(any: AnyRef<'a>) -> Result<Uint> {
-            any.decode_as()
-        }
-    }
-
     impl FixedTag for Uint {
         const TAG: Tag = Tag::Integer;
     }
@@ -404,8 +391,8 @@ mod allocating {
 
     impl<'a> RefToOwned<'a> for UintRef<'a> {
         type Owned = Uint;
-        fn to_owned(&self) -> Self::Owned {
-            let inner = self.inner.to_owned();
+        fn ref_to_owned(&self) -> Self::Owned {
+            let inner = self.inner.ref_to_owned();
 
             Uint { inner }
         }
@@ -413,8 +400,8 @@ mod allocating {
 
     impl OwnedToRef for Uint {
         type Borrowed<'a> = UintRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
-            let inner = self.inner.to_ref();
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+            let inner = self.inner.owned_to_ref();
 
             UintRef { inner }
         }

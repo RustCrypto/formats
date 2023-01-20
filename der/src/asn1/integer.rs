@@ -7,8 +7,8 @@ pub(super) mod uint;
 use core::{cmp::Ordering, mem};
 
 use crate::{
-    asn1::AnyRef, BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader,
-    Result, SliceWriter, Tag, ValueOrd, Writer,
+    asn1::AnyRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result,
+    SliceWriter, Tag, ValueOrd, Writer,
 };
 
 macro_rules! impl_int_encoding {
@@ -16,7 +16,14 @@ macro_rules! impl_int_encoding {
         $(
             impl<'a> DecodeValue<'a> for $int {
                 fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-                    let bytes = BytesRef::decode_value(reader, header)?.as_slice();
+                    let mut buf = [0u8; Self::BITS as usize / 8];
+                    let max_length = u32::from(header.length) as usize;
+
+                    if max_length > buf.len() {
+                        return Err(Self::TAG.non_canonical_error());
+                    }
+
+                    let bytes = reader.read_into(&mut buf[..max_length])?;
 
                     let result = if is_highest_bit_set(bytes) {
                         <$uint>::from_be_bytes(int::decode_to_array(bytes)?) as $int
@@ -77,7 +84,19 @@ macro_rules! impl_uint_encoding {
         $(
             impl<'a> DecodeValue<'a> for $uint {
                 fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-                    let bytes = BytesRef::decode_value(reader, header)?.as_slice();
+                    // Integers always encodes as a signed value, unsigned gets a leading 0x00 that
+                    // needs to be stripped off. We need to provide room for it.
+                    const UNSIGNED_HEADROOM: usize = 1;
+
+                    let mut buf = [0u8; (Self::BITS as usize / 8) + UNSIGNED_HEADROOM];
+                    let max_length = u32::from(header.length) as usize;
+
+                    if max_length > buf.len() {
+                        return Err(Self::TAG.non_canonical_error());
+                    }
+
+                    let bytes = reader.read_into(&mut buf[..max_length])?;
+
                     let result = Self::from_be_bytes(uint::decode_to_array(bytes)?);
 
                     // Ensure we compute the same encoded length as the original any value

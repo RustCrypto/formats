@@ -1,10 +1,11 @@
-name: x509-cert
+name: crmf
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/x509-cert.yml"
+      - ".github/workflows/crmf.yml"
       - "const-oid/**"
+      - "crmf/**"
       - "der/**"
       - "spki/**"
       - "x509-cert/**"
@@ -14,7 +15,7 @@ on:
 
 defaults:
   run:
-    working-directory: x509-cert
+    working-directory: crmf
 
 env:
   CARGO_INCREMENTAL: 0
@@ -66,15 +67,4 @@ jobs:
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack test --feature-powerset
 
-  fuzz:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly-2022-12-25 # Pinned due to rust-lang/rust#106247
-          override: true
-      - run: cargo install cargo-fuzz
-      - run: cargo fuzz run certreq -- -max_total_time=30 -seed_inputs="fuzz/inputs/rsa2048-csr.der"
-      - run: cargo fuzz run certreqinfo -- -max_total_time=30
+

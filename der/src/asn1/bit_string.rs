@@ -1,13 +1,10 @@
 //! ASN.1 `BIT STRING` support.
 
 use crate::{
-    asn1::AnyRef, BytesRef, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header,
-    Length, Reader, Result, Tag, ValueOrd, Writer,
+    BytesRef, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
+    Result, Tag, ValueOrd, Writer,
 };
 use core::{cmp::Ordering, iter::FusedIterator};
-
-#[cfg(feature = "alloc")]
-use alloc::vec::Vec;
 
 /// ASN.1 `BIT STRING` type.
 ///
@@ -120,6 +117,8 @@ impl<'a> BitStringRef<'a> {
     }
 }
 
+impl_type!(BitStringRef<'a>, 'a);
+
 impl<'a> DecodeValue<'a> for BitStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let header = Header {
@@ -156,14 +155,6 @@ impl ValueOrd for BitStringRef<'_> {
 impl<'a> From<&BitStringRef<'a>> for BitStringRef<'a> {
     fn from(value: &BitStringRef<'a>) -> BitStringRef<'a> {
         *value
-    }
-}
-
-impl<'a> TryFrom<AnyRef<'a>> for BitStringRef<'a> {
-    type Error = Error;
-
-    fn try_from(any: AnyRef<'a>) -> Result<BitStringRef<'a>> {
-        any.decode_as()
     }
 }
 
@@ -215,161 +206,8 @@ impl<'a> arbitrary::Arbitrary<'a> for BitStringRef<'a> {
     }
 }
 
-/// Owned form of ASN.1 `BIT STRING` type.
-///
-/// This type provides the same functionality as [`BitStringRef`] but owns the
-/// backing data.
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct BitString {
-    /// Number of unused bits in the final octet.
-    unused_bits: u8,
-
-    /// Length of this `BIT STRING` in bits.
-    bit_length: usize,
-
-    /// Bitstring represented as a slice of bytes.
-    inner: Vec<u8>,
-}
-
-#[cfg(feature = "alloc")]
-impl BitString {
-    /// Maximum number of unused bits allowed.
-    pub const MAX_UNUSED_BITS: u8 = 7;
-
-    /// Create a new ASN.1 `BIT STRING` from a byte slice.
-    ///
-    /// Accepts an optional number of "unused bits" (0-7) which are omitted
-    /// from the final octet. This number is 0 if the value is octet-aligned.
-    pub fn new(unused_bits: u8, bytes: impl Into<Vec<u8>>) -> Result<Self> {
-        let inner = bytes.into();
-
-        // Ensure parameters parse successfully as a `BitStringRef`.
-        let bit_length = BitStringRef::new(unused_bits, &inner)?.bit_length;
-
-        Ok(BitString {
-            unused_bits,
-            bit_length,
-            inner,
-        })
-    }
-
-    /// Create a new ASN.1 `BIT STRING` from the given bytes.
-    ///
-    /// The "unused bits" are set to 0.
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        Self::new(0, bytes)
-    }
-
-    /// Get the number of unused bits in the octet serialization of this
-    /// `BIT STRING`.
-    pub fn unused_bits(&self) -> u8 {
-        self.unused_bits
-    }
-
-    /// Is the number of unused bits a value other than 0?
-    pub fn has_unused_bits(&self) -> bool {
-        self.unused_bits != 0
-    }
-
-    /// Get the length of this `BIT STRING` in bits.
-    pub fn bit_len(&self) -> usize {
-        self.bit_length
-    }
-
-    /// Is the inner byte slice empty?
-    pub fn is_empty(&self) -> bool {
-        self.inner.is_empty()
-    }
-
-    /// Borrow the inner byte slice.
-    ///
-    /// Returns `None` if the number of unused bits is *not* equal to zero,
-    /// i.e. if the `BIT STRING` is not octet aligned.
-    ///
-    /// Use [`BitString::raw_bytes`] to obtain access to the raw value
-    /// regardless of the presence of unused bits.
-    pub fn as_bytes(&self) -> Option<&[u8]> {
-        if self.has_unused_bits() {
-            None
-        } else {
-            Some(self.raw_bytes())
-        }
-    }
-
-    /// Borrow the raw bytes of this `BIT STRING`.
-    pub fn raw_bytes(&self) -> &[u8] {
-        self.inner.as_slice()
-    }
-
-    /// Iterator over the bits of this `BIT STRING`.
-    pub fn bits(&self) -> BitStringIter<'_> {
-        BitStringRef::from(self).bits()
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl<'a> DecodeValue<'a> for BitString {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let inner_len = (header.length - Length::ONE)?;
-        let unused_bits = reader.read_byte()?;
-        let inner = reader.read_vec(inner_len)?;
-        Self::new(unused_bits, inner)
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl EncodeValue for BitString {
-    fn value_len(&self) -> Result<Length> {
-        Length::ONE + Length::try_from(self.inner.len())?
-    }
-
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
-        writer.write_byte(self.unused_bits)?;
-        writer.write(&self.inner)
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl FixedTag for BitString {
-    const TAG: Tag = Tag::BitString;
-}
-
-#[cfg(feature = "alloc")]
-impl<'a> From<&'a BitString> for BitStringRef<'a> {
-    fn from(bit_string: &'a BitString) -> BitStringRef<'a> {
-        // Ensured to parse successfully in constructor
-        BitStringRef::new(bit_string.unused_bits, &bit_string.inner).expect("invalid BIT STRING")
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl ValueOrd for BitString {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-        match self.unused_bits.cmp(&other.unused_bits) {
-            Ordering::Equal => self.inner.der_cmp(&other.inner),
-            ordering => Ok(ordering),
-        }
-    }
-}
-
-// Implement by hand because the derive would create invalid values.
-// Use the constructor to create a valid value.
-#[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for BitString {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Self::new(
-            u.int_in_range(0..=Self::MAX_UNUSED_BITS)?,
-            BytesRef::arbitrary(u)?.as_slice(),
-        )
-        .map_err(|_| arbitrary::Error::IncorrectFormat)
-    }
-
-    fn size_hint(depth: usize) -> (usize, Option<usize>) {
-        arbitrary::size_hint::and(u8::size_hint(depth), BytesRef::size_hint(depth))
-    }
-}
+pub use self::allocating::BitString;
 
 #[cfg(feature = "alloc")]
 mod allocating {
@@ -377,9 +215,161 @@ mod allocating {
     use crate::referenced::*;
     use alloc::vec::Vec;
 
+    /// Owned form of ASN.1 `BIT STRING` type.
+    ///
+    /// This type provides the same functionality as [`BitStringRef`] but owns the
+    /// backing data.
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+    pub struct BitString {
+        /// Number of unused bits in the final octet.
+        unused_bits: u8,
+
+        /// Length of this `BIT STRING` in bits.
+        bit_length: usize,
+
+        /// Bitstring represented as a slice of bytes.
+        inner: Vec<u8>,
+    }
+
+    impl BitString {
+        /// Maximum number of unused bits allowed.
+        pub const MAX_UNUSED_BITS: u8 = 7;
+
+        /// Create a new ASN.1 `BIT STRING` from a byte slice.
+        ///
+        /// Accepts an optional number of "unused bits" (0-7) which are omitted
+        /// from the final octet. This number is 0 if the value is octet-aligned.
+        pub fn new(unused_bits: u8, bytes: impl Into<Vec<u8>>) -> Result<Self> {
+            let inner = bytes.into();
+
+            // Ensure parameters parse successfully as a `BitStringRef`.
+            let bit_length = BitStringRef::new(unused_bits, &inner)?.bit_length;
+
+            Ok(BitString {
+                unused_bits,
+                bit_length,
+                inner,
+            })
+        }
+
+        /// Create a new ASN.1 `BIT STRING` from the given bytes.
+        ///
+        /// The "unused bits" are set to 0.
+        pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+            Self::new(0, bytes)
+        }
+
+        /// Get the number of unused bits in the octet serialization of this
+        /// `BIT STRING`.
+        pub fn unused_bits(&self) -> u8 {
+            self.unused_bits
+        }
+
+        /// Is the number of unused bits a value other than 0?
+        pub fn has_unused_bits(&self) -> bool {
+            self.unused_bits != 0
+        }
+
+        /// Get the length of this `BIT STRING` in bits.
+        pub fn bit_len(&self) -> usize {
+            self.bit_length
+        }
+
+        /// Is the inner byte slice empty?
+        pub fn is_empty(&self) -> bool {
+            self.inner.is_empty()
+        }
+
+        /// Borrow the inner byte slice.
+        ///
+        /// Returns `None` if the number of unused bits is *not* equal to zero,
+        /// i.e. if the `BIT STRING` is not octet aligned.
+        ///
+        /// Use [`BitString::raw_bytes`] to obtain access to the raw value
+        /// regardless of the presence of unused bits.
+        pub fn as_bytes(&self) -> Option<&[u8]> {
+            if self.has_unused_bits() {
+                None
+            } else {
+                Some(self.raw_bytes())
+            }
+        }
+
+        /// Borrow the raw bytes of this `BIT STRING`.
+        pub fn raw_bytes(&self) -> &[u8] {
+            self.inner.as_slice()
+        }
+
+        /// Iterator over the bits of this `BIT STRING`.
+        pub fn bits(&self) -> BitStringIter<'_> {
+            BitStringRef::from(self).bits()
+        }
+    }
+
+    impl_type!(BitString);
+
+    impl<'a> DecodeValue<'a> for BitString {
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+            let inner_len = (header.length - Length::ONE)?;
+            let unused_bits = reader.read_byte()?;
+            let inner = reader.read_vec(inner_len)?;
+            Self::new(unused_bits, inner)
+        }
+    }
+
+    impl EncodeValue for BitString {
+        fn value_len(&self) -> Result<Length> {
+            Length::ONE + Length::try_from(self.inner.len())?
+        }
+
+        fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+            writer.write_byte(self.unused_bits)?;
+            writer.write(&self.inner)
+        }
+    }
+
+    impl FixedTag for BitString {
+        const TAG: Tag = Tag::BitString;
+    }
+
+    impl<'a> From<&'a BitString> for BitStringRef<'a> {
+        fn from(bit_string: &'a BitString) -> BitStringRef<'a> {
+            // Ensured to parse successfully in constructor
+            BitStringRef::new(bit_string.unused_bits, &bit_string.inner)
+                .expect("invalid BIT STRING")
+        }
+    }
+
+    impl ValueOrd for BitString {
+        fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+            match self.unused_bits.cmp(&other.unused_bits) {
+                Ordering::Equal => self.inner.der_cmp(&other.inner),
+                ordering => Ok(ordering),
+            }
+        }
+    }
+
+    // Implement by hand because the derive would create invalid values.
+    // Use the constructor to create a valid value.
+    #[cfg(feature = "arbitrary")]
+    impl<'a> arbitrary::Arbitrary<'a> for BitString {
+        fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+            Self::new(
+                u.int_in_range(0..=Self::MAX_UNUSED_BITS)?,
+                BytesRef::arbitrary(u)?.as_slice(),
+            )
+            .map_err(|_| arbitrary::Error::IncorrectFormat)
+        }
+
+        fn size_hint(depth: usize) -> (usize, Option<usize>) {
+            arbitrary::size_hint::and(u8::size_hint(depth), BytesRef::size_hint(depth))
+        }
+    }
+
     impl<'a> RefToOwned<'a> for BitStringRef<'a> {
         type Owned = BitString;
-        fn to_owned(&self) -> Self::Owned {
+        fn ref_to_owned(&self) -> Self::Owned {
             BitString {
                 unused_bits: self.unused_bits,
                 bit_length: self.bit_length,
@@ -390,7 +380,7 @@ mod allocating {
 
     impl OwnedToRef for BitString {
         type Borrowed<'a> = BitStringRef<'a>;
-        fn to_ref(&self) -> Self::Borrowed<'_> {
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             self.into()
         }
     }
