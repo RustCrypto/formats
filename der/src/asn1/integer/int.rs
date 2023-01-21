@@ -1,4 +1,4 @@
-//! Support for encoding negative integers
+//! Support for encoding signed integers
 
 use super::is_highest_bit_set;
 use crate::{ErrorKind, Length, Result, Tag, Writer};
@@ -46,9 +46,9 @@ where
     writer.write(strip_leading_ones(bytes))
 }
 
-/// Get the encoded length for the given signed integer serialized as bytes.
+/// Get the encoded length for the given **negative** integer serialized as bytes.
 #[inline]
-pub(super) fn encoded_len(bytes: &[u8]) -> Result<Length> {
+pub(super) fn negative_encoded_len(bytes: &[u8]) -> Result<Length> {
     Length::try_from(strip_leading_ones(bytes).len())
 }
 
