@@ -1,4 +1,6 @@
-use tls_codec::{Deserialize, Serialize, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8, VLBytes};
+use tls_codec::{
+    Deserialize, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8, VLBytes,
+};
 use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 
 #[derive(TlsDeserialize, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize)]
@@ -387,4 +389,24 @@ fn that_skip_attribute_on_struct_works() {
     test(&[25, 3], StructWithSkip1 { a: 0, b: 25, c: 3 });
     test(&[13, 3], StructWithSkip2 { a: 13, b: 0, c: 3 });
     test(&[13, 55], StructWithSkip3 { a: 13, b: 55, c: 0 });
+}
+
+#[test]
+fn generic_struct() {
+    #[derive(PartialEq, Eq, Debug, TlsSize, TlsSerialize, TlsDeserialize)]
+    struct GenericStruct<T>
+    where
+        T: Size + Serialize + Deserialize,
+    {
+        a: u8,
+        b: T,
+    }
+
+    let insta = GenericStruct::<u32> { a: 123, b: 666 };
+
+    let serialized = insta.tls_serialize_detached().unwrap();
+    let mut reader = serialized.as_slice();
+    let deserialized = GenericStruct::<u32>::tls_deserialize(&mut reader).unwrap();
+
+    assert_eq!(deserialized, insta);
 }
