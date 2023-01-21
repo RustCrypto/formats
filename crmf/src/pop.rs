@@ -1,5 +1,6 @@
 //! Proof of possession (POP)-related types
 
+use alloc::boxed::Box;
 use der::asn1::{BitString, Null, OctetString, Utf8StringRef};
 use der::{Choice, Enumerated, Sequence};
 
@@ -23,13 +24,12 @@ use x509_cert::ext::pkix::name::GeneralName;
 ///
 /// [RFC 4211 Section 4]: https://www.rfc-editor.org/rfc/rfc4211#section-4
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
-#[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
 pub enum ProofOfPossession {
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "false")]
     RaVerified(Null),
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
-    Signature(PopoSigningKey),
+    Signature(Box<PopoSigningKey>),
     //todo review EXPLICIT tag here (does not compile as IMPLICIT)
     #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
     KeyEncipherment(POPOPrivKey),
@@ -61,6 +61,62 @@ pub struct PopoSigningKey {
     pub alg_id: AlgorithmIdentifierOwned,
     pub signature: BitString,
 }
+
+impl<'__der_lifetime> ::der::DecodeValue<'__der_lifetime> for Box<PopoSigningKey> {
+    fn decode_value<R: ::der::Reader<'__der_lifetime>>(
+        reader: &mut R,
+        header: ::der::Header,
+    ) -> ::der::Result<Self> {
+        use ::der::Reader as _;
+        let psk = reader.read_nested(header.length, |reader| {
+            let poposk_input =
+                ::der::asn1::ContextSpecific::decode_implicit(reader, ::der::TagNumber::N0)?
+                    .map(|cs| cs.value);
+            let alg_id = reader.decode()?;
+            let signature = reader.decode()?;
+            Ok(PopoSigningKey {
+                poposk_input,
+                alg_id,
+                signature,
+            })
+        })?;
+        Ok(Box::new(psk))
+    }
+}
+impl ::der::EncodeValue for Box<PopoSigningKey> {
+    fn value_len(&self) -> ::der::Result<::der::Length> {
+        use ::der::Encode as _;
+        [
+            self.poposk_input
+                .as_ref()
+                .map(|field| ::der::asn1::ContextSpecificRef {
+                    tag_number: ::der::TagNumber::N0,
+                    tag_mode: ::der::TagMode::Implicit,
+                    value: field,
+                })
+                .encoded_len()?,
+            self.alg_id.encoded_len()?,
+            self.signature.encoded_len()?,
+        ]
+        .into_iter()
+        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
+    }
+    fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+        use ::der::Encode as _;
+        self.poposk_input
+            .as_ref()
+            .map(|field| ::der::asn1::ContextSpecificRef {
+                tag_number: ::der::TagNumber::N0,
+                tag_mode: ::der::TagMode::Implicit,
+                value: field,
+            })
+            .encode(writer)?;
+        self.alg_id.encode(writer)?;
+        self.signature.encode(writer)?;
+        Ok(())
+    }
+}
+impl<'__der_lifetime> ::der::Sequence<'__der_lifetime> for Box<PopoSigningKey> {}
 
 /// The `POPOSigningKeyInput` type is defined in [RFC 4211 Section 4.1].
 ///
@@ -152,7 +208,6 @@ pub struct PbmParameter {
 ///
 /// [RFC 4211 Section 4.2]: https://www.rfc-editor.org/rfc/rfc4211#section-4.2
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
-#[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
 pub enum POPOPrivKey {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "false")]

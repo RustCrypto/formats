@@ -216,6 +216,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmpv2"
+version = "0.0.0"
+dependencies = [
+ "const-oid",
+ "crmf",
+ "der",
+ "flagset",
+ "hex-literal",
+ "spki",
+ "x509-cert",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.10.0-pre"
 dependencies = [
