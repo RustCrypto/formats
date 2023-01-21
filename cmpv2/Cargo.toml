@@ -24,9 +24,6 @@ crmf = {version = "0.0", path = "../crmf" }
 [dev-dependencies]
 const-oid = { version = "0.10.0-pre", path = "../const-oid" }
 hex-literal = "0.3"
-#reqwest = "0.11.13"
-#tokio = { version = "1.19.2", features = ["full", "time", "rt-multi-thread"] }
-#tokio-test = {version = "0.4.2"}
 
 [features]
 alloc = ["der/alloc"]
