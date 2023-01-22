@@ -1,0 +1,38 @@
+[package]
+name = "cms"
+version = "0.0.0"
+description = """
+Pure Rust implementation of the Cryptographic Message Syntax (CMS) as described in RFC 5652 and RFC 3274.
+"""
+authors = ["RustCrypto Developers"]
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/RustCrypto/formats/tree/master/cms"
+categories = ["cryptography", "data-structures", "encoding", "no-std"]
+keywords = ["crypto"]
+readme = "README.md"
+edition = "2021"
+rust-version = "1.65"
+
+[dependencies]
+der = { version = "0.7.0-pre", features = ["oid", "derive", "alloc"], path = "../der" }
+x509-cert = { version = "0.2.0-pre", path = "../x509-cert" }
+const-oid = { version = "0.10.0-pre", path = "../const-oid" }
+spki = { version = "0.7.0-pre", path = "../spki" }
+
+[dev-dependencies]
+hex-literal = "0.3"
+pkcs5 = { version = "0.6.0-pre", path = "../pkcs5" }
+
+# NOTE: upgrading requires MSRV bumps
+# - rstest v0.13 requires 1.59 (for `async-global-executor`)
+# - rstest v0.14 requires a workspace-wide 1.60 MSRV (for namespaced features)
+rstest = "0.12"
+
+[features]
+alloc = ["der/alloc"]
+std = ["der/std", "spki/std"]
+pem = ["alloc", "der/pem"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
