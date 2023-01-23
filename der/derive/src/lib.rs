@@ -134,6 +134,7 @@ use crate::{
     attributes::{FieldAttrs, TypeAttrs, ATTR_NAME},
     choice::DeriveChoice,
     enumerated::DeriveEnumerated,
+    sequence::DeriveBoxedSequence,
     sequence::DeriveSequence,
     tag::{Tag, TagMode, TagNumber},
     value_ord::DeriveValueOrd,
@@ -268,6 +269,13 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
 pub fn derive_sequence(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     DeriveSequence::new(input).to_tokens().into()
+}
+
+#[proc_macro_derive(BoxedSequence, attributes(asn1))]
+#[proc_macro_error]
+pub fn derive_boxed_sequence(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    DeriveBoxedSequence::new(input).to_tokens().into()
 }
 
 /// Derive the [`ValueOrd`][1] trait on a `struct`.

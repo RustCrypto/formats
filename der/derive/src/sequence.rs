@@ -127,6 +127,115 @@ impl DeriveSequence {
     }
 }
 
+pub(crate) struct DeriveBoxedSequence(pub DeriveSequence);
+
+impl DeriveBoxedSequence {
+    /// Parse [`DeriveInput`].
+    pub fn new(input: DeriveInput) -> Self {
+        let data = match input.data {
+            syn::Data::Struct(data) => data,
+            _ => abort!(
+                input.ident,
+                "can't derive `Sequence` on this type: only `struct` types are allowed",
+            ),
+        };
+
+        // TODO(tarcieri): properly handle multiple lifetimes
+        let lifetime = input
+            .generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone());
+
+        let type_attrs = TypeAttrs::parse(&input.attrs);
+
+        let fields = data
+            .fields
+            .iter()
+            .map(|field| SequenceField::new(field, &type_attrs))
+            .collect();
+
+        Self(DeriveSequence {
+            ident: input.ident,
+            lifetime,
+            fields,
+        })
+    }
+
+    /// Lower the derived output into a [`TokenStream`].
+    pub fn to_tokens(&self) -> TokenStream {
+        let ident = &self.0.ident;
+
+        let lifetime = match self.0.lifetime {
+            Some(ref lifetime) => quote!(#lifetime),
+            None => default_lifetime(),
+        };
+
+        // Lifetime parameters
+        // TODO(tarcieri): support multiple lifetimes
+        let lt_params = self
+            .0
+            .lifetime
+            .as_ref()
+            .map(|_| lifetime.clone())
+            .unwrap_or_default();
+
+        let mut decode_body = Vec::new();
+        let mut decode_result = Vec::new();
+        let mut encoded_lengths = Vec::new();
+        let mut encode_fields = Vec::new();
+
+        for field in &self.0.fields {
+            decode_body.push(field.to_decode_tokens());
+            decode_result.push(&field.ident);
+
+            let field = field.to_encode_tokens();
+            encoded_lengths.push(quote!(#field.encoded_len()?));
+            encode_fields.push(quote!(#field.encode(writer)?;));
+        }
+
+        quote! {
+            impl<#lifetime> ::der::DecodeValue<#lifetime> for Box<#ident<#lt_params>> {
+                fn decode_value<R: ::der::Reader<#lifetime>>(
+                    reader: &mut R,
+                    header: ::der::Header,
+                ) -> ::der::Result<Self> {
+                    use ::der::{Decode as _, DecodeValue as _, Reader as _};
+
+                    let s = reader.read_nested(header.length, |reader| {
+                        #(#decode_body)*
+
+                        Ok(#ident {
+                            #(#decode_result),*
+                        })
+                    })?;
+                    Ok(Box::new(s))
+                }
+            }
+
+            impl<#lifetime> ::der::EncodeValue for Box<#ident<#lt_params>> {
+                fn value_len(&self) -> ::der::Result<::der::Length> {
+                    use ::der::Encode as _;
+
+                    [
+                        #(#encoded_lengths),*
+                    ]
+                        .into_iter()
+                        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
+                }
+
+                fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+                    use ::der::Encode as _;
+                    #(#encode_fields)*
+                    Ok(())
+                }
+            }
+
+            impl<#lifetime> ::der::Sequence<#lifetime> for Box<#ident<#lt_params>> {}
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::DeriveSequence;
