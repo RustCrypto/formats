@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use der::asn1::{BitString, OctetString, Utf8StringRef};
 use der::{Choice, Enumerated, Header, Reader, Sequence, Writer};
 
-//use cms::enveloped_data::EnvelopedData;
+use cms::enveloped_data::EnvelopedData;
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 use x509_cert::attr::AttributeTypeAndValue;
 use x509_cert::ext::pkix::name::GeneralName;
@@ -151,7 +151,7 @@ pub enum PkiArchiveOptions {
 pub enum EncryptedKey {
     EncryptedValue(EncryptedValue),
     //#[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
-    //EnvelopedData(EnvelopedData),
+    EnvelopedData(EnvelopedData),
 }
 
 /// The `EncryptedValue` type is defined in [RFC 4211 Section 6.4].

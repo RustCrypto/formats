@@ -18,6 +18,7 @@ rust-version = "1.65"
 der = { version = "=0.7.0-pre", features = ["alloc", "derive"], path = "../der" }
 x509-cert = { version = "=0.2.0-pre", path = "../x509-cert" }
 spki = { version = "=0.7.0-pre", path = "../spki" }
+cms = { version = "0.0.0", path = "../cms"}
 
 [features]
 alloc = ["der/alloc"]
