@@ -1,4 +1,5 @@
 //! EnvelopedData-related types
+use alloc::boxed::Box;
 use core::cmp::Ordering;
 
 use const_oid::ObjectIdentifier;
@@ -50,6 +51,86 @@ pub struct EnvelopedData {
     )]
     pub unprotected_attrs: Option<Attributes>,
 }
+
+impl<'__der_lifetime> ::der::DecodeValue<'__der_lifetime> for Box<EnvelopedData> {
+    fn decode_value<R: ::der::Reader<'__der_lifetime>>(
+        reader: &mut R,
+        header: ::der::Header,
+    ) -> ::der::Result<Self> {
+        use ::der::Reader as _;
+        let ed = reader.read_nested(header.length, |reader| {
+            let version = reader.decode()?;
+            let originator_info =
+                ::der::asn1::ContextSpecific::decode_implicit(reader, ::der::TagNumber::N0)?
+                    .map(|cs| cs.value);
+            let recip_infos = reader.decode()?;
+            let encrypted_content = reader.decode()?;
+            let unprotected_attrs =
+                ::der::asn1::ContextSpecific::decode_implicit(reader, ::der::TagNumber::N1)?
+                    .map(|cs| cs.value);
+            Ok(EnvelopedData {
+                version,
+                originator_info,
+                recip_infos,
+                encrypted_content,
+                unprotected_attrs,
+            })
+        })?;
+        Ok(Box::new(ed))
+    }
+}
+impl ::der::EncodeValue for Box<EnvelopedData> {
+    fn value_len(&self) -> ::der::Result<::der::Length> {
+        use ::der::Encode as _;
+        [
+            self.version.encoded_len()?,
+            self.originator_info
+                .as_ref()
+                .map(|field| ::der::asn1::ContextSpecificRef {
+                    tag_number: ::der::TagNumber::N0,
+                    tag_mode: ::der::TagMode::Implicit,
+                    value: field,
+                })
+                .encoded_len()?,
+            self.recip_infos.encoded_len()?,
+            self.encrypted_content.encoded_len()?,
+            self.unprotected_attrs
+                .as_ref()
+                .map(|field| ::der::asn1::ContextSpecificRef {
+                    tag_number: ::der::TagNumber::N1,
+                    tag_mode: ::der::TagMode::Implicit,
+                    value: field,
+                })
+                .encoded_len()?,
+        ]
+        .into_iter()
+        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
+    }
+    fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+        use ::der::Encode as _;
+        self.version.encode(writer)?;
+        self.originator_info
+            .as_ref()
+            .map(|field| ::der::asn1::ContextSpecificRef {
+                tag_number: ::der::TagNumber::N0,
+                tag_mode: ::der::TagMode::Implicit,
+                value: field,
+            })
+            .encode(writer)?;
+        self.recip_infos.encode(writer)?;
+        self.encrypted_content.encode(writer)?;
+        self.unprotected_attrs
+            .as_ref()
+            .map(|field| ::der::asn1::ContextSpecificRef {
+                tag_number: ::der::TagNumber::N1,
+                tag_mode: ::der::TagMode::Implicit,
+                value: field,
+            })
+            .encode(writer)?;
+        Ok(())
+    }
+}
+impl<'__der_lifetime> ::der::Sequence<'__der_lifetime> for Box<EnvelopedData> {}
 
 /// The `OriginatorInfo` type is defined in [RFC 5652 Section 6.1].
 ///

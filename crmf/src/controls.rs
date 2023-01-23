@@ -123,15 +123,13 @@ pub enum SinglePubInfoMethod {
 ///
 /// [RFC 4211 Section 6.4]: https://www.rfc-editor.org/rfc/rfc4211#section-6.4
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
-//todo remove large_enum_variant when EnvelopedData is added back to EncryptedKey
-#[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
 pub enum PkiArchiveOptions {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
     EncryptedPrivKey(EncryptedKey),
-    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
     KeyGenParameters(KeyGenParameters),
-    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "false")]
+    #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "false")]
     ArchiveRemGenPrivKey(bool),
 }
 
@@ -149,9 +147,9 @@ pub enum PkiArchiveOptions {
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 #[allow(missing_docs)]
 pub enum EncryptedKey {
-    EncryptedValue(EncryptedValue),
+    EncryptedValue(Box<EncryptedValue>),
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
-    EnvelopedData(EnvelopedData),
+    EnvelopedData(Box<EnvelopedData>),
 }
 
 /// The `EncryptedValue` type is defined in [RFC 4211 Section 6.4].

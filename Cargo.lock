@@ -299,6 +299,7 @@ name = "crmf"
 version = "0.0.0"
 dependencies = [
  "cms",
+ "const-oid",
  "der",
  "spki",
  "x509-cert",
