@@ -227,18 +227,23 @@ impl Serialize for () {
 }
 
 impl<T> Size for PhantomData<T> {
+    #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         0
     }
 }
 
 impl<T> Deserialize for PhantomData<T> {
+    #[cfg(feature = "std")]
+    #[inline(always)]
     fn tls_deserialize<R: Read>(_: &mut R) -> Result<Self, Error> {
         Ok(PhantomData)
     }
 }
 
 impl<T> Serialize for PhantomData<T> {
+    #[cfg(feature = "std")]
+    #[inline(always)]
     fn tls_serialize<W: Write>(&self, _: &mut W) -> Result<usize, Error> {
         Ok(0)
     }
