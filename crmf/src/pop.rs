@@ -218,7 +218,7 @@ pub enum POPOPrivKey {
     DhMac(BitString),
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", constructed = "true")]
     AgreeMac(PkMacValue),
-    //#[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
     EncryptedKey(EnvelopedData),
 }
 

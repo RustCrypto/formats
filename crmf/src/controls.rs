@@ -150,7 +150,7 @@ pub enum PkiArchiveOptions {
 #[allow(missing_docs)]
 pub enum EncryptedKey {
     EncryptedValue(EncryptedValue),
-    //#[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
     EnvelopedData(EnvelopedData),
 }
 
