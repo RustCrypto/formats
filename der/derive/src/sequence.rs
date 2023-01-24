@@ -132,14 +132,6 @@ pub(crate) struct DeriveBoxedSequence(pub DeriveSequence);
 impl DeriveBoxedSequence {
     /// Parse [`DeriveInput`].
     pub fn new(input: DeriveInput) -> Self {
-        let data = match input.data {
-            syn::Data::Struct(data) => data,
-            _ => abort!(
-                input.ident,
-                "can't derive `Sequence` on this type: only `struct` types are allowed",
-            ),
-        };
-
         // TODO(tarcieri): properly handle multiple lifetimes
         let lifetime = input
             .generics
@@ -147,13 +139,7 @@ impl DeriveBoxedSequence {
             .next()
             .map(|lt| lt.lifetime.clone());
 
-        let type_attrs = TypeAttrs::parse(&input.attrs);
-
-        let fields = data
-            .fields
-            .iter()
-            .map(|field| SequenceField::new(field, &type_attrs))
-            .collect();
+        let fields = vec![];
 
         Self(DeriveSequence {
             ident: input.ident,
