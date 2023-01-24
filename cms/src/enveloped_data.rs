@@ -52,8 +52,9 @@ pub struct EnvelopedData {
     pub unprotected_attrs: Option<Attributes>,
 }
 
-impl<'__der_lifetime> ::der::DecodeValue<'__der_lifetime> for Box<EnvelopedData> {
-    fn decode_value<R: ::der::Reader<'__der_lifetime>>(
+// TODO: replace these handwritten impls with `Box` support in the proc macro
+impl<'a> ::der::DecodeValue<'a> for Box<EnvelopedData> {
+    fn decode_value<R: ::der::Reader<'a>>(
         reader: &mut R,
         header: ::der::Header,
     ) -> ::der::Result<Self> {
@@ -68,7 +69,7 @@ impl ::der::EncodeValue for Box<EnvelopedData> {
         EnvelopedData::encode_value(self, writer)
     }
 }
-impl<'__der_lifetime> ::der::Sequence<'__der_lifetime> for Box<EnvelopedData> {}
+impl<'a> ::der::Sequence<'a> for Box<EnvelopedData> {}
 
 /// The `OriginatorInfo` type is defined in [RFC 5652 Section 6.1].
 ///
