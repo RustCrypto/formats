@@ -510,8 +510,9 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                 .iter()
                 .map(|p| p.for_trait("Size"))
                 .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
-                impl #generics tls_codec::Size for #ident #generics {
+                impl #impl_generics tls_codec::Size for #ident #ty_generics #where_clause {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         #(#prefixes::tls_serialized_len(&self.#members) + )*
@@ -519,7 +520,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl #generics tls_codec::Size for &#ident #generics {
+                impl #impl_generics tls_codec::Size for &#ident #ty_generics #where_clause {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         tls_codec::Size::tls_serialized_len(*self)
@@ -547,8 +548,9 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 })
                 .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
-                impl #generics tls_codec::Size for #ident #generics {
+                impl #impl_generics tls_codec::Size for #ident #ty_generics #where_clause {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         let field_len = match self {
@@ -558,7 +560,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl #generics tls_codec::Size for &#ident #generics {
+                impl #impl_generics tls_codec::Size for &#ident #ty_generics #where_clause {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         tls_codec::Size::tls_serialized_len(*self)
@@ -587,8 +589,9 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                 .iter()
                 .map(|p| p.for_trait("Serialize"))
                 .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
-                impl #generics tls_codec::Serialize for #ident #generics {
+                impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         let mut written = 0usize;
                         #(
@@ -608,7 +611,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl #generics tls_codec::Serialize for &#ident #generics {
+                impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         tls_codec::Serialize::tls_serialize(*self, writer)
                     }
@@ -643,8 +646,9 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 })
                 .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
-                impl #generics tls_codec::Serialize for #ident #generics {
+                impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         #discriminant_constants
                         match self {
@@ -653,7 +657,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl #generics tls_codec::Serialize for &#ident #generics {
+                impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
                     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                         tls_codec::Serialize::tls_serialize(*self, writer)
                     }
@@ -681,8 +685,9 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                 .iter()
                 .map(|p| p.for_trait("Deserialize"))
                 .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
-                impl tls_codec::Deserialize for #ident {
+                impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
                         Ok(Self {
                             #(#members: #prefixes::tls_deserialize(bytes)?,)*
@@ -718,8 +723,9 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 })
                 .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
-                impl tls_codec::Deserialize for #ident {
+                impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
                     #[allow(non_upper_case_globals)]
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
                         #discriminant_constants
