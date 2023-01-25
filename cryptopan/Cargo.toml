@@ -1,0 +1,15 @@
+[package]
+name = "cryptopan"
+version = "0.1.0-pre"
+authors = ["RustCrypto Developers"]
+license = "MIT OR Apache-2.0"
+description = "CryptoPAN algorithm for IP address anonymization"
+repository = "https://github.com/RustCrypto/utils"
+keywords = ["cryptopan", "ip anonymization"]
+categories = ["cryptography"]
+edition = "2021"
+readme = "README.md"
+
+[dependencies]
+aes="0.8.1"
+bitvec = "1.0.1"
