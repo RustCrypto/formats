@@ -1,8 +1,9 @@
 //! Controls-related types
 
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 use der::asn1::{BitString, OctetString, Utf8StringRef};
-use der::{Choice, Enumerated, Header, Reader, Sequence, Writer};
+use der::{Choice, Enumerated, Sequence};
 
 use cms::enveloped_data::EnvelopedData;
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
@@ -213,139 +214,6 @@ pub struct EncryptedValue {
     pub value_hint: Option<OctetString>,
     pub enc_value: BitString,
 }
-
-use alloc::boxed::Box;
-
-impl<'a> der::DecodeValue<'a> for Box<EncryptedValue> {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        use ::der::Reader as _;
-        let ev: EncryptedValue = reader.read_nested(header.length, |reader| {
-            let intended_alg =
-                ::der::asn1::ContextSpecific::decode_explicit(reader, ::der::TagNumber::N0)?
-                    .map(|cs| cs.value);
-            let sym_alg =
-                ::der::asn1::ContextSpecific::decode_explicit(reader, ::der::TagNumber::N1)?
-                    .map(|cs| cs.value);
-            let enc_sym_key =
-                ::der::asn1::ContextSpecific::decode_explicit(reader, ::der::TagNumber::N2)?
-                    .map(|cs| cs.value);
-            let key_alg =
-                ::der::asn1::ContextSpecific::decode_explicit(reader, ::der::TagNumber::N3)?
-                    .map(|cs| cs.value);
-            let value_hint =
-                ::der::asn1::ContextSpecific::decode_explicit(reader, ::der::TagNumber::N4)?
-                    .map(|cs| cs.value);
-            let enc_value = reader.decode()?;
-            Ok(EncryptedValue {
-                intended_alg,
-                sym_alg,
-                enc_sym_key,
-                key_alg,
-                value_hint,
-                enc_value,
-            })
-        })?;
-        Ok(Box::new(ev))
-    }
-}
-impl der::EncodeValue for Box<EncryptedValue> {
-    fn value_len(&self) -> ::der::Result<::der::Length> {
-        use ::der::Encode as _;
-        [
-            self.intended_alg
-                .as_ref()
-                .map(|field| ::der::asn1::ContextSpecificRef {
-                    tag_number: ::der::TagNumber::N0,
-                    tag_mode: ::der::TagMode::Explicit,
-                    value: field,
-                })
-                .encoded_len()?,
-            self.sym_alg
-                .as_ref()
-                .map(|field| ::der::asn1::ContextSpecificRef {
-                    tag_number: ::der::TagNumber::N1,
-                    tag_mode: ::der::TagMode::Explicit,
-                    value: field,
-                })
-                .encoded_len()?,
-            self.enc_sym_key
-                .as_ref()
-                .map(|field| ::der::asn1::ContextSpecificRef {
-                    tag_number: ::der::TagNumber::N2,
-                    tag_mode: ::der::TagMode::Explicit,
-                    value: field,
-                })
-                .encoded_len()?,
-            self.key_alg
-                .as_ref()
-                .map(|field| ::der::asn1::ContextSpecificRef {
-                    tag_number: ::der::TagNumber::N3,
-                    tag_mode: ::der::TagMode::Explicit,
-                    value: field,
-                })
-                .encoded_len()?,
-            self.value_hint
-                .as_ref()
-                .map(|field| ::der::asn1::ContextSpecificRef {
-                    tag_number: ::der::TagNumber::N4,
-                    tag_mode: ::der::TagMode::Explicit,
-                    value: field,
-                })
-                .encoded_len()?,
-            self.enc_value.encoded_len()?,
-        ]
-        .into_iter()
-        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
-    }
-
-    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
-        use ::der::Encode as _;
-        self.intended_alg
-            .as_ref()
-            .map(|field| ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber::N0,
-                tag_mode: ::der::TagMode::Explicit,
-                value: field,
-            })
-            .encode(writer)?;
-        self.sym_alg
-            .as_ref()
-            .map(|field| ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber::N1,
-                tag_mode: ::der::TagMode::Explicit,
-                value: field,
-            })
-            .encode(writer)?;
-        self.enc_sym_key
-            .as_ref()
-            .map(|field| ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber::N2,
-                tag_mode: ::der::TagMode::Explicit,
-                value: field,
-            })
-            .encode(writer)?;
-        self.key_alg
-            .as_ref()
-            .map(|field| ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber::N3,
-                tag_mode: ::der::TagMode::Explicit,
-                value: field,
-            })
-            .encode(writer)?;
-        self.value_hint
-            .as_ref()
-            .map(|field| ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber::N4,
-                tag_mode: ::der::TagMode::Explicit,
-                value: field,
-            })
-            .encode(writer)?;
-        self.enc_value.encode(writer)?;
-        Ok(())
-    }
-}
-
-impl ::der::Sequence<'_> for Box<EncryptedValue> {}
 
 /// The `KeyGenParameters` control is defined in [RFC 4211 Section 6.4].
 ///

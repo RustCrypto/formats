@@ -3,7 +3,7 @@
 use crate::{Header, Length, Result, SliceWriter, Tagged, Writer};
 
 #[cfg(feature = "alloc")]
-use {alloc::vec::Vec, core::iter};
+use {alloc::boxed::Box, alloc::vec::Vec, core::iter};
 
 #[cfg(feature = "pem")]
 use {
@@ -130,4 +130,17 @@ pub trait EncodeValue {
     /// Encode value (sans [`Tag`]+[`Length`] header) as ASN.1 DER using the
     /// provided [`Writer`].
     fn encode_value(&self, encoder: &mut impl Writer) -> Result<()>;
+}
+
+#[cfg(feature = "alloc")]
+impl<T> EncodeValue for Box<T>
+where
+    T: EncodeValue,
+{
+    fn value_len(&self) -> Result<Length> {
+        T::value_len(self)
+    }
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+        T::encode_value(self, writer)
+    }
 }

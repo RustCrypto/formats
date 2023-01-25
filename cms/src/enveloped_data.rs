@@ -1,5 +1,4 @@
 //! EnvelopedData-related types
-use alloc::boxed::Box;
 use core::cmp::Ordering;
 
 use const_oid::ObjectIdentifier;
@@ -51,25 +50,6 @@ pub struct EnvelopedData {
     )]
     pub unprotected_attrs: Option<Attributes>,
 }
-
-// TODO: replace these handwritten impls with `Box` support in the proc macro
-impl<'a> ::der::DecodeValue<'a> for Box<EnvelopedData> {
-    fn decode_value<R: ::der::Reader<'a>>(
-        reader: &mut R,
-        header: ::der::Header,
-    ) -> ::der::Result<Self> {
-        Ok(Box::new(EnvelopedData::decode_value(reader, header)?))
-    }
-}
-impl ::der::EncodeValue for Box<EnvelopedData> {
-    fn value_len(&self) -> ::der::Result<::der::Length> {
-        EnvelopedData::value_len(self)
-    }
-    fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
-        EnvelopedData::encode_value(self, writer)
-    }
-}
-impl<'a> ::der::Sequence<'a> for Box<EnvelopedData> {}
 
 /// The `OriginatorInfo` type is defined in [RFC 5652 Section 6.1].
 ///
