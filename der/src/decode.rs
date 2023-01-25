@@ -8,6 +8,9 @@ use crate::{pem::PemLabel, PemReader};
 #[cfg(doc)]
 use crate::{Length, Tag};
 
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
+
 /// Decoding trait.
 ///
 /// This trait provides the core abstraction upon which all decoding operations
@@ -73,4 +76,14 @@ impl<T: DecodeOwned + PemLabel> DecodePem for T {
 pub trait DecodeValue<'a>: Sized {
     /// Attempt to decode this message using the provided [`Reader`].
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self>;
+}
+
+#[cfg(feature = "alloc")]
+impl<'a, T> DecodeValue<'a> for Box<T>
+where
+    T: DecodeValue<'a>,
+{
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        Ok(Box::new(T::decode_value(reader, header)?))
+    }
 }

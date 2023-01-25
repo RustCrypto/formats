@@ -5,6 +5,9 @@ use crate::{
     BytesRef, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, Tag, Writer,
 };
 
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
+
 /// Marker trait for ASN.1 `SEQUENCE`s.
 ///
 /// This is mainly used for custom derive.
@@ -16,6 +19,9 @@ where
 {
     const TAG: Tag = Tag::Sequence;
 }
+
+#[cfg(feature = "alloc")]
+impl<'a, T> Sequence<'a> for Box<T> where T: Sequence<'a> {}
 
 /// The [`SequenceRef`] type provides raw access to the octets which comprise a
 /// DER-encoded `SEQUENCE`.

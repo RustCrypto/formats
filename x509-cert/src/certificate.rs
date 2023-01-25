@@ -7,7 +7,7 @@ use core::cmp::Ordering;
 
 use const_oid::AssociatedOid;
 use der::asn1::BitString;
-use der::{Decode, Enumerated, Error, ErrorKind, Header, Reader, Sequence, ValueOrd, Writer};
+use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 #[cfg(feature = "pem")]
@@ -172,44 +172,3 @@ impl PemLabel for Certificate {
 ///
 /// [RFC 6066]: https://datatracker.ietf.org/doc/html/rfc6066#section-10.1
 pub type PkiPath = Vec<Certificate>;
-
-use alloc::boxed::Box;
-
-impl<'a> der::DecodeValue<'a> for Box<Certificate> {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        use ::der::Reader as _;
-        let c: Certificate = reader.read_nested(header.length, |reader| {
-            let tbs_certificate = reader.decode()?;
-            let signature_algorithm = reader.decode()?;
-            let signature = reader.decode()?;
-            Ok(Certificate {
-                tbs_certificate,
-                signature_algorithm,
-                signature,
-            })
-        })?;
-        Ok(Box::new(c))
-    }
-}
-impl der::EncodeValue for Box<Certificate> {
-    fn value_len(&self) -> ::der::Result<::der::Length> {
-        use ::der::Encode as _;
-        [
-            self.tbs_certificate.encoded_len()?,
-            self.signature_algorithm.encoded_len()?,
-            self.signature.encoded_len()?,
-        ]
-        .into_iter()
-        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
-    }
-
-    fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
-        use ::der::Encode as _;
-        self.tbs_certificate.encode(writer)?;
-        self.signature_algorithm.encode(writer)?;
-        self.signature.encode(writer)?;
-        Ok(())
-    }
-}
-
-impl ::der::Sequence<'_> for Box<Certificate> {}
