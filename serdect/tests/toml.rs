@@ -16,16 +16,22 @@ const HEX_LOWER: &str = "\"000102030405060708090a0b0c0d0e0f\"";
 /// Upper-case hex serialization of [`EXAMPLE_BYTES`].
 const HEX_UPPER: &str = "\"000102030405060708090A0B0C0D0E0F\"";
 
+#[derive(Deserialize, Serialize)]
+struct SliceTest {
+    lower: slice::HexLowerOrBin,
+    upper: slice::HexUpperOrBin,
+}
+
+#[derive(Deserialize, Serialize)]
+struct ArrayTest {
+    lower: array::HexLowerOrBin<16>,
+    upper: array::HexUpperOrBin<16>,
+}
+
 #[test]
 fn deserialize_slice() {
-    #[derive(Deserialize, Serialize)]
-    pub struct Test {
-        lower: slice::HexLowerOrBin,
-        upper: slice::HexUpperOrBin,
-    }
-
     let deserialized =
-        toml::from_str::<Test>(&format!("lower={}\nupper={}", HEX_LOWER, HEX_UPPER)).unwrap();
+        toml::from_str::<SliceTest>(&format!("lower={}\nupper={}", HEX_LOWER, HEX_UPPER)).unwrap();
 
     assert_eq!(deserialized.lower.0, EXAMPLE_BYTES);
     assert_eq!(deserialized.upper.0, EXAMPLE_BYTES);
@@ -33,14 +39,8 @@ fn deserialize_slice() {
 
 #[test]
 fn deserialize_array() {
-    #[derive(Deserialize, Serialize)]
-    pub struct Test {
-        lower: array::HexLowerOrBin<16>,
-        upper: array::HexUpperOrBin<16>,
-    }
-
     let deserialized =
-        toml::from_str::<Test>(&format!("lower={}\nupper={}", HEX_LOWER, HEX_UPPER)).unwrap();
+        toml::from_str::<ArrayTest>(&format!("lower={}\nupper={}", HEX_LOWER, HEX_UPPER)).unwrap();
 
     assert_eq!(deserialized.lower.0, EXAMPLE_BYTES);
     assert_eq!(deserialized.upper.0, EXAMPLE_BYTES);
@@ -48,20 +48,32 @@ fn deserialize_array() {
 
 #[test]
 fn serialize_slice() {
-    let serialized = toml::to_string(&slice::HexLowerOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
-    assert_eq!(serialized, HEX_LOWER);
+    let test = SliceTest {
+        lower: slice::HexLowerOrBin::from(EXAMPLE_BYTES.as_ref()),
+        upper: slice::HexUpperOrBin::from(EXAMPLE_BYTES.as_ref()),
+    };
 
-    let serialized = toml::to_string(&slice::HexUpperOrBin::from(EXAMPLE_BYTES.as_ref())).unwrap();
-    assert_eq!(serialized, HEX_UPPER);
+    let serialized = toml::to_string(&test).unwrap();
+
+    assert_eq!(
+        serialized,
+        format!("lower = {}\nupper = {}\n", HEX_LOWER, HEX_UPPER)
+    );
 }
 
 #[test]
 fn serialize_array() {
-    let serialized = toml::to_string(&array::HexLowerOrBin::from(EXAMPLE_BYTES)).unwrap();
-    assert_eq!(serialized, HEX_LOWER);
+    let test = ArrayTest {
+        lower: array::HexLowerOrBin::from(EXAMPLE_BYTES),
+        upper: array::HexUpperOrBin::from(EXAMPLE_BYTES),
+    };
 
-    let serialized = toml::to_string(&array::HexUpperOrBin::from(EXAMPLE_BYTES)).unwrap();
-    assert_eq!(serialized, HEX_UPPER);
+    let serialized = toml::to_string(&test).unwrap();
+
+    assert_eq!(
+        serialized,
+        format!("lower = {}\nupper = {}\n", HEX_LOWER, HEX_UPPER)
+    );
 }
 
 proptest! {
