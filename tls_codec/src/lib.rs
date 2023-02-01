@@ -51,7 +51,7 @@ pub use tls_vec::{
 };
 
 #[cfg(feature = "std")]
-pub use quic_vec::{VLByteSlice, VLBytes};
+pub use quic_vec::{vlbytes_len_len, VLByteSlice, VLBytes};
 
 #[cfg(feature = "derive")]
 pub use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
@@ -106,6 +106,7 @@ impl From<std::io::Error> for Error {
 /// This allows to collect the length of a serialized structure before allocating
 /// memory.
 pub trait Size {
+    /// The length of the serialized object.
     fn tls_serialized_len(&self) -> usize;
 }
 

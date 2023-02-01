@@ -63,6 +63,7 @@ fn read_variable_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize
     Ok((length, len_len))
 }
 
+/// Get the number of bytes required to encode the `length`.
 #[inline]
 fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
     if !cfg!(fuzzing) {
@@ -72,7 +73,15 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
         return Err(Error::InvalidVectorLength);
     }
 
-    Ok(if length < 0x40 {
+    Ok(vlbytes_len_len(length))
+}
+
+/// Get the number of bytes required to encode the `length`.
+///
+/// Note that this function will always return 8 for anything that is >= `0x3fff_ffff`.
+#[inline]
+pub fn vlbytes_len_len(length: u64) -> usize {
+    if length < 0x40 {
         1
     } else if length < 0x3fff {
         2
@@ -80,7 +89,7 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
         4
     } else {
         8
-    })
+    }
 }
 
 // === (De)Serialize for `Vec<T>` and &[T].
