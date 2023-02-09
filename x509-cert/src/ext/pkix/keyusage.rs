@@ -53,6 +53,65 @@ impl AssociatedOid for KeyUsage {
 
 impl_newtype!(KeyUsage, FlagSet<KeyUsages>);
 
+impl KeyUsage {
+    /// The subject public key is used for verifying digital signatures
+    pub fn digital_signature(&self) -> bool {
+        self.0.bits() & KeyUsages::DigitalSignature as u16 == KeyUsages::DigitalSignature as u16
+    }
+
+    /// When the subject public key is used to verify digital signatures,
+    /// it is asserted as non-repudiation.
+    pub fn non_repudiation(&self) -> bool {
+        self.0.bits() & KeyUsages::NonRepudiation as u16 == KeyUsages::NonRepudiation as u16
+    }
+
+    /// The subject public key is used for enciphering private or
+    /// secret keys, i.e., for key transport.
+    pub fn key_encipherment(&self) -> bool {
+        self.0.bits() & KeyUsages::KeyEncipherment as u16 == KeyUsages::KeyEncipherment as u16
+    }
+
+    /// The subject public key is used for directly enciphering
+    /// raw user data without the use of an intermediate symmetric cipher.
+    pub fn data_encipherment(&self) -> bool {
+        self.0.bits() & KeyUsages::DataEncipherment as u16 == KeyUsages::DataEncipherment as u16
+    }
+
+    /// The subject public key is used for key agreement
+    pub fn key_agreement(&self) -> bool {
+        self.0.bits() & KeyUsages::KeyAgreement as u16 == KeyUsages::KeyAgreement as u16
+    }
+
+    /// The subject public key is used for enciphering private or
+    /// secret keys, i.e., for key transport.
+    pub fn key_cert_sign(&self) -> bool {
+        self.0.bits() & KeyUsages::KeyCertSign as u16 == KeyUsages::KeyCertSign as u16
+    }
+
+    /// The subject public key is used for verifying signatures
+    /// on certificate revocation lists (e.g., CRLs, delta CRLs,
+    /// or ARLs).
+    pub fn crl_sign(&self) -> bool {
+        self.0.bits() & KeyUsages::CRLSign as u16 == KeyUsages::CRLSign as u16
+    }
+
+    /// The meaning of the `encipher_only` is undefined when `key_agreement`
+    /// returns false.  When `encipher_only` returns true and
+    /// `key_agreement` also returns true, the subject public key may be
+    /// used only for enciphering data while performing key agreement.
+    pub fn encipher_only(&self) -> bool {
+        self.0.bits() & KeyUsages::EncipherOnly as u16 == KeyUsages::EncipherOnly as u16
+    }
+
+    /// The meaning of the `decipher_only` is undefined when `key_agreement`
+    /// returns false.  When `encipher_only` returns true and
+    /// `key_agreement` also returns true, the subject public key may be
+    /// used only for deciphering data while performing key agreement.
+    pub fn decipher_only(&self) -> bool {
+        self.0.bits() & KeyUsages::DecipherOnly as u16 == KeyUsages::DecipherOnly as u16
+    }
+}
+
 /// ExtKeyUsageSyntax as defined in [RFC 5280 Section 4.2.1.12].
 ///
 /// Many extended key usage values include:
