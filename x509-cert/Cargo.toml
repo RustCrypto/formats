@@ -28,7 +28,7 @@ rstest = "0.16"
 [features]
 arbitrary = ["std", "dep:arbitrary", "const-oid/arbitrary", "der/arbitrary", "spki/arbitrary"]
 pem = ["der/pem"]
-std = ["der/std", "spki/std"]
+std = ["der/std", "spki/std", "const-oid/std"]
 
 [package.metadata.docs.rs]
 all-features = true
