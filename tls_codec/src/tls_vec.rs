@@ -56,24 +56,8 @@ macro_rules! impl_byte_deserialize {
             let mut result = Self {
                 vec: vec![0u8; len],
             };
-            let read = bytes.read(result.vec.as_mut_slice())?;
-            if read != len {
-                if !cfg!(fuzzing) {
-                    // When fuzzing we don't want to assert here because it would
-                    // crash all the time. Throwing an error is sufficient.
-                    debug_assert_eq!(
-                        read, len,
-                        "Expected to read {} bytes but {} were read.",
-                        len, read
-                    );
-                }
-                Err(Error::DecodingError(format!(
-                    "{} bytes were read but {} were expected",
-                    read, len
-                )))
-            } else {
-                Ok(result)
-            }
+            bytes.read_exact(result.vec.as_mut_slice())?;
+            Ok(result)
         }
     };
 }
