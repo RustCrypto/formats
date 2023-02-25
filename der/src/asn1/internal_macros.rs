@@ -3,19 +3,19 @@ macro_rules! impl_any_conversions {
         impl_any_conversions!($type, );
     };
     ($type: ty, $($li: lifetime)?) => {
-        impl<'__der: $($li),*, $($li),*> TryFrom<$crate::asn1::AnyRef<'__der>> for $type {
+        impl<'__der: $($li),*, $($li),*> TryFrom<$crate::AnyRef<'__der>> for $type {
             type Error = $crate::Error;
 
-            fn try_from(any: $crate::asn1::AnyRef<'__der>) -> Result<$type> {
+            fn try_from(any: $crate::AnyRef<'__der>) -> Result<$type> {
                 any.decode_as()
             }
         }
 
         #[cfg(feature = "alloc")]
-        impl<'__der: $($li),*, $($li),*> TryFrom<&'__der $crate::asn1::Any> for $type {
+        impl<'__der: $($li),*, $($li),*> TryFrom<&'__der $crate::Any> for $type {
             type Error = $crate::Error;
 
-            fn try_from(any: &'__der $crate::asn1::Any) -> Result<$type> {
+            fn try_from(any: &'__der $crate::Any) -> Result<$type> {
                 any.decode_as()
             }
         }
