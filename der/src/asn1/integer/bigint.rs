@@ -45,10 +45,7 @@ impl<'a> IntRef<'a> {
     }
 }
 
-mod int_impl {
-    use super::*;
-    impl_type!(IntRef<'a>, 'a);
-}
+impl_any_conversions!(IntRef<'a>, 'a);
 
 impl<'a> DecodeValue<'a> for IntRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
@@ -126,10 +123,7 @@ impl<'a> UintRef<'a> {
     }
 }
 
-mod uint_impl {
-    use super::*;
-    impl_type!(UintRef<'a>, 'a);
-}
+impl_any_conversions!(UintRef<'a>, 'a);
 
 impl<'a> DecodeValue<'a> for UintRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
@@ -226,10 +220,7 @@ mod allocating {
         }
     }
 
-    mod int_impl {
-        use super::*;
-        impl_type!(Int);
-    }
+    impl_any_conversions!(Int);
 
     impl<'a> DecodeValue<'a> for Int {
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
@@ -342,10 +333,7 @@ mod allocating {
         }
     }
 
-    mod uint_impl {
-        use super::*;
-        impl_type!(Uint);
-    }
+    impl_any_conversions!(Uint);
 
     impl<'a> DecodeValue<'a> for Uint {
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {

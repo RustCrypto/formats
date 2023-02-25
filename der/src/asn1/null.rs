@@ -9,7 +9,7 @@ use crate::{
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Null;
 
-impl_type!(Null);
+impl_any_conversions!(Null);
 
 impl<'a> DecodeValue<'a> for Null {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
