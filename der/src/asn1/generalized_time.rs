@@ -76,7 +76,7 @@ impl GeneralizedTime {
     }
 }
 
-impl_type!(GeneralizedTime);
+impl_any_conversions!(GeneralizedTime);
 
 impl<'a> DecodeValue<'a> for GeneralizedTime {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {

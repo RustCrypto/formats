@@ -45,7 +45,7 @@ impl<'a> OctetStringRef<'a> {
     }
 }
 
-impl_type!(OctetStringRef<'a>, 'a);
+impl_any_conversions!(OctetStringRef<'a>, 'a);
 
 impl AsRef<[u8]> for OctetStringRef<'_> {
     fn as_ref(&self) -> &[u8] {
@@ -148,7 +148,7 @@ mod allocating {
         }
     }
 
-    impl_type!(OctetString);
+    impl_any_conversions!(OctetString);
 
     impl AsRef<[u8]> for OctetString {
         fn as_ref(&self) -> &[u8] {

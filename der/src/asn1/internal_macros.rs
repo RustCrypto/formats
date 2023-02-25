@@ -1,40 +1,30 @@
-macro_rules! impl_type {
+macro_rules! impl_any_conversions {
     ($type: ty) => {
-        impl_type!($type, );
+        impl_any_conversions!($type, );
     };
     ($type: ty, $($li: lifetime)?) => {
-        mod __impl {
-            use super::*;
+        impl<'__der: $($li),*, $($li),*> TryFrom<$crate::asn1::AnyRef<'__der>> for $type {
+            type Error = $crate::Error;
 
-            use crate::{asn1::AnyRef, Error, Result};
-
-            #[cfg(feature = "alloc")]
-            use crate::asn1::Any;
-
-            #[cfg(feature = "alloc")]
-            impl<'__der: $($li),*, $($li),*> TryFrom<&'__der Any> for $type {
-                type Error = Error;
-
-                fn try_from(any: &'__der Any) -> Result<$type> {
-                    any.decode_as()
-                }
+            fn try_from(any: $crate::asn1::AnyRef<'__der>) -> Result<$type> {
+                any.decode_as()
             }
+        }
 
-            impl<'__der: $($li),*, $($li),*> TryFrom<AnyRef<'__der>> for $type {
-                type Error = Error;
+        #[cfg(feature = "alloc")]
+        impl<'__der: $($li),*, $($li),*> TryFrom<&'__der $crate::asn1::Any> for $type {
+            type Error = $crate::Error;
 
-                fn try_from(any: AnyRef<'__der>) -> Result<$type> {
-                    any.decode_as()
-                }
+            fn try_from(any: &'__der $crate::asn1::Any) -> Result<$type> {
+                any.decode_as()
             }
-
         }
     };
 }
 
 macro_rules! impl_string_type {
     ($type: ty, $($li: lifetime)?) => {
-        impl_type!($type, $($li),*);
+        impl_any_conversions!($type, $($li),*);
 
         mod __impl_string {
             use super::*;

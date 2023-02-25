@@ -78,7 +78,7 @@ impl UtcTime {
     }
 }
 
-impl_type!(UtcTime);
+impl_any_conversions!(UtcTime);
 
 impl<'a> DecodeValue<'a> for UtcTime {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
