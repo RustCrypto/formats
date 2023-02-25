@@ -28,17 +28,6 @@ mod utc_time;
 mod utf8_string;
 mod videotex_string;
 
-#[cfg(feature = "oid")]
-#[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
-pub use const_oid::ObjectIdentifier;
-
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub use self::{
-    any::Any, bit_string::BitString, ia5_string::Ia5String, integer::bigint::Int,
-    integer::bigint::Uint, octet_string::OctetString, printable_string::PrintableString,
-    set_of::SetOfVec, teletex_string::TeletexString,
-};
 pub use self::{
     any::AnyRef,
     bit_string::{BitStringIter, BitStringRef},
@@ -46,8 +35,7 @@ pub use self::{
     context_specific::{ContextSpecific, ContextSpecificRef},
     generalized_time::GeneralizedTime,
     ia5_string::Ia5StringRef,
-    integer::bigint::IntRef,
-    integer::bigint::UintRef,
+    integer::bigint::{IntRef, UintRef},
     null::Null,
     octet_string::OctetStringRef,
     printable_string::PrintableStringRef,
@@ -59,3 +47,20 @@ pub use self::{
     utf8_string::Utf8StringRef,
     videotex_string::VideotexStringRef,
 };
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub use self::{
+    any::Any,
+    bit_string::BitString,
+    ia5_string::Ia5String,
+    integer::bigint::{Int, Uint},
+    octet_string::OctetString,
+    printable_string::PrintableString,
+    set_of::SetOfVec,
+    teletex_string::TeletexString,
+};
+
+#[cfg(feature = "oid")]
+#[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
+pub use const_oid::ObjectIdentifier;
