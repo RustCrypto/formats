@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "base16ct",
     "base32ct",
+    "base64ct",
     "cmpv2",
     "cms",
     "const-oid",
@@ -24,9 +25,6 @@ members = [
     "x509-cert",
     "x509-ocsp"
 ]
-
-# TODO(tarcieri): add back to `members` when MSRV is 1.60+
-exclude = ["base64ct"]
 
 [profile.dev]
 opt-level = 2
