@@ -1,12 +1,13 @@
-name: pkcs7
+name: cmpv2
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/pkcs7.yml"
+      - ".github/workflows/cmpv2.yml"
       - "const-oid/**"
+      - "cmpv2/**"
       - "der/**"
-      - "pkcs7/**"
+      - "spki/**"
       - "x509-cert/**"
       - "Cargo.*"
   push:
@@ -14,7 +15,7 @@ on:
 
 defaults:
   run:
-    working-directory: pkcs7
+    working-directory: cmpv2
 
 env:
   CARGO_INCREMENTAL: 0
@@ -38,12 +39,13 @@ jobs:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
       - uses: RustCrypto/actions/cargo-hack-install@master
-      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset
+      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features arbitrary,default,std
 
-  minimal-versions:
-    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
-    with:
-        working-directory: ${{ github.workflow }}
+# FIXME: Temporary disabled until https://github.com/rust-fuzz/arbitrary/issues/136 is fixed
+#  minimal-versions:
+#    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
+#    with:
+#        working-directory: ${{ github.workflow }}
 
   test:
     runs-on: ubuntu-latest
@@ -59,3 +61,5 @@ jobs:
           toolchain: ${{ matrix.rust }}
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack test --feature-powerset
+
+

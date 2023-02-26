@@ -1,20 +1,22 @@
-name: pkcs7
+name: pkcs12
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/pkcs7.yml"
+      - ".github/workflows/pkcs12.yml"
+      - "base64ct/**"
       - "const-oid/**"
       - "der/**"
-      - "pkcs7/**"
-      - "x509-cert/**"
+      - "pem-rfc7468/**"
+      - "pkcs12/**"
+      - "spki/**"
       - "Cargo.*"
   push:
     branches: master
 
 defaults:
   run:
-    working-directory: pkcs7
+    working-directory: pkcs12
 
 env:
   CARGO_INCREMENTAL: 0

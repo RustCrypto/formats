@@ -1,12 +1,12 @@
-name: pkcs7
+name: x509-ocsp
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/pkcs7.yml"
+      - ".github/workflows/x509-ocsp.yml"
       - "const-oid/**"
       - "der/**"
-      - "pkcs7/**"
+      - "x509-ocsp/**"
       - "x509-cert/**"
       - "Cargo.*"
   push:
@@ -14,7 +14,7 @@ on:
 
 defaults:
   run:
-    working-directory: pkcs7
+    working-directory: x509-ocsp
 
 env:
   CARGO_INCREMENTAL: 0
