@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 #![warn(
     clippy::mod_module_files,
@@ -91,7 +91,6 @@ impl Display for Error {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
         match e.kind() {
@@ -118,12 +117,10 @@ pub trait Serialize: Size {
     /// Serialize `self` and write it to the `writer`.
     /// The function returns the number of bytes written to `writer`.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error>;
 
     /// Serialize `self` and return it as a byte vector.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error> {
         let mut buffer = Vec::with_capacity(self.tls_serialized_len());
         let written = self.tls_serialize(&mut buffer)?;
@@ -154,7 +151,6 @@ pub trait Deserialize: Size {
     ///
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error>
     where
         Self: Sized;

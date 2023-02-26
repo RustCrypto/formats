@@ -109,7 +109,6 @@ mod allocating {
     ///
     /// This type provides the same functionality as [`OctetStringRef`] but owns
     /// the backing data.
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     pub struct OctetString {
         /// Bitstring represented as a slice of bytes.

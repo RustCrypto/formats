@@ -99,7 +99,6 @@ impl FixedTag for str {
 impl OrdIsValueOrd for str {}
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a> From<Utf8StringRef<'a>> for String {
     fn from(s: Utf8StringRef<'a>) -> String {
         s.as_str().to_owned()
@@ -107,7 +106,6 @@ impl<'a> From<Utf8StringRef<'a>> for String {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a> TryFrom<AnyRef<'a>> for String {
     type Error = Error;
 
@@ -117,7 +115,6 @@ impl<'a> TryFrom<AnyRef<'a>> for String {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a> DecodeValue<'a> for String {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Ok(String::from_utf8(reader.read_vec(header.length)?)?)
@@ -125,7 +122,6 @@ impl<'a> DecodeValue<'a> for String {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl EncodeValue for String {
     fn value_len(&self) -> Result<Length> {
         Utf8StringRef::new(self)?.value_len()
@@ -137,13 +133,11 @@ impl EncodeValue for String {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl FixedTag for String {
     const TAG: Tag = Tag::Utf8String;
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl OrdIsValueOrd for String {}
 
 #[cfg(test)]

@@ -52,7 +52,6 @@ impl Time {
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn to_system_time(&self) -> SystemTime {
         match self {
             Time::UtcTime(t) => t.to_system_time(),
@@ -80,7 +79,6 @@ impl From<GeneralizedTime> for Time {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<Time> for SystemTime {
     fn from(time: Time) -> SystemTime {
         time.to_system_time()
@@ -88,7 +86,6 @@ impl From<Time> for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<&Time> for SystemTime {
     fn from(time: &Time) -> SystemTime {
         time.to_system_time()
@@ -96,7 +93,6 @@ impl From<&Time> for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl TryFrom<SystemTime> for Time {
     type Error = der::Error;
 
@@ -127,7 +123,6 @@ pub struct Validity {
 impl Validity {
     /// Creates a `Validity` which starts now and lasts for `duration`.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn from_now(duration: Duration) -> der::Result<Self> {
         let now = SystemTime::now();
         let then = now + duration;

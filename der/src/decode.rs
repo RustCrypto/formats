@@ -55,14 +55,12 @@ impl<T> DecodeOwned for T where T: for<'a> Decode<'a> {}
 /// This trait is automatically impl'd for any type which impls both
 /// [`DecodeOwned`] and [`PemLabel`].
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub trait DecodePem: DecodeOwned + PemLabel {
     /// Try to decode this type from PEM.
     fn from_pem(pem: impl AsRef<[u8]>) -> Result<Self>;
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl<T: DecodeOwned + PemLabel> DecodePem for T {
     fn from_pem(pem: impl AsRef<[u8]>) -> Result<Self> {
         let mut reader = PemReader::new(pem.as_ref())?;

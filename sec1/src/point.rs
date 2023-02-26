@@ -157,7 +157,6 @@ where
 
     /// Get boxed byte slice containing the serialized [`EncodedPoint`]
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn to_bytes(&self) -> Box<[u8]> {
         self.as_bytes().to_vec().into_boxed_slice()
     }
@@ -381,7 +380,6 @@ where
 }
 
 #[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<Size> Serialize for EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -395,7 +393,6 @@ where
 }
 
 #[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<'de, Size> Deserialize<'de> for EncodedPoint<Size>
 where
     Size: ModulusSize,

@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -62,8 +62,6 @@ impl<'a> EncryptionScheme<'a> {
     /// Attempt to decrypt the given ciphertext, allocating and returning a
     /// byte vector containing the plaintext.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>, ciphertext: &[u8]) -> Result<Vec<u8>> {
         match self {
             Self::Pbes2(params) => params.decrypt(password, ciphertext),
@@ -78,7 +76,6 @@ impl<'a> EncryptionScheme<'a> {
     /// is unsupported, or if the ciphertext is malformed (e.g. not a multiple
     /// of a block mode's padding)
     #[cfg(feature = "pbes2")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
     pub fn decrypt_in_place<'b>(
         &self,
         password: impl AsRef<[u8]>,
@@ -93,8 +90,6 @@ impl<'a> EncryptionScheme<'a> {
     /// Encrypt the given plaintext, allocating and returning a vector
     /// containing the ciphertext.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
     pub fn encrypt(&self, password: impl AsRef<[u8]>, plaintext: &[u8]) -> Result<Vec<u8>> {
         match self {
             Self::Pbes2(params) => params.encrypt(password, plaintext),
@@ -105,7 +100,6 @@ impl<'a> EncryptionScheme<'a> {
     /// Encrypt the given ciphertext in-place using a key derived from the
     /// provided password and this scheme's parameters.
     #[cfg(feature = "pbes2")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
     pub fn encrypt_in_place<'b>(
         &self,
         password: impl AsRef<[u8]>,

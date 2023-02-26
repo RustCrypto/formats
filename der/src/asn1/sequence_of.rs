@@ -178,7 +178,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> DecodeValue<'a> for Vec<T>
 where
     T: Decode<'a>,
@@ -197,7 +196,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> EncodeValue for Vec<T>
 where
     T: Encode,
@@ -217,13 +215,11 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> FixedTag for Vec<T> {
     const TAG: Tag = Tag::Sequence;
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> ValueOrd for Vec<T>
 where
     T: DerOrd,

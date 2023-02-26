@@ -67,7 +67,6 @@ impl<'a> TryFrom<&'a [u8]> for RsaPublicKey<'a> {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl TryFrom<RsaPublicKey<'_>> for Document {
     type Error = Error;
 
@@ -77,7 +76,6 @@ impl TryFrom<RsaPublicKey<'_>> for Document {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl TryFrom<&RsaPublicKey<'_>> for Document {
     type Error = Error;
 
@@ -87,7 +85,6 @@ impl TryFrom<&RsaPublicKey<'_>> for Document {
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl PemLabel for RsaPublicKey<'_> {
     const PEM_LABEL: &'static str = "RSA PUBLIC KEY";
 }

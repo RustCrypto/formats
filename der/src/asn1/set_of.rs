@@ -185,7 +185,6 @@ impl<'a, T> ExactSizeIterator for SetOfIter<'a, T> {}
 /// This type implements an append-only `SET OF` type which is heap-backed
 /// and depends on `alloc` support.
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct SetOfVec<T>
 where
@@ -195,7 +194,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T: DerOrd> Default for SetOfVec<T> {
     fn default() -> Self {
         Self {
@@ -205,7 +203,6 @@ impl<T: DerOrd> Default for SetOfVec<T> {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> SetOfVec<T>
 where
     T: DerOrd,
@@ -265,7 +262,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> AsRef<[T]> for SetOfVec<T>
 where
     T: DerOrd,
@@ -276,7 +272,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> DecodeValue<'a> for SetOfVec<T>
 where
     T: Decode<'a> + DerOrd,
@@ -297,7 +292,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, T> EncodeValue for SetOfVec<T>
 where
     T: 'a + Decode<'a> + Encode + DerOrd,
@@ -317,7 +311,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> FixedTag for SetOfVec<T>
 where
     T: DerOrd,
@@ -326,7 +319,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> From<SetOfVec<T>> for Vec<T>
 where
     T: DerOrd,
@@ -337,7 +329,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> TryFrom<Vec<T>> for SetOfVec<T>
 where
     T: DerOrd,
@@ -352,7 +343,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T, const N: usize> TryFrom<[T; N]> for SetOfVec<T>
 where
     T: DerOrd,
@@ -365,7 +355,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<T> ValueOrd for SetOfVec<T>
 where
     T: DerOrd,

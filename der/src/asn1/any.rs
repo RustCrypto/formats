@@ -160,7 +160,6 @@ mod allocating {
     ///
     /// This type provides the same functionality as [`AnyRef`] but owns the
     /// backing data.
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
     #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     pub struct Any {

@@ -27,7 +27,6 @@ use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 ///
 /// The [`SecretDocument`] provides a wrapper for this type with additional
 /// hardening applied.
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Eq, PartialEq)]
 pub struct Document {
     /// ASN.1 DER encoded bytes.
@@ -45,7 +44,6 @@ impl Document {
 
     /// Convert to a [`SecretDocument`].
     #[cfg(feature = "zeroize")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "zeroize")))]
     pub fn into_secret(self) -> SecretDocument {
         SecretDocument(self)
     }
@@ -81,7 +79,6 @@ impl Document {
     ///
     /// Returns the PEM label and decoded [`Document`] on success.
     #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn from_pem(pem: &str) -> Result<(&str, Self)> {
         let (label, der_bytes) = pem::decode_vec(pem.as_bytes())?;
         Ok((label, der_bytes.try_into()?))
@@ -90,35 +87,30 @@ impl Document {
     /// Encode ASN.1 DER document as a PEM string with encapsulation boundaries
     /// containing the provided PEM type `label` (e.g. `CERTIFICATE`).
     #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn to_pem(&self, label: &'static str, line_ending: pem::LineEnding) -> Result<String> {
         Ok(pem::encode_string(label, line_ending, self.as_bytes())?)
     }
 
     /// Read ASN.1 DER document from a file.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn read_der_file(path: impl AsRef<Path>) -> Result<Self> {
         fs::read(path)?.try_into()
     }
 
     /// Write ASN.1 DER document to a file.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         Ok(fs::write(path, self.as_bytes())?)
     }
 
     /// Read PEM-encoded ASN.1 DER document from a file.
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     pub fn read_pem_file(path: impl AsRef<Path>) -> Result<(String, Self)> {
         Self::from_pem(&fs::read_to_string(path)?).map(|(label, doc)| (label.to_owned(), doc))
     }
 
     /// Write PEM-encoded ASN.1 DER document to a file.
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     pub fn write_pem_file(
         &self,
         path: impl AsRef<Path>,
@@ -205,7 +197,6 @@ impl TryFrom<Vec<u8>> for Document {
 /// are zeroized-on-drop, and also using more restrictive file permissions when
 /// writing files to disk.
 #[cfg(feature = "zeroize")]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "zeroize"))))]
 #[derive(Clone)]
 pub struct SecretDocument(Document);
 
@@ -238,14 +229,12 @@ impl SecretDocument {
 
     /// Decode ASN.1 DER document from PEM.
     #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn from_pem(pem: &str) -> Result<(&str, Self)> {
         Document::from_pem(pem).map(|(label, doc)| (label, Self(doc)))
     }
 
     /// Encode ASN.1 DER document as a PEM string.
     #[cfg(feature = "pem")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
     pub fn to_pem(
         &self,
         label: &'static str,
@@ -256,28 +245,24 @@ impl SecretDocument {
 
     /// Read ASN.1 DER document from a file.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn read_der_file(path: impl AsRef<Path>) -> Result<Self> {
         Document::read_der_file(path).map(Self)
     }
 
     /// Write ASN.1 DER document to a file.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         write_secret_file(path, self.as_bytes())
     }
 
     /// Read PEM-encoded ASN.1 DER document from a file.
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     pub fn read_pem_file(path: impl AsRef<Path>) -> Result<(String, Self)> {
         Document::read_pem_file(path).map(|(label, doc)| (label, Self(doc)))
     }
 
     /// Write PEM-encoded ASN.1 DER document to a file.
     #[cfg(all(feature = "pem", feature = "std"))]
-    #[cfg_attr(docsrs, doc(cfg(all(feature = "pem", feature = "std"))))]
     pub fn write_pem_file(
         &self,
         path: impl AsRef<Path>,

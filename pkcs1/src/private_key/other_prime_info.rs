@@ -18,7 +18,6 @@ use der::{
 ///
 /// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
 #[derive(Clone)]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub struct OtherPrimeInfo<'a> {
     /// Prime factor `r_i` of `n`, where `i` >= 3.
     pub prime: UintRef<'a>,

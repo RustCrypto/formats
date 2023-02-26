@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -95,7 +95,6 @@ pub use spki::{
 };
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use {
     crate::traits::EncodePrivateKey,
     der::{Document, SecretDocument},
@@ -103,11 +102,9 @@ pub use {
 };
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub use der::pem::LineEnding;
 
 #[cfg(feature = "pkcs5")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pkcs5")))]
 pub use {encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
 
 #[cfg(feature = "rand_core")]

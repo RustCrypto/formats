@@ -166,7 +166,6 @@ impl<'i, E: Encoding> Decoder<'i, E> {
     /// If successful, this function will return the total number of bytes
     /// decoded into `buf`.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn decode_to_end<'o>(&mut self, buf: &'o mut Vec<u8>) -> Result<&'o [u8], Error> {
         let start_len = buf.len();
         let remaining_len = self.remaining_len();
@@ -249,7 +248,6 @@ impl<'i, E: Encoding> Decoder<'i, E> {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'i, E: Encoding> io::Read for Decoder<'i, E> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if self.is_finished() {

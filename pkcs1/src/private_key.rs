@@ -181,7 +181,6 @@ impl fmt::Debug for RsaPrivateKey<'_> {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl TryFrom<RsaPrivateKey<'_>> for SecretDocument {
     type Error = Error;
 
@@ -191,7 +190,6 @@ impl TryFrom<RsaPrivateKey<'_>> for SecretDocument {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl TryFrom<&RsaPrivateKey<'_>> for SecretDocument {
     type Error = Error;
 
@@ -201,7 +199,6 @@ impl TryFrom<&RsaPrivateKey<'_>> for SecretDocument {
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl PemLabel for RsaPrivateKey<'_> {
     const PEM_LABEL: &'static str = "RSA PRIVATE KEY";
 }

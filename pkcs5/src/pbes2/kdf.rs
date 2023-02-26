@@ -401,7 +401,6 @@ impl<'a> ScryptParams<'a> {
     /// Get the [`ScryptParams`] for the provided upstream [`scrypt::Params`]
     /// and a provided salt string.
     #[cfg(feature = "scrypt")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
     pub fn from_params_and_salt(params: scrypt::Params, salt: &'a [u8]) -> Result<Self> {
         Ok(Self {
             salt,
@@ -457,7 +456,6 @@ impl<'a> TryFrom<AnyRef<'a>> for ScryptParams<'a> {
 }
 
 #[cfg(feature = "scrypt")]
-#[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
 impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
     type Error = Error;
 
@@ -467,7 +465,6 @@ impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
 }
 
 #[cfg(feature = "scrypt")]
-#[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
 impl<'a> TryFrom<&ScryptParams<'a>> for scrypt::Params {
     type Error = Error;
 

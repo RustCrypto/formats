@@ -5,7 +5,6 @@ use crate::Result;
 use pem_rfc7468::{Encoder, LineEnding};
 
 /// `Writer` type which outputs PEM-encoded data.
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub struct PemWriter<'w>(Encoder<'static, 'w>);
 
 impl<'w> PemWriter<'w> {

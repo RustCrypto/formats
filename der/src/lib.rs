@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -371,26 +371,21 @@ pub use crate::{
 pub use crate::{asn1::Any, document::Document};
 
 #[cfg(feature = "bigint")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bigint")))]
 pub use crypto_bigint as bigint;
 
 #[cfg(feature = "derive")]
-#[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
 pub use der_derive::{Choice, Enumerated, Sequence, ValueOrd};
 
 #[cfg(feature = "oid")]
-#[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
 pub use const_oid as oid;
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub use {
     crate::{decode::DecodePem, encode::EncodePem, reader::pem::PemReader, writer::pem::PemWriter},
     pem_rfc7468 as pem,
 };
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 pub use time;
 
 #[cfg(feature = "zeroize")]

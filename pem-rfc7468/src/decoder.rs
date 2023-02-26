@@ -45,7 +45,6 @@ pub fn decode<'i, 'o>(pem: &'i [u8], buf: &'o mut [u8]) -> Result<(&'i str, &'o 
 /// Decode a PEM document according to RFC 7468's "Strict" grammar, returning
 /// the result as a [`Vec`] upon success.
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub fn decode_vec(pem: &[u8]) -> Result<(&str, Vec<u8>)> {
     let mut decoder = Decoder::new(pem).map_err(|e| check_for_headers(pem, e))?;
     let type_label = decoder.type_label();
@@ -107,7 +106,6 @@ impl<'i> Decoder<'i> {
 
     /// Decode all of the remaining data in the input buffer into `buf`.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     pub fn decode_to_end<'o>(&mut self, buf: &'o mut Vec<u8>) -> Result<&'o [u8]> {
         Ok(self.base64.decode_to_end(buf)?)
     }
@@ -130,7 +128,6 @@ impl<'i> From<Decoder<'i>> for Base64Decoder<'i> {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'i> io::Read for Decoder<'i> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.base64.read(buf)

@@ -63,10 +63,6 @@ where
     ///
     /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
     #[cfg(all(feature = "fingerprint", feature = "alloc", feature = "base64ct"))]
-    #[cfg_attr(
-        docsrs,
-        doc(cfg(all(feature = "fingerprint", feature = "alloc", feature = "base64ct")))
-    )]
     pub fn fingerprint_base64(&self) -> Result<alloc::string::String> {
         use base64ct::{Base64, Encoding};
         Ok(Base64::encode_string(&self.fingerprint_bytes()?))
@@ -79,7 +75,6 @@ where
     ///
     /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
     #[cfg(feature = "fingerprint")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
     pub fn fingerprint_bytes(&self) -> Result<FingerprintBytes> {
         let mut builder = fingerprint::Builder::new();
         self.encode(&mut builder)?;
@@ -151,7 +146,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<SubjectPublicKeyInfo<Params, Key>> for Document
 where
     Params: Choice<'a> + Encode,
@@ -166,7 +160,6 @@ where
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<&SubjectPublicKeyInfo<Params, Key>> for Document
 where
     Params: Choice<'a> + Encode,
@@ -181,7 +174,6 @@ where
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl<Params, Key> PemLabel for SubjectPublicKeyInfo<Params, Key> {
     const PEM_LABEL: &'static str = "PUBLIC KEY";
 }
