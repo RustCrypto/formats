@@ -123,8 +123,10 @@ impl_any_conversions!(IntRef<'a>, 'a);
 
 impl<'a> DecodeValue<'a> for IntRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = BytesRef::decode_value(reader, header)?.as_slice();
-        let result = Self::new(decode_to_slice(bytes)?)?;
+        let bytes = BytesRef::decode_value(reader, header)?;
+        validate_canonical(bytes.as_slice())?;
+
+        let result = Self::new(bytes.as_slice())?;
 
         // Ensure we compute the same encoded length as the original any value.
         if result.value_len()? != header.length {
@@ -160,7 +162,7 @@ impl<'a> OrdIsValueOrd for IntRef<'a> {}
 
 #[cfg(feature = "alloc")]
 mod allocating {
-    use super::{decode_to_slice, strip_leading_ones, IntRef};
+    use super::{strip_leading_ones, validate_canonical, IntRef};
     use crate::{
         asn1::Uint,
         ord::OrdIsValueOrd,
@@ -214,7 +216,9 @@ mod allocating {
     impl<'a> DecodeValue<'a> for Int {
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             let bytes = BytesOwned::decode_value(reader, header)?;
-            let result = Self::new(decode_to_slice(bytes.as_slice())?)?;
+            validate_canonical(bytes.as_slice())?;
+
+            let result = Self::new(bytes.as_slice())?;
 
             // Ensure we compute the same encoded length as the original any value.
             if result.value_len()? != header.length {
@@ -285,8 +289,7 @@ mod allocating {
 }
 
 /// Ensure `INTEGER` is canonically encoded.
-// TODO(tarcieri): refactor this into a canonicalization check method
-fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
+fn validate_canonical(bytes: &[u8]) -> Result<()> {
     // The `INTEGER` type always encodes a signed value and we're decoding
     // as signed here, so we allow a zero extension or sign extension byte,
     // but only as permitted under DER canonicalization.
@@ -294,7 +297,7 @@ fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
         [] => Err(Tag::Integer.non_canonical_error()),
         [0x00, byte, ..] if *byte < 0x80 => Err(Tag::Integer.non_canonical_error()),
         [0xFF, byte, ..] if *byte >= 0x80 => Err(Tag::Integer.non_canonical_error()),
-        _ => Ok(bytes),
+        _ => Ok(()),
     }
 }
 
@@ -351,25 +354,27 @@ pub(crate) fn strip_leading_ones(mut bytes: &[u8]) -> &[u8] {
 
 #[cfg(test)]
 mod tests {
-    use super::{decode_to_slice, IntRef};
+    use super::{validate_canonical, IntRef};
     use crate::{asn1::integer::tests::*, Decode, Encode, SliceWriter};
 
     #[test]
-    fn decode_to_slice_non_canonical() {
-        // Empty integers are always non-canonical.
-        assert!(decode_to_slice(&[]).is_err());
-        // Positives with excessive zero extension are non-canonical.
-        assert!(decode_to_slice(&[0x00, 0x00]).is_err());
-        // Negatives with excessive sign extension are non-canonical.
-        assert!(decode_to_slice(&[0xFF, 0x80]).is_err());
+    fn validate_canonical_ok() {
+        assert_eq!(validate_canonical(&[0x00]), Ok(()));
+        assert_eq!(validate_canonical(&[0x01]), Ok(()));
+        assert_eq!(validate_canonical(&[0x00, 0x80]), Ok(()));
+        assert_eq!(validate_canonical(&[0xFF, 0x00]), Ok(()));
     }
 
     #[test]
-    fn decode_to_slice_canonical() {
-        assert_eq!(decode_to_slice(&[0x00]).unwrap(), &[0x00]);
-        assert_eq!(decode_to_slice(&[0x01]).unwrap(), &[0x01]);
-        assert_eq!(decode_to_slice(&[0x00, 0x80]).unwrap(), &[0x00, 0x80]);
-        assert_eq!(decode_to_slice(&[0xFF, 0x00]).unwrap(), &[0xFF, 0x00]);
+    fn validate_canonical_err() {
+        // Empty integers are always non-canonical.
+        assert!(validate_canonical(&[]).is_err());
+
+        // Positives with excessive zero extension are non-canonical.
+        assert!(validate_canonical(&[0x00, 0x00]).is_err());
+
+        // Negatives with excessive sign extension are non-canonical.
+        assert!(validate_canonical(&[0xFF, 0x80]).is_err());
     }
 
     #[test]
