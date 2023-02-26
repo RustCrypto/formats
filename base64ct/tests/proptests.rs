@@ -1,6 +1,9 @@
 //! Equivalence tests between `base64` crate and `base64ct`.
 
 #![cfg(feature = "std")]
+// TODO(tarcieri): fix `base64` crate deprecations
+// warning: use of deprecated function `base64::encode`: Use Engine::encode
+#![allow(deprecated)]
 
 use base64ct::{Base64 as Base64ct, Encoding};
 use proptest::{prelude::*, string::*};
