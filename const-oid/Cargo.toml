@@ -1,6 +1,6 @@
 [package]
 name = "const-oid"
-version = "0.9.1"
+version = "0.9.2"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -15,6 +15,9 @@ keywords = ["iso", "iec", "itu", "oid"]
 readme = "README.md"
 edition = "2021"
 rust-version = "1.57"
+
+[dependencies]
+arbitrary = { version = "1.2", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 hex-literal = "0.3"
