@@ -56,7 +56,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "base16ct"
-version = "0.2.0-pre"
+version = "0.2.0"
 
 [[package]]
 name = "base32"
