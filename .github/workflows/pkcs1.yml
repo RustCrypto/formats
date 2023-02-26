@@ -34,12 +34,10 @@ jobs:
           - wasm32-unknown-unknown
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
+          targets: ${{ matrix.target }}
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features std
 
@@ -57,10 +55,8 @@ jobs:
           - stable
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack test --feature-powerset

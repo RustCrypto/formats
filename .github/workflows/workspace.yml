@@ -19,12 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.66.0
           components: clippy
-          override: true
-          profile: minimal
       - run: cargo clippy --all-features
 
   doc:
@@ -32,23 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          override: true
-          profile: minimal
       - run: cargo doc --workspace --all-features
 
   rustfmt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
           components: rustfmt
-          profile: minimal
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
