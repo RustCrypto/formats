@@ -5,8 +5,8 @@ use const_oid::db::rfc5280::{
 };
 use const_oid::AssociatedOid;
 use der::asn1::{GeneralizedTime, ObjectIdentifier};
+use der::flagset::{flags, FlagSet};
 use der::Sequence;
-use flagset::{flags, FlagSet};
 
 flags! {
     /// Key usage flags as defined in [RFC 5280 Section 4.2.1.3].

@@ -6,8 +6,8 @@ use crate::{Certificate, TbsCertificate};
 
 use alloc::string::String;
 use der::asn1::OctetString;
+use der::flagset::{flags, FlagSet};
 use der::{Choice, Enumerated, Sequence};
-use flagset::{flags, FlagSet};
 use spki::SubjectPublicKeyInfoOwned;
 
 /// Version identifier for TrustAnchorInfo

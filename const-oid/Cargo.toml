@@ -14,16 +14,15 @@ categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-i
 keywords = ["iso", "iec", "itu", "oid"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.60"
 
 [dependencies]
-arbitrary = { version = "1.2.3", features = ["derive"], optional = true }
+arbitrary = { version = "1.2", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 hex-literal = "0.3"
 
 [features]
-arbitrary = ["std", "dep:arbitrary"]
 db = []
 std = []
 

@@ -15,12 +15,12 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-der = { version = "=0.7.0-pre", features = ["oid", "derive", "alloc"], path = "../der" }
-x509-cert = { version = "=0.2.0-pre", path = "../x509-cert" }
-const-oid = { version = "=0.10.0-pre", path = "../const-oid" }
+der = { version = "=0.7.0-pre", features = ["alloc", "derive", "oid"], path = "../der" }
 spki = { version = "=0.7.0-pre", path = "../spki" }
+x509-cert = { version = "=0.2.0-pre", path = "../x509-cert" }
 
 [dev-dependencies]
+const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 hex-literal = "0.3"
 
 [package.metadata.docs.rs]

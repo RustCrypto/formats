@@ -1,19 +1,17 @@
 //! EnvelopedData-related types
-use core::cmp::Ordering;
-
-use const_oid::ObjectIdentifier;
-use der::asn1::{BitString, GeneralizedTime, OctetString, SetOfVec};
-use der::{Any, Choice, Sequence, ValueOrd};
-
-use spki::AlgorithmIdentifierOwned;
-use x509_cert::attr::{Attribute, Attributes};
-use x509_cert::ext::pkix::SubjectKeyIdentifier;
-use x509_cert::impl_newtype;
 
 use crate::cert::IssuerAndSerialNumber;
 use crate::content_info::CmsVersion;
 use crate::revocation::RevocationInfoChoices;
 use crate::signed_data::CertificateSet;
+
+use core::cmp::Ordering;
+use der::asn1::{BitString, GeneralizedTime, ObjectIdentifier, OctetString, SetOfVec};
+use der::{Any, Choice, Sequence, ValueOrd};
+use spki::AlgorithmIdentifierOwned;
+use x509_cert::attr::{Attribute, Attributes};
+use x509_cert::ext::pkix::SubjectKeyIdentifier;
+use x509_cert::impl_newtype;
 
 /// The `EnvelopedData` type is defined in [RFC 5652 Section 6.1].
 ///

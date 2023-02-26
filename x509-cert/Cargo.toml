@@ -15,20 +15,23 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-arbitrary = { version = "1.2.3", features = ["derive"], optional = true }
-const-oid = { version = "=0.10.0-pre", features = ["db"], path = "../const-oid" }
-der = { version = "=0.7.0-pre", features = ["derive", "alloc", "flagset"], path = "../der" }
-flagset = { version = "0.4.3" }
+const-oid = { version = "0.9.2", features = ["db"] } # TODO: path = "../const-oid"
+der = { version = "=0.7.0-pre", features = ["derive", "alloc", "flagset", "oid"], path = "../der" }
 spki = { version = "=0.7.0-pre", path = "../spki", features = ["alloc"] }
+
+# optional dependencies
+arbitrary = { version = "1.2.3", features = ["derive"], optional = true }
 
 [dev-dependencies]
 hex-literal = "0.3"
 rstest = "0.16"
 
 [features]
-arbitrary = ["std", "dep:arbitrary", "const-oid/arbitrary", "der/arbitrary", "spki/arbitrary"]
-pem = ["der/pem"]
-std = ["der/std", "spki/std", "const-oid/std"]
+default = ["pem", "std"]
+std = ["const-oid/std", "der/std", "spki/std"]
+
+arbitrary = ["dep:arbitrary", "std", "der/arbitrary", "spki/arbitrary"]
+pem = ["der/pem", "spki/pem"]
 
 [package.metadata.docs.rs]
 all-features = true

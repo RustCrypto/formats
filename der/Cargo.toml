@@ -17,10 +17,10 @@ rust-version = "1.65"
 
 [dependencies]
 arbitrary = { version = "1.2.3", features = ["derive"], optional = true }
-const-oid = { version = "=0.10.0-pre", optional = true, path = "../const-oid" }
+const-oid = { version = "0.9.2", optional = true } # TODO: path = "../const-oid"
 der_derive = { version = "=0.7.0-pre", optional = true, path = "derive" }
 flagset = { version = "0.4.3", optional = true }
-pem-rfc7468 = { version = "0.7", optional = true, path = "../pem-rfc7468" }
+pem-rfc7468 = { version = "0.7", optional = true, features = ["alloc"], path = "../pem-rfc7468" }
 time = { version = "0.3.4", optional = true, default-features = false }
 zeroize = { version = "1.5", optional = true, default-features = false, features = ["alloc"] }
 
@@ -30,10 +30,10 @@ proptest = "1"
 
 [features]
 alloc = []
-arbitrary = ["std", "dep:arbitrary", "const-oid?/arbitrary"]
-derive = ["der_derive"]
-oid = ["const-oid"]
-pem = ["alloc", "pem-rfc7468/alloc", "zeroize"]
+arbitrary = [ "dep:arbitrary", "const-oid?/arbitrary", "std"]
+derive = ["dep:der_derive"]
+oid = ["dep:const-oid"]
+pem = ["dep:pem-rfc7468", "alloc", "zeroize", ]
 real = []
 std = ["alloc"]
 

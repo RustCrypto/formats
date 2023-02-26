@@ -244,10 +244,9 @@ dependencies = [
 name = "cmpv2"
 version = "0.0.0"
 dependencies = [
- "const-oid",
+ "const-oid 0.9.2",
  "crmf",
  "der",
- "flagset",
  "hex-literal",
  "spki",
  "x509-cert",
@@ -257,13 +256,21 @@ dependencies = [
 name = "cms"
 version = "0.0.0"
 dependencies = [
- "const-oid",
+ "const-oid 0.9.2",
  "der",
  "hex-literal",
  "pkcs5",
- "rstest 0.12.0",
  "spki",
  "x509-cert",
+]
+
+[[package]]
+name = "const-oid"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "520fbf3c07483f94e3e3ca9d0cfd913d7718ef2483d2cfd91c0d9e91474ab913"
+dependencies = [
+ "arbitrary",
 ]
 
 [[package]]
@@ -324,7 +331,7 @@ name = "crmf"
 version = "0.0.0"
 dependencies = [
  "cms",
- "const-oid",
+ "const-oid 0.9.2",
  "der",
  "spki",
  "x509-cert",
@@ -388,7 +395,7 @@ name = "der"
 version = "0.7.0-pre"
 dependencies = [
  "arbitrary",
- "const-oid",
+ "const-oid 0.9.2",
  "der_derive",
  "flagset",
  "hex-literal",
@@ -835,7 +842,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 name = "pkcs1"
 version = "0.5.0-pre"
 dependencies = [
- "const-oid",
+ "const-oid 0.9.2",
  "der",
  "hex-literal",
  "pkcs8",
@@ -1083,19 +1090,6 @@ name = "regex-syntax"
 version = "0.6.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
-
-[[package]]
-name = "rstest"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d912f35156a3f99a66ee3e11ac2e0b3f34ac85a07e05263d05a7e2c8810d616f"
-dependencies = [
- "cfg-if",
- "proc-macro2",
- "quote",
- "rustc_version",
- "syn",
-]
 
 [[package]]
 name = "rstest"
@@ -1720,11 +1714,10 @@ name = "x509-cert"
 version = "0.2.0-pre"
 dependencies = [
  "arbitrary",
- "const-oid",
+ "const-oid 0.9.2",
  "der",
- "flagset",
  "hex-literal",
- "rstest 0.16.0",
+ "rstest",
  "spki",
 ]
 
@@ -1732,7 +1725,7 @@ dependencies = [
 name = "x509-ocsp"
 version = "0.1.0-pre.0"
 dependencies = [
- "const-oid",
+ "const-oid 0.9.2",
  "der",
  "hex-literal",
  "spki",

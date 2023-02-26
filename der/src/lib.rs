@@ -376,6 +376,9 @@ pub use crypto_bigint as bigint;
 #[cfg(feature = "derive")]
 pub use der_derive::{Choice, Enumerated, Sequence, ValueOrd};
 
+#[cfg(feature = "flagset")]
+pub use flagset;
+
 #[cfg(feature = "oid")]
 pub use const_oid as oid;
 
