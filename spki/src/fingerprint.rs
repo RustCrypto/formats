@@ -12,7 +12,6 @@ pub(crate) const SIZE: usize = 32;
 /// See [RFC7469 § 2.1.1] for more information.
 ///
 /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
-#[cfg_attr(docsrs, doc(cfg(feature = "fingerprint")))]
 pub type FingerprintBytes = [u8; SIZE];
 
 /// Writer newtype which accepts DER being serialized on-the-fly and computes a

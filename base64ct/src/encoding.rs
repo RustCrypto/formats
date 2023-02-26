@@ -40,7 +40,6 @@ pub trait Encoding: Alphabet {
 
     /// Decode a Base64 string into a byte vector.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn decode_vec(input: &str) -> Result<Vec<u8>, Error>;
 
     /// Encode the input byte slice as Base64.
@@ -54,7 +53,6 @@ pub trait Encoding: Alphabet {
     /// # Panics
     /// If `input` length is greater than `usize::MAX/4`.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn encode_string(input: &[u8]) -> String;
 
     /// Get the length of Base64 produced by encoding the given bytes.

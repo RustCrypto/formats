@@ -39,7 +39,6 @@ use der::pem::PemLabel;
 /// ```
 ///
 /// [RFC 5208 Section 6]: https://tools.ietf.org/html/rfc5208#section-6
-#[cfg_attr(docsrs, doc(cfg(feature = "pkcs5")))]
 #[derive(Clone, Eq, PartialEq)]
 pub struct EncryptedPrivateKeyInfo<'a> {
     /// Algorithm identifier describing a password-based symmetric encryption
@@ -54,7 +53,6 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     /// Attempt to decrypt this encrypted private key using the provided
     /// password to derive an encryption key.
     #[cfg(feature = "encryption")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>) -> Result<SecretDocument> {
         Ok(self
             .encryption_algorithm
@@ -65,7 +63,6 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     /// Encrypt the given ASN.1 DER document using a symmetric encryption key
     /// derived from the provided password.
     #[cfg(feature = "encryption")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub(crate) fn encrypt(
         mut rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
@@ -84,7 +81,6 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password and [`pbes2::Parameters`].
     #[cfg(feature = "encryption")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub(crate) fn encrypt_with(
         pbes2_params: pbes2::Parameters<'a>,
         password: impl AsRef<[u8]>,
@@ -146,7 +142,6 @@ impl<'a> fmt::Debug for EncryptedPrivateKeyInfo<'a> {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "pkcs5"))))]
 impl TryFrom<EncryptedPrivateKeyInfo<'_>> for SecretDocument {
     type Error = Error;
 
@@ -156,7 +151,6 @@ impl TryFrom<EncryptedPrivateKeyInfo<'_>> for SecretDocument {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "pkcs5"))))]
 impl TryFrom<&EncryptedPrivateKeyInfo<'_>> for SecretDocument {
     type Error = Error;
 
@@ -166,7 +160,6 @@ impl TryFrom<&EncryptedPrivateKeyInfo<'_>> for SecretDocument {
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl PemLabel for EncryptedPrivateKeyInfo<'_> {
     const PEM_LABEL: &'static str = "ENCRYPTED PRIVATE KEY";
 }

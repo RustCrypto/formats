@@ -219,7 +219,6 @@ mod allocating {
     ///
     /// This type provides the same functionality as [`BitStringRef`] but owns the
     /// backing data.
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     pub struct BitString {
         /// Number of unused bits in the final octet.

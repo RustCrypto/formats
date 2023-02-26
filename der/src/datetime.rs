@@ -240,7 +240,6 @@ impl DateTime {
 
     /// Instantiate from [`SystemTime`].
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         time.duration_since(UNIX_EPOCH)
             .map_err(|_| ErrorKind::DateTime.into())
@@ -249,7 +248,6 @@ impl DateTime {
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn to_system_time(&self) -> SystemTime {
         UNIX_EPOCH + self.unix_duration()
     }
@@ -258,19 +256,12 @@ impl DateTime {
 impl FromStr for DateTime {
     type Err = Error;
 
-    // TODO(tarcieri): checked arithmetic
-    #[allow(clippy::integer_arithmetic)]
     fn from_str(s: &str) -> Result<Self> {
         match *s.as_bytes() {
             [year1, year2, year3, year4, b'-', month1, month2, b'-', day1, day2, b'T', hour1, hour2, b':', min1, min2, b':', sec1, sec2, b'Z'] =>
             {
                 let tag = Tag::GeneralizedTime;
-                let year =
-                    u16::from(decode_decimal(tag, year1, year2).map_err(|_| ErrorKind::DateTime)?)
-                        * 100
-                        + u16::from(
-                            decode_decimal(tag, year3, year4).map_err(|_| ErrorKind::DateTime)?,
-                        );
+                let year = decode_year(&[year1, year2, year3, year4])?;
                 let month = decode_decimal(tag, month1, month2).map_err(|_| ErrorKind::DateTime)?;
                 let day = decode_decimal(tag, day1, day2).map_err(|_| ErrorKind::DateTime)?;
                 let hour = decode_decimal(tag, hour1, hour2).map_err(|_| ErrorKind::DateTime)?;
@@ -294,7 +285,6 @@ impl fmt::Display for DateTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<DateTime> for SystemTime {
     fn from(time: DateTime) -> SystemTime {
         time.to_system_time()
@@ -302,7 +292,6 @@ impl From<DateTime> for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<&DateTime> for SystemTime {
     fn from(time: &DateTime) -> SystemTime {
         time.to_system_time()
@@ -310,7 +299,6 @@ impl From<&DateTime> for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl TryFrom<SystemTime> for DateTime {
     type Error = Error;
 
@@ -320,7 +308,6 @@ impl TryFrom<SystemTime> for DateTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl TryFrom<&SystemTime> for DateTime {
     type Error = Error;
 
@@ -330,7 +317,6 @@ impl TryFrom<&SystemTime> for DateTime {
 }
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl TryFrom<DateTime> for PrimitiveDateTime {
     type Error = Error;
 
@@ -344,7 +330,6 @@ impl TryFrom<DateTime> for PrimitiveDateTime {
 }
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl TryFrom<PrimitiveDateTime> for DateTime {
     type Error = Error;
 
@@ -401,6 +386,16 @@ where
 
     writer.write_byte(b'0'.checked_add(hi_val).ok_or(ErrorKind::Overflow)?)?;
     writer.write_byte(b'0'.checked_add(value % 10).ok_or(ErrorKind::Overflow)?)
+}
+
+/// Decode 4-digit year.
+// TODO(tarcieri): checked arithmetic
+#[allow(clippy::integer_arithmetic)]
+fn decode_year(year: &[u8; 4]) -> Result<u16> {
+    let tag = Tag::GeneralizedTime;
+    let hi = decode_decimal(tag, year[0], year[1]).map_err(|_| ErrorKind::DateTime)?;
+    let lo = decode_decimal(tag, year[2], year[3]).map_err(|_| ErrorKind::DateTime)?;
+    Ok(u16::from(hi) * 100 + u16::from(lo))
 }
 
 #[cfg(test)]

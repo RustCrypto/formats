@@ -178,7 +178,6 @@ impl<'de, const N: usize, const UPPERCASE: bool> Deserialize<'de> for HexOrBin<N
 }
 
 #[cfg(feature = "zeroize")]
-#[cfg_attr(docsrs, doc(cfg(feature = "zeroize")))]
 impl<const N: usize, const UPPERCASE: bool> Zeroize for HexOrBin<N, UPPERCASE> {
     fn zeroize(&mut self) {
         self.0.as_mut_slice().zeroize();

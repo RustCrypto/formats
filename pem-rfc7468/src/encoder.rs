@@ -119,7 +119,6 @@ pub fn encode<'o>(
 /// Encode a PEM document according to RFC 7468's "Strict" grammar, returning
 /// the result as a [`String`].
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub fn encode_string(label: &str, line_ending: LineEnding, input: &[u8]) -> Result<String> {
     let expected_len = encoded_len(label, line_ending, input)?;
     let mut buf = vec![0u8; expected_len];
@@ -287,7 +286,6 @@ impl<'l, 'o> Encoder<'l, 'o> {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'l, 'o> io::Write for Encoder<'l, 'o> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.encode(buf)?;

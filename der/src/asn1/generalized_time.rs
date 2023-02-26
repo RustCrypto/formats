@@ -61,7 +61,6 @@ impl GeneralizedTime {
 
     /// Instantiate from [`SystemTime`].
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         DateTime::try_from(time)
             .map(Into::into)
@@ -70,7 +69,6 @@ impl GeneralizedTime {
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn to_system_time(&self) -> SystemTime {
         self.0.to_system_time()
     }
@@ -190,7 +188,6 @@ impl FixedTag for DateTime {
 impl OrdIsValueOrd for DateTime {}
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'a> DecodeValue<'a> for SystemTime {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Ok(GeneralizedTime::decode_value(reader, header)?.into())
@@ -198,7 +195,6 @@ impl<'a> DecodeValue<'a> for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl EncodeValue for SystemTime {
     fn value_len(&self) -> Result<Length> {
         GeneralizedTime::try_from(self)?.value_len()
@@ -210,7 +206,6 @@ impl EncodeValue for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<GeneralizedTime> for SystemTime {
     fn from(time: GeneralizedTime) -> SystemTime {
         time.to_system_time()
@@ -218,7 +213,6 @@ impl From<GeneralizedTime> for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<&GeneralizedTime> for SystemTime {
     fn from(time: &GeneralizedTime) -> SystemTime {
         time.to_system_time()
@@ -226,7 +220,6 @@ impl From<&GeneralizedTime> for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl TryFrom<SystemTime> for GeneralizedTime {
     type Error = Error;
 
@@ -236,7 +229,6 @@ impl TryFrom<SystemTime> for GeneralizedTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl TryFrom<&SystemTime> for GeneralizedTime {
     type Error = Error;
 
@@ -246,7 +238,6 @@ impl TryFrom<&SystemTime> for GeneralizedTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'a> TryFrom<AnyRef<'a>> for SystemTime {
     type Error = Error;
 
@@ -256,17 +247,14 @@ impl<'a> TryFrom<AnyRef<'a>> for SystemTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl FixedTag for SystemTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl OrdIsValueOrd for SystemTime {}
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl<'a> DecodeValue<'a> for PrimitiveDateTime {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         GeneralizedTime::decode_value(reader, header)?.try_into()
@@ -274,7 +262,6 @@ impl<'a> DecodeValue<'a> for PrimitiveDateTime {
 }
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl EncodeValue for PrimitiveDateTime {
     fn value_len(&self) -> Result<Length> {
         GeneralizedTime::try_from(self)?.value_len()
@@ -286,17 +273,14 @@ impl EncodeValue for PrimitiveDateTime {
 }
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl FixedTag for PrimitiveDateTime {
     const TAG: Tag = Tag::GeneralizedTime;
 }
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl OrdIsValueOrd for PrimitiveDateTime {}
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl TryFrom<PrimitiveDateTime> for GeneralizedTime {
     type Error = Error;
 
@@ -306,7 +290,6 @@ impl TryFrom<PrimitiveDateTime> for GeneralizedTime {
 }
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl TryFrom<&PrimitiveDateTime> for GeneralizedTime {
     type Error = Error;
 
@@ -316,7 +299,6 @@ impl TryFrom<&PrimitiveDateTime> for GeneralizedTime {
 }
 
 #[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 impl TryFrom<GeneralizedTime> for PrimitiveDateTime {
     type Error = Error;
 

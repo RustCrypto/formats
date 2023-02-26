@@ -14,7 +14,6 @@ use crate::{
 
 use super::integer::uint::strip_leading_zeroes;
 
-#[cfg_attr(docsrs, doc(cfg(feature = "real")))]
 impl<'a> DecodeValue<'a> for f64 {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = BytesRef::decode_value(reader, header)?.as_slice();
@@ -84,7 +83,6 @@ impl<'a> DecodeValue<'a> for f64 {
     }
 }
 
-#[cfg_attr(docsrs, doc(cfg(feature = "real")))]
 impl EncodeValue for f64 {
     fn value_len(&self) -> Result<Length> {
         if self.is_sign_positive() && (*self) < f64::MIN_POSITIVE {
@@ -194,7 +192,6 @@ impl EncodeValue for f64 {
     }
 }
 
-#[cfg_attr(docsrs, doc(cfg(feature = "real")))]
 impl FixedTag for f64 {
     const TAG: Tag = Tag::Real;
 }

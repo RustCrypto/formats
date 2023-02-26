@@ -38,12 +38,10 @@ pub const AES_256_CBC_OID: ObjectIdentifier =
 
 /// DES operating in CBC mode
 #[cfg(feature = "des-insecure")]
-#[cfg_attr(docsrs, doc(cfg(feature = "des-insecure")))]
 pub const DES_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.7");
 
 /// Triple DES operating in CBC mode
 #[cfg(feature = "3des")]
-#[cfg_attr(docsrs, doc(cfg(feature = "3des")))]
 pub const DES_EDE3_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.3.7");
 
 /// Password-Based Encryption Scheme 2 (PBES2) OID.
@@ -107,7 +105,6 @@ impl<'a> Parameters<'a> {
     /// For more information on scrypt parameters, see documentation for the
     /// [`scrypt::Params`] struct.
     #[cfg(feature = "scrypt")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
     pub fn scrypt_aes128cbc(
         params: scrypt::Params,
         salt: &'a [u8],
@@ -127,7 +124,6 @@ impl<'a> Parameters<'a> {
     /// When in doubt, use `Default::default()` as the [`scrypt::Params`].
     /// This also avoids the need to import the type from the `scrypt` crate.
     #[cfg(feature = "scrypt")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "scrypt")))]
     pub fn scrypt_aes256cbc(
         params: scrypt::Params,
         salt: &'a [u8],
@@ -141,8 +137,6 @@ impl<'a> Parameters<'a> {
     /// Attempt to decrypt the given ciphertext, allocating and returning a
     /// byte vector containing the plaintext.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>, ciphertext: &[u8]) -> Result<Vec<u8>> {
         let mut buffer = ciphertext.to_vec();
         let pt_len = self.decrypt_in_place(password, &mut buffer)?.len();
@@ -157,7 +151,6 @@ impl<'a> Parameters<'a> {
     /// is unsupported, or if the ciphertext is malformed (e.g. not a multiple
     /// of a block mode's padding)
     #[cfg(feature = "pbes2")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
     pub fn decrypt_in_place<'b>(
         &self,
         password: impl AsRef<[u8]>,
@@ -169,8 +162,6 @@ impl<'a> Parameters<'a> {
     /// Encrypt the given plaintext, allocating and returning a vector
     /// containing the ciphertext.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
     pub fn encrypt(&self, password: impl AsRef<[u8]>, plaintext: &[u8]) -> Result<Vec<u8>> {
         // TODO(tarcieri): support non-AES ciphers?
         let mut buffer = Vec::with_capacity(plaintext.len() + AES_BLOCK_SIZE);
@@ -189,7 +180,6 @@ impl<'a> Parameters<'a> {
     /// provided password and this scheme's parameters, writing the ciphertext
     /// into the same buffer.
     #[cfg(feature = "pbes2")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "pbes2")))]
     pub fn encrypt_in_place<'b>(
         &self,
         password: impl AsRef<[u8]>,

@@ -135,7 +135,6 @@ pub trait Reader<'r>: Sized {
 
     /// Read a byte vector of the given length.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn read_vec(&mut self, len: Length) -> Result<Vec<u8>> {
         let mut bytes = vec![0u8; usize::try_from(len)?];
         self.read_into(&mut bytes)?;

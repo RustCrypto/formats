@@ -63,7 +63,6 @@ impl UtcTime {
 
     /// Instantiate from [`SystemTime`].
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         DateTime::try_from(time)
             .map_err(|_| Self::TAG.value_error())?
@@ -72,7 +71,6 @@ impl UtcTime {
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn to_system_time(&self) -> SystemTime {
         self.0.to_system_time()
     }
@@ -181,7 +179,6 @@ impl TryFrom<&DateTime> for UtcTime {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl From<UtcTime> for SystemTime {
     fn from(utc_time: UtcTime) -> SystemTime {
         utc_time.to_system_time()

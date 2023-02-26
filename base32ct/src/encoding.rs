@@ -14,7 +14,6 @@ pub trait Encoding: Alphabet {
 
     /// Decode a Base32 string into a byte vector.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn decode_vec(input: &str) -> Result<Vec<u8>>;
 
     /// Encode the input byte slice as Base32.
@@ -25,7 +24,6 @@ pub trait Encoding: Alphabet {
 
     /// Encode input byte slice into a [`String`] containing Base32.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn encode_string(input: &[u8]) -> String;
 
     /// Get the length of Base32 produced by encoding the given bytes.
@@ -129,7 +127,6 @@ impl<T: Alphabet> Encoding for T {
     }
 
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn decode_vec(input: &str) -> Result<Vec<u8>> {
         let mut output = vec![0u8; decoded_len(input.len())];
         let len = Self::decode(input, &mut output)?.len();
@@ -208,7 +205,6 @@ impl<T: Alphabet> Encoding for T {
     }
 
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn encode_string(input: &[u8]) -> String {
         let elen = Self::encoded_len(input);
         let mut dst = vec![0u8; elen];

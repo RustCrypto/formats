@@ -37,7 +37,6 @@ pub trait Encode {
     /// Encode this message as ASN.1 DER, appending it to the provided
     /// byte vector.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn encode_to_vec(&self, buf: &mut Vec<u8>) -> Result<Length> {
         let expected_len = usize::try_from(self.encoded_len()?)?;
         buf.reserve(expected_len);
@@ -60,7 +59,6 @@ pub trait Encode {
 
     /// Serialize this message as a byte vector.
     #[cfg(feature = "alloc")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
     fn to_vec(&self) -> Result<Vec<u8>> {
         let mut buf = Vec::new();
         self.encode_to_vec(&mut buf)?;
@@ -89,14 +87,12 @@ where
 /// This trait is automatically impl'd for any type which impls both
 /// [`Encode`] and [`PemLabel`].
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 pub trait EncodePem: Encode + PemLabel {
     /// Try to encode this type as PEM.
     fn to_pem(&self, line_ending: LineEnding) -> Result<String>;
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl<T: Encode + PemLabel> EncodePem for T {
     fn to_pem(&self, line_ending: LineEnding) -> Result<String> {
         let der_len = usize::try_from(self.encoded_len()?)?;

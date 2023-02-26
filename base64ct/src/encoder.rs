@@ -166,7 +166,6 @@ impl<'o, E: Encoding> Encoder<'o, E> {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'o, E: Encoding> io::Write for Encoder<'o, E> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.encode(buf)?;

@@ -1,11 +1,9 @@
 //! Certificate types
 
 use crate::{name::Name, serial_number::SerialNumber, time::Validity};
-
 use alloc::vec::Vec;
-use core::cmp::Ordering;
-
 use const_oid::AssociatedOid;
+use core::cmp::Ordering;
 use der::asn1::BitString;
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
@@ -155,7 +153,6 @@ pub struct Certificate {
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl PemLabel for Certificate {
     const PEM_LABEL: &'static str = "CERTIFICATE";
 }

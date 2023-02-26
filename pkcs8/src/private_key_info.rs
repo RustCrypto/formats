@@ -135,7 +135,6 @@ impl<'a> PrivateKeyInfo<'a> {
     ///   - p: 1
     /// - Cipher: AES-256-CBC (best available option for PKCS#5 encryption)
     #[cfg(feature = "encryption")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn encrypt(
         &self,
         rng: impl CryptoRng + RngCore,
@@ -148,7 +147,6 @@ impl<'a> PrivateKeyInfo<'a> {
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password and [`pbes2::Parameters`].
     #[cfg(feature = "encryption")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "encryption")))]
     pub fn encrypt_with_params(
         &self,
         pbes2_params: pbes2::Parameters<'_>,
@@ -253,7 +251,6 @@ impl<'a> fmt::Debug for PrivateKeyInfo<'a> {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl TryFrom<PrivateKeyInfo<'_>> for SecretDocument {
     type Error = Error;
 
@@ -263,7 +260,6 @@ impl TryFrom<PrivateKeyInfo<'_>> for SecretDocument {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl TryFrom<&PrivateKeyInfo<'_>> for SecretDocument {
     type Error = Error;
 
@@ -273,13 +269,11 @@ impl TryFrom<&PrivateKeyInfo<'_>> for SecretDocument {
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl PemLabel for PrivateKeyInfo<'_> {
     const PEM_LABEL: &'static str = "PRIVATE KEY";
 }
 
 #[cfg(feature = "subtle")]
-#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl<'a> ConstantTimeEq for PrivateKeyInfo<'a> {
     fn ct_eq(&self, other: &Self) -> Choice {
         // NOTE: public fields are not compared in constant time
@@ -291,11 +285,9 @@ impl<'a> ConstantTimeEq for PrivateKeyInfo<'a> {
 }
 
 #[cfg(feature = "subtle")]
-#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl<'a> Eq for PrivateKeyInfo<'a> {}
 
 #[cfg(feature = "subtle")]
-#[cfg_attr(docsrs, doc(cfg(feature = "subtle")))]
 impl<'a> PartialEq for PrivateKeyInfo<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).into()

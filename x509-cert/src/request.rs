@@ -77,7 +77,6 @@ pub struct CertReq {
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl PemLabel for CertReq {
     const PEM_LABEL: &'static str = "CERTIFICATE REQUEST";
 }
