@@ -1,19 +1,16 @@
 //! SignedData-related types
 
-use core::cmp::Ordering;
+use crate::cert::{CertificateChoices, IssuerAndSerialNumber};
+use crate::content_info::CmsVersion;
+use crate::revocation::RevocationInfoChoices;
 
-use const_oid::ObjectIdentifier;
-use der::asn1::OctetString;
-use der::asn1::SetOfVec;
+use core::cmp::Ordering;
+use der::asn1::{ObjectIdentifier, OctetString, SetOfVec};
 use der::{Any, Choice, DerOrd, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
 use x509_cert::ext::pkix::SubjectKeyIdentifier;
 use x509_cert::impl_newtype;
-
-use crate::cert::{CertificateChoices, IssuerAndSerialNumber};
-use crate::content_info::CmsVersion;
-use crate::revocation::RevocationInfoChoices;
 
 /// The `SignedData` type is defined in [RFC 5652 Section 5.1].
 ///

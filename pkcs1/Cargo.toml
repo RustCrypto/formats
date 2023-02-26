@@ -23,9 +23,9 @@ pkcs8 = { version = "=0.10.0-pre", optional = true, default-features = false, pa
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
+const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 hex-literal = "0.3"
 tempfile = "3"
-const-oid = { version = "0.10.0-pre", path = "../const-oid", features = ["db"] }
 
 [features]
 alloc = ["der/alloc", "pkcs8/alloc", "zeroize/alloc"]

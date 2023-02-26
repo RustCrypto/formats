@@ -1,9 +1,7 @@
 //! ContentInfo types
+
 use core::cmp::Ordering;
-
-use const_oid::ObjectIdentifier;
-
-use der::{Any, Enumerated, Sequence, ValueOrd};
+use der::{asn1::ObjectIdentifier, Any, Enumerated, Sequence, ValueOrd};
 
 /// The `OtherCertificateFormat` type is defined in [RFC 5652 Section 10.2.5].
 ///

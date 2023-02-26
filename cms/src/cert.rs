@@ -1,9 +1,7 @@
 //! Certificate-related types
+
 use core::cmp::Ordering;
-
-use const_oid::ObjectIdentifier;
-use der::{Any, Choice, Sequence, ValueOrd};
-
+use der::{asn1::ObjectIdentifier, Any, Choice, Sequence, ValueOrd};
 use x509_cert::name::Name;
 use x509_cert::serial_number::SerialNumber;
 use x509_cert::Certificate;
