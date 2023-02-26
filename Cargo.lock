@@ -814,7 +814,7 @@ dependencies = [
 
 [[package]]
 name = "pem-rfc7468"
-version = "0.7.0-pre"
+version = "0.7.0"
 dependencies = [
  "base64ct",
 ]
