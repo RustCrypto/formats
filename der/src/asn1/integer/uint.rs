@@ -10,7 +10,7 @@ use core::cmp::Ordering;
 #[cfg(feature = "alloc")]
 pub use allocating::Uint;
 
-macro_rules! impl_encoding {
+macro_rules! impl_encoding_traits {
     ($($uint:ty),+) => {
         $(
             impl<'a> DecodeValue<'a> for $uint {
@@ -70,7 +70,7 @@ macro_rules! impl_encoding {
     };
 }
 
-impl_encoding!(u8, u16, u32, u64, u128);
+impl_encoding_traits!(u8, u16, u32, u64, u128);
 
 /// Unsigned arbitrary precision ASN.1 `INTEGER` reference type.
 ///

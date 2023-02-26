@@ -10,7 +10,7 @@ use core::cmp::Ordering;
 #[cfg(feature = "alloc")]
 pub use allocating::Int;
 
-macro_rules! impl_encoding {
+macro_rules! impl_encoding_traits {
     ($($int:ty => $uint:ty),+) => {
         $(
             impl<'a> DecodeValue<'a> for $int {
@@ -78,7 +78,7 @@ macro_rules! impl_encoding {
     };
 }
 
-impl_encoding!(i8 => u8, i16 => u16, i32 => u32, i64 => u64, i128 => u128);
+impl_encoding_traits!(i8 => u8, i16 => u16, i32 => u32, i64 => u64, i128 => u128);
 
 /// Signed arbitrary precision ASN.1 `INTEGER` reference type.
 ///
@@ -286,7 +286,7 @@ mod allocating {
 
 /// Ensure `INTEGER` is canonically encoded.
 // TODO(tarcieri): refactor this into a canonicalization check method
-pub(super) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
+fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
     // The `INTEGER` type always encodes a signed value and we're decoding
     // as signed here, so we allow a zero extension or sign extension byte,
     // but only as permitted under DER canonicalization.
@@ -301,7 +301,7 @@ pub(super) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
 /// Decode an signed integer of the specified size.
 ///
 /// Returns a byte array of the requested size containing a big endian integer.
-pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
+fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
     match N.checked_sub(bytes.len()) {
         Some(offset) => {
             let mut output = [0xFFu8; N];
@@ -322,7 +322,7 @@ pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
 }
 
 /// Encode the given big endian bytes representing an integer as ASN.1 DER.
-pub(super) fn encode_bytes<W>(writer: &mut W, bytes: &[u8]) -> Result<()>
+fn encode_bytes<W>(writer: &mut W, bytes: &[u8]) -> Result<()>
 where
     W: Writer + ?Sized,
 {
@@ -331,7 +331,7 @@ where
 
 /// Get the encoded length for the given **negative** integer serialized as bytes.
 #[inline]
-pub(super) fn negative_encoded_len(bytes: &[u8]) -> Result<Length> {
+fn negative_encoded_len(bytes: &[u8]) -> Result<Length> {
     Length::try_from(strip_leading_ones(bytes).len())
 }
 
