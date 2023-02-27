@@ -18,7 +18,7 @@ fn reencode_compressed_data_test() {
     );
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as DigestedData then re-encode
     let data = CompressedData::from_der(bytes.as_slice()).unwrap();
@@ -35,7 +35,7 @@ fn reencode_compressed_data_test() {
     );
     assert_eq!(None, data.compression_alg.parameters);
 
-    let reencoded_data = data.to_vec().unwrap();
+    let reencoded_data = data.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -45,7 +45,7 @@ fn reencode_compressed_data_test() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_data_inci = ci2.to_vec().unwrap();
+    let reencoded_data_inci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_data_inci, der_ci)

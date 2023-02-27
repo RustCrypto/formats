@@ -21,7 +21,7 @@ fn spin_over_exts(exts: Extensions) {
                     SubjectDirectoryAttributes::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -29,7 +29,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = SubjectKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -37,7 +37,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = KeyUsage::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -45,7 +45,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = PrivateKeyUsagePeriod::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -53,7 +53,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = SubjectAltName::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -61,7 +61,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = IssuerAltName::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -69,7 +69,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = BasicConstraints::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -77,7 +77,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = NameConstraints::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -85,7 +85,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = CrlDistributionPoints::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -93,7 +93,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = CertificatePolicies::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -101,7 +101,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = PolicyMappings::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -109,7 +109,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -117,7 +117,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = PolicyConstraints::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -125,7 +125,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = ExtendedKeyUsage::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -133,7 +133,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = FreshestCrl::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -141,7 +141,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = InhibitAnyPolicy::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -150,7 +150,7 @@ fn spin_over_exts(exts: Extensions) {
                     AuthorityInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -158,7 +158,7 @@ fn spin_over_exts(exts: Extensions) {
                 let decoded = SubjectInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
                 assert_eq!(
                     ext.extn_value,
-                    decoded.to_vec().and_then(OctetString::new).unwrap()
+                    decoded.to_der().and_then(OctetString::new).unwrap()
                 );
             }
 
@@ -221,7 +221,7 @@ fn decode_cert() {
             let ku = KeyUsage::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
 
-            let reencoded = ku.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = ku.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 1 == counter {
             assert_eq!(ext.extn_id.to_string(), ID_CE_BASIC_CONSTRAINTS.to_string());
@@ -230,7 +230,7 @@ fn decode_cert() {
             assert_eq!(true, bc.ca);
             assert!(bc.path_len_constraint.is_none());
 
-            let reencoded = bc.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = bc.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 2 == counter {
             assert_eq!(ext.extn_id.to_string(), ID_CE_POLICY_MAPPINGS.to_string());
@@ -238,7 +238,7 @@ fn decode_cert() {
             let pm = PolicyMappings::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(19, pm.0.len());
 
-            let reencoded = pm.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = pm.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
             let subject_domain_policy: [&str; 19] = [
@@ -306,7 +306,7 @@ fn decode_cert() {
             let cps = CertificatePolicies::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(19, cps.0.len());
 
-            let reencoded = cps.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = cps.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
             let ids: [&str; 19] = [
@@ -372,7 +372,7 @@ fn decode_cert() {
                 skid.0.as_bytes()
             );
 
-            let reencoded = skid.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = skid.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 5 == counter {
             assert_eq!(
@@ -383,7 +383,7 @@ fn decode_cert() {
             let crl_dps = CrlDistributionPoints::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(2, crl_dps.0.len());
 
-            let reencoded = crl_dps.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = crl_dps.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
             let mut crldp_counter = 0;
@@ -441,7 +441,7 @@ fn decode_cert() {
             let sias = SubjectInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(1, sias.0.len());
 
-            let reencoded = sias.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = sias.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
             for sia in sias.0 {
@@ -469,7 +469,7 @@ fn decode_cert() {
             assert_eq!(2, aias.0.len());
             let mut aia_counter = 0;
 
-            let reencoded = aias.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = aias.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
 
             for aia in aias.0 {
@@ -514,7 +514,7 @@ fn decode_cert() {
             let iap = InhibitAnyPolicy::from_der(ext.extn_value.as_bytes()).unwrap();
             assert_eq!(0, iap.0);
 
-            let reencoded = iap.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = iap.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
         } else if 9 == counter {
             assert_eq!(
@@ -528,7 +528,7 @@ fn decode_cert() {
                 akid.key_identifier.as_ref().unwrap().as_bytes()
             );
 
-            let reencoded = akid.to_vec().and_then(OctetString::new).unwrap();
+            let reencoded = akid.to_der().and_then(OctetString::new).unwrap();
             assert_eq!(ext.extn_value, reencoded);
         }
 

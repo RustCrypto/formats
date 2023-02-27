@@ -50,7 +50,7 @@ fn singular(#[case] idx: usize, #[case] value: &[u8]) {
         _ => panic!("unexpected decoded value"),
     }
 
-    let encoded = decoded.to_vec().unwrap();
+    let encoded = decoded.to_der().unwrap();
     assert_eq!(value, encoded);
 }
 
@@ -75,6 +75,6 @@ fn plural(#[case] idx: usize, #[case] value: &[u8]) {
         _ => panic!("unexpected decoded value"),
     }
 
-    let encoded = decoded.to_vec().unwrap();
+    let encoded = decoded.to_der().unwrap();
     assert_eq!(value, encoded);
 }

@@ -21,7 +21,7 @@ fn certtemplate_test() {
     assert!(cert_template.subject_unique_id.is_none());
     assert!(cert_template.extensions.is_none());
 
-    let reencoded_header_01 = cert_template.to_vec().unwrap();
+    let reencoded_header_01 = cert_template.to_der().unwrap();
     println!("Original : {:02X?}", header_01);
     println!("Reencoded: {:02X?}", reencoded_header_01);
     assert_eq!(header_01, reencoded_header_01.as_slice());
@@ -36,7 +36,7 @@ fn certrequest_test() {
     assert!(result.is_ok());
     let header = result.unwrap();
 
-    let reencoded_header_01 = header.to_vec().unwrap();
+    let reencoded_header_01 = header.to_der().unwrap();
     println!("Original : {:02X?}", header_01);
     println!("Reencoded: {:02X?}", reencoded_header_01);
     assert_eq!(header_01, reencoded_header_01.as_slice());
@@ -51,7 +51,7 @@ fn certreqmsg_test() {
     assert!(result.is_ok());
     let header = result.unwrap();
 
-    let reencoded_header_01 = header.to_vec().unwrap();
+    let reencoded_header_01 = header.to_der().unwrap();
     println!("Original : {:02X?}", header_01);
     println!("Reencoded: {:02X?}", reencoded_header_01);
     assert_eq!(header_01, reencoded_header_01.as_slice());
@@ -66,7 +66,7 @@ fn certreqmsgs_test() {
     assert!(result.is_ok());
     let header = result.unwrap();
 
-    let reencoded_header_01 = header.to_vec().unwrap();
+    let reencoded_header_01 = header.to_der().unwrap();
     println!("Original : {:02X?}", header_01);
     println!("Reencoded: {:02X?}", reencoded_header_01);
     assert_eq!(header_01, reencoded_header_01.as_slice());

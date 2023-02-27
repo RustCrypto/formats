@@ -159,7 +159,7 @@ pub enum SignerIdentifier {
 impl ValueOrd for SignerIdentifier {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         use der::Encode;
-        self.to_vec()?.der_cmp(&other.to_vec()?)
+        self.to_der()?.der_cmp(&other.to_der()?)
     }
 }
 

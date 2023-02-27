@@ -15,7 +15,7 @@ fn decode_ta1() {
 
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
-    let reencoded_tac = tac.to_vec().unwrap();
+    let reencoded_tac = tac.to_der().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
     assert_eq!(der_encoded_tac, reencoded_tac.as_slice());
@@ -128,7 +128,7 @@ fn decode_ta1() {
                 }
             }
 
-            let reencoded_cert = cert_path.certificate.to_vec().unwrap();
+            let reencoded_cert = cert_path.certificate.to_der().unwrap();
             assert_eq!(der_encoded_cert, reencoded_cert.as_slice());
         }
         _ => panic!("Unexpected TrustAnchorChoice contents"),
@@ -144,7 +144,7 @@ fn decode_ta2() {
 
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
-    let reencoded_tac = tac.to_vec().unwrap();
+    let reencoded_tac = tac.to_der().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
     assert_eq!(der_encoded_tac, reencoded_tac.as_slice());
@@ -248,7 +248,7 @@ fn decode_ta2() {
                 }
             }
 
-            let reencoded_cert = cert_path.certificate.to_vec().unwrap();
+            let reencoded_cert = cert_path.certificate.to_der().unwrap();
             assert_eq!(der_encoded_cert, reencoded_cert.as_slice());
         }
         _ => panic!("Unexpected TrustAnchorChoice contents"),
@@ -264,7 +264,7 @@ fn decode_ta3() {
 
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
-    let reencoded_tac = tac.to_vec().unwrap();
+    let reencoded_tac = tac.to_der().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
     assert_eq!(der_encoded_tac, reencoded_tac.as_slice());
@@ -375,7 +375,7 @@ fn decode_ta3() {
                 }
             }
 
-            let reencoded_cert = cert_path.certificate.to_vec().unwrap();
+            let reencoded_cert = cert_path.certificate.to_der().unwrap();
             assert_eq!(der_encoded_cert, reencoded_cert.as_slice());
         }
         _ => panic!("Unexpected TrustAnchorChoice contents"),
@@ -391,7 +391,7 @@ fn decode_ta4() {
 
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
-    let reencoded_tac = tac.to_vec().unwrap();
+    let reencoded_tac = tac.to_der().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
     assert_eq!(der_encoded_tac, reencoded_tac.as_slice());
@@ -453,7 +453,7 @@ fn decode_ta4() {
                 panic!("Wrong path length constraint");
             }
 
-            let reencoded_cert = cert_path.certificate.to_vec().unwrap();
+            let reencoded_cert = cert_path.certificate.to_der().unwrap();
             assert_eq!(der_encoded_cert, reencoded_cert.as_slice());
         }
         _ => panic!("Unexpected TrustAnchorChoice contents"),

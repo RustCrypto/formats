@@ -116,7 +116,7 @@ fn decode_rsa_2048_der() {
 #[cfg(feature = "alloc")]
 fn encode_ec_p256_der() {
     let pk = SubjectPublicKeyInfoRef::try_from(EC_P256_DER_EXAMPLE).unwrap();
-    let pk_encoded = pk.to_vec().unwrap();
+    let pk_encoded = pk.to_der().unwrap();
     assert_eq!(EC_P256_DER_EXAMPLE, pk_encoded.as_slice());
 }
 
@@ -124,7 +124,7 @@ fn encode_ec_p256_der() {
 #[cfg(feature = "alloc")]
 fn encode_ed25519_der() {
     let pk = SubjectPublicKeyInfoRef::try_from(ED25519_DER_EXAMPLE).unwrap();
-    let pk_encoded = pk.to_vec().unwrap();
+    let pk_encoded = pk.to_der().unwrap();
     assert_eq!(ED25519_DER_EXAMPLE, pk_encoded.as_slice());
 }
 
@@ -132,7 +132,7 @@ fn encode_ed25519_der() {
 #[cfg(feature = "alloc")]
 fn encode_rsa_2048_der() {
     let pk = SubjectPublicKeyInfoRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
-    let pk_encoded = pk.to_vec().unwrap();
+    let pk_encoded = pk.to_der().unwrap();
     assert_eq!(RSA_2048_DER_EXAMPLE, pk_encoded.as_slice());
 }
 

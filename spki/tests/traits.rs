@@ -40,7 +40,7 @@ impl TryFrom<SubjectPublicKeyInfoRef<'_>> for MockKey {
     type Error = Error;
 
     fn try_from(spki: SubjectPublicKeyInfoRef<'_>) -> Result<MockKey> {
-        Ok(MockKey(spki.to_vec()?))
+        Ok(MockKey(spki.to_der()?))
     }
 }
 

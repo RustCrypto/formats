@@ -167,7 +167,7 @@ impl AttributeTypeAndValue {
         // Serialize.
         let value = Any::from_der(&bytes)?;
         let atv = AttributeTypeAndValue { oid, value };
-        atv.to_vec()
+        atv.to_der()
     }
 
     /// Parses the string value in the `NAME=STRING` format.
@@ -190,7 +190,7 @@ impl AttributeTypeAndValue {
         // Serialize.
         let value = Any::new(tag, parser.as_bytes())?;
         let atv = AttributeTypeAndValue { oid, value };
-        atv.to_vec()
+        atv.to_der()
     }
 
     /// Converts an AttributeTypeAndValue string into an encoded AttributeTypeAndValue
@@ -250,7 +250,7 @@ impl fmt::Display for AttributeTypeAndValue {
                 }
             }
         } else {
-            let value = self.value.to_vec().or(Err(fmt::Error))?;
+            let value = self.value.to_der().or(Err(fmt::Error))?;
 
             write!(f, "{}=#", self.oid)?;
             for c in value {

@@ -21,7 +21,7 @@ fn reencode_enveloped_data_ktri_test() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENVELOPED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as EnvelopedData then re-encode
     let data = EnvelopedData::from_der(bytes.as_slice()).unwrap();
@@ -74,7 +74,7 @@ fn reencode_enveloped_data_ktri_test() {
         iv
     );
 
-    let reencoded_data = data.to_vec().unwrap();
+    let reencoded_data = data.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -84,7 +84,7 @@ fn reencode_enveloped_data_ktri_test() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_data_in_ci, der_ci)
@@ -99,7 +99,7 @@ fn reencode_enveloped_data_kari_test() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENVELOPED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as EnvelopedData then re-encode
     let data = EnvelopedData::from_der(bytes.as_slice()).unwrap();
@@ -136,7 +136,7 @@ fn reencode_enveloped_data_kari_test() {
                         .parameters
                         .as_ref()
                         .unwrap()
-                        .to_vec()
+                        .to_der()
                         .unwrap()
                         .as_slice(),
                 )
@@ -175,7 +175,7 @@ fn reencode_enveloped_data_kari_test() {
         iv
     );
 
-    let reencoded_data = data.to_vec().unwrap();
+    let reencoded_data = data.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -185,7 +185,7 @@ fn reencode_enveloped_data_kari_test() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_data_in_ci, der_ci)
@@ -200,7 +200,7 @@ fn reencode_enveloped_data_pwri_test() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENVELOPED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as EnvelopedData then re-encode
     let data = EnvelopedData::from_der(bytes.as_slice()).unwrap();
@@ -221,7 +221,7 @@ fn reencode_enveloped_data_pwri_test() {
                     ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12"),
                     kdf_alg.oid
                 );
-                let enc_pbkdf2 = kdf_alg.parameters.as_ref().unwrap().to_vec().unwrap();
+                let enc_pbkdf2 = kdf_alg.parameters.as_ref().unwrap().to_der().unwrap();
                 let pbkdf2 = Pbkdf2Params::from_der(enc_pbkdf2.as_slice()).unwrap();
                 assert_eq!(hex!("7F EE A8 FD 56 8E 8F 07"), pbkdf2.salt);
                 assert_eq!(2048, pbkdf2.iteration_count);
@@ -234,7 +234,7 @@ fn reencode_enveloped_data_pwri_test() {
                         .parameters
                         .as_ref()
                         .unwrap()
-                        .to_vec()
+                        .to_der()
                         .unwrap()
                         .as_slice(),
                 )
@@ -265,7 +265,7 @@ fn reencode_enveloped_data_pwri_test() {
         iv
     );
 
-    let reencoded_data = data.to_vec().unwrap();
+    let reencoded_data = data.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -275,7 +275,7 @@ fn reencode_enveloped_data_pwri_test() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_data_in_ci, der_ci)
@@ -290,7 +290,7 @@ fn reencode_enveloped_data_kek_test() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENVELOPED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as EnvelopedData then re-encode
     let data = EnvelopedData::from_der(bytes.as_slice()).unwrap();
@@ -331,7 +331,7 @@ fn reencode_enveloped_data_kek_test() {
         iv
     );
 
-    let reencoded_data = data.to_vec().unwrap();
+    let reencoded_data = data.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -341,7 +341,7 @@ fn reencode_enveloped_data_kek_test() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_data_in_ci, der_ci)
@@ -356,7 +356,7 @@ fn reencode_enveloped_data_multi_test() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENVELOPED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as EnvelopedData then re-encode
     let data = EnvelopedData::from_der(bytes.as_slice()).unwrap();
@@ -414,7 +414,7 @@ fn reencode_enveloped_data_multi_test() {
                         .parameters
                         .as_ref()
                         .unwrap()
-                        .to_vec()
+                        .to_der()
                         .unwrap()
                         .as_slice(),
                 )
@@ -441,7 +441,7 @@ fn reencode_enveloped_data_multi_test() {
                     ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12"),
                     kdf_alg.oid
                 );
-                let enc_pbkdf2 = kdf_alg.parameters.as_ref().unwrap().to_vec().unwrap();
+                let enc_pbkdf2 = kdf_alg.parameters.as_ref().unwrap().to_der().unwrap();
                 let pbkdf2 = Pbkdf2Params::from_der(enc_pbkdf2.as_slice()).unwrap();
                 assert_eq!(hex!("39 04 A7 33 A0 6A 1B 27"), pbkdf2.salt);
                 assert_eq!(2048, pbkdf2.iteration_count);
@@ -454,7 +454,7 @@ fn reencode_enveloped_data_multi_test() {
                         .parameters
                         .as_ref()
                         .unwrap()
-                        .to_vec()
+                        .to_der()
                         .unwrap()
                         .as_slice(),
                 )
@@ -493,7 +493,7 @@ fn reencode_enveloped_data_multi_test() {
         iv
     );
 
-    let reencoded_data = data.to_vec().unwrap();
+    let reencoded_data = data.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -503,7 +503,7 @@ fn reencode_enveloped_data_multi_test() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_data_in_ci, der_ci)

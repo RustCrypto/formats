@@ -170,7 +170,7 @@
 //! // If you would prefer to avoid allocations, you can create a byte array
 //! // as backing storage instead, pass that to `der::Encoder::new`, and then
 //! // encode the `parameters` value using `encoder.encode(parameters)`.
-//! let der_encoded_parameters = parameters.to_vec().unwrap();
+//! let der_encoded_parameters = parameters.to_der().unwrap();
 //!
 //! let algorithm_identifier = AlgorithmIdentifier {
 //!     // OID for `id-ecPublicKey`, if you're curious
@@ -189,7 +189,7 @@
 //! // reference to it, then encode the message using
 //! // `encoder.encode(algorithm_identifier)`, then finally `encoder.finish()`
 //! // to obtain a byte slice containing the encoded message.
-//! let der_encoded_algorithm_identifier = algorithm_identifier.to_vec().unwrap();
+//! let der_encoded_algorithm_identifier = algorithm_identifier.to_der().unwrap();
 //!
 //! // Deserialize the `AlgorithmIdentifier` we just serialized from ASN.1 DER
 //! // using `der::Decode::from_bytes`.
@@ -243,7 +243,7 @@
 //! };
 //!
 //! // Encode
-//! let der_encoded_algorithm_identifier = algorithm_identifier.to_vec().unwrap();
+//! let der_encoded_algorithm_identifier = algorithm_identifier.to_der().unwrap();
 //!
 //! // Decode
 //! let decoded_algorithm_identifier = AlgorithmIdentifier::from_der(

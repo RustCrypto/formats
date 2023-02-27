@@ -117,15 +117,15 @@ fn reencode_cert() {
     let defer_cert = DeferDecodeCertificate::from_der(der_encoded_cert).unwrap();
 
     let parsed_tbs = TbsCertificate::from_der(defer_cert.tbs_certificate).unwrap();
-    let reencoded_tbs = parsed_tbs.to_vec().unwrap();
+    let reencoded_tbs = parsed_tbs.to_der().unwrap();
     assert_eq!(defer_cert.tbs_certificate, reencoded_tbs);
 
     let parsed_sigalg = AlgorithmIdentifierRef::from_der(defer_cert.signature_algorithm).unwrap();
-    let reencoded_sigalg = parsed_sigalg.to_vec().unwrap();
+    let reencoded_sigalg = parsed_sigalg.to_der().unwrap();
     assert_eq!(defer_cert.signature_algorithm, reencoded_sigalg);
 
     let parsed_sig = BitStringRef::from_der(defer_cert.signature).unwrap();
-    let reencoded_sig = parsed_sig.to_vec().unwrap();
+    let reencoded_sig = parsed_sig.to_der().unwrap();
     assert_eq!(defer_cert.signature, reencoded_sig);
 
     let parsed_coverage_tbs =
@@ -133,22 +133,22 @@ fn reencode_cert() {
 
     // TODO - defer decode then re-encode version field
 
-    let encoded_serial = parsed_tbs.serial_number.to_vec().unwrap();
+    let encoded_serial = parsed_tbs.serial_number.to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.serial_number, encoded_serial);
 
-    let encoded_signature = parsed_tbs.signature.to_vec().unwrap();
+    let encoded_signature = parsed_tbs.signature.to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.signature, encoded_signature);
 
-    let encoded_issuer = parsed_tbs.issuer.to_vec().unwrap();
+    let encoded_issuer = parsed_tbs.issuer.to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.issuer, encoded_issuer);
 
-    let encoded_validity = parsed_tbs.validity.to_vec().unwrap();
+    let encoded_validity = parsed_tbs.validity.to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.validity, encoded_validity);
 
-    let encoded_subject = parsed_tbs.subject.to_vec().unwrap();
+    let encoded_subject = parsed_tbs.subject.to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.subject, encoded_subject);
 
-    let encoded_subject_public_key_info = parsed_tbs.subject_public_key_info.to_vec().unwrap();
+    let encoded_subject_public_key_info = parsed_tbs.subject_public_key_info.to_der().unwrap();
     assert_eq!(
         parsed_coverage_tbs.subject_public_key_info,
         encoded_subject_public_key_info
@@ -156,7 +156,7 @@ fn reencode_cert() {
 
     // TODO - either encode as context specific or decode to sequence. for know lop off context
     // specific tag and length
-    let encoded_extensions = parsed_tbs.extensions.to_vec().unwrap();
+    let encoded_extensions = parsed_tbs.extensions.to_der().unwrap();
     assert_eq!(&parsed_coverage_tbs.extensions[4..], encoded_extensions);
 }
 
@@ -178,7 +178,7 @@ fn decode_oversized_oids() {
         o1.to_string(),
         "1.3.6.1.4.1.311.21.8.11672683.15464451.6967228.369088.2847561.77.4994205.11305917"
     );
-    let enc_oid = o1.to_vec().unwrap();
+    let enc_oid = o1.to_der().unwrap();
     assert_eq!(
         &hex!("06252B060104018237150885C8B86B87AFF00383A99F3C96C34081ADE6494D82B0E91D85B2873D"),
         enc_oid.as_slice()
@@ -409,6 +409,6 @@ fn decode_cert_negative_serial_number() {
         &[238, 43, 61, 235, 212, 33, 222, 20, 168, 98, 172, 4, 243, 221, 196, 1]
     );
 
-    let reencoded = cert.to_vec().unwrap();
+    let reencoded = cert.to_der().unwrap();
     assert_eq!(der_encoded_cert, reencoded.as_slice());
 }
