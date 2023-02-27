@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.0 (2023-02-26)
+### Added
+- `OwnedtoRef`/`RefToOwned` traits; MSRV 1.65 ([#797])
+- `OctetStringRef::decode_into` ([#817])
+- `Int` and `IntRef` types ([#823])
+- `IndefiniteLength` type ([#830])
+- `Any::value` accessor ([#833])
+- Buffered PEM reader ([#839])
+- `OctetString::into_bytes` ([#845])
+- Blanket impls on `Box<T>` for `DecodeValue`, `EncodeValue`, and `Sequence` ([#860])
+
+### Changed
+- Rename `UIntRef` => `UintRef` ([#786])
+- Replace use of `dyn Writer` with `impl Writer` ([#828])
+- Rename `AnyRef::decode_into` -> `::decode_as` ([#829])
+- Bump `pem-rfc7468` dependency to v0.7 ([#894])
+- Rename `Encode::to_vec` => `::to_der` ([#898])
+
+### Removed
+- `Sequence::fields` method ([#828])
+- Inherent `AnyRef` decoding methods ([#829])
+
+[#786]: https://github.com/RustCrypto/formats/pull/786
+[#797]: https://github.com/RustCrypto/formats/pull/797
+[#817]: https://github.com/RustCrypto/formats/pull/817
+[#823]: https://github.com/RustCrypto/formats/pull/823
+[#828]: https://github.com/RustCrypto/formats/pull/828
+[#829]: https://github.com/RustCrypto/formats/pull/829
+[#830]: https://github.com/RustCrypto/formats/pull/830
+[#833]: https://github.com/RustCrypto/formats/pull/833
+[#839]: https://github.com/RustCrypto/formats/pull/839
+[#845]: https://github.com/RustCrypto/formats/pull/845
+[#860]: https://github.com/RustCrypto/formats/pull/860
+[#894]: https://github.com/RustCrypto/formats/pull/894
+[#898]: https://github.com/RustCrypto/formats/pull/898
+
 ## 0.6.1 (2022-12-05)
 ### Added
 - Rudimentary implementation of `TeletexString` and `VideotexString` ([#691])
