@@ -57,9 +57,9 @@ pub trait Encode {
         actual_len.try_into()
     }
 
-    /// Serialize this message as a byte vector.
+    /// Encode this type as DER, returning a byte vector.
     #[cfg(feature = "alloc")]
-    fn to_vec(&self) -> Result<Vec<u8>> {
+    fn to_der(&self) -> Result<Vec<u8>> {
         let mut buf = Vec::new();
         self.encode_to_vec(&mut buf)?;
         Ok(buf)

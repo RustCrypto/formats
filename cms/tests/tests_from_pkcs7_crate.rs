@@ -13,7 +13,7 @@ fn cms_decode_cert_example() {
     let ci = ContentInfo::from_der(enc_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_DATA);
     assert_eq!(ci.content.value().len(), 781);
-    let reencoded_ci = ci.to_vec().unwrap();
+    let reencoded_ci = ci.to_der().unwrap();
     assert_eq!(reencoded_ci, enc_ci)
 }
 
@@ -22,7 +22,7 @@ fn cms_decode_encrypted_key_example() {
     let enc_ci = include_bytes!("../../pkcs7/tests/examples/keyEncryptedData.bin");
     let ci = ContentInfo::from_der(enc_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENCRYPTED_DATA);
-    let data = EncryptedData::from_der(ci.content.to_vec().unwrap().as_slice()).unwrap();
+    let data = EncryptedData::from_der(ci.content.to_der().unwrap().as_slice()).unwrap();
     assert_eq!(
         data.enc_content_info.content_type,
         const_oid::db::rfc5911::ID_DATA
@@ -37,7 +37,7 @@ fn cms_decode_encrypted_key_example() {
         .parameters
         .as_ref()
         .unwrap()
-        .to_vec()
+        .to_der()
         .unwrap();
     let pbkdf2 = Pbkdf2Params::from_der(enc_pbkdf2.as_slice()).unwrap();
     assert_eq!(hex!("ad2d4b4e87b34d67"), pbkdf2.salt);
@@ -60,11 +60,11 @@ fn cms_decode_signed_mdm_example() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
     let sd = SignedData::from_der(bytes.as_slice()).unwrap();
-    let reencoded_signed_data = sd.to_vec().unwrap();
+    let reencoded_signed_data = sd.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -74,7 +74,7 @@ fn cms_decode_signed_mdm_example() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_der_signed_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_der_signed_data_in_ci, der_signed_data_in_ci)
@@ -87,12 +87,12 @@ fn cms_decode_signed_scep_example() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
     let sd = SignedData::from_der(bytes.as_slice()).unwrap();
     assert_eq!(sd.version, CmsVersion::V1);
-    let reencoded_signed_data = sd.to_vec().unwrap();
+    let reencoded_signed_data = sd.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -102,7 +102,7 @@ fn cms_decode_signed_scep_example() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_der_signed_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_der_signed_data_in_ci, der_signed_data_in_ci)
@@ -115,12 +115,12 @@ fn cms_decode_signed_der() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
     let sd = SignedData::from_der(bytes.as_slice()).unwrap();
 
-    let reencoded_signed_data = sd.to_vec().unwrap();
+    let reencoded_signed_data = sd.to_der().unwrap();
     assert_eq!(
         sd.encap_content_info
             .econtent
@@ -140,7 +140,7 @@ fn cms_decode_signed_der() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_der_signed_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_der_signed_data_in_ci, der_signed_data_in_ci)

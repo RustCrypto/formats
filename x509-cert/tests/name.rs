@@ -124,7 +124,7 @@ fn decode_rdn() {
     let mut from_scratch = RelativeDistinguishedName::default();
     assert!(from_scratch.0.add(atav1a.clone()).is_ok());
     assert!(from_scratch.0.add(atav2a.clone()).is_ok());
-    let reencoded = from_scratch.to_vec().unwrap();
+    let reencoded = from_scratch.to_der().unwrap();
     assert_eq!(
         reencoded,
         &hex!("311F300A060355040A0C03313233301106035504030C0A4A4F484E20534D495448")

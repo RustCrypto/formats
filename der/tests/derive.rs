@@ -453,7 +453,7 @@ mod sequence {
 
         assert_eq!(
             ALGORITHM_IDENTIFIER_DER,
-            algorithm_identifier.to_vec().unwrap()
+            algorithm_identifier.to_der().unwrap()
         );
     }
 }

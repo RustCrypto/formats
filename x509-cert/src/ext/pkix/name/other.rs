@@ -32,6 +32,6 @@ fn test() {
     let onval = Utf8StringRef::try_from(&decoded.value).unwrap();
     assert_eq!(onval.to_string(), "Upn_214950130@mil");
 
-    let encoded = decoded.to_vec().unwrap();
+    let encoded = decoded.to_der().unwrap();
     assert_eq!(&input[..], &encoded);
 }

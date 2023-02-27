@@ -41,7 +41,7 @@ impl RdnSequence {
             out.push(RelativeDistinguishedName::from_der(der)?);
         }
 
-        RdnSequence(out).to_vec()
+        RdnSequence(out).to_der()
     }
 }
 
@@ -145,7 +145,7 @@ impl RelativeDistinguishedName {
             .map(|der| AttributeTypeAndValue::from_der(der))
             .collect::<Result<Vec<_>, der::Error>>()?;
 
-        RelativeDistinguishedName(atvs.try_into()?).to_vec()
+        RelativeDistinguishedName(atvs.try_into()?).to_der()
     }
 }
 

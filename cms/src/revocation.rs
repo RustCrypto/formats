@@ -43,7 +43,7 @@ impl ValueOrd for RevocationInfoChoice {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         use der::DerOrd;
         use der::Encode;
-        self.to_vec()?.der_cmp(&other.to_vec()?)
+        self.to_der()?.der_cmp(&other.to_der()?)
     }
 }
 

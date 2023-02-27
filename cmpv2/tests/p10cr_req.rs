@@ -71,7 +71,7 @@ fn p10cr_req_message_test() {
         protection.as_bytes().unwrap()
     );
 
-    let reencoded_req_01 = message.to_vec().unwrap();
+    let reencoded_req_01 = message.to_der().unwrap();
     println!("Original : {:02X?}", req_01);
     println!("Reencoded: {:02X?}", reencoded_req_01);
     assert_eq!(req_01, reencoded_req_01.as_slice());
@@ -95,7 +95,7 @@ fn p10cr_rsp_message_test() {
     assert!(result.is_ok());
     let message = result.unwrap();
 
-    let reencoded_req_01 = message.to_vec().unwrap();
+    let reencoded_req_01 = message.to_der().unwrap();
     println!("Original : {:02X?}", req_01);
     println!("Reencoded: {:02X?}", reencoded_req_01);
     assert_eq!(req_01, reencoded_req_01.as_slice());

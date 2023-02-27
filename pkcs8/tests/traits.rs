@@ -40,7 +40,7 @@ impl TryFrom<PrivateKeyInfo<'_>> for MockKey {
     type Error = Error;
 
     fn try_from(pkcs8: PrivateKeyInfo<'_>) -> Result<MockKey> {
-        Ok(MockKey(pkcs8.to_vec()?))
+        Ok(MockKey(pkcs8.to_der()?))
     }
 }
 

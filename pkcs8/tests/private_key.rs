@@ -129,7 +129,7 @@ fn decode_x25519_der() {
 #[cfg(feature = "alloc")]
 fn encode_ec_p256_der() {
     let pk = PrivateKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
-    let pk_encoded = pk.to_vec().unwrap();
+    let pk_encoded = pk.to_der().unwrap();
     assert_eq!(EC_P256_DER_EXAMPLE, pk_encoded);
 }
 
@@ -137,14 +137,14 @@ fn encode_ec_p256_der() {
 #[cfg(feature = "alloc")]
 fn encode_ed25519_der_v1() {
     let pk = PrivateKeyInfo::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
-    assert_eq!(ED25519_DER_V1_EXAMPLE, pk.to_vec().unwrap());
+    assert_eq!(ED25519_DER_V1_EXAMPLE, pk.to_der().unwrap());
 }
 
 #[test]
 #[cfg(all(feature = "alloc", feature = "subtle"))]
 fn encode_ed25519_der_v2() {
     let private_key = PrivateKeyInfo::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
-    let private_der = private_key.to_vec().unwrap();
+    let private_der = private_key.to_der().unwrap();
     assert_eq!(
         private_key,
         PrivateKeyInfo::try_from(private_der.as_ref()).unwrap()
@@ -155,7 +155,7 @@ fn encode_ed25519_der_v2() {
 #[cfg(feature = "alloc")]
 fn encode_rsa_2048_der() {
     let pk = PrivateKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
-    assert_eq!(RSA_2048_DER_EXAMPLE, &pk.to_vec().unwrap());
+    assert_eq!(RSA_2048_DER_EXAMPLE, &pk.to_der().unwrap());
 }
 
 #[test]

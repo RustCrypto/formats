@@ -99,7 +99,7 @@ fn cr_req_message_test() {
         protection.as_bytes().unwrap()
     );
 
-    let reencoded_req_01 = message.to_vec().unwrap();
+    let reencoded_req_01 = message.to_der().unwrap();
     println!("Original : {:02X?}", req_01);
     println!("Reencoded: {:02X?}", reencoded_req_01);
     assert_eq!(req_01, reencoded_req_01.as_slice());
@@ -172,7 +172,7 @@ fn cr_rsp_message_test() {
     let protection = message.protection.as_ref().unwrap();
     assert_eq!(105u32, protection.encoded_len().unwrap().into());
 
-    let reencoded_req_01 = message.to_vec().unwrap();
+    let reencoded_req_01 = message.to_der().unwrap();
     println!("Original : {:02X?}", req_01);
     println!("Reencoded: {:02X?}", reencoded_req_01);
     assert_eq!(req_01, reencoded_req_01.as_slice());

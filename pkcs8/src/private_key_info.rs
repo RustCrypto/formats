@@ -140,7 +140,7 @@ impl<'a> PrivateKeyInfo<'a> {
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
-        let der = Zeroizing::new(self.to_vec()?);
+        let der = Zeroizing::new(self.to_der()?);
         EncryptedPrivateKeyInfo::encrypt(rng, password, der.as_ref())
     }
 
@@ -152,7 +152,7 @@ impl<'a> PrivateKeyInfo<'a> {
         pbes2_params: pbes2::Parameters<'_>,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
-        let der = Zeroizing::new(self.to_vec()?);
+        let der = Zeroizing::new(self.to_der()?);
         EncryptedPrivateKeyInfo::encrypt_with(pbes2_params, password, der.as_ref())
     }
 

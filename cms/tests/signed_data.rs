@@ -16,11 +16,11 @@ fn trust_list_test() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
     let sd = SignedData::from_der(bytes.as_slice()).unwrap();
-    let reencoded_signed_data = sd.to_vec().unwrap();
+    let reencoded_signed_data = sd.to_der().unwrap();
     assert_eq!(
         sd.encap_content_info.econtent_type.to_string(),
         "1.3.6.1.4.1.311.10.1"
@@ -34,7 +34,7 @@ fn trust_list_test() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_der_signed_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_der_signed_data_in_ci, der_signed_data_in_ci)
@@ -50,11 +50,11 @@ fn reencode_signed_data_test() {
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
     // re-encode the AnyRef to get the SignedData bytes
-    let bytes = ci.content.to_vec().unwrap();
+    let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
     let sd = SignedData::from_der(bytes.as_slice()).unwrap();
-    let reencoded_signed_data = sd.to_vec().unwrap();
+    let reencoded_signed_data = sd.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
@@ -64,7 +64,7 @@ fn reencode_signed_data_test() {
             .try_into()
             .unwrap(),
     };
-    let reencoded_der_signed_data_in_ci = ci2.to_vec().unwrap();
+    let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 
     // should match the original
     assert_eq!(reencoded_der_signed_data_in_ci, der_signed_data_in_ci)

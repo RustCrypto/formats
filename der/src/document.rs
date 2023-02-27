@@ -72,7 +72,7 @@ impl Document {
     /// Encode the provided type as ASN.1 DER, storing the resulting encoded DER
     /// as a [`Document`].
     pub fn encode_msg<T: Encode>(msg: &T) -> Result<Self> {
-        msg.to_vec()?.try_into()
+        msg.to_der()?.try_into()
     }
 
     /// Decode ASN.1 DER document from PEM.

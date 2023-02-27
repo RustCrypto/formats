@@ -12,7 +12,7 @@ fn rr_rsp_header_test() {
     let header = result.unwrap();
     assert_eq!(header.pvno, Pvno::Cmp2000);
 
-    let reencoded_header_01 = header.to_vec().unwrap();
+    let reencoded_header_01 = header.to_der().unwrap();
     println!("Original : {:02X?}", header_01);
     println!("Reencoded: {:02X?}", reencoded_header_01);
     assert_eq!(header_01, reencoded_header_01.as_slice());
@@ -27,7 +27,7 @@ fn rr_rsp_body_test() {
     assert!(result.is_ok());
     let body = result.unwrap();
 
-    let reencoded_body_01 = body.to_vec().unwrap();
+    let reencoded_body_01 = body.to_der().unwrap();
     println!("Original : {:02X?}", body_01);
     println!("Reencoded: {:02X?}", reencoded_body_01);
     assert_eq!(body_01, reencoded_body_01.as_slice());
@@ -51,7 +51,7 @@ fn rr_req_message_test() {
     assert!(result.is_ok());
     let message = result.unwrap();
 
-    let reencoded_req_01 = message.to_vec().unwrap();
+    let reencoded_req_01 = message.to_der().unwrap();
     println!("Original : {:02X?}", req_01);
     println!("Reencoded: {:02X?}", reencoded_req_01);
     assert_eq!(req_01, reencoded_req_01.as_slice());
@@ -75,7 +75,7 @@ fn rr_rsp_message_test() {
     assert!(result.is_ok());
     let message = result.unwrap();
 
-    let reencoded_req_01 = message.to_vec().unwrap();
+    let reencoded_req_01 = message.to_der().unwrap();
     println!("Original : {:02X?}", req_01);
     println!("Reencoded: {:02X?}", reencoded_req_01);
     assert_eq!(req_01, reencoded_req_01.as_slice());
