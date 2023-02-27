@@ -1,6 +1,6 @@
 [package]
 name = "x509-ocsp"
-version = "0.1.0-pre.0"
+version = "0.2.0-pre"
 description = """
 Pure Rust implementation of the X.509 Internet Public Key Infrastructure
 Online Certificate Status Protocol - OCSP formats as described in RFC 6960
@@ -17,7 +17,7 @@ rust-version = "1.65"
 [dependencies]
 der = { version = "0.7", features = ["alloc", "derive", "oid"], path = "../der" }
 spki = { version = "0.7", path = "../spki" }
-x509-cert = { version = "=0.2.0-pre", default-features = false, path = "../x509-cert" }
+x509-cert = { version = "=0.2.0-pre.0", default-features = false, path = "../x509-cert" }
 
 [dev-dependencies]
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
