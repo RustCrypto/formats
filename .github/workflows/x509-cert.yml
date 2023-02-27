@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly
+      - uses: dtolnay/rust-toolchain@master
       - run: cargo install cargo-fuzz
       - run: cargo fuzz run certreq -- -max_total_time=30 -seed_inputs="fuzz/inputs/rsa2048-csr.der"
       - run: cargo fuzz run certreqinfo -- -max_total_time=30
