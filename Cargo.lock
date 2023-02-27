@@ -884,7 +884,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.10.0-pre"
+version = "0.10.0"
 dependencies = [
  "der",
  "hex-literal",
