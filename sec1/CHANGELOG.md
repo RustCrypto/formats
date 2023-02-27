@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.0 (2023-02-26)
+### Changed
+- MSRV 1.65 ([#805])
+- Bump `serdect` to v0.2 ([#893])
+- Bump `der` dependency to v0.7 ([#899])
+- Bump `spki` dependency to v0.7 ([#900])
+- Bump `pkcs8` to v0.10 ([#902])
+
+[#805]: https://github.com/RustCrypto/formats/pull/805
+[#893]: https://github.com/RustCrypto/formats/pull/893
+[#899]: https://github.com/RustCrypto/formats/pull/899
+[#900]: https://github.com/RustCrypto/formats/pull/900
+[#902]: https://github.com/RustCrypto/formats/pull/902
+
+## 0.6.0 (Skipped)
+- Skipped to synchronize version number with `der` and `spki`
+
+## 0.5.0 (Skipped)
+- Skipped to synchronize version number with `der` and `spki`
+
+## 0.4.0 (Skipped)
+- Skipped to synchronize version number with `der` and `spki`
+
 ## 0.3.0 (2022-05-08)
 ### Added
 - Make `der` feature optional but on-by-default ([#497])
