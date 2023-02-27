@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.10.0 (2023-02-26)
+### Changed
+- Use blanket impls for `Decode*` traits ([#785])
+- Bump `der` dependency to v0.7 ([#899])
+- Bump `spki` dependency to v0.7 ([#900])
+- Bump `pkcs5` dependency to v0.7 ([#901])
+
+[#785]: https://github.com/RustCrypto/formats/pull/785
+[#899]: https://github.com/RustCrypto/formats/pull/899
+[#900]: https://github.com/RustCrypto/formats/pull/900
+[#901]: https://github.com/RustCrypto/formats/pull/901
+
 ## 0.9.0 (2022-05-08)
 ### Added
 - Error conversion support to `pkcs8::spki::Error` ([#335])

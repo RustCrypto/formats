@@ -19,7 +19,7 @@ rust-version = "1.65"
 base16ct = { version = "0.2", optional = true, default-features = false, path = "../base16ct" }
 der = { version = "0.7", optional = true, features = ["oid"], path = "../der" }
 generic-array = { version = "0.14.6", optional = true, default-features = false }
-pkcs8 = { version = "=0.10.0-pre", optional = true, default-features = false, path = "../pkcs8" }
+pkcs8 = { version = "0.10", optional = true, default-features = false, path = "../pkcs8" }
 serdect = { version = "0.2", optional = true, default-features = false, features = ["alloc"], path = "../serdect" }
 subtle = { version = "2", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
