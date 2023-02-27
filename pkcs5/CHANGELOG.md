@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.0 (2023-02-26)
+### Changed
+- Bump `der` dependency to v0.7 ([#899])
+- Bump `spki` dependency to v0.7 ([#900])
+
+[#899]: https://github.com/RustCrypto/formats/pull/899
+[#900]: https://github.com/RustCrypto/formats/pull/900
+
+## 0.6.0 (Skipped)
+- Skipped to synchronize version number with `der` and `spki`
+
 ## 0.5.0 (2022-05-08)
 ### Changed
 - Update `hmac`, `pbkdf2`, and `sha2`

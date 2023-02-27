@@ -21,7 +21,7 @@ spki = { version = "0.7", path = "../spki" }
 
 # optional dependencies
 rand_core = { version = "0.6", optional = true, default-features = false }
-pkcs5 = { version = "=0.6.0-pre", optional = true, path = "../pkcs5" }
+pkcs5 = { version = "0.7", optional = true, path = "../pkcs5" }
 subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]
