@@ -1,6 +1,6 @@
 [package]
 name = "der"
-version = "0.7.0-pre"
+version = "0.7.0"
 description = """
 Pure Rust embedded-friendly implementation of the Distinguished Encoding Rules
 (DER) for Abstract Syntax Notation One (ASN.1) as described in ITU X.690 with
@@ -16,9 +16,9 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-arbitrary = { version = "1.2.3", features = ["derive"], optional = true }
+arbitrary = { version = "1.2", features = ["derive"], optional = true }
 const-oid = { version = "0.9.2", optional = true } # TODO: path = "../const-oid"
-der_derive = { version = "=0.7.0-pre", optional = true, path = "derive" }
+der_derive = { version = "0.7", optional = true, path = "derive" }
 flagset = { version = "0.4.3", optional = true }
 pem-rfc7468 = { version = "0.7", optional = true, features = ["alloc"], path = "../pem-rfc7468" }
 time = { version = "0.3.4", optional = true, default-features = false }
@@ -30,12 +30,13 @@ proptest = "1"
 
 [features]
 alloc = []
-arbitrary = [ "dep:arbitrary", "const-oid?/arbitrary", "std"]
+std = ["alloc"]
+
+arbitrary = ["dep:arbitrary", "const-oid?/arbitrary", "std"]
 derive = ["dep:der_derive"]
 oid = ["dep:const-oid"]
-pem = ["dep:pem-rfc7468", "alloc", "zeroize", ]
+pem = ["dep:pem-rfc7468", "alloc", "zeroize"]
 real = []
-std = ["alloc"]
 
 [package.metadata.docs.rs]
 all-features = true
