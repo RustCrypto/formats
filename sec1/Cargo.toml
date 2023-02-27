@@ -1,6 +1,6 @@
 [package]
 name = "sec1"
-version = "0.4.0"
+version = "0.7.0"
 description = """
 Pure Rust implementation of SEC1: Elliptic Curve Cryptography encoding formats
 including ASN.1 DER-serialized private keys as well as the
@@ -31,10 +31,11 @@ tempfile = "3"
 [features]
 default = ["der", "point"]
 alloc = ["der/alloc", "pkcs8/alloc", "zeroize/alloc"]
+std = ["alloc", "der?/std"]
+
 pem = ["alloc", "der/pem", "pkcs8/pem"]
-point = ["base16ct", "generic-array"]
-serde = ["serdect"]
-std = ["der/std", "alloc"]
+point = ["dep:base16ct", "dep:generic-array"]
+serde = ["dep:serdect"]
 
 [package.metadata.docs.rs]
 all-features = true
