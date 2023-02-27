@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.0 (2023-02-26)
+### Changed
+- Make `AlgorithmIdentifier` generic around `Params` ([#769])
+- Use blanket impls for `Decode*` traits ([#785])
+- Make `SubjectPublicKeyInfo` own the public key ([#790])
+- Rename `to_owned` method ([#835])
+- Bump `der` dependency to v0.7 ([#899])
+
+[#769]: https://github.com/RustCrypto/formats/pull/769
+[#785]: https://github.com/RustCrypto/formats/pull/785
+[#790]: https://github.com/RustCrypto/formats/pull/790
+[#835]: https://github.com/RustCrypto/formats/pull/835
+[#899]: https://github.com/RustCrypto/formats/pull/899
+
 ## 0.6.0 (2022-05-08)
 ### Added
 - `AlgorithmIdentifier::oids()` helper function ([#443])
