@@ -62,7 +62,7 @@ where
     /// See [RFC7469 § 2.1.1] for more information.
     ///
     /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
-    #[cfg(all(feature = "fingerprint", feature = "alloc", feature = "base64ct"))]
+    #[cfg(all(feature = "fingerprint", feature = "alloc", feature = "base64"))]
     pub fn fingerprint_base64(&self) -> Result<alloc::string::String> {
         use base64ct::{Base64, Encoding};
         Ok(Base64::encode_string(&self.fingerprint_bytes()?))

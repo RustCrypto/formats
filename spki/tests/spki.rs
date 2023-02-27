@@ -35,7 +35,7 @@ const RSA_2048_PEM_EXAMPLE: &str = include_str!("examples/rsa2048-pub.pem");
 /// The SPKI fingerprint for `ED25519_SPKI_FINGERPRINT` as a Base64 string
 ///
 /// Generated using `cat ed25519-pub.der | openssl dgst -binary -sha256 | base64`
-#[cfg(all(feature = "fingerprint", feature = "alloc", feature = "base64ct"))]
+#[cfg(all(feature = "alloc", feature = "base64", feature = "fingerprint"))]
 const ED25519_SPKI_FINGERPRINT_BASE64: &str = "Vd1MdLDkhTTi9OFzzs61DfjyenrCqomRzHrpFOAwvO0=";
 
 /// The SPKI fingerprint for `ED25519_SPKI_FINGERPRINT` as straight hash bytes
@@ -84,7 +84,7 @@ fn decode_ed25519_and_fingerprint_spki() {
 }
 
 #[test]
-#[cfg(all(feature = "fingerprint", feature = "alloc", feature = "base64ct"))]
+#[cfg(all(feature = "alloc", feature = "base64", feature = "fingerprint"))]
 fn decode_ed25519_and_fingerprint_base64() {
     // Repeat the decode test from the pkcs8 crate
     let spki = SubjectPublicKeyInfoRef::try_from(ED25519_DER_EXAMPLE).unwrap();
