@@ -419,7 +419,7 @@ pub struct VLByteSlice<'a>(pub &'a [u8]);
 impl<'a> fmt::Debug for VLByteSlice<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("VLByteSlice")
-            .field(&SliceU8HexDebug(&self.0))
+            .field(&SliceU8HexDebug(self.0))
             .finish()
     }
 }
