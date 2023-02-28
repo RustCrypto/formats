@@ -54,7 +54,7 @@ pub use generic_array::typenum::consts;
 #[cfg(feature = "der")]
 pub use crate::{parameters::EcParameters, private_key::EcPrivateKey, traits::DecodeEcPrivateKey};
 
-#[cfg(feature = "alloc")]
+#[cfg(all(feature = "alloc", feature = "der"))]
 pub use crate::traits::EncodeEcPrivateKey;
 
 #[cfg(feature = "pem")]
