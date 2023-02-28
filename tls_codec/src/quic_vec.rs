@@ -12,6 +12,7 @@
 //! This is in contrast to the default behaviour defined by RFC 9000 that allows
 //! up to 62-bit length values.
 use alloc::vec::Vec;
+use std::fmt;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Unstructured};
@@ -196,13 +197,43 @@ impl<T: Size> Size for &[T] {
 
 // === Vec<u8> and &[u8]
 
+/// Helper type used for `Debug`-printing.
+///
+/// Wrap a `&[u8]` with this type to append a comment with its hex representation
+/// during `Debug`-printing, i.e., `/* 0x... */`.
+struct SliceU8HexDebug<'a>(pub &'a [u8]);
+
+impl<'a> fmt::Debug for SliceU8HexDebug<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)?;
+
+        if !self.0.is_empty() {
+            write!(f, " /* 0x")?;
+            for byte in self.0 {
+                write!(f, "{:02x}", byte)?;
+            }
+            write!(f, " */")?;
+        }
+
+        Ok(())
+    }
+}
+
 /// Variable-length encoded byte vectors.
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
     vec: Vec<u8>,
+}
+
+impl fmt::Debug for VLBytes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("VLBytes")
+            .field("vec", &SliceU8HexDebug(&self.vec))
+            .finish()
+    }
 }
 
 impl VLBytes {
@@ -385,6 +416,14 @@ impl Size for &VLBytes {
 
 pub struct VLByteSlice<'a>(pub &'a [u8]);
 
+impl<'a> fmt::Debug for VLByteSlice<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("VLByteSlice")
+            .field(&SliceU8HexDebug(&self.0))
+            .finish()
+    }
+}
+
 impl<'a> VLByteSlice<'a> {
     /// Get the raw slice.
     #[inline(always)]
@@ -430,5 +469,34 @@ impl<'a> Arbitrary<'a> for VLBytes {
         // but better make sure that we generate valid instances.
 
         Ok(Self { vec })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{VLByteSlice, VLBytes};
+    use std::println;
+
+    #[test]
+    fn test_debug() {
+        let tests = [
+            VLBytes::new(vec![]),
+            VLBytes::new(vec![0x00]),
+            VLBytes::new(vec![0xAA]),
+            VLBytes::new(vec![0xFF]),
+            VLBytes::new(vec![0x00, 0x00]),
+            VLBytes::new(vec![0x00, 0xAA]),
+            VLBytes::new(vec![0x00, 0xFF]),
+            VLBytes::new(vec![0xff, 0xff]),
+        ];
+
+        for test in tests.into_iter() {
+            println!("# {:?}", test.vec);
+            println!("{:?}", test);
+            println!("{:#?}", test);
+            println!("{:?}", VLByteSlice(test.vec.as_slice()));
+            println!("{:#?}", VLByteSlice(test.vec.as_slice()));
+            println!("");
+        }
     }
 }
