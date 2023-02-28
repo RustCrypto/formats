@@ -30,12 +30,14 @@ tempfile = "3"
 
 [features]
 default = ["der", "point"]
-alloc = ["der/alloc", "pkcs8/alloc", "zeroize/alloc"]
+alloc = ["der?/alloc", "pkcs8?/alloc", "zeroize?/alloc"]
 std = ["alloc", "der?/std"]
 
+der = ["dep:der", "zeroize"]
 pem = ["alloc", "der/pem", "pkcs8/pem"]
 point = ["dep:base16ct", "dep:generic-array"]
 serde = ["dep:serdect"]
+zeroize = ["dep:zeroize", "der?/zeroize"]
 
 [package.metadata.docs.rs]
 all-features = true
