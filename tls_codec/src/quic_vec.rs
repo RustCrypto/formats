@@ -12,7 +12,7 @@
 //! This is in contrast to the default behaviour defined by RFC 9000 that allows
 //! up to 62-bit length values.
 use alloc::vec::Vec;
-use std::fmt;
+use core::fmt;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Unstructured};
