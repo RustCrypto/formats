@@ -17,8 +17,7 @@ impl<const LEN: usize> Serialize for [u8; LEN] {
             Ok(written)
         } else {
             Err(Error::InvalidWriteLength(format!(
-                "Expected to write {} bytes but only {} were written.",
-                LEN, written
+                "Expected to write {LEN} bytes but only {written} were written."
             )))
         }
     }

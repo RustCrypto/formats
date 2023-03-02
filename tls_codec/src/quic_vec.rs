@@ -12,6 +12,7 @@
 //! This is in contrast to the default behaviour defined by RFC 9000 that allows
 //! up to 62-bit length values.
 use alloc::vec::Vec;
+use core::fmt;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Unstructured};
@@ -124,7 +125,7 @@ impl<T: Deserialize> Deserialize for Vec<T> {
 fn write_length<W: std::io::Write>(writer: &mut W, content_length: usize) -> Result<usize, Error> {
     let len_len = length_encoding_bytes(content_length.try_into()?)?;
     if !cfg!(fuzzing) {
-        debug_assert!(len_len <= 8, "Invalid vector len_len {}", len_len);
+        debug_assert!(len_len <= 8, "Invalid vector len_len {len_len}");
     }
     if len_len > 8 {
         return Err(Error::LibraryError);
@@ -137,7 +138,7 @@ fn write_length<W: std::io::Write>(writer: &mut W, content_length: usize) -> Res
         8 => length_bytes[0] = 0x80,
         _ => {
             if !cfg!(fuzzing) {
-                debug_assert!(false, "Invalid vector len_len {}", len_len);
+                debug_assert!(false, "Invalid vector len_len {len_len}");
             }
             return Err(Error::InvalidVectorLength);
         }
@@ -196,13 +197,34 @@ impl<T: Size> Size for &[T] {
 
 // === Vec<u8> and &[u8]
 
+fn write_hex(f: &mut fmt::Formatter<'_>, data: &[u8]) -> fmt::Result {
+    if !data.is_empty() {
+        write!(f, "0x")?;
+        for byte in data {
+            write!(f, "{byte:02x}")?;
+        }
+    } else {
+        write!(f, "b\"\"")?;
+    }
+
+    Ok(())
+}
+
 /// Variable-length encoded byte vectors.
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
     vec: Vec<u8>,
+}
+
+impl fmt::Debug for VLBytes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "VLBytes {{ ")?;
+        write_hex(f, &self.vec)?;
+        write!(f, " }}")
+    }
 }
 
 impl VLBytes {
@@ -272,9 +294,7 @@ fn tls_serialize_bytes<W: std::io::Write>(writer: &mut W, bytes: &[u8]) -> Resul
     if !cfg!(fuzzing) {
         debug_assert!(
             content_length as u64 <= MAX_LEN,
-            "Vector can't be encoded. It's too large. {} >= {}",
-            content_length,
-            MAX_LEN
+            "Vector can't be encoded. It's too large. {content_length} >= {MAX_LEN}",
         );
     }
     if content_length as u64 > MAX_LEN {
@@ -290,14 +310,12 @@ fn tls_serialize_bytes<W: std::io::Write>(writer: &mut W, bytes: &[u8]) -> Resul
     if !cfg!(fuzzing) {
         debug_assert_eq!(
             written, content_length,
-            "{} bytes should have been serialized but {} were written",
-            content_length, written
+            "{content_length} bytes should have been serialized but {written} were written",
         );
     }
     if written != content_length {
         return Err(Error::EncodingError(format!(
-            "{} bytes should have been serialized but {} were written",
-            content_length, written
+            "{content_length} bytes should have been serialized but {written} were written",
         )));
     }
     Ok(written + len_len)
@@ -337,15 +355,12 @@ impl Deserialize for VLBytes {
         if !cfg!(fuzzing) {
             debug_assert!(
                 length <= MAX_LEN as usize,
-                "Trying to allocate {} bytes. Only {} allowed.",
-                length,
-                MAX_LEN
+                "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
             );
         }
         if length > MAX_LEN as usize {
             return Err(Error::DecodingError(format!(
-                "Trying to allocate {} bytes. Only {} allowed.",
-                length, MAX_LEN
+                "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
             )));
         }
         let mut result = Self {
@@ -358,13 +373,11 @@ impl Deserialize for VLBytes {
         if !cfg!(fuzzing) {
             debug_assert_eq!(
                 read, length,
-                "Expected to read {} bytes but {} were read.",
-                length, read
+                "Expected to read {length} bytes but {read} were read.",
             );
         }
         Err(Error::DecodingError(format!(
-            "{} bytes were read but {} were expected",
-            read, length
+            "{read} bytes were read but {length} were expected",
         )))
     }
 }
@@ -384,6 +397,14 @@ impl Size for &VLBytes {
 }
 
 pub struct VLByteSlice<'a>(pub &'a [u8]);
+
+impl<'a> fmt::Debug for VLByteSlice<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "VLByteSlice {{ ")?;
+        write_hex(f, self.0)?;
+        write!(f, " }}")
+    }
+}
 
 impl<'a> VLByteSlice<'a> {
     /// Get the raw slice.
@@ -430,5 +451,39 @@ impl<'a> Arbitrary<'a> for VLBytes {
         // but better make sure that we generate valid instances.
 
         Ok(Self { vec })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{VLByteSlice, VLBytes};
+    use std::println;
+
+    #[test]
+    fn test_debug() {
+        let tests = [
+            (vec![], "b\"\""),
+            (vec![0x00], "0x00"),
+            (vec![0xAA], "0xaa"),
+            (vec![0xFF], "0xff"),
+            (vec![0x00, 0x00], "0x0000"),
+            (vec![0x00, 0xAA], "0x00aa"),
+            (vec![0x00, 0xFF], "0x00ff"),
+            (vec![0xff, 0xff], "0xffff"),
+        ];
+
+        for (test, expected) in tests.into_iter() {
+            println!("\n# {test:?}");
+
+            let expected_vl_byte_slice = format!("VLByteSlice {{ {expected} }}");
+            let got = format!("{:?}", VLByteSlice(&test));
+            println!("{got}");
+            assert_eq!(expected_vl_byte_slice, got);
+
+            let expected_vl_bytes = format!("VLBytes {{ {expected} }}");
+            let got = format!("{:?}", VLBytes::new(test.clone()));
+            println!("{got}");
+            assert_eq!(expected_vl_bytes, got);
+        }
     }
 }
