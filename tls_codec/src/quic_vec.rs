@@ -201,7 +201,7 @@ fn write_hex(f: &mut fmt::Formatter<'_>, data: &[u8]) -> fmt::Result {
     if !data.is_empty() {
         write!(f, "0x")?;
         for byte in data {
-            write!(f, "{:02x}", byte)?;
+            write!(f, "{byte:02x}")?;
         }
     } else {
         write!(f, "b\"\"")?;
@@ -410,7 +410,7 @@ pub struct VLByteSlice<'a>(pub &'a [u8]);
 impl<'a> fmt::Debug for VLByteSlice<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "VLByteSlice {{ ")?;
-        write_hex(f, &self.0)?;
+        write_hex(f, self.0)?;
         write!(f, " }}")
     }
 }
@@ -482,16 +482,16 @@ mod test {
         ];
 
         for (test, expected) in tests.into_iter() {
-            println!("\n# {:?}", test);
+            println!("\n# {test:?}");
 
             let expected_vl_byte_slice = format!("VLByteSlice {{ {expected} }}");
             let got = format!("{:?}", VLByteSlice(&test));
-            println!("{}", got);
+            println!("{got}");
             assert_eq!(expected_vl_byte_slice, got);
 
             let expected_vl_bytes = format!("VLBytes {{ {expected} }}");
             let got = format!("{:?}", VLBytes::new(test.clone()));
-            println!("{}", got);
+            println!("{got}");
             assert_eq!(expected_vl_bytes, got);
         }
     }
