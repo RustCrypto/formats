@@ -197,26 +197,17 @@ impl<T: Size> Size for &[T] {
 
 // === Vec<u8> and &[u8]
 
-/// Helper type used for `Debug`-printing.
-///
-/// Wrap a `&[u8]` with this type to append a comment with its hex representation
-/// during `Debug`-printing, i.e., `/* 0x... */`.
-struct SliceU8HexDebug<'a>(pub &'a [u8]);
-
-impl<'a> fmt::Debug for SliceU8HexDebug<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)?;
-
-        if !self.0.is_empty() {
-            write!(f, " /* 0x")?;
-            for byte in self.0 {
-                write!(f, "{:02x}", byte)?;
-            }
-            write!(f, " */")?;
+fn write_hex(f: &mut fmt::Formatter<'_>, data: &[u8]) -> fmt::Result {
+    if !data.is_empty() {
+        write!(f, "0x")?;
+        for byte in data {
+            write!(f, "{:02x}", byte)?;
         }
-
-        Ok(())
+    } else {
+        write!(f, "b\"\"")?;
     }
+
+    Ok(())
 }
 
 /// Variable-length encoded byte vectors.
@@ -230,9 +221,9 @@ pub struct VLBytes {
 
 impl fmt::Debug for VLBytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("VLBytes")
-            .field("vec", &SliceU8HexDebug(&self.vec))
-            .finish()
+        write!(f, "VLBytes {{ ")?;
+        write_hex(f, &self.vec)?;
+        write!(f, " }}")
     }
 }
 
@@ -418,9 +409,9 @@ pub struct VLByteSlice<'a>(pub &'a [u8]);
 
 impl<'a> fmt::Debug for VLByteSlice<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("VLByteSlice")
-            .field(&SliceU8HexDebug(self.0))
-            .finish()
+        write!(f, "VLByteSlice {{ ")?;
+        write_hex(f, &self.0)?;
+        write!(f, " }}")
     }
 }
 
@@ -480,23 +471,28 @@ mod test {
     #[test]
     fn test_debug() {
         let tests = [
-            VLBytes::new(vec![]),
-            VLBytes::new(vec![0x00]),
-            VLBytes::new(vec![0xAA]),
-            VLBytes::new(vec![0xFF]),
-            VLBytes::new(vec![0x00, 0x00]),
-            VLBytes::new(vec![0x00, 0xAA]),
-            VLBytes::new(vec![0x00, 0xFF]),
-            VLBytes::new(vec![0xff, 0xff]),
+            (vec![], "b\"\""),
+            (vec![0x00], "0x00"),
+            (vec![0xAA], "0xaa"),
+            (vec![0xFF], "0xff"),
+            (vec![0x00, 0x00], "0x0000"),
+            (vec![0x00, 0xAA], "0x00aa"),
+            (vec![0x00, 0xFF], "0x00ff"),
+            (vec![0xff, 0xff], "0xffff"),
         ];
 
-        for test in tests.into_iter() {
-            println!("# {:?}", test.vec);
-            println!("{:?}", test);
-            println!("{:#?}", test);
-            println!("{:?}", VLByteSlice(test.vec.as_slice()));
-            println!("{:#?}", VLByteSlice(test.vec.as_slice()));
-            println!("");
+        for (test, expected) in tests.into_iter() {
+            println!("\n# {:?}", test);
+
+            let expected_vl_byte_slice = format!("VLByteSlice {{ {expected} }}");
+            let got = format!("{:?}", VLByteSlice(&test));
+            println!("{}", got);
+            assert_eq!(expected_vl_byte_slice, got);
+
+            let expected_vl_bytes = format!("VLBytes {{ {expected} }}");
+            let got = format!("{:?}", VLBytes::new(test.clone()));
+            println!("{}", got);
+            assert_eq!(expected_vl_bytes, got);
         }
     }
 }
