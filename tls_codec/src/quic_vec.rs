@@ -125,7 +125,7 @@ impl<T: Deserialize> Deserialize for Vec<T> {
 fn write_length<W: std::io::Write>(writer: &mut W, content_length: usize) -> Result<usize, Error> {
     let len_len = length_encoding_bytes(content_length.try_into()?)?;
     if !cfg!(fuzzing) {
-        debug_assert!(len_len <= 8, "Invalid vector len_len {}", len_len);
+        debug_assert!(len_len <= 8, "Invalid vector len_len {len_len}");
     }
     if len_len > 8 {
         return Err(Error::LibraryError);
@@ -138,7 +138,7 @@ fn write_length<W: std::io::Write>(writer: &mut W, content_length: usize) -> Res
         8 => length_bytes[0] = 0x80,
         _ => {
             if !cfg!(fuzzing) {
-                debug_assert!(false, "Invalid vector len_len {}", len_len);
+                debug_assert!(false, "Invalid vector len_len {len_len}");
             }
             return Err(Error::InvalidVectorLength);
         }
@@ -294,9 +294,7 @@ fn tls_serialize_bytes<W: std::io::Write>(writer: &mut W, bytes: &[u8]) -> Resul
     if !cfg!(fuzzing) {
         debug_assert!(
             content_length as u64 <= MAX_LEN,
-            "Vector can't be encoded. It's too large. {} >= {}",
-            content_length,
-            MAX_LEN
+            "Vector can't be encoded. It's too large. {content_length} >= {MAX_LEN}",
         );
     }
     if content_length as u64 > MAX_LEN {
@@ -312,14 +310,12 @@ fn tls_serialize_bytes<W: std::io::Write>(writer: &mut W, bytes: &[u8]) -> Resul
     if !cfg!(fuzzing) {
         debug_assert_eq!(
             written, content_length,
-            "{} bytes should have been serialized but {} were written",
-            content_length, written
+            "{content_length} bytes should have been serialized but {written} were written",
         );
     }
     if written != content_length {
         return Err(Error::EncodingError(format!(
-            "{} bytes should have been serialized but {} were written",
-            content_length, written
+            "{content_length} bytes should have been serialized but {written} were written",
         )));
     }
     Ok(written + len_len)
@@ -359,15 +355,12 @@ impl Deserialize for VLBytes {
         if !cfg!(fuzzing) {
             debug_assert!(
                 length <= MAX_LEN as usize,
-                "Trying to allocate {} bytes. Only {} allowed.",
-                length,
-                MAX_LEN
+                "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
             );
         }
         if length > MAX_LEN as usize {
             return Err(Error::DecodingError(format!(
-                "Trying to allocate {} bytes. Only {} allowed.",
-                length, MAX_LEN
+                "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
             )));
         }
         let mut result = Self {
@@ -380,13 +373,11 @@ impl Deserialize for VLBytes {
         if !cfg!(fuzzing) {
             debug_assert_eq!(
                 read, length,
-                "Expected to read {} bytes but {} were read.",
-                length, read
+                "Expected to read {length} bytes but {read} were read.",
             );
         }
         Err(Error::DecodingError(format!(
-            "{} bytes were read but {} were expected",
-            read, length
+            "{read} bytes were read but {length} were expected",
         )))
     }
 }

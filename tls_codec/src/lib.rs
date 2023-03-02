@@ -86,7 +86,7 @@ impl std::error::Error for Error {}
 
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!("{:?}", self))
+        f.write_fmt(format_args!("{self:?}"))
     }
 }
 
@@ -95,7 +95,7 @@ impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
         match e.kind() {
             std::io::ErrorKind::UnexpectedEof => Self::EndOfStream,
-            _ => Self::DecodingError(format!("io error: {:?}", e)),
+            _ => Self::DecodingError(format!("io error: {e:?}")),
         }
     }
 }
