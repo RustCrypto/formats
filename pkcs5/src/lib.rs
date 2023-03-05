@@ -39,6 +39,9 @@ use der::{
     Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, Writer,
 };
 
+#[cfg(feature = "pbes2")]
+pub use scrypt;
+
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
 

@@ -5,16 +5,15 @@ use crate::{Error, Result};
 use cbc::cipher::{
     block_padding::Pkcs7, BlockCipher, BlockDecryptMut, BlockEncryptMut, KeyInit, KeyIvInit,
 };
-use hmac::{
-    digest::{
+use pbkdf2::{
+    hmac::digest::{
         block_buffer::Eager,
         core_api::{BlockSizeUser, BufferKindUser, CoreProxy, FixedOutputCore, UpdateCore},
         generic_array::typenum::{IsLess, Le, NonZero, U256},
         HashMarker,
     },
-    Hmac,
+    pbkdf2_hmac,
 };
-use pbkdf2::pbkdf2;
 use scrypt::scrypt;
 
 /// Maximum size of a derived encryption key
@@ -157,18 +156,19 @@ impl EncryptionKey {
     fn derive_with_pbkdf2<D>(password: &[u8], params: &Pbkdf2Params<'_>, length: usize) -> Self
     where
         D: CoreProxy,
-        D::Core: HashMarker
+        D::Core: Sync
+            + HashMarker
             + UpdateCore
             + FixedOutputCore
             + BufferKindUser<BufferKind = Eager>
             + Default
-            + Clone
-            + Sync,
+            + Clone,
         <D::Core as BlockSizeUser>::BlockSize: IsLess<U256>,
         Le<<D::Core as BlockSizeUser>::BlockSize, U256>: NonZero,
     {
         let mut buffer = [0u8; MAX_KEY_LEN];
-        pbkdf2::<Hmac<D>>(
+
+        pbkdf2_hmac::<D>(
             password,
             params.salt,
             params.iteration_count,

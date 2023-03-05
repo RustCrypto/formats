@@ -35,7 +35,7 @@ pub const HMAC_WITH_SHA512_OID: ObjectIdentifier =
 pub const SCRYPT_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11591.4.11");
 
 /// Type used for expressing scrypt cost
-type ScryptCost = u16;
+type ScryptCost = u64;
 
 /// Password-based key derivation function.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -395,12 +395,13 @@ pub struct ScryptParams<'a> {
 }
 
 impl<'a> ScryptParams<'a> {
-    #[cfg(feature = "scrypt")]
+    #[cfg(feature = "pbes2")]
     const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: SCRYPT_OID };
 
     /// Get the [`ScryptParams`] for the provided upstream [`scrypt::Params`]
     /// and a provided salt string.
-    #[cfg(feature = "scrypt")]
+    // TODO(tarcieri): encapsulate `scrypt::Params`?
+    #[cfg(feature = "pbes2")]
     pub fn from_params_and_salt(params: scrypt::Params, salt: &'a [u8]) -> Result<Self> {
         Ok(Self {
             salt,
@@ -455,7 +456,7 @@ impl<'a> TryFrom<AnyRef<'a>> for ScryptParams<'a> {
     }
 }
 
-#[cfg(feature = "scrypt")]
+#[cfg(feature = "pbes2")]
 impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
     type Error = Error;
 
@@ -464,7 +465,7 @@ impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
     }
 }
 
-#[cfg(feature = "scrypt")]
+#[cfg(feature = "pbes2")]
 impl<'a> TryFrom<&ScryptParams<'a>> for scrypt::Params {
     type Error = Error;
 
@@ -482,6 +483,7 @@ impl<'a> TryFrom<&ScryptParams<'a>> for scrypt::Params {
             log_n,
             params.block_size.into(),
             params.parallelization.into(),
+            scrypt::Params::RECOMMENDED_LEN,
         )
         .map_err(|_| ScryptParams::INVALID_ERR)
     }
