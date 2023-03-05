@@ -35,7 +35,7 @@ des-insecure = ["encryption", "pkcs5/des-insecure"]
 encryption = ["alloc", "pkcs5/alloc", "pkcs5/pbes2", "rand_core"]
 getrandom = ["rand_core/getrandom"]
 pem = ["alloc", "der/pem", "spki/pem"]
-sha1 = ["encryption", "pkcs5/sha1"]
+sha1-insecure = ["encryption", "pkcs5/sha1-insecure"]
 std = ["alloc", "der/std", "spki/std"]
 
 [package.metadata.docs.rs]

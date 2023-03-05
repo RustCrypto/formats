@@ -104,7 +104,8 @@ impl<'a> Parameters<'a> {
     ///
     /// For more information on scrypt parameters, see documentation for the
     /// [`scrypt::Params`] struct.
-    #[cfg(feature = "scrypt")]
+    // TODO(tarcieri): encapsulate `scrypt::Params`?
+    #[cfg(feature = "pbes2")]
     pub fn scrypt_aes128cbc(
         params: scrypt::Params,
         salt: &'a [u8],
@@ -123,7 +124,8 @@ impl<'a> Parameters<'a> {
     ///
     /// When in doubt, use `Default::default()` as the [`scrypt::Params`].
     /// This also avoids the need to import the type from the `scrypt` crate.
-    #[cfg(feature = "scrypt")]
+    // TODO(tarcieri): encapsulate `scrypt::Params`?
+    #[cfg(feature = "pbes2")]
     pub fn scrypt_aes256cbc(
         params: scrypt::Params,
         salt: &'a [u8],
