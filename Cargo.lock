@@ -858,7 +858,7 @@ version = "0.0.0"
 
 [[package]]
 name = "pkcs5"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "aes",
  "cbc",
@@ -884,7 +884,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.10.0"
+version = "0.10.1"
 dependencies = [
  "der",
  "hex-literal",
