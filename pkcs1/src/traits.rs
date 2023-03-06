@@ -169,9 +169,9 @@ where
 }
 
 #[cfg(feature = "pkcs8")]
-impl<T: pkcs8::DecodePublicKey> DecodeRsaPublicKey for T
+impl<T> DecodeRsaPublicKey for T
 where
-    T: for<'a> TryFrom<pkcs8::SubjectPublicKeyInfoRef<'a>, Error = pkcs8::Error>,
+    T: for<'a> TryFrom<pkcs8::SubjectPublicKeyInfoRef<'a>, Error = pkcs8::spki::Error>,
 {
     fn from_pkcs1_der(public_key: &[u8]) -> Result<Self> {
         Ok(Self::try_from(pkcs8::SubjectPublicKeyInfoRef {
