@@ -841,7 +841,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkcs1"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "const-oid 0.9.2",
  "der",
@@ -1460,9 +1460,9 @@ dependencies = [
 
 [[package]]
 name = "trybuild"
-version = "1.0.77"
+version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a44da5a6f2164c8e14d3bbc0657d69c5966af9f5f6930d4f600b1f5c4a673413"
+checksum = "db3115bddce1b5f52dd4b5e0ec8298a66ce733e4cc6759247dc2d1c11508ec38"
 dependencies = [
  "basic-toml",
  "glob",
