@@ -22,14 +22,14 @@ der_derive = { version = "0.7", optional = true, path = "derive" }
 flagset = { version = "0.4.3", optional = true }
 pem-rfc7468 = { version = "0.7", optional = true, features = ["alloc"], path = "../pem-rfc7468" }
 time = { version = "0.3.4", optional = true, default-features = false }
-zeroize = { version = "1.5", optional = true, default-features = false, features = ["alloc"] }
+zeroize = { version = "1.5", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3.3"
 proptest = "1"
 
 [features]
-alloc = []
+alloc = ["zeroize?/alloc"]
 std = ["alloc"]
 
 arbitrary = ["dep:arbitrary", "const-oid?/arbitrary", "std"]
