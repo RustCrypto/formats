@@ -54,6 +54,7 @@
 //!
 //! ```text
 //! #[tls_codec(discriminant = 123)]
+//! #[tls_codec(discriminant = "path::to::const::or::enum::Variant")]
 //! ```
 //!
 //! This attribute may be applied to an enum variant to specify the discriminant to use when
@@ -64,18 +65,47 @@
 //! For enumerations with non-unit variants, if no variant has this attribute, the serialization
 //! discriminants will start from zero. If this attribute is used on a variant and the following
 //! variant does not have it, its discriminant will be equal to the previous variant discriminant
-//! plus 1.
+//! plus 1. This behavior is refered to as "implicit discriminants".
+//!
+//! You can also provide paths that lead to `const` definitions or enum Variants. The important
+//! thing is that any of those path expressions must resolve to something that can be coerced to
+//! the `#[repr(enum_repr)]` of the enum.
+//!
+//! Note: When using paths *once* in your enum discriminants, as we do not have enough information
+//! to deduce the next implicit discriminant (the constant expressions those paths resolve is only
+//! evaluated at a later compilation stage than macros), you will be forced to use explicit
+//! discriminants for all the other Variants of your enum.
 //!
 //! ```
 //! use tls_codec_derive::{TlsSerialize, TlsSize};
 //!
+//! const CONST_DISCRIMINANT: u8 = 5;
+//! #[repr(u8)]
+//! enum TokenType {
+//!     Constant = 3,
+//!     Variant = 4,
+//! }
+//!
 //! #[derive(TlsSerialize, TlsSize)]
 //! #[repr(u8)]
-//! enum Token {
+//! enum TokenImplicit {
 //!     #[tls_codec(discriminant = 5)]
 //!     Int(u32),
+//!     // This will have the discriminant 6 as it's implicitely determined
 //!     Bytes([u8; 16]),
 //! }
+//!
+//! #[derive(TlsSerialize, TlsSize)]
+//! #[repr(u8)]
+//! enum TokenExplicit {
+//!     #[tls_codec(discriminant = "TokenType::Constant")]
+//!     Constant(u32),
+//!     #[tls_codec(discriminant = "TokenType::Variant")]
+//!     Variant(Vec<u8>),
+//!     #[tls_codec(discriminant = "CONST_DISCRIMINANT")]
+//!     StaticConstant(u8),
+//! }
+//!
 //! ```
 //!
 //! ### `skip`
@@ -177,6 +207,12 @@ struct Variant {
 }
 
 #[derive(Clone)]
+enum DiscriminantValue {
+    Literal(u32),
+    Path(ExprPath),
+}
+
+#[derive(Clone)]
 enum TlsStruct {
     Struct(Struct),
     Enum(Enum),
@@ -187,8 +223,8 @@ enum TlsStruct {
 enum TlsAttr {
     /// Prefix for custom serialization functions
     With(ExprPath),
-    /// Custom discriminant for an enum variant
-    Discriminant(u32),
+    /// Custom literal discriminant for an enum variant
+    Discriminant(DiscriminantValue),
     /// Skip this attribute during (de)serialization.
     ///
     /// Note: The type of the attribute needs to implement [Default].
@@ -226,7 +262,14 @@ impl TlsAttr {
                         let ident_str = ident.to_string();
                         match &*ident_str {
                             "discriminant" => match &kv.lit {
-                                Lit::Int(i) => i.base10_parse::<u32>().map(TlsAttr::Discriminant),
+                                Lit::Int(i) => i
+                                    .base10_parse::<u32>()
+                                    .map(DiscriminantValue::Literal)
+                                    .map(TlsAttr::Discriminant),
+                                Lit::Str(raw_path) => raw_path
+                                    .parse::<ExprPath>()
+                                    .map(DiscriminantValue::Path)
+                                    .map(TlsAttr::Discriminant),
                                 _ => Err(syn::Error::new_spanned(
                                     &kv.lit,
                                     "Expected integer literal",
@@ -314,7 +357,7 @@ fn function_skip(field: &Field) -> Result<bool> {
 }
 
 /// Gets the serialization discriminant if specified.
-fn discriminant_value(attrs: &[Attribute]) -> Result<Option<u32>> {
+fn discriminant_value(attrs: &[Attribute]) -> Result<Option<DiscriminantValue>> {
     TlsAttr::parse_multi(attrs)?
         .into_iter()
         .try_fold(None, |discriminant, attr| match (discriminant, attr) {
@@ -417,21 +460,30 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
 #[proc_macro_derive(TlsSize, attributes(tls_codec))]
 pub fn size_macro_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-    let parsed_ast = parse_ast(ast).unwrap();
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
     impl_tls_size(parsed_ast).into()
 }
 
 #[proc_macro_derive(TlsSerialize, attributes(tls_codec))]
 pub fn serialize_macro_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-    let parsed_ast = parse_ast(ast).unwrap();
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
     impl_serialize(parsed_ast).into()
 }
 
 #[proc_macro_derive(TlsDeserialize, attributes(tls_codec))]
 pub fn deserialize_macro_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-    let parsed_ast = parse_ast(ast).unwrap();
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
     impl_deserialize(parsed_ast).into()
 }
 
@@ -477,17 +529,45 @@ fn define_discriminant_constants(
             })
             .collect::<Result<Vec<_>>>()?
     } else {
-        variants
-            .iter()
-            .try_fold((0, Vec::new()), |(next, mut acc), variant| {
-                let constant_id = discriminant_id(&variant.ident);
-                let value = discriminant_value(&variant.attrs)?.unwrap_or(next);
-                acc.push(quote! {
-                    const #constant_id: #repr = #value as #repr;
-                });
-                Ok::<_, syn::Error>((value + 1, acc))
-            })?
-            .1
+        let mut spans = Vec::with_capacity(variants.len());
+        let mut implicit_discriminant = 0u32;
+        let mut discriminant_has_paths = false;
+        for variant in variants.iter() {
+            let constant_id = discriminant_id(&variant.ident);
+
+            let tokens = if let Some(value) = discriminant_value(&variant.attrs)? {
+                match value {
+                    DiscriminantValue::Literal(value_u32) => {
+                        implicit_discriminant = value_u32;
+                        quote! {
+                            const #constant_id: #repr = #value_u32 as #repr;
+                        }
+                    }
+                    DiscriminantValue::Path(pathexpr) => {
+                        discriminant_has_paths = true;
+                        quote! {
+                            const #constant_id: #repr = #pathexpr as #repr;
+                        }
+                    }
+                }
+            } else if discriminant_has_paths {
+                return Err(syn::Error::new(
+                    Span::call_site(),
+                    "The tls_codec discriminant attribute is missing. \
+                    Once you start using paths in #[tls_codec(discriminant = \"path::to::const::or::enum::variant\"], \
+                    You **have** to provide the discriminant attribute on every single variant.")
+                );
+            } else {
+                quote! {
+                    const #constant_id: #repr = #implicit_discriminant as #repr;
+                }
+            };
+
+            implicit_discriminant += 1;
+
+            spans.push(tokens);
+        }
+        spans
     };
     Ok(quote! { #(#discriminant_constants)* })
 }

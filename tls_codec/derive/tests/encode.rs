@@ -211,6 +211,46 @@ fn discriminant_is_incremented_implicitly() {
     assert_eq!(vec![0, 4], serialized);
 }
 
+mod discriminant {
+    pub mod test {
+        pub mod constant {
+            pub const TEST_CONST: u8 = 3;
+        }
+        pub mod enum_val {
+            pub enum Test {
+                Potato = 0x0004,
+            }
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, TlsSerialize, TlsSize)]
+#[repr(u16)]
+enum EnumWithDataAndConstDiscriminant {
+    #[tls_codec(discriminant = "discriminant::test::constant::TEST_CONST")]
+    A(u8),
+    #[tls_codec(discriminant = "discriminant::test::enum_val::Test::Potato")]
+    B,
+    #[tls_codec(discriminant = 12)]
+    C,
+}
+
+#[test]
+fn enum_with_data_and_const_discriminant() {
+    let serialized = EnumWithDataAndConstDiscriminant::A(4)
+        .tls_serialize_detached()
+        .unwrap();
+    assert_eq!(vec![0, 3, 4], serialized);
+    let serialized = EnumWithDataAndConstDiscriminant::B
+        .tls_serialize_detached()
+        .unwrap();
+    assert_eq!(vec![0, 4], serialized);
+    let serialized = EnumWithDataAndConstDiscriminant::C
+        .tls_serialize_detached()
+        .unwrap();
+    assert_eq!(vec![0, 12], serialized);
+}
+
 #[derive(TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithCustomSerializedField {
