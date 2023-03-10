@@ -733,7 +733,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                         match discriminant {
                             #(#arms)*
                             _ => {
-                                Err(tls_codec::Error::DecodingError(format!("Unmatched discriminant {:?} in tls_deserialize", discriminant)))
+                                Err(tls_codec::Error::DecodingError(format!("{}: Unmatched discriminant {:?} in tls_deserialize", stringify!(#ident), discriminant)))
                             },
                         }
                     }
