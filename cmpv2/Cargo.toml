@@ -1,6 +1,6 @@
 [package]
 name = "cmpv2"
-version = "0.0.0"
+version = "0.2.0-pre.0"
 description = """
 Pure Rust implementation of the Certificate Management Protocol (CMP) as
 described in RFC 4210
