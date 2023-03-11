@@ -242,7 +242,7 @@ dependencies = [
 
 [[package]]
 name = "cmpv2"
-version = "0.0.0"
+version = "0.2.0-pre.0"
 dependencies = [
  "const-oid 0.9.2",
  "crmf",

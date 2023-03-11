@@ -42,14 +42,14 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/crmf.svg
+[crate-image]: https://buildstats.info/crate/crmf
 [crate-link]: https://crates.io/crates/crmf
 [docs-image]: https://docs.rs/crmf/badge.svg
 [docs-link]: https://docs.rs/crmf/
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/crmf.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/crmf.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.57+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.65+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 

@@ -43,12 +43,12 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/x509.svg
-[crate-link]: https://crates.io/crates/x509
-[docs-image]: https://docs.rs/x509/badge.svg
-[docs-link]: https://docs.rs/x509/
-[build-image]: https://github.com/RustCrypto/formats/actions/workflows/x509.yml/badge.svg
-[build-link]: https://github.com/RustCrypto/formats/actions/workflows/x509.yml
+[crate-image]: https://buildstats.info/crate/x509-ocsp
+[crate-link]: https://crates.io/crates/x509-ocsp
+[docs-image]: https://docs.rs/x509-ocsp/badge.svg
+[docs-link]: https://docs.rs/x509-ocsp/
+[build-image]: https://github.com/RustCrypto/formats/actions/workflows/x509-ocsp.yml/badge.svg
+[build-link]: https://github.com/RustCrypto/formats/actions/workflows/x509-ocsp.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.65+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
