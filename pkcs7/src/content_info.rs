@@ -5,7 +5,8 @@ use crate::{
 
 use der::{
     asn1::{ContextSpecific, OctetStringRef},
-    DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, TagMode, TagNumber, Writer,
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, TagMode, TagNumber,
+    Writer,
 };
 
 const CONTENT_TAG: TagNumber = TagNumber::new(0);
@@ -67,56 +68,35 @@ impl<'a> ContentInfo<'a> {
 
 impl<'a> DecodeValue<'a> for ContentInfo<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<ContentInfo<'a>> {
+        #[inline]
+        fn decode_context_specific<'a, R: Reader<'a>, T: Decode<'a>>(
+            reader: &mut R,
+        ) -> der::Result<T> {
+            Ok(ContextSpecific::<T>::decode_explicit(reader, CONTENT_TAG)?
+                .ok_or_else(|| {
+                    der::Tag::ContextSpecific {
+                        number: CONTENT_TAG,
+                        constructed: false,
+                    }
+                    .value_error()
+                })?
+                .value)
+        }
+
         reader.read_nested(header.length, |reader| {
             let content_type = reader.decode()?;
             match content_type {
-                ContentType::Data => Ok(ContentInfo::Data(
-                    ContextSpecific::<DataContent<'_>>::decode_explicit(reader, CONTENT_TAG)?
-                        .ok_or_else(|| {
-                            der::Tag::ContextSpecific {
-                                number: CONTENT_TAG,
-                                constructed: false,
-                            }
-                            .value_error()
-                        })?
-                        .value,
-                )),
-                ContentType::EncryptedData => Ok(ContentInfo::EncryptedData(
-                    ContextSpecific::<EncryptedDataContent<'_>>::decode_explicit(
-                        reader,
-                        CONTENT_TAG,
-                    )?
-                    .ok_or_else(|| {
-                        der::Tag::ContextSpecific {
-                            number: CONTENT_TAG,
-                            constructed: false,
-                        }
-                        .value_error()
-                    })?
-                    .value,
-                )),
-                ContentType::SignedData => Ok(ContentInfo::SignedData(
-                    ContextSpecific::<SignedDataContent<'_>>::decode_explicit(reader, CONTENT_TAG)?
-                        .ok_or_else(|| {
-                            der::Tag::ContextSpecific {
-                                number: CONTENT_TAG,
-                                constructed: false,
-                            }
-                            .value_error()
-                        })?
-                        .value,
-                )),
+                ContentType::Data => Ok(ContentInfo::Data(decode_context_specific(reader)?)),
+                ContentType::EncryptedData => {
+                    Ok(ContentInfo::EncryptedData(decode_context_specific(reader)?))
+                }
+                ContentType::SignedData => {
+                    Ok(ContentInfo::SignedData(decode_context_specific(reader)?))
+                }
+
                 _ => Ok(ContentInfo::Other((
                     content_type,
-                    ContextSpecific::<OctetStringRef<'_>>::decode_explicit(reader, CONTENT_TAG)?
-                        .ok_or_else(|| {
-                            der::Tag::ContextSpecific {
-                                number: CONTENT_TAG,
-                                constructed: false,
-                            }
-                            .value_error()
-                        })?
-                        .value,
+                    decode_context_specific(reader)?,
                 ))),
             }
         })
