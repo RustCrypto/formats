@@ -27,7 +27,7 @@ fn decode_cert_example() {
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
     match content {
-        ContentInfo::Data(Some(data)) => assert_eq!(data.content.len(), 781),
+        ContentInfo::Data(data) => assert_eq!(data.content.len(), 781),
         _ => panic!("expected ContentInfo::Data(Some(_))"),
     }
 
@@ -47,7 +47,7 @@ fn decode_encrypted_key_example() {
     let expected_oid = ObjectIdentifier::new("1.2.840.113549.1.12.1.6").unwrap();
     let expected_salt = &hex!("ad2d4b4e87b34d67");
     match content {
-        ContentInfo::EncryptedData(Some(EncryptedDataContent {
+        ContentInfo::EncryptedData(EncryptedDataContent {
             version: _,
             encrypted_content_info:
                 EncryptedContentInfo {
@@ -59,7 +59,7 @@ fn decode_encrypted_key_example() {
                         },
                     encrypted_content: Some(bytes),
                 },
-        })) => {
+        }) => {
             assert_eq!(oid, expected_oid);
 
             let (salt, iter) = any
@@ -91,7 +91,7 @@ fn decode_signed_mdm_example() {
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
     match content {
-        ContentInfo::SignedData(Some(SignedDataContent {
+        ContentInfo::SignedData(SignedDataContent {
             version: _,
             digest_algorithms: _,
             encap_content_info:
@@ -102,7 +102,7 @@ fn decode_signed_mdm_example() {
             certificates: _,
             crls: _,
             signer_infos: _,
-        })) => {
+        }) => {
             let _content = content
                 .decode_as::<SequenceRef>()
                 .expect("Content should be in the correct format: SequenceRef");
@@ -119,7 +119,7 @@ fn decode_signed_scep_example() {
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
     match content {
-        ContentInfo::SignedData(Some(SignedDataContent {
+        ContentInfo::SignedData(SignedDataContent {
             version: ver,
             digest_algorithms: _,
             encap_content_info:
@@ -130,7 +130,7 @@ fn decode_signed_scep_example() {
             certificates: _,
             crls: _,
             signer_infos: _,
-        })) => {
+        }) => {
             let _content = content
                 .decode_as::<OctetStringRef>()
                 .expect("Content should be in the correct format: OctetStringRef");
@@ -148,7 +148,7 @@ fn decode_signed_ber() {
     let bytes = include_bytes!("examples/cms_ber.bin");
 
     let content = match ContentInfo::from_der(bytes) {
-        Ok(ContentInfo::SignedData(Some(data))) => data,
+        Ok(ContentInfo::SignedData(data)) => data,
         other => panic!("unexpected result: {:?}", other),
     };
 
@@ -170,7 +170,7 @@ fn decode_signed_der() {
     let bytes = include_bytes!("examples/cms_der.bin");
 
     let content = match ContentInfo::from_der(bytes) {
-        Ok(ContentInfo::SignedData(Some(data))) => data,
+        Ok(ContentInfo::SignedData(data)) => data,
         other => panic!("unexpected result: {:?}", other),
     };
 

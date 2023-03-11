@@ -16,24 +16,26 @@ const CONTENT_TAG: TagNumber = TagNumber::new(0);
 /// ContentInfo ::= SEQUENCE {
 ///   contentType ContentType,
 ///   content
-///     [0] EXPLICIT ANY DEFINED BY contentType OPTIONAL }
+///     [0] EXPLICIT ANY DEFINED BY contentType }
 /// ```
+///
+/// Note: `content` field was previously optional in [RFC 2315 § 7](https://datatracker.ietf.org/doc/html/rfc2315#section-7).
 #[derive(Clone, Debug)]
 pub enum ContentInfo<'a> {
     /// Content type `data`
-    Data(Option<DataContent<'a>>),
+    Data(DataContent<'a>),
 
     /// Content type `encrypted-data`
-    EncryptedData(Option<EncryptedDataContent<'a>>),
+    EncryptedData(EncryptedDataContent<'a>),
 
     /// Content type `signed-data`
-    SignedData(Option<SignedDataContent<'a>>),
+    SignedData(SignedDataContent<'a>),
 
     /// Catch-all case for content types that are not explicitly supported
     ///   - enveloped-data
     ///   - signed-and-enveloped-data
     ///   - digested-data
-    Other((ContentType, Option<OctetStringRef<'a>>)),
+    Other((ContentType, OctetStringRef<'a>)),
 }
 
 impl<'a> ContentInfo<'a> {
@@ -51,24 +53,14 @@ impl<'a> ContentInfo<'a> {
 impl<'a> ContentInfo<'a> {
     /// new ContentInfo of `data` content type
     pub fn new_data(content: &'a [u8]) -> Self {
-        ContentInfo::Data(Some(content.into()))
-    }
-
-    /// new ContentInfo of given content type with empty content
-    pub fn new_empty(content_type: ContentType) -> Self {
-        match content_type {
-            ContentType::Data => ContentInfo::Data(None),
-            ContentType::EncryptedData => ContentInfo::EncryptedData(None),
-            ContentType::SignedData => ContentInfo::SignedData(None),
-            _ => ContentInfo::Other((content_type, None)),
-        }
+        ContentInfo::Data(content.into())
     }
 
     /// new Content info of given content type with given raw content
     pub fn new_raw(content_type: ContentType, content: &'a [u8]) -> der::Result<Self> {
         Ok(ContentInfo::Other((
             content_type,
-            Some(OctetStringRef::new(content)?),
+            OctetStringRef::new(content)?,
         )))
     }
 }
@@ -79,21 +71,52 @@ impl<'a> DecodeValue<'a> for ContentInfo<'a> {
             let content_type = reader.decode()?;
             match content_type {
                 ContentType::Data => Ok(ContentInfo::Data(
-                    reader.context_specific::<DataContent<'_>>(CONTENT_TAG, TagMode::Explicit)?,
+                    ContextSpecific::<DataContent<'_>>::decode_explicit(reader, CONTENT_TAG)?
+                        .ok_or_else(|| {
+                            der::Tag::ContextSpecific {
+                                number: CONTENT_TAG,
+                                constructed: false,
+                            }
+                            .value_error()
+                        })?
+                        .value,
                 )),
                 ContentType::EncryptedData => Ok(ContentInfo::EncryptedData(
-                    reader.context_specific(CONTENT_TAG, TagMode::Explicit)?,
+                    ContextSpecific::<EncryptedDataContent<'_>>::decode_explicit(
+                        reader,
+                        CONTENT_TAG,
+                    )?
+                    .ok_or_else(|| {
+                        der::Tag::ContextSpecific {
+                            number: CONTENT_TAG,
+                            constructed: false,
+                        }
+                        .value_error()
+                    })?
+                    .value,
                 )),
                 ContentType::SignedData => Ok(ContentInfo::SignedData(
-                    reader.context_specific::<SignedDataContent<'_>>(
-                        CONTENT_TAG,
-                        TagMode::Explicit,
-                    )?,
+                    ContextSpecific::<SignedDataContent<'_>>::decode_explicit(reader, CONTENT_TAG)?
+                        .ok_or_else(|| {
+                            der::Tag::ContextSpecific {
+                                number: CONTENT_TAG,
+                                constructed: false,
+                            }
+                            .value_error()
+                        })?
+                        .value,
                 )),
                 _ => Ok(ContentInfo::Other((
                     content_type,
-                    reader
-                        .context_specific::<OctetStringRef<'_>>(CONTENT_TAG, TagMode::Explicit)?,
+                    ContextSpecific::<OctetStringRef<'_>>::decode_explicit(reader, CONTENT_TAG)?
+                        .ok_or_else(|| {
+                            der::Tag::ContextSpecific {
+                                number: CONTENT_TAG,
+                                constructed: false,
+                            }
+                            .value_error()
+                        })?
+                        .value,
                 ))),
             }
         })
@@ -104,38 +127,30 @@ impl EncodeValue for ContentInfo<'_> {
     fn value_len(&self) -> der::Result<Length> {
         self.content_type().encoded_len()?
             + match self {
-                Self::Data(data) => data
-                    .as_ref()
-                    .map(|d| ContextSpecific {
-                        tag_number: CONTENT_TAG,
-                        tag_mode: TagMode::Explicit,
-                        value: *d,
-                    })
-                    .encoded_len(),
-                Self::EncryptedData(data) => data
-                    .as_ref()
-                    .map(|d| ContextSpecific {
-                        tag_number: CONTENT_TAG,
-                        tag_mode: TagMode::Explicit,
-                        value: *d,
-                    })
-                    .encoded_len(),
-                Self::SignedData(data) => data
-                    .as_ref()
-                    .map(|d| ContextSpecific {
-                        tag_number: CONTENT_TAG,
-                        tag_mode: TagMode::Explicit,
-                        value: d.clone(),
-                    })
-                    .encoded_len(),
-                Self::Other((_, opt_oct_str)) => opt_oct_str
-                    .as_ref()
-                    .map(|d| ContextSpecific {
-                        tag_number: CONTENT_TAG,
-                        tag_mode: TagMode::Explicit,
-                        value: *d,
-                    })
-                    .encoded_len(),
+                Self::Data(data) => ContextSpecific {
+                    tag_number: CONTENT_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value: *data,
+                }
+                .encoded_len(),
+                Self::EncryptedData(data) => ContextSpecific {
+                    tag_number: CONTENT_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value: *data,
+                }
+                .encoded_len(),
+                Self::SignedData(data) => ContextSpecific {
+                    tag_number: CONTENT_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value: data.clone(),
+                }
+                .encoded_len(),
+                Self::Other((_, oct_str)) => ContextSpecific {
+                    tag_number: CONTENT_TAG,
+                    tag_mode: TagMode::Explicit,
+                    value: *oct_str,
+                }
+                .encoded_len(),
             }?
     }
 
@@ -143,38 +158,30 @@ impl EncodeValue for ContentInfo<'_> {
         self.content_type().encode(writer)?;
 
         match self {
-            Self::Data(data) => data
-                .as_ref()
-                .map(|d| ContextSpecific {
-                    tag_number: CONTENT_TAG,
-                    tag_mode: TagMode::Explicit,
-                    value: *d,
-                })
-                .encode(writer)?,
-            Self::EncryptedData(data) => data
-                .as_ref()
-                .map(|d| ContextSpecific {
-                    tag_number: CONTENT_TAG,
-                    tag_mode: TagMode::Explicit,
-                    value: *d,
-                })
-                .encode(writer)?,
-            Self::SignedData(data) => data
-                .as_ref()
-                .map(|d| ContextSpecific {
-                    tag_number: CONTENT_TAG,
-                    tag_mode: TagMode::Explicit,
-                    value: d.clone(),
-                })
-                .encode(writer)?,
-            Self::Other((_, opt_oct_str)) => opt_oct_str
-                .as_ref()
-                .map(|d| ContextSpecific {
-                    tag_number: CONTENT_TAG,
-                    tag_mode: TagMode::Explicit,
-                    value: *d,
-                })
-                .encode(writer)?,
+            Self::Data(data) => ContextSpecific {
+                tag_number: CONTENT_TAG,
+                tag_mode: TagMode::Explicit,
+                value: *data,
+            }
+            .encode(writer)?,
+            Self::EncryptedData(data) => ContextSpecific {
+                tag_number: CONTENT_TAG,
+                tag_mode: TagMode::Explicit,
+                value: *data,
+            }
+            .encode(writer)?,
+            Self::SignedData(data) => ContextSpecific {
+                tag_number: CONTENT_TAG,
+                tag_mode: TagMode::Explicit,
+                value: data.clone(),
+            }
+            .encode(writer)?,
+            Self::Other((_, oct_str)) => ContextSpecific {
+                tag_number: CONTENT_TAG,
+                tag_mode: TagMode::Explicit,
+                value: *oct_str,
+            }
+            .encode(writer)?,
         }
 
         Ok(())
@@ -188,54 +195,6 @@ mod tests {
     use super::{ContentInfo, DataContent};
     use core::convert::TryFrom;
     use der::{asn1::OctetStringRef, Decode, Encode, Length, SliceWriter, TagMode, TagNumber};
-
-    #[test]
-    fn empty_data() -> der::Result<()> {
-        let mut in_buf = [0u8; 32];
-
-        let mut encoder = SliceWriter::new(&mut in_buf);
-        encoder.sequence(crate::PKCS_7_DATA_OID.encoded_len()?, |encoder| {
-            crate::PKCS_7_DATA_OID.encode(encoder)
-        })?;
-        let encoded_der = encoder.finish().expect("encoding success");
-
-        let info = ContentInfo::from_der(encoded_der)?;
-        match info {
-            ContentInfo::Data(None) => (),
-            _ => panic!("unexpected case"),
-        }
-
-        let mut out_buf = [0u8; 32];
-        let encoded_der2 = info.encode_to_slice(&mut out_buf)?;
-
-        assert_eq!(encoded_der, encoded_der2);
-
-        Ok(())
-    }
-
-    #[test]
-    fn empty_encrypted_data() -> der::Result<()> {
-        let mut in_buf = [0u8; 32];
-
-        let mut encoder = SliceWriter::new(&mut in_buf);
-        encoder.sequence(crate::PKCS_7_ENCRYPTED_DATA_OID.encoded_len()?, |encoder| {
-            (crate::PKCS_7_ENCRYPTED_DATA_OID).encode(encoder)
-        })?;
-        let encoded_der = encoder.finish().expect("encoding success");
-
-        let info = ContentInfo::from_der(encoded_der)?;
-        match info {
-            ContentInfo::EncryptedData(None) => (),
-            _ => panic!("unexpected case"),
-        }
-
-        let mut out_buf = [0u8; 32];
-        let encoded_der2 = info.encode_to_slice(&mut out_buf)?;
-
-        assert_eq!(encoded_der, encoded_der2);
-
-        Ok(())
-    }
 
     #[test]
     fn simple_data() -> der::Result<()> {
@@ -270,7 +229,7 @@ mod tests {
 
         let info = ContentInfo::from_der(encoded_der)?;
         match info {
-            ContentInfo::Data(Some(DataContent { content })) => assert_eq!(hello, content),
+            ContentInfo::Data(DataContent { content }) => assert_eq!(hello, content),
             _ => panic!("unexpected case"),
         }
 
