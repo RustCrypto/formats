@@ -1,6 +1,6 @@
 [package]
 name = "pkcs7"
-version = "0.4.0-pre.0"
+version = "0.4.0-pre.1"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #7:
 PKCS #7: Cryptographic Message Syntax Version 1.5 (RFC 5652)
