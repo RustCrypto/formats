@@ -1,6 +1,6 @@
 //! Reader trait.
 
-mod nested;
+pub(crate) mod nested;
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
 pub(crate) mod slice;

@@ -362,7 +362,7 @@ pub use crate::{
     header::Header,
     length::{IndefiniteLength, Length},
     ord::{DerOrd, ValueOrd},
-    reader::{slice::SliceReader, Reader},
+    reader::{nested::NestedReader, slice::SliceReader, Reader},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     writer::{slice::SliceWriter, Writer},
 };
