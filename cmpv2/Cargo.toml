@@ -15,7 +15,7 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-crmf = { version = "=0.0.0", path = "../crmf" }
+crmf = { version = "=0.2.0-pre.0", path = "../crmf" }
 der = { version = "0.7", features = ["alloc", "derive", "flagset", "oid"], path = "../der" }
 spki = { version = "0.7", path = "../spki" }
 x509-cert = { version = "=0.2.0-pre.0", default-features = false, path = "../x509-cert" }
