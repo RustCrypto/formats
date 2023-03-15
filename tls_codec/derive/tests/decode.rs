@@ -309,9 +309,10 @@ fn enum_with_data_and_discriminant() {
 mod discriminant {
     pub mod test {
         pub mod constant {
-            pub const TEST_CONST: u8 = 3;
+            pub const TEST_CONST: u16 = 3;
         }
         pub mod enum_val {
+            #[repr(u16)]
             pub enum Test {
                 Potato = 0x0004,
             }

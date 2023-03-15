@@ -69,7 +69,8 @@
 //!
 //! You can also provide paths that lead to `const` definitions or enum Variants. The important
 //! thing is that any of those path expressions must resolve to something that can be coerced to
-//! the `#[repr(enum_repr)]` of the enum.
+//! the `#[repr(enum_repr)]` of the enum. Please note that there are checks performed at compile
+//! time to check if the provided value fits within the bounds of the `enum_repr` to avoid misuse.
 //!
 //! Note: When using paths *once* in your enum discriminants, as we do not have enough information
 //! to deduce the next implicit discriminant (the constant expressions those paths resolve is only
@@ -208,7 +209,7 @@ struct Variant {
 
 #[derive(Clone)]
 enum DiscriminantValue {
-    Literal(u32),
+    Literal(usize),
     Path(ExprPath),
 }
 
@@ -263,7 +264,7 @@ impl TlsAttr {
                         match &*ident_str {
                             "discriminant" => match &kv.lit {
                                 Lit::Int(i) => i
-                                    .base10_parse::<u32>()
+                                    .base10_parse::<usize>()
                                     .map(DiscriminantValue::Literal)
                                     .map(TlsAttr::Discriminant),
                                 Lit::Str(raw_path) => raw_path
@@ -530,23 +531,34 @@ fn define_discriminant_constants(
             .collect::<Result<Vec<_>>>()?
     } else {
         let mut spans = Vec::with_capacity(variants.len());
-        let mut implicit_discriminant = 0u32;
+        let mut implicit_discriminant = 0usize;
         let mut discriminant_has_paths = false;
         for variant in variants.iter() {
             let constant_id = discriminant_id(&variant.ident);
 
             let tokens = if let Some(value) = discriminant_value(&variant.attrs)? {
                 match value {
-                    DiscriminantValue::Literal(value_u32) => {
-                        implicit_discriminant = value_u32;
+                    DiscriminantValue::Literal(value) => {
+                        implicit_discriminant = value;
                         quote! {
-                            const #constant_id: #repr = #value_u32 as #repr;
+                            const #constant_id: #repr = {
+                                if #value < #repr::MIN as usize || #value > #repr::MAX as usize {
+                                    panic!("The value corresponding to that expression is outside the bounds of the enum representation");
+                                }
+                                #value as #repr
+                            };
                         }
                     }
                     DiscriminantValue::Path(pathexpr) => {
                         discriminant_has_paths = true;
                         quote! {
-                            const #constant_id: #repr = #pathexpr as #repr;
+                            const #constant_id: #repr = {
+                                let pathexpr_usize = #pathexpr as usize;
+                                if pathexpr_usize < #repr::MIN as usize || pathexpr_usize > #repr::MAX as usize {
+                                    panic!("The value corresponding to that expression is outside the bounds of the enum representation");
+                                }
+                                #pathexpr as #repr
+                            };
                         }
                     }
                 }
@@ -559,7 +571,12 @@ fn define_discriminant_constants(
                 );
             } else {
                 quote! {
-                    const #constant_id: #repr = #implicit_discriminant as #repr;
+                    const #constant_id: #repr = {
+                        if #implicit_discriminant > #repr::MAX as usize {
+                            panic!("The value corresponding to that expression is outside the bounds of the enum representation");
+                        }
+                        #implicit_discriminant as #repr
+                    };
                 }
             };
 
