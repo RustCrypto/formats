@@ -20,7 +20,7 @@ der = { version = "0.7", features = ["derive", "alloc", "flagset", "oid"], path 
 spki = { version = "0.7", path = "../spki", features = ["alloc"] }
 
 # optional dependencies
-arbitrary = { version = "1.2", features = ["derive"], optional = true }
+arbitrary = { version = "1.3", features = ["derive"], optional = true }
 
 [dev-dependencies]
 hex-literal = "0.3"
