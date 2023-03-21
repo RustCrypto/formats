@@ -65,7 +65,7 @@
 //! For enumerations with non-unit variants, if no variant has this attribute, the serialization
 //! discriminants will start from zero. If this attribute is used on a variant and the following
 //! variant does not have it, its discriminant will be equal to the previous variant discriminant
-//! plus 1. This behavior is refered to as "implicit discriminants".
+//! plus 1. This behavior is referred to as "implicit discriminants".
 //!
 //! You can also provide paths that lead to `const` definitions or enum Variants. The important
 //! thing is that any of those path expressions must resolve to something that can be coerced to
