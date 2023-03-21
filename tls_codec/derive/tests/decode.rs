@@ -306,6 +306,45 @@ fn enum_with_data_and_discriminant() {
     }
 }
 
+mod discriminant {
+    pub mod test {
+        pub mod constant {
+            pub const TEST_CONST: u16 = 3;
+        }
+        pub mod enum_val {
+            #[repr(u16)]
+            pub enum Test {
+                Potato = 0x0004,
+            }
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+#[repr(u16)]
+enum EnumWithDataAndConstDiscriminant {
+    #[tls_codec(discriminant = "discriminant::test::constant::TEST_CONST")]
+    A(u8),
+    #[tls_codec(discriminant = "discriminant::test::enum_val::Test::Potato")]
+    B,
+    #[tls_codec(discriminant = 12)]
+    C,
+}
+
+#[test]
+fn enum_with_data_and_const_discriminant() {
+    for x in [
+        EnumWithDataAndConstDiscriminant::A(4),
+        EnumWithDataAndConstDiscriminant::B,
+        EnumWithDataAndConstDiscriminant::C,
+    ] {
+        let serialized = x.tls_serialize_detached().unwrap();
+        let deserialized =
+            EnumWithDataAndConstDiscriminant::tls_deserialize(&mut &*serialized).unwrap();
+        assert_eq!(deserialized, x);
+    }
+}
+
 #[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithCustomSerializedField {
