@@ -24,7 +24,7 @@ arbitrary = { version = "1.2", features = ["derive"], optional = true }
 
 [dev-dependencies]
 hex-literal = "0.3"
-rstest = "0.16"
+rstest = "0.17"
 
 [features]
 default = ["pem", "std"]
