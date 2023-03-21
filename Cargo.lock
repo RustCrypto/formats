@@ -412,7 +412,7 @@ dependencies = [
  "proc-macro-error",
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.4",
 ]
 
 [[package]]
@@ -1437,7 +1437,7 @@ version = "0.3.0-pre.1"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.4",
  "tls_codec",
  "trybuild",
 ]
