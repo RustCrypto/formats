@@ -92,7 +92,7 @@
 //! enum TokenImplicit {
 //!     #[tls_codec(discriminant = 5)]
 //!     Int(u32),
-//!     // This will have the discriminant 6 as it's implicitely determined
+//!     // This will have the discriminant 6 as it's implicitly determined
 //!     Bytes([u8; 16]),
 //! }
 //!
