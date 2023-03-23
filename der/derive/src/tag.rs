@@ -53,11 +53,12 @@ impl Tag {
 }
 
 /// Tagging modes: `EXPLICIT` versus `IMPLICIT`.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
 pub(crate) enum TagMode {
     /// `EXPLICIT` tagging.
     ///
     /// Tag is added in addition to the inner tag of the type.
+    #[default]
     Explicit,
 
     /// `IMPLICIT` tagging.
@@ -86,12 +87,6 @@ impl FromStr for TagMode {
             "IMPLICIT" | "implicit" => Ok(TagMode::Implicit),
             _ => Err(ParseError),
         }
-    }
-}
-
-impl Default for TagMode {
-    fn default() -> TagMode {
-        TagMode::Explicit
     }
 }
 

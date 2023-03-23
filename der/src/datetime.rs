@@ -366,7 +366,7 @@ impl<'a> arbitrary::Arbitrary<'a> for DateTime {
 // TODO(tarcieri): checked arithmetic
 #[allow(clippy::integer_arithmetic)]
 pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u8> {
-    if (b'0'..=b'9').contains(&hi) && (b'0'..=b'9').contains(&lo) {
+    if hi.is_ascii_digit() && lo.is_ascii_digit() {
         Ok((hi - b'0') * 10 + (lo - b'0'))
     } else {
         Err(tag.value_error())

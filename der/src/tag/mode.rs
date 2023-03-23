@@ -4,23 +4,18 @@ use crate::{Error, ErrorKind, Result};
 use core::{fmt, str::FromStr};
 
 /// Tagging modes: `EXPLICIT` versus `IMPLICIT`.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
 pub enum TagMode {
     /// `EXPLICIT` tagging.
     ///
     /// Tag is added in addition to the inner tag of the type.
+    #[default]
     Explicit,
 
     /// `IMPLICIT` tagging.
     ///
     /// Tag replaces the existing tag of the inner type.
     Implicit,
-}
-
-impl Default for TagMode {
-    fn default() -> TagMode {
-        TagMode::Explicit
-    }
 }
 
 impl FromStr for TagMode {
