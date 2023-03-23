@@ -548,7 +548,7 @@ macro_rules! impl_tls_vec {
         }
 
         impl $name {
-            impl_vec_members!(u8, 1);
+            impl_vec_members!(u8, $len_len);
         }
 
         impl core::hash::Hash for $name {
