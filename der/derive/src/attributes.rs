@@ -5,13 +5,11 @@ use proc_macro2::TokenStream;
 use proc_macro_error::{abort, abort_call_site};
 use quote::quote;
 use std::{fmt::Debug, str::FromStr};
-use syn::{Attribute, Lit, LitStr, Meta, MetaList, MetaNameValue, NestedMeta, Path};
+use syn::punctuated::Punctuated;
+use syn::{parse::Parse, parse::ParseStream, Attribute, Ident, LitStr, Path, Token};
 
 /// Attribute name.
 pub(crate) const ATTR_NAME: &str = "asn1";
-
-/// Parsing error message.
-const PARSE_ERR_MSG: &str = "error parsing `asn1` attribute";
 
 /// Attributes on a `struct` or `enum` type.
 #[derive(Clone, Debug, Default)]
@@ -284,7 +282,7 @@ impl FieldAttrs {
 }
 
 /// Name/value pair attribute.
-struct AttrNameValue {
+pub(crate) struct AttrNameValue {
     /// Attribute name.
     pub name: Path,
 
@@ -292,32 +290,45 @@ struct AttrNameValue {
     pub value: LitStr,
 }
 
+impl Parse for AttrNameValue {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        let name = match input.parse() {
+            Ok(name) => name,
+            // If it doesn't parse as a path, check if it's the keyword `type`
+            // The asn1 macro uses this even though Path cannot technically contain
+            // non-identifiers, so it needs to be forced in.
+            Err(e) => {
+                if let Ok(tok) = input.parse::<Token![type]>() {
+                    Path::from(Ident::new("type", tok.span))
+                } else {
+                    // If it still doesn't parse, report the original error rather than the
+                    // one produced by the workaround.
+                    return Err(e);
+                }
+            }
+        };
+        input.parse::<Token![=]>()?;
+        let value = input.parse()?;
+        Ok(Self { name, value })
+    }
+}
+
 impl AttrNameValue {
+    pub fn parse_attribute(attr: &Attribute) -> syn::Result<impl IntoIterator<Item = Self>> {
+        attr.parse_args_with(Punctuated::<Self, Token![,]>::parse_terminated)
+    }
+
     /// Parse a slice of attributes.
     pub fn from_attributes(attrs: &[Attribute], out: &mut Vec<Self>) {
         for attr in attrs {
-            if !attr.path.is_ident(ATTR_NAME) {
+            if !attr.path().is_ident(ATTR_NAME) {
                 continue;
             }
 
-            let nested = match attr.parse_meta().expect(PARSE_ERR_MSG) {
-                Meta::List(MetaList { nested, .. }) => nested,
-                other => abort!(other, "malformed `asn1` attribute"),
+            match Self::parse_attribute(attr) {
+                Ok(parsed) => out.extend(parsed),
+                Err(e) => abort!(attr, "{}", e),
             };
-
-            for meta in &nested {
-                match meta {
-                    NestedMeta::Meta(Meta::NameValue(MetaNameValue {
-                        path,
-                        lit: Lit::Str(lit_str),
-                        ..
-                    })) => out.push(Self {
-                        name: path.clone(),
-                        value: lit_str.clone(),
-                    }),
-                    _ => abort!(nested, "malformed `asn1` attribute"),
-                }
-            }
         }
     }
 

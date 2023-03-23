@@ -2,11 +2,12 @@
 //! the purposes of decoding/encoding ASN.1 `ENUMERATED` types as mapped to
 //! enum variants.
 
+use crate::attributes::AttrNameValue;
 use crate::{default_lifetime, ATTR_NAME};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, Meta, MetaList, NestedMeta, Variant};
+use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, Variant};
 
 /// Valid options for the `#[repr]` attribute on `Enumerated` types.
 const REPR_TYPES: &[&str] = &["u8", "u16", "u32"];
@@ -42,23 +43,21 @@ impl DeriveEnumerated {
         let mut integer = false;
 
         for attr in &input.attrs {
-            if attr.path.is_ident(ATTR_NAME) {
-                if let Ok(Meta::List(MetaList { nested, .. })) = attr.parse_meta() {
-                    for meta in nested {
-                        if let NestedMeta::Meta(Meta::NameValue(nv)) = meta {
-                            if nv.path.is_ident("type") {
-                                if let Lit::Str(lit) = nv.lit {
-                                    match lit.value().as_str() {
-                                        "ENUMERATED" => integer = false,
-                                        "INTEGER" => integer = true,
-                                        s => abort!(lit, "`type = \"{}\"` is unsupported", s),
-                                    }
-                                }
-                            }
+            if attr.path().is_ident(ATTR_NAME) {
+                let kvs = match AttrNameValue::parse_attribute(attr) {
+                    Ok(kvs) => kvs,
+                    Err(e) => abort!(attr, "{}", e),
+                };
+                for anv in kvs {
+                    if anv.name.is_ident("type") {
+                        match anv.value.value().as_str() {
+                            "ENUMERATED" => integer = false,
+                            "INTEGER" => integer = true,
+                            s => abort!(anv.value, "`type = \"{}\"` is unsupported", s),
                         }
                     }
                 }
-            } else if attr.path.is_ident("repr") {
+            } else if attr.path().is_ident("repr") {
                 if repr.is_some() {
                     abort!(
                         attr,
@@ -166,7 +165,7 @@ impl EnumeratedVariant {
     /// Create a new [`ChoiceVariant`] from the input [`Variant`].
     fn new(input: &Variant) -> Self {
         for attr in &input.attrs {
-            if attr.path.is_ident(ATTR_NAME) {
+            if attr.path().is_ident(ATTR_NAME) {
                 abort!(
                     attr,
                     "`asn1` attribute is not allowed on fields of `Enumerated` types"
