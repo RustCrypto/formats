@@ -148,13 +148,8 @@ use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::{
-    self, parenthesized,
-    parse::{ParseStream, Parser, Result},
-    parse_macro_input,
-    punctuated::Punctuated,
-    token::Comma,
-    Attribute, Data, DeriveInput, ExprPath, Field, Generics, Ident, Lit, Member, Meta, NestedMeta,
-    Type,
+    self, parse_macro_input, punctuated::Punctuated, token::Comma, Attribute, Data, DeriveInput,
+    Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit, Member, Meta, Result, Token, Type,
 };
 
 /// Attribute name to identify attributes to be processed by derive-macros in this crate.
@@ -246,23 +241,27 @@ impl TlsAttr {
     /// Parses attributes of the form, `#[tls_codec(with = <string>)]`,
     /// `#[tls_codec(discriminant = <number>)]`, and `#[tls_codec(skip)]`.
     fn parse(attr: &Attribute) -> Result<Vec<TlsAttr>> {
-        if attr.path.get_ident().map_or(true, |id| id != ATTR_IDENT) {
+        fn lit(e: &Expr) -> Result<&Lit> {
+            if let Expr::Lit(ExprLit { ref lit, .. }) = e {
+                Ok(lit)
+            } else {
+                Err(syn::Error::new_spanned(e, "expected literal"))
+            }
+        }
+
+        if attr.path().get_ident().map_or(true, |id| id != ATTR_IDENT) {
             return Ok(Vec::new());
         }
-        let meta = match attr.parse_meta()? {
-            Meta::List(list) => Ok(list),
-            _ => Err(syn::Error::new_spanned(attr, "Invalid attribute syntax")),
-        }?;
-        meta.nested
+        attr.parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)?
             .iter()
             .map(|item| match item {
-                NestedMeta::Meta(Meta::NameValue(kv)) => kv
+                Meta::NameValue(kv) => kv
                     .path
                     .get_ident()
                     .map(|ident| {
                         let ident_str = ident.to_string();
                         match &*ident_str {
-                            "discriminant" => match &kv.lit {
+                            "discriminant" => match lit(&kv.value)? {
                                 Lit::Int(i) => i
                                     .base10_parse::<usize>()
                                     .map(DiscriminantValue::Literal)
@@ -272,15 +271,16 @@ impl TlsAttr {
                                     .map(DiscriminantValue::Path)
                                     .map(TlsAttr::Discriminant),
                                 _ => Err(syn::Error::new_spanned(
-                                    &kv.lit,
+                                    &kv.value,
                                     "Expected integer literal",
                                 )),
                             },
-                            "with" => match &kv.lit {
+                            "with" => match lit(&kv.value)? {
                                 Lit::Str(s) => s.parse::<ExprPath>().map(TlsAttr::With),
-                                _ => {
-                                    Err(syn::Error::new_spanned(&kv.lit, "Expected string literal"))
-                                }
+                                _ => Err(syn::Error::new_spanned(
+                                    &kv.value,
+                                    "Expected string literal",
+                                )),
                             },
                             _ => Err(syn::Error::new_spanned(
                                 ident,
@@ -291,7 +291,7 @@ impl TlsAttr {
                     .unwrap_or_else(|| {
                         Err(syn::Error::new_spanned(&kv.path, "Expected identifier"))
                     }),
-                NestedMeta::Meta(Meta::Path(path)) => {
+                Meta::Path(path) => {
                     if let Some(ident) = path.get_ident() {
                         match ident.to_string().to_ascii_lowercase().as_ref() {
                             "skip" => Ok(TlsAttr::Skip),
@@ -420,13 +420,8 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
         Data::Enum(syn::DataEnum { variants, .. }) => {
             let mut repr = None;
             for attr in ast.attrs {
-                if attr.path.is_ident("repr") {
-                    fn repr_arg(input: ParseStream) -> Result<Ident> {
-                        let content;
-                        parenthesized!(content in input);
-                        content.parse()
-                    }
-                    let ty = repr_arg.parse2(attr.tokens)?;
+                if attr.path().is_ident("repr") {
+                    let ty = attr.parse_args()?;
                     repr = Some(ty);
                     break;
                 }
