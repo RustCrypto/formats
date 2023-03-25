@@ -26,16 +26,18 @@ pub type Name = RdnSequence;
 pub struct RdnSequence(pub Vec<RelativeDistinguishedName>);
 
 impl RdnSequence {
-    /// Converts an RDNSequence string into an encoded RDNSequence
-    ///
-    /// This function follows the rules in [RFC 4514].
-    ///
-    /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+    /// Converts an `RDNSequence` string into an encoded `RDNSequence`.
+    #[deprecated(since = "0.2.1", note = "use RdnSequence::from_str(...)?.to_der()")]
     pub fn encode_from_string(s: &str) -> Result<Vec<u8>, der::Error> {
         Self::from_str(s)?.to_der()
     }
 }
 
+/// Parse an [`RdnSequence`] string.
+///
+/// Follows the rules in [RFC 4514].
+///
+/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
 impl FromStr for RdnSequence {
     type Err = der::Error;
 
@@ -133,15 +135,20 @@ pub struct RelativeDistinguishedName(pub SetOfVec<AttributeTypeAndValue>);
 
 impl RelativeDistinguishedName {
     /// Converts an RelativeDistinguishedName string into an encoded RelativeDistinguishedName
-    ///
-    /// This function follows the rules in [RFC 4514].
-    ///
-    /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+    #[deprecated(
+        since = "0.2.1",
+        note = "use RelativeDistinguishedName::from_str(...)?.to_der()"
+    )]
     pub fn encode_from_string(s: &str) -> Result<Vec<u8>, der::Error> {
         Self::from_str(s)?.to_der()
     }
 }
 
+/// Parse a [`RelativeDistinguishedName`] string.
+///
+/// This function follows the rules in [RFC 4514].
+///
+/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
 impl FromStr for RelativeDistinguishedName {
     type Err = der::Error;
 
