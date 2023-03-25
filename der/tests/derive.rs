@@ -48,9 +48,8 @@ mod choice {
             }
         }
 
-        const UTC_TIMESTAMP_DER: &'static [u8] =
-            &hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a");
-        const GENERAL_TIMESTAMP_DER: &'static [u8] =
+        const UTC_TIMESTAMP_DER: &[u8] = &hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a");
+        const GENERAL_TIMESTAMP_DER: &[u8] =
             &hex!("18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
 
         #[test]
@@ -116,8 +115,8 @@ mod choice {
             }
         }
 
-        const BITSTRING_DER: &'static [u8] = &hex!("80 04 00 01 02 03");
-        const TIME_DER: &'static [u8] = &hex!("81 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
+        const BITSTRING_DER: &[u8] = &hex!("80 04 00 01 02 03");
+        const TIME_DER: &[u8] = &hex!("81 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
 
         #[test]
         fn decode() {
@@ -432,8 +431,7 @@ mod sequence {
 
     #[test]
     fn decode() {
-        let algorithm_identifier =
-            AlgorithmIdentifier::from_der(&ALGORITHM_IDENTIFIER_DER).unwrap();
+        let algorithm_identifier = AlgorithmIdentifier::from_der(ALGORITHM_IDENTIFIER_DER).unwrap();
 
         assert_eq!(ID_EC_PUBLIC_KEY_OID, algorithm_identifier.algorithm);
         assert_eq!(

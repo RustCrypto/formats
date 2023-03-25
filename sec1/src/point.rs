@@ -660,8 +660,8 @@ mod tests {
 
     #[test]
     fn decode_invalid_tag() {
-        let mut compressed_bytes = COMPRESSED_BYTES.clone();
-        let mut uncompressed_bytes = UNCOMPRESSED_BYTES.clone();
+        let mut compressed_bytes = COMPRESSED_BYTES;
+        let mut uncompressed_bytes = UNCOMPRESSED_BYTES;
 
         for bytes in &mut [&mut compressed_bytes[..], &mut uncompressed_bytes[..]] {
             for tag in 0..=0xFF {

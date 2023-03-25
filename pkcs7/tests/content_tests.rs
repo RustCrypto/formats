@@ -22,7 +22,7 @@ fn encode_content_info<'a>(content_info: &ContentInfo<'a>, buf: &'a mut [u8]) ->
 #[test]
 fn decode_cert_example() {
     let path = "./tests/examples/certData.bin";
-    let bytes = fs::read(&path).expect(&format!("Failed to read from {}", &path));
+    let bytes = fs::read(path).unwrap_or_else(|_| panic!("Failed to read from {}", &path));
 
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
@@ -40,7 +40,7 @@ fn decode_cert_example() {
 #[test]
 fn decode_encrypted_key_example() {
     let path = "./tests/examples/keyEncryptedData.bin";
-    let bytes = fs::read(&path).expect(&format!("Failed to read from {}", &path));
+    let bytes = fs::read(path).unwrap_or_else(|_| panic!("Failed to read from {}", &path));
 
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
@@ -86,7 +86,7 @@ fn decode_encrypted_key_example() {
 #[test]
 fn decode_signed_mdm_example() {
     let path = "./tests/examples/apple_mdm_signature_der.bin";
-    let bytes = fs::read(&path).expect(&format!("Failed to read from {}", &path));
+    let bytes = fs::read(path).unwrap_or_else(|_| panic!("Failed to read from {}", &path));
 
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 
@@ -114,7 +114,7 @@ fn decode_signed_mdm_example() {
 #[test]
 fn decode_signed_scep_example() {
     let path = "./tests/examples/scep_der.bin";
-    let bytes = fs::read(&path).expect(&format!("Failed to read from {}", &path));
+    let bytes = fs::read(path).unwrap_or_else(|_| panic!("Failed to read from {}", &path));
 
     let content = ContentInfo::from_der(&bytes).expect("expected valid data");
 

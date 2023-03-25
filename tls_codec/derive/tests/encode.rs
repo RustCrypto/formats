@@ -47,7 +47,7 @@ fn lifetime_struct() {
 
     let some_default_value = SomeValue { val: value };
     let values = vec![some_default_value; 33];
-    let ref_values: Vec<&SomeValue> = values.iter().map(|v| v).collect();
+    let ref_values: Vec<&SomeValue> = values.iter().collect();
     let ref_values_slice = TlsSliceU16(&ref_values);
     let s = StructWithDoubleLifetime {
         value: &ref_values_slice,

@@ -534,7 +534,7 @@ mod tests {
         assert_eq!(bits.len(), 18);
 
         for bit in [0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1] {
-            assert_eq!(bits.next().unwrap() as u8, bit)
+            assert_eq!(u8::from(bits.next().unwrap()), bit)
         }
 
         // Ensure `None` is returned on successive calls
