@@ -2,8 +2,8 @@
 
 use crate::attr::AttributeTypeAndValue;
 use alloc::vec::Vec;
-use core::fmt;
-use der::{asn1::SetOfVec, Decode, Encode};
+use core::{fmt, str::FromStr};
+use der::{asn1::SetOfVec, Encode};
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
 ///
@@ -32,16 +32,18 @@ impl RdnSequence {
     ///
     /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
     pub fn encode_from_string(s: &str) -> Result<Vec<u8>, der::Error> {
-        let ders = split(s, b',')
-            .map(RelativeDistinguishedName::encode_from_string)
-            .collect::<Result<Vec<_>, der::Error>>()?;
+        Self::from_str(s)?.to_der()
+    }
+}
 
-        let mut out = Vec::new();
-        for der in ders.iter() {
-            out.push(RelativeDistinguishedName::from_der(der)?);
-        }
+impl FromStr for RdnSequence {
+    type Err = der::Error;
 
-        RdnSequence(out).to_der()
+    fn from_str(s: &str) -> der::Result<Self> {
+        split(s, b',')
+            .map(RelativeDistinguishedName::from_str)
+            .collect::<der::Result<Vec<_>>>()
+            .map(Self)
     }
 }
 
@@ -136,16 +138,19 @@ impl RelativeDistinguishedName {
     ///
     /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
     pub fn encode_from_string(s: &str) -> Result<Vec<u8>, der::Error> {
-        let ders = split(s, b'+')
-            .map(AttributeTypeAndValue::encode_from_string)
-            .collect::<Result<Vec<_>, der::Error>>()?;
+        Self::from_str(s)?.to_der()
+    }
+}
 
-        let atvs = ders
-            .iter()
-            .map(|der| AttributeTypeAndValue::from_der(der))
-            .collect::<Result<Vec<_>, der::Error>>()?;
+impl FromStr for RelativeDistinguishedName {
+    type Err = der::Error;
 
-        RelativeDistinguishedName(atvs.try_into()?).to_der()
+    fn from_str(s: &str) -> der::Result<Self> {
+        split(s, b'+')
+            .map(AttributeTypeAndValue::from_str)
+            .collect::<der::Result<Vec<_>>>()?
+            .try_into()
+            .map(Self)
     }
 }
 

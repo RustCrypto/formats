@@ -1,15 +1,21 @@
 //! Attribute-related definitions as defined in X.501 (and updated by RFC 5280).
 
 use alloc::vec::Vec;
-use const_oid::db::rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT, SERIAL_NUMBER};
-use core::fmt::{self, Write};
-
-use const_oid::db::DB;
-use der::asn1::{
-    Any, Ia5StringRef, ObjectIdentifier, PrintableStringRef, SetOfVec, TeletexStringRef,
-    Utf8StringRef,
+use const_oid::db::{
+    rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT, SERIAL_NUMBER},
+    DB,
 };
-use der::{Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd};
+use core::{
+    fmt::{self, Write},
+    str::FromStr,
+};
+use der::{
+    asn1::{
+        Any, Ia5StringRef, ObjectIdentifier, PrintableStringRef, SetOfVec, TeletexStringRef,
+        Utf8StringRef,
+    },
+    Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd,
+};
 
 /// X.501 `AttributeType` as defined in [RFC 5280 Appendix A.1].
 ///
@@ -139,7 +145,7 @@ impl Parser {
 
 impl AttributeTypeAndValue {
     /// Parses the hex value in the `OID=#HEX` format.
-    fn encode_hex(oid: ObjectIdentifier, val: &str) -> Result<Vec<u8>, Error> {
+    fn from_hex(oid: ObjectIdentifier, val: &str) -> Result<Self, Error> {
         // Ensure an even number of hex bytes.
         let mut iter = match val.len() % 2 {
             0 => [].iter().cloned().chain(val.bytes()),
@@ -149,6 +155,7 @@ impl AttributeTypeAndValue {
 
         // Decode der bytes from hex.
         let mut bytes = Vec::with_capacity((val.len() + 1) / 2);
+
         while let (Some(h), Some(l)) = (iter.next(), iter.next()) {
             let mut byte = 0u8;
 
@@ -164,14 +171,14 @@ impl AttributeTypeAndValue {
             bytes.push(byte);
         }
 
-        // Serialize.
-        let value = Any::from_der(&bytes)?;
-        let atv = AttributeTypeAndValue { oid, value };
-        atv.to_der()
+        Ok(Self {
+            oid,
+            value: Any::from_der(&bytes)?,
+        })
     }
 
     /// Parses the string value in the `NAME=STRING` format.
-    fn encode_str(oid: ObjectIdentifier, val: &str) -> Result<Vec<u8>, Error> {
+    fn from_delimited_str(oid: ObjectIdentifier, val: &str) -> Result<Self, Error> {
         // Undo escaping.
         let mut parser = Parser::new();
         for c in val.bytes() {
@@ -187,10 +194,10 @@ impl AttributeTypeAndValue {
             _ => Tag::Utf8String,
         };
 
-        // Serialize.
-        let value = Any::new(tag, parser.as_bytes())?;
-        let atv = AttributeTypeAndValue { oid, value };
-        atv.to_der()
+        Ok(Self {
+            oid,
+            value: Any::new(tag, parser.as_bytes())?,
+        })
     }
 
     /// Converts an AttributeTypeAndValue string into an encoded AttributeTypeAndValue
@@ -199,6 +206,14 @@ impl AttributeTypeAndValue {
     ///
     /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
     pub fn encode_from_string(s: &str) -> Result<Vec<u8>, Error> {
+        Self::from_str(s)?.to_der()
+    }
+}
+
+impl FromStr for AttributeTypeAndValue {
+    type Err = Error;
+
+    fn from_str(s: &str) -> der::Result<Self> {
         let idx = s.find('=').ok_or_else(|| Error::from(ErrorKind::Failed))?;
         let (key, val) = s.split_at(idx);
         let val = &val[1..];
@@ -211,8 +226,8 @@ impl AttributeTypeAndValue {
 
         // If the value is hex-encoded DER...
         match val.strip_prefix('#') {
-            Some(val) => Self::encode_hex(oid, val),
-            None => Self::encode_str(oid, val),
+            Some(val) => Self::from_hex(oid, val),
+            None => Self::from_delimited_str(oid, val),
         }
     }
 }
