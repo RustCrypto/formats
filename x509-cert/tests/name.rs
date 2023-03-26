@@ -328,7 +328,11 @@ fn rdns_serde() {
         for input in inputs.iter() {
             eprintln!("input: {}", input);
 
-            let der = RdnSequence::encode_from_string(input).unwrap();
+            let der = input
+                .parse::<RdnSequence>()
+                .and_then(|rdn| rdn.to_der())
+                .unwrap();
+
             let rdns = RdnSequence::from_der(&der).unwrap();
 
             for (l, r) in brdns.0.iter().zip(rdns.0.iter()) {

@@ -205,11 +205,20 @@ impl AttributeTypeAndValue {
     /// This function follows the rules in [RFC 4514].
     ///
     /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+    #[deprecated(
+        since = "0.2.1",
+        note = "use AttributeTypeAndValue::from_str(...)?.to_der()"
+    )]
     pub fn encode_from_string(s: &str) -> Result<Vec<u8>, Error> {
         Self::from_str(s)?.to_der()
     }
 }
 
+/// Parse an [`AttributeTypeAndValue`] string.
+///
+/// This function follows the rules in [RFC 4514].
+///
+/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
 impl FromStr for AttributeTypeAndValue {
     type Err = Error;
 
