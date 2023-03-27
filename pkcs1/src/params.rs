@@ -17,8 +17,6 @@ const SHA_1_AI: AlgorithmIdentifierRef<'_> = AlgorithmIdentifierRef {
     parameters: None,
 };
 
-const SALT_LEN_DEFAULT: u8 = 20;
-
 /// `TrailerField` as defined in [RFC 8017 Appendix 2.3].
 /// ```text
 /// TrailerField ::= INTEGER { trailerFieldBC(1) }
@@ -91,6 +89,9 @@ pub struct RsaPssParams<'a> {
 }
 
 impl<'a> RsaPssParams<'a> {
+    /// Default RSA PSS Salt length in RsaPssParams
+    pub const SALT_LEN_DEFAULT: u8 = 20;
+
     fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
         if self.hash == SHA_1_AI {
             None
@@ -118,7 +119,7 @@ impl<'a> RsaPssParams<'a> {
     }
 
     fn context_specific_salt_len(&self) -> Option<ContextSpecificRef<'_, u8>> {
-        if self.salt_len == SALT_LEN_DEFAULT {
+        if self.salt_len == RsaPssParams::SALT_LEN_DEFAULT {
             None
         } else {
             Some(ContextSpecificRef {
@@ -147,7 +148,7 @@ impl<'a> Default for RsaPssParams<'a> {
         Self {
             hash: SHA_1_AI,
             mask_gen: default_mgf1_sha1(),
-            salt_len: SALT_LEN_DEFAULT,
+            salt_len: RsaPssParams::SALT_LEN_DEFAULT,
             trailer_field: Default::default(),
         }
     }
@@ -165,7 +166,7 @@ impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
                     .unwrap_or_else(default_mgf1_sha1),
                 salt_len: reader
                     .context_specific(TagNumber::N2, TagMode::Explicit)?
-                    .unwrap_or(SALT_LEN_DEFAULT),
+                    .unwrap_or(RsaPssParams::SALT_LEN_DEFAULT),
                 trailer_field: reader
                     .context_specific(TagNumber::N3, TagMode::Explicit)?
                     .unwrap_or_default(),
