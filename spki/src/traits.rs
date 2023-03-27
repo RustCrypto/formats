@@ -3,6 +3,9 @@
 use crate::{Error, Result, SubjectPublicKeyInfoRef};
 
 #[cfg(feature = "alloc")]
+use crate::AlgorithmIdentifierOwned;
+
+#[cfg(feature = "alloc")]
 use der::Document;
 
 #[cfg(feature = "pem")]
@@ -92,4 +95,12 @@ pub trait EncodePublicKey {
         let doc = self.to_public_key_der()?;
         Ok(doc.write_pem_file(path, SubjectPublicKeyInfoRef::PEM_LABEL, line_ending)?)
     }
+}
+
+/// Returns AlgorithmIndentifier associated with the structure. This is mostly useful for Signing
+/// and Validation keys.
+#[cfg(feature = "alloc")]
+pub trait DynAssociatedAlgorithmIdentifier {
+    /// Returns corresponding AlgorithmIndentifier
+    fn algorithm_identifier(&self) -> AlgorithmIdentifierOwned;
 }

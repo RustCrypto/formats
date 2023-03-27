@@ -57,8 +57,9 @@ pub use der::{self, asn1::ObjectIdentifier};
 #[cfg(feature = "alloc")]
 pub use {
     crate::{
-        algorithm::AlgorithmIdentifierOwned, spki::SubjectPublicKeyInfoOwned,
-        traits::EncodePublicKey,
+        algorithm::AlgorithmIdentifierOwned,
+        spki::SubjectPublicKeyInfoOwned,
+        traits::{DynAssociatedAlgorithmIdentifier, EncodePublicKey},
     },
     der::Document,
 };
