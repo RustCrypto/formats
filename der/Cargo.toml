@@ -22,7 +22,7 @@ der_derive = { version = "0.7", optional = true, path = "derive" }
 flagset = { version = "0.4.3", optional = true }
 pem-rfc7468 = { version = "0.7", optional = true, features = ["alloc"], path = "../pem-rfc7468" }
 time = { version = "0.3.4", optional = true, default-features = false }
-zeroize = { version = "1.5", optional = true, default-features = false }
+zeroize = { version = "1.6", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3.3"
