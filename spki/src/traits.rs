@@ -1,9 +1,12 @@
 //! Traits for encoding/decoding SPKI public keys.
 
-use crate::{Error, Result, SubjectPublicKeyInfoRef};
+use crate::{AlgorithmIdentifierRef, Error, Result, SubjectPublicKeyInfoRef};
 
 #[cfg(feature = "alloc")]
-use der::Document;
+use {
+    crate::AlgorithmIdentifierOwned,
+    der::{referenced::RefToOwned, Document},
+};
 
 #[cfg(feature = "pem")]
 use {
@@ -91,5 +94,29 @@ pub trait EncodePublicKey {
     ) -> Result<()> {
         let doc = self.to_public_key_der()?;
         Ok(doc.write_pem_file(path, SubjectPublicKeyInfoRef::PEM_LABEL, line_ending)?)
+    }
+}
+
+/// Returns `AlgorithmIdentifier` associated with the structure.
+///
+/// This is useful for e.g. keys for digital signature algorithms.
+pub trait AssociatedAlgorithmIdentifier {
+    /// `AlgorithmIdentifier` for this structure.
+    const ALGORITHM_IDENTIFIER: AlgorithmIdentifierRef<'static>;
+}
+
+/// Returns `AlgorithmIdentifier` associated with the structure.
+///
+/// This is useful for e.g. keys for digital signature algorithms.
+#[cfg(feature = "alloc")]
+pub trait DynAssociatedAlgorithmIdentifier {
+    /// `AlgorithmIdentifier` for this structure.
+    fn algorithm_identifier(&self) -> AlgorithmIdentifierOwned;
+}
+
+#[cfg(feature = "alloc")]
+impl<T: AssociatedAlgorithmIdentifier> DynAssociatedAlgorithmIdentifier for T {
+    fn algorithm_identifier(&self) -> AlgorithmIdentifierOwned {
+        Self::ALGORITHM_IDENTIFIER.ref_to_owned()
     }
 }
