@@ -181,6 +181,26 @@ impl ObjectIdentifier {
             Err(err) => Err(err),
         }
     }
+
+    /// Does this OID start with the other OID?
+    pub fn starts_with(&self, other: ObjectIdentifier) -> bool {
+        let mut self_arcs = self.arcs();
+
+        for other_arc in other.arcs() {
+            match self_arcs.next() {
+                Some(arc) => {
+                    if arc != other_arc {
+                        return false;
+                    }
+                }
+                None => {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
 }
 
 impl<'a> ObjectIdentifier<&'a [u8]> {

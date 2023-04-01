@@ -28,6 +28,11 @@ const EXAMPLE_OID_LARGE_ARC_BER: &[u8] = &hex!("0992268993F22C640101");
 const EXAMPLE_OID_LARGE_ARC: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("0.9.2342.19200300.100.1.1");
 
+/// Create an OID from a string.
+pub fn oid(s: &str) -> ObjectIdentifier {
+    ObjectIdentifier::new(s).unwrap()
+}
+
 #[test]
 fn from_bytes() {
     let oid0 = ObjectIdentifier::from_bytes(EXAMPLE_OID_0_BER).unwrap();
@@ -193,17 +198,26 @@ fn parse_invalid_second_arc() {
 
 #[test]
 fn parent() {
-    let oid = ObjectIdentifier::new("1.2.3.4").unwrap();
-    let parent = oid.parent().unwrap();
-    assert_eq!(parent, ObjectIdentifier::new("1.2.3").unwrap());
+    let child = oid("1.2.3.4");
+    let parent = child.parent().unwrap();
+    assert_eq!(parent, oid("1.2.3"));
     assert_eq!(parent.parent(), None);
 }
 
 #[test]
 fn push_arc() {
-    let oid = ObjectIdentifier::new("1.2.3").unwrap();
-    assert_eq!(
-        oid.push_arc(4).unwrap(),
-        ObjectIdentifier::new("1.2.3.4").unwrap()
-    );
+    let parent = oid("1.2.3");
+    assert_eq!(parent.push_arc(4).unwrap(), oid("1.2.3.4"));
+}
+
+#[test]
+fn starts_with() {
+    let child = ObjectIdentifier::new("1.2.3.4.5").unwrap();
+    assert!(child.starts_with(oid("1.2.3.4.5")));
+    assert!(child.starts_with(oid("1.2.3.4")));
+    assert!(child.starts_with(oid("1.2.3")));
+
+    assert!(!child.starts_with(oid("1.2.4")));
+    assert!(!child.starts_with(oid("2.2.3")));
+    assert!(!child.starts_with(oid("1.2.3.4.5.6")));
 }
