@@ -50,7 +50,7 @@ pub use crate::{
     algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef},
     error::{Error, Result},
     spki::{SubjectPublicKeyInfo, SubjectPublicKeyInfoRef},
-    traits::DecodePublicKey,
+    traits::{AssociatedAlgorithmIdentifier, DecodePublicKey},
 };
 pub use der::{self, asn1::ObjectIdentifier};
 
