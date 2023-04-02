@@ -130,3 +130,39 @@ where
         }
     }
 }
+
+/// Returns `AlgorithmIdentifier` associated with the signature system.
+///
+/// Unlike AssociatedAlgorithmIdentifier this is intended to be implemented for public and/or
+/// private keys.
+pub trait SignatureAlgorithmIdentifier {
+    /// Algorithm parameters.
+    type Params: der::Encode;
+
+    /// `AlgorithmIdentifier` for the corresponding singature system.
+    const SIGNATURE_ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;
+}
+
+/// Returns `AlgorithmIdentifier` associated with the signature system.
+///
+/// Unlike AssociatedAlgorithmIdentifier this is intended to be implemented for public and/or
+/// private keys.
+#[cfg(feature = "alloc")]
+pub trait DynSignatureAlgorithmIdentifier {
+    /// `AlgorithmIdentifier` for the corresponding singature system.
+    fn signature_algorithm_identifier(&self) -> AlgorithmIdentifierOwned;
+}
+
+#[cfg(feature = "alloc")]
+impl<T> DynSignatureAlgorithmIdentifier for T
+where
+    T: SignatureAlgorithmIdentifier,
+    T::Params: Into<Any>,
+{
+    fn signature_algorithm_identifier(&self) -> AlgorithmIdentifierOwned {
+        AlgorithmIdentifierOwned {
+            oid: T::SIGNATURE_ALGORITHM_IDENTIFIER.oid,
+            parameters: T::SIGNATURE_ALGORITHM_IDENTIFIER.parameters.map(Into::into),
+        }
+    }
+}
