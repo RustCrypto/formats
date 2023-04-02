@@ -6,6 +6,9 @@ use crate::{
 };
 use const_oid::ObjectIdentifier;
 
+#[cfg(feature = "alloc")]
+use super::Any;
+
 impl<'a> DecodeValue<'a> for ObjectIdentifier {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let mut buf = [0u8; ObjectIdentifier::MAX_SIZE];
@@ -47,6 +50,13 @@ impl<'a> From<&'a ObjectIdentifier> for AnyRef<'a> {
             .expect("OID length invariant violated");
 
         AnyRef::from_tag_and_value(Tag::ObjectIdentifier, value)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl From<ObjectIdentifier> for Any {
+    fn from(oid: ObjectIdentifier) -> Any {
+        AnyRef::from(&oid).into()
     }
 }
 
