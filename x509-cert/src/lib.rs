@@ -26,7 +26,6 @@ mod macros;
 pub mod anchor;
 pub mod attr;
 pub mod certificate;
-pub mod constants;
 pub mod crl;
 pub mod ext;
 pub mod name;

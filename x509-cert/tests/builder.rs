@@ -1,13 +1,13 @@
 #![cfg(all(feature = "builder", feature = "pem"))]
 
-use der::{pem::LineEnding, referenced::RefToOwned, Decode, Encode, EncodePem};
+use der::{pem::LineEnding, Decode, Encode, EncodePem};
 use rsa::pkcs1::DecodeRsaPrivateKey;
+use rsa::pkcs1v15::SigningKey;
+use sha2::Sha256;
 use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{CertificateBuilder, CertificateVersion, Profile, Signer, UniqueIds},
-    certificate::TbsCertificate,
-    constants,
+    builder::{CertificateBuilder, CertificateVersion, Profile, UniqueIds},
     name::Name,
     serial_number::SerialNumber,
     time::Validity,
@@ -15,6 +15,7 @@ use x509_cert::{
 use x509_cert_test_support::{openssl, zlint};
 
 const RSA_2048_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-pub.der");
+const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.der");
 
 #[test]
 fn root_ca_certificate() {
@@ -34,7 +35,7 @@ fn root_ca_certificate() {
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
-    let mut signer = RsaCertSigner;
+    let mut signer = rsa_signer();
     let mut builder = CertificateBuilder::new(
         profile,
         CertificateVersion::V3(uids),
@@ -46,7 +47,7 @@ fn root_ca_certificate() {
     )
     .expect("Create certificate");
 
-    let certificate = builder.build().unwrap().unwrap();
+    let certificate = builder.build().unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -83,7 +84,7 @@ fn sub_ca_certificate() {
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
-    let mut signer = RsaCertSigner;
+    let mut signer = rsa_signer();
     let mut builder = CertificateBuilder::new(
         profile,
         CertificateVersion::V3(uids),
@@ -95,7 +96,7 @@ fn sub_ca_certificate() {
     )
     .expect("Create certificate");
 
-    let certificate = builder.build().unwrap().unwrap();
+    let certificate = builder.build().unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -111,35 +112,8 @@ fn sub_ca_certificate() {
     zlint::check_certificate(pem.as_bytes(), ignored);
 }
 
-const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.der");
-
-struct RsaCertSigner;
-
-impl Signer for RsaCertSigner {
-    type Err = ();
-
-    fn signature_algorithm(&self) -> constants::CertificateSignatureAlgorithmOwned {
-        constants::SHA_256_WITH_RSA_ENCRYPTION.ref_to_owned()
-    }
-
-    fn public_key(&self) -> SubjectPublicKeyInfoOwned {
-        SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key")
-    }
-
-    fn sign(&mut self, input: &TbsCertificate) -> Result<Vec<u8>, Self::Err> {
-        use rsa::{
-            pkcs1v15::SigningKey,
-            signature::{RandomizedSigner, SignatureEncoding},
-        };
-        use sha2::Sha256;
-
-        let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
-        let signing_key = SigningKey::<Sha256>::new_with_prefix(private_key);
-
-        let mut rng = rand::thread_rng();
-        let data: Vec<u8> = input.to_der().unwrap();
-        let signature = signing_key.sign_with_rng(&mut rng, &data);
-
-        Ok(signature.to_vec())
-    }
+fn rsa_signer() -> SigningKey<Sha256> {
+    let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let signing_key = SigningKey::<Sha256>::new_with_prefix(private_key);
+    signing_key
 }

@@ -2,13 +2,16 @@
 
 use alloc::vec;
 use core::fmt;
-use der::asn1::{BitString, OctetString};
+use der::{
+    asn1::{BitString, OctetString},
+    Encode,
+};
 use sha1::{Digest, Sha1};
-use spki::SubjectPublicKeyInfoOwned;
+use signature::{Keypair, SignatureEncoding, Signer};
+use spki::{DynSignatureAlgorithmIdentifier, EncodePublicKey, SubjectPublicKeyInfoOwned};
 
 use crate::{
     certificate::{Certificate, TbsCertificate, Version},
-    constants::CertificateSignatureAlgorithmOwned,
     ext::{
         pkix::{
             AuthorityKeyIdentifier, BasicConstraints, KeyUsage, KeyUsages, SubjectKeyIdentifier,
@@ -20,7 +23,49 @@ use crate::{
     time::Validity,
 };
 
-type Result<T> = core::result::Result<T, der::Error>;
+/// Error type
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum Error {
+    /// ASN.1 DER-related errors.
+    Asn1(der::Error),
+
+    /// Public key errors propagated from the [`spki::Error`] type.
+    PublicKey(spki::Error),
+
+    /// Signing error propagated for the [`signature::Signer`] type.
+    Signature(signature::Error),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
+            Error::PublicKey(err) => write!(f, "public key error: {}", err),
+            Error::Signature(err) => write!(f, "signature error: {}", err),
+        }
+    }
+}
+
+impl From<der::Error> for Error {
+    fn from(err: der::Error) -> Error {
+        Error::Asn1(err)
+    }
+}
+
+impl From<spki::Error> for Error {
+    fn from(err: spki::Error) -> Error {
+        Error::PublicKey(err)
+    }
+}
+
+impl From<signature::Error> for Error {
+    fn from(err: signature::Error) -> Error {
+        Error::Signature(err)
+    }
+}
+
+type Result<T> = core::result::Result<T, Error>;
 
 /// UniqueIds holds the optional attributes `issuerUniqueID` and `subjectUniqueID`
 /// to be filled in the TBSCertificate if version v2 or v3.
@@ -216,28 +261,16 @@ impl From<CertificateVersion> for Version {
 /// use x509_cert::serial_number::SerialNumber;
 /// use x509_cert::time::Validity;
 ///
+/// # const RSA_2048_DER: &[u8] = include_bytes!("../tests/examples/rsa2048-pub.der");
+/// # const RSA_2048_PRIV_DER: &[u8] = include_bytes!("../tests/examples/rsa2048-priv.der");
+/// # use rsa::{pkcs1v15::SigningKey, pkcs1::DecodeRsaPrivateKey};
+/// # use sha2::Sha256;
 /// # use std::time::Duration;
 /// # use der::referenced::RefToOwned;
-/// # use x509_cert::constants;
-/// # use x509_cert::certificate::TbsCertificate;
-/// # use x509_cert::builder::{Signer};
-/// # const RSA_2048_DER: &[u8] = include_bytes!("../tests/examples/rsa2048-pub.der");
-///
-/// # struct RsaCertSigner;
-/// # impl Signer for RsaCertSigner {
-/// #     type Err = ();
-///
-/// #     fn signature_algorithm(&self) -> constants::CertificateSignatureAlgorithmOwned {
-/// #         constants::SHA_256_WITH_RSA_ENCRYPTION.ref_to_owned()
-/// #     }
-///
-/// #     fn public_key(&self) -> SubjectPublicKeyInfoOwned {
-/// #         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER).expect("get rsa pub key")
-/// #     }
-///
-/// #     fn sign(&mut self, input: &TbsCertificate) -> Result<Vec<u8>, Self::Err> {
-/// #         todo!();
-/// #     }
+/// # fn rsa_signer() -> SigningKey<Sha256> {
+/// #     let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER).unwrap();
+/// #     let signing_key = SigningKey::<Sha256>::new_with_prefix(private_key);
+/// #     signing_key
 /// # }
 ///
 /// let uids = UniqueIds {
@@ -254,7 +287,7 @@ impl From<CertificateVersion> for Version {
 /// let subject = Name::from_der(&subject).unwrap();
 /// let pub_key = SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER).expect("get rsa pub key");
 ///
-/// let mut signer = RsaCertSigner;
+/// let mut signer = rsa_signer();
 /// let mut builder = CertificateBuilder::new(
 ///     profile,
 ///     CertificateVersion::V3(uids),
@@ -266,14 +299,19 @@ impl From<CertificateVersion> for Version {
 /// )
 /// .expect("Create certificate");
 /// ```
-pub struct CertificateBuilder<'s, S: Signer> {
+pub struct CertificateBuilder<'s, S> {
     tbs: TbsCertificate,
     signer: &'s mut S,
 }
 
-impl<'s, S: Signer> CertificateBuilder<'s, S> {
+impl<'s, S> CertificateBuilder<'s, S>
+where
+    S: Keypair,
+    S::VerifyingKey: EncodePublicKey,
+    S::VerifyingKey: DynSignatureAlgorithmIdentifier,
+{
     /// Creates a new certificate builder
-    pub fn new(
+    pub fn new<Signature>(
         profile: Profile,
         version: CertificateVersion,
         serial_number: SerialNumber,
@@ -281,10 +319,16 @@ impl<'s, S: Signer> CertificateBuilder<'s, S> {
         subject: Name,
         subject_public_key_info: SubjectPublicKeyInfoOwned,
         signer: &'s mut S,
-    ) -> Result<Self> {
-        let signer_pub = signer.public_key();
+    ) -> Result<Self>
+    where
+        S: Signer<Signature>,
+    {
+        let verifying_key = signer.verifying_key();
+        let signer_pub = verifying_key
+            .to_public_key_der()?
+            .decode_msg::<SubjectPublicKeyInfoOwned>()?;
 
-        let signature_alg = signer.signature_algorithm().identifier;
+        let signature_alg = verifying_key.signature_algorithm_identifier()?;
         let issuer = profile.get_issuer(&subject);
 
         validity.not_before.rfc5280_adjust_utc_time()?;
@@ -337,12 +381,13 @@ impl<'s, S: Signer> CertificateBuilder<'s, S> {
     }
 
     /// Run the certificate through the signer and build the end certificate.
-    pub fn build(&mut self) -> Result<core::result::Result<Certificate, S::Err>> {
-        let signature = match self.signer.sign(&self.tbs) {
-            Ok(s) => s,
-            Err(e) => return Ok(Err(e)),
-        };
-        let signature = BitString::from_bytes(&signature)?;
+    pub fn build<Signature>(&mut self) -> Result<Certificate>
+    where
+        S: Signer<Signature>,
+        Signature: SignatureEncoding,
+    {
+        let signature = self.signer.try_sign(&self.tbs.to_der()?)?;
+        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
 
         let cert = Certificate {
             tbs_certificate: self.tbs.clone(),
@@ -350,22 +395,6 @@ impl<'s, S: Signer> CertificateBuilder<'s, S> {
             signature,
         };
 
-        Ok(Ok(cert))
+        Ok(cert)
     }
-}
-
-/// Signer to be used to for signing the certificates
-pub trait Signer {
-    /// Error to be returned by the Signer
-    type Err: fmt::Debug;
-
-    /// The signature expected from this signer
-    fn signature_algorithm(&self) -> CertificateSignatureAlgorithmOwned;
-
-    /// The SPKI encoded public key used by this signer
-    fn public_key(&self) -> SubjectPublicKeyInfoOwned;
-
-    /// The sign method should return the signature of the payload.
-    // TODO(baloo): do we need to zeroize that?
-    fn sign(&mut self, input: &TbsCertificate) -> core::result::Result<vec::Vec<u8>, Self::Err>;
 }
