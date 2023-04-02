@@ -1,10 +1,14 @@
 name: Security Audit
 on:
   pull_request:
-    paths: Cargo.lock
+    paths:
+      - "Cargo.lock"
+      - ".github/workflows/security-audit.yml"
   push:
     branches: master
-    paths: Cargo.lock
+    paths:
+      - "Cargo.lock"
+      - ".github/workflows/security-audit.yml"
   schedule:
     - cron: "0 0 * * *"
 
@@ -21,7 +25,7 @@ jobs:
         with:
           path: ~/.cargo/bin
           key: ${{ runner.os }}-cargo-audit-v0.15.2
-      - uses: actions-rs/audit-check@v1
+      - uses: rustsec/audit-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
