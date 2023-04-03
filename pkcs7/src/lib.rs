@@ -25,7 +25,7 @@ pub mod revocation_info_choices;
 pub mod signed_data_content;
 pub mod signer_info;
 
-mod content_info;
+pub mod content_info;
 mod content_type;
 
 pub use crate::{content_info::ContentInfo, content_type::ContentType};

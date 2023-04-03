@@ -139,6 +139,10 @@ fn decode_signed_scep_example() {
         }
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
     }
+
+    let mut buf = vec![0u8; bytes.len()];
+    let encoded_content = encode_content_info(&content, &mut buf);
+    println!("{:?}", encoded_content);
 }
 
 // TODO(tarcieri): BER support
@@ -186,3 +190,55 @@ fn decode_signed_der() {
         10034
     );
 }
+
+use pkcs7::{
+    signed_data_content::{CertificateSet, DigestAlgorithmIdentifier, DigestAlgorithmIdentifiers},
+    signer_info::{SignerInfo, SignerInfos},
+};
+
+const OID_ED25519: &str = "1.3.101.112"; // {iso(1) identified-organization(3) thawte(101) id-Ed25519(112)}
+const OID_PKCS7_SIGNED_DATA: &str = "1.2.840.113549.1.7.2"; // {iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-7(7) signedData(2)}
+
+#[test]
+fn test_make_pkcs7_signed_data() {
+
+    let content_info = ContentInfo::SignedData(SignedDataContent {
+        version: pkcs7::cms_version::CmsVersion::V1,
+        digest_algorithms: get_digest_algorithms(),
+        encap_content_info: get_encap_content_info(),
+        certificates: get_certificates(),
+        crls: None,
+        signer_infos: get_signer_infos(),
+    });
+
+    let mut buf = vec![0u8; 10000];
+    let _encoded_content = encode_content_info(&content_info, &mut buf);
+}
+
+fn get_digest_algorithms<'a>() -> DigestAlgorithmIdentifiers<'a> {
+    let digest_algorithm = DigestAlgorithmIdentifier {
+        oid: der::asn1::ObjectIdentifier::new(OID_ED25519).unwrap(),
+        parameters: None
+    };
+    let mut digest_algorithms = DigestAlgorithmIdentifiers::new();
+    digest_algorithms.add(digest_algorithm).unwrap();
+    digest_algorithms
+}
+
+fn get_encap_content_info<'a>() -> EncapsulatedContentInfo<'a> {
+    EncapsulatedContentInfo {
+        e_content_type: der::asn1::ObjectIdentifier::new(OID_PKCS7_SIGNED_DATA).unwrap(),
+        e_content: None,
+    }
+}
+
+fn get_certificates<'a>() -> Option<CertificateSet<'a>> {
+    None
+}
+
+fn get_signer_infos<'a>() -> SignerInfos<'a> {
+    let signer_infos = SignerInfos::new();
+    signer_infos
+}
+
+

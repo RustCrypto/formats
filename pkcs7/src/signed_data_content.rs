@@ -11,17 +11,17 @@ use spki::AlgorithmIdentifierRef;
 /// ```text
 /// DigestAlgorithmIdentifier ::= AlgorithmIdentifier
 /// ```
-type DigestAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
+pub type DigestAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
 
 /// ```text
 /// DigestAlgorithmIdentifiers ::= SET OF DigestAlgorithmIdentifier
 /// ```
-type DigestAlgorithmIdentifiers<'a> = SetOfVec<DigestAlgorithmIdentifier<'a>>;
+pub type DigestAlgorithmIdentifiers<'a> = SetOfVec<DigestAlgorithmIdentifier<'a>>;
 
 /// ```text
 /// CertificateSet ::= SET OF CertificateChoices
 /// ```
-type CertificateSet<'a> = SetOfVec<CertificateChoices<'a>>;
+pub type CertificateSet<'a> = SetOfVec<CertificateChoices<'a>>;
 
 /// Signed-data content type [RFC 5652 § 5](https://datatracker.ietf.org/doc/html/rfc5652#section-5)
 ///
