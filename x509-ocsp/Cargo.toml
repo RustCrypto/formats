@@ -21,7 +21,7 @@ x509-cert = { version = "0.2", default-features = false, path = "../x509-cert" }
 
 [dev-dependencies]
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
-hex-literal = "0.3"
+hex-literal = "0.4"
 
 [package.metadata.docs.rs]
 all-features = true
