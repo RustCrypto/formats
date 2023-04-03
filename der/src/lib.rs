@@ -368,7 +368,7 @@ pub use crate::{
 };
 
 #[cfg(feature = "alloc")]
-pub use crate::{asn1::Any, document::Document};
+pub use crate::{asn1::Any, asn1::AnyWrapper, document::Document};
 
 #[cfg(feature = "bigint")]
 pub use crypto_bigint as bigint;

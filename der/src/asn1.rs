@@ -50,7 +50,7 @@ pub use self::{
 
 #[cfg(feature = "alloc")]
 pub use self::{
-    any::Any,
+    any::{Any, AnyWrapper},
     bit_string::BitString,
     ia5_string::Ia5String,
     integer::{int::Int, uint::Uint},

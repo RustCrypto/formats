@@ -148,13 +148,14 @@ impl<'a> TryFrom<&'a [u8]> for AnyRef<'a> {
 }
 
 #[cfg(feature = "alloc")]
-pub use self::allocating::Any;
+pub use self::allocating::{Any, AnyWrapper};
 
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::{referenced::*, BytesOwned};
+    use crate::{referenced::*, BytesOwned, EncodeValue, SliceWriter, Tagged};
     use alloc::boxed::Box;
+    use alloc::vec::Vec;
 
     /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
     ///
@@ -270,6 +271,26 @@ mod allocating {
                 tag: anyref.tag(),
                 value: BytesOwned::from(anyref.value),
             }
+        }
+    }
+
+    /// A wrapper to circumvent https://github.com/rust-lang/rust/issues/50133
+    pub struct AnyWrapper<T>(pub T);
+    impl<T> TryFrom<AnyWrapper<T>> for Any
+    where
+        T: Tagged + EncodeValue,
+    {
+        type Error = Error;
+        fn try_from(input: AnyWrapper<T>) -> Result<Any> {
+            let mut buf = Vec::new();
+            buf.resize(input.0.value_len()?.try_into()?, 0);
+            let mut writer = SliceWriter::new(&mut buf);
+            input.0.encode_value(&mut writer)?;
+            writer.finish()?;
+            Ok(Self {
+                tag: input.0.tag(),
+                value: BytesOwned::new(buf)?,
+            })
         }
     }
 
