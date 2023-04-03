@@ -1,6 +1,7 @@
 #![cfg(all(feature = "builder", feature = "pem"))]
 
 use der::{pem::LineEnding, Decode, Encode, EncodePem};
+use p256::{pkcs8::DecodePrivateKey, NistP256};
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
@@ -15,7 +16,6 @@ use x509_cert::{
 use x509_cert_test_support::{openssl, zlint};
 
 const RSA_2048_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-pub.der");
-const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.der");
 
 #[test]
 fn root_ca_certificate() {
@@ -84,8 +84,8 @@ fn sub_ca_certificate() {
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
-    let mut signer = rsa_signer();
-    let mut builder = CertificateBuilder::new(
+    let mut signer = ecdsa_signer();
+    let mut builder = CertificateBuilder::new::<ecdsa::Signature<NistP256>>(
         profile,
         CertificateVersion::V3(uids),
         serial_number,
@@ -96,7 +96,7 @@ fn sub_ca_certificate() {
     )
     .expect("Create certificate");
 
-    let certificate = builder.build().unwrap();
+    let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -112,8 +112,17 @@ fn sub_ca_certificate() {
     zlint::check_certificate(pem.as_bytes(), ignored);
 }
 
+const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.der");
+
 fn rsa_signer() -> SigningKey<Sha256> {
     let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
     let signing_key = SigningKey::<Sha256>::new_with_prefix(private_key);
     signing_key
+}
+
+const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("examples/p256-priv.der");
+
+fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {
+    let secret_key = p256::SecretKey::from_pkcs8_der(PKCS8_PRIVATE_KEY_DER).unwrap();
+    ecdsa::SigningKey::from(secret_key)
 }
