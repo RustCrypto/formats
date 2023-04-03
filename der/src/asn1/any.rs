@@ -201,6 +201,14 @@ mod allocating {
         {
             AnyRef::from(self).sequence(f)
         }
+
+        /// [`Any`] representation of the ASN.1 `NULL` type.
+        pub fn null() -> Self {
+            Self {
+                tag: Tag::Null,
+                value: BytesOwned::default(),
+            }
+        }
     }
 
     impl Choice<'_> for Any {
