@@ -1320,7 +1320,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "arbitrary",
  "base64ct",
