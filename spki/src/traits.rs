@@ -5,7 +5,7 @@ use crate::{AlgorithmIdentifier, Error, Result, SubjectPublicKeyInfoRef};
 #[cfg(feature = "alloc")]
 use {
     crate::AlgorithmIdentifierOwned,
-    der::{Any, Document},
+    der::{Any, Document, EncodeValue, Tagged},
 };
 
 #[cfg(feature = "pem")]
@@ -114,20 +114,24 @@ pub trait AssociatedAlgorithmIdentifier {
 #[cfg(feature = "alloc")]
 pub trait DynAssociatedAlgorithmIdentifier {
     /// `AlgorithmIdentifier` for this structure.
-    fn algorithm_identifier(&self) -> AlgorithmIdentifierOwned;
+    fn algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned>;
 }
 
 #[cfg(feature = "alloc")]
 impl<T> DynAssociatedAlgorithmIdentifier for T
 where
     T: AssociatedAlgorithmIdentifier,
-    T::Params: Into<Any>,
+    T::Params: Tagged + EncodeValue,
 {
-    fn algorithm_identifier(&self) -> AlgorithmIdentifierOwned {
-        AlgorithmIdentifierOwned {
+    fn algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned> {
+        Ok(AlgorithmIdentifierOwned {
             oid: T::ALGORITHM_IDENTIFIER.oid,
-            parameters: T::ALGORITHM_IDENTIFIER.parameters.map(Into::into),
-        }
+            parameters: T::ALGORITHM_IDENTIFIER
+                .parameters
+                .as_ref()
+                .map(Any::encode_from)
+                .transpose()?,
+        })
     }
 }
 
@@ -150,19 +154,23 @@ pub trait SignatureAlgorithmIdentifier {
 #[cfg(feature = "alloc")]
 pub trait DynSignatureAlgorithmIdentifier {
     /// `AlgorithmIdentifier` for the corresponding singature system.
-    fn signature_algorithm_identifier(&self) -> AlgorithmIdentifierOwned;
+    fn signature_algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned>;
 }
 
 #[cfg(feature = "alloc")]
 impl<T> DynSignatureAlgorithmIdentifier for T
 where
     T: SignatureAlgorithmIdentifier,
-    T::Params: Into<Any>,
+    T::Params: Tagged + EncodeValue,
 {
-    fn signature_algorithm_identifier(&self) -> AlgorithmIdentifierOwned {
-        AlgorithmIdentifierOwned {
+    fn signature_algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned> {
+        Ok(AlgorithmIdentifierOwned {
             oid: T::SIGNATURE_ALGORITHM_IDENTIFIER.oid,
-            parameters: T::SIGNATURE_ALGORITHM_IDENTIFIER.parameters.map(Into::into),
-        }
+            parameters: T::SIGNATURE_ALGORITHM_IDENTIFIER
+                .parameters
+                .as_ref()
+                .map(Any::encode_from)
+                .transpose()?,
+        })
     }
 }
