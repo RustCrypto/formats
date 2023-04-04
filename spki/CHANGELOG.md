@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.1 (2023-04-04)
+### Added
+- `AssociatedAlgorithmIdentifier` trait ([#962], [#966])
+- `DynAssociatedAlgorithmIdentifier` trait ([#962])
+- `SignatureAlgorithmIdentifier` trait ([#967])
+- `DynSignatureAlgorithmIdentifier` trait ([#967])
+
+### Changed
+- Bump `der` dependency to v0.7.2 ([#979])
+
+[#962]: https://github.com/RustCrypto/formats/pull/962
+[#966]: https://github.com/RustCrypto/formats/pull/966
+[#967]: https://github.com/RustCrypto/formats/pull/967
+[#979]: https://github.com/RustCrypto/formats/pull/979
+
 ## 0.7.0 (2023-02-26)
 ### Changed
 - Make `AlgorithmIdentifier` generic around `Params` ([#769])
