@@ -11,7 +11,7 @@ use x509_cert::Certificate;
 use x509_cert::*;
 
 #[cfg(feature = "pem")]
-use der::DecodePem;
+use der::{pem::LineEnding, DecodePem, EncodePem};
 
 // TODO - parse and compare extension values
 const EXTENSIONS: &[(&str, bool)] = &[
@@ -411,4 +411,23 @@ fn decode_cert_negative_serial_number() {
 
     let reencoded = cert.to_der().unwrap();
     assert_eq!(der_encoded_cert, reencoded.as_slice());
+}
+
+#[cfg(feature = "pem")]
+#[test]
+fn decode_cert_overlength_serial_number() {
+    let der_encoded_cert = include_bytes!("examples/qualcomm.pem");
+
+    let cert = Certificate::from_pem(der_encoded_cert).unwrap();
+    assert_eq!(
+        cert.tbs_certificate.serial_number.as_bytes(),
+        &[
+            0, 132, 206, 11, 246, 160, 254, 130, 78, 229, 229, 6, 202, 168, 157, 120, 198, 21, 1,
+            98, 87, 113
+        ]
+    );
+    assert_eq!(cert.tbs_certificate.serial_number.as_bytes().len(), 22);
+
+    let reencoded = cert.to_pem(LineEnding::LF).unwrap();
+    assert_eq!(der_encoded_cert, reencoded.as_bytes());
 }

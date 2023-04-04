@@ -32,9 +32,6 @@ impl SerialNumber {
     /// Maximum length in bytes for a [`SerialNumber`]
     pub const MAX_LEN: Length = Length::new(20);
 
-    /// See notes in `SerialNumber::new` and `SerialNumber::decode_value`.
-    const MAX_DECODE_LEN: Length = Length::new(21);
-
     /// Create a new [`SerialNumber`] from a byte slice.
     ///
     /// The byte slice **must** represent a positive integer.
@@ -74,14 +71,14 @@ impl EncodeValue for SerialNumber {
 
 impl<'a> DecodeValue<'a> for SerialNumber {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        // We explicitely allow any value to be parsed from PEM/DER formatted serial numbers
+        // as per RFC 5280 section 4.1.2.2:
+        //   Note: Non-conforming CAs may issue certificates with serial numbers
+        //   that are negative or zero.  Certificate users SHOULD be prepared to
+        //   gracefully handle such certificates.
+        //
+        // https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.2
         let inner = Int::decode_value(reader, header)?;
-
-        // See the note in `SerialNumber::new`: we permit lengths of 21 bytes here,
-        // since some X.509 implementations interpret the limit of 20 bytes to refer
-        // to the pre-encoded value.
-        if inner.len() > SerialNumber::MAX_DECODE_LEN {
-            return Err(ErrorKind::Overlength.into());
-        }
 
         Ok(Self { inner })
     }
