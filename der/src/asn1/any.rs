@@ -8,6 +8,9 @@ use crate::{
 };
 use core::cmp::Ordering;
 
+#[cfg(feature = "alloc")]
+use crate::SliceWriter;
+
 /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
 ///
 /// This is a zero-copy reference type which borrows from the input data.
@@ -191,6 +194,19 @@ mod allocating {
             T: Choice<'a> + DecodeValue<'a>,
         {
             AnyRef::from(self).decode_as()
+        }
+
+        /// Encode the provided type as an [`Any`] value.
+        pub fn encode_from<T>(msg: &T) -> Result<Self>
+        where
+            T: Tagged + EncodeValue,
+        {
+            let encoded_len = usize::try_from(msg.value_len()?)?;
+            let mut buf = vec![0u8; encoded_len];
+            let mut writer = SliceWriter::new(&mut buf);
+            msg.encode_value(&mut writer)?;
+            writer.finish()?;
+            Any::new(msg.tag(), buf)
         }
 
         /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
