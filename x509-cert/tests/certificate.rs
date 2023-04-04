@@ -6,12 +6,13 @@ use der::{
 };
 use hex_literal::hex;
 use spki::AlgorithmIdentifierRef;
+use x509_cert::certificate::Rfc5280;
 use x509_cert::serial_number::SerialNumber;
 use x509_cert::Certificate;
 use x509_cert::*;
 
 #[cfg(feature = "pem")]
-use der::DecodePem;
+use der::{pem::LineEnding, DecodePem, EncodePem};
 
 // TODO - parse and compare extension values
 const EXTENSIONS: &[(&str, bool)] = &[
@@ -116,7 +117,7 @@ fn reencode_cert() {
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
     let defer_cert = DeferDecodeCertificate::from_der(der_encoded_cert).unwrap();
 
-    let parsed_tbs = TbsCertificate::from_der(defer_cert.tbs_certificate).unwrap();
+    let parsed_tbs = TbsCertificate::<Rfc5280>::from_der(defer_cert.tbs_certificate).unwrap();
     let reencoded_tbs = parsed_tbs.to_der().unwrap();
     assert_eq!(defer_cert.tbs_certificate, reencoded_tbs);
 
@@ -402,7 +403,7 @@ fn decode_cert() {
 fn decode_cert_negative_serial_number() {
     let der_encoded_cert = include_bytes!("examples/28903a635b5280fae6774c0b6da7d6baa64af2e8.der");
 
-    let cert = Certificate::from_der(der_encoded_cert).unwrap();
+    let cert = Certificate::<Rfc5280>::from_der(der_encoded_cert).unwrap();
     assert_eq!(
         cert.tbs_certificate.serial_number.as_bytes(),
         // INTEGER (125 bit) -2.370157924795571e+37
@@ -411,4 +412,25 @@ fn decode_cert_negative_serial_number() {
 
     let reencoded = cert.to_der().unwrap();
     assert_eq!(der_encoded_cert, reencoded.as_slice());
+}
+
+#[cfg(all(feature = "pem", feature = "hazmat"))]
+#[test]
+fn decode_cert_overlength_serial_number() {
+    let pem_encoded_cert = include_bytes!("examples/qualcomm.pem");
+
+    assert!(Certificate::<Rfc5280>::from_pem(pem_encoded_cert).is_err());
+
+    let cert = Certificate::<x509_cert::certificate::Raw>::from_pem(pem_encoded_cert).unwrap();
+    assert_eq!(
+        cert.tbs_certificate.serial_number.as_bytes(),
+        &[
+            0, 132, 206, 11, 246, 160, 254, 130, 78, 229, 229, 6, 202, 168, 157, 120, 198, 21, 1,
+            98, 87, 113
+        ]
+    );
+    assert_eq!(cert.tbs_certificate.serial_number.as_bytes().len(), 22);
+
+    let reencoded = cert.to_pem(LineEnding::LF).unwrap();
+    assert_eq!(pem_encoded_cert, reencoded.as_bytes());
 }

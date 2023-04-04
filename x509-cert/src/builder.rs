@@ -280,6 +280,8 @@ where
             // https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.8
             issuer_unique_id: None,
             subject_unique_id: None,
+
+            _profile: Default::default(),
         };
 
         let extensions = profile.build_extensions(
