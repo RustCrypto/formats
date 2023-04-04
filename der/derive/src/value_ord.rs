@@ -171,6 +171,10 @@ impl ValueField {
 
     /// Lower to [`TokenStream`].
     fn to_tokens(&self) -> TokenStream {
+        if self.attrs.skipped.is_some() {
+            return TokenStream::default();
+        }
+
         let ident = &self.ident;
 
         if self.is_enum {

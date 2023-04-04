@@ -79,6 +79,9 @@ pub(crate) struct FieldAttrs {
 
     /// Is the inner type constructed?
     pub constructed: bool,
+
+    /// Is the type skipped?
+    pub skipped: Option<Path>,
 }
 
 impl FieldAttrs {
@@ -98,6 +101,7 @@ impl FieldAttrs {
         let mut optional = None;
         let mut tag_mode = None;
         let mut constructed = None;
+        let mut skipped = None;
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
@@ -154,6 +158,15 @@ impl FieldAttrs {
                 }
 
                 constructed = Some(ty);
+            // `skipped` attribute
+            } else if attr.parse_value::<String>("skipped").is_some() {
+                if skipped.is_some() {
+                    abort!(attr.name, "duplicate ASN.1 `skipped` attribute");
+                }
+
+                skipped = Some(attr.value.parse().unwrap_or_else(|e| {
+                    abort!(attr.value, "error parsing ASN.1 `skipped` attribute: {}", e)
+                }));
             } else {
                 abort!(
                     attr.name,
@@ -171,6 +184,7 @@ impl FieldAttrs {
             optional: optional.unwrap_or_default(),
             tag_mode: tag_mode.unwrap_or(type_attrs.tag_mode),
             constructed: constructed.unwrap_or_default(),
+            skipped,
         }
     }
 

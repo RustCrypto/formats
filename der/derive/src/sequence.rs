@@ -8,7 +8,7 @@ use field::SequenceField;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{DeriveInput, Ident, Lifetime};
+use syn::{DeriveInput, Ident, Lifetime, TypeParam};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
@@ -17,6 +17,9 @@ pub(crate) struct DeriveSequence {
 
     /// Lifetime of the struct.
     lifetime: Option<Lifetime>,
+
+    /// Type param of the struct.
+    type_param: Option<TypeParam>,
 
     /// Fields of the struct.
     fields: Vec<SequenceField>,
@@ -40,6 +43,8 @@ impl DeriveSequence {
             .next()
             .map(|lt| lt.lifetime.clone());
 
+        let type_param = input.generics.type_params().next().cloned();
+
         let type_attrs = TypeAttrs::parse(&input.attrs);
 
         let fields = data
@@ -51,6 +56,7 @@ impl DeriveSequence {
         Self {
             ident: input.ident,
             lifetime,
+            type_param,
             fields,
         }
     }
@@ -72,6 +78,13 @@ impl DeriveSequence {
             .map(|_| lifetime.clone())
             .unwrap_or_default();
 
+        let type_params = self.type_param.as_ref().map(|t| {
+            let mut t = t.clone();
+            t.default = None;
+            t
+        });
+        let type_params_names = self.type_param.as_ref().map(|t| t.ident.clone());
+
         let mut decode_body = Vec::new();
         let mut decode_result = Vec::new();
         let mut encoded_lengths = Vec::new();
@@ -81,13 +94,14 @@ impl DeriveSequence {
             decode_body.push(field.to_decode_tokens());
             decode_result.push(&field.ident);
 
-            let field = field.to_encode_tokens();
-            encoded_lengths.push(quote!(#field.encoded_len()?));
-            encode_fields.push(quote!(#field.encode(writer)?;));
+            if let Some(field) = field.to_encode_tokens() {
+                encoded_lengths.push(quote!(#field.encoded_len()?));
+                encode_fields.push(quote!(#field.encode(writer)?;));
+            }
         }
 
         quote! {
-            impl<#lifetime> ::der::DecodeValue<#lifetime> for #ident<#lt_params> {
+            impl<#lifetime, #type_params> ::der::DecodeValue<#lifetime> for #ident<#lt_params #type_params_names> {
                 fn decode_value<R: ::der::Reader<#lifetime>>(
                     reader: &mut R,
                     header: ::der::Header,
@@ -104,7 +118,7 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lifetime> ::der::EncodeValue for #ident<#lt_params> {
+            impl<#lifetime, #type_params> ::der::EncodeValue for #ident<#lt_params #type_params_names> {
                 fn value_len(&self) -> ::der::Result<::der::Length> {
                     use ::der::Encode as _;
 
@@ -122,7 +136,7 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lifetime> ::der::Sequence<#lifetime> for #ident<#lt_params> {}
+            impl<#lifetime, #type_params> ::der::Sequence<#lifetime> for #ident<#lt_params #type_params_names> {}
         }
     }
 }

@@ -72,11 +72,22 @@ impl SequenceField {
             }
         }
 
+        if let Some(default) = &self.attrs.skipped {
+            let ident = &self.ident;
+            return quote! {
+                let #ident = #default();
+            };
+        }
+
         lowerer.into_tokens(&self.ident)
     }
 
     /// Derive code for encoding a field of a sequence.
-    pub(super) fn to_encode_tokens(&self) -> TokenStream {
+    pub(super) fn to_encode_tokens(&self) -> Option<TokenStream> {
+        if self.attrs.skipped.is_some() {
+            return None;
+        }
+
         let mut lowerer = LowerFieldEncoder::new(&self.ident);
         let attrs = &self.attrs;
 
@@ -101,7 +112,7 @@ impl SequenceField {
             lowerer.apply_default(&self.ident, default);
         }
 
-        lowerer.into_tokens()
+        Some(lowerer.into_tokens())
     }
 }
 
@@ -241,7 +252,7 @@ mod tests {
     use crate::{FieldAttrs, TagMode, TagNumber};
     use proc_macro2::Span;
     use quote::quote;
-    use syn::{punctuated::Punctuated, Ident, Path, PathSegment, Type, TypePath};
+    use syn::{punctuated::Punctuated, Ident, Path, PathArguments, PathSegment, Type, TypePath};
 
     /// Create a [`Type::Path`].
     pub fn type_path(ident: Ident) -> Type {
@@ -273,6 +284,7 @@ mod tests {
             optional: false,
             tag_mode: TagMode::Explicit,
             constructed: false,
+            skipped: None,
         };
 
         let field_type = Ident::new("String", span);
@@ -292,7 +304,7 @@ mod tests {
         );
 
         assert_eq!(
-            field.to_encode_tokens().to_string(),
+            field.to_encode_tokens().unwrap().to_string(),
             quote! {
                 self.example_field
             }
@@ -313,6 +325,7 @@ mod tests {
             optional: false,
             tag_mode: TagMode::Implicit,
             constructed: false,
+            skipped: None,
         };
 
         let field_type = Ident::new("String", span);
@@ -343,7 +356,7 @@ mod tests {
         );
 
         assert_eq!(
-            field.to_encode_tokens().to_string(),
+            field.to_encode_tokens().unwrap().to_string(),
             quote! {
                 ::der::asn1::ContextSpecificRef {
                     tag_number: ::der::TagNumber::N0,
@@ -353,5 +366,53 @@ mod tests {
             }
             .to_string()
         );
+    }
+
+    #[test]
+    fn skipped() {
+        let span = Span::call_site();
+        let ident = Ident::new("skipped", span);
+
+        let mut segments = Punctuated::new();
+        segments.push(PathSegment {
+            ident: Ident::new("Default", span),
+            arguments: PathArguments::None,
+        });
+        segments.push(PathSegment {
+            ident: Ident::new("default", span),
+            arguments: PathArguments::None,
+        });
+
+        let attrs = FieldAttrs {
+            asn1_type: None,
+            context_specific: Some(TagNumber(0)),
+            default: None,
+            extensible: false,
+            optional: false,
+            tag_mode: TagMode::Implicit,
+            constructed: false,
+            skipped: Some(Path {
+                leading_colon: None,
+                segments,
+            }),
+        };
+
+        let field_type = Ident::new("String", span);
+
+        let field = SequenceField {
+            ident,
+            attrs,
+            field_type: type_path(field_type),
+        };
+
+        assert_eq!(
+            field.to_decode_tokens().to_string(),
+            quote! {
+                let skipped = Default::default();
+            }
+            .to_string()
+        );
+
+        assert!(field.to_encode_tokens().is_none());
     }
 }
