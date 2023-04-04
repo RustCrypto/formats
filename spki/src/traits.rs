@@ -1,11 +1,12 @@
 //! Traits for encoding/decoding SPKI public keys.
 
 use crate::{AlgorithmIdentifier, Error, Result, SubjectPublicKeyInfoRef};
+use der::{EncodeValue, Tagged};
 
 #[cfg(feature = "alloc")]
 use {
     crate::AlgorithmIdentifierOwned,
-    der::{Any, Document, EncodeValue, Tagged},
+    der::{Any, Document},
 };
 
 #[cfg(feature = "pem")]
@@ -102,7 +103,7 @@ pub trait EncodePublicKey {
 /// This is useful for e.g. keys for digital signature algorithms.
 pub trait AssociatedAlgorithmIdentifier {
     /// Algorithm parameters.
-    type Params: der::Encode;
+    type Params: Tagged + EncodeValue;
 
     /// `AlgorithmIdentifier` for this structure.
     const ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;
@@ -121,7 +122,6 @@ pub trait DynAssociatedAlgorithmIdentifier {
 impl<T> DynAssociatedAlgorithmIdentifier for T
 where
     T: AssociatedAlgorithmIdentifier,
-    T::Params: Tagged + EncodeValue,
 {
     fn algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned> {
         Ok(AlgorithmIdentifierOwned {
@@ -141,7 +141,7 @@ where
 /// private keys.
 pub trait SignatureAlgorithmIdentifier {
     /// Algorithm parameters.
-    type Params: der::Encode;
+    type Params: Tagged + EncodeValue;
 
     /// `AlgorithmIdentifier` for the corresponding singature system.
     const SIGNATURE_ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;
@@ -161,7 +161,6 @@ pub trait DynSignatureAlgorithmIdentifier {
 impl<T> DynSignatureAlgorithmIdentifier for T
 where
     T: SignatureAlgorithmIdentifier,
-    T::Params: Tagged + EncodeValue,
 {
     fn signature_algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned> {
         Ok(AlgorithmIdentifierOwned {
