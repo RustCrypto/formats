@@ -171,6 +171,11 @@ impl<P: Profile> TbsCertificate<P> {
 
 /// X.509 certificates are defined in [RFC 5280 Section 4.1].
 ///
+/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+pub type Certificate = CertificateInner<Rfc5280>;
+
+/// X.509 certificates are defined in [RFC 5280 Section 4.1].
+///
 /// ```text
 /// Certificate  ::=  SEQUENCE  {
 ///     tbsCertificate       TBSCertificate,
@@ -183,14 +188,14 @@ impl<P: Profile> TbsCertificate<P> {
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct Certificate<P: Profile = Rfc5280> {
+pub struct CertificateInner<P: Profile = Rfc5280> {
     pub tbs_certificate: TbsCertificate<P>,
     pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitString,
 }
 
 #[cfg(feature = "pem")]
-impl<P: Profile> PemLabel for Certificate<P> {
+impl<P: Profile> PemLabel for CertificateInner<P> {
     const PEM_LABEL: &'static str = "CERTIFICATE";
 }
 
