@@ -11,9 +11,6 @@ use core::time::Duration;
 #[cfg(feature = "std")]
 use std::time::SystemTime;
 
-/// Maximum year that can be represented as a `UTCTime`.
-pub const MAX_YEAR: u16 = 2049;
-
 /// ASN.1 `UTCTime` type.
 ///
 /// This type implements the validity requirements specified in
@@ -36,9 +33,12 @@ impl UtcTime {
     /// Length of an RFC 5280-flavored ASN.1 DER-encoded [`UtcTime`].
     pub const LENGTH: usize = 13;
 
+    /// Maximum year that can be represented as a `UTCTime`.
+    pub const MAX_YEAR: u16 = 2049;
+
     /// Create a [`UtcTime`] from a [`DateTime`].
     pub fn from_date_time(datetime: DateTime) -> Result<Self> {
-        if datetime.year() <= MAX_YEAR {
+        if datetime.year() <= UtcTime::MAX_YEAR {
             Ok(Self(datetime))
         } else {
             Err(Self::TAG.value_error())
@@ -193,7 +193,7 @@ impl From<UtcTime> for SystemTime {
 impl<'a> arbitrary::Arbitrary<'a> for UtcTime {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         const MIN_YEAR: u16 = 1970;
-        const VALID_YEAR_COUNT: u16 = MAX_YEAR - MIN_YEAR + 1;
+        const VALID_YEAR_COUNT: u16 = UtcTime::MAX_YEAR - MIN_YEAR + 1;
         const AVERAGE_SECONDS_IN_YEAR: u64 = 31_556_952;
 
         let datetime = DateTime::arbitrary(u)?;
