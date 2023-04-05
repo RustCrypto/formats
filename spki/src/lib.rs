@@ -47,7 +47,7 @@ mod traits;
 mod fingerprint;
 
 pub use crate::{
-    algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef},
+    algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef, AlgorithmIdentifierWithOid},
     error::{Error, Result},
     spki::{SubjectPublicKeyInfo, SubjectPublicKeyInfoRef},
     traits::{AssociatedAlgorithmIdentifier, DecodePublicKey, SignatureAlgorithmIdentifier},

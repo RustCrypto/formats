@@ -88,6 +88,9 @@ where
 /// `AlgorithmIdentifier` reference which has `AnyRef` parameters.
 pub type AlgorithmIdentifierRef<'a> = AlgorithmIdentifier<AnyRef<'a>>;
 
+/// `AlgorithmIdentifier` with `ObjectIdentifier` parameters.
+pub type AlgorithmIdentifierWithOid = AlgorithmIdentifier<ObjectIdentifier>;
+
 /// `AlgorithmIdentifier` reference which has `Any` parameters.
 #[cfg(feature = "alloc")]
 pub type AlgorithmIdentifierOwned = AlgorithmIdentifier<Any>;
