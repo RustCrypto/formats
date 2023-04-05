@@ -260,6 +260,7 @@ impl From<CertificateVersion> for Version {
 /// use x509_cert::name::Name;
 /// use x509_cert::serial_number::SerialNumber;
 /// use x509_cert::time::Validity;
+/// use std::str::FromStr;
 ///
 /// # const RSA_2048_DER: &[u8] = include_bytes!("../tests/examples/rsa2048-pub.der");
 /// # const RSA_2048_PRIV_DER: &[u8] = include_bytes!("../tests/examples/rsa2048-priv.der");
@@ -281,10 +282,8 @@ impl From<CertificateVersion> for Version {
 /// let serial_number = SerialNumber::from(42u32);
 /// let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
 /// let profile = Profile::Root;
-/// let subject =
-///     Name::encode_from_string("CN=World domination corporation,O=World domination Inc,C=US")
-///         .unwrap();
-/// let subject = Name::from_der(&subject).unwrap();
+/// let subject = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
+///
 /// let pub_key = SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER).expect("get rsa pub key");
 ///
 /// let mut signer = rsa_signer();

@@ -516,7 +516,7 @@ dependencies = [
  "pem-rfc7468 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkcs8 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_core",
- "sec1 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sec1 0.7.1",
  "subtle",
  "zeroize",
 ]
@@ -1418,6 +1418,20 @@ dependencies = [
 
 [[package]]
 name = "sec1"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48518a2b5775ba8ca5b46596aae011caa431e6ce7e4a67ead66d92f08884220e"
+dependencies = [
+ "base16ct 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "der 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "generic-array",
+ "pkcs8 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
+name = "sec1"
 version = "0.7.2"
 dependencies = [
  "base16ct 0.2.0",
@@ -1428,20 +1442,6 @@ dependencies = [
  "serdect",
  "subtle",
  "tempfile",
- "zeroize",
-]
-
-[[package]]
-name = "sec1"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48518a2b5775ba8ca5b46596aae011caa431e6ce7e4a67ead66d92f08884220e"
-dependencies = [
- "base16ct 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "der 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "generic-array",
- "pkcs8 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "subtle",
  "zeroize",
 ]
 
