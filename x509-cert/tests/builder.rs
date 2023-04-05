@@ -8,7 +8,8 @@ use sha2::Sha256;
 use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{CertificateBuilder, CertificateVersion, Profile, UniqueIds},
+    builder::{CertificateBuilder, Profile},
+    certificate::Version,
     name::Name,
     serial_number::SerialNumber,
     time::Validity,
@@ -19,11 +20,6 @@ const RSA_2048_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-pub.der");
 
 #[test]
 fn root_ca_certificate() {
-    let uids = UniqueIds {
-        issuer_unique_id: None,
-        subject_unique_id: None,
-    };
-
     let serial_number = SerialNumber::from(42u32);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
     let profile = Profile::Root;
@@ -38,7 +34,7 @@ fn root_ca_certificate() {
     let mut signer = rsa_signer();
     let mut builder = CertificateBuilder::new(
         profile,
-        CertificateVersion::V3(uids),
+        Version::V3,
         serial_number,
         validity,
         subject,
@@ -58,11 +54,6 @@ fn root_ca_certificate() {
 
 #[test]
 fn sub_ca_certificate() {
-    let uids = UniqueIds {
-        issuer_unique_id: None,
-        subject_unique_id: None,
-    };
-
     let serial_number = SerialNumber::from(42u32);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
 
@@ -87,7 +78,7 @@ fn sub_ca_certificate() {
     let mut signer = ecdsa_signer();
     let mut builder = CertificateBuilder::new::<ecdsa::Signature<NistP256>>(
         profile,
-        CertificateVersion::V3(uids),
+        Version::V3,
         serial_number,
         validity,
         subject,

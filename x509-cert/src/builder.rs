@@ -67,32 +67,6 @@ impl From<signature::Error> for Error {
 
 type Result<T> = core::result::Result<T, Error>;
 
-/// UniqueIds holds the optional attributes `issuerUniqueID` and `subjectUniqueID`
-/// to be filled in the TBSCertificate if version v2 or v3.
-///
-/// See X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
-pub struct UniqueIds {
-    /// ```text
-    /// issuerUniqueID  [1]  IMPLICIT UniqueIdentifier OPTIONAL,
-    ///                      -- If present, version MUST be v2 or v3
-    /// ```
-    pub issuer_unique_id: Option<BitString>,
-    /// ```text
-    /// subjectUniqueID [2]  IMPLICIT UniqueIdentifier OPTIONAL,
-    ///                      -- If present, version MUST be v2 or v3
-    /// ```
-    pub subject_unique_id: Option<BitString>,
-}
-
-impl UniqueIds {
-    fn get_unique_ids(&self) -> (Option<BitString>, Option<BitString>) {
-        (
-            self.issuer_unique_id.clone(),
-            self.subject_unique_id.clone(),
-        )
-    }
-}
-
 /// The type of certificate to build
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Profile {
@@ -229,34 +203,13 @@ impl Profile {
     }
 }
 
-/// The version of the Certificate to build.
-/// All newly built certificate should use `CertificateVersion::V3`
-pub enum CertificateVersion {
-    /// Generate a X509 version 1
-    V1,
-    /// Generate a X509 version 2
-    V2(UniqueIds),
-    /// Generate a X509 version 3
-    V3(UniqueIds),
-}
-
-impl From<CertificateVersion> for Version {
-    fn from(cv: CertificateVersion) -> Version {
-        use CertificateVersion::*;
-        match cv {
-            V1 => Version::V1,
-            V2(_) => Version::V2,
-            V3(_) => Version::V3,
-        }
-    }
-}
-
 /// X509 Certificate builder
 ///
 /// ```
 /// use der::Decode;
 /// use x509_cert::spki::SubjectPublicKeyInfoOwned;
-/// use x509_cert::builder::{CertificateBuilder, CertificateVersion, Profile, UniqueIds};
+/// use x509_cert::certificate::Version;
+/// use x509_cert::builder::{CertificateBuilder, Profile};
 /// use x509_cert::name::Name;
 /// use x509_cert::serial_number::SerialNumber;
 /// use x509_cert::time::Validity;
@@ -274,11 +227,6 @@ impl From<CertificateVersion> for Version {
 /// #     signing_key
 /// # }
 ///
-/// let uids = UniqueIds {
-///     issuer_unique_id: None,
-///     subject_unique_id: None,
-/// };
-///
 /// let serial_number = SerialNumber::from(42u32);
 /// let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
 /// let profile = Profile::Root;
@@ -289,7 +237,7 @@ impl From<CertificateVersion> for Version {
 /// let mut signer = rsa_signer();
 /// let mut builder = CertificateBuilder::new(
 ///     profile,
-///     CertificateVersion::V3(uids),
+///     Version::V3,
 ///     serial_number,
 ///     validity,
 ///     subject,
@@ -312,7 +260,7 @@ where
     /// Creates a new certificate builder
     pub fn new<Signature>(
         profile: Profile,
-        version: CertificateVersion,
+        version: Version,
         serial_number: SerialNumber,
         mut validity: Validity,
         subject: Name,
@@ -333,12 +281,6 @@ where
         validity.not_before.rfc5280_adjust_utc_time()?;
         validity.not_after.rfc5280_adjust_utc_time()?;
 
-        let (version, (issuer_unique_id, subject_unique_id)) = match version {
-            CertificateVersion::V1 => (Version::V1, (None, None)),
-            CertificateVersion::V2(uids) => (Version::V2, uids.get_unique_ids()),
-            CertificateVersion::V3(uids) => (Version::V3, uids.get_unique_ids()),
-        };
-
         let mut tbs = TbsCertificate {
             version,
             serial_number,
@@ -347,9 +289,15 @@ where
             validity,
             subject,
             subject_public_key_info,
-            issuer_unique_id,
-            subject_unique_id,
             extensions: None,
+
+            // We will not generate unique identifier because as per RFC5280 Section 4.1.2.8:
+            //   CAs conforming to this profile MUST NOT generate
+            //   certificates with unique identifiers.
+            //
+            // https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.8
+            issuer_unique_id: None,
+            subject_unique_id: None,
         };
 
         if tbs.version == Version::V3 {
