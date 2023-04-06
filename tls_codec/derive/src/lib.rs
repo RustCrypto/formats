@@ -9,9 +9,31 @@
 //! other fields between the discriminant and variant data), the `tls_codec` traits can be
 //! implemented manually.
 //!
+//! ## Parsing unknown values
+//! In many cases it is necessary to deserialize structs with unknown values, e.g.
+//! when receiving unknown TLS extensions.
+//! In this case the deserialize function returns an `Error::UnknownValue` with
+//! a `u64` value of the unknown type.
+//!
+//! ```
+//! #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+//! #[repr(u16)]
+//! enum TypeWithUnknowns {
+//!     First = 1,
+//!     Second = 2,
+//! }
+//!
+//! #[test]
+//! fn type_with_unknowns() {
+//!     let incoming = [0x00u8, 0x03]; // This must be parsed into TypeWithUnknowns into an unknown
+//!     let deserialized = TypeWithUnknowns::tls_deserialize_exact(incoming);
+//!     assert!(matches!(deserialized, Err(Error::UnknownValue(3))));
+//! }
+//! ```
+//!
 //! ## Available attributes
 //!
-//! ### `with`
+//! ### with
 //!
 //! ```text
 //! #[tls_codec(with = "prefix")]
@@ -50,7 +72,7 @@
 //! }
 //! ```
 //!
-//! ### `discriminant`
+//! ### discriminant
 //!
 //! ```text
 //! #[tls_codec(discriminant = 123)]
@@ -109,7 +131,7 @@
 //!
 //! ```
 //!
-//! ### `skip`
+//! ### skip
 //!
 //! ```text
 //! #[tls_codec(skip)]
@@ -547,6 +569,7 @@ fn define_discriminant_constants(
                     DiscriminantValue::Path(pathexpr) => {
                         discriminant_has_paths = true;
                         quote! {
+                            #[allow(clippy::unnecessary_cast)]
                             const #constant_id: #repr = {
                                 let pathexpr_usize = #pathexpr as usize;
                                 if pathexpr_usize < #repr::MIN as usize || pathexpr_usize > #repr::MAX as usize {
@@ -825,7 +848,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                         match discriminant {
                             #(#arms)*
                             _ => {
-                                Err(tls_codec::Error::DecodingError(format!("{}: Unmatched discriminant {:?} in tls_deserialize", stringify!(#ident), discriminant)))
+                                Err(tls_codec::Error::UnknownValue(discriminant.into()))
                             },
                         }
                     }
