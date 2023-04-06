@@ -103,6 +103,66 @@ fn sub_ca_certificate() {
     zlint::check_certificate(pem.as_bytes(), ignored);
 }
 
+#[test]
+fn leaf_certificate() {
+    let serial_number = SerialNumber::from(42u32);
+    let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
+
+    let issuer = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US")
+        .unwrap()
+        .to_der()
+        .unwrap();
+    let issuer = Name::from_der(&issuer).unwrap();
+    let profile = Profile::Leaf {
+        issuer,
+        enable_key_agreement: false,
+    };
+
+    let subject = Name::from_str("CN=service.domination.world")
+        .unwrap()
+        .to_der()
+        .unwrap();
+    let subject = Name::from_der(&subject).unwrap();
+    let pub_key =
+        SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
+
+    let mut signer = ecdsa_signer();
+    let mut builder = CertificateBuilder::new::<ecdsa::Signature<NistP256>>(
+        profile,
+        Version::V3,
+        serial_number,
+        validity,
+        subject,
+        pub_key,
+        &mut signer,
+    )
+    .expect("Create certificate");
+
+    let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+
+    let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
+    println!("{}", openssl::check_certificate(pem.as_bytes()));
+
+    // TODO(baloo): not too sure we should tackle those in this API.
+    let ignored = &[
+        "e_sub_cert_aia_missing",
+        "e_sub_cert_crl_distribution_points_missing",
+        "w_sub_cert_aia_does_not_contain_issuing_ca_url",
+        // Missing policies
+        "e_sub_cert_certificate_policies_missing",
+        "e_sub_cert_cert_policy_empty",
+        // Needs to be added by the end-user
+        "e_sub_cert_aia_does_not_contain_ocsp_url",
+        // SAN needs to include DNS name (if used)
+        "e_ext_san_missing",
+        "e_subject_common_name_not_exactly_from_san",
+        // Extended key usage needs to be added by end-user and is use-case dependent
+        "e_sub_cert_eku_missing",
+    ];
+
+    zlint::check_certificate(pem.as_bytes(), ignored);
+}
+
 const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.der");
 
 fn rsa_signer() -> SigningKey<Sha256> {
