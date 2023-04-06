@@ -2,13 +2,12 @@
 
 use alloc::vec;
 use core::fmt;
-use der::{
-    asn1::{BitString, OctetString},
-    Encode,
-};
-use sha1::{Digest, Sha1};
+use der::{asn1::BitString, referenced::OwnedToRef, Encode};
 use signature::{Keypair, SignatureEncoding, Signer};
-use spki::{DynSignatureAlgorithmIdentifier, EncodePublicKey, SubjectPublicKeyInfoOwned};
+use spki::{
+    DynSignatureAlgorithmIdentifier, EncodePublicKey, SubjectPublicKeyInfoOwned,
+    SubjectPublicKeyInfoRef,
+};
 
 use crate::{
     certificate::{Certificate, TbsCertificate, Version},
@@ -112,8 +111,8 @@ impl Profile {
 
     fn build_extensions(
         &self,
-        spk: &SubjectPublicKeyInfoOwned,
-        issuer_spk: &SubjectPublicKeyInfoOwned,
+        spk: SubjectPublicKeyInfoRef<'_>,
+        issuer_spk: SubjectPublicKeyInfoRef<'_>,
         tbs: &TbsCertificate,
     ) -> Result<vec::Vec<Extension>> {
         #[cfg(feature = "hazmat")]
@@ -124,27 +123,14 @@ impl Profile {
 
         let mut extensions: vec::Vec<Extension> = vec::Vec::new();
 
-        extensions.push({
-            let result = Sha1::digest(spk.subject_public_key.raw_bytes());
-            SubjectKeyIdentifier(OctetString::new(result.to_vec())?).to_extension(tbs)?
-        });
+        extensions.push(SubjectKeyIdentifier::try_from(spk)?.to_extension(tbs)?);
 
         // Build Authority Key Identifier
         match self {
             Profile::Root => {}
             _ => {
-                let mut hasher = Sha1::new();
-                hasher.update(issuer_spk.subject_public_key.raw_bytes());
-                let result = hasher.finalize();
-
-                extensions.push(
-                    AuthorityKeyIdentifier {
-                        key_identifier: Some(OctetString::new(result.to_vec())?),
-                        authority_cert_issuer: None,
-                        authority_cert_serial_number: None,
-                    }
-                    .to_extension(tbs)?,
-                );
+                extensions
+                    .push(AuthorityKeyIdentifier::try_from(issuer_spk.clone())?.to_extension(tbs)?);
             }
         }
 
@@ -301,8 +287,11 @@ where
         };
 
         if tbs.version == Version::V3 {
-            let extensions =
-                profile.build_extensions(&tbs.subject_public_key_info, &signer_pub, &tbs)?;
+            let extensions = profile.build_extensions(
+                tbs.subject_public_key_info.owned_to_ref(),
+                signer_pub.owned_to_ref(),
+                &tbs,
+            )?;
             if !extensions.is_empty() {
                 tbs.extensions = Some(extensions);
             }

@@ -49,6 +49,10 @@ impl AssociatedOid for SubjectKeyIdentifier {
 
 impl_newtype!(SubjectKeyIdentifier, OctetString);
 impl_extension!(SubjectKeyIdentifier, critical = false);
+impl_key_identifier!(
+    SubjectKeyIdentifier,
+    (|result: &[u8]| Ok(Self(OctetString::new(result)?)))
+);
 
 /// SubjectAltName as defined in [RFC 5280 Section 4.2.1.6].
 ///

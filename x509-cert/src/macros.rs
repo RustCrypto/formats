@@ -92,3 +92,43 @@ macro_rules! impl_extension {
         }
     };
 }
+
+/// Implements conversions between [`spki::SubjectPublicKeyInfo`] and [`SubjectKeyIdentifier`] or [`AuthorityKeyIdentifier`]
+macro_rules! impl_key_identifier {
+    ($newtype:ty, $out:expr) => {
+        #[cfg(feature = "builder")]
+        mod builder_key_identifier {
+            use super::*;
+            use der::asn1::OctetString;
+            use sha1::{Digest, Sha1};
+            use spki::SubjectPublicKeyInfoRef;
+
+            impl<'a> TryFrom<SubjectPublicKeyInfoRef<'a>> for $newtype {
+                type Error = der::Error;
+
+                fn try_from(issuer: SubjectPublicKeyInfoRef<'a>) -> Result<Self, Self::Error> {
+                    // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
+                    //
+                    //  For CA certificates, subject key identifiers SHOULD be derived from
+                    //  the public key or a method that generates unique values.  Two common
+                    //  methods for generating key identifiers from the public key are:
+
+                    //     (1) The keyIdentifier is composed of the 160-bit SHA-1 hash of the
+                    //          value of the BIT STRING subjectPublicKey (excluding the tag,
+                    //          length, and number of unused bits).
+
+                    //     (2) The keyIdentifier is composed of a four-bit type field with
+                    //          the value 0100 followed by the least significant 60 bits of
+                    //          the SHA-1 hash of the value of the BIT STRING
+                    //          subjectPublicKey (excluding the tag, length, and number of
+                    //          unused bits).
+
+                    // Here we're using the first method
+
+                    let result = Sha1::digest(issuer.subject_public_key.raw_bytes());
+                    $out(result.as_slice())
+                }
+            }
+        }
+    };
+}
