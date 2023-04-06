@@ -18,6 +18,7 @@
 pub mod certificate_choices;
 pub mod cms_version;
 pub mod data_content;
+pub mod algorithm_identifier_types;
 pub mod encapsulated_content_info;
 pub mod encrypted_data_content;
 pub mod enveloped_data_content;
@@ -25,7 +26,7 @@ pub mod revocation_info_choices;
 pub mod signed_data_content;
 pub mod signer_info;
 
-pub mod content_info;
+mod content_info;
 mod content_type;
 
 pub use crate::{content_info::ContentInfo, content_type::ContentType};

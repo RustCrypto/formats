@@ -2,21 +2,11 @@
 
 use crate::{
     certificate_choices::CertificateChoices, cms_version::CmsVersion,
+    algorithm_identifier_types::DigestAlgorithmIdentifiers,
     encapsulated_content_info::EncapsulatedContentInfo,
     revocation_info_choices::RevocationInfoChoices, signer_info::SignerInfos,
 };
 use der::{asn1::SetOfVec, Sequence};
-use spki::AlgorithmIdentifierRef;
-
-/// ```text
-/// DigestAlgorithmIdentifier ::= AlgorithmIdentifier
-/// ```
-pub type DigestAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
-
-/// ```text
-/// DigestAlgorithmIdentifiers ::= SET OF DigestAlgorithmIdentifier
-/// ```
-pub type DigestAlgorithmIdentifiers<'a> = SetOfVec<DigestAlgorithmIdentifier<'a>>;
 
 /// ```text
 /// CertificateSet ::= SET OF CertificateChoices

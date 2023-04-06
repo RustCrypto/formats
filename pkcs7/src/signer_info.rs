@@ -1,24 +1,16 @@
 //! `SignerInfo` data type [RFC 5652 § 5.3](https://datatracker.ietf.org/doc/html/rfc5652#section-5.3)
 
-use crate::cms_version::CmsVersion;
+use crate::{
+    cms_version::CmsVersion,
+    algorithm_identifier_types::{DigestAlgorithmIdentifier, SignatureAlgorithmIdentifier},
+};
 use der::{
     asn1::{OctetStringRef, SetOfVec},
     Choice, Sequence, ValueOrd,
 };
-use spki::AlgorithmIdentifierRef;
 use x509_cert::{
     attr::Attribute, ext::pkix::SubjectKeyIdentifier, name::Name, serial_number::SerialNumber,
 };
-
-/// ```text
-/// DigestAlgorithmIdentifier ::= AlgorithmIdentifier
-/// ```
-type DigestAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
-
-/// ```text
-/// SignatureAlgorithmIdentifier ::= AlgorithmIdentifier
-/// ```
-type SignatureAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
 
 /// ```text
 /// SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
