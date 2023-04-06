@@ -1,5 +1,5 @@
 use tls_codec::{
-    Deserialize, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8, VLBytes,
+    Deserialize, Error, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8, VLBytes,
 };
 use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 
@@ -448,4 +448,18 @@ fn generic_struct() {
     let deserialized = GenericStruct::<u32>::tls_deserialize(&mut reader).unwrap();
 
     assert_eq!(deserialized, insta);
+}
+
+#[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+#[repr(u16)]
+enum TypeWithUnknowns {
+    First = 1,
+    Second = 2,
+}
+
+#[test]
+fn type_with_unknowns() {
+    let incoming = [0x00u8, 0x03]; // This must be parsed into TypeWithUnknowns into an unknown
+    let deserialized = TypeWithUnknowns::tls_deserialize_exact(incoming);
+    assert!(matches!(deserialized, Err(Error::UnknownValue(3))));
 }

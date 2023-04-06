@@ -77,6 +77,14 @@ pub enum Error {
     /// Reached the end of a byte stream.
     EndOfStream,
 
+    /// Found unexpected data after deserializing.
+    TrailingData,
+
+    /// An unknown value in an enum.
+    /// The application might not want to treat this as an error because it is
+    /// only an unknown value, not an invalid value.
+    UnknownValue(u64),
+
     /// An internal library error that indicates a bug.
     LibraryError,
 }
@@ -150,8 +158,41 @@ pub trait Deserialize: Size {
     /// and returns the populated struct.
     ///
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
+    ///
+    /// Returns an error if occurs during deserialization.
     #[cfg(feature = "std")]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error>
     where
         Self: Sized;
+
+    /// This function deserializes the provided `bytes` and returns the populated
+    /// struct. All bytes must be consumed.
+    ///
+    /// Returns an error if not all bytes are read from the input, or if an error
+    /// occurs during deserialization.
+    #[cfg(feature = "std")]
+    fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        let mut bytes = bytes.as_ref();
+        let out = Self::tls_deserialize(&mut bytes)?;
+
+        if !bytes.is_empty() {
+            return Err(Error::TrailingData);
+        }
+
+        Ok(out)
+    }
+    /// This function deserializes the provided `bytes` and returns the populated
+    /// struct.
+    ///
+    /// Returns an error if occurs during deserialization.
+    #[cfg(feature = "std")]
+    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        Self::tls_deserialize(&mut bytes.as_ref())
+    }
 }
