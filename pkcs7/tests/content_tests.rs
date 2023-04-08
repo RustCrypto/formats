@@ -195,7 +195,6 @@ fn decode_signed_der() {
     );
 }
 
-
 #[test]
 fn create_pkcs7_signed_data() {
     // {iso(1) identified-organization(3) thawte(101) id-Ed25519(112)}

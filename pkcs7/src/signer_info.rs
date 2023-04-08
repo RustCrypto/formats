@@ -1,8 +1,8 @@
 //! `SignerInfo` data type [RFC 5652 § 5.3](https://datatracker.ietf.org/doc/html/rfc5652#section-5.3)
 
 use crate::{
-    cms_version::CmsVersion,
     algorithm_identifier_types::{DigestAlgorithmIdentifier, SignatureAlgorithmIdentifier},
+    cms_version::CmsVersion,
 };
 use der::{
     asn1::{OctetStringRef, SetOfVec},

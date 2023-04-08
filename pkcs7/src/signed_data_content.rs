@@ -1,8 +1,8 @@
 //! `signed-data` content type [RFC 5652 § 5](https://datatracker.ietf.org/doc/html/rfc5652#section-5)
 
 use crate::{
-    certificate_choices::CertificateChoices, cms_version::CmsVersion,
     algorithm_identifier_types::DigestAlgorithmIdentifiers,
+    certificate_choices::CertificateChoices, cms_version::CmsVersion,
     encapsulated_content_info::EncapsulatedContentInfo,
     revocation_info_choices::RevocationInfoChoices, signer_info::SignerInfos,
 };

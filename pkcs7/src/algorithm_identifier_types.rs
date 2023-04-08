@@ -19,4 +19,3 @@ pub type DigestAlgorithmIdentifiers<'a> = SetOfVec<DigestAlgorithmIdentifier<'a>
 /// ```
 /// See [RFC 5652 10.1.2](https://datatracker.ietf.org/doc/html/rfc5652#section-10.1.2).
 pub type SignatureAlgorithmIdentifier<'a> = AlgorithmIdentifierRef<'a>;
-
