@@ -20,7 +20,9 @@ spki = { version = "0.7", path = "../spki" }
 x509-cert = { version = "0.2", default-features = false, path = "../x509-cert" }
 
 [dev-dependencies]
+der = { version = "0.7", features = ["oid", "pem"], path = "../der" }
 hex-literal = "0.3"
+x509-cert = { version = "0.2", default-features = false, features = ["pem"], path = "../x509-cert" }
 
 [package.metadata.docs.rs]
 all-features = true
