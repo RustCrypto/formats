@@ -145,7 +145,7 @@ fn decode_signed_scep_example() {
     }
 
     let mut buf = vec![0u8; bytes.len()];
-    let encoded_content = encode_content_info(&content, &mut buf);
+    encode_content_info(&content, &mut buf);
 }
 
 // TODO(tarcieri): BER support
