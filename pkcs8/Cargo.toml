@@ -25,7 +25,7 @@ pkcs5 = { version = "0.7", optional = true }
 subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.3"
+hex-literal = "0.4.1"
 tempfile = "3"
 
 [features]
