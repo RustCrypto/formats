@@ -15,11 +15,11 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-der = { version = "0.7.2", features = ["oid"], path = "../der" }
+der = { version = "0.7.2", features = ["oid"] }
 
 # Optional dependencies
 arbitrary = { version = "1.2", features = ["derive"], optional = true }
-base64ct = { version = "1", optional = true, default-features = false, path = "../base64ct" }
+base64ct = { version = "1", optional = true, default-features = false }
 sha2 = { version = "0.10", optional = true, default-features = false }
 
 [dev-dependencies]
