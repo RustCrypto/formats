@@ -2,9 +2,13 @@
 
 use der::{
     asn1::{ObjectIdentifier, OctetStringRef, SequenceRef},
-    Decode, SliceWriter,
+    Decode, DecodePem, SliceWriter,
 };
 use hex_literal::hex;
+use pkcs7::algorithm_identifier_types::{DigestAlgorithmIdentifier, DigestAlgorithmIdentifiers};
+use pkcs7::certificate_choices::CertificateChoices;
+use pkcs7::signed_data_content::CertificateSet;
+use pkcs7::signer_info::SignerInfos;
 use pkcs7::{
     cms_version::CmsVersion, encapsulated_content_info::EncapsulatedContentInfo,
     encrypted_data_content::EncryptedDataContent, enveloped_data_content::EncryptedContentInfo,
@@ -139,6 +143,9 @@ fn decode_signed_scep_example() {
         }
         _ => panic!("expected ContentInfo::SignedData(Some(_))"),
     }
+
+    let mut buf = vec![0u8; bytes.len()];
+    encode_content_info(&content, &mut buf);
 }
 
 // TODO(tarcieri): BER support
@@ -185,4 +192,55 @@ fn decode_signed_der() {
             .len(),
         10034
     );
+}
+
+#[test]
+fn create_pkcs7_signed_data() {
+    // {iso(1) identified-organization(3) thawte(101) id-Ed25519(112)}
+    const OID_ED25519: &str = "1.3.101.112";
+    // {iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-7(7) signedData(2)}
+    const OID_PKCS7_SIGNED_DATA: &str = "1.2.840.113549.1.7.2";
+
+    let digest_algorithms = {
+        let digest_algorithm = DigestAlgorithmIdentifier {
+            oid: der::asn1::ObjectIdentifier::new(OID_ED25519).unwrap(),
+            parameters: None,
+        };
+        let mut digest_algorithms = DigestAlgorithmIdentifiers::new();
+        digest_algorithms.add(digest_algorithm).unwrap();
+        digest_algorithms
+    };
+
+    let encap_content_info = {
+        EncapsulatedContentInfo {
+            e_content_type: der::asn1::ObjectIdentifier::new(OID_PKCS7_SIGNED_DATA).unwrap(),
+            e_content: None,
+        }
+    };
+
+    let certificates = {
+        let cert_pem = include_bytes!("../tests/examples/cert.pem");
+        let cert: x509_cert::Certificate = x509_cert::Certificate::from_pem(cert_pem).unwrap();
+        let cert_choice = CertificateChoices::Certificate(cert);
+        let mut certs = CertificateSet::new();
+        certs.add(cert_choice).unwrap();
+        Some(certs)
+    };
+
+    fn get_signer_infos<'a>() -> SignerInfos<'a> {
+        let signer_infos = SignerInfos::new();
+        signer_infos
+    }
+
+    let content_info = ContentInfo::SignedData(SignedDataContent {
+        version: pkcs7::cms_version::CmsVersion::V1,
+        digest_algorithms,
+        encap_content_info,
+        certificates,
+        crls: None,
+        signer_infos: get_signer_infos(),
+    });
+
+    let mut buf = vec![0u8; 10000]; // buffer length must be guessed in advance :|
+    encode_content_info(&content_info, &mut buf);
 }
