@@ -3,8 +3,9 @@
 use core::fmt::Display;
 
 use der::{
-    asn1::Int, asn1::Uint, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader,
-    Result, Tag, ValueOrd, Writer,
+    asn1::{self, Int},
+    DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd,
+    Writer,
 };
 
 /// [RFC 5280 Section 4.1.2.2.]  Serial Number
@@ -39,7 +40,7 @@ impl SerialNumber {
     ///
     /// The byte slice **must** represent a positive integer.
     pub fn new(bytes: &[u8]) -> Result<Self> {
-        let inner = Uint::new(bytes)?;
+        let inner = asn1::Uint::new(bytes)?;
 
         // The user might give us a 20 byte unsigned integer with a high MSB,
         // which we'd then encode with 21 octets to preserve the sign bit.
@@ -105,6 +106,27 @@ impl Display for SerialNumber {
         Ok(())
     }
 }
+
+macro_rules! impl_from {
+    ($source:ty) => {
+        impl From<$source> for SerialNumber {
+            fn from(inner: $source) -> SerialNumber {
+                let serial_number = &inner.to_be_bytes()[..];
+                let serial_number = asn1::Uint::new(serial_number).unwrap();
+
+                // This could only fail if the big endian representation was to be more than 20
+                // bytes long. Because it's only implemented for up to u64 / usize (8 bytes).
+                SerialNumber::new(serial_number.as_bytes()).unwrap()
+            }
+        }
+    };
+}
+
+impl_from!(u8);
+impl_from!(u16);
+impl_from!(u32);
+impl_from!(u64);
+impl_from!(usize);
 
 // Implement by hand because the derive would create invalid values.
 // Use the constructor to create a valid value.

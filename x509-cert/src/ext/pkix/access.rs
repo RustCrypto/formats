@@ -23,6 +23,7 @@ impl AssociatedOid for AuthorityInfoAccessSyntax {
 }
 
 impl_newtype!(AuthorityInfoAccessSyntax, Vec<AccessDescription>);
+impl_extension!(AuthorityInfoAccessSyntax, critical = false);
 
 /// SubjectInfoAccessSyntax as defined in [RFC 5280 Section 4.2.2.2].
 ///
@@ -39,6 +40,7 @@ impl AssociatedOid for SubjectInfoAccessSyntax {
 }
 
 impl_newtype!(SubjectInfoAccessSyntax, Vec<AccessDescription>);
+impl_extension!(SubjectInfoAccessSyntax, critical = false);
 
 /// AccessDescription as defined in [RFC 5280 Section 4.2.2.1].
 ///

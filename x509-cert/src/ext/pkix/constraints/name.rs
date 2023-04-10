@@ -31,6 +31,8 @@ impl AssociatedOid for NameConstraints {
     const OID: ObjectIdentifier = ID_CE_NAME_CONSTRAINTS;
 }
 
+impl_extension!(NameConstraints, critical = true);
+
 /// GeneralSubtrees as defined in [RFC 5280 Section 4.2.1.10].
 ///
 /// ```text

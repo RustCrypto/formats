@@ -23,6 +23,7 @@ members = [
     "tls_codec",
     "tls_codec/derive",
     "x509-cert",
+    "x509-cert/test-support",
     "x509-ocsp"
 ]
 

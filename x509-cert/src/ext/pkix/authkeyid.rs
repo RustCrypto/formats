@@ -19,7 +19,7 @@ use der::Sequence;
 /// ```
 ///
 /// [RFC 5280 Section 4.2.1.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, Default)]
 #[allow(missing_docs)]
 pub struct AuthorityKeyIdentifier {
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
@@ -35,3 +35,12 @@ pub struct AuthorityKeyIdentifier {
 impl AssociatedOid for AuthorityKeyIdentifier {
     const OID: ObjectIdentifier = ID_CE_AUTHORITY_KEY_IDENTIFIER;
 }
+
+impl_extension!(AuthorityKeyIdentifier, critical = false);
+impl_key_identifier!(
+    AuthorityKeyIdentifier,
+    (|result: &[u8]| Ok(Self {
+        key_identifier: Some(OctetString::new(result)?),
+        ..Default::default()
+    }))
+);

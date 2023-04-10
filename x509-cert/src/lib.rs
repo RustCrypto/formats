@@ -33,6 +33,9 @@ pub mod request;
 pub mod serial_number;
 pub mod time;
 
+#[cfg(feature = "builder")]
+pub mod builder;
+
 pub use certificate::{Certificate, PkiPath, TbsCertificate, Version};
 pub use der;
 pub use spki;

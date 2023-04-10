@@ -28,6 +28,7 @@ impl AssociatedOid for CrlNumber {
 }
 
 impl_newtype!(CrlNumber, Uint);
+impl_extension!(CrlNumber, critical = false);
 
 /// BaseCRLNumber as defined in [RFC 5280 Section 5.2.4].
 ///
@@ -60,6 +61,7 @@ impl AssociatedOid for CrlDistributionPoints {
 }
 
 impl_newtype!(CrlDistributionPoints, Vec<dp::DistributionPoint>);
+impl_extension!(CrlDistributionPoints, critical = false);
 
 /// FreshestCrl as defined in [RFC 5280 Section 5.2.6].
 ///
@@ -76,6 +78,7 @@ impl AssociatedOid for FreshestCrl {
 }
 
 impl_newtype!(FreshestCrl, Vec<dp::DistributionPoint>);
+impl_extension!(FreshestCrl, critical = false);
 
 /// CRLReason as defined in [RFC 5280 Section 5.3.1].
 ///
