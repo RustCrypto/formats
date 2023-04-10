@@ -24,7 +24,7 @@ zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
-hex-literal = "0.3"
+hex-literal = "0.4"
 tempfile = "3"
 
 [features]

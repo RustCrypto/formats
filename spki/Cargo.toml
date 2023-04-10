@@ -23,7 +23,7 @@ base64ct = { version = "1", optional = true, default-features = false }
 sha2 = { version = "0.10", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.3"
+hex-literal = "0.4"
 tempfile = "3"
 
 [features]

@@ -23,7 +23,7 @@ spki = { version = "0.7", features = ["alloc"] }
 arbitrary = { version = "1.3", features = ["derive"], optional = true }
 
 [dev-dependencies]
-hex-literal = "0.3"
+hex-literal = "0.4"
 rstest = "0.17"
 
 [features]
