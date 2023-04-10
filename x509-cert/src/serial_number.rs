@@ -80,7 +80,7 @@ impl<'a> DecodeValue<'a> for SerialNumber {
         // since some X.509 implementations interpret the limit of 20 bytes to refer
         // to the pre-encoded value.
         if inner.len() > SerialNumber::MAX_DECODE_LEN {
-            return Err(ErrorKind::Overlength.into());
+            return Err(Tag::Integer.value_error());
         }
 
         Ok(Self { inner })

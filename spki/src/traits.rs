@@ -1,9 +1,13 @@
 //! Traits for encoding/decoding SPKI public keys.
 
-use crate::{Error, Result, SubjectPublicKeyInfoRef};
+use crate::{AlgorithmIdentifier, Error, Result, SubjectPublicKeyInfoRef};
+use der::{EncodeValue, Tagged};
 
 #[cfg(feature = "alloc")]
-use der::Document;
+use {
+    crate::AlgorithmIdentifierOwned,
+    der::{Any, Document},
+};
 
 #[cfg(feature = "pem")]
 use {
@@ -91,5 +95,81 @@ pub trait EncodePublicKey {
     ) -> Result<()> {
         let doc = self.to_public_key_der()?;
         Ok(doc.write_pem_file(path, SubjectPublicKeyInfoRef::PEM_LABEL, line_ending)?)
+    }
+}
+
+/// Returns `AlgorithmIdentifier` associated with the structure.
+///
+/// This is useful for e.g. keys for digital signature algorithms.
+pub trait AssociatedAlgorithmIdentifier {
+    /// Algorithm parameters.
+    type Params: Tagged + EncodeValue;
+
+    /// `AlgorithmIdentifier` for this structure.
+    const ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;
+}
+
+/// Returns `AlgorithmIdentifier` associated with the structure.
+///
+/// This is useful for e.g. keys for digital signature algorithms.
+#[cfg(feature = "alloc")]
+pub trait DynAssociatedAlgorithmIdentifier {
+    /// `AlgorithmIdentifier` for this structure.
+    fn algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned>;
+}
+
+#[cfg(feature = "alloc")]
+impl<T> DynAssociatedAlgorithmIdentifier for T
+where
+    T: AssociatedAlgorithmIdentifier,
+{
+    fn algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned> {
+        Ok(AlgorithmIdentifierOwned {
+            oid: T::ALGORITHM_IDENTIFIER.oid,
+            parameters: T::ALGORITHM_IDENTIFIER
+                .parameters
+                .as_ref()
+                .map(Any::encode_from)
+                .transpose()?,
+        })
+    }
+}
+
+/// Returns `AlgorithmIdentifier` associated with the signature system.
+///
+/// Unlike AssociatedAlgorithmIdentifier this is intended to be implemented for public and/or
+/// private keys.
+pub trait SignatureAlgorithmIdentifier {
+    /// Algorithm parameters.
+    type Params: Tagged + EncodeValue;
+
+    /// `AlgorithmIdentifier` for the corresponding singature system.
+    const SIGNATURE_ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;
+}
+
+/// Returns `AlgorithmIdentifier` associated with the signature system.
+///
+/// Unlike AssociatedAlgorithmIdentifier this is intended to be implemented for public and/or
+/// private keys.
+#[cfg(feature = "alloc")]
+pub trait DynSignatureAlgorithmIdentifier {
+    /// `AlgorithmIdentifier` for the corresponding singature system.
+    fn signature_algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned>;
+}
+
+#[cfg(feature = "alloc")]
+impl<T> DynSignatureAlgorithmIdentifier for T
+where
+    T: SignatureAlgorithmIdentifier,
+{
+    fn signature_algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned> {
+        Ok(AlgorithmIdentifierOwned {
+            oid: T::SIGNATURE_ALGORITHM_IDENTIFIER.oid,
+            parameters: T::SIGNATURE_ALGORITHM_IDENTIFIER
+                .parameters
+                .as_ref()
+                .map(Any::encode_from)
+                .transpose()?,
+        })
     }
 }

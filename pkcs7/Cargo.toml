@@ -15,13 +15,13 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-der = { version = "0.7", features = ["oid"], path = "../der" }
-spki = { version = "0.7", path = "../spki" }
-x509-cert = { version = "0.2", default-features = false, path = "../x509-cert" }
+der = { version = "0.7", features = ["oid"] }
+spki = { version = "0.7" }
+x509-cert = { version = "0.2", default-features = false }
 
 [dev-dependencies]
 der = { version = "0.7", features = ["oid", "pem"], path = "../der" }
-hex-literal = "0.3"
+hex-literal = "0.4"
 x509-cert = { version = "0.2", default-features = false, features = ["pem"], path = "../x509-cert" }
 
 [package.metadata.docs.rs]

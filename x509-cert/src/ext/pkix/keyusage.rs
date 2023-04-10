@@ -56,43 +56,43 @@ impl_newtype!(KeyUsage, FlagSet<KeyUsages>);
 impl KeyUsage {
     /// The subject public key is used for verifying digital signatures
     pub fn digital_signature(&self) -> bool {
-        self.0.bits() & KeyUsages::DigitalSignature as u16 == KeyUsages::DigitalSignature as u16
+        self.0.contains(KeyUsages::DigitalSignature)
     }
 
     /// When the subject public key is used to verify digital signatures,
     /// it is asserted as non-repudiation.
     pub fn non_repudiation(&self) -> bool {
-        self.0.bits() & KeyUsages::NonRepudiation as u16 == KeyUsages::NonRepudiation as u16
+        self.0.contains(KeyUsages::NonRepudiation)
     }
 
     /// The subject public key is used for enciphering private or
     /// secret keys, i.e., for key transport.
     pub fn key_encipherment(&self) -> bool {
-        self.0.bits() & KeyUsages::KeyEncipherment as u16 == KeyUsages::KeyEncipherment as u16
+        self.0.contains(KeyUsages::KeyEncipherment)
     }
 
     /// The subject public key is used for directly enciphering
     /// raw user data without the use of an intermediate symmetric cipher.
     pub fn data_encipherment(&self) -> bool {
-        self.0.bits() & KeyUsages::DataEncipherment as u16 == KeyUsages::DataEncipherment as u16
+        self.0.contains(KeyUsages::DataEncipherment)
     }
 
     /// The subject public key is used for key agreement
     pub fn key_agreement(&self) -> bool {
-        self.0.bits() & KeyUsages::KeyAgreement as u16 == KeyUsages::KeyAgreement as u16
+        self.0.contains(KeyUsages::KeyAgreement)
     }
 
     /// The subject public key is used for enciphering private or
     /// secret keys, i.e., for key transport.
     pub fn key_cert_sign(&self) -> bool {
-        self.0.bits() & KeyUsages::KeyCertSign as u16 == KeyUsages::KeyCertSign as u16
+        self.0.contains(KeyUsages::KeyCertSign)
     }
 
     /// The subject public key is used for verifying signatures
     /// on certificate revocation lists (e.g., CRLs, delta CRLs,
     /// or ARLs).
     pub fn crl_sign(&self) -> bool {
-        self.0.bits() & KeyUsages::CRLSign as u16 == KeyUsages::CRLSign as u16
+        self.0.contains(KeyUsages::CRLSign)
     }
 
     /// The meaning of the `encipher_only` is undefined when `key_agreement`
@@ -100,7 +100,7 @@ impl KeyUsage {
     /// `key_agreement` also returns true, the subject public key may be
     /// used only for enciphering data while performing key agreement.
     pub fn encipher_only(&self) -> bool {
-        self.0.bits() & KeyUsages::EncipherOnly as u16 == KeyUsages::EncipherOnly as u16
+        self.0.contains(KeyUsages::EncipherOnly)
     }
 
     /// The meaning of the `decipher_only` is undefined when `key_agreement`
@@ -108,7 +108,7 @@ impl KeyUsage {
     /// `key_agreement` also returns true, the subject public key may be
     /// used only for deciphering data while performing key agreement.
     pub fn decipher_only(&self) -> bool {
-        self.0.bits() & KeyUsages::DecipherOnly as u16 == KeyUsages::DecipherOnly as u16
+        self.0.contains(KeyUsages::DecipherOnly)
     }
 }
 
@@ -161,4 +161,33 @@ pub struct PrivateKeyUsagePeriod {
 
 impl AssociatedOid for PrivateKeyUsagePeriod {
     const OID: ObjectIdentifier = ID_CE_PRIVATE_KEY_USAGE_PERIOD;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn digital_signature_contains_digital_signature() {
+        let key_usage = KeyUsage(KeyUsages::DigitalSignature.into());
+        assert!(key_usage.digital_signature());
+    }
+
+    #[test]
+    fn all_contains_digital_signature() {
+        let key_usage = KeyUsage(FlagSet::full());
+        assert!(key_usage.digital_signature());
+    }
+
+    #[test]
+    fn key_encipherment_not_contains_digital_signature() {
+        let key_usage = KeyUsage(KeyUsages::KeyEncipherment.into());
+        assert!(!key_usage.digital_signature());
+    }
+
+    #[test]
+    fn empty_not_contains_digital_signature() {
+        let key_usage = KeyUsage(None.into());
+        assert!(!key_usage.digital_signature());
+    }
 }

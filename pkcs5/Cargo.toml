@@ -15,8 +15,8 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-der = { version = "0.7", features = ["oid"], path = "../der" }
-spki = { version = "0.7", path = "../spki" }
+der = { version = "0.7", features = ["oid"] }
+spki = { version = "0.7" }
 
 # optional dependencies
 cbc = { version = "0.1.2", optional = true }
@@ -28,7 +28,7 @@ sha1 = { version = "0.10.1", optional = true, default-features = false }
 sha2 = { version = "0.10.2", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.3"
+hex-literal = "0.4"
 
 [features]
 alloc = []

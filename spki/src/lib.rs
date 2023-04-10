@@ -47,18 +47,21 @@ mod traits;
 mod fingerprint;
 
 pub use crate::{
-    algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef},
+    algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef, AlgorithmIdentifierWithOid},
     error::{Error, Result},
     spki::{SubjectPublicKeyInfo, SubjectPublicKeyInfoRef},
-    traits::DecodePublicKey,
+    traits::{AssociatedAlgorithmIdentifier, DecodePublicKey, SignatureAlgorithmIdentifier},
 };
 pub use der::{self, asn1::ObjectIdentifier};
 
 #[cfg(feature = "alloc")]
 pub use {
     crate::{
-        algorithm::AlgorithmIdentifierOwned, spki::SubjectPublicKeyInfoOwned,
-        traits::EncodePublicKey,
+        algorithm::AlgorithmIdentifierOwned,
+        spki::SubjectPublicKeyInfoOwned,
+        traits::{
+            DynAssociatedAlgorithmIdentifier, DynSignatureAlgorithmIdentifier, EncodePublicKey,
+        },
     },
     der::Document,
 };

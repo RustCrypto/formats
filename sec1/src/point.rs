@@ -14,7 +14,7 @@ use core::{
     str,
 };
 use generic_array::{
-    typenum::{U1, U28, U32, U48, U66},
+    typenum::{U1, U24, U28, U32, U48, U66},
     ArrayLength, GenericArray,
 };
 
@@ -59,7 +59,7 @@ macro_rules! impl_modulus_size {
     }
 }
 
-impl_modulus_size!(U28, U32, U48, U66);
+impl_modulus_size!(U24, U28, U32, U48, U66);
 
 /// SEC1 encoded curve point.
 ///

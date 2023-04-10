@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.3 (2023-04-06)
+### Added
+- `UtcTime::MAX_YEAR` associated constant ([#989])
+
+[#989]: https://github.com/RustCrypto/formats/pull/989
+
+## 0.7.2 (2023-04-04)
+### Added
+- Expose `NestedReader ([#925])
+- `From<ObjectIdentifier>` impl for `Any` ([#965])
+- `Any::null` helper ([#969])
+- `Any::encode_from` ([#976])
+
+[#925]: https://github.com/RustCrypto/formats/pull/925
+[#965]: https://github.com/RustCrypto/formats/pull/965
+[#969]: https://github.com/RustCrypto/formats/pull/969
+[#976]: https://github.com/RustCrypto/formats/pull/976
+
 ## 0.7.1 (2023-03-07)
 ### Changed
 - Make `zeroize`'s `alloc` feature conditional ([#920])

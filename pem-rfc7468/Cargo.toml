@@ -18,7 +18,7 @@ edition = "2021"
 rust-version = "1.60"
 
 [dependencies]
-base64ct = { version = "1.4", path = "../base64ct" }
+base64ct = { version = "1.4" }
 
 [features]
 alloc = ["base64ct/alloc"]
