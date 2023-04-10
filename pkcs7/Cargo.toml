@@ -20,7 +20,7 @@ spki = { version = "0.7" }
 x509-cert = { version = "0.2", default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.3"
+hex-literal = "0.4"
 
 [package.metadata.docs.rs]
 all-features = true
