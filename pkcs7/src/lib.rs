@@ -15,7 +15,10 @@
     unused_qualifications
 )]
 
+extern crate alloc;
+
 pub mod algorithm_identifier_types;
+pub mod builder;
 pub mod certificate_choices;
 pub mod cms_version;
 pub mod data_content;
@@ -58,3 +61,17 @@ pub const PKCS_7_DIGESTED_DATA_OID: ObjectIdentifier =
 /// `pkcs-7 encryptedData` Object Identifier (OID).
 pub const PKCS_7_ENCRYPTED_DATA_OID: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.6");
+
+/// From RFC 5652. https://datatracker.ietf.org/doc/html/rfc5652#section-12.1
+
+/// `id-messageDigest` Object identifier (OID).
+pub const PKCS9_CONTENT_TYPE_OID:  ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.3");
+
+/// `id-messageDigest` Object identifier (OID).
+pub const PKCS9_MESSAGE_DIGEST_OID:  ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.4");
+
+/// `id-signingTime` Object identifier (OID).
+ pub const PKCS9_SIGNING_TIME_OID:  ObjectIdentifier =
+     ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.5");
