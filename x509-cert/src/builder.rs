@@ -164,12 +164,8 @@ impl Profile {
         // Build Key Usage extension
         match self {
             Profile::Root | Profile::SubCA { .. } => {
-                extensions.push(
-                    KeyUsage(
-                        KeyUsages::DigitalSignature | KeyUsages::KeyCertSign | KeyUsages::CRLSign,
-                    )
-                    .to_extension(tbs)?,
-                );
+                extensions
+                    .push(KeyUsage(KeyUsages::KeyCertSign | KeyUsages::CRLSign).to_extension(tbs)?);
             }
             Profile::Leaf {
                 enable_key_agreement,
