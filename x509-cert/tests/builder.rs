@@ -49,21 +49,15 @@ fn sub_ca_certificate() {
     let serial_number = SerialNumber::from(42u32);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
 
-    let issuer = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US")
-        .unwrap()
-        .to_der()
-        .unwrap();
-    let issuer = Name::from_der(&issuer).unwrap();
+    let issuer =
+        Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
     let profile = Profile::SubCA {
         issuer,
         path_len_constraint: Some(0),
     };
 
-    let subject = Name::from_str("CN=World domination task force,O=World domination Inc,C=US")
-        .unwrap()
-        .to_der()
-        .unwrap();
-    let subject = Name::from_der(&subject).unwrap();
+    let subject =
+        Name::from_str("CN=World domination task force,O=World domination Inc,C=US").unwrap();
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
@@ -99,22 +93,15 @@ fn leaf_certificate() {
     let serial_number = SerialNumber::from(42u32);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
 
-    let issuer = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US")
-        .unwrap()
-        .to_der()
-        .unwrap();
-    let issuer = Name::from_der(&issuer).unwrap();
+    let issuer =
+        Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
     let profile = Profile::Leaf {
         issuer,
         enable_key_agreement: false,
         enable_key_encipherment: false,
     };
 
-    let subject = Name::from_str("CN=service.domination.world")
-        .unwrap()
-        .to_der()
-        .unwrap();
-    let subject = Name::from_der(&subject).unwrap();
+    let subject = Name::from_str("CN=service.domination.world").unwrap();
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
