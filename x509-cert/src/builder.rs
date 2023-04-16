@@ -238,9 +238,8 @@ pub struct CertificateBuilder<'s, S> {
 
 impl<'s, S> CertificateBuilder<'s, S>
 where
-    S: Keypair,
+    S: Keypair + DynSignatureAlgorithmIdentifier,
     S::VerifyingKey: EncodePublicKey,
-    S::VerifyingKey: DynSignatureAlgorithmIdentifier,
 {
     /// Creates a new certificate builder
     pub fn new<Signature>(
@@ -260,7 +259,7 @@ where
             .to_public_key_der()?
             .decode_msg::<SubjectPublicKeyInfoOwned>()?;
 
-        let signature_alg = verifying_key.signature_algorithm_identifier()?;
+        let signature_alg = signer.signature_algorithm_identifier()?;
         let issuer = profile.get_issuer(&subject);
 
         validity.not_before.rfc5280_adjust_utc_time()?;
