@@ -9,7 +9,6 @@ use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
     builder::{CertificateBuilder, Profile},
-    certificate::Version,
     name::Name,
     serial_number::SerialNumber,
     time::Validity,
@@ -32,16 +31,9 @@ fn root_ca_certificate() {
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = rsa_signer();
-    let builder = CertificateBuilder::new(
-        profile,
-        Version::V3,
-        serial_number,
-        validity,
-        subject,
-        pub_key,
-        &signer,
-    )
-    .expect("Create certificate");
+    let builder =
+        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
+            .expect("Create certificate");
 
     let certificate = builder.build().unwrap();
 
@@ -78,7 +70,6 @@ fn sub_ca_certificate() {
     let signer = ecdsa_signer();
     let builder = CertificateBuilder::new::<ecdsa::Signature<NistP256>>(
         profile,
-        Version::V3,
         serial_number,
         validity,
         subject,
@@ -130,7 +121,6 @@ fn leaf_certificate() {
     let signer = ecdsa_signer();
     let builder = CertificateBuilder::new::<ecdsa::Signature<NistP256>>(
         profile,
-        Version::V3,
         serial_number,
         validity,
         subject,

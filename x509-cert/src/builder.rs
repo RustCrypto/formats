@@ -197,7 +197,6 @@ impl Profile {
 /// ```
 /// use der::Decode;
 /// use x509_cert::spki::SubjectPublicKeyInfoOwned;
-/// use x509_cert::certificate::Version;
 /// use x509_cert::builder::{CertificateBuilder, Profile};
 /// use x509_cert::name::Name;
 /// use x509_cert::serial_number::SerialNumber;
@@ -226,7 +225,6 @@ impl Profile {
 /// let mut signer = rsa_signer();
 /// let mut builder = CertificateBuilder::new(
 ///     profile,
-///     Version::V3,
 ///     serial_number,
 ///     validity,
 ///     subject,
@@ -248,7 +246,6 @@ where
     /// Creates a new certificate builder
     pub fn new<Signature>(
         profile: Profile,
-        version: Version,
         serial_number: SerialNumber,
         mut validity: Validity,
         subject: Name,
@@ -270,7 +267,7 @@ where
         validity.not_after.rfc5280_adjust_utc_time()?;
 
         let mut tbs = TbsCertificate {
-            version,
+            version: Version::V3,
             serial_number,
             signature: signature_alg,
             issuer,
@@ -288,15 +285,13 @@ where
             subject_unique_id: None,
         };
 
-        if tbs.version == Version::V3 {
-            let extensions = profile.build_extensions(
-                tbs.subject_public_key_info.owned_to_ref(),
-                signer_pub.owned_to_ref(),
-                &tbs,
-            )?;
-            if !extensions.is_empty() {
-                tbs.extensions = Some(extensions);
-            }
+        let extensions = profile.build_extensions(
+            tbs.subject_public_key_info.owned_to_ref(),
+            signer_pub.owned_to_ref(),
+            &tbs,
+        )?;
+        if !extensions.is_empty() {
+            tbs.extensions = Some(extensions);
         }
 
         Ok(Self { tbs, signer })
@@ -319,11 +314,18 @@ where
     }
 
     /// Run the certificate through the signer and build the end certificate.
-    pub fn build<Signature>(self) -> Result<Certificate>
+    pub fn build<Signature>(mut self) -> Result<Certificate>
     where
         S: Signer<Signature>,
         Signature: SignatureEncoding,
     {
+        if self.tbs.extensions.is_none() {
+            if self.tbs.issuer_unique_id.is_some() || self.tbs.subject_unique_id.is_some() {
+                self.tbs.version = Version::V2;
+            } else {
+                self.tbs.version = Version::V1;
+            }
+        }
         let signature = self.signer.try_sign(&self.tbs.to_der()?)?;
         let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
 
