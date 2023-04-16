@@ -227,13 +227,13 @@ impl Profile {
 ///     validity,
 ///     subject,
 ///     pub_key,
-///     &mut signer,
+///     &signer,
 /// )
 /// .expect("Create certificate");
 /// ```
 pub struct CertificateBuilder<'s, S> {
     tbs: TbsCertificate,
-    signer: &'s mut S,
+    signer: &'s S,
 }
 
 impl<'s, S> CertificateBuilder<'s, S>
@@ -249,7 +249,7 @@ where
         mut validity: Validity,
         subject: Name,
         subject_public_key_info: SubjectPublicKeyInfoOwned,
-        signer: &'s mut S,
+        signer: &'s S,
     ) -> Result<Self>
     where
         S: Signer<Signature>,
@@ -315,7 +315,7 @@ where
     }
 
     /// Run the certificate through the signer and build the end certificate.
-    pub fn build<Signature>(&mut self) -> Result<Certificate>
+    pub fn build<Signature>(self) -> Result<Certificate>
     where
         S: Signer<Signature>,
         Signature: SignatureEncoding,
@@ -325,7 +325,7 @@ where
 
         let cert = Certificate {
             tbs_certificate: self.tbs.clone(),
-            signature_algorithm: self.tbs.signature.clone(),
+            signature_algorithm: self.tbs.signature,
             signature,
         };
 
