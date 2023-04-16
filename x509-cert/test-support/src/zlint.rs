@@ -11,7 +11,7 @@ use std::{
 };
 use tempfile::tempdir;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Status {
     NotApplicable,
     NotEffective,
@@ -29,7 +29,7 @@ impl Status {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LintStatus {
     pub status: Status,
     pub details: Option<String>,
