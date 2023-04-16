@@ -116,6 +116,7 @@ fn leaf_certificate() {
     let profile = Profile::Leaf {
         issuer,
         enable_key_agreement: false,
+        enable_key_encipherment: false,
     };
 
     let subject = Name::from_str("CN=service.domination.world")

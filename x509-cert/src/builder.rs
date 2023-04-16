@@ -90,6 +90,8 @@ pub enum Profile {
         issuer: Name,
         /// should the key agreement flag of KeyUsage be enabled
         enable_key_agreement: bool,
+        /// should the key encipherment flag of KeyUsage be enabled
+        enable_key_encipherment: bool,
     },
     #[cfg(feature = "hazmat")]
     /// Opt-out of the default extensions
@@ -169,11 +171,13 @@ impl Profile {
             }
             Profile::Leaf {
                 enable_key_agreement,
+                enable_key_encipherment,
                 ..
             } => {
-                let mut key_usage = KeyUsages::DigitalSignature
-                    | KeyUsages::NonRepudiation
-                    | KeyUsages::KeyEncipherment;
+                let mut key_usage = KeyUsages::DigitalSignature | KeyUsages::NonRepudiation;
+                if *enable_key_encipherment {
+                    key_usage |= KeyUsages::KeyEncipherment;
+                }
                 if *enable_key_agreement {
                     key_usage |= KeyUsages::KeyAgreement;
                 }
