@@ -32,7 +32,7 @@ pub enum Error {
     /// Public key errors propagated from the [`spki::Error`] type.
     PublicKey(spki::Error),
 
-    /// Signing error propagated for the [`signature::Signer`] type.
+    /// Signing error propagated for the [`signature::Error`] or type.
     Signature(signature::Error),
 }
 
