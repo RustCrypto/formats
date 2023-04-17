@@ -29,7 +29,7 @@ hex-literal = "0.4"
 rand = "0.8.5"
 rsa = { version = "0.9.0-pre.1", features = ["sha2"] }
 ecdsa = { version = "0.16.4", features = ["digest", "pem"] }
-p256 = "0.13.0"
+p256 = "0.13.2"
 rstest = "0.17"
 sha2 = { version = "0.10", features = ["oid"] }
 tempfile = "3.5.0"
