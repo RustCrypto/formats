@@ -200,6 +200,7 @@ mod enumerated {
 /// Custom derive test cases for the `Sequence` macro.
 #[cfg(feature = "oid")]
 mod sequence {
+    use core::marker::PhantomData;
     use der::{
         asn1::{AnyRef, ObjectIdentifier, SetOf},
         Decode, Encode, Sequence, ValueOrd,
@@ -266,6 +267,9 @@ mod sequence {
             tag_mode = "IMPLICIT"
         )]
         pub only_contains_attribute_certs: bool,
+
+        /// Test handling of PhantomData.
+        pub phantom: PhantomData<()>,
     }
 
     // Extension as defined in [RFC 5280 Section 4.1.2.9].
