@@ -1,10 +1,11 @@
 //! PKCS#1 RSA parameters.
 
 use crate::{Error, Result};
-use der::asn1::{AnyRef, ObjectIdentifier};
 use der::{
-    asn1::ContextSpecificRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Length, Reader,
-    Sequence, Tag, TagMode, TagNumber, Writer,
+    asn1::{AnyRef, ContextSpecificRef, ObjectIdentifier},
+    oid::AssociatedOid,
+    Decode, DecodeValue, Encode, EncodeValue, FixedTag, Length, Reader, Sequence, Tag, TagMode,
+    TagNumber, Writer,
 };
 use spki::{AlgorithmIdentifier, AlgorithmIdentifierRef};
 
@@ -91,6 +92,28 @@ pub struct RsaPssParams<'a> {
 impl<'a> RsaPssParams<'a> {
     /// Default RSA PSS Salt length in RsaPssParams
     pub const SALT_LEN_DEFAULT: u8 = 20;
+
+    /// Create new RsaPssParams for the provided digest and salt len
+    pub fn new<D>(salt_len: u8) -> Self
+    where
+        D: AssociatedOid,
+    {
+        Self {
+            hash: AlgorithmIdentifierRef {
+                oid: D::OID,
+                parameters: Some(AnyRef::NULL),
+            },
+            mask_gen: AlgorithmIdentifier {
+                oid: OID_MGF_1,
+                parameters: Some(AlgorithmIdentifierRef {
+                    oid: D::OID,
+                    parameters: Some(AnyRef::NULL),
+                }),
+            },
+            salt_len,
+            trailer_field: Default::default(),
+        }
+    }
 
     fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
         if self.hash == SHA_1_AI {
@@ -238,6 +261,35 @@ pub struct RsaOaepParams<'a> {
 }
 
 impl<'a> RsaOaepParams<'a> {
+    /// Create new RsaPssParams for the provided digest and default (empty) label
+    pub fn new<D>() -> Self
+    where
+        D: AssociatedOid,
+    {
+        Self::new_with_label::<D>(&[])
+    }
+
+    /// Create new RsaPssParams for the provided digest and specified label
+    pub fn new_with_label<D>(label: &'a impl AsRef<[u8]>) -> Self
+    where
+        D: AssociatedOid,
+    {
+        Self {
+            hash: AlgorithmIdentifierRef {
+                oid: D::OID,
+                parameters: Some(AnyRef::NULL),
+            },
+            mask_gen: AlgorithmIdentifier {
+                oid: OID_MGF_1,
+                parameters: Some(AlgorithmIdentifierRef {
+                    oid: D::OID,
+                    parameters: Some(AnyRef::NULL),
+                }),
+            },
+            p_source: pspecicied_algorithm_identifier(label),
+        }
+    }
+
     fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
         if self.hash == SHA_1_AI {
             None
@@ -332,12 +384,16 @@ impl<'a> TryFrom<&'a [u8]> for RsaOaepParams<'a> {
     }
 }
 
-/// Default Source Algorithm, empty string
-fn default_pempty_string<'a>() -> AlgorithmIdentifierRef<'a> {
+fn pspecicied_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentifierRef<'_> {
     AlgorithmIdentifierRef {
         oid: OID_PSPECIFIED,
         parameters: Some(
-            AnyRef::new(Tag::OctetString, &[]).expect("error creating default OAEP params"),
+            AnyRef::new(Tag::OctetString, label.as_ref()).expect("error creating OAEP params"),
         ),
     }
+}
+
+/// Default Source Algorithm, empty string
+fn default_pempty_string<'a>() -> AlgorithmIdentifierRef<'a> {
+    pspecicied_algorithm_identifier(&[])
 }
