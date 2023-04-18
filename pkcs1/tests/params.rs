@@ -1,7 +1,10 @@
 //! PKCS#1 algorithm params tests
 
 use const_oid::db;
-use der::{asn1::OctetStringRef, Encode};
+use der::{
+    asn1::{AnyRef, OctetStringRef},
+    Encode,
+};
 use hex_literal::hex;
 use pkcs1::{RsaOaepParams, RsaPssParams, TrailerField};
 
@@ -56,7 +59,7 @@ fn decode_pss_param_default() {
         .hash
         .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
         .is_ok());
-    assert_eq!(param.hash.parameters, None);
+    assert_eq!(param.hash.parameters, Some(AnyRef::NULL));
     assert!(param
         .mask_gen
         .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
@@ -67,6 +70,10 @@ fn decode_pss_param_default() {
         .unwrap()
         .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
         .is_ok());
+    assert_eq!(
+        param.mask_gen.parameters.unwrap().parameters,
+        Some(AnyRef::NULL)
+    );
     assert_eq!(param.salt_len, 20);
     assert_eq!(param.trailer_field, TrailerField::BC);
     assert_eq!(param, Default::default())
@@ -132,7 +139,7 @@ fn decode_oaep_param_default() {
         .hash
         .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
         .is_ok());
-    assert_eq!(param.hash.parameters, None);
+    assert_eq!(param.hash.parameters, Some(AnyRef::NULL));
     assert!(param
         .mask_gen
         .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
@@ -143,6 +150,10 @@ fn decode_oaep_param_default() {
         .unwrap()
         .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
         .is_ok());
+    assert_eq!(
+        param.mask_gen.parameters.unwrap().parameters,
+        Some(AnyRef::NULL)
+    );
     assert!(param
         .p_source
         .assert_algorithm_oid(db::rfc5912::ID_P_SPECIFIED)

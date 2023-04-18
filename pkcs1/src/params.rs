@@ -14,7 +14,7 @@ const OID_PSPECIFIED: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.1
 
 const SHA_1_AI: AlgorithmIdentifierRef<'_> = AlgorithmIdentifierRef {
     oid: OID_SHA_1,
-    parameters: None,
+    parameters: Some(AnyRef::NULL),
 };
 
 /// `TrailerField` as defined in [RFC 8017 Appendix 2.3].
