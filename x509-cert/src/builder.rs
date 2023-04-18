@@ -36,6 +36,9 @@ pub enum Error {
     Signature(signature::Error),
 }
 
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -87,6 +90,8 @@ pub enum Profile {
         issuer: Name,
         /// should the key agreement flag of KeyUsage be enabled
         enable_key_agreement: bool,
+        /// should the key encipherment flag of KeyUsage be enabled
+        enable_key_encipherment: bool,
     },
     #[cfg(feature = "hazmat")]
     /// Opt-out of the default extensions
@@ -161,20 +166,18 @@ impl Profile {
         // Build Key Usage extension
         match self {
             Profile::Root | Profile::SubCA { .. } => {
-                extensions.push(
-                    KeyUsage(
-                        KeyUsages::DigitalSignature | KeyUsages::KeyCertSign | KeyUsages::CRLSign,
-                    )
-                    .to_extension(tbs)?,
-                );
+                extensions
+                    .push(KeyUsage(KeyUsages::KeyCertSign | KeyUsages::CRLSign).to_extension(tbs)?);
             }
             Profile::Leaf {
                 enable_key_agreement,
+                enable_key_encipherment,
                 ..
             } => {
-                let mut key_usage = KeyUsages::DigitalSignature
-                    | KeyUsages::NonRepudiation
-                    | KeyUsages::KeyEncipherment;
+                let mut key_usage = KeyUsages::DigitalSignature | KeyUsages::NonRepudiation;
+                if *enable_key_encipherment {
+                    key_usage |= KeyUsages::KeyEncipherment;
+                }
                 if *enable_key_agreement {
                     key_usage |= KeyUsages::KeyAgreement;
                 }
@@ -194,7 +197,6 @@ impl Profile {
 /// ```
 /// use der::Decode;
 /// use x509_cert::spki::SubjectPublicKeyInfoOwned;
-/// use x509_cert::certificate::Version;
 /// use x509_cert::builder::{CertificateBuilder, Profile};
 /// use x509_cert::name::Name;
 /// use x509_cert::serial_number::SerialNumber;
@@ -223,35 +225,32 @@ impl Profile {
 /// let mut signer = rsa_signer();
 /// let mut builder = CertificateBuilder::new(
 ///     profile,
-///     Version::V3,
 ///     serial_number,
 ///     validity,
 ///     subject,
 ///     pub_key,
-///     &mut signer,
+///     &signer,
 /// )
 /// .expect("Create certificate");
 /// ```
 pub struct CertificateBuilder<'s, S> {
     tbs: TbsCertificate,
-    signer: &'s mut S,
+    signer: &'s S,
 }
 
 impl<'s, S> CertificateBuilder<'s, S>
 where
-    S: Keypair,
+    S: Keypair + DynSignatureAlgorithmIdentifier,
     S::VerifyingKey: EncodePublicKey,
-    S::VerifyingKey: DynSignatureAlgorithmIdentifier,
 {
     /// Creates a new certificate builder
     pub fn new<Signature>(
         profile: Profile,
-        version: Version,
         serial_number: SerialNumber,
         mut validity: Validity,
         subject: Name,
         subject_public_key_info: SubjectPublicKeyInfoOwned,
-        signer: &'s mut S,
+        signer: &'s S,
     ) -> Result<Self>
     where
         S: Signer<Signature>,
@@ -261,14 +260,14 @@ where
             .to_public_key_der()?
             .decode_msg::<SubjectPublicKeyInfoOwned>()?;
 
-        let signature_alg = verifying_key.signature_algorithm_identifier()?;
+        let signature_alg = signer.signature_algorithm_identifier()?;
         let issuer = profile.get_issuer(&subject);
 
         validity.not_before.rfc5280_adjust_utc_time()?;
         validity.not_after.rfc5280_adjust_utc_time()?;
 
         let mut tbs = TbsCertificate {
-            version,
+            version: Version::V3,
             serial_number,
             signature: signature_alg,
             issuer,
@@ -286,15 +285,13 @@ where
             subject_unique_id: None,
         };
 
-        if tbs.version == Version::V3 {
-            let extensions = profile.build_extensions(
-                tbs.subject_public_key_info.owned_to_ref(),
-                signer_pub.owned_to_ref(),
-                &tbs,
-            )?;
-            if !extensions.is_empty() {
-                tbs.extensions = Some(extensions);
-            }
+        let extensions = profile.build_extensions(
+            tbs.subject_public_key_info.owned_to_ref(),
+            signer_pub.owned_to_ref(),
+            &tbs,
+        )?;
+        if !extensions.is_empty() {
+            tbs.extensions = Some(extensions);
         }
 
         Ok(Self { tbs, signer })
@@ -317,17 +314,24 @@ where
     }
 
     /// Run the certificate through the signer and build the end certificate.
-    pub fn build<Signature>(&mut self) -> Result<Certificate>
+    pub fn build<Signature>(mut self) -> Result<Certificate>
     where
         S: Signer<Signature>,
         Signature: SignatureEncoding,
     {
+        if self.tbs.extensions.is_none() {
+            if self.tbs.issuer_unique_id.is_some() || self.tbs.subject_unique_id.is_some() {
+                self.tbs.version = Version::V2;
+            } else {
+                self.tbs.version = Version::V1;
+            }
+        }
         let signature = self.signer.try_sign(&self.tbs.to_der()?)?;
         let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
 
         let cert = Certificate {
             tbs_certificate: self.tbs.clone(),
-            signature_algorithm: self.tbs.signature.clone(),
+            signature_algorithm: self.tbs.signature,
             signature,
         };
 
