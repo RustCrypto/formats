@@ -62,15 +62,9 @@ fn sub_ca_certificate() {
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = ecdsa_signer();
-    let builder = CertificateBuilder::new::<ecdsa::Signature<NistP256>>(
-        profile,
-        serial_number,
-        validity,
-        subject,
-        pub_key,
-        &signer,
-    )
-    .expect("Create certificate");
+    let builder =
+        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
+            .expect("Create certificate");
 
     let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
 
@@ -106,15 +100,9 @@ fn leaf_certificate() {
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = ecdsa_signer();
-    let builder = CertificateBuilder::new::<ecdsa::Signature<NistP256>>(
-        profile,
-        serial_number,
-        validity,
-        subject,
-        pub_key,
-        &signer,
-    )
-    .expect("Create certificate");
+    let builder =
+        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
+            .expect("Create certificate");
 
     let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
 

@@ -244,17 +244,14 @@ where
     S::VerifyingKey: EncodePublicKey,
 {
     /// Creates a new certificate builder
-    pub fn new<Signature>(
+    pub fn new(
         profile: Profile,
         serial_number: SerialNumber,
         mut validity: Validity,
         subject: Name,
         subject_public_key_info: SubjectPublicKeyInfoOwned,
         signer: &'s S,
-    ) -> Result<Self>
-    where
-        S: Signer<Signature>,
-    {
+    ) -> Result<Self> {
         let verifying_key = signer.verifying_key();
         let signer_pub = verifying_key
             .to_public_key_der()?
