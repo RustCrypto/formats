@@ -184,7 +184,7 @@ const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.d
 
 fn rsa_signer() -> SigningKey<Sha256> {
     let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
-    let signing_key = SigningKey::<Sha256>::new_with_prefix(private_key);
+    let signing_key = SigningKey::<Sha256>::new(private_key);
     signing_key
 }
 
