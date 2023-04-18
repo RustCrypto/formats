@@ -1,6 +1,7 @@
 //! Trait definition for [`Decode`].
 
 use crate::{FixedTag, Header, Reader, Result, SliceReader};
+use core::marker::PhantomData;
 
 #[cfg(feature = "pem")]
 use crate::{pem::PemLabel, PemReader};
@@ -35,6 +36,17 @@ where
         let header = Header::decode(reader)?;
         header.tag.assert_eq(T::TAG)?;
         T::decode_value(reader, header)
+    }
+}
+
+/// Dummy implementation for [`PhantomData`] which allows deriving
+/// implementations on structs with phantom fields.
+impl<'a, T> Decode<'a> for PhantomData<T>
+where
+    T: ?Sized,
+{
+    fn decode<R: Reader<'a>>(_reader: &mut R) -> Result<PhantomData<T>> {
+        Ok(PhantomData)
     }
 }
 
