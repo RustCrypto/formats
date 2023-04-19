@@ -20,7 +20,6 @@ spki = { version = "0.7" }
 
 # optional dependencies
 pkcs8 = { version = "0.10", optional = true, default-features = false }
-zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
@@ -28,8 +27,9 @@ hex-literal = "0.4"
 tempfile = "3"
 
 [features]
-alloc = ["der/alloc", "pkcs8/alloc", "zeroize/alloc"]
-pem = ["alloc", "der/pem", "pkcs8/pem"]
+zeroize = ["der/zeroize"]
+alloc = ["der/alloc", "zeroize", "pkcs8?/alloc"]
+pem = ["alloc", "der/pem", "pkcs8?/pem"]
 std = ["der/std", "alloc"]
 
 [package.metadata.docs.rs]
