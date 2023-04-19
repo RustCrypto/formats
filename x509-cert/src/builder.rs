@@ -3,7 +3,7 @@
 use alloc::vec;
 use core::fmt;
 use der::{asn1::BitString, referenced::OwnedToRef, Encode};
-use signature::{Keypair, SignatureEncoding, Signer};
+use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, SignatureEncoding, Signer};
 use spki::{
     DynSignatureAlgorithmIdentifier, EncodePublicKey, SubjectPublicKeyInfoOwned,
     SubjectPublicKeyInfoRef,
@@ -32,7 +32,7 @@ pub enum Error {
     /// Public key errors propagated from the [`spki::Error`] type.
     PublicKey(spki::Error),
 
-    /// Signing error propagated for the [`signature::Signer`] type.
+    /// Signing error propagated for the [`signature::Error`] type.
     Signature(signature::Error),
 }
 
@@ -244,17 +244,14 @@ where
     S::VerifyingKey: EncodePublicKey,
 {
     /// Creates a new certificate builder
-    pub fn new<Signature>(
+    pub fn new(
         profile: Profile,
         serial_number: SerialNumber,
         mut validity: Validity,
         subject: Name,
         subject_public_key_info: SubjectPublicKeyInfoOwned,
         signer: &'s S,
-    ) -> Result<Self>
-    where
-        S: Signer<Signature>,
-    {
+    ) -> Result<Self> {
         let verifying_key = signer.verifying_key();
         let signer_pub = verifying_key
             .to_public_key_der()?
@@ -313,12 +310,7 @@ where
         Ok(())
     }
 
-    /// Run the certificate through the signer and build the end certificate.
-    pub fn build<Signature>(mut self) -> Result<Certificate>
-    where
-        S: Signer<Signature>,
-        Signature: SignatureEncoding,
-    {
+    fn finalize(&mut self) {
         if self.tbs.extensions.is_none() {
             if self.tbs.issuer_unique_id.is_some() || self.tbs.subject_unique_id.is_some() {
                 self.tbs.version = Version::V2;
@@ -326,7 +318,37 @@ where
                 self.tbs.version = Version::V1;
             }
         }
+    }
+
+    /// Run the certificate through the signer and build the end certificate.
+    pub fn build<Signature>(mut self) -> Result<Certificate>
+    where
+        S: Signer<Signature>,
+        Signature: SignatureEncoding,
+    {
+        self.finalize();
+
         let signature = self.signer.try_sign(&self.tbs.to_der()?)?;
+        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+
+        let cert = Certificate {
+            tbs_certificate: self.tbs.clone(),
+            signature_algorithm: self.tbs.signature,
+            signature,
+        };
+
+        Ok(cert)
+    }
+
+    /// Run the certificate through the signer and build the end certificate.
+    pub fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<Certificate>
+    where
+        S: RandomizedSigner<Signature>,
+        Signature: SignatureEncoding,
+    {
+        self.finalize();
+
+        let signature = self.signer.try_sign_with_rng(rng, &self.tbs.to_der()?)?;
         let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
 
         let cert = Certificate {
