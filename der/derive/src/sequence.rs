@@ -68,8 +68,8 @@ impl DeriveSequence {
             });
 
         // We may or may not have inserted a lifetime.
-        let (_impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let (impl_generics, _ty_generics, _where_clause) = generics.split_for_impl();
+        let (_, ty_generics, where_clause) = self.generics.split_for_impl();
+        let (impl_generics, _, _) = generics.split_for_impl();
 
         let mut decode_body = Vec::new();
         let mut decode_result = Vec::new();
