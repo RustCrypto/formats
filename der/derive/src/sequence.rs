@@ -8,7 +8,7 @@ use field::SequenceField;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{DeriveInput, GenericParam, Generics, Ident, Lifetime, LifetimeParam};
+use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
@@ -55,16 +55,17 @@ impl DeriveSequence {
 
         // Use the first lifetime parameter as lifetime for Decode/Encode lifetime
         // if none found, add one.
-        let lifetime: Lifetime = if let Some(lt) = generics.lifetimes().next() {
-            lt.lifetime.clone()
-        } else {
-            let lifetime = default_lifetime();
-            generics.params.insert(
-                0,
-                GenericParam::Lifetime(LifetimeParam::new(lifetime.clone())),
-            );
-            lifetime
-        };
+        let lifetime = generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone())
+            .unwrap_or_else(|| {
+                let lt = default_lifetime();
+                generics
+                    .params
+                    .insert(0, GenericParam::Lifetime(LifetimeParam::new(lt.clone())));
+                lt
+            });
 
         // We may or may not have inserted a lifetime.
         let (_impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
