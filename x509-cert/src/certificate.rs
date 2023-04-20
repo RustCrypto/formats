@@ -81,6 +81,9 @@ impl Default for Version {
 }
 
 /// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
+pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
+
+/// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
 ///
 /// ASN.1 structure containing the names of the subject and issuer, a public
 /// key associated with the subject, a validity period, and other associated
@@ -108,7 +111,7 @@ impl Default for Version {
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertificate<P: Profile = Rfc5280> {
+pub struct TbsCertificateInner<P: Profile = Rfc5280> {
     /// The certificate version
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
@@ -137,7 +140,7 @@ pub struct TbsCertificate<P: Profile = Rfc5280> {
     pub(crate) _profile: PhantomData<P>,
 }
 
-impl<P: Profile> TbsCertificate<P> {
+impl<P: Profile> TbsCertificateInner<P> {
     /// Decodes a single extension
     ///
     /// Returns an error if multiple of these extensions is present. Returns
@@ -189,7 +192,7 @@ pub type Certificate = CertificateInner<Rfc5280>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct CertificateInner<P: Profile = Rfc5280> {
-    pub tbs_certificate: TbsCertificate<P>,
+    pub tbs_certificate: TbsCertificateInner<P>,
     pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitString,
 }
