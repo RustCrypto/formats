@@ -3,7 +3,7 @@
 use crate::{name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
-use core::{cmp::Ordering, fmt::Debug, marker::PhantomData};
+use core::{cmp::Ordering, fmt::Debug};
 use der::asn1::BitString;
 use der::{Decode, Enumerated, Error, ErrorKind, Sequence, Tag, ValueOrd};
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
@@ -136,8 +136,6 @@ pub struct TbsCertificateInner<P: Profile = Rfc5280> {
 
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
     pub extensions: Option<crate::ext::Extensions>,
-
-    pub(crate) _profile: PhantomData<P>,
 }
 
 impl<P: Profile> TbsCertificateInner<P> {
