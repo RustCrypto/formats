@@ -6,7 +6,7 @@ use std::{
     collections::HashMap,
     fmt,
     fs::File,
-    io::{Read, Write},
+    io::{self, Read, Write},
     process::{Command, Stdio},
 };
 use tempfile::tempdir;
@@ -159,7 +159,13 @@ pub fn check_certificate(pem: &[u8], ignored: &[&str]) {
         .stderr(Stdio::inherit())
         .stdout(Stdio::piped())
         .spawn()
-        .expect("zlint failed");
+        .unwrap_or_else(|e| match e.kind() {
+            io::ErrorKind::NotFound => {
+                panic!("error running 'zlint': command not found. Is it installed?")
+            }
+            _ => panic!("error running 'zlint': {:?}", e),
+        });
+
     let mut stdout = child.stdout.take().unwrap();
     let exit_status = child.wait().expect("get zlint status");
 
