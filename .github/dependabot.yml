@@ -5,6 +5,121 @@ updates:
   schedule:
     interval: weekly
   open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/base16ct"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/base32ct"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/base64ct"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/cmpv2"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/cms"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/const-oid"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/crmf"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/der"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/der/derive"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/pem-rfc7468"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/pkcs1"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/pkcs5"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/pkcs7"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/pkcs8"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/pkcs12"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/sec1"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/serdect"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/spki"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/tai64"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/tls_codec"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/tls_codec/derive"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/x509-cert"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+- package-ecosystem: "cargo"
+  directory: "/x509-ocsp"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
