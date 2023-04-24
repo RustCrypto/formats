@@ -20,7 +20,7 @@ tls_codec_derive = { version = "=0.3.0-pre.2", optional = true }
 
 [dev-dependencies]
 criterion = "0.4"
-regex = "1.7"
+regex = "1.8"
 
 [features]
 default = [ "std" ]
