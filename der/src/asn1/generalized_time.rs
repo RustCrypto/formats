@@ -37,7 +37,7 @@ impl GeneralizedTime {
     const LENGTH: usize = 15;
 
     /// Create a [`GeneralizedTime`] from a [`DateTime`].
-    pub fn from_date_time(datetime: DateTime) -> Self {
+    pub const fn from_date_time(datetime: DateTime) -> Self {
         Self(datetime)
     }
 
