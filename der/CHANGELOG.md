@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.5 (2023-04-24)
+### Added
+- adds support for `DateTime::INFINITY` ([#1026])
+
+[#1026]: https://github.com/RustCrypto/formats/pull/1026
+
 ## 0.7.4 (2023-04-19)
 ### Added
 - `Decode` and `Encode` impls for `PhantomData` ([#1009])
