@@ -118,7 +118,7 @@ fn leaf_certificate() {
     println!("{}", openssl::check_certificate(pem.as_bytes()));
 
     // TODO(baloo): not too sure we should tackle those in this API.
-    let mut ignored = vec![
+    let ignored = vec![
         "e_sub_cert_aia_missing",
         "e_sub_cert_crl_distribution_points_missing",
         "w_sub_cert_aia_does_not_contain_issuing_ca_url",
@@ -155,6 +155,7 @@ fn leaf_certificate() {
 
         // Ignore warning about leaf not having SKI extension (this is a warning not a fail, as
         // denoted by the `w_` prefix.
+        let mut ignored = ignored;
         ignored.push("w_ext_subject_key_identifier_missing_sub_cert");
         zlint::check_certificate(pem.as_bytes(), &ignored);
     }
