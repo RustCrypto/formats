@@ -92,6 +92,14 @@ pub enum Profile {
         enable_key_agreement: bool,
         /// should the key encipherment flag of KeyUsage be enabled
         enable_key_encipherment: bool,
+        /// should the subject key identifier extension be included
+        ///
+        /// From [RFC 5280 Section 4.2.1.2]:
+        ///  For end entity certificates, subject key identifiers SHOULD be
+        ///  derived from the public key.  Two common methods for generating key
+        ///  identifiers from the public key are identified above.
+        #[cfg(feature = "hazmat")]
+        include_subject_key_identifier: bool,
     },
     #[cfg(feature = "hazmat")]
     /// Opt-out of the default extensions
@@ -128,7 +136,14 @@ impl Profile {
 
         let mut extensions: vec::Vec<Extension> = vec::Vec::new();
 
-        extensions.push(SubjectKeyIdentifier::try_from(spk)?.to_extension(tbs)?);
+        match self {
+            #[cfg(feature = "hazmat")]
+            Profile::Leaf {
+                include_subject_key_identifier: false,
+                ..
+            } => {}
+            _ => extensions.push(SubjectKeyIdentifier::try_from(spk)?.to_extension(tbs)?),
+        }
 
         // Build Authority Key Identifier
         match self {

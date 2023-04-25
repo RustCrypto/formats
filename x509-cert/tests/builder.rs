@@ -90,9 +90,11 @@ fn leaf_certificate() {
     let issuer =
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
     let profile = Profile::Leaf {
-        issuer,
+        issuer: issuer.clone(),
         enable_key_agreement: false,
         enable_key_encipherment: false,
+        #[cfg(feature = "hazmat")]
+        include_subject_key_identifier: true,
     };
 
     let subject = Name::from_str("CN=service.domination.world").unwrap();
@@ -100,9 +102,15 @@ fn leaf_certificate() {
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = ecdsa_signer();
-    let builder =
-        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
-            .expect("Create certificate");
+    let builder = CertificateBuilder::new(
+        profile,
+        serial_number.clone(),
+        validity.clone(),
+        subject.clone(),
+        pub_key.clone(),
+        &signer,
+    )
+    .expect("Create certificate");
 
     let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
 
@@ -110,7 +118,7 @@ fn leaf_certificate() {
     println!("{}", openssl::check_certificate(pem.as_bytes()));
 
     // TODO(baloo): not too sure we should tackle those in this API.
-    let ignored = &[
+    let mut ignored = vec![
         "e_sub_cert_aia_missing",
         "e_sub_cert_crl_distribution_points_missing",
         "w_sub_cert_aia_does_not_contain_issuing_ca_url",
@@ -126,7 +134,30 @@ fn leaf_certificate() {
         "e_sub_cert_eku_missing",
     ];
 
-    zlint::check_certificate(pem.as_bytes(), ignored);
+    zlint::check_certificate(pem.as_bytes(), &ignored);
+
+    #[cfg(feature = "hazmat")]
+    {
+        let profile = Profile::Leaf {
+            issuer,
+            enable_key_agreement: false,
+            enable_key_encipherment: false,
+            include_subject_key_identifier: false,
+        };
+        let builder =
+            CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
+                .expect("Create certificate");
+
+        let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+
+        let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
+        println!("{}", openssl::check_certificate(pem.as_bytes()));
+
+        // Ignore warning about leaf not having SKI extension (this is a warning not a fail, as
+        // denoted by the `w_` prefix.
+        ignored.push("w_ext_subject_key_identifier_missing_sub_cert");
+        zlint::check_certificate(pem.as_bytes(), &ignored);
+    }
 }
 
 #[test]
@@ -140,6 +171,8 @@ fn pss_certificate() {
         issuer,
         enable_key_agreement: false,
         enable_key_encipherment: false,
+        #[cfg(feature = "hazmat")]
+        include_subject_key_identifier: true,
     };
 
     let subject = Name::from_str("CN=service.domination.world").unwrap();
