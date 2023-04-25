@@ -34,6 +34,10 @@ pub enum Time {
 }
 
 impl Time {
+    /// Time used for Certificate who do not expire.
+    pub const INFINITY: Time =
+        Time::GeneralTime(GeneralizedTime::from_date_time(DateTime::INFINITY));
+
     /// Get duration since `UNIX_EPOCH`.
     pub fn to_unix_duration(self) -> Duration {
         match self {
