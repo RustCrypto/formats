@@ -215,7 +215,7 @@ fn write_hex(f: &mut fmt::Formatter<'_>, data: &[u8]) -> fmt::Result {
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize)]
 pub struct VLBytes {
     vec: Vec<u8>,
 }
@@ -282,7 +282,7 @@ impl AsRef<[u8]> for VLBytes {
 
 impl From<VLBytes> for Vec<u8> {
     fn from(b: VLBytes) -> Self {
-        b.vec.clone()
+        b.vec
     }
 }
 
@@ -394,6 +394,94 @@ impl Size for &VLBytes {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
+    }
+}
+
+/// A wrapper struct around [`VLBytes`] that implements [`ZeroizeOnDrop`]. It
+/// behaves just like [`VLBytes`], except that it doesn't allow conversion into
+/// a [`Vec<u8>`].
+#[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
+pub struct SecretVLBytes(VLBytes);
+
+impl fmt::Debug for SecretVLBytes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "SecretVLBytes {{ ")?;
+        write_hex(f, &self.0.vec)?;
+        write!(f, " }}")
+    }
+}
+
+impl SecretVLBytes {
+    /// Generate a new variable-length byte vector.
+    pub fn new(vec: Vec<u8>) -> Self {
+        Self(VLBytes { vec })
+    }
+
+    /// Get a reference to the SecretVLBytes's vec.
+    pub fn as_slice(&self) -> &[u8] {
+        self.0.vec.as_ref()
+    }
+
+    /// Add an element to this.
+    #[inline]
+    pub fn push(&mut self, value: u8) {
+        self.0.vec.push(value);
+    }
+
+    /// Remove the last element.
+    #[inline]
+    pub fn pop(&mut self) -> Option<u8> {
+        self.0.vec.pop()
+    }
+}
+
+impl From<Vec<u8>> for SecretVLBytes {
+    fn from(vec: Vec<u8>) -> Self {
+        Self(VLBytes { vec })
+    }
+}
+
+impl From<&[u8]> for SecretVLBytes {
+    fn from(slice: &[u8]) -> Self {
+        Self(VLBytes {
+            vec: slice.to_vec(),
+        })
+    }
+}
+
+impl<const N: usize> From<&[u8; N]> for SecretVLBytes {
+    fn from(slice: &[u8; N]) -> Self {
+        Self(VLBytes {
+            vec: slice.to_vec(),
+        })
+    }
+}
+
+impl AsRef<[u8]> for SecretVLBytes {
+    fn as_ref(&self) -> &[u8] {
+        &self.0.vec
+    }
+}
+
+impl Size for SecretVLBytes {
+    fn tls_serialized_len(&self) -> usize {
+        self.0.tls_serialized_len()
+    }
+}
+
+impl Serialize for SecretVLBytes {
+    fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+        self.0.tls_serialize(writer)
+    }
+}
+
+impl Deserialize for SecretVLBytes {
+    fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        Ok(Self(VLBytes::tls_deserialize(bytes)?))
     }
 }
 
