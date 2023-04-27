@@ -13,6 +13,7 @@
 //! up to 62-bit length values.
 use alloc::vec::Vec;
 use core::fmt;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Unstructured};
@@ -214,7 +215,7 @@ fn write_hex(f: &mut fmt::Formatter<'_>, data: &[u8]) -> fmt::Result {
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
 pub struct VLBytes {
     vec: Vec<u8>,
 }
@@ -281,7 +282,7 @@ impl AsRef<[u8]> for VLBytes {
 
 impl From<VLBytes> for Vec<u8> {
     fn from(b: VLBytes) -> Self {
-        b.vec
+        b.vec.clone()
     }
 }
 
