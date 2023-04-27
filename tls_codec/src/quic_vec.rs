@@ -545,7 +545,7 @@ impl<'a> Arbitrary<'a> for VLBytes {
 
 #[cfg(test)]
 mod test {
-    use crate::{VLByteSlice, VLBytes};
+    use crate::{SecretVLBytes, VLByteSlice, VLBytes};
     use std::println;
 
     #[test]
@@ -573,6 +573,11 @@ mod test {
             let got = format!("{:?}", VLBytes::new(test.clone()));
             println!("{got}");
             assert_eq!(expected_vl_bytes, got);
+
+            let expected_secret_vl_bytes = format!("SecretVLBytes {{ {expected} }}");
+            let got = format!("{:?}", SecretVLBytes::new(test.clone()));
+            println!("{got}");
+            assert_eq!(expected_secret_vl_bytes, got);
         }
     }
 }
