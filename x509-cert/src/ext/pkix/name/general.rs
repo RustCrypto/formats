@@ -61,3 +61,49 @@ pub enum GeneralName {
     #[asn1(context_specific = "8", tag_mode = "IMPLICIT")]
     RegisteredId(ObjectIdentifier),
 }
+
+#[cfg(feature = "std")]
+impl From<std::net::IpAddr> for GeneralName {
+    fn from(ip: std::net::IpAddr) -> Self {
+        // Safety: this is unfailable here, OctetString will issue an error if you go
+        // over 256MiB, here the buffer is at most 16 bytes (ipv6). The two `expect`s
+        // below are safe.
+        let buf = match ip {
+            std::net::IpAddr::V4(v) => {
+                let value = v.octets();
+                OctetString::new(&value[..])
+                    .expect("OctetString is not expected to fail with a 4 bytes long buffer")
+            }
+            std::net::IpAddr::V6(v) => {
+                let value = v.octets();
+                OctetString::new(&value[..])
+                    .expect("OctetString is not expected to fail with a 16 bytes long buffer")
+            }
+        };
+
+        GeneralName::IpAddress(buf)
+    }
+}
+
+#[cfg(all(feature = "std", test))]
+mod tests {
+    use super::*;
+    use der::Encode;
+
+    #[test]
+    fn test_convert() {
+        use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
+        let localhost_v4 = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+        let localhost_v6 = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
+
+        assert_eq!(
+            GeneralName::from(localhost_v4).to_der().unwrap(),
+            &[135, 4, 127, 0, 0, 1][..]
+        );
+        assert_eq!(
+            GeneralName::from(localhost_v6).to_der().unwrap(),
+            &[135, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1][..]
+        );
+    }
+}
