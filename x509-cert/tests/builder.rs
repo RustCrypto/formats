@@ -8,7 +8,8 @@ use sha2::Sha256;
 use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{CertificateBuilder, Profile},
+    builder::{CertificateBuilder, Profile, RequestBuilder},
+    ext::pkix::{name::GeneralName, SubjectAltName},
     name::Name,
     serial_number::SerialNumber,
     time::Validity,
@@ -233,4 +234,22 @@ const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("examples/p256-priv.der");
 fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {
     let secret_key = p256::SecretKey::from_pkcs8_der(PKCS8_PRIVATE_KEY_DER).unwrap();
     ecdsa::SigningKey::from(secret_key)
+}
+
+#[test]
+fn certificate_request() {
+    use std::net::{IpAddr, Ipv4Addr};
+    let subject = Name::from_str("CN=service.domination.world").unwrap();
+
+    let signer = ecdsa_signer();
+    let mut builder = RequestBuilder::new(subject, &signer).expect("Create certificate request");
+    builder
+        .add_extension(&SubjectAltName(vec![GeneralName::from(IpAddr::V4(
+            Ipv4Addr::new(192, 0, 2, 0),
+        ))]))
+        .unwrap();
+
+    let cert_req = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+    let pem = cert_req.to_pem(LineEnding::LF).expect("generate pem");
+    println!("{}", openssl::check_request(pem.as_bytes()));
 }

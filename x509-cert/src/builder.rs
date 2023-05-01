@@ -18,6 +18,7 @@ use crate::{
         AsExtension, Extension, Extensions,
     },
     name::Name,
+    request::{CertReq, CertReqInfo, ExtensionReq},
     serial_number::SerialNumber,
     time::Validity,
 };
@@ -376,5 +377,126 @@ where
         };
 
         Ok(cert)
+    }
+}
+
+/// Builder for X509 Certificate Requests
+///
+/// ```
+/// # use p256::{pkcs8::DecodePrivateKey, NistP256};
+/// # const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("../tests/examples/p256-priv.der");
+/// # fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {
+/// #     let secret_key = p256::SecretKey::from_pkcs8_der(PKCS8_PRIVATE_KEY_DER).unwrap();
+/// #     ecdsa::SigningKey::from(secret_key)
+/// # }
+/// use x509_cert::{
+///     builder::{Builder, RequestBuilder},
+///     ext::pkix::{name::GeneralName, SubjectAltName},
+///     name::Name,
+/// };
+/// use std::str::FromStr;
+///
+/// use std::net::{IpAddr, Ipv4Addr};
+/// let subject = Name::from_str("CN=service.domination.world").unwrap();
+///
+/// let signer = ecdsa_signer();
+/// let mut builder = RequestBuilder::new(subject, &signer).expect("Create certificate request");
+/// builder
+///     .add_extension(&SubjectAltName(vec![GeneralName::from(IpAddr::V4(
+///         Ipv4Addr::new(192, 0, 2, 0),
+///     ))]))
+///     .unwrap();
+///
+/// let cert_req = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+/// ```
+pub struct RequestBuilder<'s, S> {
+    info: CertReqInfo,
+    extension_req: ExtensionReq,
+    signer: &'s S,
+}
+
+impl<'s, S> RequestBuilder<'s, S>
+where
+    S: Keypair + DynSignatureAlgorithmIdentifier,
+    S::VerifyingKey: EncodePublicKey,
+{
+    /// Creates a new certificate request builder
+    pub fn new(subject: Name, signer: &'s S) -> Result<Self> {
+        let version = Default::default();
+        let verifying_key = signer.verifying_key();
+        let public_key = verifying_key
+            .to_public_key_der()?
+            .decode_msg::<SubjectPublicKeyInfoOwned>()?;
+        let attributes = Default::default();
+        let extension_req = Default::default();
+
+        Ok(Self {
+            info: CertReqInfo {
+                version,
+                subject,
+                public_key,
+                attributes,
+            },
+            extension_req,
+            signer,
+        })
+    }
+
+    /// Add an extension to this certificate request
+    pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
+        let ext = extension.to_extension(&self.info.subject, &self.extension_req.0)?;
+
+        self.extension_req.0.push(ext);
+
+        Ok(())
+    }
+
+    fn finalize(&mut self) -> Result<()> {
+        self.info
+            .attributes
+            .add(self.extension_req.clone().try_into()?);
+        Ok(())
+    }
+
+    /// Run the certificate through the signer and build the end certificate.
+    pub fn build<Signature>(mut self) -> Result<CertReq>
+    where
+        S: Signer<Signature>,
+        Signature: SignatureEncoding,
+    {
+        self.finalize()?;
+
+        let algorithm = self.signer.signature_algorithm_identifier()?;
+        let signature = self.signer.try_sign(&self.info.to_der()?)?;
+        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+
+        let req = CertReq {
+            info: self.info,
+            algorithm,
+            signature,
+        };
+
+        Ok(req)
+    }
+
+    /// Run the certificate through the signer and build the end certificate.
+    pub fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<CertReq>
+    where
+        S: RandomizedSigner<Signature>,
+        Signature: SignatureEncoding,
+    {
+        self.finalize()?;
+
+        let algorithm = self.signer.signature_algorithm_identifier()?;
+        let signature = self.signer.try_sign_with_rng(rng, &self.info.to_der()?)?;
+        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+
+        let req = CertReq {
+            info: self.info,
+            algorithm,
+            signature,
+        };
+
+        Ok(req)
     }
 }
