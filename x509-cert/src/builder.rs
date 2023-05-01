@@ -15,7 +15,7 @@ use crate::{
         pkix::{
             AuthorityKeyIdentifier, BasicConstraints, KeyUsage, KeyUsages, SubjectKeyIdentifier,
         },
-        AsExtension, Extension,
+        AsExtension, Extension, Extensions,
     },
     name::Name,
     serial_number::SerialNumber,
@@ -142,15 +142,19 @@ impl Profile {
                 include_subject_key_identifier: false,
                 ..
             } => {}
-            _ => extensions.push(SubjectKeyIdentifier::try_from(spk)?.to_extension(tbs)?),
+            _ => extensions.push(
+                SubjectKeyIdentifier::try_from(spk)?.to_extension(&tbs.subject, &extensions)?,
+            ),
         }
 
         // Build Authority Key Identifier
         match self {
             Profile::Root => {}
             _ => {
-                extensions
-                    .push(AuthorityKeyIdentifier::try_from(issuer_spk.clone())?.to_extension(tbs)?);
+                extensions.push(
+                    AuthorityKeyIdentifier::try_from(issuer_spk.clone())?
+                        .to_extension(&tbs.subject, &extensions)?,
+                );
             }
         }
 
@@ -160,7 +164,7 @@ impl Profile {
                 ca: true,
                 path_len_constraint: None,
             }
-            .to_extension(tbs)?,
+            .to_extension(&tbs.subject, &extensions)?,
             Profile::SubCA {
                 path_len_constraint,
                 ..
@@ -168,12 +172,12 @@ impl Profile {
                 ca: true,
                 path_len_constraint: *path_len_constraint,
             }
-            .to_extension(tbs)?,
+            .to_extension(&tbs.subject, &extensions)?,
             Profile::Leaf { .. } => BasicConstraints {
                 ca: false,
                 path_len_constraint: None,
             }
-            .to_extension(tbs)?,
+            .to_extension(&tbs.subject, &extensions)?,
             #[cfg(feature = "hazmat")]
             Profile::Manual { .. } => unreachable!(),
         });
@@ -181,8 +185,10 @@ impl Profile {
         // Build Key Usage extension
         match self {
             Profile::Root | Profile::SubCA { .. } => {
-                extensions
-                    .push(KeyUsage(KeyUsages::KeyCertSign | KeyUsages::CRLSign).to_extension(tbs)?);
+                extensions.push(
+                    KeyUsage(KeyUsages::KeyCertSign | KeyUsages::CRLSign)
+                        .to_extension(&tbs.subject, &extensions)?,
+                );
             }
             Profile::Leaf {
                 enable_key_agreement,
@@ -197,7 +203,7 @@ impl Profile {
                     key_usage |= KeyUsages::KeyAgreement;
                 }
 
-                extensions.push(KeyUsage(key_usage).to_extension(tbs)?);
+                extensions.push(KeyUsage(key_usage).to_extension(&tbs.subject, &extensions)?);
             }
             #[cfg(feature = "hazmat")]
             Profile::Manual { .. } => unreachable!(),
@@ -250,6 +256,7 @@ impl Profile {
 /// ```
 pub struct CertificateBuilder<'s, S> {
     tbs: TbsCertificate,
+    extensions: Extensions,
     signer: &'s S,
 }
 
@@ -278,7 +285,7 @@ where
         validity.not_before.rfc5280_adjust_utc_time()?;
         validity.not_after.rfc5280_adjust_utc_time()?;
 
-        let mut tbs = TbsCertificate {
+        let tbs = TbsCertificate {
             version: Version::V3,
             serial_number,
             signature: signature_alg,
@@ -302,30 +309,26 @@ where
             signer_pub.owned_to_ref(),
             &tbs,
         )?;
-        if !extensions.is_empty() {
-            tbs.extensions = Some(extensions);
-        }
-
-        Ok(Self { tbs, signer })
+        Ok(Self {
+            tbs,
+            extensions,
+            signer,
+        })
     }
 
     /// Add an extension to this certificate
     pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
-        if self.tbs.version == Version::V3 {
-            let ext = extension.to_extension(&self.tbs)?;
-
-            if let Some(extensions) = self.tbs.extensions.as_mut() {
-                extensions.push(ext);
-            } else {
-                let extensions = vec![ext];
-                self.tbs.extensions = Some(extensions);
-            }
-        }
+        let ext = extension.to_extension(&self.tbs.subject, &self.extensions)?;
+        self.extensions.push(ext);
 
         Ok(())
     }
 
     fn finalize(&mut self) {
+        if !self.extensions.is_empty() {
+            self.tbs.extensions = Some(self.extensions.clone());
+        }
+
         if self.tbs.extensions.is_none() {
             if self.tbs.issuer_unique_id.is_some() || self.tbs.subject_unique_id.is_some() {
                 self.tbs.version = Version::V2;

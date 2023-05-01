@@ -24,7 +24,11 @@ impl AssociatedOid for BasicConstraints {
 }
 
 impl crate::ext::AsExtension for BasicConstraints {
-    fn critical(&self, _tbs: &crate::certificate::TbsCertificate) -> bool {
+    fn critical(
+        &self,
+        _subject: &crate::name::Name,
+        _extensions: &[crate::ext::Extension],
+    ) -> bool {
         // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.9
         //   Conforming CAs MUST include this extension in all CA certificates
         //   that contain public keys used to validate digital signatures on

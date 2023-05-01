@@ -139,7 +139,11 @@ impl AssociatedOid for ExtendedKeyUsage {
 impl_newtype!(ExtendedKeyUsage, Vec<ObjectIdentifier>);
 
 impl crate::ext::AsExtension for ExtendedKeyUsage {
-    fn critical(&self, _tbs: &crate::certificate::TbsCertificate) -> bool {
+    fn critical(
+        &self,
+        _subject: &crate::name::Name,
+        _extensions: &[crate::ext::Extension],
+    ) -> bool {
         // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
         //   This extension MAY, at the option of the certificate issuer, be
         //   either critical or non-critical.
