@@ -258,7 +258,7 @@ impl Profile {
 pub struct CertificateBuilder<'s, S> {
     tbs: TbsCertificate,
     extensions: Extensions,
-    signer: &'s S,
+    cert_signer: &'s S,
 }
 
 impl<'s, S> CertificateBuilder<'s, S>
@@ -273,14 +273,14 @@ where
         mut validity: Validity,
         subject: Name,
         subject_public_key_info: SubjectPublicKeyInfoOwned,
-        signer: &'s S,
+        cert_signer: &'s S,
     ) -> Result<Self> {
-        let verifying_key = signer.verifying_key();
+        let verifying_key = cert_signer.verifying_key();
         let signer_pub = verifying_key
             .to_public_key_der()?
             .decode_msg::<SubjectPublicKeyInfoOwned>()?;
 
-        let signature_alg = signer.signature_algorithm_identifier()?;
+        let signature_alg = cert_signer.signature_algorithm_identifier()?;
         let issuer = profile.get_issuer(&subject);
 
         validity.not_before.rfc5280_adjust_utc_time()?;
@@ -313,7 +313,7 @@ where
         Ok(Self {
             tbs,
             extensions,
-            signer,
+            cert_signer,
         })
     }
 
@@ -323,60 +323,6 @@ where
         self.extensions.push(ext);
 
         Ok(())
-    }
-
-    fn finalize(&mut self) {
-        if !self.extensions.is_empty() {
-            self.tbs.extensions = Some(self.extensions.clone());
-        }
-
-        if self.tbs.extensions.is_none() {
-            if self.tbs.issuer_unique_id.is_some() || self.tbs.subject_unique_id.is_some() {
-                self.tbs.version = Version::V2;
-            } else {
-                self.tbs.version = Version::V1;
-            }
-        }
-    }
-
-    /// Run the certificate through the signer and build the end certificate.
-    pub fn build<Signature>(mut self) -> Result<Certificate>
-    where
-        S: Signer<Signature>,
-        Signature: SignatureEncoding,
-    {
-        self.finalize();
-
-        let signature = self.signer.try_sign(&self.tbs.to_der()?)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
-
-        let cert = Certificate {
-            tbs_certificate: self.tbs.clone(),
-            signature_algorithm: self.tbs.signature,
-            signature,
-        };
-
-        Ok(cert)
-    }
-
-    /// Run the certificate through the signer and build the end certificate.
-    pub fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<Certificate>
-    where
-        S: RandomizedSigner<Signature>,
-        Signature: SignatureEncoding,
-    {
-        self.finalize();
-
-        let signature = self.signer.try_sign_with_rng(rng, &self.tbs.to_der()?)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
-
-        let cert = Certificate {
-            tbs_certificate: self.tbs.clone(),
-            signature_algorithm: self.tbs.signature,
-            signature,
-        };
-
-        Ok(cert)
     }
 }
 
@@ -412,7 +358,7 @@ where
 pub struct RequestBuilder<'s, S> {
     info: CertReqInfo,
     extension_req: ExtensionReq,
-    signer: &'s S,
+    req_signer: &'s S,
 }
 
 impl<'s, S> RequestBuilder<'s, S>
@@ -421,9 +367,9 @@ where
     S::VerifyingKey: EncodePublicKey,
 {
     /// Creates a new certificate request builder
-    pub fn new(subject: Name, signer: &'s S) -> Result<Self> {
+    pub fn new(subject: Name, req_signer: &'s S) -> Result<Self> {
         let version = Default::default();
-        let verifying_key = signer.verifying_key();
+        let verifying_key = req_signer.verifying_key();
         let public_key = verifying_key
             .to_public_key_der()?
             .decode_msg::<SubjectPublicKeyInfoOwned>()?;
@@ -438,7 +384,7 @@ where
                 attributes,
             },
             extension_req,
-            signer,
+            req_signer,
         })
     }
 
@@ -450,53 +396,122 @@ where
 
         Ok(())
     }
+}
 
-    fn finalize(&mut self) -> Result<()> {
+/// Trait for X509 builders
+///
+/// This trait defines the interface between builder and the signers.
+pub trait Builder: Sized {
+    /// The builder's object signer
+    type Signer;
+
+    /// Type built by this builder
+    type Output: Sized;
+
+    /// Return a reference to the signer.
+    fn signer(&self) -> &Self::Signer;
+
+    /// Assemble the final object from signature.
+    fn assemble(self, signature: BitString) -> Result<Self::Output>;
+
+    /// Finalize and return a serialization of the object for signature.
+    fn finalize(&mut self) -> der::Result<vec::Vec<u8>>;
+
+    /// Run the object through the signer and build it.
+    fn build<Signature>(mut self) -> Result<Self::Output>
+    where
+        Self::Signer: Signer<Signature>,
+        Signature: SignatureEncoding,
+    {
+        let blob = self.finalize()?;
+
+        let signature = self.signer().try_sign(&blob)?;
+        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+
+        self.assemble(signature)
+    }
+
+    /// Run the object through the signer and build it.
+    fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<Self::Output>
+    where
+        Self::Signer: RandomizedSigner<Signature>,
+        Signature: SignatureEncoding,
+    {
+        let blob = self.finalize()?;
+
+        let signature = self.signer().try_sign_with_rng(rng, &blob)?;
+        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+
+        self.assemble(signature)
+    }
+}
+
+impl<'s, S> Builder for CertificateBuilder<'s, S>
+where
+    S: Keypair + DynSignatureAlgorithmIdentifier,
+    S::VerifyingKey: EncodePublicKey,
+{
+    type Signer = S;
+    type Output = Certificate;
+
+    fn signer(&self) -> &Self::Signer {
+        self.cert_signer
+    }
+
+    fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
+        if !self.extensions.is_empty() {
+            self.tbs.extensions = Some(self.extensions.clone());
+        }
+
+        if self.tbs.extensions.is_none() {
+            if self.tbs.issuer_unique_id.is_some() || self.tbs.subject_unique_id.is_some() {
+                self.tbs.version = Version::V2;
+            } else {
+                self.tbs.version = Version::V1;
+            }
+        }
+
+        self.tbs.to_der()
+    }
+
+    fn assemble(self, signature: BitString) -> Result<Self::Output> {
+        let signature_algorithm = self.tbs.signature.clone();
+
+        Ok(Certificate {
+            tbs_certificate: self.tbs,
+            signature_algorithm,
+            signature,
+        })
+    }
+}
+
+impl<'s, S> Builder for RequestBuilder<'s, S>
+where
+    S: Keypair + DynSignatureAlgorithmIdentifier,
+    S::VerifyingKey: EncodePublicKey,
+{
+    type Signer = S;
+    type Output = CertReq;
+
+    fn signer(&self) -> &Self::Signer {
+        self.req_signer
+    }
+
+    fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
         self.info
             .attributes
-            .add(self.extension_req.clone().try_into()?);
-        Ok(())
+            .add(self.extension_req.clone().try_into()?)?;
+
+        self.info.to_der()
     }
 
-    /// Run the certificate through the signer and build the end certificate.
-    pub fn build<Signature>(mut self) -> Result<CertReq>
-    where
-        S: Signer<Signature>,
-        Signature: SignatureEncoding,
-    {
-        self.finalize()?;
+    fn assemble(self, signature: BitString) -> Result<Self::Output> {
+        let algorithm = self.req_signer.signature_algorithm_identifier()?;
 
-        let algorithm = self.signer.signature_algorithm_identifier()?;
-        let signature = self.signer.try_sign(&self.info.to_der()?)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
-
-        let req = CertReq {
+        Ok(CertReq {
             info: self.info,
             algorithm,
             signature,
-        };
-
-        Ok(req)
-    }
-
-    /// Run the certificate through the signer and build the end certificate.
-    pub fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<CertReq>
-    where
-        S: RandomizedSigner<Signature>,
-        Signature: SignatureEncoding,
-    {
-        self.finalize()?;
-
-        let algorithm = self.signer.signature_algorithm_identifier()?;
-        let signature = self.signer.try_sign_with_rng(rng, &self.info.to_der()?)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
-
-        let req = CertReq {
-            info: self.info,
-            algorithm,
-            signature,
-        };
-
-        Ok(req)
+        })
     }
 }

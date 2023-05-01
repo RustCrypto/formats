@@ -8,7 +8,7 @@ use sha2::Sha256;
 use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{CertificateBuilder, Profile, RequestBuilder},
+    builder::{Builder, CertificateBuilder, Profile, RequestBuilder},
     ext::pkix::{name::GeneralName, SubjectAltName},
     name::Name,
     serial_number::SerialNumber,
