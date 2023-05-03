@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.2 (unreleased)
+
+### Added
+- Certificate builder ([#764])
+- Support for `RandomizedSigner` in builder ([#1007])
+- Provide parsing profiles ([#987])
+- Support for `Time::INFINITY` ([#1024])
+- Conversion from `std::net::IpAddr` ([#1035])
+- `CertReq` builder ([#1034])
+- missing extension implementations ([#1050])
+- notes about `UTCTime` range being 1970-2049 ([#1052])
+- consume the `SignatureBitStringEncoding` trait ([#1048])
+
+### Changed
+- use `ErrorKind::Value` for overlength serial ([#988])
+- Bump `hex-literal` to v0.4.1 ([#999])
+- Builder updates ([#1001])
+- better debug info when `zlint` isn't installed ([#1018])
+- make SKI optional in leaf certificate ([#1028])
+- bump rsa from 0.9.0-pre.2 to 0.9.0 ([#1033])
+- bump rsa from 0.9.1 to 0.9.2 ([#1056])
+
+### Fixed
+- fix `KeyUsage` bit tests ([#993])
+- extraneous PhantomData in `TbsCertificate` ([#1017])
+- CI flakiness ([#1042])
+- usage of ecdsa signer ([#1043])
+
+[#764]: https://github.com/RustCrypto/formats/pull/764
+[#987]: https://github.com/RustCrypto/formats/pull/987
+[#988]: https://github.com/RustCrypto/formats/pull/988
+[#993]: https://github.com/RustCrypto/formats/pull/993
+[#999]: https://github.com/RustCrypto/formats/pull/999
+[#1001]: https://github.com/RustCrypto/formats/pull/1001
+[#1007]: https://github.com/RustCrypto/formats/pull/1007
+[#1017]: https://github.com/RustCrypto/formats/pull/1017
+[#1018]: https://github.com/RustCrypto/formats/pull/1018
+[#1024]: https://github.com/RustCrypto/formats/pull/1024
+[#1028]: https://github.com/RustCrypto/formats/pull/1028
+[#1033]: https://github.com/RustCrypto/formats/pull/1033
+[#1034]: https://github.com/RustCrypto/formats/pull/1034
+[#1035]: https://github.com/RustCrypto/formats/pull/1035
+[#1042]: https://github.com/RustCrypto/formats/pull/1042
+[#1043]: https://github.com/RustCrypto/formats/pull/1043
+[#1048]: https://github.com/RustCrypto/formats/pull/1048
+[#1050]: https://github.com/RustCrypto/formats/pull/1050
+[#1052]: https://github.com/RustCrypto/formats/pull/1052
+[#1056]: https://github.com/RustCrypto/formats/pull/1056
+
 ## 0.2.1 (2023-03-26)
 ### Added
 - `FromStr` impls for `RdnSequence` (`Name`), `RelativeDistinguishedName`, and
