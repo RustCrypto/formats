@@ -86,7 +86,11 @@ macro_rules! impl_extension {
     };
     ($newtype:ty, critical = $critical:expr) => {
         impl crate::ext::AsExtension for $newtype {
-            fn critical(&self, _tbs: &crate::certificate::TbsCertificate) -> bool {
+            fn critical(
+                &self,
+                _subject: &crate::name::Name,
+                _extensions: &[crate::ext::Extension],
+            ) -> bool {
                 $critical
             }
         }

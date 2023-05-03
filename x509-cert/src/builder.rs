@@ -15,9 +15,10 @@ use crate::{
         pkix::{
             AuthorityKeyIdentifier, BasicConstraints, KeyUsage, KeyUsages, SubjectKeyIdentifier,
         },
-        AsExtension, Extension,
+        AsExtension, Extension, Extensions,
     },
     name::Name,
+    request::{CertReq, CertReqInfo, ExtensionReq},
     serial_number::SerialNumber,
     time::Validity,
 };
@@ -142,15 +143,19 @@ impl Profile {
                 include_subject_key_identifier: false,
                 ..
             } => {}
-            _ => extensions.push(SubjectKeyIdentifier::try_from(spk)?.to_extension(tbs)?),
+            _ => extensions.push(
+                SubjectKeyIdentifier::try_from(spk)?.to_extension(&tbs.subject, &extensions)?,
+            ),
         }
 
         // Build Authority Key Identifier
         match self {
             Profile::Root => {}
             _ => {
-                extensions
-                    .push(AuthorityKeyIdentifier::try_from(issuer_spk.clone())?.to_extension(tbs)?);
+                extensions.push(
+                    AuthorityKeyIdentifier::try_from(issuer_spk.clone())?
+                        .to_extension(&tbs.subject, &extensions)?,
+                );
             }
         }
 
@@ -160,7 +165,7 @@ impl Profile {
                 ca: true,
                 path_len_constraint: None,
             }
-            .to_extension(tbs)?,
+            .to_extension(&tbs.subject, &extensions)?,
             Profile::SubCA {
                 path_len_constraint,
                 ..
@@ -168,12 +173,12 @@ impl Profile {
                 ca: true,
                 path_len_constraint: *path_len_constraint,
             }
-            .to_extension(tbs)?,
+            .to_extension(&tbs.subject, &extensions)?,
             Profile::Leaf { .. } => BasicConstraints {
                 ca: false,
                 path_len_constraint: None,
             }
-            .to_extension(tbs)?,
+            .to_extension(&tbs.subject, &extensions)?,
             #[cfg(feature = "hazmat")]
             Profile::Manual { .. } => unreachable!(),
         });
@@ -181,8 +186,10 @@ impl Profile {
         // Build Key Usage extension
         match self {
             Profile::Root | Profile::SubCA { .. } => {
-                extensions
-                    .push(KeyUsage(KeyUsages::KeyCertSign | KeyUsages::CRLSign).to_extension(tbs)?);
+                extensions.push(
+                    KeyUsage(KeyUsages::KeyCertSign | KeyUsages::CRLSign)
+                        .to_extension(&tbs.subject, &extensions)?,
+                );
             }
             Profile::Leaf {
                 enable_key_agreement,
@@ -197,7 +204,7 @@ impl Profile {
                     key_usage |= KeyUsages::KeyAgreement;
                 }
 
-                extensions.push(KeyUsage(key_usage).to_extension(tbs)?);
+                extensions.push(KeyUsage(key_usage).to_extension(&tbs.subject, &extensions)?);
             }
             #[cfg(feature = "hazmat")]
             Profile::Manual { .. } => unreachable!(),
@@ -250,7 +257,8 @@ impl Profile {
 /// ```
 pub struct CertificateBuilder<'s, S> {
     tbs: TbsCertificate,
-    signer: &'s S,
+    extensions: Extensions,
+    cert_signer: &'s S,
 }
 
 impl<'s, S> CertificateBuilder<'s, S>
@@ -265,20 +273,20 @@ where
         mut validity: Validity,
         subject: Name,
         subject_public_key_info: SubjectPublicKeyInfoOwned,
-        signer: &'s S,
+        cert_signer: &'s S,
     ) -> Result<Self> {
-        let verifying_key = signer.verifying_key();
+        let verifying_key = cert_signer.verifying_key();
         let signer_pub = verifying_key
             .to_public_key_der()?
             .decode_msg::<SubjectPublicKeyInfoOwned>()?;
 
-        let signature_alg = signer.signature_algorithm_identifier()?;
+        let signature_alg = cert_signer.signature_algorithm_identifier()?;
         let issuer = profile.get_issuer(&subject);
 
         validity.not_before.rfc5280_adjust_utc_time()?;
         validity.not_after.rfc5280_adjust_utc_time()?;
 
-        let mut tbs = TbsCertificate {
+        let tbs = TbsCertificate {
             version: Version::V3,
             serial_number,
             signature: signature_alg,
@@ -302,30 +310,159 @@ where
             signer_pub.owned_to_ref(),
             &tbs,
         )?;
-        if !extensions.is_empty() {
-            tbs.extensions = Some(extensions);
-        }
-
-        Ok(Self { tbs, signer })
+        Ok(Self {
+            tbs,
+            extensions,
+            cert_signer,
+        })
     }
 
     /// Add an extension to this certificate
     pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
-        if self.tbs.version == Version::V3 {
-            let ext = extension.to_extension(&self.tbs)?;
-
-            if let Some(extensions) = self.tbs.extensions.as_mut() {
-                extensions.push(ext);
-            } else {
-                let extensions = vec![ext];
-                self.tbs.extensions = Some(extensions);
-            }
-        }
+        let ext = extension.to_extension(&self.tbs.subject, &self.extensions)?;
+        self.extensions.push(ext);
 
         Ok(())
     }
+}
 
-    fn finalize(&mut self) {
+/// Builder for X509 Certificate Requests
+///
+/// ```
+/// # use p256::{pkcs8::DecodePrivateKey, NistP256};
+/// # const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("../tests/examples/p256-priv.der");
+/// # fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {
+/// #     let secret_key = p256::SecretKey::from_pkcs8_der(PKCS8_PRIVATE_KEY_DER).unwrap();
+/// #     ecdsa::SigningKey::from(secret_key)
+/// # }
+/// use x509_cert::{
+///     builder::{Builder, RequestBuilder},
+///     ext::pkix::{name::GeneralName, SubjectAltName},
+///     name::Name,
+/// };
+/// use std::str::FromStr;
+///
+/// use std::net::{IpAddr, Ipv4Addr};
+/// let subject = Name::from_str("CN=service.domination.world").unwrap();
+///
+/// let signer = ecdsa_signer();
+/// let mut builder = RequestBuilder::new(subject, &signer).expect("Create certificate request");
+/// builder
+///     .add_extension(&SubjectAltName(vec![GeneralName::from(IpAddr::V4(
+///         Ipv4Addr::new(192, 0, 2, 0),
+///     ))]))
+///     .unwrap();
+///
+/// let cert_req = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+/// ```
+pub struct RequestBuilder<'s, S> {
+    info: CertReqInfo,
+    extension_req: ExtensionReq,
+    req_signer: &'s S,
+}
+
+impl<'s, S> RequestBuilder<'s, S>
+where
+    S: Keypair + DynSignatureAlgorithmIdentifier,
+    S::VerifyingKey: EncodePublicKey,
+{
+    /// Creates a new certificate request builder
+    pub fn new(subject: Name, req_signer: &'s S) -> Result<Self> {
+        let version = Default::default();
+        let verifying_key = req_signer.verifying_key();
+        let public_key = verifying_key
+            .to_public_key_der()?
+            .decode_msg::<SubjectPublicKeyInfoOwned>()?;
+        let attributes = Default::default();
+        let extension_req = Default::default();
+
+        Ok(Self {
+            info: CertReqInfo {
+                version,
+                subject,
+                public_key,
+                attributes,
+            },
+            extension_req,
+            req_signer,
+        })
+    }
+
+    /// Add an extension to this certificate request
+    pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
+        let ext = extension.to_extension(&self.info.subject, &self.extension_req.0)?;
+
+        self.extension_req.0.push(ext);
+
+        Ok(())
+    }
+}
+
+/// Trait for X509 builders
+///
+/// This trait defines the interface between builder and the signers.
+pub trait Builder: Sized {
+    /// The builder's object signer
+    type Signer;
+
+    /// Type built by this builder
+    type Output: Sized;
+
+    /// Return a reference to the signer.
+    fn signer(&self) -> &Self::Signer;
+
+    /// Assemble the final object from signature.
+    fn assemble(self, signature: BitString) -> Result<Self::Output>;
+
+    /// Finalize and return a serialization of the object for signature.
+    fn finalize(&mut self) -> der::Result<vec::Vec<u8>>;
+
+    /// Run the object through the signer and build it.
+    fn build<Signature>(mut self) -> Result<Self::Output>
+    where
+        Self::Signer: Signer<Signature>,
+        Signature: SignatureEncoding,
+    {
+        let blob = self.finalize()?;
+
+        let signature = self.signer().try_sign(&blob)?;
+        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+
+        self.assemble(signature)
+    }
+
+    /// Run the object through the signer and build it.
+    fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<Self::Output>
+    where
+        Self::Signer: RandomizedSigner<Signature>,
+        Signature: SignatureEncoding,
+    {
+        let blob = self.finalize()?;
+
+        let signature = self.signer().try_sign_with_rng(rng, &blob)?;
+        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+
+        self.assemble(signature)
+    }
+}
+
+impl<'s, S> Builder for CertificateBuilder<'s, S>
+where
+    S: Keypair + DynSignatureAlgorithmIdentifier,
+    S::VerifyingKey: EncodePublicKey,
+{
+    type Signer = S;
+    type Output = Certificate;
+
+    fn signer(&self) -> &Self::Signer {
+        self.cert_signer
+    }
+
+    fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
+        if !self.extensions.is_empty() {
+            self.tbs.extensions = Some(self.extensions.clone());
+        }
+
         if self.tbs.extensions.is_none() {
             if self.tbs.issuer_unique_id.is_some() || self.tbs.subject_unique_id.is_some() {
                 self.tbs.version = Version::V2;
@@ -333,45 +470,48 @@ where
                 self.tbs.version = Version::V1;
             }
         }
+
+        self.tbs.to_der()
     }
 
-    /// Run the certificate through the signer and build the end certificate.
-    pub fn build<Signature>(mut self) -> Result<Certificate>
-    where
-        S: Signer<Signature>,
-        Signature: SignatureEncoding,
-    {
-        self.finalize();
+    fn assemble(self, signature: BitString) -> Result<Self::Output> {
+        let signature_algorithm = self.tbs.signature.clone();
 
-        let signature = self.signer.try_sign(&self.tbs.to_der()?)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
-
-        let cert = Certificate {
-            tbs_certificate: self.tbs.clone(),
-            signature_algorithm: self.tbs.signature,
+        Ok(Certificate {
+            tbs_certificate: self.tbs,
+            signature_algorithm,
             signature,
-        };
+        })
+    }
+}
 
-        Ok(cert)
+impl<'s, S> Builder for RequestBuilder<'s, S>
+where
+    S: Keypair + DynSignatureAlgorithmIdentifier,
+    S::VerifyingKey: EncodePublicKey,
+{
+    type Signer = S;
+    type Output = CertReq;
+
+    fn signer(&self) -> &Self::Signer {
+        self.req_signer
     }
 
-    /// Run the certificate through the signer and build the end certificate.
-    pub fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<Certificate>
-    where
-        S: RandomizedSigner<Signature>,
-        Signature: SignatureEncoding,
-    {
-        self.finalize();
+    fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
+        self.info
+            .attributes
+            .add(self.extension_req.clone().try_into()?)?;
 
-        let signature = self.signer.try_sign_with_rng(rng, &self.tbs.to_der()?)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+        self.info.to_der()
+    }
 
-        let cert = Certificate {
-            tbs_certificate: self.tbs.clone(),
-            signature_algorithm: self.tbs.signature,
+    fn assemble(self, signature: BitString) -> Result<Self::Output> {
+        let algorithm = self.req_signer.signature_algorithm_identifier()?;
+
+        Ok(CertReq {
+            info: self.info,
+            algorithm,
             signature,
-        };
-
-        Ok(cert)
+        })
     }
 }
