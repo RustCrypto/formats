@@ -249,7 +249,7 @@ dependencies = [
  "der",
  "hex-literal",
  "spki",
- "x509-cert",
+ "x509-cert 0.2.1",
 ]
 
 [[package]]
@@ -261,7 +261,7 @@ dependencies = [
  "hex-literal",
  "pkcs5",
  "spki",
- "x509-cert",
+ "x509-cert 0.2.1",
 ]
 
 [[package]]
@@ -334,7 +334,7 @@ dependencies = [
  "const-oid 0.9.2",
  "der",
  "spki",
- "x509-cert",
+ "x509-cert 0.2.1",
 ]
 
 [[package]]
@@ -1006,7 +1006,7 @@ dependencies = [
  "der",
  "hex-literal",
  "spki",
- "x509-cert",
+ "x509-cert 0.2.1",
 ]
 
 [[package]]
@@ -1968,6 +1968,17 @@ dependencies = [
 [[package]]
 name = "x509-cert"
 version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0103e822c47e037cb45b34873a31e33181dc4db3a97123b2ecce49c6d4081bab"
+dependencies = [
+ "const-oid 0.9.2",
+ "der",
+ "spki",
+]
+
+[[package]]
+name = "x509-cert"
+version = "0.2.2-pre"
 dependencies = [
  "arbitrary",
  "const-oid 0.9.2",
@@ -2003,7 +2014,7 @@ dependencies = [
  "der",
  "hex-literal",
  "spki",
- "x509-cert",
+ "x509-cert 0.2.1",
 ]
 
 [[package]]
