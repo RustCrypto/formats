@@ -213,7 +213,7 @@ impl Tag {
             Tag::UtcTime => 0x17,
             Tag::GeneralizedTime => 0x18,
             Tag::VisibleString => 0x1A,
-            Tag::BmpString => 0x1D,
+            Tag::BmpString => 0x1E,
             Tag::Application {
                 constructed,
                 number,
@@ -282,7 +282,7 @@ impl TryFrom<u8> for Tag {
             0x17 => Ok(Tag::UtcTime),
             0x18 => Ok(Tag::GeneralizedTime),
             0x1A => Ok(Tag::VisibleString),
-            0x1d => Ok(Tag::BmpString),
+            0x1E => Ok(Tag::BmpString),
             0x30 => Ok(Tag::Sequence), // constructed
             0x31 => Ok(Tag::Set),      // constructed
             0x40..=0x7E => Ok(Tag::Application {
