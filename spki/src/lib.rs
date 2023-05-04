@@ -61,6 +61,7 @@ pub use {
         spki::SubjectPublicKeyInfoOwned,
         traits::{
             DynAssociatedAlgorithmIdentifier, DynSignatureAlgorithmIdentifier, EncodePublicKey,
+            SignatureBitStringEncoding,
         },
     },
     der::Document,
