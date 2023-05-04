@@ -1,7 +1,7 @@
 #![cfg(all(feature = "builder", feature = "pem"))]
 
 use der::{pem::LineEnding, Decode, Encode, EncodePem};
-use p256::{pkcs8::DecodePrivateKey, NistP256};
+use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
@@ -17,6 +17,7 @@ use x509_cert::{
 use x509_cert_test_support::{openssl, zlint};
 
 const RSA_2048_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-pub.der");
+const PKCS8_PUBLIC_KEY_DER: &[u8] = include_bytes!("examples/p256-pub.der");
 
 #[test]
 fn root_ca_certificate() {
@@ -37,6 +38,33 @@ fn root_ca_certificate() {
             .expect("Create certificate");
 
     let certificate = builder.build().unwrap();
+
+    let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
+    println!("{}", openssl::check_certificate(pem.as_bytes()));
+
+    let ignored = &[];
+    zlint::check_certificate(pem.as_bytes(), ignored);
+}
+
+#[test]
+fn root_ca_certificate_ecdsa() {
+    let serial_number = SerialNumber::from(42u32);
+    let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
+    let profile = Profile::Root;
+    let subject = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US")
+        .unwrap()
+        .to_der()
+        .unwrap();
+    let subject = Name::from_der(&subject).unwrap();
+    let pub_key =
+        SubjectPublicKeyInfoOwned::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
+
+    let signer = ecdsa_signer();
+    let builder =
+        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
+            .expect("Create certificate");
+
+    let certificate = builder.build::<DerSignature>().unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -67,7 +95,7 @@ fn sub_ca_certificate() {
         CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
             .expect("Create certificate");
 
-    let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+    let certificate = builder.build::<DerSignature>().unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -113,7 +141,7 @@ fn leaf_certificate() {
     )
     .expect("Create certificate");
 
-    let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+    let certificate = builder.build::<DerSignature>().unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -149,7 +177,7 @@ fn leaf_certificate() {
             CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
                 .expect("Create certificate");
 
-        let certificate = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+        let certificate = builder.build::<DerSignature>().unwrap();
 
         let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
         println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -249,7 +277,11 @@ fn certificate_request() {
         ))]))
         .unwrap();
 
-    let cert_req = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+    let cert_req = builder.build::<DerSignature>().unwrap();
     let pem = cert_req.to_pem(LineEnding::LF).expect("generate pem");
+    use std::fs::File;
+    use std::io::Write;
+    let mut file = File::create("/tmp/ecdsa.csr").expect("create pem file");
+    file.write_all(pem.as_bytes()).expect("Create pem file");
     println!("{}", openssl::check_request(pem.as_bytes()));
 }
