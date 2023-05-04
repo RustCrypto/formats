@@ -329,7 +329,7 @@ where
 /// Builder for X509 Certificate Requests
 ///
 /// ```
-/// # use p256::{pkcs8::DecodePrivateKey, NistP256};
+/// # use p256::{pkcs8::DecodePrivateKey, NistP256, ecdsa::DerSignature};
 /// # const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("../tests/examples/p256-priv.der");
 /// # fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {
 /// #     let secret_key = p256::SecretKey::from_pkcs8_der(PKCS8_PRIVATE_KEY_DER).unwrap();
@@ -353,7 +353,7 @@ where
 ///     ))]))
 ///     .unwrap();
 ///
-/// let cert_req = builder.build::<ecdsa::Signature<NistP256>>().unwrap();
+/// let cert_req = builder.build::<DerSignature>().unwrap();
 /// ```
 pub struct RequestBuilder<'s, S> {
     info: CertReqInfo,
