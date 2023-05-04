@@ -64,6 +64,8 @@ impl AssociatedOid for IssuingDistributionPoint {
     const OID: ObjectIdentifier = ID_PE_SUBJECT_INFO_ACCESS;
 }
 
+impl_extension!(IssuingDistributionPoint, critical = true);
+
 /// DistributionPoint as defined in [RFC 5280 Section 4.2.1.13].
 ///
 /// ```text
