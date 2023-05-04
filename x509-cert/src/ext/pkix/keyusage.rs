@@ -188,6 +188,8 @@ impl AssociatedOid for PrivateKeyUsagePeriod {
     const OID: ObjectIdentifier = ID_CE_PRIVATE_KEY_USAGE_PERIOD;
 }
 
+impl_extension!(PrivateKeyUsagePeriod, critical = false);
+
 #[cfg(test)]
 mod tests {
     use super::*;
