@@ -17,8 +17,10 @@
 
 extern crate alloc;
 
+// TODO NM #[cfg(feature = "std")]
+extern crate std;
+
 pub mod algorithm_identifier_types;
-pub mod builder;
 pub mod certificate_choices;
 pub mod cms_version;
 pub mod data_content;
@@ -28,6 +30,9 @@ pub mod enveloped_data_content;
 pub mod revocation_info_choices;
 pub mod signed_data_content;
 pub mod signer_info;
+
+// TODO NM #[cfg(feature = "builder")]
+pub mod builder;
 
 mod content_info;
 mod content_type;

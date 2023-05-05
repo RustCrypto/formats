@@ -15,12 +15,12 @@ use x509_cert::{
 /// ```text
 /// SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 /// ```
-type SignedAttributes<'a> = SetOfVec<Attribute>;
+pub type SignedAttributes<'a> = SetOfVec<Attribute>;
 
 /// ```text
 /// UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 /// ```
-type UnsignedAttributes<'a> = SetOfVec<Attribute>;
+pub type UnsignedAttributes<'a> = SetOfVec<Attribute>;
 
 /// ```text
 /// SignerIdentifier ::= CHOICE {

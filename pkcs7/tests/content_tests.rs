@@ -198,7 +198,7 @@ fn decode_signed_der() {
 fn create_pkcs7_signed_data() {
     // {iso(1) identified-organization(3) thawte(101) id-Ed25519(112)}
     const OID_ED25519: &str = "1.3.101.112";
-    // {iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-7(7) signedData(2)} q
+    // {iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-7(7) signedData(2)}
     const OID_PKCS7_SIGNED_DATA: &str = "1.2.840.113549.1.7.2";
 
     let digest_algorithms = {
