@@ -25,7 +25,7 @@ use std::time::SystemTime;
 /// >   interpreted as `19YY`; and
 /// > - Where `YY` is less than 50, the year SHALL be interpreted as `20YY`.
 ///
-/// Note: Due to common operations working on `UNIX_EPOCH` [`UtcTime`]s are 
+/// Note: Due to common operations working on `UNIX_EPOCH` [`UtcTime`]s are
 /// only supported for the years 1970-2049.
 ///
 /// [1]: https://tools.ietf.org/html/rfc5280#section-4.1.2.5.1
