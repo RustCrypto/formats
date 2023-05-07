@@ -83,7 +83,7 @@ impl<'a> EncodeValue for InitialContextToken<'a> {
     }
 }
 
-/// The `SubsequencContextToken` type is defined in [RFC 1508 Appendix B].
+/// The `SubsequentContextToken` type is defined in [RFC 1508 Appendix B].
 ///
 /// ```text
 /// subsequentContextToken ::= innerContextToken ANY
@@ -91,7 +91,7 @@ impl<'a> EncodeValue for InitialContextToken<'a> {
 /// ```
 ///
 /// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
-pub type SubsequencContextToken<'a> = AnyRef<'a>;
+pub type SubsequentContextToken<'a> = AnyRef<'a>;
 
 /// The `PerMsgToken` type is defined in [RFC 1508 Appendix B].
 ///
