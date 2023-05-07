@@ -10,6 +10,7 @@ members = [
     "crmf",
     "der",
     "der/derive",
+    "gssapi",
     "pem-rfc7468",
     "pkcs1",
     "pkcs5",
