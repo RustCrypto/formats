@@ -17,8 +17,7 @@
 extern crate alloc;
 
 use der::{
-    asn1::ContextSpecific, Any, DecodeValue, Encode, EncodeValue, FixedTag, Length, Reader, Tag,
-    TagMode, TagNumber, Writer,
+    AnyRef, DecodeValue, Encode, EncodeValue, FixedTag, Length, Reader, Tag, TagNumber, Writer,
 };
 use spki::ObjectIdentifier;
 
@@ -48,49 +47,37 @@ pub type MechType = ObjectIdentifier;
 ///
 /// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct InitialContextToken {
+pub struct InitialContextToken<'a> {
     /// mechanism type OID
     pub this_mech: MechType,
     /// mechanism-specific content
-    pub inner_context_token: Any,
+    pub inner_context_token: AnyRef<'a>,
 }
 
-impl InitialContextToken {
-    fn context_specific_object(&self) -> der::Result<Option<ContextSpecific<Any>>> {
-        Ok(Some(ContextSpecific {
-            tag_number: TagNumber::N0,
-            tag_mode: TagMode::Implicit,
-            value: self.inner_context_token.clone(),
-        }))
-    }
-}
-
-impl FixedTag for InitialContextToken {
+impl<'a> FixedTag for InitialContextToken<'a> {
     const TAG: Tag = Tag::Application {
         constructed: true,
         number: TagNumber::new(0),
     };
 }
 
-impl<'a> DecodeValue<'a> for InitialContextToken {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                this_mech: reader.decode()?,
-                inner_context_token: reader.decode()?,
-            })
+impl<'a> DecodeValue<'a> for InitialContextToken<'a> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: der::Header) -> der::Result<Self> {
+        Ok(Self {
+            this_mech: reader.decode()?,
+            inner_context_token: reader.decode()?,
         })
     }
 }
 
-impl EncodeValue for InitialContextToken {
+impl<'a> EncodeValue for InitialContextToken<'a> {
     fn value_len(&self) -> der::Result<Length> {
         self.this_mech.encoded_len()? + self.inner_context_token.encoded_len()?
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
         self.this_mech.encode(writer)?;
-        self.context_specific_object()?.encode(writer)?;
+        self.inner_context_token.encode(writer)?;
 
         Ok(())
     }
@@ -104,7 +91,7 @@ impl EncodeValue for InitialContextToken {
 /// ```
 ///
 /// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
-pub type SubsequencContextToken = Any;
+pub type SubsequencContextToken<'a> = AnyRef<'a>;
 
 /// The `PerMsgToken` type is defined in [RFC 1508 Appendix B].
 ///
@@ -114,7 +101,7 @@ pub type SubsequencContextToken = Any;
 /// ```
 ///
 /// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
-pub type PerMsgToken = Any;
+pub type PerMsgToken<'a> = AnyRef<'a>;
 
 /// The `SealedMessage` type is defined in [RFC 1508 Appendix B].
 ///
@@ -127,7 +114,7 @@ pub type PerMsgToken = Any;
 /// ```
 ///
 /// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
-pub type SealedMessage = Any;
+pub type SealedMessage<'a> = AnyRef<'a>;
 
 #[cfg(test)]
 mod tests {
@@ -147,12 +134,12 @@ mod tests {
 
         assert_eq!(ObjectIdentifier::new_unwrap("1.3.6.1.5.5.2"), gss.this_mech);
         assert_eq!(
-            Any::new(
+            AnyRef::new(
                 Tag::ContextSpecific {
                     constructed: true,
                     number: TagNumber::N0
                 },
-                inner_bytes
+                &inner_bytes
             )
             .unwrap(),
             gss.inner_context_token
@@ -160,12 +147,12 @@ mod tests {
 
         let output = InitialContextToken {
             this_mech: MechType::new_unwrap("1.3.6.1.5.5.2"),
-            inner_context_token: Any::new(
+            inner_context_token: AnyRef::new(
                 Tag::ContextSpecific {
                     constructed: true,
                     number: TagNumber::N0,
                 },
-                inner_bytes,
+                &inner_bytes,
             )
             .unwrap(),
         };
@@ -174,14 +161,4 @@ mod tests {
 
         assert_eq!(&gss_bytes[..], &output_bytes);
     }
-
-    // #[test]
-    // fn decode() {
-
-    //     let smb_status_response_negotiation = hex!("a151304fa0030a0101a10c060a2b06010401823702020aa23a04384e544c4d5353500002000000000000003800000002020002020d41b1e0a7801200000000000000000000000038000000060100000000000f");
-
-    //     let neg = NegotiationToken::from_der(&smb_status_response_negotiation);
-
-    //     println!("Token Only Test: {:?}", neg);
-    // }
 }

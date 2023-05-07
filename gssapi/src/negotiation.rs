@@ -305,6 +305,8 @@ pub struct NegHints<'a> {
     pub hint_name: Option<AnyRef<'a>>, // TODO: GeneralString
 
     /// Never present. MUST be omitted by the sender. Note that the encoding rules, as specified in [X690], require that this structure not be present at all, not just be zero.
+    /// 
+    /// [X690]: https://www.itu.int/rec/T-REC-X.690/
     #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub hint_address: Option<OctetStringRef<'a>>,
 }
@@ -321,19 +323,25 @@ pub struct NegHints<'a> {
 ///     ...
 /// }
 /// ```
-///
+/// 
 /// [MS-SPNG Section 2.2.1]: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-spng/8e71cf53-e867-4b79-b5b5-38c92be3d472
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct NegTokenInit2<'a> {
     /// The list of authentication mechanisms that are available, by OID, as specified in [RFC4178] section 4.1.
+    /// 
+    /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_types: Option<MechTypeList>,
 
     /// As specified in [RFC4178] section 4.2.1 This field SHOULD be omitted by the sender.
+    ///
+    /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub req_flags: Option<ContextFlags>,
 
     /// The optimistic mechanism token ([RFC4178] section 4.2.1).
+    ///
+    /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_token: Option<OctetStringRef<'a>>,
 
@@ -342,6 +350,8 @@ pub struct NegTokenInit2<'a> {
     pub neg_hints: Option<NegHints<'a>>,
 
     /// The message integrity code (MIC) token ([RFC4178] section 4.2.1).
+    ///
+    /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
     #[asn1(context_specific = "4", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_list_mic: Option<OctetStringRef<'a>>,
 }
