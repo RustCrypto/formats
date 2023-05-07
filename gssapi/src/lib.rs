@@ -131,7 +131,6 @@ pub type SealedMessage = Any;
 
 #[cfg(test)]
 mod tests {
-    use alloc::vec;
     use hex_literal::hex;
     use spki::ObjectIdentifier;
 
