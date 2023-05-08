@@ -1,8 +1,8 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, Decode, DecodeValue, EncodeValue, ErrorKind,
-    FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, Decode, DecodeValue, EncodeValue, Error, ErrorKind,
+    FixedTag, Header, Length, Reader, Tag, Writer,
 };
 
 /// ASN.1 `OCTET STRING` type: borrowed form.
@@ -18,7 +18,7 @@ pub struct OctetStringRef<'a> {
 
 impl<'a> OctetStringRef<'a> {
     /// Create a new ASN.1 `OCTET STRING` from a byte slice.
-    pub fn new(slice: &'a [u8]) -> Result<Self> {
+    pub fn new(slice: &'a [u8]) -> Result<Self, Error> {
         BytesRef::new(slice)
             .map(|inner| Self { inner })
             .map_err(|_| ErrorKind::Length { tag: Self::TAG }.into())
@@ -40,7 +40,7 @@ impl<'a> OctetStringRef<'a> {
     }
 
     /// Parse `T` from this `OCTET STRING`'s contents.
-    pub fn decode_into<T: Decode<'a>>(&self) -> Result<T> {
+    pub fn decode_into<T: Decode<'a>>(&self) -> Result<T, T::Error> {
         Decode::from_der(self.as_bytes())
     }
 }
@@ -54,18 +54,20 @@ impl AsRef<[u8]> for OctetStringRef<'_> {
 }
 
 impl<'a> DecodeValue<'a> for OctetStringRef<'a> {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+    type Error = Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
         let inner = BytesRef::decode_value(reader, header)?;
         Ok(Self { inner })
     }
 }
 
 impl EncodeValue for OctetStringRef<'_> {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         self.inner.value_len()
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         self.inner.encode_value(writer)
     }
 }
@@ -117,7 +119,7 @@ mod allocating {
 
     impl OctetString {
         /// Create a new ASN.1 `OCTET STRING`.
-        pub fn new(bytes: impl Into<Vec<u8>>) -> Result<Self> {
+        pub fn new(bytes: impl Into<Vec<u8>>) -> Result<Self, Error> {
             let inner = bytes.into();
 
             // Ensure the bytes parse successfully as an `OctetStringRef`
@@ -156,17 +158,19 @@ mod allocating {
     }
 
     impl<'a> DecodeValue<'a> for OctetString {
-        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        type Error = Error;
+
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
             Self::new(reader.read_vec(header.length)?)
         }
     }
 
     impl EncodeValue for OctetString {
-        fn value_len(&self) -> Result<Length> {
+        fn value_len(&self) -> Result<Length, Error> {
             self.inner.len().try_into()
         }
 
-        fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+        fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
             writer.write(&self.inner)
         }
     }
@@ -217,10 +221,14 @@ mod allocating {
 #[cfg(feature = "bytes")]
 mod bytes {
     use super::OctetString;
-    use crate::{DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, Tag, Writer};
+    use crate::{
+        DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    };
     use bytes::Bytes;
 
     impl<'a> DecodeValue<'a> for Bytes {
+        type Error = Error;
+
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             OctetString::decode_value(reader, header).map(|octet_string| octet_string.inner.into())
         }

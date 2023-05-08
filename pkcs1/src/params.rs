@@ -37,6 +37,8 @@ impl Default for TrailerField {
 }
 
 impl<'a> DecodeValue<'a> for TrailerField {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(decoder: &mut R, header: der::Header) -> der::Result<Self> {
         match u8::decode_value(decoder, header)? {
             1 => Ok(TrailerField::BC),
@@ -178,6 +180,8 @@ impl<'a> Default for RsaPssParams<'a> {
 }
 
 impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
@@ -342,6 +346,7 @@ impl<'a> Default for RsaOaepParams<'a> {
 }
 
 impl<'a> DecodeValue<'a> for RsaOaepParams<'a> {
+    type Error = der::Error;
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {

@@ -82,6 +82,8 @@ impl UtcTime {
 impl_any_conversions!(UtcTime);
 
 impl<'a> DecodeValue<'a> for UtcTime {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         if Self::LENGTH != usize::try_from(header.length)? {
             return Err(Self::TAG.value_error());

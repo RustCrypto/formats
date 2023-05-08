@@ -6,7 +6,7 @@ macro_rules! impl_any_conversions {
         impl<'__der: $($li),*, $($li),*> TryFrom<$crate::AnyRef<'__der>> for $type {
             type Error = $crate::Error;
 
-            fn try_from(any: $crate::AnyRef<'__der>) -> Result<$type> {
+            fn try_from(any: $crate::AnyRef<'__der>) -> $crate::Result<$type> {
                 any.decode_as()
             }
         }
@@ -15,7 +15,7 @@ macro_rules! impl_any_conversions {
         impl<'__der: $($li),*, $($li),*> TryFrom<&'__der $crate::Any> for $type {
             type Error = $crate::Error;
 
-            fn try_from(any: &'__der $crate::Any) -> Result<$type> {
+            fn try_from(any: &'__der $crate::Any) -> $crate::Result<$type> {
                 any.decode_as()
             }
         }
@@ -48,7 +48,9 @@ macro_rules! impl_string_type {
             }
 
             impl<'__der: $($li),*, $($li),*> DecodeValue<'__der> for $type {
-                fn decode_value<R: Reader<'__der>>(reader: &mut R, header: Header) -> Result<Self> {
+                type Error = $crate::Error;
+
+                fn decode_value<R: Reader<'__der>>(reader: &mut R, header: Header) -> $crate::Result<Self> {
                     Self::new(BytesRef::decode_value(reader, header)?.as_slice())
                 }
             }

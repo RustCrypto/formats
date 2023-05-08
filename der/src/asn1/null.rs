@@ -12,6 +12,8 @@ pub struct Null;
 impl_any_conversions!(Null);
 
 impl<'a> DecodeValue<'a> for Null {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         if header.length.is_zero() {
             Ok(Null)
@@ -58,6 +60,8 @@ impl<'a> From<()> for AnyRef<'a> {
 }
 
 impl<'a> DecodeValue<'a> for () {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Null::decode_value(reader, header)?;
         Ok(())

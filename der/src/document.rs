@@ -1,6 +1,6 @@
 //! ASN.1 DER-encoded documents stored on the heap.
 
-use crate::{Decode, Encode, Error, FixedTag, Length, Reader, Result, SliceReader, Tag, Writer};
+use crate::{Decode, Encode, Error, FixedTag, Length, Reader, SliceReader, Tag, Writer};
 use alloc::vec::Vec;
 use core::fmt::{self, Debug};
 
@@ -65,13 +65,13 @@ impl Document {
 
     /// Try to decode the inner ASN.1 DER message contained in this
     /// [`Document`] as the given type.
-    pub fn decode_msg<'a, T: Decode<'a>>(&'a self) -> Result<T> {
+    pub fn decode_msg<'a, T: Decode<'a>>(&'a self) -> Result<T, T::Error> {
         T::from_der(self.as_bytes())
     }
 
     /// Encode the provided type as ASN.1 DER, storing the resulting encoded DER
     /// as a [`Document`].
-    pub fn encode_msg<T: Encode>(msg: &T) -> Result<Self> {
+    pub fn encode_msg<T: Encode>(msg: &T) -> Result<Self, Error> {
         msg.to_der()?.try_into()
     }
 
@@ -79,7 +79,7 @@ impl Document {
     ///
     /// Returns the PEM label and decoded [`Document`] on success.
     #[cfg(feature = "pem")]
-    pub fn from_pem(pem: &str) -> Result<(&str, Self)> {
+    pub fn from_pem(pem: &str) -> Result<(&str, Self), Error> {
         let (label, der_bytes) = pem::decode_vec(pem.as_bytes())?;
         Ok((label, der_bytes.try_into()?))
     }
@@ -87,25 +87,29 @@ impl Document {
     /// Encode ASN.1 DER document as a PEM string with encapsulation boundaries
     /// containing the provided PEM type `label` (e.g. `CERTIFICATE`).
     #[cfg(feature = "pem")]
-    pub fn to_pem(&self, label: &'static str, line_ending: pem::LineEnding) -> Result<String> {
+    pub fn to_pem(
+        &self,
+        label: &'static str,
+        line_ending: pem::LineEnding,
+    ) -> Result<String, Error> {
         Ok(pem::encode_string(label, line_ending, self.as_bytes())?)
     }
 
     /// Read ASN.1 DER document from a file.
     #[cfg(feature = "std")]
-    pub fn read_der_file(path: impl AsRef<Path>) -> Result<Self> {
+    pub fn read_der_file(path: impl AsRef<Path>) -> Result<Self, Error> {
         fs::read(path)?.try_into()
     }
 
     /// Write ASN.1 DER document to a file.
     #[cfg(feature = "std")]
-    pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
+    pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<(), Error> {
         Ok(fs::write(path, self.as_bytes())?)
     }
 
     /// Read PEM-encoded ASN.1 DER document from a file.
     #[cfg(all(feature = "pem", feature = "std"))]
-    pub fn read_pem_file(path: impl AsRef<Path>) -> Result<(String, Self)> {
+    pub fn read_pem_file(path: impl AsRef<Path>) -> Result<(String, Self), Error> {
         Self::from_pem(&fs::read_to_string(path)?).map(|(label, doc)| (label.to_owned(), doc))
     }
 
@@ -116,7 +120,7 @@ impl Document {
         path: impl AsRef<Path>,
         label: &'static str,
         line_ending: pem::LineEnding,
-    ) -> Result<()> {
+    ) -> Result<(), Error> {
         let pem = self.to_pem(label, line_ending)?;
         Ok(fs::write(path, pem.as_bytes())?)
     }
@@ -141,7 +145,9 @@ impl Debug for Document {
 }
 
 impl<'a> Decode<'a> for Document {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Document> {
+    type Error = Error;
+
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Document, Error> {
         let header = reader.peek_header()?;
         let length = (header.encoded_len()? + header.length)?;
         let bytes = reader.read_slice(length)?;
@@ -154,11 +160,11 @@ impl<'a> Decode<'a> for Document {
 }
 
 impl Encode for Document {
-    fn encoded_len(&self) -> Result<Length> {
+    fn encoded_len(&self) -> Result<Length, Error> {
         Ok(self.len())
     }
 
-    fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<(), Error> {
         writer.write(self.as_bytes())
     }
 }
@@ -170,7 +176,7 @@ impl FixedTag for Document {
 impl TryFrom<&[u8]> for Document {
     type Error = Error;
 
-    fn try_from(der_bytes: &[u8]) -> Result<Self> {
+    fn try_from(der_bytes: &[u8]) -> Result<Self, Error> {
         Self::from_der(der_bytes)
     }
 }
@@ -178,7 +184,7 @@ impl TryFrom<&[u8]> for Document {
 impl TryFrom<Vec<u8>> for Document {
     type Error = Error;
 
-    fn try_from(der_bytes: Vec<u8>) -> Result<Self> {
+    fn try_from(der_bytes: Vec<u8>) -> Result<Self, Error> {
         let mut decoder = SliceReader::new(&der_bytes)?;
         decode_sequence(&mut decoder)?;
         decoder.finish(())?;
@@ -218,18 +224,18 @@ impl SecretDocument {
     }
 
     /// Try to decode the inner ASN.1 DER message as the given type.
-    pub fn decode_msg<'a, T: Decode<'a>>(&'a self) -> Result<T> {
+    pub fn decode_msg<'a, T: Decode<'a>>(&'a self) -> Result<T, T::Error> {
         self.0.decode_msg()
     }
 
     /// Encode the provided type as ASN.1 DER.
-    pub fn encode_msg<T: Encode>(msg: &T) -> Result<Self> {
+    pub fn encode_msg<T: Encode>(msg: &T) -> Result<Self, Error> {
         Document::encode_msg(msg).map(Self)
     }
 
     /// Decode ASN.1 DER document from PEM.
     #[cfg(feature = "pem")]
-    pub fn from_pem(pem: &str) -> Result<(&str, Self)> {
+    pub fn from_pem(pem: &str) -> Result<(&str, Self), Error> {
         Document::from_pem(pem).map(|(label, doc)| (label, Self(doc)))
     }
 
@@ -239,25 +245,25 @@ impl SecretDocument {
         &self,
         label: &'static str,
         line_ending: pem::LineEnding,
-    ) -> Result<Zeroizing<String>> {
+    ) -> Result<Zeroizing<String>, Error> {
         self.0.to_pem(label, line_ending).map(Zeroizing::new)
     }
 
     /// Read ASN.1 DER document from a file.
     #[cfg(feature = "std")]
-    pub fn read_der_file(path: impl AsRef<Path>) -> Result<Self> {
+    pub fn read_der_file(path: impl AsRef<Path>) -> Result<Self, Error> {
         Document::read_der_file(path).map(Self)
     }
 
     /// Write ASN.1 DER document to a file.
     #[cfg(feature = "std")]
-    pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
+    pub fn write_der_file(&self, path: impl AsRef<Path>) -> Result<(), Error> {
         write_secret_file(path, self.as_bytes())
     }
 
     /// Read PEM-encoded ASN.1 DER document from a file.
     #[cfg(all(feature = "pem", feature = "std"))]
-    pub fn read_pem_file(path: impl AsRef<Path>) -> Result<(String, Self)> {
+    pub fn read_pem_file(path: impl AsRef<Path>) -> Result<(String, Self), Error> {
         Document::read_pem_file(path).map(|(label, doc)| (label, Self(doc)))
     }
 
@@ -268,7 +274,7 @@ impl SecretDocument {
         path: impl AsRef<Path>,
         label: &'static str,
         line_ending: pem::LineEnding,
-    ) -> Result<()> {
+    ) -> Result<(), Error> {
         write_secret_file(path, self.to_pem(label, line_ending)?.as_bytes())
     }
 }
@@ -297,7 +303,7 @@ impl From<Document> for SecretDocument {
 impl TryFrom<&[u8]> for SecretDocument {
     type Error = Error;
 
-    fn try_from(der_bytes: &[u8]) -> Result<Self> {
+    fn try_from(der_bytes: &[u8]) -> Result<Self, Error> {
         Document::try_from(der_bytes).map(Self)
     }
 }
@@ -306,7 +312,7 @@ impl TryFrom<&[u8]> for SecretDocument {
 impl TryFrom<Vec<u8>> for SecretDocument {
     type Error = Error;
 
-    fn try_from(der_bytes: Vec<u8>) -> Result<Self> {
+    fn try_from(der_bytes: Vec<u8>) -> Result<Self, Error> {
         Document::try_from(der_bytes).map(Self)
     }
 }
@@ -316,7 +322,7 @@ impl ZeroizeOnDrop for SecretDocument {}
 
 /// Attempt to decode a ASN.1 `SEQUENCE` from the given decoder, returning the
 /// entire sequence including the header.
-fn decode_sequence<'a>(decoder: &mut SliceReader<'a>) -> Result<&'a [u8]> {
+fn decode_sequence<'a>(decoder: &mut SliceReader<'a>) -> Result<&'a [u8], Error> {
     let header = decoder.peek_header()?;
     header.tag.assert_eq(Tag::Sequence)?;
 
@@ -327,7 +333,7 @@ fn decode_sequence<'a>(decoder: &mut SliceReader<'a>) -> Result<&'a [u8]> {
 /// Write a file containing secret data to the filesystem, restricting the
 /// file permissions so it's only readable by the owner
 #[cfg(all(unix, feature = "std", feature = "zeroize"))]
-fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<()> {
+fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<(), Error> {
     use std::{io::Write, os::unix::fs::OpenOptionsExt};
 
     /// File permissions for secret data

@@ -62,6 +62,8 @@ impl<'a> FixedTag for InitialContextToken<'a> {
 }
 
 impl<'a> DecodeValue<'a> for InitialContextToken<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: der::Header) -> der::Result<Self> {
         Ok(Self {
             this_mech: reader.decode()?,

@@ -207,6 +207,8 @@ impl TryFrom<Length> for usize {
 }
 
 impl<'a> Decode<'a> for Length {
+    type Error = Error;
+
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Length> {
         match reader.read_byte()? {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
@@ -356,6 +358,8 @@ impl IndefiniteLength {
 }
 
 impl<'a> Decode<'a> for IndefiniteLength {
+    type Error = Error;
+
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<IndefiniteLength> {
         if reader.peek_byte() == Some(INDEFINITE_LENGTH_OCTET) {
             // Consume the byte we already peeked at.

@@ -2,7 +2,7 @@
 
 use crate::{
     asn1::AnyRef, Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error,
-    Header, Length, Reader, Result, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer,
+    Header, Length, Reader, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -42,7 +42,7 @@ impl<T> ContextSpecific<T> {
     pub fn decode_explicit<'a, R: Reader<'a>>(
         reader: &mut R,
         tag_number: TagNumber,
-    ) -> Result<Option<Self>>
+    ) -> Result<Option<Self>, T::Error>
     where
         T: Decode<'a>,
     {
@@ -58,16 +58,16 @@ impl<T> ContextSpecific<T> {
     pub fn decode_implicit<'a, R: Reader<'a>>(
         reader: &mut R,
         tag_number: TagNumber,
-    ) -> Result<Option<Self>>
+    ) -> Result<Option<Self>, T::Error>
     where
         T: DecodeValue<'a> + Tagged,
     {
-        Self::decode_with(reader, tag_number, |reader| {
+        Self::decode_with::<_, _, T::Error>(reader, tag_number, |reader| {
             let header = Header::decode(reader)?;
             let value = T::decode_value(reader, header)?;
 
             if header.tag.is_constructed() != value.tag().is_constructed() {
-                return Err(header.tag.non_canonical_error());
+                return Err(header.tag.non_canonical_error().into());
             }
 
             Ok(Self {
@@ -80,13 +80,14 @@ impl<T> ContextSpecific<T> {
 
     /// Attempt to decode a context-specific field with the given
     /// helper callback.
-    fn decode_with<'a, F, R: Reader<'a>>(
+    fn decode_with<'a, F, R: Reader<'a>, E>(
         reader: &mut R,
         tag_number: TagNumber,
         f: F,
-    ) -> Result<Option<Self>>
+    ) -> Result<Option<Self>, E>
     where
-        F: FnOnce(&mut R) -> Result<Self>,
+        F: FnOnce(&mut R) -> Result<Self, E>,
+        E: From<Error>,
     {
         while let Some(octet) = reader.peek_byte() {
             let tag = Tag::try_from(octet)?;
@@ -117,7 +118,9 @@ impl<'a, T> Decode<'a> for ContextSpecific<T>
 where
     T: Decode<'a>,
 {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
+    type Error = T::Error;
+
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Self::Error> {
         let header = Header::decode(reader)?;
 
         match header.tag {
@@ -129,7 +132,7 @@ where
                 tag_mode: TagMode::default(),
                 value: reader.read_nested(header.length, |reader| T::decode(reader))?,
             }),
-            tag => Err(tag.unexpected_error(None)),
+            tag => Err(tag.unexpected_error(None).into()),
         }
     }
 }
@@ -138,14 +141,14 @@ impl<T> EncodeValue for ContextSpecific<T>
 where
     T: EncodeValue + Tagged,
 {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         match self.tag_mode {
             TagMode::Explicit => self.value.encoded_len(),
             TagMode::Implicit => self.value.value_len(),
         }
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         match self.tag_mode {
             TagMode::Explicit => self.value.encode(writer),
             TagMode::Implicit => self.value.encode_value(writer),
@@ -174,9 +177,9 @@ impl<'a, T> TryFrom<AnyRef<'a>> for ContextSpecific<T>
 where
     T: Decode<'a>,
 {
-    type Error = Error;
+    type Error = T::Error;
 
-    fn try_from(any: AnyRef<'a>) -> Result<ContextSpecific<T>> {
+    fn try_from(any: AnyRef<'a>) -> Result<ContextSpecific<T>, Self::Error> {
         match any.tag() {
             Tag::ContextSpecific {
                 number,
@@ -186,7 +189,7 @@ where
                 tag_mode: TagMode::default(),
                 value: T::from_der(any.value())?,
             }),
-            tag => Err(tag.unexpected_error(None)),
+            tag => Err(tag.unexpected_error(None).into()),
         }
     }
 }
@@ -195,7 +198,7 @@ impl<T> ValueOrd for ContextSpecific<T>
 where
     T: EncodeValue + ValueOrd + Tagged,
 {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         match self.tag_mode {
             TagMode::Explicit => self.der_cmp(other),
             TagMode::Implicit => self.value_cmp(other),
@@ -235,11 +238,11 @@ impl<'a, T> EncodeValue for ContextSpecificRef<'a, T>
 where
     T: EncodeValue + Tagged,
 {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         self.encoder().value_len()
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         self.encoder().encode_value(writer)
     }
 }

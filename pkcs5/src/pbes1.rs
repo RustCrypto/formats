@@ -67,6 +67,8 @@ impl Algorithm {
 }
 
 impl<'a> DecodeValue<'a> for Algorithm {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AlgorithmIdentifierRef::decode_value(reader, header)?.try_into()
     }
@@ -125,6 +127,8 @@ pub struct Parameters {
 }
 
 impl<'a> DecodeValue<'a> for Parameters {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AnyRef::decode_value(reader, header)?.try_into()
     }

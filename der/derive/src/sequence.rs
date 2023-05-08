@@ -86,6 +86,8 @@ impl DeriveSequence {
 
         quote! {
             impl #impl_generics ::der::DecodeValue<#lifetime> for #ident #ty_generics #where_clause {
+                type Error = ::der::Error;
+
                 fn decode_value<R: ::der::Reader<#lifetime>>(
                     reader: &mut R,
                     header: ::der::Header,

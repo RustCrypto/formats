@@ -37,6 +37,8 @@ pub struct SafeBag {
 }
 
 impl<'a> ::der::DecodeValue<'a> for SafeBag {
+    type Error = ::der::Error;
+
     fn decode_value<R: ::der::Reader<'a>>(
         reader: &mut R,
         header: ::der::Header,

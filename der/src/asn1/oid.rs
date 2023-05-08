@@ -10,6 +10,8 @@ use const_oid::ObjectIdentifier;
 use super::Any;
 
 impl<'a> DecodeValue<'a> for ObjectIdentifier {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let mut buf = [0u8; ObjectIdentifier::MAX_SIZE];
         let slice = buf
