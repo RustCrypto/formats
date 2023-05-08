@@ -986,6 +986,17 @@ dependencies = [
  "pkcs8",
  "spki",
  "tempfile",
+name = "pkcs1"
+version = "0.7.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8ffb9f10fa047879315e6625af03c164b16962a5368d724ed16323b68ace47f"
+dependencies = [
+ "der",
+ "pkcs8",
+ "spki",
+]
+
+[[package]]
 name = "pkcs12"
 version = "0.0.0"
 
@@ -1269,7 +1280,7 @@ dependencies = [
  "num-integer",
  "num-iter",
  "num-traits",
- "pkcs1",
+ "pkcs1 0.7.5",
  "pkcs8",
  "rand_core",
  "sha2",
