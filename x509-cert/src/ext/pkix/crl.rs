@@ -45,6 +45,7 @@ impl AssociatedOid for BaseCrlNumber {
 }
 
 impl_newtype!(BaseCrlNumber, Uint);
+impl_extension!(BaseCrlNumber, critical = true);
 
 /// CrlDistributionPoints as defined in [RFC 5280 Section 4.2.1.13].
 ///
@@ -117,3 +118,5 @@ pub enum CrlReason {
 impl AssociatedOid for CrlReason {
     const OID: ObjectIdentifier = ID_CE_CRL_REASONS;
 }
+
+impl_extension!(CrlReason, critical = false);

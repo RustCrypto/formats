@@ -1,6 +1,6 @@
 [package]
 name = "cms"
-version = "0.2.0"
+version = "0.2.1"
 description = """
 Pure Rust implementation of the Cryptographic Message Syntax (CMS) as described in RFC 5652 and RFC 3274.
 """
@@ -14,12 +14,12 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-der = { version = "0.7", features = ["alloc", "derive", "oid"] }
+der = { version = "0.7", features = ["alloc", "derive", "oid", "pem"] }
 spki = { version = "0.7" }
-x509-cert = { version = "0.2", default-features = false }
+x509-cert = { version = "0.2", default-features = false, features = ["pem"] }
+const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 
 [dev-dependencies]
-const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 hex-literal = "0.4"
 pkcs5 = { version = "0.7" }
 

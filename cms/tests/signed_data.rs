@@ -2,7 +2,8 @@
 
 use cms::content_info::ContentInfo;
 use cms::signed_data::{SignedData, SignerInfos};
-use der::{AnyRef, Decode, Encode, ErrorKind, Tag};
+use der::{AnyRef, Decode, DecodePem, Encode, ErrorKind, Tag};
+use x509_cert::Certificate;
 
 #[test]
 fn trust_list_sd_test() {
@@ -105,3 +106,42 @@ fn misencoded_signer_infos_tests() {
 
 #[test]
 fn misencoded_signed_data_tests() {}
+
+#[test]
+fn cert_to_p7b() {
+    // test with p7b created as follows:
+    // openssl crl2pkcs7 -nocrl -certfile ValidCertificatePathTest1EE.pem -out pkits.p7b -outform DER
+    let p7b_ee_buf = include_bytes!("examples/pkits_ee.p7b");
+    let ee_cert_buf = include_bytes!("examples/ValidCertificatePathTest1EE.crt");
+    let ee_cert = Certificate::from_der(ee_cert_buf).unwrap();
+    let p7b_ee = ContentInfo::try_from(ee_cert).unwrap();
+    let p7b_ee_buf2 = p7b_ee.to_der().unwrap();
+    assert_eq!(p7b_ee_buf, p7b_ee_buf2.as_slice());
+}
+
+#[test]
+fn pem_cert_to_p7b() {
+    // test with p7b created as follows:
+    // openssl crl2pkcs7 -nocrl -certfile ValidCertificatePathTest1EE.pem -out pkits.p7b -outform DER
+    let p7b_ee_buf = include_bytes!("examples/pkits_ee.p7b");
+    let ee_cert_buf = include_bytes!("examples/ValidCertificatePathTest1EE.pem");
+    let ee_cert: x509_cert::Certificate = x509_cert::Certificate::from_pem(ee_cert_buf).unwrap();
+    let p7b_ee = ContentInfo::try_from(ee_cert).unwrap();
+    let p7b_ee_buf2 = p7b_ee.to_der().unwrap();
+    assert_eq!(p7b_ee_buf, p7b_ee_buf2.as_slice());
+}
+
+#[test]
+fn certs_to_p7b() {
+    // test with p7b created as follows:
+    // openssl crl2pkcs7 -nocrl -certfile ValidCertificatePathTest1EE.pem -certfile GoodCACert.pem -out pkits.p7b -outform DER
+    let p7b_buf = include_bytes!("examples/pkits.p7b");
+    let ee_cert_buf = include_bytes!("examples/ValidCertificatePathTest1EE.crt");
+    let ca_cert_buf = include_bytes!("examples/GoodCACert.crt");
+    let ee_cert = Certificate::from_der(ee_cert_buf).unwrap();
+    let ca_cert = Certificate::from_der(ca_cert_buf).unwrap();
+    let pki_path = vec![ee_cert, ca_cert];
+    let p7b_ee = ContentInfo::try_from(pki_path).unwrap();
+    let p7b_buf2 = p7b_ee.to_der().unwrap();
+    assert_eq!(p7b_buf, p7b_buf2.as_slice());
+}

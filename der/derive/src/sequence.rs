@@ -8,15 +8,15 @@ use field::SequenceField;
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{DeriveInput, Ident, Lifetime};
+use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
     /// Name of the sequence struct.
     ident: Ident,
 
-    /// Lifetime of the struct.
-    lifetime: Option<Lifetime>,
+    /// Generics of the struct.
+    generics: Generics,
 
     /// Fields of the struct.
     fields: Vec<SequenceField>,
@@ -33,13 +33,6 @@ impl DeriveSequence {
             ),
         };
 
-        // TODO(tarcieri): properly handle multiple lifetimes
-        let lifetime = input
-            .generics
-            .lifetimes()
-            .next()
-            .map(|lt| lt.lifetime.clone());
-
         let type_attrs = TypeAttrs::parse(&input.attrs);
 
         let fields = data
@@ -50,7 +43,7 @@ impl DeriveSequence {
 
         Self {
             ident: input.ident,
-            lifetime,
+            generics: input.generics.clone(),
             fields,
         }
     }
@@ -58,19 +51,25 @@ impl DeriveSequence {
     /// Lower the derived output into a [`TokenStream`].
     pub fn to_tokens(&self) -> TokenStream {
         let ident = &self.ident;
+        let mut generics = self.generics.clone();
 
-        let lifetime = match self.lifetime {
-            Some(ref lifetime) => quote!(#lifetime),
-            None => default_lifetime(),
-        };
+        // Use the first lifetime parameter as lifetime for Decode/Encode lifetime
+        // if none found, add one.
+        let lifetime = generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone())
+            .unwrap_or_else(|| {
+                let lt = default_lifetime();
+                generics
+                    .params
+                    .insert(0, GenericParam::Lifetime(LifetimeParam::new(lt.clone())));
+                lt
+            });
 
-        // Lifetime parameters
-        // TODO(tarcieri): support multiple lifetimes
-        let lt_params = self
-            .lifetime
-            .as_ref()
-            .map(|_| lifetime.clone())
-            .unwrap_or_default();
+        // We may or may not have inserted a lifetime.
+        let (_, ty_generics, where_clause) = self.generics.split_for_impl();
+        let (impl_generics, _, _) = generics.split_for_impl();
 
         let mut decode_body = Vec::new();
         let mut decode_result = Vec::new();
@@ -87,7 +86,7 @@ impl DeriveSequence {
         }
 
         quote! {
-            impl<#lifetime> ::der::DecodeValue<#lifetime> for #ident<#lt_params> {
+            impl #impl_generics ::der::DecodeValue<#lifetime> for #ident #ty_generics #where_clause {
                 fn decode_value<R: ::der::Reader<#lifetime>>(
                     reader: &mut R,
                     header: ::der::Header,
@@ -104,7 +103,7 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lifetime> ::der::EncodeValue for #ident<#lt_params> {
+            impl #impl_generics ::der::EncodeValue for #ident #ty_generics #where_clause {
                 fn value_len(&self) -> ::der::Result<::der::Length> {
                     use ::der::Encode as _;
 
@@ -122,7 +121,7 @@ impl DeriveSequence {
                 }
             }
 
-            impl<#lifetime> ::der::Sequence<#lifetime> for #ident<#lt_params> {}
+            impl #impl_generics ::der::Sequence<#lifetime> for #ident #ty_generics #where_clause {}
         }
     }
 }
@@ -146,7 +145,10 @@ mod tests {
 
         let ir = DeriveSequence::new(input);
         assert_eq!(ir.ident, "AlgorithmIdentifier");
-        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(
+            ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
+            "'a"
+        );
         assert_eq!(ir.fields.len(), 2);
 
         let algorithm_field = &ir.fields[0];
@@ -177,7 +179,10 @@ mod tests {
 
         let ir = DeriveSequence::new(input);
         assert_eq!(ir.ident, "SubjectPublicKeyInfo");
-        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(
+            ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
+            "'a"
+        );
         assert_eq!(ir.fields.len(), 2);
 
         let algorithm_field = &ir.fields[0];
@@ -242,7 +247,10 @@ mod tests {
 
         let ir = DeriveSequence::new(input);
         assert_eq!(ir.ident, "OneAsymmetricKey");
-        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(
+            ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
+            "'a"
+        );
         assert_eq!(ir.fields.len(), 5);
 
         let version_field = &ir.fields[0];
@@ -314,7 +322,10 @@ mod tests {
 
         let ir = DeriveSequence::new(input);
         assert_eq!(ir.ident, "ImplicitSequence");
-        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(
+            ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
+            "'a"
+        );
         assert_eq!(ir.fields.len(), 3);
 
         let bit_string = &ir.fields[0];

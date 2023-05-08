@@ -13,6 +13,7 @@
 //! up to 62-bit length values.
 use alloc::vec::Vec;
 use core::fmt;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Unstructured};
@@ -210,21 +211,68 @@ fn write_hex(f: &mut fmt::Formatter<'_>, data: &[u8]) -> fmt::Result {
     Ok(())
 }
 
+macro_rules! impl_vl_bytes_generic {
+    ($name:ident) => {
+        impl fmt::Debug for $name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(f, "{} {{ ", stringify!($name))?;
+                write_hex(f, &self.vec())?;
+                write!(f, " }}")
+            }
+        }
+
+        impl $name {
+            /// Get a reference to the vlbytes's vec.
+            pub fn as_slice(&self) -> &[u8] {
+                self.vec().as_ref()
+            }
+
+            /// Add an element to this.
+            #[inline]
+            pub fn push(&mut self, value: u8) {
+                self.vec_mut().push(value);
+            }
+
+            /// Remove the last element.
+            #[inline]
+            pub fn pop(&mut self) -> Option<u8> {
+                self.vec_mut().pop()
+            }
+        }
+
+        impl From<Vec<u8>> for $name {
+            fn from(vec: Vec<u8>) -> Self {
+                Self::new(vec)
+            }
+        }
+
+        impl From<&[u8]> for $name {
+            fn from(slice: &[u8]) -> Self {
+                Self::new(slice.to_vec())
+            }
+        }
+
+        impl<const N: usize> From<&[u8; N]> for $name {
+            fn from(slice: &[u8; N]) -> Self {
+                Self::new(slice.to_vec())
+            }
+        }
+
+        impl AsRef<[u8]> for $name {
+            fn as_ref(&self) -> &[u8] {
+                &self.vec()
+            }
+        }
+    };
+}
+
 /// Variable-length encoded byte vectors.
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize)]
 pub struct VLBytes {
     vec: Vec<u8>,
-}
-
-impl fmt::Debug for VLBytes {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "VLBytes {{ ")?;
-        write_hex(f, &self.vec)?;
-        write!(f, " }}")
-    }
 }
 
 impl VLBytes {
@@ -233,57 +281,47 @@ impl VLBytes {
         Self { vec }
     }
 
-    /// Get a reference to the vlbytes's vec.
-    pub fn as_slice(&self) -> &[u8] {
-        self.vec.as_ref()
-    }
-
-    /// Add an element to this.
-    #[inline]
-    pub fn push(&mut self, value: u8) {
-        self.vec.push(value);
-    }
-
-    /// Remove the last element.
-    #[inline]
-    pub fn pop(&mut self) -> Option<u8> {
-        self.vec.pop()
-    }
-}
-
-impl From<Vec<u8>> for VLBytes {
-    fn from(vec: Vec<u8>) -> Self {
-        Self { vec }
-    }
-}
-
-impl From<&[u8]> for VLBytes {
-    fn from(slice: &[u8]) -> Self {
-        Self {
-            vec: slice.to_vec(),
-        }
-    }
-}
-
-impl<const N: usize> From<&[u8; N]> for VLBytes {
-    fn from(slice: &[u8; N]) -> Self {
-        Self {
-            vec: slice.to_vec(),
-        }
-    }
-}
-
-impl AsRef<[u8]> for VLBytes {
-    fn as_ref(&self) -> &[u8] {
+    fn vec(&self) -> &[u8] {
         &self.vec
     }
+
+    fn vec_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.vec
+    }
 }
+
+impl_vl_bytes_generic!(VLBytes);
 
 impl From<VLBytes> for Vec<u8> {
     fn from(b: VLBytes) -> Self {
         b.vec
     }
 }
+
+/// A wrapper struct around [`VLBytes`] that implements [`ZeroizeOnDrop`]. It
+/// behaves just like [`VLBytes`], except that it doesn't allow conversion into
+/// a [`Vec<u8>`].
+#[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
+pub struct SecretVLBytes(VLBytes);
+
+impl SecretVLBytes {
+    /// Generate a new variable-length byte vector that implements
+    /// [`ZeroizeOnDrop`].
+    pub fn new(vec: Vec<u8>) -> Self {
+        Self(VLBytes { vec })
+    }
+
+    fn vec(&self) -> &[u8] {
+        &self.0.vec
+    }
+
+    fn vec_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.0.vec
+    }
+}
+
+impl_vl_bytes_generic!(SecretVLBytes);
 
 #[inline(always)]
 fn tls_serialize_bytes<W: std::io::Write>(writer: &mut W, bytes: &[u8]) -> Result<usize, Error> {
@@ -396,6 +434,27 @@ impl Size for &VLBytes {
     }
 }
 
+impl Size for SecretVLBytes {
+    fn tls_serialized_len(&self) -> usize {
+        self.0.tls_serialized_len()
+    }
+}
+
+impl Serialize for SecretVLBytes {
+    fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+        self.0.tls_serialize(writer)
+    }
+}
+
+impl Deserialize for SecretVLBytes {
+    fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        Ok(Self(VLBytes::tls_deserialize(bytes)?))
+    }
+}
+
 pub struct VLByteSlice<'a>(pub &'a [u8]);
 
 impl<'a> fmt::Debug for VLByteSlice<'a> {
@@ -456,7 +515,7 @@ impl<'a> Arbitrary<'a> for VLBytes {
 
 #[cfg(test)]
 mod test {
-    use crate::{VLByteSlice, VLBytes};
+    use crate::{SecretVLBytes, VLByteSlice, VLBytes};
     use std::println;
 
     #[test]
@@ -484,6 +543,11 @@ mod test {
             let got = format!("{:?}", VLBytes::new(test.clone()));
             println!("{got}");
             assert_eq!(expected_vl_bytes, got);
+
+            let expected_secret_vl_bytes = format!("SecretVLBytes {{ {expected} }}");
+            let got = format!("{:?}", SecretVLBytes::new(test.clone()));
+            println!("{got}");
+            assert_eq!(expected_secret_vl_bytes, got);
         }
     }
 }

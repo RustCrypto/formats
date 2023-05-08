@@ -1,6 +1,7 @@
 //! Trait definition for [`Encode`].
 
 use crate::{Header, Length, Result, SliceWriter, Tagged, Writer};
+use core::marker::PhantomData;
 
 #[cfg(feature = "alloc")]
 use {alloc::boxed::Box, alloc::vec::Vec, core::iter};
@@ -79,6 +80,21 @@ where
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.header()?.encode(writer)?;
         self.encode_value(writer)
+    }
+}
+
+/// Dummy implementation for [`PhantomData`] which allows deriving
+/// implementations on structs with phantom fields.
+impl<T> Encode for PhantomData<T>
+where
+    T: ?Sized,
+{
+    fn encoded_len(&self) -> Result<Length> {
+        Ok(Length::ZERO)
+    }
+
+    fn encode(&self, _writer: &mut impl Writer) -> Result<()> {
+        Ok(())
     }
 }
 

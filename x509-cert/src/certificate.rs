@@ -3,13 +3,48 @@
 use crate::{name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
-use core::cmp::Ordering;
+use core::{cmp::Ordering, fmt::Debug};
 use der::asn1::BitString;
-use der::{Decode, Enumerated, Error, ErrorKind, Sequence, ValueOrd};
+use der::{Decode, Enumerated, Error, ErrorKind, Sequence, Tag, ValueOrd};
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
+
+/// [`Profile`] allows the consumer of this crate to customize the behavior when parsing
+/// certificates.
+/// By default, parsing will be made in a rfc5280-compliant manner.
+pub trait Profile: PartialEq + Debug + Eq + Clone {
+    /// Checks to run when parsing serial numbers
+    fn check_serial_number(serial: &SerialNumber<Self>) -> der::Result<()> {
+        // See the note in `SerialNumber::new`: we permit lengths of 21 bytes here,
+        // since some X.509 implementations interpret the limit of 20 bytes to refer
+        // to the pre-encoded value.
+        if serial.inner.len() > SerialNumber::<Self>::MAX_DECODE_LEN {
+            Err(Tag::Integer.value_error())
+        } else {
+            Ok(())
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+/// Parse certificates with rfc5280-compliant checks
+pub struct Rfc5280;
+
+impl Profile for Rfc5280 {}
+
+#[cfg(feature = "hazmat")]
+#[derive(Debug, PartialEq, Eq, Clone)]
+/// Parse raw x509 certificate and disable all the checks
+pub struct Raw;
+
+#[cfg(feature = "hazmat")]
+impl Profile for Raw {
+    fn check_serial_number(_serial: &SerialNumber<Self>) -> der::Result<()> {
+        Ok(())
+    }
+}
 
 /// Certificate `Version` as defined in [RFC 5280 Section 4.1].
 ///
@@ -46,6 +81,9 @@ impl Default for Version {
 }
 
 /// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
+pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
+
+/// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
 ///
 /// ASN.1 structure containing the names of the subject and issuer, a public
 /// key associated with the subject, a validity period, and other associated
@@ -73,7 +111,7 @@ impl Default for Version {
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertificate {
+pub struct TbsCertificateInner<P: Profile = Rfc5280> {
     /// The certificate version
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
@@ -83,7 +121,7 @@ pub struct TbsCertificate {
     #[asn1(context_specific = "0", default = "Default::default")]
     pub version: Version,
 
-    pub serial_number: SerialNumber,
+    pub serial_number: SerialNumber<P>,
     pub signature: AlgorithmIdentifierOwned,
     pub issuer: Name,
     pub validity: Validity,
@@ -100,7 +138,7 @@ pub struct TbsCertificate {
     pub extensions: Option<crate::ext::Extensions>,
 }
 
-impl TbsCertificate {
+impl<P: Profile> TbsCertificateInner<P> {
     /// Decodes a single extension
     ///
     /// Returns an error if multiple of these extensions is present. Returns
@@ -134,6 +172,11 @@ impl TbsCertificate {
 
 /// X.509 certificates are defined in [RFC 5280 Section 4.1].
 ///
+/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+pub type Certificate = CertificateInner<Rfc5280>;
+
+/// X.509 certificates are defined in [RFC 5280 Section 4.1].
+///
 /// ```text
 /// Certificate  ::=  SEQUENCE  {
 ///     tbsCertificate       TBSCertificate,
@@ -146,14 +189,14 @@ impl TbsCertificate {
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct Certificate {
-    pub tbs_certificate: TbsCertificate,
+pub struct CertificateInner<P: Profile = Rfc5280> {
+    pub tbs_certificate: TbsCertificateInner<P>,
     pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitString,
 }
 
 #[cfg(feature = "pem")]
-impl PemLabel for Certificate {
+impl<P: Profile> PemLabel for CertificateInner<P> {
     const PEM_LABEL: &'static str = "CERTIFICATE";
 }
 

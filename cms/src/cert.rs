@@ -1,5 +1,7 @@
 //! Certificate-related types
 
+pub use x509_cert as x509;
+
 use core::cmp::Ordering;
 use der::{asn1::ObjectIdentifier, Any, Choice, Sequence, ValueOrd};
 use x509_cert::name::Name;

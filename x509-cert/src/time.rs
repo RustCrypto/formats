@@ -24,7 +24,10 @@ use std::time::SystemTime;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Choice, Copy, Clone, Debug, Eq, PartialEq, ValueOrd)]
 pub enum Time {
-    /// Legacy UTC time (has 2-digit year, valid only through 2050).
+    /// Legacy UTC time (has 2-digit year, valid from 1970 to 2049).
+    ///
+    /// Note: RFC 5280 specifies 1950-2049, however due to common operations working on
+    /// `UNIX_EPOCH` this implementation's lower bound is 1970.
     #[asn1(type = "UTCTime")]
     UtcTime(UtcTime),
 
@@ -34,6 +37,10 @@ pub enum Time {
 }
 
 impl Time {
+    /// Time used for Certificate who do not expire.
+    pub const INFINITY: Time =
+        Time::GeneralTime(GeneralizedTime::from_date_time(DateTime::INFINITY));
+
     /// Get duration since `UNIX_EPOCH`.
     pub fn to_unix_duration(self) -> Duration {
         match self {

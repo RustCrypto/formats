@@ -61,7 +61,10 @@ impl DeriveChoice {
 
         let lifetime = match self.lifetime {
             Some(ref lifetime) => quote!(#lifetime),
-            None => default_lifetime(),
+            None => {
+                let lifetime = default_lifetime();
+                quote!(#lifetime)
+            }
         };
 
         // Lifetime parameters

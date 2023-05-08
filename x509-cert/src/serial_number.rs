@@ -1,12 +1,14 @@
 //! X.509 serial number
 
-use core::fmt::Display;
+use core::{fmt::Display, marker::PhantomData};
 
 use der::{
     asn1::{self, Int},
     DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd,
     Writer,
 };
+
+use crate::certificate::{Profile, Rfc5280};
 
 /// [RFC 5280 Section 4.1.2.2.]  Serial Number
 ///
@@ -25,16 +27,17 @@ use der::{
 ///   that are negative or zero.  Certificate users SHOULD be prepared to
 ///   gracefully handle such certificates.
 #[derive(Clone, Debug, Eq, PartialEq, ValueOrd, PartialOrd, Ord)]
-pub struct SerialNumber {
-    inner: Int,
+pub struct SerialNumber<P: Profile = Rfc5280> {
+    pub(crate) inner: Int,
+    _profile: PhantomData<P>,
 }
 
-impl SerialNumber {
+impl<P: Profile> SerialNumber<P> {
     /// Maximum length in bytes for a [`SerialNumber`]
     pub const MAX_LEN: Length = Length::new(20);
 
     /// See notes in `SerialNumber::new` and `SerialNumber::decode_value`.
-    const MAX_DECODE_LEN: Length = Length::new(21);
+    pub(crate) const MAX_DECODE_LEN: Length = Length::new(21);
 
     /// Create a new [`SerialNumber`] from a byte slice.
     ///
@@ -47,12 +50,13 @@ impl SerialNumber {
         // RFC 5280 is ambiguous about whether this is valid, so we limit
         // `SerialNumber` *encodings* to 20 bytes or fewer while permitting
         // `SerialNumber` *decodings* to have up to 21 bytes below.
-        if inner.value_len()? > SerialNumber::MAX_LEN {
+        if inner.value_len()? > Self::MAX_LEN {
             return Err(ErrorKind::Overlength.into());
         }
 
         Ok(Self {
             inner: inner.into(),
+            _profile: PhantomData,
         })
     }
 
@@ -63,7 +67,7 @@ impl SerialNumber {
     }
 }
 
-impl EncodeValue for SerialNumber {
+impl<P: Profile> EncodeValue for SerialNumber<P> {
     fn value_len(&self) -> Result<Length> {
         self.inner.value_len()
     }
@@ -73,22 +77,21 @@ impl EncodeValue for SerialNumber {
     }
 }
 
-impl<'a> DecodeValue<'a> for SerialNumber {
+impl<'a, P: Profile> DecodeValue<'a> for SerialNumber<P> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let inner = Int::decode_value(reader, header)?;
+        let serial = Self {
+            inner,
+            _profile: PhantomData,
+        };
 
-        // See the note in `SerialNumber::new`: we permit lengths of 21 bytes here,
-        // since some X.509 implementations interpret the limit of 20 bytes to refer
-        // to the pre-encoded value.
-        if inner.len() > SerialNumber::MAX_DECODE_LEN {
-            return Err(Tag::Integer.value_error());
-        }
+        P::check_serial_number(&serial)?;
 
-        Ok(Self { inner })
+        Ok(serial)
     }
 }
 
-impl FixedTag for SerialNumber {
+impl<P: Profile> FixedTag for SerialNumber<P> {
     const TAG: Tag = <Int as FixedTag>::TAG;
 }
 
@@ -131,7 +134,7 @@ impl_from!(usize);
 // Implement by hand because the derive would create invalid values.
 // Use the constructor to create a valid value.
 #[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for SerialNumber {
+impl<'a, P: Profile> arbitrary::Arbitrary<'a> for SerialNumber<P> {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         let len = u.int_in_range(0u32..=Self::MAX_LEN.into())?;
 
@@ -154,7 +157,7 @@ mod tests {
         // Creating a new serial with an oversized encoding (due to high MSB) fails.
         {
             let too_big = [0x80; 20];
-            assert!(SerialNumber::new(&too_big).is_err());
+            assert!(SerialNumber::<Rfc5280>::new(&too_big).is_err());
         }
 
         // Creating a new serial with the maximum encoding succeeds.
@@ -163,7 +166,7 @@ mod tests {
                 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
             ];
-            assert!(SerialNumber::new(&just_enough).is_ok());
+            assert!(SerialNumber::<Rfc5280>::new(&just_enough).is_ok());
         }
     }
 

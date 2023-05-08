@@ -1,6 +1,5 @@
 //! Standardized X.509 Certificate Extensions
 
-use crate::certificate;
 use const_oid::AssociatedOid;
 use der::{asn1::OctetString, Sequence, ValueOrd};
 use spki::ObjectIdentifier;
@@ -49,15 +48,19 @@ pub type Extensions = alloc::vec::Vec<Extension>;
 /// builder.
 pub trait AsExtension: AssociatedOid + der::Encode {
     /// Should the extension be marked critical
-    fn critical(&self, tbs: &certificate::TbsCertificate) -> bool;
+    fn critical(&self, subject: &crate::name::Name, extensions: &[Extension]) -> bool;
 
     /// Returns the Extension with the content encoded.
-    fn to_extension(&self, tbs: &certificate::TbsCertificate) -> Result<Extension, der::Error> {
+    fn to_extension(
+        &self,
+        subject: &crate::name::Name,
+        extensions: &[Extension],
+    ) -> Result<Extension, der::Error> {
         let content = OctetString::new(<Self as der::Encode>::to_der(self)?)?;
 
         Ok(Extension {
             extn_id: <Self as AssociatedOid>::OID,
-            critical: self.critical(tbs),
+            critical: self.critical(subject, extensions),
             extn_value: content,
         })
     }

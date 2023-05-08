@@ -6,7 +6,7 @@ use der::{EncodeValue, Tagged};
 #[cfg(feature = "alloc")]
 use {
     crate::AlgorithmIdentifierOwned,
-    der::{Any, Document},
+    der::{asn1::BitString, Any, Document},
 };
 
 #[cfg(feature = "pem")]
@@ -172,4 +172,13 @@ where
                 .transpose()?,
         })
     }
+}
+
+/// Returns the `BitString` encoding of the signature.
+///
+/// X.509 and CSR structures require signatures to be BitString encoded.
+#[cfg(feature = "alloc")]
+pub trait SignatureBitStringEncoding {
+    /// `BitString` encoding for this signature.
+    fn to_bitstring(&self) -> der::Result<BitString>;
 }

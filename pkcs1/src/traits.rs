@@ -3,10 +3,7 @@
 use crate::Result;
 
 #[cfg(feature = "alloc")]
-use {
-    crate::{RsaPrivateKey, RsaPublicKey},
-    der::SecretDocument,
-};
+use der::{Document, SecretDocument};
 
 #[cfg(feature = "pem")]
 use {
@@ -25,7 +22,10 @@ use {
 use std::path::Path;
 
 #[cfg(all(feature = "alloc", feature = "pkcs8"))]
-use der::{Decode, Document};
+use der::Decode;
+
+#[cfg(all(feature = "alloc", any(feature = "pem", feature = "pkcs8")))]
+use crate::{RsaPrivateKey, RsaPublicKey};
 
 /// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
 pub trait DecodeRsaPrivateKey: Sized {

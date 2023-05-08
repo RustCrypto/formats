@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.2 (2023-05-04)
+
+### Added
+- `AlgorithmIdentifierWithOid` trait ([#986])
+- `SignatureBitStringEncoding` trait ([#1047])
+
+### Changed
+-  Bump `hex-literal` to v0.4.1 ([#999])
+
+[#986]: https://github.com/RustCrypto/formats/pull/986
+[#999]: https://github.com/RustCrypto/formats/pull/999
+[#1047]: https://github.com/RustCrypto/formats/pull/1047
+
+
 ## 0.7.1 (2023-04-04)
 ### Added
 - `AssociatedAlgorithmIdentifier` trait ([#962], [#966])

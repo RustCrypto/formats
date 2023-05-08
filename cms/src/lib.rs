@@ -13,6 +13,15 @@
     unused_qualifications
 )]
 
+//! # `p7b` support
+//!
+//! This crate can be used to convert an X.509 certificate into a certs-only
+//! [`signed_data::SignedData`] message, a.k.a `.p7b` file.
+//!
+//! Use a [`TryFrom`] conversion between [`cert::x509::Certificate`] and
+//! [`content_info::ContentInfo`] to generate the data structures, then use
+//! `to_der` to serialize it.
+
 extern crate alloc;
 
 #[cfg(feature = "std")]

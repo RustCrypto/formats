@@ -1,7 +1,14 @@
 //! ContentInfo types
 
+use crate::cert::CertificateChoices;
+use crate::revocation::RevocationInfoChoices;
+use crate::signed_data::EncapsulatedContentInfo;
+use crate::signed_data::{CertificateSet, SignedData, SignerInfos};
 use core::cmp::Ordering;
-use der::{asn1::ObjectIdentifier, Any, Enumerated, Sequence, ValueOrd};
+use der::asn1::SetOfVec;
+use der::Encode;
+use der::{asn1::ObjectIdentifier, Any, AnyRef, Enumerated, Sequence, ValueOrd};
+use x509_cert::{Certificate, PkiPath};
 
 /// The `OtherCertificateFormat` type is defined in [RFC 5652 Section 10.2.5].
 ///
@@ -46,4 +53,68 @@ pub struct ContentInfo {
     pub content_type: ObjectIdentifier,
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
     pub content: Any,
+}
+
+/// Convert a Certificate to a certs-only SignedData message
+impl TryFrom<Certificate> for ContentInfo {
+    type Error = der::Error;
+
+    fn try_from(cert: Certificate) -> der::Result<Self> {
+        let mut certs = CertificateSet(Default::default());
+        certs.0.add(CertificateChoices::Certificate(cert))?;
+
+        // include empty CRLs field instead of omitting it to match OpenSSL's behavior
+        let sd = SignedData {
+            version: CmsVersion::V1,
+            digest_algorithms: SetOfVec::default(),
+            encap_content_info: EncapsulatedContentInfo {
+                econtent_type: const_oid::db::rfc5911::ID_DATA,
+                econtent: None,
+            },
+            certificates: Some(certs),
+            crls: Some(RevocationInfoChoices(Default::default())),
+            signer_infos: SignerInfos(Default::default()),
+        };
+
+        let signed_data = sd.to_der()?;
+        let content = AnyRef::try_from(signed_data.as_slice())?;
+
+        Ok(ContentInfo {
+            content_type: const_oid::db::rfc5911::ID_SIGNED_DATA,
+            content: Any::from(content),
+        })
+    }
+}
+
+/// Convert a vector of Certificates to a certs-only SignedData message
+impl TryFrom<PkiPath> for ContentInfo {
+    type Error = der::Error;
+
+    fn try_from(pki_path: PkiPath) -> der::Result<Self> {
+        let mut certs = CertificateSet(Default::default());
+        for cert in pki_path {
+            certs.0.add(CertificateChoices::Certificate(cert))?;
+        }
+
+        // include empty CRLs field instead of omitting it to match OpenSSL's behavior
+        let sd = SignedData {
+            version: CmsVersion::V1,
+            digest_algorithms: SetOfVec::default(),
+            encap_content_info: EncapsulatedContentInfo {
+                econtent_type: const_oid::db::rfc5911::ID_DATA,
+                econtent: None,
+            },
+            certificates: Some(certs),
+            crls: Some(RevocationInfoChoices(Default::default())),
+            signer_infos: SignerInfos(Default::default()),
+        };
+
+        let signed_data = sd.to_der()?;
+        let content = AnyRef::try_from(signed_data.as_slice())?;
+
+        Ok(ContentInfo {
+            content_type: const_oid::db::rfc5911::ID_SIGNED_DATA,
+            content: Any::from(content),
+        })
+    }
 }

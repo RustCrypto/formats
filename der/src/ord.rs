@@ -1,7 +1,7 @@
 //! Ordering trait.
 
 use crate::{EncodeValue, Result, Tagged};
-use core::cmp::Ordering;
+use core::{cmp::Ordering, marker::PhantomData};
 
 /// DER ordering trait.
 ///
@@ -68,4 +68,18 @@ where
     }
 
     Ok(length_ord)
+}
+
+/// Provide a no-op implementation for PhantomData
+impl<T> ValueOrd for PhantomData<T> {
+    fn value_cmp(&self, _other: &Self) -> Result<Ordering> {
+        Ok(Ordering::Equal)
+    }
+}
+
+/// Provide a no-op implementation for PhantomData
+impl<T> DerOrd for PhantomData<T> {
+    fn der_cmp(&self, _other: &Self) -> Result<Ordering> {
+        Ok(Ordering::Equal)
+    }
 }

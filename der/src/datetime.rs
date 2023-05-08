@@ -56,6 +56,18 @@ pub struct DateTime {
 }
 
 impl DateTime {
+    /// This is the maximum date represented by the [`DateTime`]
+    /// This corresponds to: 9999-12-31T23:59:59Z
+    pub const INFINITY: DateTime = DateTime {
+        year: 9999,
+        month: 12,
+        day: 31,
+        hour: 23,
+        minutes: 59,
+        seconds: 59,
+        unix_duration: MAX_UNIX_DURATION,
+    };
+
     /// Create a new [`DateTime`] from the given UTC time components.
     // TODO(tarcieri): checked arithmetic
     #[allow(clippy::integer_arithmetic)]

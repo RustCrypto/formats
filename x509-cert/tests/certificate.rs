@@ -412,3 +412,27 @@ fn decode_cert_negative_serial_number() {
     let reencoded = cert.to_der().unwrap();
     assert_eq!(der_encoded_cert, reencoded.as_slice());
 }
+
+#[cfg(all(feature = "pem", feature = "hazmat"))]
+#[test]
+fn decode_cert_overlength_serial_number() {
+    use der::{pem::LineEnding, DecodePem, EncodePem};
+    use x509_cert::certificate::CertificateInner;
+
+    let pem_encoded_cert = include_bytes!("examples/qualcomm.pem");
+
+    assert!(Certificate::from_pem(pem_encoded_cert).is_err());
+
+    let cert = CertificateInner::<x509_cert::certificate::Raw>::from_pem(pem_encoded_cert).unwrap();
+    assert_eq!(
+        cert.tbs_certificate.serial_number.as_bytes(),
+        &[
+            0, 132, 206, 11, 246, 160, 254, 130, 78, 229, 229, 6, 202, 168, 157, 120, 198, 21, 1,
+            98, 87, 113
+        ]
+    );
+    assert_eq!(cert.tbs_certificate.serial_number.as_bytes().len(), 22);
+
+    let reencoded = cert.to_pem(LineEnding::LF).unwrap();
+    assert_eq!(pem_encoded_cert, reencoded.as_bytes());
+}

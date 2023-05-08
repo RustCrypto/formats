@@ -6,12 +6,12 @@ use std::{
     collections::HashMap,
     fmt,
     fs::File,
-    io::{Read, Write},
+    io::{self, Read, Write},
     process::{Command, Stdio},
 };
 use tempfile::tempdir;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Status {
     NotApplicable,
     NotEffective,
@@ -29,7 +29,7 @@ impl Status {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LintStatus {
     pub status: Status,
     pub details: Option<String>,
@@ -159,7 +159,13 @@ pub fn check_certificate(pem: &[u8], ignored: &[&str]) {
         .stderr(Stdio::inherit())
         .stdout(Stdio::piped())
         .spawn()
-        .expect("zlint failed");
+        .unwrap_or_else(|e| match e.kind() {
+            io::ErrorKind::NotFound => {
+                panic!("error running 'zlint': command not found. Is it installed?")
+            }
+            _ => panic!("error running 'zlint': {:?}", e),
+        });
+
     let mut stdout = child.stdout.take().unwrap();
     let exit_status = child.wait().expect("get zlint status");
 
