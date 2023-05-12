@@ -132,8 +132,8 @@ fn decode_rdn() {
 
     let mut from_scratch2 = RelativeDistinguishedName::default();
     assert!(from_scratch2.0.add(atav2a.clone()).is_ok());
-    // fails when caller adds items not in DER lexicographical order
-    assert!(from_scratch2.0.add(atav1a.clone()).is_err());
+    // does not fail when caller adds items not in DER lexicographical order
+    assert!(from_scratch2.0.add(atav1a.clone()).is_ok());
 
     // allow out-of-order RDNs (see: RustCrypto/formats#625)
     assert!(RelativeDistinguishedName::from_der(
