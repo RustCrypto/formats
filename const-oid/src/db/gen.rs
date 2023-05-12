@@ -1379,6 +1379,30 @@ pub mod rfc5280 {
         crate::ObjectIdentifier::new_unwrap("2.5.29.9");
     pub const ID_AT: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4");
 }
+pub mod rfc5652 {
+    pub const ID_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.1");
+    pub const ID_SIGNED_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.2");
+    pub const ID_ENVELOPED_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.3");
+    pub const ID_DIGESTED_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.5");
+    pub const ID_ENCRYPTED_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.7.6");
+    pub const ID_CT_AUTH_DATA: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.2");
+    pub const ID_CT_CONTENT_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.6");
+    pub const ID_CONTENT_TYPE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.3");
+    pub const ID_MESSAGE_DIGEST: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.4");
+    pub const ID_SIGNING_TIME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.5");
+    pub const ID_COUNTERSIGNATURE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.6");
+}
 pub mod rfc5911 {
     pub const ID_PBKDF_2: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12");
@@ -3549,6 +3573,17 @@ pub const DB: super::Database<'static> = super::Database(&[
         "id-ce-subjectDirectoryAttributes",
     ),
     (&rfc5280::ID_AT, "id-at"),
+    (&rfc5652::ID_DATA, "id-data"),
+    (&rfc5652::ID_SIGNED_DATA, "id-signedData"),
+    (&rfc5652::ID_ENVELOPED_DATA, "id-envelopedData"),
+    (&rfc5652::ID_DIGESTED_DATA, "id-digestedData"),
+    (&rfc5652::ID_ENCRYPTED_DATA, "id-encryptedData"),
+    (&rfc5652::ID_CT_AUTH_DATA, "id-ct-authData"),
+    (&rfc5652::ID_CT_CONTENT_INFO, "id-ct-contentInfo"),
+    (&rfc5652::ID_CONTENT_TYPE, "id-contentType"),
+    (&rfc5652::ID_MESSAGE_DIGEST, "id-messageDigest"),
+    (&rfc5652::ID_SIGNING_TIME, "id-signingTime"),
+    (&rfc5652::ID_COUNTERSIGNATURE, "id-countersignature"),
     (&rfc5911::ID_PBKDF_2, "id-PBKDF2"),
     (&rfc5911::ID_DATA, "id-data"),
     (&rfc5911::ID_SIGNED_DATA, "id-signedData"),
