@@ -432,11 +432,12 @@ where
     T: DerOrd,
 {
     let mut i = 0;
-    let mut it = slice.iter();
-    while let Some(x) = it.next() {
+    for x in slice.iter() {
         if x.der_cmp(element)? == Ordering::Greater {
             return Ok(i);
         }
+        // Won't overflow as slice is limited
+        #[allow(clippy::integer_arithmetic)]
         i += 1;
     }
     Ok(i)
