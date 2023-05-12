@@ -438,7 +438,9 @@ where
         }
         // Won't overflow as slice is limited
         #[allow(clippy::integer_arithmetic)]
-        i += 1;
+        {
+            i += 1;
+        }
     }
     Ok(i)
 }
