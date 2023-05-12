@@ -220,21 +220,7 @@ where
     /// [`DerOrd`] impl on `T`.
     pub fn add(&mut self, new_elem: T) -> Result<()> {
         // Insert at lexicographically correct position
-        fn position<T>(slice: &[T], new_elem: &T) -> Result<usize>
-        where
-            T: DerOrd,
-        {
-            let mut i = 0;
-            let mut it = slice.iter();
-            while let Some(x) = it.next() {
-                if x.der_cmp(new_elem)? == Ordering::Greater {
-                    return Ok(i);
-                }
-                i += 1;
-            }
-            Ok(i)
-        }
-        let index_of_first_greater_element = position(&self.inner, &new_elem)?;
+        let index_of_first_greater_element = der_position(&self.inner, &new_elem)?;
         self.inner.insert(index_of_first_greater_element, new_elem);
         Ok(())
     }
@@ -437,6 +423,25 @@ fn validate<T: DerOrd>(slice: &[T]) -> Result<()> {
     Ok(())
 }
 
+/// Find the first element in a slice, that is (DerOrd-)greater then a given element `element`.
+/// Returns the index of this element. In order to maintain lexicographical order of a `SET OF`,
+/// `element` may be inserted at this position.
+#[cfg(feature = "alloc")]
+fn der_position<T>(slice: &[T], element: &T) -> Result<usize>
+where
+    T: DerOrd,
+{
+    let mut i = 0;
+    let mut it = slice.iter();
+    while let Some(x) = it.next() {
+        if x.der_cmp(element)? == Ordering::Greater {
+            return Ok(i);
+        }
+        i += 1;
+    }
+    Ok(i)
+}
+
 #[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::{SetOf, SetOfVec};
@@ -473,24 +478,24 @@ mod tests {
         let vec = vec![1, 2, 4, 5];
         let mut set = SetOfVec::try_from(vec).unwrap();
         set.add(3).expect(message);
-        assert_eq!(set.as_ref(), &[1, 2, 3, 4, 5], message);
+        assert_eq!(set.as_ref(), &[1, 2, 3, 4, 5], "{}", message);
 
         let message = "could not add at begin of SetOfVec";
         let vec = vec![1, 2, 3, 4];
         let mut set = SetOfVec::try_from(vec).unwrap();
         set.add(0).expect(message);
-        assert_eq!(set.as_ref(), &[0, 1, 2, 3, 4], message);
+        assert_eq!(set.as_ref(), &[0, 1, 2, 3, 4], "{}", message);
 
         let message = "could not add to end of SetOfVec";
         let vec = vec![1, 2, 3, 4];
         let mut set = SetOfVec::try_from(vec).unwrap();
         set.add(5).expect(message);
-        assert_eq!(set.as_ref(), &[1, 2, 3, 4, 5], message);
+        assert_eq!(set.as_ref(), &[1, 2, 3, 4, 5], "{}", message);
 
         let message = "could not add to empty SetOfVec";
         let vec = vec![];
         let mut set = SetOfVec::try_from(vec).unwrap();
         set.add(1).expect(message);
-        assert_eq!(set.as_ref(), &[1], message);
+        assert_eq!(set.as_ref(), &[1], "{}", message);
     }
 }
