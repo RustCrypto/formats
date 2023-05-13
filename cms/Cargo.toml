@@ -7,8 +7,8 @@ Pure Rust implementation of the Cryptographic Message Syntax (CMS) as described 
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/cms"
-categories = ["cryptography", "data-structures", "encoding", "no-std"]
-keywords = ["crypto"]
+categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
+keywords = ["crypto", "pkcs7", "signing"]
 readme = "README.md"
 edition = "2021"
 rust-version = "1.65"
