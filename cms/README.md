@@ -7,16 +7,23 @@
 ![Rust Version][rustc-image]
 [![Project Chat][chat-image]][chat-link]
 
-Pure Rust implementation of the Cryptographic Message Syntax (CMS) as described in [RFC 5652] and in [RFC 3274].
+Pure Rust implementation of the Cryptographic Message Syntax (CMS) as described
+in [RFC 5652], [RFC 5911], and in [RFC 3274].
 
 [Documentation][docs-link]
 
-## Status
+## About
 
-tl;dr: not ready to use.
+Cryptographic Message Syntax (CMS) is an IETF standard for encrypted messages,
+and can be used to sign and/or encrypt data.  It uses a certificate-based
+architecture for authenticating principals who can exchange encrypted and/or
+signed messages.
 
-This is a work-in-progress implementation which is at an early stage of
-development.
+CMS is based on the syntax of PKCS #7, itself based on the Privacy-Enhanced
+Mail (PEM) standard.
+
+It's used in many cryptographic standards, such as S/MIME, PKCS#12 and the
+RFC 3161 digital timestamping protocol.
 
 ## Minimum Supported Rust Version
 
@@ -56,5 +63,6 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 5652]: https://datatracker.ietf.org/doc/html/rfc5652
 [RFC 3274]: https://datatracker.ietf.org/doc/html/rfc3274
+[RFC 5652]: https://datatracker.ietf.org/doc/html/rfc5652
+[RFC 5911]: https://datatracker.ietf.org/doc/html/rfc5652
