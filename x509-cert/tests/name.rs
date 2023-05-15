@@ -132,8 +132,10 @@ fn decode_rdn() {
 
     let mut from_scratch2 = RelativeDistinguishedName::default();
     assert!(from_scratch2.0.add(atav2a.clone()).is_ok());
-    // does not fail when caller adds items not in DER lexicographical order
-    assert!(from_scratch2.0.add(atav1a.clone()).is_ok());
+    // fails when caller adds items not in DER lexicographical order
+    // note: there exists a proposal for `SetOfVec::add()` to accept elements in any order. this
+    // is under discussion, but might be rejected.
+    assert!(from_scratch2.0.add(atav1a.clone()).is_err());
 
     // allow out-of-order RDNs (see: RustCrypto/formats#625)
     assert!(RelativeDistinguishedName::from_der(
