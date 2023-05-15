@@ -218,13 +218,12 @@ where
     ///
     /// Note: this is an inherent method instead of an impl of the
     /// [`FromIterator`] trait in order to be fallible.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_iter<I>(iter: I) -> Result<Self>
     where
         I: IntoIterator<Item = T>,
     {
-        let mut ret = Self::new();
-        ret.extend(iter)?;
-        Ok(ret)
+        Vec::from_iter(iter).try_into()
     }
 
     /// Add an element to this [`SetOfVec`].
