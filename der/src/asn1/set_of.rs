@@ -214,6 +214,18 @@ where
         }
     }
 
+    /// Create a new [`SetOfVec`] from the given iterator.
+    ///
+    /// Note: this is an inherent method instead of an impl of the
+    /// [`FromIterator`] trait in order to be fallible.
+    #[allow(clippy::should_implement_trait)]
+    pub fn from_iter<I>(iter: I) -> Result<Self>
+    where
+        I: IntoIterator<Item = T>,
+    {
+        Vec::from_iter(iter).try_into()
+    }
+
     /// Add an element to this [`SetOfVec`].
     ///
     /// Items MUST be added in lexicographical order according to the
@@ -228,6 +240,18 @@ where
 
         self.inner.push(new_elem);
         Ok(())
+    }
+
+    /// Extend a [`SetOfVec`] using an iterator.
+    ///
+    /// Note: this is an inherent method instead of an impl of the
+    /// [`Extend`] trait in order to be fallible.
+    pub fn extend<I>(&mut self, iter: I) -> Result<()>
+    where
+        I: IntoIterator<Item = T>,
+    {
+        self.inner.extend(iter);
+        der_sort(&mut self.inner)
     }
 
     /// Borrow the elements of this [`SetOfVec`] as a slice.
