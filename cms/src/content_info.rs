@@ -61,7 +61,7 @@ impl TryFrom<Certificate> for ContentInfo {
 
     fn try_from(cert: Certificate) -> der::Result<Self> {
         let mut certs = CertificateSet(Default::default());
-        certs.0.add(CertificateChoices::Certificate(cert))?;
+        certs.0.insert(CertificateChoices::Certificate(cert))?;
 
         // include empty CRLs field instead of omitting it to match OpenSSL's behavior
         let sd = SignedData {
@@ -93,7 +93,7 @@ impl TryFrom<PkiPath> for ContentInfo {
     fn try_from(pki_path: PkiPath) -> der::Result<Self> {
         let mut certs = CertificateSet(Default::default());
         for cert in pki_path {
-            certs.0.add(CertificateChoices::Certificate(cert))?;
+            certs.0.insert(CertificateChoices::Certificate(cert))?;
         }
 
         // include empty CRLs field instead of omitting it to match OpenSSL's behavior
