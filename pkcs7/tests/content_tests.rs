@@ -207,7 +207,7 @@ fn create_pkcs7_signed_data() {
             parameters: None,
         };
         let mut digest_algorithms = DigestAlgorithmIdentifiers::new();
-        digest_algorithms.add(digest_algorithm).unwrap();
+        digest_algorithms.insert(digest_algorithm).unwrap();
         digest_algorithms
     };
 
@@ -223,7 +223,7 @@ fn create_pkcs7_signed_data() {
         let cert: x509_cert::Certificate = x509_cert::Certificate::from_pem(cert_pem).unwrap();
         let cert_choice = CertificateChoices::Certificate(cert);
         let mut certs = CertificateSet::new();
-        certs.add(cert_choice).unwrap();
+        certs.insert(cert_choice).unwrap();
         Some(certs)
     };
 

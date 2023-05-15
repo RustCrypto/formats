@@ -44,21 +44,32 @@ where
         }
     }
 
-    /// Add an element to this [`SetOf`].
+    /// Add an item to this [`SetOf`].
     ///
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
+    #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
     pub fn add(&mut self, new_elem: T) -> Result<()> {
+        self.insert_ordered(new_elem)
+    }
+
+    /// Insert an item into this [`SetOf`].
+    pub fn insert(&mut self, item: T) -> Result<()> {
+        self.inner.push(item)?;
+        der_sort(self.inner.as_mut())
+    }
+
+    /// Insert an item into this [`SetOf`].
+    ///
+    /// Items MUST be added in lexicographical order according to the
+    /// [`DerOrd`] impl on `T`.
+    pub fn insert_ordered(&mut self, item: T) -> Result<()> {
         // Ensure set elements are lexicographically ordered
-        if let Some(last_elem) = self.inner.last() {
-            match new_elem.der_cmp(last_elem)? {
-                Ordering::Less => return Err(ErrorKind::SetOrdering.into()),
-                Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
-                Ordering::Greater => (),
-            }
+        if let Some(last) = self.inner.last() {
+            check_der_ordering(last, &item)?;
         }
 
-        self.inner.add(new_elem)
+        self.inner.push(item)
     }
 
     /// Get the nth element from this [`SetOf`].
@@ -102,7 +113,7 @@ where
             let mut result = Self::new();
 
             while !reader.is_finished() {
-                result.inner.add(T::decode(reader)?)?;
+                result.inner.push(T::decode(reader)?)?;
             }
 
             der_sort(result.inner.as_mut())?;
@@ -149,7 +160,7 @@ where
         let mut result = SetOf::new();
 
         for elem in arr {
-            result.add(elem)?;
+            result.insert_ordered(elem)?;
         }
 
         Ok(result)
@@ -232,16 +243,9 @@ where
     ///
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
-    pub fn add(&mut self, new_elem: T) -> Result<()> {
-        // Ensure set elements are lexicographically ordered
-        if let Some(last_elem) = self.inner.last() {
-            if new_elem.der_cmp(last_elem)? != Ordering::Greater {
-                return Err(ErrorKind::SetOrdering.into());
-            }
-        }
-
-        self.inner.push(new_elem);
-        Ok(())
+    #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
+    pub fn add(&mut self, item: T) -> Result<()> {
+        self.insert_ordered(item)
     }
 
     /// Extend a [`SetOfVec`] using an iterator.
@@ -254,6 +258,26 @@ where
     {
         self.inner.extend(iter);
         der_sort(&mut self.inner)
+    }
+
+    /// Insert an item into this [`SetOfVec`]. Must be unique.
+    pub fn insert(&mut self, item: T) -> Result<()> {
+        self.inner.push(item);
+        der_sort(&mut self.inner)
+    }
+
+    /// Insert an item into this [`SetOfVec`]. Must be unique.
+    ///
+    /// Items MUST be added in lexicographical order according to the
+    /// [`DerOrd`] impl on `T`.
+    pub fn insert_ordered(&mut self, item: T) -> Result<()> {
+        // Ensure set elements are lexicographically ordered
+        if let Some(last) = self.inner.last() {
+            check_der_ordering(last, &item)?;
+        }
+
+        self.inner.push(item);
+        Ok(())
     }
 
     /// Borrow the elements of this [`SetOfVec`] as a slice.
@@ -406,6 +430,15 @@ where
 
     fn size_hint(_depth: usize) -> (usize, Option<usize>) {
         (0, None)
+    }
+}
+
+/// Ensure set elements are lexicographically ordered using [`DerOrd`].
+fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<()> {
+    match a.der_cmp(b)? {
+        Ordering::Less => Ok(()),
+        Ordering::Equal => Err(ErrorKind::SetDuplicate.into()),
+        Ordering::Greater => Err(ErrorKind::SetOrdering.into()),
     }
 }
 

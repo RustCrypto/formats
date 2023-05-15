@@ -501,7 +501,7 @@ where
     fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
         self.info
             .attributes
-            .add(self.extension_req.clone().try_into()?)?;
+            .insert(self.extension_req.clone().try_into()?)?;
 
         self.info.to_der()
     }

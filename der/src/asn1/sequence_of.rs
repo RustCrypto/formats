@@ -30,7 +30,7 @@ impl<T, const N: usize> SequenceOf<T, N> {
 
     /// Add an element to this [`SequenceOf`].
     pub fn add(&mut self, element: T) -> Result<()> {
-        self.inner.add(element)
+        self.inner.push(element)
     }
 
     /// Get an element of this [`SequenceOf`].
