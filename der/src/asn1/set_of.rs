@@ -51,8 +51,10 @@ where
     pub fn add(&mut self, new_elem: T) -> Result<()> {
         // Ensure set elements are lexicographically ordered
         if let Some(last_elem) = self.inner.last() {
-            if new_elem.der_cmp(last_elem)? != Ordering::Greater {
-                return Err(ErrorKind::SetOrdering.into());
+            match new_elem.der_cmp(last_elem)? {
+                Ordering::Less => return Err(ErrorKind::SetOrdering.into()),
+                Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
+                Ordering::Greater => (),
             }
         }
 
@@ -360,7 +362,6 @@ where
     type Error = Error;
 
     fn try_from(mut vec: Vec<T>) -> Result<SetOfVec<T>> {
-        // TODO(tarcieri): use `[T]::sort_by` here?
         der_sort(vec.as_mut_slice())?;
         Ok(SetOfVec { inner: vec })
     }
@@ -422,9 +423,15 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
     for i in 0..slice.len() {
         let mut j = i;
 
-        while j > 0 && slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
-            slice.swap(j - 1, j);
-            j -= 1;
+        while j > 0 {
+            match slice[j - 1].der_cmp(&slice[j])? {
+                Ordering::Less => break,
+                Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
+                Ordering::Greater => {
+                    slice.swap(j - 1, j);
+                    j -= 1;
+                }
+            }
         }
     }
 
@@ -452,21 +459,28 @@ fn validate<T: DerOrd>(slice: &[T]) -> Result<()> {
     Ok(())
 }
 
-#[cfg(all(test, feature = "alloc"))]
+#[cfg(test)]
 mod tests {
-    use super::{SetOf, SetOfVec};
-    use alloc::vec::Vec;
+    use super::SetOf;
+    #[cfg(feature = "alloc")]
+    use super::SetOfVec;
+    use crate::ErrorKind;
 
     #[test]
     fn setof_tryfrom_array() {
         let arr = [3u16, 2, 1, 65535, 0];
         let set = SetOf::try_from(arr).unwrap();
-        assert_eq!(
-            set.iter().cloned().collect::<Vec<u16>>(),
-            &[0, 1, 2, 3, 65535]
-        );
+        assert!(set.iter().copied().eq([0, 1, 2, 3, 65535]));
     }
 
+    #[test]
+    fn setof_tryfrom_array_reject_duplicates() {
+        let arr = [1u16, 1];
+        let err = SetOf::try_from(arr).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::SetDuplicate);
+    }
+
+    #[cfg(feature = "alloc")]
     #[test]
     fn setofvec_tryfrom_array() {
         let arr = [3u16, 2, 1, 65535, 0];
@@ -480,5 +494,13 @@ mod tests {
         let vec = vec![3u16, 2, 1, 65535, 0];
         let set = SetOfVec::try_from(vec).unwrap();
         assert_eq!(set.as_ref(), &[0, 1, 2, 3, 65535]);
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn setofvec_tryfrom_vec_reject_duplicates() {
+        let vec = vec![1u16, 1];
+        let err = SetOfVec::try_from(vec).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::SetDuplicate);
     }
 }
