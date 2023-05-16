@@ -227,6 +227,9 @@ pub enum ErrorKind {
         oid: ObjectIdentifier,
     },
 
+    /// `SET` cannot contain duplicates.
+    SetDuplicate,
+
     /// `SET` ordering error: items not in canonical order.
     SetOrdering,
 
@@ -329,6 +332,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::OidUnknown { oid } => {
                 write!(f, "unknown/unsupported OID: {}", oid)
             }
+            ErrorKind::SetDuplicate => write!(f, "SET OF contains duplicate"),
             ErrorKind::SetOrdering => write!(f, "SET OF ordering error"),
             ErrorKind::Overflow => write!(f, "integer overflow"),
             ErrorKind::Overlength => write!(f, "ASN.1 DER message is too long"),

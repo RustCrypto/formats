@@ -1,10 +1,7 @@
 [package]
 name = "pkcs7"
-version = "0.4.0"
-description = """
-Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #7:
-PKCS #7: Cryptographic Message Syntax Version 1.5 (RFC 5652)
-"""
+version = "0.4.1"
+description = "DEPRECATED: use the `cms` crate instead"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/pkcs7"

@@ -3,10 +3,10 @@
 use alloc::vec;
 use core::fmt;
 use der::{asn1::BitString, referenced::OwnedToRef, Encode};
-use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, SignatureEncoding, Signer};
+use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, Signer};
 use spki::{
-    DynSignatureAlgorithmIdentifier, EncodePublicKey, SubjectPublicKeyInfoOwned,
-    SubjectPublicKeyInfoRef,
+    DynSignatureAlgorithmIdentifier, EncodePublicKey, SignatureBitStringEncoding,
+    SubjectPublicKeyInfoOwned, SubjectPublicKeyInfoRef,
 };
 
 use crate::{
@@ -421,12 +421,11 @@ pub trait Builder: Sized {
     fn build<Signature>(mut self) -> Result<Self::Output>
     where
         Self::Signer: Signer<Signature>,
-        Signature: SignatureEncoding,
+        Signature: SignatureBitStringEncoding,
     {
         let blob = self.finalize()?;
 
-        let signature = self.signer().try_sign(&blob)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+        let signature = self.signer().try_sign(&blob)?.to_bitstring()?;
 
         self.assemble(signature)
     }
@@ -435,12 +434,14 @@ pub trait Builder: Sized {
     fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<Self::Output>
     where
         Self::Signer: RandomizedSigner<Signature>,
-        Signature: SignatureEncoding,
+        Signature: SignatureBitStringEncoding,
     {
         let blob = self.finalize()?;
 
-        let signature = self.signer().try_sign_with_rng(rng, &blob)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+        let signature = self
+            .signer()
+            .try_sign_with_rng(rng, &blob)?
+            .to_bitstring()?;
 
         self.assemble(signature)
     }
@@ -500,7 +501,7 @@ where
     fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
         self.info
             .attributes
-            .add(self.extension_req.clone().try_into()?)?;
+            .insert(self.extension_req.clone().try_into()?)?;
 
         self.info.to_der()
     }

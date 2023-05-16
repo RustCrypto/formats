@@ -122,8 +122,8 @@ fn decode_rdn() {
     assert_eq!(utf8a.to_string(), "JOHN SMITH");
 
     let mut from_scratch = RelativeDistinguishedName::default();
-    assert!(from_scratch.0.add(atav1a.clone()).is_ok());
-    assert!(from_scratch.0.add(atav2a.clone()).is_ok());
+    assert!(from_scratch.0.insert(atav1a.clone()).is_ok());
+    assert!(from_scratch.0.insert(atav2a.clone()).is_ok());
     let reencoded = from_scratch.to_der().unwrap();
     assert_eq!(
         reencoded,
@@ -131,9 +131,9 @@ fn decode_rdn() {
     );
 
     let mut from_scratch2 = RelativeDistinguishedName::default();
-    assert!(from_scratch2.0.add(atav2a.clone()).is_ok());
+    assert!(from_scratch2.0.insert_ordered(atav2a.clone()).is_ok());
     // fails when caller adds items not in DER lexicographical order
-    assert!(from_scratch2.0.add(atav1a.clone()).is_err());
+    assert!(from_scratch2.0.insert_ordered(atav1a.clone()).is_err());
 
     // allow out-of-order RDNs (see: RustCrypto/formats#625)
     assert!(RelativeDistinguishedName::from_der(
