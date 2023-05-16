@@ -7,8 +7,8 @@ Pure Rust implementation for Generic Security Service Application Program Interf
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/gssapi"
-categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
-keywords = ["crypto", "key", "gssapi", "rfc1509", "rfc2478", "rfc4178", "ms-spng"]
+categories = ["cryptography", "authentication", "encoding", "no-std", "parser-implementations"]
+keywords = ["crypto", "gssapi", "kerberos"]
 readme = "README.md"
 edition = "2021"
 rust-version = "1.65"
