@@ -35,10 +35,10 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/pkcs12
-[crate-link]: https://crates.io/crates/pkcs12
-[docs-image]: https://docs.rs/pkcs12/badge.svg
-[docs-link]: https://docs.rs/pkcs12/
+[crate-image]: https://buildstats.info/crate/gss-api
+[crate-link]: https://crates.io/crates/gss-api
+[docs-image]: https://docs.rs/gss-api/badge.svg
+[docs-link]: https://docs.rs/gss-api/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.65+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
