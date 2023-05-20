@@ -692,7 +692,7 @@ dependencies = [
  "der",
  "hex-literal",
  "spki",
- "x509-cert 0.2.1",
+ "x509-cert",
 ]
 
 [[package]]
