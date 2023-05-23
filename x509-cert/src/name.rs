@@ -3,7 +3,8 @@
 use crate::attr::AttributeTypeAndValue;
 use alloc::vec::Vec;
 use core::{fmt, str::FromStr};
-use der::{asn1::SetOfVec, Encode};
+use std::cmp::Ordering;
+use der::{asn1::SetOfVec, DerOrd, Encode};
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
 ///
@@ -163,6 +164,25 @@ impl FromStr for RelativeDistinguishedName {
             .collect::<der::Result<Vec<_>>>()?
             .try_into()
             .map(Self)
+    }
+}
+
+impl TryFrom<Vec<AttributeTypeAndValue>> for RelativeDistinguishedName
+{
+    type Error = der::Error;
+
+    fn try_from(mut vec: Vec<AttributeTypeAndValue>) -> der::Result<RelativeDistinguishedName> {
+        let slice = vec.as_mut_slice();
+        // This is der_sort from set_of.rs, which is inaccessible from here
+        for i in 0..slice.len() {
+            let mut j = i;
+
+            while j > 0 && slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
+                slice.swap(j - 1, j);
+                j -= 1;
+            }
+        }
+        Ok(RelativeDistinguishedName(SetOfVec::try_from(vec)?))
     }
 }
 

@@ -15,8 +15,6 @@
     unused_qualifications
 )]
 
-extern crate alloc;
-
 // TODO NM #[cfg(feature = "std")]
 extern crate std;
 

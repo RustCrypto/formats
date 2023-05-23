@@ -269,7 +269,7 @@ dependencies = [
  "sha3",
  "signature",
  "spki",
- "x509-cert 0.2.1",
+ "x509-cert 0.2.2-pre",
 ]
 
 [[package]]

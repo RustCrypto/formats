@@ -15,8 +15,8 @@ rust-version = "1.65"
 
 [dependencies]
 der = { version = "0.7", features = ["alloc", "derive", "oid", "pem", "std"] } # TODO NM std only for builder feature
-spki = { version = "0.7" }
-x509-cert = { version = "0.2", default-features = false, features = ["pem"] }
+spki = { version = "0.7", features = ["alloc"] } # TODO NM alloc only for builder feature
+x509-cert = { version = "0.2.2-pre", default-features = false, features = ["pem", "builder"], path = "../x509-cert"} # TODO NM builder only for builder feature
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 
 # optional dependencies

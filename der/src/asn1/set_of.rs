@@ -10,7 +10,7 @@
 //! However, all types in this module sort elements of a set at decode-time,
 //! ensuring they'll be in the proper order if reserialized.
 
-use crate::{arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer};
+use crate::{arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer, der_sort};
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
@@ -393,29 +393,6 @@ where
     fn size_hint(_depth: usize) -> (usize, Option<usize>) {
         (0, None)
     }
-}
-
-/// Sort a mut slice according to its [`DerOrd`], returning any errors which
-/// might occur during the comparison.
-///
-/// The algorithm is insertion sort, which should perform well when the input
-/// is mostly sorted to begin with.
-///
-/// This function is used rather than Rust's built-in `[T]::sort_by` in order
-/// to support heapless `no_std` targets as well as to enable bubbling up
-/// sorting errors.
-#[allow(clippy::integer_arithmetic)]
-fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
-    for i in 0..slice.len() {
-        let mut j = i;
-
-        while j > 0 && slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
-            slice.swap(j - 1, j);
-            j -= 1;
-        }
-    }
-
-    Ok(())
 }
 
 /// Validate the elements of a `SET OF`, ensuring that they are all in order

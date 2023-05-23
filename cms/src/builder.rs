@@ -6,26 +6,27 @@ use crate::cert::CertificateChoices;
 use crate::content_info::{CmsVersion, ContentInfo};
 use crate::revocation::{RevocationInfoChoice, RevocationInfoChoices};
 use crate::signed_data::{
-    CertificateSet, DigestAlgorithmIdentifiers, EncapsulatedContentInfo, SignedAttributes,
-    SignedData, SignerInfo, SignerInfos,
+    CertificateSet, DigestAlgorithmIdentifiers, EncapsulatedContentInfo, SignatureValue,
+    SignedAttributes, SignedData, SignerIdentifier, SignerInfo, SignerInfos, UnsignedAttributes,
 };
 use crate::{PKCS9_CONTENT_TYPE_OID, PKCS9_MESSAGE_DIGEST_OID, PKCS9_SIGNING_TIME_OID};
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
-use alloc::format;
-use alloc::string::{String, ToString};
+use alloc::string::String;
 use alloc::vec::Vec;
 use const_oid::ObjectIdentifier;
 use core::cmp::Ordering;
 use core::fmt;
-use der::asn1::{OctetString, OctetStringRef, SetOfVec};
+use der::asn1::{BitString, OctetStringRef, SetOfVec};
 use der::oid::db::DB;
-use der::{Any, AnyRef, DateTime, Decode, Encode, Tag, ValueOrd};
+use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
 use signature::digest::DynDigest;
-use signature::{SignatureEncoding, Signer};
-use spki::AlgorithmIdentifierOwned;
+use signature::{Keypair, SignatureEncoding, Signer};
+use spki::{AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey};
 use std::time::SystemTime;
+use std::vec;
 use x509_cert::attr::{Attribute, AttributeValue};
+use x509_cert::builder::Builder;
 
 /// Error type
 #[derive(Debug)]
@@ -75,28 +76,239 @@ impl From<signature::Error> for Error {
 
 type Result<T> = core::result::Result<T, Error>;
 
-/// Builder for signedData PKCS #7
-pub struct SignedDataBuilder {
+/// Collect info needed for creating a `SignerInfo`.
+/// Calling `build()` on this struct will
+/// - calculate the correct `CMSVersion` (depends on `sid`)
+/// - calculate the signature
+/// - set the signing time attribute
+/// - create a `SignerInfo` object
+pub struct SignerInfoBuilder<'s, S> {
+    signer: &'s S,
+    sid: SignerIdentifier,
+    digest_algorithm: AlgorithmIdentifierOwned,
+    signed_attributes: Option<Vec<Attribute>>,
+    signature_algorithm: AlgorithmIdentifierOwned,
+    unsigned_attributes: Option<Vec<Attribute>>,
+    encapsulated_content_info: &'s EncapsulatedContentInfo,
+    external_message_digest: Option<&'s [u8]>,
+}
+
+impl<'s, S> SignerInfoBuilder<'s, S>
+where
+    S: Keypair + DynSignatureAlgorithmIdentifier,
+    S::VerifyingKey: EncodePublicKey,
+{
+    /// Create a new `SignerBuilder`
+    pub fn new(
+        signer: &'s S,
+        sid: SignerIdentifier,
+        digest_algorithm: AlgorithmIdentifierOwned,
+        signature_algorithm: AlgorithmIdentifierOwned,
+        encapsulated_content_info: &'s EncapsulatedContentInfo,
+        external_message_digest: Option<&'s [u8]>,
+    ) -> Result<Self> {
+        Ok(SignerInfoBuilder {
+            signer,
+            sid,
+            digest_algorithm,
+            signed_attributes: None,
+            signature_algorithm,
+            unsigned_attributes: None,
+            encapsulated_content_info,
+            external_message_digest,
+        })
+    }
+
+    /// Add a "signed" attribute. The attribute will be signed together with the other "signed"
+    /// attributes, when `build()` is called.
+    pub fn add_signed_attribute(&mut self, signed_attribute: Attribute) -> Result<&mut Self> {
+        if let Some(signed_attributes) = &mut self.signed_attributes {
+            signed_attributes.push(signed_attribute);
+        } else {
+            self.signed_attributes = Some(vec![signed_attribute]);
+        }
+        Ok(self)
+    }
+
+    /// Add an unsigned attribute according to .
+    pub fn add_unsigned_attribute(&mut self, unsigned_attribute: Attribute) -> Result<&mut Self> {
+        if let Some(unsigned_attributes) = &mut self.unsigned_attributes {
+            unsigned_attributes.push(unsigned_attribute);
+        } else {
+            self.unsigned_attributes = Some(vec![unsigned_attribute]);
+        }
+        Ok(self)
+    }
+
+    /// Calculate the CMSVersion of the signer info.
+    /// Intended to be called during building the `SignerInfo`.
+    /// RFC 5652 § 5.3: version is the syntax version number.  If the SignerIdentifier is
+    /// the CHOICE issuerAndSerialNumber, then the version MUST be 1. If
+    /// the SignerIdentifier is subjectKeyIdentifier, then the version MUST be 3.
+    pub fn version(&self) -> CmsVersion {
+        match self.sid {
+            SignerIdentifier::IssuerAndSerialNumber(_) => CmsVersion::V1,
+            SignerIdentifier::SubjectKeyIdentifier(_) => CmsVersion::V3,
+        }
+    }
+}
+
+impl<'s, S> Builder for SignerInfoBuilder<'s, S>
+where
+    S: Keypair + DynSignatureAlgorithmIdentifier,
+    S::VerifyingKey: EncodePublicKey,
+{
+    type Signer = S;
+    type Output = SignerInfo;
+
+    fn signer(&self) -> &Self::Signer {
+        self.signer
+    }
+
+    /// Calculate the data to be signed
+    /// [RFC 5652 § 5.4](https://datatracker.ietf.org/doc/html/rfc5652#section-5.4)
+    /// If an `external_message_digest` is passed in, it is assumed, that we are signing external
+    /// content (see RFC 5652 § 5.2). In this case, the `eContent` in `EncapsulatedContentInfo`
+    /// must be `None`.
+    fn finalize(&mut self) -> der::Result<Vec<u8>> {
+        let message_digest = match self.external_message_digest {
+            Some(external_content_digest) => {
+                if self.encapsulated_content_info.econtent.is_some() {
+                    // Encapsulated content must be empty, if external digest is given.
+                    return Err(der::Error::from(ErrorKind::Failed));
+                }
+                external_content_digest.to_vec()
+            }
+            None => match &self.encapsulated_content_info.econtent {
+                None => {
+                    // Content missing, cannot sign
+                    return Err(der::Error::from(ErrorKind::Failed));
+                }
+                Some(content) => {
+                    let mut hasher = get_hasher(&self.digest_algorithm).ok_or_else(|| {
+                        // Unsupported hash algorithm: {}, &self.digest_algorithm.oid.to_string()
+                        der::Error::from(ErrorKind::Failed)
+                    })?;
+                    // TODO NM is this value DER encoded TLV or is it just V? for hashing,
+                    // TODO NM T and L must not be used (only V is hashed).
+                    hasher.update(content.value());
+                    hasher.finalize_reset().to_vec()
+                }
+            },
+        };
+
+        // We set the signing time attribute. In this case, signed attributes are used and
+        // will be signed instead of the eContent itself.
+        if let Some(signed_attributes) = &mut self.signed_attributes {
+            if !signed_attributes
+                .iter()
+                .any(|attr| attr.oid.cmp(&PKCS9_SIGNING_TIME_OID) == Ordering::Equal)
+            {
+                // Add current time as signing time
+                signed_attributes.push(
+                    create_signing_time_attribute()
+                        .map_err(|_| der::Error::from(ErrorKind::Failed))?,
+                );
+            }
+        } else {
+            // Add signed attributes with signing time attribute and content type attribute
+            self.signed_attributes =
+                Some(vec![create_signing_time_attribute()
+                    .map_err(|_| der::Error::from(ErrorKind::Failed))?]);
+        }
+
+        // Add digest attribute to (to be) signed attributes
+        let signed_attributes = self
+            .signed_attributes
+            .as_mut()
+            .expect("Signed attributes must be present.");
+        signed_attributes.push(
+            create_message_digest_attribute(&message_digest)
+                .map_err(|_| der::Error::from(ErrorKind::Failed))?,
+        );
+
+        // The content-type attribute type specifies the content type of the
+        // ContentInfo within signed-data or authenticated-data.  The content-
+        // type attribute type MUST be present whenever signed attributes are
+        // present in signed-data or authenticated attributes present in
+        // authenticated-data.  The content-type attribute value MUST match the
+        // encapContentInfo eContentType value in the signed-data or
+        // authenticated-data.
+        let econtent_type = self.encapsulated_content_info.econtent_type;
+        let signed_attributes_content_type = signed_attributes
+            .iter()
+            .find(|attr| attr.oid.cmp(&PKCS9_CONTENT_TYPE_OID) == Ordering::Equal);
+        if let Some(signed_attributes_content_type) = signed_attributes_content_type {
+            // Check against `eContentType`
+            if signed_attributes_content_type.oid != econtent_type {
+                // Mismatch between content types: encapsulated content info <-> signed attributes.
+                return Err(der::Error::from(ErrorKind::Failed));
+            }
+        } else {
+            signed_attributes.push(
+                create_content_type_attribute(econtent_type)
+                    .map_err(|_| der::Error::from(ErrorKind::Failed))?,
+            );
+        }
+
+        // Now use `signer` to sign the DER encoded signed attributes
+        let signed_attributes = SignedAttributes::try_from(signed_attributes.to_owned())
+            .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+        let mut signed_attributes_der = Vec::new();
+        signed_attributes.encode_to_vec(&mut signed_attributes_der)?;
+
+        Ok(signed_attributes_der)
+    }
+
+    fn assemble(
+        self,
+        signature: BitString,
+    ) -> core::result::Result<Self::Output, x509_cert::builder::Error> {
+        let signed_attrs = if let Some(signed_attributes) = &self.signed_attributes {
+            Some(SignedAttributes::try_from(signed_attributes.to_owned()).unwrap())
+        } else {
+            None
+        };
+        let unsigned_attrs = if let Some(unsigned_attributes) = &self.unsigned_attributes {
+            Some(UnsignedAttributes::try_from(unsigned_attributes.to_owned()).unwrap())
+        } else {
+            None
+        };
+
+        let signature_value =
+            SignatureValue::new(signature.raw_bytes()).map_err(x509_cert::builder::Error::from)?;
+
+        Ok(SignerInfo {
+            version: self.version(),
+            sid: self.sid.clone(),
+            digest_alg: self.digest_algorithm.clone(),
+            signed_attrs,
+            signature_algorithm: self.signature_algorithm.clone(),
+            signature: signature_value,
+            unsigned_attrs,
+        })
+    }
+}
+
+/// Builder for signedData (CMS and PKCS #7)
+pub struct SignedDataBuilder<'s> {
     digest_algorithms: Vec<AlgorithmIdentifierOwned>,
-    encap_content_info: Option<EncapsulatedContentInfo>,
+    encapsulated_content_info: &'s EncapsulatedContentInfo,
     certificates: Option<Vec<CertificateChoices>>,
     crls: Option<Vec<RevocationInfoChoice>>,
     signer_infos: Vec<SignerInfo>,
-    is_signed: bool,
-    is_finalized: bool,
 }
 
-impl SignedDataBuilder {
+impl<'s> SignedDataBuilder<'s>
+{
     /// Create a new builder for `SignedData`
-    pub fn new() -> SignedDataBuilder {
+    pub fn new(encapsulated_content_info: &'s EncapsulatedContentInfo) -> SignedDataBuilder<'s> {
         Self {
             digest_algorithms: Vec::new(),
-            encap_content_info: None,
+            encapsulated_content_info,
             certificates: None,
             crls: None,
             signer_infos: Vec::new(),
-            is_signed: false,
-            is_finalized: false,
         }
     }
 
@@ -112,16 +324,7 @@ impl SignedDataBuilder {
         &mut self,
         digest_algorithm: AlgorithmIdentifierOwned,
     ) -> Result<&mut Self> {
-        self.check_finalized()?;
         self.digest_algorithms.push(digest_algorithm);
-        Ok(self)
-    }
-
-    /// Set the content of the PKCS #7
-    pub fn set_content_info(&mut self, content_info: EncapsulatedContentInfo) -> Result<&mut Self> {
-        self.check_finalized()?;
-        self.check_signed()?;
-        self.encap_content_info = Some(content_info);
         Ok(self)
     }
 
@@ -140,7 +343,6 @@ impl SignedDataBuilder {
     /// signer's certificate MAY be included.  The use of version 1
     /// attribute certificates is strongly discouraged.
     pub fn add_certificate(&mut self, certificate: CertificateChoices) -> Result<&mut Self> {
-        self.check_finalized()?;
         if self.certificates.is_none() {
             self.certificates = Some(Vec::new());
         }
@@ -160,7 +362,6 @@ impl SignedDataBuilder {
     /// status information.  There MAY be more CRLs than necessary, and
     /// there MAY also be fewer CRLs than necessary.
     pub fn add_crl(&mut self, crl: RevocationInfoChoice) -> Result<&mut Self> {
-        self.check_finalized()?;
         if self.crls.is_none() {
             self.crls = Some(Vec::new());
         }
@@ -170,182 +371,45 @@ impl SignedDataBuilder {
         Ok(self)
     }
 
-    /// Sign the encapsulated content according to
-    /// [RFC 5652 § 5.4](https://datatracker.ietf.org/doc/html/rfc5652#section-5.4)
-    /// This method may be called multiple times for different `signer`s. Each call will add a
-    /// `SignerInfo` to the PKCS #7 object. After first signing, the encapsulated content will be
-    /// locked and can't be changed any more, as this would invalidate existing signatures.
-    /// If an `external_message_digest` is passed in, it is assumed, that we are signing external
-    /// content (see RFC 5652 § 5.2). In this case, the `eContent` in `EncapsulatedContentInfo`
-    /// must be `None`.
-    /// This method creates `SignedAttributes`(, if they do not already exist), as the signing time
-    /// is added. This also means, that the `signed_attributes` including the message digest are
-    /// signed and not the encapsulated content itself.
-    pub fn sign<S, Signature>(
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub fn add_signer_info<S, Signature>(
         &mut self,
-        signer: &mut S,
-        mut signer_info: SignerInfo,
-        external_message_digest: Option<&[u8]>,
+        signer_info_builder: SignerInfoBuilder<'_, S>,
     ) -> Result<&mut Self>
     where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
         S: Signer<Signature>,
         Signature: SignatureEncoding,
     {
-        let encap_content_info = match &self.encap_content_info {
-            None => {
-                return Err(Error::Builder(
-                    "Encapsulated content info missing, cannot sign".to_string(),
-                ))
-            }
-            Some(encap_content_info) => {
-                if let None = external_message_digest {
-                    // Internal content must be present
-                    if encap_content_info.econtent.is_none() {
-                        return Err(Error::Builder(
-                            "Encapsulated content missing, cannot sign".to_string(),
-                        ));
-                    }
-                } else {
-                    // Internal content must be empty
-                    if encap_content_info.econtent.is_some() {
-                        return Err(Error::Builder(
-                            "Encapsulated content must be empty, if external digest is given."
-                                .to_string(),
-                        ));
-                    }
-                }
-                encap_content_info
-            }
-        };
-
-        let message_digest = match external_message_digest {
-            Some(external_content_digest) => external_content_digest.to_vec(),
-            None => match &encap_content_info.econtent {
-                None => return Err(Error::Builder("Content missing, cannot sign".to_string())),
-                Some(content) => {
-                    let mut hasher = get_hasher(&signer_info.digest_alg).ok_or_else(|| {
-                        Error::Builder(format!(
-                            "Unsupported hash algorithm: {}",
-                            &signer_info.digest_alg.oid.to_string()
-                        ))
-                    })?;
-                    // TODO NM is this value DER encoded TLV or is it just V? For hashing, only V must be used.
-                    hasher.update(content.value());
-                    hasher.finalize_reset().to_vec()
-                }
-            },
-        };
-
-        // We set the signing time attribute. In this case, signed attributes are used and
-        // will be signed instead of the eContent itself.
-        if let Some(signed_attributes) = &mut signer_info.signed_attrs {
-            if !signed_attributes
-                .iter()
-                .any(|attr| attr.oid.cmp(&PKCS9_SIGNING_TIME_OID) == Ordering::Equal)
-            {
-                // Add current time as signing time
-                signed_attributes.add(create_signing_time_attribute()?)?;
-            }
-        } else {
-            // Add signed attributes with signing time attribute and content type attribute
-            let mut signed_attributes = SignedAttributes::new();
-            signed_attributes.add(create_signing_time_attribute()?)?;
-            signer_info.signed_attrs = Some(signed_attributes);
-        }
-
-        // Add digest attribute to (to be) signed attributes
-        let signed_attributes = signer_info
-            .signed_attrs
-            .as_mut()
-            .expect("Signed attributes must be present.");
-        signed_attributes.add(create_message_digest_attribute(&message_digest)?)?;
-
-        // The content-type attribute type specifies the content type of the
-        // ContentInfo within signed-data or authenticated-data.  The content-
-        // type attribute type MUST be present whenever signed attributes are
-        // present in signed-data or authenticated attributes present in
-        // authenticated-data.  The content-type attribute value MUST match the
-        // encapContentInfo eContentType value in the signed-data or
-        // authenticated-data.
-        let econtent_type = encap_content_info.econtent_type;
-        let signed_attributes_content_type = signed_attributes
-            .iter()
-            .find(|attr| attr.oid.cmp(&PKCS9_CONTENT_TYPE_OID) == Ordering::Equal);
-        if let Some(signed_attributes_content_type) = signed_attributes_content_type {
-            // Check against `eContentType`
-            if signed_attributes_content_type.oid != econtent_type {
-                return Err(Error::Builder(
-                    "Mismatch between content types: encapsulated content info <-> signed attributes."
-                        .to_string(),
-                ));
-            }
-        } else {
-            signed_attributes.add(create_content_type_attribute(econtent_type)?)?;
-        }
-
-        // Now use `signer` to sign the DER encoded signed attributes
-        let mut signed_attributes_der = Vec::new();
-        signed_attributes.encode_to_vec(&mut signed_attributes_der)?;
-        let signature: Signature = signer.try_sign(&signed_attributes_der)?;
-        let signature_der = signature.to_vec();
-        signer_info.signature = OctetString::new(signature_der)?;
+        let signer_info = signer_info_builder.build::<Signature>()
+            .map_err(|_| der::Error::from(ErrorKind::Failed))?;
         self.signer_infos.push(signer_info);
-
-        self.is_signed = true;
 
         Ok(self)
     }
 
-    /// Return finalized `SignedData` struct.
-    /// This method returns a `ContentInfo` of type `signedData`. After this call, the builder cannot
-    /// be used any more.
+    /// This method returns a `ContentInfo` of type `signedData`.
     pub fn build(&mut self) -> Result<ContentInfo> {
-        self.check_finalized()?;
+        let digest_algorithms =
+            DigestAlgorithmIdentifiers::try_from(self.digest_algorithms.to_owned()).unwrap();
 
-        // Sort digest_algorithms before adding to a DigestAlgorithmIdentifiers object
-        // -> See der::asn1::set_of
-        self.digest_algorithms
-            .sort_by(|a, b| a.value_cmp(b).unwrap());
-        let mut digest_algorithms: DigestAlgorithmIdentifiers = DigestAlgorithmIdentifiers::new();
-        for digest_algorithm in self.digest_algorithms.drain(..) {
-            digest_algorithms.add(digest_algorithm)?;
-        }
-
-        let encap_content_info = self
-            .encap_content_info
-            .clone()
-            .ok_or_else(|| Error::Builder("EncapsulatedContentInfo is required".to_string()))?;
+        let encap_content_info = self.encapsulated_content_info.clone();
 
         let certificates = if let Some(certificates) = &mut self.certificates {
-            // Ensure lexicographical DER ordering:
-            certificates.sort_by(|a, b| a.value_cmp(b).unwrap());
-            let mut certificate_set: CertificateSet = CertificateSet(Default::default());
-            for certificate in certificates.drain(..) {
-                certificate_set.0.add(certificate)?;
-            }
-            Some(certificate_set)
+            Some(CertificateSet::try_from(certificates.to_owned()).unwrap())
         } else {
             None
         };
 
         let crls = if let Some(crls) = &mut self.crls {
-            // Ensure lexicographical DER ordering:
-            crls.sort_by(|a, b| a.value_cmp(b).unwrap());
-            let mut revocation_info_choices: RevocationInfoChoices =
-                RevocationInfoChoices(Default::default());
-            for crl in crls.drain(..) {
-                revocation_info_choices.0.add(crl)?;
-            }
-            Some(revocation_info_choices)
+            Some(RevocationInfoChoices::try_from(crls.to_owned()).unwrap())
         } else {
             None
         };
 
-        self.signer_infos.sort_by(|a, b| a.value_cmp(b).unwrap());
-        let mut signer_infos = SignerInfos(Default::default());
-        for signer_info in &self.signer_infos {
-            signer_infos.0.add(signer_info.to_owned())?;
-        }
+        let signer_infos = SignerInfos::try_from(self.signer_infos.clone()).unwrap();
 
         let signed_data = SignedData {
             version: self.calculate_version(),
@@ -364,7 +428,6 @@ impl SignedDataBuilder {
             content: Any::from(content),
         };
 
-        self.is_finalized = true; // no more changes allowed after here
         Ok(signed_data)
     }
 
@@ -426,15 +489,8 @@ impl SignedDataBuilder {
             .signer_infos
             .iter()
             .any(|signer_info| signer_info.version == CmsVersion::V3);
-        let content_not_data = match &self.encap_content_info {
-            None => false,
-            Some(encap_content_info) => {
-                encap_content_info.econtent_type
-                    != *DB
-                        .by_name("id-data")
-                        .expect("id-data not found in OID database")
-            }
-        };
+        let content_not_data =
+            self.encapsulated_content_info.econtent_type != const_oid::db::rfc5911::ID_DATA;
 
         if other_certificates_are_present || other_crls_are_present {
             CmsVersion::V5
@@ -444,26 +500,6 @@ impl SignedDataBuilder {
             CmsVersion::V3
         } else {
             CmsVersion::V1
-        }
-    }
-
-    fn check_finalized(&self) -> Result<()> {
-        if self.is_finalized {
-            Err(Error::Builder(
-                "Builder is finalized. Changes are not possible.".to_string(),
-            ))
-        } else {
-            Ok(())
-        }
-    }
-
-    fn check_signed(&self) -> Result<()> {
-        if self.is_signed {
-            Err(Error::Builder(
-                "Content can't be changed, as Builder is already signed.".to_string(),
-            ))
-        } else {
-            Ok(())
         }
     }
 }
@@ -537,7 +573,6 @@ pub fn create_signing_time_attribute() -> Result<Attribute> {
         // der::asn1::UtcTime::from_date_time(now)?.encode_to_vec(&mut signing_time_buf)?;
         der::asn1::UtcTime::from_date_time(now)?.to_der()?
     };
-    //let signing_time_attribute_value = AttributeValue::new(tag, signing_time_buf.as_slice())?;
     let signing_time_attribute_value = AttributeValue::from_der(&time_der)?;
     let mut values = SetOfVec::<AttributeValue>::new();
     values.add(signing_time_attribute_value)?;

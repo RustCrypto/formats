@@ -6,7 +6,7 @@ use crate::revocation::RevocationInfoChoices;
 
 use core::cmp::Ordering;
 use der::asn1::{ObjectIdentifier, OctetString, SetOfVec};
-use der::{Any, Choice, DerOrd, Sequence, ValueOrd};
+use der::{Any, Choice, der_sort, DerOrd, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
 use x509_cert::ext::pkix::SubjectKeyIdentifier;
@@ -59,6 +59,17 @@ pub type DigestAlgorithmIdentifiers = SetOfVec<AlgorithmIdentifierOwned>;
 pub struct CertificateSet(pub SetOfVec<CertificateChoices>);
 impl_newtype!(CertificateSet, SetOfVec<CertificateChoices>);
 
+#[cfg(feature = "std")]
+impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet
+{
+    type Error = der::Error;
+
+    fn try_from(mut vec: std::vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
+        der_sort(vec.as_mut_slice())?;
+        Ok(CertificateSet(SetOfVec::try_from(vec)?))
+    }
+}
+
 /// The `SignerInfos` type is defined in [RFC 5652 Section 5.1].
 ///
 /// ```text
@@ -69,6 +80,17 @@ impl_newtype!(CertificateSet, SetOfVec<CertificateChoices>);
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct SignerInfos(pub SetOfVec<SignerInfo>);
 impl_newtype!(SignerInfos, SetOfVec<SignerInfo>);
+
+#[cfg(feature = "std")]
+impl TryFrom<std::vec::Vec<SignerInfo>> for SignerInfos
+{
+    type Error = der::Error;
+
+    fn try_from(mut vec: std::vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {
+        der_sort(vec.as_mut_slice())?;
+        Ok(SignerInfos(SetOfVec::try_from(vec)?))
+    }
+}
 
 /// The `EncapsulatedContentInfo` type is defined in [RFC 5652 Section 5.2].
 ///

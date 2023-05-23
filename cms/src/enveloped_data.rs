@@ -7,7 +7,7 @@ use crate::signed_data::CertificateSet;
 
 use core::cmp::Ordering;
 use der::asn1::{BitString, GeneralizedTime, ObjectIdentifier, OctetString, SetOfVec};
-use der::{Any, Choice, Sequence, ValueOrd};
+use der::{Any, Choice, der_sort, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, Attributes};
 use x509_cert::ext::pkix::SubjectKeyIdentifier;
@@ -87,6 +87,17 @@ pub struct OriginatorInfo {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RecipientInfos(pub SetOfVec<RecipientInfo>);
 impl_newtype!(RecipientInfos, SetOfVec<RecipientInfo>);
+
+#[cfg(feature = "std")]
+impl TryFrom<std::vec::Vec<RecipientInfo>> for RecipientInfos
+{
+    type Error = der::Error;
+
+    fn try_from(mut vec: std::vec::Vec<RecipientInfo>) -> der::Result<RecipientInfos> {
+        der_sort(vec.as_mut_slice())?;
+        Ok(RecipientInfos(SetOfVec::try_from(vec)?))
+    }
+}
 
 /// The `EncryptedContentInfo` type is defined in [RFC 5652 Section 6.1].
 ///
