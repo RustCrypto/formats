@@ -436,3 +436,13 @@ fn decode_cert_overlength_serial_number() {
     let reencoded = cert.to_pem(LineEnding::LF).unwrap();
     assert_eq!(pem_encoded_cert, reencoded.as_bytes());
 }
+
+#[cfg(all(feature = "pem"))]
+#[test]
+fn load_certificate_chains() {
+    let pem_encoded_chain = include_bytes!("examples/crates.io-chain.pem");
+
+    let chain = Certificate::load_pem_chain(pem_encoded_chain).expect("parse certificate chain");
+
+    assert_eq!(chain.len(), 4, "4 certificates are expected in this chain");
+}
