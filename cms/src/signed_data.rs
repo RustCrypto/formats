@@ -6,7 +6,9 @@ use crate::revocation::RevocationInfoChoices;
 
 use core::cmp::Ordering;
 use der::asn1::{ObjectIdentifier, OctetString, SetOfVec};
-use der::{Any, Choice, der_sort, DerOrd, Sequence, ValueOrd};
+#[cfg(feature = "std")]
+use der::der_sort;
+use der::{Any, Choice, DerOrd, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
 use x509_cert::ext::pkix::SubjectKeyIdentifier;
@@ -60,8 +62,7 @@ pub struct CertificateSet(pub SetOfVec<CertificateChoices>);
 impl_newtype!(CertificateSet, SetOfVec<CertificateChoices>);
 
 #[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet
-{
+impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet {
     type Error = der::Error;
 
     fn try_from(mut vec: std::vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
@@ -82,8 +83,7 @@ pub struct SignerInfos(pub SetOfVec<SignerInfo>);
 impl_newtype!(SignerInfos, SetOfVec<SignerInfo>);
 
 #[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<SignerInfo>> for SignerInfos
-{
+impl TryFrom<std::vec::Vec<SignerInfo>> for SignerInfos {
     type Error = der::Error;
 
     fn try_from(mut vec: std::vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {

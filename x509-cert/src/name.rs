@@ -3,8 +3,11 @@
 use crate::attr::AttributeTypeAndValue;
 use alloc::vec::Vec;
 use core::{fmt, str::FromStr};
+#[cfg(feature = "std")]
+use der::DerOrd;
+use der::{asn1::SetOfVec, Encode};
+#[cfg(feature = "std")]
 use std::cmp::Ordering;
-use der::{asn1::SetOfVec, DerOrd, Encode};
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
 ///
@@ -167,8 +170,8 @@ impl FromStr for RelativeDistinguishedName {
     }
 }
 
-impl TryFrom<Vec<AttributeTypeAndValue>> for RelativeDistinguishedName
-{
+#[cfg(feature = "std")]
+impl TryFrom<Vec<AttributeTypeAndValue>> for RelativeDistinguishedName {
     type Error = der::Error;
 
     fn try_from(mut vec: Vec<AttributeTypeAndValue>) -> der::Result<RelativeDistinguishedName> {

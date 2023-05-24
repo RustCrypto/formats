@@ -1,11 +1,11 @@
-// TODO NM #![cfg(feature = "builder")]
+#![cfg(feature = "builder")]
 
-use p256::{pkcs8::DecodePrivateKey, NistP256};
 use cms::builder::{create_signing_time_attribute, SignedDataBuilder, SignerInfoBuilder};
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::signed_data::{EncapsulatedContentInfo, SignerIdentifier};
 use der::asn1::{OctetString, SetOfVec, Utf8StringRef};
 use der::{Any, DecodePem, Encode, Tag, Tagged};
+use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
@@ -77,7 +77,8 @@ fn build_signed_data() {
         signature_algorithm,
         &content,
         external_message_digest,
-    ).expect("Could not create RSA SignerInfoBuilder");
+    )
+    .expect("Could not create RSA SignerInfoBuilder");
 
     let signer_2 = ecdsa_signer();
     let digest_algorithm_2 = AlgorithmIdentifierOwned {
@@ -98,7 +99,8 @@ fn build_signed_data() {
         signature_algorithm_2,
         &content,
         external_message_digest_2,
-    ).expect("Could not create ECDSA SignerInfoBuilder");
+    )
+    .expect("Could not create ECDSA SignerInfoBuilder");
 
     let certificate_buf = include_bytes!("examples/ValidCertificatePathTest1EE.pem");
     let certificate = x509_cert::Certificate::from_pem(certificate_buf).unwrap();
@@ -112,7 +114,9 @@ fn build_signed_data() {
         .expect("error adding certificate")
         .add_signer_info::<SigningKey<Sha256>, rsa::pkcs1v15::Signature>(signer_info_builder_1)
         .expect("error adding RSA signer info")
-        .add_signer_info::<ecdsa::SigningKey<NistP256>, p256::ecdsa::DerSignature>(signer_info_builder_2)
+        .add_signer_info::<ecdsa::SigningKey<NistP256>, p256::ecdsa::DerSignature>(
+            signer_info_builder_2,
+        )
         .expect("error adding RSA signer info")
         .build()
         .expect("building signed data failed");

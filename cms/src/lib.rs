@@ -24,10 +24,8 @@
 
 extern crate alloc;
 
-// TODO NM revert: #[cfg(feature = "std")]
+#[cfg(feature = "std")]
 extern crate std;
-
-use const_oid::ObjectIdentifier;
 
 pub mod attr;
 pub mod authenticated_data;
@@ -40,20 +38,3 @@ pub mod encrypted_data;
 pub mod enveloped_data;
 pub mod revocation;
 pub mod signed_data;
-
-
-// TODO NM define these OIDs somewhere else?
-
-/// From RFC 5652. https://datatracker.ietf.org/doc/html/rfc5652#section-12.1
-
-/// `id-messageDigest` Object identifier (OID).
-pub const PKCS9_CONTENT_TYPE_OID:  ObjectIdentifier =
-    ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.3");
-
-/// `id-messageDigest` Object identifier (OID).
-pub const PKCS9_MESSAGE_DIGEST_OID:  ObjectIdentifier =
-    ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.4");
-
-/// `id-signingTime` Object identifier (OID).
-pub const PKCS9_SIGNING_TIME_OID:  ObjectIdentifier =
-    ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.5");

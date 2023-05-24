@@ -10,7 +10,10 @@
 //! However, all types in this module sort elements of a set at decode-time,
 //! ensuring they'll be in the proper order if reserialized.
 
-use crate::{arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer, der_sort};
+use crate::{
+    arrayvec, der_sort, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue,
+    Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+};
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
@@ -45,6 +48,8 @@ where
     ///
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
+    /// For adding elements in arbitrary order you can use a `Vec<T>` first and then
+    /// `TryFrom<Vec<T>> impl for SetOfVec<T>` which takes ownership of a Vec and sorts it in-place.
     pub fn add(&mut self, new_elem: T) -> Result<()> {
         // Ensure set elements are lexicographically ordered
         if let Some(last_elem) = self.inner.last() {
@@ -216,28 +221,14 @@ where
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
     pub fn add(&mut self, new_elem: T) -> Result<()> {
-        // Insert at correct position to avoid sorting
-        fn position<T>(slice: &[T], new_elem: &T) -> Result<usize>
-            where T: DerOrd
-        {
-            let mut i = 0;
-            let mut it = slice.iter();
-            while let Some(x) = it.next() {
-                if x.der_cmp(new_elem)? == Ordering::Greater {
-                    return Ok(i);
-                }
-                i += 1;
+        // Ensure set elements are lexicographically ordered
+        if let Some(last_elem) = self.inner.last() {
+            if new_elem.der_cmp(last_elem)? != Ordering::Greater {
+                return Err(ErrorKind::SetOrdering.into());
             }
-            Ok(i)
         }
-        // TODO NM remove
-        // let _index_first_greater_element = self
-        //     .inner
-        //     .iter()
-        //     .position(|elem| elem.der_cmp(&new_elem)? == Ordering::Greater);
-        let index_first_greater_element = position(&self.inner, &new_elem)?;
-        self.inner.insert(index_first_greater_element, new_elem);
 
+        self.inner.push(new_elem);
         Ok(())
     }
 
@@ -444,32 +435,5 @@ mod tests {
         let vec = vec![3u16, 2, 1, 65535, 0];
         let set = SetOfVec::try_from(vec).unwrap();
         assert_eq!(set.as_ref(), &[0, 1, 2, 3, 65535]);
-    }
-
-    #[test]
-    fn setofvec_add() {
-        let message = "could not add to SetOfVec";
-        let vec = vec![1,2,4,5];
-        let mut set = SetOfVec::try_from(vec).unwrap();
-        set.add(3).expect(message);
-        assert_eq!(set.as_ref(), &[1,2,3,4,5], message);
-
-        let message = "could not add at begin of SetOfVec";
-        let vec = vec![1,2,3,4];
-        let mut set = SetOfVec::try_from(vec).unwrap();
-        set.add(0).expect(message);
-        assert_eq!(set.as_ref(), &[0,1,2,3,4], message);
-
-        let message = "could not add to end of SetOfVec";
-        let vec = vec![1,2,3,4];
-        let mut set = SetOfVec::try_from(vec).unwrap();
-        set.add(5).expect(message);
-        assert_eq!(set.as_ref(), &[1,2,3,4,5], message);
-
-        let message = "could not add to empty SetOfVec";
-        let vec = vec![];
-        let mut set = SetOfVec::try_from(vec).unwrap();
-        set.add(1).expect(message);
-        assert_eq!(set.as_ref(), &[1],message);
     }
 }

@@ -14,9 +14,9 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-der = { version = "0.7", features = ["alloc", "derive", "oid", "pem", "std"] } # TODO NM std only for builder feature
-spki = { version = "0.7", features = ["alloc"] } # TODO NM alloc only for builder feature
-x509-cert = { version = "0.2.2-pre", default-features = false, features = ["pem", "builder"], path = "../x509-cert"} # TODO NM builder only for builder feature
+der = { version = "0.7", features = ["alloc", "derive", "oid", "pem"] }
+spki = { version = "0.7" }
+x509-cert = { version = "0.2.2-pre", default-features = false, features = ["pem"], path = "../x509-cert"}
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 
 # optional dependencies
@@ -36,7 +36,7 @@ p256 = "0.13.0"
 [features]
 alloc = ["der/alloc"]
 std = ["der/std", "spki/std"]
-
+builder = ["std", "spki/alloc", "x509-cert/builder"]
 pem = ["alloc", "der/pem"]
 
 [package.metadata.docs.rs]

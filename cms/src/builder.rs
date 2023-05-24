@@ -1,4 +1,4 @@
-// TODO NM #![cfg(feature = "std")]
+#![cfg(feature = "builder")]
 
 //! CMS Builder
 
@@ -9,7 +9,6 @@ use crate::signed_data::{
     CertificateSet, DigestAlgorithmIdentifiers, EncapsulatedContentInfo, SignatureValue,
     SignedAttributes, SignedData, SignerIdentifier, SignerInfo, SignerInfos, UnsignedAttributes,
 };
-use crate::{PKCS9_CONTENT_TYPE_OID, PKCS9_MESSAGE_DIGEST_OID, PKCS9_SIGNING_TIME_OID};
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -200,10 +199,9 @@ where
         // We set the signing time attribute. In this case, signed attributes are used and
         // will be signed instead of the eContent itself.
         if let Some(signed_attributes) = &mut self.signed_attributes {
-            if !signed_attributes
-                .iter()
-                .any(|attr| attr.oid.cmp(&PKCS9_SIGNING_TIME_OID) == Ordering::Equal)
-            {
+            if !signed_attributes.iter().any(|attr| {
+                attr.oid.cmp(&const_oid::db::rfc5911::ID_SIGNING_TIME) == Ordering::Equal
+            }) {
                 // Add current time as signing time
                 signed_attributes.push(
                     create_signing_time_attribute()
@@ -237,7 +235,7 @@ where
         let econtent_type = self.encapsulated_content_info.econtent_type;
         let signed_attributes_content_type = signed_attributes
             .iter()
-            .find(|attr| attr.oid.cmp(&PKCS9_CONTENT_TYPE_OID) == Ordering::Equal);
+            .find(|attr| attr.oid.cmp(&const_oid::db::rfc5911::ID_CONTENT_TYPE) == Ordering::Equal);
         if let Some(signed_attributes_content_type) = signed_attributes_content_type {
             // Check against `eContentType`
             if signed_attributes_content_type.oid != econtent_type {
@@ -299,8 +297,7 @@ pub struct SignedDataBuilder<'s> {
     signer_infos: Vec<SignerInfo>,
 }
 
-impl<'s> SignedDataBuilder<'s>
-{
+impl<'s> SignedDataBuilder<'s> {
     /// Create a new builder for `SignedData`
     pub fn new(encapsulated_content_info: &'s EncapsulatedContentInfo) -> SignedDataBuilder<'s> {
         Self {
@@ -383,7 +380,8 @@ impl<'s> SignedDataBuilder<'s>
         S: Signer<Signature>,
         Signature: SignatureEncoding,
     {
-        let signer_info = signer_info_builder.build::<Signature>()
+        let signer_info = signer_info_builder
+            .build::<Signature>()
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
         self.signer_infos.push(signer_info);
 
@@ -532,7 +530,7 @@ pub fn create_content_type_attribute(content_type: ObjectIdentifier) -> Result<A
     let mut values = SetOfVec::new();
     values.add(content_type_attribute_value)?;
     let attribute = Attribute {
-        oid: PKCS9_CONTENT_TYPE_OID,
+        oid: const_oid::db::rfc5911::ID_CONTENT_TYPE,
         values,
     };
     Ok(attribute)
@@ -547,7 +545,7 @@ pub fn create_message_digest_attribute(message_digest: &[u8]) -> Result<Attribut
     let mut values = SetOfVec::new();
     values.add(message_digest_attribute_value)?;
     let attribute = Attribute {
-        oid: PKCS9_MESSAGE_DIGEST_OID,
+        oid: const_oid::db::rfc5911::ID_MESSAGE_DIGEST,
         values,
     };
     Ok(attribute)
@@ -577,7 +575,7 @@ pub fn create_signing_time_attribute() -> Result<Attribute> {
     let mut values = SetOfVec::<AttributeValue>::new();
     values.add(signing_time_attribute_value)?;
     let attribute = Attribute {
-        oid: PKCS9_SIGNING_TIME_OID,
+        oid: const_oid::db::rfc5911::ID_SIGNING_TIME,
         values,
     };
     Ok(attribute)
