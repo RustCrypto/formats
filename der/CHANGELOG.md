@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.6 (2023-05-16)
+### Added
+- `SetOfVec::{extend, from_iter}` methods ([#1065])
+- `SetOf(Vec)::{insert, insert_ordered}` methods ([#1067])
+
+### Changed
+- Deprecate `SetOf(Vec)::add` ([#1067])
+
+### Fixed
+- Off-by-one error in `BMPString` tag ([#1037])
+- Handling of non-unique items in `SetOf`(Vec) ([#1066])
+
+[#1037]: https://github.com/RustCrypto/formats/pull/1037
+[#1065]: https://github.com/RustCrypto/formats/pull/1065
+[#1066]: https://github.com/RustCrypto/formats/pull/1066
+[#1067]: https://github.com/RustCrypto/formats/pull/1067
+
 ## 0.7.5 (2023-04-24)
 ### Added
 - adds support for `DateTime::INFINITY` ([#1026])

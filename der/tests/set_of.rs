@@ -4,15 +4,21 @@
 
 use der::{asn1::SetOfVec, DerOrd};
 use proptest::{prelude::*, string::*};
+use std::collections::BTreeSet;
 
 proptest! {
     #[test]
     fn sort_equiv(bytes in bytes_regex(".{0,64}").unwrap()) {
-        let mut expected = bytes.clone();
-        expected.sort_by(|a, b| a.der_cmp(b).unwrap());
+        let mut uniq = BTreeSet::new();
 
-        let set = SetOfVec::try_from(bytes).unwrap();
-        prop_assert_eq!(expected.as_slice(), set.as_slice());
+        // Ensure there are no duplicates
+        if bytes.iter().copied().all(move |x| uniq.insert(x)) {
+            let mut expected = bytes.clone();
+            expected.sort_by(|a, b| a.der_cmp(b).unwrap());
+
+            let set = SetOfVec::try_from(bytes).unwrap();
+            prop_assert_eq!(expected.as_slice(), set.as_slice());
+        }
     }
 }
 

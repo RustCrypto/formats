@@ -12,6 +12,17 @@ Cryptographic Message Syntax v1.5 ([RFC 5652] and [RFC 8933]).
 
 [Documentation][docs-link]
 
+## 🚨 DEPRECATED! 🚨
+
+The `pkcs7` crate is deprecated and will not receive further releases.
+
+Please migrate to the following instead:
+
+- For Cryptographic Message Syntax (CMS): use the [`cms` crate](https://github.com/RustCrypto/formats/tree/master/cms).
+- For PKCS#7 block padding: use [`block_padding::Pkcs7`](https://docs.rs/block-padding/latest/block_padding/struct.Pkcs7.html)
+
+See [#1045] for more information.
+
 ## Minimum Supported Rust Version
 
 This crate requires **Rust 1.65** at a minimum.
@@ -52,3 +63,4 @@ dual licensed as above, without any additional terms or conditions.
 [RustCrypto]: https://github.com/rustcrypto
 [RFC 5652]: https://datatracker.ietf.org/doc/html/rfc5652
 [RFC 8933]: https://datatracker.ietf.org/doc/html/rfc8933
+[#1045]: https://github.com/RustCrypto/formats/issues/1045

@@ -117,7 +117,7 @@ impl TryFrom<ExtensionReq> for Attribute {
 
     fn try_from(extension_req: ExtensionReq) -> der::Result<Attribute> {
         let mut values: SetOfVec<AttributeValue> = Default::default();
-        values.add(Any::encode_from(&extension_req.0)?)?;
+        values.insert(Any::encode_from(&extension_req.0)?)?;
 
         Ok(Attribute {
             oid: ExtensionReq::OID,

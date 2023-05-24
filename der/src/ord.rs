@@ -1,6 +1,6 @@
 //! Ordering trait.
 
-use crate::{EncodeValue, Result, Tagged};
+use crate::{EncodeValue, ErrorKind, Result, Tagged};
 use core::{cmp::Ordering, marker::PhantomData};
 
 /// DER ordering trait.
@@ -98,9 +98,15 @@ pub fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
     for i in 0..slice.len() {
         let mut j = i;
 
-        while j > 0 && slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
-            slice.swap(j - 1, j);
-            j -= 1;
+        while j > 0 {
+            match slice[j - 1].der_cmp(&slice[j])? {
+                Ordering::Less => break,
+                Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
+                Ordering::Greater => {
+                    slice.swap(j - 1, j);
+                    j -= 1;
+                }
+            }
         }
     }
 

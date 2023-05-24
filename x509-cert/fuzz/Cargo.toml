@@ -10,8 +10,14 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-x509-cert = { path = ".." }
+x509-cert = "*"
 
 # Prevents this crate from interfering with the workspace
 [workspace]
 members = ["."]
+
+[patch.crates-io]
+der         = { path = "../../der" }
+der_derive  = { path = "../../der/derive" }
+pem-rfc7468 = { path = "../../pem-rfc7468" }
+spki        = { path = "../../spki" }

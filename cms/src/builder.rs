@@ -20,8 +20,11 @@ use der::asn1::{BitString, OctetStringRef, SetOfVec};
 use der::oid::db::DB;
 use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
 use signature::digest::DynDigest;
-use signature::{Keypair, SignatureEncoding, Signer};
-use spki::{AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey};
+use signature::{Keypair, Signer};
+use spki::{
+    AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
+    SignatureBitStringEncoding,
+};
 use std::time::SystemTime;
 use std::vec;
 use x509_cert::attr::{Attribute, AttributeValue};
@@ -378,7 +381,7 @@ impl<'s> SignedDataBuilder<'s> {
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         S: Signer<Signature>,
-        Signature: SignatureEncoding,
+        Signature: SignatureBitStringEncoding,
     {
         let signer_info = signer_info_builder
             .build::<Signature>()
@@ -528,7 +531,7 @@ pub fn create_content_type_attribute(content_type: ObjectIdentifier) -> Result<A
     let content_type_attribute_value =
         AttributeValue::new(Tag::ObjectIdentifier, content_type.as_bytes())?;
     let mut values = SetOfVec::new();
-    values.add(content_type_attribute_value)?;
+    values.insert(content_type_attribute_value)?;
     let attribute = Attribute {
         oid: const_oid::db::rfc5911::ID_CONTENT_TYPE,
         values,
@@ -543,7 +546,7 @@ pub fn create_message_digest_attribute(message_digest: &[u8]) -> Result<Attribut
     let message_digest_attribute_value =
         AttributeValue::new(Tag::OctetString, message_digest_der.as_bytes())?;
     let mut values = SetOfVec::new();
-    values.add(message_digest_attribute_value)?;
+    values.insert(message_digest_attribute_value)?;
     let attribute = Attribute {
         oid: const_oid::db::rfc5911::ID_MESSAGE_DIGEST,
         values,
@@ -573,7 +576,7 @@ pub fn create_signing_time_attribute() -> Result<Attribute> {
     };
     let signing_time_attribute_value = AttributeValue::from_der(&time_der)?;
     let mut values = SetOfVec::<AttributeValue>::new();
-    values.add(signing_time_attribute_value)?;
+    values.insert(signing_time_attribute_value)?;
     let attribute = Attribute {
         oid: const_oid::db::rfc5911::ID_SIGNING_TIME,
         values,

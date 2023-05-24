@@ -23,14 +23,11 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    /// Add an element to this [`ArrayVec`].
-    ///
-    /// Items MUST be added in lexicographical order according to the `Ord`
-    /// impl on `T`.
-    pub fn add(&mut self, element: T) -> Result<()> {
+    /// Push an item into this [`ArrayVec`].
+    pub fn push(&mut self, item: T) -> Result<()> {
         match self.length.checked_add(1) {
             Some(n) if n <= N => {
-                self.elements[self.length] = Some(element);
+                self.elements[self.length] = Some(item);
                 self.length = n;
                 Ok(())
             }
@@ -138,11 +135,11 @@ mod tests {
     #[test]
     fn add() {
         let mut vec = ArrayVec::<u8, 3>::new();
-        vec.add(1).unwrap();
-        vec.add(2).unwrap();
-        vec.add(3).unwrap();
+        vec.push(1).unwrap();
+        vec.push(2).unwrap();
+        vec.push(3).unwrap();
 
-        assert_eq!(vec.add(4).err().unwrap(), ErrorKind::Overlength.into());
+        assert_eq!(vec.push(4).err().unwrap(), ErrorKind::Overlength.into());
         assert_eq!(vec.len(), 3);
     }
 }
