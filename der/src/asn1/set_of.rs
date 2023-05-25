@@ -11,8 +11,8 @@
 //! ensuring they'll be in the proper order if reserialized.
 
 use crate::{
-    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue,
-    Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error,
+    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 

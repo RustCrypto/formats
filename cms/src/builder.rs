@@ -20,6 +20,7 @@ use der::asn1::{BitString, OctetStringRef, SetOfVec};
 use der::oid::db::DB;
 use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
 use digest::Digest;
+use sha2::digest;
 use signature::digest::DynDigest;
 use signature::{Keypair, Signer};
 use spki::{
@@ -28,7 +29,6 @@ use spki::{
 };
 use std::time::SystemTime;
 use std::vec;
-use sha2::digest;
 use x509_cert::attr::{Attribute, AttributeValue};
 use x509_cert::builder::Builder;
 
