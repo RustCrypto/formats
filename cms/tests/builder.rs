@@ -47,7 +47,7 @@ fn signer_identifier(id: i32) -> SignerIdentifier {
 }
 
 #[test]
-fn build_signed_data() {
+fn test_build_signed_data() {
     // Make some content
     let content = EncapsulatedContentInfo {
         econtent_type: const_oid::db::rfc5911::ID_DATA,
