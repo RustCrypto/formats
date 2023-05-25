@@ -361,7 +361,7 @@ pub use crate::{
     error::{Error, ErrorKind, Result},
     header::Header,
     length::{IndefiniteLength, Length},
-    ord::{der_sort, DerOrd, ValueOrd},
+    ord::{DerOrd, ValueOrd},
     reader::{nested::NestedReader, slice::SliceReader, Reader},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     writer::{slice::SliceWriter, Writer},

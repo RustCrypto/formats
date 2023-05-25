@@ -1,6 +1,6 @@
 //! Ordering trait.
 
-use crate::{EncodeValue, ErrorKind, Result, Tagged};
+use crate::{EncodeValue, Result, Tagged};
 use core::{cmp::Ordering, marker::PhantomData};
 
 /// DER ordering trait.
@@ -82,33 +82,4 @@ impl<T> DerOrd for PhantomData<T> {
     fn der_cmp(&self, _other: &Self) -> Result<Ordering> {
         Ok(Ordering::Equal)
     }
-}
-
-/// Sort a mut slice according to its [`DerOrd`], returning any errors which
-/// might occur during the comparison.
-///
-/// The algorithm is insertion sort, which should perform well when the input
-/// is mostly sorted to begin with.
-///
-/// This function is used rather than Rust's built-in `[T]::sort_by` in order
-/// to support heapless `no_std` targets as well as to enable bubbling up
-/// sorting errors.
-#[allow(clippy::integer_arithmetic)]
-pub fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
-    for i in 0..slice.len() {
-        let mut j = i;
-
-        while j > 0 {
-            match slice[j - 1].der_cmp(&slice[j])? {
-                Ordering::Less => break,
-                Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
-                Ordering::Greater => {
-                    slice.swap(j - 1, j);
-                    j -= 1;
-                }
-            }
-        }
-    }
-
-    Ok(())
 }
