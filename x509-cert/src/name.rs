@@ -174,17 +174,7 @@ impl FromStr for RelativeDistinguishedName {
 impl TryFrom<Vec<AttributeTypeAndValue>> for RelativeDistinguishedName {
     type Error = der::Error;
 
-    fn try_from(mut vec: Vec<AttributeTypeAndValue>) -> der::Result<RelativeDistinguishedName> {
-        let slice = vec.as_mut_slice();
-        // This is der_sort from set_of.rs, which is inaccessible from here
-        for i in 0..slice.len() {
-            let mut j = i;
-
-            while j > 0 && slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
-                slice.swap(j - 1, j);
-                j -= 1;
-            }
-        }
+    fn try_from(vec: Vec<AttributeTypeAndValue>) -> der::Result<RelativeDistinguishedName> {
         Ok(RelativeDistinguishedName(SetOfVec::try_from(vec)?))
     }
 }
