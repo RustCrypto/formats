@@ -163,6 +163,35 @@ fn deserialize_tls_vl_bytes() {
 }
 
 #[test]
+fn deserialize_remainder_tls_vl_bytes() {
+    let b = &[4u8, 77, 88, 1, 99];
+
+    let (v, remainder) = <VLBytes as tls_codec::DeserializeRemainder>::tls_deserialize(b)
+        .expect("Unable to tls_deserialize");
+    assert_eq!(5, v.tls_serialized_len());
+    assert_eq!(&[77, 88, 1, 99], v.as_slice());
+
+    // There is no remainder
+    assert!(remainder.is_empty());
+
+    let long_vector = vec![77u8; 65535];
+    let serialized_long_vec = VLByteSlice(&long_vector).tls_serialize_detached().unwrap();
+    std::println!("bytes: {:x?}", &serialized_long_vec[0..5]);
+    let (deserialized_long_vec, remainder) =
+        <VLBytes as tls_codec::DeserializeRemainder>::tls_deserialize(
+            serialized_long_vec.as_slice(),
+        )
+        .unwrap();
+    assert_eq!(
+        deserialized_long_vec.tls_serialized_len(),
+        long_vector.len() + 4
+    );
+    assert!(remainder.is_empty());
+    assert_eq!(long_vector.len(), deserialized_long_vec.as_slice().len());
+    assert_eq!(long_vector.as_slice(), deserialized_long_vec.as_slice());
+}
+
+#[test]
 fn deserialize_empty_vl_bytes() {
     let mut b: &[u8] = &[0x00];
     VLBytes::tls_deserialize(&mut b).expect("Error parsing empty bytes");

@@ -196,3 +196,37 @@ pub trait Deserialize: Size {
         Self::tls_deserialize(&mut bytes.as_ref())
     }
 }
+
+/// The `DeserializeRemainder` trait defines functions to deserialize a byte slice to a
+/// struct or enum and return the remaining byte slice.
+pub trait DeserializeRemainder: Size {
+    /// This function deserializes the `bytes` from the provided a `&[u8]`
+    /// and returns the populated struct, as well as the remaining slice.
+    ///
+    /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
+    ///
+    /// Returns an error if occurs during deserialization.
+    #[cfg(feature = "std")]
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
+    where
+        Self: Sized;
+
+    /// This function deserializes the provided `bytes` and returns the populated
+    /// struct. All bytes must be consumed.
+    ///
+    /// Returns an error if not all bytes are read from the input, or if an error
+    /// occurs during deserialization.
+    #[cfg(feature = "std")]
+    fn tls_deserialize_exact(bytes: &[u8]) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        let (out, remainder) = Self::tls_deserialize(bytes)?;
+
+        if !remainder.is_empty() {
+            return Err(Error::TrailingData);
+        }
+
+        Ok(out)
+    }
+}
