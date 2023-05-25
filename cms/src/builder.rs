@@ -91,7 +91,6 @@ pub struct SignerInfoBuilder<'s, S> {
     sid: SignerIdentifier,
     digest_algorithm: AlgorithmIdentifierOwned,
     signed_attributes: Option<Vec<Attribute>>,
-    signature_algorithm: AlgorithmIdentifierOwned,
     unsigned_attributes: Option<Vec<Attribute>>,
     encapsulated_content_info: &'s EncapsulatedContentInfo,
     external_message_digest: Option<&'s [u8]>,
@@ -107,7 +106,6 @@ where
         signer: &'s S,
         sid: SignerIdentifier,
         digest_algorithm: AlgorithmIdentifierOwned,
-        signature_algorithm: AlgorithmIdentifierOwned,
         encapsulated_content_info: &'s EncapsulatedContentInfo,
         external_message_digest: Option<&'s [u8]>,
     ) -> Result<Self> {
@@ -116,7 +114,6 @@ where
             sid,
             digest_algorithm,
             signed_attributes: None,
-            signature_algorithm,
             unsigned_attributes: None,
             encapsulated_content_info,
             external_message_digest,
@@ -280,12 +277,14 @@ where
         let signature_value =
             SignatureValue::new(signature.raw_bytes()).map_err(x509_cert::builder::Error::from)?;
 
+        let signature_algorithm = self.signer.signature_algorithm_identifier()?;
+
         Ok(SignerInfo {
             version: self.version(),
             sid: self.sid.clone(),
             digest_alg: self.digest_algorithm.clone(),
             signed_attrs,
-            signature_algorithm: self.signature_algorithm,
+            signature_algorithm,
             signature: signature_value,
             unsigned_attrs,
         })

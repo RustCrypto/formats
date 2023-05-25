@@ -65,16 +65,11 @@ fn test_build_signed_data() {
         oid: const_oid::db::rfc5912::ID_SHA_256,
         parameters: None,
     };
-    let signature_algorithm = AlgorithmIdentifierOwned {
-        oid: const_oid::db::rfc5912::SHA_256_WITH_RSA_ENCRYPTION,
-        parameters: Some(Any::null()),
-    };
     let external_message_digest = None;
     let signer_info_builder_1 = SignerInfoBuilder::new(
         &signer,
         signer_identifier(1),
         digest_algorithm.clone(),
-        signature_algorithm,
         &content,
         external_message_digest,
     )
@@ -85,18 +80,11 @@ fn test_build_signed_data() {
         oid: const_oid::db::rfc5912::ID_SHA_512,
         parameters: None,
     };
-    // We use ECDSA with NIST P256, which implies SHA-256 for hashing
-    // (according to https://www.rfc-editor.org/rfc/rfc5656#section-6.2.1)
-    let signature_algorithm_2 = AlgorithmIdentifierOwned {
-        oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_256,
-        parameters: Some(Any::null()),
-    };
     let external_message_digest_2 = None;
     let signer_info_builder_2 = SignerInfoBuilder::new(
         &signer_2,
         signer_identifier(1),
         digest_algorithm_2.clone(),
-        signature_algorithm_2,
         &content,
         external_message_digest_2,
     )
