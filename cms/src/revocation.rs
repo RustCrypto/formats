@@ -2,8 +2,6 @@
 use core::cmp::Ordering;
 
 use der::asn1::SetOfVec;
-#[cfg(feature = "std")]
-use der::der_sort;
 use der::{Any, Choice, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 
@@ -53,10 +51,7 @@ impl ValueOrd for RevocationInfoChoice {
 impl TryFrom<std::vec::Vec<RevocationInfoChoice>> for RevocationInfoChoices {
     type Error = der::Error;
 
-    fn try_from(
-        mut vec: std::vec::Vec<RevocationInfoChoice>,
-    ) -> der::Result<RevocationInfoChoices> {
-        der_sort(vec.as_mut_slice())?;
+    fn try_from(vec: std::vec::Vec<RevocationInfoChoice>) -> der::Result<RevocationInfoChoices> {
         Ok(RevocationInfoChoices(SetOfVec::try_from(vec)?))
     }
 }

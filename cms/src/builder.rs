@@ -19,6 +19,7 @@ use core::fmt;
 use der::asn1::{BitString, OctetStringRef, SetOfVec};
 use der::oid::db::DB;
 use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
+use digest::Digest;
 use signature::digest::DynDigest;
 use signature::{Keypair, Signer};
 use spki::{
@@ -27,6 +28,7 @@ use spki::{
 };
 use std::time::SystemTime;
 use std::vec;
+use sha2::digest;
 use x509_cert::attr::{Attribute, AttributeValue};
 use x509_cert::builder::Builder;
 
@@ -265,16 +267,15 @@ where
         self,
         signature: BitString,
     ) -> core::result::Result<Self::Output, x509_cert::builder::Error> {
-        let signed_attrs = if let Some(signed_attributes) = &self.signed_attributes {
-            Some(SignedAttributes::try_from(signed_attributes.to_owned()).unwrap())
-        } else {
-            None
-        };
-        let unsigned_attrs = if let Some(unsigned_attributes) = &self.unsigned_attributes {
-            Some(UnsignedAttributes::try_from(unsigned_attributes.to_owned()).unwrap())
-        } else {
-            None
-        };
+        let signed_attrs = self.signed_attributes.as_ref().map(|signed_attributes| {
+            SignedAttributes::try_from(signed_attributes.to_owned()).unwrap()
+        });
+        let unsigned_attrs = self
+            .unsigned_attributes
+            .as_ref()
+            .map(|unsigned_attributes| {
+                UnsignedAttributes::try_from(unsigned_attributes.to_owned()).unwrap()
+            });
 
         let signature_value =
             SignatureValue::new(signature.raw_bytes()).map_err(x509_cert::builder::Error::from)?;
@@ -284,7 +285,7 @@ where
             sid: self.sid.clone(),
             digest_alg: self.digest_algorithm.clone(),
             signed_attrs,
-            signature_algorithm: self.signature_algorithm.clone(),
+            signature_algorithm: self.signature_algorithm,
             signature: signature_value,
             unsigned_attrs,
         })
@@ -398,17 +399,15 @@ impl<'s> SignedDataBuilder<'s> {
 
         let encap_content_info = self.encapsulated_content_info.clone();
 
-        let certificates = if let Some(certificates) = &mut self.certificates {
-            Some(CertificateSet::try_from(certificates.to_owned()).unwrap())
-        } else {
-            None
-        };
+        let certificates = self
+            .certificates
+            .as_mut()
+            .map(|certificates| CertificateSet::try_from(certificates.to_owned()).unwrap());
 
-        let crls = if let Some(crls) = &mut self.crls {
-            Some(RevocationInfoChoices::try_from(crls.to_owned()).unwrap())
-        } else {
-            None
-        };
+        let crls = self
+            .crls
+            .as_mut()
+            .map(|crls| RevocationInfoChoices::try_from(crls.to_owned()).unwrap());
 
         let signer_infos = SignerInfos::try_from(self.signer_infos.clone()).unwrap();
 
@@ -451,10 +450,9 @@ impl<'s> SignedDataBuilder<'s> {
         //                THEN version MUST be 3
         //                ELSE version MUST be 1
         let other_certificates_are_present = if let Some(certificates) = &self.certificates {
-            certificates.iter().any(|certificate| match certificate {
-                CertificateChoices::Other(_) => true,
-                _ => false,
-            })
+            certificates
+                .iter()
+                .any(|certificate| matches!(certificate, CertificateChoices::Other(_)))
         } else {
             false
         };
@@ -478,11 +476,9 @@ impl<'s> SignedDataBuilder<'s> {
         let v2_certificates_are_present = false;
         let v1_certificates_are_present = false;
         let other_crls_are_present = if let Some(crls) = &self.crls {
-            crls.iter()
-                .any(|revocation_info_choice| match revocation_info_choice {
-                    RevocationInfoChoice::Other(_) => true,
-                    _ => false,
-                })
+            crls.iter().any(|revocation_info_choice| {
+                matches!(revocation_info_choice, RevocationInfoChoice::Other(_))
+            })
         } else {
             false
         };
@@ -511,16 +507,15 @@ fn get_hasher(
 ) -> Option<Box<dyn DynDigest>> {
     let digest_name = DB.by_oid(&digest_algorithm_identifier.oid)?;
     match digest_name {
-        "id-sha1" => Some(Box::new(sha1::Sha1::default())),
-        "id-sha256" => Some(Box::new(sha2::Sha256::default())),
-        "id-sha384" => Some(Box::new(sha2::Sha384::default())),
-        "id-sha512" => Some(Box::new(sha2::Sha512::default())),
-        "id-sha224" => Some(Box::new(sha2::Sha224::default())),
-        "id-sha-3-224" => Some(Box::new(sha3::Sha3_224::default())),
-        "id-sha-3-256" => Some(Box::new(sha3::Sha3_256::default())),
-        "id-sha-3-384" => Some(Box::new(sha3::Sha3_384::default())),
-        "id-sha-3-512" => Some(Box::new(sha3::Sha3_512::default())),
-        // TODO add more hashers
+        "id-sha1" => Some(Box::new(sha1::Sha1::new())),
+        "id-sha256" => Some(Box::new(sha2::Sha256::new())),
+        "id-sha384" => Some(Box::new(sha2::Sha384::new())),
+        "id-sha512" => Some(Box::new(sha2::Sha512::new())),
+        "id-sha224" => Some(Box::new(sha2::Sha224::new())),
+        "id-sha-3-224" => Some(Box::new(sha3::Sha3_224::new())),
+        "id-sha-3-256" => Some(Box::new(sha3::Sha3_256::new())),
+        "id-sha-3-384" => Some(Box::new(sha3::Sha3_384::new())),
+        "id-sha-3-512" => Some(Box::new(sha3::Sha3_512::new())),
         _ => None,
     }
 }

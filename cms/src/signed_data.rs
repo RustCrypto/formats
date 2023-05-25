@@ -6,8 +6,6 @@ use crate::revocation::RevocationInfoChoices;
 
 use core::cmp::Ordering;
 use der::asn1::{ObjectIdentifier, OctetString, SetOfVec};
-#[cfg(feature = "std")]
-use der::der_sort;
 use der::{Any, Choice, DerOrd, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
@@ -65,8 +63,7 @@ impl_newtype!(CertificateSet, SetOfVec<CertificateChoices>);
 impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet {
     type Error = der::Error;
 
-    fn try_from(mut vec: std::vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
-        der_sort(vec.as_mut_slice())?;
+    fn try_from(vec: std::vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
         Ok(CertificateSet(SetOfVec::try_from(vec)?))
     }
 }
@@ -86,8 +83,7 @@ impl_newtype!(SignerInfos, SetOfVec<SignerInfo>);
 impl TryFrom<std::vec::Vec<SignerInfo>> for SignerInfos {
     type Error = der::Error;
 
-    fn try_from(mut vec: std::vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {
-        der_sort(vec.as_mut_slice())?;
+    fn try_from(vec: std::vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {
         Ok(SignerInfos(SetOfVec::try_from(vec)?))
     }
 }

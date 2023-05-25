@@ -20,10 +20,10 @@ x509-cert = { version = "0.2.2-pre", default-features = false, features = ["pem"
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 
 # optional dependencies
-sha1 = { version = "0.10"}
-sha2 = { version = "0.10"}
-sha3 = { version = "0.10"}
-signature = { version = "2.1.0", features = ["digest", "alloc"]}
+sha1 = { version = "0.10", optional = true}
+sha2 = { version = "0.10", optional = true}
+sha3 = { version = "0.10", optional = true}
+signature = { version = "2.1.0", features = ["digest", "alloc"], optional = true}
 
 [dev-dependencies]
 hex-literal = "0.4"
@@ -36,7 +36,7 @@ p256 = "0.13.0"
 [features]
 alloc = ["der/alloc"]
 std = ["der/std", "spki/std"]
-builder = ["std", "spki/alloc", "x509-cert/builder"]
+builder = ["sha1", "sha2", "sha3", "signature", "std", "spki/alloc", "x509-cert/builder"]
 pem = ["alloc", "der/pem"]
 
 [package.metadata.docs.rs]

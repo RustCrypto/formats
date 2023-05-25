@@ -7,8 +7,6 @@ use crate::signed_data::CertificateSet;
 
 use core::cmp::Ordering;
 use der::asn1::{BitString, GeneralizedTime, ObjectIdentifier, OctetString, SetOfVec};
-#[cfg(feature = "std")]
-use der::der_sort;
 use der::{Any, Choice, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, Attributes};
@@ -94,8 +92,7 @@ impl_newtype!(RecipientInfos, SetOfVec<RecipientInfo>);
 impl TryFrom<std::vec::Vec<RecipientInfo>> for RecipientInfos {
     type Error = der::Error;
 
-    fn try_from(mut vec: std::vec::Vec<RecipientInfo>) -> der::Result<RecipientInfos> {
-        der_sort(vec.as_mut_slice())?;
+    fn try_from(vec: std::vec::Vec<RecipientInfo>) -> der::Result<RecipientInfos> {
         Ok(RecipientInfos(SetOfVec::try_from(vec)?))
     }
 }
