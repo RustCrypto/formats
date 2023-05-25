@@ -34,6 +34,7 @@ impl<const LEN: usize> Deserialize for [u8; LEN] {
 }
 
 impl<const LEN: usize> DeserializeRemainder for [u8; LEN] {
+    #[cfg(feature = "std")]
     #[inline]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let out = bytes[..LEN].try_into().map_err(|_| Error::EndOfStream)?;

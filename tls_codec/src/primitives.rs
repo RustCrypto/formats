@@ -69,6 +69,7 @@ impl<T: Deserialize> Deserialize for Option<T> {
 }
 
 impl<T: DeserializeRemainder> DeserializeRemainder for Option<T> {
+    #[cfg(feature = "std")]
     #[inline]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let some_or_none = bytes.first().ok_or(Error::EndOfStream)?;
@@ -98,6 +99,7 @@ macro_rules! impl_unsigned {
         }
 
         impl DeserializeRemainder for $t {
+            #[cfg(feature = "std")]
             #[inline]
             fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 // TODO: There's probably a better way of doing this.
@@ -173,6 +175,7 @@ where
     T: DeserializeRemainder,
     U: DeserializeRemainder,
 {
+    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (first_element, remainder) = T::tls_deserialize(bytes)?;
@@ -228,6 +231,7 @@ where
     U: DeserializeRemainder,
     V: DeserializeRemainder,
 {
+    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (first_element, remainder) = T::tls_deserialize(bytes)?;
@@ -280,6 +284,7 @@ impl Deserialize for () {
 }
 
 impl DeserializeRemainder for () {
+    #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok(((), bytes))
