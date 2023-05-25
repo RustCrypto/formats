@@ -15,7 +15,7 @@
     unused_qualifications
 )]
 
-// TODO NM #[cfg(feature = "std")]
+#[cfg(feature = "std")]
 extern crate std;
 
 pub mod algorithm_identifier_types;
