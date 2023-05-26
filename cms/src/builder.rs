@@ -101,7 +101,11 @@ where
     S: Keypair + DynSignatureAlgorithmIdentifier,
     S::VerifyingKey: EncodePublicKey,
 {
-    /// Create a new `SignerBuilder`
+    /// Create a new `SignerInfoBuilder`. This is used for adding `SignerInfo`s to `SignedData`
+    /// structures.
+    /// The content to be signed can be stored externally. In this case `eContent` in
+    /// `encapsulated_content_info` must be `None` and the message digest must be passed with
+    /// `external_message_digest`. `digest_algorithm` must match the used digest algorithm.
     pub fn new(
         signer: &'s S,
         sid: SignerIdentifier,
@@ -131,7 +135,7 @@ where
         Ok(self)
     }
 
-    /// Add an unsigned attribute according to .
+    /// Add an unsigned attribute.
     pub fn add_unsigned_attribute(&mut self, unsigned_attribute: Attribute) -> Result<&mut Self> {
         if let Some(unsigned_attributes) = &mut self.unsigned_attributes {
             unsigned_attributes.push(unsigned_attribute);
@@ -190,9 +194,11 @@ where
                         // Unsupported hash algorithm: {}, &self.digest_algorithm.oid.to_string()
                         der::Error::from(ErrorKind::Failed)
                     })?;
-                    // TODO NM is this value DER encoded TLV or is it just V? for hashing,
-                    // TODO NM T and L must not be used (only V is hashed).
-                    hasher.update(content.value());
+                    // Only the octets comprising the value of the eContent
+                    // OCTET STRING are input to the message digest algorithm, not the tag
+                    // or the length octets.
+                    let content_value = content.value();
+                    hasher.update(content_value);
                     hasher.finalize_reset().to_vec()
                 }
             },
