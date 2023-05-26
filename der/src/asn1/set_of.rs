@@ -452,7 +452,7 @@ fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<()> {
 /// to support heapless `no_std` targets as well as to enable bubbling up
 /// sorting errors.
 #[allow(clippy::integer_arithmetic)]
-pub fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
+fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
     for i in 0..slice.len() {
         let mut j = i;
 
