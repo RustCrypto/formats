@@ -25,11 +25,11 @@ use crate::{Deserialize, Error, Serialize, Size};
 #[cfg(not(feature = "mls"))]
 const MAX_LEN: u64 = (1 << 62) - 1;
 #[cfg(not(feature = "mls"))]
-const MAX_LEN_LEN: usize = 8;
+const MAX_LEN_LEN_LOG: usize = 3;
 #[cfg(feature = "mls")]
 const MAX_LEN: u64 = (1 << 30) - 1;
 #[cfg(feature = "mls")]
-const MAX_LEN_LEN: usize = 4;
+const MAX_LEN_LEN_LOG: usize = 2;
 
 /// Read the length of a variable-length vector.
 ///
@@ -49,14 +49,23 @@ fn read_variable_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize
     }
 
     let mut length: usize = (len_len_byte[0] & 0x3F).into();
-    let len_len = (len_len_byte[0] >> 6).into();
+    let len_len_log = (len_len_byte[0] >> 6).into();
     if !cfg!(fuzzing) {
-        debug_assert!(len_len <= MAX_LEN_LEN);
+        debug_assert!(len_len_log <= MAX_LEN_LEN_LOG);
     }
-    if len_len > MAX_LEN_LEN {
+    if len_len_log > MAX_LEN_LEN_LOG {
         return Err(Error::InvalidVectorLength);
     }
-    for _ in 0..len_len {
+
+    let len_len = match len_len_log {
+        0 => 1,
+        1 => 2,
+        2 => 4,
+        3 => 8,
+        _ => unreachable!(),
+    };
+
+    for _ in 1..len_len {
         let mut next = [0u8; 1];
         bytes.read_exact(&mut next)?;
         length = (length << 8) + usize::from(next[0]);
@@ -76,9 +85,9 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
 
     Ok(if length < 0x40 {
         1
-    } else if length < 0x3fff {
+    } else if length < 0x4000 {
         2
-    } else if length < 0x3fff_ffff {
+    } else if length < 0x4000_0000 {
         4
     } else {
         8
@@ -135,8 +144,8 @@ fn write_length<W: std::io::Write>(writer: &mut W, content_length: usize) -> Res
     match len_len {
         1 => length_bytes[0] = 0x00,
         2 => length_bytes[0] = 0x40,
-        4 => length_bytes[0] = 0xc0,
-        8 => length_bytes[0] = 0x80,
+        4 => length_bytes[0] = 0x80,
+        8 => length_bytes[0] = 0xc0,
         _ => {
             if !cfg!(fuzzing) {
                 debug_assert!(false, "Invalid vector len_len {len_len}");

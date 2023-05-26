@@ -151,7 +151,7 @@ fn deserialize_tls_vl_bytes() {
 
     let long_vector = vec![77u8; 65535];
     let serialized_long_vec = VLByteSlice(&long_vector).tls_serialize_detached().unwrap();
-    std::println!("bytes: {:x?}", &serialized_long_vec[0..5]);
+    assert_eq!(serialized_long_vec[0], 0x80);
     let deserialized_long_vec =
         VLBytes::tls_deserialize(&mut serialized_long_vec.as_slice()).unwrap();
     assert_eq!(
