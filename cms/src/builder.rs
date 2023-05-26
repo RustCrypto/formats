@@ -282,7 +282,7 @@ where
         Ok(SignerInfo {
             version: self.version(),
             sid: self.sid.clone(),
-            digest_alg: self.digest_algorithm.clone(),
+            digest_alg: self.digest_algorithm,
             signed_attrs,
             signature_algorithm,
             signature: signature_value,
