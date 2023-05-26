@@ -15,9 +15,6 @@
     unused_qualifications
 )]
 
-#[cfg(feature = "std")]
-extern crate std;
-
 pub mod algorithm_identifier_types;
 pub mod certificate_choices;
 pub mod cms_version;
