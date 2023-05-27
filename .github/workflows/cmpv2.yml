@@ -41,10 +41,11 @@ jobs:
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features arbitrary,default,std
 
-  minimal-versions:
-    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
-    with:
-        working-directory: ${{ github.workflow }}
+  # TODO: This can be re-enabled once a release of crmf is available (> 0.2.0-pre.0)
+  # minimal-versions:
+  #   uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
+  #   with:
+  #       working-directory: ${{ github.workflow }}
 
   test:
     runs-on: ubuntu-latest
