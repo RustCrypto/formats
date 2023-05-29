@@ -19,7 +19,7 @@ serde = { version = "1.0.144", features = ["derive"], optional = true }
 tls_codec_derive = { version = "=0.3.0-pre.2", optional = true }
 
 [dev-dependencies]
-criterion = "0.4"
+criterion = "0.5"
 regex = "1.8"
 
 [features]
