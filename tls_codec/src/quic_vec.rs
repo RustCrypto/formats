@@ -83,11 +83,11 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
         return Err(Error::InvalidVectorLength);
     }
 
-    Ok(if length < 0x40 {
+    Ok(if length <= 0x3f {
         1
-    } else if length < 0x4000 {
+    } else if length <= 0x3fff {
         2
-    } else if length < 0x4000_0000 {
+    } else if length <= 0x3fff_ffff {
         4
     } else {
         8
