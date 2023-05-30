@@ -166,6 +166,14 @@ impl FromStr for RelativeDistinguishedName {
     }
 }
 
+impl TryFrom<Vec<AttributeTypeAndValue>> for RelativeDistinguishedName {
+    type Error = der::Error;
+
+    fn try_from(vec: Vec<AttributeTypeAndValue>) -> der::Result<RelativeDistinguishedName> {
+        Ok(RelativeDistinguishedName(SetOfVec::try_from(vec)?))
+    }
+}
+
 /// Serializes the structure according to the rules in [RFC 4514].
 ///
 /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
