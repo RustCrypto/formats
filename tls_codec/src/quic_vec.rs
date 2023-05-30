@@ -71,6 +71,12 @@ fn read_variable_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize
         length = (length << 8) + usize::from(next[0]);
     }
 
+    // ensure that len_len is minimal for the given length
+    let min_len_len = length_encoding_bytes(length as u64)?;
+    if min_len_len != len_len {
+        return Err(Error::InvalidVectorLength);
+    }
+
     Ok((length, len_len))
 }
 

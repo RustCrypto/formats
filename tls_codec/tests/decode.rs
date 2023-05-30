@@ -1,7 +1,7 @@
 #![cfg(feature = "std")]
 
 use tls_codec::{
-    Deserialize, Serialize, Size, TlsByteSliceU16, TlsByteVecU16, TlsByteVecU8, TlsSliceU16,
+    Deserialize, Error, Serialize, Size, TlsByteSliceU16, TlsByteVecU16, TlsByteVecU8, TlsSliceU16,
     TlsVecU16, TlsVecU32, TlsVecU8, VLByteSlice, VLBytes,
 };
 
@@ -160,6 +160,15 @@ fn deserialize_tls_vl_bytes() {
     );
     assert_eq!(long_vector.len(), deserialized_long_vec.as_slice().len());
     assert_eq!(long_vector.as_slice(), deserialized_long_vec.as_slice());
+}
+
+#[test]
+fn deserialize_tls_vl_invalid_length() {
+    let mut b = &[0x40u8, 3, 10, 20, 30] as &[u8];
+    assert_eq!(
+        VLBytes::tls_deserialize(&mut b),
+        Err(Error::InvalidVectorLength)
+    );
 }
 
 #[test]
