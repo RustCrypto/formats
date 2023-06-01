@@ -1,7 +1,5 @@
 //! Codec implementations for unsigned integer primitives.
 
-use crate::DeserializeRemainder;
-
 use super::{Deserialize, Error, Serialize, Size};
 
 use core::marker::PhantomData;
@@ -66,22 +64,19 @@ impl<T: Deserialize> Deserialize for Option<T> {
             _ => Err(Error::DecodingError(format!("Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.", some_or_none[0])))
         }
     }
-}
 
-impl<T: DeserializeRemainder> DeserializeRemainder for Option<T> {
-    #[cfg(feature = "std")]
     #[inline]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let some_or_none = bytes.first().ok_or(Error::EndOfStream)?;
         match some_or_none {
             0 => {
-                Ok((None, &bytes[1..]))
+                Ok((None, bytes.get(1..).ok_or(Error::EndOfStream)?))
             },
             1 => {
-                let (element, remainder) = T::tls_deserialize(bytes)?;
+                let (element, remainder) = T::tls_deserialize_remainder(bytes)?;
                 Ok((Some(element), remainder))
             },
-            _ => Err(Error::DecodingError(format!("Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.", some_or_none)))
+            _ => Err(Error::DecodingError(alloc::format!("Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.", some_or_none)))
         }
     }
 }
@@ -96,18 +91,16 @@ macro_rules! impl_unsigned {
                 bytes.read_exact(&mut x)?;
                 Ok(<$t>::from_be_bytes(x))
             }
-        }
 
-        impl DeserializeRemainder for $t {
-            #[cfg(feature = "std")]
             #[inline]
-            fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-                // TODO: There's probably a better way of doing this.
-                let x = (0 as $t).to_be_bytes();
-                let out = bytes[..x.len()]
+            fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+                let len = core::mem::size_of::<$t>();
+                let out = bytes
+                    .get(..len)
+                    .ok_or(Error::EndOfStream)?
                     .try_into()
                     .map_err(|_| Error::EndOfStream)?;
-                Ok((<$t>::from_be_bytes(out), &bytes[x.len()..]))
+                Ok((<$t>::from_be_bytes(out), &bytes[len..]))
             }
         }
 
@@ -167,19 +160,11 @@ where
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
         Ok((T::tls_deserialize(bytes)?, U::tls_deserialize(bytes)?))
     }
-}
 
-// Implement (de)serialization for tuple.
-impl<T, U> DeserializeRemainder for (T, U)
-where
-    T: DeserializeRemainder,
-    U: DeserializeRemainder,
-{
-    #[cfg(feature = "std")]
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let (first_element, remainder) = T::tls_deserialize(bytes)?;
-        let (second_element, remainder) = U::tls_deserialize(remainder)?;
+    fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (first_element, remainder) = T::tls_deserialize_remainder(bytes)?;
+        let (second_element, remainder) = U::tls_deserialize_remainder(remainder)?;
         Ok(((first_element, second_element), remainder))
     }
 }
@@ -223,20 +208,12 @@ where
             V::tls_deserialize(bytes)?,
         ))
     }
-}
 
-impl<T, U, V> DeserializeRemainder for (T, U, V)
-where
-    T: DeserializeRemainder,
-    U: DeserializeRemainder,
-    V: DeserializeRemainder,
-{
-    #[cfg(feature = "std")]
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let (first_element, remainder) = T::tls_deserialize(bytes)?;
-        let (second_element, remainder) = U::tls_deserialize(remainder)?;
-        let (third_element, remainder) = V::tls_deserialize(remainder)?;
+    fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (first_element, remainder) = T::tls_deserialize_remainder(bytes)?;
+        let (second_element, remainder) = U::tls_deserialize_remainder(remainder)?;
+        let (third_element, remainder) = V::tls_deserialize_remainder(remainder)?;
         Ok(((first_element, second_element, third_element), remainder))
     }
 }
@@ -281,12 +258,9 @@ impl Deserialize for () {
     fn tls_deserialize<R: Read>(_: &mut R) -> Result<(), Error> {
         Ok(())
     }
-}
 
-impl DeserializeRemainder for () {
-    #[cfg(feature = "std")]
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok(((), bytes))
     }
 }
@@ -311,12 +285,9 @@ impl<T> Deserialize for PhantomData<T> {
     fn tls_deserialize<R: Read>(_: &mut R) -> Result<Self, Error> {
         Ok(PhantomData)
     }
-}
 
-impl<T> DeserializeRemainder for PhantomData<T> {
-    #[cfg(feature = "std")]
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok((PhantomData, bytes))
     }
 }

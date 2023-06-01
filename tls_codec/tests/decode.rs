@@ -166,7 +166,7 @@ fn deserialize_tls_vl_bytes() {
 fn deserialize_remainder_tls_vl_bytes() {
     let b = &[4u8, 77, 88, 1, 99];
 
-    let (v, remainder) = <VLBytes as tls_codec::DeserializeRemainder>::tls_deserialize(b)
+    let (v, remainder) = <VLBytes as tls_codec::Deserialize>::tls_deserialize_remainder(b)
         .expect("Unable to tls_deserialize");
     assert_eq!(5, v.tls_serialized_len());
     assert_eq!(&[77, 88, 1, 99], v.as_slice());
@@ -178,7 +178,7 @@ fn deserialize_remainder_tls_vl_bytes() {
     let serialized_long_vec = VLByteSlice(&long_vector).tls_serialize_detached().unwrap();
     std::println!("bytes: {:x?}", &serialized_long_vec[0..5]);
     let (deserialized_long_vec, remainder) =
-        <VLBytes as tls_codec::DeserializeRemainder>::tls_deserialize(
+        <VLBytes as tls_codec::Deserialize>::tls_deserialize_remainder(
             serialized_long_vec.as_slice(),
         )
         .unwrap();

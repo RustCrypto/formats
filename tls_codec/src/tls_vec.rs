@@ -59,6 +59,25 @@ macro_rules! impl_byte_deserialize {
             bytes.read_exact(result.vec.as_mut_slice())?;
             Ok(result)
         }
+
+        #[inline(always)]
+        fn deserialize_bytes_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+            let (type_len, remainder) = <$size>::tls_deserialize_remainder(bytes)?;
+            let len = type_len as usize;
+            // When fuzzing we limit the maximum size to allocate.
+            // XXX: We should think about a configurable limit for the allocation
+            //      here.
+            if cfg!(fuzzing) && len > u16::MAX as usize {
+                return Err(Error::DecodingError(alloc::format!(
+                    "Trying to allocate {} bytes. Only {} allowed.",
+                    len,
+                    u16::MAX
+                )));
+            }
+            let vec = bytes.get(..len).ok_or(Error::EndOfStream)?;
+            let result = Self { vec: vec.to_vec() };
+            Ok((result, &remainder[len..]))
+        }
     };
 }
 
@@ -77,6 +96,21 @@ macro_rules! impl_deserialize {
                 result.push(element);
             }
             Ok(result)
+        }
+
+        #[inline(always)]
+        fn deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+            let mut result = Self { vec: Vec::new() };
+            let (len, mut remainder) = <$size>::tls_deserialize_remainder(bytes)?;
+            let mut read = len.tls_serialized_len();
+            let len_len = read;
+            while (read - len_len) < len as usize {
+                let (element, next_remainder) = T::tls_deserialize_remainder(remainder)?;
+                remainder = next_remainder;
+                read += element.tls_serialized_len();
+                result.push(element);
+            }
+            Ok((result, remainder))
         }
     };
 }
@@ -202,6 +236,10 @@ macro_rules! impl_tls_vec_codec_generic {
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
                 Self::deserialize(bytes)
             }
+
+            fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+                Self::deserialize_remainder(bytes)
+            }
         }
     };
 }
@@ -240,6 +278,10 @@ macro_rules! impl_tls_vec_codec_bytes {
             #[cfg(feature = "std")]
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
                 Self::deserialize_bytes(bytes)
+            }
+
+            fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+                Self::deserialize_bytes_remainder(bytes)
             }
         }
     };
