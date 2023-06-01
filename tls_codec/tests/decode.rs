@@ -162,7 +162,7 @@ fn deserialize_tls_vl_bytes() {
     assert_eq!(long_vector.as_slice(), deserialized_long_vec.as_slice());
 }
 
-#[cfg(feature = "remainder")]
+#[cfg(feature = "bytes")]
 #[test]
 fn deserialize_bytes_tls_vl_bytes() {
     let b = &[4u8, 77, 88, 1, 99];

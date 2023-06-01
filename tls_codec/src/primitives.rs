@@ -65,9 +65,9 @@ impl<T: Deserialize> Deserialize for Option<T> {
         }
     }
 
-    #[cfg(feature = "remainder")]
+    #[cfg(feature = "bytes")]
     #[inline]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let bytes = bytes.as_ref();
         let some_or_none = bytes.first().ok_or(Error::EndOfStream)?;
         match some_or_none {
@@ -94,9 +94,9 @@ macro_rules! impl_unsigned {
                 Ok(<$t>::from_be_bytes(x))
             }
 
-            #[cfg(feature = "remainder")]
+            #[cfg(feature = "bytes")]
             #[inline]
-            fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+            fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 let len = core::mem::size_of::<$t>();
                 let out = bytes
                     .as_ref()
@@ -104,7 +104,10 @@ macro_rules! impl_unsigned {
                     .ok_or(Error::EndOfStream)?
                     .try_into()
                     .map_err(|_| Error::EndOfStream)?;
-                Ok((<$t>::from_be_bytes(out), &bytes[len..]))
+                Ok((
+                    <$t>::from_be_bytes(out),
+                    &bytes.as_ref().get(len..).ok_or(Error::EndOfStream)?,
+                ))
             }
         }
 
@@ -165,9 +168,9 @@ where
         Ok((T::tls_deserialize(bytes)?, U::tls_deserialize(bytes)?))
     }
 
-    #[cfg(feature = "remainder")]
+    #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let bytes = bytes.as_ref();
         let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
         let (second_element, remainder) = U::tls_deserialize_bytes(remainder)?;
@@ -215,9 +218,9 @@ where
         ))
     }
 
-    #[cfg(feature = "remainder")]
+    #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let bytes = bytes.as_ref();
         let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
         let (second_element, remainder) = U::tls_deserialize_bytes(remainder)?;
@@ -267,9 +270,9 @@ impl Deserialize for () {
         Ok(())
     }
 
-    #[cfg(feature = "remainder")]
+    #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let bytes = bytes.as_ref();
         Ok(((), bytes))
     }
@@ -296,9 +299,9 @@ impl<T> Deserialize for PhantomData<T> {
         Ok(PhantomData)
     }
 
-    #[cfg(feature = "remainder")]
+    #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok((PhantomData, bytes.as_ref()))
     }
 }

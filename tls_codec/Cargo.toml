@@ -28,7 +28,7 @@ arbitrary = [ "std", "dep:arbitrary" ]
 derive = [ "std", "tls_codec_derive" ]
 serde = [ "std", "dep:serde" ]
 mls = [] # In MLS variable length vectors are limited compared to QUIC.
-remainder = []
+bytes = []
 std = []
 
 [[bench]]

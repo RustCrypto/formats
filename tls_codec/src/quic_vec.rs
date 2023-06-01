@@ -47,23 +47,9 @@ fn read_variable_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize
         // variable-length encoded vector.
         return Err(Error::InvalidVectorLength);
     }
+    let len_len_byte = len_len_byte[0];
 
-    let mut length: usize = (len_len_byte[0] & 0x3F).into();
-    let len_len_log = (len_len_byte[0] >> 6).into();
-    if !cfg!(fuzzing) {
-        debug_assert!(len_len_log <= MAX_LEN_LEN_LOG);
-    }
-    if len_len_log > MAX_LEN_LEN_LOG {
-        return Err(Error::InvalidVectorLength);
-    }
-
-    let len_len = match len_len_log {
-        0 => 1,
-        1 => 2,
-        2 => 4,
-        3 => 8,
-        _ => unreachable!(),
-    };
+    let (mut length, len_len) = calculate_length(len_len_byte)?;
 
     for _ in 1..len_len {
         let mut next = [0u8; 1];
@@ -71,29 +57,24 @@ fn read_variable_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize
         length = (length << 8) + usize::from(next[0]);
     }
 
+    check_min_length(length, len_len)?;
+
+    Ok((length, len_len))
+}
+
+fn check_min_length(length: usize, len_len: usize) -> Result<(), Error> {
     if cfg!(feature = "mls") {
         // ensure that len_len is minimal for the given length
         let min_len_len = length_encoding_bytes(length as u64)?;
         if min_len_len != len_len {
             return Err(Error::InvalidVectorLength);
         }
-    }
-
-    Ok((length, len_len))
+    };
+    Ok(())
 }
 
-#[cfg(feature = "remainder")]
-fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), Error> {
-    // The length is encoded in the first two bits of the first byte.
-    let (len_len_byte, mut remainder) = <u8 as Deserialize>::tls_deserialize_bytes(bytes)?;
-    if len_len_byte == 0u8 {
-        // There must be at least one byte for the length.
-        // If we don't even have a length byte, this is not a valid
-        // variable-length encoded vector.
-        return Err(Error::InvalidVectorLength);
-    }
-
-    let mut length: usize = (len_len_byte & 0x3F).into();
+fn calculate_length(len_len_byte: u8) -> Result<(usize, usize), Error> {
+    let length: usize = (len_len_byte & 0x3F).into();
     let len_len_log = (len_len_byte >> 6).into();
     if !cfg!(fuzzing) {
         debug_assert!(len_len_log <= MAX_LEN_LEN_LOG);
@@ -101,7 +82,6 @@ fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), E
     if len_len_log > MAX_LEN_LEN_LOG {
         return Err(Error::InvalidVectorLength);
     }
-
     let len_len = match len_len_log {
         0 => 1,
         1 => 2,
@@ -109,6 +89,15 @@ fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), E
         3 => 8,
         _ => unreachable!(),
     };
+    Ok((length, len_len))
+}
+
+#[cfg(feature = "bytes")]
+fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), Error> {
+    // The length is encoded in the first two bits of the first byte.
+    let (len_len_byte, mut remainder) = <u8 as Deserialize>::tls_deserialize_bytes(bytes)?;
+
+    let (mut length, len_len) = calculate_length(len_len_byte)?;
 
     for _ in 1..len_len {
         let (next, next_remainder) = <u8 as Deserialize>::tls_deserialize_bytes(remainder)?;
@@ -116,13 +105,7 @@ fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), E
         length = (length << 8) + usize::from(next);
     }
 
-    if cfg!(feature = "mls") {
-        // ensure that len_len is minimal for the given length
-        let min_len_len = length_encoding_bytes(length as u64)?;
-        if min_len_len != len_len {
-            return Err(Error::InvalidVectorLength);
-        }
-    }
+    check_min_length(length, len_len)?;
 
     Ok(((length, len_len), remainder))
 }
@@ -183,9 +166,9 @@ impl<T: Deserialize> Deserialize for Vec<T> {
         Ok(result)
     }
 
-    #[cfg(feature = "remainder")]
+    #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let ((length, len_len), mut remainder) = read_variable_length_bytes(bytes.as_ref())?;
 
         if length == 0 {
@@ -502,9 +485,9 @@ impl Deserialize for VLBytes {
         )))
     }
 
-    #[cfg(feature = "remainder")]
+    #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let ((length, _), remainder) = read_variable_length_bytes(bytes.as_ref())?;
         if length == 0 {
             return Ok((Self::new(vec![]), remainder));
@@ -573,8 +556,8 @@ impl Deserialize for SecretVLBytes {
         Ok(Self(<VLBytes as Deserialize>::tls_deserialize(bytes)?))
     }
 
-    #[cfg(feature = "remainder")]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error>
+    #[cfg(feature = "bytes")]
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
         Self: Sized,
     {

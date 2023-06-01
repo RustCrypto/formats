@@ -60,7 +60,7 @@ macro_rules! impl_byte_deserialize {
             Ok(result)
         }
 
-        #[cfg(feature = "remainder")]
+        #[cfg(feature = "bytes")]
         #[inline(always)]
         fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let (type_len, remainder) = <$size>::tls_deserialize_bytes(bytes)?;
@@ -75,9 +75,9 @@ macro_rules! impl_byte_deserialize {
                     u16::MAX
                 )));
             }
-            let vec = bytes.get(..len).ok_or(Error::EndOfStream)?;
+            let vec = bytes.as_ref().get(..len).ok_or(Error::EndOfStream)?;
             let result = Self { vec: vec.to_vec() };
-            Ok((result, &remainder[len..]))
+            Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
         }
     };
 }
@@ -99,7 +99,7 @@ macro_rules! impl_deserialize {
             Ok(result)
         }
 
-        #[cfg(feature = "remainder")]
+        #[cfg(feature = "bytes")]
         #[inline(always)]
         fn deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let mut result = Self { vec: Vec::new() };
@@ -239,7 +239,7 @@ macro_rules! impl_tls_vec_codec_generic {
                 Self::deserialize(bytes)
             }
 
-            #[cfg(feature = "remainder")]
+            #[cfg(feature = "bytes")]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes(bytes)
             }
@@ -283,7 +283,7 @@ macro_rules! impl_tls_vec_codec_bytes {
                 Self::deserialize_bytes(bytes)
             }
 
-            #[cfg(feature = "remainder")]
+            #[cfg(feature = "bytes")]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes_bytes(bytes)
             }

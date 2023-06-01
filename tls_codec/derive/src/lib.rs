@@ -810,8 +810,8 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                         })
                     }
 
-                    #[cfg(feature = "remainder")]
-                    fn tls_deserialize_bytes(bytes: &impl AsRef<[u8]>) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                    #[cfg(feature = "bytes")]
+                    fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         Ok(Self {
                             #(#members: #prefixes::tls_deserialize_bytes(bytes)?,)*
                             #(#members_default: Default::default(),)*
@@ -879,9 +879,9 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                         }
                     }
 
-                    #[cfg(feature = "remainder")]
+                    #[cfg(feature = "bytes")]
                     #[allow(non_upper_case_globals)]
-                    fn tls_deserialize_bytes(bytes: &impl AsRef<[u8]>) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                    fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         #discriminant_constants
                         let (discriminant, remainder) = <#repr as tls_codec::Deserialize>::tls_deserialize_bytes(bytes)?;
                         match discriminant {

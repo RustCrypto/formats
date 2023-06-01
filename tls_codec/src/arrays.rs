@@ -1,9 +1,12 @@
 //! Implement the TLS codec for some byte arrays.
 
-use crate::{Deserialize, Error, Serialize, Size};
+use crate::{Deserialize, Serialize, Size};
 
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
+
+#[cfg(any(feature = "std", feature = "bytes"))]
+use crate::Error;
 
 impl<const LEN: usize> Serialize for [u8; LEN] {
     #[cfg(feature = "std")]
@@ -29,9 +32,9 @@ impl<const LEN: usize> Deserialize for [u8; LEN] {
         Ok(out)
     }
 
-    #[cfg(feature = "remainder")]
+    #[cfg(feature = "bytes")]
     #[inline]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let out = bytes
             .as_ref()
             .get(..LEN)
