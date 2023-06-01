@@ -88,6 +88,15 @@ pub struct OriginatorInfo {
 pub struct RecipientInfos(pub SetOfVec<RecipientInfo>);
 impl_newtype!(RecipientInfos, SetOfVec<RecipientInfo>);
 
+#[cfg(feature = "std")]
+impl TryFrom<std::vec::Vec<RecipientInfo>> for RecipientInfos {
+    type Error = der::Error;
+
+    fn try_from(vec: std::vec::Vec<RecipientInfo>) -> der::Result<RecipientInfos> {
+        Ok(RecipientInfos(SetOfVec::try_from(vec)?))
+    }
+}
+
 /// The `EncryptedContentInfo` type is defined in [RFC 5652 Section 6.1].
 ///
 /// ```text

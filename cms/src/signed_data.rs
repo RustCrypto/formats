@@ -59,6 +59,15 @@ pub type DigestAlgorithmIdentifiers = SetOfVec<AlgorithmIdentifierOwned>;
 pub struct CertificateSet(pub SetOfVec<CertificateChoices>);
 impl_newtype!(CertificateSet, SetOfVec<CertificateChoices>);
 
+#[cfg(feature = "std")]
+impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet {
+    type Error = der::Error;
+
+    fn try_from(vec: std::vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
+        Ok(CertificateSet(SetOfVec::try_from(vec)?))
+    }
+}
+
 /// The `SignerInfos` type is defined in [RFC 5652 Section 5.1].
 ///
 /// ```text
@@ -69,6 +78,15 @@ impl_newtype!(CertificateSet, SetOfVec<CertificateChoices>);
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct SignerInfos(pub SetOfVec<SignerInfo>);
 impl_newtype!(SignerInfos, SetOfVec<SignerInfo>);
+
+#[cfg(feature = "std")]
+impl TryFrom<std::vec::Vec<SignerInfo>> for SignerInfos {
+    type Error = der::Error;
+
+    fn try_from(vec: std::vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {
+        Ok(SignerInfos(SetOfVec::try_from(vec)?))
+    }
+}
 
 /// The `EncapsulatedContentInfo` type is defined in [RFC 5652 Section 5.2].
 ///
