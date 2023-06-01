@@ -165,10 +165,13 @@ fn deserialize_tls_vl_bytes() {
 #[test]
 fn deserialize_tls_vl_invalid_length() {
     let mut b = &[0x40u8, 3, 10, 20, 30] as &[u8];
-    assert_eq!(
-        VLBytes::tls_deserialize(&mut b),
-        Err(Error::InvalidVectorLength)
-    );
+    let result = VLBytes::tls_deserialize(&mut b);
+    if cfg!(feature = "mls") {
+        assert_eq!(result, Err(Error::InvalidVectorLength));
+    } else {
+        let deserialized = result.expect("Unable to tls_deserialize");
+        assert_eq!(deserialized.as_slice(), [10, 20, 30]);
+    }
 }
 
 #[test]
