@@ -95,12 +95,12 @@ fn calculate_length(len_len_byte: u8) -> Result<(usize, usize), Error> {
 #[cfg(feature = "bytes")]
 fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), Error> {
     // The length is encoded in the first two bits of the first byte.
-    let (len_len_byte, mut remainder) = <u8 as Deserialize>::tls_deserialize_bytes(bytes)?;
+    let (len_len_byte, mut remainder) = u8::tls_deserialize_bytes(bytes)?;
 
     let (mut length, len_len) = calculate_length(len_len_byte)?;
 
     for _ in 1..len_len {
-        let (next, next_remainder) = <u8 as Deserialize>::tls_deserialize_bytes(remainder)?;
+        let (next, next_remainder) = u8::tls_deserialize_bytes(remainder)?;
         remainder = next_remainder;
         length = (length << 8) + usize::from(next);
     }
@@ -169,7 +169,7 @@ impl<T: Deserialize> Deserialize for Vec<T> {
     #[cfg(feature = "bytes")]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let ((length, len_len), mut remainder) = read_variable_length_bytes(bytes.as_ref())?;
+        let ((length, len_len), mut remainder) = read_variable_length_bytes(bytes)?;
 
         if length == 0 {
             // An empty vector.
@@ -488,7 +488,7 @@ impl Deserialize for VLBytes {
     #[cfg(feature = "bytes")]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let ((length, _), remainder) = read_variable_length_bytes(bytes.as_ref())?;
+        let ((length, _), remainder) = read_variable_length_bytes(bytes)?;
         if length == 0 {
             return Ok((Self::new(vec![]), remainder));
         }
@@ -553,7 +553,7 @@ impl Deserialize for SecretVLBytes {
     where
         Self: Sized,
     {
-        Ok(Self(<VLBytes as Deserialize>::tls_deserialize(bytes)?))
+        Ok(Self(VLBytes::tls_deserialize(bytes)?))
     }
 
     #[cfg(feature = "bytes")]
@@ -561,7 +561,7 @@ impl Deserialize for SecretVLBytes {
     where
         Self: Sized,
     {
-        let (bytes, remainder) = <VLBytes as Deserialize>::tls_deserialize_bytes(bytes)?;
+        let (bytes, remainder) = VLBytes::tls_deserialize_bytes(bytes)?;
         Ok((Self(bytes), remainder))
     }
 }

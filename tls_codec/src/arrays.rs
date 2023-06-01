@@ -36,7 +36,6 @@ impl<const LEN: usize> Deserialize for [u8; LEN] {
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let out = bytes
-            .as_ref()
             .get(..LEN)
             .ok_or(Error::EndOfStream)?
             .try_into()

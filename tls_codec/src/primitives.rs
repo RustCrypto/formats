@@ -68,7 +68,6 @@ impl<T: Deserialize> Deserialize for Option<T> {
     #[cfg(feature = "bytes")]
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let bytes = bytes.as_ref();
         let some_or_none = bytes.first().ok_or(Error::EndOfStream)?;
         match some_or_none {
             0 => {
@@ -99,14 +98,13 @@ macro_rules! impl_unsigned {
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 let len = core::mem::size_of::<$t>();
                 let out = bytes
-                    .as_ref()
                     .get(..len)
                     .ok_or(Error::EndOfStream)?
                     .try_into()
                     .map_err(|_| Error::EndOfStream)?;
                 Ok((
                     <$t>::from_be_bytes(out),
-                    &bytes.as_ref().get(len..).ok_or(Error::EndOfStream)?,
+                    &bytes.get(len..).ok_or(Error::EndOfStream)?,
                 ))
             }
         }
@@ -171,7 +169,6 @@ where
     #[cfg(feature = "bytes")]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let bytes = bytes.as_ref();
         let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
         let (second_element, remainder) = U::tls_deserialize_bytes(remainder)?;
         Ok(((first_element, second_element), remainder))
@@ -221,7 +218,6 @@ where
     #[cfg(feature = "bytes")]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let bytes = bytes.as_ref();
         let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
         let (second_element, remainder) = U::tls_deserialize_bytes(remainder)?;
         let (third_element, remainder) = V::tls_deserialize_bytes(remainder)?;
@@ -273,7 +269,6 @@ impl Deserialize for () {
     #[cfg(feature = "bytes")]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let bytes = bytes.as_ref();
         Ok(((), bytes))
     }
 }
@@ -302,7 +297,7 @@ impl<T> Deserialize for PhantomData<T> {
     #[cfg(feature = "bytes")]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        Ok((PhantomData, bytes.as_ref()))
+        Ok((PhantomData, bytes))
     }
 }
 

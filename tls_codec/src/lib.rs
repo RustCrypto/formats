@@ -159,7 +159,7 @@ pub trait Deserialize: Size {
     ///
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
     ///
-    /// Returns an error if occurs during deserialization.
+    /// Returns an error if one occurs during deserialization.
     #[cfg(feature = "std")]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error>
     where
@@ -170,7 +170,7 @@ pub trait Deserialize: Size {
     ///
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
     ///
-    /// Returns an error if occurs during deserialization.
+    /// Returns an error if one occurs during deserialization.
     #[cfg(feature = "bytes")]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
