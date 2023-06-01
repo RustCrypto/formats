@@ -810,9 +810,10 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                         })
                     }
 
-                    fn tls_deserialize_remainder(bytes: &&[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                    #[cfg(feature = "remainder")]
+                    fn tls_deserialize_bytes(bytes: &impl AsRef<[u8]>) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         Ok(Self {
-                            #(#members: #prefixes::tls_deserialize_remainder(bytes)?,)*
+                            #(#members: #prefixes::tls_deserialize_bytes(bytes)?,)*
                             #(#members_default: Default::default(),)*
                         })
                     }
@@ -845,6 +846,24 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 })
                 .collect::<Vec<_>>();
+            let arms_bytes = variants
+                .iter()
+                .map(|variant| {
+                    let variant_id = &variant.ident;
+                    let discriminant = discriminant_id(variant_id);
+                    let members = &variant.members;
+                    let prefixes = variant
+                        .member_prefixes
+                        .iter()
+                        .map(|p| p.for_trait("Deserialize"))
+                        .collect::<Vec<_>>();
+                    quote! {
+                        #discriminant => Ok(#ident::#variant_id {
+                            #(#members: #prefixes::tls_deserialize_bytes(bytes)?,)*
+                        }),
+                    }
+                })
+                .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
@@ -860,12 +879,13 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                         }
                     }
 
+                    #[cfg(feature = "remainder")]
                     #[allow(non_upper_case_globals)]
-                    fn tls_deserialize_remainder(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                    fn tls_deserialize_bytes(bytes: &impl AsRef<[u8]>) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         #discriminant_constants
-                        let (discriminant, remainder) = <#repr as tls_codec::Deserialize>::tls_deserialize_remainder(bytes)?;
+                        let (discriminant, remainder) = <#repr as tls_codec::Deserialize>::tls_deserialize_bytes(bytes)?;
                         match discriminant {
-                            #(#arms)*
+                            #(#arms_bytes)*
                             _ => {
                                 Err(tls_codec::Error::UnknownValue(discriminant.into()))
                             },

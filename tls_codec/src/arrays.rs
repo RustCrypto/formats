@@ -29,9 +29,11 @@ impl<const LEN: usize> Deserialize for [u8; LEN] {
         Ok(out)
     }
 
+    #[cfg(feature = "remainder")]
     #[inline]
-    fn tls_deserialize_remainder(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<(Self, &[u8]), Error> {
         let out = bytes
+            .as_ref()
             .get(..LEN)
             .ok_or(Error::EndOfStream)?
             .try_into()
