@@ -41,11 +41,10 @@ jobs:
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features arbitrary,default,std
 
-# FIXME: Temporary disabled until https://github.com/rust-fuzz/arbitrary/issues/136 is fixed
-#  minimal-versions:
-#    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
-#    with:
-#        working-directory: ${{ github.workflow }}
+  minimal-versions:
+    uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
+    with:
+        working-directory: ${{ github.workflow }}
 
   test:
     runs-on: ubuntu-latest

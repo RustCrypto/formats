@@ -58,3 +58,22 @@ fn serialize_var_len_bytes() {
         .expect("Error encoding vector");
     assert_eq!(serialized, vec![0x00]);
 }
+
+#[test]
+fn serialize_var_len_boundaries() {
+    let v = VLBytes::new(vec![99u8; 63]);
+    let serialized = v.tls_serialize_detached().expect("Error encoding vector");
+    assert_eq!(&serialized[0..5], &[63, 99, 99, 99, 99]);
+
+    let v = VLBytes::new(vec![99u8; 64]);
+    let serialized = v.tls_serialize_detached().expect("Error encoding vector");
+    assert_eq!(&serialized[0..5], &[0x40, 64, 99, 99, 99]);
+
+    let v = VLBytes::new(vec![99u8; 16383]);
+    let serialized = v.tls_serialize_detached().expect("Error encoding vector");
+    assert_eq!(&serialized[0..5], &[0x7f, 0xff, 99, 99, 99]);
+
+    let v = VLBytes::new(vec![99u8; 16384]);
+    let serialized = v.tls_serialize_detached().expect("Error encoding vector");
+    assert_eq!(&serialized[0..5], &[0x80, 0, 0x40, 0, 99]);
+}
