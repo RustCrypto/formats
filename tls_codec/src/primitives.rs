@@ -1,5 +1,7 @@
 //! Codec implementations for unsigned integer primitives.
 
+use crate::DeserializeBytes;
+
 use super::{Deserialize, Error, Serialize, Size};
 
 use core::marker::PhantomData;
@@ -64,17 +66,19 @@ impl<T: Deserialize> Deserialize for Option<T> {
             _ => Err(Error::DecodingError(format!("Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.", some_or_none[0])))
         }
     }
+}
 
+impl<T: DeserializeBytes> DeserializeBytes for Option<T> {
     #[cfg(feature = "bytes")]
     #[inline]
-    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let some_or_none = bytes.first().ok_or(Error::EndOfStream)?;
         match some_or_none {
             0 => {
                 Ok((None, bytes.get(1..).ok_or(Error::EndOfStream)?))
             },
             1 => {
-                let (element, remainder) = T::tls_deserialize_bytes(bytes)?;
+                let (element, remainder) = T::tls_deserialize(bytes)?;
                 Ok((Some(element), remainder))
             },
             _ => Err(Error::DecodingError(alloc::format!("Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.", some_or_none)))
@@ -92,10 +96,12 @@ macro_rules! impl_unsigned {
                 bytes.read_exact(&mut x)?;
                 Ok(<$t>::from_be_bytes(x))
             }
+        }
 
+        impl DeserializeBytes for $t {
             #[cfg(feature = "bytes")]
             #[inline]
-            fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+            fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 let len = core::mem::size_of::<$t>();
                 let out = bytes
                     .get(..len)
@@ -165,12 +171,18 @@ where
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
         Ok((T::tls_deserialize(bytes)?, U::tls_deserialize(bytes)?))
     }
+}
 
+impl<T, U> DeserializeBytes for (T, U)
+where
+    T: DeserializeBytes,
+    U: DeserializeBytes,
+{
     #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
-        let (second_element, remainder) = U::tls_deserialize_bytes(remainder)?;
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (first_element, remainder) = T::tls_deserialize(bytes)?;
+        let (second_element, remainder) = U::tls_deserialize(remainder)?;
         Ok(((first_element, second_element), remainder))
     }
 }
@@ -214,13 +226,20 @@ where
             V::tls_deserialize(bytes)?,
         ))
     }
+}
 
+impl<T, U, V> DeserializeBytes for (T, U, V)
+where
+    T: DeserializeBytes,
+    U: DeserializeBytes,
+    V: DeserializeBytes,
+{
     #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
-        let (second_element, remainder) = U::tls_deserialize_bytes(remainder)?;
-        let (third_element, remainder) = V::tls_deserialize_bytes(remainder)?;
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (first_element, remainder) = T::tls_deserialize(bytes)?;
+        let (second_element, remainder) = U::tls_deserialize(remainder)?;
+        let (third_element, remainder) = V::tls_deserialize(remainder)?;
         Ok(((first_element, second_element, third_element), remainder))
     }
 }
@@ -265,10 +284,12 @@ impl Deserialize for () {
     fn tls_deserialize<R: Read>(_: &mut R) -> Result<(), Error> {
         Ok(())
     }
+}
 
+impl DeserializeBytes for () {
     #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok(((), bytes))
     }
 }
@@ -293,10 +314,12 @@ impl<T> Deserialize for PhantomData<T> {
     fn tls_deserialize<R: Read>(_: &mut R) -> Result<Self, Error> {
         Ok(PhantomData)
     }
+}
 
+impl<T> DeserializeBytes for PhantomData<T> {
     #[cfg(feature = "bytes")]
     #[inline(always)]
-    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok((PhantomData, bytes))
     }
 }

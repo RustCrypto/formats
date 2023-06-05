@@ -19,8 +19,10 @@ fn vector(c: &mut Criterion) {
                 TlsSliceU32(&long_vector).tls_serialize_detached().unwrap()
             },
             |serialized_long_vec| {
-                let _deserialized_long_vec =
-                    TlsVecU32::<u8>::tls_deserialize(&mut serialized_long_vec.as_slice()).unwrap();
+                let _deserialized_long_vec = <TlsVecU32<u8> as Deserialize>::tls_deserialize(
+                    &mut serialized_long_vec.as_slice(),
+                )
+                .unwrap();
             },
             BatchSize::SmallInput,
         )
@@ -47,8 +49,10 @@ fn byte_vector(c: &mut Criterion) {
                     .unwrap()
             },
             |serialized_long_vec| {
-                let _deserialized_long_vec =
-                    TlsVecU32::<u8>::tls_deserialize(&mut serialized_long_vec.as_slice()).unwrap();
+                let _deserialized_long_vec = <TlsVecU32<u8> as Deserialize>::tls_deserialize(
+                    &mut serialized_long_vec.as_slice(),
+                )
+                .unwrap();
             },
             BatchSize::SmallInput,
         )

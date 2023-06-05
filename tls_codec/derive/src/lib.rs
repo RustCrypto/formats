@@ -505,6 +505,16 @@ pub fn deserialize_macro_derive(input: TokenStream) -> TokenStream {
     impl_deserialize(parsed_ast).into()
 }
 
+#[proc_macro_derive(TlsDeserializeBytes, attributes(tls_codec))]
+pub fn deserialize_bytes_macro_derive(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
+    impl_deserialize_bytes(parsed_ast).into()
+}
+
 /// Returns identifiers to use as bindings in generated code
 fn make_n_ids(n: usize) -> Vec<Ident> {
     (0..n)
@@ -846,7 +856,66 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 })
                 .collect::<Vec<_>>();
-            let arms_bytes = variants
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            quote! {
+                impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
+                    #[allow(non_upper_case_globals)]
+                    fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
+                        #discriminant_constants
+                        let discriminant = <#repr as tls_codec::Deserialize>::tls_deserialize(bytes)?;
+                        match discriminant {
+                            #(#arms)*
+                            _ => {
+                                Err(tls_codec::Error::UnknownValue(discriminant.into()))
+                            },
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[allow(unused_variables)]
+fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
+    match parsed_ast {
+        TlsStruct::Struct(Struct {
+            call_site,
+            ident,
+            generics,
+            members,
+            member_prefixes,
+            member_skips,
+        }) => {
+            let ((members, member_prefixes), (members_default, member_prefixes_default)) =
+                partition_skipped(members, member_prefixes, member_skips);
+
+            let prefixes = member_prefixes
+                .iter()
+                .map(|p| p.for_trait("Deserialize"))
+                .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            quote! {
+                impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
+                    #[cfg(feature = "bytes")]
+                    fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                        Ok(Self {
+                            #(#members: #prefixes::tls_deserialize(bytes)?,)*
+                            #(#members_default: Default::default(),)*
+                        })
+                    }
+                }
+            }
+        }
+        TlsStruct::Enum(Enum {
+            call_site,
+            ident,
+            generics,
+            repr,
+            variants,
+            discriminant_constants,
+        }) => {
+            let arms = variants
                 .iter()
                 .map(|variant| {
                     let variant_id = &variant.ident;
@@ -866,26 +935,14 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
-                impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
-                    #[allow(non_upper_case_globals)]
-                    fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
-                        #discriminant_constants
-                        let discriminant = <#repr as tls_codec::Deserialize>::tls_deserialize(bytes)?;
-                        match discriminant {
-                            #(#arms)*
-                            _ => {
-                                Err(tls_codec::Error::UnknownValue(discriminant.into()))
-                            },
-                        }
-                    }
-
+                impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
                     #[cfg(feature = "bytes")]
                     #[allow(non_upper_case_globals)]
-                    fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                    fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         #discriminant_constants
-                        let (discriminant, remainder) = <#repr as tls_codec::Deserialize>::tls_deserialize_bytes(bytes)?;
+                        let (discriminant, remainder) = <#repr as tls_codec::DeserializeBytes>::tls_deserialize(bytes)?;
                         match discriminant {
-                            #(#arms_bytes)*
+                            #(#arms)*
                             _ => {
                                 Err(tls_codec::Error::UnknownValue(discriminant.into()))
                             },
