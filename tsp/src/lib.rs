@@ -6,9 +6,9 @@ use cms::{
     content_info::ContentInfo,
 };
 use der::{
-    asn1::{GeneralizedTime, OctetString, Int},
+    asn1::{GeneralizedTime, Int, OctetString},
     oid::ObjectIdentifier,
-    Any, Sequence, Enumerated,
+    Any, Enumerated, Sequence,
 };
 
 #[derive(Clone, Copy, Debug, Enumerated, Eq, PartialEq, PartialOrd, Ord)]
