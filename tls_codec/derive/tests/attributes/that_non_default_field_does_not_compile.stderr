@@ -7,5 +7,6 @@ error[E0277]: the trait bound `NonDefaultField: Default` is not satisfied
   = note: this error originates in the derive macro `TlsDeserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider annotating `NonDefaultField` with `#[derive(Default)]`
   |
-3 | #[derive(Default)]
+3 + #[derive(Default)]
+4 | struct NonDefaultField {}
   |
