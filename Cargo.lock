@@ -1704,8 +1704,10 @@ dependencies = [
 name = "tsp"
 version = "0.1.0"
 dependencies = [
+ "cmpv2",
  "cms",
  "der",
+ "hex-literal",
 ]
 
 [[package]]
