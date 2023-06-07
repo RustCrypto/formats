@@ -16,6 +16,8 @@
 //! a `u64` value of the unknown type.
 //!
 //! ```
+//! use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
+//!
 //! #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
 //! #[repr(u16)]
 //! enum TypeWithUnknowns {
