@@ -1,11 +1,9 @@
 //! Implement the TLS codec for some byte arrays.
 
-use crate::{Deserialize, DeserializeBytes, Serialize, Size};
+use crate::{Deserialize, DeserializeBytes, Error, Serialize, Size};
 
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
-
-use crate::Error;
 
 impl<const LEN: usize> Serialize for [u8; LEN] {
     #[cfg(feature = "std")]
