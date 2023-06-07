@@ -819,14 +819,6 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                             #(#members_default: Default::default(),)*
                         })
                     }
-
-                    #[cfg(feature = "bytes")]
-                    fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
-                        Ok(Self {
-                            #(#members: #prefixes::tls_deserialize_bytes(bytes)?,)*
-                            #(#members_default: Default::default(),)*
-                        })
-                    }
                 }
             }
         }
@@ -897,7 +889,6 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
-                    #[cfg(feature = "bytes")]
                     fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         Ok(Self {
                             #(#members: #prefixes::tls_deserialize(bytes)?,)*
@@ -936,7 +927,6 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
-                    #[cfg(feature = "bytes")]
                     #[allow(non_upper_case_globals)]
                     fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         #discriminant_constants

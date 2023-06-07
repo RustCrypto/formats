@@ -92,7 +92,6 @@ fn calculate_length(len_len_byte: u8) -> Result<(usize, usize), Error> {
     Ok((length, len_len))
 }
 
-#[cfg(feature = "bytes")]
 fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), Error> {
     // The length is encoded in the first two bits of the first byte.
 
@@ -169,7 +168,6 @@ impl<T: Deserialize> Deserialize for Vec<T> {
 }
 
 impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
-    #[cfg(feature = "bytes")]
     #[inline(always)]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let ((length, len_len), mut remainder) = read_variable_length_bytes(bytes)?;
@@ -490,7 +488,6 @@ impl Deserialize for VLBytes {
 }
 
 impl DeserializeBytes for VLBytes {
-    #[cfg(feature = "bytes")]
     #[inline(always)]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let ((length, _), remainder) = read_variable_length_bytes(bytes)?;
@@ -563,7 +560,6 @@ impl Deserialize for SecretVLBytes {
 }
 
 impl DeserializeBytes for SecretVLBytes {
-    #[cfg(feature = "bytes")]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
         Self: Sized,

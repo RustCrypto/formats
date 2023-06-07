@@ -60,7 +60,6 @@ macro_rules! impl_byte_deserialize {
             Ok(result)
         }
 
-        #[cfg(feature = "bytes")]
         #[inline(always)]
         fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let (type_len, remainder) = <$size as DeserializeBytes>::tls_deserialize(bytes)?;
@@ -103,7 +102,6 @@ macro_rules! impl_deserialize {
 
 macro_rules! impl_deserialize_bytes {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        #[cfg(feature = "bytes")]
         #[inline(always)]
         fn deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let mut result = Self { vec: Vec::new() };
@@ -246,7 +244,6 @@ macro_rules! impl_tls_vec_codec_generic {
         }
 
         impl<T: $($bounds + )* DeserializeBytes> DeserializeBytes for $name<T> {
-            #[cfg(feature = "bytes")]
             fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes(bytes)
             }
@@ -292,7 +289,6 @@ macro_rules! impl_tls_vec_codec_bytes {
         }
 
         impl DeserializeBytes for $name {
-            #[cfg(feature = "bytes")]
             fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes_bytes(bytes)
             }

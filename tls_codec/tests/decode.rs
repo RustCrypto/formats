@@ -24,7 +24,6 @@ fn deserialize_primitives() {
     assert!(u8::tls_deserialize(&mut b).is_err())
 }
 
-#[cfg(feature = "bytes")]
 #[test]
 fn deserialize_bytes_primitives() {
     use tls_codec::DeserializeBytes;
@@ -73,7 +72,6 @@ fn deserialize_tls_vec() {
     assert_eq!(long_vector.as_slice(), deserialized_long_vec.as_slice());
 }
 
-#[cfg(feature = "bytes")]
 #[test]
 fn deserialize_bytes_tls_vec() {
     use tls_codec::DeserializeBytes;
@@ -156,7 +154,6 @@ fn deserialize_tuples() {
         .expect("Error serializing borrow tuple");
     assert_eq!(serialized_len, 2 + 3 + 4 + 6);
 
-    #[cfg(feature = "bytes")]
     {
         use tls_codec::DeserializeBytes;
         let (deserialized_bytes, _remainder) =
@@ -184,7 +181,6 @@ fn deserialize_var_len_vec() {
         let deserialized: Vec<T> =
             Vec::tls_deserialize(&mut serialized.as_slice()).expect("Error deserializing vector");
         assert_eq!(deserialized, v);
-        #[cfg(feature = "bytes")]
         {
             use tls_codec::DeserializeBytes;
             let serialized = v.tls_serialize_detached().expect("Error encoding vector");
@@ -243,7 +239,6 @@ fn deserialize_tls_vl_bytes() {
     assert_eq!(long_vector.as_slice(), deserialized_long_vec.as_slice());
 }
 
-#[cfg(feature = "bytes")]
 #[test]
 fn deserialize_bytes_tls_vl_bytes() {
     use tls_codec::DeserializeBytes;
@@ -283,7 +278,6 @@ fn deserialize_tls_vl_invalid_length() {
     }
 }
 
-#[cfg(feature = "bytes")]
 #[test]
 fn deserialize_bytes_tls_vl_invalid_length() {
     use tls_codec::DeserializeBytes;
@@ -307,7 +301,6 @@ fn deserialize_empty_vl_bytes() {
     VLBytes::tls_deserialize(&mut b).expect_err("Empty bytes were parsed successfully");
 }
 
-#[cfg(feature = "bytes")]
 #[test]
 fn deserialize_bytes_empty_vl_bytes() {
     use tls_codec::DeserializeBytes;

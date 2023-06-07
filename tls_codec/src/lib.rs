@@ -204,7 +204,6 @@ pub trait DeserializeBytes: Size {
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
     ///
     /// Returns an error if one occurs during deserialization.
-    #[cfg(feature = "bytes")]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
         Self: Sized;
@@ -214,7 +213,6 @@ pub trait DeserializeBytes: Size {
     ///
     /// Returns an error if not all bytes are read from the input, or if an error
     /// occurs during deserialization.
-    #[cfg(feature = "bytes")]
     fn tls_deserialize_exact(bytes: &[u8]) -> Result<Self, Error>
     where
         Self: Sized,

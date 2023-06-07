@@ -3,7 +3,6 @@ use tls_codec::{
 };
 use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 
-#[cfg(feature = "bytes")]
 use tls_codec::Error;
 
 #[derive(TlsDeserialize, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize)]
@@ -460,7 +459,6 @@ enum TypeWithUnknowns {
     Second = 2,
 }
 
-#[cfg(feature = "bytes")]
 #[test]
 fn type_with_unknowns() {
     let incoming = [0x00u8, 0x03]; // This must be parsed into TypeWithUnknowns into an unknown

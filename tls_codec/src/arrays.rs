@@ -5,7 +5,6 @@ use crate::{Deserialize, DeserializeBytes, Serialize, Size};
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
-#[cfg(any(feature = "std", feature = "bytes"))]
 use crate::Error;
 
 impl<const LEN: usize> Serialize for [u8; LEN] {
@@ -34,7 +33,6 @@ impl<const LEN: usize> Deserialize for [u8; LEN] {
 }
 
 impl<const LEN: usize> DeserializeBytes for [u8; LEN] {
-    #[cfg(feature = "bytes")]
     #[inline]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let out = bytes
