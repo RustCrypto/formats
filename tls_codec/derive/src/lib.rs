@@ -883,19 +883,32 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
         }) => {
             let ((members, member_prefixes), (members_default, member_prefixes_default)) =
                 partition_skipped(members, member_prefixes, member_skips);
+            let members_values = members
+                .iter()
+                .map(|m| match m {
+                    Member::Named(named) => {
+                        Member::Named(Ident::new(&format!("value_{}", named), Span::call_site()))
+                    }
+                    Member::Unnamed(unnamed) => Member::Named(Ident::new(
+                        &format!("value_{}", unnamed.index),
+                        Span::call_site(),
+                    )),
+                })
+                .collect::<Vec<_>>();
 
             let prefixes = member_prefixes
                 .iter()
-                .map(|p| p.for_trait("Deserialize"))
+                .map(|p| p.for_trait("DeserializeBytes"))
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
                     fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
-                        Ok(Self {
-                            #(#members: #prefixes::tls_deserialize(bytes)?,)*
+                        #(let (#members_values, bytes) = #prefixes::tls_deserialize(bytes)?;)*
+                        Ok((Self {
+                            #(#members: #members_values,)*
                             #(#members_default: Default::default(),)*
-                        })
+                        }, bytes))
                     }
                 }
             }
@@ -914,15 +927,30 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                     let variant_id = &variant.ident;
                     let discriminant = discriminant_id(variant_id);
                     let members = &variant.members;
+                    let member_values = members
+                        .iter()
+                        .map(|m| match m {
+                            Member::Named(named) => Member::Named(Ident::new(
+                                &format!("value_{}", named),
+                                Span::call_site(),
+                            )),
+                            Member::Unnamed(unnamed) => Member::Named(Ident::new(
+                                &format!("value_{}", unnamed.index),
+                                Span::call_site(),
+                            )),
+                        })
+                        .collect::<Vec<_>>();
                     let prefixes = variant
                         .member_prefixes
                         .iter()
-                        .map(|p| p.for_trait("Deserialize"))
+                        .map(|p| p.for_trait("DeserializeBytes"))
                         .collect::<Vec<_>>();
                     quote! {
-                        #discriminant => Ok(#ident::#variant_id {
-                            #(#members: #prefixes::tls_deserialize_bytes(bytes)?,)*
-                        }),
+                        #discriminant => {
+                            #(let (#member_values, remainder) = #prefixes::tls_deserialize(remainder)?;)*
+                            let result = #ident::#variant_id { #(#members: #member_values,)* };
+                            Ok((result, remainder))
+                        },
                     }
                 })
                 .collect::<Vec<_>>();
