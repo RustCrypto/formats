@@ -24,23 +24,19 @@
 //! # }
 //! ```
 
-#[cfg_attr(feature = "std", macro_use)]
+#[macro_use]
 extern crate alloc;
 
 #[cfg(feature = "std")]
 extern crate std;
 
-use alloc::string::String;
+use alloc::{string::String, vec::Vec};
 use core::fmt::{self, Display};
 #[cfg(feature = "std")]
-use {
-    alloc::vec::Vec,
-    std::io::{Read, Write},
-};
+use std::io::{Read, Write};
 
 mod arrays;
 mod primitives;
-#[cfg(feature = "std")]
 mod quic_vec;
 mod tls_vec;
 
@@ -51,7 +47,8 @@ pub use tls_vec::{
 };
 
 #[cfg(feature = "std")]
-pub use quic_vec::{SecretVLBytes, VLByteSlice, VLBytes};
+pub use quic_vec::SecretVLBytes;
+pub use quic_vec::{VLByteSlice, VLBytes};
 
 #[cfg(feature = "derive")]
 pub use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize};
@@ -149,6 +146,15 @@ pub trait Serialize: Size {
             Ok(buffer)
         }
     }
+}
+
+/// The `SerializeBytes` trait provides a function to serialize a struct or enum.
+///
+/// The trait provides one function:
+/// * `tls_serialize` that returns a byte vector
+pub trait SerializeBytes: Size {
+    /// Serialize `self` and return it as a byte vector.
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
 }
 
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
