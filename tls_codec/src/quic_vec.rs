@@ -718,6 +718,7 @@ impl<'a> Arbitrary<'a> for VLBytes {
     }
 }
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod test {
     use crate::{SecretVLBytes, VLByteSlice, VLBytes};
