@@ -22,7 +22,7 @@ use arbitrary::{Arbitrary, Unstructured};
 #[cfg(feature = "serde")]
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
-use crate::{DeserializeBytes, Error, Size};
+use crate::{DeserializeBytes, Error, SerializeBytes, Size};
 
 #[cfg(not(feature = "mls"))]
 const MAX_LEN: u64 = (1 << 62) - 1;
@@ -32,140 +32,6 @@ const MAX_LEN_LEN_LOG: usize = 3;
 const MAX_LEN: u64 = (1 << 30) - 1;
 #[cfg(feature = "mls")]
 const MAX_LEN_LEN_LOG: usize = 2;
-
-#[cfg(feature = "std")]
-mod rw {
-    use super::*;
-    use crate::{Deserialize, Serialize};
-
-    /// Read the length of a variable-length vector.
-    ///
-    /// This function assumes that the reader is at the start of a variable length
-    /// vector and returns an error if there's not a single byte to read.
-    ///
-    /// The length and number of bytes read are returned.
-    #[inline]
-    pub(super) fn read_variable_length<R: std::io::Read>(
-        bytes: &mut R,
-    ) -> Result<(usize, usize), Error> {
-        // The length is encoded in the first two bits of the first byte.
-        let mut len_len_byte = [0u8; 1];
-        if bytes.read(&mut len_len_byte)? == 0 {
-            // There must be at least one byte for the length.
-            // If we don't even have a length byte, this is not a valid
-            // variable-length encoded vector.
-            return Err(Error::InvalidVectorLength);
-        }
-        let len_len_byte = len_len_byte[0];
-
-        let (mut length, len_len) = calculate_length(len_len_byte)?;
-
-        for _ in 1..len_len {
-            let mut next = [0u8; 1];
-            bytes.read_exact(&mut next)?;
-            length = (length << 8) + usize::from(next[0]);
-        }
-
-        check_min_length(length, len_len)?;
-
-        Ok((length, len_len))
-    }
-
-    impl<T: Deserialize> Deserialize for Vec<T> {
-        #[inline(always)]
-        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
-            let (length, len_len) = read_variable_length(bytes)?;
-
-            if length == 0 {
-                // An empty vector.
-                return Ok(Vec::new());
-            }
-
-            let mut result = Vec::new();
-            let mut read = len_len;
-            while (read - len_len) < length {
-                let element = T::tls_deserialize(bytes)?;
-                read += element.tls_serialized_len();
-                result.push(element);
-            }
-            Ok(result)
-        }
-    }
-
-    #[inline(always)]
-    pub(super) fn write_length<W: std::io::Write>(
-        writer: &mut W,
-        content_length: usize,
-    ) -> Result<usize, Error> {
-        let len_len = length_encoding_bytes(content_length.try_into()?)?;
-        if !cfg!(fuzzing) {
-            debug_assert!(len_len <= 8, "Invalid vector len_len {len_len}");
-        }
-        if len_len > 8 {
-            return Err(Error::LibraryError);
-        }
-        let mut length_bytes = vec![0u8; len_len];
-        match len_len {
-            1 => length_bytes[0] = 0x00,
-            2 => length_bytes[0] = 0x40,
-            4 => length_bytes[0] = 0x80,
-            8 => length_bytes[0] = 0xc0,
-            _ => {
-                if !cfg!(fuzzing) {
-                    debug_assert!(false, "Invalid vector len_len {len_len}");
-                }
-                return Err(Error::InvalidVectorLength);
-            }
-        }
-        let mut len = content_length;
-        for b in length_bytes.iter_mut().rev() {
-            *b |= (len & 0xFF) as u8;
-            len >>= 8;
-        }
-        writer.write_all(&length_bytes)?;
-        Ok(len_len)
-    }
-
-    impl<T: Serialize + std::fmt::Debug> Serialize for Vec<T> {
-        #[inline(always)]
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            self.as_slice().tls_serialize(writer)
-        }
-    }
-
-    impl<T: Serialize + std::fmt::Debug> Serialize for &[T] {
-        #[inline(always)]
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            // We need to pre-compute the length of the content.
-            // This requires more computations but the other option would be to buffer
-            // the entire content, which can end up requiring a lot of memory.
-            let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
-            let len_len = write_length(writer, content_length)?;
-
-            // Serialize the elements
-            #[cfg(debug_assertions)]
-            let mut written = 0;
-            for e in self.iter() {
-                #[cfg(debug_assertions)]
-                {
-                    written += e.tls_serialize(writer)?;
-                }
-                // We don't care about the length here. We pre-computed it.
-                #[cfg(not(debug_assertions))]
-                e.tls_serialize(writer)?;
-            }
-            #[cfg(debug_assertions)]
-            if written != content_length {
-                return Err(Error::LibraryError);
-            }
-
-            Ok(content_length + len_len)
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-use rw::*;
 
 #[inline(always)]
 fn check_min_length(length: usize, len_len: usize) -> Result<(), Error> {
@@ -238,6 +104,37 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
     })
 }
 
+#[inline(always)]
+fn write_length(content_length: usize) -> Result<Vec<u8>, Error> {
+    let len_len = length_encoding_bytes(content_length.try_into()?)?;
+    if !cfg!(fuzzing) {
+        debug_assert!(len_len <= 8, "Invalid vector len_len {len_len}");
+    }
+    if len_len > 8 {
+        return Err(Error::LibraryError);
+    }
+    let mut length_bytes = vec![0u8; len_len];
+    match len_len {
+        1 => length_bytes[0] = 0x00,
+        2 => length_bytes[0] = 0x40,
+        4 => length_bytes[0] = 0x80,
+        8 => length_bytes[0] = 0xc0,
+        _ => {
+            if !cfg!(fuzzing) {
+                debug_assert!(false, "Invalid vector len_len {len_len}");
+            }
+            return Err(Error::InvalidVectorLength);
+        }
+    }
+    let mut len = content_length;
+    for b in length_bytes.iter_mut().rev() {
+        *b |= (len & 0xFF) as u8;
+        len >>= 8;
+    }
+
+    Ok(length_bytes)
+}
+
 impl<T: Size> Size for Vec<T> {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
@@ -264,6 +161,38 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
             result.push(element);
         }
         Ok((result, remainder))
+    }
+}
+
+impl<T: SerializeBytes> SerializeBytes for &[T] {
+    #[inline(always)]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        // We need to pre-compute the length of the content.
+        // This requires more computations but the other option would be to buffer
+        // the entire content, which can end up requiring a lot of memory.
+        let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+        let mut length = write_length(content_length)?;
+        let len_len = length.len();
+
+        let mut out = Vec::with_capacity(content_length + len_len);
+        out.append(&mut length);
+
+        // Serialize the elements
+        for e in self.iter() {
+            out.append(&mut e.tls_serialize()?);
+        }
+        #[cfg(debug_assertions)]
+        if out.len() - len_len != content_length {
+            return Err(Error::LibraryError);
+        }
+
+        Ok(out)
+    }
+}
+
+impl<T: SerializeBytes> SerializeBytes for Vec<T> {
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        self.as_slice().tls_serialize()
     }
 }
 
@@ -380,179 +309,6 @@ impl From<VLBytes> for Vec<u8> {
         b.vec
     }
 }
-#[cfg(feature = "std")]
-mod secret_bytes {
-    use super::*;
-    use crate::{Deserialize, Serialize};
-
-    /// A wrapper struct around [`VLBytes`] that implements [`ZeroizeOnDrop`]. It
-    /// behaves just like [`VLBytes`], except that it doesn't allow conversion into
-    /// a [`Vec<u8>`].
-    #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
-    pub struct SecretVLBytes(VLBytes);
-
-    impl SecretVLBytes {
-        /// Generate a new variable-length byte vector that implements
-        /// [`ZeroizeOnDrop`].
-        pub fn new(vec: Vec<u8>) -> Self {
-            Self(VLBytes { vec })
-        }
-
-        fn vec(&self) -> &[u8] {
-            &self.0.vec
-        }
-
-        fn vec_mut(&mut self) -> &mut Vec<u8> {
-            &mut self.0.vec
-        }
-    }
-
-    impl_vl_bytes_generic!(SecretVLBytes);
-
-    impl Size for SecretVLBytes {
-        fn tls_serialized_len(&self) -> usize {
-            self.0.tls_serialized_len()
-        }
-    }
-
-    impl DeserializeBytes for SecretVLBytes {
-        fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
-        where
-            Self: Sized,
-        {
-            let (bytes, remainder) = <VLBytes as DeserializeBytes>::tls_deserialize(bytes)?;
-            Ok((Self(bytes), remainder))
-        }
-    }
-
-    impl Serialize for SecretVLBytes {
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            self.0.tls_serialize(writer)
-        }
-    }
-
-    impl Deserialize for SecretVLBytes {
-        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error>
-        where
-            Self: Sized,
-        {
-            Ok(Self(<VLBytes as Deserialize>::tls_deserialize(bytes)?))
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-pub use secret_bytes::SecretVLBytes;
-
-/// Read/Write (std) based (de)serialization for [`VLBytes`].
-#[cfg(feature = "std")]
-mod rw_bytes {
-    use super::*;
-    use crate::{Deserialize, Serialize};
-
-    #[inline(always)]
-    fn tls_serialize_bytes<W: std::io::Write>(
-        writer: &mut W,
-        bytes: &[u8],
-    ) -> Result<usize, Error> {
-        // Get the byte length of the content, make sure it's not too
-        // large and write it out.
-        let content_length = bytes.len();
-
-        if !cfg!(fuzzing) {
-            debug_assert!(
-                content_length as u64 <= MAX_LEN,
-                "Vector can't be encoded. It's too large. {content_length} >= {MAX_LEN}",
-            );
-        }
-        if content_length as u64 > MAX_LEN {
-            return Err(Error::InvalidVectorLength);
-        }
-
-        let len_len = write_length(writer, content_length)?;
-
-        // Now serialize the elements
-        let mut written = 0;
-        written += writer.write(bytes)?;
-
-        if !cfg!(fuzzing) {
-            debug_assert_eq!(
-                written, content_length,
-                "{content_length} bytes should have been serialized but {written} were written",
-            );
-        }
-        if written != content_length {
-            return Err(Error::EncodingError(format!(
-                "{content_length} bytes should have been serialized but {written} were written",
-            )));
-        }
-        Ok(written + len_len)
-    }
-
-    impl Serialize for VLBytes {
-        #[inline(always)]
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            tls_serialize_bytes(writer, self.as_slice())
-        }
-    }
-
-    impl Serialize for &VLBytes {
-        #[inline(always)]
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            (*self).tls_serialize(writer)
-        }
-    }
-
-    impl Deserialize for VLBytes {
-        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
-            let (length, _) = read_variable_length(bytes)?;
-            if length == 0 {
-                return Ok(Self::new(vec![]));
-            }
-
-            if !cfg!(fuzzing) {
-                debug_assert!(
-                    length <= MAX_LEN as usize,
-                    "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
-                );
-            }
-            if length > MAX_LEN as usize {
-                return Err(Error::DecodingError(format!(
-                    "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
-                )));
-            }
-            let mut result = Self {
-                vec: vec![0u8; length],
-            };
-            let read = bytes.read(result.vec.as_mut_slice())?;
-            if read == length {
-                return Ok(result);
-            }
-            if !cfg!(fuzzing) {
-                debug_assert_eq!(
-                    read, length,
-                    "Expected to read {length} bytes but {read} were read.",
-                );
-            }
-            Err(Error::DecodingError(format!(
-                "{read} bytes were read but {length} were expected",
-            )))
-        }
-    }
-
-    impl<'a> Serialize for &VLByteSlice<'a> {
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            tls_serialize_bytes(writer, self.0)
-        }
-    }
-
-    impl<'a> Serialize for VLByteSlice<'a> {
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            tls_serialize_bytes(writer, self.0)
-        }
-    }
-}
 
 #[inline(always)]
 fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
@@ -646,6 +402,293 @@ impl<'a> Size for VLByteSlice<'a> {
         tls_serialize_bytes_len(self.0)
     }
 }
+
+#[cfg(feature = "std")]
+mod rw {
+    use super::*;
+    use crate::{Deserialize, Serialize};
+
+    /// Read the length of a variable-length vector.
+    ///
+    /// This function assumes that the reader is at the start of a variable length
+    /// vector and returns an error if there's not a single byte to read.
+    ///
+    /// The length and number of bytes read are returned.
+    #[inline]
+    pub(super) fn read_variable_length<R: std::io::Read>(
+        bytes: &mut R,
+    ) -> Result<(usize, usize), Error> {
+        // The length is encoded in the first two bits of the first byte.
+        let mut len_len_byte = [0u8; 1];
+        if bytes.read(&mut len_len_byte)? == 0 {
+            // There must be at least one byte for the length.
+            // If we don't even have a length byte, this is not a valid
+            // variable-length encoded vector.
+            return Err(Error::InvalidVectorLength);
+        }
+        let len_len_byte = len_len_byte[0];
+
+        let (mut length, len_len) = calculate_length(len_len_byte)?;
+
+        for _ in 1..len_len {
+            let mut next = [0u8; 1];
+            bytes.read_exact(&mut next)?;
+            length = (length << 8) + usize::from(next[0]);
+        }
+
+        check_min_length(length, len_len)?;
+
+        Ok((length, len_len))
+    }
+
+    impl<T: Deserialize> Deserialize for Vec<T> {
+        #[inline(always)]
+        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
+            let (length, len_len) = read_variable_length(bytes)?;
+
+            if length == 0 {
+                // An empty vector.
+                return Ok(Vec::new());
+            }
+
+            let mut result = Vec::new();
+            let mut read = len_len;
+            while (read - len_len) < length {
+                let element = T::tls_deserialize(bytes)?;
+                read += element.tls_serialized_len();
+                result.push(element);
+            }
+            Ok(result)
+        }
+    }
+
+    #[inline(always)]
+    pub(super) fn write_length<W: std::io::Write>(
+        writer: &mut W,
+        content_length: usize,
+    ) -> Result<usize, Error> {
+        let buf = super::write_length(content_length)?;
+        let buf_len = buf.len();
+        writer.write_all(&buf)?;
+        Ok(buf_len)
+    }
+
+    impl<T: Serialize + std::fmt::Debug> Serialize for Vec<T> {
+        #[inline(always)]
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            self.as_slice().tls_serialize(writer)
+        }
+    }
+
+    impl<T: Serialize + std::fmt::Debug> Serialize for &[T] {
+        #[inline(always)]
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            // We need to pre-compute the length of the content.
+            // This requires more computations but the other option would be to buffer
+            // the entire content, which can end up requiring a lot of memory.
+            let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+            let len_len = write_length(writer, content_length)?;
+
+            // Serialize the elements
+            #[cfg(debug_assertions)]
+            let mut written = 0;
+            for e in self.iter() {
+                #[cfg(debug_assertions)]
+                {
+                    written += e.tls_serialize(writer)?;
+                }
+                // We don't care about the length here. We pre-computed it.
+                #[cfg(not(debug_assertions))]
+                e.tls_serialize(writer)?;
+            }
+            #[cfg(debug_assertions)]
+            if written != content_length {
+                return Err(Error::LibraryError);
+            }
+
+            Ok(content_length + len_len)
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+use rw::*;
+
+/// Read/Write (std) based (de)serialization for [`VLBytes`].
+#[cfg(feature = "std")]
+mod rw_bytes {
+    use super::*;
+    use crate::{Deserialize, Serialize};
+
+    #[inline(always)]
+    fn tls_serialize_bytes<W: std::io::Write>(
+        writer: &mut W,
+        bytes: &[u8],
+    ) -> Result<usize, Error> {
+        // Get the byte length of the content, make sure it's not too
+        // large and write it out.
+        let content_length = bytes.len();
+
+        if !cfg!(fuzzing) {
+            debug_assert!(
+                content_length as u64 <= MAX_LEN,
+                "Vector can't be encoded. It's too large. {content_length} >= {MAX_LEN}",
+            );
+        }
+        if content_length as u64 > MAX_LEN {
+            return Err(Error::InvalidVectorLength);
+        }
+
+        let length_bytes = write_length(content_length)?;
+        let len_len = length_bytes.len();
+        writer.write_all(&length_bytes)?;
+
+        // Now serialize the elements
+        let mut written = 0;
+        written += writer.write(bytes)?;
+
+        if !cfg!(fuzzing) {
+            debug_assert_eq!(
+                written, content_length,
+                "{content_length} bytes should have been serialized but {written} were written",
+            );
+        }
+        if written != content_length {
+            return Err(Error::EncodingError(format!(
+                "{content_length} bytes should have been serialized but {written} were written",
+            )));
+        }
+        Ok(written + len_len)
+    }
+
+    impl Serialize for VLBytes {
+        #[inline(always)]
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            tls_serialize_bytes(writer, self.as_slice())
+        }
+    }
+
+    impl Serialize for &VLBytes {
+        #[inline(always)]
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            (*self).tls_serialize(writer)
+        }
+    }
+
+    impl Deserialize for VLBytes {
+        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
+            let (length, _) = read_variable_length(bytes)?;
+            if length == 0 {
+                return Ok(Self::new(vec![]));
+            }
+
+            if !cfg!(fuzzing) {
+                debug_assert!(
+                    length <= MAX_LEN as usize,
+                    "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
+                );
+            }
+            if length > MAX_LEN as usize {
+                return Err(Error::DecodingError(format!(
+                    "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
+                )));
+            }
+            let mut result = Self {
+                vec: vec![0u8; length],
+            };
+            let read = bytes.read(result.vec.as_mut_slice())?;
+            if read == length {
+                return Ok(result);
+            }
+            if !cfg!(fuzzing) {
+                debug_assert_eq!(
+                    read, length,
+                    "Expected to read {length} bytes but {read} were read.",
+                );
+            }
+            Err(Error::DecodingError(format!(
+                "{read} bytes were read but {length} were expected",
+            )))
+        }
+    }
+
+    impl<'a> Serialize for &VLByteSlice<'a> {
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            tls_serialize_bytes(writer, self.0)
+        }
+    }
+
+    impl<'a> Serialize for VLByteSlice<'a> {
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            tls_serialize_bytes(writer, self.0)
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+mod secret_bytes {
+    use super::*;
+    use crate::{Deserialize, Serialize};
+
+    /// A wrapper struct around [`VLBytes`] that implements [`ZeroizeOnDrop`]. It
+    /// behaves just like [`VLBytes`], except that it doesn't allow conversion into
+    /// a [`Vec<u8>`].
+    #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
+    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
+    pub struct SecretVLBytes(VLBytes);
+
+    impl SecretVLBytes {
+        /// Generate a new variable-length byte vector that implements
+        /// [`ZeroizeOnDrop`].
+        pub fn new(vec: Vec<u8>) -> Self {
+            Self(VLBytes { vec })
+        }
+
+        fn vec(&self) -> &[u8] {
+            &self.0.vec
+        }
+
+        fn vec_mut(&mut self) -> &mut Vec<u8> {
+            &mut self.0.vec
+        }
+    }
+
+    impl_vl_bytes_generic!(SecretVLBytes);
+
+    impl Size for SecretVLBytes {
+        fn tls_serialized_len(&self) -> usize {
+            self.0.tls_serialized_len()
+        }
+    }
+
+    impl DeserializeBytes for SecretVLBytes {
+        fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
+        where
+            Self: Sized,
+        {
+            let (bytes, remainder) = <VLBytes as DeserializeBytes>::tls_deserialize(bytes)?;
+            Ok((Self(bytes), remainder))
+        }
+    }
+
+    impl Serialize for SecretVLBytes {
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            self.0.tls_serialize(writer)
+        }
+    }
+
+    impl Deserialize for SecretVLBytes {
+        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error>
+        where
+            Self: Sized,
+        {
+            Ok(Self(<VLBytes as Deserialize>::tls_deserialize(bytes)?))
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+pub use secret_bytes::SecretVLBytes;
 
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for VLBytes {

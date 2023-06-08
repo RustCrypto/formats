@@ -144,6 +144,13 @@ macro_rules! impl_unsigned {
             }
         }
 
+        impl SerializeBytes for $t {
+            #[inline]
+            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+                <&Self as SerializeBytes>::tls_serialize(&self)
+            }
+        }
+
         impl Serialize for $t {
             #[cfg(feature = "std")]
             #[inline]
@@ -158,7 +165,7 @@ macro_rules! impl_unsigned {
             #[cfg(feature = "std")]
             #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                (*self).tls_serialize(writer)
+                <$t as Serialize>::tls_serialize(self, writer)
             }
         }
 
