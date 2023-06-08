@@ -51,7 +51,9 @@ pub use quic_vec::SecretVLBytes;
 pub use quic_vec::{VLByteSlice, VLBytes};
 
 #[cfg(feature = "derive")]
-pub use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize};
+pub use tls_codec_derive::{
+    TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSerializeBytes, TlsSize,
+};
 
 /// Errors that are thrown by this crate.
 #[derive(Debug, Eq, PartialEq, Clone)]

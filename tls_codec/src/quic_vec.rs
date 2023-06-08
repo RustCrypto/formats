@@ -142,6 +142,13 @@ impl<T: Size> Size for Vec<T> {
     }
 }
 
+impl<T: Size> Size for &Vec<T> {
+    #[inline(always)]
+    fn tls_serialized_len(&self) -> usize {
+        (*self).tls_serialized_len()
+    }
+}
+
 impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
     #[inline(always)]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
@@ -187,6 +194,13 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
         }
 
         Ok(out)
+    }
+}
+
+impl<T: SerializeBytes> SerializeBytes for &Vec<T> {
+    #[inline(always)]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        self.as_slice().tls_serialize()
     }
 }
 
