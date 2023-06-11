@@ -23,7 +23,7 @@ members = [
     "tai64",
     "tls_codec",
     "tls_codec/derive",
-    "tsp",
+    "x509-tsp",
     "x509-cert",
     "x509-cert/test-support",
     "x509-ocsp"
@@ -57,6 +57,6 @@ spki              = { path = "./spki" }
 tai64             = { path = "./tai64" }
 tls_codec         = { path = "./tls_codec" }
 tls_codec_derive  = { path = "./tls_codec/derive" }
-tsp               = { path = "./tsp" }
+x509-tsp               = { path = "./x509-tsp" }
 x509-cert         = { path = "./x509-cert" }
 x509-ocsp         = { path = "./x509-ocsp" }
