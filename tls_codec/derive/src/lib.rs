@@ -728,7 +728,7 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
                             let expected_written = tls_codec::Size::tls_serialized_len(&self);
                             debug_assert_eq!(written, expected_written, "Expected to serialize {} bytes but only {} were generated.", expected_written, written);
                             if written != expected_written {
-                                Err(tls_codec::Error::EncodingError(format!("Expected to serialize {} bytes but only {} were generated.", expected_written, written)))
+                                Err(tls_codec::Error::EncodingError(std::format!("Expected to serialize {} bytes but only {} were generated.", expected_written, written)))
                             } else {
                                 Ok(written)
                             }
