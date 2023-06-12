@@ -24,7 +24,7 @@ impl_extension!(SctList, critical = false);
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
-pub enum HashAlgo {
+pub enum HashAlgorithm {
     /// No algorithm
     None = 0,
     /// MD5 algorithm
@@ -45,48 +45,75 @@ pub enum HashAlgo {
 
 #[cfg(test)]
 mod tests {
-    use tls_codec::DeserializeBytes;
+    use alloc::vec::Vec;
+    use tls_codec::{DeserializeBytes, Error, Serialize, Size};
 
-    use super::HashAlgo;
+    use super::HashAlgorithm;
 
     #[test]
-    fn test_hash_algo_deserialization() {
+    fn test_hash_algorithm_deserialization() {
+        fn run_test<'a>(
+            bytes: &'a [u8],
+            expected_result: Result<(HashAlgorithm, &[u8]), Error>,
+        ) -> Result<(HashAlgorithm, &'a [u8]), Error> {
+            let actual_result = HashAlgorithm::tls_deserialize(&bytes);
+            assert_eq!(actual_result, expected_result);
+            actual_result
+        }
         let bytes = [0, 1, 2, 3, 4, 5, 6, 8];
 
-        let hash_algo = HashAlgo::tls_deserialize(&bytes);
-        assert_eq!(
-            hash_algo,
-            Ok((HashAlgo::None, [1, 2, 3, 4, 5, 6, 8].as_slice()))
+        let result = run_test(
+            &bytes,
+            Ok((HashAlgorithm::None, [1, 2, 3, 4, 5, 6, 8].as_slice())),
         );
-
-        let hash_algo = HashAlgo::tls_deserialize(&hash_algo.unwrap().1);
-        assert_eq!(
-            hash_algo,
-            Ok((HashAlgo::Md5, [2, 3, 4, 5, 6, 8].as_slice()))
+        let result = run_test(
+            &result.unwrap().1,
+            Ok((HashAlgorithm::Md5, [2, 3, 4, 5, 6, 8].as_slice())),
         );
+        let result = run_test(
+            &result.unwrap().1,
+            Ok((HashAlgorithm::Sha1, [3, 4, 5, 6, 8].as_slice())),
+        );
+        let result = run_test(
+            &result.unwrap().1,
+            Ok((HashAlgorithm::Sha224, [4, 5, 6, 8].as_slice())),
+        );
+        let result = run_test(
+            &result.unwrap().1,
+            Ok((HashAlgorithm::Sha256, [5, 6, 8].as_slice())),
+        );
+        let result = run_test(
+            &result.unwrap().1,
+            Ok((HashAlgorithm::Sha384, [6, 8].as_slice())),
+        );
+        let result = run_test(
+            &result.unwrap().1,
+            Ok((HashAlgorithm::Sha512, [8].as_slice())),
+        );
+        let result = run_test(
+            &result.unwrap().1,
+            Ok((HashAlgorithm::Intrinsic, [].as_slice())),
+        );
+        let _ = run_test(&result.unwrap().1, Err(Error::EndOfStream));
+        let _ = run_test(&[7], Err(Error::UnknownValue(7)));
+    }
 
-        let hash_algo = HashAlgo::tls_deserialize(&hash_algo.unwrap().1);
-        assert_eq!(hash_algo, Ok((HashAlgo::Sha1, [3, 4, 5, 6, 8].as_slice())));
+    #[test]
+    fn test_hash_algorithm_serialization() {
+        fn run_test(hash_algorithm: HashAlgorithm, expected_int: u8) {
+            let mut buffer = Vec::with_capacity(hash_algorithm.tls_serialized_len());
+            let result = hash_algorithm.tls_serialize(&mut buffer);
+            assert_eq!([expected_int], buffer[..1]);
+            assert_eq!(result, Ok(1));
+        }
 
-        let hash_algo = HashAlgo::tls_deserialize(&hash_algo.unwrap().1);
-        assert_eq!(hash_algo, Ok((HashAlgo::Sha224, [4, 5, 6, 8].as_slice())));
-
-        let hash_algo = HashAlgo::tls_deserialize(&hash_algo.unwrap().1);
-        assert_eq!(hash_algo, Ok((HashAlgo::Sha256, [5, 6, 8].as_slice())));
-
-        let hash_algo = HashAlgo::tls_deserialize(&hash_algo.unwrap().1);
-        assert_eq!(hash_algo, Ok((HashAlgo::Sha384, [6, 8].as_slice())));
-
-        let hash_algo = HashAlgo::tls_deserialize(&hash_algo.unwrap().1);
-        assert_eq!(hash_algo, Ok((HashAlgo::Sha512, [8].as_slice())));
-
-        let hash_algo = HashAlgo::tls_deserialize(&hash_algo.unwrap().1);
-        assert_eq!(hash_algo, Ok((HashAlgo::Intrinsic, [].as_slice())));
-
-        let hash_algo = HashAlgo::tls_deserialize(&hash_algo.unwrap().1);
-        assert_eq!(hash_algo, Err(tls_codec::Error::EndOfStream));
-
-        let hash_algo = HashAlgo::tls_deserialize(&[7]);
-        assert_eq!(hash_algo, Err(tls_codec::Error::UnknownValue(7)));
+        run_test(HashAlgorithm::None, 0);
+        run_test(HashAlgorithm::Md5, 1);
+        run_test(HashAlgorithm::Sha1, 2);
+        run_test(HashAlgorithm::Sha224, 3);
+        run_test(HashAlgorithm::Sha256, 4);
+        run_test(HashAlgorithm::Sha384, 5);
+        run_test(HashAlgorithm::Sha512, 6);
+        run_test(HashAlgorithm::Intrinsic, 8);
     }
 }
