@@ -1,6 +1,8 @@
 //! Implement the TLS codec for some byte arrays.
 
-use crate::{Deserialize, DeserializeBytes, Error, Serialize, Size};
+use alloc::vec::Vec;
+
+use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size};
 
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
@@ -39,6 +41,12 @@ impl<const LEN: usize> DeserializeBytes for [u8; LEN] {
             .try_into()
             .map_err(|_| Error::EndOfStream)?;
         Ok((out, &bytes[LEN..]))
+    }
+}
+
+impl<const LEN: usize> SerializeBytes for [u8; LEN] {
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        Ok(self.to_vec())
     }
 }
 

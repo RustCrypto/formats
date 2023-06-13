@@ -1,6 +1,8 @@
 //! Codec implementations for unsigned integer primitives.
 
-use crate::DeserializeBytes;
+use alloc::vec::Vec;
+
+use crate::{DeserializeBytes, SerializeBytes};
 
 use super::{Deserialize, Error, Serialize, Size};
 
@@ -42,10 +44,32 @@ impl<T: Serialize> Serialize for Option<T> {
     }
 }
 
+impl<T: SerializeBytes> SerializeBytes for Option<T> {
+    #[inline]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        match self {
+            Some(e) => {
+                let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
+                out.push(1);
+                out.append(&mut e.tls_serialize()?);
+                Ok(out)
+            }
+            None => Ok(vec![0]),
+        }
+    }
+}
+
 impl<T: Serialize> Serialize for &Option<T> {
     #[cfg(feature = "std")]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         (*self).tls_serialize(writer)
+    }
+}
+
+impl<T: SerializeBytes> SerializeBytes for &Option<T> {
+    #[inline]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        (*self).tls_serialize()
     }
 }
 
@@ -113,6 +137,20 @@ macro_rules! impl_unsigned {
             }
         }
 
+        impl SerializeBytes for &$t {
+            #[inline]
+            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+                Ok(self.to_be_bytes().to_vec())
+            }
+        }
+
+        impl SerializeBytes for $t {
+            #[inline]
+            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+                <&Self as SerializeBytes>::tls_serialize(&self)
+            }
+        }
+
         impl Serialize for $t {
             #[cfg(feature = "std")]
             #[inline]
@@ -127,7 +165,7 @@ macro_rules! impl_unsigned {
             #[cfg(feature = "std")]
             #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                (*self).tls_serialize(writer)
+                <$t as Serialize>::tls_serialize(self, writer)
             }
         }
 
@@ -323,5 +361,12 @@ impl<T> Serialize for PhantomData<T> {
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, _: &mut W) -> Result<usize, Error> {
         Ok(0)
+    }
+}
+
+impl<T> SerializeBytes for PhantomData<T> {
+    #[inline(always)]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        Ok(vec![])
     }
 }
