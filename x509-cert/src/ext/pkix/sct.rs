@@ -4,8 +4,8 @@ use der::asn1::OctetString;
 //TODO: Remove use::alloc::format explicit use required by the #[derive(TlsSerialize)] on SignagureAndHashAlgorithms
 //once the PR: https://github.com/RustCrypto/formats/pull/1103 is merged
 // use std::format;
-use alloc::{format, vec::Vec};
-use tls_codec::{TlsDeserializeBytes, TlsSerialize, TlsSize};
+use alloc::format;
+use tls_codec::{TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16};
 
 // TODO: Review what should be pub
 // TODO: Update docs
@@ -32,7 +32,7 @@ pub struct DigitallySigned {
     /// [SignatureAndHashAlgorithm] of the struct
     pub algorithm: SignatureAndHashAlgorithm,
     /// Signature of the struct
-    pub signature: Vec<u8>,
+    pub signature: TlsVecU16<u8>,
 }
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
@@ -82,9 +82,9 @@ pub enum HashAlgorithm {
 #[cfg(test)]
 mod tests {
     use alloc::vec::Vec;
-    use tls_codec::{DeserializeBytes, Error, Serialize, Size};
+    use tls_codec::{DeserializeBytes, Error, Serialize, Size, TlsVecU16};
 
-    use super::{HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm};
+    use super::{HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm, DigitallySigned};
 
     #[test]
     fn test_hash_algorithm_deserialization() {
@@ -261,5 +261,50 @@ mod tests {
 
         run_test(SignatureAndHashAlgorithm { hash: HashAlgorithm::Sha1, signature: SignatureAlgorithm::Rsa }, 2, 1);
         run_test(SignatureAndHashAlgorithm { hash: HashAlgorithm::Sha256, signature: SignatureAlgorithm::Ecdsa }, 4, 3);
+    }
+
+    #[test]
+    fn test_digitally_signed_deserialization() {
+        fn run_test<'a>(
+            bytes: &'a [u8],
+            expected_result: Result<(DigitallySigned, &[u8]), Error>,
+        ) -> Result<(DigitallySigned, &'a [u8]), Error> {
+            let actual_result = DigitallySigned::tls_deserialize(&bytes);
+            assert_eq!(actual_result, expected_result);
+            actual_result
+        }
+        let bytes = [4, 3, 0, 3, 2, 1, 0, 2, 1, 0, 1, 9];
+
+        let result = run_test(
+            &bytes,
+            Ok((
+                DigitallySigned {
+                    algorithm:
+                    SignatureAndHashAlgorithm {
+                        hash: HashAlgorithm::Sha256,
+                        signature: SignatureAlgorithm::Ecdsa,
+                    },
+                    signature: TlsVecU16::<u8>::from_slice(&[2, 1, 0])
+                },
+
+                [2, 1, 0, 1, 9].as_slice(),
+            )),
+        );
+
+        let _ = run_test(
+            &result.unwrap().1,
+            Ok((
+                DigitallySigned {
+                    algorithm:
+                    SignatureAndHashAlgorithm {
+                        hash: HashAlgorithm::Sha1,
+                        signature: SignatureAlgorithm::Rsa,
+                    },
+                    signature: TlsVecU16::<u8>::from_slice(&[9])
+                },
+
+                [].as_slice(),
+            )),
+        );
     }
 }
