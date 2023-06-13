@@ -9,7 +9,6 @@ mod access;
 mod authkeyid;
 mod keyusage;
 mod policymap;
-// #[cfg(feature = "sct")]
 mod sct;
 
 use crate::attr::AttributeTypeAndValue;
@@ -26,7 +25,7 @@ pub use crl::{
 pub use keyusage::{ExtendedKeyUsage, KeyUsage, KeyUsages, PrivateKeyUsagePeriod};
 pub use policymap::{PolicyMapping, PolicyMappings};
 
-// #[cfg(feature = "sct")]
+#[cfg(feature = "sct")]
 pub use sct::SctList;
 
 pub use const_oid::db::rfc5280::{

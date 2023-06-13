@@ -1,8 +1,10 @@
+#![cfg(feature = "sct")]
 use const_oid::{db::rfc6962, AssociatedOid, ObjectIdentifier};
 use der::asn1::OctetString;
-//TODO: Remove this explicit use required by the #[derive(TlsSerialize)] on SignagureAndHashAlgorithms
+//TODO: Remove use::alloc::format explicit use required by the #[derive(TlsSerialize)] on SignagureAndHashAlgorithms
 //once the PR: https://github.com/RustCrypto/formats/pull/1103 is merged
-use std::format;
+// use std::format;
+use alloc::{format, vec::Vec};
 use tls_codec::{TlsDeserializeBytes, TlsSerialize, TlsSize};
 
 // TODO: Review what should be pub
@@ -24,6 +26,14 @@ impl AssociatedOid for SctList {
 
 impl_newtype!(SctList, OctetString);
 impl_extension!(SctList, critical = false);
+
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+pub struct DigitallySigned {
+    /// [SignatureAndHashAlgorithm] of the struct
+    pub algorithm: SignatureAndHashAlgorithm,
+    /// Signature of the struct
+    pub signature: Vec<u8>,
+}
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignatureAndHashAlgorithm {
