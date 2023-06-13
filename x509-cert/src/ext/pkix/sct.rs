@@ -248,4 +248,18 @@ mod tests {
             )),
         );
     }
+
+    #[test]
+    fn test_signature_and_hash_algorithm_serialization() {
+        fn run_test(algorithm: SignatureAndHashAlgorithm, expected_hash_int: u8, expected_signature_int: u8) {
+            let mut buffer = Vec::with_capacity(algorithm.tls_serialized_len());
+            let result = algorithm.tls_serialize(&mut buffer);
+            assert_eq!(expected_hash_int, buffer[0]);
+            assert_eq!(expected_signature_int, buffer[1]);
+            assert_eq!(result, Ok(2));
+        }
+
+        run_test(SignatureAndHashAlgorithm { hash: HashAlgorithm::Sha1, signature: SignatureAlgorithm::Rsa }, 2, 1);
+        run_test(SignatureAndHashAlgorithm { hash: HashAlgorithm::Sha256, signature: SignatureAlgorithm::Ecdsa }, 4, 3);
+    }
 }
