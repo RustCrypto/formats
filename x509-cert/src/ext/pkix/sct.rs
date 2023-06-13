@@ -84,7 +84,7 @@ mod tests {
     use alloc::vec::Vec;
     use tls_codec::{DeserializeBytes, Error, Serialize, Size, TlsVecU16};
 
-    use super::{HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm, DigitallySigned};
+    use super::{DigitallySigned, HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm};
 
     #[test]
     fn test_hash_algorithm_deserialization() {
@@ -251,7 +251,11 @@ mod tests {
 
     #[test]
     fn test_signature_and_hash_algorithm_serialization() {
-        fn run_test(algorithm: SignatureAndHashAlgorithm, expected_hash_int: u8, expected_signature_int: u8) {
+        fn run_test(
+            algorithm: SignatureAndHashAlgorithm,
+            expected_hash_int: u8,
+            expected_signature_int: u8,
+        ) {
             let mut buffer = Vec::with_capacity(algorithm.tls_serialized_len());
             let result = algorithm.tls_serialize(&mut buffer);
             assert_eq!(expected_hash_int, buffer[0]);
@@ -259,8 +263,22 @@ mod tests {
             assert_eq!(result, Ok(2));
         }
 
-        run_test(SignatureAndHashAlgorithm { hash: HashAlgorithm::Sha1, signature: SignatureAlgorithm::Rsa }, 2, 1);
-        run_test(SignatureAndHashAlgorithm { hash: HashAlgorithm::Sha256, signature: SignatureAlgorithm::Ecdsa }, 4, 3);
+        run_test(
+            SignatureAndHashAlgorithm {
+                hash: HashAlgorithm::Sha1,
+                signature: SignatureAlgorithm::Rsa,
+            },
+            2,
+            1,
+        );
+        run_test(
+            SignatureAndHashAlgorithm {
+                hash: HashAlgorithm::Sha256,
+                signature: SignatureAlgorithm::Ecdsa,
+            },
+            4,
+            3,
+        );
     }
 
     #[test]
@@ -279,14 +297,12 @@ mod tests {
             &bytes,
             Ok((
                 DigitallySigned {
-                    algorithm:
-                    SignatureAndHashAlgorithm {
+                    algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
                     },
-                    signature: TlsVecU16::<u8>::from_slice(&[2, 1, 0])
+                    signature: TlsVecU16::<u8>::from_slice(&[2, 1, 0]),
                 },
-
                 [2, 1, 0, 1, 9].as_slice(),
             )),
         );
@@ -295,16 +311,45 @@ mod tests {
             &result.unwrap().1,
             Ok((
                 DigitallySigned {
-                    algorithm:
-                    SignatureAndHashAlgorithm {
+                    algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha1,
                         signature: SignatureAlgorithm::Rsa,
                     },
-                    signature: TlsVecU16::<u8>::from_slice(&[9])
+                    signature: TlsVecU16::<u8>::from_slice(&[9]),
                 },
-
                 [].as_slice(),
             )),
+        );
+    }
+
+    #[test]
+    fn test_digitally_signed_serialization() {
+        fn run_test(digitally_signed: DigitallySigned, expected_bytes: &[u8]) {
+            let mut buffer = Vec::with_capacity(digitally_signed.tls_serialized_len());
+            let result = digitally_signed.tls_serialize(&mut buffer);
+            assert_eq!(expected_bytes, &buffer);
+            assert_eq!(result, Ok(expected_bytes.len()));
+        }
+
+        run_test(
+            DigitallySigned {
+                algorithm: SignatureAndHashAlgorithm {
+                    hash: HashAlgorithm::Sha256,
+                    signature: SignatureAlgorithm::Ecdsa,
+                },
+                signature: TlsVecU16::<u8>::from_slice(&[0, 1, 2]),
+            },
+            &[4, 3, 0, 3, 0, 1, 2],
+        );
+        run_test(
+            DigitallySigned {
+                algorithm: SignatureAndHashAlgorithm {
+                    hash: HashAlgorithm::Sha1,
+                    signature: SignatureAlgorithm::Rsa,
+                },
+                signature: TlsVecU16::<u8>::from_slice(&[0, 1, 2]),
+            },
+            &[2, 1, 0, 3, 0, 1, 2],
         );
     }
 }
