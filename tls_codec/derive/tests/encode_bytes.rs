@@ -122,25 +122,25 @@ fn custom() {
     assert_eq!(vec![3, 0, 1, 2, 3], serialized);
 }
 
-// #[derive(TlsSerializeBytes, TlsSize)]
-// struct OptionalMemberRef<'a> {
-//     optional_member: Option<&'a u32>,
-//     ref_optional_member: &'a Option<&'a u32>,
-//     ref_vector: &'a Vec<u16>,
-// }
+#[derive(TlsSerializeBytes, TlsSize)]
+struct OptionalMemberRef<'a> {
+    optional_member: Option<&'a u32>,
+    ref_optional_member: &'a Option<&'a u32>,
+    ref_vector: &'a Vec<u16>,
+}
 
-// #[test]
-// fn optional_member() {
-//     let m = 6;
-//     let v = vec![1, 2, 3];
-//     let x = OptionalMemberRef {
-//         optional_member: Some(&m),
-//         ref_optional_member: &None,
-//         ref_vector: &v.into(),
-//     };
-//     let serialized = x.tls_serialize_detached().unwrap();
-//     assert_eq!(vec![1, 0, 0, 0, 6, 0, 0, 6, 0, 1, 0, 2, 0, 3], serialized);
-// }
+#[test]
+fn optional_member() {
+    let m = 6;
+    let v = vec![1, 2, 3];
+    let x = OptionalMemberRef {
+        optional_member: Some(&m),
+        ref_optional_member: &None,
+        ref_vector: &v.into(),
+    };
+    let serialized = x.tls_serialize().unwrap();
+    assert_eq!(vec![1, 0, 0, 0, 6, 0, 6, 0, 1, 0, 2, 0, 3], serialized);
+}
 
 #[derive(TlsSerializeBytes, TlsSize)]
 #[repr(u8)]
