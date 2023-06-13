@@ -12,6 +12,7 @@ const RFCS: &[(&str, &str)] = &[
     ("rfc5912", include_str!("../rfc5912.txt")),
     ("rfc6268", include_str!("../rfc6268.txt")),
     ("rfc6960", include_str!("../rfc6960.txt")),
+    ("rfc6962", include_str!("../rfc6962.txt")),
     ("rfc7107", include_str!("../rfc7107.txt")),
     ("rfc7299", include_str!("../rfc7299.txt")),
     ("rfc8410", include_str!("../rfc8410.txt")),
@@ -23,7 +24,7 @@ const FIPS202: &str = include_str!("../fips202.md");
 
 // Bases defined in other places.
 const BASES: &[(&str, &str)] = &[("id-ad-ocsp", "1.3.6.1.5.5.7.48.1")];
-const NO_BASES: &[(&str, &str)] = &[("","")];
+const NO_BASES: &[(&str, &str)] = &[("", "")];
 
 fn main() {
     let mut root = Root::default();
