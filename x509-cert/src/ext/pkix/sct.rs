@@ -37,8 +37,8 @@ pub struct DigitallySigned {
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignatureAndHashAlgorithm {
-    signature: SignatureAlgorithm,
     hash: HashAlgorithm,
+    signature: SignatureAlgorithm,
 }
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
@@ -84,7 +84,7 @@ mod tests {
     use alloc::vec::Vec;
     use tls_codec::{DeserializeBytes, Error, Serialize, Size};
 
-    use super::{HashAlgorithm, SignatureAlgorithm};
+    use super::{HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm};
 
     #[test]
     fn test_hash_algorithm_deserialization() {
@@ -212,5 +212,40 @@ mod tests {
         run_test(SignatureAlgorithm::Ecdsa, 3);
         run_test(SignatureAlgorithm::Ed25519, 7);
         run_test(SignatureAlgorithm::Ed448, 8);
+    }
+
+    #[test]
+    fn test_signature_and_hash_algorithm_deserialization() {
+        fn run_test<'a>(
+            bytes: &'a [u8],
+            expected_result: Result<(SignatureAndHashAlgorithm, &[u8]), Error>,
+        ) -> Result<(SignatureAndHashAlgorithm, &'a [u8]), Error> {
+            let actual_result = SignatureAndHashAlgorithm::tls_deserialize(&bytes);
+            assert_eq!(actual_result, expected_result);
+            actual_result
+        }
+        let bytes = [4, 3, 2, 1];
+
+        let result = run_test(
+            &bytes,
+            Ok((
+                SignatureAndHashAlgorithm {
+                    hash: HashAlgorithm::Sha256,
+                    signature: SignatureAlgorithm::Ecdsa,
+                },
+                [2, 1].as_slice(),
+            )),
+        );
+
+        let _ = run_test(
+            &result.unwrap().1,
+            Ok((
+                SignatureAndHashAlgorithm {
+                    hash: HashAlgorithm::Sha1,
+                    signature: SignatureAlgorithm::Rsa,
+                },
+                [].as_slice(),
+            )),
+        );
     }
 }
