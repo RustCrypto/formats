@@ -183,7 +183,7 @@ pub enum HashAlgorithm {
 mod tests {
     use alloc::vec::Vec;
     use der::{asn1::OctetString, Decode, Encode};
-    use tls_codec::{DeserializeBytes, Serialize, Size, TlsVecU16};
+    use tls_codec::{DeserializeBytes, Serialize, TlsVecU16};
 
     use crate::ext::pkix::sct::LogId;
 
@@ -200,6 +200,13 @@ mod tests {
         let actual_result = T::tls_deserialize(&bytes);
         assert_eq!(actual_result, expected_result);
         actual_result
+    }
+
+    fn run_serialization_test<T: Serialize>(value: T, expected_bytes: &[u8]) {
+        let mut buffer = Vec::with_capacity(value.tls_serialized_len());
+        let result = value.tls_serialize(&mut buffer);
+        assert_eq!(expected_bytes, &buffer);
+        assert_eq!(result, Ok(expected_bytes.len()));
     }
 
     #[test]
@@ -250,21 +257,14 @@ mod tests {
 
     #[test]
     fn test_hash_algorithm_serialization() {
-        fn run_test(hash_algorithm: HashAlgorithm, expected_int: u8) {
-            let mut buffer = Vec::with_capacity(hash_algorithm.tls_serialized_len());
-            let result = hash_algorithm.tls_serialize(&mut buffer);
-            assert_eq!([expected_int], buffer[..1]);
-            assert_eq!(result, Ok(1));
-        }
-
-        run_test(HashAlgorithm::None, 0);
-        run_test(HashAlgorithm::Md5, 1);
-        run_test(HashAlgorithm::Sha1, 2);
-        run_test(HashAlgorithm::Sha224, 3);
-        run_test(HashAlgorithm::Sha256, 4);
-        run_test(HashAlgorithm::Sha384, 5);
-        run_test(HashAlgorithm::Sha512, 6);
-        run_test(HashAlgorithm::Intrinsic, 8);
+        run_serialization_test(HashAlgorithm::None, &[0]);
+        run_serialization_test(HashAlgorithm::Md5, &[1]);
+        run_serialization_test(HashAlgorithm::Sha1, &[2]);
+        run_serialization_test(HashAlgorithm::Sha224, &[3]);
+        run_serialization_test(HashAlgorithm::Sha256, &[4]);
+        run_serialization_test(HashAlgorithm::Sha384, &[5]);
+        run_serialization_test(HashAlgorithm::Sha512, &[6]);
+        run_serialization_test(HashAlgorithm::Intrinsic, &[8]);
     }
 
     #[test]
@@ -319,19 +319,12 @@ mod tests {
 
     #[test]
     fn test_signature_algorithm_serialization() {
-        fn run_test(signature_algorithm: SignatureAlgorithm, expected_int: u8) {
-            let mut buffer = Vec::with_capacity(signature_algorithm.tls_serialized_len());
-            let result = signature_algorithm.tls_serialize(&mut buffer);
-            assert_eq!([expected_int], buffer[..1]);
-            assert_eq!(result, Ok(1));
-        }
-
-        run_test(SignatureAlgorithm::Anonymous, 0);
-        run_test(SignatureAlgorithm::Rsa, 1);
-        run_test(SignatureAlgorithm::Dsa, 2);
-        run_test(SignatureAlgorithm::Ecdsa, 3);
-        run_test(SignatureAlgorithm::Ed25519, 7);
-        run_test(SignatureAlgorithm::Ed448, 8);
+        run_serialization_test(SignatureAlgorithm::Anonymous, &[0]);
+        run_serialization_test(SignatureAlgorithm::Rsa, &[1]);
+        run_serialization_test(SignatureAlgorithm::Dsa, &[2]);
+        run_serialization_test(SignatureAlgorithm::Ecdsa, &[3]);
+        run_serialization_test(SignatureAlgorithm::Ed25519, &[7]);
+        run_serialization_test(SignatureAlgorithm::Ed448, &[8]);
     }
 
     #[test]
@@ -363,33 +356,19 @@ mod tests {
 
     #[test]
     fn test_signature_and_hash_algorithm_serialization() {
-        fn run_test(
-            algorithm: SignatureAndHashAlgorithm,
-            expected_hash_int: u8,
-            expected_signature_int: u8,
-        ) {
-            let mut buffer = Vec::with_capacity(algorithm.tls_serialized_len());
-            let result = algorithm.tls_serialize(&mut buffer);
-            assert_eq!(expected_hash_int, buffer[0]);
-            assert_eq!(expected_signature_int, buffer[1]);
-            assert_eq!(result, Ok(2));
-        }
-
-        run_test(
+        run_serialization_test(
             SignatureAndHashAlgorithm {
                 hash: HashAlgorithm::Sha1,
                 signature: SignatureAlgorithm::Rsa,
             },
-            2,
-            1,
+            &[2, 1],
         );
-        run_test(
+        run_serialization_test(
             SignatureAndHashAlgorithm {
                 hash: HashAlgorithm::Sha256,
                 signature: SignatureAlgorithm::Ecdsa,
             },
-            4,
-            3,
+            &[4, 3],
         );
     }
 
@@ -428,14 +407,7 @@ mod tests {
 
     #[test]
     fn test_digitally_signed_serialization() {
-        fn run_test(digitally_signed: DigitallySigned, expected_bytes: &[u8]) {
-            let mut buffer = Vec::with_capacity(digitally_signed.tls_serialized_len());
-            let result = digitally_signed.tls_serialize(&mut buffer);
-            assert_eq!(expected_bytes, &buffer);
-            assert_eq!(result, Ok(expected_bytes.len()));
-        }
-
-        run_test(
+        run_serialization_test(
             DigitallySigned {
                 algorithm: SignatureAndHashAlgorithm {
                     hash: HashAlgorithm::Sha256,
@@ -445,7 +417,7 @@ mod tests {
             },
             &[4, 3, 0, 3, 0, 1, 2],
         );
-        run_test(
+        run_serialization_test(
             DigitallySigned {
                 algorithm: SignatureAndHashAlgorithm {
                     hash: HashAlgorithm::Sha1,
@@ -469,14 +441,7 @@ mod tests {
 
     #[test]
     fn test_version_serialization() {
-        fn run_test(version: Version, expected_bytes: &[u8]) {
-            let mut buffer = Vec::with_capacity(version.tls_serialized_len());
-            let result = version.tls_serialize(&mut buffer);
-            assert_eq!(expected_bytes, &buffer);
-            assert_eq!(result, Ok(expected_bytes.len()));
-        }
-
-        run_test(Version::V1, &[0]);
+        run_serialization_test(Version::V1, &[0]);
     }
 
     #[test]
@@ -489,14 +454,7 @@ mod tests {
 
     #[test]
     fn test_log_id_serialization() {
-        fn run_test(log_id: LogId, expected_bytes: &[u8]) {
-            let mut buffer = Vec::with_capacity(log_id.tls_serialized_len());
-            let result = log_id.tls_serialize(&mut buffer);
-            assert_eq!(expected_bytes, &buffer);
-            assert_eq!(result, Ok(expected_bytes.len()));
-        }
-
-        run_test(LogId { key_id: [3; 32] }, &[3; 32]);
+        run_serialization_test(LogId { key_id: [3; 32] }, &[3; 32]);
     }
 
     const TLS_SCT_EXAMPLE: [u8; 119] = [
@@ -535,14 +493,7 @@ mod tests {
 
     #[test]
     fn test_sct_serialization() {
-        fn run_test(sct: SignedCertificateTimestamp, expected_bytes: &[u8]) {
-            let mut buffer = Vec::with_capacity(sct.tls_serialized_len());
-            let result = sct.tls_serialize(&mut buffer);
-            assert_eq!(expected_bytes, &buffer);
-            assert_eq!(result, Ok(expected_bytes.len()));
-        }
-
-        run_test(
+        run_serialization_test(
             SignedCertificateTimestamp {
                 version: Version::V1,
                 log_id: LogId {
