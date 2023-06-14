@@ -6,7 +6,9 @@ use der::asn1::OctetString;
 //once the PR: https://github.com/RustCrypto/formats/pull/1103 is merged
 // use std::format;
 use alloc::{format, vec::Vec};
-use tls_codec::{DeserializeBytes, TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16};
+use tls_codec::{
+    DeserializeBytes, Serialize, Size, TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16,
+};
 
 // TODO: Review what should be pub
 // TODO: Update docs
@@ -48,8 +50,24 @@ impl From<tls_codec::Error> for Error {
 }
 
 impl SignedCertificateTimestampList {
+    /// Creates a new [SignedCertificateTimestamp] from a slice of [SerializedSct]s
+    pub fn new(serialized_scts: &[SerializedSct]) -> Result<Self, Error> {
+        let mut result: Vec<u8> = Vec::new();
+        for timestamp in serialized_scts {
+            let mut buffer: Vec<u8> = Vec::with_capacity(timestamp.tls_serialized_len());
+            let bytes_written = timestamp.tls_serialize(&mut buffer)?;
+            assert!(bytes_written == timestamp.tls_serialized_len());
+            result.extend(buffer);
+        }
+        let tls_vec = TlsVecU16::<u8>::new(result);
+        let mut buffer: Vec<u8> = Vec::with_capacity(tls_vec.tls_serialized_len());
+        let bytes_written = tls_vec.tls_serialize(&mut buffer)?;
+        assert!(bytes_written == tls_vec.tls_serialized_len());
+        Ok(SignedCertificateTimestampList(OctetString::new(buffer)?))
+    }
+
     /// Parses the encoded [SerializedSct]s and returns a Vec containing them
-    pub fn serialized_signed_certificate_timestamps(&self) -> Result<Vec<SerializedSct>, Error> {
+    pub fn parse_timestamps(&self) -> Result<Vec<SerializedSct>, Error> {
         let (tls_vec, rest) = TlsVecU16::<u8>::tls_deserialize(self.0.as_bytes())?;
         if !rest.is_empty() {
             return Err(tls_codec::Error::TrailingData)?;
@@ -71,7 +89,16 @@ pub struct SerializedSct {
 }
 
 impl SerializedSct {
-    pub fn signed_certificate_timestamp(&self) -> Result<SignedCertificateTimestamp, Error> {
+    pub fn new(timestamp: SignedCertificateTimestamp) -> Result<Self, tls_codec::Error> {
+        let mut buffer: Vec<u8> = Vec::with_capacity(timestamp.tls_serialized_len());
+        let bytes_written = timestamp.tls_serialize(&mut buffer)?;
+        assert!(bytes_written == timestamp.tls_serialized_len());
+        Ok(SerializedSct {
+            data: TlsVecU16::from_slice(&buffer),
+        })
+    }
+
+    pub fn parse_timestamp(&self) -> Result<SignedCertificateTimestamp, Error> {
         let (sct, rest) = SignedCertificateTimestamp::tls_deserialize(self.data.as_slice())?;
         if !rest.is_empty() {
             return Err(tls_codec::Error::TrailingData)?;
@@ -155,14 +182,15 @@ pub enum HashAlgorithm {
 #[cfg(test)]
 mod tests {
     use alloc::vec::Vec;
-    use der::{asn1::OctetString, Decode};
+    use der::{asn1::OctetString, Decode, Encode};
     use tls_codec::{DeserializeBytes, Serialize, Size, TlsVecU16};
 
     use crate::ext::pkix::sct::LogId;
 
     use super::{
-        DigitallySigned, HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm,
-        SignedCertificateTimestamp, SignedCertificateTimestampList, Version,
+        DigitallySigned, HashAlgorithm, SerializedSct, SignatureAlgorithm,
+        SignatureAndHashAlgorithm, SignedCertificateTimestamp, SignedCertificateTimestampList,
+        Version,
     };
 
     #[test]
@@ -593,12 +621,9 @@ mod tests {
                 OctetString::new(&SCT_EXAMPLE[3..]).unwrap(),
             )),
         );
-        let scts = result
-            .unwrap()
-            .serialized_signed_certificate_timestamps()
-            .unwrap();
+        let scts = result.unwrap().parse_timestamps().unwrap();
         assert_eq!(
-            scts[0].signed_certificate_timestamp(),
+            scts[0].parse_timestamp(),
             Ok(SignedCertificateTimestamp {
                 version: Version::V1,
                 log_id: LogId {
@@ -616,7 +641,7 @@ mod tests {
             })
         );
         assert_eq!(
-            scts[1].signed_certificate_timestamp(),
+            scts[1].parse_timestamp(),
             Ok(SignedCertificateTimestamp {
                 version: Version::V1,
                 log_id: LogId {
@@ -633,5 +658,45 @@ mod tests {
                 },
             })
         );
+    }
+
+    #[test]
+    fn test_sct_list_serialization() {
+        let serialized_sct1 = SerializedSct::new(SignedCertificateTimestamp {
+            version: Version::V1,
+            log_id: LogId {
+                key_id: SCT_EXAMPLE[8..40].try_into().unwrap(),
+            },
+            timestamp: u64::from_be_bytes(SCT_EXAMPLE[40..48].try_into().unwrap()),
+            extensions: TlsVecU16::from_slice(&[]),
+            sign: DigitallySigned {
+                algorithm: SignatureAndHashAlgorithm {
+                    hash: HashAlgorithm::Sha256,
+                    signature: SignatureAlgorithm::Ecdsa,
+                },
+                signature: TlsVecU16::from_slice(&SCT_EXAMPLE[54..126]),
+            },
+        })
+        .unwrap();
+        let serialized_sct2 = SerializedSct::new(SignedCertificateTimestamp {
+            version: Version::V1,
+            log_id: LogId {
+                key_id: SCT_EXAMPLE[129..161].try_into().unwrap(),
+            },
+            timestamp: u64::from_be_bytes(SCT_EXAMPLE[161..169].try_into().unwrap()),
+            extensions: TlsVecU16::from_slice(&[]),
+            sign: DigitallySigned {
+                algorithm: SignatureAndHashAlgorithm {
+                    hash: HashAlgorithm::Sha256,
+                    signature: SignatureAlgorithm::Ecdsa,
+                },
+                signature: TlsVecU16::from_slice(&SCT_EXAMPLE[175..]),
+            },
+        })
+        .unwrap();
+        let list =
+            SignedCertificateTimestampList::new(&[serialized_sct1, serialized_sct2]).unwrap();
+        let der = list.to_der().unwrap();
+        assert_eq!(der.as_slice(), SCT_EXAMPLE.as_slice());
     }
 }
