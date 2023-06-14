@@ -34,6 +34,11 @@ pub enum Version {
 }
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+pub struct LogId {
+    key_id: [u8; 32],
+}
+
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct DigitallySigned {
     /// [SignatureAndHashAlgorithm] of the struct
     pub algorithm: SignatureAndHashAlgorithm,
@@ -89,6 +94,8 @@ pub enum HashAlgorithm {
 mod tests {
     use alloc::vec::Vec;
     use tls_codec::{DeserializeBytes, Error, Serialize, Size, TlsVecU16};
+
+    use crate::ext::pkix::sct::LogId;
 
     use super::{
         DigitallySigned, HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm, Version,
@@ -389,5 +396,32 @@ mod tests {
         }
 
         run_test(Version::V1, &[0]);
+    }
+
+    #[test]
+    fn test_log_id_deserialization() {
+        fn run_test<'a>(
+            bytes: &'a [u8],
+            expected_result: Result<(LogId, &[u8]), Error>,
+        ) -> Result<(LogId, &'a [u8]), Error> {
+            let actual_result = LogId::tls_deserialize(&bytes);
+            assert_eq!(actual_result, expected_result);
+            actual_result
+        }
+        let bytes = [42; 36];
+
+        let _ = run_test(&bytes, Ok((LogId { key_id: [42; 32] }, [42; 4].as_slice())));
+    }
+
+    #[test]
+    fn test_log_id_serialization() {
+        fn run_test(log_id: LogId, expected_bytes: &[u8]) {
+            let mut buffer = Vec::with_capacity(log_id.tls_serialized_len());
+            let result = log_id.tls_serialize(&mut buffer);
+            assert_eq!(expected_bytes, &buffer);
+            assert_eq!(result, Ok(expected_bytes.len()));
+        }
+
+        run_test(LogId { key_id: [3; 32] }, &[3; 32]);
     }
 }
