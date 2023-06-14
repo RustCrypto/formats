@@ -19,14 +19,14 @@ use tls_codec::{TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16};
 // pub const CT_PRECERT_SCTS: ObjectIdentifier =
 //     ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.2");
 
-pub struct SctList(OctetString);
+pub struct SignedCertificateTimestampList(OctetString);
 
-impl AssociatedOid for SctList {
+impl AssociatedOid for SignedCertificateTimestampList {
     const OID: ObjectIdentifier = rfc6962::CT_PRECERT_SCTS;
 }
 
-impl_newtype!(SctList, OctetString);
-impl_extension!(SctList, critical = false);
+impl_newtype!(SignedCertificateTimestampList, OctetString);
+impl_extension!(SignedCertificateTimestampList, critical = false);
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignedCertificateTimestamp {
