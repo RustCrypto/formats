@@ -56,13 +56,13 @@ impl SignedCertificateTimestampList {
         for timestamp in serialized_scts {
             let mut buffer: Vec<u8> = Vec::with_capacity(timestamp.tls_serialized_len());
             let bytes_written = timestamp.tls_serialize(&mut buffer)?;
-            assert!(bytes_written == timestamp.tls_serialized_len());
+            assert_eq!(bytes_written, timestamp.tls_serialized_len());
             result.extend(buffer);
         }
         let tls_vec = TlsVecU16::<u8>::new(result);
         let mut buffer: Vec<u8> = Vec::with_capacity(tls_vec.tls_serialized_len());
         let bytes_written = tls_vec.tls_serialize(&mut buffer)?;
-        assert!(bytes_written == tls_vec.tls_serialized_len());
+        assert_eq!(bytes_written, tls_vec.tls_serialized_len());
         Ok(SignedCertificateTimestampList(OctetString::new(buffer)?))
     }
 
@@ -92,7 +92,7 @@ impl SerializedSct {
     pub fn new(timestamp: SignedCertificateTimestamp) -> Result<Self, tls_codec::Error> {
         let mut buffer: Vec<u8> = Vec::with_capacity(timestamp.tls_serialized_len());
         let bytes_written = timestamp.tls_serialize(&mut buffer)?;
-        assert!(bytes_written == timestamp.tls_serialized_len());
+        assert_eq!(bytes_written, timestamp.tls_serialized_len());
         Ok(SerializedSct {
             data: TlsVecU16::from_slice(&buffer),
         })
