@@ -28,6 +28,15 @@ impl_newtype!(SctList, OctetString);
 impl_extension!(SctList, critical = false);
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+pub struct SignedCertificateTimestamp {
+    version: Version,
+    log_id: LogId,
+    timestamp: u64,
+    extensions: TlsVecU16<u8>,
+    sign: DigitallySigned,
+}
+
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 pub enum Version {
     V1 = 0,
