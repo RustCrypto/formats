@@ -75,7 +75,7 @@ impl SignedCertificateTimestampList {
         let mut bytes = tls_vec.as_slice();
         let mut result = Vec::new();
         while !bytes.is_empty() {
-            let (serialized_sct, rest) = SerializedSct::tls_deserialize(&bytes)?;
+            let (serialized_sct, rest) = SerializedSct::tls_deserialize(bytes)?;
             result.push(serialized_sct);
             bytes = rest;
         }
