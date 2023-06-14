@@ -28,6 +28,12 @@ impl_newtype!(SctList, OctetString);
 impl_extension!(SctList, critical = false);
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[repr(u8)]
+pub enum Version {
+    V1 = 0,
+}
+
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct DigitallySigned {
     /// [SignatureAndHashAlgorithm] of the struct
     pub algorithm: SignatureAndHashAlgorithm,
@@ -84,7 +90,9 @@ mod tests {
     use alloc::vec::Vec;
     use tls_codec::{DeserializeBytes, Error, Serialize, Size, TlsVecU16};
 
-    use super::{DigitallySigned, HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm};
+    use super::{
+        DigitallySigned, HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm, Version,
+    };
 
     #[test]
     fn test_hash_algorithm_deserialization() {
@@ -351,5 +359,35 @@ mod tests {
             },
             &[2, 1, 0, 3, 0, 1, 2],
         );
+    }
+
+    #[test]
+    fn test_version_deserialization() {
+        fn run_test<'a>(
+            bytes: &'a [u8],
+            expected_result: Result<(Version, &[u8]), Error>,
+        ) -> Result<(Version, &'a [u8]), Error> {
+            let actual_result = Version::tls_deserialize(&bytes);
+            assert_eq!(actual_result, expected_result);
+            actual_result
+        }
+        let bytes = [0, 0];
+
+        let result = run_test(&bytes, Ok((Version::V1, [0].as_slice())));
+
+        let _ = run_test(&result.unwrap().1, Ok((Version::V1, [].as_slice())));
+        let _ = run_test(&[1], Err(Error::UnknownValue(1)));
+    }
+
+    #[test]
+    fn test_version_serialization() {
+        fn run_test(version: Version, expected_bytes: &[u8]) {
+            let mut buffer = Vec::with_capacity(version.tls_serialized_len());
+            let result = version.tls_serialize(&mut buffer);
+            assert_eq!(expected_bytes, &buffer);
+            assert_eq!(result, Ok(expected_bytes.len()));
+        }
+
+        run_test(Version::V1, &[0]);
     }
 }
