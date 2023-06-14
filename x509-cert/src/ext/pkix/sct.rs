@@ -1,4 +1,5 @@
 #![cfg(feature = "sct")]
+
 use const_oid::{db::rfc6962, AssociatedOid, ObjectIdentifier};
 use der::asn1::OctetString;
 //TODO: Remove use::alloc::format explicit use required by the #[derive(TlsSerialize)] on SignagureAndHashAlgorithms
@@ -107,7 +108,8 @@ mod tests {
     use crate::ext::pkix::sct::LogId;
 
     use super::{
-        DigitallySigned, HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm, Version,
+        DigitallySigned, HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm,
+        SignedCertificateTimestamp, Version,
     };
 
     #[test]
@@ -432,5 +434,77 @@ mod tests {
         }
 
         run_test(LogId { key_id: [3; 32] }, &[3; 32]);
+    }
+
+    const SCT_EXAMPLE: [u8; 119] = [
+        0, 122, 50, 140, 84, 216, 183, 45, 182, 32, 234, 56, 224, 82, 30, 233, 132, 22, 112, 50,
+        19, 133, 77, 59, 210, 43, 193, 58, 87, 163, 82, 235, 82, 0, 0, 1, 135, 224, 74, 186, 106,
+        0, 0, 4, 3, 0, 72, 48, 70, 2, 33, 0, 170, 82, 81, 162, 157, 234, 14, 189, 167, 13, 247,
+        211, 97, 112, 248, 172, 149, 125, 58, 18, 238, 60, 150, 157, 124, 245, 188, 138, 102, 212,
+        244, 187, 2, 33, 0, 209, 79, 31, 63, 208, 79, 240, 233, 193, 187, 28, 33, 190, 95, 130, 66,
+        183, 222, 187, 42, 22, 83, 0, 119, 226, 246, 19, 197, 47, 237, 198, 149,
+    ];
+
+    #[test]
+    fn test_sct_deserialization() {
+        fn run_test<'a>(
+            bytes: &'a [u8],
+            expected_result: Result<(SignedCertificateTimestamp, &[u8]), Error>,
+        ) -> Result<(SignedCertificateTimestamp, &'a [u8]), Error> {
+            let actual_result = SignedCertificateTimestamp::tls_deserialize(&bytes);
+            assert_eq!(actual_result, expected_result);
+            actual_result
+        }
+
+        let _ = run_test(
+            &SCT_EXAMPLE,
+            Ok((
+                SignedCertificateTimestamp {
+                    version: Version::V1,
+                    log_id: LogId {
+                        key_id: SCT_EXAMPLE[1..33].try_into().unwrap(),
+                    },
+                    timestamp: u64::from_be_bytes(SCT_EXAMPLE[33..41].try_into().unwrap()),
+                    extensions: TlsVecU16::from_slice(&[]),
+                    sign: DigitallySigned {
+                        algorithm: SignatureAndHashAlgorithm {
+                            hash: HashAlgorithm::Sha256,
+                            signature: SignatureAlgorithm::Ecdsa,
+                        },
+                        signature: TlsVecU16::from_slice(&SCT_EXAMPLE[47..]),
+                    },
+                },
+                &[],
+            )),
+        );
+    }
+
+    #[test]
+    fn test_sct_serialization() {
+        fn run_test(sct: SignedCertificateTimestamp, expected_bytes: &[u8]) {
+            let mut buffer = Vec::with_capacity(sct.tls_serialized_len());
+            let result = sct.tls_serialize(&mut buffer);
+            assert_eq!(expected_bytes, &buffer);
+            assert_eq!(result, Ok(expected_bytes.len()));
+        }
+
+        run_test(
+            SignedCertificateTimestamp {
+                version: Version::V1,
+                log_id: LogId {
+                    key_id: SCT_EXAMPLE[1..33].try_into().unwrap(),
+                },
+                timestamp: u64::from_be_bytes(SCT_EXAMPLE[33..41].try_into().unwrap()),
+                extensions: TlsVecU16::from_slice(&[]),
+                sign: DigitallySigned {
+                    algorithm: SignatureAndHashAlgorithm {
+                        hash: HashAlgorithm::Sha256,
+                        signature: SignatureAlgorithm::Ecdsa,
+                    },
+                    signature: TlsVecU16::from_slice(&SCT_EXAMPLE[47..]),
+                },
+            },
+            &SCT_EXAMPLE,
+        );
     }
 }
