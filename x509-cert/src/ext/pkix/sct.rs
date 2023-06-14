@@ -5,8 +5,8 @@ use der::asn1::OctetString;
 //TODO: Remove use::alloc::format explicit use required by the #[derive(TlsSerialize)] on SignagureAndHashAlgorithms
 //once the PR: https://github.com/RustCrypto/formats/pull/1103 is merged
 // use std::format;
-use alloc::format;
-use tls_codec::{TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16};
+use alloc::{format, vec::Vec};
+use tls_codec::{DeserializeBytes, TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16};
 
 // TODO: Review what should be pub
 // TODO: Update docs
@@ -19,6 +19,7 @@ use tls_codec::{TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16};
 // pub const CT_PRECERT_SCTS: ObjectIdentifier =
 //     ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.2");
 
+#[derive(Debug, PartialEq)]
 pub struct SignedCertificateTimestampList(OctetString);
 
 impl AssociatedOid for SignedCertificateTimestampList {
@@ -27,6 +28,57 @@ impl AssociatedOid for SignedCertificateTimestampList {
 
 impl_newtype!(SignedCertificateTimestampList, OctetString);
 impl_extension!(SignedCertificateTimestampList, critical = false);
+
+#[derive(PartialEq, Debug)]
+pub enum Error {
+    Der(der::Error),
+    Tls(tls_codec::Error),
+}
+
+impl From<der::Error> for Error {
+    fn from(value: der::Error) -> Self {
+        Error::Der(value)
+    }
+}
+
+impl From<tls_codec::Error> for Error {
+    fn from(value: tls_codec::Error) -> Self {
+        Error::Tls(value)
+    }
+}
+
+impl SignedCertificateTimestampList {
+    /// Parses the encoded [SerializedSct]s and returns a Vec containing them
+    pub fn serialized_signed_certificate_timestamps(&self) -> Result<Vec<SerializedSct>, Error> {
+        let (tls_vec, rest) = TlsVecU16::<u8>::tls_deserialize(self.0.as_bytes())?;
+        if !rest.is_empty() {
+            return Err(tls_codec::Error::TrailingData)?;
+        }
+        let mut bytes = tls_vec.as_slice();
+        let mut result = Vec::new();
+        while !bytes.is_empty() {
+            let (serialized_sct, rest) = SerializedSct::tls_deserialize(&bytes)?;
+            result.push(serialized_sct);
+            bytes = rest;
+        }
+        Ok(result)
+    }
+}
+
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+pub struct SerializedSct {
+    data: TlsVecU16<u8>,
+}
+
+impl SerializedSct {
+    pub fn signed_certificate_timestamp(&self) -> Result<SignedCertificateTimestamp, Error> {
+        let (sct, rest) = SignedCertificateTimestamp::tls_deserialize(self.data.as_slice())?;
+        if !rest.is_empty() {
+            return Err(tls_codec::Error::TrailingData)?;
+        }
+        Ok(sct)
+    }
+}
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignedCertificateTimestamp {
@@ -103,21 +155,22 @@ pub enum HashAlgorithm {
 #[cfg(test)]
 mod tests {
     use alloc::vec::Vec;
-    use tls_codec::{DeserializeBytes, Error, Serialize, Size, TlsVecU16};
+    use der::{asn1::OctetString, Decode};
+    use tls_codec::{DeserializeBytes, Serialize, Size, TlsVecU16};
 
     use crate::ext::pkix::sct::LogId;
 
     use super::{
         DigitallySigned, HashAlgorithm, SignatureAlgorithm, SignatureAndHashAlgorithm,
-        SignedCertificateTimestamp, Version,
+        SignedCertificateTimestamp, SignedCertificateTimestampList, Version,
     };
 
     #[test]
     fn test_hash_algorithm_deserialization() {
         fn run_test<'a>(
             bytes: &'a [u8],
-            expected_result: Result<(HashAlgorithm, &[u8]), Error>,
-        ) -> Result<(HashAlgorithm, &'a [u8]), Error> {
+            expected_result: Result<(HashAlgorithm, &[u8]), tls_codec::Error>,
+        ) -> Result<(HashAlgorithm, &'a [u8]), tls_codec::Error> {
             let actual_result = HashAlgorithm::tls_deserialize(&bytes);
             assert_eq!(actual_result, expected_result);
             actual_result
@@ -156,9 +209,9 @@ mod tests {
             &result.unwrap().1,
             Ok((HashAlgorithm::Intrinsic, [].as_slice())),
         );
-        let _ = run_test(&result.unwrap().1, Err(Error::EndOfStream));
-        let _ = run_test(&[7], Err(Error::UnknownValue(7)));
-        let _ = run_test(&[9], Err(Error::UnknownValue(9)));
+        let _ = run_test(&result.unwrap().1, Err(tls_codec::Error::EndOfStream));
+        let _ = run_test(&[7], Err(tls_codec::Error::UnknownValue(7)));
+        let _ = run_test(&[9], Err(tls_codec::Error::UnknownValue(9)));
     }
 
     #[test]
@@ -184,8 +237,8 @@ mod tests {
     fn test_signature_algorithm_deserialization() {
         fn run_test<'a>(
             bytes: &'a [u8],
-            expected_result: Result<(SignatureAlgorithm, &[u8]), Error>,
-        ) -> Result<(SignatureAlgorithm, &'a [u8]), Error> {
+            expected_result: Result<(SignatureAlgorithm, &[u8]), tls_codec::Error>,
+        ) -> Result<(SignatureAlgorithm, &'a [u8]), tls_codec::Error> {
             let actual_result = SignatureAlgorithm::tls_deserialize(&bytes);
             assert_eq!(actual_result, expected_result);
             actual_result
@@ -216,11 +269,11 @@ mod tests {
             &result.unwrap().1,
             Ok((SignatureAlgorithm::Ed448, [].as_slice())),
         );
-        let _ = run_test(&result.unwrap().1, Err(Error::EndOfStream));
-        let _ = run_test(&[4], Err(Error::UnknownValue(4)));
-        let _ = run_test(&[5], Err(Error::UnknownValue(5)));
-        let _ = run_test(&[6], Err(Error::UnknownValue(6)));
-        let _ = run_test(&[9], Err(Error::UnknownValue(9)));
+        let _ = run_test(&result.unwrap().1, Err(tls_codec::Error::EndOfStream));
+        let _ = run_test(&[4], Err(tls_codec::Error::UnknownValue(4)));
+        let _ = run_test(&[5], Err(tls_codec::Error::UnknownValue(5)));
+        let _ = run_test(&[6], Err(tls_codec::Error::UnknownValue(6)));
+        let _ = run_test(&[9], Err(tls_codec::Error::UnknownValue(9)));
     }
 
     #[test]
@@ -244,8 +297,8 @@ mod tests {
     fn test_signature_and_hash_algorithm_deserialization() {
         fn run_test<'a>(
             bytes: &'a [u8],
-            expected_result: Result<(SignatureAndHashAlgorithm, &[u8]), Error>,
-        ) -> Result<(SignatureAndHashAlgorithm, &'a [u8]), Error> {
+            expected_result: Result<(SignatureAndHashAlgorithm, &[u8]), tls_codec::Error>,
+        ) -> Result<(SignatureAndHashAlgorithm, &'a [u8]), tls_codec::Error> {
             let actual_result = SignatureAndHashAlgorithm::tls_deserialize(&bytes);
             assert_eq!(actual_result, expected_result);
             actual_result
@@ -311,8 +364,8 @@ mod tests {
     fn test_digitally_signed_deserialization() {
         fn run_test<'a>(
             bytes: &'a [u8],
-            expected_result: Result<(DigitallySigned, &[u8]), Error>,
-        ) -> Result<(DigitallySigned, &'a [u8]), Error> {
+            expected_result: Result<(DigitallySigned, &[u8]), tls_codec::Error>,
+        ) -> Result<(DigitallySigned, &'a [u8]), tls_codec::Error> {
             let actual_result = DigitallySigned::tls_deserialize(&bytes);
             assert_eq!(actual_result, expected_result);
             actual_result
@@ -383,8 +436,8 @@ mod tests {
     fn test_version_deserialization() {
         fn run_test<'a>(
             bytes: &'a [u8],
-            expected_result: Result<(Version, &[u8]), Error>,
-        ) -> Result<(Version, &'a [u8]), Error> {
+            expected_result: Result<(Version, &[u8]), tls_codec::Error>,
+        ) -> Result<(Version, &'a [u8]), tls_codec::Error> {
             let actual_result = Version::tls_deserialize(&bytes);
             assert_eq!(actual_result, expected_result);
             actual_result
@@ -394,7 +447,7 @@ mod tests {
         let result = run_test(&bytes, Ok((Version::V1, [0].as_slice())));
 
         let _ = run_test(&result.unwrap().1, Ok((Version::V1, [].as_slice())));
-        let _ = run_test(&[1], Err(Error::UnknownValue(1)));
+        let _ = run_test(&[1], Err(tls_codec::Error::UnknownValue(1)));
     }
 
     #[test]
@@ -413,8 +466,8 @@ mod tests {
     fn test_log_id_deserialization() {
         fn run_test<'a>(
             bytes: &'a [u8],
-            expected_result: Result<(LogId, &[u8]), Error>,
-        ) -> Result<(LogId, &'a [u8]), Error> {
+            expected_result: Result<(LogId, &[u8]), tls_codec::Error>,
+        ) -> Result<(LogId, &'a [u8]), tls_codec::Error> {
             let actual_result = LogId::tls_deserialize(&bytes);
             assert_eq!(actual_result, expected_result);
             actual_result
@@ -436,7 +489,7 @@ mod tests {
         run_test(LogId { key_id: [3; 32] }, &[3; 32]);
     }
 
-    const SCT_EXAMPLE: [u8; 119] = [
+    const TLS_SCT_EXAMPLE: [u8; 119] = [
         0, 122, 50, 140, 84, 216, 183, 45, 182, 32, 234, 56, 224, 82, 30, 233, 132, 22, 112, 50,
         19, 133, 77, 59, 210, 43, 193, 58, 87, 163, 82, 235, 82, 0, 0, 1, 135, 224, 74, 186, 106,
         0, 0, 4, 3, 0, 72, 48, 70, 2, 33, 0, 170, 82, 81, 162, 157, 234, 14, 189, 167, 13, 247,
@@ -449,29 +502,29 @@ mod tests {
     fn test_sct_deserialization() {
         fn run_test<'a>(
             bytes: &'a [u8],
-            expected_result: Result<(SignedCertificateTimestamp, &[u8]), Error>,
-        ) -> Result<(SignedCertificateTimestamp, &'a [u8]), Error> {
+            expected_result: Result<(SignedCertificateTimestamp, &[u8]), tls_codec::Error>,
+        ) -> Result<(SignedCertificateTimestamp, &'a [u8]), tls_codec::Error> {
             let actual_result = SignedCertificateTimestamp::tls_deserialize(&bytes);
             assert_eq!(actual_result, expected_result);
             actual_result
         }
 
         let _ = run_test(
-            &SCT_EXAMPLE,
+            &TLS_SCT_EXAMPLE,
             Ok((
                 SignedCertificateTimestamp {
                     version: Version::V1,
                     log_id: LogId {
-                        key_id: SCT_EXAMPLE[1..33].try_into().unwrap(),
+                        key_id: TLS_SCT_EXAMPLE[1..33].try_into().unwrap(),
                     },
-                    timestamp: u64::from_be_bytes(SCT_EXAMPLE[33..41].try_into().unwrap()),
+                    timestamp: u64::from_be_bytes(TLS_SCT_EXAMPLE[33..41].try_into().unwrap()),
                     extensions: TlsVecU16::from_slice(&[]),
                     sign: DigitallySigned {
                         algorithm: SignatureAndHashAlgorithm {
                             hash: HashAlgorithm::Sha256,
                             signature: SignatureAlgorithm::Ecdsa,
                         },
-                        signature: TlsVecU16::from_slice(&SCT_EXAMPLE[47..]),
+                        signature: TlsVecU16::from_slice(&TLS_SCT_EXAMPLE[47..]),
                     },
                 },
                 &[],
@@ -492,19 +545,93 @@ mod tests {
             SignedCertificateTimestamp {
                 version: Version::V1,
                 log_id: LogId {
-                    key_id: SCT_EXAMPLE[1..33].try_into().unwrap(),
+                    key_id: TLS_SCT_EXAMPLE[1..33].try_into().unwrap(),
                 },
-                timestamp: u64::from_be_bytes(SCT_EXAMPLE[33..41].try_into().unwrap()),
+                timestamp: u64::from_be_bytes(TLS_SCT_EXAMPLE[33..41].try_into().unwrap()),
                 extensions: TlsVecU16::from_slice(&[]),
                 sign: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
                     },
-                    signature: TlsVecU16::from_slice(&SCT_EXAMPLE[47..]),
+                    signature: TlsVecU16::from_slice(&TLS_SCT_EXAMPLE[47..]),
                 },
             },
+            &TLS_SCT_EXAMPLE,
+        );
+    }
+
+    const SCT_EXAMPLE: [u8; 245] = [
+        4, 129, 242, 0, 240, 0, 119, 0, 122, 50, 140, 84, 216, 183, 45, 182, 32, 234, 56, 224, 82,
+        30, 233, 132, 22, 112, 50, 19, 133, 77, 59, 210, 43, 193, 58, 87, 163, 82, 235, 82, 0, 0,
+        1, 135, 224, 74, 186, 106, 0, 0, 4, 3, 0, 72, 48, 70, 2, 33, 0, 170, 82, 81, 162, 157, 234,
+        14, 189, 167, 13, 247, 211, 97, 112, 248, 172, 149, 125, 58, 18, 238, 60, 150, 157, 124,
+        245, 188, 138, 102, 212, 244, 187, 2, 33, 0, 209, 79, 31, 63, 208, 79, 240, 233, 193, 187,
+        28, 33, 190, 95, 130, 66, 183, 222, 187, 42, 22, 83, 0, 119, 226, 246, 19, 197, 47, 237,
+        198, 149, 0, 117, 0, 173, 247, 190, 250, 124, 255, 16, 200, 139, 157, 61, 156, 30, 62, 24,
+        106, 180, 103, 41, 93, 207, 177, 12, 36, 202, 133, 134, 52, 235, 220, 130, 138, 0, 0, 1,
+        135, 224, 74, 186, 164, 0, 0, 4, 3, 0, 70, 48, 68, 2, 32, 29, 110, 144, 37, 157, 227, 170,
+        70, 67, 16, 68, 195, 212, 168, 246, 37, 94, 69, 210, 136, 42, 113, 217, 230, 34, 152, 253,
+        116, 13, 174, 232, 191, 2, 32, 16, 25, 200, 223, 59, 176, 40, 145, 76, 85, 242, 133, 130,
+        212, 61, 216, 83, 238, 115, 130, 82, 240, 196, 162, 249, 54, 199, 120, 175, 72, 223, 14,
+    ];
+
+    #[test]
+    fn test_sct_list_deserialization() {
+        fn run_test(
+            bytes: &[u8],
+            expected_result: Result<SignedCertificateTimestampList, der::Error>,
+        ) -> Result<SignedCertificateTimestampList, der::Error> {
+            let actual_result = SignedCertificateTimestampList::from_der(&bytes);
+            assert_eq!(actual_result, expected_result);
+            actual_result
+        }
+
+        let result = run_test(
             &SCT_EXAMPLE,
+            Ok(SignedCertificateTimestampList(
+                OctetString::new(&SCT_EXAMPLE[3..]).unwrap(),
+            )),
+        );
+        let scts = result
+            .unwrap()
+            .serialized_signed_certificate_timestamps()
+            .unwrap();
+        assert_eq!(
+            scts[0].signed_certificate_timestamp(),
+            Ok(SignedCertificateTimestamp {
+                version: Version::V1,
+                log_id: LogId {
+                    key_id: SCT_EXAMPLE[8..40].try_into().unwrap(),
+                },
+                timestamp: u64::from_be_bytes(SCT_EXAMPLE[40..48].try_into().unwrap()),
+                extensions: TlsVecU16::from_slice(&[]),
+                sign: DigitallySigned {
+                    algorithm: SignatureAndHashAlgorithm {
+                        hash: HashAlgorithm::Sha256,
+                        signature: SignatureAlgorithm::Ecdsa,
+                    },
+                    signature: TlsVecU16::from_slice(&SCT_EXAMPLE[54..126]),
+                },
+            })
+        );
+        assert_eq!(
+            scts[1].signed_certificate_timestamp(),
+            Ok(SignedCertificateTimestamp {
+                version: Version::V1,
+                log_id: LogId {
+                    key_id: SCT_EXAMPLE[129..161].try_into().unwrap(),
+                },
+                timestamp: u64::from_be_bytes(SCT_EXAMPLE[161..169].try_into().unwrap()),
+                extensions: TlsVecU16::from_slice(&[]),
+                sign: DigitallySigned {
+                    algorithm: SignatureAndHashAlgorithm {
+                        hash: HashAlgorithm::Sha256,
+                        signature: SignatureAlgorithm::Ecdsa,
+                    },
+                    signature: TlsVecU16::from_slice(&SCT_EXAMPLE[175..]),
+                },
+            })
         );
     }
 }
