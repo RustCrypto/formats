@@ -4,15 +4,25 @@
 
 use crate::cert::CertificateChoices;
 use crate::content_info::{CmsVersion, ContentInfo};
+use crate::enveloped_data::{
+    EncryptedContentInfo, EncryptedKey, EnvelopedData, KekIdentifier, KeyTransRecipientInfo,
+    OriginatorIdentifierOrKey, OriginatorInfo, RecipientIdentifier, RecipientInfo, RecipientInfos,
+    UserKeyingMaterial,
+};
 use crate::revocation::{RevocationInfoChoice, RevocationInfoChoices};
 use crate::signed_data::{
     CertificateSet, DigestAlgorithmIdentifiers, EncapsulatedContentInfo, SignatureValue,
     SignedAttributes, SignedData, SignerIdentifier, SignerInfo, SignerInfos, UnsignedAttributes,
 };
+use aes::{Aes128, Aes192, Aes256};
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
+use cipher::block_padding::Pkcs7;
+use cipher::crypto_common::rand_core::{CryptoRng, OsRng, RngCore};
+use cipher::{BlockEncryptMut, BlockSizeUser};
+use cipher::{Key, KeyIvInit, KeySizeUser};
 use const_oid::ObjectIdentifier;
 use core::cmp::Ordering;
 use core::fmt;
@@ -27,10 +37,12 @@ use spki::{
     AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
     SignatureBitStringEncoding,
 };
+use std::marker::PhantomData;
 use std::time::SystemTime;
 use std::vec;
-use x509_cert::attr::{Attribute, AttributeValue};
+use x509_cert::attr::{Attribute, AttributeValue, Attributes};
 use x509_cert::builder::Builder;
+use zeroize::Zeroize;
 
 /// Error type
 #[derive(Debug)]
@@ -506,6 +518,448 @@ impl<'s> SignedDataBuilder<'s> {
     }
 }
 
+/// This trait must be implemented for the 5 recipient info types defined in RFC 5652 § 6:
+pub enum RecipientInfoType {
+    /// KeyTransRecipientInfo
+    Ktri,
+    /// KeyAgreeRecipientInfo
+    Kari,
+    /// KekRecipientInfo
+    Kekri,
+    /// PasswordRecipientInfo
+    Pwri,
+    /// OtherRecipientInfo
+    Ori,
+}
+
+/// Trait for builders of a `RecipientInfo`. RFC 5652 § 6 defines 5 different `RecipientInfo`
+/// formats. All implementations must implement this trait.
+pub trait RecipientInfoBuilder {
+    /// Return the recipient info type
+    fn recipient_info_type(&self) -> RecipientInfoType;
+
+    /// Return the recipient info version
+    fn recipient_info_version(&self) -> CmsVersion;
+
+    /// Encrypt the `content_encryption_key` using a method, that is specific for the implementing
+    /// builder type. Finally return a `RecipientInfo`.
+    fn build(&self, content_encryption_key: &[u8]) -> Result<RecipientInfo>;
+}
+
+/// Builds a `KeyTransRecipientInfo` according to RFC 5652 § 6.
+/// This type uses the recipient's public key to encrypt the content-encryption key.
+pub struct KeyTransRecipientInfoBuilder<'k> {
+    /// Identifies the recipient
+    pub rid: RecipientIdentifier,
+    /// Encryption algorithm to be used for key encryption
+    pub key_enc_alg: AlgorithmIdentifierOwned,
+    /// Recipient's public, which will be used to encrypt the content-encryption key.
+    pub recipient_public_key: &'k [u8],
+}
+
+impl<'k> KeyTransRecipientInfoBuilder<'k> {
+    /// Creates a `KeyTransRecipientInfoBuilder`
+    pub fn new(
+        rid: RecipientIdentifier,
+        key_enc_alg: AlgorithmIdentifierOwned,
+        recipient_public_key: &'k [u8],
+    ) -> Result<KeyTransRecipientInfoBuilder<'k>> {
+        Ok(KeyTransRecipientInfoBuilder {
+            rid,
+            key_enc_alg,
+            recipient_public_key,
+        })
+    }
+}
+
+impl<'k> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<'k> {
+    fn recipient_info_type(&self) -> RecipientInfoType {
+        RecipientInfoType::Ktri
+    }
+
+    fn recipient_info_version(&self) -> CmsVersion {
+        match self.rid {
+            RecipientIdentifier::IssuerAndSerialNumber(_) => CmsVersion::V0,
+            RecipientIdentifier::SubjectKeyIdentifier(_) => CmsVersion::V2,
+        }
+    }
+
+    /// Build a `KeyTransRecipientInfo`. See RFC 5652 § 6.2.1
+    /// `content_encryption_key` will be encrypted with the recipient's public key.
+    fn build(&self, content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+        // Encrypt key
+        let (encrypted_key, _) = encrypt_data(
+            content_encryption_key,
+            &self.key_enc_alg,
+            Some(&self.recipient_public_key),
+            &mut OsRng,
+        )?;
+        let enc_key = EncryptedKey::new(encrypted_key)?;
+
+        Ok(RecipientInfo::Ktri(KeyTransRecipientInfo {
+            version: self.recipient_info_version(),
+            rid: self.rid.clone(),
+            key_enc_alg: self.key_enc_alg.clone(),
+            enc_key,
+        }))
+    }
+}
+
+/// Builds a `KeyAgreeRecipientInfo` according to RFC 5652 § 6.
+/// This type uses key agreement:  the recipient's public key and the sender's
+/// private key are used to generate a pairwise symmetric key, then
+/// the content-encryption key is encrypted in the pairwise symmetric key.
+pub struct KeyAgreeRecipientInfoBuilder {
+    /// A CHOICE with three alternatives specifying the sender's key agreement public key.
+    pub originator: OriginatorIdentifierOrKey,
+    /// Optional information which helps generating different keys every time.
+    pub ukm: Option<UserKeyingMaterial>,
+    /// Encryption algorithm to be used for key encryption
+    pub key_enc_alg: AlgorithmIdentifierOwned,
+}
+
+impl KeyAgreeRecipientInfoBuilder {
+    /// Creates a `KeyAgreeRecipientInfoBuilder`
+    pub fn new(
+        originator: OriginatorIdentifierOrKey,
+        ukm: Option<UserKeyingMaterial>,
+        key_enc_alg: AlgorithmIdentifierOwned,
+    ) -> Result<KeyAgreeRecipientInfoBuilder> {
+        Ok(KeyAgreeRecipientInfoBuilder {
+            originator,
+            ukm,
+            key_enc_alg,
+        })
+    }
+}
+
+impl RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder {
+    /// Returns the RecipientInfoType
+    fn recipient_info_type(&self) -> RecipientInfoType {
+        RecipientInfoType::Kari
+    }
+
+    /// Returns the `CMSVersion` for this `RecipientInfo`
+    fn recipient_info_version(&self) -> CmsVersion {
+        CmsVersion::V3
+    }
+
+    /// Build a `KeyAgreeRecipientInfoBuilder`. See RFC 5652 § 6.2.1
+    fn build(&self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+        Err(Error::Builder(String::from(
+            "Building KeyAgreeRecipientInfo is not implemented, yet.",
+        )))
+    }
+}
+
+/// Builds a `KekRecipientInfo` according to RFC 5652 § 6.
+/// Uses symmetric key-encryption keys: the content-encryption key is
+/// encrypted in a previously distributed symmetric key-encryption key.
+pub struct KekRecipientInfoBuilder {
+    /// Specifies a symmetric key-encryption key that was previously distributed to the sender and
+    /// one or more recipients.
+    pub kek_id: KekIdentifier,
+    /// Encryption algorithm to be used for key encryption
+    pub key_enc_alg: AlgorithmIdentifierOwned,
+}
+
+impl KekRecipientInfoBuilder {
+    /// Creates a `KekRecipientInfoBuilder`
+    pub fn new(
+        kek_id: KekIdentifier,
+        key_enc_alg: AlgorithmIdentifierOwned,
+    ) -> Result<KekRecipientInfoBuilder> {
+        Ok(KekRecipientInfoBuilder {
+            kek_id,
+            key_enc_alg,
+        })
+    }
+}
+
+impl RecipientInfoBuilder for KekRecipientInfoBuilder {
+    /// Returns the RecipientInfoType
+    fn recipient_info_type(&self) -> RecipientInfoType {
+        RecipientInfoType::Kekri
+    }
+
+    /// Returns the `CMSVersion` for this `RecipientInfo`
+    fn recipient_info_version(&self) -> CmsVersion {
+        CmsVersion::V4
+    }
+
+    /// Build a `KekRecipientInfoBuilder`. See RFC 5652 § 6.2.1
+    fn build(&self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+        Err(Error::Builder(String::from(
+            "Building KekRecipientInfo is not implemented, yet.",
+        )))
+    }
+}
+
+/// Builds a `PasswordRecipientInfo` according to RFC 5652 § 6.
+/// Uses a password or shared secret value to encrypt the content-encryption key.
+pub struct PasswordRecipientInfoBuilder {
+    /// Identifies the key-derivation algorithm, and any associated parameters, used to derive the
+    /// key-encryption key from the password or shared secret value. If this field is `None`,
+    /// the key-encryption key is supplied from an external source, for example a hardware crypto
+    /// token such as a smart card.
+    pub key_derivation_alg: Option<AlgorithmIdentifierOwned>,
+    /// Encryption algorithm to be used for key encryption
+    pub key_enc_alg: AlgorithmIdentifierOwned,
+}
+
+impl PasswordRecipientInfoBuilder {
+    /// Creates a `PasswordRecipientInfoBuilder`
+    pub fn new(
+        key_derivation_alg: Option<AlgorithmIdentifierOwned>,
+        key_enc_alg: AlgorithmIdentifierOwned,
+    ) -> Result<PasswordRecipientInfoBuilder> {
+        Ok(PasswordRecipientInfoBuilder {
+            key_derivation_alg,
+            key_enc_alg,
+        })
+    }
+}
+
+impl RecipientInfoBuilder for PasswordRecipientInfoBuilder {
+    /// Returns the RecipientInfoType
+    fn recipient_info_type(&self) -> RecipientInfoType {
+        RecipientInfoType::Pwri
+    }
+
+    /// Returns the `CMSVersion` for this `RecipientInfo`
+    fn recipient_info_version(&self) -> CmsVersion {
+        CmsVersion::V0
+    }
+
+    /// Build a `PasswordRecipientInfoBuilder`. See RFC 5652 § 6.2.1
+    fn build(&self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+        Err(Error::Builder(String::from(
+            "Building PasswordRecipientInfo is not implemented, yet.",
+        )))
+    }
+}
+
+/// Builds an `OtherRecipientInfo` according to RFC 5652 § 6.
+/// This type makes no assumption about the encryption method or the needed information.
+pub struct OtherRecipientInfoBuilder {
+    /// Identifies the key management technique.
+    pub ori_type: ObjectIdentifier,
+    /// Contains the protocol data elements needed by a recipient using the identified key
+    /// management technique
+    pub ori_value: Any,
+}
+
+impl OtherRecipientInfoBuilder {
+    /// Creates a `OtherRecipientInfoBuilder`
+    pub fn new(ori_type: ObjectIdentifier, ori_value: Any) -> Result<OtherRecipientInfoBuilder> {
+        Ok(OtherRecipientInfoBuilder {
+            ori_type,
+            ori_value,
+        })
+    }
+}
+
+impl RecipientInfoBuilder for OtherRecipientInfoBuilder {
+    /// Returns the RecipientInfoType
+    fn recipient_info_type(&self) -> RecipientInfoType {
+        RecipientInfoType::Ori
+    }
+
+    /// Returns the `CMSVersion` for this `RecipientInfo`
+    fn recipient_info_version(&self) -> CmsVersion {
+        // TODO bk
+        panic!("Ori has no CMSVersion")
+    }
+
+    /// Build a `OtherRecipientInfoBuilder`. See RFC 5652 § 6.2.1
+    fn build(&self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+        // TODO bk
+        panic!("Ori has no common build method.")
+    }
+}
+
+/// Builds CMS `EnvelopedData` according to RFC 5652 § 6.
+pub struct EnvelopedDataBuilder<'c, E>
+where
+    E: BlockEncryptMut + KeySizeUser + BlockSizeUser,
+{
+    originator_info: Option<OriginatorInfo>,
+    recipient_infos: Vec<Box<dyn RecipientInfoBuilder>>,
+    unencrypted_content: &'c [u8],
+    // TODO bk Not good to offer both, `content_encryptor` and `content_encryption_algorithm`.
+    // We should
+    // (1) either derive `content_encryption_algorithm` from `content_encryptor` (but this is not
+    //            yet supported by RustCrypto),
+    // (2) or     pass `content_encryption_algorithm` and create an encryptor for it.
+    // In the first case, we might need a new trait here, e.g. `DynEncryptionAlgorithmIdentifier` in
+    // analogy to `DynSignatureAlgorithmIdentifier`.
+    // Going for (2)
+    //  content_encryptor: E,
+    content_encryption_algorithm: AlgorithmIdentifierOwned,
+    unprotected_attributes: Option<Attributes>,
+    phantom: PhantomData<E>,
+}
+
+impl<'c, E> EnvelopedDataBuilder<'c, E>
+where
+    E: BlockEncryptMut + KeySizeUser + BlockSizeUser,
+{
+    /// Create a new builder for `EnvelopedData`
+    pub fn new(
+        originator_info: Option<OriginatorInfo>,
+        unencrypted_content: &'c [u8],
+        content_encryption_algorithm: AlgorithmIdentifierOwned,
+        unprotected_attributes: Option<Attributes>,
+    ) -> Result<EnvelopedDataBuilder<'c, E>> {
+        Ok(EnvelopedDataBuilder {
+            originator_info,
+            recipient_infos: Vec::new(),
+            unencrypted_content,
+            content_encryption_algorithm,
+            unprotected_attributes,
+            phantom: Default::default(),
+        })
+    }
+
+    /// Add recipient info. A builder is used, which generates a `RecipientInfo` according to
+    /// RFC 5652 § 6.2, when `EnvelopedData` is built.
+    pub fn add_recipient_info(
+        &mut self,
+        recipient_info_builder: impl RecipientInfoBuilder + 'static,
+    ) -> Result<&mut Self> {
+        self.recipient_infos.push(Box::new(recipient_info_builder));
+
+        Ok(self)
+    }
+
+    /// Generate an `EnvelopedData` object according to RFC 5652 § 6.
+    pub fn build(&mut self) -> Result<EnvelopedData> {
+        // Generate encryption key
+        // Encrypt content
+        // Build recipient infos
+        // Make sure, key is securely destroyed
+        let (encrypted_content, mut content_encryption_key) = encrypt_data(
+            &self.unencrypted_content,
+            &self.content_encryption_algorithm,
+            None,
+            &mut OsRng,
+        )?;
+        let encrypted_content_octetstring = der::asn1::OctetString::new(encrypted_content)?;
+        let encrypted_content_info = EncryptedContentInfo {
+            content_type: const_oid::db::rfc5911::ID_DATA, // TODO bk should this be configurable?
+            content_enc_alg: self.content_encryption_algorithm.clone(),
+            encrypted_content: Some(encrypted_content_octetstring), // TODO bk `None` (external content) should also be possible
+        };
+
+        let recipient_infos_vec = self
+            .recipient_infos
+            .iter()
+            .map(|ri| Ok(ri.build(&content_encryption_key)?))
+            .collect::<Result<Vec<RecipientInfo>>>()?;
+        content_encryption_key.zeroize();
+        let recip_infos = RecipientInfos::try_from(recipient_infos_vec).unwrap();
+
+        Ok(EnvelopedData {
+            version: self.calculate_version(),
+            originator_info: self.originator_info.clone(),
+            recip_infos,
+            encrypted_content: encrypted_content_info,
+            unprotected_attrs: self.unprotected_attributes.clone(),
+        })
+    }
+
+    /// Calculate the `CMSVersion` of the `EnvelopedData` according to RFC 5652 § 6.1
+    fn calculate_version(&self) -> CmsVersion {
+        // IF (originatorInfo is present) AND
+        //    ((any certificates with a type of other are present) OR
+        //    (any crls with a type of other are present))
+        // THEN version is 4
+        // ELSE
+        //    IF ((originatorInfo is present) AND
+        //       (any version 2 attribute certificates are present)) OR
+        //       (any RecipientInfo structures include pwri) OR
+        //       (any RecipientInfo structures include ori)
+        //    THEN version is 3
+        //    ELSE
+        //       IF (originatorInfo is absent) AND
+        //          (unprotectedAttrs is absent) AND
+        //          (all RecipientInfo structures are version 0)
+        //       THEN version is 0
+        //       ELSE version is 2
+        let originator_info_present = self.originator_info.is_some();
+        let other_certificates_present = if let Some(originator_info) = &self.originator_info {
+            if let Some(certificates) = &originator_info.certs {
+                certificates
+                    .0
+                    .iter()
+                    .any(|certificate| matches!(certificate, CertificateChoices::Other(_)))
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+        let other_crls_present = if let Some(originator_info) = &self.originator_info {
+            if let Some(crls) = &originator_info.crls {
+                crls.0
+                    .iter()
+                    .any(|crl| matches!(crl, RevocationInfoChoice::Other(_)))
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+        // v2 certificates currently not supported
+        // let v2_certificates_present = if let Some(certificate_option) = &self.originator_info {
+        //     if let Some(certificates) = certificate_option {
+        //         certificates
+        //             .iter()
+        //             .any(|certificate| matches!(certificate, CertificateChoices::V2AttrCert))
+        //     } else {
+        //         false
+        //     }
+        // } else {
+        //     false
+        // };
+        let v2_certificates_present = false;
+        let pwri_recipient_info_present = self.recipient_infos.iter().any(|recipient_info| {
+            matches!(
+                recipient_info.recipient_info_type(),
+                RecipientInfoType::Pwri
+            )
+        });
+        let ori_recipient_info_present = self.recipient_infos.iter().any(|recipient_info| {
+            matches!(recipient_info.recipient_info_type(), RecipientInfoType::Ori)
+        });
+        let unprotected_attributes_present = self.unprotected_attributes.is_some();
+        let all_recipient_infos_are_v0 = self
+            .recipient_infos
+            .iter()
+            .all(|ri| ri.recipient_info_version() == CmsVersion::V0);
+
+        if originator_info_present && (other_certificates_present || other_crls_present) {
+            CmsVersion::V4
+        } else {
+            if (originator_info_present && v2_certificates_present)
+                || pwri_recipient_info_present
+                || ori_recipient_info_present
+            {
+                CmsVersion::V3
+            } else {
+                if !originator_info_present
+                    && !unprotected_attributes_present
+                    && all_recipient_infos_are_v0
+                {
+                    CmsVersion::V0
+                } else {
+                    CmsVersion::V2
+                }
+            }
+        }
+    }
+}
+
 /// Get a hasher for a given digest algorithm
 fn get_hasher(
     digest_algorithm_identifier: &AlgorithmIdentifierOwned,
@@ -522,6 +976,84 @@ fn get_hasher(
         "id-sha-3-384" => Some(Box::new(sha3::Sha3_384::new())),
         "id-sha-3-512" => Some(Box::new(sha3::Sha3_512::new())),
         _ => None,
+    }
+}
+
+/// Helps encrypting.
+#[macro_export]
+macro_rules! encrypt_block_mode {
+    ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $rng:expr) => {{
+        let (key, iv) = match $key {
+            None => $block_mode::$typ::<$alg>::generate_key_iv($rng),
+            Some(key) => {
+                if key.len() != $alg::key_size() {
+                    return Err(Error::Builder(String::from(
+                        "Invalid key size for chosen algorithm",
+                    )));
+                }
+                (
+                    Key::<$block_mode::$typ<$alg>>::from_slice(key).to_owned(),
+                    $block_mode::$typ::<$alg>::generate_iv($rng),
+                )
+            }
+        };
+        let encryptor = $block_mode::$typ::<$alg>::new(&key.into(), &iv.into());
+        Ok((
+            encryptor.encrypt_padded_vec_mut::<Pkcs7>($data),
+            key.to_vec(),
+        ))
+    }};
+}
+
+// TODO bk this must be refactored so we can select the encryption algorithm
+/// Get an encryptor for a given encryption algorithm. Currently, only AES-CBC is supported.
+/// If `key` is `Some`, it's length must fit the chosen encryption algorithm. Otherwise the
+/// conversion `Key::<B>::from_slice(key)` panics.
+///
+/// TODO bk add CFB, CTR, OFB and others? Not GCM, as AEAD is not necessary for CMS?
+fn encrypt_data<R>(
+    data: &[u8],
+    encryption_algorithm_identifier: &AlgorithmIdentifierOwned,
+    key: Option<&[u8]>,
+    rng: &mut R,
+) -> Result<(Vec<u8>, Vec<u8>)>
+where
+    R: CryptoRng + RngCore,
+{
+    let encryption_algorithm_name =
+        DB.by_oid(&encryption_algorithm_identifier.oid)
+            .ok_or(Error::Builder(String::from(
+                "Encryption algorithm oid not found",
+            )))?;
+    match encryption_algorithm_name {
+        "id-aes128-CBC" => encrypt_block_mode!(data, cbc::Encryptor<Aes128>, key, rng),
+        "id-aes192-CBC" => encrypt_block_mode!(data, cbc::Encryptor<Aes192>, key, rng),
+        "id-aes256-CBC" => encrypt_block_mode!(data, cbc::Encryptor<Aes256>, key, rng),
+        // TODO bk remove following test code
+        "test-for-debugging" => Ok({
+            let (key, iv) = match key {
+                None => cbc::Encryptor::<Aes128>::generate_key_iv(rng),
+                Some(key) => {
+                    if key.len() != <Aes128>::key_size() {
+                        return Err(Error::Builder(String::from(
+                            "Invalid key size for chosen algorithm",
+                        )));
+                    }
+                    (
+                        Key::<cbc::Encryptor<Aes128>>::from_slice(key).to_owned(),
+                        cbc::Encryptor::<Aes128>::generate_iv(rng),
+                    )
+                }
+            };
+            let encryptor = cbc::Encryptor::<Aes128>::new(&key.into(), &iv.into());
+            (
+                encryptor.encrypt_padded_vec_mut::<Pkcs7>(data),
+                key.to_vec(),
+            )
+        }),
+        _ => Err(Error::Builder(String::from(
+            "Unsupported encryption algorithm",
+        ))),
     }
 }
 
