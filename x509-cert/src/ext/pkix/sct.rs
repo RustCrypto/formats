@@ -193,53 +193,59 @@ mod tests {
         Version,
     };
 
+    fn run_deserialization_test<'a, T: DeserializeBytes + PartialEq + core::fmt::Debug>(
+        bytes: &'a [u8],
+        expected_result: Result<(T, &[u8]), tls_codec::Error>,
+    ) -> Result<(T, &'a [u8]), tls_codec::Error> {
+        let actual_result = T::tls_deserialize(&bytes);
+        assert_eq!(actual_result, expected_result);
+        actual_result
+    }
+
     #[test]
     fn test_hash_algorithm_deserialization() {
-        fn run_test<'a>(
-            bytes: &'a [u8],
-            expected_result: Result<(HashAlgorithm, &[u8]), tls_codec::Error>,
-        ) -> Result<(HashAlgorithm, &'a [u8]), tls_codec::Error> {
-            let actual_result = HashAlgorithm::tls_deserialize(&bytes);
-            assert_eq!(actual_result, expected_result);
-            actual_result
-        }
         let bytes = [0, 1, 2, 3, 4, 5, 6, 8];
 
-        let result = run_test(
+        let result = run_deserialization_test(
             &bytes,
             Ok((HashAlgorithm::None, [1, 2, 3, 4, 5, 6, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((HashAlgorithm::Md5, [2, 3, 4, 5, 6, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((HashAlgorithm::Sha1, [3, 4, 5, 6, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((HashAlgorithm::Sha224, [4, 5, 6, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((HashAlgorithm::Sha256, [5, 6, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((HashAlgorithm::Sha384, [6, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((HashAlgorithm::Sha512, [8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((HashAlgorithm::Intrinsic, [].as_slice())),
         );
-        let _ = run_test(&result.unwrap().1, Err(tls_codec::Error::EndOfStream));
-        let _ = run_test(&[7], Err(tls_codec::Error::UnknownValue(7)));
-        let _ = run_test(&[9], Err(tls_codec::Error::UnknownValue(9)));
+        let _ = run_deserialization_test::<HashAlgorithm>(
+            &result.unwrap().1,
+            Err(tls_codec::Error::EndOfStream),
+        );
+        let _ =
+            run_deserialization_test::<HashAlgorithm>(&[7], Err(tls_codec::Error::UnknownValue(7)));
+        let _ =
+            run_deserialization_test::<HashAlgorithm>(&[9], Err(tls_codec::Error::UnknownValue(9)));
     }
 
     #[test]
@@ -263,45 +269,52 @@ mod tests {
 
     #[test]
     fn test_signature_algorithm_deserialization() {
-        fn run_test<'a>(
-            bytes: &'a [u8],
-            expected_result: Result<(SignatureAlgorithm, &[u8]), tls_codec::Error>,
-        ) -> Result<(SignatureAlgorithm, &'a [u8]), tls_codec::Error> {
-            let actual_result = SignatureAlgorithm::tls_deserialize(&bytes);
-            assert_eq!(actual_result, expected_result);
-            actual_result
-        }
         let bytes = [0, 1, 2, 3, 7, 8];
 
-        let result = run_test(
+        let result = run_deserialization_test(
             &bytes,
             Ok((SignatureAlgorithm::Anonymous, [1, 2, 3, 7, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((SignatureAlgorithm::Rsa, [2, 3, 7, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((SignatureAlgorithm::Dsa, [3, 7, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((SignatureAlgorithm::Ecdsa, [7, 8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((SignatureAlgorithm::Ed25519, [8].as_slice())),
         );
-        let result = run_test(
+        let result = run_deserialization_test(
             &result.unwrap().1,
             Ok((SignatureAlgorithm::Ed448, [].as_slice())),
         );
-        let _ = run_test(&result.unwrap().1, Err(tls_codec::Error::EndOfStream));
-        let _ = run_test(&[4], Err(tls_codec::Error::UnknownValue(4)));
-        let _ = run_test(&[5], Err(tls_codec::Error::UnknownValue(5)));
-        let _ = run_test(&[6], Err(tls_codec::Error::UnknownValue(6)));
-        let _ = run_test(&[9], Err(tls_codec::Error::UnknownValue(9)));
+        let _ = run_deserialization_test::<SignatureAlgorithm>(
+            &result.unwrap().1,
+            Err(tls_codec::Error::EndOfStream),
+        );
+        let _ = run_deserialization_test::<SignatureAlgorithm>(
+            &[4],
+            Err(tls_codec::Error::UnknownValue(4)),
+        );
+        let _ = run_deserialization_test::<SignatureAlgorithm>(
+            &[5],
+            Err(tls_codec::Error::UnknownValue(5)),
+        );
+        let _ = run_deserialization_test::<SignatureAlgorithm>(
+            &[6],
+            Err(tls_codec::Error::UnknownValue(6)),
+        );
+        let _ = run_deserialization_test::<SignatureAlgorithm>(
+            &[9],
+            Err(tls_codec::Error::UnknownValue(9)),
+        );
     }
 
     #[test]
@@ -323,17 +336,9 @@ mod tests {
 
     #[test]
     fn test_signature_and_hash_algorithm_deserialization() {
-        fn run_test<'a>(
-            bytes: &'a [u8],
-            expected_result: Result<(SignatureAndHashAlgorithm, &[u8]), tls_codec::Error>,
-        ) -> Result<(SignatureAndHashAlgorithm, &'a [u8]), tls_codec::Error> {
-            let actual_result = SignatureAndHashAlgorithm::tls_deserialize(&bytes);
-            assert_eq!(actual_result, expected_result);
-            actual_result
-        }
         let bytes = [4, 3, 2, 1];
 
-        let result = run_test(
+        let result = run_deserialization_test(
             &bytes,
             Ok((
                 SignatureAndHashAlgorithm {
@@ -344,7 +349,7 @@ mod tests {
             )),
         );
 
-        let _ = run_test(
+        let _ = run_deserialization_test(
             &result.unwrap().1,
             Ok((
                 SignatureAndHashAlgorithm {
@@ -390,17 +395,9 @@ mod tests {
 
     #[test]
     fn test_digitally_signed_deserialization() {
-        fn run_test<'a>(
-            bytes: &'a [u8],
-            expected_result: Result<(DigitallySigned, &[u8]), tls_codec::Error>,
-        ) -> Result<(DigitallySigned, &'a [u8]), tls_codec::Error> {
-            let actual_result = DigitallySigned::tls_deserialize(&bytes);
-            assert_eq!(actual_result, expected_result);
-            actual_result
-        }
         let bytes = [4, 3, 0, 3, 2, 1, 0, 2, 1, 0, 1, 9];
 
-        let result = run_test(
+        let result = run_deserialization_test(
             &bytes,
             Ok((
                 DigitallySigned {
@@ -414,7 +411,7 @@ mod tests {
             )),
         );
 
-        let _ = run_test(
+        let _ = run_deserialization_test(
             &result.unwrap().1,
             Ok((
                 DigitallySigned {
@@ -462,20 +459,12 @@ mod tests {
 
     #[test]
     fn test_version_deserialization() {
-        fn run_test<'a>(
-            bytes: &'a [u8],
-            expected_result: Result<(Version, &[u8]), tls_codec::Error>,
-        ) -> Result<(Version, &'a [u8]), tls_codec::Error> {
-            let actual_result = Version::tls_deserialize(&bytes);
-            assert_eq!(actual_result, expected_result);
-            actual_result
-        }
         let bytes = [0, 0];
 
-        let result = run_test(&bytes, Ok((Version::V1, [0].as_slice())));
+        let result = run_deserialization_test(&bytes, Ok((Version::V1, [0].as_slice())));
 
-        let _ = run_test(&result.unwrap().1, Ok((Version::V1, [].as_slice())));
-        let _ = run_test(&[1], Err(tls_codec::Error::UnknownValue(1)));
+        let _ = run_deserialization_test(&result.unwrap().1, Ok((Version::V1, [].as_slice())));
+        let _ = run_deserialization_test::<Version>(&[1], Err(tls_codec::Error::UnknownValue(1)));
     }
 
     #[test]
@@ -492,17 +481,10 @@ mod tests {
 
     #[test]
     fn test_log_id_deserialization() {
-        fn run_test<'a>(
-            bytes: &'a [u8],
-            expected_result: Result<(LogId, &[u8]), tls_codec::Error>,
-        ) -> Result<(LogId, &'a [u8]), tls_codec::Error> {
-            let actual_result = LogId::tls_deserialize(&bytes);
-            assert_eq!(actual_result, expected_result);
-            actual_result
-        }
         let bytes = [42; 36];
 
-        let _ = run_test(&bytes, Ok((LogId { key_id: [42; 32] }, [42; 4].as_slice())));
+        let _ =
+            run_deserialization_test(&bytes, Ok((LogId { key_id: [42; 32] }, [42; 4].as_slice())));
     }
 
     #[test]
@@ -528,16 +510,7 @@ mod tests {
 
     #[test]
     fn test_sct_deserialization() {
-        fn run_test<'a>(
-            bytes: &'a [u8],
-            expected_result: Result<(SignedCertificateTimestamp, &[u8]), tls_codec::Error>,
-        ) -> Result<(SignedCertificateTimestamp, &'a [u8]), tls_codec::Error> {
-            let actual_result = SignedCertificateTimestamp::tls_deserialize(&bytes);
-            assert_eq!(actual_result, expected_result);
-            actual_result
-        }
-
-        let _ = run_test(
+        let _ = run_deserialization_test(
             &TLS_SCT_EXAMPLE,
             Ok((
                 SignedCertificateTimestamp {
