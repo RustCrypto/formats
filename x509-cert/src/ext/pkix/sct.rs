@@ -1,6 +1,6 @@
 #![cfg(feature = "sct")]
 
-use const_oid::{db::rfc6962, AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::OctetString;
 //TODO: Remove use::alloc::format explicit use required by the #[derive(TlsSerialize)] on SignagureAndHashAlgorithms
 //once the PR: https://github.com/RustCrypto/formats/pull/1103 is merged
@@ -24,8 +24,11 @@ use tls_codec::{
 #[derive(Debug, PartialEq)]
 pub struct SignedCertificateTimestampList(OctetString);
 
+pub const CT_PRECERT_SCTS: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.2");
+
 impl AssociatedOid for SignedCertificateTimestampList {
-    const OID: ObjectIdentifier = rfc6962::CT_PRECERT_SCTS;
+    const OID: ObjectIdentifier = CT_PRECERT_SCTS;
 }
 
 impl_newtype!(SignedCertificateTimestampList, OctetString);
@@ -109,11 +112,11 @@ impl SerializedSct {
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignedCertificateTimestamp {
-    version: Version,
-    log_id: LogId,
-    timestamp: u64,
-    extensions: TlsVecU16<u8>,
-    sign: DigitallySigned,
+    pub version: Version,
+    pub log_id: LogId,
+    pub timestamp: u64,
+    pub extensions: TlsVecU16<u8>,
+    pub signature: DigitallySigned,
 }
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
@@ -124,7 +127,7 @@ pub enum Version {
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct LogId {
-    key_id: [u8; 32],
+    pub key_id: [u8; 32],
 }
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
@@ -478,7 +481,7 @@ mod tests {
                     },
                     timestamp: u64::from_be_bytes(TLS_SCT_EXAMPLE[33..41].try_into().unwrap()),
                     extensions: TlsVecU16::from_slice(&[]),
-                    sign: DigitallySigned {
+                    signature: DigitallySigned {
                         algorithm: SignatureAndHashAlgorithm {
                             hash: HashAlgorithm::Sha256,
                             signature: SignatureAlgorithm::Ecdsa,
@@ -501,7 +504,7 @@ mod tests {
                 },
                 timestamp: u64::from_be_bytes(TLS_SCT_EXAMPLE[33..41].try_into().unwrap()),
                 extensions: TlsVecU16::from_slice(&[]),
-                sign: DigitallySigned {
+                signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
@@ -555,7 +558,7 @@ mod tests {
                 },
                 timestamp: u64::from_be_bytes(SCT_EXAMPLE[40..48].try_into().unwrap()),
                 extensions: TlsVecU16::from_slice(&[]),
-                sign: DigitallySigned {
+                signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
@@ -573,7 +576,7 @@ mod tests {
                 },
                 timestamp: u64::from_be_bytes(SCT_EXAMPLE[161..169].try_into().unwrap()),
                 extensions: TlsVecU16::from_slice(&[]),
-                sign: DigitallySigned {
+                signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
@@ -593,7 +596,7 @@ mod tests {
             },
             timestamp: u64::from_be_bytes(SCT_EXAMPLE[40..48].try_into().unwrap()),
             extensions: TlsVecU16::from_slice(&[]),
-            sign: DigitallySigned {
+            signature: DigitallySigned {
                 algorithm: SignatureAndHashAlgorithm {
                     hash: HashAlgorithm::Sha256,
                     signature: SignatureAlgorithm::Ecdsa,
@@ -609,7 +612,7 @@ mod tests {
             },
             timestamp: u64::from_be_bytes(SCT_EXAMPLE[161..169].try_into().unwrap()),
             extensions: TlsVecU16::from_slice(&[]),
-            sign: DigitallySigned {
+            signature: DigitallySigned {
                 algorithm: SignatureAndHashAlgorithm {
                     hash: HashAlgorithm::Sha256,
                     signature: SignatureAlgorithm::Ecdsa,

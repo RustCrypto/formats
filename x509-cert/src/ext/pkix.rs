@@ -26,7 +26,7 @@ pub use keyusage::{ExtendedKeyUsage, KeyUsage, KeyUsages, PrivateKeyUsagePeriod}
 pub use policymap::{PolicyMapping, PolicyMappings};
 
 #[cfg(feature = "sct")]
-pub use sct::SignedCertificateTimestampList;
+pub use sct::{SerializedSct, SignedCertificateTimestamp, SignedCertificateTimestampList};
 
 pub use const_oid::db::rfc5280::{
     ID_CE_INHIBIT_ANY_POLICY, ID_CE_ISSUER_ALT_NAME, ID_CE_SUBJECT_ALT_NAME,
