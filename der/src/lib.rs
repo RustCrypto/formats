@@ -327,6 +327,9 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+// Necessary for the derive macros and re-exports
+extern crate self as der;
+
 pub mod asn1;
 pub mod referenced;
 
