@@ -1,11 +1,8 @@
 #![cfg(feature = "sct")]
 
+use alloc::{format, vec::Vec};
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::OctetString;
-//TODO: Remove use::alloc::format explicit use required by the #[derive(TlsSerialize)] on SignagureAndHashAlgorithms
-//once the PR: https://github.com/RustCrypto/formats/pull/1103 is merged
-// use std::format;
-use alloc::{format, vec::Vec};
 use tls_codec::{
     DeserializeBytes, Serialize, Size, TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16,
 };
@@ -14,18 +11,12 @@ use tls_codec::{
 // TODO: Update docs
 // TODO: Review naming
 
-// TODO: Remove this constant when const_oid version is updated which includes this PR:
-// https://github.com/RustCrypto/formats/pull/1094
-// TODO: Do not publish this as pub, this is for testing only
-/// OID for signed certificate timestamps extension
-// pub const CT_PRECERT_SCTS: ObjectIdentifier =
-//     ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.2");
-
 #[derive(Debug, PartialEq)]
 pub struct SignedCertificateTimestampList(OctetString);
 
-pub const CT_PRECERT_SCTS: ObjectIdentifier =
-    ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.2");
+//TODO: Remove this and use const-oid's rfc6962::CT_PRECERT_SCTS once a const-oid version
+// containing it is published
+const CT_PRECERT_SCTS: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.2");
 
 impl AssociatedOid for SignedCertificateTimestampList {
     const OID: ObjectIdentifier = CT_PRECERT_SCTS;
