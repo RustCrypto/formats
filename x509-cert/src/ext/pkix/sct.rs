@@ -119,6 +119,12 @@ pub struct SignedCertificateTimestamp {
     pub signature: DigitallySigned,
 }
 
+impl SignedCertificateTimestamp {
+    pub fn timestamp(&self) -> Result<der::DateTime, der::Error> {
+        der::DateTime::from_unix_duration(core::time::Duration::from_millis(self.timestamp))
+    }
+}
+
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 pub enum Version {
@@ -140,8 +146,8 @@ pub struct DigitallySigned {
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignatureAndHashAlgorithm {
-    hash: HashAlgorithm,
-    signature: SignatureAlgorithm,
+    pub hash: HashAlgorithm,
+    pub signature: SignatureAlgorithm,
 }
 
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
