@@ -10,7 +10,7 @@ mod authkeyid;
 mod keyusage;
 mod policymap;
 #[cfg(feature = "sct")]
-mod sct;
+pub mod sct;
 
 use crate::attr::AttributeTypeAndValue;
 

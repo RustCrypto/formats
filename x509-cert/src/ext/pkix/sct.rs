@@ -1,4 +1,8 @@
 #![cfg(feature = "sct")]
+//! Signed Certificate Timestamp list extension as defined in the
+//! [Certificate Transparency RFC 6962].
+//!
+//! [Certificate Transparency RFC 6962]: https://datatracker.ietf.org/doc/html/rfc6962
 
 use alloc::{format, vec::Vec};
 use const_oid::{AssociatedOid, ObjectIdentifier};
@@ -54,7 +58,7 @@ impl From<tls_codec::Error> for Error {
 }
 
 impl SignedCertificateTimestampList {
-    /// Creates a new [SignedCertificateTimestamp] from a slice of [SerializedSct]s
+    /// Creates a new [SignedCertificateTimestamp] from a slice of [SerializedSct]s.
     pub fn new(serialized_scts: &[SerializedSct]) -> Result<Self, Error> {
         let mut result: Vec<u8> = Vec::new();
         for timestamp in serialized_scts {
@@ -169,17 +173,18 @@ impl SignedCertificateTimestamp {
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 pub enum Version {
-    /// Version 1
+    /// Version 1.
     V1 = 0,
 }
 
 /// The SHA-256 hash of the log's public key, calculated over
-/// the DER encoding of the key represented as SubjectPublicKeyInfo
-/// as defined in [RFC 6962 section 3.2]
+/// the DER encoding of the key represented as [SubjectPublicKeyInfo][spki::SubjectPublicKeyInfo]
+/// as defined in [RFC 6962 section 3.2].
 ///
 /// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct LogId {
+    /// Hash of the log's public key.
     pub key_id: [u8; 32],
 }
 
@@ -201,9 +206,9 @@ pub struct DigitallySigned {
 /// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignatureAndHashAlgorithm {
-    /// The hashing algorithm
+    /// The hashing algorithm.
     pub hash: HashAlgorithm,
-    /// The signature algorithm
+    /// The signature algorithm.
     pub signature: SignatureAlgorithm,
 }
 
@@ -213,17 +218,17 @@ pub struct SignatureAndHashAlgorithm {
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 pub enum SignatureAlgorithm {
-    /// Anonymous signature algorithm
+    /// Anonymous signature algorithm.
     Anonymous = 0,
-    /// RSA signature algorithm
+    /// RSA signature algorithm.
     Rsa = 1,
-    /// DSA signature algorithm
+    /// DSA signature algorithm.
     Dsa = 2,
-    /// ECDSA signature algorithm
+    /// ECDSA signature algorithm.
     Ecdsa = 3,
-    /// ED25519 signature algorithm
+    /// ED25519 signature algorithm.
     Ed25519 = 7,
-    /// ED448 signature algorithm
+    /// ED448 signature algorithm.
     Ed448 = 8,
 }
 
@@ -233,21 +238,21 @@ pub enum SignatureAlgorithm {
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 pub enum HashAlgorithm {
-    /// No algorithm
+    /// No algorithm.
     None = 0,
-    /// MD5 algorithm
+    /// MD5 algorithm.
     Md5 = 1,
-    /// SHA1 algorithm
+    /// SHA1 algorithm.
     Sha1 = 2,
-    /// SHA224 algorithm
+    /// SHA224 algorithm.
     Sha224 = 3,
-    /// SHA256 algorithm
+    /// SHA256 algorithm.
     Sha256 = 4,
-    /// SHA384 algorithm
+    /// SHA384 algorithm.
     Sha384 = 5,
-    /// SHA512 algorithm
+    /// SHA512 algorithm.
     Sha512 = 6,
-    /// Intrinsic algorithm
+    /// Intrinsic algorithm.
     Intrinsic = 8,
 }
 
