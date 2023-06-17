@@ -9,6 +9,7 @@ mod access;
 mod authkeyid;
 mod keyusage;
 mod policymap;
+#[cfg(feature = "sct")]
 mod sct;
 
 use crate::attr::AttributeTypeAndValue;
@@ -27,7 +28,7 @@ pub use policymap::{PolicyMapping, PolicyMappings};
 
 #[cfg(feature = "sct")]
 pub use sct::{
-    HashAlgorithm, SerializedSct, SignatureAlgorithm, SignatureAndHashAlgorithm,
+    Error, HashAlgorithm, SerializedSct, SignatureAlgorithm, SignatureAndHashAlgorithm,
     SignedCertificateTimestamp, SignedCertificateTimestampList, Version,
 };
 

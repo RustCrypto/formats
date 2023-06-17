@@ -11,6 +11,13 @@ use tls_codec::{
 // TODO: Update docs
 // TODO: Review naming
 
+/// A signed certificate timestamp list (SCT list) as defined in [RFC 6962 Section 3.3].
+///
+/// ```text
+/// SignedCertificateTimestampList ::= OCTET STRING
+/// ```
+///
+/// [RFC 6962 Section 3.3]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.3
 #[derive(Debug, PartialEq)]
 pub struct SignedCertificateTimestampList(OctetString);
 
@@ -25,9 +32,12 @@ impl AssociatedOid for SignedCertificateTimestampList {
 impl_newtype!(SignedCertificateTimestampList, OctetString);
 impl_extension!(SignedCertificateTimestampList, critical = false);
 
+/// Errors that are thrown by this module.
 #[derive(PartialEq, Debug)]
 pub enum Error {
+    /// [Errors][der::Error] from the `der` crate.
     Der(der::Error),
+    /// [Errors][tls_codec::Error] from the `tls_codec` crate.
     Tls(tls_codec::Error),
 }
 
@@ -60,7 +70,11 @@ impl SignedCertificateTimestampList {
         Ok(SignedCertificateTimestampList(OctetString::new(buffer)?))
     }
 
-    /// Parses the encoded [SerializedSct]s and returns a Vec containing them
+    /// Parses the encoded [SerializedSct]s and returns a [Vec][alloc::vec::Vec] containing them.
+    ///
+    /// Returns an [error][Error] if a [SerializedSct] can't be
+    /// deserialized or if there are trailing bytes after all [SerializedSct]s
+    /// are deserialized.
     pub fn parse_timestamps(&self) -> Result<Vec<SerializedSct>, Error> {
         let (tls_vec, rest) = TlsVecU16::<u8>::tls_deserialize(self.0.as_bytes())?;
         if !rest.is_empty() {
@@ -77,12 +91,20 @@ impl SignedCertificateTimestampList {
     }
 }
 
+/// A byte string that contains a serialized [SignedCertificateTimestamp] as
+/// defined in [RFC 6962 section 3.3].
+///
+/// [RFC 6962 section 3.3]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.3
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SerializedSct {
     data: TlsVecU16<u8>,
 }
 
 impl SerializedSct {
+    /// Creates a new [SerializedSct] from a [SignedCertificateTimestamp].
+    ///
+    /// Returns [tls_codec Error][tls_codec::Error] if the given [SignedCertificateTimestamp]
+    /// can't be serialized.
     pub fn new(timestamp: SignedCertificateTimestamp) -> Result<Self, tls_codec::Error> {
         let mut buffer: Vec<u8> = Vec::with_capacity(timestamp.tls_serialized_len());
         let bytes_written = timestamp.tls_serialize(&mut buffer)?;
@@ -92,6 +114,11 @@ impl SerializedSct {
         })
     }
 
+    /// Parses a [SignedCertificateTimestamp] from a this [SerializedSct].
+    ///
+    /// Returns an [error][Error] if a [SignedCertificateTimestamp] can't be
+    /// deserialized or if there are trailing bytes after a
+    /// [SignedCertificateTimestamp] has been deserialized.
     pub fn parse_timestamp(&self) -> Result<SignedCertificateTimestamp, Error> {
         let (sct, rest) = SignedCertificateTimestamp::tls_deserialize(self.data.as_slice())?;
         if !rest.is_empty() {
@@ -101,46 +128,88 @@ impl SerializedSct {
     }
 }
 
+/// A signed certificate timestamp (SCT) as defined in [RFC 6962 section 3.2].
+///
+/// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignedCertificateTimestamp {
+    /// The version of the protocol to which the SCT conforms.
+    /// Currently, it is always v1.
     pub version: Version,
+    /// The SHA-256 hash of the log's public key, calculated over
+    /// the DER encoding of the key represented as [SubjectPublicKeyInfo][spki::SubjectPublicKeyInfo].
     pub log_id: LogId,
+    /// the current NTP Time measured since the `UNIX_EPOCH`
+    /// (January 1, 1970, 00:00), ignoring leap seconds, in milliseconds.
     pub timestamp: u64,
+    /// The future extensions to protocol version v1.
+    /// Currently, no extensions are specified.
     pub extensions: TlsVecU16<u8>,
+    /// A digital signature over many fields including
+    /// version, timestamp, extensions and others. See [RFC 6962 section 3.2]
+    /// for a complete list.
+    ///
+    /// [RFC 6962 section 3.2]:https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
     pub signature: DigitallySigned,
 }
 
 impl SignedCertificateTimestamp {
+    /// Creates a [DateTime][der::DateTime] from the timestamp field since the `UNIX_EPOCH`.
+    ///
+    /// Returns an error if timestamp is outside the supported date range.
     pub fn timestamp(&self) -> Result<der::DateTime, der::Error> {
         der::DateTime::from_unix_duration(core::time::Duration::from_millis(self.timestamp))
     }
 }
 
+/// The version of the protocol to which the SCT conforms
+/// as defined in [RFC 6962 section 3.2]. Currently, it is always v1.
+///
+/// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 pub enum Version {
+    /// Version 1
     V1 = 0,
 }
 
+/// The SHA-256 hash of the log's public key, calculated over
+/// the DER encoding of the key represented as SubjectPublicKeyInfo
+/// as defined in [RFC 6962 section 3.2]
+///
+/// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct LogId {
     pub key_id: [u8; 32],
 }
 
+/// Digital signature as defined in [RFC 5246 section 4.7].
+///
+/// [RFC 5246 section 4.7]: https://datatracker.ietf.org/doc/html/rfc5246#section-4.7
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct DigitallySigned {
-    /// [SignatureAndHashAlgorithm] of the struct
+    /// [SignatureAndHashAlgorithm] as defined in [RFC 5246 section 7.4.1.4.1].
+    ///
+    /// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
     pub algorithm: SignatureAndHashAlgorithm,
-    /// Signature of the struct
+    /// Digital signature over some contents using the [SignatureAndHashAlgorithm].
     pub signature: TlsVecU16<u8>,
 }
 
+/// A combination of signature and hashing algorithms as defined in [RFC 5246 section 7.4.1.4.1].
+///
+/// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 pub struct SignatureAndHashAlgorithm {
+    /// The hashing algorithm
     pub hash: HashAlgorithm,
+    /// The signature algorithm
     pub signature: SignatureAlgorithm,
 }
 
+/// Signature algorithm as defined in [RFC 5246 section 7.4.1.4.1].
+///
+/// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 pub enum SignatureAlgorithm {
@@ -158,6 +227,9 @@ pub enum SignatureAlgorithm {
     Ed448 = 8,
 }
 
+/// Hashing algorithm as defined in [RFC 5246 section 7.4.1.4.1].
+///
+/// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 pub enum HashAlgorithm {
