@@ -96,7 +96,7 @@ pub type TimeStampToken = ContentInfo;
 ///     extensions                   [1] IMPLICIT Extensions   OPTIONAL  }
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-pub struct TSTInfo {
+pub struct TstInfo {
     pub version: TspVersion,
     pub policy: TsaPolicyId,
     pub message_imprint: MessageImprint,
@@ -196,7 +196,7 @@ mod tests {
         let content = resp.time_stamp_token.unwrap().content;
         let sd = SignedData::from_der(&content.to_der().unwrap()).unwrap();
         let encap = sd.encap_content_info.econtent.unwrap();
-        let tst = TSTInfo::from_der(&encap.value()).unwrap();
+        let tst = TstInfo::from_der(&encap.value()).unwrap();
         assert_eq!(resp.status.status, PkiStatus::Accepted);
         assert_eq!(tst.version, TspVersion::V1);
         assert_eq!(tst.policy.to_string(), "1.2.3.4.1");
