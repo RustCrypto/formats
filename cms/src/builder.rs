@@ -21,7 +21,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use cipher::block_padding::Pkcs7;
 use cipher::crypto_common::rand_core::{CryptoRng, OsRng, RngCore};
-use cipher::{BlockEncryptMut, BlockSizeUser};
+use cipher::BlockEncryptMut;
 use cipher::{Key, KeyIvInit, KeySizeUser};
 use const_oid::ObjectIdentifier;
 use core::cmp::Ordering;
@@ -30,6 +30,7 @@ use der::asn1::{BitString, OctetStringRef, SetOfVec};
 use der::oid::db::DB;
 use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
 use digest::Digest;
+use rsa::Pkcs1v15Encrypt;
 use sha2::digest;
 use signature::digest::DynDigest;
 use signature::{Keypair, Signer};
@@ -37,7 +38,6 @@ use spki::{
     AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
     SignatureBitStringEncoding,
 };
-use std::marker::PhantomData;
 use std::time::SystemTime;
 use std::vec;
 use x509_cert::attr::{Attribute, AttributeValue, Attributes};
@@ -518,20 +518,6 @@ impl<'s> SignedDataBuilder<'s> {
     }
 }
 
-/// This trait must be implemented for the 5 recipient info types defined in RFC 5652 § 6:
-pub enum RecipientInfoType {
-    /// KeyTransRecipientInfo
-    Ktri,
-    /// KeyAgreeRecipientInfo
-    Kari,
-    /// KekRecipientInfo
-    Kekri,
-    /// PasswordRecipientInfo
-    Pwri,
-    /// OtherRecipientInfo
-    Ori,
-}
-
 /// Trait for builders of a `RecipientInfo`. RFC 5652 § 6 defines 5 different `RecipientInfo`
 /// formats. All implementations must implement this trait.
 pub trait RecipientInfoBuilder {
@@ -546,33 +532,51 @@ pub trait RecipientInfoBuilder {
     fn build(&self, content_encryption_key: &[u8]) -> Result<RecipientInfo>;
 }
 
-/// Builds a `KeyTransRecipientInfo` according to RFC 5652 § 6.
-/// This type uses the recipient's public key to encrypt the content-encryption key.
-pub struct KeyTransRecipientInfoBuilder<'k> {
-    /// Identifies the recipient
-    pub rid: RecipientIdentifier,
-    /// Encryption algorithm to be used for key encryption
-    pub key_enc_alg: AlgorithmIdentifierOwned,
-    /// Recipient's public, which will be used to encrypt the content-encryption key.
-    pub recipient_public_key: &'k [u8],
+/// `RecipientInfoBuilder` must be implemented for these 5 recipient info types
+/// as defined in RFC 5652 § 6:
+pub enum RecipientInfoType {
+    /// KeyTransRecipientInfo
+    Ktri,
+    /// KeyAgreeRecipientInfo
+    Kari,
+    /// KekRecipientInfo
+    Kekri,
+    /// PasswordRecipientInfo
+    Pwri,
+    /// OtherRecipientInfo
+    Ori,
 }
 
-impl<'k> KeyTransRecipientInfoBuilder<'k> {
+/// Contains information required to encrypt the content encryption key with a specific method
+pub enum KeyEncryptionInfo {
+    /// Encrypt key with RSA
+    Rsa(rsa::RsaPublicKey),
+    // to be extended here with other asymmetric encryption algorithms
+}
+
+/// Builds a `KeyTransRecipientInfo` according to RFC 5652 § 6.
+/// This type uses the recipient's public key to encrypt the content-encryption key.
+pub struct KeyTransRecipientInfoBuilder {
+    /// Identifies the recipient
+    pub rid: RecipientIdentifier,
+    /// Info for key encryption
+    pub key_encryption_info: KeyEncryptionInfo,
+}
+
+impl KeyTransRecipientInfoBuilder {
     /// Creates a `KeyTransRecipientInfoBuilder`
     pub fn new(
         rid: RecipientIdentifier,
-        key_enc_alg: AlgorithmIdentifierOwned,
-        recipient_public_key: &'k [u8],
-    ) -> Result<KeyTransRecipientInfoBuilder<'k>> {
+        key_encryption_info: KeyEncryptionInfo,
+    ) -> Result<KeyTransRecipientInfoBuilder> {
         Ok(KeyTransRecipientInfoBuilder {
             rid,
-            key_enc_alg,
-            recipient_public_key,
+            key_encryption_info,
         })
     }
 }
 
-impl<'k> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<'k> {
+impl RecipientInfoBuilder for KeyTransRecipientInfoBuilder {
     fn recipient_info_type(&self) -> RecipientInfoType {
         RecipientInfoType::Ktri
     }
@@ -588,18 +592,24 @@ impl<'k> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<'k> {
     /// `content_encryption_key` will be encrypted with the recipient's public key.
     fn build(&self, content_encryption_key: &[u8]) -> Result<RecipientInfo> {
         // Encrypt key
-        let (encrypted_key, _) = encrypt_data(
-            content_encryption_key,
-            &self.key_enc_alg,
-            Some(&self.recipient_public_key),
-            &mut OsRng,
-        )?;
+        let (encrypted_key, key_enc_alg) = match &self.key_encryption_info {
+            // RSA encryption
+            KeyEncryptionInfo::Rsa(recipient_public_key) => (
+                recipient_public_key
+                    .encrypt(&mut OsRng, Pkcs1v15Encrypt, content_encryption_key)
+                    .map_err(|_| Error::Builder(String::from("Could not encrypt key")))?,
+                AlgorithmIdentifierOwned {
+                    oid: const_oid::db::rfc5912::RSA_ENCRYPTION,
+                    parameters: None,
+                },
+            ),
+        };
         let enc_key = EncryptedKey::new(encrypted_key)?;
 
         Ok(RecipientInfo::Ktri(KeyTransRecipientInfo {
             version: self.recipient_info_version(),
             rid: self.rid.clone(),
-            key_enc_alg: self.key_enc_alg.clone(),
+            key_enc_alg,
             enc_key,
         }))
     }
@@ -779,10 +789,7 @@ impl RecipientInfoBuilder for OtherRecipientInfoBuilder {
 }
 
 /// Builds CMS `EnvelopedData` according to RFC 5652 § 6.
-pub struct EnvelopedDataBuilder<'c, E>
-where
-    E: BlockEncryptMut + KeySizeUser + BlockSizeUser,
-{
+pub struct EnvelopedDataBuilder<'c> {
     originator_info: Option<OriginatorInfo>,
     recipient_infos: Vec<Box<dyn RecipientInfoBuilder>>,
     unencrypted_content: &'c [u8],
@@ -797,27 +804,22 @@ where
     //  content_encryptor: E,
     content_encryption_algorithm: AlgorithmIdentifierOwned,
     unprotected_attributes: Option<Attributes>,
-    phantom: PhantomData<E>,
 }
 
-impl<'c, E> EnvelopedDataBuilder<'c, E>
-where
-    E: BlockEncryptMut + KeySizeUser + BlockSizeUser,
-{
+impl<'c> EnvelopedDataBuilder<'c> {
     /// Create a new builder for `EnvelopedData`
     pub fn new(
         originator_info: Option<OriginatorInfo>,
         unencrypted_content: &'c [u8],
         content_encryption_algorithm: AlgorithmIdentifierOwned,
         unprotected_attributes: Option<Attributes>,
-    ) -> Result<EnvelopedDataBuilder<'c, E>> {
+    ) -> Result<EnvelopedDataBuilder<'c>> {
         Ok(EnvelopedDataBuilder {
             originator_info,
             recipient_infos: Vec::new(),
             unencrypted_content,
             content_encryption_algorithm,
             unprotected_attributes,
-            phantom: Default::default(),
         })
     }
 
@@ -834,10 +836,10 @@ where
 
     /// Generate an `EnvelopedData` object according to RFC 5652 § 6.
     pub fn build(&mut self) -> Result<EnvelopedData> {
-        // Generate encryption key
+        // Generate content encryption key
         // Encrypt content
         // Build recipient infos
-        // Make sure, key is securely destroyed
+        // Make sure, content encryption key is securely destroyed
         let (encrypted_content, mut content_encryption_key) = encrypt_data(
             &self.unencrypted_content,
             &self.content_encryption_algorithm,

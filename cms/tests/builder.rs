@@ -1,7 +1,11 @@
 #![cfg(feature = "builder")]
 
-use cms::builder::{create_signing_time_attribute, SignedDataBuilder, SignerInfoBuilder};
+use cms::builder::{
+    create_signing_time_attribute, EnvelopedDataBuilder, KeyEncryptionInfo,
+    KeyTransRecipientInfoBuilder, SignedDataBuilder, SignerInfoBuilder,
+};
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
+use cms::enveloped_data::RecipientIdentifier;
 use cms::signed_data::{EncapsulatedContentInfo, SignerIdentifier};
 use der::asn1::{OctetString, SetOfVec, Utf8StringRef};
 use der::{Any, DecodePem, Encode, Tag, Tagged};
@@ -9,6 +13,7 @@ use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
+use rsa::{rand_core, RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, AttributeTypeAndValue};
@@ -40,6 +45,23 @@ fn signer_identifier(id: i32) -> SignerIdentifier {
         .0
         .push(RelativeDistinguishedName::from(set_of_vector));
     SignerIdentifier::IssuerAndSerialNumber(IssuerAndSerialNumber {
+        issuer: rdn_sequence,
+        serial_number: SerialNumber::new(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
+            .expect("failed to create a serial number"),
+    })
+}
+
+fn recipient_identifier(id: i32) -> RecipientIdentifier {
+    let mut rdn_sequence = RdnSequence::default();
+    let rdn = &[AttributeTypeAndValue {
+        oid: const_oid::db::rfc4519::CN,
+        value: Any::from(Utf8StringRef::new(&format!("test client {id}")).unwrap()),
+    }];
+    let set_of_vector = SetOfVec::try_from(rdn.to_vec()).unwrap();
+    rdn_sequence
+        .0
+        .push(RelativeDistinguishedName::from(set_of_vector));
+    RecipientIdentifier::IssuerAndSerialNumber(IssuerAndSerialNumber {
         issuer: rdn_sequence,
         serial_number: SerialNumber::new(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
             .expect("failed to create a serial number"),
@@ -124,6 +146,49 @@ fn test_build_signed_data() {
 //   - different encapsulated content ASN.1 encoding
 //   - enveloped data content
 //   - additional signed attributes
+
+#[test]
+fn test_build_enveloped_data() {
+    let content_encryption_algorithm = AlgorithmIdentifierOwned {
+        oid: const_oid::db::rfc5911::ID_AES_128_CBC,
+        parameters: None,
+    };
+    let recipient_identifier = recipient_identifier(1);
+    let mut rng = rand_core::OsRng;
+    let bits = 2048;
+    let recipient_private_key =
+        RsaPrivateKey::new(&mut rng, bits).expect("failed to generate a key");
+    let recipient_public_key = RsaPublicKey::from(&recipient_private_key);
+    let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
+        recipient_identifier,
+        KeyEncryptionInfo::Rsa(recipient_public_key),
+    )
+    .expect("Could not create a KeyTransRecipientInfoBuilder");
+
+    let mut builder = EnvelopedDataBuilder::new(
+        None,
+        "Arbitrary unencrypted content".as_bytes(),
+        content_encryption_algorithm,
+        None,
+    )
+    .expect("Could not create an EnvelopedData builder.");
+    let enveloped_data = builder
+        .add_recipient_info(recipient_info_builder)
+        .expect("Could not add a recipient info")
+        .build()
+        .expect("Building EnvelopedData failed");
+    let enveloped_data_der = enveloped_data
+        .to_der()
+        .expect("conversion of enveloped data to DER failed.");
+    println!(
+        "{}",
+        pem_rfc7468::encode_string("ENVELOPEDDATA", LineEnding::LF, &enveloped_data_der)
+            .expect("PEM encoding of enveloped data DER failed")
+    );
+}
+
+#[test]
+fn build_pkcs7() {}
 
 #[test]
 fn test_create_signing_attribute() {
