@@ -7,10 +7,11 @@ use proptest::{array::*, collection::vec, prelude::*};
 use serdect::{array, slice};
 
 /// Example input to be serialized.
-const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0E0F");
+/// Last byte is `0xFF` to test that no packing is performed for values under 128.
+const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0EFF");
 
 /// bincode serialization of [`EXAMPLE_BYTES`] as a slice.
-const BINCODE_SLICE: [u8; 24] = hex!("1000000000000000000102030405060708090A0B0C0D0E0F");
+const BINCODE_SLICE: [u8; 24] = hex!("1000000000000000000102030405060708090A0B0C0D0EFF");
 
 /// bincode serialization of [`EXAMPLE_BYTES`] as an array.
 const BINCODE_ARRAY: [u8; 16] = EXAMPLE_BYTES;

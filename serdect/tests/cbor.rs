@@ -9,10 +9,11 @@ use serde::Serialize;
 use serdect::{array, slice};
 
 /// Example input to be serialized.
-const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0E0F");
+/// Last byte is `0xFF` to test that no packing is performed for values under 128.
+const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0EFF");
 
 /// CBOR serialization of [`EXAMPLE_BYTES`] as a slice.
-const CBOR_SLICE: [u8; 17] = hex!("90000102030405060708090A0B0C0D0E0F");
+const CBOR_SLICE: [u8; 17] = hex!("90000102030405060708090A0B0C0D0EFF");
 
 /// CBOR serialization of [`EXAMPLE_BYTES`] as an array.
 const CBOR_ARRAY: [u8; 17] = CBOR_SLICE;
