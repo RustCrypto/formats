@@ -3,7 +3,10 @@
 use core::fmt;
 
 use serde::de::{Error, Visitor};
-use serde::{Deserializer, Serialize, Serializer};
+use serde::{Deserializer, Serializer};
+
+#[cfg(feature = "alloc")]
+use serde::Serialize;
 
 #[cfg(feature = "alloc")]
 use ::{alloc::vec::Vec, serde::Deserialize};
@@ -21,7 +24,7 @@ where
     if serializer.is_human_readable() {
         crate::serialize_hex::<_, _, false>(value, serializer)
     } else {
-        value.as_ref().serialize(serializer)
+        serializer.serialize_bytes(value.as_ref())
     }
 }
 
@@ -35,7 +38,7 @@ where
     if serializer.is_human_readable() {
         crate::serialize_hex::<_, _, true>(value, serializer)
     } else {
-        value.as_ref().serialize(serializer)
+        serializer.serialize_bytes(value.as_ref())
     }
 }
 
@@ -147,7 +150,31 @@ where
 
         deserializer.deserialize_str(StrVisitor)
     } else {
-        Vec::deserialize(deserializer)
+        struct VecVisitor;
+
+        impl<'de> Visitor<'de> for VecVisitor {
+            type Value = Vec<u8>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(formatter, "a bytestring")
+            }
+
+            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(v.into())
+            }
+
+            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(v)
+            }
+        }
+
+        deserializer.deserialize_byte_buf(VecVisitor)
     }
 }
 
