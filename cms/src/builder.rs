@@ -28,6 +28,7 @@ use core::cmp::Ordering;
 use core::fmt;
 use der::asn1::{BitString, OctetStringRef, SetOfVec};
 use der::oid::db::DB;
+use der::Tag::OctetString;
 use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
 use digest::Digest;
 use rsa::Pkcs1v15Encrypt;
@@ -788,6 +789,27 @@ impl RecipientInfoBuilder for OtherRecipientInfoBuilder {
     }
 }
 
+/// Supported content encryption algorithms.
+pub enum ContentEncryptionAlgorithm {
+    /// AES-128 CBC
+    Aes128Cbc,
+    /// AES-192 CBC
+    Aes192Cbc,
+    /// AES-256 CBC
+    Aes256Cbc,
+}
+
+impl ContentEncryptionAlgorithm {
+    /// Return the OID of the algorithm.
+    pub fn oid(&self) -> ObjectIdentifier {
+        match self {
+            ContentEncryptionAlgorithm::Aes128Cbc => const_oid::db::rfc5911::ID_AES_128_CBC,
+            ContentEncryptionAlgorithm::Aes192Cbc => const_oid::db::rfc5911::ID_AES_192_CBC,
+            ContentEncryptionAlgorithm::Aes256Cbc => const_oid::db::rfc5911::ID_AES_256_CBC,
+        }
+    }
+}
+
 /// Builds CMS `EnvelopedData` according to RFC 5652 § 6.
 pub struct EnvelopedDataBuilder<'c> {
     originator_info: Option<OriginatorInfo>,
@@ -802,7 +824,7 @@ pub struct EnvelopedDataBuilder<'c> {
     // analogy to `DynSignatureAlgorithmIdentifier`.
     // Going for (2)
     //  content_encryptor: E,
-    content_encryption_algorithm: AlgorithmIdentifierOwned,
+    content_encryption_algorithm: ContentEncryptionAlgorithm,
     unprotected_attributes: Option<Attributes>,
 }
 
@@ -811,7 +833,7 @@ impl<'c> EnvelopedDataBuilder<'c> {
     pub fn new(
         originator_info: Option<OriginatorInfo>,
         unencrypted_content: &'c [u8],
-        content_encryption_algorithm: AlgorithmIdentifierOwned,
+        content_encryption_algorithm: ContentEncryptionAlgorithm,
         unprotected_attributes: Option<Attributes>,
     ) -> Result<EnvelopedDataBuilder<'c>> {
         Ok(EnvelopedDataBuilder {
@@ -840,7 +862,7 @@ impl<'c> EnvelopedDataBuilder<'c> {
         // Encrypt content
         // Build recipient infos
         // Make sure, content encryption key is securely destroyed
-        let (encrypted_content, mut content_encryption_key) = encrypt_data(
+        let (encrypted_content, mut content_encryption_key, content_enc_alg) = encrypt_data(
             &self.unencrypted_content,
             &self.content_encryption_algorithm,
             None,
@@ -849,7 +871,7 @@ impl<'c> EnvelopedDataBuilder<'c> {
         let encrypted_content_octetstring = der::asn1::OctetString::new(encrypted_content)?;
         let encrypted_content_info = EncryptedContentInfo {
             content_type: const_oid::db::rfc5911::ID_DATA, // TODO bk should this be configurable?
-            content_enc_alg: self.content_encryption_algorithm.clone(),
+            content_enc_alg,
             encrypted_content: Some(encrypted_content_octetstring), // TODO bk `None` (external content) should also be possible
         };
 
@@ -984,7 +1006,7 @@ fn get_hasher(
 /// Helps encrypting.
 #[macro_export]
 macro_rules! encrypt_block_mode {
-    ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $rng:expr) => {{
+    ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $iv:expr, $rng:expr, $oid:expr) => {{
         let (key, iv) = match $key {
             None => $block_mode::$typ::<$alg>::generate_key_iv($rng),
             Some(key) => {
@@ -1003,6 +1025,10 @@ macro_rules! encrypt_block_mode {
         Ok((
             encryptor.encrypt_padded_vec_mut::<Pkcs7>($data),
             key.to_vec(),
+            AlgorithmIdentifierOwned {
+                oid: $oid,
+                parameters: Some(Any::new(OctetString, iv.to_vec())?),
+            },
         ))
     }};
 }
@@ -1011,51 +1037,70 @@ macro_rules! encrypt_block_mode {
 /// Get an encryptor for a given encryption algorithm. Currently, only AES-CBC is supported.
 /// If `key` is `Some`, it's length must fit the chosen encryption algorithm. Otherwise the
 /// conversion `Key::<B>::from_slice(key)` panics.
+/// Returns encrypted content, content-encryption key and the used algorithm identifier (including
+/// the used algorithm parameters).
 ///
-/// TODO bk add CFB, CTR, OFB and others? Not GCM, as AEAD is not necessary for CMS?
+/// TODO bk which encryption algorithms shall also be supported?
 fn encrypt_data<R>(
     data: &[u8],
-    encryption_algorithm_identifier: &AlgorithmIdentifierOwned,
+    encryption_algorithm_identifier: &ContentEncryptionAlgorithm,
     key: Option<&[u8]>,
     rng: &mut R,
-) -> Result<(Vec<u8>, Vec<u8>)>
+) -> Result<(Vec<u8>, Vec<u8>, AlgorithmIdentifierOwned)>
 where
     R: CryptoRng + RngCore,
 {
-    let encryption_algorithm_name =
-        DB.by_oid(&encryption_algorithm_identifier.oid)
-            .ok_or(Error::Builder(String::from(
-                "Encryption algorithm oid not found",
-            )))?;
-    match encryption_algorithm_name {
-        "id-aes128-CBC" => encrypt_block_mode!(data, cbc::Encryptor<Aes128>, key, rng),
-        "id-aes192-CBC" => encrypt_block_mode!(data, cbc::Encryptor<Aes192>, key, rng),
-        "id-aes256-CBC" => encrypt_block_mode!(data, cbc::Encryptor<Aes256>, key, rng),
+    match encryption_algorithm_identifier {
+        ContentEncryptionAlgorithm::Aes128Cbc => encrypt_block_mode!(
+            data,
+            cbc::Encryptor<Aes128>,
+            key,
+            iv,
+            rng,
+            encryption_algorithm_identifier.oid()
+        ),
+        ContentEncryptionAlgorithm::Aes192Cbc => encrypt_block_mode!(
+            data,
+            cbc::Encryptor<Aes192>,
+            key,
+            iv,
+            rng,
+            encryption_algorithm_identifier.oid()
+        ),
+        ContentEncryptionAlgorithm::Aes256Cbc => encrypt_block_mode!(
+            data,
+            cbc::Encryptor<Aes256>,
+            key,
+            iv,
+            rng,
+            encryption_algorithm_identifier.oid()
+        ),
         // TODO bk remove following test code
-        "test-for-debugging" => Ok({
-            let (key, iv) = match key {
-                None => cbc::Encryptor::<Aes128>::generate_key_iv(rng),
-                Some(key) => {
-                    if key.len() != <Aes128>::key_size() {
-                        return Err(Error::Builder(String::from(
-                            "Invalid key size for chosen algorithm",
-                        )));
-                    }
-                    (
-                        Key::<cbc::Encryptor<Aes128>>::from_slice(key).to_owned(),
-                        cbc::Encryptor::<Aes128>::generate_iv(rng),
-                    )
-                }
-            };
-            let encryptor = cbc::Encryptor::<Aes128>::new(&key.into(), &iv.into());
-            (
-                encryptor.encrypt_padded_vec_mut::<Pkcs7>(data),
-                key.to_vec(),
-            )
-        }),
-        _ => Err(Error::Builder(String::from(
-            "Unsupported encryption algorithm",
-        ))),
+        // _ => Ok({
+        //     let (key, iv) = match key {
+        //         None => cbc::Encryptor::<Aes128>::generate_key_iv(rng),
+        //         Some(key) => {
+        //             if key.len() != <Aes128>::key_size() {
+        //                 return Err(Error::Builder(String::from(
+        //                     "Invalid key size for chosen algorithm",
+        //                 )));
+        //             }
+        //             (
+        //                 Key::<cbc::Encryptor<Aes128>>::from_slice(key).to_owned(),
+        //                 cbc::Encryptor::<Aes128>::generate_iv(rng),
+        //             )
+        //         }
+        //     };
+        //     let encryptor = cbc::Encryptor::<Aes128>::new(&key.into(), &iv.into());
+        //     (
+        //         encryptor.encrypt_padded_vec_mut::<Pkcs7>(data),
+        //         key.to_vec(),
+        //         AlgorithmIdentifierOwned {
+        //             oid: encryption_algorithm_identifier.oid(),
+        //             parameters: Some(Any::new(OctetString, iv.to_vec())?),
+        //         },
+        //     )
+        // }),
     }
 }
 
@@ -1078,7 +1123,7 @@ pub fn create_content_type_attribute(content_type: ObjectIdentifier) -> Result<A
 pub fn create_message_digest_attribute(message_digest: &[u8]) -> Result<Attribute> {
     let message_digest_der = OctetStringRef::new(message_digest)?;
     let message_digest_attribute_value =
-        AttributeValue::new(Tag::OctetString, message_digest_der.as_bytes())?;
+        AttributeValue::new(OctetString, message_digest_der.as_bytes())?;
     let mut values = SetOfVec::new();
     values.insert(message_digest_attribute_value)?;
     let attribute = Attribute {

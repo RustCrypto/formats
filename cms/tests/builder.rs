@@ -1,9 +1,6 @@
 #![cfg(feature = "builder")]
 
-use cms::builder::{
-    create_signing_time_attribute, EnvelopedDataBuilder, KeyEncryptionInfo,
-    KeyTransRecipientInfoBuilder, SignedDataBuilder, SignerInfoBuilder,
-};
+use cms::builder::{ContentEncryptionAlgorithm, create_signing_time_attribute, EnvelopedDataBuilder, KeyEncryptionInfo, KeyTransRecipientInfoBuilder, SignedDataBuilder, SignerInfoBuilder};
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::enveloped_data::RecipientIdentifier;
 use cms::signed_data::{EncapsulatedContentInfo, SignerIdentifier};
@@ -149,10 +146,6 @@ fn test_build_signed_data() {
 
 #[test]
 fn test_build_enveloped_data() {
-    let content_encryption_algorithm = AlgorithmIdentifierOwned {
-        oid: const_oid::db::rfc5911::ID_AES_128_CBC,
-        parameters: None,
-    };
     let recipient_identifier = recipient_identifier(1);
     let mut rng = rand_core::OsRng;
     let bits = 2048;
@@ -168,7 +161,7 @@ fn test_build_enveloped_data() {
     let mut builder = EnvelopedDataBuilder::new(
         None,
         "Arbitrary unencrypted content".as_bytes(),
-        content_encryption_algorithm,
+        ContentEncryptionAlgorithm::Aes128Cbc,
         None,
     )
     .expect("Could not create an EnvelopedData builder.");
