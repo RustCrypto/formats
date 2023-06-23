@@ -18,9 +18,12 @@ const RFCS: &[(&str, &str)] = &[
     ("rfc8410", include_str!("../rfc8410.txt")),
 ];
 
-// Created from:
-// https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
-const FIPS202: &str = include_str!("../fips202.md");
+const MDS: &[(&str, &str)] = &[
+    // Created from:
+    // https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
+    ("fips202", include_str!("../fips202.md")),
+    ("rfc8894", include_str!("../rfc8894.md")),
+];
 
 // Bases defined in other places.
 const BASES: &[(&str, &str)] = &[("id-ad-ocsp", "1.3.6.1.5.5.7.48.1")];
@@ -39,8 +42,10 @@ fn main() {
         }
     }
 
-    for (name, obid) in Asn1Parser::new(FIPS202, NO_BASES).iter() {
-        root.add("fips202", &name, &obid);
+    for (spec, body) in MDS {
+        for (name, obid) in Asn1Parser::new(body, NO_BASES).iter() {
+            root.add(spec, &name, &obid);
+        }
     }
 
     println!("{}", root.module());
