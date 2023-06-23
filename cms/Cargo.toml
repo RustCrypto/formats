@@ -42,7 +42,7 @@ p256 = "0.13.0"
 [features]
 alloc = ["der/alloc"]
 std = ["der/std", "spki/std"]
-builder = ["aes", "aes-gcm", "cbc", "cipher", "rsa", "sha1", "sha2", "sha3", "signature", "std", "spki/alloc", "x509-cert/builder"]
+builder = ["aes", "aes-gcm", "cbc", "cipher", "rsa", "sha1", "sha2", "sha3", "signature", "std", "spki/alloc", "x509-cert/builder", "zeroize"]
 pem = ["alloc", "der/pem"]
 
 [package.metadata.docs.rs]
