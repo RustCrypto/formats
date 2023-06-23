@@ -13,7 +13,7 @@ use serde::ser::SerializeStruct;
 use std::io::{Read, Write};
 use zeroize::Zeroize;
 
-use crate::{Deserialize, Error, Serialize, Size};
+use crate::{Deserialize, DeserializeBytes, Error, Serialize, Size};
 
 macro_rules! impl_size {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
@@ -42,7 +42,7 @@ macro_rules! impl_byte_deserialize {
         #[cfg(feature = "std")]
         #[inline(always)]
         fn deserialize_bytes<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-            let len = <$size>::tls_deserialize(bytes)? as usize;
+            let len = <$size as Deserialize>::tls_deserialize(bytes)? as usize;
             // When fuzzing we limit the maximum size to allocate.
             // XXX: We should think about a configurable limit for the allocation
             //      here.
@@ -59,6 +59,25 @@ macro_rules! impl_byte_deserialize {
             bytes.read_exact(result.vec.as_mut_slice())?;
             Ok(result)
         }
+
+        #[inline(always)]
+        fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+            let (type_len, remainder) = <$size as DeserializeBytes>::tls_deserialize(bytes)?;
+            let len = type_len as usize;
+            // When fuzzing we limit the maximum size to allocate.
+            // XXX: We should think about a configurable limit for the allocation
+            //      here.
+            if cfg!(fuzzing) && len > u16::MAX as usize {
+                return Err(Error::DecodingError(alloc::format!(
+                    "Trying to allocate {} bytes. Only {} allowed.",
+                    len,
+                    u16::MAX
+                )));
+            }
+            let vec = bytes.get(..len).ok_or(Error::EndOfStream)?;
+            let result = Self { vec: vec.to_vec() };
+            Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
+        }
     };
 }
 
@@ -68,7 +87,7 @@ macro_rules! impl_deserialize {
         #[inline(always)]
         fn deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
             let mut result = Self { vec: Vec::new() };
-            let len = <$size>::tls_deserialize(bytes)?;
+            let len = <$size as Deserialize>::tls_deserialize(bytes)?;
             let mut read = len.tls_serialized_len();
             let len_len = read;
             while (read - len_len) < len as usize {
@@ -77,6 +96,26 @@ macro_rules! impl_deserialize {
                 result.push(element);
             }
             Ok(result)
+        }
+    };
+}
+
+macro_rules! impl_deserialize_bytes {
+    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[inline(always)]
+        fn deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+            let mut result = Self { vec: Vec::new() };
+            let (len, mut remainder) = <$size as DeserializeBytes>::tls_deserialize(bytes)?;
+            let mut read = len.tls_serialized_len();
+            let len_len = read;
+            while (read - len_len) < len as usize {
+                let (element, next_remainder) =
+                    <T as DeserializeBytes>::tls_deserialize(remainder)?;
+                remainder = next_remainder;
+                read += element.tls_serialized_len();
+                result.push(element);
+            }
+            Ok((result, remainder))
         }
     };
 }
@@ -203,6 +242,12 @@ macro_rules! impl_tls_vec_codec_generic {
                 Self::deserialize(bytes)
             }
         }
+
+        impl<T: $($bounds + )* DeserializeBytes> DeserializeBytes for $name<T> {
+            fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+                Self::deserialize_bytes(bytes)
+            }
+        }
     };
 }
 
@@ -240,6 +285,12 @@ macro_rules! impl_tls_vec_codec_bytes {
             #[cfg(feature = "std")]
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
                 Self::deserialize_bytes(bytes)
+            }
+        }
+
+        impl DeserializeBytes for $name {
+            fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+                Self::deserialize_bytes_bytes(bytes)
             }
         }
     };
@@ -749,6 +800,10 @@ macro_rules! impl_secret_tls_vec {
             impl_deserialize!(self, $size, $name, $len_len);
         }
 
+        impl<T: DeserializeBytes + Zeroize> $name<T> {
+            impl_deserialize_bytes!(self, $size, $name, $len_len);
+        }
+
         impl<T: Zeroize> Zeroize for $name<T> {
             fn zeroize(&mut self) {
                 self.vec.zeroize()
@@ -779,6 +834,10 @@ macro_rules! impl_public_tls_vec {
 
         impl<T: Deserialize> $name<T> {
             impl_deserialize!(self, $size, $name, $len_len);
+        }
+
+        impl<T: DeserializeBytes> $name<T> {
+            impl_deserialize_bytes!(self, $size, $name, $len_len);
         }
     };
 }

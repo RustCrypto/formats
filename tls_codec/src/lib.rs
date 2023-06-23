@@ -24,23 +24,19 @@
 //! # }
 //! ```
 
-#[cfg_attr(feature = "std", macro_use)]
+#[macro_use]
 extern crate alloc;
 
 #[cfg(feature = "std")]
 extern crate std;
 
-use alloc::string::String;
+use alloc::{string::String, vec::Vec};
 use core::fmt::{self, Display};
 #[cfg(feature = "std")]
-use {
-    alloc::vec::Vec,
-    std::io::{Read, Write},
-};
+use std::io::{Read, Write};
 
 mod arrays;
 mod primitives;
-#[cfg(feature = "std")]
 mod quic_vec;
 mod tls_vec;
 
@@ -51,10 +47,13 @@ pub use tls_vec::{
 };
 
 #[cfg(feature = "std")]
-pub use quic_vec::{SecretVLBytes, VLByteSlice, VLBytes};
+pub use quic_vec::SecretVLBytes;
+pub use quic_vec::{VLByteSlice, VLBytes};
 
 #[cfg(feature = "derive")]
-pub use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
+pub use tls_codec_derive::{
+    TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSerializeBytes, TlsSize,
+};
 
 /// Errors that are thrown by this crate.
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -151,6 +150,15 @@ pub trait Serialize: Size {
     }
 }
 
+/// The `SerializeBytes` trait provides a function to serialize a struct or enum.
+///
+/// The trait provides one function:
+/// * `tls_serialize` that returns a byte vector
+pub trait SerializeBytes: Size {
+    /// Serialize `self` and return it as a byte vector.
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
+}
+
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
 /// struct or enum.
 pub trait Deserialize: Size {
@@ -159,7 +167,7 @@ pub trait Deserialize: Size {
     ///
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
     ///
-    /// Returns an error if occurs during deserialization.
+    /// Returns an error if one occurs during deserialization.
     #[cfg(feature = "std")]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error>
     where
@@ -187,12 +195,42 @@ pub trait Deserialize: Size {
     /// This function deserializes the provided `bytes` and returns the populated
     /// struct.
     ///
-    /// Returns an error if occurs during deserialization.
+    /// Returns an error if one occurs during deserialization.
     #[cfg(feature = "std")]
     fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
     where
         Self: Sized,
     {
         Self::tls_deserialize(&mut bytes.as_ref())
+    }
+}
+
+pub trait DeserializeBytes: Size {
+    /// This function deserializes the `bytes` from the provided a `&[u8]`
+    /// and returns the populated struct, as well as the remaining slice.
+    ///
+    /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
+    ///
+    /// Returns an error if one occurs during deserialization.
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
+    where
+        Self: Sized;
+
+    /// This function deserializes the provided `bytes` and returns the populated
+    /// struct. All bytes must be consumed.
+    ///
+    /// Returns an error if not all bytes are read from the input, or if an error
+    /// occurs during deserialization.
+    fn tls_deserialize_exact(bytes: &[u8]) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        let (out, remainder) = Self::tls_deserialize(bytes)?;
+
+        if !remainder.is_empty() {
+            return Err(Error::TrailingData);
+        }
+
+        Ok(out)
     }
 }

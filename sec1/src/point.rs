@@ -10,6 +10,7 @@ use base16ct::HexDisplay;
 use core::{
     cmp::Ordering,
     fmt::{self, Debug},
+    hash::{Hash, Hasher},
     ops::Add,
     str,
 };
@@ -291,6 +292,15 @@ where
 {
     fn eq(&self, other: &Self) -> bool {
         self.as_bytes() == other.as_bytes()
+    }
+}
+
+impl<Size> Hash for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_bytes().hash(state)
     }
 }
 

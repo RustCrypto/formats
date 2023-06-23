@@ -1,5 +1,9 @@
 //! Codec implementations for unsigned integer primitives.
 
+use alloc::vec::Vec;
+
+use crate::{DeserializeBytes, SerializeBytes};
+
 use super::{Deserialize, Error, Serialize, Size};
 
 use core::marker::PhantomData;
@@ -40,10 +44,32 @@ impl<T: Serialize> Serialize for Option<T> {
     }
 }
 
+impl<T: SerializeBytes> SerializeBytes for Option<T> {
+    #[inline]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        match self {
+            Some(e) => {
+                let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
+                out.push(1);
+                out.append(&mut e.tls_serialize()?);
+                Ok(out)
+            }
+            None => Ok(vec![0]),
+        }
+    }
+}
+
 impl<T: Serialize> Serialize for &Option<T> {
     #[cfg(feature = "std")]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         (*self).tls_serialize(writer)
+    }
+}
+
+impl<T: SerializeBytes> SerializeBytes for &Option<T> {
+    #[inline]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        (*self).tls_serialize()
     }
 }
 
@@ -66,6 +92,23 @@ impl<T: Deserialize> Deserialize for Option<T> {
     }
 }
 
+impl<T: DeserializeBytes> DeserializeBytes for Option<T> {
+    #[inline]
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let some_or_none = bytes.first().ok_or(Error::EndOfStream)?;
+        match some_or_none {
+            0 => {
+                Ok((None, bytes.get(1..).ok_or(Error::EndOfStream)?))
+            },
+            1 => {
+                let (element, remainder) = T::tls_deserialize(bytes)?;
+                Ok((Some(element), remainder))
+            },
+            _ => Err(Error::DecodingError(alloc::format!("Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.", some_or_none)))
+        }
+    }
+}
+
 macro_rules! impl_unsigned {
     ($t:ty, $bytes:literal) => {
         impl Deserialize for $t {
@@ -75,6 +118,36 @@ macro_rules! impl_unsigned {
                 let mut x = (0 as $t).to_be_bytes();
                 bytes.read_exact(&mut x)?;
                 Ok(<$t>::from_be_bytes(x))
+            }
+        }
+
+        impl DeserializeBytes for $t {
+            #[inline]
+            fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+                let len = core::mem::size_of::<$t>();
+                let out = bytes
+                    .get(..len)
+                    .ok_or(Error::EndOfStream)?
+                    .try_into()
+                    .map_err(|_| Error::EndOfStream)?;
+                Ok((
+                    <$t>::from_be_bytes(out),
+                    &bytes.get(len..).ok_or(Error::EndOfStream)?,
+                ))
+            }
+        }
+
+        impl SerializeBytes for &$t {
+            #[inline]
+            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+                Ok(self.to_be_bytes().to_vec())
+            }
+        }
+
+        impl SerializeBytes for $t {
+            #[inline]
+            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+                <&Self as SerializeBytes>::tls_serialize(&self)
             }
         }
 
@@ -92,7 +165,7 @@ macro_rules! impl_unsigned {
             #[cfg(feature = "std")]
             #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                (*self).tls_serialize(writer)
+                <$t as Serialize>::tls_serialize(self, writer)
             }
         }
 
@@ -136,6 +209,19 @@ where
     }
 }
 
+impl<T, U> DeserializeBytes for (T, U)
+where
+    T: DeserializeBytes,
+    U: DeserializeBytes,
+{
+    #[inline(always)]
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (first_element, remainder) = T::tls_deserialize(bytes)?;
+        let (second_element, remainder) = U::tls_deserialize(remainder)?;
+        Ok(((first_element, second_element), remainder))
+    }
+}
+
 impl<T, U> Serialize for (T, U)
 where
     T: Serialize,
@@ -174,6 +260,21 @@ where
             U::tls_deserialize(bytes)?,
             V::tls_deserialize(bytes)?,
         ))
+    }
+}
+
+impl<T, U, V> DeserializeBytes for (T, U, V)
+where
+    T: DeserializeBytes,
+    U: DeserializeBytes,
+    V: DeserializeBytes,
+{
+    #[inline(always)]
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (first_element, remainder) = T::tls_deserialize(bytes)?;
+        let (second_element, remainder) = U::tls_deserialize(remainder)?;
+        let (third_element, remainder) = V::tls_deserialize(remainder)?;
+        Ok(((first_element, second_element, third_element), remainder))
     }
 }
 
@@ -219,6 +320,13 @@ impl Deserialize for () {
     }
 }
 
+impl DeserializeBytes for () {
+    #[inline(always)]
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        Ok(((), bytes))
+    }
+}
+
 impl Serialize for () {
     #[cfg(feature = "std")]
     fn tls_serialize<W: Write>(&self, _: &mut W) -> Result<usize, Error> {
@@ -241,10 +349,24 @@ impl<T> Deserialize for PhantomData<T> {
     }
 }
 
+impl<T> DeserializeBytes for PhantomData<T> {
+    #[inline(always)]
+    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        Ok((PhantomData, bytes))
+    }
+}
+
 impl<T> Serialize for PhantomData<T> {
     #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, _: &mut W) -> Result<usize, Error> {
         Ok(0)
+    }
+}
+
+impl<T> SerializeBytes for PhantomData<T> {
+    #[inline(always)]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        Ok(vec![])
     }
 }

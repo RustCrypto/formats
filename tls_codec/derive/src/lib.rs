@@ -16,6 +16,8 @@
 //! a `u64` value of the unknown type.
 //!
 //! ```
+//! use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
+//!
 //! #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
 //! #[repr(u16)]
 //! enum TypeWithUnknowns {
@@ -475,6 +477,11 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
     }
 }
 
+enum SerializeVariant {
+    Write,
+    Bytes,
+}
+
 #[proc_macro_derive(TlsSize, attributes(tls_codec))]
 pub fn size_macro_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
@@ -492,7 +499,7 @@ pub fn serialize_macro_derive(input: TokenStream) -> TokenStream {
         Ok(ast) => ast,
         Err(err_ts) => return err_ts.into_compile_error().into(),
     };
-    impl_serialize(parsed_ast).into()
+    impl_serialize(parsed_ast, SerializeVariant::Write).into()
 }
 
 #[proc_macro_derive(TlsDeserialize, attributes(tls_codec))]
@@ -503,6 +510,26 @@ pub fn deserialize_macro_derive(input: TokenStream) -> TokenStream {
         Err(err_ts) => return err_ts.into_compile_error().into(),
     };
     impl_deserialize(parsed_ast).into()
+}
+
+#[proc_macro_derive(TlsDeserializeBytes, attributes(tls_codec))]
+pub fn deserialize_bytes_macro_derive(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
+    impl_deserialize_bytes(parsed_ast).into()
+}
+
+#[proc_macro_derive(TlsSerializeBytes, attributes(tls_codec))]
+pub fn serialize_bytes_macro_derive(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
+    impl_serialize(parsed_ast, SerializeVariant::Bytes).into()
 }
 
 /// Returns identifiers to use as bindings in generated code
@@ -687,7 +714,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
 }
 
 #[allow(unused_variables)]
-fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
+fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStream2 {
     match parsed_ast {
         TlsStruct::Struct(Struct {
             call_site,
@@ -702,33 +729,71 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
 
             let prefixes = member_prefixes
                 .iter()
-                .map(|p| p.for_trait("Serialize"))
+                .map(|p| match svariant {
+                    SerializeVariant::Write => p.for_trait("Serialize"),
+                    SerializeVariant::Bytes => p.for_trait("SerializeBytes"),
+                })
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-            quote! {
-                impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
-                    fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                        let mut written = 0usize;
-                        #(
-                            written += #prefixes::tls_serialize(&self.#members, writer)?;
-                        )*
-                        if cfg!(debug_assertions) {
-                            let expected_written = tls_codec::Size::tls_serialized_len(&self);
-                            debug_assert_eq!(written, expected_written, "Expected to serialize {} bytes but only {} were generated.", expected_written, written);
-                            if written != expected_written {
-                                Err(tls_codec::Error::EncodingError(format!("Expected to serialize {} bytes but only {} were generated.", expected_written, written)))
-                            } else {
-                                Ok(written)
+
+            match svariant {
+                SerializeVariant::Write => {
+                    quote! {
+                        impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
+                            fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                let mut written = 0usize;
+                                #(
+                                    written += #prefixes::tls_serialize(&self.#members, writer)?;
+                                )*
+                                if cfg!(debug_assertions) {
+                                    let expected_written = tls_codec::Size::tls_serialized_len(&self);
+                                    debug_assert_eq!(written, expected_written, "Expected to serialize {} bytes but only {} were generated.", expected_written, written);
+                                    if written != expected_written {
+                                        Err(tls_codec::Error::EncodingError(format!("Expected to serialize {} bytes but only {} were generated.", expected_written, written)))
+                                    } else {
+                                        Ok(written)
+                                    }
+                                } else {
+                                    Ok(written)
+                                }
                             }
-                        } else {
-                            Ok(written)
+                        }
+
+                        impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
+                            fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                tls_codec::Serialize::tls_serialize(*self, writer)
+                            }
                         }
                     }
                 }
+                SerializeVariant::Bytes => {
+                    quote! {
+                        impl #impl_generics tls_codec::SerializeBytes for #ident #ty_generics #where_clause {
+                            fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
+                                let expected_out = tls_codec::Size::tls_serialized_len(&self);
+                                let mut out = Vec::with_capacity(expected_out);
 
-                impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
-                    fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                        tls_codec::Serialize::tls_serialize(*self, writer)
+                                #(
+                                    out.append(&mut #prefixes::tls_serialize(&self.#members)?);
+                                )*
+                                if cfg!(debug_assertions) {
+                                    debug_assert_eq!(out.len(), expected_out, "Expected to serialize {} bytes but only {} were generated.", expected_out, out.len());
+                                    if out.len() != expected_out {
+                                        Err(tls_codec::Error::EncodingError(format!("Expected to serialize {} bytes but only {} were generated.", expected_out, out.len())))
+                                    } else {
+                                        Ok(out)
+                                    }
+                                } else {
+                                    Ok(out)
+                                }
+                            }
+                        }
+
+                        impl #impl_generics tls_codec::SerializeBytes for &#ident #ty_generics #where_clause {
+                            fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
+                                tls_codec::SerializeBytes::tls_serialize(*self)
+                            }
+                        }
                     }
                 }
             }
@@ -741,40 +806,81 @@ fn impl_serialize(parsed_ast: TlsStruct) -> TokenStream2 {
             variants,
             discriminant_constants,
         }) => {
-            let arms = variants
+            let arms: Vec<TokenStream2> = variants
                 .iter()
                 .map(|variant| {
                     let variant_id = &variant.ident;
                     let discriminant = discriminant_id(variant_id);
                     let members = &variant.members;
                     let bindings = make_n_ids(members.len());
-                    let prefixes = variant
-                        .member_prefixes
-                        .iter()
-                        .map(|p| p.for_trait("Serialize"))
-                        .collect::<Vec<_>>();
-                    quote! {
-                        #ident::#variant_id { #(#members: #bindings,)* } => Ok(
-                            tls_codec::Serialize::tls_serialize(&#discriminant, writer)?
-                            #(+ #prefixes::tls_serialize(#bindings, writer)?)*
-                        ),
+                    match svariant {
+                        SerializeVariant::Write => {
+                            let prefixes = variant
+                                .member_prefixes
+                                .iter()
+                                .map(|p| p.for_trait("Serialize"))
+                                .collect::<Vec<_>>();
+                            quote! {
+                                #ident::#variant_id { #(#members: #bindings,)* } => Ok(
+                                    tls_codec::Serialize::tls_serialize(&#discriminant, writer)?
+                                    #(+ #prefixes::tls_serialize(#bindings, writer)?)*
+                                ),
+                            }
+                        }
+                        SerializeVariant::Bytes => {
+                            let prefixes = variant
+                                .member_prefixes
+                                .iter()
+                                .map(|p| p.for_trait("SerializeBytes"))
+                                .collect::<Vec<_>>();
+                            quote! {
+                                #ident::#variant_id { #(#members: #bindings,)* } => {
+                                    let mut discriminant_out = tls_codec::SerializeBytes::tls_serialize(&#discriminant)?;
+                                    #(discriminant_out.append(&mut #prefixes::tls_serialize(#bindings)?);)*
+                                    Ok(discriminant_out)
+                                },
+                            }
+                        }
                     }
                 })
-                .collect::<Vec<_>>();
+                .collect();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-            quote! {
-                impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
-                    fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                        #discriminant_constants
-                        match self {
-                            #(#arms)*
+
+            match svariant {
+                SerializeVariant::Write => {
+                    quote! {
+                        impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
+                            fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                #discriminant_constants
+                                match self {
+                                    #(#arms)*
+                                }
+                            }
+                        }
+
+                        impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
+                            fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                tls_codec::Serialize::tls_serialize(*self, writer)
+                            }
                         }
                     }
                 }
+                SerializeVariant::Bytes => {
+                    quote! {
+                        impl #impl_generics tls_codec::SerializeBytes for #ident #ty_generics #where_clause {
+                            fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
+                                #discriminant_constants
+                                match self {
+                                    #(#arms)*
+                                }
+                            }
+                        }
 
-                impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
-                    fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                        tls_codec::Serialize::tls_serialize(*self, writer)
+                        impl #impl_generics tls_codec::SerializeBytes for &#ident #ty_generics #where_clause {
+                            fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
+                                tls_codec::SerializeBytes::tls_serialize(*self)
+                            }
+                        }
                     }
                 }
             }
@@ -845,6 +951,110 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
                         #discriminant_constants
                         let discriminant = <#repr as tls_codec::Deserialize>::tls_deserialize(bytes)?;
+                        match discriminant {
+                            #(#arms)*
+                            _ => {
+                                Err(tls_codec::Error::UnknownValue(discriminant.into()))
+                            },
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[allow(unused_variables)]
+fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
+    match parsed_ast {
+        TlsStruct::Struct(Struct {
+            call_site,
+            ident,
+            generics,
+            members,
+            member_prefixes,
+            member_skips,
+        }) => {
+            let ((members, member_prefixes), (members_default, member_prefixes_default)) =
+                partition_skipped(members, member_prefixes, member_skips);
+            let members_values = members
+                .iter()
+                .map(|m| match m {
+                    Member::Named(named) => {
+                        Member::Named(Ident::new(&format!("value_{}", named), Span::call_site()))
+                    }
+                    Member::Unnamed(unnamed) => Member::Named(Ident::new(
+                        &format!("value_{}", unnamed.index),
+                        Span::call_site(),
+                    )),
+                })
+                .collect::<Vec<_>>();
+
+            let prefixes = member_prefixes
+                .iter()
+                .map(|p| p.for_trait("DeserializeBytes"))
+                .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            quote! {
+                impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
+                    fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                        #(let (#members_values, bytes) = #prefixes::tls_deserialize(bytes)?;)*
+                        Ok((Self {
+                            #(#members: #members_values,)*
+                            #(#members_default: Default::default(),)*
+                        }, bytes))
+                    }
+                }
+            }
+        }
+        TlsStruct::Enum(Enum {
+            call_site,
+            ident,
+            generics,
+            repr,
+            variants,
+            discriminant_constants,
+        }) => {
+            let arms = variants
+                .iter()
+                .map(|variant| {
+                    let variant_id = &variant.ident;
+                    let discriminant = discriminant_id(variant_id);
+                    let members = &variant.members;
+                    let member_values = members
+                        .iter()
+                        .map(|m| match m {
+                            Member::Named(named) => Member::Named(Ident::new(
+                                &format!("value_{}", named),
+                                Span::call_site(),
+                            )),
+                            Member::Unnamed(unnamed) => Member::Named(Ident::new(
+                                &format!("value_{}", unnamed.index),
+                                Span::call_site(),
+                            )),
+                        })
+                        .collect::<Vec<_>>();
+                    let prefixes = variant
+                        .member_prefixes
+                        .iter()
+                        .map(|p| p.for_trait("DeserializeBytes"))
+                        .collect::<Vec<_>>();
+                    quote! {
+                        #discriminant => {
+                            #(let (#member_values, remainder) = #prefixes::tls_deserialize(remainder)?;)*
+                            let result = #ident::#variant_id { #(#members: #member_values,)* };
+                            Ok((result, remainder))
+                        },
+                    }
+                })
+                .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            quote! {
+                impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
+                    #[allow(non_upper_case_globals)]
+                    fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                        #discriminant_constants
+                        let (discriminant, remainder) = <#repr as tls_codec::DeserializeBytes>::tls_deserialize(bytes)?;
                         match discriminant {
                             #(#arms)*
                             _ => {
