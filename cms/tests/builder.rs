@@ -5,6 +5,7 @@ use cms::builder::{
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, SignedDataBuilder, SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
+use cms::content_info::ContentInfo;
 use cms::enveloped_data::RecipientIdentifier;
 use cms::signed_data::{EncapsulatedContentInfo, SignerIdentifier};
 use const_oid::ObjectIdentifier;
@@ -16,7 +17,6 @@ use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use rsa::{rand_core, RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
-use cms::content_info::ContentInfo;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, AttributeTypeAndValue, AttributeValue};
 use x509_cert::name::{RdnSequence, RelativeDistinguishedName};
@@ -254,7 +254,8 @@ fn build_pkcs7_scep_pkcsreq() {
 
     // Create recipient info
     let recipient_identifier = recipient_identifier(1);
-    let recipient_private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let recipient_private_key =
+        rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
     let recipient_public_key = RsaPublicKey::from(&recipient_private_key);
 
     let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
@@ -319,17 +320,21 @@ fn build_pkcs7_scep_pkcsreq() {
     // - transactionID
     let mut message_type_value: SetOfVec<AttributeValue> = Default::default();
     let pkcsreq = 19_i8; // Numerical value of PKCSReq messageType
-    // TODO bk: is the correct way to create an `Int` from an `i8`?
+                         // TODO bk: is the correct way to create an `Int` from an `i8`?
     let pkcsreq_bytes = pkcsreq.to_be_bytes();
     let pkcsreq_as_int = Int::new(&pkcsreq_bytes).unwrap();
-    message_type_value.insert(Any::new(Tag::Integer, pkcsreq_as_int.as_bytes()).unwrap()).unwrap();
+    message_type_value
+        .insert(Any::new(Tag::Integer, pkcsreq_as_int.as_bytes()).unwrap())
+        .unwrap();
     let message_type = Attribute {
         oid: RFC8894_ID_MESSAGE_TYPE,
         values: message_type_value,
     };
     let mut sender_nonce_value: SetOfVec<AttributeValue> = Default::default();
     let nonce = OctetString::new(*&[42; 32]).unwrap();
-    sender_nonce_value.insert(Any::new(Tag::OctetString, nonce.as_bytes()).unwrap()).unwrap();
+    sender_nonce_value
+        .insert(Any::new(Tag::OctetString, nonce.as_bytes()).unwrap())
+        .unwrap();
     let sender_nonce = Attribute {
         oid: RFC8894_ID_SENDER_NONCE,
         values: sender_nonce_value,
@@ -342,9 +347,15 @@ fn build_pkcs7_scep_pkcsreq() {
         values: transaction_id_value,
     };
 
-    signer_info_builder.add_signed_attribute(message_type).unwrap();
-    signer_info_builder.add_signed_attribute(sender_nonce).unwrap();
-    signer_info_builder.add_signed_attribute(transaction_id).unwrap();
+    signer_info_builder
+        .add_signed_attribute(message_type)
+        .unwrap();
+    signer_info_builder
+        .add_signed_attribute(sender_nonce)
+        .unwrap();
+    signer_info_builder
+        .add_signed_attribute(transaction_id)
+        .unwrap();
 
     let certificate_buf = include_bytes!("examples/sceptest_cert-selfsigned.pem");
     let certificate = x509_cert::Certificate::from_pem(certificate_buf).unwrap();

@@ -863,7 +863,7 @@ impl<'c> EnvelopedDataBuilder<'c> {
         // Build recipient infos
         // Make sure, content encryption key is securely destroyed
         let (encrypted_content, mut content_encryption_key, content_enc_alg) = encrypt_data(
-            &self.unencrypted_content,
+            self.unencrypted_content,
             &self.content_encryption_algorithm,
             None,
             &mut OsRng,
@@ -878,7 +878,7 @@ impl<'c> EnvelopedDataBuilder<'c> {
         let recipient_infos_vec = self
             .recipient_infos
             .iter()
-            .map(|ri| Ok(ri.build(&content_encryption_key)?))
+            .map(|ri| ri.build(&content_encryption_key))
             .collect::<Result<Vec<RecipientInfo>>>()?;
         content_encryption_key.zeroize();
         let recip_infos = RecipientInfos::try_from(recipient_infos_vec).unwrap();
@@ -964,22 +964,18 @@ impl<'c> EnvelopedDataBuilder<'c> {
 
         if originator_info_present && (other_certificates_present || other_crls_present) {
             CmsVersion::V4
+        } else if (originator_info_present && v2_certificates_present)
+            || pwri_recipient_info_present
+            || ori_recipient_info_present
+        {
+            CmsVersion::V3
+        } else if !originator_info_present
+            && !unprotected_attributes_present
+            && all_recipient_infos_are_v0
+        {
+            CmsVersion::V0
         } else {
-            if (originator_info_present && v2_certificates_present)
-                || pwri_recipient_info_present
-                || ori_recipient_info_present
-            {
-                CmsVersion::V3
-            } else {
-                if !originator_info_present
-                    && !unprotected_attributes_present
-                    && all_recipient_infos_are_v0
-                {
-                    CmsVersion::V0
-                } else {
-                    CmsVersion::V2
-                }
-            }
+            CmsVersion::V2
         }
     }
 }
