@@ -336,7 +336,7 @@ dependencies = [
 
 [[package]]
 name = "crmf"
-version = "0.2.0-pre.0"
+version = "0.2.0"
 dependencies = [
  "cms",
  "const-oid 0.9.2",
@@ -1702,16 +1702,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tsp"
-version = "0.1.0"
-dependencies = [
- "cmpv2",
- "cms",
- "der",
- "hex-literal",
-]
-
-[[package]]
 name = "typenum"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1969,6 +1959,16 @@ dependencies = [
  "hex-literal",
  "spki",
  "x509-cert",
+]
+
+[[package]]
+name = "x509-tsp"
+version = "0.1.0"
+dependencies = [
+ "cmpv2",
+ "cms",
+ "der",
+ "hex-literal",
 ]
 
 [[package]]
