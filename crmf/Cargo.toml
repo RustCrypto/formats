@@ -1,6 +1,6 @@
 [package]
 name = "crmf"
-version = "0.2.0-pre.0"
+version = "0.2.0"
 description = """
 Pure Rust implementation of the Certificate Request Message Format (CRMF) as
 described in RFC 4211
@@ -15,13 +15,13 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-cms = { version = "0.2" }
+cms = "0.2"
 der = { version = "0.7", features = ["alloc", "derive"] }
-spki = { version = "0.7" }
+spki = "0.7"
 x509-cert = { version = "0.2", default-features = false }
 
 [dev-dependencies]
-const-oid = { version = "0.9" } # TODO: path = "../const-oid"
+const-oid = "0.9"
 
 [features]
 alloc = ["der/alloc"]
