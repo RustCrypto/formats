@@ -13,8 +13,6 @@ keywords = ["crypto", "tsp", "timestamp"]
 readme = "README.md"
 rust-version = "1.65"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 der = { version = "0.7.6", features = ["alloc", "derive", "oid", "pem"] }
 cms = { version = "0.2.1", features = ["alloc", "std"] }
