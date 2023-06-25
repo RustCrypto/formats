@@ -16,8 +16,11 @@ const RFCS: &[(&str, &str)] = &[
     ("rfc7299", include_str!("../rfc7299.txt")),
 ];
 
+const MDS: &[(&str, &str)] = &[("rfc8894", include_str!("../rfc8894.md"))];
+
 // Bases defined in other places.
 const BASES: &[(&str, &str)] = &[("id-ad-ocsp", "1.3.6.1.5.5.7.48.1")];
+const NO_BASES: &[(&str, &str)] = &[("", "")];
 
 fn main() {
     let mut root = Root::default();
@@ -28,6 +31,12 @@ fn main() {
 
     for (spec, body) in RFCS {
         for (name, obid) in Asn1Parser::new(body, BASES).iter() {
+            root.add(spec, &name, &obid);
+        }
+    }
+
+    for (spec, body) in MDS {
+        for (name, obid) in Asn1Parser::new(body, NO_BASES).iter() {
             root.add(spec, &name, &obid);
         }
     }
