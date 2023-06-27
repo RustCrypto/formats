@@ -95,13 +95,13 @@ impl<T: Deserialize> Deserialize for Option<T> {
 impl<T: DeserializeBytes> DeserializeBytes for Option<T> {
     #[inline]
     fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let some_or_none = bytes.first().ok_or(Error::EndOfStream)?;
+        let (some_or_none, remainder) = <u8 as DeserializeBytes>::tls_deserialize(bytes)?;
         match some_or_none {
             0 => {
-                Ok((None, bytes.get(1..).ok_or(Error::EndOfStream)?))
+                Ok((None, remainder))
             },
             1 => {
-                let (element, remainder) = T::tls_deserialize(bytes)?;
+                let (element, remainder) = T::tls_deserialize(remainder)?;
                 Ok((Some(element), remainder))
             },
             _ => Err(Error::DecodingError(alloc::format!("Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.", some_or_none)))
