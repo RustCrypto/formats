@@ -226,14 +226,6 @@ fn rdns_serde() {
             ],
             "CN=foo,SN=bar,C=baz+L=bat",
             &[
-                &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::CN,
-                    value: Any::from(Utf8StringRef::new("foo").unwrap()),
-                }],
-                &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::SN,
-                    value: Any::from(Utf8StringRef::new("bar").unwrap()),
-                }],
                 &[
                     AttributeTypeAndValue {
                         oid: const_oid::db::rfc4519::C,
@@ -244,6 +236,14 @@ fn rdns_serde() {
                         value: Any::from(Utf8StringRef::new("bat").unwrap()),
                     },
                 ],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::SN,
+                    value: Any::from(Utf8StringRef::new("bar").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::CN,
+                    value: Any::from(Utf8StringRef::new("foo").unwrap()),
+                }],
             ],
         ),
         (
@@ -251,16 +251,16 @@ fn rdns_serde() {
             "UID=jsmith,DC=example,DC=net",
             &[
                 &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::UID,
-                    value: Any::from(Utf8StringRef::new("jsmith").unwrap()),
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Ia5StringRef::new("net").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
                     value: Any::from(Ia5StringRef::new("example").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::DC,
-                    value: Any::from(Ia5StringRef::new("net").unwrap()),
+                    oid: const_oid::db::rfc4519::UID,
+                    value: Any::from(Utf8StringRef::new("jsmith").unwrap()),
                 }],
             ],
         ),
@@ -268,6 +268,14 @@ fn rdns_serde() {
             &["OU=Sales+CN=J.  Smith,DC=example,DC=net"],
             "OU=Sales+CN=J.  Smith,DC=example,DC=net",
             &[
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Ia5StringRef::new("net").unwrap()),
+                }],
+                &[AttributeTypeAndValue {
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Ia5StringRef::new("example").unwrap()),
+                }],
                 &[
                     AttributeTypeAndValue {
                         oid: const_oid::db::rfc4519::OU,
@@ -278,14 +286,6 @@ fn rdns_serde() {
                         value: Any::from(Utf8StringRef::new("J.  Smith").unwrap()),
                     },
                 ],
-                &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::DC,
-                    value: Any::from(Ia5StringRef::new("example").unwrap()),
-                }],
-                &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::DC,
-                    value: Any::from(Ia5StringRef::new("net").unwrap()),
-                }],
             ],
         ),
         (
@@ -293,16 +293,16 @@ fn rdns_serde() {
             "CN=James \\\"Jim\\\" Smith\\, III,DC=example,DC=net",
             &[
                 &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::CN,
-                    value: Any::from(Utf8StringRef::new(r#"James "Jim" Smith, III"#).unwrap()),
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Ia5StringRef::new("net").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
                     value: Any::from(Ia5StringRef::new("example").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::DC,
-                    value: Any::from(Ia5StringRef::new("net").unwrap()),
+                    oid: const_oid::db::rfc4519::CN,
+                    value: Any::from(Utf8StringRef::new(r#"James "Jim" Smith, III"#).unwrap()),
                 }],
             ],
         ),
@@ -311,16 +311,16 @@ fn rdns_serde() {
             "CN=Before\\0dAfter,DC=example,DC=net",
             &[
                 &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::CN,
-                    value: Any::from(Utf8StringRef::new("Before\rAfter").unwrap()),
+                    oid: const_oid::db::rfc4519::DC,
+                    value: Any::from(Ia5StringRef::new("net").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::DC,
                     value: Any::from(Ia5StringRef::new("example").unwrap()),
                 }],
                 &[AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::DC,
-                    value: Any::from(Ia5StringRef::new("net").unwrap()),
+                    oid: const_oid::db::rfc4519::CN,
+                    value: Any::from(Utf8StringRef::new("Before\rAfter").unwrap()),
                 }],
             ],
         ),

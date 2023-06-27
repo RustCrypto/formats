@@ -47,10 +47,11 @@ impl FromStr for RdnSequence {
     type Err = der::Error;
 
     fn from_str(s: &str) -> der::Result<Self> {
-        split(s, b',')
+        let mut parts = split(s, b',')
             .map(RelativeDistinguishedName::from_str)
-            .collect::<der::Result<Vec<_>>>()
-            .map(Self)
+            .collect::<der::Result<Vec<_>>>()?;
+        parts.reverse();
+        Ok(Self(parts))
     }
 }
 
