@@ -59,7 +59,8 @@ impl FromStr for RdnSequence {
 /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
 impl fmt::Display for RdnSequence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (i, atv) in self.0.iter().enumerate() {
+        // As per RFC 4514 Section 2.1, the elements are reversed
+        for (i, atv) in self.0.iter().rev().enumerate() {
             match i {
                 0 => write!(f, "{}", atv)?,
                 _ => write!(f, ",{}", atv)?,

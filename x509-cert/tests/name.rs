@@ -66,6 +66,27 @@ fn decode_name() {
             counter += 1;
         }
     }
+
+    #[cfg(feature = "std")]
+    {
+        // https://datatracker.ietf.org/doc/html/rfc4514.html#section-2.1
+        // If the RDNSequence is an empty sequence, the result is the empty or
+        // zero-length string.
+        // Otherwise, the output consists of the string encodings of each
+        // RelativeDistinguishedName in the RDNSequence (according to Section 2.2),
+        // starting with the last element of the sequence and moving backwards
+        // toward the first.
+        // The encodings of adjoining RelativeDistinguishedNames are separated by
+        // a comma (',' U+002C) character.
+        let name = rdn1a.to_string();
+        assert_eq!(name, "CN=Good CA,O=Test Certificates 2011,C=US");
+
+        // https://github.com/RustCrypto/formats/issues/1121
+        let rdn1 = Name::from_der(&hex!("3081c0310b30090603550406130255533113301106035504080c0a43616c69666f726e69613116301406035504070c0d4d6f756e7461696e205669657731133011060355040a0c0a476f6f676c65204c4c43311e301c06035504030c154f51464176444e4457732e676f6f676c652e636f6d31243022060355040b0c1b6d616e6167656d656e743a64732e67726f75702e3338393131313131293027060a0992268993f22c6401010c196964656e746974793a64732e67726f75702e33383931313131")[..]);
+        let rdn1a = rdn1.unwrap();
+        let name = rdn1a.to_string();
+        assert_eq!(name, "UID=identity:ds.group.3891111,OU=management:ds.group.3891111,CN=OQFAvDNDWs.google.com,O=Google LLC,L=Mountain View,STATEORPROVINCENAME=California,C=US");
+    }
 }
 
 #[test]
