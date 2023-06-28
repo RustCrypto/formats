@@ -3,7 +3,7 @@
 use alloc::vec::Vec;
 use const_oid::db::{
     rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT, SERIAL_NUMBER},
-    DB,
+    Database, DB,
 };
 use core::{
     fmt::{self, Write},
@@ -260,7 +260,7 @@ impl fmt::Display for AttributeTypeAndValue {
             _ => None,
         };
 
-        if let (Some(key), Some(val)) = (DB.by_oid(&self.oid), val) {
+        if let (Some(key), Some(val)) = (DB.shortest_name_by_oid(&self.oid), val) {
             write!(f, "{}=", key.to_ascii_uppercase())?;
 
             let mut iter = val.char_indices().peekable();
@@ -283,5 +283,28 @@ impl fmt::Display for AttributeTypeAndValue {
         }
 
         Ok(())
+    }
+}
+
+/// Helper trait to bring shortest name by oid lookups to Database
+trait ShortestName {
+    fn shortest_name_by_oid(&self, oid: &ObjectIdentifier) -> Option<&str>;
+}
+
+impl<'a> ShortestName for Database<'a> {
+    fn shortest_name_by_oid(&self, oid: &ObjectIdentifier) -> Option<&'a str> {
+        let mut best_match: Option<&'a str> = None;
+
+        for m in self.find_names_for_oid(oid) {
+            if let Some(previous) = best_match {
+                if m.len() < previous.len() {
+                    best_match = Some(m);
+                }
+            } else {
+                best_match = Some(m);
+            }
+        }
+
+        best_match
     }
 }
