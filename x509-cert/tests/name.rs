@@ -85,7 +85,7 @@ fn decode_name() {
         let rdn1 = Name::from_der(&hex!("3081c0310b30090603550406130255533113301106035504080c0a43616c69666f726e69613116301406035504070c0d4d6f756e7461696e205669657731133011060355040a0c0a476f6f676c65204c4c43311e301c06035504030c154f51464176444e4457732e676f6f676c652e636f6d31243022060355040b0c1b6d616e6167656d656e743a64732e67726f75702e3338393131313131293027060a0992268993f22c6401010c196964656e746974793a64732e67726f75702e33383931313131")[..]);
         let rdn1a = rdn1.unwrap();
         let name = rdn1a.to_string();
-        assert_eq!(name, "UID=identity:ds.group.3891111,OU=management:ds.group.3891111,CN=OQFAvDNDWs.google.com,O=Google LLC,L=Mountain View,STATEORPROVINCENAME=California,C=US");
+        assert_eq!(name, "UID=identity:ds.group.3891111,OU=management:ds.group.3891111,CN=OQFAvDNDWs.google.com,O=Google LLC,L=Mountain View,ST=California,C=US");
     }
 }
 
