@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.7 (2023-06-29)
+### Added
+- `TryFrom<String>` impl for strings based on `StrOwned` ([#1064])
+
+[#1064]: https://github.com/RustCrypto/formats/pull/1064
+
 ## 0.7.6 (2023-05-16)
 ### Added
 - `SetOfVec::{extend, from_iter}` methods ([#1065])
