@@ -127,7 +127,7 @@ impl<'a> Iterator for Names<'a> {
         while i < self.database.0.len() {
             let lhs = self.database.0[i].0;
 
-            if lhs.buffer.eq(&self.oid.buffer) {
+            if lhs.as_bytes().eq(self.oid.as_bytes()) {
                 self.position = i + 1;
                 return Some(self.database.0[i].1);
             }
