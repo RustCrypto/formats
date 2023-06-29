@@ -412,7 +412,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.7.6"
+version = "0.7.7"
 dependencies = [
  "arbitrary",
  "const-oid 0.9.2",
