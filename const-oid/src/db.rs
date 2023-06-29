@@ -36,6 +36,7 @@ const fn eq_case(lhs: &[u8], rhs: &[u8]) -> bool {
 }
 
 /// A query interface for OIDs/Names.
+#[derive(Copy, Clone)]
 pub struct Database<'a>(&'a [(&'a ObjectIdentifier, &'a str)]);
 
 impl<'a> Database<'a> {
@@ -75,6 +76,43 @@ impl<'a> Database<'a> {
             let lhs = self.0[i].1;
             if eq_case(lhs.as_bytes(), name.as_bytes()) {
                 return Some(self.0[i].0);
+            }
+
+            i += 1;
+        }
+
+        None
+    }
+
+    /// Return the list of matched name for the OID.
+    pub const fn find_names_for_oid(&self, oid: ObjectIdentifier) -> Names<'a> {
+        Names {
+            database: *self,
+            oid,
+            position: 0,
+        }
+    }
+}
+
+/// Iterator returning the multiple names that may be associated with an OID.
+pub struct Names<'a> {
+    database: Database<'a>,
+    oid: ObjectIdentifier,
+    position: usize,
+}
+
+impl<'a> Iterator for Names<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<&'a str> {
+        let mut i = self.position;
+
+        while i < self.database.0.len() {
+            let lhs = self.database.0[i].0;
+
+            if lhs.buffer.eq(&self.oid.buffer) {
+                self.position = i + 1;
+                return Some(self.database.0[i].1);
             }
 
             i += 1;
