@@ -1,29 +1,34 @@
 #![cfg(feature = "builder")]
 
+use aes::Aes128;
+use cipher::block_padding::Pkcs7;
+use cipher::{BlockDecryptMut, KeyIvInit};
 use cms::builder::{
     create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, SignedDataBuilder, SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
-use cms::enveloped_data::RecipientIdentifier;
-use cms::signed_data::{EncapsulatedContentInfo, SignerIdentifier};
+use cms::enveloped_data::RecipientInfo::Ktri;
+use cms::enveloped_data::{EnvelopedData, RecipientIdentifier, RecipientInfo};
+use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
 use der::asn1::{Int, OctetString, PrintableString, SetOfVec, Utf8StringRef};
-use der::{Any, AnyRef, DecodePem, Encode, Tag, Tagged};
+use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
 use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
 use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
-use rsa::pkcs1v15::SigningKey;
-use rsa::{RsaPrivateKey, RsaPublicKey};
+use rsa::pkcs1v15::{SigningKey, VerifyingKey};
+use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
+use signature::Verifier;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, AttributeTypeAndValue, AttributeValue};
 use x509_cert::name::{RdnSequence, RelativeDistinguishedName};
 use x509_cert::serial_number::SerialNumber;
 
-// TODO bk replace this by const_oid definitions as soon as merged
+// TODO bk replace this by const_oid definitions as soon as released
 const RFC8894_ID_MESSAGE_TYPE: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("2.16.840.1.113733.1.9.2");
 const RFC8894_ID_SENDER_NONCE: ObjectIdentifier =
@@ -256,17 +261,19 @@ fn build_pkcs7_scep_pkcsreq() {
     // - Wrap enveloped data in `SignedData`
     // - Sign with sender's RSA key.
 
+    // Generate a random number generator
+    let mut rng = rand::thread_rng();
+
     // Create recipient info
-    let recipient_identifier = recipient_identifier(1);
+    let recipient_identifier = recipient_identifier(42);
     let recipient_private_key =
         rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
     let recipient_public_key = RsaPublicKey::from(&recipient_private_key);
 
-    // Generate a random number generator
-    let mut rng = rand::thread_rng();
-
+    //----------------------------------------------------------------------------------------------
+    // Create enveloped data
     let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
-        recipient_identifier,
+        recipient_identifier.clone(),
         KeyEncryptionInfo::Rsa(recipient_public_key),
         &mut rng,
     )
@@ -297,6 +304,9 @@ fn build_pkcs7_scep_pkcsreq() {
         content_type: const_oid::db::rfc5911::ID_ENVELOPED_DATA,
         content: Any::from(content),
     };
+
+    //----------------------------------------------------------------------------------------------
+    // Create signed data
 
     // Encapsulate the `EnvelopedData`
     let content_info_der = content_info.to_der().unwrap();
@@ -387,10 +397,95 @@ fn build_pkcs7_scep_pkcsreq() {
         pem_rfc7468::encode_string("PKCS7", LineEnding::LF, &signed_data_pkcs7_der).unwrap()
     );
 
-    // TODO bk
-    // Check signature
+    //----------------------------------------------------------------------------------------------
+    // Verify
+
     // Decode Message including decrypted enveloped content
-    // Check CSR
+    // Check signature
+    // Decrypt content-encryption key
+    // Decrypt content
+    let ci = ContentInfo::from_der(signed_data_pkcs7_der.as_slice()).unwrap();
+    assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
+
+    // Decode CMS message (by converting `Any` to `SignedData`)
+    let signed_data_der = ci.content.to_der().unwrap();
+    let signed_data = SignedData::from_der(signed_data_der.as_slice()).unwrap();
+
+    // Check signatures (only one in this test)
+    for signer_info in signed_data.signer_infos.0.iter() {
+        let signature =
+            rsa::pkcs1v15::Signature::try_from(signer_info.signature.as_bytes()).unwrap();
+        let signed_attributes_der = signer_info.signed_attrs.clone().unwrap().to_der().unwrap();
+        let verifier = {
+            let verifier_rsa_key_pem = include_str!("examples/sceptest_key.pem");
+            let verifier_rsa_key = RsaPrivateKey::from_pkcs8_pem(verifier_rsa_key_pem).unwrap();
+            VerifyingKey::<Sha256>::new(RsaPublicKey::from(verifier_rsa_key))
+        };
+        assert!(verifier
+            .verify(signed_attributes_der.as_slice(), &signature)
+            .is_ok());
+    }
+
+    // Decode contained enveloped data
+    let encap_content_info = signed_data.encap_content_info;
+    assert_eq!(
+        encap_content_info.econtent_type,
+        const_oid::db::rfc5911::ID_DATA
+    );
+    let econtent = encap_content_info
+        .econtent
+        .expect("this cms must contain content");
+    // let octet_string = OctetString::from_der(econtent.value()).unwrap();
+    // let ci = ContentInfo::from_der(octet_string.as_bytes()).unwrap();
+    let ci = ContentInfo::from_der(econtent.value()).unwrap();
+    assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENVELOPED_DATA);
+    let enveloped_data_der = ci.content.to_der().unwrap();
+    let enveloped_data = EnvelopedData::from_der(enveloped_data_der.as_slice()).unwrap();
+    let my_recipient_info: &RecipientInfo = enveloped_data
+        .recip_infos
+        .0
+        .iter()
+        .find(|&recipient_info| match recipient_info {
+            Ktri(ri) => ri.rid == recipient_identifier,
+            _ => false,
+        })
+        .unwrap();
+    let key_trans_recipient_info = if let Ktri(recipient_info) = my_recipient_info {
+        recipient_info // this must succeed
+    } else {
+        panic!();
+    };
+    let encrypted_key = &key_trans_recipient_info.enc_key;
+
+    // Decrypt the content-encryption key
+    let content_encryption_key = recipient_private_key
+        .decrypt(Pkcs1v15Encrypt, encrypted_key.as_bytes())
+        .unwrap();
+
+    // Decrypt the CSR
+    let encryption_info = enveloped_data.encrypted_content;
+    assert_eq!(
+        encryption_info.content_enc_alg.oid,
+        const_oid::db::rfc5911::ID_AES_128_CBC
+    );
+    let iv_octet_string = OctetString::from_der(
+        encryption_info
+            .content_enc_alg
+            .parameters
+            .unwrap()
+            .to_der()
+            .unwrap()
+            .as_slice(),
+    )
+    .unwrap();
+    let iv = iv_octet_string.as_bytes();
+    let encrypted_content_octet_string = encryption_info.encrypted_content.unwrap();
+    let encrypted_content = encrypted_content_octet_string.as_bytes();
+    let csr_der_decrypted =
+        cbc::Decryptor::<Aes128>::new(content_encryption_key.as_slice().into(), iv.into())
+            .decrypt_padded_vec_mut::<Pkcs7>(encrypted_content)
+            .unwrap();
+    assert_eq!(csr_der_decrypted.as_slice(), csr_der)
 }
 
 #[test]
