@@ -158,7 +158,6 @@ fn test_build_signed_data() {
 //   - additional signed attributes
 
 #[test]
-#[cfg(feature ="getrandom" )]
 fn test_build_enveloped_data() {
     let recipient_identifier = recipient_identifier(1);
     let mut rng = OsRng;

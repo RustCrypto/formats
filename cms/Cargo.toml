@@ -14,7 +14,7 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-der = { version = "0.7.6", features = ["alloc", "derive", "oid", "pem"] }
+der = { version = "0.7.7", features = ["alloc", "derive", "oid", "pem"] }
 spki = { version = "0.7" }
 x509-cert = { version = "0.2.3", default-features = false, features = ["pem"] }
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
@@ -31,6 +31,7 @@ signature = { version = "2.1.0", features = ["digest", "alloc"], optional = true
 zeroize = { version = "1.6.0", optional = true }
 
 [dev-dependencies]
+getrandom = "0.2"
 hex-literal = "0.4"
 pem-rfc7468 = "0.7.0"
 pkcs5 = { version = "0.7" }
@@ -41,7 +42,6 @@ p256 = "0.13.0"
 
 [features]
 alloc = ["der/alloc"]
-getrandom = ["rand/getrandom"]
 std = ["der/std", "spki/std"]
 builder = ["aes", "cbc", "cipher", "rsa", "sha1", "sha2", "sha3", "signature", "std", "spki/alloc", "x509-cert/builder", "zeroize"]
 pem = ["alloc", "der/pem"]
