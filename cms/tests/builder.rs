@@ -12,10 +12,11 @@ use const_oid::ObjectIdentifier;
 use der::asn1::{Int, OctetString, PrintableString, SetOfVec, Utf8StringRef};
 use der::{Any, AnyRef, DecodePem, Encode, Tag, Tagged};
 use p256::{pkcs8::DecodePrivateKey, NistP256};
+use rand::rngs::OsRng;
 use pem_rfc7468::LineEnding;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
-use rsa::{rand_core, RsaPrivateKey, RsaPublicKey};
+use rsa::{RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, AttributeTypeAndValue, AttributeValue};
@@ -157,19 +158,23 @@ fn test_build_signed_data() {
 //   - additional signed attributes
 
 #[test]
+#[cfg(feature ="getrandom" )]
 fn test_build_enveloped_data() {
     let recipient_identifier = recipient_identifier(1);
-    let mut rng = rand_core::OsRng;
+    let mut rng = OsRng;
     let bits = 2048;
     let recipient_private_key =
         RsaPrivateKey::new(&mut rng, bits).expect("failed to generate a key");
     let recipient_public_key = RsaPublicKey::from(&recipient_private_key);
+
     let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
         recipient_identifier,
         KeyEncryptionInfo::Rsa(recipient_public_key),
+        &mut rng
     )
     .expect("Could not create a KeyTransRecipientInfoBuilder");
 
+    let mut rng = OsRng;
     let mut builder = EnvelopedDataBuilder::new(
         None,
         "Arbitrary unencrypted content".as_bytes(),
@@ -180,7 +185,7 @@ fn test_build_enveloped_data() {
     let enveloped_data = builder
         .add_recipient_info(recipient_info_builder)
         .expect("Could not add a recipient info")
-        .build()
+        .build_with_rng(&mut rng)
         .expect("Building EnvelopedData failed");
     let enveloped_data_der = enveloped_data
         .to_der()
@@ -258,9 +263,13 @@ fn build_pkcs7_scep_pkcsreq() {
         rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
     let recipient_public_key = RsaPublicKey::from(&recipient_private_key);
 
+    // Generate a random number generator
+    let mut rng = rand::thread_rng();
+
     let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
         recipient_identifier,
         KeyEncryptionInfo::Rsa(recipient_public_key),
+        &mut rng,
     )
     .unwrap();
 
@@ -274,11 +283,13 @@ fn build_pkcs7_scep_pkcsreq() {
     )
     .unwrap();
 
+    let mut rng = rand::thread_rng();
+
     // Add recipient info. Multiple recipients are possible, but not used here.
     let enveloped_data = enveloped_data_builder
         .add_recipient_info(recipient_info_builder)
         .unwrap()
-        .build()
+        .build_with_rng(&mut rng)
         .unwrap();
 
     let enveloped_data_der = enveloped_data.to_der().unwrap();

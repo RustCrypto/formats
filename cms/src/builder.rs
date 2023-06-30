@@ -20,7 +20,6 @@ use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
 use cipher::block_padding::Pkcs7;
-use cipher::crypto_common::rand_core::{CryptoRng, OsRng, RngCore};
 use cipher::BlockEncryptMut;
 use cipher::{Key, KeyIvInit, KeySizeUser};
 use const_oid::ObjectIdentifier;
@@ -41,6 +40,7 @@ use spki::{
 };
 use std::time::SystemTime;
 use std::vec;
+use cipher::rand_core::{RngCore, CryptoRng, CryptoRngCore}; // TODO bk remove redundancy
 use x509_cert::attr::{Attribute, AttributeValue, Attributes};
 use x509_cert::builder::Builder;
 use zeroize::Zeroize;
@@ -530,7 +530,7 @@ pub trait RecipientInfoBuilder {
 
     /// Encrypt the `content_encryption_key` using a method, that is specific for the implementing
     /// builder type. Finally return a `RecipientInfo`.
-    fn build(&self, content_encryption_key: &[u8]) -> Result<RecipientInfo>;
+    fn build(&mut self, content_encryption_key: &[u8]) -> Result<RecipientInfo>;
 }
 
 /// `RecipientInfoBuilder` must be implemented for these 5 recipient info types
@@ -557,27 +557,40 @@ pub enum KeyEncryptionInfo {
 
 /// Builds a `KeyTransRecipientInfo` according to RFC 5652 § 6.
 /// This type uses the recipient's public key to encrypt the content-encryption key.
-pub struct KeyTransRecipientInfoBuilder {
+pub struct KeyTransRecipientInfoBuilder<'a, R>
+where
+    R: CryptoRngCore
+{
     /// Identifies the recipient
     pub rid: RecipientIdentifier,
     /// Info for key encryption
     pub key_encryption_info: KeyEncryptionInfo,
+    /// Rng
+    rng: &'a mut R,
 }
 
-impl KeyTransRecipientInfoBuilder {
+impl<'a, R> KeyTransRecipientInfoBuilder<'a, R>
+    where
+        R: CryptoRngCore
+{
     /// Creates a `KeyTransRecipientInfoBuilder`
     pub fn new(
         rid: RecipientIdentifier,
         key_encryption_info: KeyEncryptionInfo,
-    ) -> Result<KeyTransRecipientInfoBuilder> {
+        rng: &'a mut R,
+    ) -> Result<KeyTransRecipientInfoBuilder<'a, R>> {
         Ok(KeyTransRecipientInfoBuilder {
             rid,
             key_encryption_info,
+            rng,
         })
     }
 }
 
-impl RecipientInfoBuilder for KeyTransRecipientInfoBuilder {
+impl<'a, R> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<'a, R>
+    where
+        R: CryptoRngCore
+{
     fn recipient_info_type(&self) -> RecipientInfoType {
         RecipientInfoType::Ktri
     }
@@ -591,13 +604,13 @@ impl RecipientInfoBuilder for KeyTransRecipientInfoBuilder {
 
     /// Build a `KeyTransRecipientInfo`. See RFC 5652 § 6.2.1
     /// `content_encryption_key` will be encrypted with the recipient's public key.
-    fn build(&self, content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+    fn build(&mut self, content_encryption_key: &[u8]) -> Result<RecipientInfo> {
         // Encrypt key
         let (encrypted_key, key_enc_alg) = match &self.key_encryption_info {
             // RSA encryption
             KeyEncryptionInfo::Rsa(recipient_public_key) => (
                 recipient_public_key
-                    .encrypt(&mut OsRng, Pkcs1v15Encrypt, content_encryption_key)
+                    .encrypt(self.rng, Pkcs1v15Encrypt, content_encryption_key)
                     .map_err(|_| Error::Builder(String::from("Could not encrypt key")))?,
                 AlgorithmIdentifierOwned {
                     oid: const_oid::db::rfc5912::RSA_ENCRYPTION,
@@ -656,7 +669,7 @@ impl RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder {
     }
 
     /// Build a `KeyAgreeRecipientInfoBuilder`. See RFC 5652 § 6.2.1
-    fn build(&self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+    fn build(&mut self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
         Err(Error::Builder(String::from(
             "Building KeyAgreeRecipientInfo is not implemented, yet.",
         )))
@@ -699,7 +712,7 @@ impl RecipientInfoBuilder for KekRecipientInfoBuilder {
     }
 
     /// Build a `KekRecipientInfoBuilder`. See RFC 5652 § 6.2.1
-    fn build(&self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+    fn build(&mut self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
         Err(Error::Builder(String::from(
             "Building KekRecipientInfo is not implemented, yet.",
         )))
@@ -743,7 +756,7 @@ impl RecipientInfoBuilder for PasswordRecipientInfoBuilder {
     }
 
     /// Build a `PasswordRecipientInfoBuilder`. See RFC 5652 § 6.2.1
-    fn build(&self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+    fn build(&mut self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
         Err(Error::Builder(String::from(
             "Building PasswordRecipientInfo is not implemented, yet.",
         )))
@@ -778,13 +791,11 @@ impl RecipientInfoBuilder for OtherRecipientInfoBuilder {
 
     /// Returns the `CMSVersion` for this `RecipientInfo`
     fn recipient_info_version(&self) -> CmsVersion {
-        // TODO bk
         panic!("Ori has no CMSVersion")
     }
 
     /// Build a `OtherRecipientInfoBuilder`. See RFC 5652 § 6.2.1
-    fn build(&self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
-        // TODO bk
+    fn build(&mut self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
         panic!("Ori has no common build method.")
     }
 }
@@ -813,7 +824,7 @@ impl ContentEncryptionAlgorithm {
 /// Builds CMS `EnvelopedData` according to RFC 5652 § 6.
 pub struct EnvelopedDataBuilder<'c> {
     originator_info: Option<OriginatorInfo>,
-    recipient_infos: Vec<Box<dyn RecipientInfoBuilder>>,
+    recipient_infos: Vec<Box<dyn RecipientInfoBuilder + 'c>>,
     unencrypted_content: &'c [u8],
     // TODO bk Not good to offer both, `content_encryptor` and `content_encryption_algorithm`.
     // We should
@@ -849,15 +860,16 @@ impl<'c> EnvelopedDataBuilder<'c> {
     /// RFC 5652 § 6.2, when `EnvelopedData` is built.
     pub fn add_recipient_info(
         &mut self,
-        recipient_info_builder: impl RecipientInfoBuilder + 'static,
+        recipient_info_builder: impl RecipientInfoBuilder + 'c,
     ) -> Result<&mut Self> {
         self.recipient_infos.push(Box::new(recipient_info_builder));
 
         Ok(self)
     }
 
-    /// Generate an `EnvelopedData` object according to RFC 5652 § 6.
-    pub fn build(&mut self) -> Result<EnvelopedData> {
+    /// Generate an `EnvelopedData` object according to RFC 5652 § 6 using a provided
+    /// random number generator.
+    pub fn build_with_rng(&mut self, rng: &mut impl CryptoRngCore) -> Result<EnvelopedData> {
         // Generate content encryption key
         // Encrypt content
         // Build recipient infos
@@ -866,7 +878,7 @@ impl<'c> EnvelopedDataBuilder<'c> {
             self.unencrypted_content,
             &self.content_encryption_algorithm,
             None,
-            &mut OsRng,
+            rng,
         )?;
         let encrypted_content_octetstring = der::asn1::OctetString::new(encrypted_content)?;
         let encrypted_content_info = EncryptedContentInfo {
@@ -877,7 +889,7 @@ impl<'c> EnvelopedDataBuilder<'c> {
 
         let recipient_infos_vec = self
             .recipient_infos
-            .iter()
+            .iter_mut()
             .map(|ri| ri.build(&content_encryption_key))
             .collect::<Result<Vec<RecipientInfo>>>()?;
         content_encryption_key.zeroize();
@@ -1029,14 +1041,11 @@ macro_rules! encrypt_block_mode {
     }};
 }
 
-// TODO bk this must be refactored so we can select the encryption algorithm
-/// Get an encryptor for a given encryption algorithm. Currently, only AES-CBC is supported.
-/// If `key` is `Some`, it's length must fit the chosen encryption algorithm. Otherwise the
-/// conversion `Key::<B>::from_slice(key)` panics.
+/// Symmetrically encrypt data.
 /// Returns encrypted content, content-encryption key and the used algorithm identifier (including
 /// the used algorithm parameters).
 ///
-/// TODO bk which encryption algorithms shall also be supported?
+/// TODO Which encryption algorithms shall also be supported?
 fn encrypt_data<R>(
     data: &[u8],
     encryption_algorithm_identifier: &ContentEncryptionAlgorithm,
@@ -1071,32 +1080,6 @@ where
             rng,
             encryption_algorithm_identifier.oid()
         ),
-        // TODO bk remove following test code
-        // _ => Ok({
-        //     let (key, iv) = match key {
-        //         None => cbc::Encryptor::<Aes128>::generate_key_iv(rng),
-        //         Some(key) => {
-        //             if key.len() != <Aes128>::key_size() {
-        //                 return Err(Error::Builder(String::from(
-        //                     "Invalid key size for chosen algorithm",
-        //                 )));
-        //             }
-        //             (
-        //                 Key::<cbc::Encryptor<Aes128>>::from_slice(key).to_owned(),
-        //                 cbc::Encryptor::<Aes128>::generate_iv(rng),
-        //             )
-        //         }
-        //     };
-        //     let encryptor = cbc::Encryptor::<Aes128>::new(&key.into(), &iv.into());
-        //     (
-        //         encryptor.encrypt_padded_vec_mut::<Pkcs7>(data),
-        //         key.to_vec(),
-        //         AlgorithmIdentifierOwned {
-        //             oid: encryption_algorithm_identifier.oid(),
-        //             parameters: Some(Any::new(OctetString, iv.to_vec())?),
-        //         },
-        //     )
-        // }),
     }
 }
 
