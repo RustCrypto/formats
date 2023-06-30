@@ -20,6 +20,7 @@ use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
 use cipher::block_padding::Pkcs7;
+use cipher::rand_core::{CryptoRng, CryptoRngCore, RngCore}; // TODO bk remove redundancy
 use cipher::BlockEncryptMut;
 use cipher::{Key, KeyIvInit, KeySizeUser};
 use const_oid::ObjectIdentifier;
@@ -40,7 +41,6 @@ use spki::{
 };
 use std::time::SystemTime;
 use std::vec;
-use cipher::rand_core::{RngCore, CryptoRng, CryptoRngCore}; // TODO bk remove redundancy
 use x509_cert::attr::{Attribute, AttributeValue, Attributes};
 use x509_cert::builder::Builder;
 use zeroize::Zeroize;
@@ -559,7 +559,7 @@ pub enum KeyEncryptionInfo {
 /// This type uses the recipient's public key to encrypt the content-encryption key.
 pub struct KeyTransRecipientInfoBuilder<'a, R>
 where
-    R: CryptoRngCore
+    R: CryptoRngCore,
 {
     /// Identifies the recipient
     pub rid: RecipientIdentifier,
@@ -570,8 +570,8 @@ where
 }
 
 impl<'a, R> KeyTransRecipientInfoBuilder<'a, R>
-    where
-        R: CryptoRngCore
+where
+    R: CryptoRngCore,
 {
     /// Creates a `KeyTransRecipientInfoBuilder`
     pub fn new(
@@ -588,8 +588,8 @@ impl<'a, R> KeyTransRecipientInfoBuilder<'a, R>
 }
 
 impl<'a, R> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<'a, R>
-    where
-        R: CryptoRngCore
+where
+    R: CryptoRngCore,
 {
     fn recipient_info_type(&self) -> RecipientInfoType {
         RecipientInfoType::Ktri

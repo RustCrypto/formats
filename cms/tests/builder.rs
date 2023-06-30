@@ -12,8 +12,8 @@ use const_oid::ObjectIdentifier;
 use der::asn1::{Int, OctetString, PrintableString, SetOfVec, Utf8StringRef};
 use der::{Any, AnyRef, DecodePem, Encode, Tag, Tagged};
 use p256::{pkcs8::DecodePrivateKey, NistP256};
-use rand::rngs::OsRng;
 use pem_rfc7468::LineEnding;
+use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use rsa::{RsaPrivateKey, RsaPublicKey};
@@ -169,7 +169,7 @@ fn test_build_enveloped_data() {
     let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
         recipient_identifier,
         KeyEncryptionInfo::Rsa(recipient_public_key),
-        &mut rng
+        &mut rng,
     )
     .expect("Could not create a KeyTransRecipientInfoBuilder");
 
