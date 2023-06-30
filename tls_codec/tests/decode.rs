@@ -25,6 +25,20 @@ fn deserialize_primitives() {
 }
 
 #[test]
+fn deserialize_option_bytes() {
+    use tls_codec::DeserializeBytes;
+    for b in [Some(0u8), None] {
+        let b_encoded = b.tls_serialize_detached().expect("Unable to tls_serialize");
+        let (b_decoded, remainder) = Option::<u8>::tls_deserialize(&mut b_encoded.as_slice())
+            .expect("Unable to tls_deserialize");
+
+        assert!(remainder.is_empty());
+
+        assert_eq!(b_decoded, b);
+    }
+}
+
+#[test]
 fn deserialize_bytes_primitives() {
     use tls_codec::DeserializeBytes;
     let b = &[77u8, 88, 1, 99] as &[u8];
