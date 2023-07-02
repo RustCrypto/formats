@@ -1,6 +1,6 @@
 [package]
 name = "const-oid"
-version = "0.9.2"
+version = "0.10.0-pre"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
