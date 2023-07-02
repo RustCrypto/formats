@@ -83,9 +83,6 @@ macro_rules! impl_byte_deserialize {
             let tls_serialized_len = $self.tls_serialized_len();
             let byte_length = tls_serialized_len - $len_len;
 
-            let ll = $len_len;
-            std::println!("serialize_bytes_bytes: tls_serialized_len: {tls_serialized_len}, $len_len: {ll}, byte_length: {byte_length}");
-
             let max_len = <$size>::MAX as usize;
             debug_assert!(
                 byte_length <= max_len,
@@ -170,9 +167,6 @@ macro_rules! impl_serialize {
             let tls_serialized_len = $self.tls_serialized_len();
             let byte_length = tls_serialized_len - $len_len;
 
-            let ll = $len_len;
-            std::println!("serialize: tls_serialized_len: {tls_serialized_len}, $len_len: {ll}, byte_length: {byte_length}");
-
             let max_len = <$size>::MAX as usize;
             debug_assert!(
                 byte_length <= max_len,
@@ -216,9 +210,6 @@ macro_rules! impl_byte_serialize {
             // large and write it out.
             let tls_serialized_len = $self.tls_serialized_len();
             let byte_length = tls_serialized_len - $len_len;
-
-            let ll = $len_len;
-            std::println!("serialize_bytes: tls_serialized_len: {tls_serialized_len}, $len_len: {ll}, byte_length: {byte_length}");
 
             let max_len = <$size>::MAX as usize;
             debug_assert!(
