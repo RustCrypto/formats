@@ -95,7 +95,7 @@ macro_rules! impl_byte_deserialize {
             }
 
             let mut vec = Vec::<u8>::with_capacity(tls_serialized_len);
-            let mut written =  <$size as $crate::Serialize>::tls_serialize(&(byte_length as $size), &mut vec)?;
+            let mut written =  <$size as Serialize>::tls_serialize(&(byte_length as $size), &mut vec)?;
 
             let bytes = $self.as_slice();
             vec.extend_from_slice(bytes);
@@ -178,7 +178,7 @@ macro_rules! impl_serialize {
                 return Err(Error::InvalidVectorLength);
             }
 
-            let mut written =  <$size as $crate::Serialize>::tls_serialize(&(byte_length as $size), writer)?;
+            let mut written =  <$size as Serialize>::tls_serialize(&(byte_length as $size), writer)?;
 
             // Now serialize the elements
             for e in $self.as_slice().iter() {
@@ -222,7 +222,7 @@ macro_rules! impl_byte_serialize {
                 return Err(Error::InvalidVectorLength);
             }
 
-            let mut written = <$size as $crate::Serialize>::tls_serialize(&(byte_length as $size), writer)?;
+            let mut written = <$size as Serialize>::tls_serialize(&(byte_length as $size), writer)?;
 
             // Now serialize the elements
             written += writer.write($self.as_slice())?;
