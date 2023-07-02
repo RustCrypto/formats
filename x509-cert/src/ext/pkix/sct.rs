@@ -8,7 +8,8 @@ use alloc::{format, vec::Vec};
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::asn1::OctetString;
 use tls_codec::{
-    DeserializeBytes, Serialize, Size, TlsDeserializeBytes, TlsSerialize, TlsSize, TlsVecU16,
+    DeserializeBytes, SerializeBytes, TlsByteVecU16, TlsDeserializeBytes, TlsSerializeBytes,
+    TlsSize,
 };
 
 // TODO: Review what should be pub
@@ -62,15 +63,11 @@ impl SignedCertificateTimestampList {
     pub fn new(serialized_scts: &[SerializedSct]) -> Result<Self, Error> {
         let mut result: Vec<u8> = Vec::new();
         for timestamp in serialized_scts {
-            let mut buffer: Vec<u8> = Vec::with_capacity(timestamp.tls_serialized_len());
-            let bytes_written = timestamp.tls_serialize(&mut buffer)?;
-            assert_eq!(bytes_written, timestamp.tls_serialized_len());
+            let buffer = timestamp.tls_serialize()?;
             result.extend(buffer);
         }
-        let tls_vec = TlsVecU16::<u8>::new(result);
-        let mut buffer: Vec<u8> = Vec::with_capacity(tls_vec.tls_serialized_len());
-        let bytes_written = tls_vec.tls_serialize(&mut buffer)?;
-        assert_eq!(bytes_written, tls_vec.tls_serialized_len());
+        let tls_vec = TlsByteVecU16::new(result);
+        let buffer = tls_vec.tls_serialize()?;
         Ok(SignedCertificateTimestampList(OctetString::new(buffer)?))
     }
 
@@ -80,7 +77,7 @@ impl SignedCertificateTimestampList {
     /// deserialized or if there are trailing bytes after all [SerializedSct]s
     /// are deserialized.
     pub fn parse_timestamps(&self) -> Result<Vec<SerializedSct>, Error> {
-        let (tls_vec, rest) = TlsVecU16::<u8>::tls_deserialize(self.0.as_bytes())?;
+        let (tls_vec, rest) = TlsByteVecU16::tls_deserialize(self.0.as_bytes())?;
         if !rest.is_empty() {
             return Err(tls_codec::Error::TrailingData)?;
         }
@@ -99,9 +96,9 @@ impl SignedCertificateTimestampList {
 /// defined in [RFC 6962 section 3.3].
 ///
 /// [RFC 6962 section 3.3]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.3
-#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct SerializedSct {
-    data: TlsVecU16<u8>,
+    data: TlsByteVecU16,
 }
 
 impl SerializedSct {
@@ -110,11 +107,9 @@ impl SerializedSct {
     /// Returns [tls_codec Error][tls_codec::Error] if the given [SignedCertificateTimestamp]
     /// can't be serialized.
     pub fn new(timestamp: SignedCertificateTimestamp) -> Result<Self, tls_codec::Error> {
-        let mut buffer: Vec<u8> = Vec::with_capacity(timestamp.tls_serialized_len());
-        let bytes_written = timestamp.tls_serialize(&mut buffer)?;
-        assert_eq!(bytes_written, timestamp.tls_serialized_len());
+        let buffer = timestamp.tls_serialize()?;
         Ok(SerializedSct {
-            data: TlsVecU16::from_slice(&buffer),
+            data: TlsByteVecU16::from_slice(&buffer),
         })
     }
 
@@ -135,7 +130,7 @@ impl SerializedSct {
 /// A signed certificate timestamp (SCT) as defined in [RFC 6962 section 3.2].
 ///
 /// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
-#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct SignedCertificateTimestamp {
     /// The version of the protocol to which the SCT conforms.
     /// Currently, it is always v1.
@@ -148,7 +143,7 @@ pub struct SignedCertificateTimestamp {
     pub timestamp: u64,
     /// The future extensions to protocol version v1.
     /// Currently, no extensions are specified.
-    pub extensions: TlsVecU16<u8>,
+    pub extensions: TlsByteVecU16,
     /// A digital signature over many fields including
     /// version, timestamp, extensions and others. See [RFC 6962 section 3.2]
     /// for a complete list.
@@ -170,7 +165,7 @@ impl SignedCertificateTimestamp {
 /// as defined in [RFC 6962 section 3.2]. Currently, it is always v1.
 ///
 /// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
-#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 #[repr(u8)]
 pub enum Version {
     /// Version 1.
@@ -182,7 +177,7 @@ pub enum Version {
 /// as defined in [RFC 6962 section 3.2].
 ///
 /// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
-#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct LogId {
     /// Hash of the log's public key.
     pub key_id: [u8; 32],
@@ -191,20 +186,20 @@ pub struct LogId {
 /// Digital signature as defined in [RFC 5246 section 4.7].
 ///
 /// [RFC 5246 section 4.7]: https://datatracker.ietf.org/doc/html/rfc5246#section-4.7
-#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct DigitallySigned {
     /// [SignatureAndHashAlgorithm] as defined in [RFC 5246 section 7.4.1.4.1].
     ///
     /// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
     pub algorithm: SignatureAndHashAlgorithm,
     /// Digital signature over some contents using the [SignatureAndHashAlgorithm].
-    pub signature: TlsVecU16<u8>,
+    pub signature: TlsByteVecU16,
 }
 
 /// A combination of signature and hashing algorithms as defined in [RFC 5246 section 7.4.1.4.1].
 ///
 /// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
-#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct SignatureAndHashAlgorithm {
     /// The hashing algorithm.
     pub hash: HashAlgorithm,
@@ -215,7 +210,7 @@ pub struct SignatureAndHashAlgorithm {
 /// Signature algorithm as defined in [RFC 5246 section 7.4.1.4.1].
 ///
 /// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
-#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 #[repr(u8)]
 pub enum SignatureAlgorithm {
     /// Anonymous signature algorithm.
@@ -235,7 +230,7 @@ pub enum SignatureAlgorithm {
 /// Hashing algorithm as defined in [RFC 5246 section 7.4.1.4.1].
 ///
 /// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
-#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 #[repr(u8)]
 pub enum HashAlgorithm {
     /// No algorithm.
@@ -258,9 +253,8 @@ pub enum HashAlgorithm {
 
 #[cfg(test)]
 mod tests {
-    use alloc::vec::Vec;
     use der::{asn1::OctetString, Decode, Encode};
-    use tls_codec::{DeserializeBytes, Serialize, TlsVecU16};
+    use tls_codec::{DeserializeBytes, SerializeBytes, TlsByteVecU16};
 
     use crate::ext::pkix::sct::LogId;
 
@@ -279,11 +273,9 @@ mod tests {
         actual_result
     }
 
-    fn run_serialization_test<T: Serialize>(value: T, expected_bytes: &[u8]) {
-        let mut buffer = Vec::with_capacity(value.tls_serialized_len());
-        let result = value.tls_serialize(&mut buffer);
-        assert_eq!(expected_bytes, &buffer);
-        assert_eq!(result, Ok(expected_bytes.len()));
+    fn run_serialization_test<T: SerializeBytes>(value: T, expected_bytes: &[u8]) {
+        let result = value.tls_serialize().unwrap();
+        assert_eq!(expected_bytes, &result);
     }
 
     #[test]
@@ -461,7 +453,7 @@ mod tests {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
                     },
-                    signature: TlsVecU16::<u8>::from_slice(&[2, 1, 0]),
+                    signature: TlsByteVecU16::from_slice(&[2, 1, 0]),
                 },
                 [2, 1, 0, 1, 9].as_slice(),
             )),
@@ -475,7 +467,7 @@ mod tests {
                         hash: HashAlgorithm::Sha1,
                         signature: SignatureAlgorithm::Rsa,
                     },
-                    signature: TlsVecU16::<u8>::from_slice(&[9]),
+                    signature: TlsByteVecU16::from_slice(&[9]),
                 },
                 [].as_slice(),
             )),
@@ -490,7 +482,7 @@ mod tests {
                     hash: HashAlgorithm::Sha256,
                     signature: SignatureAlgorithm::Ecdsa,
                 },
-                signature: TlsVecU16::<u8>::from_slice(&[0, 1, 2]),
+                signature: TlsByteVecU16::from_slice(&[0, 1, 2]),
             },
             &[4, 3, 0, 3, 0, 1, 2],
         );
@@ -500,7 +492,7 @@ mod tests {
                     hash: HashAlgorithm::Sha1,
                     signature: SignatureAlgorithm::Rsa,
                 },
-                signature: TlsVecU16::<u8>::from_slice(&[0, 1, 2]),
+                signature: TlsByteVecU16::from_slice(&[0, 1, 2]),
             },
             &[2, 1, 0, 3, 0, 1, 2],
         );
@@ -554,13 +546,13 @@ mod tests {
                         key_id: TLS_SCT_EXAMPLE[1..33].try_into().unwrap(),
                     },
                     timestamp: u64::from_be_bytes(TLS_SCT_EXAMPLE[33..41].try_into().unwrap()),
-                    extensions: TlsVecU16::from_slice(&[]),
+                    extensions: TlsByteVecU16::from_slice(&[]),
                     signature: DigitallySigned {
                         algorithm: SignatureAndHashAlgorithm {
                             hash: HashAlgorithm::Sha256,
                             signature: SignatureAlgorithm::Ecdsa,
                         },
-                        signature: TlsVecU16::from_slice(&TLS_SCT_EXAMPLE[47..]),
+                        signature: TlsByteVecU16::from_slice(&TLS_SCT_EXAMPLE[47..]),
                     },
                 },
                 &[],
@@ -577,13 +569,13 @@ mod tests {
                     key_id: TLS_SCT_EXAMPLE[1..33].try_into().unwrap(),
                 },
                 timestamp: u64::from_be_bytes(TLS_SCT_EXAMPLE[33..41].try_into().unwrap()),
-                extensions: TlsVecU16::from_slice(&[]),
+                extensions: TlsByteVecU16::from_slice(&[]),
                 signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
                     },
-                    signature: TlsVecU16::from_slice(&TLS_SCT_EXAMPLE[47..]),
+                    signature: TlsByteVecU16::from_slice(&TLS_SCT_EXAMPLE[47..]),
                 },
             },
             &TLS_SCT_EXAMPLE,
@@ -631,13 +623,13 @@ mod tests {
                     key_id: SCT_EXAMPLE[8..40].try_into().unwrap(),
                 },
                 timestamp: u64::from_be_bytes(SCT_EXAMPLE[40..48].try_into().unwrap()),
-                extensions: TlsVecU16::from_slice(&[]),
+                extensions: TlsByteVecU16::from_slice(&[]),
                 signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
                     },
-                    signature: TlsVecU16::from_slice(&SCT_EXAMPLE[54..126]),
+                    signature: TlsByteVecU16::from_slice(&SCT_EXAMPLE[54..126]),
                 },
             })
         );
@@ -649,13 +641,13 @@ mod tests {
                     key_id: SCT_EXAMPLE[129..161].try_into().unwrap(),
                 },
                 timestamp: u64::from_be_bytes(SCT_EXAMPLE[161..169].try_into().unwrap()),
-                extensions: TlsVecU16::from_slice(&[]),
+                extensions: TlsByteVecU16::from_slice(&[]),
                 signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
                         hash: HashAlgorithm::Sha256,
                         signature: SignatureAlgorithm::Ecdsa,
                     },
-                    signature: TlsVecU16::from_slice(&SCT_EXAMPLE[175..]),
+                    signature: TlsByteVecU16::from_slice(&SCT_EXAMPLE[175..]),
                 },
             })
         );
@@ -669,13 +661,13 @@ mod tests {
                 key_id: SCT_EXAMPLE[8..40].try_into().unwrap(),
             },
             timestamp: u64::from_be_bytes(SCT_EXAMPLE[40..48].try_into().unwrap()),
-            extensions: TlsVecU16::from_slice(&[]),
+            extensions: TlsByteVecU16::from_slice(&[]),
             signature: DigitallySigned {
                 algorithm: SignatureAndHashAlgorithm {
                     hash: HashAlgorithm::Sha256,
                     signature: SignatureAlgorithm::Ecdsa,
                 },
-                signature: TlsVecU16::from_slice(&SCT_EXAMPLE[54..126]),
+                signature: TlsByteVecU16::from_slice(&SCT_EXAMPLE[54..126]),
             },
         })
         .unwrap();
@@ -685,13 +677,13 @@ mod tests {
                 key_id: SCT_EXAMPLE[129..161].try_into().unwrap(),
             },
             timestamp: u64::from_be_bytes(SCT_EXAMPLE[161..169].try_into().unwrap()),
-            extensions: TlsVecU16::from_slice(&[]),
+            extensions: TlsByteVecU16::from_slice(&[]),
             signature: DigitallySigned {
                 algorithm: SignatureAndHashAlgorithm {
                     hash: HashAlgorithm::Sha256,
                     signature: SignatureAlgorithm::Ecdsa,
                 },
-                signature: TlsVecU16::from_slice(&SCT_EXAMPLE[175..]),
+                signature: TlsByteVecU16::from_slice(&SCT_EXAMPLE[175..]),
             },
         })
         .unwrap();
