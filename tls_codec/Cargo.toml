@@ -31,7 +31,7 @@ arbitrary = [ "std", "dep:arbitrary" ]
 derive = [ "std", "tls_codec_derive" ]
 serde = [ "std", "dep:serde" ]
 mls = [] # In MLS variable length vectors are limited compared to QUIC.
-std = []
+std = [ "tls_codec_derive?/std" ]
 
 [[bench]]
 name = "tls_vec"
