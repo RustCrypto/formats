@@ -1,4 +1,4 @@
-use tls_codec::SerializeBytes;
+use tls_codec::{SerializeBytes, TlsByteVecU16, TlsByteVecU32, TlsByteVecU8};
 
 #[test]
 fn serialize_primitives() {
@@ -39,4 +39,31 @@ fn serialize_var_len_boundaries() {
     let v = vec![99u8; 16384];
     let serialized = v.tls_serialize().expect("Error encoding vector");
     assert_eq!(&serialized[0..5], &[0x80, 0, 0x40, 0, 99]);
+}
+
+#[test]
+fn serialize_tls_byte_vec_u8() {
+    let byte_vec = TlsByteVecU8::from_slice(&[1, 2, 3]);
+    let actual_result = byte_vec
+        .tls_serialize()
+        .expect("Error encoding byte vector");
+    assert_eq!(actual_result, vec![3, 1, 2, 3]);
+}
+
+#[test]
+fn serialize_tls_byte_vec_u16() {
+    let byte_vec = TlsByteVecU16::from_slice(&[1, 2, 3]);
+    let actual_result = byte_vec
+        .tls_serialize()
+        .expect("Error encoding byte vector");
+    assert_eq!(actual_result, vec![0, 3, 1, 2, 3]);
+}
+
+#[test]
+fn serialize_tls_byte_vec_u32() {
+    let byte_vec = TlsByteVecU32::from_slice(&[1, 2, 3]);
+    let actual_result = byte_vec
+        .tls_serialize()
+        .expect("Error encoding byte vector");
+    assert_eq!(actual_result, vec![0, 0, 0, 3, 1, 2, 3]);
 }

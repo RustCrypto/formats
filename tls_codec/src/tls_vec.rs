@@ -13,7 +13,7 @@ use serde::ser::SerializeStruct;
 use std::io::{Read, Write};
 use zeroize::Zeroize;
 
-use crate::{Deserialize, DeserializeBytes, Error, Serialize, Size};
+use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size};
 
 macro_rules! impl_size {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
@@ -78,6 +78,46 @@ macro_rules! impl_byte_deserialize {
             let result = Self { vec: vec.to_vec() };
             Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
         }
+
+        fn serialize_bytes_bytes(&$self) -> Result<Vec<u8>, Error> {
+            let tls_serialized_len = $self.tls_serialized_len();
+            let byte_length = tls_serialized_len - $len_len;
+
+            let ll = $len_len;
+            std::println!("serialize_bytes_bytes: tls_serialized_len: {tls_serialized_len}, $len_len: {ll}, byte_length: {byte_length}");
+
+            let max_len = <$size>::MAX as usize;
+            debug_assert!(
+                byte_length <= max_len,
+                "Vector length can't be encoded in the vector length a {} >= {}",
+                byte_length,
+                max_len
+            );
+            if byte_length > max_len {
+                return Err(Error::InvalidVectorLength);
+            }
+
+            let mut vec = Vec::<u8>::with_capacity(tls_serialized_len);
+            let mut written =  <$size as Serialize>::tls_serialize(&(byte_length as $size), &mut vec)?;
+
+            let bytes = $self.as_slice();
+            vec.extend_from_slice(bytes);
+            written += bytes.len();
+
+            debug_assert_eq!(
+                written, tls_serialized_len,
+                "{} bytes should have been serialized but {} were written",
+                tls_serialized_len, written
+            );
+            if written != tls_serialized_len {
+                return Err(Error::EncodingError(format!(
+                    "{} bytes should have been serialized but {} were written",
+                    tls_serialized_len, written
+                )));
+            }
+
+            Ok(vec)
+        }
     };
 }
 
@@ -130,6 +170,9 @@ macro_rules! impl_serialize {
             let tls_serialized_len = $self.tls_serialized_len();
             let byte_length = tls_serialized_len - $len_len;
 
+            let ll = $len_len;
+            std::println!("serialize: tls_serialized_len: {tls_serialized_len}, $len_len: {ll}, byte_length: {byte_length}");
+
             let max_len = <$size>::MAX as usize;
             debug_assert!(
                 byte_length <= max_len,
@@ -141,7 +184,7 @@ macro_rules! impl_serialize {
                 return Err(Error::InvalidVectorLength);
             }
 
-            let mut written = (byte_length as $size).tls_serialize(writer)?;
+            let mut written =  <$size as Serialize>::tls_serialize(&(byte_length as $size), writer)?;
 
             // Now serialize the elements
             for e in $self.as_slice().iter() {
@@ -174,6 +217,9 @@ macro_rules! impl_byte_serialize {
             let tls_serialized_len = $self.tls_serialized_len();
             let byte_length = tls_serialized_len - $len_len;
 
+            let ll = $len_len;
+            std::println!("serialize_bytes: tls_serialized_len: {tls_serialized_len}, $len_len: {ll}, byte_length: {byte_length}");
+
             let max_len = <$size>::MAX as usize;
             debug_assert!(
                 byte_length <= max_len,
@@ -185,7 +231,7 @@ macro_rules! impl_byte_serialize {
                 return Err(Error::InvalidVectorLength);
             }
 
-            let mut written = (byte_length as $size).tls_serialize(writer)?;
+            let mut written = <$size as Serialize>::tls_serialize(&(byte_length as $size), writer)?;
 
             // Now serialize the elements
             written += writer.write($self.as_slice())?;
@@ -291,6 +337,12 @@ macro_rules! impl_tls_vec_codec_bytes {
         impl DeserializeBytes for $name {
             fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes_bytes(bytes)
+            }
+        }
+
+        impl SerializeBytes for $name {
+            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+                self.serialize_bytes_bytes()
             }
         }
     };
