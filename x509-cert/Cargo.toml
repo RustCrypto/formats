@@ -26,7 +26,7 @@ signature = { version = "2.1.0", features = ["rand_core"], optional = true }
 # TODO: Use next version of tls_codec when a verion containing the following PR is published:
 # https://github.com/RustCrypto/formats/pull/1132
 # https://github.com/RustCrypto/formats/pull/1133
-tls_codec = { path = "../tls_codec", features = ["derive"], optional = true }
+tls_codec = { path = "../tls_codec", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
 hex-literal = "0.4"
