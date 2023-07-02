@@ -95,7 +95,9 @@ macro_rules! impl_byte_deserialize {
             }
 
             let mut vec = Vec::<u8>::with_capacity(tls_serialized_len);
-            let mut written =  <$size as Serialize>::tls_serialize(&(byte_length as $size), &mut vec)?;
+            let length_vec =  <$size as SerializeBytes>::tls_serialize(&(byte_length as $size))?;
+            let mut written = length_vec.len();
+            vec.extend_from_slice(&length_vec);
 
             let bytes = $self.as_slice();
             vec.extend_from_slice(bytes);
