@@ -12,10 +12,6 @@ use tls_codec::{
     TlsSize,
 };
 
-// TODO: Review what should be pub
-// TODO: Update docs
-// TODO: Review naming
-
 /// A signed certificate timestamp list (SCT list) as defined in [RFC 6962 Section 3.3].
 ///
 /// ```text
