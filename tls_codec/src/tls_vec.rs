@@ -74,7 +74,9 @@ macro_rules! impl_byte_deserialize {
                     u16::MAX
                 )));
             }
-            let vec = bytes.get(..len).ok_or(Error::EndOfStream)?;
+            let vec = bytes
+                .get($len_len..len + $len_len)
+                .ok_or(Error::EndOfStream)?;
             let result = Self { vec: vec.to_vec() };
             Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
         }
