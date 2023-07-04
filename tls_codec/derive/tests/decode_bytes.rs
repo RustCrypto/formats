@@ -99,3 +99,27 @@ fn deserialize_tls_vec() {
     assert_eq!(long_vector.len(), deserialized_long_vec_bytes.len());
     assert_eq!(long_vector, deserialized_long_vec_bytes);
 }
+
+#[test]
+fn byte_arrays() {
+    let x = [0u8, 1, 2, 3];
+    let serialized = [0, 1, 2, 3];
+    assert_eq!(x.to_vec(), serialized);
+
+    let (deserialized, rest) =
+        <[u8; 4] as tls_codec::DeserializeBytes>::tls_deserialize(&mut serialized.as_slice())
+            .unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+
+    let x = [0u8, 1, 2, 3, 7, 6, 5, 4];
+    let w = ArrayWrap { data: x };
+    let serialized = [0, 1, 2, 3, 7, 6, 5, 4];
+    assert_eq!(x.to_vec(), serialized);
+
+    let (deserialized, rest) =
+        <ArrayWrap as tls_codec::DeserializeBytes>::tls_deserialize(&mut serialized.as_slice())
+            .unwrap();
+    assert_eq!(deserialized, w);
+    assert_eq!(rest, []);
+}
