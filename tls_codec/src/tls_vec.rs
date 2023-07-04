@@ -162,8 +162,8 @@ macro_rules! impl_byte_serialize {
     };
 }
 macro_rules! impl_serialize_common {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$attr:meta])?) => {
-        $(#[$attr])?
+    ($self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$std_enabled:meta])?) => {
+        $(#[$std_enabled])?
         fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
             let tls_serialized_len = $self.tls_serialized_len();
             let byte_length = tls_serialized_len - $len_len;
@@ -181,7 +181,7 @@ macro_rules! impl_serialize_common {
             Ok((tls_serialized_len, byte_length))
         }
 
-        $(#[$attr])?
+        $(#[$std_enabled])?
         fn assert_written_bytes(&$self, tls_serialized_len: usize, written: usize) -> Result<(), Error> {
             debug_assert_eq!(
                 written, tls_serialized_len,
