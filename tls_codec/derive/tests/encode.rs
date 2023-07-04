@@ -1,7 +1,14 @@
-use tls_codec::{SecretTlsVecU16, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32};
-use tls_codec_derive::{TlsSerialize, TlsSize};
+use tls_codec::{SecretTlsVecU16, Serialize, TlsSliceU16, TlsVecU16, TlsVecU32};
+use tls_codec_derive::TlsSize;
 
-#[derive(TlsSerialize, TlsSize, Debug)]
+#[cfg(feature = "std")]
+use tls_codec::Size;
+
+#[cfg(feature = "std")]
+use tls_codec_derive::TlsSerialize;
+
+#[derive(TlsSize, Debug)]
+#[cfg_attr(feature = "std", derive(TlsSerialize))]
 #[repr(u16)]
 pub enum ExtensionType {
     Reserved = 0,
@@ -13,32 +20,38 @@ pub enum ExtensionType {
     SomethingElse = 500,
 }
 
-#[derive(TlsSerialize, TlsSize, Debug)]
+#[derive(TlsSize, Debug)]
+#[cfg_attr(feature = "std", derive(TlsSerialize))]
 pub struct ExtensionStruct {
     extension_type: ExtensionType,
     extension_data: TlsVecU32<u8>,
     additional_data: Option<SecretTlsVecU16<u8>>,
 }
 
-#[derive(TlsSerialize, TlsSize, Debug)]
+#[derive(TlsSize, Debug)]
+#[cfg_attr(feature = "std", derive(TlsSerialize))]
 pub struct TupleStruct(ExtensionStruct, u8);
 
-#[derive(TlsSerialize, TlsSize, Debug)]
+#[derive(TlsSize, Debug)]
+#[cfg_attr(feature = "std", derive(TlsSerialize))]
 pub struct StructWithLifetime<'a> {
     value: &'a TlsVecU16<u8>,
 }
 
-#[derive(TlsSerialize, TlsSize, Debug, Clone)]
+#[derive(TlsSize, Debug, Clone)]
+#[cfg_attr(feature = "std", derive(TlsSerialize))]
 struct SomeValue {
     val: TlsVecU16<u8>,
 }
 
-#[derive(TlsSerialize, TlsSize)]
+#[derive(TlsSize)]
+#[cfg_attr(feature = "std", derive(TlsSerialize))]
 pub struct StructWithDoubleLifetime<'a, 'b> {
     value: &'a TlsSliceU16<'a, &'b SomeValue>,
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn lifetime_struct() {
     let value: TlsVecU16<u8> = vec![7u8; 33].into();
     let s = StructWithLifetime { value: &value };
@@ -60,6 +73,7 @@ fn lifetime_struct() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn simple_enum() {
     let serialized = ExtensionType::KeyId.tls_serialize_detached().unwrap();
     assert_eq!(vec![0, 3], serialized);
@@ -70,6 +84,7 @@ fn simple_enum() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn simple_struct() {
     let extension = ExtensionStruct {
         extension_type: ExtensionType::KeyId,
@@ -81,6 +96,7 @@ fn simple_struct() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn tuple_struct() {
     let ext = ExtensionStruct {
         extension_type: ExtensionType::KeyId,
@@ -100,6 +116,7 @@ fn byte_arrays() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn lifetimes() {
     let x = vec![1, 2, 3, 4].into();
     let s = StructWithLifetime { value: &x };
@@ -113,7 +130,8 @@ fn lifetimes() {
     assert_eq!(vec![0, 4, 1, 2, 3, 4], serialized);
 }
 
-#[derive(TlsSerialize, TlsSize)]
+#[derive(TlsSize)]
+#[cfg_attr(feature = "std", derive(TlsSerialize))]
 struct Custom {
     #[tls_codec(with = "custom")]
     values: Vec<u8>,
@@ -121,19 +139,26 @@ struct Custom {
 }
 
 mod custom {
+    use tls_codec::{Size, TlsByteSliceU32};
+
+    #[cfg(feature = "std")]
     use std::io::Write;
-    use tls_codec::{Serialize, Size, TlsByteSliceU32};
+
+    #[cfg(feature = "std")]
+    use tls_codec::Serialize;
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         TlsByteSliceU32(v).tls_serialized_len()
     }
 
+    #[cfg(feature = "std")]
     pub fn tls_serialize<W: Write>(v: &[u8], writer: &mut W) -> Result<usize, tls_codec::Error> {
         TlsByteSliceU32(v).tls_serialize(writer)
     }
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn custom() {
     let x = Custom {
         values: vec![0, 1, 2],
@@ -143,7 +168,8 @@ fn custom() {
     assert_eq!(vec![0, 0, 0, 3, 0, 1, 2, 3], serialized);
 }
 
-#[derive(TlsSerialize, TlsSize)]
+#[derive(TlsSize)]
+#[cfg_attr(feature = "std", derive(TlsSerialize))]
 struct OptionalMemberRef<'a> {
     optional_member: Option<&'a u32>,
     ref_optional_member: &'a Option<&'a u32>,
@@ -151,6 +177,7 @@ struct OptionalMemberRef<'a> {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn optional_member() {
     let m = 6;
     let v = vec![1, 2, 3];
@@ -163,6 +190,7 @@ fn optional_member() {
     assert_eq!(vec![1, 0, 0, 0, 6, 0, 0, 6, 0, 1, 0, 2, 0, 3], serialized);
 }
 
+#[cfg(feature = "std")]
 #[derive(TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithTupleVariant {
@@ -170,12 +198,14 @@ enum EnumWithTupleVariant {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn enum_with_tuple_variant() {
     let x = EnumWithTupleVariant::A(3, 4);
     let serialized = x.tls_serialize_detached().unwrap();
     assert_eq!(vec![0, 3, 0, 0, 0, 4], serialized);
 }
 
+#[cfg(feature = "std")]
 #[derive(TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithStructVariant {
@@ -183,12 +213,14 @@ enum EnumWithStructVariant {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn enum_with_struct_variant() {
     let x = EnumWithStructVariant::A { foo: 3, bar: 4 };
     let serialized = x.tls_serialize_detached().unwrap();
     assert_eq!(vec![0, 3, 0, 0, 0, 4], serialized);
 }
 
+#[cfg(feature = "std")]
 #[derive(TlsSerialize, TlsSize)]
 #[repr(u16)]
 enum EnumWithDataAndDiscriminant {
@@ -198,6 +230,7 @@ enum EnumWithDataAndDiscriminant {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn enum_with_data_and_discriminant() {
     let x = EnumWithDataAndDiscriminant::A(4);
     let serialized = x.tls_serialize_detached().unwrap();
@@ -205,12 +238,14 @@ fn enum_with_data_and_discriminant() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn discriminant_is_incremented_implicitly() {
     let x = EnumWithDataAndDiscriminant::B;
     let serialized = x.tls_serialize_detached().unwrap();
     assert_eq!(vec![0, 4], serialized);
 }
 
+#[cfg(feature = "std")]
 mod discriminant {
     pub mod test {
         pub mod constant {
@@ -224,6 +259,7 @@ mod discriminant {
     }
 }
 
+#[cfg(feature = "std")]
 #[derive(Debug, PartialEq, TlsSerialize, TlsSize)]
 #[repr(u16)]
 enum EnumWithDataAndConstDiscriminant {
@@ -236,6 +272,7 @@ enum EnumWithDataAndConstDiscriminant {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn enum_with_data_and_const_discriminant() {
     let serialized = EnumWithDataAndConstDiscriminant::A(4)
         .tls_serialize_detached()
@@ -251,6 +288,7 @@ fn enum_with_data_and_const_discriminant() {
     assert_eq!(vec![0, 12], serialized);
 }
 
+#[cfg(feature = "std")]
 #[derive(TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithCustomSerializedField {
@@ -258,6 +296,7 @@ enum EnumWithCustomSerializedField {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn enum_with_custom_serialized_field() {
     let x = EnumWithCustomSerializedField::A(vec![1, 2, 3]);
     let serialized = x.tls_serialize_detached().unwrap();
@@ -265,6 +304,7 @@ fn enum_with_custom_serialized_field() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn that_skip_attribute_on_struct_works() {
     fn test<T>(test: T, expected: &[u8])
     where
@@ -277,7 +317,8 @@ fn that_skip_attribute_on_struct_works() {
         assert_eq!(test.tls_serialize_detached().unwrap(), expected);
     }
 
-    #[derive(Debug, PartialEq, TlsSerialize, TlsSize)]
+    #[derive(Debug, PartialEq, TlsSize)]
+    #[cfg_attr(feature = "std", derive(TlsSerialize))]
     struct StructWithSkip1 {
         #[tls_codec(skip)]
         a: u8,
@@ -285,7 +326,8 @@ fn that_skip_attribute_on_struct_works() {
         c: u8,
     }
 
-    #[derive(Debug, PartialEq, TlsSerialize, TlsSize)]
+    #[derive(Debug, PartialEq, TlsSize)]
+    #[cfg_attr(feature = "std", derive(TlsSerialize))]
     struct StructWithSkip2 {
         a: u8,
         #[tls_codec(skip)]
@@ -293,7 +335,8 @@ fn that_skip_attribute_on_struct_works() {
         c: u8,
     }
 
-    #[derive(Debug, PartialEq, TlsSerialize, TlsSize)]
+    #[derive(Debug, PartialEq, TlsSize)]
+    #[cfg_attr(feature = "std", derive(TlsSerialize))]
     struct StructWithSkip3 {
         a: u8,
         b: u8,
