@@ -1,14 +1,11 @@
-use tls_codec::{TlsVecU16, TlsVecU32, TlsVecU8, VLBytes};
-use tls_codec_derive::{TlsDeserializeBytes, TlsSize};
+use tls_codec::{
+    Deserialize, Error, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8, VLBytes,
+};
+use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize};
 
-#[cfg(feature = "std")]
-use tls_codec::{Deserialize, Error, Serialize, Size, TlsSliceU16};
-
-#[cfg(feature = "std")]
-use tls_codec_derive::{TlsDeserialize, TlsSerialize};
-
-#[derive(TlsDeserializeBytes, Debug, PartialEq, Clone, Copy, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(
+    TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize,
+)]
 #[repr(u16)]
 pub enum ExtensionType {
     Reserved = 0,
@@ -26,35 +23,31 @@ impl Default for ExtensionType {
     }
 }
 
-#[derive(TlsDeserializeBytes, Debug, PartialEq, TlsSize, Clone, Default)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(
+    TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, TlsSerialize, TlsSize, Clone, Default,
+)]
 pub struct ExtensionStruct {
     extension_type: ExtensionType,
     extension_data: TlsVecU32<u8>,
 }
 
-#[derive(TlsDeserializeBytes, Debug, PartialEq, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, TlsSize, TlsSerialize)]
 pub struct ExtensionTypeVec {
     data: TlsVecU8<ExtensionType>,
 }
 
-#[derive(TlsDeserializeBytes, Debug, PartialEq, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, TlsSize, TlsSerialize)]
 pub struct ArrayWrap {
     data: [u8; 8],
 }
 
-#[derive(TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
 pub struct TupleStruct1(ExtensionStruct);
 
-#[derive(TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
 pub struct TupleStruct(ExtensionStruct, u8);
 
 #[test]
-#[cfg(feature = "std")]
 fn tuple_struct() {
     let ext = ExtensionStruct {
         extension_type: ExtensionType::KeyId,
@@ -96,7 +89,6 @@ fn tuple_struct() {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn simple_enum() {
     let b = &[0u8, 5] as &[u8];
     let mut b_reader = b;
@@ -124,7 +116,6 @@ fn simple_enum() {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn deserialize_tls_vec() {
     let long_vector = vec![ExtensionStruct::default(); 3000];
     let serialized_long_vec = TlsSliceU16(&long_vector).tls_serialize_detached().unwrap();
@@ -147,7 +138,6 @@ fn deserialize_tls_vec() {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn byte_arrays() {
     let x = [0u8, 1, 2, 3];
     let serialized = x.tls_serialize_detached().unwrap();
@@ -166,7 +156,6 @@ fn byte_arrays() {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn simple_struct() {
     let mut b = &[0u8, 3, 0, 0, 0, 5, 1, 2, 3, 4, 5] as &[u8];
     let extension = ExtensionStruct {
@@ -189,60 +178,50 @@ fn simple_struct() {
     assert_eq!(extension, deserialized);
 }
 
-#[derive(TlsDeserializeBytes, Clone, TlsSize, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsDeserialize))]
+#[derive(TlsDeserialize, TlsDeserializeBytes, Clone, TlsSize, PartialEq)]
 struct DeserializeOnlyStruct(u16);
 
 // KAT from MLS
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 #[repr(u8)]
 enum ProtocolVersion {
     Reserved = 0,
     Mls10 = 1,
 }
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 struct CipherSuite(u16);
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 struct HPKEPublicKey(TlsVecU16<u8>);
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 struct CredentialType(u16);
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 struct SignatureScheme(u16);
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 struct BasicCredential {
     identity: TlsVecU16<u8>,
     signature_scheme: SignatureScheme,
     signature_key: TlsVecU16<u8>,
 }
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 struct Credential {
     credential_type: CredentialType,
     credential: BasicCredential,
 }
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 struct Extension {
     extension_type: ExtensionType,
     extension_data: TlsVecU32<u8>,
 }
 
-#[derive(TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(TlsSerialize, TlsDeserialize, TlsDeserializeBytes, TlsSize, Clone, PartialEq)]
 struct KeyPackage {
     version: ProtocolVersion,
     cipher_suite: CipherSuite,
@@ -253,7 +232,6 @@ struct KeyPackage {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn kat_mls_key_package() {
     let key_package_bytes = &[
         0x01u8, 0x00, 0x01, 0x00, 0x20, 0xF2, 0xBC, 0xD8, 0x95, 0x19, 0xDD, 0x1D, 0x06, 0x9F, 0x8B,
@@ -282,8 +260,7 @@ fn kat_mls_key_package() {
     );
 }
 
-#[derive(Debug, PartialEq, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
 struct Custom {
     #[tls_codec(with = "custom")]
     values: Vec<u8>,
@@ -291,30 +268,23 @@ struct Custom {
 }
 
 mod custom {
-    use tls_codec::{Size, TlsByteSliceU32};
-
-    #[cfg(feature = "std")]
     use std::io::{Read, Write};
-    #[cfg(feature = "std")]
-    use tls_codec::{Deserialize, Serialize, TlsByteVecU32};
+    use tls_codec::{Deserialize, Serialize, Size, TlsByteSliceU32, TlsByteVecU32};
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         TlsByteSliceU32(v).tls_serialized_len()
     }
 
-    #[cfg(feature = "std")]
     pub fn tls_serialize<W: Write>(v: &[u8], writer: &mut W) -> Result<usize, tls_codec::Error> {
         TlsByteSliceU32(v).tls_serialize(writer)
     }
 
-    #[cfg(feature = "std")]
     pub fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Vec<u8>, tls_codec::Error> {
         Ok(TlsByteVecU32::tls_deserialize(bytes)?.into_vec())
     }
 }
 
-#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize))]
+#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 struct CustomBytes {
     #[tls_codec(with = "custom_bytes")]
     values: Vec<u8>,
@@ -322,18 +292,13 @@ struct CustomBytes {
 }
 
 mod custom_bytes {
-    use tls_codec::{DeserializeBytes, Size, TlsByteSliceU32, TlsByteVecU32};
-
-    #[cfg(feature = "std")]
     use std::io::Write;
-    #[cfg(feature = "std")]
-    use tls_codec::Serialize;
+    use tls_codec::{DeserializeBytes, Serialize, Size, TlsByteSliceU32, TlsByteVecU32};
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         TlsByteSliceU32(v).tls_serialized_len()
     }
 
-    #[cfg(feature = "std")]
     pub fn tls_serialize<W: Write>(v: &[u8], writer: &mut W) -> Result<usize, tls_codec::Error> {
         TlsByteSliceU32(v).tls_serialize(writer)
     }
@@ -342,11 +307,9 @@ mod custom_bytes {
         let (vec, remainder) = TlsByteVecU32::tls_deserialize(bytes)?;
         Ok((vec.into_vec(), remainder))
     }
-    // pub fn tls_deserialize(bytes: &mut R) -> Result<(Vec<u8>, &R), tls_codec::Error> {}
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn custom() {
     let x = Custom {
         values: vec![0, 1, 2],
@@ -357,15 +320,13 @@ fn custom() {
     assert_eq!(x, deserialized);
 }
 
-#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithTupleVariant {
     A(u8, u32),
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn enum_with_tuple_variant() {
     let x = EnumWithTupleVariant::A(3, 4);
     let serialized = x.tls_serialize_detached().unwrap();
@@ -373,15 +334,13 @@ fn enum_with_tuple_variant() {
     assert_eq!(deserialized, x);
 }
 
-#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithStructVariant {
     A { foo: u8, bar: u32 },
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn enum_with_struct_variant() {
     let x = EnumWithStructVariant::A { foo: 3, bar: 4 };
     let serialized = x.tls_serialize_detached().unwrap();
@@ -389,8 +348,7 @@ fn enum_with_struct_variant() {
     assert_eq!(deserialized, x);
 }
 
-#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u16)]
 enum EnumWithDataAndDiscriminant {
     #[tls_codec(discriminant = 3)]
@@ -399,7 +357,6 @@ enum EnumWithDataAndDiscriminant {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn enum_with_data_and_discriminant() {
     for x in [
         EnumWithDataAndDiscriminant::A(4),
@@ -425,8 +382,7 @@ mod discriminant {
     }
 }
 
-#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u16)]
 enum EnumWithDataAndConstDiscriminant {
     #[tls_codec(discriminant = "discriminant::test::constant::TEST_CONST")]
@@ -438,7 +394,6 @@ enum EnumWithDataAndConstDiscriminant {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn enum_with_data_and_const_discriminant() {
     for x in [
         EnumWithDataAndConstDiscriminant::A(4),
@@ -452,15 +407,13 @@ fn enum_with_data_and_const_discriminant() {
     }
 }
 
-#[cfg(feature = "std")]
-#[derive(Debug, PartialEq, TlsSize, TlsSerialize, TlsDeserialize)]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithCustomSerializedField {
     A(#[tls_codec(with = "custom")] Vec<u8>),
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn enum_with_custom_serialized_field() {
     let x = EnumWithCustomSerializedField::A(vec![1, 2, 3]);
     let serialized = x.tls_serialize_detached().unwrap();
@@ -468,28 +421,24 @@ fn enum_with_custom_serialized_field() {
     assert_eq!(deserialized, x);
 }
 
-#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize))]
+#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
 enum EnumWithCustomSerializedFieldBytes {
     A(#[tls_codec(with = "custom_bytes")] Vec<u8>),
 }
 
 // Variable length vectors
-#[derive(Debug, PartialEq, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
 struct MyContainer {
     value: Vec<u8>,
 }
 
-#[derive(Debug, PartialEq, TlsSize)]
-#[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
 struct MyByteContainer {
     value: VLBytes,
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn simple_variable_length_struct() {
     let val = MyContainer {
         value: vec![1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -507,7 +456,6 @@ fn simple_variable_length_struct() {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn that_skip_attribute_on_struct_works() {
     fn test<T>(test: &[u8], expected: T)
     where
@@ -521,8 +469,7 @@ fn that_skip_attribute_on_struct_works() {
         assert_eq!(expected, got);
     }
 
-    #[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSize)]
-    #[cfg_attr(feature = "std", derive(TlsDeserialize))]
+    #[derive(Debug, PartialEq, TlsDeserialize, TlsDeserializeBytes, TlsSize)]
     struct StructWithSkip1 {
         #[tls_codec(skip)]
         a: u8,
@@ -530,8 +477,7 @@ fn that_skip_attribute_on_struct_works() {
         c: u8,
     }
 
-    #[derive(Debug, PartialEq, TlsSize)]
-    #[cfg_attr(feature = "std", derive(TlsDeserialize))]
+    #[derive(Debug, PartialEq, TlsDeserialize, TlsSize)]
     struct StructWithSkip2 {
         a: u8,
         #[tls_codec(skip)]
@@ -539,8 +485,7 @@ fn that_skip_attribute_on_struct_works() {
         c: u8,
     }
 
-    #[derive(Debug, PartialEq, TlsSize)]
-    #[cfg_attr(feature = "std", derive(TlsDeserialize))]
+    #[derive(Debug, PartialEq, TlsDeserialize, TlsSize)]
     struct StructWithSkip3 {
         a: u8,
         b: u8,
@@ -554,10 +499,8 @@ fn that_skip_attribute_on_struct_works() {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn generic_struct() {
-    #[derive(PartialEq, Eq, Debug, TlsSize)]
-    #[cfg_attr(feature = "std", derive(TlsSerialize, TlsDeserialize))]
+    #[derive(PartialEq, Eq, Debug, TlsSize, TlsSerialize, TlsDeserialize)]
     struct GenericStruct<T>
     where
         T: Size + Serialize + Deserialize,
@@ -575,8 +518,7 @@ fn generic_struct() {
     assert_eq!(deserialized, insta);
 }
 
-#[cfg(feature = "std")]
-#[derive(TlsSerialize, TlsDeserialize, TlsSize)]
+#[derive(TlsDeserialize, TlsSerialize, TlsSize)]
 #[repr(u16)]
 enum TypeWithUnknowns {
     First = 1,
@@ -584,7 +526,6 @@ enum TypeWithUnknowns {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn type_with_unknowns() {
     let incoming = [0x00u8, 0x03]; // This must be parsed into TypeWithUnknowns into an unknown
     let deserialized = TypeWithUnknowns::tls_deserialize_exact(incoming);
