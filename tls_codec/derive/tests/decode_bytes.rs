@@ -48,12 +48,19 @@ fn tuple_struct() {
         extension_data: TlsVecU32::from_slice(&[1, 2, 3, 4, 5]),
     };
     let t1 = TupleStruct1(ext.clone());
-    let serialized_t1 = vec![0, 3, 0, 0, 0, 5, 1, 2, 3, 4, 5]; //t1.tls_serialize_detached().unwrap();
+    let serialized_t1 = vec![0, 3, 0, 0, 0, 5, 1, 2, 3, 4, 5];
     println!("{:?}", serialized_t1);
     let (deserialized_bytes_t1, _remainder) =
         <TupleStruct1 as tls_codec::DeserializeBytes>::tls_deserialize(serialized_t1.as_slice())
             .unwrap();
     assert_eq!(t1, deserialized_bytes_t1);
+
+    let t2 = TupleStruct(ext, 5);
+    let serialized_t2 = vec![0, 3, 0, 0, 0, 5, 1, 2, 3, 4, 5, 5];
+    let (deserialized_bytes_t2, _remainder) =
+        <TupleStruct as tls_codec::DeserializeBytes>::tls_deserialize(serialized_t2.as_slice())
+            .unwrap();
+    assert_eq!(t2, deserialized_bytes_t2);
 }
 
 #[test]
