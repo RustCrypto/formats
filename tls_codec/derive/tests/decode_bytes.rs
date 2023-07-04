@@ -1,7 +1,7 @@
-use tls_codec::{TlsVecU16, TlsVecU32, TlsVecU8};
-use tls_codec_derive::{TlsDeserializeBytes, TlsSize};
+use tls_codec::{DeserializeBytes, SerializeBytes, Size};
+use tls_codec_derive::{TlsDeserializeBytes, TlsSerializeBytes, TlsSize};
 
-#[derive(TlsDeserializeBytes, Debug, PartialEq, Clone, Copy, TlsSize)]
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, PartialEq, Debug)]
 #[repr(u16)]
 pub enum ExtensionType {
     Reserved = 0,
@@ -13,113 +13,310 @@ pub enum ExtensionType {
     SomethingElse = 500,
 }
 
-impl Default for ExtensionType {
-    fn default() -> Self {
-        Self::Reserved
-    }
-}
-
-#[derive(TlsDeserializeBytes, Debug, PartialEq, TlsSize, Clone, Default)]
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
 pub struct ExtensionStruct {
     extension_type: ExtensionType,
-    extension_data: TlsVecU32<u8>,
+    extension_data: Vec<u8>,
+    additional_data: Option<Vec<u8>>,
 }
 
-#[derive(TlsDeserializeBytes, Debug, PartialEq, TlsSize)]
-pub struct ExtensionTypeVec {
-    data: TlsVecU8<ExtensionType>,
-}
-
-#[derive(TlsDeserializeBytes, Debug, PartialEq, TlsSize)]
-pub struct ArrayWrap {
-    data: [u8; 8],
-}
-
-#[derive(TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
-pub struct TupleStruct1(ExtensionStruct);
-
-#[derive(TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
 pub struct TupleStruct(ExtensionStruct, u8);
+
+#[derive(TlsSerializeBytes, TlsSize, Debug, Clone)]
+struct SomeValue {
+    val: Vec<u8>,
+}
+
+#[test]
+fn simple_enum() {
+    let serialized = ExtensionType::KeyId.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <ExtensionType as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, ExtensionType::KeyId);
+    assert_eq!(rest, []);
+    let serialized = ExtensionType::SomethingElse.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <ExtensionType as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, ExtensionType::SomethingElse);
+    assert_eq!(rest, []);
+}
+
+#[test]
+fn simple_struct() {
+    let extension = ExtensionStruct {
+        extension_type: ExtensionType::KeyId,
+        extension_data: vec![1, 2, 3, 4, 5],
+        additional_data: None,
+    };
+    let serialized = extension.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <ExtensionStruct as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, extension);
+    assert_eq!(rest, []);
+}
 
 #[test]
 fn tuple_struct() {
     let ext = ExtensionStruct {
         extension_type: ExtensionType::KeyId,
-        extension_data: TlsVecU32::from_slice(&[1, 2, 3, 4, 5]),
+        extension_data: vec![1, 2, 3, 4, 5],
+        additional_data: None,
     };
-    let t1 = TupleStruct1(ext.clone());
-    let serialized_t1 = vec![0, 3, 0, 0, 0, 5, 1, 2, 3, 4, 5];
-    println!("{:?}", serialized_t1);
-    let (deserialized_bytes_t1, _remainder) =
-        <TupleStruct1 as tls_codec::DeserializeBytes>::tls_deserialize(serialized_t1.as_slice())
-            .unwrap();
-    assert_eq!(t1, deserialized_bytes_t1);
-
-    let t2 = TupleStruct(ext, 5);
-    let serialized_t2 = vec![0, 3, 0, 0, 0, 5, 1, 2, 3, 4, 5, 5];
-    let (deserialized_bytes_t2, _remainder) =
-        <TupleStruct as tls_codec::DeserializeBytes>::tls_deserialize(serialized_t2.as_slice())
-            .unwrap();
-    assert_eq!(t2, deserialized_bytes_t2);
-}
-
-#[test]
-fn simple_enum() {
-    let b = &[0u8, 5] as &[u8];
-    let (deserialized_bytes, _remainder) =
-        <ExtensionType as tls_codec::DeserializeBytes>::tls_deserialize(b).unwrap();
-    assert_eq!(ExtensionType::RatchetTree, deserialized_bytes);
-
-    let mut b = &[0u8, 5, 1, 244, 0, 1] as &[u8];
-    let variants = [
-        ExtensionType::RatchetTree,
-        ExtensionType::SomethingElse,
-        ExtensionType::Capabilities,
-    ];
-    for variant in variants.iter() {
-        let (deserialized_bytes, remainder) =
-            <ExtensionType as tls_codec::DeserializeBytes>::tls_deserialize(b).unwrap();
-        b = remainder;
-        assert_eq!(variant, &deserialized_bytes);
-    }
-}
-
-#[test]
-fn deserialize_tls_vec() {
-    let long_vector = vec![ExtensionStruct::default(); 4];
-    let serialized_long_vec = [
-        0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ];
-    let (deserialized_long_vec_bytes, _remainder): (Vec<ExtensionStruct>, &[u8]) =
-        <TlsVecU16<ExtensionStruct> as tls_codec::DeserializeBytes>::tls_deserialize(
-            serialized_long_vec.as_slice(),
-        )
-        .map(|(v, r)| (v.into(), r))
-        .unwrap();
-    assert_eq!(long_vector.len(), deserialized_long_vec_bytes.len());
-    assert_eq!(long_vector, deserialized_long_vec_bytes);
+    let x = TupleStruct(ext, 6);
+    let serialized = x.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <TupleStruct as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
 }
 
 #[test]
 fn byte_arrays() {
     let x = [0u8, 1, 2, 3];
-    let serialized = [0, 1, 2, 3];
-    assert_eq!(x.to_vec(), serialized);
+    let serialized = x.tls_serialize().unwrap();
+    let (deserialized, rest) = <[u8; 4] as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+}
+
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
+struct Custom {
+    #[tls_codec(with = "custom")]
+    values: Vec<u8>,
+    a: u8,
+}
+
+mod custom {
+    use tls_codec::{DeserializeBytes, SerializeBytes, Size};
+
+    pub fn tls_serialized_len(v: &[u8]) -> usize {
+        v.tls_serialized_len()
+    }
+
+    pub fn tls_serialize(v: &[u8]) -> Result<Vec<u8>, tls_codec::Error> {
+        v.tls_serialize()
+    }
+
+    pub fn tls_deserialize<T: DeserializeBytes>(
+        bytes: &[u8],
+    ) -> Result<(T, &[u8]), tls_codec::Error> {
+        <T as DeserializeBytes>::tls_deserialize(bytes)
+    }
+}
+
+#[test]
+fn custom() {
+    let x = Custom {
+        values: vec![0, 1, 2],
+        a: 3,
+    };
+    let serialized = x.tls_serialize().unwrap();
+    assert_eq!(vec![3, 0, 1, 2, 3], serialized);
+    let (deserialized, rest) = <Custom as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+}
+
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
+#[repr(u8)]
+enum EnumWithTupleVariant {
+    A(u8, u32),
+}
+
+#[test]
+fn enum_with_tuple_variant() {
+    let x = EnumWithTupleVariant::A(3, 4);
+    let serialized = x.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <EnumWithTupleVariant as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+}
+
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
+#[repr(u8)]
+enum EnumWithStructVariant {
+    A { foo: u8, bar: u32 },
+}
+
+#[test]
+fn enum_with_struct_variant() {
+    let x = EnumWithStructVariant::A { foo: 3, bar: 4 };
+    let serialized = x.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <EnumWithStructVariant as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+}
+
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
+#[repr(u16)]
+enum EnumWithDataAndDiscriminant {
+    #[tls_codec(discriminant = 3)]
+    A(u8),
+    B,
+}
+
+#[test]
+fn enum_with_data_and_discriminant() {
+    let x = EnumWithDataAndDiscriminant::A(4);
+    let serialized = x.tls_serialize().unwrap();
 
     let (deserialized, rest) =
-        <[u8; 4] as tls_codec::DeserializeBytes>::tls_deserialize(&mut serialized.as_slice())
+        <EnumWithDataAndDiscriminant as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+}
+
+#[test]
+fn discriminant_is_incremented_implicitly() {
+    let x = EnumWithDataAndDiscriminant::B;
+    let serialized = x.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <EnumWithDataAndDiscriminant as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+}
+
+mod discriminant {
+    pub mod test {
+        pub mod constant {
+            pub const TEST_CONST: u8 = 3;
+        }
+        pub mod enum_val {
+            pub enum Test {
+                Potato = 0x0004,
+            }
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, TlsSerializeBytes, TlsDeserializeBytes, TlsSize)]
+#[repr(u16)]
+enum EnumWithDataAndConstDiscriminant {
+    #[tls_codec(discriminant = "discriminant::test::constant::TEST_CONST")]
+    A(u8),
+    #[tls_codec(discriminant = "discriminant::test::enum_val::Test::Potato")]
+    B,
+    #[tls_codec(discriminant = 12)]
+    C,
+}
+
+#[test]
+fn enum_with_data_and_const_discriminant() {
+    let x = EnumWithDataAndConstDiscriminant::A(4);
+    let serialized = x.tls_serialize().unwrap();
+    assert_eq!(vec![0, 3, 4], serialized);
+    let (deserialized, rest) =
+        <EnumWithDataAndConstDiscriminant as DeserializeBytes>::tls_deserialize(&serialized)
             .unwrap();
     assert_eq!(deserialized, x);
     assert_eq!(rest, []);
 
-    let x = [0u8, 1, 2, 3, 7, 6, 5, 4];
-    let w = ArrayWrap { data: x };
-    let serialized = [0, 1, 2, 3, 7, 6, 5, 4];
-    assert_eq!(x.to_vec(), serialized);
-
+    let x = EnumWithDataAndConstDiscriminant::B;
+    let serialized = x.tls_serialize().unwrap();
     let (deserialized, rest) =
-        <ArrayWrap as tls_codec::DeserializeBytes>::tls_deserialize(&mut serialized.as_slice())
+        <EnumWithDataAndConstDiscriminant as DeserializeBytes>::tls_deserialize(&serialized)
             .unwrap();
-    assert_eq!(deserialized, w);
+    assert_eq!(deserialized, x);
     assert_eq!(rest, []);
+
+    let x = EnumWithDataAndConstDiscriminant::C;
+    let serialized = x.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <EnumWithDataAndConstDiscriminant as DeserializeBytes>::tls_deserialize(&serialized)
+            .unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+}
+
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
+#[repr(u8)]
+enum EnumWithCustomSerializedField {
+    A(#[tls_codec(with = "custom")] Vec<u8>),
+}
+
+#[test]
+fn enum_with_custom_serialized_field() {
+    let x = EnumWithCustomSerializedField::A(vec![1, 2, 3]);
+    let serialized = x.tls_serialize().unwrap();
+    let (deserialized, rest) =
+        <EnumWithCustomSerializedField as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+    assert_eq!(deserialized, x);
+    assert_eq!(rest, []);
+}
+
+#[test]
+fn that_skip_attribute_on_struct_works() {
+    fn test<T: DeserializeBytes>(test: T, expected: T)
+    where
+        T: std::fmt::Debug + PartialEq + SerializeBytes + Size,
+    {
+        let serialized = test.tls_serialize().unwrap();
+        let (deserialized, rest) = <T as DeserializeBytes>::tls_deserialize(&serialized).unwrap();
+        assert_eq!(deserialized, expected);
+        assert_eq!(rest, []);
+    }
+
+    #[derive(Debug, PartialEq, TlsSerializeBytes, TlsDeserializeBytes, TlsSize)]
+    struct StructWithSkip1 {
+        #[tls_codec(skip)]
+        a: u8,
+        b: u8,
+        c: u8,
+    }
+
+    #[derive(Debug, PartialEq, TlsSerializeBytes, TlsDeserializeBytes, TlsSize)]
+    struct StructWithSkip2 {
+        a: u8,
+        #[tls_codec(skip)]
+        b: u8,
+        c: u8,
+    }
+
+    #[derive(Debug, PartialEq, TlsSerializeBytes, TlsDeserializeBytes, TlsSize)]
+    struct StructWithSkip3 {
+        a: u8,
+        b: u8,
+        #[tls_codec(skip)]
+        c: u8,
+    }
+
+    test(
+        StructWithSkip1 {
+            a: 123,
+            b: 13,
+            c: 42,
+        },
+        StructWithSkip1 {
+            a: Default::default(),
+            b: 13,
+            c: 42,
+        },
+    );
+    test(
+        StructWithSkip2 {
+            a: 123,
+            b: 13,
+            c: 42,
+        },
+        StructWithSkip2 {
+            a: 123,
+            b: Default::default(),
+            c: 42,
+        },
+    );
+    test(
+        StructWithSkip3 {
+            a: 123,
+            b: 13,
+            c: 42,
+        },
+        StructWithSkip3 {
+            a: 123,
+            b: 13,
+            c: Default::default(),
+        },
+    );
 }
