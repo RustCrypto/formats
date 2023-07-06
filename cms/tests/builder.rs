@@ -13,7 +13,7 @@ use cms::enveloped_data::RecipientInfo::Ktri;
 use cms::enveloped_data::{EnvelopedData, RecipientIdentifier, RecipientInfo};
 use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
-use der::asn1::{Int, OctetString, PrintableString, SetOfVec, Utf8StringRef};
+use der::asn1::{OctetString, PrintableString, SetOfVec, Utf8StringRef};
 use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
 use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
@@ -339,13 +339,8 @@ fn build_pkcs7_scep_pkcsreq() {
     // - senderNonce
     // - transactionID
     let mut message_type_value: SetOfVec<AttributeValue> = Default::default();
-    let pkcsreq = 19_i8; // Numerical value of PKCSReq messageType
-                         // TODO bk: is the correct way to create an `Int` from an `i8`?
-    let pkcsreq_bytes = pkcsreq.to_be_bytes();
-    let pkcsreq_as_int = Int::new(&pkcsreq_bytes).unwrap();
-    message_type_value
-        .insert(Any::new(Tag::Integer, pkcsreq_as_int.as_bytes()).unwrap())
-        .unwrap();
+    let message_type = PrintableString::try_from("19".to_string()).unwrap();
+    message_type_value.insert(Any::from(&message_type)).unwrap();
     let message_type = Attribute {
         oid: RFC8894_ID_MESSAGE_TYPE,
         values: message_type_value,
