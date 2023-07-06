@@ -112,7 +112,6 @@ pub struct SignerInfoBuilder<'s, S> {
 impl<'s, S> SignerInfoBuilder<'s, S>
 where
     S: Keypair + DynSignatureAlgorithmIdentifier,
-    S::VerifyingKey: EncodePublicKey,
 {
     /// Create a new `SignerInfoBuilder`. This is used for adding `SignerInfo`s to `SignedData`
     /// structures.
@@ -1012,9 +1011,8 @@ fn get_hasher(
 }
 
 /// Helps encrypting.
-#[macro_export]
 macro_rules! encrypt_block_mode {
-    ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $iv:expr, $rng:expr, $oid:expr) => {{
+    ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $rng:expr, $oid:expr) => {{
         let (key, iv) = match $key {
             None => $block_mode::$typ::<$alg>::generate_key_iv($rng),
             Some(key) => {
@@ -1060,7 +1058,6 @@ where
             data,
             cbc::Encryptor<Aes128>,
             key,
-            iv,
             rng,
             encryption_algorithm_identifier.oid()
         ),
@@ -1068,7 +1065,6 @@ where
             data,
             cbc::Encryptor<Aes192>,
             key,
-            iv,
             rng,
             encryption_algorithm_identifier.oid()
         ),
@@ -1076,7 +1072,6 @@ where
             data,
             cbc::Encryptor<Aes256>,
             key,
-            iv,
             rng,
             encryption_algorithm_identifier.oid()
         ),
