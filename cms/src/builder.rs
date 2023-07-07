@@ -35,10 +35,7 @@ use rsa::Pkcs1v15Encrypt;
 use sha2::digest;
 use signature::digest::DynDigest;
 use signature::{Keypair, Signer};
-use spki::{
-    AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
-    SignatureBitStringEncoding,
-};
+use spki::{AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use std::time::SystemTime;
 use std::vec;
 use x509_cert::attr::{Attribute, AttributeValue, Attributes};
@@ -173,7 +170,6 @@ where
 impl<'s, S> Builder for SignerInfoBuilder<'s, S>
 where
     S: Keypair + DynSignatureAlgorithmIdentifier,
-    S::VerifyingKey: EncodePublicKey,
 {
     type Signer = S;
     type Output = SignerInfo;
@@ -397,7 +393,6 @@ impl<'s> SignedDataBuilder<'s> {
     ) -> Result<&mut Self>
     where
         S: Keypair + DynSignatureAlgorithmIdentifier,
-        S::VerifyingKey: EncodePublicKey,
         S: Signer<Signature>,
         Signature: SignatureBitStringEncoding,
     {
