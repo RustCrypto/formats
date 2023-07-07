@@ -202,7 +202,7 @@ fn test_build_enveloped_data() {
 }
 
 #[test]
-fn build_pkcs7_scep_pkcsreq() {
+fn test_build_pkcs7_scep_pkcsreq() {
     // This test demonstrates how to build a PKCS7 message for the SCEP PKCSReq pkiMessage
     // according to RFC 8894.
     // We use the key transport mechanism in this example, which means, we have the recipient
