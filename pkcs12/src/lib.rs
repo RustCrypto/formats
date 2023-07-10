@@ -14,4 +14,16 @@
     unused_qualifications
 )]
 
-//! TODO: PKCS#12 crate
+//! TODO: complete PKCS#12 crate
+
+#[cfg(feature="alloc")]
+#[macro_use]
+extern crate alloc;
+
+#[cfg(feature="alloc")]
+pub mod kdf;
+
+pub mod error;
+
+pub use error::Result;
+

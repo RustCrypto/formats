@@ -1,6 +1,6 @@
 [package]
 name = "pkcs12"
-version = "0.0.0"
+version = "0.1.0"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #12:
 Personal Information Exchange Syntax v1.1 (RFC7292)
@@ -14,6 +14,16 @@ readme = "README.md"
 edition = "2021"
 rust-version = "1.65"
 
+[features]
+alloc = []
+
+[dependencies]
+sha2 = "0.10.7"
+
+[dev-dependencies]
+hex-literal = "0.4"
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
