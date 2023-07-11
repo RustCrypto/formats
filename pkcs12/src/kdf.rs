@@ -16,12 +16,13 @@ pub enum Pkcs12KeyType {
     Mac=3
 }
 
-pub fn pkcs12_key_gen<const N: usize>(
+pub fn pkcs12_key_gen(
     pass: &str,
     salt: &[u8],
     id: Pkcs12KeyType,
     rounds: i32,
-) -> Result<[u8; N]> {
+    key_len: usize,
+) -> Result<Vec<u8>> {
     let pass_uni = str_to_unicode(pass);
     let u = 32;
     let v = 64;
@@ -40,9 +41,9 @@ pub fn pkcs12_key_gen<const N: usize>(
         Pkcs12KeyType::Iv => vec![2u8; v],
         Pkcs12KeyType::Mac => vec![3u8; v],
     };
-    let mut m = N;
+    let mut m = key_len;
     let mut n = 0;
-    let mut out = [0u8; N];
+    let mut out = vec![0u8; key_len];
     loop {
         let mut hasher = Sha256::new();
         hasher.update(&d_tmp);
