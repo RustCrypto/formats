@@ -259,7 +259,7 @@ dependencies = [
 
 [[package]]
 name = "cms"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "const-oid 0.9.3",
  "der",
