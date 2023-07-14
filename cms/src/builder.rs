@@ -212,23 +212,9 @@ where
             },
         };
 
-        // We set the signing time attribute. In this case, signed attributes are used and
-        // will be signed instead of the eContent itself.
-        if let Some(signed_attributes) = &mut self.signed_attributes {
-            if !signed_attributes.iter().any(|attr| {
-                attr.oid.cmp(&const_oid::db::rfc5911::ID_SIGNING_TIME) == Ordering::Equal
-            }) {
-                // Add current time as signing time
-                signed_attributes.push(
-                    create_signing_time_attribute()
-                        .map_err(|_| der::Error::from(ErrorKind::Failed))?,
-                );
-            }
-        } else {
-            // Add signed attributes with signing time attribute and content type attribute
-            self.signed_attributes =
-                Some(vec![create_signing_time_attribute()
-                    .map_err(|_| der::Error::from(ErrorKind::Failed))?]);
+        // This implementation uses signed attributes.
+        if self.signed_attributes.is_none() {
+            self.signed_attributes = Some(vec![]);
         }
 
         // Add digest attribute to (to be) signed attributes

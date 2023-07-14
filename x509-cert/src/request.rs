@@ -125,3 +125,67 @@ impl TryFrom<ExtensionReq> for Attribute {
         })
     }
 }
+
+pub mod attributes {
+    //! Set of attributes that may be associated to a request
+
+    use alloc::vec;
+    use const_oid::AssociatedOid;
+    use der::{
+        asn1::{Any, ObjectIdentifier, SetOfVec},
+        EncodeValue, Length, Result, Tag, Tagged, Writer,
+    };
+
+    use crate::{attr::Attribute, ext::pkix::name::DirectoryString};
+
+    /// Trait to be implement by request attributes
+    pub trait AsAttribute: AssociatedOid + Tagged + EncodeValue + Sized {
+        /// Returns the Attribute with the content encoded.
+        fn to_attribute(&self) -> Result<Attribute> {
+            let inner: Any = der::asn1::Any::encode_from(self)?;
+
+            let values = SetOfVec::try_from(vec![inner])?;
+
+            Ok(Attribute {
+                oid: Self::OID,
+                values,
+            })
+        }
+    }
+
+    /// `ChallengePassword` as defined in [RFC 2985 Section 5.4.1]
+    ///
+    /// ```text
+    /// challengePassword ATTRIBUTE ::= {
+    ///          WITH SYNTAX DirectoryString {pkcs-9-ub-challengePassword}
+    ///          EQUALITY MATCHING RULE caseExactMatch
+    ///          SINGLE VALUE TRUE
+    ///          ID pkcs-9-at-challengePassword
+    ///  }
+    /// ```
+    ///
+    /// [RFC 2985 Section 5.4.1]: https://www.rfc-editor.org/rfc/rfc2985#page-16
+    pub struct ChallengePassword(pub DirectoryString);
+
+    impl AsAttribute for ChallengePassword {}
+
+    impl AssociatedOid for ChallengePassword {
+        const OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.7");
+    }
+
+    impl Tagged for ChallengePassword {
+        fn tag(&self) -> Tag {
+            self.0.tag()
+        }
+    }
+
+    impl EncodeValue for ChallengePassword {
+        fn value_len(&self) -> Result<Length> {
+            self.0.value_len()
+        }
+
+        fn encode_value(&self, encoder: &mut impl Writer) -> Result<()> {
+            self.0.encode_value(encoder)
+        }
+    }
+}
