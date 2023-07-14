@@ -8,6 +8,7 @@ use spki::{
     DynSignatureAlgorithmIdentifier, EncodePublicKey, SignatureBitStringEncoding,
     SubjectPublicKeyInfoOwned, SubjectPublicKeyInfoRef,
 };
+use std::vec::Vec;
 
 use crate::{
     certificate::{Certificate, TbsCertificate, Version},
@@ -22,6 +23,7 @@ use crate::{
     serial_number::SerialNumber,
     time::Validity,
 };
+use crate::attr::{Attribute, Attributes};
 
 /// Error type
 #[derive(Debug)]
@@ -359,6 +361,7 @@ pub struct RequestBuilder<'s, S> {
     info: CertReqInfo,
     extension_req: ExtensionReq,
     req_signer: &'s S,
+    attributes_req: Vec<Attribute>,
 }
 
 impl<'s, S> RequestBuilder<'s, S>
@@ -375,6 +378,7 @@ where
             .decode_msg::<SubjectPublicKeyInfoOwned>()?;
         let attributes = Default::default();
         let extension_req = Default::default();
+        let attributes_req = Default::default();
 
         Ok(Self {
             info: CertReqInfo {
@@ -385,6 +389,7 @@ where
             },
             extension_req,
             req_signer,
+            attributes_req,
         })
     }
 
@@ -393,6 +398,13 @@ where
         let ext = extension.to_extension(&self.info.subject, &self.extension_req.0)?;
 
         self.extension_req.0.push(ext);
+
+        Ok(())
+    }
+
+    /// Add an attribute to this certificate request
+    pub fn add_attribute(&mut self, attribute: Attribute) -> Result<()> {
+        self.attributes_req.push(attribute.clone());
 
         Ok(())
     }
@@ -499,9 +511,8 @@ where
     }
 
     fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
-        self.info
-            .attributes
-            .insert(self.extension_req.clone().try_into()?)?;
+        self.attributes_req.push(self.extension_req.clone().try_into()?);
+        self.info.attributes = Attributes::try_from(self.attributes_req.clone())?;
 
         self.info.to_der()
     }

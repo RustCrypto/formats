@@ -1,12 +1,15 @@
 #![cfg(all(feature = "builder", feature = "pem"))]
 
-use der::{pem::LineEnding, Decode, Encode, EncodePem};
+use der::{pem::LineEnding, Decode, Encode, EncodePem, Tag};
 use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
 use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
+use const_oid::ObjectIdentifier;
+use der::asn1::SetOfVec;
+
 use x509_cert::{
     builder::{Builder, CertificateBuilder, Profile, RequestBuilder},
     ext::pkix::{name::GeneralName, SubjectAltName},
@@ -14,6 +17,7 @@ use x509_cert::{
     serial_number::SerialNumber,
     time::Validity,
 };
+use x509_cert::attr::{Attribute, AttributeValue};
 use x509_cert_test_support::{openssl, zlint};
 
 const RSA_2048_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-pub.der");
@@ -271,11 +275,22 @@ fn certificate_request() {
 
     let signer = ecdsa_signer();
     let mut builder = RequestBuilder::new(subject, &signer).expect("Create certificate request");
+
     builder
         .add_extension(&SubjectAltName(vec![GeneralName::from(IpAddr::V4(
             Ipv4Addr::new(192, 0, 2, 0),
         ))]))
         .unwrap();
+
+    let challenge_password = "Ch@113ng3 9@zzw0rd";
+    let challenge_password_attribute_value = AttributeValue::new(Tag::Utf8String, challenge_password.as_bytes()).unwrap();
+    let mut values = SetOfVec::new();
+    values.insert(challenge_password_attribute_value).unwrap();
+    let oid_pkcs9_challengepassword = ObjectIdentifier::new("1.2.840.113549.1.9.7").unwrap();
+    builder.add_attribute(Attribute {
+        oid: oid_pkcs9_challengepassword,
+        values,
+    }).unwrap();
 
     let cert_req = builder.build::<DerSignature>().unwrap();
     let pem = cert_req.to_pem(LineEnding::LF).expect("generate pem");
