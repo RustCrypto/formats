@@ -1,5 +1,5 @@
 #[test]
-//#[cfg(feature="alloc")]
+#[cfg(feature="alloc")]
 fn pkcs12_key_gen_sha256() {
     use pkcs12::kdf::{pkcs12_key_gen, Pkcs12KeyType};
     use hex_literal::hex;
