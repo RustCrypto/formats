@@ -1005,6 +1005,7 @@ dependencies = [
 name = "pkcs12"
 version = "0.1.0"
 dependencies = [
+ "cfg-if",
  "digest",
  "hex-literal",
  "sha2",

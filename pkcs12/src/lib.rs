@@ -16,12 +16,17 @@
 
 //! TODO: complete PKCS#12 crate
 
-#[cfg(feature = "alloc")]
-#[macro_use]
-extern crate alloc;
+use cfg_if::cfg_if;
 
-#[cfg(feature = "alloc")]
-pub mod kdf;
+cfg_if! {
+    if #[cfg(feature = "alloc")] {
+
+        #[macro_use]
+        extern crate alloc;
+
+        pub mod kdf;
+    }
+}
 
 pub mod error;
 

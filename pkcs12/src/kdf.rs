@@ -1,4 +1,4 @@
-//! Implementation of the key derivation function 
+//! Implementation of the key derivation function
 //! [RFC 7292 Appendix B](https://datatracker.ietf.org/doc/html/rfc7292#appendix-B)
 
 use super::Result;
