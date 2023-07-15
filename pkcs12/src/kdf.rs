@@ -78,10 +78,10 @@ where
         let min_mu = m.min(u);
         out[n..n + min_mu].copy_from_slice(&result[0..min_mu]);
         n += min_mu;
-        m -= min_mu;
-        if m <= 0 {
+        if m <= min_mu {
             break;
         }
+        m -= min_mu;
         let mut b_tmp = vec![0u8; v];
         for j in 0..v {
             b_tmp[j] = result[j % u];
