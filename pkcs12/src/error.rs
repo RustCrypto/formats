@@ -18,6 +18,6 @@ impl fmt::Display for Error {
             Error::InternalError => {
                 write!(f, "PKCS#12 internal error")
             }
-       }
+        }
     }
 }

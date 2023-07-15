@@ -18,10 +18,12 @@ rust-version = "1.65"
 alloc = []
 
 [dependencies]
-sha2 = "0.10.7"
+digest = { version = "0.10.7", features=["alloc"] }
 
 [dev-dependencies]
 hex-literal = "0.4"
+sha2 = "0.10.7"
+whirlpool = "0.10.4"
 
 [package.metadata.docs.rs]
 all-features = true
