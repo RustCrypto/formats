@@ -1,5 +1,5 @@
-/* Implementation of the key derivation function as specified in the PKCS#12 standard
- */
+//! Implementation of the key derivation function 
+//! [RFC 7292 Appendix B](https://datatracker.ietf.org/doc/html/rfc7292#appendix-B)
 
 use super::Result;
 use alloc::vec::Vec;
