@@ -1,8 +1,12 @@
-use alloc::vec::Vec;
+/* Implementation of the key derivation function as specified in the PKCS#12 standard
+ */
 
-use sha2::{Digest, Sha256};
+use alloc::vec::Vec;
+use sha2::{Digest, Sha256, digest::FixedOutputReset};
 use super::Result;
 
+/// Transform a utf-8 string in a unicode (utf16) string as binary array.
+/// The Utf16 code points are stored in big endian format with two trailing zero bytes.
 pub fn str_to_unicode(s: &str) -> Vec<u8> {
     let mut unicode: Vec<u8> = s.encode_utf16().flat_map(|c| c.to_be_bytes().to_vec()).collect();
     unicode.push(0);
@@ -10,12 +14,22 @@ pub fn str_to_unicode(s: &str) -> Vec<u8> {
     unicode
 }
 
+/// Specify the usage type of the generated key
+/// This allows to derive distinct encryption keys, IVs and MAC from the same password or text
+/// string.
 pub enum Pkcs12KeyType {
+    /// Use key for encryption
     EncryptionKey=1,
+    /// Use key as initial vector
     Iv=2,
+    /// Use key as MAC
     Mac=3
 }
 
+/// Derive a key of length `keylen` from a given password (utf-8 string) 
+/// and a salt. Password and Salt may have arbitrary length.
+/// The id allows to derive distinct key types from the same password.
+/// The number of rounds should be 1000 or more, minimum is 1.
 pub fn pkcs12_key_gen(
     pass: &str,
     salt: &[u8],
@@ -23,6 +37,7 @@ pub fn pkcs12_key_gen(
     rounds: i32,
     key_len: usize,
 ) -> Result<Vec<u8>> {
+    let mut hasher = Sha256::new();
     let pass_uni = str_to_unicode(pass);
     let u = 32;
     let v = 64;
@@ -45,14 +60,12 @@ pub fn pkcs12_key_gen(
     let mut n = 0;
     let mut out = vec![0u8; key_len];
     loop {
-        let mut hasher = Sha256::new();
         hasher.update(&d_tmp);
         hasher.update(&i_tmp);
-        let mut result = hasher.finalize();
+        let mut result = hasher.finalize_fixed_reset();
         for _ in 1..rounds {
-            let mut hasher = Sha256::new();
             hasher.update(&result[0..u]);
-            result = hasher.finalize();
+            result = hasher.finalize_fixed_reset();
         }
         let min_mu = m.min(u);
         out[n..n+min_mu].copy_from_slice(&result[0..min_mu]);

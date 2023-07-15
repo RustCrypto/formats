@@ -1,17 +1,48 @@
-#[cfg(feature="alloc")]
-use pkcs12::kdf::pkcs12_key_gen;
-use hex_literal::hex;
-
-const PASS_SHORT: &str = "ge@äheim";
-const SALT_INC: [u8; 8] = [0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8];
- 
 #[test]
-#[cfg(feature="alloc")]
+//#[cfg(feature="alloc")]
 fn pkcs12_key_gen_sha256() {
-    let iter = 100;
-    let id = pkcs12::kdf::Pkcs12KeyType::Mac;
-    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, id, iter, 32).unwrap(),
+    use pkcs12::kdf::{pkcs12_key_gen, Pkcs12KeyType};
+    use hex_literal::hex;
+
+    const PASS_SHORT: &str = "ge@äheim";
+    const SALT_INC: [u8; 8] = [0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8];
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 100, 32).unwrap(),
+        hex!("fae4d4957a3cc781e1180b9d4fb79c1e0c8579b746a3177e5b0768a3118bf863"));
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::Iv, 100, 32).unwrap(),
+        hex!("e5ff813bc6547de5155b14d2fada85b3201a977349db6e26ccc998d9e8f83d6c"));
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::Mac, 100, 32).unwrap(),
         hex!("136355ed9434516682534f46d63956db5ff06b844702c2c1f3b46321e2524a4d"));
+     
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 100, 20).unwrap(),
+        hex!("fae4d4957a3cc781e1180b9d4fb79c1e0c8579b7"));
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::Iv, 100, 20).unwrap(),
+        hex!("e5ff813bc6547de5155b14d2fada85b3201a9773"));
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::Mac, 100, 20).unwrap(),
+        hex!("136355ed9434516682534f46d63956db5ff06b84"));
+        
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 100, 12).unwrap(),
+        hex!("fae4d4957a3cc781e1180b9d"));
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::Iv, 100, 12).unwrap(),
+        hex!("e5ff813bc6547de5155b14d2"));
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::Mac, 100, 12).unwrap(),
+        hex!("136355ed9434516682534f46"));
+ 
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 1000, 32).unwrap(),
+        hex!("2b95a0569b63f641fae1efca32e84db3699ab74540628ba66283b58cf5400527"));
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::Iv, 1000, 32).unwrap(),
+        hex!("6472c0ebad3fab4123e8b5ed7834de21eeb20187b3eff78a7d1cdffa4034851d"));
+    
+    assert_eq!(pkcs12_key_gen(PASS_SHORT, &SALT_INC, Pkcs12KeyType::Mac, 1000, 32).unwrap(),
+        hex!("3f9113f05c30a996c4a516409bdac9d065f44296ccd52bb75de3fcfdbe2bf130"));
+ 
 }
 
 
