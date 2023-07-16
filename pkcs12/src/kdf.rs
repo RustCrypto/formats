@@ -11,11 +11,9 @@ fn str_to_unicode(utf8_str: &str) -> Vec<u8> {
     let mut utf16_bytes = Vec::new();
     // reserve max number of required bytes to avoid re-allocation
     utf16_bytes.reserve(utf8_str.len() * 2 + 2);
-    for code_point in utf8_str.encode_utf16() {
+    for code_point in utf8_str.encode_utf16().chain(Some(0)) {
         utf16_bytes.extend(code_point.to_be_bytes());
     }
-    utf16_bytes.push(0);
-    utf16_bytes.push(0);
     utf16_bytes
 }
 
