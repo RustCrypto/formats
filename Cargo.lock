@@ -1010,6 +1010,7 @@ dependencies = [
  "hex-literal",
  "sha2",
  "whirlpool",
+ "zeroize",
 ]
 
 [[package]]

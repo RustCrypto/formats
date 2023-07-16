@@ -20,6 +20,7 @@ alloc = []
 [dependencies]
 cfg-if = "1.0.0"
 digest = { version = "0.10.7", features=["alloc"] }
+zeroize = "1.6.0"
 
 [dev-dependencies]
 hex-literal = "0.4"

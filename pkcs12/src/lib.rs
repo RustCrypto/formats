@@ -28,6 +28,3 @@ cfg_if! {
     }
 }
 
-pub mod error;
-
-pub use error::Result;
