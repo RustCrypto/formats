@@ -49,28 +49,53 @@ where
     let mut pass_utf16 = str_to_unicode(pass);
     let output_size = <D as OutputSizeUser>::output_size();
     let block_size = D::block_size();
-    let slen = block_size * ((salt.len() + block_size - 1) / block_size);
-    let plen = block_size * ((pass_utf16.len() + block_size - 1) / block_size);
-    let ilen = slen + plen;
-    let mut init_key = vec![0u8; ilen];
-    for i in 0..slen {
-        init_key[i] = salt[i % salt.len()];
-    }
-    for i in 0..plen {
-        init_key[slen + i] = pass_utf16[i % pass_utf16.len()];
-    }
-    pass_utf16.zeroize();
 
+    // In the following, the numbered comments relate directly to the algorithm
+    // described in RFC 7292, Appendix B.2. Actual variable names may differ.
+    // Comments of the RFC are in enclosed in []
+    //
+    // 1. Construct a string, D (the "diversifier"), by concatenating v/8
+    //    copies of ID, where v is the block size in bits.
     let id_block = match id {
         Pkcs12KeyType::EncryptionKey => vec![1u8; block_size],
         Pkcs12KeyType::Iv => vec![2u8; block_size],
         Pkcs12KeyType::Mac => vec![3u8; block_size],
     };
 
+    let slen = block_size * ((salt.len() + block_size - 1) / block_size);
+    let plen = block_size * ((pass_utf16.len() + block_size - 1) / block_size);
+    let ilen = slen + plen;
+    let mut init_key = vec![0u8; ilen];
+    // 2. Concatenate copies of the salt together to create a string S of
+    //    length v(ceiling(s/v)) bits (the final copy of the salt may be
+    //    truncated to create S).  Note that if the salt is the empty
+    //    string, then so is S.
+    for i in 0..slen {
+        init_key[i] = salt[i % salt.len()];
+    }
+
+    // 3. Concatenate copies of the password together to create a string P
+    //    of length v(ceiling(p/v)) bits (the final copy of the password
+    //    may be truncated to create P).  Note that if the password is the
+    //    empty string, then so is P.
+    for i in 0..plen {
+        init_key[slen + i] = pass_utf16[i % pass_utf16.len()];
+    }
+    pass_utf16.zeroize();
+
+    // 4. Set I=S||P to be the concatenation of S and P.
+    // [already done in `init_key`]
+
     let mut m = key_len;
     let mut n = 0;
     let mut out = vec![0u8; key_len];
+    // 5. Set c=ceiling(n/u)
+    // 6. For i=1, 2, ..., c, do the following:
+    // [ Instead of following this approach, we use an infinite loop and
+    //   use the break condition below, if we have produced n bytes for the key]
     loop {
+        // 6. A. Set A2=H^r(D||I). (i.e., the r-th hash of D||1,
+        //    H(H(H(... H(D||I))))
         <D as Update>::update(&mut digest, &id_block);
         <D as Update>::update(&mut digest, &init_key);
         let mut result = digest.finalize_fixed_reset();
@@ -78,15 +103,26 @@ where
             <D as Update>::update(&mut digest, &result[0..output_size]);
             result = digest.finalize_fixed_reset();
         }
+
+        // 7. Concateate A_1, A_2, ..., A_c together to form a pseudorandom
+        //     bit string, A.
+        // [ Instead of storing all Ais and concatenating later, we concatenate
+        // them immediately ]
         let new_bytes_num = m.min(output_size);
         out[n..n + new_bytes_num].copy_from_slice(&result[0..new_bytes_num]);
         n += new_bytes_num;
         if m <= new_bytes_num {
             break;
         }
-
-        // prepare `init_key` for next block if `ouput_size` is smaller than `key_len`
         m -= new_bytes_num;
+
+        // 6. B. Concatenate copies of Ai to create a string B of length v
+        //       bits (the final copy of Ai may be truncated to create B).
+        // [ we achieve this on thy fly with the expression `result[k % output_size]` below]
+
+        // 6. C. Treating I as a concatenation I_0, I_1, ..., I_(k-1) of v-bit
+        //       blocks, where k=ceiling(s/v)+ceiling(p/v), modify I by
+        //       setting I_j=(I_j+B+1) mod 2^v for each j.
         let mut j = 0;
         while j < ilen {
             let mut c = 1_u16;
@@ -104,5 +140,6 @@ where
         }
     }
     init_key.zeroize();
+    // 8. Use the first n bits of A as the output of this entire process.
     out
 }

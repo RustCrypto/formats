@@ -2,10 +2,9 @@
 /// All test cases have been verified against openssl's method `PKCS12_key_gen_utf8`.
 /// See https://github.com/xemwebe/test_pkcs12_kdf for a sample program.
 ///
-
 use hex_literal::hex;
 use pkcs12::kdf::{derive_key, Pkcs12KeyType};
- 
+
 #[test]
 fn pkcs12_key_derive_sha256() {
     const PASS_SHORT: &str = "ge@äheim";
@@ -137,5 +136,3 @@ fn pkcs12_key_derive_special_chars() {
         hex!("d01e72a940b4b1a7a5707fc8264a60cb7606ff9051dedff90930687d2513c006")
     );
 }
-
-
