@@ -515,6 +515,7 @@ pub trait RecipientInfoBuilder {
 
 /// `RecipientInfoBuilder` must be implemented for these 5 recipient info types
 /// as defined in RFC 5652 § 6:
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum RecipientInfoType {
     /// KeyTransRecipientInfo
     Ktri,
@@ -529,6 +530,7 @@ pub enum RecipientInfoType {
 }
 
 /// Contains information required to encrypt the content encryption key with a specific method
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum KeyEncryptionInfo {
     /// Encrypt key with RSA
     Rsa(rsa::RsaPublicKey),
@@ -781,6 +783,7 @@ impl RecipientInfoBuilder for OtherRecipientInfoBuilder {
 }
 
 /// Supported content encryption algorithms.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ContentEncryptionAlgorithm {
     /// AES-128 CBC
     Aes128Cbc,
