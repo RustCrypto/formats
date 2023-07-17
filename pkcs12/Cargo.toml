@@ -14,9 +14,6 @@ readme = "README.md"
 edition = "2021"
 rust-version = "1.65"
 
-[features]
-alloc = []
-
 [dependencies]
 cfg-if = "1.0.0"
 digest = { version = "0.10.7", features=["alloc"] }

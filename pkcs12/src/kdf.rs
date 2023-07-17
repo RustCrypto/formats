@@ -1,7 +1,7 @@
 //! Implementation of the key derivation function
 //! [RFC 7292 Appendix B](https://datatracker.ietf.org/doc/html/rfc7292#appendix-B)
 
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
 use digest::{core_api::BlockSizeUser, Digest, FixedOutputReset, OutputSizeUser, Update};
 use zeroize::Zeroize;
 
