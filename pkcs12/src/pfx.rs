@@ -43,5 +43,5 @@ pub struct Pfx {
     pub auth_safe: ContentInfo,
 
     /// the message digest info
-    pub mac_data: Option<MacData>
+    pub mac_data: Option<MacData>,
 }

@@ -2,12 +2,9 @@
 
 use alloc::vec::Vec;
 use const_oid::ObjectIdentifier;
-use der::{Choice, Enumerated, Sequence};
-use pkcs8::{EncryptedPrivateKeyInfo};
+use der::{Enumerated, Sequence};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
-use crate::cert_type::CertTypes;
-use crate::crl_type::CrlTypes;
 
 /// The `SafeContents` type is defined in [RFC 7292 Section 4.1].
 ///
@@ -16,7 +13,7 @@ use crate::crl_type::CrlTypes;
 /// ```
 ///
 /// [RFC 7292 Section 4]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2
-pub type SafeContents<'a> = Vec<SafeBag<'a>>;
+pub type SafeContents<'a> = Vec<SafeBag>;
 
 /// The `SafeBag` type is defined in [RFC 7292 Section 4.1].
 ///
@@ -29,14 +26,66 @@ pub type SafeContents<'a> = Vec<SafeBag<'a>>;
 /// ```
 ///
 /// [RFC 7292 Section 4]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2
-#[derive(Clone, Debug, PartialEq, Sequence)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[allow(missing_docs)]
-pub struct SafeBag<'a> {
+pub struct SafeBag {
     pub bag_id: ObjectIdentifier,
-    #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
-    pub bag_value: Pkcs12BagSet<'a>,
+    //#[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
+    pub bag_value: Vec<u8>,
     pub bag_attributes: Option<Attributes>,
 }
+
+impl<'__der_lifetime> ::der::DecodeValue<'__der_lifetime> for SafeBag {
+    fn decode_value<R: ::der::Reader<'__der_lifetime>>(
+        reader: &mut R,
+        header: ::der::Header,
+    ) -> ::der::Result<Self> {
+        use ::der::Reader as _;
+        reader.read_nested(header.length, |reader| {
+            let bag_id = reader.decode()?;
+            let bag_value = match reader.tlv_bytes() {
+                Ok(v) => v.to_vec(),
+                Err(e) => return Err(e),
+            };
+            let bag_attributes = reader.decode()?;
+            Ok(Self {
+                bag_id,
+                bag_value,
+                bag_attributes,
+            })
+        })
+    }
+}
+impl ::der::EncodeValue for SafeBag {
+    fn value_len(&self) -> ::der::Result<::der::Length> {
+        use ::der::Encode as _;
+        [
+            self.bag_id.encoded_len()?,
+            ::der::asn1::ContextSpecificRef {
+                tag_number: ::der::TagNumber::N0,
+                tag_mode: ::der::TagMode::Explicit,
+                value: &self.bag_value,
+            }
+            .encoded_len()?,
+            self.bag_attributes.encoded_len()?,
+        ]
+        .into_iter()
+        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
+    }
+    fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+        use ::der::Encode as _;
+        self.bag_id.encode(writer)?;
+        ::der::asn1::ContextSpecificRef {
+            tag_number: ::der::TagNumber::N0,
+            tag_mode: ::der::TagMode::Explicit,
+            value: &self.bag_value,
+        }
+        .encode(writer)?;
+        self.bag_attributes.encode(writer)?;
+        Ok(())
+    }
+}
+impl<'__der_lifetime> ::der::Sequence<'__der_lifetime> for SafeBag {}
 
 /// Version for the PrivateKeyInfo structure as defined in [RFC 5208 Section 5].
 ///
@@ -76,26 +125,3 @@ pub struct PrivateKeyInfo {
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
     pub attributes: Option<Attributes>,
 }
-
-/// PKCS12BagSet BAG-TYPE ::= {
-///     keyBag |
-///     pkcs8ShroudedKeyBag |
-///     certBag |
-///     crlBag |
-///     secretBag |
-///     safeContentsBag,
-///     .. -- For future extensions
-/// }
-#[derive(Clone, Debug, PartialEq, Choice)]
-#[allow(missing_docs)]
-#[allow(clippy::large_enum_variant)]
-pub enum Pkcs12BagSet<'a> {
-    KeyBag(PrivateKeyInfo),
-    Pkcs8ShroudedKeyBag(EncryptedPrivateKeyInfo<'a>),
-    CertBag(CertTypes),
-    CrlBag(CrlTypes),
-    // SecretBag omitted due to not instances defined in RFC 7292
-    SafeContentsBag(SafeContents<'a>)
-}
-
-

@@ -27,6 +27,8 @@ const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 cms = "0.2.1"
 #pkcs7 = { version = "=0.4.0-pre.0", path = "../pkcs7" }
 pkcs8 = { version = "0.10.2", features = ["pkcs5"] }
+pkcs5 = {version = "0.7.1", features = ["pbes2"]}
 
 [dev-dependencies]
 hex-literal = "0.3.3"
+subtle-encoding = "0.5.1"

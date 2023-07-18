@@ -25,7 +25,6 @@ pub enum BagType {
     SafeContents,
 }
 
-
 impl FixedTag for BagType {
     const TAG: Tag = Tag::ObjectIdentifier;
 }

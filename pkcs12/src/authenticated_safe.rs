@@ -14,5 +14,3 @@ use cms::content_info::ContentInfo;
 ///
 /// [RFC 7292 Section 4.1]: https://www.rfc-editor.org/rfc/rfc7292#section-4.1
 pub type AuthenticatedSafe<'a> = Vec<ContentInfo>;
-
-

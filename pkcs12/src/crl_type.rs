@@ -37,4 +37,3 @@ pub struct CrlBag {
 ///
 /// [RFC 7292 Section 4.2.4]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2.4
 pub type CrlTypes = OctetString;
-

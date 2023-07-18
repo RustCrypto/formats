@@ -28,6 +28,7 @@ pub mod cert_type;
 pub mod crl_type;
 pub mod digest_info;
 pub mod mac_data;
+pub mod pbe_params;
 pub mod pfx;
 pub mod safe_bag;
 
