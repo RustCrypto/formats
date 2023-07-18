@@ -31,19 +31,30 @@ pub mod mac_data;
 pub mod pfx;
 pub mod safe_bag;
 
-//  rsadsi  OBJECT IDENTIFIER ::= {iso(1) member-body(2) us(840)
-//                                 rsadsi(113549)}
-//  pkcs    OBJECT IDENTIFIER ::= {rsadsi pkcs(1)}
-//  pkcs-12 OBJECT IDENTIFIER ::= {pkcs 12}
-//  pkcs-12PbeIds OBJECT IDENTIFIER ::= {pkcs-12 1}
-//  pbeWithSHAAnd128BitRC4          OBJECT IDENTIFIER ::= {pkcs-12PbeIds 1}
-//  pbeWithSHAAnd40BitRC4           OBJECT IDENTIFIER ::= {pkcs-12PbeIds 2}
-//  pbeWithSHAAnd3-KeyTripleDES-CBC OBJECT IDENTIFIER ::= {pkcs-12PbeIds 3}
-//  pbeWithSHAAnd2-KeyTripleDES-CBC OBJECT IDENTIFIER ::= {pkcs-12PbeIds 4}
-//  pbeWithSHAAnd128BitRC2-CBC      OBJECT IDENTIFIER ::= {pkcs-12PbeIds 5}
-//  pbewithSHAAnd40BitRC2-CBC       OBJECT IDENTIFIER ::= {pkcs-12PbeIds 6}
-//
-//  bagtypes OBJECT IDENTIFIER ::= {pkcs-12 10 1}
+// pbe oids
+/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+pub const PKCS_12_PBE_WITH_SHAAND128_BIT_RC4: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.1");
+
+/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+pub const PKCS_12_PBE_WITH_SHAAND40_BIT_RC4: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.2");
+
+/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+pub const PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.3");
+
+/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+pub const PKCS_12_PBE_WITH_SHAAND2_KEY_TRIPLE_DES_CBC: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.4");
+
+/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+pub const PKCS_12_PBE_WITH_SHAAND128_BIT_RC2_CBC: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.5");
+
+/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+pub const PKCS_12_PBEWITH_SHAAND40_BIT_RC2_CBC: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.6");
 
 // bag types
 /// `pkcs-12 keyBag` Object Identifier (OID).
