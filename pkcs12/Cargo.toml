@@ -17,3 +17,16 @@ rust-version = "1.65"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+der = { version = "0.7.7", features = ["alloc", "derive", "oid", "pem"] }
+spki = { version = "0.7" }
+x509-cert = { version = "0.2.3", default-features = false, features = ["pem"] }
+const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
+
+cms = "0.2.1"
+#pkcs7 = { version = "=0.4.0-pre.0", path = "../pkcs7" }
+pkcs8 = { version = "0.10.2", features = ["pkcs5"] }
+
+[dev-dependencies]
+hex-literal = "0.3.3"
