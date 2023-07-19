@@ -1,3 +1,4 @@
+#![cfg(feature="kdf")]
 /// Test cases for the key derivation functions.
 /// All test cases have been verified against openssl's method `PKCS12_key_gen_utf8`.
 /// See https://github.com/xemwebe/test_pkcs12_kdf for a sample program.
