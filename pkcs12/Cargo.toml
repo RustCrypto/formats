@@ -30,6 +30,8 @@ pkcs5 = {version = "0.7.1", features = ["pbes2"], optional = true}
 [dev-dependencies]
 hex-literal = "0.3.3"
 subtle-encoding = "0.5.1"
+pkcs8 = { version = "0.10.2", features = ["pkcs5"] }
+pkcs5 = {version = "0.7.1", features = ["pbes2"]}
 
 [features]
 decrypt = ["pkcs8", "pkcs5"]

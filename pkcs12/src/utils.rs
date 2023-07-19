@@ -92,11 +92,10 @@ fn process_encrypted_data(
         .enc_content_info
         .content_enc_alg
         .parameters
-        .as_ref() {
-        Some(params) => {
-            params.to_der().map_err(|e| Error::Asn1(e))?
-        }
-        None => return Err(Error::MissingParameters)
+        .as_ref()
+    {
+        Some(params) => params.to_der().map_err(|e| Error::Asn1(e))?,
+        None => return Err(Error::MissingParameters),
     };
 
     let params =
@@ -112,7 +111,7 @@ fn process_encrypted_data(
                 .map_err(|e| Error::Pkcs5(e))?;
             process_safe_contents(plaintext, password)
         }
-        None => return Err(Error::MissingContent)
+        None => return Err(Error::MissingContent),
     }
 }
 
