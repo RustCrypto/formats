@@ -32,6 +32,9 @@ pub mod pbe_params;
 pub mod pfx;
 pub mod safe_bag;
 
+#[cfg(feature = "decrypt")]
+pub mod utils;
+
 // pbe oids
 /// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
 pub const PKCS_12_PBE_WITH_SHAAND128_BIT_RC4: ObjectIdentifier =

@@ -12,6 +12,10 @@ use pkcs12::pbe_params::Pbkdf2Params;
 use pkcs12::pfx::Pfx;
 use pkcs12::pfx::Version;
 use pkcs12::safe_bag::SafeContents;
+
+#[cfg(feature = "decrypt")]
+use pkcs12::utils::decrypt_pfx;
+
 use pkcs8::pkcs5::pbes2::{AES_256_CBC_OID, HMAC_WITH_SHA256_OID, PBES2_OID, PBKDF2_OID};
 use pkcs8::{pkcs5, EncryptedPrivateKeyInfo};
 use spki::AlgorithmIdentifierOwned;
@@ -258,6 +262,17 @@ fn decode_sample_pfx() {
         mac_data.mac_salt.as_bytes()
     );
     assert_eq!(hex!["08 00"], mac_data.iterations.as_bytes());
+}
+
+#[cfg(feature = "decrypt")]
+#[test]
+fn decode_sample_pfx_with_utils() {
+    let bytes = include_bytes!("examples/example.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }
 
 //    0 1752: SEQUENCE {
@@ -645,4 +660,15 @@ fn decode_sample_pfx2() {
         mac_data.mac_salt.as_bytes()
     );
     assert_eq!(hex!["08 00"], mac_data.iterations.as_bytes());
+}
+
+#[cfg(feature = "decrypt")]
+#[test]
+fn decode_sample_pfx2_with_utils() {
+    let bytes = include_bytes!("examples/example2.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }

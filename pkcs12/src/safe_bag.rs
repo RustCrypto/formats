@@ -2,6 +2,7 @@
 
 use alloc::vec::Vec;
 use const_oid::ObjectIdentifier;
+use der::asn1::OctetString;
 use der::{Enumerated, Sequence};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
@@ -119,7 +120,7 @@ pub struct PrivateKeyInfo {
     pub algorithm: AlgorithmIdentifierOwned,
 
     /// Private key data.
-    pub private_key: Vec<u8>,
+    pub private_key: OctetString,
 
     /// Public key data, optionally available if version is V2.
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
