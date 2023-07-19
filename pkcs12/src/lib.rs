@@ -16,9 +16,8 @@
 
 //! TODO: complete PKCS#12 crate
 
-#[cfg(feature="kdf")]
+#[cfg(feature = "kdf")]
 extern crate alloc;
 
-#[cfg(feature="kdf")]
+#[cfg(feature = "kdf")]
 pub mod kdf;
-
