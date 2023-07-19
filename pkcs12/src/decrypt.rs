@@ -6,14 +6,16 @@ use crate::pfx::Pfx;
 use crate::safe_bag::{PrivateKeyInfo, SafeContents};
 use cms::encrypted_data::EncryptedData;
 use const_oid::db::rfc5911;
+use const_oid::ObjectIdentifier;
 use der::asn1::ContextSpecific;
 use der::asn1::OctetString;
 use der::{Any, Decode, Encode};
+use pkcs5::pbes2;
 use pkcs8::EncryptedPrivateKeyInfo;
 use x509_cert::Certificate;
 
 /// Error type
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum Error {
     /// ASN.1 DER-related errors.
@@ -36,6 +38,9 @@ pub enum Error {
 
     /// Missing expected content
     MissingContent,
+
+    /// Missing expected content
+    UnexpectedAlgorithm(ObjectIdentifier),
 }
 type Result<T> = core::result::Result<T, Error>;
 
@@ -76,6 +81,16 @@ fn process_safe_contents(
                     return Err(Error::UnexpectedSafeBag);
                 }
             }
+            crate::PKCS_12_KEY_BAG_OID => {
+                if key.is_none() {
+                    let cs: ContextSpecific<PrivateKeyInfo> =
+                        ContextSpecific::from_der(&safe_bag.bag_value)
+                            .map_err(|e| Error::Asn1(e))?;
+                    key = Some(cs.value);
+                } else {
+                    return Err(Error::UnexpectedSafeBag);
+                }
+            }
             _ => return Err(Error::UnexpectedSafeBag),
         };
     }
@@ -98,8 +113,16 @@ fn process_encrypted_data(
         None => return Err(Error::MissingParameters),
     };
 
-    let params =
-        pkcs8::pkcs5::pbes2::Parameters::from_der(&enc_params).map_err(|e| Error::Asn1(e))?;
+    let params = match enc_data.enc_content_info.content_enc_alg.oid {
+        pbes2::PBES2_OID => {
+            pkcs8::pkcs5::pbes2::Parameters::from_der(&enc_params).map_err(|e| Error::Asn1(e))?
+        }
+        _ => {
+            return Err(Error::UnexpectedAlgorithm(
+                enc_data.enc_content_info.content_enc_alg.oid,
+            ))
+        }
+    };
 
     let scheme =
         pkcs5::EncryptionScheme::try_from(params.clone()).map_err(|_e| Error::EncryptionScheme)?;
