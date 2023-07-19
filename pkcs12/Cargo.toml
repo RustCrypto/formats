@@ -19,6 +19,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
+cbc = { version = "0.1.2", optional = true }
 der = { version = "0.7.7", features = ["alloc", "derive", "oid", "pem"] }
 spki = { version = "0.7" }
 x509-cert = { version = "0.2.3", default-features = false, features = ["pem"] }
@@ -26,13 +27,19 @@ const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 cms = "0.2.1"
 pkcs8 = { version = "0.10.2", features = ["pkcs5"], optional = true }
 pkcs5 = {version = "0.7.1", features = ["pbes2"], optional = true}
+digest = { version = "0.10.7", features=["alloc"], optional = true }
+zeroize = "1.6.0"
+sha1 = { version = "0.10.5", optional = true }
+des = { version = "0.8.1", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3.3"
-subtle-encoding = "0.5.1"
 pkcs8 = { version = "0.10.2", features = ["pkcs5"] }
-pkcs5 = {version = "0.7.1", features = ["pbes2"]}
+pkcs5 = {version = "0.7.1", features = ["pbes2", "3des"]}
+subtle-encoding = "0.5.1"
+sha2 = "0.10.7"
 
 [features]
-decrypt = ["pkcs8", "pkcs5"]
-insecure = ["pkcs5/sha1-insecure", "pkcs5/des-insecure"]
+decrypt = ["pkcs8", "pkcs5", "cbc", "kdf"]
+insecure = ["pkcs5/sha1-insecure", "pkcs5/des-insecure", "des", "sha1"]
+kdf = ["dep:digest"]

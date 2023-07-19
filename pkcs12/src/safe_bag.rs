@@ -14,7 +14,7 @@ use x509_cert::attr::Attributes;
 /// ```
 ///
 /// [RFC 7292 Section 4]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2
-pub type SafeContents<'a> = Vec<SafeBag>;
+pub type SafeContents = Vec<SafeBag>;
 
 /// The `SafeBag` type is defined in [RFC 7292 Section 4.1].
 ///

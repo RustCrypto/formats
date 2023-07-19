@@ -35,6 +35,12 @@ pub mod safe_bag;
 #[cfg(feature = "decrypt")]
 pub mod decrypt;
 
+#[cfg(feature = "kdf")]
+pub mod kdf;
+
+#[cfg(all(feature = "kdf", feature = "insecure", feature = "decrypt"))]
+pub mod decrypt_kdf;
+
 // pbe oids
 /// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
 pub const PKCS_12_PBE_WITH_SHAAND128_BIT_RC4: ObjectIdentifier =

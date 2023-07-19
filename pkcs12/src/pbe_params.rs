@@ -1,9 +1,6 @@
 //! pkcs-12PbeParams implementation
 
-use der::{
-    asn1::{Int, OctetString},
-    Sequence, ValueOrd,
-};
+use der::{asn1::OctetString, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 
 /// The `pkcs-12PbeParams` type is defined in [RFC 7292 Appendix C].
@@ -22,7 +19,7 @@ pub struct Pkcs12PbeParams {
     pub salt: OctetString,
 
     /// the number of iterations
-    pub iterations: Int,
+    pub iterations: i32,
 }
 
 /// Password-Based Key Derivation Scheme 2 parameters as defined in
@@ -55,4 +52,14 @@ pub struct Pbkdf2Params {
 
     /// Pseudo-random function to use with PBKDF2
     pub prf: AlgorithmIdentifierOwned,
+}
+
+/// EncryptedPrivateKeyInfo ::= SEQUENCE {
+///   encryptionAlgorithm  EncryptionAlgorithmIdentifier,
+///   encryptedData        EncryptedData }
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
+pub struct EncryptedPrivateKeyInfo {
+    pub encryption_algorithm: AlgorithmIdentifierOwned,
+    pub encrypted_data: OctetString,
 }

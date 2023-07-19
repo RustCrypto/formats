@@ -16,10 +16,10 @@ use pkcs12::safe_bag::SafeContents;
 #[cfg(feature = "decrypt")]
 use pkcs12::decrypt::decrypt_pfx;
 
-#[cfg(feature = "decrypt")]
+#[cfg(all(feature = "decrypt", not(feature = "insecure")))]
 use pkcs12::decrypt::Error;
 
-#[cfg(feature = "decrypt")]
+#[cfg(all(feature = "decrypt", not(feature = "insecure")))]
 use pkcs12::PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC;
 
 use pkcs8::pkcs5::pbes2::{AES_256_CBC_OID, HMAC_WITH_SHA256_OID, PBES2_OID, PBKDF2_OID};
@@ -715,7 +715,7 @@ fn decode_sample_pfx5_with_decrypt() {
     assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }
 
-#[cfg(feature = "decrypt")]
+#[cfg(all(feature = "decrypt", not(feature = "insecure")))]
 #[test]
 fn decode_sample_pkits_with_decrypt_fail() {
     let bytes = include_bytes!("examples/ValidCertificatePathTest1EE.p12");
@@ -727,4 +727,21 @@ fn decode_sample_pkits_with_decrypt_fail() {
             PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC
         ))
     )
+}
+
+#[cfg(all(feature = "insecure", feature = "decrypt", feature = "kdf"))]
+#[test]
+fn decode_sample_pkits_with_decrypt() {
+    let bytes = include_bytes!("examples/ValidCertificatePathTest1EE.p12");
+    let (key, cert) = decrypt_pfx(bytes, "password".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(
+        include_bytes!("examples/ValidCertificatePathTest1EE.key"),
+        enc_key.as_slice()
+    );
+    let enc_cert = cert.unwrap().to_der().unwrap();
+    assert_eq!(
+        include_bytes!("examples/ValidCertificatePathTest1EE.crt"),
+        enc_cert.as_slice()
+    );
 }

@@ -2,6 +2,12 @@
 
 use crate::authenticated_safe::AuthenticatedSafe;
 use crate::cert_type::CertBag;
+use crate::pbe_params::EncryptedPrivateKeyInfo as OtherEncryptedPrivateKeyInfo;
+use core::str::Utf8Error;
+
+#[cfg(all(feature = "kdf", feature = "insecure"))]
+use crate::decrypt_kdf::*;
+
 use crate::pfx::Pfx;
 use crate::safe_bag::{PrivateKeyInfo, SafeContents};
 use cms::encrypted_data::EncryptedData;
@@ -10,7 +16,7 @@ use const_oid::ObjectIdentifier;
 use der::asn1::ContextSpecific;
 use der::asn1::OctetString;
 use der::{Any, Decode, Encode};
-use pkcs5::pbes2;
+use pkcs5::pbes2::PBES2_OID;
 use pkcs8::EncryptedPrivateKeyInfo;
 use x509_cert::Certificate;
 
@@ -41,8 +47,12 @@ pub enum Error {
 
     /// Missing expected content
     UnexpectedAlgorithm(ObjectIdentifier),
+
+    /// String conversion error
+    Utf8Error(Utf8Error),
 }
-type Result<T> = core::result::Result<T, Error>;
+/// Result type for PKCS #12 der
+pub type Result<T> = core::result::Result<T, Error>;
 
 fn process_safe_contents(
     data: &[u8],
@@ -67,19 +77,46 @@ fn process_safe_contents(
                 }
             }
             crate::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfo<'_>> =
+                let cs_tmp: ContextSpecific<OtherEncryptedPrivateKeyInfo> =
                     ContextSpecific::from_der(&safe_bag.bag_value).map_err(|e| Error::Asn1(e))?;
-                let mut ciphertext = cs.value.encrypted_data.to_vec();
-                let plaintext = cs
-                    .value
-                    .encryption_algorithm
-                    .decrypt_in_place(password, &mut ciphertext)
-                    .map_err(|e| Error::Pkcs5(e))?;
-                if key.is_none() {
-                    key = Some(PrivateKeyInfo::from_der(plaintext).map_err(|e| Error::Asn1(e))?);
-                } else {
-                    return Err(Error::UnexpectedSafeBag);
-                }
+                match cs_tmp.value.encryption_algorithm.oid {
+                    PBES2_OID => {
+                        let cs: ContextSpecific<EncryptedPrivateKeyInfo<'_>> =
+                            ContextSpecific::from_der(&safe_bag.bag_value)
+                                .map_err(|e| Error::Asn1(e))?;
+                        let mut ciphertext = cs.value.encrypted_data.to_vec();
+                        let plaintext = cs
+                            .value
+                            .encryption_algorithm
+                            .decrypt_in_place(password, &mut ciphertext)
+                            .map_err(|e| Error::Pkcs5(e))?;
+                        if key.is_none() {
+                            key = Some(
+                                PrivateKeyInfo::from_der(plaintext).map_err(|e| Error::Asn1(e))?,
+                            );
+                        } else {
+                            return Err(Error::UnexpectedSafeBag);
+                        }
+                    }
+                    #[cfg(all(feature = "kdf", feature = "insecure"))]
+                    _ => {
+                        let cur_key = pkcs12_pbe_key(
+                            cs_tmp.value.encrypted_data,
+                            password,
+                            &cs_tmp.value.encryption_algorithm,
+                        )?;
+                        if key.is_some() {
+                            return Err(Error::UnexpectedAuthSafe);
+                        }
+                        key = Some(cur_key);
+                    }
+                    #[cfg(not(all(feature = "kdf", feature = "insecure")))]
+                    _ => {
+                        return Err(Error::UnexpectedAlgorithm(
+                            cs_tmp.value.encryption_algorithm.oid,
+                        ))
+                    }
+                };
             }
             crate::PKCS_12_KEY_BAG_OID => {
                 if key.is_none() {
@@ -103,38 +140,50 @@ fn process_encrypted_data(
 ) -> Result<(Option<PrivateKeyInfo>, Option<Certificate>)> {
     let enc_data_os = &data.to_der().map_err(|e| Error::Asn1(e))?;
     let enc_data = EncryptedData::from_der(enc_data_os.as_slice()).map_err(|e| Error::Asn1(e))?;
-    let enc_params = match enc_data
-        .enc_content_info
-        .content_enc_alg
-        .parameters
-        .as_ref()
-    {
-        Some(params) => params.to_der().map_err(|e| Error::Asn1(e))?,
-        None => return Err(Error::MissingParameters),
-    };
 
-    let params = match enc_data.enc_content_info.content_enc_alg.oid {
-        pbes2::PBES2_OID => {
-            pkcs8::pkcs5::pbes2::Parameters::from_der(&enc_params).map_err(|e| Error::Asn1(e))?
+    match enc_data.enc_content_info.content_enc_alg.oid {
+        PBES2_OID => {
+            let enc_params = match enc_data
+                .enc_content_info
+                .content_enc_alg
+                .parameters
+                .as_ref()
+            {
+                Some(params) => params.to_der().map_err(|e| Error::Asn1(e))?,
+                None => return Err(Error::MissingParameters),
+            };
+            let params = pkcs8::pkcs5::pbes2::Parameters::from_der(&enc_params)
+                .map_err(|e| Error::Asn1(e))?;
+            let scheme = pkcs5::EncryptionScheme::try_from(params.clone())
+                .map_err(|_e| Error::EncryptionScheme)?;
+            match enc_data.enc_content_info.encrypted_content {
+                Some(content) => {
+                    let mut ciphertext = content.as_bytes().to_vec();
+                    let plaintext = scheme
+                        .decrypt_in_place(password, &mut ciphertext)
+                        .map_err(|e| Error::Pkcs5(e))?;
+                    process_safe_contents(plaintext, password)
+                }
+                None => return Err(Error::MissingContent),
+            }
+        }
+        #[cfg(all(feature = "kdf", feature = "insecure"))]
+        crate::PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC => {
+            let plaintext = match enc_data.enc_content_info.encrypted_content {
+                Some(encrypted_content) => pkcs12_pbe(
+                    encrypted_content,
+                    password,
+                    &enc_data.enc_content_info.content_enc_alg,
+                )?,
+                None => return Err(Error::MissingParameters),
+            };
+            process_safe_contents(&plaintext, password)
         }
         _ => {
             return Err(Error::UnexpectedAlgorithm(
                 enc_data.enc_content_info.content_enc_alg.oid,
             ))
         }
-    };
-
-    let scheme =
-        pkcs5::EncryptionScheme::try_from(params.clone()).map_err(|_e| Error::EncryptionScheme)?;
-    match enc_data.enc_content_info.encrypted_content {
-        Some(content) => {
-            let mut ciphertext = content.as_bytes().to_vec();
-            let plaintext = scheme
-                .decrypt_in_place(password, &mut ciphertext)
-                .map_err(|e| Error::Pkcs5(e))?;
-            process_safe_contents(plaintext, password)
-        }
-        None => return Err(Error::MissingContent),
     }
 }
 

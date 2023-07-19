@@ -1025,13 +1025,21 @@ dependencies = [
 name = "pkcs12"
 version = "0.0.0"
 dependencies = [
+ "cbc",
  "cms",
  "const-oid 0.9.3",
  "der",
+ "des",
+ "digest",
  "hex-literal 0.3.4",
+ "pkcs5",
  "pkcs8",
+ "sha1",
+ "sha2",
  "spki",
+ "subtle-encoding",
  "x509-cert",
+ "zeroize",
 ]
 
 [[package]]
@@ -1604,6 +1612,15 @@ name = "subtle"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
+
+[[package]]
+name = "subtle-encoding"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dcb1ed7b8330c5eed5441052651dd7a12c75e2ed88f2ec024ae1fa3a5e59945"
+dependencies = [
+ "zeroize",
+]
 
 [[package]]
 name = "syn"
