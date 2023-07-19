@@ -33,7 +33,7 @@ pub mod pfx;
 pub mod safe_bag;
 
 #[cfg(feature = "decrypt")]
-pub mod utils;
+pub mod decrypt;
 
 // pbe oids
 /// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).

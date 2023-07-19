@@ -14,7 +14,7 @@ use pkcs12::pfx::Version;
 use pkcs12::safe_bag::SafeContents;
 
 #[cfg(feature = "decrypt")]
-use pkcs12::utils::decrypt_pfx;
+use pkcs12::decrypt::decrypt_pfx;
 
 use pkcs8::pkcs5::pbes2::{AES_256_CBC_OID, HMAC_WITH_SHA256_OID, PBES2_OID, PBKDF2_OID};
 use pkcs8::{pkcs5, EncryptedPrivateKeyInfo};
