@@ -1032,6 +1032,7 @@ dependencies = [
  "des",
  "digest",
  "hex-literal 0.3.4",
+ "hmac",
  "pkcs5",
  "pkcs8",
  "sha1",

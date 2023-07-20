@@ -102,3 +102,5 @@ pub const PKCS_12_SDSI_CERT_OID: ObjectIdentifier =
 
 // todo: return the friendly name if present? (minimally, defer until BMPString support is available)
 // todo: support separate mac and encryption passwords?
+// todo: add more encryption tests
+// todo: add a builder
