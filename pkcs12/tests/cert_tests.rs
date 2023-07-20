@@ -267,7 +267,7 @@ fn decode_sample_pfx() {
         hex!("FF 08 ED 21 81 C8 A8 E3"),
         mac_data.mac_salt.as_bytes()
     );
-    assert_eq!(hex!["08 00"], mac_data.iterations.as_bytes());
+    assert_eq!(2048, mac_data.iterations);
 }
 
 #[cfg(feature = "decrypt")]
@@ -665,7 +665,7 @@ fn decode_sample_pfx2() {
         hex!("E1 14 4F 8C B4 AF B2 FE"),
         mac_data.mac_salt.as_bytes()
     );
-    assert_eq!(hex!["08 00"], mac_data.iterations.as_bytes());
+    assert_eq!(2048, mac_data.iterations);
 }
 
 #[cfg(feature = "decrypt")]
@@ -708,6 +708,18 @@ fn decode_sample_pfx4_with_decrypt() {
 fn decode_sample_pfx5_with_decrypt() {
     // openssl pkcs12 -export -out example5.pfx -inkey key.pem -in cert.pem -passout pass:1234 -certpbe aes-192-cbc -keypbe aes-256-cbc -nomac
     let bytes = include_bytes!("examples/example5.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(feature = "decrypt")]
+#[test]
+fn decode_sample_pfx6_with_decrypt() {
+    // openssl pkcs12 -export -out example6.pfx -inkey key.pem -in cert.pem -passout pass:1234 -iter 1
+    let bytes = include_bytes!("examples/example6.pfx");
     let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();
     assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());

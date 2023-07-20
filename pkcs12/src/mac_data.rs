@@ -2,7 +2,7 @@
 
 use crate::digest_info::DigestInfo;
 use der::{
-    asn1::{Int, OctetString},
+    asn1::OctetString,
     Sequence, ValueOrd,
 };
 
@@ -28,5 +28,10 @@ pub struct MacData {
     pub mac_salt: OctetString,
 
     /// the number of iterations
-    pub iterations: Int,
+    #[asn1(default = "default_one")]
+    pub iterations: u32,
+}
+
+fn default_one() -> u32 {
+    1
 }
