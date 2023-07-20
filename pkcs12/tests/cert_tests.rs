@@ -22,6 +22,12 @@ use pkcs12::decrypt::Error;
 #[cfg(all(feature = "decrypt", not(feature = "insecure")))]
 use pkcs12::PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC;
 
+#[cfg(all(feature = "decrypt", feature = "insecure"))]
+use pkcs12::decrypt::Error;
+
+#[cfg(all(feature = "decrypt", feature = "insecure"))]
+use pkcs12::PKCS_12_PBEWITH_SHAAND40_BIT_RC2_CBC;
+
 use pkcs8::pkcs5::pbes2::{AES_256_CBC_OID, HMAC_WITH_SHA256_OID, PBES2_OID, PBKDF2_OID};
 use pkcs8::{pkcs5, EncryptedPrivateKeyInfo};
 use spki::AlgorithmIdentifierOwned;
@@ -771,3 +777,18 @@ fn decode_sample_pkits_with_decrypt() {
         enc_cert.as_slice()
     );
 }
+
+#[cfg(all(feature = "insecure", feature = "decrypt", feature = "kdf"))]
+#[test]
+fn decode_sample_pkits_macos_with_decrypt() {
+    let bytes = include_bytes!("examples/ValidCertificatePathTest1EE_macos.p12");
+    let r = decrypt_pfx(bytes, "password".as_bytes());
+    assert!(r.is_err());
+    assert_eq!(
+        r.err(),
+        Some(Error::UnexpectedAlgorithm(
+            PKCS_12_PBEWITH_SHAAND40_BIT_RC2_CBC
+        ))
+    )
+}
+
