@@ -113,9 +113,6 @@ fn pkcs12_key_derive_sha256() {
 
 #[test]
 fn pkcs12_key_derive_sha512() {
-    use hex_literal::hex;
-    use pkcs12::kdf::{derive_key, Pkcs12KeyType};
-
     const PASS_SHORT: &str = "ge@äheim";
     const SALT_INC: [u8; 8] = [0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8];
 
