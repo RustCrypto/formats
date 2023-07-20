@@ -227,9 +227,9 @@ pub fn decrypt_pfx(
 
     #[cfg(feature = "kdf")]
     if let Some(mac_data) = pfx.mac_data {
-        use hmac::{Hmac, Mac};
         use crate::kdf::*;
         use digest::OutputSizeUser;
+        use hmac::{Hmac, Mac};
 
         #[cfg(feature = "insecure")]
         const OID_SHA_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
