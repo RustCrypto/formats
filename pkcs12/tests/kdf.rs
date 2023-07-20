@@ -12,7 +12,13 @@ fn pkcs12_key_derive_sha256() {
     const SALT_INC: [u8; 8] = [0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8];
 
     assert_eq!(
-        derive_key_utf8::<sha2::Sha256>(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 100, 32),
+        derive_key_utf8::<sha2::Sha256>(
+            PASS_SHORT,
+            &SALT_INC,
+            Pkcs12KeyType::EncryptionKey,
+            100,
+            32
+        ),
         hex!("fae4d4957a3cc781e1180b9d4fb79c1e0c8579b746a3177e5b0768a3118bf863")
     );
 
@@ -27,7 +33,13 @@ fn pkcs12_key_derive_sha256() {
     );
 
     assert_eq!(
-        derive_key_utf8::<sha2::Sha256>(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 100, 20),
+        derive_key_utf8::<sha2::Sha256>(
+            PASS_SHORT,
+            &SALT_INC,
+            Pkcs12KeyType::EncryptionKey,
+            100,
+            20
+        ),
         hex!("fae4d4957a3cc781e1180b9d4fb79c1e0c8579b7")
     );
 
@@ -42,7 +54,13 @@ fn pkcs12_key_derive_sha256() {
     );
 
     assert_eq!(
-        derive_key_utf8::<sha2::Sha256>(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 100, 12),
+        derive_key_utf8::<sha2::Sha256>(
+            PASS_SHORT,
+            &SALT_INC,
+            Pkcs12KeyType::EncryptionKey,
+            100,
+            12
+        ),
         hex!("fae4d4957a3cc781e1180b9d")
     );
 
@@ -102,7 +120,13 @@ fn pkcs12_key_derive_sha512() {
     const SALT_INC: [u8; 8] = [0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8];
 
     assert_eq!(
-        derive_key_utf8::<sha2::Sha512>(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 100, 32),
+        derive_key_utf8::<sha2::Sha512>(
+            PASS_SHORT,
+            &SALT_INC,
+            Pkcs12KeyType::EncryptionKey,
+            100,
+            32
+        ),
         hex!("b14a9f01bfd9dce4c9d66d2fe9937e5fd9f1afa59e370a6fa4fc81c1cc8ec8ee")
     );
 }
@@ -130,7 +154,13 @@ fn pkcs12_key_derive_special_chars() {
     const SALT_INC: [u8; 8] = [0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8];
 
     assert_eq!(
-        derive_key_utf8::<sha2::Sha256>(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 100, 32),
+        derive_key_utf8::<sha2::Sha256>(
+            PASS_SHORT,
+            &SALT_INC,
+            Pkcs12KeyType::EncryptionKey,
+            100,
+            32
+        ),
         hex!("d01e72a940b4b1a7a5707fc8264a60cb7606ff9051dedff90930687d2513c006")
     );
 }
