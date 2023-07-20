@@ -1,5 +1,7 @@
 //! Convenience functions for working with some common PKCS #12 use cases
 
+use alloc::vec;
+use alloc::vec::Vec;
 use crate::authenticated_safe::AuthenticatedSafe;
 use crate::cert_type::CertBag;
 use crate::pbe_params::EncryptedPrivateKeyInfo as OtherEncryptedPrivateKeyInfo;
@@ -57,9 +59,9 @@ pub type Result<T> = core::result::Result<T, Error>;
 fn process_safe_contents(
     data: &[u8],
     password: &[u8],
-) -> Result<(Option<PrivateKeyInfo>, Option<Certificate>)> {
+) -> Result<(Option<PrivateKeyInfo>, Vec<Certificate>)> {
     let mut key: Option<PrivateKeyInfo> = None;
-    let mut cert: Option<Certificate> = None;
+    let mut cert: Vec<Certificate> = vec![];
 
     let safe_contents = SafeContents::from_der(data).map_err(|e| Error::Asn1(e))?;
     for safe_bag in safe_contents {
@@ -67,14 +69,9 @@ fn process_safe_contents(
             crate::PKCS_12_CERT_BAG_OID => {
                 let cs: ContextSpecific<CertBag> =
                     ContextSpecific::from_der(&safe_bag.bag_value).map_err(|e| Error::Asn1(e))?;
-                if cert.is_none() {
-                    cert = Some(
+                    let _ = cert.push(
                         Certificate::from_der(cs.value.cert_value.as_bytes())
-                            .map_err(|e| Error::Asn1(e))?,
-                    );
-                } else {
-                    return Err(Error::UnexpectedSafeBag);
-                }
+                            .map_err(|e| Error::Asn1(e))?);
             }
             crate::PKCS_12_PKCS8_KEY_BAG_OID => {
                 let cs_tmp: ContextSpecific<OtherEncryptedPrivateKeyInfo> =
@@ -137,7 +134,7 @@ fn process_safe_contents(
 fn process_encrypted_data(
     data: &Any,
     password: &[u8],
-) -> Result<(Option<PrivateKeyInfo>, Option<Certificate>)> {
+) -> Result<(Option<PrivateKeyInfo>, Vec<Certificate>)> {
     let enc_data_os = &data.to_der().map_err(|e| Error::Asn1(e))?;
     let enc_data = EncryptedData::from_der(enc_data_os.as_slice()).map_err(|e| Error::Asn1(e))?;
 
@@ -192,9 +189,9 @@ fn process_encrypted_data(
 pub fn decrypt_pfx(
     pfx_data: &[u8],
     password: &[u8],
-) -> Result<(Option<PrivateKeyInfo>, Option<Certificate>)> {
+) -> Result<(Option<PrivateKeyInfo>, Vec<Certificate>)> {
     let mut key: Option<PrivateKeyInfo> = None;
-    let mut cert: Option<Certificate> = None;
+    let mut cert: Vec<Certificate> = vec![];
     let pfx = Pfx::from_der(pfx_data).map_err(|e| Error::Asn1(e))?;
     let auth_safes_os =
         OctetString::from_der(&pfx.auth_safe.content.to_der().map_err(|e| Error::Asn1(e))?)
@@ -202,7 +199,7 @@ pub fn decrypt_pfx(
     let auth_safes =
         AuthenticatedSafe::from_der(auth_safes_os.as_bytes()).map_err(|e| Error::Asn1(e))?;
     for auth_safe in auth_safes {
-        let (cur_key, cur_cert) = match auth_safe.content_type {
+        let (cur_key, mut cur_cert) = match auth_safe.content_type {
             rfc5911::ID_ENCRYPTED_DATA => process_encrypted_data(&auth_safe.content, password)?,
             rfc5911::ID_DATA => {
                 let os =
@@ -219,11 +216,8 @@ pub fn decrypt_pfx(
             }
             key = cur_key;
         }
-        if cur_cert.is_some() {
-            if cert.is_some() {
-                return Err(Error::UnexpectedAuthSafe);
-            }
-            cert = cur_cert;
+        if !cur_cert.is_empty() {
+            cert.append(&mut cur_cert);
         }
     }
     Ok((key, cert))

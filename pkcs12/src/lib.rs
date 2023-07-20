@@ -100,7 +100,6 @@ pub const PKCS_12_X509_CERT_OID: ObjectIdentifier =
 pub const PKCS_12_SDSI_CERT_OID: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.22.2");
 
-// todo: multi-cert support
 // todo: return the friendly name if present
 // todo: more unencrypted tests from OpenSSL
 // todo: test from MacOS and Windows

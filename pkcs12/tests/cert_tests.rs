@@ -277,7 +277,7 @@ fn decode_sample_pfx_with_decrypt() {
     let (key, cert) = decrypt_pfx(bytes, "".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();
     assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
-    let enc_cert = cert.unwrap().to_der().unwrap();
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
     assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }
 
@@ -675,7 +675,7 @@ fn decode_sample_pfx2_with_decrypt() {
     let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();
     assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
-    let enc_cert = cert.unwrap().to_der().unwrap();
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
     assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }
 
@@ -687,7 +687,7 @@ fn decode_sample_pfx3_with_decrypt() {
     let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();
     assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
-    let enc_cert = cert.unwrap().to_der().unwrap();
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
     assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }
 
@@ -699,7 +699,7 @@ fn decode_sample_pfx4_with_decrypt() {
     let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();
     assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
-    let enc_cert = cert.unwrap().to_der().unwrap();
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
     assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }
 
@@ -711,7 +711,7 @@ fn decode_sample_pfx5_with_decrypt() {
     let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();
     assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
-    let enc_cert = cert.unwrap().to_der().unwrap();
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
     assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }
 
@@ -723,8 +723,22 @@ fn decode_sample_pfx6_with_decrypt() {
     let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();
     assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
-    let enc_cert = cert.unwrap().to_der().unwrap();
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
     assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(feature = "decrypt")]
+#[test]
+fn decode_sample_pfx7_with_decrypt() {
+    // openssl pkcs12 -export -out example6.pfx -inkey key.pem -in cert.pem -passout pass:1234 -iter 1
+    let bytes = include_bytes!("examples/example7.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/ValidCertificatePathTest1EE.key"), enc_key.as_slice());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/ValidCertificatePathTest1EE.crt"), enc_cert.as_slice());
+    let enc_ca_cert = cert.get(1).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/GoodCACert.der"), enc_ca_cert.as_slice());
 }
 
 #[cfg(all(feature = "decrypt", not(feature = "insecure")))]
@@ -751,7 +765,7 @@ fn decode_sample_pkits_with_decrypt() {
         include_bytes!("examples/ValidCertificatePathTest1EE.key"),
         enc_key.as_slice()
     );
-    let enc_cert = cert.unwrap().to_der().unwrap();
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
     assert_eq!(
         include_bytes!("examples/ValidCertificatePathTest1EE.crt"),
         enc_cert.as_slice()
