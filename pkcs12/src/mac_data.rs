@@ -1,10 +1,7 @@
 //! MacData-related types
 
 use crate::digest_info::DigestInfo;
-use der::{
-    asn1::OctetString,
-    Sequence, ValueOrd,
-};
+use der::{asn1::OctetString, Sequence, ValueOrd};
 
 /// The `MacData` type is defined in [RFC 7292 Section 4].
 ///

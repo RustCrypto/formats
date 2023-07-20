@@ -43,7 +43,7 @@ pub(crate) fn pkcs12_pbe(
         &s,
         p12_pbe_params.salt.as_bytes(),
         Pkcs12KeyType::Iv,
-        2048,
+        p12_pbe_params.iterations,
         8,
     );
     let es = match alg.oid {

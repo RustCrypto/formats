@@ -740,11 +740,20 @@ fn decode_sample_pfx7_with_decrypt() {
     let bytes = include_bytes!("examples/example7.pfx");
     let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();
-    assert_eq!(include_bytes!("examples/ValidCertificatePathTest1EE.key"), enc_key.as_slice());
+    assert_eq!(
+        include_bytes!("examples/ValidCertificatePathTest1EE.key"),
+        enc_key.as_slice()
+    );
     let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
-    assert_eq!(include_bytes!("examples/ValidCertificatePathTest1EE.crt"), enc_cert.as_slice());
+    assert_eq!(
+        include_bytes!("examples/ValidCertificatePathTest1EE.crt"),
+        enc_cert.as_slice()
+    );
     let enc_ca_cert = cert.get(1).expect("Missing certificate").to_der().unwrap();
-    assert_eq!(include_bytes!("examples/GoodCACert.der"), enc_ca_cert.as_slice());
+    assert_eq!(
+        include_bytes!("examples/GoodCACert.der"),
+        enc_ca_cert.as_slice()
+    );
 }
 
 #[cfg(all(feature = "decrypt", not(feature = "insecure")))]
@@ -792,3 +801,28 @@ fn decode_sample_pkits_macos_with_decrypt() {
     )
 }
 
+#[cfg(all(feature = "insecure", feature = "decrypt", feature = "kdf"))]
+#[test]
+fn decode_sample_pkits_windows_tdes_with_decrypt() {
+    let bytes = include_bytes!("examples/ValidCertificatePathTest1EE_windows_tdes.p12.pfx");
+    let (_key, cert) = decrypt_pfx(bytes, "password".as_bytes()).unwrap();
+    // key includes key usage values, hence no comparison here
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(
+        include_bytes!("examples/ValidCertificatePathTest1EE.crt"),
+        enc_cert.as_slice()
+    );
+}
+
+#[cfg(feature = "decrypt")]
+#[test]
+fn decode_sample_pkits_windows_aes_with_decrypt() {
+    let bytes = include_bytes!("examples/ValidCertificatePathTest1EE_windows_aes.p12.pfx");
+    let (_key, cert) = decrypt_pfx(bytes, "password".as_bytes()).unwrap();
+    // key includes key usage values, hence no comparison here
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(
+        include_bytes!("examples/ValidCertificatePathTest1EE.crt"),
+        enc_cert.as_slice()
+    );
+}

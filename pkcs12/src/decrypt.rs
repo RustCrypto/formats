@@ -1,10 +1,10 @@
 //! Convenience functions for working with some common PKCS #12 use cases
 
-use alloc::vec;
-use alloc::vec::Vec;
 use crate::authenticated_safe::AuthenticatedSafe;
 use crate::cert_type::CertBag;
 use crate::pbe_params::EncryptedPrivateKeyInfo as OtherEncryptedPrivateKeyInfo;
+use alloc::vec;
+use alloc::vec::Vec;
 use core::str::Utf8Error;
 
 #[cfg(all(feature = "kdf", feature = "insecure"))]
@@ -69,9 +69,10 @@ fn process_safe_contents(
             crate::PKCS_12_CERT_BAG_OID => {
                 let cs: ContextSpecific<CertBag> =
                     ContextSpecific::from_der(&safe_bag.bag_value).map_err(|e| Error::Asn1(e))?;
-                    let _ = cert.push(
-                        Certificate::from_der(cs.value.cert_value.as_bytes())
-                            .map_err(|e| Error::Asn1(e))?);
+                let _ = cert.push(
+                    Certificate::from_der(cs.value.cert_value.as_bytes())
+                        .map_err(|e| Error::Asn1(e))?,
+                );
             }
             crate::PKCS_12_PKCS8_KEY_BAG_OID => {
                 let cs_tmp: ContextSpecific<OtherEncryptedPrivateKeyInfo> =
