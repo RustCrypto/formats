@@ -44,7 +44,7 @@ pub fn derive_key_utf8<D>(
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
-    let mut pass_utf16 = Zeroizing::new(str_to_unicode(pass));
+    let pass_utf16 = Zeroizing::new(str_to_unicode(pass));
     derive_key::<D>(&pass_utf16, salt, id, rounds, key_len)
 }
 
