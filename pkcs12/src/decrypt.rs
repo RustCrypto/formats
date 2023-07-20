@@ -13,7 +13,7 @@ use crate::decrypt_kdf::*;
 use crate::pfx::Pfx;
 use crate::safe_bag::{PrivateKeyInfo, SafeContents};
 use cms::encrypted_data::EncryptedData;
-use const_oid::db::rfc5911;
+use const_oid::db::{rfc5911, rfc5912};
 use const_oid::ObjectIdentifier;
 use der::asn1::ContextSpecific;
 use der::asn1::OctetString;
@@ -46,6 +46,9 @@ pub enum Error {
 
     /// Missing expected content
     MissingContent,
+
+    /// Error verifying MacData
+    MacError,
 
     /// Missing expected content
     UnexpectedAlgorithm(ObjectIdentifier),
@@ -199,7 +202,7 @@ pub fn decrypt_pfx(
             .map_err(|e| Error::Asn1(e))?;
     let auth_safes =
         AuthenticatedSafe::from_der(auth_safes_os.as_bytes()).map_err(|e| Error::Asn1(e))?;
-    for auth_safe in auth_safes {
+    for auth_safe in &auth_safes {
         let (cur_key, mut cur_cert) = match auth_safe.content_type {
             rfc5911::ID_ENCRYPTED_DATA => process_encrypted_data(&auth_safe.content, password)?,
             rfc5911::ID_DATA => {
@@ -221,5 +224,56 @@ pub fn decrypt_pfx(
             cert.append(&mut cur_cert);
         }
     }
+
+    #[cfg(feature = "kdf")]
+    if let Some(mac_data) = pfx.mac_data {
+        use hmac::{Hmac, Mac};
+        use crate::kdf::*;
+        use digest::OutputSizeUser;
+
+        #[cfg(feature = "insecure")]
+        const OID_SHA_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
+
+        let s = core::str::from_utf8(password).map_err(|e| Error::Utf8Error(e))?;
+
+        match mac_data.mac.algorithm.oid {
+            #[cfg(feature = "insecure")]
+            OID_SHA_1 => {
+                use sha1::Sha1;
+                type HmacSha1 = Hmac<Sha1>;
+
+                let mac_key = derive_key::<Sha1>(
+                    &s,
+                    mac_data.mac_salt.as_bytes(),
+                    Pkcs12KeyType::Mac,
+                    mac_data.iterations,
+                    Sha1::output_size(),
+                );
+
+                let mut mac = HmacSha1::new_from_slice(&mac_key).map_err(|_e| Error::MacError)?;
+                mac.update(pfx.auth_safe.content.value());
+                mac.verify_slice(mac_data.mac.digest.as_bytes())
+                    .map_err(|_e| Error::MacError)?;
+            }
+            rfc5912::ID_SHA_256 => {
+                use sha2::Sha256;
+                type HmacSha256 = Hmac<Sha256>;
+                let mac_key = derive_key::<Sha256>(
+                    &s,
+                    mac_data.mac_salt.as_bytes(),
+                    Pkcs12KeyType::Mac,
+                    mac_data.iterations,
+                    Sha256::output_size(),
+                );
+
+                let mut mac = HmacSha256::new_from_slice(&mac_key).map_err(|_e| Error::MacError)?;
+                mac.update(pfx.auth_safe.content.value());
+                mac.verify_slice(mac_data.mac.digest.as_bytes())
+                    .map_err(|_e| Error::MacError)?;
+            }
+            _ => return Err(Error::UnexpectedAlgorithm(mac_data.mac.algorithm.oid)),
+        };
+    }
+
     Ok((key, cert))
 }

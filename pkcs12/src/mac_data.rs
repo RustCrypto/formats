@@ -26,9 +26,9 @@ pub struct MacData {
 
     /// the number of iterations
     #[asn1(default = "default_one")]
-    pub iterations: u32,
+    pub iterations: i32,
 }
 
-fn default_one() -> u32 {
+fn default_one() -> i32 {
     1
 }
