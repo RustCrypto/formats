@@ -271,6 +271,38 @@ pub fn decrypt_pfx(
                 mac.verify_slice(mac_data.mac.digest.as_bytes())
                     .map_err(|_e| Error::MacError)?;
             }
+            rfc5912::ID_SHA_384 => {
+                use sha2::Sha384;
+                type HmacSha384 = Hmac<Sha384>;
+                let mac_key = derive_key::<Sha384>(
+                    &s,
+                    mac_data.mac_salt.as_bytes(),
+                    Pkcs12KeyType::Mac,
+                    mac_data.iterations,
+                    Sha384::output_size(),
+                );
+
+                let mut mac = HmacSha384::new_from_slice(&mac_key).map_err(|_e| Error::MacError)?;
+                mac.update(pfx.auth_safe.content.value());
+                mac.verify_slice(mac_data.mac.digest.as_bytes())
+                    .map_err(|_e| Error::MacError)?;
+            }
+            rfc5912::ID_SHA_512 => {
+                use sha2::Sha512;
+                type HmacSha512 = Hmac<Sha512>;
+                let mac_key = derive_key::<Sha512>(
+                    &s,
+                    mac_data.mac_salt.as_bytes(),
+                    Pkcs12KeyType::Mac,
+                    mac_data.iterations,
+                    Sha512::output_size(),
+                );
+
+                let mut mac = HmacSha512::new_from_slice(&mac_key).map_err(|_e| Error::MacError)?;
+                mac.update(pfx.auth_safe.content.value());
+                mac.verify_slice(mac_data.mac.digest.as_bytes())
+                    .map_err(|_e| Error::MacError)?;
+            }
             _ => return Err(Error::UnexpectedAlgorithm(mac_data.mac.algorithm.oid)),
         };
     }

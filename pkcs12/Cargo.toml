@@ -32,7 +32,7 @@ zeroize = "1.6.0"
 sha1 = { version = "0.10.5", optional = true }
 sha2 = { version = "0.10.7", optional = true }
 des = { version = "0.8.1", optional = true, default-features = false }
-hmac = "0.12.1"
+hmac = { version = "0.12.1", optional = true }
 
 [dev-dependencies]
 hex-literal = "0.3.3"
@@ -42,6 +42,6 @@ subtle-encoding = "0.5.1"
 sha2 = "0.10.7"
 
 [features]
-decrypt = ["pkcs8", "pkcs5", "cbc", "kdf", "sha2"]
+decrypt = ["pkcs8", "pkcs5", "cbc", "kdf", "sha2", "hmac"]
 insecure = ["pkcs5/sha1-insecure", "pkcs5/des-insecure", "des", "sha1"]
 kdf = ["dep:digest"]

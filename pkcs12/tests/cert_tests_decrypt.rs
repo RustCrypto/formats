@@ -4,6 +4,9 @@ use der::Encode;
 #[cfg(feature = "decrypt")]
 use pkcs12::decrypt::decrypt_pfx;
 
+#[cfg(all(feature = "decrypt", feature = "insecure", feature = "kdf"))]
+use const_oid::ObjectIdentifier;
+
 #[cfg(all(feature = "decrypt", not(feature = "insecure")))]
 use pkcs12::decrypt::Error;
 
@@ -107,6 +110,125 @@ fn decode_sample_pfx7_with_decrypt() {
         include_bytes!("examples/GoodCACert.der"),
         enc_ca_cert.as_slice()
     );
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx8_with_decrypt() {
+    // openssl pkcs12 -export -out example8.pfx -inkey key.pem -in cert.pem -passout pass:1234 -macalg SHA384 -certpbe aes-192-cbc -keypbe aes-256-cbc
+    let bytes = include_bytes!("examples/example8.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx9_with_decrypt() {
+    // openssl pkcs12 -export -out example9.pfx -inkey key.pem -in cert.pem -passout pass:1234 -macalg SHA512
+    let bytes = include_bytes!("examples/example9.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx10_with_decrypt() {
+    // openssl pkcs12 -export -out example10.pfx -inkey key.pem -in cert.pem -passout pass:1234 -macalg SHA256 -certpbe aes-192-cbc -keypbe aes-256-cbc -iter 600000
+    let bytes = include_bytes!("examples/example10.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx11_with_decrypt() {
+    // openssl pkcs12 -export -out example11.pfx -inkey key.pem -in cert.pem -passout pass:1234 -macalg BLAKE2b512 -certpbe aes-192-cbc -keypbe aes-256-cbc
+    let bytes = include_bytes!("examples/example11.pfx");
+    let r = decrypt_pfx(bytes, "1234".as_bytes());
+    assert!(r.is_err());
+    const BLAKE2B512: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.1.16");
+
+    assert_eq!(r.err(), Some(Error::UnexpectedAlgorithm(BLAKE2B512)))
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx12_with_decrypt() {
+    // openssl pkcs12 -export -out example12.pfx -inkey key.pem -in cert.pem -passout pass:1234 -macalg SHA256 -certpbe aes-192-cbc -keypbe aes-256-cbc -noiter
+    let bytes = include_bytes!("examples/example12.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx13_with_decrypt() {
+    // openssl pkcs12 -export -out example13.pfx -inkey key.pem -in cert.pem -passout pass:1234 -macalg SHA256 -certpbe aes-192-cbc -keypbe aes-256-cbc -nomaciter
+    let bytes = include_bytes!("examples/example13.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx14_with_decrypt() {
+    // openssl pkcs12 -export -out example14.pfx -inkey key.pem -in cert.pem -passout pass:1234 -certpbe aes-192-cbc -keypbe aes-256-cbc -descert
+    let bytes = include_bytes!("examples/example14.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx15_with_decrypt() {
+    // openssl pkcs12 -export -out example15.pfx -inkey key.pem -in cert.pem -passout pass:1234 -certpbe aes-192-cbc -keypbe aes-256-cbc -nokeys
+    let bytes = include_bytes!("examples/example15.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    assert!(key.is_none());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf", feature = "insecure"))]
+#[test]
+fn decode_sample_pfx16_with_decrypt() {
+    // openssl pkcs12 -export -out example15.pfx -inkey key.pem -in cert.pem -passout pass:1234 -certpbe aes-192-cbc -keypbe aes-256-cbc -nocerts
+    let bytes = include_bytes!("examples/example16.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    assert!(cert.is_empty());
+}
+
+#[cfg(all(feature = "decrypt", feature = "kdf"))]
+#[test]
+fn decode_sample_pfx17_with_decrypt() {
+    // this was generated on linux (the rest were on macos). For this command on macos, getting the non-default Mac algorithm resulted in default (SHA1) in the KDF
+    // openssl pkcs12 -export -out example17.pfx -inkey key.pem -in cert.pem -passout pass:1234 -certpbe aes-192-cbc -keypbe aes-256-cbc -macalg SHA256
+    let bytes = include_bytes!("examples/example17.pfx");
+    let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
+    let enc_key = key.unwrap().to_der().unwrap();
+    assert_eq!(include_bytes!("examples/key.der"), enc_key.as_slice());
+    let enc_cert = cert.get(0).expect("Missing certificate").to_der().unwrap();
+    assert_eq!(include_bytes!("examples/cert.der"), enc_cert.as_slice());
 }
 
 #[cfg(all(feature = "decrypt", not(feature = "insecure")))]
