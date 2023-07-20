@@ -3,7 +3,7 @@
 
 use alloc::{vec, vec::Vec};
 use digest::{core_api::BlockSizeUser, Digest, FixedOutputReset, OutputSizeUser, Update};
-use zeroize::Zeroize;
+use zeroize::{Zeroize, Zeroizing};
 
 /// Transform a utf-8 string in a unicode (utf16) string as binary array.
 /// The Utf16 code points are stored in big endian format with two trailing zero bytes.
@@ -29,11 +29,12 @@ pub enum Pkcs12KeyType {
 
 /// Derives `key` of type `id` from `pass` and `salt` with length `key_len` using `rounds`
 /// iterations of the algorithm
+/// `pass` must be a utf8 string.
 /// ```rust
-/// let key = pkcs12::kdf::derive_key::<sha2::Sha256>("top-secret", &[0x1, 0x2, 0x3, 0x4],
+/// let key = pkcs12::kdf::derive_key_utf8::<sha2::Sha256>("top-secret", &[0x1, 0x2, 0x3, 0x4],
 ///     pkcs12::kdf::Pkcs12KeyType::EncryptionKey, 1000, 32);
 /// ```
-pub fn derive_key<D>(
+pub fn derive_key_utf8<D>(
     pass: &str,
     salt: &[u8],
     id: Pkcs12KeyType,
@@ -43,8 +44,29 @@ pub fn derive_key<D>(
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
+    let mut pass_utf16 = Zeroizing::new(str_to_unicode(pass));
+    derive_key::<D>(&pass_utf16, salt, id, rounds, key_len)
+}
+
+/// Derives `key` of type `id` from `pass` and `salt` with length `key_len` using `rounds`
+/// iterations of the algorithm
+/// `pass` must be a unicode (utf16) byte array in big endian order without order mark and with two
+/// terminating zero bytes.
+/// ```rust
+/// let key = pkcs12::kdf::derive_key_utf8::<sha2::Sha256>("top-secret", &[0x1, 0x2, 0x3, 0x4],
+///     pkcs12::kdf::Pkcs12KeyType::EncryptionKey, 1000, 32);
+/// ```
+pub fn derive_key<D>(
+    pass: &[u8],
+    salt: &[u8],
+    id: Pkcs12KeyType,
+    rounds: i32,
+    key_len: usize,
+) -> Vec<u8>
+where
+    D: Digest + FixedOutputReset + BlockSizeUser,
+{
     let mut digest = D::new();
-    let mut pass_utf16 = str_to_unicode(pass);
     let output_size = <D as OutputSizeUser>::output_size();
     let block_size = D::block_size();
 
@@ -61,7 +83,7 @@ where
     };
 
     let slen = block_size * ((salt.len() + block_size - 1) / block_size);
-    let plen = block_size * ((pass_utf16.len() + block_size - 1) / block_size);
+    let plen = block_size * ((pass.len() + block_size - 1) / block_size);
     let ilen = slen + plen;
     let mut init_key = vec![0u8; ilen];
     // 2. Concatenate copies of the salt together to create a string S of
@@ -77,9 +99,8 @@ where
     //    may be truncated to create P).  Note that if the password is the
     //    empty string, then so is P.
     for i in 0..plen {
-        init_key[slen + i] = pass_utf16[i % pass_utf16.len()];
+        init_key[slen + i] = pass[i % pass.len()];
     }
-    pass_utf16.zeroize();
 
     // 4. Set I=S||P to be the concatenation of S and P.
     // [already done in `init_key`]
