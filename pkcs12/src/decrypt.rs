@@ -5,6 +5,7 @@ use crate::cert_type::CertBag;
 use crate::pbe_params::EncryptedPrivateKeyInfo as OtherEncryptedPrivateKeyInfo;
 use alloc::vec;
 use alloc::vec::Vec;
+use core::fmt;
 use core::str::Utf8Error;
 
 #[cfg(all(feature = "kdf", feature = "insecure"))]
@@ -39,10 +40,10 @@ pub enum Error {
     EncryptionScheme,
 
     /// Encountered an unexpected SafeBag
-    UnexpectedSafeBag,
+    UnexpectedSafeBag(ObjectIdentifier),
 
     /// Encountered an unexpected AuthSafe
-    UnexpectedAuthSafe,
+    UnexpectedAuthSafe(ObjectIdentifier),
 
     /// Missing expected content
     MissingContent,
@@ -56,6 +57,42 @@ pub enum Error {
     /// String conversion error
     Utf8Error(Utf8Error),
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
+            Error::Pkcs5(err) => write!(f, "PKCS5 crate error: {}", err),
+            Error::MissingParameters => write!(f, "Missing parameters"),
+            Error::EncryptionScheme => write!(f, "Error preparing EncryptionScheme"),
+            Error::UnexpectedSafeBag(oid) => write!(f, "Unexpected SafeBag type: {}", oid),
+            Error::UnexpectedAuthSafe(oid) => write!(f, "Unexpected AuthenticatedSafe type: {}", oid),
+            Error::MissingContent => write!(f, "Missing content"),
+            Error::MacError => write!(f, "Error verifying message authentication code"),
+            Error::UnexpectedAlgorithm(oid) => write!(f, "Unexpected algorithm: {}", oid),
+            Error::Utf8Error(err) => write!(f, "Utf8Error: {}", err),
+        }
+    }
+}
+
+impl From<der::Error> for Error {
+    fn from(err: der::Error) -> Error {
+        Error::Asn1(err)
+    }
+}
+
+impl From<pkcs5::Error> for Error {
+    fn from(err: pkcs5::Error) -> Error {
+        Error::Pkcs5(err)
+    }
+}
+
+impl From<Utf8Error> for Error {
+    fn from(err: Utf8Error) -> Error {
+        Error::Utf8Error(err)
+    }
+}
+
 /// Result type for PKCS #12 der
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -96,7 +133,7 @@ fn process_safe_contents(
                                 PrivateKeyInfo::from_der(plaintext).map_err(|e| Error::Asn1(e))?,
                             );
                         } else {
-                            return Err(Error::UnexpectedSafeBag);
+                            return Err(Error::UnexpectedSafeBag(cs_tmp.value.encryption_algorithm.oid));
                         }
                     }
                     #[cfg(all(feature = "kdf", feature = "insecure"))]
@@ -107,7 +144,7 @@ fn process_safe_contents(
                             &cs_tmp.value.encryption_algorithm,
                         )?;
                         if key.is_some() {
-                            return Err(Error::UnexpectedAuthSafe);
+                            return Err(Error::UnexpectedAuthSafe(cs_tmp.value.encryption_algorithm.oid));
                         }
                         key = Some(cur_key);
                     }
@@ -126,10 +163,10 @@ fn process_safe_contents(
                             .map_err(|e| Error::Asn1(e))?;
                     key = Some(cs.value);
                 } else {
-                    return Err(Error::UnexpectedSafeBag);
+                    return Err(Error::UnexpectedSafeBag(safe_bag.bag_id));
                 }
             }
-            _ => return Err(Error::UnexpectedSafeBag),
+            _ => return Err(Error::UnexpectedSafeBag(safe_bag.bag_id)),
         };
     }
     Ok((key, cert))
@@ -212,11 +249,11 @@ pub fn decrypt_pfx(
 
                 process_safe_contents(&os.as_bytes(), password)?
             }
-            _ => return Err(Error::UnexpectedAuthSafe),
+            _ => return Err(Error::UnexpectedAuthSafe(auth_safe.content_type)),
         };
         if cur_key.is_some() {
             if key.is_some() {
-                return Err(Error::UnexpectedAuthSafe);
+                return Err(Error::UnexpectedAuthSafe(auth_safe.content_type));
             }
             key = cur_key;
         }

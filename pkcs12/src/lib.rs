@@ -104,3 +104,4 @@ pub const PKCS_12_SDSI_CERT_OID: ObjectIdentifier =
 // todo: support separate mac and encryption passwords?
 // todo: add more encryption tests
 // todo: add a builder
+// todo: add RC2 support
