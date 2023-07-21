@@ -41,6 +41,9 @@ pub mod kdf;
 #[cfg(all(feature = "kdf", feature = "insecure", feature = "decrypt"))]
 pub mod decrypt_kdf;
 
+#[cfg(feature = "builder")]
+pub mod builder;
+
 // pbe oids
 /// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
 pub const PKCS_12_PBE_WITH_SHAAND128_BIT_RC4: ObjectIdentifier =

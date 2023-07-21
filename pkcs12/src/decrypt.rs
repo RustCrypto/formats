@@ -66,7 +66,9 @@ impl fmt::Display for Error {
             Error::MissingParameters => write!(f, "Missing parameters"),
             Error::EncryptionScheme => write!(f, "Error preparing EncryptionScheme"),
             Error::UnexpectedSafeBag(oid) => write!(f, "Unexpected SafeBag type: {}", oid),
-            Error::UnexpectedAuthSafe(oid) => write!(f, "Unexpected AuthenticatedSafe type: {}", oid),
+            Error::UnexpectedAuthSafe(oid) => {
+                write!(f, "Unexpected AuthenticatedSafe type: {}", oid)
+            }
             Error::MissingContent => write!(f, "Missing content"),
             Error::MacError => write!(f, "Error verifying message authentication code"),
             Error::UnexpectedAlgorithm(oid) => write!(f, "Unexpected algorithm: {}", oid),
@@ -133,7 +135,9 @@ fn process_safe_contents(
                                 PrivateKeyInfo::from_der(plaintext).map_err(|e| Error::Asn1(e))?,
                             );
                         } else {
-                            return Err(Error::UnexpectedSafeBag(cs_tmp.value.encryption_algorithm.oid));
+                            return Err(Error::UnexpectedSafeBag(
+                                cs_tmp.value.encryption_algorithm.oid,
+                            ));
                         }
                     }
                     #[cfg(all(feature = "kdf", feature = "insecure"))]
@@ -144,7 +148,9 @@ fn process_safe_contents(
                             &cs_tmp.value.encryption_algorithm,
                         )?;
                         if key.is_some() {
-                            return Err(Error::UnexpectedAuthSafe(cs_tmp.value.encryption_algorithm.oid));
+                            return Err(Error::UnexpectedAuthSafe(
+                                cs_tmp.value.encryption_algorithm.oid,
+                            ));
                         }
                         key = Some(cur_key);
                     }

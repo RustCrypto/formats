@@ -36,7 +36,7 @@ hmac = { version = "0.12.1", optional = true }
 
 [dev-dependencies]
 hex-literal = "0.3.3"
-pkcs8 = { version = "0.10.2", features = ["pkcs5"] }
+pkcs8 = { version = "0.10.2", features = ["pkcs5", "getrandom"] }
 pkcs5 = {version = "0.7.1", features = ["pbes2", "3des"]}
 subtle-encoding = "0.5.1"
 sha2 = "0.10.7"
@@ -45,3 +45,4 @@ sha2 = "0.10.7"
 decrypt = ["pkcs8", "pkcs5", "cbc", "kdf", "sha2", "hmac"]
 insecure = ["pkcs5/sha1-insecure", "pkcs5/des-insecure", "des", "sha1"]
 kdf = ["dep:digest"]
+builder = ["pkcs8", "pkcs5"]

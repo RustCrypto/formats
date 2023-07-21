@@ -63,3 +63,15 @@ pub struct EncryptedPrivateKeyInfo {
     pub encryption_algorithm: AlgorithmIdentifierOwned,
     pub encrypted_data: OctetString,
 }
+
+///```text
+/// PBES2-params ::= SEQUENCE {
+///      keyDerivationFunc AlgorithmIdentifier {{PBES2-KDFs}},
+///      encryptionScheme AlgorithmIdentifier {{PBES2-Encs}} }
+///```
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[allow(missing_docs)]
+pub struct Pbes2Params {
+    pub kdf: AlgorithmIdentifierOwned,
+    pub encryption: AlgorithmIdentifierOwned,
+}
