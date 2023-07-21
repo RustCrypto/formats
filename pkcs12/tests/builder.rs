@@ -38,6 +38,7 @@ fn build_no_pbe() {
     let dcert_bytes = dcert.get(0).unwrap().to_der().unwrap();
     assert_eq!(key_bytes, dkey_bytes.as_slice());
     assert_eq!(cert_bytes, dcert_bytes.as_slice());
+    assert!(pfx.mac_data.is_none());
 }
 
 #[cfg(all(feature = "builder", feature = "decrypt"))]
@@ -69,6 +70,7 @@ fn build_key_pbe() {
     let dcert_bytes = dcert.get(0).unwrap().to_der().unwrap();
     assert_eq!(key_bytes, dkey_bytes.as_slice());
     assert_eq!(cert_bytes, dcert_bytes.as_slice());
+    assert!(pfx.mac_data.is_none());
 }
 
 #[cfg(all(feature = "builder", feature = "decrypt"))]
@@ -99,4 +101,5 @@ fn build_key_and_cert_pbe() {
     let dcert_bytes = dcert.get(0).unwrap().to_der().unwrap();
     assert_eq!(key_bytes, dkey_bytes.as_slice());
     assert_eq!(cert_bytes, dcert_bytes.as_slice());
+    assert!(pfx.mac_data.is_some());
 }

@@ -1,38 +1,23 @@
 //! Builder for simple PKCS #12 structures
 
-use alloc::string::{String, ToString};
-use subtle_encoding::hex;
-pub fn buffer_to_hex(buffer: &[u8]) -> String {
-    let hex = hex::encode_upper(buffer);
-    let r = core::str::from_utf8(hex.as_slice());
-    if let Ok(s) = r {
-        s.to_string()
-    } else {
-        "".to_string()
-    }
-}
-
 use crate::cert_type::CertBag;
-use crate::mac_data::MacData;
 use crate::pbe_params::{EncryptedPrivateKeyInfo, Pbes2Params, Pbkdf2Params};
 use crate::pfx::{Pfx, Version};
 use crate::safe_bag::{PrivateKeyInfo, SafeBag, SafeContents};
 use crate::{
     PKCS_12_CERT_BAG_OID, PKCS_12_KEY_BAG_OID, PKCS_12_PKCS8_KEY_BAG_OID, PKCS_12_X509_CERT_OID,
 };
+use alloc::vec;
 use alloc::vec::Vec;
-use alloc::{format, vec};
 use cms::content_info::{CmsVersion, ContentInfo};
+use cms::encrypted_data::EncryptedData;
+use cms::enveloped_data::EncryptedContentInfo;
 use const_oid::db::rfc5911::{ID_DATA, ID_ENCRYPTED_DATA};
 use const_oid::db::rfc5912::ID_SHA_256;
 use const_oid::db::rfc6268::ID_HMAC_WITH_SHA_256;
 use const_oid::ObjectIdentifier;
 use core::fmt;
 use core::str::Utf8Error;
-use const_oid::db::rfc5912;
-use digest::FixedOutput;
-use cms::encrypted_data::EncryptedData;
-use cms::enveloped_data::EncryptedContentInfo;
 use der::asn1::OctetString;
 use der::{Any, AnyRef, Decode, Encode};
 use pkcs5::pbes2::{AES_256_CBC_OID, PBES2_OID, PBKDF2_OID};
@@ -40,7 +25,9 @@ use pkcs5::EncryptionScheme;
 use pkcs8::rand_core::{CryptoRng, RngCore};
 use spki::{AlgorithmIdentifier, AlgorithmIdentifierOwned};
 use x509_cert::Certificate;
-use crate::digest_info::DigestInfo;
+
+#[cfg(feature = "kdf")]
+use crate::mac_data::MacData;
 
 /// Error type
 #[derive(Debug, Eq, PartialEq)]
@@ -205,16 +192,24 @@ impl Pkcs12Builder {
     }
 
     /// Geenerate a Pfx structure from builder contents
-    pub fn build(&mut self, password: Option<&[u8]>, rng: &mut (impl CryptoRng + RngCore)) -> Result<Pfx> {
+    pub fn build(
+        &mut self,
+        password: Option<&[u8]>,
+        #[cfg(feature = "kdf")] rng: &mut (impl CryptoRng + RngCore),
+    ) -> Result<Pfx> {
         let mut auth_safes = vec![];
         auth_safes.push(self.prepare_cert_bag(&self.certificates, password)?);
         auth_safes.push(self.prepare_key_bag(&self.private_key, password)?);
         let der_auth_safes = auth_safes.to_der()?;
+
+        #[cfg(not(feature = "kdf"))]
+        let mac_data = None;
+
+        #[cfg(feature = "kdf")]
         let mac_data = if let Some(mac_alg) = &self.mac_alg {
             if let Some(password) = password {
                 Some(self.prepare_mac_data(&der_auth_safes, &mac_alg, password, rng)?)
-            }
-            else {
+            } else {
                 None
             }
         } else {
@@ -263,7 +258,7 @@ impl Pkcs12Builder {
                 let mut safe_contents: SafeContents = vec![];
                 safe_contents.push(safe_bag);
 
-                let mut safe_contents_der = safe_contents.to_der()?;
+                let safe_contents_der = safe_contents.to_der()?;
                 let os = OctetString::new(safe_contents_der)?;
                 let os_der = os.to_der()?;
                 let content = AnyRef::try_from(os_der.as_slice())?;
@@ -283,7 +278,7 @@ impl Pkcs12Builder {
             let mut safe_contents: SafeContents = vec![];
             safe_contents.push(safe_bag);
 
-            let mut safe_contents_der = safe_contents.to_der()?;
+            let safe_contents_der = safe_contents.to_der()?;
             let os = OctetString::new(safe_contents_der)?;
             let os_der = os.to_der()?;
             let content = AnyRef::try_from(os_der.as_slice())?;
@@ -336,7 +331,7 @@ impl Pkcs12Builder {
                     unprotected_attrs: None,
                 };
 
-                let mut epki_der = epki.to_der()?;
+                let epki_der = epki.to_der()?;
                 let content = AnyRef::try_from(epki_der.as_slice())?;
                 Ok(ContentInfo {
                     content_type: ID_ENCRYPTED_DATA,
@@ -362,9 +357,12 @@ impl Pkcs12Builder {
         der_auth_safes: &[u8],
         mac_alg: &AlgorithmIdentifierOwned,
         password: &[u8],
-        rng: &mut (impl CryptoRng + RngCore)
+        rng: &mut (impl CryptoRng + RngCore),
     ) -> Result<MacData> {
+        use crate::digest_info::DigestInfo;
         use crate::kdf::*;
+        use const_oid::db::rfc5912;
+        use digest::FixedOutput;
         use digest::OutputSizeUser;
         use hmac::{Hmac, Mac};
 
@@ -395,7 +393,7 @@ impl Pkcs12Builder {
                 let output = mac.finalize_fixed();
                 output.as_slice().to_vec()
             }
-            rfc5912::ID_SHA_256 => {
+            ID_SHA_256 => {
                 use sha2::Sha256;
                 type HmacSha256 = Hmac<Sha256>;
                 let mac_key = derive_key::<Sha256>(
@@ -445,8 +443,11 @@ impl Pkcs12Builder {
             }
             _ => return Err(Error::UnexpectedAlgorithm(mac_alg.oid)),
         };
-        Ok(MacData{
-            mac: DigestInfo { algorithm: mac_alg.clone(), digest: OctetString::new(digest.as_slice())? },
+        Ok(MacData {
+            mac: DigestInfo {
+                algorithm: mac_alg.clone(),
+                digest: OctetString::new(digest.as_slice())?,
+            },
             mac_salt: OctetString::new(kdf_salt)?,
             iterations: 2048,
         })

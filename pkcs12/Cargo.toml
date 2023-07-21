@@ -46,4 +46,4 @@ sha2 = "0.10.7"
 decrypt = ["pkcs8", "pkcs5", "cbc", "kdf", "sha2", "hmac"]
 insecure = ["pkcs5/sha1-insecure", "pkcs5/des-insecure", "des", "sha1"]
 kdf = ["dep:digest"]
-builder = ["pkcs8", "pkcs5"]
+builder = ["pkcs8", "pkcs5", "cbc", "kdf", "sha2", "hmac"]
