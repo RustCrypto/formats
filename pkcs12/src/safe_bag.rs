@@ -3,7 +3,7 @@
 use alloc::vec::Vec;
 use const_oid::ObjectIdentifier;
 use der::asn1::OctetString;
-use der::{Enumerated, Sequence};
+use der::{AnyRef, Decode, Enumerated, Sequence};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
 
@@ -59,13 +59,14 @@ impl<'__der_lifetime> ::der::DecodeValue<'__der_lifetime> for SafeBag {
 }
 impl ::der::EncodeValue for SafeBag {
     fn value_len(&self) -> ::der::Result<::der::Length> {
+        let content = AnyRef::from_der(&self.bag_value)?;
         use ::der::Encode as _;
         [
             self.bag_id.encoded_len()?,
             ::der::asn1::ContextSpecificRef {
                 tag_number: ::der::TagNumber::N0,
                 tag_mode: ::der::TagMode::Explicit,
-                value: &self.bag_value,
+                value: &content,
             }
             .encoded_len()?,
             self.bag_attributes.encoded_len()?,
@@ -76,10 +77,11 @@ impl ::der::EncodeValue for SafeBag {
     fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
         use ::der::Encode as _;
         self.bag_id.encode(writer)?;
+        let content = AnyRef::from_der(&self.bag_value)?;
         ::der::asn1::ContextSpecificRef {
             tag_number: ::der::TagNumber::N0,
             tag_mode: ::der::TagMode::Explicit,
-            value: &self.bag_value,
+            value: &content,
         }
         .encode(writer)?;
         self.bag_attributes.encode(writer)?;

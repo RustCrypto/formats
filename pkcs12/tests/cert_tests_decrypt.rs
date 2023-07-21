@@ -92,7 +92,7 @@ fn decode_sample_pfx6_with_decrypt() {
 #[cfg(feature = "decrypt")]
 #[test]
 fn decode_sample_pfx7_with_decrypt() {
-    // openssl pkcs12 -export -out example6.pfx -inkey key.pem -in cert.pem -passout pass:1234 -iter 1
+    // openssl pkcs12 -export -out example7.pfx -inkey ValidCertificatePathTest1EE.pem -in ValidCertificatePathTest1EE.crt -passout pass:1234 -certfile GoodCACert.crt -certpbe NONE -keypbe NONE
     let bytes = include_bytes!("examples/example7.pfx");
     let (key, cert) = decrypt_pfx(bytes, "1234".as_bytes()).unwrap();
     let enc_key = key.unwrap().to_der().unwrap();

@@ -1,16 +1,21 @@
 //! Builder for simple PKCS #12 structures
 
+use crate::cert_type::CertBag;
+use crate::mac_data::MacData;
 use crate::pbe_params::{Pbes2Params, Pbkdf2Params};
-use crate::pfx::Pfx;
-use crate::safe_bag::PrivateKeyInfo;
+use crate::pfx::{Pfx, Version};
+use crate::safe_bag::{PrivateKeyInfo, SafeBag, SafeContents};
+use crate::{PKCS_12_CERT_BAG_OID, PKCS_12_KEY_BAG_OID, PKCS_12_X509_CERT_OID};
 use alloc::vec;
 use alloc::vec::Vec;
+use cms::content_info::ContentInfo;
+use const_oid::db::rfc5911::ID_DATA;
 use const_oid::db::rfc5912::ID_SHA_256;
 use const_oid::db::rfc6268::ID_HMAC_WITH_SHA_256;
 use const_oid::ObjectIdentifier;
 use core::fmt;
 use der::asn1::OctetString;
-use der::{Any, Decode, Encode};
+use der::{Any, AnyRef, Decode, Encode};
 use pkcs5::pbes2::{AES_256_CBC_OID, PBES2_OID, PBKDF2_OID};
 use pkcs8::rand_core::{CryptoRng, RngCore};
 use spki::{AlgorithmIdentifier, AlgorithmIdentifierOwned};
@@ -132,18 +137,18 @@ impl Pkcs12Builder {
         Ok(self)
     }
     /// Set the password-based encryption algorithm to use when preparing a KeyBag
-    pub fn key_pbe(&mut self, key_pbe: AlgorithmIdentifierOwned) -> Result<&mut Self> {
-        self.key_pbe = Some(key_pbe);
+    pub fn key_pbe(&mut self, key_pbe: Option<AlgorithmIdentifierOwned>) -> Result<&mut Self> {
+        self.key_pbe = key_pbe;
         Ok(self)
     }
     /// Set the password-based encryption algorithm to use when preparing a CertBag
-    pub fn cert_pbe(&mut self, cert_pbe: AlgorithmIdentifierOwned) -> Result<&mut Self> {
-        self.cert_pbe = Some(cert_pbe);
+    pub fn cert_pbe(&mut self, cert_pbe: Option<AlgorithmIdentifierOwned>) -> Result<&mut Self> {
+        self.cert_pbe = cert_pbe;
         Ok(self)
     }
     /// Set the algorithm to use when preparing a MacData structure
-    pub fn mac_alg(&mut self, mac_alg: AlgorithmIdentifierOwned) -> Result<&mut Self> {
-        self.mac_alg = Some(mac_alg);
+    pub fn mac_alg(&mut self, mac_alg: Option<AlgorithmIdentifierOwned>) -> Result<&mut Self> {
+        self.mac_alg = mac_alg;
         Ok(self)
     }
     /// Number of iterations for Mac and PBE KDF
@@ -153,7 +158,90 @@ impl Pkcs12Builder {
     }
 
     /// Geenerate a Pfx structure from builder contents
-    pub fn build(&mut self) -> Result<Pfx> {
-        todo!();
+    pub fn build(&mut self, password: Option<&[u8]>) -> Result<Pfx> {
+        let mut auth_safes = vec![];
+        auth_safes.push(prepare_cert_bag(&self.certificates, password)?);
+        auth_safes.push(prepare_key_bag(&self.private_key, password)?);
+        let der_auth_safes = auth_safes.to_der()?;
+        let mac_data = if let Some(mac_alg) = &self.mac_alg {
+            Some(prepare_mac_data(&der_auth_safes, &mac_alg)?)
+        } else {
+            None
+        };
+        let os = OctetString::new(der_auth_safes)?;
+        let os_der = os.to_der()?;
+        let content = AnyRef::try_from(os_der.as_slice())?;
+        Ok(Pfx {
+            version: Version::V3,
+            auth_safe: ContentInfo {
+                content_type: ID_DATA,
+                content: Any::from(content),
+            },
+            mac_data,
+        })
     }
+}
+
+fn prepare_key_bag(private_key: &PrivateKeyInfo, password: Option<&[u8]>) -> Result<ContentInfo> {
+    if let Some(_password) = password {
+        todo!()
+    } else {
+        let der_private_key = private_key.to_der()?;
+        let safe_bag = SafeBag {
+            bag_id: PKCS_12_KEY_BAG_OID,
+            bag_value: der_private_key,
+            bag_attributes: None,
+        };
+        let mut safe_contents: SafeContents = vec![];
+        safe_contents.push(safe_bag);
+
+        let safe_contents_der = safe_contents.to_der()?;
+        let os = OctetString::new(safe_contents_der)?;
+        let os_der = os.to_der()?;
+        let content = AnyRef::try_from(os_der.as_slice())?;
+        Ok(ContentInfo {
+            content_type: ID_DATA,
+            content: Any::from(content),
+        })
+    }
+}
+
+fn prepare_cert_bag(
+    certificates: &Vec<Certificate>,
+    password: Option<&[u8]>,
+) -> Result<ContentInfo> {
+    if let Some(_password) = password {
+        todo!()
+    } else {
+        let mut safe_contents: SafeContents = vec![];
+        for certificate in certificates {
+            let der_cert = certificate.to_der()?;
+            let cert_bag = CertBag {
+                cert_id: PKCS_12_X509_CERT_OID,
+                cert_value: OctetString::new(der_cert)?,
+            };
+            let der_cer_bag = cert_bag.to_der()?;
+            let safe_bag = SafeBag {
+                bag_id: PKCS_12_CERT_BAG_OID,
+                bag_value: der_cer_bag,
+                bag_attributes: None,
+            };
+            safe_contents.push(safe_bag);
+        }
+        let safe_contents_der = safe_contents.to_der()?;
+        let os = OctetString::new(safe_contents_der)?;
+        let os_der = os.to_der()?;
+        let content = AnyRef::try_from(os_der.as_slice())?;
+        Ok(ContentInfo {
+            content_type: ID_DATA,
+            content: Any::from(content),
+        })
+    }
+}
+
+fn prepare_mac_data(
+    _der_auth_safes: &[u8],
+    _mac_alg: &AlgorithmIdentifierOwned,
+) -> Result<MacData> {
+    todo!()
 }
