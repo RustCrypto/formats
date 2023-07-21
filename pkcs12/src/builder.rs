@@ -183,19 +183,19 @@ impl Pkcs12Builder {
 }
 
 fn prepare_key_bag(private_key: &PrivateKeyInfo, password: Option<&[u8]>) -> Result<ContentInfo> {
+    let der_private_key = private_key.to_der()?;
+    let safe_bag = SafeBag {
+        bag_id: PKCS_12_KEY_BAG_OID,
+        bag_value: der_private_key,
+        bag_attributes: None,
+    };
+    let mut safe_contents: SafeContents = vec![];
+    safe_contents.push(safe_bag);
+
+    let safe_contents_der = safe_contents.to_der()?;
     if let Some(_password) = password {
         todo!()
     } else {
-        let der_private_key = private_key.to_der()?;
-        let safe_bag = SafeBag {
-            bag_id: PKCS_12_KEY_BAG_OID,
-            bag_value: der_private_key,
-            bag_attributes: None,
-        };
-        let mut safe_contents: SafeContents = vec![];
-        safe_contents.push(safe_bag);
-
-        let safe_contents_der = safe_contents.to_der()?;
         let os = OctetString::new(safe_contents_der)?;
         let os_der = os.to_der()?;
         let content = AnyRef::try_from(os_der.as_slice())?;
@@ -210,25 +210,25 @@ fn prepare_cert_bag(
     certificates: &Vec<Certificate>,
     password: Option<&[u8]>,
 ) -> Result<ContentInfo> {
+    let mut safe_contents: SafeContents = vec![];
+    for certificate in certificates {
+        let der_cert = certificate.to_der()?;
+        let cert_bag = CertBag {
+            cert_id: PKCS_12_X509_CERT_OID,
+            cert_value: OctetString::new(der_cert)?,
+        };
+        let der_cer_bag = cert_bag.to_der()?;
+        let safe_bag = SafeBag {
+            bag_id: PKCS_12_CERT_BAG_OID,
+            bag_value: der_cer_bag,
+            bag_attributes: None,
+        };
+        safe_contents.push(safe_bag);
+    }
+    let safe_contents_der = safe_contents.to_der()?;
     if let Some(_password) = password {
         todo!()
     } else {
-        let mut safe_contents: SafeContents = vec![];
-        for certificate in certificates {
-            let der_cert = certificate.to_der()?;
-            let cert_bag = CertBag {
-                cert_id: PKCS_12_X509_CERT_OID,
-                cert_value: OctetString::new(der_cert)?,
-            };
-            let der_cer_bag = cert_bag.to_der()?;
-            let safe_bag = SafeBag {
-                bag_id: PKCS_12_CERT_BAG_OID,
-                bag_value: der_cer_bag,
-                bag_attributes: None,
-            };
-            safe_contents.push(safe_bag);
-        }
-        let safe_contents_der = safe_contents.to_der()?;
         let os = OctetString::new(safe_contents_der)?;
         let os_der = os.to_der()?;
         let content = AnyRef::try_from(os_der.as_slice())?;

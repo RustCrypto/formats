@@ -17,7 +17,7 @@ pub(crate) fn pkcs12_pbe_key(
     alg: &AlgorithmIdentifierOwned,
 ) -> Result<PrivateKeyInfo> {
     let plaintext = pkcs12_pbe(encrypted_content, password, alg)?;
-    PrivateKeyInfo::from_der(&plaintext).map_err(|e| Error::Asn1(e))
+    Ok(PrivateKeyInfo::from_der(&plaintext)?)
 }
 
 #[cfg(all(feature = "kdf", feature = "insecure", feature = "decrypt"))]
@@ -32,11 +32,11 @@ pub(crate) fn pkcs12_pbe(
     use sha1::Sha1;
 
     let enc_params = match &alg.parameters {
-        Some(params) => params.to_der().map_err(|e| Error::Asn1(e))?,
+        Some(params) => params.to_der()?,
         None => return Err(Error::MissingParameters),
     };
 
-    let p12_pbe_params = Pkcs12PbeParams::from_der(&enc_params).map_err(|e| Error::Asn1(e))?;
+    let p12_pbe_params = Pkcs12PbeParams::from_der(&enc_params)?;
     let s = str::from_utf8(password).map_err(|e| Error::Utf8Error(e))?;
 
     let iv = derive_key::<Sha1>(
