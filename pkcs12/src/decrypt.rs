@@ -109,12 +109,8 @@ fn process_safe_contents(
     for safe_bag in safe_contents {
         match safe_bag.bag_id {
             crate::PKCS_12_CERT_BAG_OID => {
-                let cs: ContextSpecific<CertBag> =
-                    ContextSpecific::from_der(&safe_bag.bag_value)?;
-                let _ = cert.push(
-                    Certificate::from_der(cs.value.cert_value.as_bytes())
-                        ?,
-                );
+                let cs: ContextSpecific<CertBag> = ContextSpecific::from_der(&safe_bag.bag_value)?;
+                let _ = cert.push(Certificate::from_der(cs.value.cert_value.as_bytes())?);
             }
             crate::PKCS_12_PKCS8_KEY_BAG_OID => {
                 let cs_tmp: ContextSpecific<OtherEncryptedPrivateKeyInfo> =
@@ -122,8 +118,7 @@ fn process_safe_contents(
                 match cs_tmp.value.encryption_algorithm.oid {
                     PBES2_OID => {
                         let cs: ContextSpecific<EncryptedPrivateKeyInfo<'_>> =
-                            ContextSpecific::from_der(&safe_bag.bag_value)
-                                ?;
+                            ContextSpecific::from_der(&safe_bag.bag_value)?;
                         let mut ciphertext = cs.value.encrypted_data.to_vec();
                         let plaintext = cs
                             .value
@@ -131,9 +126,7 @@ fn process_safe_contents(
                             .decrypt_in_place(password, &mut ciphertext)
                             .map_err(|e| Error::Pkcs5(e))?;
                         if key.is_none() {
-                            key = Some(
-                                PrivateKeyInfo::from_der(plaintext)?,
-                            );
+                            key = Some(PrivateKeyInfo::from_der(plaintext)?);
                         } else {
                             return Err(Error::UnexpectedSafeBag(
                                 cs_tmp.value.encryption_algorithm.oid,
@@ -165,8 +158,7 @@ fn process_safe_contents(
             crate::PKCS_12_KEY_BAG_OID => {
                 if key.is_none() {
                     let cs: ContextSpecific<PrivateKeyInfo> =
-                        ContextSpecific::from_der(&safe_bag.bag_value)
-                            ?;
+                        ContextSpecific::from_der(&safe_bag.bag_value)?;
                     key = Some(cs.value);
                 } else {
                     return Err(Error::UnexpectedSafeBag(safe_bag.bag_id));
@@ -196,8 +188,7 @@ fn process_encrypted_data(
                 Some(params) => params.to_der()?,
                 None => return Err(Error::MissingParameters),
             };
-            let params = pkcs8::pkcs5::pbes2::Parameters::from_der(&enc_params)
-                ?;
+            let params = pkcs8::pkcs5::pbes2::Parameters::from_der(&enc_params)?;
             let scheme = pkcs5::EncryptionScheme::try_from(params.clone())
                 .map_err(|_e| Error::EncryptionScheme)?;
             match enc_data.enc_content_info.encrypted_content {
@@ -240,18 +231,13 @@ pub fn decrypt_pfx(
     let mut key: Option<PrivateKeyInfo> = None;
     let mut cert: Vec<Certificate> = vec![];
     let pfx = Pfx::from_der(pfx_data)?;
-    let auth_safes_os =
-        OctetString::from_der(&pfx.auth_safe.content.to_der()?)
-            ?;
-    let auth_safes =
-        AuthenticatedSafe::from_der(auth_safes_os.as_bytes())?;
+    let auth_safes_os = OctetString::from_der(&pfx.auth_safe.content.to_der()?)?;
+    let auth_safes = AuthenticatedSafe::from_der(auth_safes_os.as_bytes())?;
     for auth_safe in &auth_safes {
         let (cur_key, mut cur_cert) = match auth_safe.content_type {
             rfc5911::ID_ENCRYPTED_DATA => process_encrypted_data(&auth_safe.content, password)?,
             rfc5911::ID_DATA => {
-                let os =
-                    OctetString::from_der(&auth_safe.content.to_der()?)
-                        ?;
+                let os = OctetString::from_der(&auth_safe.content.to_der()?)?;
 
                 process_safe_contents(&os.as_bytes(), password)?
             }
