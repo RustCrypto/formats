@@ -161,6 +161,7 @@ macro_rules! impl_byte_serialize {
         }
     };
 }
+
 macro_rules! impl_serialize_common {
     ($self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$std_enabled:meta])?) => {
         $(#[$std_enabled])?
