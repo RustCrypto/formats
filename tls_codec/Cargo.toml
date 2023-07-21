@@ -29,9 +29,9 @@ regex = "1.8"
 default = [ "std" ]
 arbitrary = [ "std", "dep:arbitrary" ]
 derive = [ "tls_codec_derive" ]
-serde = []
+serde = [ "std", "dep:serde" ]
 mls = [] # In MLS variable length vectors are limited compared to QUIC.
-std = [ "tls_codec_derive?/std", "serde?/std" ]
+std = [ "tls_codec_derive?/std" ]
 
 [[bench]]
 name = "tls_vec"
