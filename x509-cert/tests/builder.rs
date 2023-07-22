@@ -2,6 +2,7 @@
 
 use der::{asn1::PrintableString, pem::LineEnding, Decode, Encode, EncodePem};
 use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
+use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
@@ -37,11 +38,10 @@ fn root_ca_certificate() {
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = rsa_signer();
-    let builder =
-        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
-            .expect("Create certificate");
+    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+        .expect("Create certificate");
 
-    let certificate = builder.build().unwrap();
+    let certificate = builder.build(&signer).unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -64,11 +64,10 @@ fn root_ca_certificate_ecdsa() {
         SubjectPublicKeyInfoOwned::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
 
     let signer = ecdsa_signer();
-    let builder =
-        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
-            .expect("Create certificate");
+    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+        .expect("Create certificate");
 
-    let certificate = builder.build::<DerSignature>().unwrap();
+    let certificate = builder.build::<_, DerSignature>(&signer).unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -95,11 +94,10 @@ fn sub_ca_certificate() {
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = ecdsa_signer();
-    let builder =
-        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
-            .expect("Create certificate");
+    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+        .expect("Create certificate");
 
-    let certificate = builder.build::<DerSignature>().unwrap();
+    let certificate = builder.build::<_, DerSignature>(&signer).unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -141,11 +139,10 @@ fn leaf_certificate() {
         validity,
         subject.clone(),
         pub_key.clone(),
-        &signer,
     )
     .expect("Create certificate");
 
-    let certificate = builder.build::<DerSignature>().unwrap();
+    let certificate = builder.build::<_, DerSignature>(&signer).unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -180,11 +177,10 @@ fn leaf_certificate() {
             enable_key_encipherment: false,
             include_subject_key_identifier: false,
         };
-        let builder =
-            CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
-                .expect("Create certificate");
+        let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+            .expect("Create certificate");
 
-        let certificate = builder.build::<DerSignature>().unwrap();
+        let certificate = builder.build::<_, DerSignature>(&signer).unwrap();
 
         let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
         println!("{}", openssl::check_certificate(pem.as_bytes()));
@@ -217,12 +213,11 @@ fn pss_certificate() {
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = rsa_pss_signer();
-    let builder =
-        CertificateBuilder::new(profile, serial_number, validity, subject, pub_key, &signer)
-            .expect("Create certificate");
+    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+        .expect("Create certificate");
 
     let certificate = builder
-        .build_with_rng::<rsa::pss::Signature>(&mut rand::thread_rng())
+        .build_with_rng::<_, rsa::pss::Signature>(&signer, &mut rand::thread_rng())
         .unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
@@ -278,14 +273,14 @@ fn certificate_request() {
     let subject = Name::from_str("CN=service.domination.world").unwrap();
 
     let signer = ecdsa_signer();
-    let mut builder = RequestBuilder::new(subject, &signer).expect("Create certificate request");
+    let mut builder = RequestBuilder::new(subject).expect("Create certificate request");
     builder
         .add_extension(&SubjectAltName(vec![GeneralName::from(IpAddr::V4(
             Ipv4Addr::new(192, 0, 2, 0),
         ))]))
         .unwrap();
 
-    let cert_req = builder.build::<DerSignature>().unwrap();
+    let cert_req = builder.build::<_, DerSignature>(&signer).unwrap();
     let pem = cert_req.to_pem(LineEnding::LF).expect("generate pem");
     use std::fs::File;
     use std::io::Write;
@@ -299,7 +294,7 @@ fn certificate_request_attributes() {
     let subject = Name::from_str("CN=service.domination.world").unwrap();
 
     let signer = ecdsa_signer();
-    let mut builder = RequestBuilder::new(subject, &signer).expect("Create certificate request");
+    let mut builder = RequestBuilder::new(subject).expect("Create certificate request");
     builder
         .add_attribute(&request::attributes::ChallengePassword(
             DirectoryString::PrintableString(
@@ -309,11 +304,32 @@ fn certificate_request_attributes() {
         ))
         .expect("unable to add attribute");
 
-    let cert_req = builder.build::<DerSignature>().unwrap();
+    let cert_req = builder.build::<_, DerSignature>(&signer).unwrap();
     let pem = cert_req.to_pem(LineEnding::LF).expect("generate pem");
     use std::fs::File;
     use std::io::Write;
     let mut file = File::create("/tmp/ecdsa.csr").expect("create pem file");
     file.write_all(pem.as_bytes()).expect("Create pem file");
     println!("{}", openssl::check_request(pem.as_bytes()));
+}
+
+#[test]
+fn dynamic_signer() {
+    let subject = Name::from_str("CN=Test").expect("parse common name");
+
+    let csr_builder = RequestBuilder::new(subject).expect("construct builder");
+
+    let csr = if true {
+        let req_signer = p256::ecdsa::SigningKey::random(&mut OsRng);
+        csr_builder
+            .build::<_, p256::ecdsa::DerSignature>(&req_signer)
+            .expect("Sign request")
+    } else {
+        let req_signer = rsa_signer();
+        csr_builder.build(&req_signer).expect("Sign request")
+    };
+
+    let csr_pem = csr.to_pem(LineEnding::LF).expect("format CSR");
+
+    println!("{}", csr_pem);
 }
