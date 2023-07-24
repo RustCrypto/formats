@@ -79,7 +79,7 @@ impl BmpString {
         // TODO(tarcieri): use `array_chunks`
         self.as_bytes()
             .chunks_exact(2)
-            .map(|chunk| u16::from_be_bytes(chunk.try_into().expect("two bytes")))
+            .map(|chunk| u16::from_be_bytes([chunk[0], chunk[1]]))
     }
 }
 
