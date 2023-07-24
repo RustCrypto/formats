@@ -29,10 +29,12 @@ impl BmpString {
             bytes: bytes.try_into()?,
         };
 
-        // Ensure resulting string is free of unpaired surrogates
         for maybe_char in char::decode_utf16(ret.codepoints()) {
-            if maybe_char.is_err() {
-                return Err(Tag::BmpString.value_error());
+            match maybe_char {
+                // All surrogates paired and character is in the Basic Multilingual Plane
+                Ok(c) if (c as u64) < u64::from(u16::MAX) => (),
+                // Unpaired surrogates or characters outside Basic Multilingual Plane
+                _ => return Err(Tag::BmpString.value_error()),
             }
         }
 
@@ -41,16 +43,18 @@ impl BmpString {
 
     /// Create a new [`BmpString`] from a UTF-8 string.
     pub fn from_utf8(utf8: &str) -> Result<Self> {
-        #[allow(clippy::integer_arithmetic)]
-        let mut bytes = Vec::with_capacity(utf8.len() * 2);
+        let capacity = utf8
+            .len()
+            .checked_mul(2)
+            .ok_or_else(|| Tag::BmpString.length_error())?;
+
+        let mut bytes = Vec::with_capacity(capacity);
 
         for code_point in utf8.encode_utf16() {
             bytes.extend(code_point.to_be_bytes());
         }
 
-        Ok(Self {
-            bytes: bytes.try_into()?,
-        })
+        Self::from_ucs2(bytes)
     }
 
     /// Borrow the encoded UCS-2 as bytes.
