@@ -1,7 +1,7 @@
 //! TODO: complete PKCS#12 crate
 
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -16,7 +16,7 @@
     unused_qualifications
 )]
 
-use spki::ObjectIdentifier;
+use const_oid::ObjectIdentifier;
 extern crate alloc;
 
 pub mod authenticated_safe;
@@ -31,9 +31,6 @@ pub mod safe_bag;
 
 #[cfg(feature = "kdf")]
 pub mod kdf;
-
-#[cfg(feature = "builder")]
-pub mod builder;
 
 // pbe oids
 /// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
@@ -96,6 +93,7 @@ pub const PKCS_12_SDSI_CERT_OID: ObjectIdentifier =
 
 // todo: return the friendly name if present? (minimally, defer until BMPString support is available)
 // todo: support separate mac and encryption passwords?
+// todo: add decryption support
 // todo: add more encryption tests
 // todo: add a builder
 // todo: add RC2 support
