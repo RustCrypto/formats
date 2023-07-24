@@ -21,15 +21,8 @@ spki = { version = "0.7" }
 x509-cert = { version = "0.2.3", default-features = false, features = ["pem"] }
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
 cms = "0.2.1"
-pkcs8 = { version = "0.10.2", features = ["pkcs5"], optional = true }
-pkcs5 = {version = "0.7.1", features = ["pbes2"], optional = true}
 digest = { version = "0.10.7", features=["alloc"], optional = true }
 zeroize = "1.6.0"
-sha1 = { version = "0.10.5", optional = true }
-sha2 = { version = "0.10.7", optional = true }
-des = { version = "0.8.1", optional = true, default-features = false }
-hmac = { version = "0.12.1", optional = true }
-subtle-encoding = "0.5.1"
 
 [dev-dependencies]
 hex-literal = "0.3.3"
