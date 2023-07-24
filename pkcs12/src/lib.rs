@@ -1,3 +1,5 @@
+//! TODO: complete PKCS#12 crate
+
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
@@ -13,11 +15,6 @@
     rust_2018_idioms,
     unused_qualifications
 )]
-
-//! TODO: PKCS#12 crate
-//!
-//!
-// #[cfg(feature = "pem")]
 
 use spki::ObjectIdentifier;
 extern crate alloc;

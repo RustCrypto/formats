@@ -263,16 +263,15 @@ pub fn decrypt_pfx(
         #[cfg(feature = "insecure")]
         const OID_SHA_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
 
-        let s = core::str::from_utf8(password).map_err(|e| Error::Utf8Error(e))?;
-
+        let password = core::str::from_utf8(password).map_err(|e| Error::Utf8Error(e))?;
         match mac_data.mac.algorithm.oid {
             #[cfg(feature = "insecure")]
             OID_SHA_1 => {
                 use sha1::Sha1;
                 type HmacSha1 = Hmac<Sha1>;
 
-                let mac_key = derive_key::<Sha1>(
-                    &s,
+                let mac_key = derive_key_utf8::<Sha1>(
+                    password,
                     mac_data.mac_salt.as_bytes(),
                     Pkcs12KeyType::Mac,
                     mac_data.iterations,
@@ -287,8 +286,8 @@ pub fn decrypt_pfx(
             rfc5912::ID_SHA_256 => {
                 use sha2::Sha256;
                 type HmacSha256 = Hmac<Sha256>;
-                let mac_key = derive_key::<Sha256>(
-                    &s,
+                let mac_key = derive_key_utf8::<Sha256>(
+                    password,
                     mac_data.mac_salt.as_bytes(),
                     Pkcs12KeyType::Mac,
                     mac_data.iterations,
@@ -303,8 +302,8 @@ pub fn decrypt_pfx(
             rfc5912::ID_SHA_384 => {
                 use sha2::Sha384;
                 type HmacSha384 = Hmac<Sha384>;
-                let mac_key = derive_key::<Sha384>(
-                    &s,
+                let mac_key = derive_key_utf8::<Sha384>(
+                    password,
                     mac_data.mac_salt.as_bytes(),
                     Pkcs12KeyType::Mac,
                     mac_data.iterations,
@@ -319,8 +318,8 @@ pub fn decrypt_pfx(
             rfc5912::ID_SHA_512 => {
                 use sha2::Sha512;
                 type HmacSha512 = Hmac<Sha512>;
-                let mac_key = derive_key::<Sha512>(
-                    &s,
+                let mac_key = derive_key_utf8::<Sha512>(
+                    password,
                     mac_data.mac_salt.as_bytes(),
                     Pkcs12KeyType::Mac,
                     mac_data.iterations,

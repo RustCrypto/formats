@@ -8,15 +8,11 @@ Personal Information Exchange Syntax v1.1 (RFC7292)
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/RustCrypto/formats/tree/master/pkcs12"
-categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
+categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "pkcs", "private"]
 readme = "README.md"
 edition = "2021"
 rust-version = "1.65"
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 cbc = { version = "0.1.2", optional = true }
@@ -41,9 +37,15 @@ pkcs8 = { version = "0.10.2", features = ["pkcs5", "getrandom"] }
 pkcs5 = {version = "0.7.1", features = ["pbes2", "3des"]}
 subtle-encoding = "0.5.1"
 sha2 = "0.10.7"
+whirlpool = "0.10.4"
 
 [features]
 decrypt = ["pkcs8", "pkcs5", "cbc", "kdf", "sha2", "hmac"]
 insecure = ["pkcs5/sha1-insecure", "pkcs5/des-insecure", "des", "sha1"]
 kdf = ["dep:digest"]
 builder = ["pkcs8", "pkcs5", "cbc", "kdf", "sha2", "hmac"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+

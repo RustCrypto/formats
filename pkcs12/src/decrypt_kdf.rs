@@ -39,7 +39,7 @@ pub(crate) fn pkcs12_pbe(
     let p12_pbe_params = Pkcs12PbeParams::from_der(&enc_params)?;
     let s = str::from_utf8(password).map_err(|e| Error::Utf8Error(e))?;
 
-    let iv = derive_key::<Sha1>(
+    let iv = derive_key_utf8::<Sha1>(
         &s,
         p12_pbe_params.salt.as_bytes(),
         Pkcs12KeyType::Iv,
@@ -57,7 +57,7 @@ pub(crate) fn pkcs12_pbe(
         // PKCS_12_PBEWITH_SHAAND40_BIT_RC2_CBC
         _ => return Err(Error::UnexpectedAlgorithm(alg.oid)),
     };
-    let key = derive_key::<Sha1>(
+    let key = derive_key_utf8::<Sha1>(
         &s,
         p12_pbe_params.salt.as_bytes(),
         Pkcs12KeyType::EncryptionKey,
