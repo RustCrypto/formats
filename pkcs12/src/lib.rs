@@ -29,14 +29,8 @@ pub mod pbe_params;
 pub mod pfx;
 pub mod safe_bag;
 
-#[cfg(feature = "decrypt")]
-pub mod decrypt;
-
 #[cfg(feature = "kdf")]
 pub mod kdf;
-
-#[cfg(all(feature = "kdf", feature = "insecure", feature = "decrypt"))]
-pub mod decrypt_kdf;
 
 #[cfg(feature = "builder")]
 pub mod builder;
