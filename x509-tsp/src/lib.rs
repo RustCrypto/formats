@@ -1,3 +1,13 @@
+#![no_std]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![doc = include_str!("../README.md")]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
+)]
+
+extern crate alloc;
+
 use cmpv2::status::PkiStatusInfo;
 use cms::content_info::ContentInfo;
 use der::{
@@ -131,6 +141,7 @@ pub struct Accuracy {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::string::ToString;
     use cmpv2::status::*;
     use cms::signed_data::SignedData;
     use der::oid::db::rfc5912::ID_SHA_256;
