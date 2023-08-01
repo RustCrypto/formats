@@ -1,15 +1,13 @@
 use cmpv2::status::PkiStatusInfo;
-use cms::{
-    cert::x509::{
-        ext::{pkix::name::GeneralName, Extensions},
-        spki::AlgorithmIdentifier,
-    },
-    content_info::ContentInfo,
-};
+use cms::content_info::ContentInfo;
 use der::{
     asn1::{GeneralizedTime, Int, OctetString},
     oid::ObjectIdentifier,
     Any, Enumerated, Sequence,
+};
+use x509_cert::{
+    ext::{pkix::name::GeneralName, Extensions},
+    spki::AlgorithmIdentifier,
 };
 
 #[derive(Clone, Copy, Debug, Enumerated, Eq, PartialEq, PartialOrd, Ord)]
