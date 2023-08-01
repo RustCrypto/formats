@@ -19,6 +19,7 @@ rust-version = "1.60"
 [dev-dependencies]
 base64 = "0.21"
 proptest = "1"
+rustix = "0.37" # Pinned to preserve MSRV 1.60
 
 [features]
 alloc = []
