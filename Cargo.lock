@@ -2024,6 +2024,7 @@ dependencies = [
  "cms",
  "der",
  "hex-literal",
+ "x509-cert",
 ]
 
 [[package]]

@@ -1,15 +1,13 @@
 use cmpv2::status::PkiStatusInfo;
-use cms::{
-    cert::x509::{
-        ext::{pkix::name::GeneralName, Extensions},
-        spki::AlgorithmIdentifier,
-    },
-    content_info::ContentInfo,
-};
+use cms::content_info::ContentInfo;
 use der::{
     asn1::{GeneralizedTime, Int, OctetString},
     oid::ObjectIdentifier,
     Any, Enumerated, Sequence,
+};
+use x509_cert::{
+    ext::{pkix::name::GeneralName, Extensions},
+    spki::AlgorithmIdentifier,
 };
 
 #[derive(Clone, Copy, Debug, Enumerated, Eq, PartialEq, PartialOrd, Ord)]
@@ -214,10 +212,7 @@ mod tests {
             GeneralName::DirectoryName(n) => n,
             _ => panic!(),
         };
-        assert_eq!(
-            dn.to_string(),
-            "C=US,STATEORPROVINCENAME=Some-State,O=Test,CN=Test TSA"
-        );
+        assert_eq!(dn.to_string(), "CN=Test TSA,O=Test,ST=Some-State,C=US");
         assert_eq!(
             tst.message_imprint.hashed_message.as_bytes(),
             hex!("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
