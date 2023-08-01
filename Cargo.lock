@@ -255,7 +255,7 @@ checksum = "2da6da31387c7e4ef160ffab6d5e7f00c42626fe39aea70a7b0f1773f7dd6c1b"
 name = "cmpv2"
 version = "0.2.0"
 dependencies = [
- "const-oid 0.9.3",
+ "const-oid 0.9.4",
  "crmf",
  "der",
  "hex-literal",
@@ -267,13 +267,18 @@ dependencies = [
 name = "cms"
 version = "0.2.2"
 dependencies = [
- "const-oid 0.9.3",
+ "aes",
+ "cbc",
+ "cipher",
+ "const-oid 0.9.4",
  "der",
  "ecdsa",
+ "getrandom",
  "hex-literal",
  "p256",
  "pem-rfc7468",
  "pkcs5",
+ "rand",
  "rsa",
  "sha1",
  "sha2",
@@ -281,13 +286,14 @@ dependencies = [
  "signature",
  "spki",
  "x509-cert",
+ "zeroize",
 ]
 
 [[package]]
 name = "const-oid"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6340df57935414636969091153f35f68d9f00bbc8fb4a9c6054706c213e6c6bc"
+checksum = "795bc6e66a8e340f075fcf6227e417a2dc976b92b91f3cdc778bb858778b6747"
 dependencies = [
  "arbitrary",
 ]
@@ -350,7 +356,7 @@ name = "crmf"
 version = "0.2.0"
 dependencies = [
  "cms",
- "const-oid 0.9.3",
+ "const-oid 0.9.4",
  "der",
  "spki",
  "x509-cert",
@@ -418,6 +424,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1bfb12502f3fc46cca1bb51ac28df9d618d813cdc3d2f25b9fe775a34af26bb3"
 dependencies = [
  "generic-array",
+ "rand_core",
  "typenum",
 ]
 
@@ -427,7 +434,7 @@ version = "0.7.7"
 dependencies = [
  "arbitrary",
  "bytes",
- "const-oid 0.9.3",
+ "const-oid 0.9.4",
  "der_derive",
  "flagset",
  "hex-literal",
@@ -474,7 +481,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
 dependencies = [
  "block-buffer",
- "const-oid 0.9.3",
+ "const-oid 0.9.4",
  "crypto-common",
  "subtle",
 ]
@@ -1007,7 +1014,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 name = "pkcs1"
 version = "0.7.5"
 dependencies = [
- "const-oid 0.9.3",
+ "const-oid 0.9.4",
  "der",
  "hex-literal",
  "pkcs8",
@@ -1298,7 +1305,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ab43bb47d23c1a631b4b680199a45255dce26fa9ab2fa902581f624ff13e6a8"
 dependencies = [
  "byteorder",
- "const-oid 0.9.3",
+ "const-oid 0.9.4",
  "digest",
  "num-bigint-dig",
  "num-integer",
@@ -1980,7 +1987,7 @@ name = "x509-cert"
 version = "0.2.4"
 dependencies = [
  "arbitrary",
- "const-oid 0.9.3",
+ "const-oid 0.9.4",
  "der",
  "ecdsa",
  "hex-literal",
@@ -2009,7 +2016,7 @@ dependencies = [
 name = "x509-ocsp"
 version = "0.2.0-pre"
 dependencies = [
- "const-oid 0.9.3",
+ "const-oid 0.9.4",
  "der",
  "hex-literal",
  "spki",

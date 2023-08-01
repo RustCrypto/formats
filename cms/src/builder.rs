@@ -190,12 +190,13 @@ where
                     // Encapsulated content must be empty, if external digest is given.
                     return Err(der::Error::from(ErrorKind::Failed));
                 }
-                external_content_digest.to_vec()
+                Some(external_content_digest.to_vec())
             }
             None => match &self.encapsulated_content_info.econtent {
                 None => {
-                    // Content missing, cannot sign
-                    return Err(der::Error::from(ErrorKind::Failed));
+                    // This case is allowed. E.g. for degenerate certificates-only messages.
+                    // See RFC 5652 § 5.2 or RFC 8894 § 3.4.
+                    None
                 }
                 Some(content) => {
                     let mut hasher = get_hasher(&self.digest_algorithm).ok_or_else(|| {
@@ -207,48 +208,51 @@ where
                     // or the length octets.
                     let content_value = content.value();
                     hasher.update(content_value);
-                    hasher.finalize_reset().to_vec()
+                    Some(hasher.finalize_reset().to_vec())
                 }
             },
         };
 
-        // This implementation uses signed attributes.
+        // This implementation uses signed attributes to store the message digest.
         if self.signed_attributes.is_none() {
             self.signed_attributes = Some(vec![]);
         }
 
-        // Add digest attribute to (to be) signed attributes
         let signed_attributes = self
             .signed_attributes
             .as_mut()
             .expect("Signed attributes must be present.");
-        signed_attributes.push(
-            create_message_digest_attribute(&message_digest)
-                .map_err(|_| der::Error::from(ErrorKind::Failed))?,
-        );
 
-        // The content-type attribute type specifies the content type of the
-        // ContentInfo within signed-data or authenticated-data.  The content-
-        // type attribute type MUST be present whenever signed attributes are
-        // present in signed-data or authenticated attributes present in
-        // authenticated-data.  The content-type attribute value MUST match the
-        // encapContentInfo eContentType value in the signed-data or
-        // authenticated-data.
-        let econtent_type = self.encapsulated_content_info.econtent_type;
-        let signed_attributes_content_type = signed_attributes
-            .iter()
-            .find(|attr| attr.oid.cmp(&const_oid::db::rfc5911::ID_CONTENT_TYPE) == Ordering::Equal);
-        if let Some(signed_attributes_content_type) = signed_attributes_content_type {
-            // Check against `eContentType`
-            if signed_attributes_content_type.oid != econtent_type {
-                // Mismatch between content types: encapsulated content info <-> signed attributes.
-                return Err(der::Error::from(ErrorKind::Failed));
-            }
-        } else {
+        if let Some(message_digest) = message_digest {
+            // Add digest attribute to (to be) signed attributes
             signed_attributes.push(
-                create_content_type_attribute(econtent_type)
+                create_message_digest_attribute(&message_digest)
                     .map_err(|_| der::Error::from(ErrorKind::Failed))?,
             );
+
+            // The content-type attribute type specifies the content type of the
+            // ContentInfo within signed-data or authenticated-data.  The content-
+            // type attribute type MUST be present whenever signed attributes are
+            // present in signed-data or authenticated attributes present in
+            // authenticated-data.  The content-type attribute value MUST match the
+            // encapContentInfo eContentType value in the signed-data or
+            // authenticated-data.
+            let econtent_type = self.encapsulated_content_info.econtent_type;
+            let signed_attributes_content_type = signed_attributes
+                .iter()
+                .find(|attr| attr.oid.cmp(&const_oid::db::rfc5911::ID_CONTENT_TYPE) == Ordering::Equal);
+            if let Some(signed_attributes_content_type) = signed_attributes_content_type {
+                // Check against `eContentType`
+                if signed_attributes_content_type.oid != econtent_type {
+                    // Mismatch between content types: encapsulated content info <-> signed attributes.
+                    return Err(der::Error::from(ErrorKind::Failed));
+                }
+            } else {
+                signed_attributes.push(
+                    create_content_type_attribute(econtent_type)
+                        .map_err(|_| der::Error::from(ErrorKind::Failed))?,
+                );
+            }
         }
 
         // Now use `signer` to sign the DER encoded signed attributes
