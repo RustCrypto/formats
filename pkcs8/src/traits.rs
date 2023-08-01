@@ -12,10 +12,14 @@ use {
 };
 
 #[cfg(feature = "pem")]
-use {crate::LineEnding, alloc::string::String, der::zeroize::Zeroizing};
-
-#[cfg(feature = "pem")]
-use der::pem::PemLabel;
+use {
+    crate::LineEnding,
+    alloc::string::String,
+    der::{
+        pem::{self, PemLabel},
+        zeroize::Zeroizing,
+    },
+};
 
 #[cfg(feature = "std")]
 use std::path::Path;
@@ -43,8 +47,11 @@ pub trait DecodePrivateKey: Sized {
     /// ```
     #[cfg(feature = "pem")]
     fn from_pkcs8_pem(s: &str) -> Result<Self> {
-        let (label, doc) = SecretDocument::from_pem(s)?;
+        // Validate PEM label
+        let label = pem::decode_label(s.as_bytes())?;
         PrivateKeyInfo::validate_pem_label(label)?;
+
+        let doc = SecretDocument::from_pem(s)?.1;
         Self::from_pkcs8_der(doc.as_bytes())
     }
 
