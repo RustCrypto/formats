@@ -19,7 +19,7 @@ const CBOR_SLICE: [u8; 17] = hex!("50000102030405060708090A0B0C0D0EFF");
 /// CBOR serialization of [`EXAMPLE_BYTES`] as an array.
 /// (first three bits, `0b100` denote an array, and the last five, `0b10000` denote the length)
 /// Note the 0x18 marker before 0xFF, denoting that the integers are dynamically sized.
-const CBOR_ARRAY: [u8; 18] = hex!("90000102030405060708090A0B0C0D0E18FF");
+const CBOR_ARRAY: [u8; 17] = CBOR_SLICE;
 
 #[test]
 fn deserialize_slice() {

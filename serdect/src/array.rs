@@ -1,10 +1,19 @@
 //! Serialization primitives for arrays.
 
-use core::fmt;
+// Unfortunately, we currently cannot assert generically that we are serializing
+// a fixed-size byte array.
+// See https://github.com/serde-rs/serde/issues/2120 for the discussion.
+// Therefore we have to fall back to the slice methods,
+// which will add the size information in the binary formats.
+// The only difference is that for the arrays we require the size of the data
+// to be exactly equal to the size of the buffer during deserialization,
+// while for slices the buffer can be larger than the deserialized data.
 
-use serde::de::{Error, SeqAccess, Visitor};
-use serde::ser::SerializeTuple;
+use core::marker::PhantomData;
+
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use crate::slice;
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -16,17 +25,7 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    if serializer.is_human_readable() {
-        crate::serialize_hex::<_, _, false>(value, serializer)
-    } else {
-        let mut seq = serializer.serialize_tuple(value.as_ref().len())?;
-
-        for byte in value.as_ref() {
-            seq.serialize_element(byte)?;
-        }
-
-        seq.end()
-    }
+    slice::serialize_hex_lower_or_bin(value, serializer)
 }
 
 /// Serialize the given type as upper case hex when using human-readable
@@ -36,17 +35,7 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    if serializer.is_human_readable() {
-        crate::serialize_hex::<_, _, true>(value, serializer)
-    } else {
-        let mut seq = serializer.serialize_tuple(value.as_ref().len())?;
-
-        for byte in value.as_ref() {
-            seq.serialize_element(byte)?;
-        }
-
-        seq.end()
-    }
+    slice::serialize_hex_upper_or_bin(value, serializer)
 }
 
 /// Deserialize from hex when using human-readable formats or binary if the
@@ -57,56 +46,12 @@ where
     D: Deserializer<'de>,
 {
     if deserializer.is_human_readable() {
-        struct StrVisitor<'b>(&'b mut [u8]);
-
-        impl<'de> Visitor<'de> for StrVisitor<'_> {
-            type Value = ();
-
-            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(formatter, "a string of length {}", self.0.len() * 2)
-            }
-
-            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                if v.len() != self.0.len() * 2 {
-                    return Err(Error::invalid_length(v.len(), &self));
-                }
-
-                base16ct::mixed::decode(v, self.0).map_err(E::custom)?;
-
-                Ok(())
-            }
-        }
-
-        deserializer.deserialize_str(StrVisitor(buffer))
+        deserializer.deserialize_str(slice::StrVisitor::<slice::ExactLength>(buffer, PhantomData))
     } else {
-        struct ArrayVisitor<'b>(&'b mut [u8]);
-
-        impl<'de> Visitor<'de> for ArrayVisitor<'_> {
-            type Value = ();
-
-            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(formatter, "an array of length {}", self.0.len())
-            }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-            where
-                A: SeqAccess<'de>,
-            {
-                for (index, byte) in self.0.iter_mut().enumerate() {
-                    *byte = match seq.next_element()? {
-                        Some(byte) => byte,
-                        None => return Err(Error::invalid_length(index, &self)),
-                    };
-                }
-
-                Ok(())
-            }
-        }
-
-        deserializer.deserialize_tuple(buffer.len(), ArrayVisitor(buffer))
+        deserializer.deserialize_byte_buf(slice::SliceVisitor::<slice::ExactLength>(
+            buffer,
+            PhantomData,
+        ))
     }
 }
 

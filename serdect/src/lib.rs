@@ -49,8 +49,17 @@
 //! let data = SecretData([42; 32]);
 //!
 //! let serialized = bincode::serialize(&data).unwrap();
-//! // bincode, a binary serialization format, is serialized into bytes.
-//! assert_eq!(serialized.as_slice(), [42; 32]);
+//! // bincode, a binary serialization format is serialized into bytes.
+//! assert_eq!(
+//!     serialized.as_slice(),
+//!     [
+//!         // Array size.
+//!         32, 0, 0, 0, 0, 0, 0, 0,
+//!         // Actual data.
+//!         42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+//!         42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+//!     ]
+//! );
 //! # let deserialized: SecretData = bincode::deserialize(&serialized).unwrap();
 //! # assert_eq!(deserialized, data);
 //!
@@ -98,7 +107,7 @@
 //! assert_eq!(
 //!     serialized.as_slice(),
 //!     [
-//!         // Not fixed-size, so a size will be encoded.
+//!         // Slice size.
 //!         32, 0, 0, 0, 0, 0, 0, 0,
 //!         // Actual data.
 //!         42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,

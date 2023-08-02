@@ -15,7 +15,7 @@ const MESSAGEPACK_SLICE: [u8; 18] = hex!("C410000102030405060708090A0B0C0D0EFF")
 
 /// messagepack serialization of [`EXAMPLE_BYTES`] as an array.
 /// Note the 0xCC marker before 0xFF, denoting that the integers are dynamically sized.
-const MESSAGEPACK_ARRAY: [u8; 20] = hex!("DC0010000102030405060708090A0B0C0D0ECCFF");
+const MESSAGEPACK_ARRAY: [u8; 18] = MESSAGEPACK_SLICE;
 
 #[test]
 fn deserialize_slice() {

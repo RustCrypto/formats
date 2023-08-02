@@ -29,17 +29,14 @@ While this crate can't ensure that format implementations don't perform
 other kinds of data-dependent branching on the contents of the serialized data,
 using a constant-time hex serialization with human-readable formats should
 help reduce the overall timing variability.
-The table below lists the crates `serdect` is tested against.
-&#x274c; marks the cases for which the serialization is not constant-size for a given data size (due to the format limitations), and therefore will not be constant-time too.
 
-| Crate                                                              | `array`  | `slice`  |
-|--------------------------------------------------------------------|:--------:|:--------:|
-| [`bincode`](https://crates.io/crates/bincode) v1                   | &#x2705; | &#x2705; |
-| [`ciborium`](https://crates.io/crates/ciborium) v0.2               | &#x274c; | &#x2705; |
-| [`rmp-serde`](https://crates.io/crates/rmp-serde) v1               | &#x274c; | &#x2705; |
-| [`serde-json-core`](https://crates.io/crates/serde-json-core) v0.5 | &#x2705; | &#x2705; |
-| [`serde-json`](https://crates.io/crates/serde-json) v1             | &#x2705; | &#x2705; |
-| [`toml`](https://crates.io/crates/toml) v0.7                       | &#x2705; | &#x2705; |
+`serdect` is tested against the following crates:
+- [`bincode`](https://crates.io/crates/bincode) v1
+- [`ciborium`](https://crates.io/crates/ciborium) v0.2
+- [`rmp-serde`](https://crates.io/crates/rmp-serde) v1
+- [`serde-json-core`](https://crates.io/crates/serde-json-core) v0.5
+- [`serde-json`](https://crates.io/crates/serde-json) v1
+- [`toml`](https://crates.io/crates/toml) v0.7
 
 
 ## Minimum Supported Rust Version

@@ -14,7 +14,7 @@ const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0EFF");
 const BINCODE_SLICE: [u8; 24] = hex!("1000000000000000000102030405060708090A0B0C0D0EFF");
 
 /// bincode serialization of [`EXAMPLE_BYTES`] as an array.
-const BINCODE_ARRAY: [u8; 16] = EXAMPLE_BYTES;
+const BINCODE_ARRAY: [u8; 24] = BINCODE_SLICE;
 
 #[test]
 fn deserialize_slice() {
