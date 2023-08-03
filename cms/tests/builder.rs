@@ -495,7 +495,9 @@ fn test_degenerate_certificates_only_cms() {
     let mut signed_data_builder = SignedDataBuilder::new(&encapsulated_content_info);
 
     for cert in certs {
-        signed_data_builder.add_certificate(CertificateChoices::Certificate(cert.clone())).unwrap();
+        signed_data_builder
+            .add_certificate(CertificateChoices::Certificate(cert.clone()))
+            .unwrap();
     }
 
     let degenerate_certificates_only_cms = signed_data_builder.build().unwrap();

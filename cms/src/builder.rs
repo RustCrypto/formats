@@ -238,9 +238,9 @@ where
             // encapContentInfo eContentType value in the signed-data or
             // authenticated-data.
             let econtent_type = self.encapsulated_content_info.econtent_type;
-            let signed_attributes_content_type = signed_attributes
-                .iter()
-                .find(|attr| attr.oid.cmp(&const_oid::db::rfc5911::ID_CONTENT_TYPE) == Ordering::Equal);
+            let signed_attributes_content_type = signed_attributes.iter().find(|attr| {
+                attr.oid.cmp(&const_oid::db::rfc5911::ID_CONTENT_TYPE) == Ordering::Equal
+            });
             if let Some(signed_attributes_content_type) = signed_attributes_content_type {
                 // Check against `eContentType`
                 if signed_attributes_content_type.oid != econtent_type {
