@@ -20,7 +20,7 @@ use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
 use cipher::block_padding::Pkcs7;
-use cipher::rand_core::{CryptoRng, CryptoRngCore, RngCore}; // TODO bk remove redundancy
+use cipher::rand_core::{CryptoRng, CryptoRngCore, RngCore};
 use cipher::BlockEncryptMut;
 use cipher::{Key, KeyIvInit, KeySizeUser};
 use const_oid::ObjectIdentifier;
