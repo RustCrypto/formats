@@ -211,44 +211,43 @@ fn test_build_pkcs7_scep_pkcsreq() {
     // - the recipients public RSA key,
     // - an RSA key pair of the sender and
     // - a CSR (PKCS #10) signed with the sender's key
+    //
     // A CMS `SignedData` message is roughly structured as follows:
-    // ContentInfo
-    //     SignedData
-    //         version
-    //         digestAlgorithms*
-    //         encapContentInfo
-    //             ContentInfo
-    //                 EnvelopedData
-    //                     version
-    //                     [originatorInfo]
-    //                     recipientInfos*
-    //                         e.g. KeyTransRecipientInfo
-    //                             version
-    //                             rid
-    //                             keyEncryptionAlgorithm
-    //                             encryptedKey
-    //                     encryptedContentInfo
-    //                         contentType
-    //                         contentEncryptionAlgorithm
-    //                         [encryptedContent]
-    //                     [unprotectedAttrs*]
+    // cms_message: ContentInfo ::= SEQUENCE
+    //     contentType: ContentType = id-signed-data
+    //     content: ANY == SignedData
+    //         version: CMSVersion
+    //         digestAlgorithms*: DigestAlgorithmIdentifiers
+    //         encapContentInfo: EncapsulatedContentInfo ::= SEQUENCE
+    //             eContentType: ContentType = id-data
+    //             eContent: OCTET STRING
+    //                 value_of_econtent_without_tag_and_length_bytes: ContentInfo
+    //                     contentType: ContentType = id-enveloped-data
+    //                     content: ANY == EnvelopeData ::= SEQUENCE
+    //                         version: CMSVersion
+    //                         [originatorInfo]: OriginatorInfo
+    //                         recipientInfos: RecipientInfos ::= SET OF RecipientInfo
+    //                             e.g. KeyTransRecipientInfo ::= SEQUENCE
+    //                                 version: CMSVersion
+    //                                 rid: RecipientIdentifier
+    //                                 keyEncryptionAlgorithm: KeyEncryptionAlgorithmIdentifier
+    //                                 encryptedKey: EncryptedKey
+    //                         encryptedContentInfo: EncryptedContentInfo ::= SEQUENCE
+    //                             contentType: ContentType
+    //                             contentEncryptionAlgorithm: ContentEncryptionAlgorithmIdentifier
+    //                             [encryptedContent]: EncryptedContent == OCTET STRING
+    //                         [unprotectedAttrs*]
     //         [certificates*]
     //         [crls*]
-    //         signerInfos
-    //             version
-    //             sid
-    //             digestAlgorithm
-    //             [signedAttrs*]
-    //             signatureAlgorithm
-    //             signature
-    //             [unsignedAttrs*]
-    // Reduced to the nested structures:
-    // ContentInfo
-    //     SignedData
-    //         encapContentInfo
-    //             ContentInfo
-    //                 EnvelopedData
-    //                     encryptedContentInfo
+    //         signerInfos*: SET OF SignerInfo
+    //             version: CMSVersion
+    //             sid: SignerIdentifier
+    //             digestAlgorithm: DigestAlgorithmIdentifier
+    //             [signedAttrs*]: SignedAttributes
+    //             signatureAlgorithm: SignatureAlgorithmIdentifier
+    //             signature: SignatureValue
+    //             [unsignedAttrs*]: UnsignedAttributes
+    //
     // 4 builders are involved in the procedure:
     // - `SignedDataBuilder`
     // - `SignerInfoBuilder`
@@ -481,6 +480,42 @@ fn test_build_pkcs7_scep_pkcsreq() {
             .decrypt_padded_vec_mut::<Pkcs7>(encrypted_content)
             .unwrap();
     assert_eq!(csr_der_decrypted.as_slice(), csr_der)
+}
+
+#[test]
+fn test_degenerate_certificates_only_cms() {
+    let cert_buf = include_bytes!("examples/ValidCertificatePathTest1EE.pem");
+    let cert = x509_cert::Certificate::from_pem(cert_buf).unwrap();
+    let certs = vec![cert];
+
+    let encapsulated_content_info = EncapsulatedContentInfo {
+        econtent_type: const_oid::db::rfc5911::ID_DATA,
+        econtent: None,
+    };
+    let mut signed_data_builder = SignedDataBuilder::new(&encapsulated_content_info);
+
+    for cert in certs {
+        signed_data_builder.add_certificate(CertificateChoices::Certificate(cert.clone())).unwrap();
+    }
+
+    let degenerate_certificates_only_cms = signed_data_builder.build().unwrap();
+
+    // Extract certificates from `degenerate_certificates_only_cms`
+    let signed_data = SignedData::from_der(
+        degenerate_certificates_only_cms
+            .content
+            .to_der()
+            .unwrap()
+            .as_slice(),
+    )
+    .unwrap();
+    let certs = signed_data.certificates.unwrap();
+    let CertificateChoices::Certificate(extracted_cert) = certs.0.get(0).unwrap() else {
+        panic!("Invalid certificate choice encountered");
+    };
+
+    let original_cert = x509_cert::Certificate::from_pem(cert_buf).unwrap();
+    assert_eq!(original_cert.signature, extracted_cert.signature)
 }
 
 #[test]
