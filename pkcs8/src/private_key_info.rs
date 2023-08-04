@@ -352,10 +352,10 @@ where
     }
 }
 
-/// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and [`BytesRef`] params.
+/// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and [`BytesRef`] key.
 pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, BytesRef<'a>>;
 
-/// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and [`BytesOwned`] params.
+/// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and [`BytesOwned`] key.
 #[cfg(feature = "alloc")]
 pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, BytesOwned>;
 
