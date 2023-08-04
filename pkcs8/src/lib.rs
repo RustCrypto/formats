@@ -85,7 +85,7 @@ pub(crate) mod encrypted_private_key_info;
 
 pub use crate::{
     error::{Error, Result},
-    private_key_info::PrivateKeyInfo,
+    private_key_info::{PrivateKeyInfo, PrivateKeyInfoRef},
     traits::DecodePrivateKey,
     version::Version,
 };
@@ -96,7 +96,7 @@ pub use spki::{
 
 #[cfg(feature = "alloc")]
 pub use {
-    crate::traits::EncodePrivateKey,
+    crate::{private_key_info::PrivateKeyInfoOwned, traits::EncodePrivateKey},
     der::{Document, SecretDocument},
     spki::EncodePublicKey,
 };

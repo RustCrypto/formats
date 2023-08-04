@@ -3,7 +3,7 @@
 #![cfg(feature = "pkcs5")]
 
 use hex_literal::hex;
-use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfo, PrivateKeyInfo};
+use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfo, PrivateKeyInfoRef};
 
 #[cfg(feature = "alloc")]
 use der::Encode;
@@ -248,7 +248,7 @@ fn encrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
     )
     .unwrap();
 
-    let pk_plaintext = PrivateKeyInfo::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
+    let pk_plaintext = PrivateKeyInfoRef::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
     let pk_encrypted = pk_plaintext
         .encrypt_with_params(pbes2_params, PASSWORD)
         .unwrap();
@@ -269,7 +269,7 @@ fn encrypt_ed25519_der_encpriv_aes256_scrypt() {
     )
     .unwrap();
 
-    let pk_plaintext = PrivateKeyInfo::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
+    let pk_plaintext = PrivateKeyInfoRef::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
     let pk_encrypted = pk_plaintext
         .encrypt_with_params(scrypt_params, PASSWORD)
         .unwrap();
