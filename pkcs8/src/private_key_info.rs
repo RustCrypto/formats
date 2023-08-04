@@ -4,13 +4,16 @@ use crate::{Error, Result, Version};
 use core::fmt;
 use der::{
     asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
-    BytesRef, Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, TagMode,
-    TagNumber, Writer,
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, TagMode, TagNumber,
+    Writer,
 };
 use spki::AlgorithmIdentifier;
 
 #[cfg(feature = "alloc")]
-use der::{asn1::Any, BytesOwned, SecretDocument};
+use {
+    alloc::boxed::Box,
+    der::{asn1::Any, SecretDocument},
+};
 
 #[cfg(feature = "encryption")]
 use {
@@ -129,7 +132,7 @@ impl<Params, Key> PrivateKeyInfo<Params, Key> {
 impl<'a, Params, Key> PrivateKeyInfo<Params, Key>
 where
     Params: der::Choice<'a> + Encode,
-    Key: TryFrom<&'a [u8], Error = der::Error> + AsRef<[u8]>,
+    Key: From<&'a [u8]> + AsRef<[u8]>,
 {
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password.
@@ -186,7 +189,7 @@ where
 impl<'a, Params, Key> DecodeValue<'a> for PrivateKeyInfo<Params, Key>
 where
     Params: der::Choice<'a> + Encode,
-    Key: TryFrom<&'a [u8], Error = der::Error>,
+    Key: From<&'a [u8]>,
 {
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
@@ -203,7 +206,7 @@ where
                 .map(|bs| {
                     bs.as_bytes()
                         .ok_or_else(|| der::Tag::BitString.value_error())
-                        .and_then(Key::try_from)
+                        .map(Key::from)
                 })
                 .transpose()?;
 
@@ -256,14 +259,14 @@ where
 impl<'a, Params, Key> Sequence<'a> for PrivateKeyInfo<Params, Key>
 where
     Params: der::Choice<'a> + Encode,
-    Key: TryFrom<&'a [u8], Error = der::Error> + AsRef<[u8]>,
+    Key: From<&'a [u8]> + AsRef<[u8]>,
 {
 }
 
 impl<'a, Params, Key> TryFrom<&'a [u8]> for PrivateKeyInfo<Params, Key>
 where
     Params: der::Choice<'a> + Encode,
-    Key: TryFrom<&'a [u8], Error = der::Error> + AsRef<[u8]>,
+    Key: From<&'a [u8]> + AsRef<[u8]>,
 {
     type Error = Error;
 
@@ -290,7 +293,7 @@ where
 impl<'a, Params, Key> TryFrom<PrivateKeyInfo<Params, Key>> for SecretDocument
 where
     Params: der::Choice<'a> + Encode,
-    Key: TryFrom<&'a [u8], Error = der::Error> + AsRef<[u8]>,
+    Key: From<&'a [u8]> + AsRef<[u8]>,
 {
     type Error = Error;
 
@@ -303,7 +306,7 @@ where
 impl<'a, Params, Key> TryFrom<&PrivateKeyInfo<Params, Key>> for SecretDocument
 where
     Params: der::Choice<'a> + Encode,
-    Key: TryFrom<&'a [u8], Error = der::Error> + AsRef<[u8]>,
+    Key: From<&'a [u8]> + AsRef<[u8]>,
 {
     type Error = Error;
 
@@ -352,12 +355,12 @@ where
     }
 }
 
-/// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and [`BytesRef`] key.
-pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, BytesRef<'a>>;
+/// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and `&[u8]` key.
+pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a [u8]>;
 
-/// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and [`BytesOwned`] key.
+/// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
 #[cfg(feature = "alloc")]
-pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, BytesOwned>;
+pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, Box<[u8]>>;
 
 #[cfg(feature = "alloc")]
 mod allocating {
