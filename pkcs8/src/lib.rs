@@ -85,7 +85,7 @@ pub(crate) mod encrypted_private_key_info;
 
 pub use crate::{
     error::{Error, Result},
-    private_key_info::PrivateKeyInfo,
+    private_key_info::{PrivateKeyInfo, PrivateKeyInfoRef},
     traits::DecodePrivateKey,
     version::Version,
 };
