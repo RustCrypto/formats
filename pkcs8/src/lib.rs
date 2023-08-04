@@ -96,7 +96,7 @@ pub use spki::{
 
 #[cfg(feature = "alloc")]
 pub use {
-    crate::traits::EncodePrivateKey,
+    crate::{private_key_info::PrivateKeyInfoOwned, traits::EncodePrivateKey},
     der::{Document, SecretDocument},
     spki::EncodePublicKey,
 };
