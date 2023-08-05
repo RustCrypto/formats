@@ -55,7 +55,7 @@
 //! This attribute can be added to associate a particular `CONTEXT-SPECIFIC`
 //! tag number with a given enum variant or struct field.
 //!
-//! The value must be quoted and contain a number, e.g. `#[asn1(context_specific = "42"]`.
+//! The value must be quoted and contain a number, e.g. `#[asn1(context_specific = "29")]`.
 //!
 //! ### `#[asn1(default = "...")]` attribute: `DEFAULT` support
 //!
