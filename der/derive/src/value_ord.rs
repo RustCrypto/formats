@@ -7,7 +7,6 @@
 
 use crate::{FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
-use proc_macro_error::abort;
 use quote::quote;
 use syn::{DeriveInput, Field, Ident, Lifetime, Variant};
 
@@ -28,9 +27,9 @@ pub(crate) struct DeriveValueOrd {
 
 impl DeriveValueOrd {
     /// Parse [`DeriveInput`].
-    pub fn new(input: DeriveInput) -> Self {
+    pub fn new(input: DeriveInput) -> syn::Result<Self> {
         let ident = input.ident;
-        let type_attrs = TypeAttrs::parse(&input.attrs);
+        let type_attrs = TypeAttrs::parse(&input.attrs)?;
 
         // TODO(tarcieri): properly handle multiple lifetimes
         let lifetime = input
@@ -44,14 +43,14 @@ impl DeriveValueOrd {
                 data.variants
                     .into_iter()
                     .map(|variant| ValueField::new_enum(variant, &type_attrs))
-                    .collect(),
+                    .collect::<syn::Result<_>>()?,
                 InputType::Enum,
             ),
             syn::Data::Struct(data) => (
                 data.fields
                     .into_iter()
                     .map(|field| ValueField::new_struct(field, &type_attrs))
-                    .collect(),
+                    .collect::<syn::Result<_>>()?,
                 InputType::Struct,
             ),
             _ => abort!(
@@ -61,12 +60,12 @@ impl DeriveValueOrd {
             ),
         };
 
-        Self {
+        Ok(Self {
             ident,
             lifetime,
             fields,
             input_type,
-        }
+        })
     }
 
     /// Lower the derived output into a [`TokenStream`].
@@ -142,31 +141,30 @@ struct ValueField {
 
 impl ValueField {
     /// Create from an `enum` variant.
-    fn new_enum(variant: Variant, type_attrs: &TypeAttrs) -> Self {
+    fn new_enum(variant: Variant, type_attrs: &TypeAttrs) -> syn::Result<Self> {
         let ident = variant.ident;
 
-        let attrs = FieldAttrs::parse(&variant.attrs, type_attrs);
-        Self {
+        let attrs = FieldAttrs::parse(&variant.attrs, type_attrs)?;
+        Ok(Self {
             ident,
             attrs,
             is_enum: true,
-        }
+        })
     }
 
     /// Create from a `struct` field.
-    fn new_struct(field: Field, type_attrs: &TypeAttrs) -> Self {
-        let ident = field
-            .ident
-            .as_ref()
-            .cloned()
-            .unwrap_or_else(|| abort!(&field, "tuple structs are not supported"));
+    fn new_struct(field: Field, type_attrs: &TypeAttrs) -> syn::Result<Self> {
+        let ident =
+            field.ident.as_ref().cloned().ok_or_else(|| {
+                syn::Error::new_spanned(&field, "tuple structs are not supported")
+            })?;
 
-        let attrs = FieldAttrs::parse(&field.attrs, type_attrs);
-        Self {
+        let attrs = FieldAttrs::parse(&field.attrs, type_attrs)?;
+        Ok(Self {
             ident,
             attrs,
             is_enum: false,
-        }
+        })
     }
 
     /// Lower to [`TokenStream`].
