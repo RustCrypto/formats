@@ -13,10 +13,6 @@ const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0EFF");
 /// messagepack serialization of [`EXAMPLE_BYTES`] as a slice.
 const MESSAGEPACK_SLICE: [u8; 18] = hex!("C410000102030405060708090A0B0C0D0EFF");
 
-/// messagepack serialization of [`EXAMPLE_BYTES`] as an array.
-/// Note the 0xCC marker before 0xFF, denoting that the integers are dynamically sized.
-const MESSAGEPACK_ARRAY: [u8; 18] = MESSAGEPACK_SLICE;
-
 #[test]
 fn deserialize_slice() {
     let deserialized =
@@ -27,7 +23,7 @@ fn deserialize_slice() {
 #[test]
 fn deserialize_array() {
     let deserialized =
-        rmp_serde::decode::from_slice::<array::HexUpperOrBin<16>>(&MESSAGEPACK_ARRAY).unwrap();
+        rmp_serde::decode::from_slice::<array::HexUpperOrBin<16>>(&MESSAGEPACK_SLICE).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 }
 
@@ -41,7 +37,7 @@ fn serialize_slice() {
 #[test]
 fn serialize_array() {
     let serialized = rmp_serde::encode::to_vec(&array::HexUpperOrBin::from(EXAMPLE_BYTES)).unwrap();
-    assert_eq!(&serialized, &MESSAGEPACK_ARRAY);
+    assert_eq!(&serialized, &MESSAGEPACK_SLICE);
 }
 
 proptest! {
@@ -57,5 +53,7 @@ proptest! {
         let serialized = rmp_serde::encode::to_vec(&array::HexUpperOrBin::from(bytes)).unwrap();
         let deserialized = rmp_serde::decode::from_slice::<array::HexUpperOrBin<32>>(&serialized).unwrap();
         prop_assert_eq!(bytes, deserialized.0);
+        // 1 byte slice tag + 1 byte length tag + 32 bytes of data
+        prop_assert_eq!(serialized.len(), 2 + 32);
     }
 }
