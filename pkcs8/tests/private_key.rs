@@ -2,7 +2,7 @@
 
 use der::asn1::ObjectIdentifier;
 use hex_literal::hex;
-use pkcs8::{PrivateKeyInfoRef, Version};
+use pkcs8::{PrivateKeyInfo, Version};
 
 #[cfg(feature = "alloc")]
 use der::Encode;
@@ -43,7 +43,7 @@ const X25519_PEM_EXAMPLE: &str = include_str!("examples/x25519-priv.pem");
 
 #[test]
 fn decode_ec_p256_der() {
-    let pk = PrivateKeyInfoRef::try_from(EC_P256_DER_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
 
     assert_eq!(pk.version(), Version::V1);
     assert_eq!(pk.algorithm.oid, "1.2.840.10045.2.1".parse().unwrap());
@@ -66,7 +66,7 @@ fn decode_ec_p256_der() {
 // https://datatracker.ietf.org/doc/html/rfc8410#section-10.3
 #[test]
 fn decode_ed25519_der_v1() {
-    let pk = PrivateKeyInfoRef::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
     assert_eq!(pk.version(), Version::V1);
     assert_eq!(pk.algorithm.oid, "1.3.101.112".parse().unwrap());
     assert_eq!(pk.algorithm.parameters, None);
@@ -90,7 +90,7 @@ fn decode_ed25519_der_v2() {
     const PUB_KEY: [u8; 32] =
         hex!("19BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
 
-    let pk = PrivateKeyInfoRef::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
     assert_eq!(pk.version(), Version::V2);
     assert_eq!(pk.algorithm.oid, "1.3.101.112".parse().unwrap());
     assert_eq!(pk.algorithm.parameters, None);
@@ -103,7 +103,7 @@ fn decode_ed25519_der_v2() {
 
 #[test]
 fn decode_rsa_2048_der() {
-    let pk = PrivateKeyInfoRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
     assert_eq!(pk.version(), Version::V1);
     assert_eq!(pk.algorithm.oid, "1.2.840.113549.1.1.1".parse().unwrap());
     assert!(pk.algorithm.parameters.unwrap().is_null());
@@ -115,7 +115,7 @@ fn decode_rsa_2048_der() {
 
 #[test]
 fn decode_x25519_der() {
-    let pk = PrivateKeyInfoRef::try_from(X25519_DER_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(X25519_DER_EXAMPLE).unwrap();
     assert_eq!(pk.version(), Version::V1);
     assert_eq!(pk.algorithm.oid, "1.3.101.110".parse().unwrap());
     assert_eq!(pk.algorithm.parameters, None);
@@ -131,7 +131,7 @@ fn decode_x25519_der() {
 #[test]
 #[cfg(feature = "alloc")]
 fn encode_ec_p256_der() {
-    let pk = PrivateKeyInfoRef::try_from(EC_P256_DER_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_der().unwrap();
     assert_eq!(EC_P256_DER_EXAMPLE, pk_encoded);
 }
@@ -139,52 +139,52 @@ fn encode_ec_p256_der() {
 #[test]
 #[cfg(feature = "alloc")]
 fn encode_ed25519_der_v1() {
-    let pk = PrivateKeyInfoRef::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
     assert_eq!(ED25519_DER_V1_EXAMPLE, pk.to_der().unwrap());
 }
 
 #[test]
 #[cfg(all(feature = "alloc", feature = "subtle"))]
 fn encode_ed25519_der_v2() {
-    let private_key = PrivateKeyInfoRef::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
+    let private_key = PrivateKeyInfo::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
     let private_der = private_key.to_der().unwrap();
     assert_eq!(
         private_key,
-        PrivateKeyInfoRef::try_from(private_der.as_ref()).unwrap()
+        PrivateKeyInfo::try_from(private_der.as_ref()).unwrap()
     );
 }
 
 #[test]
 #[cfg(feature = "alloc")]
 fn encode_rsa_2048_der() {
-    let pk = PrivateKeyInfoRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
     assert_eq!(RSA_2048_DER_EXAMPLE, &pk.to_der().unwrap());
 }
 
 #[test]
 #[cfg(feature = "pem")]
 fn encode_ec_p256_pem() {
-    let pk = PrivateKeyInfoRef::try_from(EC_P256_DER_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
     assert_eq!(EC_P256_PEM_EXAMPLE, pk.to_pem(LineEnding::LF).unwrap());
 }
 
 #[test]
 #[cfg(feature = "pem")]
 fn encode_ed25519_pem() {
-    let pk = PrivateKeyInfoRef::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
     assert_eq!(ED25519_PEM_V1_EXAMPLE, pk.to_pem(LineEnding::LF).unwrap());
 }
 
 #[test]
 #[cfg(feature = "pem")]
 fn encode_rsa_2048_pem() {
-    let pk = PrivateKeyInfoRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(RSA_2048_DER_EXAMPLE).unwrap();
     assert_eq!(RSA_2048_PEM_EXAMPLE, pk.to_pem(LineEnding::LF).unwrap());
 }
 
 #[test]
 #[cfg(feature = "pem")]
 fn encode_x25519_pem() {
-    let pk = PrivateKeyInfoRef::try_from(X25519_DER_EXAMPLE).unwrap();
+    let pk = PrivateKeyInfo::try_from(X25519_DER_EXAMPLE).unwrap();
     assert_eq!(X25519_PEM_EXAMPLE, pk.to_pem(LineEnding::LF).unwrap());
 }
