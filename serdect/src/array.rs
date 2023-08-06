@@ -1,6 +1,6 @@
 //! Serialization primitives for arrays.
 
-// Unfortunately, we currently cannot assert generically that we are serializing
+// Unfortunately, we currently cannot tell `serde` in a uniform fashion that we are serializing
 // a fixed-size byte array.
 // See https://github.com/serde-rs/serde/issues/2120 for the discussion.
 // Therefore we have to fall back to the slice methods,
@@ -9,11 +9,12 @@
 // to be exactly equal to the size of the buffer during deserialization,
 // while for slices the buffer can be larger than the deserialized data.
 
+use core::fmt;
 use core::marker::PhantomData;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::slice;
+use crate::common::{self, LengthCheck, SliceVisitor, StrIntoBufVisitor};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -25,7 +26,7 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    slice::serialize_hex_lower_or_bin(value, serializer)
+    common::serialize_hex_lower_or_bin(value, serializer)
 }
 
 /// Serialize the given type as upper case hex when using human-readable
@@ -35,7 +36,22 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    slice::serialize_hex_upper_or_bin(value, serializer)
+    common::serialize_hex_upper_or_bin(value, serializer)
+}
+
+struct ExactLength;
+
+impl LengthCheck for ExactLength {
+    fn length_check(buffer_length: usize, data_length: usize) -> bool {
+        buffer_length == data_length
+    }
+    fn expecting(
+        formatter: &mut fmt::Formatter<'_>,
+        data_type: &str,
+        data_length: usize,
+    ) -> fmt::Result {
+        write!(formatter, "{} of length {}", data_type, data_length)
+    }
 }
 
 /// Deserialize from hex when using human-readable formats or binary if the
@@ -46,12 +62,9 @@ where
     D: Deserializer<'de>,
 {
     if deserializer.is_human_readable() {
-        deserializer.deserialize_str(slice::StrVisitor::<slice::ExactLength>(buffer, PhantomData))
+        deserializer.deserialize_str(StrIntoBufVisitor::<ExactLength>(buffer, PhantomData))
     } else {
-        deserializer.deserialize_byte_buf(slice::SliceVisitor::<slice::ExactLength>(
-            buffer,
-            PhantomData,
-        ))
+        deserializer.deserialize_byte_buf(SliceVisitor::<ExactLength>(buffer, PhantomData))
     }
 }
 

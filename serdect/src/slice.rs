@@ -3,14 +3,18 @@
 use core::fmt;
 use core::marker::PhantomData;
 
-use serde::de::{Error, Visitor};
 use serde::{Deserializer, Serializer};
 
-#[cfg(feature = "alloc")]
-use serde::Serialize;
+use crate::common::{self, LengthCheck, SliceVisitor, StrIntoBufVisitor};
 
 #[cfg(feature = "alloc")]
-use ::{alloc::vec::Vec, serde::Deserialize};
+use ::{
+    alloc::vec::Vec,
+    serde::{Deserialize, Serialize},
+};
+
+#[cfg(feature = "alloc")]
+use crate::common::{StrIntoVecVisitor, VecVisitor};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -22,11 +26,7 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    if serializer.is_human_readable() {
-        crate::serialize_hex::<_, _, false>(value, serializer)
-    } else {
-        serializer.serialize_bytes(value.as_ref())
-    }
+    common::serialize_hex_lower_or_bin(value, serializer)
 }
 
 /// Serialize the given type as upper case hex when using human-readable
@@ -36,35 +36,7 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    if serializer.is_human_readable() {
-        crate::serialize_hex::<_, _, true>(value, serializer)
-    } else {
-        serializer.serialize_bytes(value.as_ref())
-    }
-}
-
-pub(crate) trait LengthCheck {
-    fn length_check(buffer_length: usize, data_length: usize) -> bool;
-    fn expecting(
-        formatter: &mut fmt::Formatter<'_>,
-        data_type: &str,
-        data_length: usize,
-    ) -> fmt::Result;
-}
-
-pub(crate) struct ExactLength;
-
-impl LengthCheck for ExactLength {
-    fn length_check(buffer_length: usize, data_length: usize) -> bool {
-        buffer_length == data_length
-    }
-    fn expecting(
-        formatter: &mut fmt::Formatter<'_>,
-        data_type: &str,
-        data_length: usize,
-    ) -> fmt::Result {
-        write!(formatter, "{} of length {}", data_type, data_length)
-    }
+    common::serialize_hex_upper_or_bin(value, serializer)
 }
 
 struct UpperBound;
@@ -86,70 +58,6 @@ impl LengthCheck for UpperBound {
     }
 }
 
-pub(crate) struct StrVisitor<'b, T: LengthCheck>(pub &'b mut [u8], pub PhantomData<T>);
-
-impl<'de, 'b, T: LengthCheck> Visitor<'de> for StrVisitor<'b, T> {
-    type Value = ();
-
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        T::expecting(formatter, "a string", self.0.len() * 2)
-    }
-
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-    where
-        E: Error,
-    {
-        if !T::length_check(self.0.len() * 2, v.len()) {
-            return Err(Error::invalid_length(v.len(), &self));
-        }
-        // TODO: Map `base16ct::Error::InvalidLength` to `Error::invalid_length`.
-        base16ct::mixed::decode(v, self.0)
-            .map(|_| ())
-            .map_err(E::custom)
-    }
-}
-
-pub(crate) struct SliceVisitor<'b, T: LengthCheck>(pub &'b mut [u8], pub PhantomData<T>);
-
-impl<'de, 'b, T: LengthCheck> Visitor<'de> for SliceVisitor<'b, T> {
-    type Value = ();
-
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        T::expecting(formatter, "an array", self.0.len())
-    }
-
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-    where
-        E: Error,
-    {
-        // Workaround for
-        // https://github.com/rust-lang/rfcs/blob/b1de05846d9bc5591d753f611ab8ee84a01fa500/text/2094-nll.md#problem-case-3-conditional-control-flow-across-functions
-        if T::length_check(self.0.len(), v.len()) {
-            let buffer = &mut self.0[..v.len()];
-            buffer.copy_from_slice(v);
-            return Ok(());
-        }
-
-        Err(E::invalid_length(v.len(), &self))
-    }
-
-    #[cfg(feature = "alloc")]
-    fn visit_byte_buf<E>(self, mut v: Vec<u8>) -> Result<Self::Value, E>
-    where
-        E: Error,
-    {
-        // Workaround for
-        // https://github.com/rust-lang/rfcs/blob/b1de05846d9bc5591d753f611ab8ee84a01fa500/text/2094-nll.md#problem-case-3-conditional-control-flow-across-functions
-        if T::length_check(self.0.len(), v.len()) {
-            let buffer = &mut self.0[..v.len()];
-            buffer.swap_with_slice(&mut v);
-            return Ok(());
-        }
-
-        Err(E::invalid_length(v.len(), &self))
-    }
-}
-
 /// Deserialize from hex when using human-readable formats or binary if the
 /// format is binary. Fails if the `buffer` is smaller then the resulting
 /// slice.
@@ -158,7 +66,7 @@ where
     D: Deserializer<'de>,
 {
     if deserializer.is_human_readable() {
-        deserializer.deserialize_str(StrVisitor::<UpperBound>(buffer, PhantomData))
+        deserializer.deserialize_str(StrIntoBufVisitor::<UpperBound>(buffer, PhantomData))
     } else {
         deserializer.deserialize_byte_buf(SliceVisitor::<UpperBound>(buffer, PhantomData))
     }
@@ -172,49 +80,8 @@ where
     D: Deserializer<'de>,
 {
     if deserializer.is_human_readable() {
-        struct StrVisitor;
-
-        impl<'de> Visitor<'de> for StrVisitor {
-            type Value = Vec<u8>;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(formatter, "a string")
-            }
-
-            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                base16ct::mixed::decode_vec(v).map_err(E::custom)
-            }
-        }
-
-        deserializer.deserialize_str(StrVisitor)
+        deserializer.deserialize_str(StrIntoVecVisitor)
     } else {
-        struct VecVisitor;
-
-        impl<'de> Visitor<'de> for VecVisitor {
-            type Value = Vec<u8>;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(formatter, "a bytestring")
-            }
-
-            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                Ok(v.into())
-            }
-
-            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                Ok(v)
-            }
-        }
-
         deserializer.deserialize_byte_buf(VecVisitor)
     }
 }
