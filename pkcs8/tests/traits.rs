@@ -3,7 +3,7 @@
 #![cfg(any(feature = "pem", feature = "std"))]
 
 use der::Encode;
-use pkcs8::{DecodePrivateKey, EncodePrivateKey, Error, PrivateKeyInfoRef, Result, SecretDocument};
+use pkcs8::{DecodePrivateKey, EncodePrivateKey, Error, PrivateKeyInfo, Result, SecretDocument};
 
 #[cfg(feature = "pem")]
 use pkcs8::der::pem::LineEnding;
@@ -14,7 +14,7 @@ use tempfile::tempdir;
 #[cfg(all(feature = "pem", feature = "std"))]
 use std::fs;
 
-/// Ed25519 `PrivateKeyInfoRef` encoded as ASN.1 DER
+/// Ed25519 `PrivateKeyInfo` encoded as ASN.1 DER
 const ED25519_DER_EXAMPLE: &[u8] = include_bytes!("examples/ed25519-priv-pkcs8v1.der");
 
 /// Ed25519 private key encoded as PEM
@@ -36,10 +36,10 @@ impl EncodePrivateKey for MockKey {
     }
 }
 
-impl TryFrom<PrivateKeyInfoRef<'_>> for MockKey {
+impl TryFrom<PrivateKeyInfo<'_>> for MockKey {
     type Error = Error;
 
-    fn try_from(pkcs8: PrivateKeyInfoRef<'_>) -> Result<MockKey> {
+    fn try_from(pkcs8: PrivateKeyInfo<'_>) -> Result<MockKey> {
         Ok(MockKey(pkcs8.to_der()?))
     }
 }

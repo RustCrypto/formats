@@ -91,7 +91,7 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber::N1;
 /// [RFC 5208 Section 5]: https://tools.ietf.org/html/rfc5208#section-5
 /// [RFC 5958 Section 2]: https://datatracker.ietf.org/doc/html/rfc5958#section-2
 #[derive(Clone)]
-pub struct PrivateKeyInfo<Params, Key> {
+pub struct PrivateKeyInfoInner<Params, Key> {
     /// X.509 `AlgorithmIdentifier` for the private key type.
     pub algorithm: AlgorithmIdentifier<Params>,
 
@@ -102,8 +102,8 @@ pub struct PrivateKeyInfo<Params, Key> {
     pub public_key: Option<Key>,
 }
 
-impl<Params, Key> PrivateKeyInfo<Params, Key> {
-    /// Create a new PKCS#8 [`PrivateKeyInfo`] message.
+impl<Params, Key> PrivateKeyInfoInner<Params, Key> {
+    /// Create a new PKCS#8 [`PrivateKeyInfoInner`] message.
     ///
     /// This is a helper method which initializes `attributes` and `public_key`
     /// to `None`, helpful if you aren't using those.
@@ -126,7 +126,7 @@ impl<Params, Key> PrivateKeyInfo<Params, Key> {
         }
     }
 }
-impl<'a, Params, Key> PrivateKeyInfo<Params, Key>
+impl<'a, Params, Key> PrivateKeyInfoInner<Params, Key>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: From<&'a [u8]> + AsRef<[u8]>,
@@ -163,7 +163,7 @@ where
     }
 }
 
-impl<'a, Params, Key> PrivateKeyInfo<Params, Key>
+impl<'a, Params, Key> PrivateKeyInfoInner<Params, Key>
 where
     Params: der::Choice<'a> + Encode,
     Key: AsRef<[u8]>,
@@ -183,17 +183,14 @@ where
     }
 }
 
-impl<'a, Params, Key> DecodeValue<'a> for PrivateKeyInfo<Params, Key>
+impl<'a, Params, Key> DecodeValue<'a> for PrivateKeyInfoInner<Params, Key>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: From<&'a [u8]>,
 {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(
-        reader: &mut R,
-        header: Header,
-    ) -> der::Result<PrivateKeyInfo<Params, Key>> {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             // Parse and validate `version` INTEGER.
             let version = Version::decode(reader)?;
@@ -234,7 +231,7 @@ where
     }
 }
 
-impl<'a, Params, Key> EncodeValue for PrivateKeyInfo<Params, Key>
+impl<'a, Params, Key> EncodeValue for PrivateKeyInfoInner<Params, Key>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: AsRef<[u8]>,
@@ -255,14 +252,14 @@ where
     }
 }
 
-impl<'a, Params, Key> Sequence<'a> for PrivateKeyInfo<Params, Key>
+impl<'a, Params, Key> Sequence<'a> for PrivateKeyInfoInner<Params, Key>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: From<&'a [u8]> + AsRef<[u8]>,
 {
 }
 
-impl<'a, Params, Key> TryFrom<&'a [u8]> for PrivateKeyInfo<Params, Key>
+impl<'a, Params, Key> TryFrom<&'a [u8]> for PrivateKeyInfoInner<Params, Key>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: From<&'a [u8]> + AsRef<[u8]> + 'a,
@@ -274,13 +271,13 @@ where
     }
 }
 
-impl<Params, Key> fmt::Debug for PrivateKeyInfo<Params, Key>
+impl<Params, Key> fmt::Debug for PrivateKeyInfoInner<Params, Key>
 where
     Params: fmt::Debug,
     Key: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("PrivateKeyInfo")
+        f.debug_struct("PrivateKeyInfoInner")
             .field("version", &self.version())
             .field("algorithm", &self.algorithm)
             .field("public_key", &self.public_key)
@@ -289,38 +286,38 @@ where
 }
 
 #[cfg(feature = "alloc")]
-impl<'a, Params, Key> TryFrom<PrivateKeyInfo<Params, Key>> for SecretDocument
+impl<'a, Params, Key> TryFrom<PrivateKeyInfoInner<Params, Key>> for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: From<&'a [u8]> + AsRef<[u8]>,
 {
     type Error = Error;
 
-    fn try_from(private_key: PrivateKeyInfo<Params, Key>) -> Result<SecretDocument> {
+    fn try_from(private_key: PrivateKeyInfoInner<Params, Key>) -> Result<SecretDocument> {
         SecretDocument::try_from(&private_key)
     }
 }
 
 #[cfg(feature = "alloc")]
-impl<'a, Params, Key> TryFrom<&PrivateKeyInfo<Params, Key>> for SecretDocument
+impl<'a, Params, Key> TryFrom<&PrivateKeyInfoInner<Params, Key>> for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: From<&'a [u8]> + AsRef<[u8]>,
 {
     type Error = Error;
 
-    fn try_from(private_key: &PrivateKeyInfo<Params, Key>) -> Result<SecretDocument> {
+    fn try_from(private_key: &PrivateKeyInfoInner<Params, Key>) -> Result<SecretDocument> {
         Ok(Self::encode_msg(private_key)?)
     }
 }
 
 #[cfg(feature = "pem")]
-impl<Params, Key> PemLabel for PrivateKeyInfo<Params, Key> {
+impl<Params, Key> PemLabel for PrivateKeyInfoInner<Params, Key> {
     const PEM_LABEL: &'static str = "PRIVATE KEY";
 }
 
 #[cfg(feature = "subtle")]
-impl<Params, Key> ConstantTimeEq for PrivateKeyInfo<Params, Key>
+impl<Params, Key> ConstantTimeEq for PrivateKeyInfoInner<Params, Key>
 where
     Params: Eq,
     Key: PartialEq + AsRef<[u8]>,
@@ -336,7 +333,7 @@ where
 }
 
 #[cfg(feature = "subtle")]
-impl<Params, Key> Eq for PrivateKeyInfo<Params, Key>
+impl<Params, Key> Eq for PrivateKeyInfoInner<Params, Key>
 where
     Params: Eq,
     Key: AsRef<[u8]> + Eq,
@@ -344,7 +341,7 @@ where
 }
 
 #[cfg(feature = "subtle")]
-impl<Params, Key> PartialEq for PrivateKeyInfo<Params, Key>
+impl<Params, Key> PartialEq for PrivateKeyInfoInner<Params, Key>
 where
     Params: Eq,
     Key: PartialEq + AsRef<[u8]>,
@@ -354,19 +351,19 @@ where
     }
 }
 
-/// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and `&[u8]` key.
-pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a [u8]>;
+/// [`PrivateKeyInfoInner`] with [`AnyRef`] algorithm parameters, and `&[u8]` key.
+pub type PrivateKeyInfo<'a> = PrivateKeyInfoInner<AnyRef<'a>, &'a [u8]>;
 
 /// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
 #[cfg(feature = "alloc")]
-pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, Box<[u8]>>;
+pub type PrivateKeyInfoOwned = PrivateKeyInfoInner<Any, Box<[u8]>>;
 
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
     use der::referenced::*;
 
-    impl<'a> RefToOwned<'a> for PrivateKeyInfoRef<'a> {
+    impl<'a> RefToOwned<'a> for PrivateKeyInfo<'a> {
         type Owned = PrivateKeyInfoOwned;
         fn ref_to_owned(&self) -> Self::Owned {
             PrivateKeyInfoOwned {
@@ -378,9 +375,9 @@ mod allocating {
     }
 
     impl OwnedToRef for PrivateKeyInfoOwned {
-        type Borrowed<'a> = PrivateKeyInfoRef<'a>;
+        type Borrowed<'a> = PrivateKeyInfo<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
-            PrivateKeyInfoRef {
+            PrivateKeyInfo {
                 algorithm: self.algorithm.owned_to_ref(),
                 private_key: self.private_key.owned_to_ref(),
                 public_key: self.public_key.owned_to_ref(),
