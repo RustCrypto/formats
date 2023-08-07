@@ -45,11 +45,17 @@ pub use scrypt;
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
 
+pub type EncryptionScheme<'a> = EncryptionSchemeInner<
+    &'a [u8; pbes2::AES_BLOCK_SIZE],
+    &'a [u8; pbes2::DES_BLOCK_SIZE],
+    &'a [u8],
+>;
+
 /// Supported PKCS#5 password-based encryption schemes.
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 #[allow(clippy::large_enum_variant)]
-pub enum EncryptionScheme<'a> {
+pub enum EncryptionSchemeInner<AesBlock, DesBlock, Salt> {
     /// Password-Based Encryption Scheme 1 as defined in [RFC 8018 Section 6.1].
     ///
     /// [RFC 8018 Section 6.1]: https://tools.ietf.org/html/rfc8018#section-6.1
@@ -58,10 +64,15 @@ pub enum EncryptionScheme<'a> {
     /// Password-Based Encryption Scheme 2 as defined in [RFC 8018 Section 6.2].
     ///
     /// [RFC 8018 Section 6.2]: https://tools.ietf.org/html/rfc8018#section-6.2
-    Pbes2(pbes2::Parameters<'a>),
+    Pbes2(pbes2::ParametersInner<AesBlock, DesBlock, Salt>),
 }
 
-impl<'a> EncryptionScheme<'a> {
+impl<AesBlock, DesBlock, Salt> EncryptionSchemeInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]>,
+    AesBlock: AsRef<[u8]>,
+    DesBlock: AsRef<[u8]>,
+{
     /// Attempt to decrypt the given ciphertext, allocating and returning a
     /// byte vector containing the plaintext.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -132,7 +143,7 @@ impl<'a> EncryptionScheme<'a> {
     }
 
     /// Get [`pbes2::Parameters`] if it is the selected algorithm.
-    pub fn pbes2(&self) -> Option<&pbes2::Parameters<'a>> {
+    pub fn pbes2(&self) -> Option<&pbes2::ParametersInner<AesBlock, DesBlock, Salt>> {
         match self {
             Self::Pbes2(params) => Some(params),
             _ => None,
@@ -140,13 +151,24 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for EncryptionScheme<'a> {
+impl<'a, AesBlock, DesBlock, Salt> DecodeValue<'a>
+    for EncryptionSchemeInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]> + From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
     fn decode_value<R: Reader<'a>>(decoder: &mut R, header: Header) -> der::Result<Self> {
         AlgorithmIdentifierRef::decode_value(decoder, header)?.try_into()
     }
 }
 
-impl EncodeValue for EncryptionScheme<'_> {
+impl<'a, AesBlock, DesBlock, Salt> EncodeValue for EncryptionSchemeInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]> + From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
     fn value_len(&self) -> der::Result<Length> {
         match self {
             Self::Pbes1(pbes1) => pbes1.oid().encoded_len()? + pbes1.parameters.encoded_len()?,
@@ -170,27 +192,43 @@ impl EncodeValue for EncryptionScheme<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for EncryptionScheme<'a> {}
+impl<'a, AesBlock, DesBlock, Salt> Sequence<'a> for EncryptionSchemeInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]> + From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
+}
 
-impl<'a> From<pbes1::Algorithm> for EncryptionScheme<'a> {
-    fn from(alg: pbes1::Algorithm) -> EncryptionScheme<'a> {
+impl<AesBlock, DesBlock, Salt> From<pbes1::Algorithm>
+    for EncryptionSchemeInner<AesBlock, DesBlock, Salt>
+{
+    fn from(alg: pbes1::Algorithm) -> Self {
         Self::Pbes1(alg)
     }
 }
 
-impl<'a> From<pbes2::Parameters<'a>> for EncryptionScheme<'a> {
-    fn from(params: pbes2::Parameters<'a>) -> EncryptionScheme<'a> {
+impl<AesBlock, DesBlock, Salt> From<pbes2::ParametersInner<AesBlock, DesBlock, Salt>>
+    for EncryptionSchemeInner<AesBlock, DesBlock, Salt>
+{
+    fn from(params: pbes2::ParametersInner<AesBlock, DesBlock, Salt>) -> Self {
         Self::Pbes2(params)
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
+impl<'a, AesBlock, DesBlock, Salt> TryFrom<AlgorithmIdentifierRef<'a>>
+    for EncryptionSchemeInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]> + From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<EncryptionScheme<'_>> {
+    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
         if alg.oid == pbes2::PBES2_OID {
             match alg.parameters {
-                Some(params) => pbes2::Parameters::try_from(params).map(Into::into),
+                Some(params) => pbes2::ParametersInner::try_from(params).map(Into::into),
                 None => Err(Tag::OctetString.value_error()),
             }
         } else {
@@ -199,10 +237,16 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for EncryptionScheme<'a> {
+impl<'a, AesBlock, DesBlock, Salt> TryFrom<&'a [u8]>
+    for EncryptionSchemeInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]> + From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
     type Error = der::Error;
 
-    fn try_from(bytes: &'a [u8]) -> der::Result<EncryptionScheme<'a>> {
+    fn try_from(bytes: &'a [u8]) -> der::Result<Self> {
         AlgorithmIdentifierRef::from_der(bytes)?.try_into()
     }
 }

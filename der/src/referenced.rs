@@ -46,6 +46,25 @@ where
     }
 }
 
+impl<'a, T, const N: usize> RefToOwned<'a> for &'a [T; N]
+where
+    T: Clone,
+{
+    type Owned = [T; N];
+
+    fn ref_to_owned(&self) -> Self::Owned {
+        self.clone().clone()
+    }
+}
+
+impl<T, const N: usize> OwnedToRef for [T; N] {
+    type Borrowed<'a> = &'a [T; N] where T:'a;
+
+    fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+        &self
+    }
+}
+
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::{OwnedToRef, RefToOwned};

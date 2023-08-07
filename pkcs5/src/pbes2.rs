@@ -8,8 +8,8 @@ mod kdf;
 mod encryption;
 
 pub use self::kdf::{
-    Kdf, Pbkdf2Params, Pbkdf2Prf, ScryptParams, HMAC_WITH_SHA1_OID, HMAC_WITH_SHA256_OID,
-    PBKDF2_OID, SCRYPT_OID,
+    Kdf, KdfInner, Pbkdf2Params, Pbkdf2ParamsInner, Pbkdf2Prf, ScryptParams, ScryptParamsInner,
+    HMAC_WITH_SHA1_OID, HMAC_WITH_SHA256_OID, PBKDF2_OID, SCRYPT_OID,
 };
 
 use crate::{AlgorithmIdentifierRef, Error, Result};
@@ -50,11 +50,11 @@ pub const DES_EDE3_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2
 pub const PBES2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.13");
 
 /// AES cipher block size
-const AES_BLOCK_SIZE: usize = 16;
+pub const AES_BLOCK_SIZE: usize = 16;
 
 /// DES / Triple DES block size
 #[cfg(any(feature = "3des", feature = "des-insecure"))]
-const DES_BLOCK_SIZE: usize = 8;
+pub const DES_BLOCK_SIZE: usize = 8;
 
 /// Password-Based Encryption Scheme 2 parameters as defined in [RFC 8018 Appendix A.4].
 ///
@@ -66,24 +66,29 @@ const DES_BLOCK_SIZE: usize = 8;
 ///
 /// [RFC 8018 Appendix A.4]: https://tools.ietf.org/html/rfc8018#appendix-A.4
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Parameters<'a> {
+pub struct ParametersInner<AesBlock, DesBlock, Salt> {
     /// Key derivation function
-    pub kdf: Kdf<'a>,
+    pub kdf: KdfInner<Salt>,
 
     /// Encryption scheme
-    pub encryption: EncryptionScheme<'a>,
+    pub encryption: EncryptionSchemeInner<AesBlock, DesBlock>,
 }
 
-impl<'a> Parameters<'a> {
+impl<Salt, AesBlock, DesBlock> ParametersInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]>,
+    AesBlock: AsRef<[u8]>,
+    DesBlock: AsRef<[u8]>,
+{
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-128-CBC as the symmetric cipher.
     pub fn pbkdf2_sha256_aes128cbc(
         pbkdf2_iterations: u32,
-        pbkdf2_salt: &'a [u8],
-        aes_iv: &'a [u8; AES_BLOCK_SIZE],
+        pbkdf2_salt: Salt,
+        aes_iv: AesBlock,
     ) -> Result<Self> {
-        let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
-        let encryption = EncryptionScheme::Aes128Cbc { iv: aes_iv };
+        let kdf = Pbkdf2ParamsInner::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
+        let encryption = EncryptionSchemeInner::Aes128Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
     }
 
@@ -91,11 +96,11 @@ impl<'a> Parameters<'a> {
     /// key derivation function and AES-256-CBC as the symmetric cipher.
     pub fn pbkdf2_sha256_aes256cbc(
         pbkdf2_iterations: u32,
-        pbkdf2_salt: &'a [u8],
-        aes_iv: &'a [u8; AES_BLOCK_SIZE],
+        pbkdf2_salt: Salt,
+        aes_iv: AesBlock,
     ) -> Result<Self> {
-        let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
-        let encryption = EncryptionScheme::Aes256Cbc { iv: aes_iv };
+        let kdf = Pbkdf2ParamsInner::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
+        let encryption = EncryptionSchemeInner::Aes256Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
     }
 
@@ -106,13 +111,9 @@ impl<'a> Parameters<'a> {
     /// [`scrypt::Params`] struct.
     // TODO(tarcieri): encapsulate `scrypt::Params`?
     #[cfg(feature = "pbes2")]
-    pub fn scrypt_aes128cbc(
-        params: scrypt::Params,
-        salt: &'a [u8],
-        aes_iv: &'a [u8; AES_BLOCK_SIZE],
-    ) -> Result<Self> {
-        let kdf = ScryptParams::from_params_and_salt(params, salt)?.into();
-        let encryption = EncryptionScheme::Aes128Cbc { iv: aes_iv };
+    pub fn scrypt_aes128cbc(params: scrypt::Params, salt: Salt, aes_iv: AesBlock) -> Result<Self> {
+        let kdf = ScryptParamsInner::from_params_and_salt(params, salt)?.into();
+        let encryption = EncryptionSchemeInner::Aes128Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
     }
 
@@ -126,13 +127,9 @@ impl<'a> Parameters<'a> {
     /// This also avoids the need to import the type from the `scrypt` crate.
     // TODO(tarcieri): encapsulate `scrypt::Params`?
     #[cfg(feature = "pbes2")]
-    pub fn scrypt_aes256cbc(
-        params: scrypt::Params,
-        salt: &'a [u8],
-        aes_iv: &'a [u8; AES_BLOCK_SIZE],
-    ) -> Result<Self> {
-        let kdf = ScryptParams::from_params_and_salt(params, salt)?.into();
-        let encryption = EncryptionScheme::Aes256Cbc { iv: aes_iv };
+    pub fn scrypt_aes256cbc(params: scrypt::Params, salt: Salt, aes_iv: AesBlock) -> Result<Self> {
+        let kdf = ScryptParamsInner::from_params_and_salt(params, salt)?.into();
+        let encryption = EncryptionSchemeInner::Aes256Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
     }
 
@@ -192,13 +189,23 @@ impl<'a> Parameters<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for Parameters<'a> {
+impl<'a, AesBlock, DesBlock, Salt> DecodeValue<'a> for ParametersInner<AesBlock, DesBlock, Salt>
+where
+    Salt: From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AnyRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl EncodeValue for Parameters<'_> {
+impl<'a, AesBlock, DesBlock, Salt> EncodeValue for ParametersInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]> + From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
     fn value_len(&self) -> der::Result<Length> {
         self.kdf.encoded_len()? + self.encryption.encoded_len()?
     }
@@ -210,9 +217,20 @@ impl EncodeValue for Parameters<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for Parameters<'a> {}
+impl<'a, AesBlock, DesBlock, Salt> Sequence<'a> for ParametersInner<AesBlock, DesBlock, Salt>
+where
+    Salt: AsRef<[u8]> + From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
+}
 
-impl<'a> TryFrom<AnyRef<'a>> for Parameters<'a> {
+impl<'a, AesBlock, DesBlock, Salt> TryFrom<AnyRef<'a>> for ParametersInner<AesBlock, DesBlock, Salt>
+where
+    Salt: From<&'a [u8]>,
+    AesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+    DesBlock: AsRef<[u8]> + TryFrom<&'a [u8]>,
+{
     type Error = der::Error;
 
     fn try_from(any: AnyRef<'a>) -> der::Result<Self> {
@@ -228,44 +246,52 @@ impl<'a> TryFrom<AnyRef<'a>> for Parameters<'a> {
     }
 }
 
+pub type Parameters<'a> =
+    ParametersInner<&'a [u8; AES_BLOCK_SIZE], &'a [u8; DES_BLOCK_SIZE], &'a [u8]>;
+
+pub type EncryptionScheme<'a> =
+    EncryptionSchemeInner<&'a [u8; AES_BLOCK_SIZE], &'a [u8; DES_BLOCK_SIZE]>;
+
+pub type EncryptionSchemeOwned = EncryptionSchemeInner<[u8; AES_BLOCK_SIZE], [u8; DES_BLOCK_SIZE]>;
+
 /// Symmetric encryption scheme used by PBES2.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
-pub enum EncryptionScheme<'a> {
+pub enum EncryptionSchemeInner<AesBlock, DesBlock> {
     /// AES-128 in CBC mode
     Aes128Cbc {
         /// Initialization vector
-        iv: &'a [u8; AES_BLOCK_SIZE],
+        iv: AesBlock,
     },
 
     /// AES-192 in CBC mode
     Aes192Cbc {
         /// Initialization vector
-        iv: &'a [u8; AES_BLOCK_SIZE],
+        iv: AesBlock,
     },
 
     /// AES-256 in CBC mode
     Aes256Cbc {
         /// Initialization vector
-        iv: &'a [u8; AES_BLOCK_SIZE],
+        iv: AesBlock,
     },
 
     /// 3-Key Triple DES in CBC mode
     #[cfg(feature = "3des")]
     DesEde3Cbc {
         /// Initialisation vector
-        iv: &'a [u8; DES_BLOCK_SIZE],
+        iv: DesBlock,
     },
 
     /// DES in CBC mode
     #[cfg(feature = "des-insecure")]
     DesCbc {
         /// Initialisation vector
-        iv: &'a [u8; DES_BLOCK_SIZE],
+        iv: DesBlock,
     },
 }
 
-impl<'a> EncryptionScheme<'a> {
+impl<AesBlock, DesBlock> EncryptionSchemeInner<AesBlock, DesBlock> {
     /// Get the size of a key used by this algorithm in bytes.
     pub fn key_size(&self) -> usize {
         match self {
@@ -300,13 +326,22 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> Decode<'a> for EncryptionScheme<'a> {
+impl<'a, AesBlock, DesBlock> Decode<'a> for EncryptionSchemeInner<AesBlock, DesBlock>
+where
+    AesBlock: TryFrom<&'a [u8]>,
+    DesBlock: TryFrom<&'a [u8]>,
+{
     fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
         AlgorithmIdentifierRef::decode(reader).and_then(TryInto::try_into)
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
+impl<'a, AesBlock, DesBlock> TryFrom<AlgorithmIdentifierRef<'a>>
+    for EncryptionSchemeInner<AesBlock, DesBlock>
+where
+    AesBlock: TryFrom<&'a [u8]>,
+    DesBlock: TryFrom<&'a [u8]>,
+{
     type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
@@ -349,33 +384,55 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
     }
 }
 
-impl<'a> TryFrom<EncryptionScheme<'a>> for AlgorithmIdentifierRef<'a> {
+impl<AesBlock, DesBlock> EncryptionSchemeInner<AesBlock, DesBlock>
+where
+    AesBlock: AsRef<[u8]>,
+    DesBlock: AsRef<[u8]>,
+{
+    fn as_slice(&self) -> &[u8] {
+        match self {
+            EncryptionSchemeInner::Aes128Cbc { iv } => iv.as_ref(),
+            EncryptionSchemeInner::Aes192Cbc { iv } => iv.as_ref(),
+            EncryptionSchemeInner::Aes256Cbc { iv } => iv.as_ref(),
+            #[cfg(feature = "des-insecure")]
+            EncryptionSchemeInner::DesCbc { iv } => iv.as_ref(),
+            #[cfg(feature = "3des")]
+            EncryptionSchemeInner::DesEde3Cbc { iv } => iv.as_ref(),
+        }
+    }
+}
+
+impl<'a, AesBlock, DesBlock> TryFrom<&'a EncryptionSchemeInner<AesBlock, DesBlock>>
+    for AlgorithmIdentifierRef<'a>
+where
+    AesBlock: AsRef<[u8]>,
+    DesBlock: AsRef<[u8]>,
+{
     type Error = der::Error;
 
-    fn try_from(scheme: EncryptionScheme<'a>) -> der::Result<Self> {
-        let parameters = OctetStringRef::new(match scheme {
-            EncryptionScheme::Aes128Cbc { iv } => iv,
-            EncryptionScheme::Aes192Cbc { iv } => iv,
-            EncryptionScheme::Aes256Cbc { iv } => iv,
-            #[cfg(feature = "des-insecure")]
-            EncryptionScheme::DesCbc { iv } => iv,
-            #[cfg(feature = "3des")]
-            EncryptionScheme::DesEde3Cbc { iv } => iv,
-        })?;
+    fn try_from(scheme: &'a EncryptionSchemeInner<AesBlock, DesBlock>) -> der::Result<Self> {
+        let oid = scheme.oid();
+
+        let parameters: &[u8] = scheme.as_slice();
+        let parameters: OctetStringRef<'_> = OctetStringRef::new(parameters)?;
 
         Ok(AlgorithmIdentifierRef {
-            oid: scheme.oid(),
+            oid,
             parameters: Some(parameters.into()),
         })
     }
 }
 
-impl<'a> Encode for EncryptionScheme<'a> {
+impl<AesBlock, DesBlock> Encode for EncryptionSchemeInner<AesBlock, DesBlock>
+where
+    AesBlock: AsRef<[u8]>,
+    DesBlock: AsRef<[u8]>,
+{
     fn encoded_len(&self) -> der::Result<Length> {
-        AlgorithmIdentifierRef::try_from(*self)?.encoded_len()
+        AlgorithmIdentifierRef::try_from(self)?.encoded_len()
     }
 
     fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {
-        AlgorithmIdentifierRef::try_from(*self)?.encode(writer)
+        AlgorithmIdentifierRef::try_from(self)?.encode(writer)
     }
 }
