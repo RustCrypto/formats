@@ -23,7 +23,7 @@ tls_codec_derive = { version = "=0.3.0", path = "./derive", optional = true }
 
 [dev-dependencies]
 criterion = "0.5"
-regex = "1.8"
+regex = "1.9"
 
 [features]
 default = [ "std" ]
