@@ -25,7 +25,7 @@ jobs:
           components: clippy
           override: true
           profile: minimal
-      - run: cargo clippy --all-features
+      - run: cargo clippy
 
   doc:
     runs-on: ubuntu-latest

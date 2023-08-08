@@ -2245,6 +2245,18 @@ pub mod rfc8284 {
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.23.1");
     pub const JID: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.23.2");
 }
+pub mod rfc8410 {
+    pub const ID_EDWARDS_CURVE_ALGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.101");
+    pub const ID_X_25519: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.101.110");
+    pub const ID_X_448: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.101.111");
+    pub const ID_ED_25519: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.101.112");
+    pub const ID_ED_448: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.101.113");
+}
 pub mod rfc8894 {
     pub const ID_VERI_SIGN: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.16.840.1.113733");
@@ -4205,6 +4217,11 @@ pub const DB: super::Database<'static> = super::Database(&[
     ),
     (&rfc8284::JID_OBJECT, "JIDObject"),
     (&rfc8284::JID, "jid"),
+    (&rfc8410::ID_EDWARDS_CURVE_ALGS, "id-edwards-curve-algs"),
+    (&rfc8410::ID_X_25519, "id-X25519"),
+    (&rfc8410::ID_X_448, "id-X448"),
+    (&rfc8410::ID_ED_25519, "id-Ed25519"),
+    (&rfc8410::ID_ED_448, "id-Ed448"),
     (&rfc8894::ID_VERI_SIGN, "id-VeriSign"),
     (&rfc8894::ID_PKI, "id-pki"),
     (&rfc8894::ID_ATTRIBUTES, "id-attributes"),
