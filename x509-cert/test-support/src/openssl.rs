@@ -5,7 +5,7 @@ use std::{
 };
 use tempfile::tempdir;
 
-fn check_openssl_output(command: &str, pem: &[u8]) -> String {
+fn check_openssl_output(command_and_args: &[&str], pem: &[u8]) -> String {
     let tmp_dir = tempdir().expect("create tempdir");
     let cert_path = tmp_dir.path().join("cert.pem");
 
@@ -13,7 +13,7 @@ fn check_openssl_output(command: &str, pem: &[u8]) -> String {
     cert_file.write_all(pem).expect("Create pem file");
 
     let mut child = Command::new("openssl")
-        .arg(command)
+        .args(command_and_args)
         .arg("-in")
         .arg(&cert_path)
         .arg("-noout")
@@ -35,9 +35,9 @@ fn check_openssl_output(command: &str, pem: &[u8]) -> String {
 }
 
 pub fn check_certificate(pem: &[u8]) -> String {
-    check_openssl_output("x509", pem)
+    check_openssl_output(&["x509"], pem)
 }
 
 pub fn check_request(pem: &[u8]) -> String {
-    check_openssl_output("req", pem)
+    check_openssl_output(&["req", "-verify"], pem)
 }

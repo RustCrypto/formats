@@ -2,7 +2,6 @@
 
 use crate::{Asn1Type, FieldAttrs, TagMode, TagNumber, TypeAttrs};
 use proc_macro2::TokenStream;
-use proc_macro_error::abort;
 use quote::quote;
 use syn::{Field, Ident, Path, Type};
 
@@ -20,35 +19,35 @@ pub(super) struct SequenceField {
 
 impl SequenceField {
     /// Create a new [`SequenceField`] from the input [`Field`].
-    pub(super) fn new(field: &Field, type_attrs: &TypeAttrs) -> Self {
-        let ident = field.ident.as_ref().cloned().unwrap_or_else(|| {
-            abort!(
+    pub(super) fn new(field: &Field, type_attrs: &TypeAttrs) -> syn::Result<Self> {
+        let ident = field.ident.as_ref().cloned().ok_or_else(|| {
+            syn::Error::new_spanned(
                 field,
-                "no name on struct field i.e. tuple structs unsupported"
+                "no name on struct field i.e. tuple structs unsupported",
             )
-        });
+        })?;
 
-        let attrs = FieldAttrs::parse(&field.attrs, type_attrs);
+        let attrs = FieldAttrs::parse(&field.attrs, type_attrs)?;
 
         if attrs.asn1_type.is_some() && attrs.default.is_some() {
-            abort!(
+            return Err(syn::Error::new_spanned(
                 ident,
-                "ASN.1 `type` and `default` options cannot be combined"
-            );
+                "ASN.1 `type` and `default` options cannot be combined",
+            ));
         }
 
         if attrs.default.is_some() && attrs.optional {
-            abort!(
+            return Err(syn::Error::new_spanned(
                 ident,
-                "`optional` and `default` field qualifiers are mutually exclusive"
-            );
+                "`optional` and `default` field qualifiers are mutually exclusive",
+            ));
         }
 
-        Self {
+        Ok(Self {
             ident,
             attrs,
             field_type: field.ty.clone(),
-        }
+        })
     }
 
     /// Derive code for decoding a field of a sequence.

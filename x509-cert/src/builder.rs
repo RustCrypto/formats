@@ -18,7 +18,7 @@ use crate::{
         AsExtension, Extension, Extensions,
     },
     name::Name,
-    request::{CertReq, CertReqInfo, ExtensionReq},
+    request::{attributes::AsAttribute, CertReq, CertReqInfo, ExtensionReq},
     serial_number::SerialNumber,
     time::Validity,
 };
@@ -394,6 +394,14 @@ where
 
         self.extension_req.0.push(ext);
 
+        Ok(())
+    }
+
+    /// Add an attribute to this certificate request
+    pub fn add_attribute<A: AsAttribute>(&mut self, attribute: &A) -> Result<()> {
+        let attr = attribute.to_attribute()?;
+
+        self.info.attributes.insert(attr)?;
         Ok(())
     }
 }
