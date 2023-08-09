@@ -43,7 +43,7 @@ use der::pem::PemLabel;
 pub struct EncryptedPrivateKeyInfo<'a> {
     /// Algorithm identifier describing a password-based symmetric encryption
     /// scheme used to encrypt the `encrypted_data` field.
-    pub encryption_algorithm: EncryptionScheme<'a>,
+    pub encryption_algorithm: EncryptionScheme,
 
     /// Private key data
     pub encrypted_data: &'a [u8],
@@ -74,7 +74,7 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
         let mut iv = [0u8; 16];
         rng.fill_bytes(&mut iv);
 
-        let pbes2_params = pbes2::Parameters::scrypt_aes256cbc(Default::default(), &salt, &iv)?;
+        let pbes2_params = pbes2::Parameters::scrypt_aes256cbc(Default::default(), &salt, iv)?;
         EncryptedPrivateKeyInfo::encrypt_with(pbes2_params, password, doc)
     }
 
@@ -82,7 +82,7 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     /// from the provided password and [`pbes2::Parameters`].
     #[cfg(feature = "encryption")]
     pub(crate) fn encrypt_with(
-        pbes2_params: pbes2::Parameters<'a>,
+        pbes2_params: pbes2::Parameters,
         password: impl AsRef<[u8]>,
         doc: &[u8],
     ) -> Result<SecretDocument> {
