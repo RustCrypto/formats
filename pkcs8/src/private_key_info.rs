@@ -17,7 +17,8 @@ use {
 
 #[cfg(feature = "encryption")]
 use {
-    crate::EncryptedPrivateKeyInfo, der::zeroize::Zeroizing, pkcs5::pbes2, rand_core::CryptoRngCore,
+    crate::EncryptedPrivateKeyInfoRef, der::zeroize::Zeroizing, pkcs5::pbes2,
+    rand_core::CryptoRngCore,
 };
 
 #[cfg(feature = "pem")]
@@ -129,7 +130,7 @@ impl<Params, Key> PrivateKeyInfoInner<Params, Key> {
 impl<'a, Params, Key> PrivateKeyInfoInner<Params, Key>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
-    Key: From<&'a [u8]> + AsRef<[u8]>,
+    Key: From<&'a [u8]> + AsRef<[u8]> + 'a,
 {
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password.
@@ -147,7 +148,7 @@ where
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
-        EncryptedPrivateKeyInfo::encrypt(rng, password, der.as_ref())
+        EncryptedPrivateKeyInfoRef::encrypt(rng, password, der.as_ref())
     }
 
     /// Encrypt this private key using a symmetric encryption key derived
@@ -159,7 +160,7 @@ where
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
-        EncryptedPrivateKeyInfo::encrypt_with(pbes2_params, password, der.as_ref())
+        EncryptedPrivateKeyInfoRef::encrypt_with(pbes2_params, password, der.as_ref())
     }
 }
 
