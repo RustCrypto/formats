@@ -223,7 +223,7 @@ fn reencode_enveloped_data_pwri_test() {
                 );
                 let enc_pbkdf2 = kdf_alg.parameters.as_ref().unwrap().to_der().unwrap();
                 let pbkdf2 = Pbkdf2Params::from_der(enc_pbkdf2.as_slice()).unwrap();
-                assert_eq!(hex!("7F EE A8 FD 56 8E 8F 07"), pbkdf2.salt);
+                assert_eq!(hex!("7F EE A8 FD 56 8E 8F 07"), pbkdf2.salt.as_ref());
                 assert_eq!(2048, pbkdf2.iteration_count);
                 assert_eq!(
                     ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.9"),
@@ -443,7 +443,7 @@ fn reencode_enveloped_data_multi_test() {
                 );
                 let enc_pbkdf2 = kdf_alg.parameters.as_ref().unwrap().to_der().unwrap();
                 let pbkdf2 = Pbkdf2Params::from_der(enc_pbkdf2.as_slice()).unwrap();
-                assert_eq!(hex!("39 04 A7 33 A0 6A 1B 27"), pbkdf2.salt);
+                assert_eq!(hex!("39 04 A7 33 A0 6A 1B 27"), pbkdf2.salt.as_ref());
                 assert_eq!(2048, pbkdf2.iteration_count);
                 assert_eq!(
                     ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.9"),
