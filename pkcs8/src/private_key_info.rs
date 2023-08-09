@@ -17,7 +17,7 @@ use {
 
 #[cfg(feature = "encryption")]
 use {
-    crate::EncryptedPrivateKeyInfo,
+    crate::EncryptedPrivateKeyInfoRef,
     der::zeroize::Zeroizing,
     pkcs5::pbes2,
     rand_core::{CryptoRng, RngCore},
@@ -150,7 +150,7 @@ where
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
-        EncryptedPrivateKeyInfo::encrypt(rng, password, der.as_ref())
+        EncryptedPrivateKeyInfoRef::encrypt(rng, password, der.as_ref())
     }
 
     /// Encrypt this private key using a symmetric encryption key derived
@@ -162,7 +162,7 @@ where
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
-        EncryptedPrivateKeyInfo::encrypt_with(pbes2_params, password, der.as_ref())
+        EncryptedPrivateKeyInfoRef::encrypt_with(pbes2_params, password, der.as_ref())
     }
 }
 

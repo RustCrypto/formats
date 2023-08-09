@@ -7,7 +7,7 @@ use der::SecretDocument;
 
 #[cfg(feature = "encryption")]
 use {
-    crate::EncryptedPrivateKeyInfo,
+    crate::EncryptedPrivateKeyInfoRef,
     rand_core::{CryptoRng, RngCore},
 };
 
@@ -34,7 +34,7 @@ pub trait DecodePrivateKey: Sized {
     /// (binary format) and attempt to decrypt it using the provided password.
     #[cfg(feature = "encryption")]
     fn from_pkcs8_encrypted_der(bytes: &[u8], password: impl AsRef<[u8]>) -> Result<Self> {
-        let doc = EncryptedPrivateKeyInfo::try_from(bytes)?.decrypt(password)?;
+        let doc = EncryptedPrivateKeyInfoRef::try_from(bytes)?.decrypt(password)?;
         Self::from_pkcs8_der(doc.as_bytes())
     }
 
@@ -66,7 +66,7 @@ pub trait DecodePrivateKey: Sized {
     #[cfg(all(feature = "encryption", feature = "pem"))]
     fn from_pkcs8_encrypted_pem(s: &str, password: impl AsRef<[u8]>) -> Result<Self> {
         let (label, doc) = SecretDocument::from_pem(s)?;
-        EncryptedPrivateKeyInfo::validate_pem_label(label)?;
+        EncryptedPrivateKeyInfoRef::validate_pem_label(label)?;
         Self::from_pkcs8_encrypted_der(doc.as_bytes(), password)
     }
 
@@ -109,7 +109,7 @@ pub trait EncodePrivateKey {
         rng: impl CryptoRng + RngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
-        EncryptedPrivateKeyInfo::encrypt(rng, password, self.to_pkcs8_der()?.as_bytes())
+        EncryptedPrivateKeyInfoRef::encrypt(rng, password, self.to_pkcs8_der()?.as_bytes())
     }
 
     /// Serialize this private key as PEM-encoded PKCS#8 with the given [`LineEnding`].
@@ -129,7 +129,7 @@ pub trait EncodePrivateKey {
         line_ending: LineEnding,
     ) -> Result<Zeroizing<String>> {
         let doc = self.to_pkcs8_encrypted_der(rng, password)?;
-        Ok(doc.to_pem(EncryptedPrivateKeyInfo::PEM_LABEL, line_ending)?)
+        Ok(doc.to_pem(EncryptedPrivateKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 
     /// Write ASN.1 DER-encoded PKCS#8 private key to the given path
