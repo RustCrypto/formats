@@ -20,7 +20,7 @@ use scrypt::scrypt;
 const MAX_KEY_LEN: usize = 32;
 
 fn cbc_encrypt<'a, C: BlockEncryptMut + BlockCipher + KeyInit>(
-    es: EncryptionScheme<'_>,
+    es: EncryptionScheme,
     key: EncryptionKey,
     iv: &[u8],
     buffer: &'a mut [u8],
@@ -33,7 +33,7 @@ fn cbc_encrypt<'a, C: BlockEncryptMut + BlockCipher + KeyInit>(
 }
 
 fn cbc_decrypt<'a, C: BlockDecryptMut + BlockCipher + KeyInit>(
-    es: EncryptionScheme<'_>,
+    es: EncryptionScheme,
     key: EncryptionKey,
     iv: &[u8],
     buffer: &'a mut [u8],
@@ -45,7 +45,7 @@ fn cbc_decrypt<'a, C: BlockDecryptMut + BlockCipher + KeyInit>(
 }
 
 pub fn encrypt_in_place<'b>(
-    params: &Parameters<'_>,
+    params: &Parameters,
     password: impl AsRef<[u8]>,
     buf: &'b mut [u8],
     pos: usize,
@@ -58,11 +58,11 @@ pub fn encrypt_in_place<'b>(
     let key = EncryptionKey::derive_from_password(password.as_ref(), &params.kdf, key_size)?;
 
     match es {
-        EncryptionScheme::Aes128Cbc { iv } => cbc_encrypt::<aes::Aes128Enc>(es, key, iv, buf, pos),
-        EncryptionScheme::Aes192Cbc { iv } => cbc_encrypt::<aes::Aes192Enc>(es, key, iv, buf, pos),
-        EncryptionScheme::Aes256Cbc { iv } => cbc_encrypt::<aes::Aes256Enc>(es, key, iv, buf, pos),
+        EncryptionScheme::Aes128Cbc { iv } => cbc_encrypt::<aes::Aes128Enc>(es, key, &iv, buf, pos),
+        EncryptionScheme::Aes192Cbc { iv } => cbc_encrypt::<aes::Aes192Enc>(es, key, &iv, buf, pos),
+        EncryptionScheme::Aes256Cbc { iv } => cbc_encrypt::<aes::Aes256Enc>(es, key, &iv, buf, pos),
         #[cfg(feature = "3des")]
-        EncryptionScheme::DesEde3Cbc { iv } => cbc_encrypt::<des::TdesEde3>(es, key, iv, buf, pos),
+        EncryptionScheme::DesEde3Cbc { iv } => cbc_encrypt::<des::TdesEde3>(es, key, &iv, buf, pos),
         #[cfg(feature = "des-insecure")]
         EncryptionScheme::DesCbc { .. } => Err(Error::UnsupportedAlgorithm {
             oid: super::DES_CBC_OID,
@@ -72,7 +72,7 @@ pub fn encrypt_in_place<'b>(
 
 /// Decrypt a message encrypted with PBES2-based key derivation
 pub fn decrypt_in_place<'a>(
-    params: &Parameters<'_>,
+    params: &Parameters,
     password: impl AsRef<[u8]>,
     buf: &'a mut [u8],
 ) -> Result<&'a [u8]> {
@@ -80,13 +80,13 @@ pub fn decrypt_in_place<'a>(
     let key = EncryptionKey::derive_from_password(password.as_ref(), &params.kdf, es.key_size())?;
 
     match es {
-        EncryptionScheme::Aes128Cbc { iv } => cbc_decrypt::<aes::Aes128Dec>(es, key, iv, buf),
-        EncryptionScheme::Aes192Cbc { iv } => cbc_decrypt::<aes::Aes192Dec>(es, key, iv, buf),
-        EncryptionScheme::Aes256Cbc { iv } => cbc_decrypt::<aes::Aes256Dec>(es, key, iv, buf),
+        EncryptionScheme::Aes128Cbc { iv } => cbc_decrypt::<aes::Aes128Dec>(es, key, &iv, buf),
+        EncryptionScheme::Aes192Cbc { iv } => cbc_decrypt::<aes::Aes192Dec>(es, key, &iv, buf),
+        EncryptionScheme::Aes256Cbc { iv } => cbc_decrypt::<aes::Aes256Dec>(es, key, &iv, buf),
         #[cfg(feature = "3des")]
-        EncryptionScheme::DesEde3Cbc { iv } => cbc_decrypt::<des::TdesEde3>(es, key, iv, buf),
+        EncryptionScheme::DesEde3Cbc { iv } => cbc_decrypt::<des::TdesEde3>(es, key, &iv, buf),
         #[cfg(feature = "des-insecure")]
-        EncryptionScheme::DesCbc { iv } => cbc_decrypt::<des::Des>(es, key, iv, buf),
+        EncryptionScheme::DesCbc { iv } => cbc_decrypt::<des::Des>(es, key, &iv, buf),
     }
 }
 
@@ -99,7 +99,7 @@ struct EncryptionKey {
 
 impl EncryptionKey {
     /// Derive an encryption key using the supplied PBKDF parameters.
-    pub fn derive_from_password(password: &[u8], kdf: &Kdf<'_>, key_size: usize) -> Result<Self> {
+    pub fn derive_from_password(password: &[u8], kdf: &Kdf, key_size: usize) -> Result<Self> {
         // if the kdf params defined a key length, ensure it matches the required key size
         if let Some(len) = kdf.key_length() {
             if key_size != len.into() {
@@ -153,7 +153,7 @@ impl EncryptionKey {
     }
 
     /// Derive key using PBKDF2.
-    fn derive_with_pbkdf2<D>(password: &[u8], params: &Pbkdf2Params<'_>, length: usize) -> Self
+    fn derive_with_pbkdf2<D>(password: &[u8], params: &Pbkdf2Params, length: usize) -> Self
     where
         D: CoreProxy,
         D::Core: Sync
@@ -170,7 +170,7 @@ impl EncryptionKey {
 
         pbkdf2_hmac::<D>(
             password,
-            params.salt,
+            params.salt.as_ref(),
             params.iteration_count,
             &mut buffer[..length],
         );
@@ -179,15 +179,11 @@ impl EncryptionKey {
     }
 
     /// Derive key using scrypt.
-    fn derive_with_scrypt(
-        password: &[u8],
-        params: &ScryptParams<'_>,
-        length: usize,
-    ) -> Result<Self> {
+    fn derive_with_scrypt(password: &[u8], params: &ScryptParams, length: usize) -> Result<Self> {
         let mut buffer = [0u8; MAX_KEY_LEN];
         scrypt(
             password,
-            params.salt,
+            params.salt.as_ref(),
             &params.try_into()?,
             &mut buffer[..length],
         )
