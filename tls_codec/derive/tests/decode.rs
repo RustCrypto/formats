@@ -1,3 +1,4 @@
+#![cfg(feature = "std")]
 use tls_codec::{
     Deserialize, Error, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32, TlsVecU8, VLBytes,
 };
