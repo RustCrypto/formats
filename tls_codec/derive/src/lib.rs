@@ -769,6 +769,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 SerializeVariant::Bytes => {
                     quote! {
                         impl #impl_generics tls_codec::SerializeBytes for #ident #ty_generics #where_clause {
+                            #[allow(non_upper_case_globals)]
                             fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
                                 let expected_out = tls_codec::Size::tls_serialized_len(&self);
                                 let mut out = Vec::with_capacity(expected_out);
@@ -850,6 +851,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 SerializeVariant::Write => {
                     quote! {
                         impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
+                            #[allow(non_upper_case_globals)]
                             fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                                 #discriminant_constants
                                 match self {
@@ -868,6 +870,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 SerializeVariant::Bytes => {
                     quote! {
                         impl #impl_generics tls_codec::SerializeBytes for #ident #ty_generics #where_clause {
+                            #[allow(non_upper_case_globals)]
                             fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
                                 #discriminant_constants
                                 match self {
