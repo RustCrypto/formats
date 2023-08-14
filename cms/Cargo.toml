@@ -30,7 +30,7 @@ hex-literal = "0.4"
 pem-rfc7468 = "0.7.0"
 pkcs5 = { version = "0.7" }
 rsa = { version = "0.9.2", features = ["sha2"] }
-ecdsa = { version = "0.16.7", features = ["digest", "pem"] }
+ecdsa = { version = "0.16.8", features = ["digest", "pem"] }
 p256 = "0.13.0"
 
 [features]
