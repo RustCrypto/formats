@@ -2,7 +2,6 @@
 
 use crate::{FieldAttrs, Tag, TypeAttrs};
 use proc_macro2::TokenStream;
-use proc_macro_error::abort;
 use quote::quote;
 use syn::{Fields, Ident, Path, Type, Variant};
 
@@ -33,20 +32,22 @@ impl From<Path> for TagOrPath {
     }
 }
 
-impl From<&Variant> for TagOrPath {
-    fn from(input: &Variant) -> Self {
+impl TryFrom<&Variant> for TagOrPath {
+    type Error = syn::Error;
+
+    fn try_from(input: &Variant) -> syn::Result<Self> {
         if let Fields::Unnamed(fields) = &input.fields {
             if fields.unnamed.len() == 1 {
                 if let Type::Path(path) = &fields.unnamed[0].ty {
-                    return path.path.clone().into();
+                    return Ok(path.path.clone().into());
                 }
             }
         }
 
-        abort!(
+        Err(syn::Error::new_spanned(
             &input.ident,
-            "no #[asn1(type=...)] specified for enum variant"
-        )
+            "no #[asn1(type=...)] specified for enum variant",
+        ))
     }
 }
 
@@ -73,9 +74,9 @@ pub(super) struct ChoiceVariant {
 
 impl ChoiceVariant {
     /// Create a new [`ChoiceVariant`] from the input [`Variant`].
-    pub(super) fn new(input: &Variant, type_attrs: &TypeAttrs) -> Self {
+    pub(super) fn new(input: &Variant, type_attrs: &TypeAttrs) -> syn::Result<Self> {
         let ident = input.ident.clone();
-        let attrs = FieldAttrs::parse(&input.attrs, type_attrs);
+        let attrs = FieldAttrs::parse(&input.attrs, type_attrs)?;
 
         if attrs.extensible {
             abort!(&ident, "`extensible` is not allowed on CHOICE");
@@ -88,12 +89,12 @@ impl ChoiceVariant {
             _ => abort!(&ident, "enum variant must be a 1-element tuple struct"),
         }
 
-        let tag = attrs
-            .tag()
-            .map(TagOrPath::from)
-            .unwrap_or_else(|| TagOrPath::from(input));
+        let tag = match attrs.tag()? {
+            Some(x) => x.into(),
+            None => input.try_into()?,
+        };
 
-        Self { ident, attrs, tag }
+        Ok(Self { ident, attrs, tag })
     }
 
     /// Derive a match arm of the impl body for `TryFrom<der::asn1::Any<'_>>`.

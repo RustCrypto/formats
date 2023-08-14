@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.2 (2023-08-07)
+### Changed
+- fix doc typo and use a valid tag number ([#1184])
+- remove proc-macro-error dependency ([#1180])
+
+[#1180]: https://github.com/RustCrypto/formats/pull/1180
+[#1184]: https://github.com/RustCrypto/formats/pull/1184
+
 ## 0.7.1 (2023-04-19)
 ### Added
  - Support for type generics in `Sequence` macro ([#1014])

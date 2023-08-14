@@ -698,7 +698,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                         let field_len = match self {
                             #(#field_arms)*
                         };
-                        std::mem::size_of::<#repr>() + field_len
+                        core::mem::size_of::<#repr>() + field_len
                     }
                 }
 
@@ -740,6 +740,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 SerializeVariant::Write => {
                     quote! {
                         impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
+                            #[cfg(feature = "std")]
                             fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                                 let mut written = 0usize;
                                 #(
@@ -760,6 +761,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                         }
 
                         impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
+                            #[cfg(feature = "std")]
                             fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                                 tls_codec::Serialize::tls_serialize(*self, writer)
                             }
@@ -851,6 +853,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 SerializeVariant::Write => {
                     quote! {
                         impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
+                            #[cfg(feature = "std")]
                             #[allow(non_upper_case_globals)]
                             fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                                 #discriminant_constants
@@ -861,6 +864,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                         }
 
                         impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
+                            #[cfg(feature = "std")]
                             fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
                                 tls_codec::Serialize::tls_serialize(*self, writer)
                             }
@@ -912,6 +916,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
+                    #[cfg(feature = "std")]
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
                         Ok(Self {
                             #(#members: #prefixes::tls_deserialize(bytes)?,)*
@@ -951,6 +956,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             quote! {
                 impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
                     #[allow(non_upper_case_globals)]
+                    #[cfg(feature = "std")]
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
                         #discriminant_constants
                         let discriminant = <#repr as tls_codec::Deserialize>::tls_deserialize(bytes)?;

@@ -1,3 +1,4 @@
+#![cfg(feature = "std")]
 use tls_codec::{SecretTlsVecU16, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32};
 use tls_codec_derive::{TlsSerialize, TlsSize};
 
