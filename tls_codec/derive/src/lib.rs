@@ -541,11 +541,7 @@ fn make_n_ids(n: usize) -> Vec<Ident> {
 
 /// Returns identifier to define a constant equal to the discriminant of a variant
 fn discriminant_id(variant: &Ident) -> Ident {
-    let variant_string = variant.to_string().to_uppercase();
-    Ident::new(
-        &format!("__TLS_CODEC_{}", variant_string),
-        Span::call_site(),
-    )
+    Ident::new(&format!("__TLS_CODEC_{}", variant), Span::call_site())
 }
 
 /// Returns definitions of constants equal to the discriminants of each variant
