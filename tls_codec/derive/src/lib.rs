@@ -618,6 +618,7 @@ fn define_discriminant_constants(
                 );
             } else {
                 quote! {
+                    #[allow(non_upper_case_globals)]
                     const #constant_id: #repr = {
                         if #implicit_discriminant > #repr::MAX as usize {
                             panic!("The value corresponding to that expression is outside the bounds of the enum representation");
