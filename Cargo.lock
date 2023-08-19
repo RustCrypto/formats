@@ -1452,7 +1452,7 @@ dependencies = [
 
 [[package]]
 name = "serdect"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "base16ct",
  "bincode",
@@ -1616,7 +1616,7 @@ dependencies = [
 
 [[package]]
 name = "tls_codec"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "arbitrary",
  "criterion",
