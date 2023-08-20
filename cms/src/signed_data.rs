@@ -169,7 +169,7 @@ pub type SignedAttributes = Attributes;
 pub enum SignerIdentifier {
     IssuerAndSerialNumber(IssuerAndSerialNumber),
 
-    #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
     SubjectKeyIdentifier(SubjectKeyIdentifier),
 }
 

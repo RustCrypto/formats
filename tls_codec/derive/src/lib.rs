@@ -568,6 +568,7 @@ fn define_discriminant_constants(
                     ))
                 } else {
                     Ok(quote! {
+                        #[allow(non_upper_case_globals)]
                         const #constant_id: #repr = #enum_ident::#variant_id as #repr;
                     })
                 }
@@ -585,6 +586,7 @@ fn define_discriminant_constants(
                     DiscriminantValue::Literal(value) => {
                         implicit_discriminant = value;
                         quote! {
+                            #[allow(non_upper_case_globals)]
                             const #constant_id: #repr = {
                                 if #value < #repr::MIN as usize || #value > #repr::MAX as usize {
                                     panic!("The value corresponding to that expression is outside the bounds of the enum representation");
@@ -596,7 +598,7 @@ fn define_discriminant_constants(
                     DiscriminantValue::Path(pathexpr) => {
                         discriminant_has_paths = true;
                         quote! {
-                            #[allow(clippy::unnecessary_cast)]
+                            #[allow(clippy::unnecessary_cast, non_upper_case_globals)]
                             const #constant_id: #repr = {
                                 let pathexpr_usize = #pathexpr as usize;
                                 if pathexpr_usize < #repr::MIN as usize || pathexpr_usize > #repr::MAX as usize {
@@ -616,6 +618,7 @@ fn define_discriminant_constants(
                 );
             } else {
                 quote! {
+                    #[allow(non_upper_case_globals)]
                     const #constant_id: #repr = {
                         if #implicit_discriminant > #repr::MAX as usize {
                             panic!("The value corresponding to that expression is outside the bounds of the enum representation");
@@ -952,7 +955,6 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
-                    #[allow(non_upper_case_globals)]
                     #[cfg(feature = "std")]
                     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
                         #discriminant_constants
@@ -1057,7 +1059,6 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
-                    #[allow(non_upper_case_globals)]
                     fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         #discriminant_constants
                         let (discriminant, remainder) = <#repr as tls_codec::DeserializeBytes>::tls_deserialize(bytes)?;

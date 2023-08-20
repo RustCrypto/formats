@@ -31,6 +31,7 @@ pub trait Profile: PartialEq + Debug + Eq + Clone {
     }
 }
 
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Debug, PartialEq, Eq, Clone)]
 /// Parse certificates with rfc5280-compliant checks
 pub struct Rfc5280;
@@ -38,6 +39,7 @@ pub struct Rfc5280;
 impl Profile for Rfc5280 {}
 
 #[cfg(feature = "hazmat")]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Debug, PartialEq, Eq, Clone)]
 /// Parse raw x509 certificate and disable all the checks
 pub struct Raw;

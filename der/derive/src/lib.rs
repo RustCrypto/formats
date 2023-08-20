@@ -55,7 +55,7 @@
 //! This attribute can be added to associate a particular `CONTEXT-SPECIFIC`
 //! tag number with a given enum variant or struct field.
 //!
-//! The value must be quoted and contain a number, e.g. `#[asn1(context_specific = "42"]`.
+//! The value must be quoted and contain a number, e.g. `#[asn1(context_specific = "29")]`.
 //!
 //! ### `#[asn1(default = "...")]` attribute: `DEFAULT` support
 //!
@@ -121,6 +121,12 @@
     unused_qualifications
 )]
 
+macro_rules! abort {
+    ( $tokens:expr, $message:expr $(,)? ) => {
+        return Err(syn::Error::new_spanned($tokens, $message))
+    };
+}
+
 mod asn1_type;
 mod attributes;
 mod choice;
@@ -140,7 +146,6 @@ use crate::{
 };
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-use proc_macro_error::proc_macro_error;
 use syn::{parse_macro_input, DeriveInput, Lifetime};
 
 /// Get the default lifetime.
@@ -186,10 +191,12 @@ fn default_lifetime() -> Lifetime {
 /// [3]: https://docs.rs/der/latest/der/trait.Encode.html
 /// [4]: https://docs.rs/der_derive/
 #[proc_macro_derive(Choice, attributes(asn1))]
-#[proc_macro_error]
 pub fn derive_choice(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    DeriveChoice::new(input).to_tokens().into()
+    match DeriveChoice::new(input) {
+        Ok(t) => t.to_tokens().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
 }
 
 /// Derive decoders and encoders for ASN.1 [`Enumerated`] types on a
@@ -222,10 +229,12 @@ pub fn derive_choice(input: TokenStream) -> TokenStream {
 /// Note that the derive macro will write a `TryFrom<...>` impl for the
 /// provided `#[repr]`, which is used by the decoder.
 #[proc_macro_derive(Enumerated, attributes(asn1))]
-#[proc_macro_error]
 pub fn derive_enumerated(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    DeriveEnumerated::new(input).to_tokens().into()
+    match DeriveEnumerated::new(input) {
+        Ok(t) => t.to_tokens().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
 }
 
 /// Derive the [`Sequence`][1] trait on a `struct`.
@@ -262,10 +271,12 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
 /// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
 /// [2]: https://docs.rs/der_derive/
 #[proc_macro_derive(Sequence, attributes(asn1))]
-#[proc_macro_error]
 pub fn derive_sequence(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    DeriveSequence::new(input).to_tokens().into()
+    match DeriveSequence::new(input) {
+        Ok(t) => t.to_tokens().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
 }
 
 /// Derive the [`ValueOrd`][1] trait on a `struct`.
@@ -275,8 +286,10 @@ pub fn derive_sequence(input: TokenStream) -> TokenStream {
 ///
 /// [1]: https://docs.rs/der/latest/der/trait.ValueOrd.html
 #[proc_macro_derive(ValueOrd, attributes(asn1))]
-#[proc_macro_error]
 pub fn derive_value_ord(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    DeriveValueOrd::new(input).to_tokens().into()
+    match DeriveValueOrd::new(input) {
+        Ok(t) => t.to_tokens().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
 }

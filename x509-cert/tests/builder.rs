@@ -1,6 +1,6 @@
 #![cfg(all(feature = "builder", feature = "pem"))]
 
-use der::{pem::LineEnding, Decode, Encode, EncodePem};
+use der::{asn1::PrintableString, pem::LineEnding, Decode, Encode, EncodePem};
 use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
@@ -9,8 +9,12 @@ use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
     builder::{Builder, CertificateBuilder, Profile, RequestBuilder},
-    ext::pkix::{name::GeneralName, SubjectAltName},
+    ext::pkix::{
+        name::{DirectoryString, GeneralName},
+        SubjectAltName,
+    },
     name::Name,
+    request,
     serial_number::SerialNumber,
     time::Validity,
 };
@@ -276,6 +280,30 @@ fn certificate_request() {
             Ipv4Addr::new(192, 0, 2, 0),
         ))]))
         .unwrap();
+
+    let cert_req = builder.build::<DerSignature>().unwrap();
+    let pem = cert_req.to_pem(LineEnding::LF).expect("generate pem");
+    use std::fs::File;
+    use std::io::Write;
+    let mut file = File::create("/tmp/ecdsa.csr").expect("create pem file");
+    file.write_all(pem.as_bytes()).expect("Create pem file");
+    println!("{}", openssl::check_request(pem.as_bytes()));
+}
+
+#[test]
+fn certificate_request_attributes() {
+    let subject = Name::from_str("CN=service.domination.world").unwrap();
+
+    let signer = ecdsa_signer();
+    let mut builder = RequestBuilder::new(subject, &signer).expect("Create certificate request");
+    builder
+        .add_attribute(&request::attributes::ChallengePassword(
+            DirectoryString::PrintableString(
+                PrintableString::new(b"password1234")
+                    .expect("create printable string with password"),
+            ),
+        ))
+        .expect("unable to add attribute");
 
     let cert_req = builder.build::<DerSignature>().unwrap();
     let pem = cert_req.to_pem(LineEnding::LF).expect("generate pem");

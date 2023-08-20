@@ -14,4 +14,10 @@
     unused_qualifications
 )]
 
-//! TODO: PKCS#12 crate
+//! TODO: complete PKCS#12 crate
+
+#[cfg(feature = "kdf")]
+extern crate alloc;
+
+#[cfg(feature = "kdf")]
+pub mod kdf;
