@@ -1932,6 +1932,7 @@ dependencies = [
  "signature",
  "spki",
  "tempfile",
+ "tls_codec",
  "x509-cert-test-support",
 ]
 
