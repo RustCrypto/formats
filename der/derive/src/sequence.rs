@@ -126,6 +126,8 @@ impl DeriveSequence {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
+#[allow(clippy::bool_assert_comparison)]
 mod tests {
     use super::DeriveSequence;
     use crate::{Asn1Type, TagMode};

@@ -397,7 +397,7 @@ pub struct BitStringIter<'a> {
 impl<'a> Iterator for BitStringIter<'a> {
     type Item = bool;
 
-    #[allow(clippy::integer_arithmetic)]
+    #[allow(clippy::arithmetic_side_effects)]
     fn next(&mut self) -> Option<bool> {
         if self.position >= self.bit_string.bit_len() {
             return None;
@@ -435,7 +435,7 @@ where
 }
 
 #[cfg(feature = "flagset")]
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 impl<'a, T> DecodeValue<'a> for flagset::FlagSet<T>
 where
     T: flagset::Flags,
@@ -461,7 +461,7 @@ where
 }
 
 #[cfg(feature = "flagset")]
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 #[inline(always)]
 fn encode_flagset<T>(set: &flagset::FlagSet<T>) -> (usize, [u8; 16])
 where
@@ -480,7 +480,7 @@ where
 }
 
 #[cfg(feature = "flagset")]
-#[allow(clippy::cast_possible_truncation, clippy::integer_arithmetic)]
+#[allow(clippy::cast_possible_truncation, clippy::arithmetic_side_effects)]
 impl<T: flagset::Flags> EncodeValue for flagset::FlagSet<T>
 where
     T::Type: From<bool>,

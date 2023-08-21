@@ -8,6 +8,8 @@
 //! $ cargo expand --test derive --all-features
 
 #![cfg(all(feature = "derive", feature = "alloc"))]
+// TODO: fix needless_question_mark in the derive crate
+#![allow(clippy::bool_assert_comparison, clippy::needless_question_mark)]
 
 /// Custom derive test cases for the `Choice` macro.
 mod choice {

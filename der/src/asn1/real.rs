@@ -4,7 +4,7 @@
 #![allow(
     clippy::cast_lossless,
     clippy::cast_sign_loss,
-    clippy::integer_arithmetic
+    clippy::arithmetic_side_effects
 )]
 
 use crate::{
@@ -817,8 +817,8 @@ mod tests {
             f64::MIN_POSITIVE,
             f64::MAX,
             f64::MIN,
-            std::f64::consts::PI,
-            -std::f64::consts::PI,
+            core::f64::consts::PI,
+            -core::f64::consts::PI,
             951.2357864,
             -951.2357864,
         ] {

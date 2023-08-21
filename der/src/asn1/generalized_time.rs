@@ -1,5 +1,5 @@
 //! ASN.1 `GeneralizedTime` support.
-#![cfg_attr(feature = "arbitrary", allow(clippy::integer_arithmetic))]
+#![cfg_attr(feature = "arbitrary", allow(clippy::arithmetic_side_effects))]
 
 use crate::{
     datetime::{self, DateTime},

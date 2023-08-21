@@ -135,6 +135,7 @@ impl DeriveChoice {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::DeriveChoice;
     use crate::{Asn1Type, Tag, TagMode};
