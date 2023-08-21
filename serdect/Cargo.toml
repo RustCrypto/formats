@@ -16,8 +16,7 @@ rust-version = "1.60"
 
 [dependencies]
 base16ct = { version = "0.2", default-features = false }
-# Pin upper version of serde to work around https://github.com/serde-rs/serde/issues/2538
-serde = { version = "1.0.96, <1.0.172", default-features = false }
+serde = { version = "1.0.184", default-features = false }
 
 # optional features
 zeroize = { version = "1", optional = true, default-features = false }
@@ -27,7 +26,7 @@ bincode = "1"
 ciborium = "0.2"
 hex-literal = "0.4"
 proptest = "1"
-serde = { version = "1.0.119", default-features = false, features = ["derive"] }
+serde = { version = "1.0.184", default-features = false, features = ["derive"] }
 serde_json = "1"
 serde-json-core = { version = "0.5", default-features = false, features = ["std"] }
 toml = "0.7"
