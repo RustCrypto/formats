@@ -70,6 +70,7 @@ impl TryFrom<AnyRef<'_>> for ObjectIdentifier {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::ObjectIdentifier;
     use crate::{Decode, Encode, Length};

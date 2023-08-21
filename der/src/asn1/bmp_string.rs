@@ -133,6 +133,7 @@ impl fmt::Display for BmpString {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::BmpString;
     use crate::{Decode, Encode};

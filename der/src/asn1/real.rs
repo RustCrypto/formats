@@ -248,6 +248,7 @@ pub(crate) fn encode_f64(sign: u64, exponent: u64, mantissa: u64) -> f64 {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::{Decode, Encode};
 
@@ -816,9 +817,9 @@ mod tests {
             f64::MIN_POSITIVE,
             f64::MAX,
             f64::MIN,
-            3.1415,
+            std::f64::consts::PI,
+            -std::f64::consts::PI,
             951.2357864,
-            -3.1415,
             -951.2357864,
         ] {
             let (s, e, m) = decode_f64(val);

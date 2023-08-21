@@ -1087,11 +1087,7 @@ fn partition_skipped(
     let mut members_skip: Vec<Member> = Vec::new();
     let mut member_prefixes_skip: Vec<Prefix> = Vec::new();
 
-    for ((member, prefix), skip) in members
-        .into_iter()
-        .zip(member_prefixes.into_iter())
-        .zip(member_skips.into_iter())
-    {
+    for ((member, prefix), skip) in members.into_iter().zip(member_prefixes).zip(member_skips) {
         if !skip {
             members_not_skip.push(member);
             member_prefixes_not_skip.push(prefix);

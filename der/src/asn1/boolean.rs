@@ -53,6 +53,7 @@ impl TryFrom<AnyRef<'_>> for bool {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::{Decode, Encode};
 

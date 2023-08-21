@@ -242,6 +242,7 @@ mod bytes {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::asn1::{OctetStringRef, PrintableStringRef};
 

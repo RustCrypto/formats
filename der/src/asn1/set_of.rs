@@ -493,6 +493,7 @@ fn validate<T: DerOrd>(slice: &[T]) -> Result<()> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::SetOf;
     #[cfg(feature = "alloc")]

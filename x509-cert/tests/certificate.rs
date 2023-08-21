@@ -437,7 +437,7 @@ fn decode_cert_overlength_serial_number() {
     assert_eq!(pem_encoded_cert, reencoded.as_bytes());
 }
 
-#[cfg(all(feature = "pem"))]
+#[cfg(feature = "pem")]
 #[test]
 fn load_certificate_chains() {
     let pem_encoded_chain = include_bytes!("examples/crates.io-chain.pem");

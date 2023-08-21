@@ -18,9 +18,9 @@ fn get_raw_data() -> Vec<u8> {
 fn get_b64_data() -> String {
     (0..B64_LEN)
         .map(|i| match (i % 64) as u8 {
-            v @ 0..=25 => (v + 'A' as u8) as char,
-            v @ 26..=51 => (v - 26 + 'a' as u8) as char,
-            v @ 52..=61 => (v - 52 + '0' as u8) as char,
+            v @ 0..=25 => (v + b'A') as char,
+            v @ 26..=51 => (v - 26 + b'a') as char,
+            v @ 52..=61 => (v - 52 + b'0') as char,
             62 => '+',
             _ => '/',
         })

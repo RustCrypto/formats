@@ -20,8 +20,7 @@ const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("examples/p256-priv.der");
 
 fn rsa_signer() -> SigningKey<Sha256> {
     let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
-    let signing_key = SigningKey::<Sha256>::new(private_key);
-    signing_key
+    SigningKey::<Sha256>::new(private_key)
 }
 
 fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {

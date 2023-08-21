@@ -308,6 +308,7 @@ impl TryFrom<GeneralizedTime> for PrimitiveDateTime {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::GeneralizedTime;
     use crate::{Decode, Encode, SliceWriter};

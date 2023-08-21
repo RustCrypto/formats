@@ -40,7 +40,7 @@ mod choice {
         }
 
         impl Time {
-            fn to_unix_duration(self) -> Duration {
+            fn to_unix_duration(&self) -> Duration {
                 match self {
                     Time::UtcTime(t) => t.to_unix_duration(),
                     Time::GeneralTime(t) => t.to_unix_duration(),

@@ -35,7 +35,7 @@ impl<const SIZE: usize> Buffer<SIZE> {
             }
 
             // Won't overflow due to `i < self.len()` check above
-            #[allow(clippy::integer_arithmetic)]
+            #[allow(clippy::arithmetic_side_effects)]
             {
                 i += 1;
             }
