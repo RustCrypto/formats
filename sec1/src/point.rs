@@ -552,6 +552,7 @@ impl From<Tag> for u8 {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::{Coordinates, Tag};
     use core::str::FromStr;

@@ -62,7 +62,7 @@ impl Encoder {
                 Ok(self)
             }
             // Ensured not to overflow by `ARC_MAX_SECOND` check
-            #[allow(clippy::integer_arithmetic)]
+            #[allow(clippy::arithmetic_side_effects)]
             State::FirstArc(first_arc) => {
                 if arc > ARC_MAX_SECOND {
                     return Err(Error::ArcInvalid { arc });
@@ -74,7 +74,7 @@ impl Encoder {
                 Ok(self)
             }
             // TODO(tarcieri): finer-grained overflow safety / checked arithmetic
-            #[allow(clippy::integer_arithmetic)]
+            #[allow(clippy::arithmetic_side_effects)]
             State::Body => {
                 // Total number of bytes in encoded arc - 1
                 let nbytes = base128_len(arc);
@@ -117,7 +117,7 @@ impl Encoder {
         let mask = if continued { 0b10000000 } else { 0 };
 
         // Underflow checked by branch
-        #[allow(clippy::integer_arithmetic)]
+        #[allow(clippy::arithmetic_side_effects)]
         if n > 0x80 {
             self.bytes[checked_add!(self.cursor, i)] = (n & 0b1111111) as u8 | mask;
             n >>= 7;
@@ -146,6 +146,7 @@ const fn base128_len(arc: Arc) -> usize {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::Encoder;
     use hex_literal::hex;

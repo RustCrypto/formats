@@ -85,7 +85,7 @@ where
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
-            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
+            .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
@@ -152,7 +152,7 @@ where
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
-            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
+            .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
@@ -202,7 +202,7 @@ where
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
-            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
+            .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {

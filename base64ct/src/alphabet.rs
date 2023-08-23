@@ -1,7 +1,7 @@
 //! Base64 alphabets.
 
 // TODO(tarcieri): explicitly checked/wrapped arithmetic
-#![allow(clippy::integer_arithmetic)]
+#![allow(clippy::arithmetic_side_effects)]
 
 use core::{fmt::Debug, ops::RangeInclusive};
 

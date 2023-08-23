@@ -41,7 +41,7 @@ const ED25519_SPKI_FINGERPRINT_BASE64: &str = "Vd1MdLDkhTTi9OFzzs61DfjyenrCqomRz
 /// The SPKI fingerprint for `ED25519_SPKI_FINGERPRINT` as straight hash bytes
 ///
 /// Generated using `cat ed25519-pub.der | openssl dgst -sha256`
-#[cfg(all(feature = "fingerprint"))]
+#[cfg(feature = "fingerprint")]
 const ED25519_SPKI_FINGERPRINT: &[u8] =
     &hex!("55dd4c74b0e48534e2f4e173ceceb50df8f27a7ac2aa8991cc7ae914e030bced");
 

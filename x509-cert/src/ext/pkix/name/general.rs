@@ -86,6 +86,7 @@ impl From<std::net::IpAddr> for GeneralName {
 }
 
 #[cfg(all(feature = "std", test))]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
     use der::Encode;

@@ -129,6 +129,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::SliceReader;
     use crate::{Decode, ErrorKind, Length, Reader, Tag};

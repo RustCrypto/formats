@@ -201,6 +201,7 @@ impl EnumeratedVariant {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::DeriveEnumerated;
     use syn::parse_quote;

@@ -79,6 +79,7 @@ impl FixedTag for () {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::Null;
     use crate::{Decode, Encode};

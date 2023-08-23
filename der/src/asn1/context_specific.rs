@@ -254,6 +254,7 @@ where
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::ContextSpecific;
     use crate::{asn1::BitStringRef, Decode, Encode, SliceReader, TagMode, TagNumber};

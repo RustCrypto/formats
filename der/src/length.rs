@@ -412,6 +412,7 @@ impl TryFrom<IndefiniteLength> for Length {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::{IndefiniteLength, Length};
     use crate::{Decode, DerOrd, Encode, ErrorKind};

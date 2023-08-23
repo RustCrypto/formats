@@ -1,5 +1,5 @@
 //! ASN.1 `GeneralizedTime` support.
-#![cfg_attr(feature = "arbitrary", allow(clippy::integer_arithmetic))]
+#![cfg_attr(feature = "arbitrary", allow(clippy::arithmetic_side_effects))]
 
 use crate::{
     datetime::{self, DateTime},
@@ -308,6 +308,7 @@ impl TryFrom<GeneralizedTime> for PrimitiveDateTime {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::GeneralizedTime;
     use crate::{Decode, Encode, SliceWriter};
