@@ -70,7 +70,7 @@ impl DateTime {
 
     /// Create a new [`DateTime`] from the given UTC time components.
     // TODO(tarcieri): checked arithmetic
-    #[allow(clippy::integer_arithmetic)]
+    #[allow(clippy::arithmetic_side_effects)]
     pub fn new(year: u16, month: u8, day: u8, hour: u8, minutes: u8, seconds: u8) -> Result<Self> {
         // Basic validation of the components.
         if year < MIN_YEAR
@@ -138,7 +138,7 @@ impl DateTime {
     ///
     /// Returns `None` if the value is outside the supported date range.
     // TODO(tarcieri): checked arithmetic
-    #[allow(clippy::integer_arithmetic)]
+    #[allow(clippy::arithmetic_side_effects)]
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
         if unix_duration > MAX_UNIX_DURATION {
             return Err(ErrorKind::DateTime.into());
@@ -376,7 +376,7 @@ impl<'a> arbitrary::Arbitrary<'a> for DateTime {
 
 /// Decode 2-digit decimal value
 // TODO(tarcieri): checked arithmetic
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u8> {
     if hi.is_ascii_digit() && lo.is_ascii_digit() {
         Ok((hi - b'0') * 10 + (lo - b'0'))
@@ -402,7 +402,7 @@ where
 
 /// Decode 4-digit year.
 // TODO(tarcieri): checked arithmetic
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 fn decode_year(year: &[u8; 4]) -> Result<u16> {
     let tag = Tag::GeneralizedTime;
     let hi = decode_decimal(tag, year[0], year[1]).map_err(|_| ErrorKind::DateTime)?;
@@ -411,6 +411,7 @@ fn decode_year(year: &[u8; 4]) -> Result<u16> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::DateTime;
 
@@ -441,7 +442,7 @@ mod tests {
     #[test]
     fn display() {
         use alloc::string::ToString;
-        let datetime = DateTime::new(2001, 01, 02, 12, 13, 14).unwrap();
+        let datetime = DateTime::new(2001, 1, 2, 12, 13, 14).unwrap();
         assert_eq!(&datetime.to_string(), "2001-01-02T12:13:14Z");
     }
 }

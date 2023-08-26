@@ -136,7 +136,7 @@ fn optional_member() {
     let x = OptionalMemberRef {
         optional_member: Some(&m),
         ref_optional_member: &None,
-        ref_vector: &v.into(),
+        ref_vector: &v,
     };
     let serialized = x.tls_serialize().unwrap();
     assert_eq!(vec![1, 0, 0, 0, 6, 0, 6, 0, 1, 0, 2, 0, 3], serialized);

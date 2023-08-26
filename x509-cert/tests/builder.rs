@@ -138,7 +138,7 @@ fn leaf_certificate() {
     let builder = CertificateBuilder::new(
         profile,
         serial_number.clone(),
-        validity.clone(),
+        validity,
         subject.clone(),
         pub_key.clone(),
         &signer,
@@ -251,14 +251,12 @@ const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.d
 
 fn rsa_signer() -> SigningKey<Sha256> {
     let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
-    let signing_key = SigningKey::<Sha256>::new(private_key);
-    signing_key
+    SigningKey::<Sha256>::new(private_key)
 }
 
 fn rsa_pss_signer() -> rsa::pss::SigningKey<Sha256> {
     let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
-    let signing_key = rsa::pss::SigningKey::<Sha256>::new(private_key);
-    signing_key
+    rsa::pss::SigningKey::<Sha256>::new(private_key)
 }
 
 const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("examples/p256-priv.der");

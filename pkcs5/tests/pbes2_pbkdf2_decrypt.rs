@@ -9,26 +9,27 @@ fn run_combinations(prfs: &[&str]) {
     const PASSWORD: &[u8] = b"hunter2"; // Bad password; don't actually use outside tests!
 
     let sk_path = "./tests/examples/rsa_sk.pkcs8.der";
-    let sk_bytes = fs::read(&sk_path).expect(&format!("Failed to read from {}", &sk_path));
+    let sk_bytes =
+        fs::read(sk_path).unwrap_or_else(|err| panic!("Failed to read from {sk_path}: {err}"));
 
     for aes_mode in ["aes-128-cbc", "aes-192-cbc", "aes-256-cbc"] {
         for prf in prfs {
             let algid_path = format!("./tests/examples/pbes2_{}_{}_algid.der", aes_mode, prf);
-            let algid_bytes =
-                fs::read(&algid_path).expect(&format!("Failed to read from {}", &algid_path));
+            let algid_bytes = fs::read(&algid_path)
+                .unwrap_or_else(|err| panic!("Failed to read from {algid_path}: {err}"));
             let scheme = pkcs5::EncryptionScheme::try_from(algid_bytes.as_slice())
-                .expect(&format!("Failed to interpret scheme {} {}", aes_mode, prf));
+                .unwrap_or_else(|err| panic!("Failed to interpret scheme {aes_mode} {prf}: {err}"));
 
             let ciphertext_path =
                 format!("./tests/examples/pbes2_{}_{}_ciphertext.bin", aes_mode, prf);
             let mut ciphertext_bytes = fs::read(&ciphertext_path)
-                .expect(&format!("Failed to read from {}", &ciphertext_path));
+                .unwrap_or_else(|err| panic!("Failed to read from {ciphertext_path}: {err}"));
 
             assert_eq!(640, ciphertext_bytes.len());
 
             let plaintext = scheme
                 .decrypt_in_place(PASSWORD, &mut ciphertext_bytes)
-                .expect(&format!("pbes2 decryption of {} {}", aes_mode, prf));
+                .unwrap_or_else(|err| panic!("pbes2 decryption of {aes_mode} {prf}: {err}"));
 
             assert_eq!(sk_bytes, plaintext);
         }

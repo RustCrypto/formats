@@ -1,21 +1,23 @@
-name: cmpv2
+name: x509-tsp
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/cmpv2.yml"
+      - ".github/workflows/x509-tsp.yml"
       - "const-oid/**"
       - "cmpv2/**"
+      - "cms/**"
       - "der/**"
       - "spki/**"
       - "x509-cert/**"
+      - "x509-tsp/**"
       - "Cargo.*"
   push:
     branches: master
 
 defaults:
   run:
-    working-directory: cmpv2
+    working-directory: x509-tsp
 
 env:
   CARGO_INCREMENTAL: 0
@@ -39,7 +41,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
       - uses: RustCrypto/actions/cargo-hack-install@master
-      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features arbitrary,default,std
+      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features arbitrary,builder,default,std
 
   minimal-versions:
     uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
@@ -55,10 +57,9 @@ jobs:
           - stable
     steps:
       - uses: actions/checkout@v3
+
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack test --feature-powerset
-
-

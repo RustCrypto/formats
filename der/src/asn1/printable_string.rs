@@ -236,6 +236,7 @@ mod allocation {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::PrintableStringRef;
     use crate::Decode;

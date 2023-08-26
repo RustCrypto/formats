@@ -21,6 +21,7 @@ pub struct OtherName {
 
 #[test]
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 fn test() {
     use alloc::string::ToString;
     use der::{asn1::Utf8StringRef, Decode, Encode};
