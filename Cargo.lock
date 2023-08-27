@@ -1061,6 +1061,7 @@ dependencies = [
  "des",
  "hex-literal 0.4.1",
  "pbkdf2",
+ "rand_core",
  "scrypt",
  "sha1",
  "sha2",
