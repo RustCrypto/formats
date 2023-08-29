@@ -1005,6 +1005,7 @@ dependencies = [
 name = "pkcs12"
 version = "0.0.0"
 dependencies = [
+ "der",
  "digest",
  "hex-literal",
  "sha2",

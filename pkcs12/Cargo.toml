@@ -15,8 +15,11 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
+der = { version = "0.7.8", features = ["alloc"] }
+zeroize = "1.6"
+
+# optional dependencies
 digest = { version = "0.10.7", features = ["alloc"], optional = true }
-zeroize = "1.6.0"
 
 [dev-dependencies]
 hex-literal = "0.4"
