@@ -1,36 +1,17 @@
-use std::cmp::Ordering;
-
+use const_oid::ObjectIdentifier;
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Node {
-    obid: String,
+    oid: ObjectIdentifier,
     name: String,
     symb: Ident,
 }
 
-impl Ord for Node {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match self.obid.cmp(&other.obid) {
-            Ordering::Equal => match self.name.len().cmp(&other.name.len()) {
-                Ordering::Equal => self.name.cmp(&other.name),
-                o => o,
-            },
-            o => o,
-        }
-    }
-}
-
-impl PartialOrd for Node {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 impl Node {
-    pub fn new(obid: String, name: String) -> Self {
+    pub fn new(oid: ObjectIdentifier, name: String) -> Self {
         // Raise the first letter in the beginning or after a hyphen.
         // This produces more natural UpperSnake conversions below.
         let mut upper = true;
@@ -51,7 +32,7 @@ impl Node {
         let symb = symb.to_case(Case::UpperSnake);
         let symb = Ident::new(&symb, Span::call_site());
 
-        Self { obid, name, symb }
+        Self { oid, name, symb }
     }
 
     pub fn name(&self) -> &str {
@@ -63,11 +44,19 @@ impl Node {
     }
 
     pub fn definition(&self) -> TokenStream {
-        let obid = self.obid.replace(' ', ""); // Fix a typo.
         let symb = &self.symb;
+        let oid = self.oid.to_string();
+        let doc = format!("#[doc=\"{}: {}\"]", &self.oid, &self.name)
+            .parse::<TokenStream>()
+            .expect("malformed doc comment");
+
+        let bytes = format!("&{:?}", oid.as_bytes())
+            .parse::<TokenStream>()
+            .expect("malformed byte slice literal");
 
         quote! {
-            pub const #symb: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap(#obid);
+            #doc
+            pub const #symb: crate::ObjectIdentifierRef<'static> = crate::ObjectIdentifierRef::from_bytes_unchecked(#bytes);
         }
     }
 }
