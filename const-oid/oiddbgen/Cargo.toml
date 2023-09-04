@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 convert_case = "0.5.0"
+const-oid = { path = ".." }
 proc-macro2 = "1.0.36"
 quote = "1.0.15"
 regex = "1.5.5"
