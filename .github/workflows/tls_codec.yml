@@ -30,7 +30,7 @@ jobs:
           - wasm32-unknown-unknown
           - thumbv7em-none-eabi
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
@@ -62,7 +62,7 @@ jobs:
           - targets: x86_64-unknown-linux-gnu
             rust: stable
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
