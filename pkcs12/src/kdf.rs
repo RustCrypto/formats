@@ -2,18 +2,9 @@
 //! [RFC 7292 Appendix B](https://datatracker.ietf.org/doc/html/rfc7292#appendix-B)
 
 use alloc::{vec, vec::Vec};
+use der::asn1::BmpString;
 use digest::{core_api::BlockSizeUser, Digest, FixedOutputReset, OutputSizeUser, Update};
 use zeroize::{Zeroize, Zeroizing};
-
-/// Transform a utf-8 string in a unicode (utf16) string as binary array.
-/// The Utf16 code points are stored in big endian format with two trailing zero bytes.
-fn str_to_unicode(utf8_str: &str) -> Vec<u8> {
-    let mut utf16_bytes = Vec::with_capacity(utf8_str.len() * 2 + 2);
-    for code_point in utf8_str.encode_utf16().chain(Some(0)) {
-        utf16_bytes.extend(code_point.to_be_bytes());
-    }
-    utf16_bytes
-}
 
 /// Specify the usage type of the generated key
 /// This allows to derive distinct encryption keys, IVs and MAC from the same password or text
@@ -35,7 +26,22 @@ pub enum Pkcs12KeyType {
 ///     pkcs12::kdf::Pkcs12KeyType::EncryptionKey, 1000, 32);
 /// ```
 pub fn derive_key_utf8<D>(
-    pass: &str,
+    password: &str,
+    salt: &[u8],
+    id: Pkcs12KeyType,
+    rounds: i32,
+    key_len: usize,
+) -> der::Result<Vec<u8>>
+where
+    D: Digest + FixedOutputReset + BlockSizeUser,
+{
+    let password_bmp = BmpString::from_utf8(password)?;
+    Ok(derive_key_bmp::<D>(password_bmp, salt, id, rounds, key_len))
+}
+
+/// Derive
+pub fn derive_key_bmp<D>(
+    password: BmpString,
     salt: &[u8],
     id: Pkcs12KeyType,
     rounds: i32,
@@ -44,8 +50,12 @@ pub fn derive_key_utf8<D>(
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
-    let pass_utf16 = Zeroizing::new(str_to_unicode(pass));
-    derive_key::<D>(&pass_utf16, salt, id, rounds, key_len)
+    let mut password = Zeroizing::new(Vec::from(password.into_bytes()));
+
+    // Password is NULL terminated
+    password.extend([0u8; 2]);
+
+    derive_key::<D>(&password, salt, id, rounds, key_len)
 }
 
 /// Derives `key` of type `id` from `pass` and `salt` with length `key_len` using `rounds`

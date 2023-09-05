@@ -31,9 +31,9 @@ impl BmpString {
 
         for maybe_char in char::decode_utf16(ret.codepoints()) {
             match maybe_char {
-                // All surrogates paired and character is in the Basic Multilingual Plane
+                // Character is in the Basic Multilingual Plane
                 Ok(c) if (c as u64) < u64::from(u16::MAX) => (),
-                // Unpaired surrogates or characters outside Basic Multilingual Plane
+                // Characters outside Basic Multilingual Plane or unpaired surrogates
                 _ => return Err(Tag::BmpString.value_error()),
             }
         }
