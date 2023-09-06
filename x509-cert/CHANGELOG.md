@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.4 (2023-07-25)
+
+### Added
+- `add_attribute` to `RequestBuilder` ([#1137])
+
+### Changed
+- bump `serde_json` from 1.0.97 to 1.0.99 ([#1122])
+- use the shortest name when looking attr OID ([#1130])
+- bump `serde_json` from 1.0.100 to 1.0.103 ([#1158])
+
+### Fixed
+- RDN string representation ([#1126])
+- `Arbitrary` for certificates ([#1150])
+
+[#1122]: https://github.com/RustCrypto/formats/pull/1122
+[#1126]: https://github.com/RustCrypto/formats/pull/1126
+[#1130]: https://github.com/RustCrypto/formats/pull/1130
+[#1137]: https://github.com/RustCrypto/formats/pull/1137
+[#1150]: https://github.com/RustCrypto/formats/pull/1150
+[#1158]: https://github.com/RustCrypto/formats/pull/1158
+
 ## 0.2.3 (2023-05-30)
 
 ### Added

@@ -1,5 +1,5 @@
 //! ASN.1 tags.
-#![cfg_attr(feature = "arbitrary", allow(clippy::integer_arithmetic))]
+#![cfg_attr(feature = "arbitrary", allow(clippy::arithmetic_side_effects))]
 
 mod class;
 mod mode;

@@ -248,6 +248,7 @@ fn check_for_headers(pem: &[u8], err: Error) -> Error {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::Encapsulation;
 

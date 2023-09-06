@@ -223,6 +223,7 @@ impl<'a> arbitrary::Arbitrary<'a> for UtcTime {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::UtcTime;
     use crate::{Decode, Encode, SliceWriter};

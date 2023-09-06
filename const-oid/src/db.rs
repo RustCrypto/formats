@@ -9,13 +9,13 @@
 //! [RFC 5280]: https://datatracker.ietf.org/doc/html/rfc5280
 //! [Object Identifier Descriptors]: https://www.iana.org/assignments/ldap-parameters/ldap-parameters.xhtml#ldap-parameters-3
 
-#![allow(clippy::integer_arithmetic, missing_docs)]
+#![allow(clippy::arithmetic_side_effects, missing_docs)]
 
 mod gen;
 
 pub use gen::*;
 
-use crate::{Error, ObjectIdentifier};
+use crate::{Error, ObjectIdentifier, ObjectIdentifierRef};
 
 /// A const implementation of case-insensitive ASCII equals.
 const fn eq_case(lhs: &[u8], rhs: &[u8]) -> bool {
@@ -37,7 +37,7 @@ const fn eq_case(lhs: &[u8], rhs: &[u8]) -> bool {
 
 /// A query interface for OIDs/Names.
 #[derive(Copy, Clone)]
-pub struct Database<'a>(&'a [(&'a ObjectIdentifier, &'a str)]);
+pub struct Database<'a>(&'a [(ObjectIdentifierRef<'a>, &'a str)]);
 
 impl<'a> Database<'a> {
     /// Looks up a name for an OID.
@@ -52,13 +52,14 @@ impl<'a> Database<'a> {
     }
 
     /// Finds a named oid by its associated OID.
-    pub const fn by_oid(&self, oid: &ObjectIdentifier) -> Option<&'a str> {
+    pub fn by_oid<B>(&self, oid: &ObjectIdentifier<B>) -> Option<&'a str>
+    where
+        B: AsRef<[u8]>,
+    {
         let mut i = 0;
 
         while i < self.0.len() {
-            let lhs = self.0[i].0;
-
-            if lhs.buffer.eq(&oid.buffer) {
+            if oid == &self.0[i].0 {
                 return Some(self.0[i].1);
             }
 
@@ -69,7 +70,7 @@ impl<'a> Database<'a> {
     }
 
     /// Finds a named oid by its associated name.
-    pub const fn by_name(&self, name: &str) -> Option<&'a ObjectIdentifier> {
+    pub const fn by_name(&self, name: &str) -> Option<ObjectIdentifierRef<'a>> {
         let mut i = 0;
 
         while i < self.0.len() {
@@ -85,7 +86,7 @@ impl<'a> Database<'a> {
     }
 
     /// Return the list of matched name for the OID.
-    pub const fn find_names_for_oid(&self, oid: ObjectIdentifier) -> Names<'a> {
+    pub fn find_names_for_oid(&self, oid: ObjectIdentifier) -> Names<'a> {
         Names {
             database: *self,
             oid,
@@ -110,7 +111,7 @@ impl<'a> Iterator for Names<'a> {
         while i < self.database.0.len() {
             let lhs = self.database.0[i].0;
 
-            if lhs.buffer.eq(&self.oid.buffer) {
+            if lhs.eq(&self.oid) {
                 self.position = i + 1;
                 return Some(self.database.0[i].1);
             }
@@ -140,7 +141,7 @@ mod tests {
     #[test]
     fn by_name() {
         let cn = super::DB.by_name("CN").expect("cn not found");
-        assert_eq!(&CN, cn);
+        assert_eq!(CN, cn);
 
         assert_eq!(None, super::DB.by_name("purplePeopleEater"));
     }

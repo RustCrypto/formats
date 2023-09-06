@@ -193,6 +193,7 @@ pub(crate) fn validate_label(label: &[u8]) -> Result<()> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 

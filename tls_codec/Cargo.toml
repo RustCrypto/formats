@@ -18,8 +18,8 @@ zeroize = { version = "1.6", default-features = false, features = [
 
 # optional dependencies
 arbitrary = { version = "1", features = ["derive"], optional = true }
-serde = { version = "1.0.144", features = ["derive"], optional = true }
 tls_codec_derive = { version = "=0.3.0", path = "./derive", optional = true }
+serde = { version = "1.0.184", features = ["derive"], optional = true }
 
 [dev-dependencies]
 criterion = "0.5"
@@ -28,10 +28,10 @@ regex = "1.8"
 [features]
 default = [ "std" ]
 arbitrary = [ "std", "dep:arbitrary" ]
-derive = [ "std", "tls_codec_derive" ]
+derive = [ "tls_codec_derive" ]
 serde = [ "std", "dep:serde" ]
 mls = [] # In MLS variable length vectors are limited compared to QUIC.
-std = []
+std = [ "tls_codec_derive?/std" ]
 
 [[bench]]
 name = "tls_vec"

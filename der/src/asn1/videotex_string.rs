@@ -82,6 +82,7 @@ impl<'a> fmt::Debug for VideotexStringRef<'a> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::VideotexStringRef;
     use crate::Decode;

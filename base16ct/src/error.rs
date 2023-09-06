@@ -27,6 +27,6 @@ impl std::error::Error for Error {}
 
 impl From<Error> for core::fmt::Error {
     fn from(_: Error) -> core::fmt::Error {
-        core::fmt::Error::default()
+        core::fmt::Error
     }
 }

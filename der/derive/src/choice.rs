@@ -7,7 +7,6 @@ mod variant;
 use self::variant::ChoiceVariant;
 use crate::{default_lifetime, TypeAttrs};
 use proc_macro2::TokenStream;
-use proc_macro_error::abort;
 use quote::quote;
 use syn::{DeriveInput, Ident, Lifetime};
 
@@ -25,7 +24,7 @@ pub(crate) struct DeriveChoice {
 
 impl DeriveChoice {
     /// Parse [`DeriveInput`].
-    pub fn new(input: DeriveInput) -> Self {
+    pub fn new(input: DeriveInput) -> syn::Result<Self> {
         let data = match input.data {
             syn::Data::Enum(data) => data,
             _ => abort!(
@@ -41,18 +40,18 @@ impl DeriveChoice {
             .next()
             .map(|lt| lt.lifetime.clone());
 
-        let type_attrs = TypeAttrs::parse(&input.attrs);
+        let type_attrs = TypeAttrs::parse(&input.attrs)?;
         let variants = data
             .variants
             .iter()
             .map(|variant| ChoiceVariant::new(variant, &type_attrs))
-            .collect();
+            .collect::<syn::Result<_>>()?;
 
-        Self {
+        Ok(Self {
             ident: input.ident,
             lifetime,
             variants,
-        }
+        })
     }
 
     /// Lower the derived output into a [`TokenStream`].
@@ -136,6 +135,7 @@ impl DeriveChoice {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::DeriveChoice;
     use crate::{Asn1Type, Tag, TagMode};
@@ -161,7 +161,7 @@ mod tests {
             }
         };
 
-        let ir = DeriveChoice::new(input);
+        let ir = DeriveChoice::new(input).unwrap();
         assert_eq!(ir.ident, "Time");
         assert_eq!(ir.lifetime, None);
         assert_eq!(ir.variants.len(), 2);
@@ -201,7 +201,7 @@ mod tests {
             }
         };
 
-        let ir = DeriveChoice::new(input);
+        let ir = DeriveChoice::new(input).unwrap();
         assert_eq!(ir.ident, "ImplicitChoice");
         assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
         assert_eq!(ir.variants.len(), 3);

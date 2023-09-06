@@ -128,6 +128,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
 impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::ArrayVec;
     use crate::ErrorKind;

@@ -357,6 +357,7 @@ pub struct NegTokenInit2<'a> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use hex_literal::hex;
     use spki::ObjectIdentifier;

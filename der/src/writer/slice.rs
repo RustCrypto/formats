@@ -134,6 +134,7 @@ impl<'a> Writer for SliceWriter<'a> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::SliceWriter;
     use crate::{Encode, ErrorKind, Length};

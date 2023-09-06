@@ -1,4 +1,12 @@
-use oiddbgen::{Asn1Parser, LdapParser, Root};
+mod asn1;
+mod ldap;
+mod node;
+mod root;
+mod spec;
+
+pub use asn1::Asn1Parser;
+pub use ldap::LdapParser;
+pub use root::Root;
 
 // Update this database by downloading the CSV file here:
 // https://www.iana.org/assignments/ldap-parameters/ldap-parameters.xhtml#ldap-parameters-3
@@ -32,19 +40,19 @@ const NO_BASES: &[(&str, &str)] = &[("", "")];
 fn main() {
     let mut root = Root::default();
 
-    for (spec, name, obid) in LdapParser::new(LDAP).iter() {
-        root.add(&spec, &name, &obid);
+    for (spec, name, oid) in LdapParser::new(LDAP).iter() {
+        root.add(&spec, &name, &oid);
     }
 
     for (spec, body) in RFCS {
-        for (name, obid) in Asn1Parser::new(body, BASES).iter() {
-            root.add(spec, &name, &obid);
+        for (name, oid) in Asn1Parser::new(body, BASES).iter() {
+            root.add(spec, &name, &oid);
         }
     }
 
     for (spec, body) in MDS {
-        for (name, obid) in Asn1Parser::new(body, NO_BASES).iter() {
-            root.add(spec, &name, &obid);
+        for (name, oid) in Asn1Parser::new(body, NO_BASES).iter() {
+            root.add(spec, &name, &oid);
         }
     }
 

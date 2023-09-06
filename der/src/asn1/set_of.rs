@@ -129,7 +129,7 @@ where
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
-            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
+            .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
@@ -348,7 +348,7 @@ where
 {
     fn value_len(&self) -> Result<Length> {
         self.iter()
-            .fold(Ok(Length::ZERO), |len, elem| len + elem.encoded_len()?)
+            .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
@@ -451,7 +451,7 @@ fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<()> {
 /// This function is used rather than Rust's built-in `[T]::sort_by` in order
 /// to support heapless `no_std` targets as well as to enable bubbling up
 /// sorting errors.
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
     for i in 0..slice.len() {
         let mut j = i;
@@ -493,6 +493,7 @@ fn validate<T: DerOrd>(slice: &[T]) -> Result<()> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::SetOf;
     #[cfg(feature = "alloc")]

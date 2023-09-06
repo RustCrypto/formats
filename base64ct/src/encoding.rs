@@ -102,7 +102,7 @@ impl<T: Alphabet> Encoding for T {
     }
 
     // TODO(tarcieri): explicitly checked/wrapped arithmetic
-    #[allow(clippy::integer_arithmetic)]
+    #[allow(clippy::arithmetic_side_effects)]
     fn decode_in_place(mut buf: &mut [u8]) -> Result<&[u8], InvalidEncodingError> {
         // TODO: eliminate unsafe code when LLVM12 is stable
         // See: https://github.com/rust-lang/rust/issues/80963
@@ -304,7 +304,7 @@ fn validate_last_block<T: Alphabet>(encoded: &[u8], decoded: &[u8]) -> Result<()
     }
 
     // TODO(tarcieri): explicitly checked/wrapped arithmetic
-    #[allow(clippy::integer_arithmetic)]
+    #[allow(clippy::arithmetic_side_effects)]
     fn last_block_start(bytes: &[u8], block_size: usize) -> usize {
         (bytes.len().saturating_sub(1) / block_size) * block_size
     }
@@ -342,7 +342,7 @@ fn validate_last_block<T: Alphabet>(encoded: &[u8], decoded: &[u8]) -> Result<()
 /// Note that this function does not fully validate the Base64 is well-formed
 /// and may return incorrect results for malformed Base64.
 // TODO(tarcieri): explicitly checked/wrapped arithmetic
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 #[inline(always)]
 pub(crate) fn decoded_len(input_len: usize) -> usize {
     // overflow-proof computation of `(3*n)/4`
@@ -353,14 +353,14 @@ pub(crate) fn decoded_len(input_len: usize) -> usize {
 
 /// Branchless match that a given byte is the `PAD` character
 // TODO(tarcieri): explicitly checked/wrapped arithmetic
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 #[inline(always)]
 fn is_pad_ct(input: u8) -> i16 {
     ((((PAD as i16 - 1) - input as i16) & (input as i16 - (PAD as i16 + 1))) >> 8) & 1
 }
 
 // TODO(tarcieri): explicitly checked/wrapped arithmetic
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 #[inline(always)]
 const fn encoded_len_inner(n: usize, padded: bool) -> Option<usize> {
     match n.checked_mul(4) {
