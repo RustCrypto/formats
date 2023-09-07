@@ -164,13 +164,37 @@
 //!     c: u8,
 //! }
 //! ```
+//!
+//!
+#[cfg_attr(
+    feature = "verifiable_structs",
+    doc = r##"
+## Verifiable structs
 
+```compile_fail
+use tls_codec_derive::{TlsSerialize, TlsDeserialize, TlsSize};
+
+#[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+struct VerifiableStruct<const VERIFIED: bool> {
+    pub a: u16,
+}
+
+impl VerifiableStruct<true> {
+    #[cfg(feature = "verifiable_structs")]
+    fn deserialize(mut bytes: &[u8]) -> Result<Self, Error> {
+        Self::tls_deserialize(&mut bytes)
+    }
+}
+
+```
+"##
+)]
 extern crate proc_macro;
 extern crate proc_macro2;
 
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{
     self, parse_macro_input, punctuated::Punctuated, token::Comma, Attribute, Data, DeriveInput,
     Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit, Member, Meta, Result, Token, Type,
@@ -504,6 +528,16 @@ pub fn serialize_macro_derive(input: TokenStream) -> TokenStream {
 
 #[proc_macro_derive(TlsDeserialize, attributes(tls_codec))]
 pub fn deserialize_macro_derive(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
+    impl_deserialize(parsed_ast).into()
+}
+
+#[proc_macro_derive(TlsDeserializeUnverified, attributes(tls_codec))]
+pub fn deserialize_unverified_macro_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let parsed_ast = match parse_ast(ast) {
         Ok(ast) => ast,
@@ -914,6 +948,24 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                 .map(|p| p.for_trait("Deserialize"))
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            // If the struct is a VERIFIABLE pattern struct, only derive Deserialize for the unverified version
+            let (ty_generics, impl_generics) = if cfg!(feature = "verifiable_structs")
+                && ty_generics.clone().to_token_stream().to_string() == "< VERIFIED >"
+            {
+                (
+                    quote! {
+                        <false>
+                    },
+                    TokenStream2::new(),
+                )
+            } else {
+                (
+                    quote! {
+                        #ty_generics
+                    },
+                    impl_generics.to_token_stream(),
+                )
+            };
             quote! {
                 impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
                     #[cfg(feature = "std")]

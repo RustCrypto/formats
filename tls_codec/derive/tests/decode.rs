@@ -532,3 +532,30 @@ fn type_with_unknowns() {
     let deserialized = TypeWithUnknowns::tls_deserialize_exact(incoming);
     assert!(matches!(deserialized, Err(Error::UnknownValue(3))));
 }
+
+#[derive(TlsDeserialize, TlsSerialize, TlsSize)]
+struct VerifiableStruct<const VERIFIED: bool> {
+    pub a: u16,
+}
+
+impl VerifiableStruct<true> {
+    fn deserialize(mut bytes: &[u8]) -> Result<Self, Error> {
+        Self::tls_deserialize(&mut bytes)
+    }
+}
+
+#[test]
+fn verifiable_struct() {
+    let verifiable_struct = VerifiableStruct::<true> { a: 1 };
+    let serialized = verifiable_struct.tls_serialize_detached().unwrap();
+    let deserialized = VerifiableStruct::<false>::tls_deserialize(&mut serialized.as_slice());
+    assert!(deserialized.is_ok());
+
+    // Remove this to test that the verifiable struct is not deserializable when
+    // the const generic is set to true.
+    #[cfg(not(feature = "verifiable_structs"))]
+    {
+        let deserialized = VerifiableStruct::<true>::tls_deserialize(&mut serialized.as_slice());
+        assert!(deserialized.is_ok());
+    }
+}
