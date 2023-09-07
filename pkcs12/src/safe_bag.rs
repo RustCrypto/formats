@@ -36,8 +36,8 @@ pub struct SafeBag {
     pub bag_attributes: Option<Attributes>,
 }
 
-impl<'__der_lifetime> ::der::DecodeValue<'__der_lifetime> for SafeBag {
-    fn decode_value<R: ::der::Reader<'__der_lifetime>>(
+impl<'a> ::der::DecodeValue<'a> for SafeBag {
+    fn decode_value<R: ::der::Reader<'a>>(
         reader: &mut R,
         header: ::der::Header,
     ) -> ::der::Result<Self> {
@@ -88,7 +88,7 @@ impl ::der::EncodeValue for SafeBag {
         Ok(())
     }
 }
-impl<'__der_lifetime> ::der::Sequence<'__der_lifetime> for SafeBag {}
+impl<'a> ::der::Sequence<'a> for SafeBag {}
 
 /// Version for the PrivateKeyInfo structure as defined in [RFC 5208 Section 5].
 ///
