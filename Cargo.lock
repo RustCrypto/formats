@@ -261,7 +261,7 @@ dependencies = [
  "const-oid 0.9.5",
  "crmf",
  "der",
- "hex-literal",
+ "hex-literal 0.4.1",
  "spki",
  "x509-cert",
 ]
@@ -277,7 +277,7 @@ dependencies = [
  "der",
  "ecdsa",
  "getrandom",
- "hex-literal",
+ "hex-literal 0.4.1",
  "p256",
  "pem-rfc7468",
  "pkcs5",
@@ -306,7 +306,7 @@ name = "const-oid"
 version = "0.10.0-pre"
 dependencies = [
  "arbitrary",
- "hex-literal",
+ "hex-literal 0.4.1",
 ]
 
 [[package]]
@@ -440,7 +440,7 @@ dependencies = [
  "const-oid 0.9.5",
  "der_derive",
  "flagset",
- "hex-literal",
+ "hex-literal 0.4.1",
  "pem-rfc7468",
  "proptest",
  "time",
@@ -728,7 +728,7 @@ name = "gss-api"
 version = "0.1.0"
 dependencies = [
  "der",
- "hex-literal",
+ "hex-literal 0.4.1",
  "spki",
  "x509-cert",
 ]
@@ -750,6 +750,12 @@ name = "hermit-abi"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "443144c8cdadd93ebf52ddb4056d257f5b52c04d3c804e657d19eb73fc33668b"
+
+[[package]]
+name = "hex-literal"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ebdb29d2ea9ed0083cd8cece49bbd968021bd99b0849edb4a9a7ee0fdf6a4e0"
 
 [[package]]
 name = "hex-literal"
@@ -995,7 +1001,7 @@ version = "0.7.5"
 dependencies = [
  "const-oid 0.9.5",
  "der",
- "hex-literal",
+ "hex-literal 0.4.1",
  "pkcs8",
  "spki",
  "tempfile",
@@ -1005,11 +1011,18 @@ dependencies = [
 name = "pkcs12"
 version = "0.0.0"
 dependencies = [
+ "cms",
+ "const-oid 0.9.5",
  "der",
  "digest",
- "hex-literal",
+ "hex-literal 0.3.4",
+ "pkcs5",
+ "pkcs8",
  "sha2",
+ "spki",
+ "subtle-encoding",
  "whirlpool",
+ "x509-cert",
  "zeroize",
 ]
 
@@ -1021,7 +1034,7 @@ dependencies = [
  "cbc",
  "der",
  "des",
- "hex-literal",
+ "hex-literal 0.4.1",
  "pbkdf2",
  "scrypt",
  "sha1",
@@ -1034,7 +1047,7 @@ name = "pkcs7"
 version = "0.4.1"
 dependencies = [
  "der",
- "hex-literal",
+ "hex-literal 0.4.1",
  "spki",
  "x509-cert",
 ]
@@ -1044,7 +1057,7 @@ name = "pkcs8"
 version = "0.10.2"
 dependencies = [
  "der",
- "hex-literal",
+ "hex-literal 0.4.1",
  "pkcs5",
  "rand_core",
  "spki",
@@ -1394,7 +1407,7 @@ dependencies = [
  "base16ct",
  "der",
  "generic-array",
- "hex-literal",
+ "hex-literal 0.4.1",
  "pkcs8",
  "serdect",
  "subtle",
@@ -1465,7 +1478,7 @@ dependencies = [
  "base16ct",
  "bincode",
  "ciborium",
- "hex-literal",
+ "hex-literal 0.4.1",
  "proptest",
  "serde",
  "serde-json-core",
@@ -1544,7 +1557,7 @@ dependencies = [
  "arbitrary",
  "base64ct",
  "der",
- "hex-literal",
+ "hex-literal 0.4.1",
  "sha2",
  "tempfile",
 ]
@@ -1554,6 +1567,15 @@ name = "subtle"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
+
+[[package]]
+name = "subtle-encoding"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dcb1ed7b8330c5eed5441052651dd7a12c75e2ed88f2ec024ae1fa3a5e59945"
+dependencies = [
+ "zeroize",
+]
 
 [[package]]
 name = "syn"
@@ -1930,7 +1952,7 @@ dependencies = [
  "const-oid 0.9.5",
  "der",
  "ecdsa",
- "hex-literal",
+ "hex-literal 0.4.1",
  "p256",
  "rand",
  "rsa",
@@ -1958,7 +1980,7 @@ version = "0.2.0-pre"
 dependencies = [
  "const-oid 0.9.5",
  "der",
- "hex-literal",
+ "hex-literal 0.4.1",
  "spki",
  "x509-cert",
 ]
@@ -1970,7 +1992,7 @@ dependencies = [
  "cmpv2",
  "cms",
  "der",
- "hex-literal",
+ "hex-literal 0.4.1",
  "x509-cert",
 ]
 
