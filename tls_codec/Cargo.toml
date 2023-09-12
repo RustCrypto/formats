@@ -17,12 +17,13 @@ zeroize = { version = "1.6", default-features = false, features = [
 ] }
 
 # optional dependencies
-arbitrary = { version = "1", features = ["derive"], optional = true }
+arbitrary = { version = "1.3", features = ["derive"], optional = true }
 tls_codec_derive = { version = "=0.3.0", path = "./derive", optional = true }
 serde = { version = "1.0.184", features = ["derive"], optional = true }
 
 [dev-dependencies]
-criterion = "0.5"
+clap = "=4.3.23" # pinned to preserve MSRV
+criterion = { version = "0.5", default-features = false }
 regex = "1.8"
 
 [features]
