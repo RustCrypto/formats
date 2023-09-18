@@ -18,7 +18,7 @@ rust-version = "1.65"
 [dependencies]
 base16ct = { version = "0.2", optional = true, default-features = false }
 der = { version = "0.7", optional = true, features = ["oid"] }
-generic-array = { version = "0.14.7", optional = true, default-features = false }
+generic-array = { version = "1.0.0", optional = true, default-features = false }
 pkcs8 = { version = "0.10", optional = true, default-features = false }
 serdect = { version = "0.2", optional = true, default-features = false, features = ["alloc"] }
 subtle = { version = "2", optional = true, default-features = false }
