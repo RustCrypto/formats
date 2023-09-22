@@ -172,12 +172,11 @@ use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::{
     self, parse_macro_input, punctuated::Punctuated, token::Comma, Attribute, Data, DeriveInput,
-    Expr, ExprLit, ExprPath, Field, Generics, Ident, ImplGenerics, Lit, Member, Meta, Result,
-    Token, Type, TypeGenerics,
+    Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit, Member, Meta, Result, Token, Type,
 };
 
 #[cfg(feature = "verifiable_structs")]
-use syn::{parse_quote, ConstParam, ItemStruct};
+use syn::{parse_quote, ConstParam, ImplGenerics, ItemStruct, TypeGenerics};
 
 /// Attribute name to identify attributes to be processed by derive-macros in this crate.
 const ATTR_IDENT: &str = "tls_codec";
