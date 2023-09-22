@@ -898,6 +898,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
     }
 }
 
+#[cfg(feature = "verifiable_structs")]
 fn restrict_verified_generic(
     impl_generics: ImplGenerics,
     ty_generics: TypeGenerics,
