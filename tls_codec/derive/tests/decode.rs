@@ -533,29 +533,40 @@ fn type_with_unknowns() {
     assert!(matches!(deserialized, Err(Error::UnknownValue(3))));
 }
 
-#[derive(TlsDeserialize, TlsSerialize, TlsSize)]
-struct VerifiableStruct<const VERIFIED: bool> {
-    pub a: u16,
-}
+#[cfg(feature = "verifiable_structs")]
+mod verifiable {
+    use tls_codec::{Deserialize, DeserializeBytes, Serialize};
+    use tls_codec_derive::{verifiable, TlsSerialize, TlsSize};
 
-impl VerifiableStruct<true> {
-    fn deserialize(mut bytes: &[u8]) -> Result<Self, Error> {
-        Self::tls_deserialize(&mut bytes)
+    #[test]
+    fn verifiable_struct() {
+        #[verifiable(Reader)]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct ExampleStruct {
+            a: u8,
+            b: u16,
+        }
+        let verified_struct = VerifiedExampleStruct { a: 1, b: 2 };
+        let serialized = verified_struct.tls_serialize_detached().unwrap();
+        let unverified_struct =
+            UnverifiedExampleStruct::tls_deserialize(&mut serialized.as_slice()).unwrap();
+        assert_eq!(unverified_struct.a, verified_struct.a);
+        assert_eq!(unverified_struct.b, verified_struct.b);
     }
-}
 
-#[test]
-fn verifiable_struct() {
-    let verifiable_struct = VerifiableStruct::<true> { a: 1 };
-    let serialized = verifiable_struct.tls_serialize_detached().unwrap();
-    let deserialized = VerifiableStruct::<false>::tls_deserialize(&mut serialized.as_slice());
-    assert!(deserialized.is_ok());
-
-    // Remove this to test that the verifiable struct is not deserializable when
-    // the const generic is set to true.
-    #[cfg(not(feature = "verifiable_structs"))]
-    {
-        let deserialized = VerifiableStruct::<true>::tls_deserialize(&mut serialized.as_slice());
-        assert!(deserialized.is_ok());
+    #[test]
+    fn verifiable_struct_bytes() {
+        #[verifiable(Bytes)]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct ExampleStruct {
+            a: u8,
+            b: u16,
+        }
+        let verified_struct = VerifiedExampleStruct { a: 1, b: 2 };
+        let serialized = verified_struct.tls_serialize_detached().unwrap();
+        let unverified_struct =
+            UnverifiedExampleStruct::tls_deserialize_exact(&mut &*serialized).unwrap();
+        assert_eq!(unverified_struct.a, verified_struct.a);
+        assert_eq!(unverified_struct.b, verified_struct.b);
     }
 }
