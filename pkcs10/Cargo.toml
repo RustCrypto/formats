@@ -1,0 +1,42 @@
+[package]
+name = "pkcs10"
+version = "0.1.0"
+description = """
+Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #10:
+Certification Request Syntax Specification - Version 1.7 (RFC 2986)
+"""
+authors = ["RustCrypto Developers"]
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/RustCrypto/formats/tree/master/pkcs10"
+categories = [
+    "cryptography",
+    "data-structures",
+    "encoding",
+    "no-std",
+    "parser-implementations",
+]
+keywords = ["crypto", "key", "pkcs", "public"]
+readme = "README.md"
+edition = "2021"
+rust-version = "1.65"
+
+[dependencies]
+const-oid = { version = "0.9", features = ["db"] }
+der = { version = "0.7", features = ["alloc", "derive", "flagset", "oid"] }
+spki = { version = "0.7.1" }
+
+
+[dev-dependencies]
+hex-literal = "0.4.1"
+tempfile = "3"
+
+[features]
+alloc = ["der/alloc", "der/zeroize", "spki/alloc"]
+std = ["alloc", "const-oid/std", "der/std", "spki/std"]
+pem = ["alloc", "der/pem", "spki/pem"]
+default = ["pem", "std"]
+
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
