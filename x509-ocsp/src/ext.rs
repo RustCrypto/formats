@@ -53,16 +53,13 @@ impl AsExtension for Nonce {
     const CRITICAL: bool = false;
 }
 
-impl TryFrom<&[u8]> for Nonce {
-    type Error = der::Error;
-
-    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
-        Ok(Self(OctetString::new(data)?))
-    }
-}
-
 impl Nonce {
-    /// Creates a new Nonce object given a random generator and a length
+    /// Creates a Nonce object given the bytes
+    pub fn new(bytes: impl Into<Vec<u8>>) -> Result<Self, der::Error> {
+        Ok(Self(OctetString::new(bytes)?))
+    }
+
+    /// Creates a Nonce object given a random generator and a length
     #[cfg(feature = "rand_core")]
     pub fn generate<R: CryptoRngCore>(rng: &mut R, length: usize) -> Result<Self, der::Error> {
         let mut bytes = Vec::with_capacity(length);
