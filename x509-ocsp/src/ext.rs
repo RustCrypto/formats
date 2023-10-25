@@ -75,6 +75,7 @@ impl Nonce {
             rng.fill_bytes(&mut random);
             bytes.extend_from_slice(&random);
         }
+        bytes.resize(length, 0);
         Ok(Self(OctetString::new(bytes)?))
     }
 }
