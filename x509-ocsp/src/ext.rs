@@ -14,7 +14,7 @@ use der::{
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
-    ext::{pkix::AuthorityInfoAccessSyntax, Extension},
+    ext::{pkix::AuthorityInfoAccessSyntax, AsExtension, Extension},
     impl_newtype,
     name::Name,
 };
@@ -22,20 +22,15 @@ use x509_cert::{
 #[cfg(feature = "rand_core")]
 use rand_core::CryptoRngCore;
 
-/// Trait to be implemented by extensions to allow them to be formated for x509 OCSP
-/// requests/responses.
-pub trait AsExtension: AssociatedOid + der::Encode {
-    /// Should the extension be marked as critical
-    const CRITICAL: bool;
-
-    /// Returns the Extension with the content encoded
-    fn to_extension(&self) -> Result<Extension, der::Error> {
-        Ok(Extension {
-            extn_id: <Self as AssociatedOid>::OID,
-            critical: Self::CRITICAL,
-            extn_value: OctetString::new(<Self as der::Encode>::to_der(self)?)?,
-        })
-    }
+// x509-cert's is not exported
+macro_rules! impl_extension {
+    ($newtype:ty, critical = $critical:expr) => {
+        impl AsExtension for $newtype {
+            fn critical(&self, _subject: &Name, _extensions: &[Extension]) -> bool {
+                $critical
+            }
+        }
+    };
 }
 
 /// Nonce extension as defined in [RFC 6960 Section 4.4.1].
@@ -44,13 +39,11 @@ pub struct Nonce(pub OctetString);
 
 impl_newtype!(Nonce, OctetString);
 
+// Some responders do not honor nonces
+impl_extension!(Nonce, critical = false);
+
 impl AssociatedOid for Nonce {
     const OID: ObjectIdentifier = ID_PKIX_OCSP_NONCE;
-}
-
-impl AsExtension for Nonce {
-    // Some responders do not honor nonces
-    const CRITICAL: bool = false;
 }
 
 impl Nonce {
@@ -80,20 +73,18 @@ pub struct CrlReferences(pub Vec<CrlId>);
 
 impl_newtype!(CrlReferences, Vec<CrlId>);
 
+// It may be desirable for the OCSP responder to indicate the CRL on
+// which a revoked or onHold certificate is found.  This can be useful
+// where OCSP is used between repositories, and also as an auditing
+// mechanism.  The CRL may be specified by a URL (the URL at which the
+// CRL is available), a number (CRL number), or a time (the time at
+// which the relevant CRL was created).  These extensions will be
+// specified as singleExtensions.  The identifier for this extension
+// will be id-pkix-ocsp-crl, while the value will be CrlID.
+impl_extension!(CrlReferences, critical = false);
+
 impl AssociatedOid for CrlReferences {
     const OID: ObjectIdentifier = ID_PKIX_OCSP_CRL;
-}
-
-impl AsExtension for CrlReferences {
-    // It may be desirable for the OCSP responder to indicate the CRL on
-    // which a revoked or onHold certificate is found.  This can be useful
-    // where OCSP is used between repositories, and also as an auditing
-    // mechanism.  The CRL may be specified by a URL (the URL at which the
-    // CRL is available), a number (CRL number), or a time (the time at
-    // which the relevant CRL was created).  These extensions will be
-    // specified as singleExtensions.  The identifier for this extension
-    // will be id-pkix-ocsp-crl, while the value will be CrlID.
-    const CRITICAL: bool = false;
 }
 
 /// CrlID structure as defined in [RFC 6960 Section 4.4.2].
@@ -130,16 +121,14 @@ pub struct AcceptableResponses(pub Vec<ObjectIdentifier>);
 
 impl_newtype!(AcceptableResponses, Vec<ObjectIdentifier>);
 
+// As noted in Section 4.2.1, OCSP responders SHALL be capable of
+// responding with responses of the id-pkix-ocsp-basic response type.
+// Correspondingly, OCSP clients SHALL be capable of receiving and
+// processing responses of the id-pkix-ocsp-basic response type.
+impl_extension!(AcceptableResponses, critical = true);
+
 impl AssociatedOid for AcceptableResponses {
     const OID: ObjectIdentifier = ID_PKIX_OCSP_RESPONSE;
-}
-
-impl AsExtension for AcceptableResponses {
-    // As noted in Section 4.2.1, OCSP responders SHALL be capable of
-    // responding with responses of the id-pkix-ocsp-basic response type.
-    // Correspondingly, OCSP clients SHALL be capable of receiving and
-    // processing responses of the id-pkix-ocsp-basic response type.
-    const CRITICAL: bool = true;
 }
 
 /// ArchiveCutoff structure as defined in [RFC 6960 Section 4.4.4].
@@ -152,13 +141,10 @@ impl AsExtension for AcceptableResponses {
 pub struct ArchiveCutoff(GeneralizedTime);
 
 impl_newtype!(ArchiveCutoff, GeneralizedTime);
+impl_extension!(ArchiveCutoff, critical = false);
 
 impl AssociatedOid for ArchiveCutoff {
     const OID: ObjectIdentifier = ID_PKIX_OCSP_ARCHIVE_CUTOFF;
-}
-
-impl AsExtension for ArchiveCutoff {
-    const CRITICAL: bool = false;
 }
 
 /// ServiceLocator structure as defined in [RFC 6960 Section 4.4.6].
@@ -181,9 +167,7 @@ impl AssociatedOid for ServiceLocator {
     const OID: ObjectIdentifier = ID_PKIX_OCSP_SERVICE_LOCATOR;
 }
 
-impl AsExtension for ServiceLocator {
-    const CRITICAL: bool = false;
-}
+impl_extension!(ServiceLocator, critical = false);
 
 /// PreferredSignatureAlgorithms structure as defined in [RFC 6960 Section 4.4.7.1].
 ///
@@ -198,13 +182,10 @@ impl_newtype!(
     PreferredSignatureAlgorithms,
     Vec<PreferredSignatureAlgorithm>
 );
+impl_extension!(PreferredSignatureAlgorithms, critical = false);
 
-impl AssociatedOid for PreferredSignatureAlgorithm {
+impl AssociatedOid for PreferredSignatureAlgorithms {
     const OID: ObjectIdentifier = ID_PKIX_OCSP_PREF_SIG_ALGS;
-}
-
-impl AsExtension for PreferredSignatureAlgorithm {
-    const CRITICAL: bool = false;
 }
 
 /// PreferredSignatureAlgorithm structure as defined in [RFC 6960 Section 4.4.7.1].
