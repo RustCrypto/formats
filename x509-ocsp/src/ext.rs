@@ -59,7 +59,14 @@ impl Nonce {
         Ok(Self(OctetString::new(bytes)?))
     }
 
-    /// Creates a Nonce object given a random generator and a length
+    /// Creates a Nonce object given a random generator and a length.
+    ///
+    /// A proposed but not (yet) accepted RFC [RFC 8954] wants to limit nonces. RFC 6960 has no
+    /// mention of a minimum or maximum length.
+    ///
+    /// ```text
+    /// Nonce ::= OCTET STRING(SIZE(1..32))
+    /// ```
     #[cfg(feature = "rand_core")]
     pub fn generate<R: CryptoRngCore>(rng: &mut R, length: usize) -> Result<Self, der::Error> {
         let mut bytes = Vec::with_capacity(length);
