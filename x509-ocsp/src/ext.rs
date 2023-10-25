@@ -19,8 +19,8 @@ use x509_cert::{
     name::Name,
 };
 
-#[cfg(feature = "signature")]
-use signature::rand_core::CryptoRngCore;
+#[cfg(feature = "rand_core")]
+use rand_core::CryptoRngCore;
 
 /// Trait to be implemented by extensions to allow them to be formated for x509 OCSP
 /// requests/responses.
@@ -63,7 +63,7 @@ impl TryFrom<&[u8]> for Nonce {
 
 impl Nonce {
     /// Creates a new Nonce object given a random generator and a length
-    #[cfg(feature = "signature")]
+    #[cfg(feature = "rand_core")]
     pub fn generate<R: CryptoRngCore>(rng: &mut R, length: usize) -> Result<Self, der::Error> {
         let mut bytes = Vec::with_capacity(length);
         let mut random = [0u8; 32];
