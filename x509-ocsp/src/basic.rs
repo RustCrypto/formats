@@ -213,7 +213,7 @@ impl From<RevokedCert> for RevokedInfo {
         Self {
             revocation_time: match rc.revocation_date {
                 Time::UtcTime(t) => GeneralizedTime::from_date_time(t.to_date_time()),
-                Time::GeneralTime(t) => t.clone(),
+                Time::GeneralTime(t) => t,
             },
             revocation_reason: if let Some(extensions) = &rc.crl_entry_extensions {
                 let mut filter = extensions
@@ -238,7 +238,7 @@ impl From<&RevokedCert> for RevokedInfo {
         Self {
             revocation_time: match rc.revocation_date {
                 Time::UtcTime(t) => GeneralizedTime::from_date_time(t.to_date_time()),
-                Time::GeneralTime(t) => t.clone(),
+                Time::GeneralTime(t) => t,
             },
             revocation_reason: if let Some(extensions) = &rc.crl_entry_extensions {
                 let mut filter = extensions
