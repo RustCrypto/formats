@@ -28,7 +28,7 @@ hex-literal = "0.3.3"
 pkcs8 = { version = "0.10.2", features = ["pkcs5", "getrandom"] }
 pkcs5 = {version = "0.7.1", features = ["pbes2", "3des"]}
 subtle-encoding = "0.5.1"
-sha2 = "0.10.7"
+sha2 = "0.10.8"
 whirlpool = "0.10.4"
 
 [features]
