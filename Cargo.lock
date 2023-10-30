@@ -1839,6 +1839,7 @@ dependencies = [
  "const-oid 0.9.5",
  "der",
  "hex-literal 0.4.1",
+ "rand_core",
  "spki",
  "x509-cert",
 ]
