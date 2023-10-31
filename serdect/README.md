@@ -30,6 +30,15 @@ other kinds of data-dependent branching on the contents of the serialized data,
 using a constant-time hex serialization with human-readable formats should
 help reduce the overall timing variability.
 
+`serdect` is tested against the following crates:
+- [`bincode`](https://crates.io/crates/bincode) v1
+- [`ciborium`](https://crates.io/crates/ciborium) v0.2
+- [`rmp-serde`](https://crates.io/crates/rmp-serde) v1
+- [`serde-json-core`](https://crates.io/crates/serde-json-core) v0.5
+- [`serde-json`](https://crates.io/crates/serde-json) v1
+- [`toml`](https://crates.io/crates/toml) v0.7
+
+
 ## Minimum Supported Rust Version
 
 Rust **1.60** or newer.
