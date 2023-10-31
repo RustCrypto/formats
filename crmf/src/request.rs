@@ -90,6 +90,16 @@ pub struct CertRequest {
 ///       extensions   [9] Extensions{{CertExtensions}}  OPTIONAL }
 /// ```
 ///
+/// Note, the EXPLICIT tagging attribute used in the definition of the the issuer and subject fields
+/// is because Name is a CHOICE and the original tag type cannot be obscured by an IMPLICIT tag.
+/// See 31.2.6 in X.680:
+///
+/// ```text
+/// All application of tags is either implicit tagging or explicit tagging. Implicit tagging
+/// indicates, for those encoding rules which provide the option, that explicit identification
+/// of the original tag of the "Type" in the "TaggedType" is not needed during transfer.
+/// ```
+///
 /// [RFC 4211 Section 5]: https://www.rfc-editor.org/rfc/rfc4211#section-5
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]

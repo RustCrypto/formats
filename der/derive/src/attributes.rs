@@ -1,8 +1,7 @@
 //! Attribute-related types used by the proc macro
 
 use crate::{Asn1Type, Tag, TagMode, TagNumber};
-use proc_macro2::TokenStream;
-use proc_macro_error::{abort, abort_call_site};
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use std::{fmt::Debug, str::FromStr};
 use syn::punctuated::Punctuated;
@@ -23,31 +22,34 @@ pub(crate) struct TypeAttrs {
 
 impl TypeAttrs {
     /// Parse attributes from a struct field or enum variant.
-    pub fn parse(attrs: &[Attribute]) -> Self {
+    pub fn parse(attrs: &[Attribute]) -> syn::Result<Self> {
         let mut tag_mode = None;
 
         let mut parsed_attrs = Vec::new();
-        AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
+        AttrNameValue::from_attributes(attrs, &mut parsed_attrs)?;
 
         for attr in parsed_attrs {
             // `tag_mode = "..."` attribute
-            if let Some(mode) = attr.parse_value("tag_mode") {
-                if tag_mode.is_some() {
-                    abort!(attr.name, "duplicate ASN.1 `tag_mode` attribute");
-                }
-
-                tag_mode = Some(mode);
-            } else {
-                abort!(
-                    attr.name,
+            let mode = attr.parse_value("tag_mode")?.ok_or_else(|| {
+                syn::Error::new_spanned(
+                    &attr.name,
                     "invalid `asn1` attribute (valid options are `tag_mode`)",
-                );
+                )
+            })?;
+
+            if tag_mode.is_some() {
+                return Err(syn::Error::new_spanned(
+                    &attr.name,
+                    "duplicate ASN.1 `tag_mode` attribute",
+                ));
             }
+
+            tag_mode = Some(mode);
         }
 
-        Self {
+        Ok(Self {
             tag_mode: tag_mode.unwrap_or_default(),
-        }
+        })
     }
 }
 
@@ -90,7 +92,7 @@ impl FieldAttrs {
     }
 
     /// Parse attributes from a struct field or enum variant.
-    pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> Self {
+    pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> syn::Result<Self> {
         let mut asn1_type = None;
         let mut context_specific = None;
         let mut default = None;
@@ -100,57 +102,60 @@ impl FieldAttrs {
         let mut constructed = None;
 
         let mut parsed_attrs = Vec::new();
-        AttrNameValue::from_attributes(attrs, &mut parsed_attrs);
+        AttrNameValue::from_attributes(attrs, &mut parsed_attrs)?;
 
         for attr in parsed_attrs {
             // `context_specific = "..."` attribute
-            if let Some(tag_number) = attr.parse_value("context_specific") {
+            if let Some(tag_number) = attr.parse_value("context_specific")? {
                 if context_specific.is_some() {
                     abort!(attr.name, "duplicate ASN.1 `context_specific` attribute");
                 }
 
                 context_specific = Some(tag_number);
             // `default` attribute
-            } else if attr.parse_value::<String>("default").is_some() {
+            } else if attr.parse_value::<String>("default")?.is_some() {
                 if default.is_some() {
                     abort!(attr.name, "duplicate ASN.1 `default` attribute");
                 }
 
-                default = Some(attr.value.parse().unwrap_or_else(|e| {
-                    abort!(attr.value, "error parsing ASN.1 `default` attribute: {}", e)
-                }));
+                default = Some(attr.value.parse().map_err(|e| {
+                    syn::Error::new_spanned(
+                        attr.value,
+                        format_args!("error parsing ASN.1 `default` attribute: {e}"),
+                    )
+                })?);
             // `extensible` attribute
-            } else if let Some(ext) = attr.parse_value("extensible") {
+            } else if let Some(ext) = attr.parse_value("extensible")? {
                 if extensible.is_some() {
                     abort!(attr.name, "duplicate ASN.1 `extensible` attribute");
                 }
 
                 extensible = Some(ext);
             // `optional` attribute
-            } else if let Some(opt) = attr.parse_value("optional") {
+            } else if let Some(opt) = attr.parse_value("optional")? {
                 if optional.is_some() {
                     abort!(attr.name, "duplicate ASN.1 `optional` attribute");
                 }
 
                 optional = Some(opt);
             // `tag_mode` attribute
-            } else if let Some(mode) = attr.parse_value("tag_mode") {
+            } else if let Some(mode) = attr.parse_value("tag_mode")? {
                 if tag_mode.is_some() {
                     abort!(attr.name, "duplicate ASN.1 `tag_mode` attribute");
                 }
 
                 tag_mode = Some(mode);
             // `type = "..."` attribute
-            } else if let Some(ty) = attr.parse_value("type") {
+            } else if let Some(ty) = attr.parse_value("type")? {
                 if asn1_type.is_some() {
-                    abort!(attr.name, "duplicate ASN.1 `type` attribute: {}");
+                    abort!(attr.name, "duplicate ASN.1 `type` attribute");
                 }
 
                 asn1_type = Some(ty);
             // `constructed = "..."` attribute
-            } else if let Some(ty) = attr.parse_value("constructed") {
+            } else if let Some(ty) = attr.parse_value("constructed")? {
                 if constructed.is_some() {
-                    abort!(attr.name, "duplicate ASN.1 `constructed` attribute: {}");
+                    abort!(attr.name, "duplicate ASN.1 `constructed` attribute");
                 }
 
                 constructed = Some(ty);
@@ -163,7 +168,7 @@ impl FieldAttrs {
             }
         }
 
-        Self {
+        Ok(Self {
             asn1_type,
             context_specific,
             default,
@@ -171,20 +176,23 @@ impl FieldAttrs {
             optional: optional.unwrap_or_default(),
             tag_mode: tag_mode.unwrap_or(type_attrs.tag_mode),
             constructed: constructed.unwrap_or_default(),
-        }
+        })
     }
 
     /// Get the expected [`Tag`] for this field.
-    pub fn tag(&self) -> Option<Tag> {
+    pub fn tag(&self) -> syn::Result<Option<Tag>> {
         match self.context_specific {
-            Some(tag_number) => Some(Tag::ContextSpecific {
+            Some(tag_number) => Ok(Some(Tag::ContextSpecific {
                 constructed: self.constructed,
                 number: tag_number,
-            }),
+            })),
 
             None => match self.tag_mode {
-                TagMode::Explicit => self.asn1_type.map(Tag::Universal),
-                TagMode::Implicit => abort_call_site!("implicit tagging requires a `tag_number`"),
+                TagMode::Explicit => Ok(self.asn1_type.map(Tag::Universal)),
+                TagMode::Implicit => Err(syn::Error::new(
+                    Span::call_site(),
+                    "implicit tagging requires a `tag_number`",
+                )),
             },
         }
     }
@@ -319,7 +327,7 @@ impl AttrNameValue {
     }
 
     /// Parse a slice of attributes.
-    pub fn from_attributes(attrs: &[Attribute], out: &mut Vec<Self>) {
+    pub fn from_attributes(attrs: &[Attribute], out: &mut Vec<Self>) -> syn::Result<()> {
         for attr in attrs {
             if !attr.path().is_ident(ATTR_NAME) {
                 continue;
@@ -327,26 +335,28 @@ impl AttrNameValue {
 
             match Self::parse_attribute(attr) {
                 Ok(parsed) => out.extend(parsed),
-                Err(e) => abort!(attr, "{}", e),
-            };
+                Err(e) => abort!(attr, e),
+            }
         }
+
+        Ok(())
     }
 
     /// Parse an attribute value if the name matches the specified one.
-    pub fn parse_value<T>(&self, name: &str) -> Option<T>
+    pub fn parse_value<T>(&self, name: &str) -> syn::Result<Option<T>>
     where
         T: FromStr + Debug,
         T::Err: Debug,
     {
-        if self.name.is_ident(name) {
+        Ok(if self.name.is_ident(name) {
             Some(
                 self.value
                     .value()
                     .parse()
-                    .unwrap_or_else(|_| abort!(self.name, "error parsing attribute")),
+                    .map_err(|_| syn::Error::new_spanned(&self.name, "error parsing attribute"))?,
             )
         } else {
             None
-        }
+        })
     }
 }

@@ -437,7 +437,7 @@ fn decode_cert_overlength_serial_number() {
     assert_eq!(pem_encoded_cert, reencoded.as_bytes());
 }
 
-#[cfg(all(feature = "pem"))]
+#[cfg(feature = "pem")]
 #[test]
 fn load_certificate_chains() {
     let pem_encoded_chain = include_bytes!("examples/crates.io-chain.pem");
@@ -445,4 +445,23 @@ fn load_certificate_chains() {
     let chain = Certificate::load_pem_chain(pem_encoded_chain).expect("parse certificate chain");
 
     assert_eq!(chain.len(), 4, "4 certificates are expected in this chain");
+}
+
+#[cfg(feature = "arbitrary")]
+#[test]
+// Purpose of this check is to ensure the arbitraty trait is provided for certificate variants
+#[allow(unused)]
+fn certificate_arbitrary() {
+    fn check_arbitrary<'a>(_arbitrary: impl arbitrary::Arbitrary<'a>) {}
+
+    fn check_certificate(certificate: x509_cert::Certificate) {
+        check_arbitrary(certificate);
+    }
+
+    #[cfg(feature = "hazmat")]
+    fn check_raw_certificate(
+        certificate: x509_cert::certificate::CertificateInner<x509_cert::certificate::Raw>,
+    ) {
+        check_arbitrary(certificate);
+    }
 }

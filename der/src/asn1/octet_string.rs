@@ -112,7 +112,7 @@ mod allocating {
     #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     pub struct OctetString {
         /// Bitstring represented as a slice of bytes.
-        inner: Vec<u8>,
+        pub(super) inner: Vec<u8>,
     }
 
     impl OctetString {
@@ -214,7 +214,35 @@ mod allocating {
     }
 }
 
+#[cfg(feature = "bytes")]
+mod bytes {
+    use super::OctetString;
+    use crate::{DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, Tag, Writer};
+    use bytes::Bytes;
+
+    impl<'a> DecodeValue<'a> for Bytes {
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+            OctetString::decode_value(reader, header).map(|octet_string| octet_string.inner.into())
+        }
+    }
+
+    impl EncodeValue for Bytes {
+        fn value_len(&self) -> Result<Length> {
+            self.len().try_into()
+        }
+
+        fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+            writer.write(self.as_ref())
+        }
+    }
+
+    impl FixedTag for Bytes {
+        const TAG: Tag = Tag::OctetString;
+    }
+}
+
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::asn1::{OctetStringRef, PrintableStringRef};
 

@@ -343,6 +343,7 @@ fn needs_leading_zero(bytes: &[u8]) -> bool {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::{decode_to_array, UintRef};
     use crate::{asn1::integer::tests::*, AnyRef, Decode, Encode, ErrorKind, SliceWriter, Tag};

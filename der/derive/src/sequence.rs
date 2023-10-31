@@ -6,7 +6,6 @@ mod field;
 use crate::{default_lifetime, TypeAttrs};
 use field::SequenceField;
 use proc_macro2::TokenStream;
-use proc_macro_error::abort;
 use quote::quote;
 use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
 
@@ -24,7 +23,7 @@ pub(crate) struct DeriveSequence {
 
 impl DeriveSequence {
     /// Parse [`DeriveInput`].
-    pub fn new(input: DeriveInput) -> Self {
+    pub fn new(input: DeriveInput) -> syn::Result<Self> {
         let data = match input.data {
             syn::Data::Struct(data) => data,
             _ => abort!(
@@ -33,19 +32,19 @@ impl DeriveSequence {
             ),
         };
 
-        let type_attrs = TypeAttrs::parse(&input.attrs);
+        let type_attrs = TypeAttrs::parse(&input.attrs)?;
 
         let fields = data
             .fields
             .iter()
             .map(|field| SequenceField::new(field, &type_attrs))
-            .collect();
+            .collect::<syn::Result<_>>()?;
 
-        Self {
+        Ok(Self {
             ident: input.ident,
             generics: input.generics.clone(),
             fields,
-        }
+        })
     }
 
     /// Lower the derived output into a [`TokenStream`].
@@ -127,6 +126,8 @@ impl DeriveSequence {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
+#[allow(clippy::bool_assert_comparison)]
 mod tests {
     use super::DeriveSequence;
     use crate::{Asn1Type, TagMode};
@@ -143,7 +144,7 @@ mod tests {
             }
         };
 
-        let ir = DeriveSequence::new(input);
+        let ir = DeriveSequence::new(input).unwrap();
         assert_eq!(ir.ident, "AlgorithmIdentifier");
         assert_eq!(
             ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
@@ -177,7 +178,7 @@ mod tests {
             }
         };
 
-        let ir = DeriveSequence::new(input);
+        let ir = DeriveSequence::new(input).unwrap();
         assert_eq!(ir.ident, "SubjectPublicKeyInfo");
         assert_eq!(
             ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
@@ -245,7 +246,7 @@ mod tests {
             }
         };
 
-        let ir = DeriveSequence::new(input);
+        let ir = DeriveSequence::new(input).unwrap();
         assert_eq!(ir.ident, "OneAsymmetricKey");
         assert_eq!(
             ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
@@ -320,7 +321,7 @@ mod tests {
             }
         };
 
-        let ir = DeriveSequence::new(input);
+        let ir = DeriveSequence::new(input).unwrap();
         assert_eq!(ir.ident, "ImplicitSequence");
         assert_eq!(
             ir.generics.lifetimes().next().unwrap().lifetime.to_string(),

@@ -228,8 +228,7 @@ fn create_pkcs7_signed_data() {
     };
 
     fn get_signer_infos<'a>() -> SignerInfos<'a> {
-        let signer_infos = SignerInfos::new();
-        signer_infos
+        SignerInfos::new()
     }
 
     let content_info = ContentInfo::SignedData(SignedDataContent {

@@ -117,6 +117,7 @@ pub type PerMsgToken<'a> = AnyRef<'a>;
 pub type SealedMessage<'a> = AnyRef<'a>;
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use hex_literal::hex;
     use spki::ObjectIdentifier;

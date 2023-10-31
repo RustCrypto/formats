@@ -5,7 +5,6 @@
 use crate::attributes::AttrNameValue;
 use crate::{default_lifetime, ATTR_NAME};
 use proc_macro2::TokenStream;
-use proc_macro_error::abort;
 use quote::quote;
 use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, Variant};
 
@@ -29,7 +28,7 @@ pub(crate) struct DeriveEnumerated {
 
 impl DeriveEnumerated {
     /// Parse [`DeriveInput`].
-    pub fn new(input: DeriveInput) -> Self {
+    pub fn new(input: DeriveInput) -> syn::Result<Self> {
         let data = match input.data {
             syn::Data::Enum(data) => data,
             _ => abort!(
@@ -46,14 +45,14 @@ impl DeriveEnumerated {
             if attr.path().is_ident(ATTR_NAME) {
                 let kvs = match AttrNameValue::parse_attribute(attr) {
                     Ok(kvs) => kvs,
-                    Err(e) => abort!(attr, "{}", e),
+                    Err(e) => abort!(attr, e),
                 };
                 for anv in kvs {
                     if anv.name.is_ident("type") {
                         match anv.value.value().as_str() {
                             "ENUMERATED" => integer = false,
                             "INTEGER" => integer = true,
-                            s => abort!(anv.value, "`type = \"{}\"` is unsupported", s),
+                            s => abort!(anv.value, format_args!("`type = \"{s}\"` is unsupported")),
                         }
                     }
                 }
@@ -65,16 +64,15 @@ impl DeriveEnumerated {
                     );
                 }
 
-                let r = attr
-                    .parse_args::<Ident>()
-                    .unwrap_or_else(|_| abort!(attr, "error parsing `#[repr]` attribute"));
+                let r = attr.parse_args::<Ident>().map_err(|_| {
+                    syn::Error::new_spanned(attr, "error parsing `#[repr]` attribute")
+                })?;
 
                 // Validate
                 if !REPR_TYPES.contains(&r.to_string().as_str()) {
                     abort!(
                         attr,
-                        "invalid `#[repr]` type: allowed types are {:?}",
-                        REPR_TYPES
+                        format_args!("invalid `#[repr]` type: allowed types are {REPR_TYPES:?}"),
                     );
                 }
 
@@ -83,20 +81,23 @@ impl DeriveEnumerated {
         }
 
         // Parse enum variants
-        let variants = data.variants.iter().map(EnumeratedVariant::new).collect();
+        let variants = data
+            .variants
+            .iter()
+            .map(EnumeratedVariant::new)
+            .collect::<syn::Result<_>>()?;
 
-        Self {
+        Ok(Self {
             ident: input.ident.clone(),
-            repr: repr.unwrap_or_else(|| {
-                abort!(
+            repr: repr.ok_or_else(|| {
+                syn::Error::new_spanned(
                     &input.ident,
-                    "no `#[repr]` attribute on enum: must be one of {:?}",
-                    REPR_TYPES
+                    format_args!("no `#[repr]` attribute on enum: must be one of {REPR_TYPES:?}"),
                 )
-            }),
+            })?,
             variants,
             integer,
-        }
+        })
     }
 
     /// Lower the derived output into a [`TokenStream`].
@@ -163,7 +164,7 @@ pub struct EnumeratedVariant {
 
 impl EnumeratedVariant {
     /// Create a new [`ChoiceVariant`] from the input [`Variant`].
-    fn new(input: &Variant) -> Self {
+    fn new(input: &Variant) -> syn::Result<Self> {
         for attr in &input.attrs {
             if attr.path().is_ident(ATTR_NAME) {
                 abort!(
@@ -180,10 +181,10 @@ impl EnumeratedVariant {
                     lit: Lit::Int(discriminant),
                     ..
                 }),
-            )) => Self {
+            )) => Ok(Self {
                 ident: input.ident.clone(),
                 discriminant: discriminant.clone(),
-            },
+            }),
             Some((_, other)) => abort!(other, "invalid discriminant for `Enumerated`"),
             None => abort!(input, "`Enumerated` variant has no discriminant"),
         }
@@ -200,6 +201,7 @@ impl EnumeratedVariant {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::DeriveEnumerated;
     use syn::parse_quote;
@@ -223,7 +225,7 @@ mod tests {
             }
         };
 
-        let ir = DeriveEnumerated::new(input);
+        let ir = DeriveEnumerated::new(input).unwrap();
         assert_eq!(ir.ident, "CrlReason");
         assert_eq!(ir.repr, "u32");
         assert_eq!(ir.variants.len(), 10);

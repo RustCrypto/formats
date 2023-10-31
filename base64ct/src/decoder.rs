@@ -543,6 +543,7 @@ impl<'i> Iterator for LineReader<'i> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::{alphabet::Alphabet, test_vectors::*, Base64, Base64Unpadded, Decoder};
 
@@ -592,6 +593,7 @@ mod tests {
     }
 
     /// Core functionality of a decoding test
+    #[allow(clippy::arithmetic_side_effects)]
     fn decode_test<'a, F, V>(expected: &[u8], f: F)
     where
         F: Fn() -> Decoder<'a, V>,
@@ -607,7 +609,8 @@ mod tests {
                 let decoded = decoder.decode(&mut buffer[..chunk.len()]).unwrap();
                 assert_eq!(chunk, decoded);
 
-                remaining_len -= decoded.len();
+                let dlen = decoded.len();
+                remaining_len -= dlen;
                 assert_eq!(remaining_len, decoder.remaining_len());
             }
 

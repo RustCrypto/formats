@@ -147,6 +147,7 @@ impl<'a, P: Profile> arbitrary::Arbitrary<'a> for SerialNumber<P> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use alloc::string::ToString;
 

@@ -1,6 +1,6 @@
 [package]
 name = "tls_codec"
-version = "0.3.0-pre.4"
+version = "0.3.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/tls_codec/"
@@ -17,21 +17,22 @@ zeroize = { version = "1.6", default-features = false, features = [
 ] }
 
 # optional dependencies
-arbitrary = { version = "1", features = ["derive"], optional = true }
-serde = { version = "1.0.144", features = ["derive"], optional = true }
-tls_codec_derive = { version = "=0.3.0-pre.4", path = "./derive", optional = true }
+arbitrary = { version = "1.3", features = ["derive"], optional = true }
+tls_codec_derive = { version = "=0.3.0", path = "./derive", optional = true }
+serde = { version = "1.0.184", features = ["derive"], optional = true }
 
 [dev-dependencies]
-criterion = "0.5"
+clap = "=4.3.23" # pinned to preserve MSRV
+criterion = { version = "0.5", default-features = false }
 regex = "1.8"
 
 [features]
 default = [ "std" ]
 arbitrary = [ "std", "dep:arbitrary" ]
-derive = [ "std", "tls_codec_derive" ]
+derive = [ "tls_codec_derive" ]
 serde = [ "std", "dep:serde" ]
 mls = [] # In MLS variable length vectors are limited compared to QUIC.
-std = []
+std = [ "tls_codec_derive?/std" ]
 
 [[bench]]
 name = "tls_vec"

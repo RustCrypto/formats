@@ -141,6 +141,7 @@ impl FixedTag for String {
 impl OrdIsValueOrd for String {}
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::Utf8StringRef;
     use crate::Decode;

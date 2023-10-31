@@ -353,6 +353,7 @@ pub(crate) fn strip_leading_ones(mut bytes: &[u8]) -> &[u8] {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::{validate_canonical, IntRef};
     use crate::{asn1::integer::tests::*, Decode, Encode, SliceWriter};

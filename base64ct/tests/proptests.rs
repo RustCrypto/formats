@@ -7,7 +7,6 @@
 
 use base64ct::{Base64 as Base64ct, Encoding};
 use proptest::{prelude::*, string::*};
-use std::iter;
 
 /// Incremental Base64 decoder.
 type Decoder<'a> = base64ct::Decoder<'a, Base64ct>;
@@ -112,7 +111,7 @@ proptest! {
             0 => base64ish,
             n => {
                 let padding_len = 4 - n;
-                base64ish + &iter::repeat("=").take(padding_len).collect::<String>()
+                base64ish + &"=".repeat(padding_len)
             }
         };
 

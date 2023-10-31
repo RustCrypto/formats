@@ -1,4 +1,5 @@
 //! Certificate tests
+#![allow(clippy::bool_assert_comparison)]
 use const_oid::AssociatedOid;
 use der::asn1::{Ia5StringRef, OctetString, PrintableStringRef, Utf8StringRef};
 use der::{Decode, Encode, ErrorKind, Length, Tag, Tagged};
@@ -211,194 +212,284 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
     let exts = cert.tbs_certificate.extensions.unwrap();
-    let i = exts.iter();
-    let mut counter = 0;
-    for ext in i {
-        if 0 == counter {
-            assert_eq!(ext.extn_id.to_string(), ID_CE_KEY_USAGE.to_string());
-            assert_eq!(ext.critical, true);
+    for (i, ext) in exts.iter().enumerate() {
+        match i {
+            0 => {
+                assert_eq!(ext.extn_id.to_string(), ID_CE_KEY_USAGE.to_string());
+                assert_eq!(ext.critical, true);
 
-            let ku = KeyUsage::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
+                let ku = KeyUsage::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(KeyUsages::KeyCertSign | KeyUsages::CRLSign, ku);
 
-            let reencoded = ku.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if 1 == counter {
-            assert_eq!(ext.extn_id.to_string(), ID_CE_BASIC_CONSTRAINTS.to_string());
-            assert_eq!(ext.critical, true);
-            let bc = BasicConstraints::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(true, bc.ca);
-            assert!(bc.path_len_constraint.is_none());
-
-            let reencoded = bc.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if 2 == counter {
-            assert_eq!(ext.extn_id.to_string(), ID_CE_POLICY_MAPPINGS.to_string());
-            assert_eq!(ext.critical, false);
-            let pm = PolicyMappings::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(19, pm.0.len());
-
-            let reencoded = pm.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-
-            let subject_domain_policy: [&str; 19] = [
-                "2.16.840.1.101.3.2.1.48.2",
-                "2.16.840.1.101.3.2.1.48.2",
-                "2.16.840.1.101.3.2.1.48.3",
-                "2.16.840.1.101.3.2.1.48.3",
-                "2.16.840.1.101.3.2.1.48.5",
-                "2.16.840.1.101.3.2.1.48.5",
-                "2.16.840.1.101.3.2.1.48.4",
-                "2.16.840.1.101.3.2.1.48.4",
-                "2.16.840.1.101.3.2.1.48.6",
-                "2.16.840.1.101.3.2.1.48.6",
-                "2.16.840.1.101.3.2.1.48.78",
-                "2.16.840.1.101.3.2.1.48.78",
-                "2.16.840.1.101.3.2.1.48.78",
-                "2.16.840.1.101.3.2.1.48.79",
-                "2.16.840.1.101.3.2.1.48.80",
-                "2.16.840.1.101.3.2.1.48.99",
-                "2.16.840.1.101.3.2.1.48.99",
-                "2.16.840.1.101.3.2.1.48.100",
-                "2.16.840.1.101.3.2.1.48.100",
-            ];
-
-            let issuer_domain_policy: [&str; 19] = [
-                "2.16.840.1.113839.0.100.2.1",
-                "2.16.840.1.113839.0.100.2.2",
-                "2.16.840.1.113839.0.100.3.1",
-                "2.16.840.1.113839.0.100.3.2",
-                "2.16.840.1.113839.0.100.14.1",
-                "2.16.840.1.113839.0.100.14.2",
-                "2.16.840.1.113839.0.100.12.1",
-                "2.16.840.1.113839.0.100.12.2",
-                "2.16.840.1.113839.0.100.15.1",
-                "2.16.840.1.113839.0.100.15.2",
-                "2.16.840.1.113839.0.100.18.0",
-                "2.16.840.1.113839.0.100.18.1",
-                "2.16.840.1.113839.0.100.18.2",
-                "2.16.840.1.113839.0.100.19.1",
-                "2.16.840.1.113839.0.100.20.1",
-                "2.16.840.1.113839.0.100.37.1",
-                "2.16.840.1.113839.0.100.37.2",
-                "2.16.840.1.113839.0.100.38.1",
-                "2.16.840.1.113839.0.100.38.2",
-            ];
-
-            let mut counter_pm = 0;
-            for mapping in pm.0 {
-                assert_eq!(
-                    issuer_domain_policy[counter_pm],
-                    mapping.issuer_domain_policy.to_string()
-                );
-                assert_eq!(
-                    subject_domain_policy[counter_pm],
-                    mapping.subject_domain_policy.to_string()
-                );
-                counter_pm += 1;
+                let reencoded = ku.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
             }
-        } else if 3 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                ID_CE_CERTIFICATE_POLICIES.to_string()
-            );
-            assert_eq!(ext.critical, false);
-            let cps = CertificatePolicies::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(19, cps.0.len());
+            1 => {
+                assert_eq!(ext.extn_id.to_string(), ID_CE_BASIC_CONSTRAINTS.to_string());
+                assert_eq!(ext.critical, true);
+                let bc = BasicConstraints::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(true, bc.ca);
+                assert!(bc.path_len_constraint.is_none());
 
-            let reencoded = cps.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
+                let reencoded = bc.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
+            }
+            2 => {
+                assert_eq!(ext.extn_id.to_string(), ID_CE_POLICY_MAPPINGS.to_string());
+                assert_eq!(ext.critical, false);
+                let pm = PolicyMappings::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(19, pm.0.len());
 
-            let ids: [&str; 19] = [
-                "2.16.840.1.113839.0.100.2.1",
-                "2.16.840.1.113839.0.100.2.2",
-                "2.16.840.1.113839.0.100.3.1",
-                "2.16.840.1.113839.0.100.3.2",
-                "2.16.840.1.113839.0.100.14.1",
-                "2.16.840.1.113839.0.100.14.2",
-                "2.16.840.1.113839.0.100.12.1",
-                "2.16.840.1.113839.0.100.12.2",
-                "2.16.840.1.113839.0.100.15.1",
-                "2.16.840.1.113839.0.100.15.2",
-                "2.16.840.1.113839.0.100.18.0",
-                "2.16.840.1.113839.0.100.18.1",
-                "2.16.840.1.113839.0.100.18.2",
-                "2.16.840.1.113839.0.100.19.1",
-                "2.16.840.1.113839.0.100.20.1",
-                "2.16.840.1.113839.0.100.37.1",
-                "2.16.840.1.113839.0.100.37.2",
-                "2.16.840.1.113839.0.100.38.1",
-                "2.16.840.1.113839.0.100.38.2",
-            ];
+                let reencoded = pm.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
 
-            let mut cp_counter = 0;
-            for cp in cps.0 {
-                assert_eq!(ids[cp_counter], cp.policy_identifier.to_string());
-                if 18 == cp_counter {
-                    assert!(cp.policy_qualifiers.is_some());
-                    let pq = cp.policy_qualifiers.unwrap();
-                    let mut counter_pq = 0;
-                    for pqi in pq.iter() {
-                        if 0 == counter_pq {
-                            assert_eq!("1.3.6.1.5.5.7.2.1", pqi.policy_qualifier_id.to_string());
-                            let cpsval =
-                                Ia5StringRef::try_from(pqi.qualifier.as_ref().unwrap()).unwrap();
-                            assert_eq!(
-                                "https://secure.identrust.com/certificates/policy/IGC/index.html",
-                                cpsval.to_string()
-                            );
-                        } else if 1 == counter_pq {
-                            assert_eq!("1.3.6.1.5.5.7.2.2", pqi.policy_qualifier_id.to_string());
-                            // TODO VisibleString
-                        }
-                        counter_pq += 1;
-                    }
-                } else {
-                    assert!(cp.policy_qualifiers.is_none())
+                let subject_domain_policy: [&str; 19] = [
+                    "2.16.840.1.101.3.2.1.48.2",
+                    "2.16.840.1.101.3.2.1.48.2",
+                    "2.16.840.1.101.3.2.1.48.3",
+                    "2.16.840.1.101.3.2.1.48.3",
+                    "2.16.840.1.101.3.2.1.48.5",
+                    "2.16.840.1.101.3.2.1.48.5",
+                    "2.16.840.1.101.3.2.1.48.4",
+                    "2.16.840.1.101.3.2.1.48.4",
+                    "2.16.840.1.101.3.2.1.48.6",
+                    "2.16.840.1.101.3.2.1.48.6",
+                    "2.16.840.1.101.3.2.1.48.78",
+                    "2.16.840.1.101.3.2.1.48.78",
+                    "2.16.840.1.101.3.2.1.48.78",
+                    "2.16.840.1.101.3.2.1.48.79",
+                    "2.16.840.1.101.3.2.1.48.80",
+                    "2.16.840.1.101.3.2.1.48.99",
+                    "2.16.840.1.101.3.2.1.48.99",
+                    "2.16.840.1.101.3.2.1.48.100",
+                    "2.16.840.1.101.3.2.1.48.100",
+                ];
+
+                let issuer_domain_policy: [&str; 19] = [
+                    "2.16.840.1.113839.0.100.2.1",
+                    "2.16.840.1.113839.0.100.2.2",
+                    "2.16.840.1.113839.0.100.3.1",
+                    "2.16.840.1.113839.0.100.3.2",
+                    "2.16.840.1.113839.0.100.14.1",
+                    "2.16.840.1.113839.0.100.14.2",
+                    "2.16.840.1.113839.0.100.12.1",
+                    "2.16.840.1.113839.0.100.12.2",
+                    "2.16.840.1.113839.0.100.15.1",
+                    "2.16.840.1.113839.0.100.15.2",
+                    "2.16.840.1.113839.0.100.18.0",
+                    "2.16.840.1.113839.0.100.18.1",
+                    "2.16.840.1.113839.0.100.18.2",
+                    "2.16.840.1.113839.0.100.19.1",
+                    "2.16.840.1.113839.0.100.20.1",
+                    "2.16.840.1.113839.0.100.37.1",
+                    "2.16.840.1.113839.0.100.37.2",
+                    "2.16.840.1.113839.0.100.38.1",
+                    "2.16.840.1.113839.0.100.38.2",
+                ];
+
+                for (j, mapping) in pm.0.iter().enumerate() {
+                    assert_eq!(
+                        issuer_domain_policy[j],
+                        mapping.issuer_domain_policy.to_string()
+                    );
+                    assert_eq!(
+                        subject_domain_policy[j],
+                        mapping.subject_domain_policy.to_string()
+                    );
                 }
-
-                cp_counter += 1;
             }
-        } else if 4 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                ID_CE_SUBJECT_KEY_IDENTIFIER.to_string()
-            );
-            assert_eq!(ext.critical, false);
-            let skid = SubjectKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(Length::new(21), skid.0.len());
-            assert_eq!(
-                &hex!("DBD3DEBF0D7B615B32803BC0206CD7AADD39B8ACFF"),
-                skid.0.as_bytes()
-            );
+            3 => {
+                assert_eq!(
+                    ext.extn_id.to_string(),
+                    ID_CE_CERTIFICATE_POLICIES.to_string()
+                );
+                assert_eq!(ext.critical, false);
+                let cps = CertificatePolicies::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(19, cps.0.len());
 
-            let reencoded = skid.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if 5 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                ID_CE_CRL_DISTRIBUTION_POINTS.to_string()
-            );
-            assert_eq!(ext.critical, false);
-            let crl_dps = CrlDistributionPoints::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(2, crl_dps.0.len());
+                let reencoded = cps.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
 
-            let reencoded = crl_dps.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
+                let ids: [&str; 19] = [
+                    "2.16.840.1.113839.0.100.2.1",
+                    "2.16.840.1.113839.0.100.2.2",
+                    "2.16.840.1.113839.0.100.3.1",
+                    "2.16.840.1.113839.0.100.3.2",
+                    "2.16.840.1.113839.0.100.14.1",
+                    "2.16.840.1.113839.0.100.14.2",
+                    "2.16.840.1.113839.0.100.12.1",
+                    "2.16.840.1.113839.0.100.12.2",
+                    "2.16.840.1.113839.0.100.15.1",
+                    "2.16.840.1.113839.0.100.15.2",
+                    "2.16.840.1.113839.0.100.18.0",
+                    "2.16.840.1.113839.0.100.18.1",
+                    "2.16.840.1.113839.0.100.18.2",
+                    "2.16.840.1.113839.0.100.19.1",
+                    "2.16.840.1.113839.0.100.20.1",
+                    "2.16.840.1.113839.0.100.37.1",
+                    "2.16.840.1.113839.0.100.37.2",
+                    "2.16.840.1.113839.0.100.38.1",
+                    "2.16.840.1.113839.0.100.38.2",
+                ];
 
-            let mut crldp_counter = 0;
-            for crldp in crl_dps.0 {
-                let dpn = crldp.distribution_point.unwrap();
-                if 0 == crldp_counter {
-                    match dpn {
-                        DistributionPointName::FullName(gns) => {
-                            assert_eq!(1, gns.len());
-                            let gn = gns.get(0).unwrap();
+                for (cp_counter, cp) in cps.0.into_iter().enumerate() {
+                    assert_eq!(ids[cp_counter], cp.policy_identifier.to_string());
+                    match cp_counter {
+                        18 => {
+                            assert!(cp.policy_qualifiers.is_some());
+                            let pq = cp.policy_qualifiers.unwrap();
+                            for (pq_counter, pqi) in pq.iter().enumerate() {
+                                match pq_counter {
+                                    0 => {
+                                        assert_eq!(
+                                            "1.3.6.1.5.5.7.2.1",
+                                            pqi.policy_qualifier_id.to_string()
+                                        );
+                                        let cpsval =
+                                            Ia5StringRef::try_from(pqi.qualifier.as_ref().unwrap())
+                                                .unwrap();
+                                        assert_eq!(
+                                            "https://secure.identrust.com/certificates/policy/IGC/index.html",
+                                            cpsval.to_string()
+                                        );
+                                    }
+                                    1 => {
+                                        assert_eq!(
+                                            "1.3.6.1.5.5.7.2.2",
+                                            pqi.policy_qualifier_id.to_string()
+                                        );
+                                        // TODO VisibleString
+                                    }
+                                    _ => unreachable!(),
+                                }
+                            }
+                        }
+                        _ => assert!(cp.policy_qualifiers.is_none()),
+                    }
+                }
+            }
+            4 => {
+                assert_eq!(
+                    ext.extn_id.to_string(),
+                    ID_CE_SUBJECT_KEY_IDENTIFIER.to_string()
+                );
+                assert_eq!(ext.critical, false);
+                let skid = SubjectKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(Length::new(21), skid.0.len());
+                assert_eq!(
+                    &hex!("DBD3DEBF0D7B615B32803BC0206CD7AADD39B8ACFF"),
+                    skid.0.as_bytes()
+                );
+
+                let reencoded = skid.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
+            }
+            5 => {
+                assert_eq!(
+                    ext.extn_id.to_string(),
+                    ID_CE_CRL_DISTRIBUTION_POINTS.to_string()
+                );
+                assert_eq!(ext.critical, false);
+                let crl_dps = CrlDistributionPoints::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(2, crl_dps.0.len());
+
+                let reencoded = crl_dps.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
+
+                for (crldp_counter, crldp) in crl_dps.0.into_iter().enumerate() {
+                    let dpn = crldp.distribution_point.unwrap();
+                    match crldp_counter {
+                        0 => match dpn {
+                            DistributionPointName::FullName(gns) => {
+                                assert_eq!(1, gns.len());
+                                let gn = gns.get(0).unwrap();
+                                match gn {
+                                    GeneralName::UniformResourceIdentifier(uri) => {
+                                        assert_eq!(
+                                            "http://crl-pte.identrust.com.test/crl/IGCRootca1.crl",
+                                            uri.to_string()
+                                        );
+                                    }
+                                    _ => {
+                                        panic!("Expected UniformResourceIdentifier");
+                                    }
+                                }
+                            }
+                            _ => {
+                                panic!("Expected FullName");
+                            }
+                        },
+                        1 => match dpn {
+                            DistributionPointName::FullName(gns) => {
+                                assert_eq!(1, gns.len());
+                                let gn = gns.get(0).unwrap();
+                                match gn {
+                                    GeneralName::UniformResourceIdentifier(uri) => {
+                                        assert_eq!("ldap://ldap-pte.identrust.com.test/cn%3DIGC%20Root%20CA1%2Co%3DIdenTrust%2Cc%3DUS%3FcertificateRevocationList%3Bbinary", uri.to_string());
+                                    }
+                                    _ => {
+                                        panic!("Expected UniformResourceIdentifier");
+                                    }
+                                }
+                            }
+                            _ => {
+                                panic!("Expected UniformResourceIdentifier");
+                            }
+                        },
+                        _ => unreachable!(),
+                    }
+                }
+            }
+            6 => {
+                assert_eq!(
+                    ext.extn_id.to_string(),
+                    ID_PE_SUBJECT_INFO_ACCESS.to_string()
+                );
+                assert_eq!(ext.critical, false);
+                let sias = SubjectInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(1, sias.0.len());
+
+                let reencoded = sias.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
+
+                for sia in sias.0 {
+                    assert_eq!("1.3.6.1.5.5.7.48.5", sia.access_method.to_string());
+                    let gn = sia.access_location;
+                    match gn {
+                        GeneralName::UniformResourceIdentifier(gn) => {
+                            assert_eq!(
+                            "http://http.cite.fpki-lab.gov.test/bridge/caCertsIssuedBytestFBCA.p7c",
+                            gn.to_string()
+                        );
+                        }
+                        _ => {
+                            panic!("Expected UniformResourceIdentifier");
+                        }
+                    }
+                }
+            }
+            7 => {
+                assert_eq!(
+                    ext.extn_id.to_string(),
+                    ID_PE_AUTHORITY_INFO_ACCESS.to_string()
+                );
+                assert_eq!(ext.critical, false);
+                let aias = AuthorityInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(2, aias.0.len());
+
+                let reencoded = aias.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
+
+                for (aia_counter, aia) in aias.0.into_iter().enumerate() {
+                    match aia_counter {
+                        0 => {
+                            assert_eq!("1.3.6.1.5.5.7.48.2", aia.access_method.to_string());
+                            let gn = aia.access_location;
                             match gn {
-                                GeneralName::UniformResourceIdentifier(uri) => {
+                                GeneralName::UniformResourceIdentifier(gn) => {
                                     assert_eq!(
-                                        "http://crl-pte.identrust.com.test/crl/IGCRootca1.crl",
-                                        uri.to_string()
+                                        "http://apps-stg.identrust.com.test/roots/IGCRootca1.p7c",
+                                        gn.to_string()
                                     );
                                 }
                                 _ => {
@@ -406,133 +497,54 @@ fn decode_cert() {
                                 }
                             }
                         }
-                        _ => {
-                            panic!("Expected FullName");
-                        }
-                    }
-                } else if 1 == crldp_counter {
-                    match dpn {
-                        DistributionPointName::FullName(gns) => {
-                            assert_eq!(1, gns.len());
-                            let gn = gns.get(0).unwrap();
+                        1 => {
+                            assert_eq!("1.3.6.1.5.5.7.48.1", aia.access_method.to_string());
+                            let gn = aia.access_location;
                             match gn {
-                                GeneralName::UniformResourceIdentifier(uri) => {
-                                    assert_eq!("ldap://ldap-pte.identrust.com.test/cn%3DIGC%20Root%20CA1%2Co%3DIdenTrust%2Cc%3DUS%3FcertificateRevocationList%3Bbinary", uri.to_string());
+                                GeneralName::UniformResourceIdentifier(gn) => {
+                                    assert_eq!(
+                                        "http://igcrootpte.ocsp.identrust.com.test:8125",
+                                        gn.to_string()
+                                    );
                                 }
                                 _ => {
                                     panic!("Expected UniformResourceIdentifier");
                                 }
                             }
                         }
-                        _ => {
-                            panic!("Expected UniformResourceIdentifier");
-                        }
-                    }
-                }
-
-                crldp_counter += 1;
-            }
-        } else if 6 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                ID_PE_SUBJECT_INFO_ACCESS.to_string()
-            );
-            assert_eq!(ext.critical, false);
-            let sias = SubjectInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(1, sias.0.len());
-
-            let reencoded = sias.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-
-            for sia in sias.0 {
-                assert_eq!("1.3.6.1.5.5.7.48.5", sia.access_method.to_string());
-                let gn = sia.access_location;
-                match gn {
-                    GeneralName::UniformResourceIdentifier(gn) => {
-                        assert_eq!(
-                            "http://http.cite.fpki-lab.gov.test/bridge/caCertsIssuedBytestFBCA.p7c",
-                            gn.to_string()
-                        );
-                    }
-                    _ => {
-                        panic!("Expected UniformResourceIdentifier");
+                        _ => unreachable!(),
                     }
                 }
             }
-        } else if 7 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                ID_PE_AUTHORITY_INFO_ACCESS.to_string()
-            );
-            assert_eq!(ext.critical, false);
-            let aias = AuthorityInfoAccessSyntax::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(2, aias.0.len());
-            let mut aia_counter = 0;
+            8 => {
+                assert_eq!(
+                    ext.extn_id.to_string(),
+                    ID_CE_INHIBIT_ANY_POLICY.to_string()
+                );
+                assert_eq!(ext.critical, false);
+                let iap = InhibitAnyPolicy::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(0, iap.0);
 
-            let reencoded = aias.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-
-            for aia in aias.0 {
-                if 0 == aia_counter {
-                    assert_eq!("1.3.6.1.5.5.7.48.2", aia.access_method.to_string());
-                    let gn = aia.access_location;
-                    match gn {
-                        GeneralName::UniformResourceIdentifier(gn) => {
-                            assert_eq!(
-                                "http://apps-stg.identrust.com.test/roots/IGCRootca1.p7c",
-                                gn.to_string()
-                            );
-                        }
-                        _ => {
-                            panic!("Expected UniformResourceIdentifier");
-                        }
-                    }
-                } else if 1 == aia_counter {
-                    assert_eq!("1.3.6.1.5.5.7.48.1", aia.access_method.to_string());
-                    let gn = aia.access_location;
-                    match gn {
-                        GeneralName::UniformResourceIdentifier(gn) => {
-                            assert_eq!(
-                                "http://igcrootpte.ocsp.identrust.com.test:8125",
-                                gn.to_string()
-                            );
-                        }
-                        _ => {
-                            panic!("Expected UniformResourceIdentifier");
-                        }
-                    }
-                }
-
-                aia_counter += 1;
+                let reencoded = iap.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
             }
-        } else if 8 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                ID_CE_INHIBIT_ANY_POLICY.to_string()
-            );
-            assert_eq!(ext.critical, false);
-            let iap = InhibitAnyPolicy::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(0, iap.0);
+            9 => {
+                assert_eq!(
+                    ext.extn_id.to_string(),
+                    ID_CE_AUTHORITY_KEY_IDENTIFIER.to_string()
+                );
+                assert_eq!(ext.critical, false);
+                let akid = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
+                assert_eq!(
+                    &hex!("7C4C863AB80BD589870BEDB7E11BBD2A08BB3D23FF"),
+                    akid.key_identifier.as_ref().unwrap().as_bytes()
+                );
 
-            let reencoded = iap.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
-        } else if 9 == counter {
-            assert_eq!(
-                ext.extn_id.to_string(),
-                ID_CE_AUTHORITY_KEY_IDENTIFIER.to_string()
-            );
-            assert_eq!(ext.critical, false);
-            let akid = AuthorityKeyIdentifier::from_der(ext.extn_value.as_bytes()).unwrap();
-            assert_eq!(
-                &hex!("7C4C863AB80BD589870BEDB7E11BBD2A08BB3D23FF"),
-                akid.key_identifier.as_ref().unwrap().as_bytes()
-            );
-
-            let reencoded = akid.to_der().and_then(OctetString::new).unwrap();
-            assert_eq!(ext.extn_value, reencoded);
+                let reencoded = akid.to_der().and_then(OctetString::new).unwrap();
+                assert_eq!(ext.extn_value, reencoded);
+            }
+            _ => unreachable!(),
         }
-
-        counter += 1;
     }
 
     let der_encoded_cert = include_bytes!("examples/GoodCACert.crt");
@@ -850,22 +862,15 @@ fn decode_idp() {
 
     let gn =
         GeneralName::from_der(&hex!("A45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
-    match gn {
-        GeneralName::DirectoryName(gn) => {
-            assert_eq!(4, gn.0.len());
-        }
-        _ => {}
+    if let GeneralName::DirectoryName(gn) = gn {
+        assert_eq!(4, gn.0.len());
     }
 
     let gns =
         GeneralNames::from_der(&hex!("305EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
     assert_eq!(1, gns.len());
-    let gn = gns.get(0).unwrap();
-    match gn {
-        GeneralName::DirectoryName(gn) => {
-            assert_eq!(4, gn.0.len());
-        }
-        _ => {}
+    if let GeneralName::DirectoryName(gn) = gns.get(0).unwrap() {
+        assert_eq!(4, gn.0.len());
     }
 
     //TODO - fix decode impl (expecting a SEQUENCE despite this being a CHOICE). Sort out FixedTag implementation.
@@ -887,20 +892,13 @@ fn decode_idp() {
 
     let dp =
         DistributionPoint::from_der(&hex!("3062A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
-    let dpn = dp.distribution_point.unwrap();
-    match dpn {
-        DistributionPointName::FullName(dpn) => {
-            assert_eq!(1, dpn.len());
-            let gn = dpn.get(0).unwrap();
-            match gn {
-                GeneralName::DirectoryName(gn) => {
-                    assert_eq!(4, gn.0.len());
-                }
-                _ => {}
-            }
+    if let DistributionPointName::FullName(dpn) = dp.distribution_point.unwrap() {
+        assert_eq!(1, dpn.len());
+        if let GeneralName::DirectoryName(gn) = dpn.get(0).unwrap() {
+            assert_eq!(4, gn.0.len());
         }
-        _ => {}
     }
+
     assert!(dp.crl_issuer.is_none());
     assert!(dp.reasons.is_none());
 
