@@ -1345,7 +1345,7 @@ dependencies = [
  "generic-array",
  "hex-literal 0.4.1",
  "pkcs8",
- "serdect",
+ "serdect 0.2.0",
  "subtle",
  "tempfile",
  "zeroize",
@@ -1409,7 +1409,17 @@ dependencies = [
 
 [[package]]
 name = "serdect"
-version = "0.2.1"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a84f14a19e9a014bb9f4512488d9829a68e04ecabffb0f9904cd1ace94598177"
+dependencies = [
+ "base16ct",
+ "serde",
+]
+
+[[package]]
+name = "serdect"
+version = "0.3.0-pre"
 dependencies = [
  "base16ct",
  "bincode",
