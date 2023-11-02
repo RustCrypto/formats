@@ -175,7 +175,7 @@ use syn::{
     Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit, Member, Meta, Result, Token, Type,
 };
 
-#[cfg(feature = "verifiable_structs")]
+#[cfg(feature = "conditional_deserialization")]
 use syn::{parse_quote, ConstParam, ImplGenerics, ItemStruct, TypeGenerics};
 
 /// Attribute name to identify attributes to be processed by derive-macros in this crate.
@@ -897,22 +897,22 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
     }
 }
 
-#[cfg(feature = "verifiable_structs")]
-fn restrict_verified_generic(
+#[cfg(feature = "conditional_deserialization")]
+fn restrict_conditional_generic(
     impl_generics: ImplGenerics,
     ty_generics: TypeGenerics,
-    verified: bool,
+    deserializable: bool,
 ) -> (TokenStream2, TokenStream2) {
     let impl_generics = quote! { #impl_generics }
         .to_string()
-        .replace(" const IS_VERIFIED : bool ", "")
+        .replace(" const IS_DESERIALIZABLE : bool ", "")
         .replace("<>", "")
         .parse()
         .unwrap();
-    let verified_string = if verified { "VERIFIED" } else { "UNVERIFIED" };
+    let deserializable_string = if deserializable { "true" } else { "false" };
     let ty_generics = quote! { #ty_generics }
         .to_string()
-        .replace("IS_VERIFIED", verified_string)
+        .replace("IS_DESERIALIZABLE", deserializable_string)
         .parse()
         .unwrap();
     (impl_generics, ty_generics)
@@ -937,9 +937,9 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                 .map(|p| p.for_trait("Deserialize"))
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-            #[cfg(feature = "verifiable_structs")]
+            #[cfg(feature = "conditional_deserialization")]
             let (impl_generics, ty_generics) =
-                restrict_verified_generic(impl_generics, ty_generics, false);
+                restrict_conditional_generic(impl_generics, ty_generics, true);
             quote! {
                 impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
                     #[cfg(feature = "std")]
@@ -1029,9 +1029,9 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 .map(|p| p.for_trait("DeserializeBytes"))
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-            #[cfg(feature = "verifiable_structs")]
+            #[cfg(feature = "conditional_deserialization")]
             let (impl_generics, ty_generics) =
-                restrict_verified_generic(impl_generics, ty_generics, false);
+                restrict_conditional_generic(impl_generics, ty_generics, true);
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
                     fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
@@ -1132,77 +1132,79 @@ fn partition_skipped(
     )
 }
 
-/// The `verifiable` attribute macro takes as input either `Bytes` or `Reader`
-/// and does the following:
+/// The `conditionally_deserializable` attribute macro takes as input either
+/// `Bytes` or `Reader` and does the following:
 /// * Add a boolean const generic to the struct indicating if the variant of the
-///   struct was verified or not (false = unverified, true = verified).
+///   struct is deserializable or not.
 /// * Depending on the input derive either the `TlsDeserialize` or
-///   `TlsDeserializeBytes` trait for the unverified variant, but not for the
-///   verified variant of the struct
-/// * Create type aliases for the verified and unverified variant of the struct,
-///   where the alias is the name of the struct prefixed with `Verified` or
-///   `Unverified` respectively.
+///   `TlsDeserializeBytes` trait for the deserializable variant
+/// * Create type aliases for the deserializable and undeserializable variant of
+///   the struct, where the alias is the name of the struct prefixed with
+///   `Deserializable` or `Undeserializable` respectively.
 ///
-/// The `verifiable` attribute macro is only available if the `verifiable`
-/// feature is enabled.
+/// The `conditionally_deserializable` attribute macro is only available if the
+/// `conditional_deserialization` feature is enabled.
 ///
 #[cfg_attr(
-    feature = "verifiable_structs",
+    feature = "conditional_deserialization",
     doc = r##"
 ```compile_fail
-use tls_codec_derive::{TlsSerialize, TlsDeserialize, TlsSize};
+use tls_codec_derive::{TlsSerialize, TlsDeserialize, TlsSize, conditionally_deserializable};
 
-#[verifiable(Bytes)]
+#[conditionally_deserializable(Bytes)]
 #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
 struct ExampleStruct {
     pub a: u16,
 }
 
-impl VerifiableStruct<true> {
-    #[cfg(feature = "verifiable_structs")]
-    fn deserialize(bytes: &[u8]) -> Result<Self, Error> {
+impl UndeserializableExampleStruct {
+    #[cfg(feature = "conditional_deserialization")]
+    fn deserialize(bytes: &[u8]) -> Result<Self, tls_codec::Error> {
         Self::tls_deserialize_exact(bytes)
     }
 }
 ```
 "##
 )]
-#[cfg(feature = "verifiable_structs")]
+#[cfg(feature = "conditional_deserialization")]
 #[proc_macro_attribute]
-pub fn verifiable(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
+pub fn conditionally_deserializable(
+    input: TokenStream,
+    annotated_item: TokenStream,
+) -> TokenStream {
     let annotated_item = parse_macro_input!(annotated_item as ItemStruct);
     let input = parse_macro_input!(input as Ident);
-    impl_verifiable(annotated_item, input).into()
+    impl_conditionally_deserializable(annotated_item, input).into()
 }
 
-#[cfg(feature = "verifiable_structs")]
-fn impl_verifiable(mut annotated_item: ItemStruct, input: Ident) -> TokenStream2 {
-    let verifiable_const_generic: ConstParam = parse_quote! {const IS_VERIFIED: bool};
-    // Add the VERIFIED const generic to the struct
+#[cfg(feature = "conditional_deserialization")]
+fn impl_conditionally_deserializable(mut annotated_item: ItemStruct, input: Ident) -> TokenStream2 {
+    let deserializable_const_generic: ConstParam = parse_quote! {const IS_DESERIALIZABLE: bool};
+    // Add the DESERIALIZABLE const generic to the struct
     annotated_item
         .generics
         .params
-        .push(verifiable_const_generic.into());
+        .push(deserializable_const_generic.into());
     // Derive either TlsDeserialize or TlsDeserializeBytes depending on the input
     let deserialize_implementation = if input == Ident::new("Bytes", Span::call_site()) {
         impl_deserialize_bytes(parse_ast(annotated_item.clone().into()).unwrap())
     } else if input == Ident::new("Reader", Span::call_site()) {
         impl_deserialize(parse_ast(annotated_item.clone().into()).unwrap())
     } else {
-        panic!("verifiable attribute macro only supports Bytes and Reader as input");
+        panic!("verifiable attribute macro only supports \"Bytes\" and \"Reader\" as input");
     };
     let (impl_generics, ty_generics, _) = annotated_item.generics.split_for_impl();
-    let (_unverified_impl_generics, unverified_ty_generics) =
-        restrict_verified_generic(impl_generics.clone(), ty_generics.clone(), false);
-    let (_verified_impl_generics, verified_ty_generics) =
-        restrict_verified_generic(impl_generics.clone(), ty_generics.clone(), true);
+    let (_deserializable_impl_generics, deserializable_ty_generics) =
+        restrict_conditional_generic(impl_generics.clone(), ty_generics.clone(), true);
+    let (_undeserializable_impl_generics, undeserializable_ty_generics) =
+        restrict_conditional_generic(impl_generics.clone(), ty_generics.clone(), false);
     let annotated_item_ident = annotated_item.ident.clone();
-    let verified_ident = Ident::new(
-        &format!("Verified{}", annotated_item_ident),
+    let deserializable_ident = Ident::new(
+        &format!("Deserializable{}", annotated_item_ident),
         Span::call_site(),
     );
-    let unverified_ident = Ident::new(
-        &format!("Unverified{}", annotated_item_ident),
+    let undeserializable_ident = Ident::new(
+        &format!("Undeserializable{}", annotated_item_ident),
         Span::call_site(),
     );
     let annotated_item_visibility = annotated_item.vis.clone();
@@ -1210,11 +1212,8 @@ fn impl_verifiable(mut annotated_item: ItemStruct, input: Ident) -> TokenStream2
     quote! {
         #annotated_item
 
-        #annotated_item_visibility const VERIFIED: bool = true;
-        #annotated_item_visibility const UNVERIFIED: bool = false;
-
-        #annotated_item_visibility type #unverified_ident = #annotated_item_ident #unverified_ty_generics;
-        #annotated_item_visibility type #verified_ident = #annotated_item_ident #verified_ty_generics;
+        #annotated_item_visibility type #undeserializable_ident = #annotated_item_ident #undeserializable_ty_generics;
+        #annotated_item_visibility type #deserializable_ident = #annotated_item_ident #deserializable_ty_generics;
 
         #deserialize_implementation
     }

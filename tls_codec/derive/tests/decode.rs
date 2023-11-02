@@ -533,40 +533,48 @@ fn type_with_unknowns() {
     assert!(matches!(deserialized, Err(Error::UnknownValue(3))));
 }
 
-#[cfg(feature = "verifiable_structs")]
-mod verifiable {
+#[cfg(feature = "conditional_deserialization")]
+mod conditional_deserialization {
     use tls_codec::{Deserialize, DeserializeBytes, Serialize};
-    use tls_codec_derive::{verifiable, TlsSerialize, TlsSize};
+    use tls_codec_derive::{conditionally_deserializable, TlsSerialize, TlsSize};
 
     #[test]
-    fn verifiable_struct() {
-        #[verifiable(Reader)]
+    fn conditionally_deserializable_struct() {
+        #[conditionally_deserializable(Reader)]
         #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
         struct ExampleStruct {
             a: u8,
             b: u16,
         }
-        let verified_struct = VerifiedExampleStruct { a: 1, b: 2 };
-        let serialized = verified_struct.tls_serialize_detached().unwrap();
-        let unverified_struct =
-            UnverifiedExampleStruct::tls_deserialize(&mut serialized.as_slice()).unwrap();
-        assert_eq!(unverified_struct.a, verified_struct.a);
-        assert_eq!(unverified_struct.b, verified_struct.b);
+
+        let undeserializable_struct = UndeserializableExampleStruct { a: 1, b: 2 };
+        let serialized = undeserializable_struct.tls_serialize_detached().unwrap();
+        let deserializable_struct =
+            DeserializableExampleStruct::tls_deserialize(&mut serialized.as_slice()).unwrap();
+        assert_eq!(deserializable_struct.a, undeserializable_struct.a);
+        assert_eq!(deserializable_struct.b, undeserializable_struct.b);
+
+        #[conditionally_deserializable(Reader)]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct SecondExampleStruct {
+            a: u8,
+            b: u16,
+        }
     }
 
     #[test]
-    fn verifiable_struct_bytes() {
-        #[verifiable(Bytes)]
+    fn conditional_deserializable_struct_bytes() {
+        #[conditionally_deserializable(Bytes)]
         #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
         struct ExampleStruct {
             a: u8,
             b: u16,
         }
-        let verified_struct = VerifiedExampleStruct { a: 1, b: 2 };
-        let serialized = verified_struct.tls_serialize_detached().unwrap();
-        let unverified_struct =
-            UnverifiedExampleStruct::tls_deserialize_exact(&mut &*serialized).unwrap();
-        assert_eq!(unverified_struct.a, verified_struct.a);
-        assert_eq!(unverified_struct.b, verified_struct.b);
+        let undeserializable_struct = UndeserializableExampleStruct { a: 1, b: 2 };
+        let serialized = undeserializable_struct.tls_serialize_detached().unwrap();
+        let deserializable_struct =
+            DeserializableExampleStruct::tls_deserialize_exact(&mut &*serialized).unwrap();
+        assert_eq!(deserializable_struct.a, undeserializable_struct.a);
+        assert_eq!(deserializable_struct.b, undeserializable_struct.b);
     }
 }

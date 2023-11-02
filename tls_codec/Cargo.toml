@@ -30,9 +30,12 @@ default = ["std"]
 arbitrary = ["std", "dep:arbitrary"]
 derive = ["tls_codec_derive"]
 serde = ["std", "dep:serde"]
-mls = []                                                               # In MLS variable length vectors are limited compared to QUIC.
+mls = [] # In MLS variable length vectors are limited compared to QUIC.
 std = ["tls_codec_derive?/std"]
-verifiable_structs = ["derive", "tls_codec_derive/verifiable_structs"]
+conditional_deserialization = [
+    "derive",
+    "tls_codec_derive/conditional_deserialization",
+]
 
 [[bench]]
 name = "tls_vec"
