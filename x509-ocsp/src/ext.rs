@@ -69,9 +69,19 @@ impl Nonce {
 }
 
 /// CrlReferences extension as defined in [RFC 6960 Section 4.4.2]
-pub struct CrlReferences(pub Vec<CrlId>);
+///
+/// ```
+/// id-pkix-ocsp-crl       OBJECT IDENTIFIER ::= { id-pkix-ocsp 3 }
+/// CrlID ::= SEQUENCE {
+///     crlUrl               [0]     EXPLICIT IA5String OPTIONAL,
+///     crlNum               [1]     EXPLICIT INTEGER OPTIONAL,
+///     crlTime              [2]     EXPLICIT GeneralizedTime OPTIONAL }
+/// ```
+///
+/// [RFC 6960 Section 4.4.2]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.2
+pub struct CrlReferences(CrlId);
 
-impl_newtype!(CrlReferences, Vec<CrlId>);
+impl_newtype!(CrlReferences, CrlId);
 
 // It may be desirable for the OCSP responder to indicate the CRL on
 // which a revoked or onHold certificate is found.  This can be useful
@@ -181,7 +191,7 @@ pub struct PreferredSignatureAlgorithms(pub Vec<PreferredSignatureAlgorithm>);
 impl_newtype!(
     PreferredSignatureAlgorithms,
     Vec<PreferredSignatureAlgorithm>
-);
+    );
 impl_extension!(PreferredSignatureAlgorithms, critical = false);
 
 impl AssociatedOid for PreferredSignatureAlgorithms {
