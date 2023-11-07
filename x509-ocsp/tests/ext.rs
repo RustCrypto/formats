@@ -99,7 +99,7 @@ fn crl_references_as_extension() {
 // 24:d=1  hl=2 l=   9 prim: OBJECT            :OCSP CRL ID
 #[test]
 fn acceptable_responses_as_extension() {
-    let ext = AcceptableResponses(vec![
+    let ext = AcceptableResponses::from(vec![
         ID_PKIX_OCSP_BASIC,
         ID_PKIX_OCSP_NONCE,
         ID_PKIX_OCSP_CRL,
@@ -121,7 +121,7 @@ fn acceptable_responses_as_extension() {
 //  0:d=0  hl=2 l=  15 prim: GENERALIZEDTIME   :20200101000000Z
 #[test]
 fn archive_cutoff_as_extension() {
-    let ext = ArchiveCutoff(GeneralizedTime::from_date_time(
+    let ext = ArchiveCutoff::from(GeneralizedTime::from_date_time(
         DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
     ));
     let ext = ext.to_extension(&Name::default(), &[]).unwrap();
@@ -202,7 +202,7 @@ fn service_locator_as_extension() {
 // 32:d=3  hl=2 l=   0 prim: NULL
 #[test]
 fn pref_sig_algs_as_extension() {
-    let ext = PreferredSignatureAlgorithms(vec![PreferredSignatureAlgorithm {
+    let ext = PreferredSignatureAlgorithms::from(vec![PreferredSignatureAlgorithm {
         sig_identifier: AlgorithmIdentifierOwned {
             oid: ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.11"),
             parameters: Some(Null.into()),
