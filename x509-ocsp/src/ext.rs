@@ -70,7 +70,7 @@ impl Nonce {
 
 /// CrlReferences extension as defined in [RFC 6960 Section 4.4.2]
 ///
-/// ```
+/// ```text
 /// id-pkix-ocsp-crl       OBJECT IDENTIFIER ::= { id-pkix-ocsp 3 }
 /// CrlID ::= SEQUENCE {
 ///     crlUrl               [0]     EXPLICIT IA5String OPTIONAL,
@@ -148,7 +148,7 @@ impl AssociatedOid for AcceptableResponses {
 /// ```
 ///
 /// [RFC 6960 Section 4.4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.4
-pub struct ArchiveCutoff(GeneralizedTime);
+pub struct ArchiveCutoff(pub GeneralizedTime);
 
 impl_newtype!(ArchiveCutoff, GeneralizedTime);
 impl_extension!(ArchiveCutoff, critical = false);
