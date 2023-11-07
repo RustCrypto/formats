@@ -3,7 +3,7 @@
 use core::str::FromStr;
 use der::{
     asn1::{GeneralizedTime, Ia5String, Null, ObjectIdentifier, Uint},
-    DateTime, Decode, Encode,
+    DateTime, Encode,
 };
 use hex_literal::hex;
 use spki::AlgorithmIdentifierOwned;
@@ -14,7 +14,7 @@ use x509_cert::{
     },
     name::Name,
 };
-use x509_ocsp::{ext::*, *};
+use x509_ocsp::ext::*;
 
 #[cfg(feature = "rand_core")]
 use rand_core::SeedableRng;
@@ -23,14 +23,6 @@ const ID_AD_OCSP: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7
 const ID_PKIX_OCSP_BASIC: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.1");
 const ID_PKIX_OCSP_NONCE: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.2");
 const ID_PKIX_OCSP_CRL: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.3");
-const ID_PKIX_OCSP_RESPONSE: ObjectIdentifier =
-    ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.4");
-const ID_PKIX_OCSP_ARCHIVE_CUTOFF: ObjectIdentifier =
-    ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.6");
-const ID_PKIX_OCSP_SERVICE_LOCATOR: ObjectIdentifier =
-    ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.7");
-const ID_PKIX_OCSP_PREF_SIG_ALGS: ObjectIdentifier =
-    ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.8");
 
 //  0:d=0  hl=2 l=  25 cons: SEQUENCE
 //  2:d=1  hl=2 l=   9 prim: OBJECT            :OCSP Nonce
