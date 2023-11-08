@@ -103,6 +103,18 @@ pub enum ResponderId {
     ByKey(KeyHash),
 }
 
+impl From<Name> for ResponderId {
+    fn from(other: Name) -> Self {
+        Self::ByName(other)
+    }
+}
+
+impl From<KeyHash> for ResponderId {
+    fn from(other: KeyHash) -> Self {
+        Self::ByKey(other)
+    }
+}
+
 /// KeyHash structure as defined in [RFC 6960 Section 4.2.1].
 ///
 /// ```text
@@ -203,7 +215,19 @@ pub struct RevokedInfo {
     pub revocation_reason: Option<CrlReason>,
 }
 
+/// RevokedInfo structure as defined in [RFC 6960 Section 4.2.1].
+///
+/// ```text
+/// UnknownInfo ::= NULL
+/// ```
+///
+/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+pub type UnknownInfo = Null;
+
 impl From<&RevokedCert> for RevokedInfo {
+    /// Converts [`RevokedCert`] to [`RevokedInfo`].
+    ///
+    /// Attempts to extract the [`CrlReason`]. If it fails, the `CrlReason` is set to `None`.
     fn from(rc: &RevokedCert) -> Self {
         Self {
             revocation_time: match rc.revocation_date {
@@ -229,16 +253,10 @@ impl From<&RevokedCert> for RevokedInfo {
 }
 
 impl From<RevokedCert> for RevokedInfo {
+    /// Converts [`RevokedCert`] to [`RevokedInfo`].
+    ///
+    /// Attempts to extract the [`CrlReason`]. If it fails, the `CrlReason` is set to `None`.
     fn from(rc: RevokedCert) -> Self {
         Self::from(&rc)
     }
 }
-
-/// RevokedInfo structure as defined in [RFC 6960 Section 4.2.1].
-///
-/// ```text
-/// UnknownInfo ::= NULL
-/// ```
-///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-pub type UnknownInfo = Null;

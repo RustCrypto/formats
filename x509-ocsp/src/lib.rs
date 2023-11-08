@@ -25,3 +25,6 @@ pub use basic::{
 };
 pub use request::{OcspRequest, Request, Signature, TbsRequest};
 pub use response::{OcspNoCheck, OcspResponse, OcspResponseStatus, ResponseBytes};
+
+#[cfg(feature = "builder")]
+pub mod builder;

@@ -70,32 +70,10 @@ impl Nonce {
 
 /// CrlReferences extension as defined in [RFC 6960 Section 4.4.2]
 ///
-/// ```text
-/// id-pkix-ocsp-crl       OBJECT IDENTIFIER ::= { id-pkix-ocsp 3 }
-/// CrlID ::= SEQUENCE {
-///     crlUrl               [0]     EXPLICIT IA5String OPTIONAL,
-///     crlNum               [1]     EXPLICIT INTEGER OPTIONAL,
-///     crlTime              [2]     EXPLICIT GeneralizedTime OPTIONAL }
-/// ```
+/// This does not seem to be its own type and just another name for CrlID
 ///
 /// [RFC 6960 Section 4.4.2]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.2
-pub struct CrlReferences(CrlId);
-
-impl_newtype!(CrlReferences, CrlId);
-
-// It may be desirable for the OCSP responder to indicate the CRL on
-// which a revoked or onHold certificate is found.  This can be useful
-// where OCSP is used between repositories, and also as an auditing
-// mechanism.  The CRL may be specified by a URL (the URL at which the
-// CRL is available), a number (CRL number), or a time (the time at
-// which the relevant CRL was created).  These extensions will be
-// specified as singleExtensions.  The identifier for this extension
-// will be id-pkix-ocsp-crl, while the value will be CrlID.
-impl_extension!(CrlReferences, critical = false);
-
-impl AssociatedOid for CrlReferences {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_CRL;
-}
+pub type CrlReferences = CrlId;
 
 /// CrlID structure as defined in [RFC 6960 Section 4.4.2].
 ///
@@ -120,6 +98,20 @@ pub struct CrlId {
     pub crl_time: Option<GeneralizedTime>,
 }
 
+// It may be desirable for the OCSP responder to indicate the CRL on
+// which a revoked or onHold certificate is found.  This can be useful
+// where OCSP is used between repositories, and also as an auditing
+// mechanism.  The CRL may be specified by a URL (the URL at which the
+// CRL is available), a number (CRL number), or a time (the time at
+// which the relevant CRL was created).  These extensions will be
+// specified as singleExtensions.  The identifier for this extension
+// will be id-pkix-ocsp-crl, while the value will be CrlID.
+impl_extension!(CrlId, critical = false);
+
+impl AssociatedOid for CrlId {
+    const OID: ObjectIdentifier = ID_PKIX_OCSP_CRL;
+}
+
 /// AcceptableResponses structure as defined in [RFC 6960 Section 4.4.3].
 ///
 /// ```text
@@ -127,6 +119,7 @@ pub struct CrlId {
 /// ```
 ///
 /// [RFC 6960 Section 4.4.3]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.3
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AcceptableResponses(pub Vec<ObjectIdentifier>);
 
 impl_newtype!(AcceptableResponses, Vec<ObjectIdentifier>);
@@ -148,6 +141,7 @@ impl AssociatedOid for AcceptableResponses {
 /// ```
 ///
 /// [RFC 6960 Section 4.4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.4
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ArchiveCutoff(pub GeneralizedTime);
 
 impl_newtype!(ArchiveCutoff, GeneralizedTime);
@@ -186,12 +180,13 @@ impl_extension!(ServiceLocator, critical = false);
 /// ```
 ///
 /// [RFC 6960 Section 4.4.7.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.7.1
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PreferredSignatureAlgorithms(pub Vec<PreferredSignatureAlgorithm>);
 
 impl_newtype!(
     PreferredSignatureAlgorithms,
     Vec<PreferredSignatureAlgorithm>
-    );
+);
 impl_extension!(PreferredSignatureAlgorithms, critical = false);
 
 impl AssociatedOid for PreferredSignatureAlgorithms {

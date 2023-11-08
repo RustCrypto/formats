@@ -30,7 +30,7 @@ const ID_PKIX_OCSP_CRL: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1
 // --
 //  0:d=0  hl=2 l=  10 prim: OCTET STRING      [HEX DUMP]:00010203040506070809
 #[test]
-fn nonce_as_extension() {
+fn as_extension_nonce() {
     let bytes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     let ext = Nonce::new(bytes).unwrap();
     assert_eq!(ext.0.as_bytes(), &bytes);
@@ -69,14 +69,14 @@ fn nonce_generation() {
 // 31:d=1  hl=2 l=  17 cons: cont [ 2 ]
 // 33:d=2  hl=2 l=  15 prim: GENERALIZEDTIME   :20200101000000Z
 #[test]
-fn crl_references_as_extension() {
-    let ext = CrlReferences::from(CrlId {
+fn as_extension_crl_references() {
+    let ext = CrlReferences {
         crl_url: Some(Ia5String::new("http://127.0.0.1/crl").unwrap()),
         crl_num: Some(Uint::new(&[1]).unwrap()),
         crl_time: Some(GeneralizedTime::from_date_time(
             DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
         )),
-    });
+    };
     let ext = ext.to_extension(&Name::default(), &[]).unwrap();
     assert_eq!(
         &ext.to_der().unwrap(),
@@ -98,7 +98,7 @@ fn crl_references_as_extension() {
 // 13:d=1  hl=2 l=   9 prim: OBJECT            :OCSP Nonce
 // 24:d=1  hl=2 l=   9 prim: OBJECT            :OCSP CRL ID
 #[test]
-fn acceptable_responses_as_extension() {
+fn as_extension_acceptable_responses() {
     let ext = AcceptableResponses::from(vec![
         ID_PKIX_OCSP_BASIC,
         ID_PKIX_OCSP_NONCE,
@@ -120,7 +120,7 @@ fn acceptable_responses_as_extension() {
 // --
 //  0:d=0  hl=2 l=  15 prim: GENERALIZEDTIME   :20200101000000Z
 #[test]
-fn archive_cutoff_as_extension() {
+fn as_extension_archive_cutoff() {
     let ext = ArchiveCutoff::from(GeneralizedTime::from_date_time(
         DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
     ));
@@ -167,7 +167,7 @@ fn archive_cutoff_as_extension() {
 // 88:d=3  hl=2 l=   8 prim: OBJECT            :OCSP
 // 98:d=3  hl=2 l=   9 prim: cont [ 2 ]
 #[test]
-fn service_locator_as_extension() {
+fn as_extension_service_locator() {
     let ext = ServiceLocator {
         issuer: Name::from_str("CN=service,OU=test-deep,OU=test,O=org,C=US").unwrap(),
         locator: Some(AuthorityInfoAccessSyntax::from(vec![AccessDescription {
@@ -201,7 +201,7 @@ fn service_locator_as_extension() {
 // 21:d=3  hl=2 l=   9 prim: OBJECT            :sha256WithRSAEncryption
 // 32:d=3  hl=2 l=   0 prim: NULL
 #[test]
-fn pref_sig_algs_as_extension() {
+fn as_extension_pref_sig_algs() {
     let ext = PreferredSignatureAlgorithms::from(vec![PreferredSignatureAlgorithm {
         sig_identifier: AlgorithmIdentifierOwned {
             oid: ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.11"),

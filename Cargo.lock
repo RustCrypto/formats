@@ -1866,10 +1866,15 @@ version = "0.2.0-pre"
 dependencies = [
  "const-oid 0.9.5",
  "der",
+ "digest",
  "hex-literal 0.4.1",
  "lazy_static",
  "rand_chacha",
  "rand_core",
+ "rsa",
+ "sha1",
+ "sha2",
+ "signature",
  "spki",
  "x509-cert",
 ]

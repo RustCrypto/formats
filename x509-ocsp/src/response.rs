@@ -1,11 +1,9 @@
 //! OCSP Response
 
-use crate::BasicOcspResponse;
-use const_oid::db::rfc6960::ID_PKIX_OCSP_BASIC;
 use core::option::Option;
 use der::{
     asn1::{Null, ObjectIdentifier, OctetString},
-    Encode, Enumerated, Sequence,
+    Enumerated, Sequence,
 };
 
 /// OcspNoCheck as defined in [RFC 6960 Section 4.2.2.2.1].
@@ -35,59 +33,6 @@ pub struct OcspResponse {
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub response_bytes: Option<ResponseBytes>,
-}
-
-impl OcspResponse {
-    /// Encodes an `OcspResponse` with the status set to `Successful`
-    pub fn successful(basic: BasicOcspResponse) -> Result<Self, der::Error> {
-        Ok(OcspResponse {
-            response_status: OcspResponseStatus::Successful,
-            response_bytes: Some(ResponseBytes {
-                response_type: ID_PKIX_OCSP_BASIC,
-                response: OctetString::new(basic.to_der()?)?,
-            }),
-        })
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `MalformedRequest`
-    pub fn malformed_request() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::MalformedRequest,
-            response_bytes: None,
-        }
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `InternalError`
-    pub fn internal_error() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::InternalError,
-            response_bytes: None,
-        }
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `TryLater`
-    pub fn try_later() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::TryLater,
-            response_bytes: None,
-        }
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `SigRequired`
-    pub fn sig_required() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::SigRequired,
-            response_bytes: None,
-        }
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `Unauthorized`
-    pub fn unauthorized() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::Unauthorized,
-            response_bytes: None,
-        }
-    }
 }
 
 /// OCSPResponseStatus structure as defined in [RFC 6960 Section 4.2.1].
