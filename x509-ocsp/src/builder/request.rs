@@ -20,8 +20,8 @@ use x509_cert::{
 /// use der::Decode;
 /// use sha1::Sha1;
 /// use x509_cert::{serial_number::SerialNumber, Certificate};
-/// use x509_ocsp::{ext::Nonce, Request};
 /// use x509_ocsp::builder::OcspRequestBuilder;
+/// use x509_ocsp::{ext::Nonce, Request};
 ///
 /// # const ISSUER_DER: &[u8] = include_bytes!("../../tests/examples/rsa-2048-sha256-ca.der");
 /// # const CERT_DER: &[u8] = include_bytes!("../../tests/examples/rsa-2048-sha256-crt.der");
