@@ -26,6 +26,10 @@ use x509_cert::{
 /// # const ISSUER_DER: &[u8] = include_bytes!("../../tests/examples/rsa-2048-sha256-ca.der");
 /// # const CERT_DER: &[u8] = include_bytes!("../../tests/examples/rsa-2048-sha256-crt.der");
 /// # const KEY_DER: &[u8] = include_bytes!("../../tests/examples/rsa-2048-sha256-crt-key.der");
+/// # use rand_core::SeedableRng;
+/// # fn seed_rng() -> rand_chacha::ChaChaRng {
+/// #     rand_chacha::ChaChaRng::from_seed([5; 32])
+/// # }
 /// # use rsa::{pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
 /// # use sha2::Sha256;
 /// # fn rsa_signer() -> SigningKey<Sha256> {
@@ -36,8 +40,8 @@ use x509_cert::{
 /// let issuer = Certificate::from_der(ISSUER_DER).unwrap();
 /// let cert = Certificate::from_der(CERT_DER).unwrap();
 ///
-/// # use rand_core::SeedableRng;
-/// # let mut rng = rand_chacha::ChaChaRng::from_seed([5; 32]);
+/// let mut rng = seed_rng();
+///
 /// let req = OcspRequestBuilder::default()
 ///     .with_request(Request::from_cert::<Sha1>(&issuer, &cert).unwrap())
 ///     .with_extension(Nonce::generate(&mut rng, 32).unwrap())
