@@ -1,22 +1,20 @@
 //! Basic OCSP Response
 
-use crate::AsResponseBytes;
+use crate::{AsResponseBytes, OcspGeneralizedTime};
 use alloc::vec::Vec;
 use const_oid::{db::rfc6960::ID_PKIX_OCSP_BASIC, AssociatedOid};
 use core::{default::Default, option::Option};
 use der::{
-    asn1::{BitString, GeneralizedTime, Null, ObjectIdentifier, OctetString, UtcTime},
-    Choice, DateTime, Decode, Enumerated, Sequence,
+    asn1::{BitString, Null, ObjectIdentifier, OctetString},
+    Choice, Decode, Enumerated, Sequence,
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
     certificate::Certificate,
     crl::RevokedCert,
     ext::{pkix::CrlReason, Extensions},
-    impl_newtype,
     name::Name,
     serial_number::SerialNumber,
-    time::Time,
 };
 
 /// OCSP `Version` as defined in [RFC 6960 Section 4.1.1].
@@ -33,71 +31,6 @@ pub enum Version {
     /// Version 1 (default)
     #[default]
     V1 = 0,
-}
-
-/// [`GeneralizedTime`] wrapper for easy conversion from legacy `UTC Time`
-///
-/// OCSP does not support legacy UTC Time while many other X.509 structures do.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct OcspGeneralizedTime(pub GeneralizedTime);
-
-impl_newtype!(OcspGeneralizedTime, GeneralizedTime);
-
-#[cfg(feature = "std")]
-impl TryFrom<std::time::SystemTime> for OcspGeneralizedTime {
-    type Error = der::Error;
-
-    fn try_from(other: std::time::SystemTime) -> Result<Self, Self::Error> {
-        Ok(Self(GeneralizedTime::from_system_time(other)?))
-    }
-}
-
-#[cfg(feature = "std")]
-impl TryFrom<&std::time::SystemTime> for OcspGeneralizedTime {
-    type Error = der::Error;
-
-    fn try_from(other: &std::time::SystemTime) -> Result<Self, Self::Error> {
-        Self::try_from(*other)
-    }
-}
-
-impl From<DateTime> for OcspGeneralizedTime {
-    fn from(other: DateTime) -> Self {
-        Self(GeneralizedTime::from_date_time(other))
-    }
-}
-
-impl From<&DateTime> for OcspGeneralizedTime {
-    fn from(other: &DateTime) -> Self {
-        Self::from(*other)
-    }
-}
-
-impl From<UtcTime> for OcspGeneralizedTime {
-    fn from(other: UtcTime) -> Self {
-        Self(GeneralizedTime::from_date_time(other.to_date_time()))
-    }
-}
-
-impl From<&UtcTime> for OcspGeneralizedTime {
-    fn from(other: &UtcTime) -> Self {
-        Self::from(*other)
-    }
-}
-
-impl From<Time> for OcspGeneralizedTime {
-    fn from(other: Time) -> Self {
-        match other {
-            Time::UtcTime(t) => t.into(),
-            Time::GeneralTime(t) => t.into(),
-        }
-    }
-}
-
-impl From<&Time> for OcspGeneralizedTime {
-    fn from(other: &Time) -> Self {
-        Self::from(*other)
-    }
 }
 
 /// BasicOcspResponse structure as defined in [RFC 6960 Section 4.2.1].

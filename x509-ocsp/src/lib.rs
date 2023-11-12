@@ -16,15 +16,17 @@ extern crate alloc;
 mod basic;
 mod request;
 mod response;
+mod time;
 
 pub mod ext;
 
 pub use basic::{
-    BasicOcspResponse, CertId, CertStatus, KeyHash, OcspGeneralizedTime, ResponderId, ResponseData,
-    RevokedInfo, SingleResponse, UnknownInfo, Version,
+    BasicOcspResponse, CertId, CertStatus, KeyHash, ResponderId, ResponseData, RevokedInfo,
+    SingleResponse, UnknownInfo, Version,
 };
 pub use request::{OcspRequest, Request, Signature, TbsRequest};
 pub use response::{AsResponseBytes, OcspNoCheck, OcspResponse, OcspResponseStatus, ResponseBytes};
+pub use time::OcspGeneralizedTime;
 
 #[cfg(feature = "std")]
 extern crate std;
