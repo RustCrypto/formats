@@ -98,8 +98,8 @@ impl OcspResponse {
 /// use der::{asn1::ObjectIdentifier, DateTime, Decode};
 /// use x509_cert::Certificate;
 /// use x509_ocsp::builder::BasicOcspResponseBuilder;
-/// use x509_ocsp::{ext::Nonce, CertStatus, OcspGeneralizedTime, OcspRequest, OcspResponse, SingleResponse,
-///     Version
+/// use x509_ocsp::{ext::Nonce, CertStatus, OcspGeneralizedTime, OcspRequest, OcspResponse,
+///     SingleResponse, Version,
 /// };
 ///
 /// const NONCE_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.2");
