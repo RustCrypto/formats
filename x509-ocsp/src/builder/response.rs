@@ -96,7 +96,6 @@ impl OcspResponse {
 ///
 /// ```
 /// use der::{asn1::ObjectIdentifier, DateTime, Decode};
-/// use std::time::SystemTime;
 /// use x509_cert::Certificate;
 /// use x509_ocsp::builder::BasicOcspResponseBuilder;
 /// use x509_ocsp::{ext::Nonce, CertStatus, OcspGeneralizedTime, OcspRequest, OcspResponse, SingleResponse,
@@ -144,15 +143,19 @@ impl OcspResponse {
 ///     }
 /// }
 ///
+/// #[cfg(feature = "std")]
+/// let now = OcspGeneralizedTime::try_from(std::time::SystemTime::now()).unwrap();
+///
+/// #[cfg(not(feature = "std"))]
+/// let now = OcspGeneralizedTime::from(
+///     DateTime::new(2023, 11, 1, 0, 0, 0).unwrap()
+/// );
+///
 /// let mut signer = rsa_signer();
 /// let signer_cert_chain = vec![ca.clone()];
 /// let resp = OcspResponse::successful(
 ///     builder
-///         .sign(
-///             &mut signer,
-///             Some(signer_cert_chain),
-///             OcspGeneralizedTime::try_from(SystemTime::now()).unwrap(),
-///         )
+///         .sign(&mut signer, Some(signer_cert_chain), now)
 ///         .unwrap(),
 /// )
 /// .unwrap();
@@ -200,6 +203,11 @@ impl BasicOcspResponseBuilder {
 
     /// Consumes the builder and returns a signed [`BasicOcspResponse`]. Errors when the algorithm
     /// identifier encoding, message encoding, or signature generation fails.
+    ///
+    /// Per [RFC 6960 Section 2.4], the `producedAt` value must be the time the request was
+    /// signed.
+    ///
+    /// [RFC 6960 Section 2.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.4
     pub fn sign<S, Sig>(
         self,
         signer: &mut S,
