@@ -1,7 +1,7 @@
 //! ocsp response decode tests
 
 use der::{
-    asn1::{GeneralizedTime, Null, ObjectIdentifier, OctetString},
+    asn1::{Null, ObjectIdentifier, OctetString},
     DateTime, Decode, Encode,
 };
 use hex_literal::hex;
@@ -36,8 +36,8 @@ lazy_static! {
             )
         .unwrap()
         );
-    static ref TIME: GeneralizedTime =
-        GeneralizedTime::from_date_time(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap());
+    static ref TIME: OcspGeneralizedTime =
+        OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap());
 }
 
 fn assert_ocsp_response(ocsp_res: &OcspResponse) -> BasicOcspResponse {
@@ -67,7 +67,7 @@ fn assert_signature(
 fn assert_basic_response<'a>(
     res: &'a BasicOcspResponse,
     expected_id: &ResponderId,
-    expected_time: &GeneralizedTime,
+    expected_time: &OcspGeneralizedTime,
     expected_certid: &CertId,
 ) -> &'a SingleResponse {
     let data = &res.tbs_response_data;
@@ -87,8 +87,8 @@ fn assert_basic_response<'a>(
 fn assert_single_response(
     single_res: &SingleResponse,
     expected_status: CertStatus,
-    expected_this_update: &GeneralizedTime,
-    expected_next_update: Option<&GeneralizedTime>,
+    expected_this_update: &OcspGeneralizedTime,
+    expected_next_update: Option<&OcspGeneralizedTime>,
 ) {
     assert_eq!(single_res.cert_status, expected_status);
     assert_eq!(single_res.this_update, *expected_this_update);

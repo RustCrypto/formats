@@ -1,5 +1,6 @@
 //! OCSP Response
 
+use const_oid::AssociatedOid;
 use core::option::Option;
 use der::{
     asn1::{Null, ObjectIdentifier, OctetString},
@@ -76,4 +77,15 @@ pub enum OcspResponseStatus {
 pub struct ResponseBytes {
     pub response_type: ObjectIdentifier,
     pub response: OctetString,
+}
+
+/// Trait for encoding `ResponsesBytes`
+pub trait AsResponseBytes: AssociatedOid + der::Encode {
+    /// Encodes the response bytes of successful OCSP responses
+    fn to_response_bytes(&self) -> Result<ResponseBytes, der::Error> {
+        Ok(ResponseBytes {
+            response_type: <Self as AssociatedOid>::OID,
+            response: OctetString::new(self.to_der()?)?,
+        })
+    }
 }

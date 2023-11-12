@@ -35,8 +35,7 @@ impl CertId {
                         .tbs_certificate
                         .subject_public_key_info
                         .subject_public_key
-                        .as_bytes()
-                        .ok_or(spki::Error::KeyMalformed)?,
+                        .raw_bytes(),
                 )
                 .to_vec(),
             )?,

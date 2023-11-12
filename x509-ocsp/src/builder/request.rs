@@ -26,10 +26,6 @@ use x509_cert::{
 /// # const ISSUER_DER: &[u8] = include_bytes!("../../tests/examples/rsa-2048-sha256-ca.der");
 /// # const CERT_DER: &[u8] = include_bytes!("../../tests/examples/rsa-2048-sha256-crt.der");
 /// # const KEY_DER: &[u8] = include_bytes!("../../tests/examples/rsa-2048-sha256-crt-key.der");
-/// # use rand_core::SeedableRng;
-/// # fn seed_rng() -> rand_chacha::ChaChaRng {
-/// #     rand_chacha::ChaChaRng::from_seed([5; 32])
-/// # }
 /// # use rsa::{pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
 /// # use sha2::Sha256;
 /// # fn rsa_signer() -> SigningKey<Sha256> {
@@ -40,7 +36,7 @@ use x509_cert::{
 /// let issuer = Certificate::from_der(ISSUER_DER).unwrap();
 /// let cert = Certificate::from_der(CERT_DER).unwrap();
 ///
-/// let mut rng = seed_rng();
+/// let mut rng = rand::thread_rng();
 ///
 /// let req = OcspRequestBuilder::default()
 ///     .with_request(Request::from_cert::<Sha1>(&issuer, &cert).unwrap())
@@ -169,7 +165,7 @@ impl Request {
 
     /// Generates a `CertID` by running the issuer's subject and key through the specified
     /// [`Digest`].
-    /// 
+    ///
     /// [RFC 6960 Section 4.1.1]
     ///
     /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
@@ -183,7 +179,7 @@ impl Request {
     /// Generates a `CertID` by running the issuer's subject and key through the specified
     /// [`Digest`] and pulls the serial from `cert`. This does not ensure that `cert` is actually
     /// issued by `issuer`.
-    /// 
+    ///
     /// [RFC 6960 Section 4.1.1]
     ///
     /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1

@@ -1869,7 +1869,7 @@ dependencies = [
  "digest",
  "hex-literal 0.4.1",
  "lazy_static",
- "rand_chacha",
+ "rand",
  "rand_core",
  "rsa",
  "sha1",

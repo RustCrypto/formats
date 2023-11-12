@@ -1,18 +1,22 @@
 //! OCSP response builder
 
 use crate::{
-    builder::Error, BasicOcspResponse, CertId, CertStatus, OcspResponse, OcspResponseStatus,
-    ResponderId, ResponseBytes, ResponseData, SingleResponse, Version,
+    builder::Error, AsResponseBytes, BasicOcspResponse, CertId, CertStatus, OcspGeneralizedTime,
+    OcspResponse, OcspResponseStatus, ResponderId, ResponseData, SingleResponse, Version,
 };
 use alloc::vec::Vec;
-use const_oid::db::rfc6960::ID_PKIX_OCSP_BASIC;
-use der::{
-    asn1::{BitString, GeneralizedTime, OctetString},
-    Encode,
-};
+use const_oid::AssociatedOid;
+use der::{asn1::BitString, Encode};
+use digest::Digest;
 use signature::{SignatureEncoding, Signer};
 use spki::DynSignatureAlgorithmIdentifier;
-use x509_cert::{ext::AsExtension, name::Name, Certificate};
+use x509_cert::{
+    crl::CertificateList,
+    ext::{AsExtension, Extensions},
+    name::Name,
+    serial_number::SerialNumber,
+    Certificate,
+};
 
 impl OcspResponse {
     /// Encodes an `OcspResponse` with the status set to `Successful`
@@ -20,13 +24,10 @@ impl OcspResponse {
     /// [RFC 6960 Section 4.2.1]
     ///
     /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn successful(basic: BasicOcspResponse) -> Result<Self, der::Error> {
+    pub fn successful(res: impl AsResponseBytes) -> Result<Self, der::Error> {
         Ok(OcspResponse {
             response_status: OcspResponseStatus::Successful,
-            response_bytes: Some(ResponseBytes {
-                response_type: ID_PKIX_OCSP_BASIC,
-                response: OctetString::new(basic.to_der()?)?,
-            }),
+            response_bytes: Some(res.to_response_bytes()?),
         })
     }
 
@@ -94,14 +95,13 @@ impl OcspResponse {
 /// X509 Basic OCSP Response builder
 ///
 /// ```
-/// use der::{
-///     asn1::{GeneralizedTime, ObjectIdentifier},
-///     DateTime, Decode,
-/// };
+/// use der::{asn1::ObjectIdentifier, DateTime, Decode};
 /// use std::time::SystemTime;
 /// use x509_cert::Certificate;
 /// use x509_ocsp::builder::BasicOcspResponseBuilder;
-/// use x509_ocsp::{ext::Nonce, CertStatus, OcspRequest, OcspResponse, SingleResponse, Version};
+/// use x509_ocsp::{ext::Nonce, CertStatus, OcspGeneralizedTime, OcspRequest, OcspResponse, SingleResponse,
+///     Version
+/// };
 ///
 /// const NONCE_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.2");
 ///
@@ -123,13 +123,17 @@ impl OcspResponse {
 /// let mut builder = BasicOcspResponseBuilder::new(
 ///     Version::V1,
 ///     ca.tbs_certificate.subject.clone(),
-///     GeneralizedTime::from_system_time(SystemTime::now()).unwrap(),
 /// )
-/// .with_single_response(SingleResponse::new(
-///     req.tbs_request.request_list[0].req_cert.clone(),
-///     CertStatus::good(),
-///     GeneralizedTime::from_date_time(DateTime::new(2023, 10, 31, 0, 0, 0).unwrap()),
-/// ));
+/// .with_single_response(
+///     SingleResponse::new(
+///         req.tbs_request.request_list[0].req_cert.clone(),
+///         CertStatus::good(),
+///         OcspGeneralizedTime::from(DateTime::new(2023, 10, 31, 0, 0, 0).unwrap()),
+///     )
+///     .with_next_update(OcspGeneralizedTime::from(
+///         DateTime::new(2024, 1, 1, 0, 0, 0).unwrap()
+///     )),
+/// );
 ///
 /// if let Some(extns) = req.tbs_request.request_extensions {
 ///     let mut filter = extns.iter().filter(|e| e.extn_id == NONCE_OID);
@@ -142,31 +146,34 @@ impl OcspResponse {
 ///
 /// let mut signer = rsa_signer();
 /// let signer_cert_chain = vec![ca.clone()];
-/// let resp =
-///     OcspResponse::successful(builder.sign(&mut signer, Some(signer_cert_chain)).unwrap())
-///         .unwrap();
+/// let resp = OcspResponse::successful(
+///     builder
+///         .sign(
+///             &mut signer,
+///             Some(signer_cert_chain),
+///             OcspGeneralizedTime::try_from(SystemTime::now()).unwrap(),
+///         )
+///         .unwrap(),
+/// )
+/// .unwrap();
 /// ```
 pub struct BasicOcspResponseBuilder {
-    tbs_response_data: ResponseData,
+    version: Version,
+    responder_id: ResponderId,
+    responses: Vec<SingleResponse>,
+    response_extensions: Option<Extensions>,
 }
 
 impl BasicOcspResponseBuilder {
     /// Returns a `BasicOcspResponseBuilder` given the [`Version`], [`ResponderId`], and `Produced
     /// At` values.
-    pub fn new(
-        version: Version,
-        responder_id: impl Into<ResponderId>,
-        produced_at: GeneralizedTime,
-    ) -> Self {
+    pub fn new(version: Version, responder_id: impl Into<ResponderId>) -> Self {
         let responder_id = responder_id.into();
         Self {
-            tbs_response_data: ResponseData {
-                version,
-                responder_id,
-                produced_at,
-                responses: Vec::new(),
-                response_extensions: None,
-            },
+            version,
+            responder_id,
+            responses: Vec::new(),
+            response_extensions: None,
         }
     }
 
@@ -174,7 +181,7 @@ impl BasicOcspResponseBuilder {
     ///
     /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
     pub fn with_single_response(mut self, single_response: SingleResponse) -> Self {
-        self.tbs_response_data.responses.push(single_response);
+        self.responses.push(single_response);
         self
     }
 
@@ -184,9 +191,9 @@ impl BasicOcspResponseBuilder {
     /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
     pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
-        match self.tbs_response_data.response_extensions {
+        match self.response_extensions {
             Some(ref mut exts) => exts.push(ext),
-            None => self.tbs_response_data.response_extensions = Some(alloc::vec![ext]),
+            None => self.response_extensions = Some(alloc::vec![ext]),
         }
         Ok(self)
     }
@@ -197,16 +204,24 @@ impl BasicOcspResponseBuilder {
         self,
         signer: &mut S,
         certificate_chain: Option<Vec<Certificate>>,
+        produced_at: OcspGeneralizedTime,
     ) -> Result<BasicOcspResponse, Error>
     where
         S: Signer<Sig> + DynSignatureAlgorithmIdentifier,
         Sig: SignatureEncoding,
     {
+        let tbs_response_data = ResponseData {
+            version: self.version,
+            responder_id: self.responder_id,
+            produced_at: produced_at,
+            responses: self.responses,
+            response_extensions: self.response_extensions,
+        };
         let signature_algorithm = signer.signature_algorithm_identifier()?;
-        let signature = signer.try_sign(&self.tbs_response_data.to_der()?)?;
+        let signature = signer.try_sign(&tbs_response_data.to_der()?)?;
         let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
         Ok(BasicOcspResponse {
-            tbs_response_data: self.tbs_response_data,
+            tbs_response_data,
             signature_algorithm,
             signature,
             certs: certificate_chain,
@@ -217,7 +232,7 @@ impl BasicOcspResponseBuilder {
 impl SingleResponse {
     /// Returns a `SingleResponse` given the `CertID`, `CertStatus`, and `This Update`. `Next
     /// Update` is set to `None`.
-    pub fn new(cert_id: CertId, cert_status: CertStatus, this_update: GeneralizedTime) -> Self {
+    pub fn new(cert_id: CertId, cert_status: CertStatus, this_update: OcspGeneralizedTime) -> Self {
         Self {
             cert_id,
             cert_status,
@@ -230,7 +245,7 @@ impl SingleResponse {
     /// Adds a `Next Update` to the builder as defined in [RFC 6960 Section 4.2.1].
     ///
     /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn with_next_update(mut self, next_update: GeneralizedTime) -> Self {
+    pub fn with_next_update(mut self, next_update: OcspGeneralizedTime) -> Self {
         self.next_update = Some(next_update);
         self
     }
@@ -246,5 +261,44 @@ impl SingleResponse {
             None => self.single_extensions = Some(alloc::vec![ext]),
         }
         Ok(self)
+    }
+
+    /// Returns a `SingleResponse` by searching through the CRL to see if `serial` is revoked. If
+    /// not, the `CertStatus` is set to good. The `CertID` is built from the issuer and serial
+    /// number. This method does not ensure the CRL is issued by the issuer and only asserts that
+    /// the serial is not revoked in the provided CRL.
+    pub fn from_crl<D>(
+        issuer: &Certificate,
+        crl: &CertificateList,
+        serial_number: SerialNumber,
+    ) -> Result<Self, Error>
+    where
+        D: Digest + AssociatedOid,
+    {
+        let cert_status = match &crl.tbs_cert_list.revoked_certificates {
+            Some(revoked_certs) => {
+                let mut filter = revoked_certs
+                    .iter()
+                    .filter(|rc| rc.serial_number == serial_number);
+                match filter.next() {
+                    None => CertStatus::good(),
+                    Some(rc) => CertStatus::Revoked(rc.into()),
+                }
+            }
+            None => CertStatus::good(),
+        };
+        let cert_id = CertId::from_issuer::<D>(issuer, serial_number)?;
+        let this_update = crl.tbs_cert_list.this_update.into();
+        let next_update = match crl.tbs_cert_list.next_update {
+            Some(t) => Some(t.into()),
+            None => None,
+        };
+        Ok(Self {
+            cert_id,
+            cert_status,
+            this_update,
+            next_update,
+            single_extensions: None,
+        })
     }
 }

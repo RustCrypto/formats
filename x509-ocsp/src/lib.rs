@@ -20,11 +20,14 @@ mod response;
 pub mod ext;
 
 pub use basic::{
-    BasicOcspResponse, CertId, CertStatus, KeyHash, ResponderId, ResponseData, RevokedInfo,
-    SingleResponse, UnknownInfo, Version,
+    BasicOcspResponse, CertId, CertStatus, KeyHash, OcspGeneralizedTime, ResponderId, ResponseData,
+    RevokedInfo, SingleResponse, UnknownInfo, Version,
 };
 pub use request::{OcspRequest, Request, Signature, TbsRequest};
-pub use response::{OcspNoCheck, OcspResponse, OcspResponseStatus, ResponseBytes};
+pub use response::{AsResponseBytes, OcspNoCheck, OcspResponse, OcspResponseStatus, ResponseBytes};
+
+#[cfg(feature = "std")]
+extern crate std;
 
 #[cfg(feature = "builder")]
 pub mod builder;

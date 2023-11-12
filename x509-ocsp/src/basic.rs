@@ -1,17 +1,19 @@
 //! Basic OCSP Response
 
+use crate::AsResponseBytes;
 use alloc::vec::Vec;
-use const_oid::AssociatedOid;
+use const_oid::{db::rfc6960::ID_PKIX_OCSP_BASIC, AssociatedOid};
 use core::{default::Default, option::Option};
 use der::{
-    asn1::{BitString, GeneralizedTime, Null, OctetString},
-    Choice, Decode, Enumerated, Sequence,
+    asn1::{BitString, GeneralizedTime, Null, ObjectIdentifier, OctetString, UtcTime},
+    Choice, DateTime, Decode, Enumerated, Sequence,
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
     certificate::Certificate,
     crl::RevokedCert,
     ext::{pkix::CrlReason, Extensions},
+    impl_newtype,
     name::Name,
     serial_number::SerialNumber,
     time::Time,
@@ -31,6 +33,71 @@ pub enum Version {
     /// Version 1 (default)
     #[default]
     V1 = 0,
+}
+
+/// [`GeneralizedTime`] wrapper for easy conversion from legacy `UTC Time`
+///
+/// OCSP does not support legacy UTC Time while many other X.509 structures do.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct OcspGeneralizedTime(pub GeneralizedTime);
+
+impl_newtype!(OcspGeneralizedTime, GeneralizedTime);
+
+#[cfg(feature = "std")]
+impl TryFrom<std::time::SystemTime> for OcspGeneralizedTime {
+    type Error = der::Error;
+
+    fn try_from(other: std::time::SystemTime) -> Result<Self, Self::Error> {
+        Ok(Self(GeneralizedTime::from_system_time(other)?))
+    }
+}
+
+#[cfg(feature = "std")]
+impl TryFrom<&std::time::SystemTime> for OcspGeneralizedTime {
+    type Error = der::Error;
+
+    fn try_from(other: &std::time::SystemTime) -> Result<Self, Self::Error> {
+        Self::try_from(*other)
+    }
+}
+
+impl From<DateTime> for OcspGeneralizedTime {
+    fn from(other: DateTime) -> Self {
+        Self(GeneralizedTime::from_date_time(other))
+    }
+}
+
+impl From<&DateTime> for OcspGeneralizedTime {
+    fn from(other: &DateTime) -> Self {
+        Self::from(*other)
+    }
+}
+
+impl From<UtcTime> for OcspGeneralizedTime {
+    fn from(other: UtcTime) -> Self {
+        Self(GeneralizedTime::from_date_time(other.to_date_time()))
+    }
+}
+
+impl From<&UtcTime> for OcspGeneralizedTime {
+    fn from(other: &UtcTime) -> Self {
+        Self::from(*other)
+    }
+}
+
+impl From<Time> for OcspGeneralizedTime {
+    fn from(other: Time) -> Self {
+        match other {
+            Time::UtcTime(t) => t.into(),
+            Time::GeneralTime(t) => t.into(),
+        }
+    }
+}
+
+impl From<&Time> for OcspGeneralizedTime {
+    fn from(other: &Time) -> Self {
+        Self::from(*other)
+    }
 }
 
 /// BasicOcspResponse structure as defined in [RFC 6960 Section 4.2.1].
@@ -55,6 +122,12 @@ pub struct BasicOcspResponse {
     pub certs: Option<Vec<Certificate>>,
 }
 
+impl AssociatedOid for BasicOcspResponse {
+    const OID: ObjectIdentifier = ID_PKIX_OCSP_BASIC;
+}
+
+impl AsResponseBytes for BasicOcspResponse {}
+
 /// ResponseData structure as defined in [RFC 6960 Section 4.2.1].
 ///
 /// ```text
@@ -77,7 +150,7 @@ pub struct ResponseData {
     )]
     pub version: Version,
     pub responder_id: ResponderId,
-    pub produced_at: GeneralizedTime,
+    pub produced_at: OcspGeneralizedTime,
     pub responses: Vec<SingleResponse>,
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
@@ -145,10 +218,10 @@ pub type KeyHash = OctetString;
 pub struct SingleResponse {
     pub cert_id: CertId,
     pub cert_status: CertStatus,
-    pub this_update: GeneralizedTime,
+    pub this_update: OcspGeneralizedTime,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
-    pub next_update: Option<GeneralizedTime>,
+    pub next_update: Option<OcspGeneralizedTime>,
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub single_extensions: Option<Extensions>,
@@ -225,7 +298,7 @@ impl CertStatus {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct RevokedInfo {
-    pub revocation_time: GeneralizedTime,
+    pub revocation_time: OcspGeneralizedTime,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub revocation_reason: Option<CrlReason>,
@@ -246,10 +319,7 @@ impl From<&RevokedCert> for RevokedInfo {
     /// Attempts to extract the [`CrlReason`]. If it fails, the `CrlReason` is set to `None`.
     fn from(rc: &RevokedCert) -> Self {
         Self {
-            revocation_time: match rc.revocation_date {
-                Time::UtcTime(t) => GeneralizedTime::from_date_time(t.to_date_time()),
-                Time::GeneralTime(t) => t,
-            },
+            revocation_time: rc.revocation_date.into(),
             revocation_reason: if let Some(extensions) = &rc.crl_entry_extensions {
                 let mut filter = extensions
                     .iter()

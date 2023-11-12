@@ -1,5 +1,6 @@
 //! OCSP Extensions
 
+use crate::OcspGeneralizedTime;
 use alloc::vec::Vec;
 use const_oid::{
     db::rfc6960::{
@@ -9,7 +10,7 @@ use const_oid::{
     AssociatedOid,
 };
 use der::{
-    asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, OctetString, Uint},
+    asn1::{Ia5String, ObjectIdentifier, OctetString, Uint},
     Sequence, ValueOrd,
 };
 use spki::AlgorithmIdentifierOwned;
@@ -95,7 +96,7 @@ pub struct CrlId {
     pub crl_num: Option<Uint>,
 
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub crl_time: Option<GeneralizedTime>,
+    pub crl_time: Option<OcspGeneralizedTime>,
 }
 
 // It may be desirable for the OCSP responder to indicate the CRL on
@@ -141,10 +142,8 @@ impl AssociatedOid for AcceptableResponses {
 /// ```
 ///
 /// [RFC 6960 Section 4.4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.4
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ArchiveCutoff(pub GeneralizedTime);
+pub type ArchiveCutoff = OcspGeneralizedTime;
 
-impl_newtype!(ArchiveCutoff, GeneralizedTime);
 impl_extension!(ArchiveCutoff, critical = false);
 
 impl AssociatedOid for ArchiveCutoff {
