@@ -12,38 +12,43 @@ use x509_ocsp::builder::*;
 use x509_ocsp::{ext::*, *};
 
 lazy_static! {
-    static ref ISSUER: Certificate =
-        Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-ca.der").unwrap())
-        .unwrap();
+    static ref ISSUER: Certificate = Certificate::from_der(
+        &std::fs::read("tests/examples/rsa-2048-sha256-ca.der").unwrap()
+    )
+    .unwrap();
+
     static ref ISSUER_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
         &std::fs::read("tests/examples/rsa-2048-sha256-ca-key.der").unwrap()
-        )
-        .unwrap();
-    static ref CERT: Certificate =
-        Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-crt.der").unwrap())
-        .unwrap();
+    )
+    .unwrap();
+
+    static ref CERT: Certificate = Certificate::from_der(
+        &std::fs::read("tests/examples/rsa-2048-sha256-crt.der").unwrap()
+    )
+    .unwrap();
+
     static ref CERT_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
         &std::fs::read("tests/examples/rsa-2048-sha256-crt-key.der").unwrap()
-        )
-        .unwrap();
-    static ref OCSP: Certificate =
-        Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt.der").unwrap())
-        .unwrap();
+    )
+    .unwrap();
+
+    static ref OCSP: Certificate = Certificate::from_der(
+        &std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt.der").unwrap()
+    )
+    .unwrap();
+
     static ref OCSP_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
         &std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt-key.der").unwrap()
-        )
-        .unwrap();
+    )
+    .unwrap();
 
     // PrintableString: CN = rsa-2048-sha256-ocsp-crt
     static ref RESPONDER_ID: ResponderId = ResponderId::ByName(
         Name::from_der(
-            &hex!(
-                "30233121301f060355040313187273612d323034382d7368613235362d6f\
-                 6373702d637274"
-                 )[..]
-            )
+            &hex!("30233121301f060355040313187273612d323034382d7368613235362d6f6373702d637274")[..]
+        )
         .unwrap()
-        );
+    );
 }
 
 #[test]

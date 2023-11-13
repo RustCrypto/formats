@@ -29,17 +29,15 @@ lazy_static! {
     // PrintableString: CN = rsa-2048-sha256-ocsp-crt
     static ref RESPONDER_ID: ResponderId = ResponderId::ByName(
         Name::from_der(
-            &hex!(
-                "30233121301f060355040313187273612d323034382d7368613235362d6f\
-                 6373702d637274"
-                 )[..]
-            )
+            &hex!("30233121301f060355040313187273612d323034382d7368613235362d6f6373702d637274")[..]
+        )
         .unwrap()
-        );
+    );
 
-    // Just a random time
-    static ref TIME: OcspGeneralizedTime =
-        OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap());
+    // Time used almost everywhere in these tests
+    static ref TIME: OcspGeneralizedTime = OcspGeneralizedTime::from(
+        DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()
+    );
 }
 
 fn assert_ocsp_response(ocsp_res: &OcspResponse) -> BasicOcspResponse {
