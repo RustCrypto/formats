@@ -153,6 +153,7 @@ impl OcspResponse {
 /// )
 /// .unwrap();
 /// ```
+#[derive(Clone, Debug)]
 pub struct BasicOcspResponseBuilder {
     version: Version,
     responder_id: ResponderId,
