@@ -69,12 +69,12 @@ fn calculate_length(len_len_byte: u8) -> Result<(usize, usize), Error> {
 fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), Error> {
     // The length is encoded in the first two bits of the first byte.
 
-    let (len_len_byte, mut remainder) = <u8 as DeserializeBytes>::tls_deserialize_bytes(bytes)?;
+    let (len_len_byte, mut remainder) = u8::tls_deserialize_bytes(bytes)?;
 
     let (mut length, len_len) = calculate_length(len_len_byte)?;
 
     for _ in 1..len_len {
-        let (next, next_remainder) = <u8 as DeserializeBytes>::tls_deserialize_bytes(remainder)?;
+        let (next, next_remainder) = u8::tls_deserialize_bytes(remainder)?;
         remainder = next_remainder;
         length = (length << 8) + usize::from(next);
     }
