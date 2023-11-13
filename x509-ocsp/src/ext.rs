@@ -62,7 +62,10 @@ impl Nonce {
     /// Nonce ::= OCTET STRING(SIZE(1..32))
     /// ```
     #[cfg(feature = "rand_core")]
-    pub fn generate<R: CryptoRngCore>(rng: &mut R, length: usize) -> Result<Self, der::Error> {
+    pub fn generate<R>(rng: &mut R, length: usize) -> Result<Self, der::Error>
+    where
+        R: CryptoRngCore,
+    {
         let mut bytes = alloc::vec![0; length];
         rng.fill_bytes(&mut bytes);
         Self::new(bytes)

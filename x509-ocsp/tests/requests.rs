@@ -3,7 +3,7 @@
 use der::{asn1::ObjectIdentifier, Decode, Encode};
 use hex_literal::hex;
 use x509_cert::{ext::Extension, serial_number::SerialNumber};
-use x509_ocsp::*;
+use x509_ocsp::{ext::Nonce, *};
 
 const ID_SHA1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
 const ID_SHA224: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.4");
@@ -168,6 +168,10 @@ fn decode_ocsp_req_multiple_extensions() {
     let key_hash = hex!("5DD72C171C018B2FFA92C3133913689EBD82115C");
     let serial = SerialNumber::from(0x10001usize);
     let nonce_ext = hex!("0420BB42AE6BEBD2B6E455CA02BC853452635F08863EFFAF25E182905E7FFF1FB40A");
+    let nonce = Nonce::new(hex!(
+        "BB42AE6BEBD2B6E455CA02BC853452635F08863EFFAF25E182905E7FFF1FB40A"
+    ))
+    .unwrap();
     let response_ext = hex!("300B06092B0601050507300101");
     let srv_loc_ext = hex!(
         "3051301D311B3019060355040313127273612D323034382D736861323536\
@@ -182,6 +186,7 @@ fn decode_ocsp_req_multiple_extensions() {
     let req_exts = ocsp_req.tbs_request.request_extensions.as_ref().unwrap();
     assert_eq!(req_exts.len(), 2);
     assert_extension(&req_exts[0], ID_PKIX_OCSP_NONCE, false, &nonce_ext[..]);
+    assert_eq!(ocsp_req.nonce(), Some(nonce));
     assert_extension(&req_exts[1], ID_PKIX_OCSP_RESPONSE, true, &response_ext[..]);
 
     // Assert Request and SingleRequestExtensions
@@ -316,13 +321,19 @@ fn decode_ocsp_req_multiple_requests_nonce() {
          39615E06"
     );
     let nonce_ext = hex!("042027E51B16C355C29C18B686987041A1D972C4C17AE1F6250FCDEA5FCD7AE81677");
+    let nonce = Nonce::new(hex!(
+        "27E51B16C355C29C18B686987041A1D972C4C17AE1F6250FCDEA5FCD7AE81677"
+    ))
+    .unwrap();
 
     assert_ocsp_request(&ocsp_req, 8);
     assert!(ocsp_req.optional_signature.is_none());
+    assert!(ocsp_req.nonce().is_some());
     assert!(ocsp_req.tbs_request.request_extensions.is_some());
     let req_exts = ocsp_req.tbs_request.request_extensions.as_ref().unwrap();
     assert_eq!(req_exts.len(), 1);
     assert_extension(&req_exts[0], ID_PKIX_OCSP_NONCE, false, &nonce_ext[..]);
+    assert_eq!(ocsp_req.nonce(), Some(nonce));
 
     let req_list = &ocsp_req.tbs_request.request_list;
     assert_request(

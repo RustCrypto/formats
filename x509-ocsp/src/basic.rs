@@ -1,8 +1,11 @@
 //! Basic OCSP Response
 
-use crate::{AsResponseBytes, OcspGeneralizedTime};
+use crate::{ext::Nonce, AsResponseBytes, OcspGeneralizedTime};
 use alloc::vec::Vec;
-use const_oid::{db::rfc6960::ID_PKIX_OCSP_BASIC, AssociatedOid};
+use const_oid::{
+    db::rfc6960::{ID_PKIX_OCSP_BASIC, ID_PKIX_OCSP_NONCE},
+    AssociatedOid,
+};
 use core::{default::Default, option::Option};
 use der::{
     asn1::{BitString, Null, ObjectIdentifier, OctetString},
@@ -55,6 +58,14 @@ pub struct BasicOcspResponse {
     pub certs: Option<Vec<Certificate>>,
 }
 
+impl BasicOcspResponse {
+    /// Returns the response's nonce value, if any. This method will return `None` if the response
+    /// has no `Nonce` extension or decoding of the `Nonce` extension fails.
+    pub fn nonce(&self) -> Option<Nonce> {
+        self.tbs_response_data.nonce()
+    }
+}
+
 impl AssociatedOid for BasicOcspResponse {
     const OID: ObjectIdentifier = ID_PKIX_OCSP_BASIC;
 }
@@ -88,6 +99,23 @@ pub struct ResponseData {
 
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub response_extensions: Option<Extensions>,
+}
+
+impl ResponseData {
+    /// Returns the response's nonce value, if any. This method will return `None` if the response
+    /// has no `Nonce` extension or decoding of the `Nonce` extension fails.
+    pub fn nonce(&self) -> Option<Nonce> {
+        match &self.response_extensions {
+            Some(extns) => {
+                let mut filter = extns.iter().filter(|e| e.extn_id == ID_PKIX_OCSP_NONCE);
+                match filter.next() {
+                    Some(extn) => Nonce::from_der(extn.extn_value.as_bytes()).ok(),
+                    None => None,
+                }
+            }
+            None => None,
+        }
+    }
 }
 
 /// ResponderID structure as defined in [RFC 6960 Section 4.2.1].
@@ -253,19 +281,15 @@ impl From<&RevokedCert> for RevokedInfo {
     fn from(rc: &RevokedCert) -> Self {
         Self {
             revocation_time: rc.revocation_date.into(),
-            revocation_reason: if let Some(extensions) = &rc.crl_entry_extensions {
-                let mut filter = extensions
-                    .iter()
-                    .filter(|ext| ext.extn_id == CrlReason::OID);
-                match filter.next() {
-                    None => None,
-                    Some(ext) => match CrlReason::from_der(ext.extn_value.as_bytes()) {
-                        Ok(reason) => Some(reason),
-                        Err(_) => None,
-                    },
+            revocation_reason: match &rc.crl_entry_extensions {
+                Some(extns) => {
+                    let mut filter = extns.iter().filter(|extn| extn.extn_id == CrlReason::OID);
+                    match filter.next() {
+                        Some(extn) => CrlReason::from_der(extn.extn_value.as_bytes()).ok(),
+                        None => None,
+                    }
                 }
-            } else {
-                None
+                None => None,
             },
         }
     }

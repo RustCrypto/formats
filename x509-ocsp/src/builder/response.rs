@@ -102,8 +102,6 @@ impl OcspResponse {
 ///     SingleResponse, Version,
 /// };
 ///
-/// const NONCE_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.2");
-///
 /// # const OCSP_REQ_DER: &[u8] = include_bytes!(
 /// #     "../../tests/examples/ocsp-multiple-requests-nonce-req.der"
 /// # );
@@ -134,13 +132,8 @@ impl OcspResponse {
 ///     )),
 /// );
 ///
-/// if let Some(extns) = req.tbs_request.request_extensions {
-///     let mut filter = extns.iter().filter(|e| e.extn_id == NONCE_OID);
-///     if let Some(extn) = filter.next() {
-///         builder = builder
-///             .with_extension(Nonce::from_der(extn.extn_value.as_bytes()).unwrap())
-///             .unwrap();
-///     }
+/// if let Some(nonce) = req.nonce() {
+///     builder = builder.with_extension(nonce).unwrap();
 /// }
 ///
 /// #[cfg(feature = "std")]
@@ -221,7 +214,7 @@ impl BasicOcspResponseBuilder {
         let tbs_response_data = ResponseData {
             version: self.version,
             responder_id: self.responder_id,
-            produced_at: produced_at,
+            produced_at,
             responses: self.responses,
             response_extensions: self.response_extensions,
         };
@@ -273,8 +266,17 @@ impl SingleResponse {
 
     /// Returns a `SingleResponse` by searching through the CRL to see if `serial` is revoked. If
     /// not, the `CertStatus` is set to good. The `CertID` is built from the issuer and serial
-    /// number. This method does not ensure the CRL is issued by the issuer and only asserts that
-    /// the serial is not revoked in the provided CRL.
+    /// number. This method does not ensure the CRL is issued by the issuer and only asserts the
+    /// serial is not revoked in the provided CRL.
+    ///
+    /// NOTE: this method complies with [RFC 2560 Section 2.2] and not [RFC 6960 Section 2.2].
+    /// [RFC 6960] limits the `good` status to only issued certificates. [RFC 2560] only asserts
+    /// the serial was not revoked and makes no assertion the serial was ever issued.
+    ///
+    /// [RFC 2560]: https://datatracker.ietf.org/doc/html/rfc2560
+    /// [RFC 2560 Section 2.2]: https://datatracker.ietf.org/doc/html/rfc2560#section-2.2
+    /// [RFC 6960]: https://datatracker.ietf.org/doc/html/rfc6960
+    /// [RFC 6960 Section 2.2]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.2
     pub fn from_crl<D>(
         issuer: &Certificate,
         crl: &CertificateList,
@@ -297,10 +299,7 @@ impl SingleResponse {
         };
         let cert_id = CertId::from_issuer::<D>(issuer, serial_number)?;
         let this_update = crl.tbs_cert_list.this_update.into();
-        let next_update = match crl.tbs_cert_list.next_update {
-            Some(t) => Some(t.into()),
-            None => None,
-        };
+        let next_update = crl.tbs_cert_list.next_update.map(|t| t.into());
         Ok(Self {
             cert_id,
             cert_status,

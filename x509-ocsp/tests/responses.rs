@@ -12,7 +12,7 @@ use x509_cert::{
     name::Name,
     serial_number::SerialNumber,
 };
-use x509_ocsp::*;
+use x509_ocsp::{ext::Nonce, *};
 
 const ID_PKIX_OCSP_BASIC: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.1");
 const ID_SHA1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
@@ -168,6 +168,7 @@ fn decode_ocsp_resp_sha1_certid() {
     let res = OcspResponse::from_der(&data[..]).unwrap();
     let res = assert_ocsp_response(&res);
     assert_signature(&res, SHA_256_WITH_RSA_ENCRYPTION, &signature[..], Some(&ca));
+    assert!(res.nonce().is_none());
     let certid = CertId {
         hash_algorithm: AlgorithmIdentifierOwned {
             oid: ID_SHA1,
@@ -206,6 +207,7 @@ fn decode_ocsp_resp_sha256_certid() {
     );
     let res = OcspResponse::from_der(&data[..]).unwrap();
     let res = assert_ocsp_response(&res);
+    assert!(res.nonce().is_none());
     assert_signature(&res, SHA_256_WITH_RSA_ENCRYPTION, &signature[..], Some(&ca));
     let certid = CertId {
         hash_algorithm: AlgorithmIdentifierOwned {
@@ -249,6 +251,7 @@ fn decode_ocsp_resp_sha512_certid() {
     );
     let res = OcspResponse::from_der(&data[..]).unwrap();
     let res = assert_ocsp_response(&res);
+    assert!(res.nonce().is_none());
     assert_signature(&res, SHA_256_WITH_RSA_ENCRYPTION, &signature[..], Some(&ca));
     let certid = CertId {
         hash_algorithm: AlgorithmIdentifierOwned {
@@ -297,6 +300,10 @@ fn decode_ocsp_resp_multiple_extensions() {
          bee7deb3"
     );
     let nonce_ext = hex!("04201F27F8C9CD8D154DAAEF021D5AAD6EAD7FE0637D044198E3F39291204924CEF8");
+    let nonce = Nonce::new(hex!(
+        "1F27F8C9CD8D154DAAEF021D5AAD6EAD7FE0637D044198E3F39291204924CEF8"
+    ))
+    .unwrap();
     let archive_cutoff_ext = hex!("180F32303230303130313030303030305A");
     let crl_refs_ext = hex!(
         "3030A0161614687474703A2F2F3132372E302E302E312F63726CA103020101A2\
@@ -312,6 +319,7 @@ fn decode_ocsp_resp_multiple_extensions() {
         false,
         &nonce_ext[..],
     );
+    assert_eq!(res.nonce(), Some(nonce));
     let certid = CertId {
         hash_algorithm: AlgorithmIdentifierOwned {
             oid: ID_SHA1,
@@ -361,6 +369,10 @@ fn decode_ocsp_resp_dtm_no_chain() {
          c8aa2f99"
     );
     let nonce_ext = hex!("04201F27F8C9CD8D154DAAEF021D5AAD6EAD7FE0637D044198E3F39291204924CEF8");
+    let nonce = Nonce::new(hex!(
+        "1F27F8C9CD8D154DAAEF021D5AAD6EAD7FE0637D044198E3F39291204924CEF8"
+    ))
+    .unwrap();
     let res = OcspResponse::from_der(&data[..]).unwrap();
     let res = assert_ocsp_response(&res);
     assert_signature(&res, SHA_256_WITH_RSA_ENCRYPTION, &signature[..], None);
@@ -371,6 +383,7 @@ fn decode_ocsp_resp_dtm_no_chain() {
         false,
         &nonce_ext[..],
     );
+    assert_eq!(res.nonce(), Some(nonce));
     let certid = CertId {
         hash_algorithm: AlgorithmIdentifierOwned {
             oid: ID_SHA1,
@@ -410,6 +423,10 @@ fn decode_ocsp_resp_dtm_by_key() {
         OctetString::new(&hex!("F4A810E6EA0984AF7636128A40284379986A4735")[..]).unwrap(),
     );
     let nonce_ext = hex!("04201F27F8C9CD8D154DAAEF021D5AAD6EAD7FE0637D044198E3F39291204924CEF8");
+    let nonce = Nonce::new(hex!(
+        "1F27F8C9CD8D154DAAEF021D5AAD6EAD7FE0637D044198E3F39291204924CEF8"
+    ))
+    .unwrap();
     let res = OcspResponse::from_der(&data[..]).unwrap();
     let res = assert_ocsp_response(&res);
     assert_signature(&res, SHA_256_WITH_RSA_ENCRYPTION, &signature[..], None);
@@ -420,6 +437,7 @@ fn decode_ocsp_resp_dtm_by_key() {
         false,
         &nonce_ext[..],
     );
+    assert_eq!(res.nonce(), Some(nonce));
     let certid = CertId {
         hash_algorithm: AlgorithmIdentifierOwned {
             oid: ID_SHA1,
@@ -458,6 +476,7 @@ fn decode_ocsp_resp_multiple_responses() {
     );
     let res = OcspResponse::from_der(&data[..]).unwrap();
     let res = assert_ocsp_response(&res);
+    assert!(res.nonce().is_none());
     assert_signature(&res, SHA_256_WITH_RSA_ENCRYPTION, &signature[..], Some(&ca));
     let sha1_certid = CertId {
         hash_algorithm: AlgorithmIdentifierOwned {
@@ -519,6 +538,7 @@ fn decode_ocsp_resp_revoked_response() {
     let data = std::fs::read("tests/examples/DODEMAILCA_63-resp.der").unwrap();
     let res = OcspResponse::from_der(&data[..]).unwrap();
     let res = assert_ocsp_response(&res);
+    assert!(res.nonce().is_none());
     let certid = CertId {
         hash_algorithm: AlgorithmIdentifierOwned {
             oid: ID_SHA1,

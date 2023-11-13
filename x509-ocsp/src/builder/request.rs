@@ -2,13 +2,14 @@
 
 use crate::{builder::Error, CertId, OcspRequest, Request, Signature, TbsRequest, Version};
 use alloc::vec::Vec;
-use const_oid::AssociatedOid;
+use const_oid::{db::rfc6960::ID_PKIX_OCSP_NONCE, AssociatedOid};
 use der::{asn1::BitString, Encode};
 use digest::Digest;
+use rand_core::CryptoRngCore;
 use signature::{SignatureEncoding, Signer};
 use spki::DynSignatureAlgorithmIdentifier;
 use x509_cert::{
-    ext::{pkix::name::GeneralName, AsExtension},
+    ext::{pkix::name::GeneralName, AsExtension, Extensions},
     name::Name,
     serial_number::SerialNumber,
     Certificate,
@@ -61,28 +62,22 @@ use x509_cert::{
 ///     .sign(&mut signer, Some(signer_cert_chain))
 ///     .unwrap();
 /// ```
+#[derive(Clone, Debug, Default)]
 pub struct OcspRequestBuilder {
-    tbs_request: TbsRequest,
-    optional_signature: Option<Signature>,
-}
-
-impl Default for OcspRequestBuilder {
-    fn default() -> Self {
-        OcspRequestBuilder::new(Version::V1)
-    }
+    version: Version,
+    requestor_name: Option<GeneralName>,
+    request_list: Vec<Request>,
+    request_extensions: Option<Extensions>,
 }
 
 impl OcspRequestBuilder {
     /// Returns an `OcspRequestBuilder` with the specified [`Version`]
     pub fn new(version: Version) -> Self {
         Self {
-            tbs_request: TbsRequest {
-                version,
-                requestor_name: None,
-                request_list: Vec::new(),
-                request_extensions: None,
-            },
-            optional_signature: None,
+            version,
+            requestor_name: None,
+            request_list: Vec::new(),
+            request_extensions: None,
         }
     }
 
@@ -90,7 +85,7 @@ impl OcspRequestBuilder {
     ///
     /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
     pub fn with_requestor_name(mut self, requestor_name: GeneralName) -> Self {
-        self.tbs_request.requestor_name = Some(requestor_name);
+        self.requestor_name = Some(requestor_name);
         self
     }
 
@@ -98,7 +93,7 @@ impl OcspRequestBuilder {
     ///
     /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
     pub fn with_request(mut self, request: Request) -> Self {
-        self.tbs_request.request_list.push(request);
+        self.request_list.push(request);
         self
     }
 
@@ -108,22 +103,25 @@ impl OcspRequestBuilder {
     /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
     pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
-        match self.tbs_request.request_extensions {
+        match self.request_extensions {
             Some(ref mut exts) => exts.push(ext),
-            None => self.tbs_request.request_extensions = Some(alloc::vec![ext]),
+            None => self.request_extensions = Some(alloc::vec![ext]),
         }
         Ok(self)
     }
 
     /// Consumes the builder and returns an [`OcspRequest`]
     pub fn build(self) -> OcspRequest {
-        self.into()
+        OcspRequest {
+            tbs_request: self.into_tbs_request(),
+            optional_signature: None,
+        }
     }
 
     /// Consumes the builder and returns a signed [`OcspRequest`]. Errors when the algorithm
     /// identifier encoding, message encoding, or signature generation fails.
     pub fn sign<S, Sig>(
-        mut self,
+        self,
         signer: &mut S,
         certificate_chain: Option<Vec<Certificate>>,
     ) -> Result<OcspRequest, Error>
@@ -131,25 +129,29 @@ impl OcspRequestBuilder {
         S: Signer<Sig> + DynSignatureAlgorithmIdentifier,
         Sig: SignatureEncoding,
     {
+        let tbs_request = self.into_tbs_request();
         let signature_algorithm = signer.signature_algorithm_identifier()?;
-        let signature = signer.try_sign(&self.tbs_request.to_der()?)?;
+        let signature = signer.try_sign(&tbs_request.to_der()?)?;
         let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
-        self.optional_signature = Some(Signature {
+        let optional_signature = Some(Signature {
             signature_algorithm,
             signature,
             certs: certificate_chain,
         });
-        Ok(self.into())
+        Ok(OcspRequest {
+            tbs_request,
+            optional_signature,
+        })
     }
-}
 
-// There is no point going backwards from OcspRequest
-#[allow(clippy::from_over_into)]
-impl Into<OcspRequest> for OcspRequestBuilder {
-    fn into(self) -> OcspRequest {
-        OcspRequest {
-            tbs_request: self.tbs_request,
-            optional_signature: self.optional_signature,
+    /// Consumes the builder and returns a [`TbsRequest`]
+    fn into_tbs_request(self) -> TbsRequest {
+        // Maybe verify extensions before building?
+        TbsRequest {
+            version: self.version,
+            requestor_name: self.requestor_name,
+            request_list: self.request_list,
+            request_extensions: self.request_extensions,
         }
     }
 }
