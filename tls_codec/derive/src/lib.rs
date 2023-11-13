@@ -164,6 +164,40 @@
 //!     c: u8,
 //! }
 //! ```
+//!
+//! ## Conditional deserialization via the `conditionally_deserializable` attribute macro
+//!
+//! In some cases, it can be useful to have two variants of a struct, where one
+//! is deserializable and one isn't. For example, the deserializable variant of
+//! the struct could represent an unverified message, where only verification
+//! produces the verified variant. Further processing could then be restricted
+//! to the undeserializable struct variant.
+//!
+//! A pattern like this can be created via the `conditionally_deserializable`
+//! attribute macro (requires the `conditional_deserialization` feature flag).
+//!
+//! The macro takes a single argument, which is the name of the deserialize
+//! trait variant (either `Reader` or `Bytes`) that should be derived for the
+//! deserializable struct part.
+//!
+//! The macro will then add a boolean const generic to the struct and create two
+//! aliases, one for the deserializable variant and one for the undeserializable
+//! one.
+//!
+//! ```
+//! #[conditionally_deserializable(Reader)]
+//! #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+//! struct ExampleStruct {
+//!     a: u8,
+//!     b: u16,
+//! }
+//!
+//! let undeserializable_struct = UndeserializableExampleStruct { a: 1, b: 2 };
+//! let serialized = undeserializable_struct.tls_serialize_detached().unwrap();
+//! let deserializable_struct =
+//!     DeserializableExampleStruct::tls_deserialize(&mut serialized.as_slice()).unwrap();
+//! ```
+
 extern crate proc_macro;
 extern crate proc_macro2;
 
