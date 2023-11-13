@@ -37,13 +37,11 @@ use x509_cert::{
 /// let issuer = Certificate::from_der(ISSUER_DER).unwrap();
 /// let cert = Certificate::from_der(CERT_DER).unwrap();
 ///
-/// let mut rng = rand::thread_rng();
-///
 /// let req = OcspRequestBuilder::default()
 ///     .with_request(Request::from_cert::<Sha1>(&issuer, &cert).unwrap())
-///     .with_extension(Nonce::generate(&mut rng, 32).unwrap())
-///     .unwrap()
 ///     .build();
+///
+/// let mut rng = rand::thread_rng();
 ///
 /// let req = OcspRequestBuilder::default()
 ///     .with_request(Request::from_issuer::<Sha1>(&issuer, SerialNumber::from(2usize)).unwrap())

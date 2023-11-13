@@ -244,7 +244,15 @@ impl SingleResponse {
         }
     }
 
-    /// Adds a `Next Update` to the builder as defined in [RFC 6960 Section 4.2.1].
+    /// Sets `thisUpdate` in the `singleResponse` as defined in [RFC 6960 Section 4.2.1].
+    ///
+    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    pub fn with_this_update(mut self, this_update: OcspGeneralizedTime) -> Self {
+        self.this_update = this_update;
+        self
+    }
+
+    /// Sets `nextUpdate` in the `singleResponse` as defined in [RFC 6960 Section 4.2.1].
     ///
     /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
     pub fn with_next_update(mut self, next_update: OcspGeneralizedTime) -> Self {
@@ -269,6 +277,8 @@ impl SingleResponse {
     /// not, the `CertStatus` is set to good. The `CertID` is built from the issuer and serial
     /// number. This method does not ensure the CRL is issued by the issuer and only asserts the
     /// serial is not revoked in the provided CRL.
+    ///
+    /// `thisUpdate` and `nextUpdate` will be pulled from the CRL.
     ///
     /// NOTE: this method complies with [RFC 2560 Section 2.2] and not [RFC 6960 Section 2.2].
     /// [RFC 6960] limits the `good` status to only issued certificates. [RFC 2560] only asserts
