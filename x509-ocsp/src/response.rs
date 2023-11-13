@@ -153,7 +153,7 @@ pub struct ResponseBytes {
     pub response: OctetString,
 }
 
-/// Trait for encoding [`ResponsesBytes`]
+/// Trait for encoding [`ResponseBytes`]
 pub trait AsResponseBytes: AssociatedOid + der::Encode {
     /// Encodes the response bytes of successful OCSP responses
     fn to_response_bytes(&self) -> Result<ResponseBytes, der::Error> {
