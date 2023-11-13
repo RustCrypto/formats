@@ -69,12 +69,12 @@ fn calculate_length(len_len_byte: u8) -> Result<(usize, usize), Error> {
 fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), Error> {
     // The length is encoded in the first two bits of the first byte.
 
-    let (len_len_byte, mut remainder) = <u8 as DeserializeBytes>::tls_deserialize(bytes)?;
+    let (len_len_byte, mut remainder) = <u8 as DeserializeBytes>::tls_deserialize_bytes(bytes)?;
 
     let (mut length, len_len) = calculate_length(len_len_byte)?;
 
     for _ in 1..len_len {
-        let (next, next_remainder) = <u8 as DeserializeBytes>::tls_deserialize(remainder)?;
+        let (next, next_remainder) = <u8 as DeserializeBytes>::tls_deserialize_bytes(remainder)?;
         remainder = next_remainder;
         length = (length << 8) + usize::from(next);
     }
@@ -151,7 +151,7 @@ impl<T: Size> Size for &Vec<T> {
 
 impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let ((length, len_len), mut remainder) = read_variable_length_bytes(bytes)?;
 
         if length == 0 {
@@ -162,7 +162,7 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
         let mut result = Vec::new();
         let mut read = len_len;
         while (read - len_len) < length {
-            let (element, next_remainder) = T::tls_deserialize(remainder)?;
+            let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
             remainder = next_remainder;
             read += element.tls_serialized_len();
             result.push(element);
@@ -343,7 +343,7 @@ impl Size for VLBytes {
 
 impl DeserializeBytes for VLBytes {
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let ((length, _), remainder) = read_variable_length_bytes(bytes)?;
         if length == 0 {
             return Ok((Self::new(vec![]), remainder));
@@ -676,11 +676,11 @@ mod secret_bytes {
     }
 
     impl DeserializeBytes for SecretVLBytes {
-        fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
+        fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
         where
             Self: Sized,
         {
-            let (bytes, remainder) = <VLBytes as DeserializeBytes>::tls_deserialize(bytes)?;
+            let (bytes, remainder) = <VLBytes as DeserializeBytes>::tls_deserialize_bytes(bytes)?;
             Ok((Self(bytes), remainder))
         }
     }

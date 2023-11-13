@@ -58,8 +58,10 @@ fn tuple_struct() {
     let serialized_t1 = t1.tls_serialize_detached().unwrap();
     let deserialized_t1 = TupleStruct1::tls_deserialize(&mut serialized_t1.as_slice()).unwrap();
     let (deserialized_bytes_t1, _remainder) =
-        <TupleStruct1 as tls_codec::DeserializeBytes>::tls_deserialize(serialized_t1.as_slice())
-            .unwrap();
+        <TupleStruct1 as tls_codec::DeserializeBytes>::tls_deserialize_bytes(
+            serialized_t1.as_slice(),
+        )
+        .unwrap();
     assert_eq!(t1, deserialized_t1);
     assert_eq!(t1, deserialized_bytes_t1);
     assert_eq!(
@@ -75,8 +77,10 @@ fn tuple_struct() {
     let serialized_t2 = t2.tls_serialize_detached().unwrap();
     let deserialized_t2 = TupleStruct::tls_deserialize(&mut serialized_t2.as_slice()).unwrap();
     let (deserialized_bytes_t2, _remainder) =
-        <TupleStruct as tls_codec::DeserializeBytes>::tls_deserialize(serialized_t2.as_slice())
-            .unwrap();
+        <TupleStruct as tls_codec::DeserializeBytes>::tls_deserialize_bytes(
+            serialized_t2.as_slice(),
+        )
+        .unwrap();
     assert_eq!(t2, deserialized_t2);
     assert_eq!(t2, deserialized_bytes_t2);
     assert_eq!(
@@ -95,7 +99,7 @@ fn simple_enum() {
     let mut b_reader = b;
     let deserialized = ExtensionType::tls_deserialize(&mut b_reader).unwrap();
     let (deserialized_bytes, _remainder) =
-        <ExtensionType as tls_codec::DeserializeBytes>::tls_deserialize(b).unwrap();
+        <ExtensionType as tls_codec::DeserializeBytes>::tls_deserialize_bytes(b).unwrap();
     assert_eq!(ExtensionType::RatchetTree, deserialized);
     assert_eq!(ExtensionType::RatchetTree, deserialized_bytes);
 
@@ -110,7 +114,7 @@ fn simple_enum() {
         let deserialized = ExtensionType::tls_deserialize(&mut b_reader).unwrap();
         assert_eq!(variant, &deserialized);
         let (deserialized_bytes, remainder) =
-            <ExtensionType as tls_codec::DeserializeBytes>::tls_deserialize(b).unwrap();
+            <ExtensionType as tls_codec::DeserializeBytes>::tls_deserialize_bytes(b).unwrap();
         b = remainder;
         assert_eq!(variant, &deserialized_bytes);
     }
@@ -129,7 +133,7 @@ fn deserialize_tls_vec() {
     assert_eq!(long_vector.len(), deserialized_long_vec.len());
     assert_eq!(long_vector, deserialized_long_vec);
     let (deserialized_long_vec_bytes, _remainder): (Vec<ExtensionStruct>, &[u8]) =
-        <TlsVecU16<ExtensionStruct> as tls_codec::DeserializeBytes>::tls_deserialize(
+        <TlsVecU16<ExtensionStruct> as tls_codec::DeserializeBytes>::tls_deserialize_bytes(
             serialized_long_vec.as_slice(),
         )
         .map(|(v, r)| (v.into(), r))
