@@ -6,9 +6,9 @@ use der::{
 };
 use x509_cert::{impl_newtype, time::Time};
 
-/// [`GeneralizedTime`] wrapper for easy conversion from legacy `UTC Time`
+/// [`GeneralizedTime`] wrapper for easy conversion from legacy `UTCTime`
 ///
-/// OCSP does not support UTC Time while many other X.509 structures do.
+/// OCSP does not support `UTCTime` while many other X.509 structures do.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct OcspGeneralizedTime(pub GeneralizedTime);
 
