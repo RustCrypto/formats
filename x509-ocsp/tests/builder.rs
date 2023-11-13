@@ -14,18 +14,25 @@ use x509_ocsp::{ext::*, *};
 lazy_static! {
     static ref ISSUER: Certificate =
         Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-ca.der").unwrap())
-            .unwrap();
+        .unwrap();
     static ref ISSUER_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
         &std::fs::read("tests/examples/rsa-2048-sha256-ca-key.der").unwrap()
-    )
-    .unwrap();
+        )
+        .unwrap();
     static ref CERT: Certificate =
         Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-crt.der").unwrap())
-            .unwrap();
+        .unwrap();
     static ref CERT_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
         &std::fs::read("tests/examples/rsa-2048-sha256-crt-key.der").unwrap()
-    )
-    .unwrap();
+        )
+        .unwrap();
+    static ref OCSP: Certificate =
+        Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt.der").unwrap())
+        .unwrap();
+    static ref OCSP_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
+        &std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt-key.der").unwrap()
+        )
+        .unwrap();
 
     // PrintableString: CN = rsa-2048-sha256-ocsp-crt
     static ref RESPONDER_ID: ResponderId = ResponderId::ByName(
@@ -33,10 +40,10 @@ lazy_static! {
             &hex!(
                 "30233121301f060355040313187273612d323034382d7368613235362d6f\
                  6373702d637274"
-            )[..]
-        )
+                 )[..]
+            )
         .unwrap()
-    );
+        );
 }
 
 #[test]
@@ -164,6 +171,25 @@ fn encode_ocsp_req_signed() {
         .sign(&mut signer, Some(vec![CERT.clone()]))
         .unwrap();
     assert_eq!(&req.to_der().unwrap(), &req_der);
+}
+
+#[test]
+fn encode_ocsp_resp_errors() {
+    let req_der = std::fs::read("tests/examples/ocsp-malformed.der").unwrap();
+    let resp = OcspResponse::malformed_request();
+    assert_eq!(&resp.to_der().unwrap(), &req_der);
+    let req_der = std::fs::read("tests/examples/ocsp-internal-error.der").unwrap();
+    let resp = OcspResponse::internal_error();
+    assert_eq!(&resp.to_der().unwrap(), &req_der);
+    let req_der = std::fs::read("tests/examples/ocsp-try-later.der").unwrap();
+    let resp = OcspResponse::try_later();
+    assert_eq!(&resp.to_der().unwrap(), &req_der);
+    let req_der = std::fs::read("tests/examples/ocsp-sig-required.der").unwrap();
+    let resp = OcspResponse::sig_required();
+    assert_eq!(&resp.to_der().unwrap(), &req_der);
+    let req_der = std::fs::read("tests/examples/ocsp-unauthorized.der").unwrap();
+    let resp = OcspResponse::unauthorized();
+    assert_eq!(&resp.to_der().unwrap(), &req_der);
 }
 
 #[test]
@@ -390,6 +416,38 @@ fn encode_ocsp_resp_multiple_responses() {
                 &mut signer,
                 Some(vec![ISSUER.clone()]),
                 OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+            )
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(&resp.to_der().unwrap(), &resp_der);
+}
+
+#[test]
+fn encode_ocsp_resp_revoked_delegated() {
+    let resp_der = std::fs::read("tests/examples/rsa-2048-sha256-revoked-ocsp-res.der").unwrap();
+    let mut signer = SigningKey::<Sha256>::new(OCSP_KEY.clone());
+    let resp = OcspResponse::successful(
+        BasicOcspResponseBuilder::new(Version::V1, RESPONDER_ID.clone())
+            .with_single_response(
+                SingleResponse::new(
+                    CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(3usize)).unwrap(),
+                    CertStatus::revoked(RevokedInfo {
+                        revocation_time: OcspGeneralizedTime::from(
+                            DateTime::new(2023, 11, 5, 1, 9, 45).unwrap(),
+                        ),
+                        revocation_reason: None,
+                    }),
+                    OcspGeneralizedTime::from(DateTime::new(2023, 11, 5, 1, 9, 46).unwrap()),
+                )
+                .with_next_update(OcspGeneralizedTime::from(
+                    DateTime::new(2024, 11, 4, 1, 9, 46).unwrap(),
+                )),
+            )
+            .sign(
+                &mut signer,
+                Some(vec![OCSP.clone()]),
+                OcspGeneralizedTime::from(DateTime::new(2023, 11, 5, 1, 9, 46).unwrap()),
             )
             .unwrap(),
     )
