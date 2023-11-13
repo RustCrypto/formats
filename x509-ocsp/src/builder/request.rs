@@ -1,17 +1,13 @@
 //! OCSP request builder
 
-use crate::{builder::Error, CertId, OcspRequest, Request, Signature, TbsRequest, Version};
+use crate::{builder::Error, OcspRequest, Request, Signature, TbsRequest, Version};
 use alloc::vec::Vec;
-use const_oid::{db::rfc6960::ID_PKIX_OCSP_NONCE, AssociatedOid};
 use der::{asn1::BitString, Encode};
-use digest::Digest;
-use rand_core::CryptoRngCore;
 use signature::{SignatureEncoding, Signer};
 use spki::DynSignatureAlgorithmIdentifier;
 use x509_cert::{
     ext::{pkix::name::GeneralName, AsExtension, Extensions},
     name::Name,
-    serial_number::SerialNumber,
     Certificate,
 };
 
@@ -151,55 +147,5 @@ impl OcspRequestBuilder {
             request_list: self.request_list,
             request_extensions: self.request_extensions,
         }
-    }
-}
-
-impl Request {
-    /// Returns a new `Request` with the specified `CertID`
-    pub fn new(req_cert: CertId) -> Self {
-        Self {
-            req_cert,
-            single_request_extensions: None,
-        }
-    }
-
-    /// Generates a `CertID` by running the issuer's subject and key through the specified
-    /// [`Digest`].
-    ///
-    /// [RFC 6960 Section 4.1.1]
-    ///
-    /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
-    pub fn from_issuer<D>(issuer: &Certificate, serial_number: SerialNumber) -> Result<Self, Error>
-    where
-        D: Digest + AssociatedOid,
-    {
-        Ok(Self::new(CertId::from_issuer::<D>(issuer, serial_number)?))
-    }
-
-    /// Generates a `CertID` by running the issuer's subject and key through the specified
-    /// [`Digest`] and pulls the serial from `cert`. This does not ensure that `cert` is actually
-    /// issued by `issuer`.
-    ///
-    /// [RFC 6960 Section 4.1.1]
-    ///
-    /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
-    pub fn from_cert<D>(issuer: &Certificate, cert: &Certificate) -> Result<Self, Error>
-    where
-        D: Digest + AssociatedOid,
-    {
-        Ok(Self::new(CertId::from_cert::<D>(issuer, cert)?))
-    }
-
-    /// Adds a single request extension as specified in [RFC 6960 Section 4.4]. Errors when the
-    /// extension encoding fails.
-    ///
-    /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
-    pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
-        let ext = ext.to_extension(&Name::default(), &[])?;
-        match self.single_request_extensions {
-            Some(ref mut exts) => exts.push(ext),
-            None => self.single_request_extensions = Some(alloc::vec![ext]),
-        }
-        Ok(self)
     }
 }

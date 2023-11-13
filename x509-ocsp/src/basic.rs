@@ -1,6 +1,8 @@
 //! Basic OCSP Response
 
-use crate::{ext::Nonce, AsResponseBytes, OcspGeneralizedTime};
+use crate::{
+    ext::Nonce, AsResponseBytes, CertId, CertStatus, OcspGeneralizedTime, ResponderId, Version,
+};
 use alloc::vec::Vec;
 use const_oid::{
     db::rfc6960::{ID_PKIX_OCSP_BASIC, ID_PKIX_OCSP_NONCE},
@@ -8,33 +10,11 @@ use const_oid::{
 };
 use core::{default::Default, option::Option};
 use der::{
-    asn1::{BitString, Null, ObjectIdentifier, OctetString},
-    Choice, Decode, Enumerated, Sequence,
+    asn1::{BitString, ObjectIdentifier},
+    Decode, Sequence,
 };
 use spki::AlgorithmIdentifierOwned;
-use x509_cert::{
-    certificate::Certificate,
-    crl::RevokedCert,
-    ext::{pkix::CrlReason, Extensions},
-    name::Name,
-    serial_number::SerialNumber,
-};
-
-/// OCSP `Version` as defined in [RFC 6960 Section 4.1.1].
-///
-/// ```text
-/// Version ::= INTEGER { v1(0) }
-/// ```
-///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
-#[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Enumerated)]
-#[asn1(type = "INTEGER")]
-#[repr(u8)]
-pub enum Version {
-    /// Version 1 (default)
-    #[default]
-    V1 = 0,
-}
+use x509_cert::{certificate::Certificate, ext::Extensions};
 
 /// BasicOcspResponse structure as defined in [RFC 6960 Section 4.2.1].
 ///
@@ -118,50 +98,6 @@ impl ResponseData {
     }
 }
 
-/// ResponderID structure as defined in [RFC 6960 Section 4.2.1].
-///
-/// ```text
-/// ResponderID ::= CHOICE {
-///    byName              [1] Name,
-///    byKey               [2] KeyHash }
-/// ```
-///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-#[derive(Clone, Debug, Eq, PartialEq, Choice)]
-#[allow(missing_docs)]
-pub enum ResponderId {
-    #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
-    ByName(Name),
-
-    #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
-    ByKey(KeyHash),
-}
-
-impl From<Name> for ResponderId {
-    fn from(other: Name) -> Self {
-        Self::ByName(other)
-    }
-}
-
-impl From<KeyHash> for ResponderId {
-    fn from(other: KeyHash) -> Self {
-        Self::ByKey(other)
-    }
-}
-
-/// KeyHash structure as defined in [RFC 6960 Section 4.2.1].
-///
-/// ```text
-/// KeyHash ::= OCTET STRING -- SHA-1 hash of responder's public key
-///                          -- (i.e., the SHA-1 hash of the value of the
-///                          -- BIT STRING subjectPublicKey [excluding
-///                          -- the tag, length, and number of unused
-///                          -- bits] in the responder's certificate)
-/// ```
-///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-pub type KeyHash = OctetString;
-
 /// SingleResponse structure as defined in [RFC 6960 Section 4.2.1].
 ///
 /// ```text
@@ -188,138 +124,107 @@ pub struct SingleResponse {
     pub single_extensions: Option<Extensions>,
 }
 
-/// CertID structure as defined in [RFC 6960 Section 4.1.1].
-///
-/// ```text
-/// CertID ::= SEQUENCE {
-///    hashAlgorithm           AlgorithmIdentifier,
-///    issuerNameHash          OCTET STRING, -- Hash of issuer's DN
-///    issuerKeyHash           OCTET STRING, -- Hash of issuer's public key
-///    serialNumber            CertificateSerialNumber }
-/// ```
-///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-#[allow(missing_docs)]
-pub struct CertId {
-    pub hash_algorithm: AlgorithmIdentifierOwned,
-    pub issuer_name_hash: OctetString,
-    pub issuer_key_hash: OctetString,
-    pub serial_number: SerialNumber,
-}
+#[cfg(feature = "builder")]
+mod builder {
+    use crate::{builder::Error, CertId, CertStatus, OcspGeneralizedTime, SingleResponse};
+    use const_oid::AssociatedOid;
+    use digest::Digest;
+    use x509_cert::{
+        crl::CertificateList, ext::AsExtension, name::Name, serial_number::SerialNumber,
+        Certificate,
+    };
 
-impl From<&CertId> for CertId {
-    /// Clones the referenced `CertID`
-    fn from(other: &CertId) -> Self {
-        other.clone()
-    }
-}
+    impl SingleResponse {
+        /// Returns a `SingleResponse` given the `CertID`, `CertStatus`, and `This Update`. `Next
+        /// Update` is set to `None`.
+        pub fn new(
+            cert_id: CertId,
+            cert_status: CertStatus,
+            this_update: OcspGeneralizedTime,
+        ) -> Self {
+            Self {
+                cert_id,
+                cert_status,
+                this_update,
+                next_update: None,
+                single_extensions: None,
+            }
+        }
 
-/// CertStatus structure as defined in [RFC 6960 Section 4.2.1].
-///
-/// ```text
-/// CertStatus ::= CHOICE {
-///    good                [0] IMPLICIT NULL,
-///    revoked             [1] IMPLICIT RevokedInfo,
-///    unknown             [2] IMPLICIT UnknownInfo }
-/// ```
-///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Choice)]
-#[allow(missing_docs)]
-pub enum CertStatus {
-    #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
-    Good(Null),
+        /// Sets `thisUpdate` in the `singleResponse` as defined in [RFC 6960 Section 4.2.1].
+        ///
+        /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+        pub fn with_this_update(mut self, this_update: OcspGeneralizedTime) -> Self {
+            self.this_update = this_update;
+            self
+        }
 
-    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
-    Revoked(RevokedInfo),
+        /// Sets `nextUpdate` in the `singleResponse` as defined in [RFC 6960 Section 4.2.1].
+        ///
+        /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+        pub fn with_next_update(mut self, next_update: OcspGeneralizedTime) -> Self {
+            self.next_update = Some(next_update);
+            self
+        }
 
-    #[asn1(context_specific = "2", tag_mode = "IMPLICIT")]
-    Unknown(UnknownInfo),
-}
+        /// Adds a single response extension as specified in [RFC 6960 Section 4.4]. Errors when the
+        /// extension encoding fails.
+        ///
+        /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
+        pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
+            let ext = ext.to_extension(&Name::default(), &[])?;
+            match self.single_extensions {
+                Some(ref mut exts) => exts.push(ext),
+                None => self.single_extensions = Some(alloc::vec![ext]),
+            }
+            Ok(self)
+        }
 
-impl CertStatus {
-    /// Returns `CertStatus` set to `good` as defined in [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn good() -> Self {
-        Self::Good(Null)
-    }
-
-    /// Returns `CertStatus` set to `revoked` as defined in [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn revoked(info: impl Into<RevokedInfo>) -> Self {
-        Self::Revoked(info.into())
-    }
-
-    /// Returns `CertStatus` set to `unknown` as defined in [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn unknown() -> Self {
-        Self::Unknown(Null)
-    }
-}
-
-/// RevokedInfo structure as defined in [RFC 6960 Section 4.2.1].
-///
-/// ```text
-/// RevokedInfo ::= SEQUENCE {
-///    revocationTime          GeneralizedTime,
-///    revocationReason        [0] EXPLICIT CRLReason OPTIONAL }
-/// ```
-///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence)]
-#[allow(missing_docs)]
-pub struct RevokedInfo {
-    pub revocation_time: OcspGeneralizedTime,
-
-    #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
-    pub revocation_reason: Option<CrlReason>,
-}
-
-/// RevokedInfo structure as defined in [RFC 6960 Section 4.2.1].
-///
-/// ```text
-/// UnknownInfo ::= NULL
-/// ```
-///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-pub type UnknownInfo = Null;
-
-impl From<&RevokedInfo> for RevokedInfo {
-    fn from(info: &RevokedInfo) -> Self {
-        *info
-    }
-}
-
-impl From<&RevokedCert> for RevokedInfo {
-    /// Converts [`RevokedCert`] to [`RevokedInfo`].
-    ///
-    /// Attempts to extract the [`CrlReason`]. If it fails, the `CrlReason` is set to `None`.
-    fn from(rc: &RevokedCert) -> Self {
-        Self {
-            revocation_time: rc.revocation_date.into(),
-            revocation_reason: match &rc.crl_entry_extensions {
-                Some(extns) => {
-                    let mut filter = extns.iter().filter(|extn| extn.extn_id == CrlReason::OID);
+        /// Returns a `SingleResponse` by searching through the CRL to see if `serial` is revoked. If
+        /// not, the `CertStatus` is set to good. The `CertID` is built from the issuer and serial
+        /// number. This method does not ensure the CRL is issued by the issuer and only asserts the
+        /// serial is not revoked in the provided CRL.
+        ///
+        /// `thisUpdate` and `nextUpdate` will be pulled from the CRL.
+        ///
+        /// NOTE: this method complies with [RFC 2560 Section 2.2] and not [RFC 6960 Section 2.2].
+        /// [RFC 6960] limits the `good` status to only issued certificates. [RFC 2560] only asserts
+        /// the serial was not revoked and makes no assertion the serial was ever issued.
+        ///
+        /// [RFC 2560]: https://datatracker.ietf.org/doc/html/rfc2560
+        /// [RFC 2560 Section 2.2]: https://datatracker.ietf.org/doc/html/rfc2560#section-2.2
+        /// [RFC 6960]: https://datatracker.ietf.org/doc/html/rfc6960
+        /// [RFC 6960 Section 2.2]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.2
+        pub fn from_crl<D>(
+            issuer: &Certificate,
+            crl: &CertificateList,
+            serial_number: SerialNumber,
+        ) -> Result<Self, Error>
+        where
+            D: Digest + AssociatedOid,
+        {
+            let cert_status = match &crl.tbs_cert_list.revoked_certificates {
+                Some(revoked_certs) => {
+                    let mut filter = revoked_certs
+                        .iter()
+                        .filter(|rc| rc.serial_number == serial_number);
                     match filter.next() {
-                        Some(extn) => CrlReason::from_der(extn.extn_value.as_bytes()).ok(),
-                        None => None,
+                        None => CertStatus::good(),
+                        Some(rc) => CertStatus::revoked(rc),
                     }
                 }
-                None => None,
-            },
+                None => CertStatus::good(),
+            };
+            let cert_id = CertId::from_issuer::<D>(issuer, serial_number)?;
+            let this_update = crl.tbs_cert_list.this_update.into();
+            let next_update = crl.tbs_cert_list.next_update.map(|t| t.into());
+            Ok(Self {
+                cert_id,
+                cert_status,
+                this_update,
+                next_update,
+                single_extensions: None,
+            })
         }
-    }
-}
-
-impl From<RevokedCert> for RevokedInfo {
-    /// Converts [`RevokedCert`] to [`RevokedInfo`].
-    ///
-    /// Attempts to extract the [`CrlReason`]. If it fails, the `CrlReason` is set to `None`.
-    fn from(rc: RevokedCert) -> Self {
-        Self::from(&rc)
     }
 }

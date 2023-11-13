@@ -26,7 +26,7 @@ const SHA_256_WITH_RSA_ENCRYPTION: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.11");
 
 lazy_static! {
-    // CN = rsa-2048-sha256-ocsp-crt (printable string)
+    // PrintableString: CN = rsa-2048-sha256-ocsp-crt
     static ref RESPONDER_ID: ResponderId = ResponderId::ByName(
         Name::from_der(
             &hex!(
@@ -36,6 +36,8 @@ lazy_static! {
             )
         .unwrap()
         );
+
+    // Just a random time
     static ref TIME: OcspGeneralizedTime =
         OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap());
 }

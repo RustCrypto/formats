@@ -36,6 +36,80 @@ pub struct OcspResponse {
     pub response_bytes: Option<ResponseBytes>,
 }
 
+impl OcspResponse {
+    /// Encodes an `OcspResponse` with the status set to `Successful`
+    ///
+    /// [RFC 6960 Section 4.2.1]
+    ///
+    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    pub fn successful(res: impl AsResponseBytes) -> Result<Self, der::Error> {
+        Ok(OcspResponse {
+            response_status: OcspResponseStatus::Successful,
+            response_bytes: Some(res.to_response_bytes()?),
+        })
+    }
+
+    /// Encodes an `OcspResponse` with the status set to `MalformedRequest`
+    ///
+    /// [RFC 6960 Section 4.2.1]
+    ///
+    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    pub fn malformed_request() -> Self {
+        OcspResponse {
+            response_status: OcspResponseStatus::MalformedRequest,
+            response_bytes: None,
+        }
+    }
+
+    /// Encodes an `OcspResponse` with the status set to `InternalError`
+    ///
+    /// [RFC 6960 Section 4.2.1]
+    ///
+    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    pub fn internal_error() -> Self {
+        OcspResponse {
+            response_status: OcspResponseStatus::InternalError,
+            response_bytes: None,
+        }
+    }
+
+    /// Encodes an `OcspResponse` with the status set to `TryLater`
+    ///
+    /// [RFC 6960 Section 4.2.1]
+    ///
+    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    pub fn try_later() -> Self {
+        OcspResponse {
+            response_status: OcspResponseStatus::TryLater,
+            response_bytes: None,
+        }
+    }
+
+    /// Encodes an `OcspResponse` with the status set to `SigRequired`
+    ///
+    /// [RFC 6960 Section 4.2.1]
+    ///
+    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    pub fn sig_required() -> Self {
+        OcspResponse {
+            response_status: OcspResponseStatus::SigRequired,
+            response_bytes: None,
+        }
+    }
+
+    /// Encodes an `OcspResponse` with the status set to `Unauthorized`
+    ///
+    /// [RFC 6960 Section 4.2.1]
+    ///
+    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    pub fn unauthorized() -> Self {
+        OcspResponse {
+            response_status: OcspResponseStatus::Unauthorized,
+            response_bytes: None,
+        }
+    }
+}
+
 /// OCSPResponseStatus structure as defined in [RFC 6960 Section 4.2.1].
 ///
 /// ```text
@@ -79,7 +153,7 @@ pub struct ResponseBytes {
     pub response: OctetString,
 }
 
-/// Trait for encoding `ResponsesBytes`
+/// Trait for encoding [`ResponsesBytes`]
 pub trait AsResponseBytes: AssociatedOid + der::Encode {
     /// Encodes the response bytes of successful OCSP responses
     fn to_response_bytes(&self) -> Result<ResponseBytes, der::Error> {

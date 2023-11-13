@@ -1,96 +1,18 @@
 //! OCSP response builder
 
 use crate::{
-    builder::Error, AsResponseBytes, BasicOcspResponse, CertId, CertStatus, OcspGeneralizedTime,
-    OcspResponse, OcspResponseStatus, ResponderId, ResponseData, SingleResponse, Version,
+    builder::Error, BasicOcspResponse, OcspGeneralizedTime, ResponderId, ResponseData,
+    SingleResponse, Version,
 };
 use alloc::vec::Vec;
-use const_oid::AssociatedOid;
 use der::{asn1::BitString, Encode};
-use digest::Digest;
 use signature::{SignatureEncoding, Signer};
 use spki::DynSignatureAlgorithmIdentifier;
 use x509_cert::{
-    crl::CertificateList,
     ext::{AsExtension, Extensions},
     name::Name,
-    serial_number::SerialNumber,
     Certificate,
 };
-
-impl OcspResponse {
-    /// Encodes an `OcspResponse` with the status set to `Successful`
-    ///
-    /// [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn successful(res: impl AsResponseBytes) -> Result<Self, der::Error> {
-        Ok(OcspResponse {
-            response_status: OcspResponseStatus::Successful,
-            response_bytes: Some(res.to_response_bytes()?),
-        })
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `MalformedRequest`
-    ///
-    /// [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn malformed_request() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::MalformedRequest,
-            response_bytes: None,
-        }
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `InternalError`
-    ///
-    /// [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn internal_error() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::InternalError,
-            response_bytes: None,
-        }
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `TryLater`
-    ///
-    /// [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn try_later() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::TryLater,
-            response_bytes: None,
-        }
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `SigRequired`
-    ///
-    /// [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn sig_required() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::SigRequired,
-            response_bytes: None,
-        }
-    }
-
-    /// Encodes an `OcspResponse` with the status set to `Unauthorized`
-    ///
-    /// [RFC 6960 Section 4.2.1]
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn unauthorized() -> Self {
-        OcspResponse {
-            response_status: OcspResponseStatus::Unauthorized,
-            response_bytes: None,
-        }
-    }
-}
 
 /// X509 Basic OCSP Response builder
 ///
@@ -227,96 +149,6 @@ impl BasicOcspResponseBuilder {
             signature_algorithm,
             signature,
             certs: certificate_chain,
-        })
-    }
-}
-
-impl SingleResponse {
-    /// Returns a `SingleResponse` given the `CertID`, `CertStatus`, and `This Update`. `Next
-    /// Update` is set to `None`.
-    pub fn new(cert_id: CertId, cert_status: CertStatus, this_update: OcspGeneralizedTime) -> Self {
-        Self {
-            cert_id,
-            cert_status,
-            this_update,
-            next_update: None,
-            single_extensions: None,
-        }
-    }
-
-    /// Sets `thisUpdate` in the `singleResponse` as defined in [RFC 6960 Section 4.2.1].
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn with_this_update(mut self, this_update: OcspGeneralizedTime) -> Self {
-        self.this_update = this_update;
-        self
-    }
-
-    /// Sets `nextUpdate` in the `singleResponse` as defined in [RFC 6960 Section 4.2.1].
-    ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
-    pub fn with_next_update(mut self, next_update: OcspGeneralizedTime) -> Self {
-        self.next_update = Some(next_update);
-        self
-    }
-
-    /// Adds a single response extension as specified in [RFC 6960 Section 4.4]. Errors when the
-    /// extension encoding fails.
-    ///
-    /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
-    pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
-        let ext = ext.to_extension(&Name::default(), &[])?;
-        match self.single_extensions {
-            Some(ref mut exts) => exts.push(ext),
-            None => self.single_extensions = Some(alloc::vec![ext]),
-        }
-        Ok(self)
-    }
-
-    /// Returns a `SingleResponse` by searching through the CRL to see if `serial` is revoked. If
-    /// not, the `CertStatus` is set to good. The `CertID` is built from the issuer and serial
-    /// number. This method does not ensure the CRL is issued by the issuer and only asserts the
-    /// serial is not revoked in the provided CRL.
-    ///
-    /// `thisUpdate` and `nextUpdate` will be pulled from the CRL.
-    ///
-    /// NOTE: this method complies with [RFC 2560 Section 2.2] and not [RFC 6960 Section 2.2].
-    /// [RFC 6960] limits the `good` status to only issued certificates. [RFC 2560] only asserts
-    /// the serial was not revoked and makes no assertion the serial was ever issued.
-    ///
-    /// [RFC 2560]: https://datatracker.ietf.org/doc/html/rfc2560
-    /// [RFC 2560 Section 2.2]: https://datatracker.ietf.org/doc/html/rfc2560#section-2.2
-    /// [RFC 6960]: https://datatracker.ietf.org/doc/html/rfc6960
-    /// [RFC 6960 Section 2.2]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.2
-    pub fn from_crl<D>(
-        issuer: &Certificate,
-        crl: &CertificateList,
-        serial_number: SerialNumber,
-    ) -> Result<Self, Error>
-    where
-        D: Digest + AssociatedOid,
-    {
-        let cert_status = match &crl.tbs_cert_list.revoked_certificates {
-            Some(revoked_certs) => {
-                let mut filter = revoked_certs
-                    .iter()
-                    .filter(|rc| rc.serial_number == serial_number);
-                match filter.next() {
-                    None => CertStatus::good(),
-                    Some(rc) => CertStatus::Revoked(rc.into()),
-                }
-            }
-            None => CertStatus::good(),
-        };
-        let cert_id = CertId::from_issuer::<D>(issuer, serial_number)?;
-        let this_update = crl.tbs_cert_list.this_update.into();
-        let next_update = crl.tbs_cert_list.next_update.map(|t| t.into());
-        Ok(Self {
-            cert_id,
-            cert_status,
-            this_update,
-            next_update,
-            single_extensions: None,
         })
     }
 }
