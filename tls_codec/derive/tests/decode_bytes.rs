@@ -33,11 +33,11 @@ fn simple_enum() {
     let serialized = ExtensionType::KeyId.tls_serialize().unwrap();
     let (deserialized, rest) = ExtensionType::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, ExtensionType::KeyId);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
     let serialized = ExtensionType::SomethingElse.tls_serialize().unwrap();
     let (deserialized, rest) = ExtensionType::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, ExtensionType::SomethingElse);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[test]
@@ -50,7 +50,7 @@ fn simple_struct() {
     let serialized = extension.tls_serialize().unwrap();
     let (deserialized, rest) = ExtensionStruct::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, extension);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[test]
@@ -64,7 +64,7 @@ fn tuple_struct() {
     let serialized = x.tls_serialize().unwrap();
     let (deserialized, rest) = TupleStruct::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[test]
@@ -74,7 +74,7 @@ fn byte_arrays() {
     let (deserialized, rest) =
         <[u8; 4] as DeserializeBytes>::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
@@ -95,7 +95,7 @@ mod custom {
         v.tls_serialize()
     }
 
-    pub fn tls_deserialize<T: DeserializeBytes>(
+    pub fn tls_deserialize_bytes<T: DeserializeBytes>(
         bytes: &[u8],
     ) -> Result<(T, &[u8]), tls_codec::Error> {
         T::tls_deserialize_bytes(bytes)
@@ -112,7 +112,7 @@ fn custom() {
     assert_eq!(vec![3, 0, 1, 2, 3], serialized);
     let (deserialized, rest) = Custom::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
@@ -127,7 +127,7 @@ fn enum_with_tuple_variant() {
     let serialized = x.tls_serialize().unwrap();
     let (deserialized, rest) = EnumWithTupleVariant::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
@@ -142,7 +142,7 @@ fn enum_with_struct_variant() {
     let serialized = x.tls_serialize().unwrap();
     let (deserialized, rest) = EnumWithStructVariant::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
@@ -161,7 +161,7 @@ fn enum_with_data_and_discriminant() {
     let (deserialized, rest) =
         EnumWithDataAndDiscriminant::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[test]
@@ -171,7 +171,7 @@ fn discriminant_is_incremented_implicitly() {
     let (deserialized, rest) =
         EnumWithDataAndDiscriminant::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 mod discriminant {
@@ -206,21 +206,21 @@ fn enum_with_data_and_const_discriminant() {
     let (deserialized, rest) =
         EnumWithDataAndConstDiscriminant::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 
     let x = EnumWithDataAndConstDiscriminant::B;
     let serialized = x.tls_serialize().unwrap();
     let (deserialized, rest) =
         EnumWithDataAndConstDiscriminant::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 
     let x = EnumWithDataAndConstDiscriminant::C;
     let serialized = x.tls_serialize().unwrap();
     let (deserialized, rest) =
         EnumWithDataAndConstDiscriminant::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
@@ -236,7 +236,7 @@ fn enum_with_custom_serialized_field() {
     let (deserialized, rest) =
         EnumWithCustomSerializedField::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
-    assert_eq!(rest, []);
+    assert!(rest.is_empty());
 }
 
 #[test]
@@ -248,7 +248,7 @@ fn that_skip_attribute_on_struct_works() {
         let serialized = test.tls_serialize().unwrap();
         let (deserialized, rest) = T::tls_deserialize_bytes(&serialized).unwrap();
         assert_eq!(deserialized, expected);
-        assert_eq!(rest, []);
+        assert!(rest.is_empty());
     }
 
     #[derive(Debug, PartialEq, TlsSerializeBytes, TlsDeserializeBytes, TlsSize)]

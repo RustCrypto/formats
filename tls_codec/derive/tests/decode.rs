@@ -308,8 +308,8 @@ mod custom_bytes {
         TlsByteSliceU32(v).tls_serialize(writer)
     }
 
-    pub fn tls_deserialize(bytes: &[u8]) -> Result<(Vec<u8>, &[u8]), tls_codec::Error> {
-        let (vec, remainder) = TlsByteVecU32::tls_deserialize(bytes)?;
+    pub fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Vec<u8>, &[u8]), tls_codec::Error> {
+        let (vec, remainder) = TlsByteVecU32::tls_deserialize_bytes(bytes)?;
         Ok((vec.into_vec(), remainder))
     }
 }
