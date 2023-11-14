@@ -192,17 +192,6 @@ pub trait Deserialize: Size {
 
         Ok(out)
     }
-    /// This function deserializes the provided `bytes` and returns the populated
-    /// struct.
-    ///
-    /// Returns an error if one occurs during deserialization.
-    #[cfg(feature = "std")]
-    fn tls_deserialize_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
-        Self::tls_deserialize(&mut bytes.as_ref())
-    }
 }
 
 pub trait DeserializeBytes: Size {
