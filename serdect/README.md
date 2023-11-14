@@ -30,9 +30,18 @@ other kinds of data-dependent branching on the contents of the serialized data,
 using a constant-time hex serialization with human-readable formats should
 help reduce the overall timing variability.
 
+`serdect` is tested against the following crates:
+- [`bincode`](https://crates.io/crates/bincode) v1
+- [`ciborium`](https://crates.io/crates/ciborium) v0.2
+- [`rmp-serde`](https://crates.io/crates/rmp-serde) v1
+- [`serde-json-core`](https://crates.io/crates/serde-json-core) v0.5
+- [`serde-json`](https://crates.io/crates/serde-json) v1
+- [`toml`](https://crates.io/crates/toml) v0.7
+
+
 ## Minimum Supported Rust Version
 
-Rust **1.60** or newer.
+Rust **1.70** or newer.
 
 In the future, we reserve the right to change MSRV (i.e. MSRV is out-of-scope
 for this crate's SemVer guarantees), however when we do it will be accompanied by
@@ -60,7 +69,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/serdect/badge.svg
 [docs-link]: https://docs.rs/serdect/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[msrv-image]: https://img.shields.io/badge/rustc-1.60+-blue.svg
+[msrv-image]: https://img.shields.io/badge/rustc-1.70+-blue.svg
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/serdect.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/serdect.yml
 

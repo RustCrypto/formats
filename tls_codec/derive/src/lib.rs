@@ -1068,8 +1068,8 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 restrict_conditional_generic(impl_generics, ty_generics, true);
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
-                    fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
-                        #(let (#members_values, bytes) = #prefixes::tls_deserialize(bytes)?;)*
+                    fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                        #(let (#members_values, bytes) = #prefixes::tls_deserialize_bytes(bytes)?;)*
                         Ok((Self {
                             #(#members: #members_values,)*
                             #(#members_default: Default::default(),)*
@@ -1112,7 +1112,7 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                         .collect::<Vec<_>>();
                     quote! {
                         #discriminant => {
-                            #(let (#member_values, remainder) = #prefixes::tls_deserialize(remainder)?;)*
+                            #(let (#member_values, remainder) = #prefixes::tls_deserialize_bytes(remainder)?;)*
                             let result = #ident::#variant_id { #(#members: #member_values,)* };
                             Ok((result, remainder))
                         },
@@ -1122,9 +1122,9 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
-                    fn tls_deserialize(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
+                    fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         #discriminant_constants
-                        let (discriminant, remainder) = <#repr as tls_codec::DeserializeBytes>::tls_deserialize(bytes)?;
+                        let (discriminant, remainder) = #repr::tls_deserialize_bytes(bytes)?;
                         match discriminant {
                             #(#arms)*
                             _ => {

@@ -7,13 +7,11 @@ use proptest::{array::*, collection::vec, prelude::*};
 use serdect::{array, slice};
 
 /// Example input to be serialized.
-const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0E0F");
+/// Last byte is `0xFF` to test that no packing is performed for values under 128.
+const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0EFF");
 
 /// bincode serialization of [`EXAMPLE_BYTES`] as a slice.
-const BINCODE_SLICE: [u8; 24] = hex!("1000000000000000000102030405060708090A0B0C0D0E0F");
-
-/// bincode serialization of [`EXAMPLE_BYTES`] as an array.
-const BINCODE_ARRAY: [u8; 16] = EXAMPLE_BYTES;
+const BINCODE_SLICE: [u8; 24] = hex!("1000000000000000000102030405060708090A0B0C0D0EFF");
 
 #[test]
 fn deserialize_slice() {
@@ -30,14 +28,14 @@ fn deserialize_slice_owned() {
 
 #[test]
 fn deserialize_array() {
-    let deserialized = bincode::deserialize::<array::HexUpperOrBin<16>>(&BINCODE_ARRAY).unwrap();
+    let deserialized = bincode::deserialize::<array::HexUpperOrBin<16>>(&BINCODE_SLICE).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 }
 
 #[test]
 fn deserialize_array_owned() {
     let deserialized =
-        bincode::deserialize_from::<_, array::HexUpperOrBin<16>>(BINCODE_ARRAY.as_ref()).unwrap();
+        bincode::deserialize_from::<_, array::HexUpperOrBin<16>>(BINCODE_SLICE.as_ref()).unwrap();
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 }
 
@@ -51,7 +49,7 @@ fn serialize_slice() {
 #[test]
 fn serialize_array() {
     let serialized = bincode::serialize(&array::HexUpperOrBin::from(EXAMPLE_BYTES)).unwrap();
-    assert_eq!(&serialized, &BINCODE_ARRAY);
+    assert_eq!(&serialized, &BINCODE_SLICE);
 }
 
 proptest! {
@@ -67,5 +65,7 @@ proptest! {
         let serialized = bincode::serialize(&array::HexUpperOrBin::from(bytes)).unwrap();
         let deserialized = bincode::deserialize::<array::HexUpperOrBin<32>>(&serialized).unwrap();
         prop_assert_eq!(bytes, deserialized.0);
+        // 8 bytes for the length tag + 32 bytes of data
+        prop_assert_eq!(serialized.len(), 8 + 32);
     }
 }

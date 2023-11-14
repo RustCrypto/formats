@@ -9,13 +9,12 @@ use serde::Serialize;
 use serdect::{array, slice};
 
 /// Example input to be serialized.
-const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0E0F");
+/// Last byte is `0xFF` to test that no packing is performed for values under 128.
+const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0EFF");
 
 /// CBOR serialization of [`EXAMPLE_BYTES`] as a slice.
-const CBOR_SLICE: [u8; 17] = hex!("90000102030405060708090A0B0C0D0E0F");
-
-/// CBOR serialization of [`EXAMPLE_BYTES`] as an array.
-const CBOR_ARRAY: [u8; 17] = CBOR_SLICE;
+/// (first three bits, `0b010` denote a byte string, and the last five, `0b10000` denote the length)
+const CBOR_SLICE: [u8; 17] = hex!("50000102030405060708090A0B0C0D0EFF");
 
 #[test]
 fn deserialize_slice() {
@@ -47,7 +46,7 @@ fn serialize_slice() {
 #[test]
 fn serialize_array() {
     let serialized = serialize(&array::HexUpperOrBin::from(EXAMPLE_BYTES));
-    assert_eq!(&serialized, &CBOR_ARRAY);
+    assert_eq!(&serialized, &CBOR_SLICE);
 }
 
 proptest! {
@@ -63,5 +62,7 @@ proptest! {
         let serialized = serialize(&array::HexUpperOrBin::from(bytes));
         let deserialized = de::from_reader::<array::HexUpperOrBin<32>, _>(serialized.as_slice()).unwrap();
         prop_assert_eq!(bytes, deserialized.0);
+        // 1 byte slice tag + 1 byte length tag + 32 bytes of data
+        prop_assert_eq!(serialized.len(), 2 + 32);
     }
 }

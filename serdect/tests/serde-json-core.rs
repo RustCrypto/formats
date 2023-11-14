@@ -9,13 +9,13 @@ use serde_json_core as json;
 use serdect::{array, slice};
 
 /// Example input to be serialized.
-const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0E0F");
+const EXAMPLE_BYTES: [u8; 16] = hex!("000102030405060708090A0B0C0D0EFF");
 
 /// Lower-case hex serialization of [`EXAMPLE_BYTES`].
-const HEX_LOWER: &str = "\"000102030405060708090a0b0c0d0e0f\"";
+const HEX_LOWER: &str = "\"000102030405060708090a0b0c0d0eff\"";
 
 /// Upper-case hex serialization of [`EXAMPLE_BYTES`].
-const HEX_UPPER: &str = "\"000102030405060708090A0B0C0D0E0F\"";
+const HEX_UPPER: &str = "\"000102030405060708090A0B0C0D0EFF\"";
 
 fn serialize<T>(value: &T) -> String
 where
