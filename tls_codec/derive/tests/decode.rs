@@ -535,7 +535,7 @@ mod conditional_deserialization {
 
     #[test]
     fn conditionally_deserializable_struct() {
-        #[conditionally_deserializable(Reader)]
+        #[conditionally_deserializable]
         #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
         struct ExampleStruct {
             a: u8,
@@ -549,7 +549,7 @@ mod conditional_deserialization {
         assert_eq!(deserializable_struct.a, undeserializable_struct.a);
         assert_eq!(deserializable_struct.b, undeserializable_struct.b);
 
-        #[conditionally_deserializable(Reader)]
+        #[conditionally_deserializable]
         #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
         struct SecondExampleStruct {
             a: u8,
@@ -559,7 +559,7 @@ mod conditional_deserialization {
 
     #[test]
     fn conditional_deserializable_struct_bytes() {
-        #[conditionally_deserializable(Bytes)]
+        #[conditionally_deserializable]
         #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
         struct ExampleStruct {
             a: u8,
