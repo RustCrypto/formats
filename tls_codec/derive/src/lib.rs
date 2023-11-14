@@ -1061,7 +1061,7 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
                     fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
                         #discriminant_constants
-                        let (discriminant, remainder) = <#repr as tls_codec::DeserializeBytes>::tls_deserialize_bytes(bytes)?;
+                        let (discriminant, remainder) = #repr::tls_deserialize_bytes(bytes)?;
                         match discriminant {
                             #(#arms)*
                             _ => {
