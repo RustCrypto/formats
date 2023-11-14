@@ -530,7 +530,7 @@ fn type_with_unknowns() {
 
 #[cfg(feature = "conditional_deserialization")]
 mod conditional_deserialization {
-    use tls_codec::{Deserialize, DeserializeBytes, Serialize};
+    use tls_codec::{Deserialize, Serialize};
     use tls_codec_derive::{conditionally_deserializable, TlsSerialize, TlsSize};
 
     #[test]
