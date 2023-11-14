@@ -95,7 +95,7 @@ impl<T: Deserialize> Deserialize for Option<T> {
 impl<T: DeserializeBytes> DeserializeBytes for Option<T> {
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let (some_or_none, remainder) = <u8 as DeserializeBytes>::tls_deserialize_bytes(bytes)?;
+        let (some_or_none, remainder) = <u8>::tls_deserialize_bytes(bytes)?;
         match some_or_none {
             0 => {
                 Ok((None, remainder))

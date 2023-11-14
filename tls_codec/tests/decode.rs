@@ -171,10 +171,8 @@ fn deserialize_tuples() {
     {
         use tls_codec::DeserializeBytes;
         let (deserialized_bytes, _remainder) =
-            <(TlsVecU16<u8>, TlsVecU32<u16>) as DeserializeBytes>::tls_deserialize_bytes(
-                bytes.as_slice(),
-            )
-            .expect("Error deserializing tuple.");
+            <(TlsVecU16<u8>, TlsVecU32<u16>)>::tls_deserialize_bytes(bytes.as_slice())
+                .expect("Error deserializing tuple.");
         assert_eq!(deserialized_bytes, t);
     }
 
@@ -199,7 +197,7 @@ fn deserialize_var_len_vec() {
             use tls_codec::DeserializeBytes;
             let serialized = v.tls_serialize_detached().expect("Error encoding vector");
             let (deserialized, _remainder): (Vec<T>, &[u8]) =
-                <Vec<T> as DeserializeBytes>::tls_deserialize_bytes(serialized.as_slice())
+                Vec::<T>::tls_deserialize_bytes(serialized.as_slice())
                     .expect("Error deserializing vector");
             assert_eq!(deserialized, v);
         }

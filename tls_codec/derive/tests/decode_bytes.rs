@@ -71,8 +71,7 @@ fn tuple_struct() {
 fn byte_arrays() {
     let x = [0u8, 1, 2, 3];
     let serialized = x.tls_serialize().unwrap();
-    let (deserialized, rest) =
-        <[u8; 4] as DeserializeBytes>::tls_deserialize_bytes(&serialized).unwrap();
+    let (deserialized, rest) = <[u8; 4]>::tls_deserialize_bytes(&serialized).unwrap();
     assert_eq!(deserialized, x);
     assert!(rest.is_empty());
 }

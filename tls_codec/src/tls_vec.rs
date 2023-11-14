@@ -42,7 +42,7 @@ macro_rules! impl_byte_deserialize {
         #[cfg(feature = "std")]
         #[inline(always)]
         fn deserialize_bytes<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-            let len = <$size as Deserialize>::tls_deserialize(bytes)? as usize;
+            let len = <$size>::tls_deserialize(bytes)? as usize;
             // When fuzzing we limit the maximum size to allocate.
             // XXX: We should think about a configurable limit for the allocation
             //      here.
@@ -62,7 +62,7 @@ macro_rules! impl_byte_deserialize {
 
         #[inline(always)]
         fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-            let (type_len, remainder) = <$size as DeserializeBytes>::tls_deserialize_bytes(bytes)?;
+            let (type_len, remainder) = <$size>::tls_deserialize_bytes(bytes)?;
             let len = type_len as usize;
             // When fuzzing we limit the maximum size to allocate.
             // XXX: We should think about a configurable limit for the allocation
@@ -89,7 +89,7 @@ macro_rules! impl_deserialize {
         #[inline(always)]
         fn deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
             let mut result = Self { vec: Vec::new() };
-            let len = <$size as Deserialize>::tls_deserialize(bytes)?;
+            let len = <$size>::tls_deserialize(bytes)?;
             let mut read = len.tls_serialized_len();
             let len_len = read;
             while (read - len_len) < len as usize {
@@ -107,12 +107,11 @@ macro_rules! impl_deserialize_bytes {
         #[inline(always)]
         fn deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let mut result = Self { vec: Vec::new() };
-            let (len, mut remainder) = <$size as DeserializeBytes>::tls_deserialize_bytes(bytes)?;
+            let (len, mut remainder) = <$size>::tls_deserialize_bytes(bytes)?;
             let mut read = len.tls_serialized_len();
             let len_len = read;
             while (read - len_len) < len as usize {
-                let (element, next_remainder) =
-                    <T as DeserializeBytes>::tls_deserialize_bytes(remainder)?;
+                let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
                 remainder = next_remainder;
                 read += element.tls_serialized_len();
                 result.push(element);

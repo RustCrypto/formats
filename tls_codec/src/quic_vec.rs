@@ -680,7 +680,7 @@ mod secret_bytes {
         where
             Self: Sized,
         {
-            let (bytes, remainder) = <VLBytes as DeserializeBytes>::tls_deserialize_bytes(bytes)?;
+            let (bytes, remainder) = VLBytes::tls_deserialize_bytes(bytes)?;
             Ok((Self(bytes), remainder))
         }
     }
@@ -696,7 +696,7 @@ mod secret_bytes {
         where
             Self: Sized,
         {
-            Ok(Self(<VLBytes as Deserialize>::tls_deserialize(bytes)?))
+            Ok(Self(VLBytes::tls_deserialize(bytes)?))
         }
     }
 }
