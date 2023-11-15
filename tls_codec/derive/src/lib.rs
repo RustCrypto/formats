@@ -1,21 +1,31 @@
 //! # Derive macros for traits in `tls_codec`
 //!
+//! Derive macros can be used to automatically implement the [`Serialize`],
+//! [`SerializeBytes`], [`Deserialize`], [`DeserializeBytes`], and [`Size`]
+//! traits for structs and enums. Note that the functions of the [`Serialize`]
+//! and [`Deserialize`] traits (and thus the corresponding derive macros)
+//! require the `"std"` feature to work.
+//!
 //! ## Warning
 //!
-//! The derive macros support deriving the `tls_codec` traits for enumerations and the resulting
-//! serialized format complies with [the "variants" section of the TLS RFC](https://datatracker.ietf.org/doc/html/rfc8446#section-3.8).
-//! However support is limited to enumerations that are serialized with their discriminant
-//! immediately followed by the variant data. If this is not appropriate (e.g. the format requires
-//! other fields between the discriminant and variant data), the `tls_codec` traits can be
-//! implemented manually.
+//! The derive macros support deriving the `tls_codec` traits for enumerations
+//! and the resulting serialized format complies with [the "variants" section of
+//! the TLS RFC](https://datatracker.ietf.org/doc/html/rfc8446#section-3.8).
+//! However support is limited to enumerations that are serialized with their
+//! discriminant immediately followed by the variant data. If this is not
+//! appropriate (e.g. the format requires other fields between the discriminant
+//! and variant data), the `tls_codec` traits can be implemented manually.
 //!
 //! ## Parsing unknown values
-//! In many cases it is necessary to deserialize structs with unknown values, e.g.
-//! when receiving unknown TLS extensions.
-//! In this case the deserialize function returns an `Error::UnknownValue` with
-//! a `u64` value of the unknown type.
+//!
+//! In many cases it is necessary to deserialize structs with unknown values,
+//! e.g. when receiving unknown TLS extensions. In this case the deserialize
+//! function returns an `Error::UnknownValue` with a `u64` value of the unknown
+//! type.
 //!
 //! ```
+//! # #[cfg(feature = "std")]
+//! # {
 //! use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 //!
 //! #[derive(TlsDeserialize, TlsSerialize, TlsSize)]
@@ -31,9 +41,13 @@
 //!     let deserialized = TypeWithUnknowns::tls_deserialize_exact(incoming);
 //!     assert!(matches!(deserialized, Err(Error::UnknownValue(3))));
 //! }
+//! # }
 //! ```
 //!
 //! ## Available attributes
+//!
+//! Attributes can be used to control serialization and deserialization on a
+//! per-field basis.
 //!
 //! ### with
 //!
@@ -41,17 +55,21 @@
 //! #[tls_codec(with = "prefix")]
 //! ```
 //!
-//! This attribute may be applied to a struct field. It indicates that deriving any of the
-//! `tls_codec` traits for the containing struct calls the following functions:
+//! This attribute may be applied to a struct field. It indicates that deriving
+//! any of the `tls_codec` traits for the containing struct calls the following
+//! functions:
 //! - `prefix::tls_deserialize` when deriving `Deserialize`
 //! - `prefix::tls_serialize` when deriving `Serialize`
 //! - `prefix::tls_serialized_len` when deriving `Size`
 //!
-//! `prefix` can be a path to a module, type or trait where the functions are defined.
+//! `prefix` can be a path to a module, type or trait where the functions are
+//! defined.
 //!
 //! Their expected signatures match the corresponding methods in the traits.
 //!
 //! ```
+//! # #[cfg(feature = "std")]
+//! # {
 //! use tls_codec_derive::{TlsSerialize, TlsSize};
 //!
 //! #[derive(TlsSerialize, TlsSize)]
@@ -72,6 +90,7 @@
 //!         TlsByteSliceU32(v).tls_serialize(writer)
 //!     }
 //! }
+//! # }
 //! ```
 //!
 //! ### discriminant
@@ -81,27 +100,34 @@
 //! #[tls_codec(discriminant = "path::to::const::or::enum::Variant")]
 //! ```
 //!
-//! This attribute may be applied to an enum variant to specify the discriminant to use when
-//! serializing it. If all variants are units (e.g. they do not have any data), this attribute
-//! must not be used and the desired discriminants should be assigned to the variants using
-//! standard Rust syntax (`Variant = Discriminant`).
+//! This attribute may be applied to an enum variant to specify the discriminant
+//! to use when serializing it. If all variants are units (e.g. they do not have
+//! any data), this attribute must not be used and the desired discriminants
+//! should be assigned to the variants using standard Rust syntax (`Variant =
+//! Discriminant`).
 //!
-//! For enumerations with non-unit variants, if no variant has this attribute, the serialization
-//! discriminants will start from zero. If this attribute is used on a variant and the following
-//! variant does not have it, its discriminant will be equal to the previous variant discriminant
-//! plus 1. This behavior is referred to as "implicit discriminants".
+//! For enumerations with non-unit variants, if no variant has this attribute,
+//! the serialization discriminants will start from zero. If this attribute is
+//! used on a variant and the following variant does not have it, its
+//! discriminant will be equal to the previous variant discriminant plus 1. This
+//! behavior is referred to as "implicit discriminants".
 //!
-//! You can also provide paths that lead to `const` definitions or enum Variants. The important
-//! thing is that any of those path expressions must resolve to something that can be coerced to
-//! the `#[repr(enum_repr)]` of the enum. Please note that there are checks performed at compile
-//! time to check if the provided value fits within the bounds of the `enum_repr` to avoid misuse.
+//! You can also provide paths that lead to `const` definitions or enum
+//! Variants. The important thing is that any of those path expressions must
+//! resolve to something that can be coerced to the `#[repr(enum_repr)]` of the
+//! enum. Please note that there are checks performed at compile time to check
+//! if the provided value fits within the bounds of the `enum_repr` to avoid
+//! misuse.
 //!
-//! Note: When using paths *once* in your enum discriminants, as we do not have enough information
-//! to deduce the next implicit discriminant (the constant expressions those paths resolve is only
-//! evaluated at a later compilation stage than macros), you will be forced to use explicit
-//! discriminants for all the other Variants of your enum.
+//! Note: When using paths *once* in your enum discriminants, as we do not have
+//! enough information to deduce the next implicit discriminant (the constant
+//! expressions those paths resolve is only evaluated at a later compilation
+//! stage than macros), you will be forced to use explicit discriminants for all
+//! the other Variants of your enum.
 //!
 //! ```
+//! # #[cfg(feature = "std")]
+//! # {
 //! use tls_codec_derive::{TlsSerialize, TlsSize};
 //!
 //! const CONST_DISCRIMINANT: u8 = 5;
@@ -130,7 +156,7 @@
 //!     #[tls_codec(discriminant = "CONST_DISCRIMINANT")]
 //!     StaticConstant(u8),
 //! }
-//!
+//! # }
 //! ```
 //!
 //! ### skip
@@ -139,13 +165,16 @@
 //! #[tls_codec(skip)]
 //! ```
 //!
-//! This attribute may be applied to a struct field to specify that it should be skipped. Skipping
-//! means that the field at hand will neither be serialized into TLS bytes nor deserialized from TLS
-//! bytes. For deserialization, it is required to populate the field with a known value. Thus, when
-//! `skip` is used, the field type needs to implement the [Default] trait so it can be populated
-//! with a default value.
+//! This attribute may be applied to a struct field to specify that it should be
+//! skipped. Skipping means that the field at hand will neither be serialized
+//! into TLS bytes nor deserialized from TLS bytes. For deserialization, it is
+//! required to populate the field with a known value. Thus, when `skip` is
+//! used, the field type needs to implement the [Default] trait so it can be
+//! populated with a default value.
 //!
 //! ```
+//! # #[cfg(feature = "std")]
+//! # {
 //! use tls_codec_derive::{TlsSerialize, TlsDeserialize, TlsSize};
 //!
 //! struct CustomStruct;
@@ -163,6 +192,7 @@
 //!     b: CustomStruct,
 //!     c: u8,
 //! }
+//! # }
 //! ```
 //!
 //! ## Conditional deserialization via the `conditionally_deserializable` attribute macro
@@ -182,6 +212,11 @@
 //! prefix).
 //!
 //! ```
+//! # #[cfg(all(feature = "conditional_deserialization", feature = "std"))]
+//! # {
+//! use tls_codec::{Serialize, Deserialize};
+//! use tls_codec_derive::{TlsSerialize, TlsSize, conditionally_deserializable};
+//!
 //! #[conditionally_deserializable]
 //! #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
 //! struct ExampleStruct {
@@ -193,6 +228,7 @@
 //! let serialized = undeserializable_struct.tls_serialize_detached().unwrap();
 //! let deserializable_struct =
 //!     DeserializableExampleStruct::tls_deserialize(&mut serialized.as_slice()).unwrap();
+//! # }
 //! ```
 
 extern crate proc_macro;
