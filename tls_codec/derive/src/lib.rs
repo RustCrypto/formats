@@ -1,10 +1,14 @@
 //! # Derive macros for traits in `tls_codec`
 //!
-//! Derive macros can be used to automatically implement the [`Serialize`],
-//! [`SerializeBytes`], [`Deserialize`], [`DeserializeBytes`], and [`Size`]
-//! traits for structs and enums. Note that the functions of the [`Serialize`]
-//! and [`Deserialize`] traits (and thus the corresponding derive macros)
-//! require the `"std"` feature to work.
+//! Derive macros can be used to automatically implement the
+//! [`Serialize`](../tls_codec::Serialize),
+//! [`SerializeBytes`](../tls_codec::SerializeBytes),
+//! [`Deserialize`](../tls_codec::Deserialize),
+//! [`DeserializeBytes`](../tls_codec::DeserializeBytes), and
+//! [`Size`](../tls_codec::Size) traits for structs and enums. Note that the
+//! functions of the [`Serialize`](../tls_codec::Serialize) and
+//! [`Deserialize`](../tls_codec::Deserialize) traits (and thus the
+//! corresponding derive macros) require the `"std"` feature to work.
 //!
 //! ## Warning
 //!
