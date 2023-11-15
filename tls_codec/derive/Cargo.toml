@@ -14,7 +14,7 @@ rust-version = "1.60"
 proc-macro = true
 
 [dependencies]
-syn = { version = "2", features = ["parsing", "full"] }
+syn = { version = "2", features = ["parsing"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 
@@ -24,5 +24,5 @@ trybuild = "1"
 
 [features]
 default = ["std"]
-conditional_deserialization = []
+conditional_deserialization = ["syn/full"]
 std = []
