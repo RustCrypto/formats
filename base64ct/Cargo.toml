@@ -18,7 +18,8 @@ rust-version = "1.60"
 
 [dev-dependencies]
 base64 = "0.21"
-proptest = { version = "1", default-features = false, features = ["std"] }
+# pinned to preserve MSRV
+proptest = { version = "=1.3.1", default-features = false, features = ["std"] }
 
 [features]
 alloc = []
