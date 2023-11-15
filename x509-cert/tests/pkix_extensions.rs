@@ -402,7 +402,7 @@ fn decode_cert() {
                         0 => match dpn {
                             DistributionPointName::FullName(gns) => {
                                 assert_eq!(1, gns.len());
-                                let gn = gns.get(0).unwrap();
+                                let gn = gns.first().unwrap();
                                 match gn {
                                     GeneralName::UniformResourceIdentifier(uri) => {
                                         assert_eq!(
@@ -422,7 +422,7 @@ fn decode_cert() {
                         1 => match dpn {
                             DistributionPointName::FullName(gns) => {
                                 assert_eq!(1, gns.len());
-                                let gn = gns.get(0).unwrap();
+                                let gn = gns.first().unwrap();
                                 match gn {
                                     GeneralName::UniformResourceIdentifier(uri) => {
                                         assert_eq!("ldap://ldap-pte.identrust.com.test/cn%3DIGC%20Root%20CA1%2Co%3DIdenTrust%2Cc%3DUS%3FcertificateRevocationList%3Bbinary", uri.to_string());
@@ -869,7 +869,7 @@ fn decode_idp() {
     let gns =
         GeneralNames::from_der(&hex!("305EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
     assert_eq!(1, gns.len());
-    if let GeneralName::DirectoryName(gn) = gns.get(0).unwrap() {
+    if let GeneralName::DirectoryName(gn) = gns.first().unwrap() {
         assert_eq!(4, gn.0.len());
     }
 
@@ -894,7 +894,7 @@ fn decode_idp() {
         DistributionPoint::from_der(&hex!("3062A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C")).unwrap();
     if let DistributionPointName::FullName(dpn) = dp.distribution_point.unwrap() {
         assert_eq!(1, dpn.len());
-        if let GeneralName::DirectoryName(gn) = dpn.get(0).unwrap() {
+        if let GeneralName::DirectoryName(gn) = dpn.first().unwrap() {
             assert_eq!(4, gn.0.len());
         }
     }

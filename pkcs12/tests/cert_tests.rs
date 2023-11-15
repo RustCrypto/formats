@@ -166,7 +166,7 @@ fn decode_sample_pfx() {
     let auth_safes = AuthenticatedSafe::from_der(auth_safes_os.as_bytes()).unwrap();
 
     // Process first auth safe (from offset 34)
-    let auth_safe0 = auth_safes.get(0).unwrap();
+    let auth_safe0 = auth_safes.first().unwrap();
     assert_eq!(ID_ENCRYPTED_DATA, auth_safe0.content_type);
     let enc_data_os = &auth_safe0.content.to_der().unwrap();
     let enc_data = EncryptedData::from_der(enc_data_os.as_slice()).unwrap();
@@ -183,11 +183,11 @@ fn decode_sample_pfx() {
 
     let params = pkcs8::pkcs5::pbes2::Parameters::from_der(&enc_params).unwrap();
 
-    let scheme = pkcs5::EncryptionScheme::try_from(params.clone()).unwrap();
+    let scheme = pkcs5::EncryptionScheme::from(params.clone());
     let ciphertext_os = enc_data.enc_content_info.encrypted_content.clone().unwrap();
     let mut ciphertext = ciphertext_os.as_bytes().to_vec();
     let plaintext = scheme.decrypt_in_place("", &mut ciphertext).unwrap();
-    let cert_bags = SafeContents::from_der(&plaintext).unwrap();
+    let cert_bags = SafeContents::from_der(plaintext).unwrap();
     for cert_bag in cert_bags {
         match cert_bag.bag_id {
             pkcs12::PKCS_12_CERT_BAG_OID => {
@@ -589,7 +589,7 @@ fn decode_sample_pfx2() {
     let auth_safes = AuthenticatedSafe::from_der(auth_safes_os.as_bytes()).unwrap();
 
     // Process first auth safe (from offset 34)
-    let auth_safe0 = auth_safes.get(0).unwrap();
+    let auth_safe0 = auth_safes.first().unwrap();
     assert_eq!(ID_DATA, auth_safe0.content_type);
 
     let auth_safe0_auth_safes_os =
