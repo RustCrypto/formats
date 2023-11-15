@@ -1215,17 +1215,19 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
         .generics
         .params
         .push(deserializable_const_generic.into());
-    // Derive either TlsDeserialize or TlsDeserializeBytes depending on the input
+    // Derive both TlsDeserialize and TlsDeserializeBytes
     let deserialize_bytes_implementation =
         impl_deserialize_bytes(parse_ast(annotated_item.clone().into()).unwrap());
     let deserialize_implementation =
         impl_deserialize(parse_ast(annotated_item.clone().into()).unwrap());
     let (impl_generics, ty_generics, _) = annotated_item.generics.split_for_impl();
+    // Patch generics for use by the type aliases
     let (_deserializable_impl_generics, deserializable_ty_generics) =
         restrict_conditional_generic(impl_generics.clone(), ty_generics.clone(), true);
     let (_undeserializable_impl_generics, undeserializable_ty_generics) =
         restrict_conditional_generic(impl_generics.clone(), ty_generics.clone(), false);
     let annotated_item_ident = annotated_item.ident.clone();
+    // Create Alias Idents by adding prefixes
     let deserializable_ident = Ident::new(
         &format!("Deserializable{}", annotated_item_ident),
         Span::call_site(),
@@ -1235,7 +1237,6 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
         Span::call_site(),
     );
     let annotated_item_visibility = annotated_item.vis.clone();
-    // For now, we assume that the struct doesn't
     quote! {
         #annotated_item
 
