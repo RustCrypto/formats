@@ -355,11 +355,11 @@ impl<'a> From<Pbkdf2Prf> for AlgorithmIdentifierRef<'a> {
 
 impl Encode for Pbkdf2Prf {
     fn encoded_len(&self) -> der::Result<Length> {
-        AlgorithmIdentifierRef::try_from(*self)?.encoded_len()
+        AlgorithmIdentifierRef::from(*self).encoded_len()
     }
 
     fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {
-        AlgorithmIdentifierRef::try_from(*self)?.encode(writer)
+        AlgorithmIdentifierRef::from(*self).encode(writer)
     }
 }
 

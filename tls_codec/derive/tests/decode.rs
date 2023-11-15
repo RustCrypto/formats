@@ -568,7 +568,7 @@ mod conditional_deserialization {
         let undeserializable_struct = UndeserializableExampleStruct { a: 1, b: 2 };
         let serialized = undeserializable_struct.tls_serialize_detached().unwrap();
         let deserializable_struct =
-            DeserializableExampleStruct::tls_deserialize_exact(&mut &*serialized).unwrap();
+            DeserializableExampleStruct::tls_deserialize_exact(&*serialized).unwrap();
         assert_eq!(deserializable_struct.a, undeserializable_struct.a);
         assert_eq!(deserializable_struct.b, undeserializable_struct.b);
     }
