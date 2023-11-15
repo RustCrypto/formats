@@ -23,5 +23,6 @@ tls_codec = { path = "../" }
 trybuild = "1"
 
 [features]
-default = [ "std" ]
+default = ["std"]
+conditional_deserialization = ["syn/full"]
 std = []

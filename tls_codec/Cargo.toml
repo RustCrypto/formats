@@ -27,12 +27,16 @@ criterion = { version = "0.5", default-features = false }
 regex = "1.8"
 
 [features]
-default = [ "std" ]
-arbitrary = [ "std", "dep:arbitrary" ]
-derive = [ "tls_codec_derive" ]
-serde = [ "std", "dep:serde" ]
+default = ["std"]
+arbitrary = ["std", "dep:arbitrary"]
+derive = ["tls_codec_derive"]
+serde = ["std", "dep:serde"]
 mls = [] # In MLS variable length vectors are limited compared to QUIC.
-std = [ "tls_codec_derive?/std" ]
+std = ["tls_codec_derive?/std"]
+conditional_deserialization = [
+    "derive",
+    "tls_codec_derive/conditional_deserialization",
+]
 
 [[bench]]
 name = "tls_vec"

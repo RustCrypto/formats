@@ -527,3 +527,49 @@ fn type_with_unknowns() {
     let deserialized = TypeWithUnknowns::tls_deserialize_exact(incoming);
     assert!(matches!(deserialized, Err(Error::UnknownValue(3))));
 }
+
+#[cfg(feature = "conditional_deserialization")]
+mod conditional_deserialization {
+    use tls_codec::{Deserialize, Serialize};
+    use tls_codec_derive::{conditionally_deserializable, TlsSerialize, TlsSize};
+
+    #[test]
+    fn conditionally_deserializable_struct() {
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct ExampleStruct {
+            a: u8,
+            b: u16,
+        }
+
+        let undeserializable_struct = UndeserializableExampleStruct { a: 1, b: 2 };
+        let serialized = undeserializable_struct.tls_serialize_detached().unwrap();
+        let deserializable_struct =
+            DeserializableExampleStruct::tls_deserialize(&mut serialized.as_slice()).unwrap();
+        assert_eq!(deserializable_struct.a, undeserializable_struct.a);
+        assert_eq!(deserializable_struct.b, undeserializable_struct.b);
+
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct SecondExampleStruct {
+            a: u8,
+            b: u16,
+        }
+    }
+
+    #[test]
+    fn conditional_deserializable_struct_bytes() {
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct ExampleStruct {
+            a: u8,
+            b: u16,
+        }
+        let undeserializable_struct = UndeserializableExampleStruct { a: 1, b: 2 };
+        let serialized = undeserializable_struct.tls_serialize_detached().unwrap();
+        let deserializable_struct =
+            DeserializableExampleStruct::tls_deserialize_exact(&mut &*serialized).unwrap();
+        assert_eq!(deserializable_struct.a, undeserializable_struct.a);
+        assert_eq!(deserializable_struct.b, undeserializable_struct.b);
+    }
+}
