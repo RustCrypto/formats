@@ -80,7 +80,7 @@ fn assert_basic_response<'a>(
         .filter(|r| &r.cert_id == expected_certid);
     match filter.next() {
         None => panic!("CertId not found"),
-        Some(res) => &res,
+        Some(res) => res,
     }
 }
 
@@ -181,7 +181,7 @@ fn decode_ocsp_resp_sha1_certid() {
         serial_number: SerialNumber::from(0x10001usize),
     };
     let single = assert_basic_response(&res, &RESPONDER_ID, &TIME, &certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
 }
 
 #[test]
@@ -225,7 +225,7 @@ fn decode_ocsp_resp_sha256_certid() {
         serial_number: SerialNumber::from(0x10001usize),
     };
     let single = assert_basic_response(&res, &RESPONDER_ID, &TIME, &certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
 }
 
 #[test]
@@ -275,7 +275,7 @@ fn decode_ocsp_resp_sha512_certid() {
         serial_number: SerialNumber::from(0x10001usize),
     };
     let single = assert_basic_response(&res, &RESPONDER_ID, &TIME, &certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
 }
 
 #[test]
@@ -332,7 +332,7 @@ fn decode_ocsp_resp_multiple_extensions() {
         serial_number: SerialNumber::from(0x10001usize),
     };
     let single = assert_basic_response(&res, &RESPONDER_ID, &TIME, &certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
     assert!(single.single_extensions.as_ref().is_some());
     assert_extension(
         &single.single_extensions.as_ref().unwrap()[0],
@@ -396,7 +396,7 @@ fn decode_ocsp_resp_dtm_no_chain() {
         serial_number: SerialNumber::from(0x10001usize),
     };
     let single = assert_basic_response(&res, &RESPONDER_ID, &TIME, &certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
 }
 
 #[test]
@@ -450,7 +450,7 @@ fn decode_ocsp_resp_dtm_by_key() {
         serial_number: SerialNumber::from(0x10001usize),
     };
     let single = assert_basic_response(&res, &responder_id, &TIME, &certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
 }
 
 #[test]
@@ -526,11 +526,11 @@ fn decode_ocsp_resp_multiple_responses() {
         serial_number: SerialNumber::from(0x10001usize),
     };
     let single = assert_basic_response(&res, &RESPONDER_ID, &TIME, &sha1_certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
     let single = assert_basic_response(&res, &RESPONDER_ID, &TIME, &sha256_certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
     let single = assert_basic_response(&res, &RESPONDER_ID, &TIME, &sha512_certid);
-    assert_single_response(&single, CertStatus::Good(Null), &TIME, Some(&TIME));
+    assert_single_response(single, CertStatus::Good(Null), &TIME, Some(&TIME));
 }
 
 #[test]
@@ -554,7 +554,7 @@ fn decode_ocsp_resp_revoked_response() {
         .tbs_response_data
         .responses
         .iter()
-        .filter(|r| &r.cert_id == &certid);
+        .filter(|r| r.cert_id == certid);
     match filter.next() {
         None => panic!("CertId not found"),
         Some(res) => match &res.cert_status {
