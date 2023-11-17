@@ -48,7 +48,7 @@ impl OcspRequest {
 /// ```
 ///
 /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct TbsRequest {
     #[asn1(

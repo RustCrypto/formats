@@ -4,7 +4,7 @@ mod request;
 mod response;
 
 pub use self::request::OcspRequestBuilder;
-pub use self::response::BasicOcspResponseBuilder;
+pub use self::response::OcspResponseBuilder;
 
 /// Error type
 #[derive(Debug)]

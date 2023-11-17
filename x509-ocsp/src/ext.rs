@@ -20,7 +20,7 @@ use x509_cert::{
     name::Name,
 };
 
-#[cfg(feature = "rand_core")]
+#[cfg(feature = "rand")]
 use rand_core::CryptoRngCore;
 
 // x509-cert's is not exported
@@ -61,7 +61,7 @@ impl Nonce {
     /// ```text
     /// Nonce ::= OCTET STRING(SIZE(1..32))
     /// ```
-    #[cfg(feature = "rand_core")]
+    #[cfg(feature = "rand")]
     pub fn generate<R>(rng: &mut R, length: usize) -> Result<Self, der::Error>
     where
         R: CryptoRngCore,

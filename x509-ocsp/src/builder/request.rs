@@ -2,11 +2,12 @@
 
 use crate::{builder::Error, OcspRequest, Request, Signature, TbsRequest, Version};
 use alloc::vec::Vec;
-use der::{asn1::BitString, Encode};
-use signature::{SignatureEncoding, Signer};
-use spki::DynSignatureAlgorithmIdentifier;
+use der::Encode;
+use rand_core::CryptoRngCore;
+use signature::{RandomizedSigner, Signer};
+use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
-    ext::{pkix::name::GeneralName, AsExtension, Extensions},
+    ext::{pkix::name::GeneralName, AsExtension},
     name::Name,
     Certificate,
 };
@@ -58,20 +59,19 @@ use x509_cert::{
 /// ```
 #[derive(Clone, Debug, Default)]
 pub struct OcspRequestBuilder {
-    version: Version,
-    requestor_name: Option<GeneralName>,
-    request_list: Vec<Request>,
-    request_extensions: Option<Extensions>,
+    tbs: TbsRequest,
 }
 
 impl OcspRequestBuilder {
     /// Returns an `OcspRequestBuilder` with the specified [`Version`]
     pub fn new(version: Version) -> Self {
         Self {
-            version,
-            requestor_name: None,
-            request_list: Vec::new(),
-            request_extensions: None,
+            tbs: TbsRequest {
+                version,
+                requestor_name: None,
+                request_list: Vec::new(),
+                request_extensions: None,
+            },
         }
     }
 
@@ -79,7 +79,7 @@ impl OcspRequestBuilder {
     ///
     /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
     pub fn with_requestor_name(mut self, requestor_name: GeneralName) -> Self {
-        self.requestor_name = Some(requestor_name);
+        self.tbs.requestor_name = Some(requestor_name);
         self
     }
 
@@ -87,7 +87,7 @@ impl OcspRequestBuilder {
     ///
     /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
     pub fn with_request(mut self, request: Request) -> Self {
-        self.request_list.push(request);
+        self.tbs.request_list.push(request);
         self
     }
 
@@ -97,9 +97,9 @@ impl OcspRequestBuilder {
     /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
     pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
-        match self.request_extensions {
+        match self.tbs.request_extensions {
             Some(ref mut exts) => exts.push(ext),
-            None => self.request_extensions = Some(alloc::vec![ext]),
+            None => self.tbs.request_extensions = Some(alloc::vec![ext]),
         }
         Ok(self)
     }
@@ -107,7 +107,7 @@ impl OcspRequestBuilder {
     /// Consumes the builder and returns an [`OcspRequest`]
     pub fn build(self) -> OcspRequest {
         OcspRequest {
-            tbs_request: self.into_tbs_request(),
+            tbs_request: self.tbs,
             optional_signature: None,
         }
     }
@@ -121,31 +121,45 @@ impl OcspRequestBuilder {
     ) -> Result<OcspRequest, Error>
     where
         S: Signer<Sig> + DynSignatureAlgorithmIdentifier,
-        Sig: SignatureEncoding,
+        Sig: SignatureBitStringEncoding,
     {
-        let tbs_request = self.into_tbs_request();
         let signature_algorithm = signer.signature_algorithm_identifier()?;
-        let signature = signer.try_sign(&tbs_request.to_der()?)?;
-        let signature = BitString::from_bytes(signature.to_bytes().as_ref())?;
+        let signature = signer.try_sign(&self.tbs.to_der()?)?.to_bitstring()?;
         let optional_signature = Some(Signature {
             signature_algorithm,
             signature,
             certs: certificate_chain,
         });
         Ok(OcspRequest {
-            tbs_request,
+            tbs_request: self.tbs,
             optional_signature,
         })
     }
 
-    /// Consumes the builder and returns a [`TbsRequest`]
-    fn into_tbs_request(self) -> TbsRequest {
-        // Maybe verify extensions before building?
-        TbsRequest {
-            version: self.version,
-            requestor_name: self.requestor_name,
-            request_list: self.request_list,
-            request_extensions: self.request_extensions,
-        }
+    /// Consumes the builder and returns a signed [`OcspRequest`]. Errors when the algorithm
+    /// identifier encoding, message encoding, or signature generation fails.
+    pub fn sign_with_rng<S, Sig>(
+        self,
+        signer: &mut S,
+        rng: &mut impl CryptoRngCore,
+        certificate_chain: Option<Vec<Certificate>>,
+    ) -> Result<OcspRequest, Error>
+    where
+        S: RandomizedSigner<Sig> + DynSignatureAlgorithmIdentifier,
+        Sig: SignatureBitStringEncoding,
+    {
+        let signature_algorithm = signer.signature_algorithm_identifier()?;
+        let signature = signer
+            .try_sign_with_rng(rng, &self.tbs.to_der()?)?
+            .to_bitstring()?;
+        let optional_signature = Some(Signature {
+            signature_algorithm,
+            signature,
+            certs: certificate_chain,
+        });
+        Ok(OcspRequest {
+            tbs_request: self.tbs,
+            optional_signature,
+        })
     }
 }

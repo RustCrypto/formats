@@ -201,26 +201,23 @@ fn encode_ocsp_resp_errors() {
 fn encode_ocsp_resp_sha1_certid() {
     let resp_der = std::fs::read("tests/examples/sha1-certid-ocsp-res.der").unwrap();
     let mut signer = SigningKey::<Sha256>::new(ISSUER_KEY.clone());
-    let resp = OcspResponse::successful(
-        BasicOcspResponseBuilder::new(Version::V1, RESPONDER_ID.clone())
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .sign(
-                &mut signer,
-                Some(vec![ISSUER.clone()]),
+    let resp = OcspResponseBuilder::new(RESPONDER_ID.clone())
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
                 OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
             )
-            .unwrap(),
-    )
-    .unwrap();
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .sign(
+            &mut signer,
+            Some(vec![ISSUER.clone()]),
+            OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+        )
+        .unwrap();
     assert_eq!(&resp.to_der().unwrap(), &resp_der);
 }
 
@@ -228,27 +225,23 @@ fn encode_ocsp_resp_sha1_certid() {
 fn encode_ocsp_resp_sha256_certid() {
     let resp_der = std::fs::read("tests/examples/sha256-certid-ocsp-res.der").unwrap();
     let mut signer = SigningKey::<Sha256>::new(ISSUER_KEY.clone());
-    let resp = OcspResponse::successful(
-        BasicOcspResponseBuilder::new(Version::V1, RESPONDER_ID.clone())
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha256>(&ISSUER, SerialNumber::from(0x10001usize))
-                        .unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .sign(
-                &mut signer,
-                Some(vec![ISSUER.clone()]),
+    let resp = OcspResponseBuilder::new(RESPONDER_ID.clone())
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha256>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
                 OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
             )
-            .unwrap(),
-    )
-    .unwrap();
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .sign(
+            &mut signer,
+            Some(vec![ISSUER.clone()]),
+            OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+        )
+        .unwrap();
     assert_eq!(&resp.to_der().unwrap(), &resp_der);
 }
 
@@ -256,27 +249,23 @@ fn encode_ocsp_resp_sha256_certid() {
 fn encode_ocsp_resp_sha512_certid() {
     let resp_der = std::fs::read("tests/examples/sha512-certid-ocsp-res.der").unwrap();
     let mut signer = SigningKey::<Sha256>::new(ISSUER_KEY.clone());
-    let resp = OcspResponse::successful(
-        BasicOcspResponseBuilder::new(Version::V1, RESPONDER_ID.clone())
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha512>(&ISSUER, SerialNumber::from(0x10001usize))
-                        .unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .sign(
-                &mut signer,
-                Some(vec![ISSUER.clone()]),
+    let resp = OcspResponseBuilder::new(RESPONDER_ID.clone())
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha512>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
                 OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
             )
-            .unwrap(),
-    )
-    .unwrap();
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .sign(
+            &mut signer,
+            Some(vec![ISSUER.clone()]),
+            OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+        )
+        .unwrap();
     assert_eq!(&resp.to_der().unwrap(), &resp_der);
 }
 
@@ -297,32 +286,29 @@ fn encode_ocsp_resp_multiple_extensions() {
     )
     .unwrap();
     let mut signer = SigningKey::<Sha256>::new(ISSUER_KEY.clone());
-    let resp = OcspResponse::successful(
-        BasicOcspResponseBuilder::new(Version::V1, RESPONDER_ID.clone())
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                ))
-                .with_extension(single_ext1)
-                .unwrap()
-                .with_extension(single_ext2)
-                .unwrap(),
-            )
-            .with_extension(ext1)
-            .unwrap()
-            .sign(
-                &mut signer,
-                Some(vec![ISSUER.clone()]),
+    let resp = OcspResponseBuilder::new(RESPONDER_ID.clone())
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
                 OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
             )
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            ))
+            .with_extension(single_ext1)
+            .unwrap()
+            .with_extension(single_ext2)
             .unwrap(),
-    )
-    .unwrap();
+        )
+        .with_extension(ext1)
+        .unwrap()
+        .sign(
+            &mut signer,
+            Some(vec![ISSUER.clone()]),
+            OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+        )
+        .unwrap();
     assert_eq!(&resp.to_der().unwrap(), &resp_der);
 }
 
@@ -330,101 +316,93 @@ fn encode_ocsp_resp_multiple_extensions() {
 fn encode_ocsp_resp_multiple_responses() {
     let resp_der = std::fs::read("tests/examples/ocsp-multiple-responses-res.der").unwrap();
     let mut signer = SigningKey::<Sha256>::new(ISSUER_KEY.clone());
-    let resp = OcspResponse::successful(
-        BasicOcspResponseBuilder::new(Version::V1, RESPONDER_ID.clone())
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha224>(&ISSUER, SerialNumber::from(0x10001usize))
-                        .unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha256>(&ISSUER, SerialNumber::from(0x10001usize))
-                        .unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha384>(&ISSUER, SerialNumber::from(0x10001usize))
-                        .unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha512>(&ISSUER, SerialNumber::from(0x10001usize))
-                        .unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x5usize)).unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x16usize)).unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0xFFFFFFFFusize))
-                        .unwrap(),
-                    CertStatus::good(),
-                    OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
-                )),
-            )
-            .sign(
-                &mut signer,
-                Some(vec![ISSUER.clone()]),
+    let resp = OcspResponseBuilder::new(RESPONDER_ID.clone())
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
                 OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
             )
-            .unwrap(),
-    )
-    .unwrap();
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha224>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
+                OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+            )
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha256>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
+                OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+            )
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha384>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
+                OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+            )
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha512>(&ISSUER, SerialNumber::from(0x10001usize)).unwrap(),
+                CertStatus::good(),
+                OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+            )
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x5usize)).unwrap(),
+                CertStatus::good(),
+                OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+            )
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x16usize)).unwrap(),
+                CertStatus::good(),
+                OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+            )
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0xFFFFFFFFusize)).unwrap(),
+                CertStatus::good(),
+                OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+            )
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
+            )),
+        )
+        .sign(
+            &mut signer,
+            Some(vec![ISSUER.clone()]),
+            OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()),
+        )
+        .unwrap();
     assert_eq!(&resp.to_der().unwrap(), &resp_der);
 }
 
@@ -432,30 +410,27 @@ fn encode_ocsp_resp_multiple_responses() {
 fn encode_ocsp_resp_revoked_delegated() {
     let resp_der = std::fs::read("tests/examples/rsa-2048-sha256-revoked-ocsp-res.der").unwrap();
     let mut signer = SigningKey::<Sha256>::new(OCSP_KEY.clone());
-    let resp = OcspResponse::successful(
-        BasicOcspResponseBuilder::new(Version::V1, RESPONDER_ID.clone())
-            .with_single_response(
-                SingleResponse::new(
-                    CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(3usize)).unwrap(),
-                    CertStatus::revoked(RevokedInfo {
-                        revocation_time: OcspGeneralizedTime::from(
-                            DateTime::new(2023, 11, 5, 1, 9, 45).unwrap(),
-                        ),
-                        revocation_reason: None,
-                    }),
-                    OcspGeneralizedTime::from(DateTime::new(2023, 11, 5, 1, 9, 46).unwrap()),
-                )
-                .with_next_update(OcspGeneralizedTime::from(
-                    DateTime::new(2024, 11, 4, 1, 9, 46).unwrap(),
-                )),
-            )
-            .sign(
-                &mut signer,
-                Some(vec![OCSP.clone()]),
+    let resp = OcspResponseBuilder::new(RESPONDER_ID.clone())
+        .with_single_response(
+            SingleResponse::new(
+                CertId::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(3usize)).unwrap(),
+                CertStatus::revoked(RevokedInfo {
+                    revocation_time: OcspGeneralizedTime::from(
+                        DateTime::new(2023, 11, 5, 1, 9, 45).unwrap(),
+                    ),
+                    revocation_reason: None,
+                }),
                 OcspGeneralizedTime::from(DateTime::new(2023, 11, 5, 1, 9, 46).unwrap()),
             )
-            .unwrap(),
-    )
-    .unwrap();
+            .with_next_update(OcspGeneralizedTime::from(
+                DateTime::new(2024, 11, 4, 1, 9, 46).unwrap(),
+            )),
+        )
+        .sign(
+            &mut signer,
+            Some(vec![OCSP.clone()]),
+            OcspGeneralizedTime::from(DateTime::new(2023, 11, 5, 1, 9, 46).unwrap()),
+        )
+        .unwrap();
     assert_eq!(&resp.to_der().unwrap(), &resp_der);
 }
