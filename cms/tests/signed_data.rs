@@ -32,8 +32,7 @@ fn trust_list_test() {
         content_type: ci.content_type,
         content: AnyRef::try_from(reencoded_signed_data.as_slice())
             .unwrap()
-            .try_into()
-            .unwrap(),
+            .into(),
     };
     let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 
@@ -62,8 +61,7 @@ fn reencode_signed_data_test() {
         content_type: ci.content_type,
         content: AnyRef::try_from(reencoded_signed_data.as_slice())
             .unwrap()
-            .try_into()
-            .unwrap(),
+            .into(),
     };
     let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 

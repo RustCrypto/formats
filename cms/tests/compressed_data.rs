@@ -40,10 +40,7 @@ fn reencode_compressed_data_test() {
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
         content_type: ci.content_type,
-        content: AnyRef::try_from(reencoded_data.as_slice())
-            .unwrap()
-            .try_into()
-            .unwrap(),
+        content: AnyRef::try_from(reencoded_data.as_slice()).unwrap().into(),
     };
     let reencoded_data_inci = ci2.to_der().unwrap();
 

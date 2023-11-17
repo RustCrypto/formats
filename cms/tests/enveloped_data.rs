@@ -79,10 +79,7 @@ fn reencode_enveloped_data_ktri_test() {
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
         content_type: ci.content_type,
-        content: AnyRef::try_from(reencoded_data.as_slice())
-            .unwrap()
-            .try_into()
-            .unwrap(),
+        content: AnyRef::try_from(reencoded_data.as_slice()).unwrap().into(),
     };
     let reencoded_data_in_ci = ci2.to_der().unwrap();
 
@@ -180,10 +177,7 @@ fn reencode_enveloped_data_kari_test() {
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
         content_type: ci.content_type,
-        content: AnyRef::try_from(reencoded_data.as_slice())
-            .unwrap()
-            .try_into()
-            .unwrap(),
+        content: AnyRef::try_from(reencoded_data.as_slice()).unwrap().into(),
     };
     let reencoded_data_in_ci = ci2.to_der().unwrap();
 
@@ -270,10 +264,7 @@ fn reencode_enveloped_data_pwri_test() {
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
         content_type: ci.content_type,
-        content: AnyRef::try_from(reencoded_data.as_slice())
-            .unwrap()
-            .try_into()
-            .unwrap(),
+        content: AnyRef::try_from(reencoded_data.as_slice()).unwrap().into(),
     };
     let reencoded_data_in_ci = ci2.to_der().unwrap();
 
@@ -336,10 +327,7 @@ fn reencode_enveloped_data_kek_test() {
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
         content_type: ci.content_type,
-        content: AnyRef::try_from(reencoded_data.as_slice())
-            .unwrap()
-            .try_into()
-            .unwrap(),
+        content: AnyRef::try_from(reencoded_data.as_slice()).unwrap().into(),
     };
     let reencoded_data_in_ci = ci2.to_der().unwrap();
 
@@ -498,10 +486,7 @@ fn reencode_enveloped_data_multi_test() {
     // assemble a new ContentInfo and encode it
     let ci2 = ContentInfo {
         content_type: ci.content_type,
-        content: AnyRef::try_from(reencoded_data.as_slice())
-            .unwrap()
-            .try_into()
-            .unwrap(),
+        content: AnyRef::try_from(reencoded_data.as_slice()).unwrap().into(),
     };
     let reencoded_data_in_ci = ci2.to_der().unwrap();
 
