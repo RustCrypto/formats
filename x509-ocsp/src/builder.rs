@@ -1,5 +1,7 @@
 //! OCSP builder module
 
+use alloc::fmt;
+
 mod request;
 mod response;
 
@@ -17,6 +19,19 @@ pub enum Error {
 
     /// Signing errors
     Signature(signature::Error),
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
+            Error::PublicKey(err) => write!(f, "public key error: {}", err),
+            Error::Signature(err) => write!(f, "signature error: {}", err),
+        }
+    }
 }
 
 impl From<der::Error> for Error {
