@@ -2,11 +2,11 @@
 
 use crate::content_info::ContentInfo;
 
-use alloc::{vec::Vec, string::String};
+use alloc::{string::String, vec::Vec};
 use const_oid::ObjectIdentifier;
 use der::{
     asn1::{Ia5String, OctetString, OctetStringRef},
-    Any, Choice, Sequence, Enumerated
+    Any, Choice, Enumerated, Sequence,
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
