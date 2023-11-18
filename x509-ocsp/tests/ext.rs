@@ -38,7 +38,7 @@ fn as_extension_nonce() {
     );
 }
 
-#[cfg(feature = "rand_core")]
+#[cfg(feature = "rand")]
 #[test]
 fn nonce_generation() {
     let mut rng = rand::thread_rng();
