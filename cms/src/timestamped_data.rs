@@ -99,7 +99,7 @@ pub type TimeStampTokenEvidence = Vec<TimeStampAndCRL>;
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct TimeStampAndCRL {
+pub struct TimeStampAndCrl {
     pub time_stamp: TimeStampToken,
     #[asn1(optional = "true")]
     pub crl: Option<CertificateList>,
