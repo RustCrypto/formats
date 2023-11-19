@@ -1589,7 +1589,7 @@ dependencies = [
 
 [[package]]
 name = "tls_codec"
-version = "0.4.0-pre.1"
+version = "0.4.0-pre.2"
 dependencies = [
  "anstyle",
  "anstyle-parse",
@@ -1605,7 +1605,7 @@ dependencies = [
 
 [[package]]
 name = "tls_codec_derive"
-version = "0.4.0-pre.1"
+version = "0.4.0-pre.2"
 dependencies = [
  "proc-macro2",
  "quote",
