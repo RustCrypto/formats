@@ -828,8 +828,6 @@ pub mod rfc4237 {
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.11.2.9");
 }
 pub mod rfc4403 {
-    pub const UDDIV_3_SERVICE_KEY: crate::ObjectIdentifier =
-        crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.10.4.32");
     pub const UDDI_BUSINESS_ENTITY_NAME_FORM: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.10.15.1");
     pub const UDDIV_3_ENTITY_OBITUARY_NAME_FORM: crate::ObjectIdentifier =
@@ -900,6 +898,8 @@ pub mod rfc4403 {
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.10.4.30");
     pub const UDDIV_3_BUSINESS_KEY: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.10.4.31");
+    pub const UDDIV_3_SERVICE_KEY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.10.4.32");
     pub const UDDIV_3_BINDING_KEY: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.10.4.33");
     pub const UDDIV_3_TMODEL_KEY: crate::ObjectIdentifier =
@@ -2358,6 +2358,32 @@ pub mod rfc7612 {
     pub const PRINTER_IPP_FEATURES_SUPPORTED: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.18.0.2.24.46.1.108");
 }
+pub mod rfc7693 {
+    pub const HASH_ALGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2");
+    pub const BLAKE_2_B: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.1");
+    pub const ID_BLAKE_2_B_384: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.1.12");
+    pub const ID_BLAKE_2_B_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.1.16");
+    pub const ID_BLAKE_2_B_160: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.1.5");
+    pub const ID_BLAKE_2_B_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.1.8");
+    pub const BLAKE_2_S: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.2");
+    pub const ID_BLAKE_2_S_128: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.2.4");
+    pub const ID_BLAKE_2_S_160: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.2.5");
+    pub const ID_BLAKE_2_S_224: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.2.7");
+    pub const ID_BLAKE_2_S_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.2.2.8");
+    pub const MAC_ALGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.1722.12.3");
+}
 pub mod rfc8284 {
     pub const JID_OBJECT: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.1.23.1");
@@ -3264,7 +3290,6 @@ pub const DB: super::Database<'static> = super::Database(&[
         "vPIMExtendedAbsenceStatus",
     ),
     (&rfc4237::VPIM_MAX_MESSAGE_SIZE, "vPIMMaxMessageSize"),
-    (&rfc4403::UDDIV_3_SERVICE_KEY, "uddiv3ServiceKey"),
     (
         &rfc4403::UDDI_BUSINESS_ENTITY_NAME_FORM,
         "uddiBusinessEntityNameForm",
@@ -3327,6 +3352,7 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc4403::UDDI_OPERATOR, "uddiOperator"),
     (&rfc4403::UDDI_LANG, "uddiLang"),
     (&rfc4403::UDDIV_3_BUSINESS_KEY, "uddiv3BusinessKey"),
+    (&rfc4403::UDDIV_3_SERVICE_KEY, "uddiv3ServiceKey"),
     (&rfc4403::UDDIV_3_BINDING_KEY, "uddiv3BindingKey"),
     (&rfc4403::UDDIV_3_TMODEL_KEY, "uddiv3TmodelKey"),
     (
@@ -4449,6 +4475,18 @@ pub const DB: super::Database<'static> = super::Database(&[
         &rfc7612::PRINTER_IPP_FEATURES_SUPPORTED,
         "printer-ipp-features-supported",
     ),
+    (&rfc7693::HASH_ALGS, "hashAlgs"),
+    (&rfc7693::BLAKE_2_B, "blake2b"),
+    (&rfc7693::ID_BLAKE_2_B_384, "id-blake2b384"),
+    (&rfc7693::ID_BLAKE_2_B_512, "id-blake2b512"),
+    (&rfc7693::ID_BLAKE_2_B_160, "id-blake2b160"),
+    (&rfc7693::ID_BLAKE_2_B_256, "id-blake2b256"),
+    (&rfc7693::BLAKE_2_S, "blake2s"),
+    (&rfc7693::ID_BLAKE_2_S_128, "id-blake2s128"),
+    (&rfc7693::ID_BLAKE_2_S_160, "id-blake2s160"),
+    (&rfc7693::ID_BLAKE_2_S_224, "id-blake2s224"),
+    (&rfc7693::ID_BLAKE_2_S_256, "id-blake2s256"),
+    (&rfc7693::MAC_ALGS, "macAlgs"),
     (&rfc8284::JID_OBJECT, "JIDObject"),
     (&rfc8284::JID, "jid"),
     (&rfc8410::ID_EDWARDS_CURVE_ALGS, "id-edwards-curve-algs"),
