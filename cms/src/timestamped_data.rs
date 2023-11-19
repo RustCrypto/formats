@@ -87,12 +87,12 @@ pub enum Evidence {
 }
 
 /// ```text
-/// TimeStampTokenEvidence ::= SEQUENCE SIZE(1..MAX) OF TimeStampAndCRL
+/// TimeStampTokenEvidence ::= SEQUENCE SIZE(1..MAX) OF TimeStampAndCrl
 /// ```
-pub type TimeStampTokenEvidence = Vec<TimeStampAndCRL>;
+pub type TimeStampTokenEvidence = Vec<TimeStampAndCrl>;
 
 /// ```text
-/// TimeStampAndCRL ::= SEQUENCE {
+/// TimeStampAndCrl ::= SEQUENCE {
 ///     timeStamp   TimeStampToken,          -- according to RFC 3161
 ///     crl         CertificateList OPTIONAL -- according to RFC 5280
 /// }
