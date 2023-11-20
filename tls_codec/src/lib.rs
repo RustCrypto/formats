@@ -55,6 +55,9 @@ pub use tls_codec_derive::{
     TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSerializeBytes, TlsSize,
 };
 
+#[cfg(feature = "conditional_deserialization")]
+pub use tls_codec_derive::conditionally_deserializable;
+
 /// Errors that are thrown by this crate.
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Error {
