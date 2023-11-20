@@ -145,8 +145,9 @@ impl AssociatedOid for AcceptableResponses {
 /// ```
 ///
 /// [RFC 6960 Section 4.4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.4
-pub type ArchiveCutoff = OcspGeneralizedTime;
+pub struct ArchiveCutoff(pub OcspGeneralizedTime);
 
+impl_newtype!(ArchiveCutoff, OcspGeneralizedTime);
 impl_extension!(ArchiveCutoff, critical = false);
 
 impl AssociatedOid for ArchiveCutoff {
