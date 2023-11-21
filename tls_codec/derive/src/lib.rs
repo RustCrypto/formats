@@ -1223,19 +1223,28 @@ fn partition_skipped(
     )
 }
 
-/// The `conditionally_deserializable` attribute macro takes as input either
-/// `Bytes` or `Reader` and does the following:
-/// * Add a boolean const generic to the struct indicating if the variant of the
-///   struct is deserializable or not.
-/// * Depending on the input derive either the `TlsDeserialize` or
-///   `TlsDeserializeBytes` trait for the deserializable variant
-/// * Create type aliases for the deserializable and undeserializable variant of
-///   the struct, where the alias is the name of the struct prefixed with
-///   `Deserializable` or `Undeserializable` respectively.
+/// The `conditionally_deserializable` attribute macro creates two versions of
+/// the affected struct: One that implements the
+/// [`Deserialize`](../tls_codec::Deserialize) and
+/// [`DeserializeBytes`](../tls_codec::DeserializeBytes) traits and one that
+/// does not. It does so by introducing a boolean const generic that indicates
+/// if the struct can be deserialized or not.
+///
+/// This conditional deserialization can be used, for example, to implement a
+/// simple state machine, where after deserialization, the user must first
+/// complete an additional transition (e.g. verification) to the
+/// undeserializable version of the struct, which might then implement functions
+/// for further processing.
+///
+/// For ease of use, the macro creates type aliases for the deserializable and
+/// undeserializable variant of the struct, where the alias is the name of the
+/// struct prefixed with `Deserializable` or `Undeserializable` respectively.
+///
+/// Due to the way that the macro rewrites the struct, it must be placed before
+/// any `#[derive(...)]` statements.
 ///
 /// The `conditionally_deserializable` attribute macro is only available if the
 /// `conditional_deserialization` feature is enabled.
-///
 #[cfg_attr(
     feature = "conditional_deserialization",
     doc = r##"
