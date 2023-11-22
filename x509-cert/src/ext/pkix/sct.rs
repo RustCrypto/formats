@@ -264,13 +264,13 @@ mod tests {
         bytes: &'a [u8],
         expected_result: Result<(T, &[u8]), tls_codec::Error>,
     ) -> Result<(T, &'a [u8]), tls_codec::Error> {
-        let actual_result = T::tls_deserialize_bytes(&bytes);
+        let actual_result = T::tls_deserialize_bytes(bytes);
         assert_eq!(actual_result, expected_result);
         actual_result
     }
 
     fn run_serialization_test<T: SerializeBytes>(value: T, expected_bytes: &[u8]) {
-        let result = value.tls_serialize().unwrap();
+        let result = value.tls_serialize().expect("failed to serialize value");
         assert_eq!(expected_bytes, &result);
     }
 
@@ -283,35 +283,35 @@ mod tests {
             Ok((HashAlgorithm::None, [1, 2, 3, 4, 5, 6, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((HashAlgorithm::Md5, [2, 3, 4, 5, 6, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((HashAlgorithm::Sha1, [3, 4, 5, 6, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((HashAlgorithm::Sha224, [4, 5, 6, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((HashAlgorithm::Sha256, [5, 6, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((HashAlgorithm::Sha384, [6, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((HashAlgorithm::Sha512, [8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((HashAlgorithm::Intrinsic, [].as_slice())),
         );
         let _ = run_deserialization_test::<HashAlgorithm>(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Err(tls_codec::Error::EndOfStream),
         );
         let _ =
@@ -341,27 +341,27 @@ mod tests {
             Ok((SignatureAlgorithm::Anonymous, [1, 2, 3, 7, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((SignatureAlgorithm::Rsa, [2, 3, 7, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((SignatureAlgorithm::Dsa, [3, 7, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((SignatureAlgorithm::Ecdsa, [7, 8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((SignatureAlgorithm::Ed25519, [8].as_slice())),
         );
         let result = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((SignatureAlgorithm::Ed448, [].as_slice())),
         );
         let _ = run_deserialization_test::<SignatureAlgorithm>(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Err(tls_codec::Error::EndOfStream),
         );
         let _ = run_deserialization_test::<SignatureAlgorithm>(
@@ -408,7 +408,7 @@ mod tests {
         );
 
         let _ = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((
                 SignatureAndHashAlgorithm {
                     hash: HashAlgorithm::Sha1,
@@ -456,7 +456,7 @@ mod tests {
         );
 
         let _ = run_deserialization_test(
-            &result.unwrap().1,
+            result.expect("run_deserialization_test failed").1,
             Ok((
                 DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
@@ -500,7 +500,10 @@ mod tests {
 
         let result = run_deserialization_test(&bytes, Ok((Version::V1, [0].as_slice())));
 
-        let _ = run_deserialization_test(&result.unwrap().1, Ok((Version::V1, [].as_slice())));
+        let _ = run_deserialization_test(
+            result.expect("run_deserialization_test failed").1,
+            Ok((Version::V1, [].as_slice())),
+        );
         let _ = run_deserialization_test::<Version>(&[1], Err(tls_codec::Error::UnknownValue(1)));
     }
 
@@ -539,9 +542,15 @@ mod tests {
                 SignedCertificateTimestamp {
                     version: Version::V1,
                     log_id: LogId {
-                        key_id: TLS_SCT_EXAMPLE[1..33].try_into().unwrap(),
+                        key_id: TLS_SCT_EXAMPLE[1..33]
+                            .try_into()
+                            .expect("failed to convert to u8 array"),
                     },
-                    timestamp: u64::from_be_bytes(TLS_SCT_EXAMPLE[33..41].try_into().unwrap()),
+                    timestamp: u64::from_be_bytes(
+                        TLS_SCT_EXAMPLE[33..41]
+                            .try_into()
+                            .expect("failed to convert to u8 array"),
+                    ),
                     extensions: TlsByteVecU16::from_slice(&[]),
                     signature: DigitallySigned {
                         algorithm: SignatureAndHashAlgorithm {
@@ -562,9 +571,15 @@ mod tests {
             SignedCertificateTimestamp {
                 version: Version::V1,
                 log_id: LogId {
-                    key_id: TLS_SCT_EXAMPLE[1..33].try_into().unwrap(),
+                    key_id: TLS_SCT_EXAMPLE[1..33]
+                        .try_into()
+                        .expect("failed to convert to u8 array"),
                 },
-                timestamp: u64::from_be_bytes(TLS_SCT_EXAMPLE[33..41].try_into().unwrap()),
+                timestamp: u64::from_be_bytes(
+                    TLS_SCT_EXAMPLE[33..41]
+                        .try_into()
+                        .expect("failed to convert to u8 array"),
+                ),
                 extensions: TlsByteVecU16::from_slice(&[]),
                 signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
@@ -599,7 +614,7 @@ mod tests {
             bytes: &[u8],
             expected_result: Result<SignedCertificateTimestampList, der::Error>,
         ) -> Result<SignedCertificateTimestampList, der::Error> {
-            let actual_result = SignedCertificateTimestampList::from_der(&bytes);
+            let actual_result = SignedCertificateTimestampList::from_der(bytes);
             assert_eq!(actual_result, expected_result);
             actual_result
         }
@@ -607,18 +622,27 @@ mod tests {
         let result = run_test(
             &SCT_EXAMPLE,
             Ok(SignedCertificateTimestampList(
-                OctetString::new(&SCT_EXAMPLE[3..]).unwrap(),
+                OctetString::new(&SCT_EXAMPLE[3..]).expect("failed to convert to u8 array"),
             )),
         );
-        let scts = result.unwrap().parse_timestamps().unwrap();
+        let scts = result
+            .expect("run_test failed")
+            .parse_timestamps()
+            .expect("parse_timestamps failed");
         assert_eq!(
             scts[0].parse_timestamp(),
             Ok(SignedCertificateTimestamp {
                 version: Version::V1,
                 log_id: LogId {
-                    key_id: SCT_EXAMPLE[8..40].try_into().unwrap(),
+                    key_id: SCT_EXAMPLE[8..40]
+                        .try_into()
+                        .expect("failed to convert to u8 array"),
                 },
-                timestamp: u64::from_be_bytes(SCT_EXAMPLE[40..48].try_into().unwrap()),
+                timestamp: u64::from_be_bytes(
+                    SCT_EXAMPLE[40..48]
+                        .try_into()
+                        .expect("failed to convert to u8 array")
+                ),
                 extensions: TlsByteVecU16::from_slice(&[]),
                 signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
@@ -634,9 +658,15 @@ mod tests {
             Ok(SignedCertificateTimestamp {
                 version: Version::V1,
                 log_id: LogId {
-                    key_id: SCT_EXAMPLE[129..161].try_into().unwrap(),
+                    key_id: SCT_EXAMPLE[129..161]
+                        .try_into()
+                        .expect("failed to convert to u8 array"),
                 },
-                timestamp: u64::from_be_bytes(SCT_EXAMPLE[161..169].try_into().unwrap()),
+                timestamp: u64::from_be_bytes(
+                    SCT_EXAMPLE[161..169]
+                        .try_into()
+                        .expect("failed to convert to u8 array")
+                ),
                 extensions: TlsByteVecU16::from_slice(&[]),
                 signature: DigitallySigned {
                     algorithm: SignatureAndHashAlgorithm {
@@ -654,9 +684,15 @@ mod tests {
         let serialized_sct1 = SerializedSct::new(SignedCertificateTimestamp {
             version: Version::V1,
             log_id: LogId {
-                key_id: SCT_EXAMPLE[8..40].try_into().unwrap(),
+                key_id: SCT_EXAMPLE[8..40]
+                    .try_into()
+                    .expect("failed to convert to u8 array"),
             },
-            timestamp: u64::from_be_bytes(SCT_EXAMPLE[40..48].try_into().unwrap()),
+            timestamp: u64::from_be_bytes(
+                SCT_EXAMPLE[40..48]
+                    .try_into()
+                    .expect("failed to convert to u8 array"),
+            ),
             extensions: TlsByteVecU16::from_slice(&[]),
             signature: DigitallySigned {
                 algorithm: SignatureAndHashAlgorithm {
@@ -666,13 +702,19 @@ mod tests {
                 signature: TlsByteVecU16::from_slice(&SCT_EXAMPLE[54..126]),
             },
         })
-        .unwrap();
+        .expect("failed to create SerializedSct");
         let serialized_sct2 = SerializedSct::new(SignedCertificateTimestamp {
             version: Version::V1,
             log_id: LogId {
-                key_id: SCT_EXAMPLE[129..161].try_into().unwrap(),
+                key_id: SCT_EXAMPLE[129..161]
+                    .try_into()
+                    .expect("failed to convert to u8 array"),
             },
-            timestamp: u64::from_be_bytes(SCT_EXAMPLE[161..169].try_into().unwrap()),
+            timestamp: u64::from_be_bytes(
+                SCT_EXAMPLE[161..169]
+                    .try_into()
+                    .expect("failed to convert to u8 array"),
+            ),
             extensions: TlsByteVecU16::from_slice(&[]),
             signature: DigitallySigned {
                 algorithm: SignatureAndHashAlgorithm {
@@ -682,10 +724,10 @@ mod tests {
                 signature: TlsByteVecU16::from_slice(&SCT_EXAMPLE[175..]),
             },
         })
-        .unwrap();
-        let list =
-            SignedCertificateTimestampList::new(&[serialized_sct1, serialized_sct2]).unwrap();
-        let der = list.to_der().unwrap();
+        .expect("failed to create SerializedSct");
+        let list = SignedCertificateTimestampList::new(&[serialized_sct1, serialized_sct2])
+            .expect("failed to create SignedCertificateTimestampList");
+        let der = list.to_der().expect("failed to convert to der");
         assert_eq!(der.as_slice(), SCT_EXAMPLE.as_slice());
     }
 }
