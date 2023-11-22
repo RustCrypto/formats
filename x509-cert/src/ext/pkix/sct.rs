@@ -80,7 +80,7 @@ impl SignedCertificateTimestampList {
         let mut bytes = tls_vec.as_slice();
         let mut result = Vec::new();
         while !bytes.is_empty() {
-            let (serialized_sct, rest) = SerializedSct::tls_deserialize(bytes)?;
+            let (serialized_sct, rest) = SerializedSct::tls_deserialize_bytes(bytes)?;
             result.push(serialized_sct);
             bytes = rest;
         }
@@ -115,7 +115,7 @@ impl SerializedSct {
     /// deserialized or if there are trailing bytes after a
     /// [SignedCertificateTimestamp] has been deserialized.
     pub fn parse_timestamp(&self) -> Result<SignedCertificateTimestamp, Error> {
-        let (sct, rest) = SignedCertificateTimestamp::tls_deserialize(self.data.as_slice())?;
+        let (sct, rest) = SignedCertificateTimestamp::tls_deserialize_bytes(self.data.as_slice())?;
         if !rest.is_empty() {
             return Err(tls_codec::Error::TrailingData)?;
         }
@@ -264,7 +264,7 @@ mod tests {
         bytes: &'a [u8],
         expected_result: Result<(T, &[u8]), tls_codec::Error>,
     ) -> Result<(T, &'a [u8]), tls_codec::Error> {
-        let actual_result = T::tls_deserialize(&bytes);
+        let actual_result = T::tls_deserialize_bytes(&bytes);
         assert_eq!(actual_result, expected_result);
         actual_result
     }
