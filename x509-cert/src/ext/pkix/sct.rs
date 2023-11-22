@@ -67,7 +67,7 @@ impl SignedCertificateTimestampList {
         Ok(SignedCertificateTimestampList(OctetString::new(buffer)?))
     }
 
-    /// Parses the encoded [SerializedSct]s and returns a [Vec][alloc::vec::Vec] containing them.
+    /// Parses the encoded [SerializedSct]s and returns a [Vec] containing them.
     ///
     /// Returns an [error][Error] if a [SerializedSct] can't be
     /// deserialized or if there are trailing bytes after all [SerializedSct]s
