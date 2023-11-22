@@ -5729,10 +5729,25 @@ pub mod rfc8410 {
         ]);
 }
 pub mod rfc8894 {
+    #[doc = "1.3.6.1.5.5.7: id-pkix"]
+    pub const ID_PKIX: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55,
+        ]);
+    #[doc = "1.3.6.1.5.5.7.24: id-scep"]
+    pub const ID_SCEP: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55, 46, 50, 52,
+        ]);
     #[doc = "2.16.840.1.113733: id-VeriSign"]
     pub const ID_VERI_SIGN: crate::ObjectIdentifierRef<'static> =
         crate::ObjectIdentifierRef::from_bytes_unchecked(&[
             50, 46, 49, 54, 46, 56, 52, 48, 46, 49, 46, 49, 49, 51, 55, 51, 51,
+        ]);
+    #[doc = "1.3.6.1.5.5.7.24.1: id-scep-failInfoText"]
+    pub const ID_SCEP_FAIL_INFO_TEXT: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55, 46, 50, 52, 46, 49,
         ]);
     #[doc = "2.16.840.1.113733.1: id-pki"]
     pub const ID_PKI: crate::ObjectIdentifierRef<'static> =
@@ -7755,7 +7770,10 @@ pub const DB: super::Database<'static> = super::Database(&[
     (rfc8410::ID_X_448, "id-X448"),
     (rfc8410::ID_ED_25519, "id-Ed25519"),
     (rfc8410::ID_ED_448, "id-Ed448"),
+    (rfc8894::ID_PKIX, "id-pkix"),
+    (rfc8894::ID_SCEP, "id-scep"),
     (rfc8894::ID_VERI_SIGN, "id-VeriSign"),
+    (rfc8894::ID_SCEP_FAIL_INFO_TEXT, "id-scep-failInfoText"),
     (rfc8894::ID_PKI, "id-pki"),
     (rfc8894::ID_ATTRIBUTES, "id-attributes"),
     (rfc8894::ID_MESSAGE_TYPE, "id-messageType"),
