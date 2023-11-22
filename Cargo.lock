@@ -1622,7 +1622,17 @@ dependencies = [
  "criterion",
  "regex",
  "serde",
- "tls_codec_derive",
+ "tls_codec_derive 0.3.0",
+ "zeroize",
+]
+
+[[package]]
+name = "tls_codec"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d38a1d5fcfa859f0ec2b5e111dc903890bd7dac7f34713232bf9aa4fd7cad7b2"
+dependencies = [
+ "tls_codec_derive 0.4.0",
  "zeroize",
 ]
 
@@ -1633,8 +1643,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
- "tls_codec",
+ "tls_codec 0.3.1",
  "trybuild",
+]
+
+[[package]]
+name = "tls_codec_derive"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8e00e3e7a54e0f1c8834ce72ed49c8487fbd3f801d8cfe1a0ad0640382f8e15"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1932,7 +1953,7 @@ dependencies = [
  "signature",
  "spki",
  "tempfile",
- "tls_codec",
+ "tls_codec 0.4.0",
  "x509-cert-test-support",
 ]
 
@@ -1969,9 +1990,9 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.6.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a0956f1ba7c7909bfb66c2e9e4124ab6f6482560f6628b5aaeba39207c9aad9"
+checksum = "525b4ec142c6b68a2d10f01f7bbf6755599ca3f81ea53b8431b7dd348f5fdb2d"
 dependencies = [
  "zeroize_derive",
 ]

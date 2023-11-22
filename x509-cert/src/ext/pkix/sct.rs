@@ -73,7 +73,7 @@ impl SignedCertificateTimestampList {
     /// deserialized or if there are trailing bytes after all [SerializedSct]s
     /// are deserialized.
     pub fn parse_timestamps(&self) -> Result<Vec<SerializedSct>, Error> {
-        let (tls_vec, rest) = TlsByteVecU16::tls_deserialize(self.0.as_bytes())?;
+        let (tls_vec, rest) = TlsByteVecU16::tls_deserialize_bytes(self.0.as_bytes())?;
         if !rest.is_empty() {
             return Err(tls_codec::Error::TrailingData)?;
         }
