@@ -473,6 +473,240 @@ pub mod rfc2798 {
             50, 52, 49,
         ]);
 }
+pub mod rfc2985 {
+    #[doc = "1.3.6.1.5.5.7.9: ietf-at"]
+    pub const IETF_AT: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55, 46, 57,
+        ]);
+    #[doc = "1.2.840.113549.1.9: pkcs-9"]
+    pub const PKCS_9: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57,
+        ]);
+    #[doc = "1.3.6.1.5.5.7.9.1: pkcs-9-at-dateOfBirth"]
+    pub const PKCS_9_AT_DATE_OF_BIRTH: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55, 46, 57, 46, 49,
+        ]);
+    #[doc = "1.3.6.1.5.5.7.9.2: pkcs-9-at-placeOfBirth"]
+    pub const PKCS_9_AT_PLACE_OF_BIRTH: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55, 46, 57, 46, 50,
+        ]);
+    #[doc = "1.3.6.1.5.5.7.9.3: pkcs-9-at-gender"]
+    pub const PKCS_9_AT_GENDER: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55, 46, 57, 46, 51,
+        ]);
+    #[doc = "1.3.6.1.5.5.7.9.4: pkcs-9-at-countryOfCitizenship"]
+    pub const PKCS_9_AT_COUNTRY_OF_CITIZENSHIP: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55, 46, 57, 46, 52,
+        ]);
+    #[doc = "1.3.6.1.5.5.7.9.5: pkcs-9-at-countryOfResidence"]
+    pub const PKCS_9_AT_COUNTRY_OF_RESIDENCE: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 51, 46, 54, 46, 49, 46, 53, 46, 53, 46, 55, 46, 57, 46, 53,
+        ]);
+    #[doc = "1.2.840.113549.1.9.0: pkcs-9-mo"]
+    pub const PKCS_9_MO: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 48,
+        ]);
+    #[doc = "1.2.840.113549.1.9.1: pkcs-9-at-emailAddress"]
+    pub const PKCS_9_AT_EMAIL_ADDRESS: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 49,
+        ]);
+    #[doc = "1.2.840.113549.1.9.2: pkcs-9-at-unstructuredName"]
+    pub const PKCS_9_AT_UNSTRUCTURED_NAME: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50,
+        ]);
+    #[doc = "1.2.840.113549.1.9.3: pkcs-9-at-contentType"]
+    pub const PKCS_9_AT_CONTENT_TYPE: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 51,
+        ]);
+    #[doc = "1.2.840.113549.1.9.4: pkcs-9-at-messageDigest"]
+    pub const PKCS_9_AT_MESSAGE_DIGEST: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 52,
+        ]);
+    #[doc = "1.2.840.113549.1.9.5: pkcs-9-at-signingTime"]
+    pub const PKCS_9_AT_SIGNING_TIME: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 53,
+        ]);
+    #[doc = "1.2.840.113549.1.9.6: pkcs-9-at-counterSignature"]
+    pub const PKCS_9_AT_COUNTER_SIGNATURE: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 54,
+        ]);
+    #[doc = "1.2.840.113549.1.9.7: pkcs-9-at-challengePassword"]
+    pub const PKCS_9_AT_CHALLENGE_PASSWORD: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 55,
+        ]);
+    #[doc = "1.2.840.113549.1.9.8: pkcs-9-at-unstructuredAddress"]
+    pub const PKCS_9_AT_UNSTRUCTURED_ADDRESS: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 56,
+        ]);
+    #[doc = "1.2.840.113549.1.9.9: pkcs-9-at-extendedCertificateAttributes"]
+    pub const PKCS_9_AT_EXTENDED_CERTIFICATE_ATTRIBUTES: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 57,
+        ]);
+    #[doc = "1.2.840.113549.1.9.10: pkcs-9-at-issuerAndSerialNumber"]
+    pub const PKCS_9_AT_ISSUER_AND_SERIAL_NUMBER: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 49, 48,
+        ]);
+    #[doc = "1.2.840.113549.1.9.11: pkcs-9-at-passwordCheck"]
+    pub const PKCS_9_AT_PASSWORD_CHECK: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 49, 49,
+        ]);
+    #[doc = "1.2.840.113549.1.9.12: pkcs-9-at-publicKey"]
+    pub const PKCS_9_AT_PUBLIC_KEY: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 49, 50,
+        ]);
+    #[doc = "1.2.840.113549.1.9.13: pkcs-9-at-signingDescription"]
+    pub const PKCS_9_AT_SIGNING_DESCRIPTION: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 49, 51,
+        ]);
+    #[doc = "1.2.840.113549.1.9.14: pkcs-9-at-extensionRequest"]
+    pub const PKCS_9_AT_EXTENSION_REQUEST: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 49, 52,
+        ]);
+    #[doc = "1.2.840.113549.1.9.15: pkcs-9-at-smimeCapabilities"]
+    pub const PKCS_9_AT_SMIME_CAPABILITIES: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 49, 53,
+        ]);
+    #[doc = "1.2.840.113549.1.9.16: smime"]
+    pub const SMIME: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 49, 54,
+        ]);
+    #[doc = "1.2.840.113549.1.9.20: pkcs-9-at-friendlyName"]
+    pub const PKCS_9_AT_FRIENDLY_NAME: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 48,
+        ]);
+    #[doc = "1.2.840.113549.1.9.21: pkcs-9-at-localKeyId"]
+    pub const PKCS_9_AT_LOCAL_KEY_ID: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 49,
+        ]);
+    #[doc = "1.2.840.113549.1.9.22: certTypes"]
+    pub const CERT_TYPES: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 50,
+        ]);
+    #[doc = "1.2.840.113549.1.9.23: crlTypes"]
+    pub const CRL_TYPES: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 51,
+        ]);
+    #[doc = "1.2.840.113549.1.9.24: pkcs-9-oc"]
+    pub const PKCS_9_OC: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 52,
+        ]);
+    #[doc = "1.2.840.113549.1.9.25: pkcs-9-at"]
+    pub const PKCS_9_AT: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 53,
+        ]);
+    #[doc = "1.2.840.113549.1.9.26: pkcs-9-sx"]
+    pub const PKCS_9_SX: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 54,
+        ]);
+    #[doc = "1.2.840.113549.1.9.27: pkcs-9-mr"]
+    pub const PKCS_9_MR: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 55,
+        ]);
+    #[doc = "1.2.840.113549.1.9.24.1: pkcs-9-oc-pkcsEntity"]
+    pub const PKCS_9_OC_PKCS_ENTITY: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 52, 46,
+            49,
+        ]);
+    #[doc = "1.2.840.113549.1.9.24.2: pkcs-9-oc-naturalPerson"]
+    pub const PKCS_9_OC_NATURAL_PERSON: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 52, 46,
+            50,
+        ]);
+    #[doc = "1.2.840.113549.1.9.25.1: pkcs-9-at-pkcs15Token"]
+    pub const PKCS_9_AT_PKCS_15_TOKEN: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 53, 46,
+            49,
+        ]);
+    #[doc = "1.2.840.113549.1.9.25.2: pkcs-9-at-encryptedPrivateKeyInfo"]
+    pub const PKCS_9_AT_ENCRYPTED_PRIVATE_KEY_INFO: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 53, 46,
+            50,
+        ]);
+    #[doc = "1.2.840.113549.1.9.25.3: pkcs-9-at-randomNonce"]
+    pub const PKCS_9_AT_RANDOM_NONCE: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 53, 46,
+            51,
+        ]);
+    #[doc = "1.2.840.113549.1.9.25.4: pkcs-9-at-sequenceNumber"]
+    pub const PKCS_9_AT_SEQUENCE_NUMBER: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 53, 46,
+            52,
+        ]);
+    #[doc = "1.2.840.113549.1.9.25.5: pkcs-9-at-pkcs7PDU"]
+    pub const PKCS_9_AT_PKCS_7_PDU: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 53, 46,
+            53,
+        ]);
+    #[doc = "1.2.840.113549.1.9.26.1: pkcs-9-sx-pkcs9String"]
+    pub const PKCS_9_SX_PKCS_9_STRING: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 54, 46,
+            49,
+        ]);
+    #[doc = "1.2.840.113549.1.9.26.2: pkcs-9-sx-signingTime"]
+    pub const PKCS_9_SX_SIGNING_TIME: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 54, 46,
+            50,
+        ]);
+    #[doc = "1.2.840.113549.1.9.27.1: pkcs-9-mr-caseIgnoreMatch"]
+    pub const PKCS_9_MR_CASE_IGNORE_MATCH: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 55, 46,
+            49,
+        ]);
+    #[doc = "1.2.840.113549.1.9.27.2: pkcs-9-mr-signingTimeMatch"]
+    pub const PKCS_9_MR_SIGNING_TIME_MATCH: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            49, 46, 50, 46, 56, 52, 48, 46, 49, 49, 51, 53, 52, 57, 46, 49, 46, 57, 46, 50, 55, 46,
+            50,
+        ]);
+    #[doc = "2.16.840.1.113730.3.1.216: pkcs-9-at-userPKCS12"]
+    pub const PKCS_9_AT_USER_PKCS_12: crate::ObjectIdentifierRef<'static> =
+        crate::ObjectIdentifierRef::from_bytes_unchecked(&[
+            50, 46, 49, 54, 46, 56, 52, 48, 46, 49, 46, 49, 49, 51, 55, 51, 48, 46, 51, 46, 49, 46,
+            50, 49, 54,
+        ]);
+}
 pub mod rfc3280 {
     #[doc = "2.5.4.65: pseudonym"]
     pub const PSEUDONYM: crate::ObjectIdentifierRef<'static> =
@@ -5656,6 +5890,95 @@ pub const DB: super::Database<'static> = super::Database(&[
     (rfc2798::INET_ORG_PERSON, "inetOrgPerson"),
     (rfc2798::USER_PKCS_12, "userPKCS12"),
     (rfc2798::DISPLAY_NAME, "displayName"),
+    (rfc2985::IETF_AT, "ietf-at"),
+    (rfc2985::PKCS_9, "pkcs-9"),
+    (rfc2985::PKCS_9_AT_DATE_OF_BIRTH, "pkcs-9-at-dateOfBirth"),
+    (rfc2985::PKCS_9_AT_PLACE_OF_BIRTH, "pkcs-9-at-placeOfBirth"),
+    (rfc2985::PKCS_9_AT_GENDER, "pkcs-9-at-gender"),
+    (
+        rfc2985::PKCS_9_AT_COUNTRY_OF_CITIZENSHIP,
+        "pkcs-9-at-countryOfCitizenship",
+    ),
+    (
+        rfc2985::PKCS_9_AT_COUNTRY_OF_RESIDENCE,
+        "pkcs-9-at-countryOfResidence",
+    ),
+    (rfc2985::PKCS_9_MO, "pkcs-9-mo"),
+    (rfc2985::PKCS_9_AT_EMAIL_ADDRESS, "pkcs-9-at-emailAddress"),
+    (
+        rfc2985::PKCS_9_AT_UNSTRUCTURED_NAME,
+        "pkcs-9-at-unstructuredName",
+    ),
+    (rfc2985::PKCS_9_AT_CONTENT_TYPE, "pkcs-9-at-contentType"),
+    (rfc2985::PKCS_9_AT_MESSAGE_DIGEST, "pkcs-9-at-messageDigest"),
+    (rfc2985::PKCS_9_AT_SIGNING_TIME, "pkcs-9-at-signingTime"),
+    (
+        rfc2985::PKCS_9_AT_COUNTER_SIGNATURE,
+        "pkcs-9-at-counterSignature",
+    ),
+    (
+        rfc2985::PKCS_9_AT_CHALLENGE_PASSWORD,
+        "pkcs-9-at-challengePassword",
+    ),
+    (
+        rfc2985::PKCS_9_AT_UNSTRUCTURED_ADDRESS,
+        "pkcs-9-at-unstructuredAddress",
+    ),
+    (
+        rfc2985::PKCS_9_AT_EXTENDED_CERTIFICATE_ATTRIBUTES,
+        "pkcs-9-at-extendedCertificateAttributes",
+    ),
+    (
+        rfc2985::PKCS_9_AT_ISSUER_AND_SERIAL_NUMBER,
+        "pkcs-9-at-issuerAndSerialNumber",
+    ),
+    (rfc2985::PKCS_9_AT_PASSWORD_CHECK, "pkcs-9-at-passwordCheck"),
+    (rfc2985::PKCS_9_AT_PUBLIC_KEY, "pkcs-9-at-publicKey"),
+    (
+        rfc2985::PKCS_9_AT_SIGNING_DESCRIPTION,
+        "pkcs-9-at-signingDescription",
+    ),
+    (
+        rfc2985::PKCS_9_AT_EXTENSION_REQUEST,
+        "pkcs-9-at-extensionRequest",
+    ),
+    (
+        rfc2985::PKCS_9_AT_SMIME_CAPABILITIES,
+        "pkcs-9-at-smimeCapabilities",
+    ),
+    (rfc2985::SMIME, "smime"),
+    (rfc2985::PKCS_9_AT_FRIENDLY_NAME, "pkcs-9-at-friendlyName"),
+    (rfc2985::PKCS_9_AT_LOCAL_KEY_ID, "pkcs-9-at-localKeyId"),
+    (rfc2985::CERT_TYPES, "certTypes"),
+    (rfc2985::CRL_TYPES, "crlTypes"),
+    (rfc2985::PKCS_9_OC, "pkcs-9-oc"),
+    (rfc2985::PKCS_9_AT, "pkcs-9-at"),
+    (rfc2985::PKCS_9_SX, "pkcs-9-sx"),
+    (rfc2985::PKCS_9_MR, "pkcs-9-mr"),
+    (rfc2985::PKCS_9_OC_PKCS_ENTITY, "pkcs-9-oc-pkcsEntity"),
+    (rfc2985::PKCS_9_OC_NATURAL_PERSON, "pkcs-9-oc-naturalPerson"),
+    (rfc2985::PKCS_9_AT_PKCS_15_TOKEN, "pkcs-9-at-pkcs15Token"),
+    (
+        rfc2985::PKCS_9_AT_ENCRYPTED_PRIVATE_KEY_INFO,
+        "pkcs-9-at-encryptedPrivateKeyInfo",
+    ),
+    (rfc2985::PKCS_9_AT_RANDOM_NONCE, "pkcs-9-at-randomNonce"),
+    (
+        rfc2985::PKCS_9_AT_SEQUENCE_NUMBER,
+        "pkcs-9-at-sequenceNumber",
+    ),
+    (rfc2985::PKCS_9_AT_PKCS_7_PDU, "pkcs-9-at-pkcs7PDU"),
+    (rfc2985::PKCS_9_SX_PKCS_9_STRING, "pkcs-9-sx-pkcs9String"),
+    (rfc2985::PKCS_9_SX_SIGNING_TIME, "pkcs-9-sx-signingTime"),
+    (
+        rfc2985::PKCS_9_MR_CASE_IGNORE_MATCH,
+        "pkcs-9-mr-caseIgnoreMatch",
+    ),
+    (
+        rfc2985::PKCS_9_MR_SIGNING_TIME_MATCH,
+        "pkcs-9-mr-signingTimeMatch",
+    ),
+    (rfc2985::PKCS_9_AT_USER_PKCS_12, "pkcs-9-at-userPKCS12"),
     (rfc3280::PSEUDONYM, "pseudonym"),
     (rfc3280::EMAIL, "email"),
     (rfc3280::EMAIL_ADDRESS, "emailAddress"),

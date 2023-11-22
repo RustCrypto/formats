@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "const-oid"
-version = "0.10.0-pre"
+version = "0.10.0-pre.0"
 
 [[package]]
 name = "convert_case"
