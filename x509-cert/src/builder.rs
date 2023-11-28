@@ -276,9 +276,7 @@ where
         cert_signer: &'s S,
     ) -> Result<Self> {
         let verifying_key = cert_signer.verifying_key();
-        let signer_pub = verifying_key
-            .to_public_key_der()?
-            .decode_msg::<SubjectPublicKeyInfoOwned>()?;
+        let signer_pub = SubjectPublicKeyInfoOwned::from_key(verifying_key)?;
 
         let signature_alg = cert_signer.signature_algorithm_identifier()?;
         let issuer = profile.get_issuer(&subject);
@@ -370,9 +368,7 @@ where
     pub fn new(subject: Name, req_signer: &'s S) -> Result<Self> {
         let version = Default::default();
         let verifying_key = req_signer.verifying_key();
-        let public_key = verifying_key
-            .to_public_key_der()?
-            .decode_msg::<SubjectPublicKeyInfoOwned>()?;
+        let public_key = SubjectPublicKeyInfoOwned::from_key(verifying_key)?;
         let attributes = Default::default();
         let extension_req = Default::default();
 
