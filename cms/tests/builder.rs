@@ -2,10 +2,11 @@
 
 use aes::Aes128;
 use cipher::block_padding::Pkcs7;
-use cipher::{BlockDecryptMut, KeyIvInit};
+use cipher::{BlockDecryptMut, BlockEncryptMut, Iv, KeyIvInit};
 use cms::builder::{
     create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
-    KeyEncryptionInfo, KeyTransRecipientInfoBuilder, SignedDataBuilder, SignerInfoBuilder,
+    KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
+    SignedDataBuilder, SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -578,5 +579,113 @@ fn test_create_signing_attribute() {
     assert!(
         tag == Tag::GeneralizedTime || tag == Tag::UtcTime,
         "Invalid tag number in signing time attribute value"
+    );
+}
+
+#[test]
+/// This demonstrates and tests PasswordRecipientInfoBuilder according to RFC3211,
+/// using Aes128Cbc for encryption of the content-encryption key (CEK).
+fn test_create_password_recipient_info() {
+    // First define an Encryptor, which is used to encrypt the content-encryption key
+    // for a recipient of the CMS message.
+    struct Aes128CbcPwriEncryptor<'a> {
+        challenge_password: &'a [u8],
+        key_encryption_iv: Iv<cbc::Encryptor<Aes128>>,
+        key_derivation_params: pkcs5::pbes2::Pbkdf2Params<'a>,
+    }
+    impl<'a> Aes128CbcPwriEncryptor<'a> {
+        pub fn new(challenge_password: &'a [u8]) -> Self {
+            let rng = OsRng;
+            Aes128CbcPwriEncryptor {
+                challenge_password,
+                key_encryption_iv: cbc::Encryptor::<Aes128>::generate_iv(rng),
+                key_derivation_params: pkcs5::pbes2::Pbkdf2Params::hmac_with_sha256(
+                    500_000, b"salz",
+                )
+                .unwrap(),
+            }
+        }
+    }
+    impl<'a> PwriEncryptor for Aes128CbcPwriEncryptor<'a> {
+        const BLOCK_LENGTH: usize = 128; // AES block length
+        fn encrypt_rfc3211(
+            &self,
+            wrapped_content_encryption_key: &[u8],
+        ) -> Result<Vec<u8>, cms::builder::Error> {
+            // Derive a key-encryption key from the challenge password.
+            let mut key_encryption_key = [0_u8; 16];
+            pbkdf2::pbkdf2_hmac::<Sha256>(
+                self.challenge_password,
+                self.key_derivation_params.salt,
+                self.key_derivation_params.iteration_count,
+                &mut key_encryption_key,
+            );
+            // Encrypt first time
+            let key =
+                cipher::Key::<cbc::Encryptor<Aes128>>::from_slice(&key_encryption_key).to_owned();
+            let mut encryptor = cbc::Encryptor::<Aes128>::new(&key.into(), &self.key_encryption_iv);
+            let tmp = encryptor.encrypt_padded_vec_mut::<Pkcs7>(wrapped_content_encryption_key);
+
+            // Encrypt result again (see RFC 3211)
+            encryptor = cbc::Encryptor::<Aes128>::new(
+                &key.into(),
+                aes::Block::from_slice(&tmp[tmp.len() - self.key_encryption_iv.len()..]),
+            );
+            Ok(encryptor.encrypt_padded_vec_mut::<Pkcs7>(tmp.as_slice()))
+        }
+
+        fn key_derivation_algorithm(&self) -> Option<AlgorithmIdentifierOwned> {
+            Some(AlgorithmIdentifierOwned {
+                oid: const_oid::db::rfc5911::ID_PBKDF_2,
+                parameters: Some(
+                    Any::new(
+                        der::Tag::Sequence,
+                        self.key_derivation_params.to_der().unwrap(),
+                    )
+                    .unwrap(),
+                ),
+            })
+        }
+
+        fn key_encryption_algorithm(&self) -> AlgorithmIdentifierOwned {
+            AlgorithmIdentifierOwned {
+                oid: const_oid::db::rfc5911::ID_AES_128_CBC,
+                parameters: Some(
+                    Any::new(der::Tag::OctetString, self.key_encryption_iv.to_vec()).unwrap(),
+                ),
+            }
+        }
+    }
+
+    // Encrypt the content-encryption key using custom encryptor
+    // of type `Aes128CbcPwriEncryptor`:
+    let challenge_password = b"chellange pazzw0rd";
+    let key_encryptor = Aes128CbcPwriEncryptor::new(challenge_password);
+    let mut rng = OsRng;
+
+    // Create recipient info
+    let recipient_info_builder =
+        PasswordRecipientInfoBuilder::new(key_encryptor, &mut rng).unwrap();
+
+    let mut rng = OsRng;
+    let mut builder = EnvelopedDataBuilder::new(
+        None,
+        "Arbitrary unencrypted content".as_bytes(),
+        ContentEncryptionAlgorithm::Aes128Cbc,
+        None,
+    )
+    .expect("Could not create an EnvelopedData builder.");
+    let enveloped_data = builder
+        .add_recipient_info(recipient_info_builder)
+        .expect("Could not add a recipient info")
+        .build_with_rng(&mut rng)
+        .expect("Building EnvelopedData failed");
+    let enveloped_data_der = enveloped_data
+        .to_der()
+        .expect("conversion of enveloped data to DER failed.");
+    println!(
+        "{}",
+        pem_rfc7468::encode_string("ENVELOPEDDATA", LineEnding::LF, &enveloped_data_der)
+            .expect("PEM encoding of enveloped data DER failed")
     );
 }

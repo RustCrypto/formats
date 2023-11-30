@@ -244,13 +244,15 @@ mod bytes {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use crate::asn1::{OctetStringRef, PrintableStringRef};
+    use crate::asn1::{OctetString, OctetStringRef, PrintableStringRef};
 
     #[test]
     fn octet_string_decode_into() {
         // PrintableString "hi"
         let der = b"\x13\x02\x68\x69";
         let oct = OctetStringRef::new(der).unwrap();
+        let oct_owned = OctetString::new("Halllo".as_bytes()).unwrap();
+        assert!(!oct_owned.is_empty());
 
         let res = oct.decode_into::<PrintableStringRef<'_>>().unwrap();
         assert_eq!(AsRef::<str>::as_ref(&res), "hi");

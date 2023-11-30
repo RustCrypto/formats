@@ -6,8 +6,8 @@ use crate::cert::CertificateChoices;
 use crate::content_info::{CmsVersion, ContentInfo};
 use crate::enveloped_data::{
     EncryptedContentInfo, EncryptedKey, EnvelopedData, KekIdentifier, KeyTransRecipientInfo,
-    OriginatorIdentifierOrKey, OriginatorInfo, RecipientIdentifier, RecipientInfo, RecipientInfos,
-    UserKeyingMaterial,
+    OriginatorIdentifierOrKey, OriginatorInfo, PasswordRecipientInfo, RecipientIdentifier,
+    RecipientInfo, RecipientInfos, UserKeyingMaterial,
 };
 use crate::revocation::{RevocationInfoChoice, RevocationInfoChoices};
 use crate::signed_data::{
@@ -17,7 +17,7 @@ use crate::signed_data::{
 use aes::{Aes128, Aes192, Aes256};
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use cipher::block_padding::Pkcs7;
 use cipher::rand_core::{CryptoRng, CryptoRngCore, RngCore};
@@ -26,9 +26,8 @@ use cipher::{Key, KeyIvInit, KeySizeUser};
 use const_oid::ObjectIdentifier;
 use core::cmp::Ordering;
 use core::fmt;
-use der::asn1::{BitString, OctetStringRef, SetOfVec};
+use der::asn1::{BitString, OctetString, OctetStringRef, SetOfVec};
 use der::oid::db::DB;
-use der::Tag::OctetString;
 use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
 use digest::Digest;
 use rsa::Pkcs1v15Encrypt;
@@ -705,9 +704,31 @@ impl RecipientInfoBuilder for KekRecipientInfoBuilder {
     }
 }
 
-/// Builds a `PasswordRecipientInfo` according to RFC 5652 § 6.
+/// Trait used for encrypting the content-encryption key for PasswordRecipientInfo.
+/// This trait must be implemented by a user and which allows for greater flexibility
+/// in choosing key derivation and encryption algorithms. Note, that method
+/// `encrypt_rfc3211()` must follow RFC 3211 and encrypt the key twice.
+pub trait PwriEncryptor {
+    /// Block length of the encryption algorithm.
+    const BLOCK_LENGTH: usize;
+    /// Returns the algorithm identifier of the used key derivation algorithm,
+    /// which is used to derive an encryption key from the secret/password
+    /// shared with the recipient. Includes eventual parameters (e.g. the used iv).
+    fn key_derivation_algorithm(&self, ) -> Option<AlgorithmIdentifierOwned>;
+    /// Returns the algorithm identifier of the used encryption algorithm
+    /// including eventual parameters (e.g. the used iv).
+    fn key_encryption_algorithm(&self, ) -> AlgorithmIdentifierOwned;
+    /// Encrypt the wrapped content-encryption key twice following RFC 3211, § 2.3.1
+    fn encrypt_rfc3211(&self, wrapped_content_encryption_key: &[u8]) -> Result<Vec<u8>>;
+}
+
+/// Builds a `PasswordRecipientInfo` according to RFC 5652 § 6 and RFC 3211.
 /// Uses a password or shared secret value to encrypt the content-encryption key.
-pub struct PasswordRecipientInfoBuilder {
+pub struct PasswordRecipientInfoBuilder<'r, P, R>
+where
+    P: PwriEncryptor,
+    R: CryptoRngCore,
+{
     /// Identifies the key-derivation algorithm, and any associated parameters, used to derive the
     /// key-encryption key from the password or shared secret value. If this field is `None`,
     /// the key-encryption key is supplied from an external source, for example a hardware crypto
@@ -715,22 +736,77 @@ pub struct PasswordRecipientInfoBuilder {
     pub key_derivation_alg: Option<AlgorithmIdentifierOwned>,
     /// Encryption algorithm to be used for key encryption
     pub key_enc_alg: AlgorithmIdentifierOwned,
+    /// Provided password encryptor
+    pub key_encryptor: P,
+    /// Random number generator
+    pub rng: &'r mut R,
 }
 
-impl PasswordRecipientInfoBuilder {
+impl<'r, P, R> PasswordRecipientInfoBuilder<'r, P, R>
+where
+    P: PwriEncryptor,
+    R: CryptoRngCore,
+{
     /// Creates a `PasswordRecipientInfoBuilder`
+    /// `key_derivation_alg`: (optional) Algorithm used to derive the
+    ///     key-encryption key from the shared secret (password)
+    /// `key_enc_alg`: Algorithm used to (symmetrically) encrypt the
+    ///     content-encryption key
+    /// `key_encryptor`: Provided encryptor, which is used to encrypt
+    ///     the content-encryption key
+    /// `rng`: Random number generator, required for padding values.
     pub fn new(
-        key_derivation_alg: Option<AlgorithmIdentifierOwned>,
-        key_enc_alg: AlgorithmIdentifierOwned,
-    ) -> Result<PasswordRecipientInfoBuilder> {
+        key_encryptor: P,
+        rng: &'r mut R,
+    ) -> Result<PasswordRecipientInfoBuilder<'r, P, R>> {
         Ok(PasswordRecipientInfoBuilder {
-            key_derivation_alg,
-            key_enc_alg,
+            key_derivation_alg: key_encryptor.key_derivation_algorithm(),
+            key_enc_alg: key_encryptor.key_encryption_algorithm(),
+            key_encryptor,
+            rng,
         })
+    }
+
+    /// Wrap the content-encryption key according to RFC 3211, §2.3.1:
+    ///     ....
+    ///     The formatted CEK block then looks as follows:
+    ///     CEK byte count || check value || CEK || padding (if required)
+    fn wrap_content_encryption_key(&mut self, content_encryption_key: &[u8]) -> Result<Vec<u8>> {
+        let content_encryption_key_length = content_encryption_key.len();
+        let wrapped_key_length_wo_padding = 1 + 3 + content_encryption_key_length;
+        let key_enc_alg_blocklength = P::BLOCK_LENGTH;
+        let padding_length = if wrapped_key_length_wo_padding < 2 * key_enc_alg_blocklength {
+            2 * key_enc_alg_blocklength - wrapped_key_length_wo_padding
+        } else {
+            0
+        };
+
+        let cek_byte_count: u8 = content_encryption_key.len().try_into().map_err(|_| {
+            Error::Builder("Content encryption key length must not exceed 255".to_string())
+        })?;
+        let mut check_value = vec![
+            0xff ^ content_encryption_key[0],
+            0xff ^ content_encryption_key[1],
+            0xff ^ content_encryption_key[2],
+        ];
+
+        let mut wrapped_cek: Vec<u8> = Vec::new();
+        wrapped_cek.insert(0, cek_byte_count);
+        wrapped_cek.append(&mut check_value);
+        if padding_length > 0 {
+            let mut padding = vec![0_u8; padding_length];
+            self.rng.fill_bytes(padding.as_mut_slice());
+            wrapped_cek.append(&mut padding);
+        }
+        Ok(wrapped_cek)
     }
 }
 
-impl RecipientInfoBuilder for PasswordRecipientInfoBuilder {
+impl<'r, P, R> RecipientInfoBuilder for PasswordRecipientInfoBuilder<'r, P, R>
+where
+    P: PwriEncryptor,
+    R: CryptoRngCore,
+{
     /// Returns the RecipientInfoType
     fn recipient_info_type(&self) -> RecipientInfoType {
         RecipientInfoType::Pwri
@@ -742,10 +818,16 @@ impl RecipientInfoBuilder for PasswordRecipientInfoBuilder {
     }
 
     /// Build a `PasswordRecipientInfoBuilder`. See RFC 5652 § 6.2.1
-    fn build(&mut self, _content_encryption_key: &[u8]) -> Result<RecipientInfo> {
-        Err(Error::Builder(String::from(
-            "Building PasswordRecipientInfo is not implemented, yet.",
-        )))
+    fn build(&mut self, content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+        let wrapped_cek = self.wrap_content_encryption_key(content_encryption_key)?;
+        let encrypted_key = self.key_encryptor.encrypt_rfc3211(wrapped_cek.as_slice())?;
+        let enc_key = OctetString::new(encrypted_key)?;
+        Ok(RecipientInfo::Pwri(PasswordRecipientInfo {
+            version: self.recipient_info_version(),
+            key_derivation_alg: self.key_derivation_alg.clone(),
+            key_enc_alg: self.key_enc_alg.clone(),
+            enc_key,
+        }))
     }
 }
 
@@ -867,7 +949,7 @@ impl<'c> EnvelopedDataBuilder<'c> {
             None,
             rng,
         )?;
-        let encrypted_content_octetstring = der::asn1::OctetString::new(encrypted_content)?;
+        let encrypted_content_octetstring = OctetString::new(encrypted_content)?;
         let encrypted_content_info = EncryptedContentInfo {
             content_type: const_oid::db::rfc5911::ID_DATA, // TODO bk should this be configurable?
             content_enc_alg,
@@ -1021,7 +1103,7 @@ macro_rules! encrypt_block_mode {
             key.to_vec(),
             AlgorithmIdentifierOwned {
                 oid: $oid,
-                parameters: Some(Any::new(OctetString, iv.to_vec())?),
+                parameters: Some(Any::new(der::Tag::OctetString, iv.to_vec())?),
             },
         ))
     }};
@@ -1085,7 +1167,7 @@ pub fn create_content_type_attribute(content_type: ObjectIdentifier) -> Result<A
 pub fn create_message_digest_attribute(message_digest: &[u8]) -> Result<Attribute> {
     let message_digest_der = OctetStringRef::new(message_digest)?;
     let message_digest_attribute_value =
-        AttributeValue::new(OctetString, message_digest_der.as_bytes())?;
+        AttributeValue::new(der::Tag::OctetString, message_digest_der.as_bytes())?;
     let mut values = SetOfVec::new();
     values.insert(message_digest_attribute_value)?;
     let attribute = Attribute {
