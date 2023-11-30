@@ -122,7 +122,7 @@ fn test_build_signed_data() {
     let signer_info_builder_2 = SignerInfoBuilder::new(
         &signer_2,
         signer_identifier(1),
-        digest_algorithm_2.clone(),
+        digest_algorithm_2,
         &content,
         external_message_digest_2,
     )
@@ -623,12 +623,12 @@ fn test_create_password_recipient_info() {
             // Encrypt first time
             let key =
                 cipher::Key::<cbc::Encryptor<Aes128>>::from_slice(&key_encryption_key).to_owned();
-            let mut encryptor = cbc::Encryptor::<Aes128>::new(&key.into(), &self.key_encryption_iv);
+            let mut encryptor = cbc::Encryptor::<Aes128>::new(&key, &self.key_encryption_iv);
             let tmp = encryptor.encrypt_padded_vec_mut::<Pkcs7>(wrapped_content_encryption_key);
 
             // Encrypt result again (see RFC 3211)
             encryptor = cbc::Encryptor::<Aes128>::new(
-                &key.into(),
+                &key,
                 aes::Block::from_slice(&tmp[tmp.len() - self.key_encryption_iv.len()..]),
             );
             Ok(encryptor.encrypt_padded_vec_mut::<Pkcs7>(tmp.as_slice()))
