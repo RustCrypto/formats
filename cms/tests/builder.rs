@@ -177,7 +177,6 @@ fn test_build_enveloped_data() {
     let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
         recipient_identifier,
         KeyEncryptionInfo::Rsa(recipient_public_key),
-        &mut rng,
     )
     .expect("Could not create a KeyTransRecipientInfoBuilder");
 
@@ -263,9 +262,6 @@ fn test_build_pkcs7_scep_pkcsreq() {
     // - Wrap enveloped data in `SignedData`
     // - Sign with sender's RSA key.
 
-    // Generate a random number generator
-    let mut rng = rand::thread_rng();
-
     // Create recipient info
     let recipient_identifier = recipient_identifier(42);
     let recipient_private_key =
@@ -277,7 +273,6 @@ fn test_build_pkcs7_scep_pkcsreq() {
     let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
         recipient_identifier.clone(),
         KeyEncryptionInfo::Rsa(recipient_public_key),
-        &mut rng,
     )
     .unwrap();
 
@@ -808,11 +803,9 @@ fn test_create_password_recipient_info() {
     // of type `Aes128CbcPwriEncryptor`:
     let challenge_password = "chellange pazzw0rd";
     let key_encryptor = Aes128CbcPwriEncryptor::new(challenge_password.as_bytes());
-    let mut rng = OsRng;
 
     // Create recipient info
-    let recipient_info_builder =
-        PasswordRecipientInfoBuilder::new(key_encryptor, &mut rng).unwrap();
+    let recipient_info_builder = PasswordRecipientInfoBuilder::new(key_encryptor).unwrap();
 
     let mut rng = OsRng;
     let mut builder = EnvelopedDataBuilder::new(
