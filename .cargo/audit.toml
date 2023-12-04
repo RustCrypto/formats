@@ -1,4 +1,5 @@
 [advisories]
 ignore = [
     "RUSTSEC-2021-0127", # serde_cbor is unmaintained
+    "RUSTSEC-2023-0071", # rsa: Marvin Attack: potential key recovery
 ]
