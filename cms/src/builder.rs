@@ -784,10 +784,10 @@ where
             Error::Builder("Content encryption key length must not exceed 255".to_string())
         })?;
         let mut wrapped_cek: Vec<u8> = Vec::with_capacity(4 + padding_length);
-        wrapped_cek.insert(0, cek_byte_count);
-        wrapped_cek.insert(0xff ^ content_encryption_key[0]);
-        wrapped_cek.insert(0xff ^ content_encryption_key[1]);
-        wrapped_cek.insert(0xff ^ content_encryption_key[2]);
+        wrapped_cek.push(cek_byte_count);
+        wrapped_cek.push(0xff ^ content_encryption_key[0]);
+        wrapped_cek.push(0xff ^ content_encryption_key[1]);
+        wrapped_cek.push(0xff ^ content_encryption_key[2]);
         if padding_length > 0 {
             let mut padding = vec![0_u8; padding_length];
             self.rng.fill_bytes(padding.as_mut_slice());
