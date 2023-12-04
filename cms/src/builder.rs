@@ -764,10 +764,12 @@ where
         })
     }
 
-    /// Wrap the content-encryption key according to RFC 3211, §2.3.1:
+    /// Wrap the content-encryption key according to [RFC 3211, §2.3.1]:
     ///     ....
     ///     The formatted CEK block then looks as follows:
     ///     CEK byte count || check value || CEK || padding (if required)
+    ///
+    /// [RFC 3211, §2.3.1]: https://www.rfc-editor.org/rfc/rfc3211#section-2.3.1
     fn wrap_content_encryption_key(&mut self, content_encryption_key: &[u8]) -> Result<Vec<u8>> {
         let content_encryption_key_length = content_encryption_key.len();
         let wrapped_key_length_wo_padding = 1 + 3 + content_encryption_key_length;
