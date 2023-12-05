@@ -6,7 +6,7 @@ use cipher::{BlockDecryptMut, BlockEncryptMut, Iv, KeyIvInit};
 use cms::builder::{
     create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
-    SignedDataBuilder, SignerInfoBuilder,
+    Result, SignedDataBuilder, SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -634,26 +634,24 @@ fn test_create_password_recipient_info() {
             Ok(encryptor.encrypt_padded_vec_mut::<Pkcs7>(tmp.as_slice()))
         }
 
-        fn key_derivation_algorithm(&self) -> Option<AlgorithmIdentifierOwned> {
-            Some(AlgorithmIdentifierOwned {
+        fn key_derivation_algorithm(&self) -> Result<Option<AlgorithmIdentifierOwned>> {
+            Ok(Some(AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5911::ID_PBKDF_2,
-                parameters: Some(
-                    Any::new(
-                        der::Tag::Sequence,
-                        self.key_derivation_params.to_der().unwrap(),
-                    )
-                    .unwrap(),
-                ),
-            })
+                parameters: Some(Any::new(
+                    der::Tag::Sequence,
+                    self.key_derivation_params.to_der()?,
+                )?),
+            }))
         }
 
-        fn key_encryption_algorithm(&self) -> AlgorithmIdentifierOwned {
-            AlgorithmIdentifierOwned {
+        fn key_encryption_algorithm(&self) -> Result<AlgorithmIdentifierOwned> {
+            Ok(AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5911::ID_AES_128_CBC,
-                parameters: Some(
-                    Any::new(der::Tag::OctetString, self.key_encryption_iv.to_vec()).unwrap(),
-                ),
-            }
+                parameters: Some(Any::new(
+                    der::Tag::OctetString,
+                    self.key_encryption_iv.to_vec(),
+                )?),
+            })
         }
     }
 

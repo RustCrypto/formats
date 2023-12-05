@@ -714,10 +714,10 @@ pub trait PwriEncryptor {
     /// Returns the algorithm identifier of the used key derivation algorithm,
     /// which is used to derive an encryption key from the secret/password
     /// shared with the recipient. Includes eventual parameters (e.g. the used iv).
-    fn key_derivation_algorithm(&self) -> Option<AlgorithmIdentifierOwned>;
+    fn key_derivation_algorithm(&self) -> Result<Option<AlgorithmIdentifierOwned>>;
     /// Returns the algorithm identifier of the used encryption algorithm
     /// including eventual parameters (e.g. the used iv).
-    fn key_encryption_algorithm(&self) -> AlgorithmIdentifierOwned;
+    fn key_encryption_algorithm(&self) -> Result<AlgorithmIdentifierOwned>;
     /// Encrypt the wrapped content-encryption key twice following RFC 3211, § 2.3.1
     fn encrypt_rfc3211(&self, wrapped_content_encryption_key: &[u8]) -> Result<Vec<u8>>;
 }
@@ -757,8 +757,8 @@ where
     /// `rng`: Random number generator, required for padding values.
     pub fn new(key_encryptor: P, rng: &'r mut R) -> Result<PasswordRecipientInfoBuilder<'r, P, R>> {
         Ok(PasswordRecipientInfoBuilder {
-            key_derivation_alg: key_encryptor.key_derivation_algorithm(),
-            key_enc_alg: key_encryptor.key_encryption_algorithm(),
+            key_derivation_alg: key_encryptor.key_derivation_algorithm()?,
+            key_enc_alg: key_encryptor.key_encryption_algorithm()?,
             key_encryptor,
             rng,
         })
