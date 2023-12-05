@@ -6,7 +6,7 @@ use cipher::{BlockDecryptMut, BlockEncryptMut, Iv, KeyIvInit};
 use cms::builder::{
     create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
-    Result, SignedDataBuilder, SignerInfoBuilder,
+    SignedDataBuilder, SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -634,7 +634,9 @@ fn test_create_password_recipient_info() {
             Ok(encryptor.encrypt_padded_vec_mut::<Pkcs7>(tmp.as_slice()))
         }
 
-        fn key_derivation_algorithm(&self) -> Result<Option<AlgorithmIdentifierOwned>> {
+        fn key_derivation_algorithm(
+            &self,
+        ) -> Result<Option<AlgorithmIdentifierOwned>, cms::builder::Error> {
             Ok(Some(AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5911::ID_PBKDF_2,
                 parameters: Some(Any::new(
@@ -644,7 +646,9 @@ fn test_create_password_recipient_info() {
             }))
         }
 
-        fn key_encryption_algorithm(&self) -> Result<AlgorithmIdentifierOwned> {
+        fn key_encryption_algorithm(
+            &self,
+        ) -> Result<AlgorithmIdentifierOwned, cms::builder::Error> {
             Ok(AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5911::ID_AES_128_CBC,
                 parameters: Some(Any::new(
