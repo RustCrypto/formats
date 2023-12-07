@@ -637,12 +637,10 @@ fn test_create_password_recipient_info() {
         fn key_derivation_algorithm(
             &self,
         ) -> Result<Option<AlgorithmIdentifierOwned>, cms::builder::Error> {
+            let key_derivation_params_der = self.key_derivation_params.to_der()?;
             Ok(Some(AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5911::ID_PBKDF_2,
-                parameters: Some(Any::new(
-                    der::Tag::Sequence,
-                    self.key_derivation_params.to_der()?,
-                )?),
+                parameters: Some(Any::from_der(key_derivation_params_der.as_slice())?),
             }))
         }
 
