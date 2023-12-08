@@ -788,7 +788,7 @@ where
         wrapped_cek.push(0xff ^ content_encryption_key[0]);
         wrapped_cek.push(0xff ^ content_encryption_key[1]);
         wrapped_cek.push(0xff ^ content_encryption_key[2]);
-        wrapped_cek.append(content_encryption_key);
+        wrapped_cek.extend_from_slice(content_encryption_key);
         if padding_length > 0 {
             let mut padding = vec![0_u8; padding_length];
             self.rng.fill_bytes(padding.as_mut_slice());
