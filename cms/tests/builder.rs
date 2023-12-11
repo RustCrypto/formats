@@ -607,10 +607,10 @@ fn test_create_password_recipient_info() {
         }
     }
     impl<'a> PwriEncryptor for Aes128CbcPwriEncryptor<'a> {
-        const BLOCK_LENGTH: usize = 128; // AES block length
+        const BLOCK_LENGTH_BITS: usize = 128; // AES block length
         fn encrypt_rfc3211(
             &self,
-            wrapped_content_encryption_key: &[u8],
+            padded_content_encryption_key: &[u8],
         ) -> Result<Vec<u8>, cms::builder::Error> {
             // Derive a key-encryption key from the challenge password.
             let mut key_encryption_key = [0_u8; 16];
@@ -624,7 +624,7 @@ fn test_create_password_recipient_info() {
             let key =
                 cipher::Key::<cbc::Encryptor<Aes128>>::from_slice(&key_encryption_key).to_owned();
             let mut encryptor = cbc::Encryptor::<Aes128>::new(&key, &self.key_encryption_iv);
-            let tmp = encryptor.encrypt_padded_vec_mut::<Pkcs7>(wrapped_content_encryption_key);
+            let tmp = encryptor.encrypt_padded_vec_mut::<Pkcs7>(padded_content_encryption_key);
 
             // Encrypt result again (see RFC 3211)
             encryptor = cbc::Encryptor::<Aes128>::new(

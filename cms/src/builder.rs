@@ -710,7 +710,7 @@ impl RecipientInfoBuilder for KekRecipientInfoBuilder {
 /// `encrypt_rfc3211()` must follow RFC 3211 and encrypt the key twice.
 pub trait PwriEncryptor {
     /// Block length of the encryption algorithm.
-    const BLOCK_LENGTH: usize;
+    const BLOCK_LENGTH_BITS: usize;
     /// Returns the algorithm identifier of the used key derivation algorithm,
     /// which is used to derive an encryption key from the secret/password
     /// shared with the recipient. Includes eventual parameters (e.g. the used iv).
@@ -718,8 +718,8 @@ pub trait PwriEncryptor {
     /// Returns the algorithm identifier of the used encryption algorithm
     /// including eventual parameters (e.g. the used iv).
     fn key_encryption_algorithm(&self) -> Result<AlgorithmIdentifierOwned>;
-    /// Encrypt the wrapped content-encryption key twice following RFC 3211, § 2.3.1
-    fn encrypt_rfc3211(&self, wrapped_content_encryption_key: &[u8]) -> Result<Vec<u8>>;
+    /// Encrypt the padded content-encryption key twice following RFC 3211, § 2.3.1
+    fn encrypt_rfc3211(&self, padded_content_encryption_key: &[u8]) -> Result<Vec<u8>>;
 }
 
 /// Builds a `PasswordRecipientInfo` according to RFC 5652 § 6 and RFC 3211.
@@ -770,12 +770,12 @@ where
     ///     CEK byte count || check value || CEK || padding (if required)
     ///
     /// [RFC 3211, §2.3.1]: https://www.rfc-editor.org/rfc/rfc3211#section-2.3.1
-    fn wrap_content_encryption_key(&mut self, content_encryption_key: &[u8]) -> Result<Vec<u8>> {
+    fn pad_content_encryption_key(&mut self, content_encryption_key: &[u8]) -> Result<Vec<u8>> {
         let content_encryption_key_length = content_encryption_key.len();
-        let wrapped_key_length_wo_padding = 1 + 3 + content_encryption_key_length;
-        let key_enc_alg_blocklength = P::BLOCK_LENGTH;
-        let padding_length = if wrapped_key_length_wo_padding < 2 * key_enc_alg_blocklength {
-            2 * key_enc_alg_blocklength - wrapped_key_length_wo_padding
+        let padded_key_length_wo_padding = 1 + 3 + content_encryption_key_length;
+        let key_enc_alg_blocklength_bytes = P::BLOCK_LENGTH_BITS / 8;
+        let padding_length = if padded_key_length_wo_padding < 2 * key_enc_alg_blocklength_bytes {
+            2 * key_enc_alg_blocklength_bytes - padded_key_length_wo_padding
         } else {
             0
         };
@@ -783,18 +783,18 @@ where
         let cek_byte_count: u8 = content_encryption_key.len().try_into().map_err(|_| {
             Error::Builder("Content encryption key length must not exceed 255".to_string())
         })?;
-        let mut wrapped_cek: Vec<u8> = Vec::with_capacity(4 + padding_length);
-        wrapped_cek.push(cek_byte_count);
-        wrapped_cek.push(0xff ^ content_encryption_key[0]);
-        wrapped_cek.push(0xff ^ content_encryption_key[1]);
-        wrapped_cek.push(0xff ^ content_encryption_key[2]);
-        wrapped_cek.extend_from_slice(content_encryption_key);
+        let mut padded_cek: Vec<u8> = Vec::with_capacity(4 + padding_length);
+        padded_cek.push(cek_byte_count);
+        padded_cek.push(0xff ^ content_encryption_key[0]);
+        padded_cek.push(0xff ^ content_encryption_key[1]);
+        padded_cek.push(0xff ^ content_encryption_key[2]);
+        padded_cek.extend_from_slice(content_encryption_key);
         if padding_length > 0 {
             let mut padding = vec![0_u8; padding_length];
             self.rng.fill_bytes(padding.as_mut_slice());
-            wrapped_cek.append(&mut padding);
+            padded_cek.append(&mut padding);
         }
-        Ok(wrapped_cek)
+        Ok(padded_cek)
     }
 }
 
@@ -815,8 +815,8 @@ where
 
     /// Build a `PasswordRecipientInfoBuilder`. See RFC 5652 § 6.2.1
     fn build(&mut self, content_encryption_key: &[u8]) -> Result<RecipientInfo> {
-        let wrapped_cek = self.wrap_content_encryption_key(content_encryption_key)?;
-        let encrypted_key = self.key_encryptor.encrypt_rfc3211(wrapped_cek.as_slice())?;
+        let padded_cek = self.pad_content_encryption_key(content_encryption_key)?;
+        let encrypted_key = self.key_encryptor.encrypt_rfc3211(padded_cek.as_slice())?;
         let enc_key = OctetString::new(encrypted_key)?;
         Ok(RecipientInfo::Pwri(PasswordRecipientInfo {
             version: self.recipient_info_version(),
