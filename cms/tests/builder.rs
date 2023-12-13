@@ -2,7 +2,7 @@
 
 use aes::Aes128;
 use cipher::block_padding::Pkcs7;
-use cipher::{BlockDecryptMut, BlockEncryptMut, Iv, KeyIvInit};
+use cipher::{BlockDecryptMut, BlockEncryptMut, BlockSizeUser, Iv, IvSizeUser, KeyIvInit};
 use cms::builder::{
     create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
@@ -11,13 +11,16 @@ use cms::builder::{
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
 use cms::enveloped_data::RecipientInfo::Ktri;
-use cms::enveloped_data::{EnvelopedData, RecipientIdentifier, RecipientInfo};
+use cms::enveloped_data::{
+    EnvelopedData, PasswordRecipientInfo, RecipientIdentifier, RecipientInfo,
+};
 use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
-use der::asn1::{OctetString, PrintableString, SetOfVec, Utf8StringRef};
+use der::asn1::{OctetString, OctetStringRef, PrintableString, SetOfVec, Utf8StringRef};
 use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
 use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
+use pkcs5::pbes2::Pbkdf2Params;
 use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::{SigningKey, VerifyingKey};
@@ -600,7 +603,8 @@ fn test_create_password_recipient_info() {
                 challenge_password,
                 key_encryption_iv: cbc::Encryptor::<Aes128>::generate_iv(rng),
                 key_derivation_params: pkcs5::pbes2::Pbkdf2Params::hmac_with_sha256(
-                    500_000, b"salz",
+                    60_000, // use >=600_000 in real world applications
+                    b"salz",
                 )
                 .unwrap(),
             }
@@ -612,6 +616,11 @@ fn test_create_password_recipient_info() {
             &self,
             padded_content_encryption_key: &[u8],
         ) -> Result<Vec<u8>, cms::builder::Error> {
+            if padded_content_encryption_key.len() < 2 * Self::BLOCK_LENGTH_BITS / 8 {
+                return Err(cms::builder::Error::Builder(
+                    "Padded content encryption key must be at least 2 AES blocks long.".to_string(),
+                ));
+            }
             // Derive a key-encryption key from the challenge password.
             let mut key_encryption_key = [0_u8; 16];
             pbkdf2::pbkdf2_hmac::<Sha256>(
@@ -624,14 +633,30 @@ fn test_create_password_recipient_info() {
             let key =
                 cipher::Key::<cbc::Encryptor<Aes128>>::from_slice(&key_encryption_key).to_owned();
             let mut encryptor = cbc::Encryptor::<Aes128>::new(&key, &self.key_encryption_iv);
-            let tmp = encryptor.encrypt_padded_vec_mut::<Pkcs7>(padded_content_encryption_key);
+            // Allocate memory for encrypted cek and pre-fill with unencrypted key for in-place
+            // encryption.
+            let mut encrypted_cek_blocks: Vec<aes::Block> = padded_content_encryption_key
+                .chunks_exact(Self::BLOCK_LENGTH_BITS / 8)
+                .map(|chunk| {
+                    let mut block = [0_u8; Self::BLOCK_LENGTH_BITS / 8];
+                    block.copy_from_slice(chunk);
+                    aes::Block::from(block)
+                })
+                .collect();
+            encryptor.encrypt_blocks_mut(encrypted_cek_blocks.as_mut_slice());
 
             // Encrypt result again (see RFC 3211)
             encryptor = cbc::Encryptor::<Aes128>::new(
                 &key,
-                aes::Block::from_slice(&tmp[tmp.len() - self.key_encryption_iv.len()..]),
+                encrypted_cek_blocks
+                    .last()
+                    .expect("Pass 1 encrypted cek cannot be empty"),
             );
-            Ok(encryptor.encrypt_padded_vec_mut::<Pkcs7>(tmp.as_slice()))
+            encryptor.encrypt_blocks_mut(encrypted_cek_blocks.as_mut_slice());
+            Ok(encrypted_cek_blocks
+                .into_iter()
+                .flat_map(|block| block.into_iter())
+                .collect())
         }
 
         fn key_derivation_algorithm(
@@ -657,10 +682,132 @@ fn test_create_password_recipient_info() {
         }
     }
 
-    // Encrypt the content-encryption key using custom encryptor
+    pub fn cms_pwri_decrypt_content_encryption_key(
+        recipient_info: &PasswordRecipientInfo,
+        challenge_password: &str,
+    ) -> Vec<u8> {
+        // Derive key from challenge password.
+        let key_encryption_key: Vec<u8> = {
+            let key_derivation_alg = recipient_info.key_derivation_alg.clone().unwrap();
+            assert_eq!(key_derivation_alg.oid, const_oid::db::rfc5911::ID_PBKDF_2);
+            let key_derivation_parameters_any = &key_derivation_alg.parameters.unwrap();
+            let key_derivation_parameters_der = key_derivation_parameters_any.to_der().unwrap();
+            let kdf_parameters =
+                Pbkdf2Params::from_der(key_derivation_parameters_der.as_slice()).unwrap();
+            let salt = kdf_parameters.salt;
+            let iteration_count = kdf_parameters.iteration_count;
+            let mut key_encryption_key = [0_u8; 16];
+            pbkdf2::pbkdf2_hmac::<Sha256>(
+                challenge_password.as_bytes(),
+                salt,
+                iteration_count,
+                &mut key_encryption_key,
+            );
+            key_encryption_key.to_vec()
+        };
+        // Decrypt twice according to RFC 3211
+        assert_eq!(
+            recipient_info.key_enc_alg.oid,
+            const_oid::db::rfc5911::ID_AES_128_CBC
+        );
+        let block_size_in_bytes = cbc::Decryptor::<Aes128>::block_size();
+        let iv_size_in_bytes = cbc::Decryptor::<Aes128>::iv_size();
+
+        let enc_key_len = u32::from(recipient_info.enc_key.len()) as usize;
+        assert!(enc_key_len >= 2 * block_size_in_bytes);
+
+        // Allocate memory for the decrypted cek and pre-fill with encrypted cek.
+        let mut padded_cek_blocks: Vec<aes::Block> = recipient_info
+            .enc_key
+            .as_bytes()
+            .chunks_exact(block_size_in_bytes)
+            .map(|chunk| {
+                let mut block = [0_u8; 16]; // 16 == block_size_in_bytes
+                block.copy_from_slice(chunk);
+                aes::Block::from(block)
+            })
+            .collect();
+
+        let key = cipher::Key::<cbc::Decryptor<Aes128>>::from_slice(&key_encryption_key).to_owned();
+
+        // 1. Using the n-1'th ciphertext block as the IV, decrypt the n'th ciphertext block.
+        let iv_pre =
+            Iv::<cbc::Decryptor<Aes128>>::from(padded_cek_blocks[padded_cek_blocks.len() - 2]);
+        let iv_encrypted_block = padded_cek_blocks[padded_cek_blocks.len() - 1];
+        let mut iv = Iv::<cbc::Decryptor<Aes128>>::from([0_u8; 16]);
+        cbc::Decryptor::<aes::Aes128>::new(&key, &iv_pre)
+            .decrypt_block_b2b_mut(&iv_encrypted_block, &mut iv);
+
+        // 2. Using the decrypted n'th ciphertext block as the IV, decrypt the 1st ... n-1'th
+        //    ciphertext blocks. This strips the outer layer of encryption.
+        // Decryption is in-place.
+        cbc::Decryptor::<aes::Aes128>::new(&key, &iv)
+            .decrypt_blocks_mut(padded_cek_blocks.as_mut_slice());
+
+        // 3. Decrypt the inner layer of encryption using the KEK.
+        // Decryption is in-place.
+        let iv2_bytes = get_iv_from_algorithm_identifier(&recipient_info.key_enc_alg);
+        assert!(iv2_bytes.as_bytes().len() == iv_size_in_bytes);
+        let iv2 = Iv::<cbc::Decryptor<Aes128>>::from_slice(iv2_bytes.as_bytes());
+        cbc::Decryptor::<aes::Aes128>::new(key_encryption_key.as_slice().into(), iv2)
+            .decrypt_blocks_mut(padded_cek_blocks.as_mut_slice());
+
+        let padded_cek: Vec<u8> = padded_cek_blocks
+            .into_iter()
+            .flat_map(|block| block.into_iter())
+            .collect();
+
+        cms_pwri_unpad_content_encryption_key(padded_cek.as_slice(), aes::Aes128::block_size())
+    }
+
+    /// Return the IV, which is stored in the algorithm params for AES algorithm identifiers.
+    fn get_iv_from_algorithm_identifier(
+        encryption_algorithm_identifier: &AlgorithmIdentifierOwned,
+    ) -> OctetString {
+        let encryption_params = &encryption_algorithm_identifier.parameters.clone().unwrap();
+        let iv_der = encryption_params.to_der().unwrap();
+        let iv_octet_string = OctetString::from_der(iv_der.as_slice()).unwrap();
+
+        iv_octet_string
+    }
+
+    /// Unpad a content-encryption key (CEK) according RFC 3211, §2.3.1
+    /// The formatted CEK block looks as follows:
+    ///     CEK byte count || check value || CEK || padding (if required)
+    fn cms_pwri_unpad_content_encryption_key(
+        padded_content_encryption_key: &[u8],
+        block_length: usize,
+    ) -> Vec<u8> {
+        assert!(padded_content_encryption_key.len() >= 2 * block_length);
+        assert!(padded_content_encryption_key.len() % block_length == 0);
+
+        let content_encryption_key_length = padded_content_encryption_key[0] as usize;
+        assert!(content_encryption_key_length != 0);
+        assert!(padded_content_encryption_key.len() >= content_encryption_key_length + 4);
+        let mut content_encryption_key = vec![];
+        content_encryption_key.extend_from_slice(
+            &padded_content_encryption_key[4..(4 + content_encryption_key_length)],
+        );
+        assert_eq!(
+            0xff ^ padded_content_encryption_key[1],
+            content_encryption_key[0]
+        );
+        assert_eq!(
+            0xff ^ padded_content_encryption_key[2],
+            content_encryption_key[1]
+        );
+        assert_eq!(
+            0xff ^ padded_content_encryption_key[3],
+            content_encryption_key[2]
+        );
+
+        content_encryption_key
+    }
+
+    // Encrypt the content-encryption key (CEK) using custom encryptor
     // of type `Aes128CbcPwriEncryptor`:
-    let challenge_password = b"chellange pazzw0rd";
-    let key_encryptor = Aes128CbcPwriEncryptor::new(challenge_password);
+    let challenge_password = "chellange pazzw0rd";
+    let key_encryptor = Aes128CbcPwriEncryptor::new(challenge_password.as_bytes());
     let mut rng = OsRng;
 
     // Create recipient info
@@ -688,4 +835,41 @@ fn test_create_password_recipient_info() {
         pem_rfc7468::encode_string("ENVELOPEDDATA", LineEnding::LF, &enveloped_data_der)
             .expect("PEM encoding of enveloped data DER failed")
     );
+
+    // Decrypt CEK and content
+    let recipient_info = enveloped_data.recip_infos.0.get(0).unwrap();
+    if let RecipientInfo::Pwri(recipient_info) = recipient_info {
+        let decrypted_content_encryption_key =
+            cms_pwri_decrypt_content_encryption_key(recipient_info, &challenge_password);
+        let key = cipher::Key::<cbc::Encryptor<Aes128>>::from_slice(
+            decrypted_content_encryption_key.as_slice(),
+        )
+        .to_owned();
+        let algorithm_params_der = enveloped_data
+            .encrypted_content
+            .content_enc_alg
+            .parameters
+            .unwrap()
+            .to_der()
+            .unwrap();
+        let iv = Iv::<cbc::Decryptor<Aes128>>::from_slice(
+            OctetStringRef::from_der(algorithm_params_der.as_slice())
+                .unwrap()
+                .as_bytes(),
+        );
+        let content = cbc::Decryptor::<Aes128>::new(&key, &iv)
+            .decrypt_padded_vec_mut::<Pkcs7>(
+                enveloped_data
+                    .encrypted_content
+                    .encrypted_content
+                    .unwrap()
+                    .as_bytes(),
+            )
+            .unwrap();
+        // This is the final test: do we get the original content?
+        assert_eq!(
+            content.as_slice(),
+            "Arbitrary unencrypted content".as_bytes()
+        )
+    };
 }

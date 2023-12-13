@@ -783,7 +783,8 @@ where
         let cek_byte_count: u8 = content_encryption_key.len().try_into().map_err(|_| {
             Error::Builder("Content encryption key length must not exceed 255".to_string())
         })?;
-        let mut padded_cek: Vec<u8> = Vec::with_capacity(4 + padding_length);
+        let mut padded_cek: Vec<u8> =
+            Vec::with_capacity(4 + content_encryption_key_length + padding_length);
         padded_cek.push(cek_byte_count);
         padded_cek.push(0xff ^ content_encryption_key[0]);
         padded_cek.push(0xff ^ content_encryption_key[1]);
