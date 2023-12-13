@@ -840,7 +840,7 @@ fn test_create_password_recipient_info() {
     let recipient_info = enveloped_data.recip_infos.0.get(0).unwrap();
     if let RecipientInfo::Pwri(recipient_info) = recipient_info {
         let decrypted_content_encryption_key =
-            cms_pwri_decrypt_content_encryption_key(recipient_info, &challenge_password);
+            cms_pwri_decrypt_content_encryption_key(recipient_info, challenge_password);
         let key = cipher::Key::<cbc::Encryptor<Aes128>>::from_slice(
             decrypted_content_encryption_key.as_slice(),
         )
@@ -857,7 +857,7 @@ fn test_create_password_recipient_info() {
                 .unwrap()
                 .as_bytes(),
         );
-        let content = cbc::Decryptor::<Aes128>::new(&key, &iv)
+        let content = cbc::Decryptor::<Aes128>::new(&key, iv)
             .decrypt_padded_vec_mut::<Pkcs7>(
                 enveloped_data
                     .encrypted_content
