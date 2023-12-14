@@ -1,6 +1,7 @@
 //! X509 Certificate builder
 
 use alloc::vec;
+use async_signature::{AsyncRandomizedSigner, AsyncSigner};
 use core::fmt;
 use der::{asn1::BitString, referenced::OwnedToRef, Encode};
 use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, Signer};
@@ -536,5 +537,88 @@ impl Builder for RequestBuilder {
             algorithm,
             signature,
         })
+    }
+}
+
+/// Trait for async X509 builders
+///
+/// This trait defines the interface between builder and the signers.
+///
+/// This is the async counterpart of [`Builder`].
+#[allow(async_fn_in_trait)]
+pub trait AsyncBuilder: Sized {
+    /// Type built by this builder
+    type Output: Sized;
+
+    /// Assemble the final object from signature.
+    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey;
+
+    /// Finalize and return a serialization of the object for signature.
+    fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey;
+
+    /// Run the object through the signer and build it.
+    async fn build_async<S, Signature: 'static>(mut self, signer: &S) -> Result<Self::Output>
+    where
+        S: AsyncSigner<Signature>,
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+    {
+        let blob = self.finalize(signer)?;
+
+        let signature = signer.sign_async(&blob).await?.to_bitstring()?;
+
+        self.assemble(signature, signer)
+    }
+
+    /// Run the object through the signer and build it.
+    async fn build_with_rng_async<S, Signature: 'static>(
+        mut self,
+        signer: &S,
+        rng: &mut impl CryptoRngCore,
+    ) -> Result<Self::Output>
+    where
+        S: AsyncRandomizedSigner<Signature>,
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+    {
+        let blob = self.finalize(signer)?;
+
+        let signature = signer
+            .try_sign_with_rng_async(rng, &blob)
+            .await?
+            .to_bitstring()?;
+
+        self.assemble(signature, signer)
+    }
+}
+
+impl<T> AsyncBuilder for T
+where
+    T: Builder,
+{
+    type Output = <T as Builder>::Output;
+
+    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        <T as Builder>::assemble(self, signature, signer)
+    }
+
+    fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        <T as Builder>::finalize(self, signer)
     }
 }
