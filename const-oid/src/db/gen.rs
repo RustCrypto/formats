@@ -2044,6 +2044,16 @@ pub mod rfc6960 {
     pub const ID_PKIX_OCSP_EXTENDED_REVOKE: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.9");
 }
+pub mod rfc6962 {
+    pub const GOOGLE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129");
+    pub const CT_PRECERT_SCTS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.2");
+    pub const CT_PRECERT_POISON: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.3");
+    pub const CT_PRECERT_SIGNING_CERT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.4");
+}
 pub mod rfc7107 {
     pub const ID_SMIME: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16");
@@ -4109,6 +4119,10 @@ pub const DB: super::Database<'static> = super::Database(&[
         &rfc6960::ID_PKIX_OCSP_EXTENDED_REVOKE,
         "id-pkix-ocsp-extended-revoke",
     ),
+    (&rfc6962::GOOGLE, "google"),
+    (&rfc6962::CT_PRECERT_SCTS, "ct-precert-scts"),
+    (&rfc6962::CT_PRECERT_POISON, "ct-precert-poison"),
+    (&rfc6962::CT_PRECERT_SIGNING_CERT, "ct-precert-signing-cert"),
     (&rfc7107::ID_SMIME, "id-smime"),
     (&rfc7107::ID_MOD, "id-mod"),
     (&rfc7107::ID_CT, "id-ct"),
