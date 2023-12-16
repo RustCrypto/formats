@@ -13,7 +13,7 @@ use serde::ser::SerializeStruct;
 use std::io::{Read, Write};
 use zeroize::Zeroize;
 
-use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size};
+use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, U24};
 
 macro_rules! impl_size {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
@@ -42,7 +42,7 @@ macro_rules! impl_byte_deserialize {
         #[cfg(feature = "std")]
         #[inline(always)]
         fn deserialize_bytes<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-            let len = <$size>::tls_deserialize(bytes)? as usize;
+            let len = <$size>::tls_deserialize(bytes)?.try_into().unwrap();
             // When fuzzing we limit the maximum size to allocate.
             // XXX: We should think about a configurable limit for the allocation
             //      here.
@@ -63,7 +63,7 @@ macro_rules! impl_byte_deserialize {
         #[inline(always)]
         fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let (type_len, remainder) = <$size>::tls_deserialize_bytes(bytes)?;
-            let len = type_len as usize;
+            let len = type_len.try_into().unwrap();
             // When fuzzing we limit the maximum size to allocate.
             // XXX: We should think about a configurable limit for the allocation
             //      here.
@@ -92,7 +92,7 @@ macro_rules! impl_deserialize {
             let len = <$size>::tls_deserialize(bytes)?;
             let mut read = len.tls_serialized_len();
             let len_len = read;
-            while (read - len_len) < len as usize {
+            while (read - len_len) < len.try_into().unwrap() {
                 let element = T::tls_deserialize(bytes)?;
                 read += element.tls_serialized_len();
                 result.push(element);
@@ -110,7 +110,7 @@ macro_rules! impl_deserialize_bytes {
             let (len, mut remainder) = <$size>::tls_deserialize_bytes(bytes)?;
             let mut read = len.tls_serialized_len();
             let len_len = read;
-            while (read - len_len) < len as usize {
+            while (read - len_len) < len.try_into().unwrap() {
                 let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
                 remainder = next_remainder;
                 read += element.tls_serialized_len();
@@ -130,7 +130,7 @@ macro_rules! impl_serialize {
             // large and write it out.
             let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
-            let mut written =  <$size as Serialize>::tls_serialize(&(byte_length as $size), writer)?;
+            let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
 
             // Now serialize the elements
             for e in $self.as_slice().iter() {
@@ -152,7 +152,7 @@ macro_rules! impl_byte_serialize {
             // large and write it out.
             let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
-            let mut written = <$size as Serialize>::tls_serialize(&(byte_length as $size), writer)?;
+            let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
 
             // Now serialize the elements
             written += writer.write($self.as_slice())?;
@@ -170,7 +170,7 @@ macro_rules! impl_serialize_common {
             let tls_serialized_len = $self.tls_serialized_len();
             let byte_length = tls_serialized_len - $len_len;
 
-            let max_len = <$size>::MAX as usize;
+            let max_len = <$size>::MAX.try_into().unwrap();
             debug_assert!(
                 byte_length <= max_len,
                 "Vector length can't be encoded in the vector length a {} >= {}",
@@ -207,7 +207,7 @@ macro_rules! impl_serialize_bytes_bytes {
             let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
             let mut vec = Vec::<u8>::with_capacity(tls_serialized_len);
-            let length_vec =  <$size as SerializeBytes>::tls_serialize(&(byte_length as $size))?;
+            let length_vec = <$size as SerializeBytes>::tls_serialize(&byte_length.try_into().unwrap())?;
             let mut written = length_vec.len();
             vec.extend_from_slice(&length_vec);
 
@@ -885,15 +885,18 @@ macro_rules! impl_tls_byte_vec {
 
 impl_public_tls_vec!(u8, TlsVecU8, 1);
 impl_public_tls_vec!(u16, TlsVecU16, 2);
+impl_public_tls_vec!(U24, TlsVecU24, 3);
 impl_public_tls_vec!(u32, TlsVecU32, 4);
 
 impl_tls_byte_vec!(u8, TlsByteVecU8, 1);
 impl_tls_byte_vec!(u16, TlsByteVecU16, 2);
+impl_tls_byte_vec!(U24, TlsByteVecU24, 3);
 impl_tls_byte_vec!(u32, TlsByteVecU32, 4);
 
 // Secrets should be put into these Secret tls vectors as they implement zeroize.
 impl_secret_tls_vec!(u8, SecretTlsVecU8, 1);
 impl_secret_tls_vec!(u16, SecretTlsVecU16, 2);
+impl_secret_tls_vec!(U24, SecretTlsVecU24, 2);
 impl_secret_tls_vec!(u32, SecretTlsVecU32, 4);
 
 // We also implement shallow serialization for slices
@@ -948,6 +951,7 @@ macro_rules! impl_tls_byte_slice {
 
 impl_tls_byte_slice!(u8, TlsByteSliceU8, 1);
 impl_tls_byte_slice!(u16, TlsByteSliceU16, 2);
+impl_tls_byte_slice!(U24, TlsByteSliceU24, 3);
 impl_tls_byte_slice!(u32, TlsByteSliceU32, 4);
 
 macro_rules! impl_tls_slice {
@@ -1003,6 +1007,7 @@ macro_rules! impl_tls_slice {
 
 impl_tls_slice!(u8, TlsSliceU8, 1);
 impl_tls_slice!(u16, TlsSliceU16, 2);
+impl_tls_slice!(U24, TlsSliceU24, 3);
 impl_tls_slice!(u32, TlsSliceU32, 4);
 
 impl From<core::num::TryFromIntError> for Error {

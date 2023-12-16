@@ -2,7 +2,7 @@
 
 use alloc::vec::Vec;
 
-use crate::{DeserializeBytes, SerializeBytes};
+use crate::{DeserializeBytes, SerializeBytes, U24};
 
 use super::{Deserialize, Error, Serialize, Size};
 
@@ -115,7 +115,7 @@ macro_rules! impl_unsigned {
             #[cfg(feature = "std")]
             #[inline]
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-                let mut x = (0 as $t).to_be_bytes();
+                let mut x = <$t>::default().to_be_bytes();
                 bytes.read_exact(&mut x)?;
                 Ok(<$t>::from_be_bytes(x))
             }
@@ -124,7 +124,7 @@ macro_rules! impl_unsigned {
         impl DeserializeBytes for $t {
             #[inline]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-                let len = core::mem::size_of::<$t>();
+                let len = <$t>::default().tls_serialized_len();
                 let out = bytes
                     .get(..len)
                     .ok_or(Error::EndOfStream)?
@@ -187,6 +187,7 @@ macro_rules! impl_unsigned {
 
 impl_unsigned!(u8, 1);
 impl_unsigned!(u16, 2);
+impl_unsigned!(U24, 3);
 impl_unsigned!(u32, 4);
 impl_unsigned!(u64, 8);
 
