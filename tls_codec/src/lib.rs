@@ -232,30 +232,27 @@ pub trait DeserializeBytes: Size {
 ///
 /// [RFC 5246]: https://datatracker.ietf.org/doc/html/rfc5246#section-4.4
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
-pub struct U24(u32);
+pub struct U24([u8; 3]);
 
 impl U24 {
-    pub const MAX: Self = Self((1 << 24) - 1);
-    pub const MIN: Self = Self(0);
+    pub const MAX: Self = Self([255u8; 3]);
+    pub const MIN: Self = Self([0u8; 3]);
 
     pub fn from_be_bytes(bytes: [u8; 3]) -> Self {
-        let mut full_width = [0u8; 4];
-        full_width[1..].copy_from_slice(&bytes);
-        Self(u32::from_be_bytes(full_width))
+        U24(bytes)
     }
 
     pub fn to_be_bytes(self) -> [u8; 3] {
-        let mut result = [0u8; 3];
-        result.copy_from_slice(&self.0.to_be_bytes()[1..]);
-        result
+        self.0
     }
 }
 
-impl TryFrom<U24> for usize {
-    type Error = <u32 as TryFrom<usize>>::Error;
-
-    fn try_from(value: U24) -> Result<Self, Self::Error> {
-        value.0.try_into()
+impl From<U24> for usize {
+    fn from(value: U24) -> usize {
+        const LEN: usize = core::mem::size_of::<usize>();
+        let mut usize_bytes = [0u8; LEN];
+        usize_bytes[LEN - 3..].copy_from_slice(&value.0);
+        usize::from_be_bytes(usize_bytes)
     }
 }
 
@@ -263,12 +260,13 @@ impl TryFrom<usize> for U24 {
     type Error = Error;
 
     fn try_from(value: usize) -> Result<Self, Self::Error> {
+        const LEN: usize = core::mem::size_of::<usize>();
         // In practice, our usages of this conversion should never be invalid, as the values
         // have to come from `TryFrom<U24> for usize`.
         if value > (1 << 24) - 1 {
             Err(Error::LibraryError)
         } else {
-            Ok(U24(value as u32))
+            Ok(U24(value.to_be_bytes()[LEN - 3..].try_into()?))
         }
     }
 }

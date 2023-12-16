@@ -124,7 +124,7 @@ macro_rules! impl_unsigned {
         impl DeserializeBytes for $t {
             #[inline]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-                let len = <$t>::default().tls_serialized_len();
+                let len = core::mem::size_of::<$t>();
                 let out = bytes
                     .get(..len)
                     .ok_or(Error::EndOfStream)?
