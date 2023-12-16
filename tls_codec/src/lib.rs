@@ -255,7 +255,7 @@ impl TryFrom<U24> for usize {
     type Error = <u32 as TryFrom<usize>>::Error;
 
     fn try_from(value: U24) -> Result<Self, Self::Error> {
-        Ok(value.0.try_into()?)
+        value.0.try_into()
     }
 }
 
