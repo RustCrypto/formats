@@ -1,8 +1,9 @@
-#![cfg(feature = "sct")]
 //! Signed Certificate Timestamp list extension as defined in the
 //! [Certificate Transparency RFC 6962].
 //!
 //! [Certificate Transparency RFC 6962]: https://datatracker.ietf.org/doc/html/rfc6962
+
+#![cfg(feature = "sct")]
 
 use alloc::{format, vec::Vec};
 use const_oid::{AssociatedOid, ObjectIdentifier};
