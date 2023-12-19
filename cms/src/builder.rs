@@ -26,7 +26,7 @@ use cipher::{Key, KeyIvInit, KeySizeUser};
 use const_oid::ObjectIdentifier;
 use core::cmp::Ordering;
 use core::fmt;
-use der::asn1::{BitString, OctetString, OctetStringRef, SetOfVec};
+use der::asn1::{BitString, Null, OctetString, OctetStringRef, SetOfVec};
 use der::oid::db::DB;
 use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
 use digest::Digest;
@@ -599,7 +599,7 @@ where
                     .map_err(|_| Error::Builder(String::from("Could not encrypt key")))?,
                 AlgorithmIdentifierOwned {
                     oid: const_oid::db::rfc5912::RSA_ENCRYPTION,
-                    parameters: None,
+                    parameters: Some(Any::from(Null)),
                 },
             ),
         };
