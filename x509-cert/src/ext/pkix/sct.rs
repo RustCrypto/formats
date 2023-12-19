@@ -55,7 +55,7 @@ impl From<tls_codec::Error> for Error {
 }
 
 impl SignedCertificateTimestampList {
-    /// Creates a new [SignedCertificateTimestamp] from a slice of [SerializedSct]s.
+    /// Creates a new [`SignedCertificateTimestampList`] from a slice of [`SerializedSct`]s.
     pub fn new(serialized_scts: &[SerializedSct]) -> Result<Self, Error> {
         let mut result: Vec<u8> = Vec::new();
         for timestamp in serialized_scts {
