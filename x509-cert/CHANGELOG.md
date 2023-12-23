@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.5 (2023-12-23)
+
+### Added
+- Signed Certificate Timestamp (SCT) extension support ([#1134])
+
+### Changed
+- Relax dependencies ([#1179])
+- Use `SubjectPublicKeyInfoOwned::from_key` ([#1271])
+
+[#1134]: https://github.com/RustCrypto/formats/pull/1134
+[#1179]: https://github.com/RustCrypto/formats/pull/1179
+[#1271]: https://github.com/RustCrypto/formats/pull/1271
+
 ## 0.2.4 (2023-07-25)
 
 ### Added
