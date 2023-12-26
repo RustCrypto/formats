@@ -6,7 +6,7 @@
 #![cfg(feature = "sct")]
 
 use alloc::{format, vec::Vec};
-use const_oid::{AssociatedOid, ObjectIdentifier};
+use const_oid::{db::rfc6962::CT_PRECERT_SCTS, AssociatedOid, ObjectIdentifier};
 use der::asn1::OctetString;
 use tls_codec::{
     DeserializeBytes, SerializeBytes, TlsByteVecU16, TlsDeserializeBytes, TlsSerializeBytes,
@@ -22,10 +22,6 @@ use tls_codec::{
 /// [RFC 6962 Section 3.3]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.3
 #[derive(Debug, PartialEq)]
 pub struct SignedCertificateTimestampList(OctetString);
-
-//TODO: Remove this and use const-oid's rfc6962::CT_PRECERT_SCTS once a const-oid version
-// containing it is published
-const CT_PRECERT_SCTS: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11129.2.4.2");
 
 impl AssociatedOid for SignedCertificateTimestampList {
     const OID: ObjectIdentifier = CT_PRECERT_SCTS;
