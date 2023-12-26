@@ -15,7 +15,7 @@ edition = "2021"
 rust-version = "1.65"
 
 [dependencies]
-const-oid = { version = "0.9.3", features = ["db"] }
+const-oid = { version = "0.9.6", features = ["db"] }
 der = { version = "0.7.6", features = ["alloc", "derive", "flagset", "oid"] }
 spki = { version = "0.7.3", features = ["alloc"] }
 
