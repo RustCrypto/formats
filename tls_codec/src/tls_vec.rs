@@ -896,7 +896,7 @@ impl_tls_byte_vec!(u32, TlsByteVecU32, 4);
 // Secrets should be put into these Secret tls vectors as they implement zeroize.
 impl_secret_tls_vec!(u8, SecretTlsVecU8, 1);
 impl_secret_tls_vec!(u16, SecretTlsVecU16, 2);
-impl_secret_tls_vec!(U24, SecretTlsVecU24, 2);
+impl_secret_tls_vec!(U24, SecretTlsVecU24, 3);
 impl_secret_tls_vec!(u32, SecretTlsVecU32, 4);
 
 // We also implement shallow serialization for slices
