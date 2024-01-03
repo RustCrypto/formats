@@ -998,16 +998,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pkcs7"
-version = "0.4.1"
-dependencies = [
- "der",
- "hex-literal 0.4.1",
- "spki",
- "x509-cert",
-]
-
-[[package]]
 name = "pkcs8"
 version = "0.10.2"
 dependencies = [
