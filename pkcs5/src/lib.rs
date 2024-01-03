@@ -49,7 +49,7 @@ use alloc::vec::Vec;
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 #[allow(clippy::large_enum_variant)]
-pub enum EncryptionScheme<'a> {
+pub enum EncryptionScheme {
     /// Password-Based Encryption Scheme 1 as defined in [RFC 8018 Section 6.1].
     ///
     /// [RFC 8018 Section 6.1]: https://tools.ietf.org/html/rfc8018#section-6.1
@@ -58,10 +58,10 @@ pub enum EncryptionScheme<'a> {
     /// Password-Based Encryption Scheme 2 as defined in [RFC 8018 Section 6.2].
     ///
     /// [RFC 8018 Section 6.2]: https://tools.ietf.org/html/rfc8018#section-6.2
-    Pbes2(pbes2::Parameters<'a>),
+    Pbes2(pbes2::Parameters),
 }
 
-impl<'a> EncryptionScheme<'a> {
+impl EncryptionScheme {
     /// Attempt to decrypt the given ciphertext, allocating and returning a
     /// byte vector containing the plaintext.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -79,11 +79,11 @@ impl<'a> EncryptionScheme<'a> {
     /// is unsupported, or if the ciphertext is malformed (e.g. not a multiple
     /// of a block mode's padding)
     #[cfg(feature = "pbes2")]
-    pub fn decrypt_in_place<'b>(
+    pub fn decrypt_in_place<'a>(
         &self,
         password: impl AsRef<[u8]>,
-        buffer: &'b mut [u8],
-    ) -> Result<&'b [u8]> {
+        buffer: &'a mut [u8],
+    ) -> Result<&'a [u8]> {
         match self {
             Self::Pbes2(params) => params.decrypt_in_place(password, buffer),
             Self::Pbes1(_) => Err(Error::NoPbes1CryptSupport),
@@ -103,12 +103,12 @@ impl<'a> EncryptionScheme<'a> {
     /// Encrypt the given ciphertext in-place using a key derived from the
     /// provided password and this scheme's parameters.
     #[cfg(feature = "pbes2")]
-    pub fn encrypt_in_place<'b>(
+    pub fn encrypt_in_place<'a>(
         &self,
         password: impl AsRef<[u8]>,
-        buffer: &'b mut [u8],
+        buffer: &'a mut [u8],
         pos: usize,
-    ) -> Result<&'b [u8]> {
+    ) -> Result<&'a [u8]> {
         match self {
             Self::Pbes2(params) => params.encrypt_in_place(password, buffer, pos),
             Self::Pbes1(_) => Err(Error::NoPbes1CryptSupport),
@@ -132,7 +132,7 @@ impl<'a> EncryptionScheme<'a> {
     }
 
     /// Get [`pbes2::Parameters`] if it is the selected algorithm.
-    pub fn pbes2(&self) -> Option<&pbes2::Parameters<'a>> {
+    pub fn pbes2(&self) -> Option<&pbes2::Parameters> {
         match self {
             Self::Pbes2(params) => Some(params),
             _ => None,
@@ -140,13 +140,13 @@ impl<'a> EncryptionScheme<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for EncryptionScheme<'a> {
+impl<'a> DecodeValue<'a> for EncryptionScheme {
     fn decode_value<R: Reader<'a>>(decoder: &mut R, header: Header) -> der::Result<Self> {
         AlgorithmIdentifierRef::decode_value(decoder, header)?.try_into()
     }
 }
 
-impl EncodeValue for EncryptionScheme<'_> {
+impl EncodeValue for EncryptionScheme {
     fn value_len(&self) -> der::Result<Length> {
         match self {
             Self::Pbes1(pbes1) => pbes1.oid().encoded_len()? + pbes1.parameters.encoded_len()?,
@@ -170,24 +170,24 @@ impl EncodeValue for EncryptionScheme<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for EncryptionScheme<'a> {}
+impl Sequence<'_> for EncryptionScheme {}
 
-impl<'a> From<pbes1::Algorithm> for EncryptionScheme<'a> {
-    fn from(alg: pbes1::Algorithm) -> EncryptionScheme<'a> {
+impl From<pbes1::Algorithm> for EncryptionScheme {
+    fn from(alg: pbes1::Algorithm) -> EncryptionScheme {
         Self::Pbes1(alg)
     }
 }
 
-impl<'a> From<pbes2::Parameters<'a>> for EncryptionScheme<'a> {
-    fn from(params: pbes2::Parameters<'a>) -> EncryptionScheme<'a> {
+impl From<pbes2::Parameters> for EncryptionScheme {
+    fn from(params: pbes2::Parameters) -> EncryptionScheme {
         Self::Pbes2(params)
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
+impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<EncryptionScheme<'_>> {
+    fn try_from(alg: AlgorithmIdentifierRef<'_>) -> der::Result<EncryptionScheme> {
         if alg.oid == pbes2::PBES2_OID {
             match alg.parameters {
                 Some(params) => pbes2::Parameters::try_from(params).map(Into::into),
@@ -199,10 +199,10 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for EncryptionScheme<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for EncryptionScheme<'a> {
+impl TryFrom<&[u8]> for EncryptionScheme {
     type Error = der::Error;
 
-    fn try_from(bytes: &'a [u8]) -> der::Result<EncryptionScheme<'a>> {
+    fn try_from(bytes: &[u8]) -> der::Result<EncryptionScheme> {
         AlgorithmIdentifierRef::from_der(bytes)?.try_into()
     }
 }

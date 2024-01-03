@@ -63,14 +63,14 @@ fn decode_pbes2_pbkdf2_sha1_aes128cbc() {
     let params = scheme.pbes2().unwrap();
 
     let pbkdf2_params = params.kdf.pbkdf2().unwrap();
-    assert_eq!(pbkdf2_params.salt, &hex!("e8765e01e43b6bad"));
+    assert_eq!(pbkdf2_params.salt.as_bytes(), &hex!("e8765e01e43b6bad"));
     assert_eq!(pbkdf2_params.iteration_count, 2048);
     assert_eq!(pbkdf2_params.key_length, None);
     assert_eq!(pbkdf2_params.prf, pbes2::Pbkdf2Prf::HmacWithSha1);
 
     match params.encryption {
         pbes2::EncryptionScheme::Aes128Cbc { iv } => {
-            assert_eq!(iv, &hex!("223080a71bcd2b9a256d876c924979d2"));
+            assert_eq!(iv, hex!("223080a71bcd2b9a256d876c924979d2"));
         }
         other => panic!("unexpected encryption scheme: {:?}", other),
     }
@@ -83,14 +83,14 @@ fn decode_pbes2_pbkdf2_sha256_aes256cbc() {
     let params = scheme.pbes2().unwrap();
 
     let pbkdf2_params = params.kdf.pbkdf2().unwrap();
-    assert_eq!(pbkdf2_params.salt, &hex!("79d982e70df91a88"));
+    assert_eq!(pbkdf2_params.salt.as_bytes(), &hex!("79d982e70df91a88"));
     assert_eq!(pbkdf2_params.iteration_count, 2048);
     assert_eq!(pbkdf2_params.key_length, None);
     assert_eq!(pbkdf2_params.prf, pbes2::Pbkdf2Prf::HmacWithSha256);
 
     match params.encryption {
         pbes2::EncryptionScheme::Aes256Cbc { iv } => {
-            assert_eq!(iv, &hex!("b2d02d78b2efd9dff694cf8e0af40925"));
+            assert_eq!(iv, hex!("b2d02d78b2efd9dff694cf8e0af40925"));
         }
         other => panic!("unexpected encryption scheme: {:?}", other),
     }
@@ -103,7 +103,7 @@ fn decode_pbes2_scrypt_aes256cbc() {
     let params = scheme.pbes2().unwrap();
 
     let scrypt_params = params.kdf.scrypt().unwrap();
-    assert_eq!(scrypt_params.salt, &hex!("E6211E2348AD69E0"));
+    assert_eq!(scrypt_params.salt.as_bytes(), &hex!("E6211E2348AD69E0"));
     assert_eq!(scrypt_params.cost_parameter, 16384);
     assert_eq!(scrypt_params.block_size, 8);
     assert_eq!(scrypt_params.parallelization, 1);
@@ -111,7 +111,7 @@ fn decode_pbes2_scrypt_aes256cbc() {
 
     match params.encryption {
         pbes2::EncryptionScheme::Aes256Cbc { iv } => {
-            assert_eq!(iv, &hex!("9BD0A6251F2254F9FD5963887C27CF01"));
+            assert_eq!(iv, hex!("9BD0A6251F2254F9FD5963887C27CF01"));
         }
         other => panic!("unexpected encryption scheme: {:?}", other),
     }
@@ -125,14 +125,14 @@ fn decode_pbes2_pbkdf2_sha256_desede3cbc() {
     let params = scheme.pbes2().unwrap();
 
     let pbkdf2_params = params.kdf.pbkdf2().unwrap();
-    assert_eq!(pbkdf2_params.salt, &hex!("32A0AE2E01BBE329"));
+    assert_eq!(pbkdf2_params.salt.as_bytes(), &hex!("32A0AE2E01BBE329"));
     assert_eq!(pbkdf2_params.key_length, None);
     assert_eq!(pbkdf2_params.prf, pbes2::Pbkdf2Prf::HmacWithSha256);
     assert_eq!(pbkdf2_params.iteration_count, 2048);
 
     match params.encryption {
         pbes2::EncryptionScheme::DesEde3Cbc { iv } => {
-            assert_eq!(iv, &hex!("97E8F53AB0ACA359"));
+            assert_eq!(iv, hex!("97E8F53AB0ACA359"));
         }
         other => panic!("unexpected encryption scheme: {:?}", other),
     }
@@ -146,14 +146,14 @@ fn decode_pbes2_pbkdf2_sha256_descbc() {
     let params = scheme.pbes2().unwrap();
 
     let pbkdf2_params = params.kdf.pbkdf2().unwrap();
-    assert_eq!(pbkdf2_params.salt, &hex!("09E7EDFBD9F21E2B"));
+    assert_eq!(pbkdf2_params.salt.as_bytes(), &hex!("09E7EDFBD9F21E2B"));
     assert_eq!(pbkdf2_params.key_length, None);
     assert_eq!(pbkdf2_params.prf, pbes2::Pbkdf2Prf::HmacWithSha256);
     assert_eq!(pbkdf2_params.iteration_count, 2048);
 
     match params.encryption {
         pbes2::EncryptionScheme::DesCbc { iv } => {
-            assert_eq!(iv, &hex!("F4AAF206A18DE7AD"));
+            assert_eq!(iv, hex!("F4AAF206A18DE7AD"));
         }
         other => panic!("unexpected encryption scheme: {:?}", other),
     }
