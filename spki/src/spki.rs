@@ -207,7 +207,7 @@ mod allocating {
     impl SubjectPublicKeyInfoOwned {
         /// Create a [`SubjectPublicKeyInfoOwned`] from any object that implements
         /// [`EncodePublicKey`].
-        pub fn from_key<T>(source: T) -> Result<Self>
+        pub fn from_key<T>(source: &T) -> Result<Self>
         where
             T: EncodePublicKey,
         {
