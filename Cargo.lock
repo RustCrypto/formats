@@ -781,6 +781,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hybrid-array"
+version = "0.2.0-pre.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27fbaf242418fe980caf09ed348d5a6aeabe71fc1bd8bebad641f4591ae0a46d"
+dependencies = [
+ "typenum",
+]
+
+[[package]]
 name = "indexmap"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1408,8 +1417,8 @@ version = "0.8.0-pre"
 dependencies = [
  "base16ct",
  "der 0.8.0-pre",
- "generic-array",
  "hex-literal 0.4.1",
+ "hybrid-array",
  "pkcs8 0.11.0-pre",
  "serdect",
  "subtle",
