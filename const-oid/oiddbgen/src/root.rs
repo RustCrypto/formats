@@ -1,23 +1,24 @@
 use crate::{node::Node, spec::Spec};
-use const_oid::ObjectIdentifier;
+
+use std::collections::BTreeMap;
+
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Default)]
 pub struct Root(BTreeMap<Ident, Spec>);
 
 impl Root {
-    pub fn add(&mut self, spec: &str, name: &str, oid: &str) {
+    pub fn add(&mut self, spec: &str, name: &str, obid: &str) {
         let name = name.trim().to_string();
-        let oid = oid.trim().parse::<ObjectIdentifier>().expect("invalid OID");
+        let obid = obid.trim().to_string();
         let spec = spec.trim().to_ascii_lowercase();
         let spec = Ident::new(&spec, Span::call_site());
 
         self.0
             .entry(spec)
             .or_insert_with(Spec::default)
-            .insert(Node::new(oid, name));
+            .insert(Node::new(obid, name));
     }
 
     pub fn module(&self) -> TokenStream {
@@ -26,7 +27,7 @@ impl Root {
 
         for (spec, s) in &self.0 {
             mods.extend(s.module(spec));
-            recs.extend(s.records(quote! { #spec }));
+            recs.extend(s.records(quote! { &#spec }));
         }
 
         quote! {

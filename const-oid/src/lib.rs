@@ -85,26 +85,12 @@ impl<T: AssociatedOid> DynAssociatedOid for T {
 /// - The second arc MUST be within the range 0-39
 /// - The BER/DER encoding of the OID MUST be shorter than
 ///   [`ObjectIdentifier::MAX_SIZE`]
-#[derive(Copy, Clone, PartialOrd, Ord)]
+#[derive(Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct ObjectIdentifier<B: AsRef<[u8]> = Buffer<MAX_SIZE>> {
     /// Buffer containing BER/DER-serialized bytes (sans ASN.1 tag/length)
     buffer: B,
 }
 
-/// OID reference backed by a byte slice.
-pub type ObjectIdentifierRef<'a> = ObjectIdentifier<&'a [u8]>;
-
-impl<'a> ObjectIdentifierRef<'a> {
-    /// Initialize OID from a byte slice without validating that it contains
-    /// a well-formed BER-encoded OID.
-    ///
-    /// Use with care, e.g. to define compact constants.
-    pub const fn from_bytes_unchecked(buffer: &'a [u8]) -> Self {
-        Self { buffer }
-    }
-}
-
-/// [`Buffer`]-backed [`ObjectIdentifier`] methods.
 impl ObjectIdentifier {
     /// Maximum size of a BER/DER-encoded OID in bytes.
     pub const MAX_SIZE: usize = MAX_SIZE;
@@ -195,9 +181,38 @@ impl ObjectIdentifier {
             Err(err) => Err(err),
         }
     }
+
+    /// Does this OID start with the other OID?
+    pub fn starts_with(&self, other: ObjectIdentifier) -> bool {
+        let mut self_arcs = self.arcs();
+
+        for other_arc in other.arcs() {
+            match self_arcs.next() {
+                Some(arc) => {
+                    if arc != other_arc {
+                        return false;
+                    }
+                }
+                None => {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
 }
 
-/// Generic [`ObjectIdentifier`] methods that work for any buffer.
+impl<'a> ObjectIdentifier<&'a [u8]> {
+    /// Initialize OID from a byte slice without validating that it contains
+    /// a well-formed BER-encoded OID.
+    ///
+    /// Use with care, e.g. to define compact constants.
+    pub const fn from_bytes_unchecked(buffer: &'a [u8]) -> Self {
+        Self { buffer }
+    }
+}
+
 impl<B> ObjectIdentifier<B>
 where
     B: AsRef<[u8]>,
@@ -226,36 +241,6 @@ where
     pub fn len(&self) -> usize {
         self.arcs().count()
     }
-
-    /// Does this OID start with the other OID?
-    pub fn starts_with<A>(&self, other: ObjectIdentifier<A>) -> bool
-    where
-        A: AsRef<[u8]>,
-    {
-        let mut self_arcs = self.arcs();
-
-        for other_arc in other.arcs() {
-            match self_arcs.next() {
-                Some(arc) => {
-                    if arc != other_arc {
-                        return false;
-                    }
-                }
-                None => {
-                    return false;
-                }
-            }
-        }
-
-        true
-    }
-
-    /// Get an [`ObjectIdentifierRef`] which borrows from self.
-    pub fn to_ref(&self) -> ObjectIdentifierRef<'_> {
-        ObjectIdentifierRef {
-            buffer: self.as_ref(),
-        }
-    }
 }
 
 impl<B> AsRef<[u8]> for ObjectIdentifier<B>
@@ -275,17 +260,6 @@ impl FromStr for ObjectIdentifier {
     }
 }
 
-impl<B: AsRef<[u8]>> Eq for ObjectIdentifier<B> {}
-impl<A, B> PartialEq<ObjectIdentifier<A>> for ObjectIdentifier<B>
-where
-    A: AsRef<[u8]>,
-    B: AsRef<[u8]>,
-{
-    fn eq(&self, other: &ObjectIdentifier<A>) -> bool {
-        self.as_ref() == other.as_ref()
-    }
-}
-
 impl TryFrom<&[u8]> for ObjectIdentifier {
     type Error = Error;
 
@@ -294,19 +268,13 @@ impl TryFrom<&[u8]> for ObjectIdentifier {
     }
 }
 
-impl<B> fmt::Debug for ObjectIdentifier<B>
-where
-    B: AsRef<[u8]>,
-{
+impl fmt::Debug for ObjectIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ObjectIdentifier({})", self)
     }
 }
 
-impl<B> fmt::Display for ObjectIdentifier<B>
-where
-    B: AsRef<[u8]>,
-{
+impl fmt::Display for ObjectIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let len = self.arcs().count();
 
