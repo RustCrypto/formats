@@ -46,7 +46,7 @@ use core::{fmt, str::FromStr};
 /// Default maximum size.
 ///
 /// Makes `ObjectIdentifier` 40-bytes total w\ 1-byte length.
-const MAX_SIZE: usize = 39;
+const DEFAULT_MAX_SIZE: usize = 39;
 
 /// A trait which associates an OID with a type.
 pub trait AssociatedOid {
@@ -85,15 +85,15 @@ impl<T: AssociatedOid> DynAssociatedOid for T {
 /// - The second arc MUST be within the range 0-39
 /// - The BER/DER encoding of the OID MUST be shorter than
 ///   [`ObjectIdentifier::MAX_SIZE`]
-#[derive(Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
-pub struct ObjectIdentifier<B: AsRef<[u8]> = Buffer<MAX_SIZE>> {
+#[derive(Clone, Copy, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct ObjectIdentifier<const MAX_SIZE: usize = DEFAULT_MAX_SIZE> {
     /// Buffer containing BER/DER-serialized bytes (sans ASN.1 tag/length)
-    buffer: B,
+    buffer: Buffer<MAX_SIZE>,
 }
 
 impl ObjectIdentifier {
     /// Maximum size of a BER/DER-encoded OID in bytes.
-    pub const MAX_SIZE: usize = MAX_SIZE;
+    pub const MAX_SIZE: usize = DEFAULT_MAX_SIZE;
 
     /// Parse an [`ObjectIdentifier`] from the dot-delimited string form,
     /// panicking on parse errors.
@@ -203,20 +203,7 @@ impl ObjectIdentifier {
     }
 }
 
-impl<'a> ObjectIdentifier<&'a [u8]> {
-    /// Initialize OID from a byte slice without validating that it contains
-    /// a well-formed BER-encoded OID.
-    ///
-    /// Use with care, e.g. to define compact constants.
-    pub const fn from_bytes_unchecked(buffer: &'a [u8]) -> Self {
-        Self { buffer }
-    }
-}
-
-impl<B> ObjectIdentifier<B>
-where
-    B: AsRef<[u8]>,
-{
+impl<const MAX_SIZE: usize> ObjectIdentifier<MAX_SIZE> {
     /// Get the BER/DER serialization of this OID as bytes.
     ///
     /// Note that this encoding omits the tag/length, and only contains the
@@ -243,10 +230,7 @@ where
     }
 }
 
-impl<B> AsRef<[u8]> for ObjectIdentifier<B>
-where
-    B: AsRef<[u8]>,
-{
+impl<const MAX_SIZE: usize> AsRef<[u8]> for ObjectIdentifier<MAX_SIZE> {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
     }
@@ -268,13 +252,13 @@ impl TryFrom<&[u8]> for ObjectIdentifier {
     }
 }
 
-impl fmt::Debug for ObjectIdentifier {
+impl<const MAX_SIZE: usize> fmt::Debug for ObjectIdentifier<MAX_SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ObjectIdentifier({})", self)
     }
 }
 
-impl fmt::Display for ObjectIdentifier {
+impl<const MAX_SIZE: usize> fmt::Display for ObjectIdentifier<MAX_SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let len = self.arcs().count();
 
