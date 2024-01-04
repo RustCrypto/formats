@@ -49,7 +49,7 @@ pub use crate::error::{Error, Result};
 pub use crate::point::EncodedPoint;
 
 #[cfg(feature = "point")]
-pub use generic_array::typenum::consts;
+pub use hybrid_array::typenum::consts;
 
 #[cfg(feature = "der")]
 pub use crate::{parameters::EcParameters, private_key::EcPrivateKey, traits::DecodeEcPrivateKey};
