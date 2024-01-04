@@ -30,6 +30,7 @@ mod buffer;
 mod encoder;
 mod error;
 mod parser;
+mod traits;
 
 #[cfg(feature = "db")]
 pub mod db;
@@ -38,6 +39,7 @@ pub use crate::{
     arcs::{Arc, Arcs},
     buffer::Buffer,
     error::{Error, Result},
+    traits::{AssociatedOid, DynAssociatedOid},
 };
 
 use crate::encoder::Encoder;
@@ -47,28 +49,6 @@ use core::{fmt, str::FromStr};
 ///
 /// Makes `ObjectIdentifier` 40-bytes total w\ 1-byte length.
 const DEFAULT_MAX_SIZE: usize = 39;
-
-/// A trait which associates an OID with a type.
-pub trait AssociatedOid {
-    /// The OID associated with this type.
-    const OID: ObjectIdentifier;
-}
-
-/// A trait which associates a dynamic, `&self`-dependent OID with a type,
-/// which may change depending on the type's value.
-///
-/// This trait is object safe and auto-impl'd for any types which impl
-/// [`AssociatedOid`].
-pub trait DynAssociatedOid {
-    /// Get the OID associated with this value.
-    fn oid(&self) -> ObjectIdentifier;
-}
-
-impl<T: AssociatedOid> DynAssociatedOid for T {
-    fn oid(&self) -> ObjectIdentifier {
-        T::OID
-    }
-}
 
 /// Object identifier (OID).
 ///
