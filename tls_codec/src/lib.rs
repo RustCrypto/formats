@@ -41,9 +41,10 @@ mod quic_vec;
 mod tls_vec;
 
 pub use tls_vec::{
-    SecretTlsVecU16, SecretTlsVecU32, SecretTlsVecU8, TlsByteSliceU16, TlsByteSliceU32,
-    TlsByteSliceU8, TlsByteVecU16, TlsByteVecU32, TlsByteVecU8, TlsSliceU16, TlsSliceU32,
-    TlsSliceU8, TlsVecU16, TlsVecU32, TlsVecU8,
+    SecretTlsVecU16, SecretTlsVecU24, SecretTlsVecU32, SecretTlsVecU8, TlsByteSliceU16,
+    TlsByteSliceU24, TlsByteSliceU32, TlsByteSliceU8, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32,
+    TlsByteVecU8, TlsSliceU16, TlsSliceU24, TlsSliceU32, TlsSliceU8, TlsVecU16, TlsVecU24,
+    TlsVecU32, TlsVecU8,
 };
 
 #[cfg(feature = "std")]
@@ -224,5 +225,48 @@ pub trait DeserializeBytes: Size {
         }
 
         Ok(out)
+    }
+}
+
+/// A 3 byte wide unsigned integer type as defined in [RFC 5246].
+///
+/// [RFC 5246]: https://datatracker.ietf.org/doc/html/rfc5246#section-4.4
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub struct U24([u8; 3]);
+
+impl U24 {
+    pub const MAX: Self = Self([255u8; 3]);
+    pub const MIN: Self = Self([0u8; 3]);
+
+    pub fn from_be_bytes(bytes: [u8; 3]) -> Self {
+        U24(bytes)
+    }
+
+    pub fn to_be_bytes(self) -> [u8; 3] {
+        self.0
+    }
+}
+
+impl From<U24> for usize {
+    fn from(value: U24) -> usize {
+        const LEN: usize = core::mem::size_of::<usize>();
+        let mut usize_bytes = [0u8; LEN];
+        usize_bytes[LEN - 3..].copy_from_slice(&value.0);
+        usize::from_be_bytes(usize_bytes)
+    }
+}
+
+impl TryFrom<usize> for U24 {
+    type Error = Error;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        const LEN: usize = core::mem::size_of::<usize>();
+        // In practice, our usages of this conversion should never be invalid, as the values
+        // have to come from `TryFrom<U24> for usize`.
+        if value > (1 << 24) - 1 {
+            Err(Error::LibraryError)
+        } else {
+            Ok(U24(value.to_be_bytes()[LEN - 3..].try_into()?))
+        }
     }
 }
