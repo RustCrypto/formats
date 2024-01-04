@@ -9,7 +9,7 @@ use pkcs5::pbes2::Pbkdf2Params;
 
 #[test]
 fn cms_decode_cert_example() {
-    let enc_ci = include_bytes!("../../pkcs7/tests/examples/certData.bin");
+    let enc_ci = include_bytes!("../tests/examples/certData.bin");
     let ci = ContentInfo::from_der(enc_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_DATA);
     assert_eq!(ci.content.value().len(), 781);
@@ -19,7 +19,7 @@ fn cms_decode_cert_example() {
 
 #[test]
 fn cms_decode_encrypted_key_example() {
-    let enc_ci = include_bytes!("../../pkcs7/tests/examples/keyEncryptedData.bin");
+    let enc_ci = include_bytes!("../tests/examples/keyEncryptedData.bin");
     let ci = ContentInfo::from_der(enc_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENCRYPTED_DATA);
     let data = EncryptedData::from_der(ci.content.to_der().unwrap().as_slice()).unwrap();
@@ -54,8 +54,7 @@ fn cms_decode_encrypted_key_example() {
 
 #[test]
 fn cms_decode_signed_mdm_example() {
-    let der_signed_data_in_ci =
-        include_bytes!("../../pkcs7/tests/examples/apple_mdm_signature_der.bin");
+    let der_signed_data_in_ci = include_bytes!("../tests/examples/apple_mdm_signature_der.bin");
     let ci = ContentInfo::from_der(der_signed_data_in_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
@@ -71,8 +70,7 @@ fn cms_decode_signed_mdm_example() {
         content_type: ci.content_type,
         content: AnyRef::try_from(reencoded_signed_data.as_slice())
             .unwrap()
-            .try_into()
-            .unwrap(),
+            .into(),
     };
     let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 
@@ -82,7 +80,7 @@ fn cms_decode_signed_mdm_example() {
 
 #[test]
 fn cms_decode_signed_scep_example() {
-    let der_signed_data_in_ci = include_bytes!("../../pkcs7/tests/examples/scep_der.bin");
+    let der_signed_data_in_ci = include_bytes!("../tests/examples/scep_der.bin");
     let ci = ContentInfo::from_der(der_signed_data_in_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
@@ -99,8 +97,7 @@ fn cms_decode_signed_scep_example() {
         content_type: ci.content_type,
         content: AnyRef::try_from(reencoded_signed_data.as_slice())
             .unwrap()
-            .try_into()
-            .unwrap(),
+            .into(),
     };
     let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 
@@ -110,7 +107,7 @@ fn cms_decode_signed_scep_example() {
 
 #[test]
 fn cms_decode_signed_der() {
-    let der_signed_data_in_ci = include_bytes!("../../pkcs7/tests/examples/cms_der.bin");
+    let der_signed_data_in_ci = include_bytes!("../tests/examples/cms_der.bin");
     let ci = ContentInfo::from_der(der_signed_data_in_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
@@ -137,8 +134,7 @@ fn cms_decode_signed_der() {
         content_type: ci.content_type,
         content: AnyRef::try_from(reencoded_signed_data.as_slice())
             .unwrap()
-            .try_into()
-            .unwrap(),
+            .into(),
     };
     let reencoded_der_signed_data_in_ci = ci2.to_der().unwrap();
 

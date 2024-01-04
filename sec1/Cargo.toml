@@ -1,6 +1,6 @@
 [package]
 name = "sec1"
-version = "0.7.3"
+version = "0.8.0-pre"
 description = """
 Pure Rust implementation of SEC1: Elliptic Curve Cryptography encoding formats
 including ASN.1 DER-serialized private keys as well as the
@@ -13,14 +13,14 @@ categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-i
 keywords = ["crypto", "key", "elliptic-curve", "secg"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.70"
 
 [dependencies]
 base16ct = { version = "0.2", optional = true, default-features = false }
-der = { version = "0.7", optional = true, features = ["oid"] }
+der = { version = "=0.8.0-pre", optional = true, features = ["oid"] }
 generic-array = { version = "0.14.7", optional = true, default-features = false }
-pkcs8 = { version = "0.10", optional = true, default-features = false }
-serdect = { version = "0.2", optional = true, default-features = false, features = ["alloc"] }
+pkcs8 = { version = "=0.11.0-pre", optional = true, default-features = false }
+serdect = { version = "=0.3.0-pre", optional = true, default-features = false, features = ["alloc"] }
 subtle = { version = "2", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 

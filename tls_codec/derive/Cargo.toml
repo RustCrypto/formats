@@ -1,6 +1,6 @@
 [package]
 name = "tls_codec_derive"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/tls_codec_derive/"
@@ -23,5 +23,6 @@ tls_codec = { path = "../" }
 trybuild = "1"
 
 [features]
-default = [ "std" ]
+default = ["std"]
+conditional_deserialization = ["syn/full"]
 std = []

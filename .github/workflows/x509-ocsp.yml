@@ -44,6 +44,9 @@ jobs:
     uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
     with:
         working-directory: ${{ github.workflow }}
+        # TODO: re-enable benches build when min version of proc-macro2
+        # will be updated to 1.0.60+
+        nightly-cmd:
 
   test:
     runs-on: ubuntu-latest

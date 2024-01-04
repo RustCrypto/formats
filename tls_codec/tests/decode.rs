@@ -2,7 +2,7 @@
 
 use tls_codec::{
     Error, Serialize, Size, TlsByteSliceU16, TlsByteVecU16, TlsByteVecU8, TlsSliceU16, TlsVecU16,
-    TlsVecU32, TlsVecU8, VLByteSlice, VLBytes,
+    TlsVecU32, TlsVecU8, VLByteSlice, VLBytes, U24,
 };
 
 #[test]
@@ -29,8 +29,8 @@ fn deserialize_option_bytes() {
     use tls_codec::DeserializeBytes;
     for b in [Some(0u8), None] {
         let b_encoded = b.tls_serialize_detached().expect("Unable to tls_serialize");
-        let (b_decoded, remainder) =
-            Option::<u8>::tls_deserialize(b_encoded.as_slice()).expect("Unable to tls_deserialize");
+        let (b_decoded, remainder) = Option::<u8>::tls_deserialize_bytes(b_encoded.as_slice())
+            .expect("Unable to tls_deserialize");
 
         assert!(remainder.is_empty());
 
@@ -41,21 +41,24 @@ fn deserialize_option_bytes() {
 #[test]
 fn deserialize_bytes_primitives() {
     use tls_codec::DeserializeBytes;
-    let b = &[77u8, 88, 1, 99] as &[u8];
+    let b = &[77u8, 88, 1, 99, 1, 0, 73] as &[u8];
 
-    let (a, remainder) = u8::tls_deserialize(b).expect("Unable to tls_deserialize");
+    let (a, remainder) = u8::tls_deserialize_bytes(b).expect("Unable to tls_deserialize");
     assert_eq!(1, a.tls_serialized_len());
     assert_eq!(77, a);
-    let (a, remainder) = u8::tls_deserialize(remainder).expect("Unable to tls_deserialize");
+    let (a, remainder) = u8::tls_deserialize_bytes(remainder).expect("Unable to tls_deserialize");
     assert_eq!(1, a.tls_serialized_len());
     assert_eq!(88, a);
-    let (a, remainder) = u16::tls_deserialize(remainder).expect("Unable to tls_deserialize");
+    let (a, remainder) = u16::tls_deserialize_bytes(remainder).expect("Unable to tls_deserialize");
     assert_eq!(2, a.tls_serialized_len());
     assert_eq!(355, a);
+    let (a, remainder) = U24::tls_deserialize_bytes(remainder).expect("Unable to tls_deserialize");
+    assert_eq!(3, a.tls_serialized_len());
+    assert_eq!(U24::try_from(65609usize).unwrap(), a);
 
     // It's empty now.
     assert!(remainder.is_empty());
-    assert!(u8::tls_deserialize(remainder).is_err())
+    assert!(u8::tls_deserialize_bytes(remainder).is_err())
 }
 
 #[test]
@@ -91,22 +94,22 @@ fn deserialize_bytes_tls_vec() {
     use tls_codec::DeserializeBytes;
     let b = &[1u8, 4, 77, 88, 1, 99] as &[u8];
 
-    let (a, remainder) = u8::tls_deserialize(b).expect("Unable to tls_deserialize");
+    let (a, remainder) = u8::tls_deserialize_bytes(b).expect("Unable to tls_deserialize");
     assert_eq!(1, a);
     assert_eq!(1, a.tls_serialized_len());
     println!("b: {b:?}");
     let (v, remainder) =
-        TlsVecU8::<u8>::tls_deserialize(remainder).expect("Unable to tls_deserialize");
+        TlsVecU8::<u8>::tls_deserialize_bytes(remainder).expect("Unable to tls_deserialize");
     assert_eq!(5, v.tls_serialized_len());
     assert_eq!(&[77, 88, 1, 99], v.as_slice());
 
     // It's empty now.
-    assert!(u8::tls_deserialize(remainder).is_err());
+    assert!(u8::tls_deserialize_bytes(remainder).is_err());
 
     let long_vector = vec![77u8; 65535];
     let serialized_long_vec = TlsSliceU16(&long_vector).tls_serialize_detached().unwrap();
     let (deserialized_long_vec, _remainder) =
-        TlsVecU16::<u8>::tls_deserialize(serialized_long_vec.as_slice()).unwrap();
+        TlsVecU16::<u8>::tls_deserialize_bytes(serialized_long_vec.as_slice()).unwrap();
     assert_eq!(
         deserialized_long_vec.tls_serialized_len(),
         long_vector.len() + 2
@@ -171,10 +174,8 @@ fn deserialize_tuples() {
     {
         use tls_codec::DeserializeBytes;
         let (deserialized_bytes, _remainder) =
-            <(TlsVecU16<u8>, TlsVecU32<u16>) as DeserializeBytes>::tls_deserialize(
-                bytes.as_slice(),
-            )
-            .expect("Error deserializing tuple.");
+            <(TlsVecU16<u8>, TlsVecU32<u16>)>::tls_deserialize_bytes(bytes.as_slice())
+                .expect("Error deserializing tuple.");
         assert_eq!(deserialized_bytes, t);
     }
 
@@ -199,7 +200,7 @@ fn deserialize_var_len_vec() {
             use tls_codec::DeserializeBytes;
             let serialized = v.tls_serialize_detached().expect("Error encoding vector");
             let (deserialized, _remainder): (Vec<T>, &[u8]) =
-                <Vec<T> as DeserializeBytes>::tls_deserialize(serialized.as_slice())
+                Vec::<T>::tls_deserialize_bytes(serialized.as_slice())
                     .expect("Error deserializing vector");
             assert_eq!(deserialized, v);
         }
@@ -258,7 +259,7 @@ fn deserialize_bytes_tls_vl_bytes() {
     use tls_codec::DeserializeBytes;
     let b = &[4u8, 77, 88, 1, 99];
 
-    let (v, remainder) = VLBytes::tls_deserialize(b).expect("Unable to tls_deserialize");
+    let (v, remainder) = VLBytes::tls_deserialize_bytes(b).expect("Unable to tls_deserialize");
     assert_eq!(5, v.tls_serialized_len());
     assert_eq!(&[77, 88, 1, 99], v.as_slice());
 
@@ -269,7 +270,7 @@ fn deserialize_bytes_tls_vl_bytes() {
     let serialized_long_vec = VLByteSlice(&long_vector).tls_serialize_detached().unwrap();
     std::println!("bytes: {:x?}", &serialized_long_vec[0..5]);
     let (deserialized_long_vec, remainder) =
-        VLBytes::tls_deserialize(serialized_long_vec.as_slice()).unwrap();
+        VLBytes::tls_deserialize_bytes(serialized_long_vec.as_slice()).unwrap();
     assert_eq!(
         deserialized_long_vec.tls_serialized_len(),
         long_vector.len() + 4
@@ -296,7 +297,7 @@ fn deserialize_tls_vl_invalid_length() {
 fn deserialize_bytes_tls_vl_invalid_length() {
     use tls_codec::DeserializeBytes;
     let b = &[0x40u8, 3, 10, 20, 30] as &[u8];
-    let result = VLBytes::tls_deserialize(b);
+    let result = VLBytes::tls_deserialize_bytes(b);
     if cfg!(feature = "mls") {
         assert_eq!(result, Err(Error::InvalidVectorLength));
     } else {
@@ -319,8 +320,8 @@ fn deserialize_empty_vl_bytes() {
 fn deserialize_bytes_empty_vl_bytes() {
     use tls_codec::DeserializeBytes;
     let b: &[u8] = &[0x00];
-    VLBytes::tls_deserialize(b).expect("Error parsing empty bytes");
+    VLBytes::tls_deserialize_bytes(b).expect("Error parsing empty bytes");
 
     let b: &[u8] = &[];
-    VLBytes::tls_deserialize(b).expect_err("Empty bytes were parsed successfully");
+    VLBytes::tls_deserialize_bytes(b).expect_err("Empty bytes were parsed successfully");
 }

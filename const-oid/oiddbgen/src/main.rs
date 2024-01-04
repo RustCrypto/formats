@@ -15,6 +15,7 @@ const LDAP: &str = include_str!("../ldap-parameters-3.csv");
 // All RFCs downloaded from:
 // https://www.rfc-editor.org/rfc/rfcNNNN.txt
 const RFCS: &[(&str, &str)] = &[
+    ("rfc2985", include_str!("../rfc2985.txt")),
     ("rfc5280", include_str!("../rfc5280.txt")),
     ("rfc5911", include_str!("../rfc5911.txt")),
     ("rfc5912", include_str!("../rfc5912.txt")),

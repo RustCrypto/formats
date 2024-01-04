@@ -9,6 +9,8 @@ mod access;
 mod authkeyid;
 mod keyusage;
 mod policymap;
+#[cfg(feature = "sct")]
+pub mod sct;
 
 use crate::attr::AttributeTypeAndValue;
 
@@ -23,6 +25,12 @@ pub use crl::{
 };
 pub use keyusage::{ExtendedKeyUsage, KeyUsage, KeyUsages, PrivateKeyUsagePeriod};
 pub use policymap::{PolicyMapping, PolicyMappings};
+
+#[cfg(feature = "sct")]
+pub use sct::{
+    Error, HashAlgorithm, SerializedSct, SignatureAlgorithm, SignatureAndHashAlgorithm,
+    SignedCertificateTimestamp, SignedCertificateTimestampList, Version,
+};
 
 pub use const_oid::db::rfc5280::{
     ID_CE_INHIBIT_ANY_POLICY, ID_CE_ISSUER_ALT_NAME, ID_CE_SUBJECT_ALT_NAME,

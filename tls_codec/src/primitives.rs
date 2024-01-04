@@ -2,7 +2,7 @@
 
 use alloc::vec::Vec;
 
-use crate::{DeserializeBytes, SerializeBytes};
+use crate::{DeserializeBytes, SerializeBytes, U24};
 
 use super::{Deserialize, Error, Serialize, Size};
 
@@ -94,14 +94,14 @@ impl<T: Deserialize> Deserialize for Option<T> {
 
 impl<T: DeserializeBytes> DeserializeBytes for Option<T> {
     #[inline]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let (some_or_none, remainder) = <u8 as DeserializeBytes>::tls_deserialize(bytes)?;
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (some_or_none, remainder) = <u8>::tls_deserialize_bytes(bytes)?;
         match some_or_none {
             0 => {
                 Ok((None, remainder))
             },
             1 => {
-                let (element, remainder) = T::tls_deserialize(remainder)?;
+                let (element, remainder) = T::tls_deserialize_bytes(remainder)?;
                 Ok((Some(element), remainder))
             },
             _ => Err(Error::DecodingError(alloc::format!("Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.", some_or_none)))
@@ -115,7 +115,7 @@ macro_rules! impl_unsigned {
             #[cfg(feature = "std")]
             #[inline]
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-                let mut x = (0 as $t).to_be_bytes();
+                let mut x = <$t>::default().to_be_bytes();
                 bytes.read_exact(&mut x)?;
                 Ok(<$t>::from_be_bytes(x))
             }
@@ -123,7 +123,7 @@ macro_rules! impl_unsigned {
 
         impl DeserializeBytes for $t {
             #[inline]
-            fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+            fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 let len = core::mem::size_of::<$t>();
                 let out = bytes
                     .get(..len)
@@ -187,6 +187,7 @@ macro_rules! impl_unsigned {
 
 impl_unsigned!(u8, 1);
 impl_unsigned!(u16, 2);
+impl_unsigned!(U24, 3);
 impl_unsigned!(u32, 4);
 impl_unsigned!(u64, 8);
 
@@ -215,9 +216,9 @@ where
     U: DeserializeBytes,
 {
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let (first_element, remainder) = T::tls_deserialize(bytes)?;
-        let (second_element, remainder) = U::tls_deserialize(remainder)?;
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
+        let (second_element, remainder) = U::tls_deserialize_bytes(remainder)?;
         Ok(((first_element, second_element), remainder))
     }
 }
@@ -270,10 +271,10 @@ where
     V: DeserializeBytes,
 {
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let (first_element, remainder) = T::tls_deserialize(bytes)?;
-        let (second_element, remainder) = U::tls_deserialize(remainder)?;
-        let (third_element, remainder) = V::tls_deserialize(remainder)?;
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
+        let (second_element, remainder) = U::tls_deserialize_bytes(remainder)?;
+        let (third_element, remainder) = V::tls_deserialize_bytes(remainder)?;
         Ok(((first_element, second_element, third_element), remainder))
     }
 }
@@ -322,7 +323,7 @@ impl Deserialize for () {
 
 impl DeserializeBytes for () {
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok(((), bytes))
     }
 }
@@ -351,7 +352,7 @@ impl<T> Deserialize for PhantomData<T> {
 
 impl<T> DeserializeBytes for PhantomData<T> {
     #[inline(always)]
-    fn tls_deserialize(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok((PhantomData, bytes))
     }
 }

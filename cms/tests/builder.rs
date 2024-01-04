@@ -344,7 +344,7 @@ fn test_build_pkcs7_scep_pkcsreq() {
         values: message_type_value,
     };
     let mut sender_nonce_value: SetOfVec<AttributeValue> = Default::default();
-    let nonce = OctetString::new(*&[42; 32]).unwrap();
+    let nonce = OctetString::new([42; 32]).unwrap();
     sender_nonce_value
         .insert(Any::new(Tag::OctetString, nonce.as_bytes()).unwrap())
         .unwrap();
