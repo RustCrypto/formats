@@ -1,6 +1,6 @@
 [package]
 name = "pkcs1"
-version = "0.7.5"
+version = "0.8.0-pre"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #1:
 RSA Cryptography Specifications Version 2.2 (RFC 8017)
@@ -15,11 +15,11 @@ edition = "2021"
 rust-version = "1.60"
 
 [dependencies]
-der = { version = "0.7", features = ["oid"] }
-spki = { version = "0.7" }
+der = { version = "=0.8.0-pre", features = ["oid"] }
+spki = { version = "=0.8.0-pre" }
 
 # optional dependencies
-pkcs8 = { version = "0.10", optional = true, default-features = false }
+pkcs8 = { version = "=0.11.0-pre", optional = true, default-features = false }
 
 [dev-dependencies]
 const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
