@@ -7,12 +7,12 @@ use crate::{
 
 /// BER/DER encoder
 #[derive(Debug)]
-pub(crate) struct Encoder {
+pub(crate) struct Encoder<const MAX_SIZE: usize> {
     /// Current state
     state: State,
 
     /// Bytes of the OID being encoded in-progress
-    bytes: [u8; ObjectIdentifier::MAX_SIZE],
+    bytes: [u8; MAX_SIZE],
 
     /// Current position within the byte buffer
     cursor: usize,
@@ -31,18 +31,18 @@ enum State {
     Body,
 }
 
-impl Encoder {
+impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
     /// Create a new encoder initialized to an empty default state.
     pub(crate) const fn new() -> Self {
         Self {
             state: State::Initial,
-            bytes: [0u8; ObjectIdentifier::MAX_SIZE],
+            bytes: [0u8; MAX_SIZE],
             cursor: 0,
         }
     }
 
     /// Extend an existing OID.
-    pub(crate) const fn extend(oid: ObjectIdentifier) -> Self {
+    pub(crate) const fn extend(oid: ObjectIdentifier<MAX_SIZE>) -> Self {
         Self {
             state: State::Body,
             bytes: oid.buffer.bytes,
@@ -99,7 +99,7 @@ impl Encoder {
     }
 
     /// Finish encoding an OID.
-    pub(crate) const fn finish(self) -> Result<ObjectIdentifier> {
+    pub(crate) const fn finish(self) -> Result<ObjectIdentifier<MAX_SIZE>> {
         if self.cursor >= 2 {
             let bytes = Buffer {
                 bytes: self.bytes,
@@ -156,7 +156,7 @@ mod tests {
 
     #[test]
     fn encode() {
-        let encoder = Encoder::new();
+        let encoder = Encoder::<7>::new();
         let encoder = encoder.arc(1).unwrap();
         let encoder = encoder.arc(2).unwrap();
         let encoder = encoder.arc(840).unwrap();

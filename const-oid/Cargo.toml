@@ -14,7 +14,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-i
 keywords = ["iso", "iec", "itu", "oid"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.71"
 
 [dependencies]
 arbitrary = { version = "1.2", optional = true, features = ["derive"] }

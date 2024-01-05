@@ -18,15 +18,15 @@ This crate provides a `no_std`-friendly implementation of a subset of ASN.1 DER
 necessary for decoding/encoding the following cryptography-related formats
 implemented as crates maintained by the [RustCrypto] project:
 
+- [`cms`]: Cryptographic Message Syntax
 - [`pkcs1`]: RSA Cryptography Specifications
 - [`pkcs5`]: Password-Based Cryptography Specification
-- [`pkcs7`]: Cryptographic Message Syntax
 - [`pkcs8`]: Private-Key Information Syntax Specification
-- [`pkcs10`]: Certification Request Syntax Specification
+- [`pkcs12`]: Personal Information Exchange Syntax
 - [`sec1`]: Elliptic Curve Cryptography
 - [`spki`]: X.509 Subject Public Key Info
-- [`x501`]: Directory Services Types
-- [`x509`]: Public Key Infrastructure Certificate
+- [`x509-cert`]: Public Key Infrastructure Certificate
+- [`x509-ocsp`]: Online Certificate Status Protocol
 
 The core implementation avoids any heap usage (with convenience methods
 that allocate gated under the off-by-default `alloc` feature).
@@ -49,7 +49,7 @@ encountered. There is currently no way to disable these checks.
 
 ## Minimum Supported Rust Version
 
-This crate requires **Rust 1.65** at a minimum.
+This crate requires **Rust 1.71** at a minimum.
 
 We may change the MSRV in the future, but it will be accompanied by a minor
 version bump.
@@ -78,19 +78,19 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/der.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/der.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.65+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.71+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
+[`cms`]: https://github.com/RustCrypto/formats/tree/master/cms
 [`pkcs1`]: https://github.com/RustCrypto/formats/tree/master/pkcs1
 [`pkcs5`]: https://github.com/RustCrypto/formats/tree/master/pkcs5
-[`pkcs7`]: https://github.com/RustCrypto/formats/tree/master/pkcs7
 [`pkcs8`]: https://github.com/RustCrypto/formats/tree/master/pkcs8
-[`pkcs10`]: https://github.com/RustCrypto/formats/tree/master/pkcs10
+[`pkcs12`]: https://github.com/RustCrypto/formats/tree/master/pkcs12
 [`sec1`]: https://github.com/RustCrypto/formats/tree/master/sec1
 [`spki`]: https://github.com/RustCrypto/formats/tree/master/spki
-[`x501`]: https://github.com/RustCrypto/formats/tree/master/x501
-[`x509`]: https://github.com/RustCrypto/formats/tree/master/x509
+[`x509-cert`]: https://github.com/RustCrypto/formats/tree/master/x509-cert
+[`x509-ocsp`]: https://github.com/RustCrypto/formats/tree/master/x509-ocsp

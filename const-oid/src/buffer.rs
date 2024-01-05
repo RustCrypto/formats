@@ -12,8 +12,8 @@ pub struct Buffer<const SIZE: usize> {
 
 impl<const SIZE: usize> Buffer<SIZE> {
     /// Borrow the inner byte slice.
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes[..self.length as usize]
+    pub const fn as_bytes(&self) -> &[u8] {
+        self.bytes.split_at(self.length as usize).0
     }
 
     /// Get the length of the BER message.
