@@ -37,9 +37,6 @@ pub enum Error {
     /// OID length is invalid (too short or too long).
     Length,
 
-    /// Minimum 3 arcs required.
-    NotEnoughArcs,
-
     /// Trailing `.` character at end of input.
     TrailingDot,
 }
@@ -56,7 +53,6 @@ impl Error {
             Error::DigitExpected { .. } => panic!("OID expected to start with digit"),
             Error::Empty => panic!("OID value is empty"),
             Error::Length => panic!("OID length invalid"),
-            Error::NotEnoughArcs => panic!("OID requires minimum of 3 arcs"),
             Error::TrailingDot => panic!("OID ends with invalid trailing '.'"),
         }
     }
@@ -73,7 +69,6 @@ impl fmt::Display for Error {
             }
             Error::Empty => f.write_str("OID value is empty"),
             Error::Length => f.write_str("OID length invalid"),
-            Error::NotEnoughArcs => f.write_str("OID requires minimum of 3 arcs"),
             Error::TrailingDot => f.write_str("OID ends with invalid trailing '.'"),
         }
     }
