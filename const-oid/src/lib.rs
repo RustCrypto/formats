@@ -356,6 +356,14 @@ impl<'a, const MAX_SIZE: usize> From<&'a ObjectIdentifier<MAX_SIZE>> for &'a Obj
     }
 }
 
+impl<'a> TryFrom<&'a [u8]> for &'a ObjectIdentifierRef {
+    type Error = Error;
+
+    fn try_from(ber_bytes: &'a [u8]) -> Result<Self> {
+        ObjectIdentifierRef::from_bytes(ber_bytes)
+    }
+}
+
 impl fmt::Debug for ObjectIdentifierRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ObjectIdentifierRef({})", self)
