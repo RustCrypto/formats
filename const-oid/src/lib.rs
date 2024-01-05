@@ -146,50 +146,15 @@ impl ObjectIdentifier {
 
         Ok(oid)
     }
-
-    /// Get the parent OID of this one (if applicable).
-    pub fn parent(&self) -> Option<Self> {
-        let num_arcs = self.len().checked_sub(1)?;
-        Self::from_arcs(self.arcs().take(num_arcs)).ok()
-    }
-
-    /// Push an additional arc onto this OID, returning the child OID.
-    pub const fn push_arc(self, arc: Arc) -> Result<Self> {
-        // TODO(tarcieri): use `?` when stable in `const fn`
-        match Encoder::extend(self).arc(arc) {
-            Ok(encoder) => encoder.finish(),
-            Err(err) => Err(err),
-        }
-    }
-
-    /// Does this OID start with the other OID?
-    pub fn starts_with(&self, other: ObjectIdentifier) -> bool {
-        let mut self_arcs = self.arcs();
-
-        for other_arc in other.arcs() {
-            match self_arcs.next() {
-                Some(arc) => {
-                    if arc != other_arc {
-                        return false;
-                    }
-                }
-                None => {
-                    return false;
-                }
-            }
-        }
-
-        true
-    }
 }
 
 impl<const MAX_SIZE: usize> ObjectIdentifier<MAX_SIZE> {
     /// Get the BER/DER serialization of this OID as bytes.
     ///
-    /// Note that this encoding omits the tag/length, and only contains the
-    /// value portion of the encoded OID.
-    pub fn as_bytes(&self) -> &[u8] {
-        self.buffer.as_ref()
+    /// Note that this encoding omits the tag/length, and only contains the value portion of the
+    /// encoded OID.
+    pub const fn as_bytes(&self) -> &[u8] {
+        self.buffer.as_bytes()
     }
 
     /// Return the arc with the given index, if it exists.
@@ -208,11 +173,55 @@ impl<const MAX_SIZE: usize> ObjectIdentifier<MAX_SIZE> {
     pub fn len(&self) -> usize {
         self.arcs().count()
     }
+
+    /// Get the parent OID of this one (if applicable).
+    pub fn parent(&self) -> Option<Self> {
+        let num_arcs = self.len().checked_sub(1)?;
+        let mut encoder = Encoder::new();
+
+        for arc in self.arcs().take(num_arcs) {
+            encoder = encoder.arc(arc).ok()?;
+        }
+
+        encoder.finish().ok()
+    }
+
+    /// Push an additional arc onto this OID, returning the child OID.
+    pub const fn push_arc(self, arc: Arc) -> Result<Self> {
+        // TODO(tarcieri): use `?` when stable in `const fn`
+        match Encoder::extend(self).arc(arc) {
+            Ok(encoder) => encoder.finish(),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Does this OID start with the other OID?
+    pub const fn starts_with(&self, other: ObjectIdentifier) -> bool {
+        let len = other.as_bytes().len();
+
+        if self.as_bytes().len() < len {
+            return false;
+        }
+
+        let mut i = 0;
+        while i < len {
+            if self.as_bytes()[i] != other.as_bytes()[i] {
+                return false;
+            }
+
+            match i.checked_add(1) {
+                Some(succ) => i = succ,
+                None => return false,
+            }
+        }
+
+        true
+    }
 }
 
 impl<const MAX_SIZE: usize> AsRef<[u8]> for ObjectIdentifier<MAX_SIZE> {
     fn as_ref(&self) -> &[u8] {
-        self.as_bytes()
+        self.buffer.as_bytes()
     }
 }
 
