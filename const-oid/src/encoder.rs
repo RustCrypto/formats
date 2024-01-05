@@ -5,29 +5,29 @@ use crate::{
     Arc, Buffer, Error, ObjectIdentifier, Result,
 };
 
-/// BER/DER encoder
+/// BER/DER encoder.
 #[derive(Debug)]
 pub(crate) struct Encoder<const MAX_SIZE: usize> {
-    /// Current state
+    /// Current state.
     state: State,
 
-    /// Bytes of the OID being encoded in-progress
+    /// Bytes of the OID being BER-encoded in-progress.
     bytes: [u8; MAX_SIZE],
 
-    /// Current position within the byte buffer
+    /// Current position within the byte buffer.
     cursor: usize,
 }
 
-/// Current state of the encoder
+/// Current state of the encoder.
 #[derive(Debug)]
 enum State {
-    /// Initial state - no arcs yet encoded
+    /// Initial state - no arcs yet encoded.
     Initial,
 
-    /// First arc parsed
+    /// First arc parsed.
     FirstArc(Arc),
 
-    /// Encoding base 128 body of the OID
+    /// Encoding base 128 body of the OID.
     Body,
 }
 
@@ -45,8 +45,8 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
     pub(crate) const fn extend(oid: ObjectIdentifier<MAX_SIZE>) -> Self {
         Self {
             state: State::Body,
-            bytes: oid.buffer.bytes,
-            cursor: oid.buffer.length as usize,
+            bytes: oid.ber.bytes,
+            cursor: oid.ber.length as usize,
         }
     }
 
@@ -100,16 +100,16 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
 
     /// Finish encoding an OID.
     pub(crate) const fn finish(self) -> Result<ObjectIdentifier<MAX_SIZE>> {
-        if self.cursor >= 2 {
-            let bytes = Buffer {
-                bytes: self.bytes,
-                length: self.cursor as u8,
-            };
-
-            Ok(ObjectIdentifier { buffer: bytes })
-        } else {
-            Err(Error::NotEnoughArcs)
+        if self.cursor == 0 {
+            return Err(Error::Empty);
         }
+
+        let ber = Buffer {
+            bytes: self.bytes,
+            length: self.cursor as u8,
+        };
+
+        Ok(ObjectIdentifier { ber })
     }
 
     /// Encode a single byte of a Base 128 value.

@@ -58,7 +58,7 @@ impl<'a> Database<'a> {
         while i < self.0.len() {
             let lhs = self.0[i].0;
 
-            if lhs.buffer.eq(&oid.buffer) {
+            if lhs.ber.eq(&oid.ber) {
                 return Some(self.0[i].1);
             }
 
@@ -110,7 +110,7 @@ impl<'a> Iterator for Names<'a> {
         while i < self.database.0.len() {
             let lhs = self.database.0[i].0;
 
-            if lhs.buffer.eq(&self.oid.buffer) {
+            if lhs.ber.eq(&self.oid.ber) {
                 self.position = i + 1;
                 return Some(self.database.0[i].1);
             }
