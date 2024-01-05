@@ -80,7 +80,7 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
                 let nbytes = base128_len(arc);
 
                 // Shouldn't overflow on any 16-bit+ architectures
-                if self.cursor + nbytes + 1 >= ObjectIdentifier::MAX_SIZE {
+                if self.cursor + nbytes + 1 > MAX_SIZE {
                     return Err(Error::Length);
                 }
 
