@@ -21,7 +21,7 @@ spki = { version = "0.7" }
 x509-cert = { version = "0.2", default-features = false }
 
 [dev-dependencies]
-const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
+const-oid = { version = "0.9", features = ["db"] }
 hex-literal = "0.4"
 
 [features]

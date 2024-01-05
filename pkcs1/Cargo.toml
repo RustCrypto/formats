@@ -22,7 +22,7 @@ spki = { version = "=0.8.0-pre" }
 pkcs8 = { version = "=0.11.0-pre", optional = true, default-features = false }
 
 [dev-dependencies]
-const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
+const-oid = { version = "=0.10.0-pre.1", features = ["db"] }
 hex-literal = "0.4"
 tempfile = "3"
 
