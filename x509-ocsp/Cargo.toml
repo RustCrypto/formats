@@ -1,6 +1,6 @@
 [package]
 name = "x509-ocsp"
-version = "0.2.0-pre"
+version = "0.2.0"
 description = """
 Pure Rust implementation of the X.509 Internet Public Key Infrastructure
 Online Certificate Status Protocol - OCSP formats as described in RFC 6960

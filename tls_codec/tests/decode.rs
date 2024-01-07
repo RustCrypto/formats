@@ -2,7 +2,7 @@
 
 use tls_codec::{
     Error, Serialize, Size, TlsByteSliceU16, TlsByteVecU16, TlsByteVecU8, TlsSliceU16, TlsVecU16,
-    TlsVecU32, TlsVecU8, VLByteSlice, VLBytes,
+    TlsVecU32, TlsVecU8, VLByteSlice, VLBytes, U24,
 };
 
 #[test]
@@ -41,7 +41,7 @@ fn deserialize_option_bytes() {
 #[test]
 fn deserialize_bytes_primitives() {
     use tls_codec::DeserializeBytes;
-    let b = &[77u8, 88, 1, 99] as &[u8];
+    let b = &[77u8, 88, 1, 99, 1, 0, 73] as &[u8];
 
     let (a, remainder) = u8::tls_deserialize_bytes(b).expect("Unable to tls_deserialize");
     assert_eq!(1, a.tls_serialized_len());
@@ -52,6 +52,9 @@ fn deserialize_bytes_primitives() {
     let (a, remainder) = u16::tls_deserialize_bytes(remainder).expect("Unable to tls_deserialize");
     assert_eq!(2, a.tls_serialized_len());
     assert_eq!(355, a);
+    let (a, remainder) = U24::tls_deserialize_bytes(remainder).expect("Unable to tls_deserialize");
+    assert_eq!(3, a.tls_serialized_len());
+    assert_eq!(U24::try_from(65609usize).unwrap(), a);
 
     // It's empty now.
     assert!(remainder.is_empty());

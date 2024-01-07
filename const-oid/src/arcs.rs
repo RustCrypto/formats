@@ -58,7 +58,8 @@ impl<'a> Arcs<'a> {
         match self.cursor {
             // Indicates we're on the root arc
             None => {
-                let root = RootArcs::try_from(self.bytes[0])?;
+                let root_byte = *self.bytes.first().ok_or(Error::Empty)?;
+                let root = RootArcs::try_from(root_byte)?;
                 self.cursor = Some(0);
                 Ok(Some(root.first_arc()))
             }

@@ -14,7 +14,6 @@ members = [
     "pem-rfc7468",
     "pkcs1",
     "pkcs5",
-    "pkcs7",
     "pkcs8",
     "pkcs12",
     "sec1",
@@ -48,7 +47,6 @@ der_derive        = { path = "./der/derive" }
 pem-rfc7468       = { path = "./pem-rfc7468" }
 pkcs1             = { path = "./pkcs1" }
 pkcs5             = { path = "./pkcs5" }
-pkcs7             = { path = "./pkcs7" }
 pkcs8             = { path = "./pkcs8" }
 pkcs12            = { path = "./pkcs12" }
 sec1              = { path = "./sec1" }

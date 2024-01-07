@@ -1,6 +1,6 @@
 #![cfg(feature = "std")]
 
-use tls_codec::{Serialize, TlsVecU16, VLByteSlice, VLBytes};
+use tls_codec::{Serialize, TlsVecU16, TlsVecU24, VLByteSlice, VLBytes, U24};
 
 #[test]
 fn serialize_primitives() {
@@ -8,7 +8,11 @@ fn serialize_primitives() {
     77u8.tls_serialize(&mut v).expect("Error encoding u8");
     88u8.tls_serialize(&mut v).expect("Error encoding u8");
     355u16.tls_serialize(&mut v).expect("Error encoding u16");
-    let b = [77u8, 88, 1, 99];
+    U24::try_from(65609usize)
+        .unwrap()
+        .tls_serialize(&mut v)
+        .expect("Error encoding U24");
+    let b = [77u8, 88, 1, 99, 1, 0, 73];
     assert_eq!(&b[..], &v[..]);
 }
 
@@ -19,8 +23,11 @@ fn serialize_tls_vec() {
     TlsVecU16::<u8>::from_slice(&[77, 88, 1, 99])
         .tls_serialize(&mut v)
         .expect("Error encoding u8");
+    TlsVecU24::<u8>::from_slice(&[255, 42, 73])
+        .tls_serialize(&mut v)
+        .expect("Error encoding u8");
 
-    let b = [1u8, 0, 4, 77, 88, 1, 99];
+    let b = [1u8, 0, 4, 77, 88, 1, 99, 0, 0, 3, 255, 42, 73];
     assert_eq!(&b[..], &v[..]);
 }
 

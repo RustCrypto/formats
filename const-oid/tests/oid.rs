@@ -1,4 +1,4 @@
-//! `const-oid` crate tests
+//! Tests for `ObjectIdentifier`.
 
 // TODO(tarcieri): test full set of OID encoding constraints specified here:
 // <https://misc.daniel-marschall.de/asn.1/oid_facts.html>
@@ -62,16 +62,6 @@ fn from_bytes() {
 
     // Empty
     assert_eq!(ObjectIdentifier::from_bytes(&[]), Err(Error::Empty));
-
-    // Truncated
-    assert_eq!(
-        ObjectIdentifier::from_bytes(&[42]),
-        Err(Error::NotEnoughArcs)
-    );
-    assert_eq!(
-        ObjectIdentifier::from_bytes(&[42, 134]),
-        Err(Error::NotEnoughArcs)
-    );
 }
 
 #[test]
@@ -102,9 +92,6 @@ fn from_str() {
     assert_eq!(oid3.arc(5).unwrap(), 1);
     assert_eq!(oid3.arc(6).unwrap(), 1);
     assert_eq!(oid3, EXAMPLE_OID_LARGE_ARC);
-
-    // Too short
-    assert_eq!("1.2".parse::<ObjectIdentifier>(), Err(Error::NotEnoughArcs));
 
     // Truncated
     assert_eq!(
@@ -145,12 +132,6 @@ fn try_from_u32_slice() {
     assert_eq!(oid2.arc(1).unwrap(), 16);
     assert_eq!(EXAMPLE_OID_2, oid2);
 
-    // Too short
-    assert_eq!(
-        ObjectIdentifier::from_arcs([1, 2]),
-        Err(Error::NotEnoughArcs)
-    );
-
     // Invalid first arc
     assert_eq!(
         ObjectIdentifier::from_arcs([3, 2, 840, 10045, 3, 1, 7]),
@@ -171,13 +152,16 @@ fn as_bytes() {
 }
 
 #[test]
-fn parse_empty() {
-    assert_eq!(ObjectIdentifier::new(""), Err(Error::Empty));
+fn as_oid_ref() {
+    assert_eq!(
+        EXAMPLE_OID_0.as_bytes(),
+        EXAMPLE_OID_0.as_oid_ref().as_bytes()
+    );
 }
 
 #[test]
-fn parse_not_enough_arcs() {
-    assert_eq!(ObjectIdentifier::new("1.2"), Err(Error::NotEnoughArcs));
+fn parse_empty() {
+    assert_eq!(ObjectIdentifier::new(""), Err(Error::Empty));
 }
 
 #[test]
@@ -201,6 +185,9 @@ fn parent() {
     let child = oid("1.2.3.4");
     let parent = child.parent().unwrap();
     assert_eq!(parent, oid("1.2.3"));
+
+    let parent = parent.parent().unwrap();
+    assert_eq!(parent, oid("1.2"));
     assert_eq!(parent.parent(), None);
 }
 

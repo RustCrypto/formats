@@ -1,12 +1,4 @@
-mod asn1;
-mod ldap;
-mod node;
-mod root;
-mod spec;
-
-pub use asn1::Asn1Parser;
-pub use ldap::LdapParser;
-pub use root::Root;
+use oiddbgen::{Asn1Parser, LdapParser, Root};
 
 // Update this database by downloading the CSV file here:
 // https://www.iana.org/assignments/ldap-parameters/ldap-parameters.xhtml#ldap-parameters-3
@@ -15,6 +7,7 @@ const LDAP: &str = include_str!("../ldap-parameters-3.csv");
 // All RFCs downloaded from:
 // https://www.rfc-editor.org/rfc/rfcNNNN.txt
 const RFCS: &[(&str, &str)] = &[
+    ("rfc2985", include_str!("../rfc2985.txt")),
     ("rfc5280", include_str!("../rfc5280.txt")),
     ("rfc5911", include_str!("../rfc5911.txt")),
     ("rfc5912", include_str!("../rfc5912.txt")),
@@ -40,19 +33,19 @@ const NO_BASES: &[(&str, &str)] = &[("", "")];
 fn main() {
     let mut root = Root::default();
 
-    for (spec, name, oid) in LdapParser::new(LDAP).iter() {
-        root.add(&spec, &name, &oid);
+    for (spec, name, obid) in LdapParser::new(LDAP).iter() {
+        root.add(&spec, &name, &obid);
     }
 
     for (spec, body) in RFCS {
-        for (name, oid) in Asn1Parser::new(body, BASES).iter() {
-            root.add(spec, &name, &oid);
+        for (name, obid) in Asn1Parser::new(body, BASES).iter() {
+            root.add(spec, &name, &obid);
         }
     }
 
     for (spec, body) in MDS {
-        for (name, oid) in Asn1Parser::new(body, NO_BASES).iter() {
-            root.add(spec, &name, &oid);
+        for (name, obid) in Asn1Parser::new(body, NO_BASES).iter() {
+            root.add(spec, &name, &obid);
         }
     }
 

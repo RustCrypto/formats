@@ -814,33 +814,38 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
 
             match svariant {
                 SerializeVariant::Write => {
-                    quote! {
-                        impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
-                            #[cfg(feature = "std")]
-                            fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                                let mut written = 0usize;
-                                #(
-                                    written += #prefixes::tls_serialize(&self.#members, writer)?;
-                                )*
-                                if cfg!(debug_assertions) {
-                                    let expected_written = tls_codec::Size::tls_serialized_len(&self);
-                                    debug_assert_eq!(written, expected_written, "Expected to serialize {} bytes but only {} were generated.", expected_written, written);
-                                    if written != expected_written {
-                                        Err(tls_codec::Error::EncodingError(format!("Expected to serialize {} bytes but only {} were generated.", expected_written, written)))
+                    if cfg!(feature = "std") {
+                        quote! {
+                            impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
+                                fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                    let mut written = 0usize;
+                                    #(
+                                        written += #prefixes::tls_serialize(&self.#members, writer)?;
+                                    )*
+                                    if cfg!(debug_assertions) {
+                                        let expected_written = tls_codec::Size::tls_serialized_len(&self);
+                                        debug_assert_eq!(written, expected_written, "Expected to serialize {} bytes but only {} were generated.", expected_written, written);
+                                        if written != expected_written {
+                                            Err(tls_codec::Error::EncodingError(format!("Expected to serialize {} bytes but only {} were generated.", expected_written, written)))
+                                        } else {
+                                            Ok(written)
+                                        }
                                     } else {
                                         Ok(written)
                                     }
-                                } else {
-                                    Ok(written)
+                                }
+                            }
+
+                            impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
+                                fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                    tls_codec::Serialize::tls_serialize(*self, writer)
                                 }
                             }
                         }
-
-                        impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
-                            #[cfg(feature = "std")]
-                            fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                                tls_codec::Serialize::tls_serialize(*self, writer)
-                            }
+                    } else {
+                        quote! {
+                            impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {}
+                            impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {}
                         }
                     }
                 }
@@ -926,22 +931,27 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
 
             match svariant {
                 SerializeVariant::Write => {
-                    quote! {
-                        impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
-                            #[cfg(feature = "std")]
-                            fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                                #discriminant_constants
-                                match self {
-                                    #(#arms)*
+                    if cfg!(feature = "std") {
+                        quote! {
+                            impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
+                                fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                    #discriminant_constants
+                                    match self {
+                                        #(#arms)*
+                                    }
+                                }
+                            }
+
+                            impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
+                                fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                    tls_codec::Serialize::tls_serialize(*self, writer)
                                 }
                             }
                         }
-
-                        impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
-                            #[cfg(feature = "std")]
-                            fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                                tls_codec::Serialize::tls_serialize(*self, writer)
-                            }
+                    } else {
+                        quote! {
+                            impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {}
+                            impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {}
                         }
                     }
                 }
@@ -1011,15 +1021,20 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
             #[cfg(feature = "conditional_deserialization")]
             let (impl_generics, ty_generics) =
                 restrict_conditional_generic(impl_generics, ty_generics, true);
-            quote! {
-                impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
-                    #[cfg(feature = "std")]
-                    fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
-                        Ok(Self {
-                            #(#members: #prefixes::tls_deserialize(bytes)?,)*
-                            #(#members_default: Default::default(),)*
-                        })
+            if cfg!(feature = "std") {
+                quote! {
+                    impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
+                        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
+                            Ok(Self {
+                                #(#members: #prefixes::tls_deserialize(bytes)?,)*
+                                #(#members_default: Default::default(),)*
+                            })
+                        }
                     }
+                }
+            } else {
+                quote! {
+                    impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {}
                 }
             }
         }
@@ -1050,19 +1065,24 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                 })
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-            quote! {
-                impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
-                    #[cfg(feature = "std")]
-                    fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
-                        #discriminant_constants
-                        let discriminant = <#repr as tls_codec::Deserialize>::tls_deserialize(bytes)?;
-                        match discriminant {
-                            #(#arms)*
-                            _ => {
-                                Err(tls_codec::Error::UnknownValue(discriminant.into()))
-                            },
+            if cfg!(feature = "std") {
+                quote! {
+                    impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
+                        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> core::result::Result<Self, tls_codec::Error> {
+                            #discriminant_constants
+                            let discriminant = <#repr as tls_codec::Deserialize>::tls_deserialize(bytes)?;
+                            match discriminant {
+                                #(#arms)*
+                                _ => {
+                                    Err(tls_codec::Error::UnknownValue(discriminant.into()))
+                                },
+                            }
                         }
                     }
+                }
+            } else {
+                quote! {
+                    impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {}
                 }
             }
         }
@@ -1203,19 +1223,28 @@ fn partition_skipped(
     )
 }
 
-/// The `conditionally_deserializable` attribute macro takes as input either
-/// `Bytes` or `Reader` and does the following:
-/// * Add a boolean const generic to the struct indicating if the variant of the
-///   struct is deserializable or not.
-/// * Depending on the input derive either the `TlsDeserialize` or
-///   `TlsDeserializeBytes` trait for the deserializable variant
-/// * Create type aliases for the deserializable and undeserializable variant of
-///   the struct, where the alias is the name of the struct prefixed with
-///   `Deserializable` or `Undeserializable` respectively.
+/// The `conditionally_deserializable` attribute macro creates two versions of
+/// the affected struct: One that implements the
+/// [`Deserialize`](../tls_codec::Deserialize) and
+/// [`DeserializeBytes`](../tls_codec::DeserializeBytes) traits and one that
+/// does not. It does so by introducing a boolean const generic that indicates
+/// if the struct can be deserialized or not.
+///
+/// This conditional deserialization can be used, for example, to implement a
+/// simple state machine, where after deserialization, the user must first
+/// complete an additional transition (e.g. verification) to the
+/// undeserializable version of the struct, which might then implement functions
+/// for further processing.
+///
+/// For ease of use, the macro creates type aliases for the deserializable and
+/// undeserializable variant of the struct, where the alias is the name of the
+/// struct prefixed with `Deserializable` or `Undeserializable` respectively.
+///
+/// Due to the way that the macro rewrites the struct, it must be placed before
+/// any `#[derive(...)]` statements.
 ///
 /// The `conditionally_deserializable` attribute macro is only available if the
 /// `conditional_deserialization` feature is enabled.
-///
 #[cfg_attr(
     feature = "conditional_deserialization",
     doc = r##"
