@@ -446,7 +446,7 @@ dependencies = [
  "der_derive 0.8.0-pre",
  "flagset",
  "hex-literal 0.4.1",
- "pem-rfc7468 1.0.0-pre",
+ "pem-rfc7468 1.0.0-pre.0",
  "proptest",
  "time",
  "zeroize",
@@ -976,7 +976,7 @@ dependencies = [
 
 [[package]]
 name = "pem-rfc7468"
-version = "1.0.0-pre"
+version = "1.0.0-pre.0"
 dependencies = [
  "base64ct",
 ]
