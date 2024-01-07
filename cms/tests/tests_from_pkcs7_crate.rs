@@ -40,7 +40,7 @@ fn cms_decode_encrypted_key_example() {
         .to_der()
         .unwrap();
     let pbkdf2 = Pbkdf2Params::from_der(enc_pbkdf2.as_slice()).unwrap();
-    assert_eq!(hex!("ad2d4b4e87b34d67"), pbkdf2.salt.as_ref());
+    assert_eq!(hex!("ad2d4b4e87b34d67"), pbkdf2.salt);
     assert_eq!(2048, pbkdf2.iteration_count);
     assert_eq!(
         552u32,
