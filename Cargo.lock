@@ -443,7 +443,7 @@ dependencies = [
  "arbitrary",
  "bytes",
  "const-oid 0.10.0-pre.2",
- "der_derive 0.8.0-pre",
+ "der_derive 0.8.0-pre.0",
  "flagset",
  "hex-literal 0.4.1",
  "pem-rfc7468 1.0.0-pre.0",
@@ -465,7 +465,7 @@ dependencies = [
 
 [[package]]
 name = "der_derive"
-version = "0.8.0-pre"
+version = "0.8.0-pre.0"
 dependencies = [
  "proc-macro2",
  "quote",
