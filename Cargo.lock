@@ -438,7 +438,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.8.0-pre"
+version = "0.8.0-pre.0"
 dependencies = [
  "arbitrary",
  "bytes",
@@ -1009,7 +1009,7 @@ name = "pkcs1"
 version = "0.8.0-pre"
 dependencies = [
  "const-oid 0.10.0-pre.2",
- "der 0.8.0-pre",
+ "der 0.8.0-pre.0",
  "hex-literal 0.4.1",
  "pkcs8 0.11.0-pre",
  "spki 0.8.0-pre",
@@ -1057,7 +1057,7 @@ version = "0.8.0-pre"
 dependencies = [
  "aes",
  "cbc",
- "der 0.8.0-pre",
+ "der 0.8.0-pre.0",
  "des",
  "hex-literal 0.4.1",
  "pbkdf2",
@@ -1083,7 +1083,7 @@ dependencies = [
 name = "pkcs8"
 version = "0.11.0-pre"
 dependencies = [
- "der 0.8.0-pre",
+ "der 0.8.0-pre.0",
  "hex-literal 0.4.1",
  "pkcs5 0.8.0-pre",
  "rand_core",
@@ -1416,7 +1416,7 @@ name = "sec1"
 version = "0.8.0-pre"
 dependencies = [
  "base16ct",
- "der 0.8.0-pre",
+ "der 0.8.0-pre.0",
  "hex-literal 0.4.1",
  "hybrid-array",
  "pkcs8 0.11.0-pre",
@@ -1579,7 +1579,7 @@ version = "0.8.0-pre"
 dependencies = [
  "arbitrary",
  "base64ct",
- "der 0.8.0-pre",
+ "der 0.8.0-pre.0",
  "hex-literal 0.4.1",
  "sha2",
  "tempfile",
