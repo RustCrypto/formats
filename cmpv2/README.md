@@ -11,13 +11,6 @@ Pure Rust implementation of the Certificate Management Protocol (CMP) as describ
 
 [Documentation][docs-link]
 
-## Status
-
-tl;dr: not ready to use.
-
-This is a work-in-progress implementation which is at an early stage of
-development.
-
 ## Minimum Supported Rust Version
 
 This crate requires **Rust 1.65** at a minimum.
