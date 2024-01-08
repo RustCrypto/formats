@@ -38,3 +38,4 @@ pub mod encrypted_data;
 pub mod enveloped_data;
 pub mod revocation;
 pub mod signed_data;
+pub mod timestamped_data;
