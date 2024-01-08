@@ -18,6 +18,9 @@ use der::{
     Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Writer,
 };
 
+#[cfg(feature = "rand_core")]
+use rand_core::CryptoRngCore;
+
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
 
@@ -75,6 +78,42 @@ pub struct Parameters {
 }
 
 impl Parameters {
+    /// Default length of an initialization vector.
+    #[cfg(feature = "rand_core")]
+    const DEFAULT_IV_LEN: usize = AES_BLOCK_SIZE;
+
+    /// Default length of a salt for password hashing.
+    #[cfg(feature = "rand_core")]
+    const DEFAULT_SALT_LEN: usize = 16;
+
+    /// Generate PBES2 parameters using the recommended algorithm settings and
+    /// a randomly generated salt and IV.
+    ///
+    /// This is currently an alias for [`Parameters::scrypt`]. See that method
+    /// for more information.
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
+    pub fn recommended(rng: &mut impl CryptoRngCore) -> Self {
+        Self::scrypt(rng)
+    }
+
+    /// Generate PBES2 parameters using PBKDF2 as the password hashing
+    /// algorithm, using that algorithm's recommended algorithm settings
+    /// (OWASP recommended default: 600,000 rounds) along with a randomly
+    /// generated salt and IV.
+    ///
+    /// This will use AES-256-CBC as the encryption algorithm and SHA-256 as
+    /// the hash function for PBKDF2.
+    #[cfg(feature = "rand_core")]
+    pub fn pbkdf2(rng: &mut impl CryptoRngCore) -> Self {
+        let mut iv = [0u8; Self::DEFAULT_IV_LEN];
+        rng.fill_bytes(&mut iv);
+
+        let mut salt = [0u8; Self::DEFAULT_SALT_LEN];
+        rng.fill_bytes(&mut salt);
+
+        Self::pbkdf2_sha256_aes256cbc(600_000, &salt, iv).expect("invalid PBKDF2 parameters")
+    }
+
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-128-CBC as the symmetric cipher.
     pub fn pbkdf2_sha256_aes128cbc(
@@ -97,6 +136,36 @@ impl Parameters {
         let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
         let encryption = EncryptionScheme::Aes256Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
+    }
+
+    /// Generate PBES2 parameters using scrypt as the password hashing
+    /// algorithm, using that algorithm's recommended algorithm settings
+    /// along with a randomly generated salt and IV.
+    ///
+    /// This will use AES-256-CBC as the encryption algorithm.
+    ///
+    /// scrypt parameters are deliberately chosen to retain compatibility with
+    /// OpenSSL v3. See [RustCrypto/formats#1205] for more information.
+    /// Parameter choices are as follows:
+    ///
+    /// - `log_n`: 14
+    /// - `r`: 8
+    /// - `p`: 1
+    /// - salt length: 16
+    ///
+    /// [RustCrypto/formats#1205]: https://github.com/RustCrypto/formats/issues/1205
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
+    pub fn scrypt(rng: &mut impl CryptoRngCore) -> Self {
+        let mut iv = [0u8; Self::DEFAULT_IV_LEN];
+        rng.fill_bytes(&mut iv);
+
+        let mut salt = [0u8; Self::DEFAULT_SALT_LEN];
+        rng.fill_bytes(&mut salt);
+
+        scrypt::Params::new(14, 8, 1, 32)
+            .ok()
+            .and_then(|params| Self::scrypt_aes256cbc(params, &salt, iv).ok())
+            .expect("invalid scrypt parameters")
     }
 
     /// Initialize PBES2 parameters using scrypt as the password-based

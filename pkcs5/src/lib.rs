@@ -21,6 +21,9 @@
 //! the [`Decode`] and [`Encode`] traits from the [`der`] crate, and can be
 //! used for decoding/encoding PKCS#5 `AlgorithmIdentifier` fields.
 //!
+//! The [`pbes2::Parameters`] struct can be used to generate new encryption
+//! parameters when encrypting new keys.
+//!
 //! [RFC 8018]: https://tools.ietf.org/html/rfc8018
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
