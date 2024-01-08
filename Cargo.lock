@@ -1012,7 +1012,7 @@ dependencies = [
  "der 0.8.0-pre.0",
  "hex-literal 0.4.1",
  "pkcs8 0.11.0-pre",
- "spki 0.8.0-pre",
+ "spki 0.8.0-pre.0",
  "tempfile",
 ]
 
@@ -1065,7 +1065,7 @@ dependencies = [
  "scrypt",
  "sha1",
  "sha2",
- "spki 0.8.0-pre",
+ "spki 0.8.0-pre.0",
 ]
 
 [[package]]
@@ -1088,7 +1088,7 @@ dependencies = [
  "hex-literal 0.4.1",
  "pkcs5 0.8.0-pre",
  "rand_core",
- "spki 0.8.0-pre",
+ "spki 0.8.0-pre.0",
  "subtle",
  "tempfile",
 ]
@@ -1576,7 +1576,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.8.0-pre"
+version = "0.8.0-pre.0"
 dependencies = [
  "arbitrary",
  "base64ct",
