@@ -1011,7 +1011,7 @@ dependencies = [
  "const-oid 0.10.0-pre.2",
  "der 0.8.0-pre.0",
  "hex-literal 0.4.1",
- "pkcs8 0.11.0-pre",
+ "pkcs8 0.11.0-pre.0",
  "spki 0.8.0-pre.0",
  "tempfile",
 ]
@@ -1082,7 +1082,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.11.0-pre"
+version = "0.11.0-pre.0"
 dependencies = [
  "der 0.8.0-pre.0",
  "hex-literal 0.4.1",
@@ -1420,7 +1420,7 @@ dependencies = [
  "der 0.8.0-pre.0",
  "hex-literal 0.4.1",
  "hybrid-array",
- "pkcs8 0.11.0-pre",
+ "pkcs8 0.11.0-pre.0",
  "serdect",
  "subtle",
  "tempfile",
