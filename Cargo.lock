@@ -1958,6 +1958,8 @@ dependencies = [
  "const-oid 0.9.6",
  "der 0.7.8",
  "hex-literal 0.4.1",
+ "lazy_static",
+ "rand",
  "rand_core",
  "spki 0.7.3",
  "x509-cert",
