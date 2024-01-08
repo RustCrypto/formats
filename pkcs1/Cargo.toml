@@ -16,7 +16,7 @@ rust-version = "1.71"
 
 [dependencies]
 der = { version = "=0.8.0-pre.0", features = ["oid"] }
-spki = { version = "=0.8.0-pre" }
+spki = { version = "=0.8.0-pre.0" }
 
 # optional dependencies
 pkcs8 = { version = "=0.11.0-pre", optional = true, default-features = false }
