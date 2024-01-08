@@ -1954,14 +1954,19 @@ dependencies = [
 
 [[package]]
 name = "x509-ocsp"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "const-oid 0.9.6",
  "der 0.7.8",
+ "digest",
  "hex-literal 0.4.1",
  "lazy_static",
  "rand",
  "rand_core",
+ "rsa",
+ "sha1",
+ "sha2",
+ "signature",
  "spki 0.7.3",
  "x509-cert",
 ]
