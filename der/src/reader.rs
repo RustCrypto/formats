@@ -8,8 +8,8 @@ pub(crate) mod slice;
 pub(crate) use nested::NestedReader;
 
 use crate::{
-    asn1::ContextSpecific, Decode, DecodeValue, Encode, Error, ErrorKind, FixedTag, Header, Length,
-    Result, Tag, TagMode, TagNumber,
+    asn1::ContextSpecific, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag,
+    Header, Length, Result, Tag, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -17,6 +17,9 @@ use alloc::vec::Vec;
 
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Sized {
+    /// Get the [`EncodingRules`] which should be applied when decoding the input.
+    fn encoding_rules(&self) -> EncodingRules;
+
     /// Get the length of the input.
     fn input_len(&self) -> Length;
 
