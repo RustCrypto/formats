@@ -782,9 +782,9 @@ dependencies = [
 
 [[package]]
 name = "hybrid-array"
-version = "0.2.0-pre.8"
+version = "0.2.0-rc.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27fbaf242418fe980caf09ed348d5a6aeabe71fc1bd8bebad641f4591ae0a46d"
+checksum = "b8c5517ac29f08e88170b9647d85cc5f21c2596de177b4867232e20b214b8da1"
 dependencies = [
  "typenum",
 ]
@@ -1414,7 +1414,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.8.0-pre.0"
+version = "0.8.0-pre.1"
 dependencies = [
  "base16ct",
  "der 0.8.0-pre.0",
