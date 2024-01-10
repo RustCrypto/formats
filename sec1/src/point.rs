@@ -210,7 +210,7 @@ where
         }
 
         let (x_bytes, y_bytes) = self.bytes[1..].split_at(Size::to_usize());
-        let x = Array::ref_from_slice(x_bytes);
+        let x = Array::from_slice(x_bytes);
 
         if self.is_compressed() {
             Coordinates::Compressed {
@@ -222,7 +222,7 @@ where
         } else {
             Coordinates::Uncompressed {
                 x,
-                y: Array::ref_from_slice(y_bytes),
+                y: Array::from_slice(y_bytes),
             }
         }
     }
