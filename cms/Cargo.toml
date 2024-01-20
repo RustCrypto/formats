@@ -11,7 +11,7 @@ categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "pkcs7", "signing"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.72"
+rust-version = "1.75"
 
 [dependencies]
 der = { version = "=0.8.0-pre.0", features = ["alloc", "derive", "oid", "pem"] }

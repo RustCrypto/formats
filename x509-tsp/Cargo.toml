@@ -11,7 +11,7 @@ repository = "https://github.com/RustCrypto/formats/tree/master/x509-tsp"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "tsp", "timestamp"]
 readme = "README.md"
-rust-version = "1.72"
+rust-version = "1.75"
 
 [dependencies]
 der = { version = "=0.8.0-pre.0", features = ["alloc", "derive", "oid", "pem"] }
