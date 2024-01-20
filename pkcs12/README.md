@@ -14,7 +14,7 @@ Personal Information Exchange Syntax v1.1 ([RFC7292]).
 
 ## Minimum Supported Rust Version
 
-This crate requires **Rust 1.65** at a minimum.
+This crate requires **Rust 1.75** at a minimum.
 
 We may change the MSRV in the future, but it will be accompanied by a minor
 version bump.
@@ -41,7 +41,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/pkcs12/badge.svg
 [docs-link]: https://docs.rs/pkcs12/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.65+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.75+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 [build-image]: https://github.com/RustCrypto/formats/workflows/pkcs12/badge.svg?branch=master&event=push

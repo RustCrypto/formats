@@ -1,6 +1,6 @@
 [package]
 name = "gss-api"
-version = "0.1.0"
+version = "0.2.0-pre"
 description = """
 Pure Rust implementation for Generic Security Service Application Program
 Interface (GSS-API)
@@ -12,17 +12,17 @@ categories = ["cryptography", "authentication", "encoding", "no-std", "parser-im
 keywords = ["crypto", "gssapi", "kerberos", "krb5"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.75"
 
 [dependencies]
-der = { version = "0.7", features = ["oid", "alloc"] }
-spki = { version = "0.7" }
-x509-cert = { version = "0.2", default-features = false }
+der = { version = "=0.8.0-pre.0", features = ["oid", "alloc"] }
+spki = { version = "=0.8.0-pre.0" }
+x509-cert = { version = "=0.3.0-pre", default-features = false }
 
 [dev-dependencies]
-der = { version = "0.7", features = ["oid", "pem", "alloc"] }
+der = { version = "=0.8.0-pre.0", features = ["oid", "pem", "alloc"] }
 hex-literal = "0.4"
-x509-cert = { version = "0.2", default-features = false, features = ["pem"] }
+x509-cert = { version = "=0.3.0-pre", default-features = false, features = ["pem"] }
 
 [features]
 rfc2478 = []
