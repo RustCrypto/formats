@@ -35,11 +35,14 @@ use rsa::Pkcs1v15Encrypt;
 use sha2::digest;
 use signature::digest::DynDigest;
 use signature::{Keypair, Signer};
-use spki::{AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
+use spki::{
+    AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
+    SignatureBitStringEncoding,
+};
 use std::time::SystemTime;
 use std::vec;
 use x509_cert::attr::{Attribute, AttributeValue, Attributes};
-use x509_cert::builder::Builder;
+use x509_cert::builder::{self, Builder};
 use zeroize::Zeroize;
 
 /// Error type
@@ -96,8 +99,7 @@ type Result<T> = core::result::Result<T, Error>;
 /// - calculate the signature
 /// - set the signing time attribute
 /// - create a `SignerInfo` object
-pub struct SignerInfoBuilder<'s, S> {
-    signer: &'s S,
+pub struct SignerInfoBuilder<'s> {
     sid: SignerIdentifier,
     digest_algorithm: AlgorithmIdentifierOwned,
     signed_attributes: Option<Vec<Attribute>>,
@@ -106,24 +108,19 @@ pub struct SignerInfoBuilder<'s, S> {
     external_message_digest: Option<&'s [u8]>,
 }
 
-impl<'s, S> SignerInfoBuilder<'s, S>
-where
-    S: Keypair + DynSignatureAlgorithmIdentifier,
-{
+impl<'s> SignerInfoBuilder<'s> {
     /// Create a new `SignerInfoBuilder`. This is used for adding `SignerInfo`s to `SignedData`
     /// structures.
     /// The content to be signed can be stored externally. In this case `eContent` in
     /// `encapsulated_content_info` must be `None` and the message digest must be passed with
     /// `external_message_digest`. `digest_algorithm` must match the used digest algorithm.
     pub fn new(
-        signer: &'s S,
         sid: SignerIdentifier,
         digest_algorithm: AlgorithmIdentifierOwned,
         encapsulated_content_info: &'s EncapsulatedContentInfo,
         external_message_digest: Option<&'s [u8]>,
     ) -> Result<Self> {
         Ok(SignerInfoBuilder {
-            signer,
             sid,
             digest_algorithm,
             signed_attributes: None,
@@ -167,28 +164,24 @@ where
     }
 }
 
-impl<'s, S> Builder for SignerInfoBuilder<'s, S>
-where
-    S: Keypair + DynSignatureAlgorithmIdentifier,
-{
-    type Signer = S;
+impl<'s> Builder for SignerInfoBuilder<'s> {
     type Output = SignerInfo;
-
-    fn signer(&self) -> &Self::Signer {
-        self.signer
-    }
 
     /// Calculate the data to be signed
     /// [RFC 5652 § 5.4](https://datatracker.ietf.org/doc/html/rfc5652#section-5.4)
     /// If an `external_message_digest` is passed in, it is assumed, that we are signing external
     /// content (see RFC 5652 § 5.2). In this case, the `eContent` in `EncapsulatedContentInfo`
     /// must be `None`.
-    fn finalize(&mut self) -> der::Result<Vec<u8>> {
+    fn finalize<S>(&mut self, _signer: &S) -> builder::Result<Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
         let message_digest = match self.external_message_digest {
             Some(external_content_digest) => {
                 if self.encapsulated_content_info.econtent.is_some() {
                     // Encapsulated content must be empty, if external digest is given.
-                    return Err(der::Error::from(ErrorKind::Failed));
+                    return Err(der::Error::from(ErrorKind::Failed).into());
                 }
                 Some(external_content_digest.to_vec())
             }
@@ -201,7 +194,7 @@ where
                 Some(content) => {
                     let mut hasher = get_hasher(&self.digest_algorithm).ok_or_else(|| {
                         // Unsupported hash algorithm: {}, &self.digest_algorithm.oid.to_string()
-                        der::Error::from(ErrorKind::Failed)
+                        x509_cert::builder::Error::from(der::Error::from(ErrorKind::Failed))
                     })?;
                     // Only the octets comprising the value of the eContent
                     // OCTET STRING are input to the message digest algorithm, not the tag
@@ -245,7 +238,7 @@ where
                 // Check against `eContentType`
                 if signed_attributes_content_type.oid != econtent_type {
                     // Mismatch between content types: encapsulated content info <-> signed attributes.
-                    return Err(der::Error::from(ErrorKind::Failed));
+                    return Err(der::Error::from(ErrorKind::Failed).into());
                 }
             } else {
                 signed_attributes.push(
@@ -264,10 +257,11 @@ where
         Ok(signed_attributes_der)
     }
 
-    fn assemble(
-        self,
-        signature: BitString,
-    ) -> core::result::Result<Self::Output, x509_cert::builder::Error> {
+    fn assemble<S>(self, signature: BitString, signer: &S) -> builder::Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
         let signed_attrs = self.signed_attributes.as_ref().map(|signed_attributes| {
             SignedAttributes::try_from(signed_attributes.to_owned()).unwrap()
         });
@@ -281,7 +275,7 @@ where
         let signature_value =
             SignatureValue::new(signature.raw_bytes()).map_err(x509_cert::builder::Error::from)?;
 
-        let signature_algorithm = self.signer.signature_algorithm_identifier()?;
+        let signature_algorithm = signer.signature_algorithm_identifier()?;
 
         Ok(SignerInfo {
             version: self.version(),
@@ -379,15 +373,17 @@ impl<'s> SignedDataBuilder<'s> {
     /// must not be changed after the first signer info was added.
     pub fn add_signer_info<S, Signature>(
         &mut self,
-        signer_info_builder: SignerInfoBuilder<'_, S>,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
     ) -> Result<&mut Self>
     where
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S: Signer<Signature>,
+        S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
     {
         let signer_info = signer_info_builder
-            .build::<Signature>()
+            .build::<S, Signature>(signer)
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
         self.signer_infos.push(signer_info);
 

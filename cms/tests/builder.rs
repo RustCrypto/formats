@@ -104,7 +104,6 @@ fn test_build_signed_data() {
     };
     let external_message_digest = None;
     let signer_info_builder_1 = SignerInfoBuilder::new(
-        &signer,
         signer_identifier(1),
         digest_algorithm.clone(),
         &content,
@@ -119,7 +118,6 @@ fn test_build_signed_data() {
     };
     let external_message_digest_2 = None;
     let signer_info_builder_2 = SignerInfoBuilder::new(
-        &signer_2,
         signer_identifier(1),
         digest_algorithm_2.clone(),
         &content,
@@ -137,10 +135,14 @@ fn test_build_signed_data() {
         .expect("could not add a digest algorithm")
         .add_certificate(CertificateChoices::Certificate(certificate))
         .expect("error adding certificate")
-        .add_signer_info::<SigningKey<Sha256>, rsa::pkcs1v15::Signature>(signer_info_builder_1)
+        .add_signer_info::<SigningKey<Sha256>, rsa::pkcs1v15::Signature>(
+            signer_info_builder_1,
+            &signer,
+        )
         .expect("error adding RSA signer info")
         .add_signer_info::<ecdsa::SigningKey<NistP256>, p256::ecdsa::DerSignature>(
             signer_info_builder_2,
+            &signer_2,
         )
         .expect("error adding P256 signer info")
         .build()
@@ -324,7 +326,6 @@ fn test_build_pkcs7_scep_pkcsreq() {
         parameters: None,
     };
     let mut signer_info_builder = SignerInfoBuilder::new(
-        &signer,
         signer_identifier(1),
         digest_algorithm.clone(),
         &content,
@@ -380,7 +381,10 @@ fn test_build_pkcs7_scep_pkcsreq() {
         .unwrap()
         .add_certificate(CertificateChoices::Certificate(certificate))
         .unwrap()
-        .add_signer_info::<SigningKey<Sha256>, rsa::pkcs1v15::Signature>(signer_info_builder)
+        .add_signer_info::<SigningKey<Sha256>, rsa::pkcs1v15::Signature>(
+            signer_info_builder,
+            &signer,
+        )
         .unwrap()
         .build()
         .unwrap();
