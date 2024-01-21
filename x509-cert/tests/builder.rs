@@ -9,7 +9,7 @@ use sha2::Sha256;
 use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{Builder, CertificateBuilder, Profile, RequestBuilder},
+    builder::{AsyncBuilder, Builder, CertificateBuilder, Profile, RequestBuilder},
     ext::pkix::{
         name::{DirectoryString, GeneralName},
         SubjectAltName,
@@ -332,4 +332,30 @@ fn dynamic_signer() {
     let csr_pem = csr.to_pem(LineEnding::LF).expect("format CSR");
 
     println!("{}", csr_pem);
+}
+
+#[tokio::test]
+async fn async_builder() {
+    let serial_number = SerialNumber::from(42u32);
+    let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
+    let profile = Profile::Root;
+    let subject = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US")
+        .unwrap()
+        .to_der()
+        .unwrap();
+    let subject = Name::from_der(&subject).unwrap();
+    let pub_key =
+        SubjectPublicKeyInfoOwned::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
+
+    let signer = ecdsa_signer();
+    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+        .expect("Create certificate");
+
+    let certificate = builder
+        .build_async::<_, DerSignature>(&signer)
+        .await
+        .unwrap();
+
+    let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
+    println!("{}", openssl::check_certificate(pem.as_bytes()));
 }
