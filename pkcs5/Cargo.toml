@@ -33,6 +33,8 @@ hex-literal = "0.4"
 
 [features]
 alloc = []
+std = ["alloc"]
+
 3des = ["dep:des", "pbes2"]
 des-insecure = ["dep:des", "pbes2"]
 getrandom = ["rand_core/getrandom"]
