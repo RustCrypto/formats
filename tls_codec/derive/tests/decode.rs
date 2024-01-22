@@ -551,6 +551,13 @@ mod conditional_deserialization {
 
         #[conditionally_deserializable]
         #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct NestedExampleStruct {
+            #[tls_codec(cd_field)]
+            nested_field: ExampleStruct,
+        }
+
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
         struct SecondExampleStruct {
             a: u8,
             b: u16,

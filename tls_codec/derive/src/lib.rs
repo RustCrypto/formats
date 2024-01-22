@@ -324,6 +324,8 @@ enum TlsAttr {
     ///       This is required to populate the field with a known
     ///       value during deserialization.
     Skip,
+    #[cfg(feature = "conditional_deserialization")]
+    CdField,
 }
 
 impl TlsAttr {
@@ -332,6 +334,8 @@ impl TlsAttr {
             TlsAttr::With(_) => "with",
             TlsAttr::Discriminant(_) => "discriminant",
             TlsAttr::Skip => "skip",
+            #[cfg(feature = "conditional_deserialization")]
+            TlsAttr::CdField => "cd_field",
         }
     }
 
@@ -392,6 +396,7 @@ impl TlsAttr {
                     if let Some(ident) = path.get_ident() {
                         match ident.to_string().to_ascii_lowercase().as_ref() {
                             "skip" => Ok(TlsAttr::Skip),
+                            "cd_field" => Ok(TlsAttr::CdField),
                             _ => Err(syn::Error::new_spanned(
                                 ident,
                                 format!("Unexpected identifier {}", ident),
@@ -446,6 +451,24 @@ fn function_skip(field: &Field) -> Result<bool> {
             (Some(_), TlsAttr::Skip) => Err(syn::Error::new(
                 Span::call_site(),
                 "Attribute `skip` specified more than once",
+            )),
+            (skip, _) => Ok(skip),
+        })?
+        .unwrap_or(false);
+
+    Ok(skip)
+}
+
+/// Process all attributes of a field and return a single, true or false, `cd_field` value.
+/// This function will return an error in the case of multiple `cd` attributes.
+fn function_cd(field: &Field) -> Result<bool> {
+    let skip = TlsAttr::parse_multi(&field.attrs)?
+        .into_iter()
+        .try_fold(None, |skip, attr| match (skip, attr) {
+            (None, TlsAttr::CdField) => Ok(Some(true)),
+            (Some(_), TlsAttr::CdField) => Err(syn::Error::new(
+                Span::call_site(),
+                "Attribute `cd_field` specified more than once",
             )),
             (skip, _) => Ok(skip),
         })?
@@ -1276,19 +1299,68 @@ pub fn conditionally_deserializable(
     impl_conditionally_deserializable(annotated_item).into()
 }
 
+fn set_cd_fields_generic(
+    mut item_struct: ItemStruct,
+    value: proc_macro2::TokenStream,
+) -> ItemStruct {
+    use syn::{
+        parse::{Parse, Parser},
+        AngleBracketedGenericArguments, PathArguments,
+    };
+
+    item_struct.fields.iter_mut().for_each(|field| {
+        if function_cd(field).unwrap() {
+            // We only do this if it's a simple (Path) type
+            if let Type::Path(path) = &mut field.ty {
+                // If there is already an AngleBracketedGenericArguments, we just add the const generic at the end.
+                if let Some(segment) = path.path.segments.last_mut() {
+                    if let PathArguments::AngleBracketed(ref mut argument) = &mut segment.arguments
+                    {
+                        argument.args.push(parse_quote! {value});
+                    } else {
+                        // If there is no AngleBracketedGenericArguments, we create one and add the const generic.
+                        let parser = AngleBracketedGenericArguments::parse;
+                        let angle_bracketed = parser.parse(TokenStream::from(value.clone()));
+                        let angle_bracketed = angle_bracketed.unwrap();
+                        segment.arguments = PathArguments::AngleBracketed(angle_bracketed);
+                        //panic!("Path: {:?}", path);
+                    }
+                }
+            }
+        }
+    });
+    item_struct
+}
+
 #[cfg(feature = "conditional_deserialization")]
 fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStream2 {
+    use core::panic;
+
+    use syn::{
+        parse::{Parse, Parser},
+        AngleBracketedGenericArguments, GenericArgument, PathArguments,
+    };
+
     let deserializable_const_generic: ConstParam = parse_quote! {const IS_DESERIALIZABLE: bool};
     // Add the DESERIALIZABLE const generic to the struct
     annotated_item
         .generics
         .params
         .push(deserializable_const_generic.into());
+    // Look through struct fields and if a field has an `cd_field` attribute,
+    // add the `IS_DESERIALIZABLE` const generic to the field type (set to true
+    // for the deserialize implementation).
+    let item_for_deserialize_impl = set_cd_fields_generic(annotated_item.clone(), quote!(<true>));
+    // Look through struct fields and if a field has an `cd_field` attribute,
+    // add the `IS_DESERIALIZABLE` const generic to the field type (set to the
+    // value IS_DESERIALIZABLE from the struct definition).
+    let annotated_item = set_cd_fields_generic(annotated_item, quote!(<IS_DESERIALIZABLE>));
+
     // Derive both TlsDeserialize and TlsDeserializeBytes
     let deserialize_bytes_implementation =
-        impl_deserialize_bytes(parse_ast(annotated_item.clone().into()).unwrap());
+        impl_deserialize_bytes(parse_ast(item_for_deserialize_impl.clone().into()).unwrap());
     let deserialize_implementation =
-        impl_deserialize(parse_ast(annotated_item.clone().into()).unwrap());
+        impl_deserialize(parse_ast(item_for_deserialize_impl.clone().into()).unwrap());
     let (impl_generics, ty_generics, _) = annotated_item.generics.split_for_impl();
     // Patch generics for use by the type aliases
     let (_deserializable_impl_generics, deserializable_ty_generics) =
