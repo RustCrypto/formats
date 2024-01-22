@@ -1334,13 +1334,6 @@ fn set_cd_fields_generic(
 
 #[cfg(feature = "conditional_deserialization")]
 fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStream2 {
-    use core::panic;
-
-    use syn::{
-        parse::{Parse, Parser},
-        AngleBracketedGenericArguments, GenericArgument, PathArguments,
-    };
-
     let deserializable_const_generic: ConstParam = parse_quote! {const IS_DESERIALIZABLE: bool};
     // Add the DESERIALIZABLE const generic to the struct
     annotated_item
