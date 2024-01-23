@@ -299,7 +299,7 @@ pub struct RecipientEncryptedKey {
 #[allow(missing_docs)]
 pub enum KeyAgreeRecipientIdentifier {
     IssuerAndSerialNumber(IssuerAndSerialNumber),
-    #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
     RKeyId(RecipientKeyIdentifier),
 }
 
