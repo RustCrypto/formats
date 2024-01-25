@@ -1696,6 +1696,16 @@ dependencies = [
 [[package]]
 name = "tls_codec"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d38a1d5fcfa859f0ec2b5e111dc903890bd7dac7f34713232bf9aa4fd7cad7b2"
+dependencies = [
+ "tls_codec_derive 0.4.0",
+ "zeroize",
+]
+
+[[package]]
+name = "tls_codec"
+version = "0.4.1-pre.1"
 dependencies = [
  "anstyle",
  "anstyle-parse",
@@ -1705,18 +1715,29 @@ dependencies = [
  "criterion",
  "regex",
  "serde",
- "tls_codec_derive",
+ "tls_codec_derive 0.4.1-pre.1",
  "zeroize",
 ]
 
 [[package]]
 name = "tls_codec_derive"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8e00e3e7a54e0f1c8834ce72ed49c8487fbd3f801d8cfe1a0ad0640382f8e15"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
- "tls_codec",
+]
+
+[[package]]
+name = "tls_codec_derive"
+version = "0.4.1-pre.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "tls_codec 0.4.1-pre.1",
  "trybuild",
 ]
 
@@ -1980,7 +2001,7 @@ dependencies = [
  "signature",
  "spki",
  "tempfile",
- "tls_codec",
+ "tls_codec 0.4.0",
  "tokio",
  "x509-cert-test-support",
 ]
