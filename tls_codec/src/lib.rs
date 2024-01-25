@@ -198,6 +198,9 @@ pub trait Deserialize: Size {
     }
 }
 
+/// The `DeserializeBytes` trait defines functions to deserialize a byte slice
+/// to a struct or enum. In contrast to [`Deserialize`], this trait operates
+/// directly on byte slices and can return any remaining bytes.
 pub trait DeserializeBytes: Size {
     /// This function deserializes the `bytes` from the provided a `&[u8]`
     /// and returns the populated struct, as well as the remaining slice.
