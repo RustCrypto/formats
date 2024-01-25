@@ -1012,7 +1012,7 @@ fn restrict_conditional_generic(
     let impl_generics = quote! { #impl_generics }
         .to_string()
         // Make string replacement easier by replacing newlines with spaces.
-        .replace("\n", " ")
+        .replace('\n', " ")
         .replace(" const IS_DESERIALIZABLE : bool ", "")
         .replace("<>", "")
         .parse()
@@ -1381,12 +1381,20 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
         Span::call_site(),
     );
     let annotated_item_visibility = annotated_item.vis.clone();
+    let doc_string_deserializable = format!(
+        "Alias for the deserializable version of the [`{}`].",
+        annotated_item_ident
+    );
+    let doc_string_undeserializable = format!(
+        "Alias for the version of the [`{}`] that cannot be deserialized.",
+        annotated_item_ident
+    );
     quote! {
         #annotated_item
 
-        /// Alias for the deserializable version of the [`#annotated_item_ident`].
+        #[doc = #doc_string_deserializable]
         #annotated_item_visibility type #undeserializable_ident #original_ty_generics = #annotated_item_ident #undeserializable_ty_generics;
-        /// Alias for the version of the [`#annotated_item_ident`] that cannot be deserialized.
+        #[doc = #doc_string_undeserializable]
         #annotated_item_visibility type #deserializable_ident #original_ty_generics = #annotated_item_ident #deserializable_ty_generics;
 
         #deserialize_implementation
