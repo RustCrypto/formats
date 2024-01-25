@@ -234,6 +234,32 @@
 //!     DeserializableExampleStruct::tls_deserialize(&mut serialized.as_slice()).unwrap();
 //! # }
 //! ```
+//!
+//! The helper macro `#[tls_codec(cd_field)]` can be used to mark a field as
+//! conditionally deserializable, thus allowing nested conditionally
+//! deserializable structs.
+//!
+//! ```
+//! # #[cfg(all(feature = "conditional_deserialization", feature = "std"))]
+//! # {
+//! use tls_codec::{Serialize, Deserialize};
+//! use tls_codec_derive::{TlsSerialize, TlsSize, conditionally_deserializable};
+//!
+//! #[conditionally_deserializable]
+//! #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+//! struct ExampleStruct {
+//!     a: u8,
+//!     b: u16,
+//! }
+//!
+//! #[conditionally_deserializable]
+//! #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+//! struct NestedExampleStruct {
+//!    #[tls_codec(cd_field)]
+//!    example_struct: ExampleStruct,
+//! }
+//! # }
+//! ```
 
 extern crate proc_macro;
 extern crate proc_macro2;
