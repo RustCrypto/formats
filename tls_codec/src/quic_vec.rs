@@ -558,21 +558,9 @@ mod rw_bytes {
         writer.write_all(&length_bytes)?;
 
         // Now serialize the elements
-        let mut written = 0;
-        written += writer.write(bytes)?;
+        writer.write_all(bytes)?;
 
-        if !cfg!(fuzzing) {
-            debug_assert_eq!(
-                written, content_length,
-                "{content_length} bytes should have been serialized but {written} were written",
-            );
-        }
-        if written != content_length {
-            return Err(Error::EncodingError(format!(
-                "{content_length} bytes should have been serialized but {written} were written",
-            )));
-        }
-        Ok(written + len_len)
+        Ok(content_length + len_len)
     }
 
     impl Serialize for VLBytes {
@@ -610,19 +598,8 @@ mod rw_bytes {
             let mut result = Self {
                 vec: vec![0u8; length],
             };
-            let read = bytes.read(result.vec.as_mut_slice())?;
-            if read == length {
-                return Ok(result);
-            }
-            if !cfg!(fuzzing) {
-                debug_assert_eq!(
-                    read, length,
-                    "Expected to read {length} bytes but {read} were read.",
-                );
-            }
-            Err(Error::DecodingError(format!(
-                "{read} bytes were read but {length} were expected",
-            )))
+            bytes.read_exact(result.vec.as_mut_slice())?;
+            Ok(result)
         }
     }
 
