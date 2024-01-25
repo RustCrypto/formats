@@ -396,6 +396,7 @@ impl TlsAttr {
                     if let Some(ident) = path.get_ident() {
                         match ident.to_string().to_ascii_lowercase().as_ref() {
                             "skip" => Ok(TlsAttr::Skip),
+                            #[cfg(feature = "conditional_deserialization")]
                             "cd_field" => Ok(TlsAttr::CdField),
                             _ => Err(syn::Error::new_spanned(
                                 ident,
@@ -461,6 +462,7 @@ fn function_skip(field: &Field) -> Result<bool> {
 
 /// Process all attributes of a field and return a single, true or false, `cd_field` value.
 /// This function will return an error in the case of multiple `cd` attributes.
+#[cfg(feature = "conditional_deserialization")]
 fn function_cd(field: &Field) -> Result<bool> {
     let skip = TlsAttr::parse_multi(&field.attrs)?
         .into_iter()
@@ -1299,6 +1301,7 @@ pub fn conditionally_deserializable(
     impl_conditionally_deserializable(annotated_item).into()
 }
 
+#[cfg(feature = "conditional_deserialization")]
 fn set_cd_fields_generic(
     mut item_struct: ItemStruct,
     value: proc_macro2::TokenStream,
