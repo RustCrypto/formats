@@ -1378,7 +1378,9 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
     quote! {
         #annotated_item
 
+        /// Alias for the deserializable version of the [`#annotated_item_ident`].
         #annotated_item_visibility type #undeserializable_ident = #annotated_item_ident #undeserializable_ty_generics;
+        /// Alias for the version of the [`#annotated_item_ident`] that cannot be deserialized.
         #annotated_item_visibility type #deserializable_ident = #annotated_item_ident #deserializable_ty_generics;
 
         #deserialize_implementation
