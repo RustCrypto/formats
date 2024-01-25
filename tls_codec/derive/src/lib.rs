@@ -1326,9 +1326,10 @@ fn set_cd_fields_generic(
                         let angle_bracketed = parser.parse(TokenStream::from(value.clone()));
                         let angle_bracketed = angle_bracketed.unwrap();
                         segment.arguments = PathArguments::AngleBracketed(angle_bracketed);
-                        //panic!("Path: {:?}", path);
                     }
                 }
+            } else {
+                panic!("Only simple types are supported for conditional deserialization.");
             }
         }
     });
