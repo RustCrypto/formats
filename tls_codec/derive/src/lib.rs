@@ -1011,6 +1011,8 @@ fn restrict_conditional_generic(
 ) -> (TokenStream2, TokenStream2) {
     let impl_generics = quote! { #impl_generics }
         .to_string()
+        // Make string replacement easier by replacing newlines with spaces.
+        .replace("\n", " ")
         .replace(" const IS_DESERIALIZABLE : bool ", "")
         .replace("<>", "")
         .parse()
@@ -1319,11 +1321,11 @@ fn set_cd_fields_generic(
                 if let Some(segment) = path.path.segments.last_mut() {
                     if let PathArguments::AngleBracketed(ref mut argument) = &mut segment.arguments
                     {
-                        argument.args.push(parse_quote! {value});
+                        argument.args.push(parse_quote! {#value});
                     } else {
                         // If there is no AngleBracketedGenericArguments, we create one and add the const generic.
                         let parser = AngleBracketedGenericArguments::parse;
-                        let angle_bracketed = parser.parse(TokenStream::from(value.clone()));
+                        let angle_bracketed = parser.parse(TokenStream::from(quote!(<#value>)));
                         let angle_bracketed = angle_bracketed.unwrap();
                         segment.arguments = PathArguments::AngleBracketed(angle_bracketed);
                     }
@@ -1339,6 +1341,10 @@ fn set_cd_fields_generic(
 #[cfg(feature = "conditional_deserialization")]
 fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStream2 {
     let deserializable_const_generic: ConstParam = parse_quote! {const IS_DESERIALIZABLE: bool};
+    // Get all the original generics of the annotated item before we modify
+    // them.
+    let original_annotated_item = annotated_item.clone();
+    let (_, original_ty_generics, _) = original_annotated_item.generics.split_for_impl();
     // Add the DESERIALIZABLE const generic to the struct
     annotated_item
         .generics
@@ -1347,11 +1353,11 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
     // Look through struct fields and if a field has an `cd_field` attribute,
     // add the `IS_DESERIALIZABLE` const generic to the field type (set to true
     // for the deserialize implementation).
-    let item_for_deserialize_impl = set_cd_fields_generic(annotated_item.clone(), quote!(<true>));
+    let item_for_deserialize_impl = set_cd_fields_generic(annotated_item.clone(), quote!(true));
     // Look through struct fields and if a field has an `cd_field` attribute,
     // add the `IS_DESERIALIZABLE` const generic to the field type (set to the
     // value IS_DESERIALIZABLE from the struct definition).
-    let annotated_item = set_cd_fields_generic(annotated_item, quote!(<IS_DESERIALIZABLE>));
+    let annotated_item = set_cd_fields_generic(annotated_item, quote!(IS_DESERIALIZABLE));
 
     // Derive both TlsDeserialize and TlsDeserializeBytes
     let deserialize_bytes_implementation =
@@ -1379,9 +1385,9 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
         #annotated_item
 
         /// Alias for the deserializable version of the [`#annotated_item_ident`].
-        #annotated_item_visibility type #undeserializable_ident = #annotated_item_ident #undeserializable_ty_generics;
+        #annotated_item_visibility type #undeserializable_ident #original_ty_generics = #annotated_item_ident #undeserializable_ty_generics;
         /// Alias for the version of the [`#annotated_item_ident`] that cannot be deserialized.
-        #annotated_item_visibility type #deserializable_ident = #annotated_item_ident #deserializable_ty_generics;
+        #annotated_item_visibility type #deserializable_ident #original_ty_generics = #annotated_item_ident #deserializable_ty_generics;
 
         #deserialize_implementation
 
