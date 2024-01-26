@@ -1,6 +1,6 @@
 [package]
 name = "tls_codec_derive"
-version = "0.4.1-pre.1"
+version = "0.4.1"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/tls_codec_derive/"
