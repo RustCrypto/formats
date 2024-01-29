@@ -2427,6 +2427,78 @@ pub mod rfc8894 {
     pub const ID_TRANSACTION_ID: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.16.840.1.113733.1.9.7");
 }
+pub mod tcgtpm {
+    pub const TCG_ORGANIZATION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133");
+    pub const TCG_TCPA_SPEC_VERSION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.1");
+    pub const TCG_SV_TPM_12: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.1.0");
+    pub const TCG_SV_TPM_20: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.1.2");
+    pub const TCG_ATTRIBUTE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2");
+    pub const TCG_AT_TPM_MANUFACTURER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.1");
+    pub const TCG_AT_SECURITY_QUALITIES: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.10");
+    pub const TCG_AT_TPM_PROTECTION_PROFILE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.11");
+    pub const TCG_AT_TPM_SECURITY_TARGET: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.12");
+    pub const TCG_AT_TBB_PROTECTION_PROFILE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.13");
+    pub const TCG_AT_TBB_SECURITY_TARGET: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.14");
+    pub const TCG_AT_TPM_ID_LABEL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.15");
+    pub const TCG_AT_TPM_SPECIFICATION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.16");
+    pub const TCG_AT_TCG_PLATFORM_SPECIFICATION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.17");
+    pub const TCG_AT_TPM_SECURITY_ASSERTIONS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.18");
+    pub const TCG_AT_TBB_SECURITY_ASSERTIONS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.19");
+    pub const TCG_AT_TPM_MODEL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.2");
+    pub const TCG_AT_TPM_VERSION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.3");
+    pub const TCG_AT_PLATFORM_MANUFACTURER: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.4");
+    pub const TCG_AT_PLATFORM_MODEL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.5");
+    pub const TCG_AT_PLATFORM_VERSION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.2.6");
+    pub const TCG_PROTOCOL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.3");
+    pub const TCG_PRT_TPM_ID_PROTOCOL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.3.1");
+    pub const TCG_ALGORITHM: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.4");
+    pub const TCG_ALGORITHM_NULL: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.4.1");
+    pub const TCG_CE: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.23.133.6");
+    pub const TCG_CE_RELEVANT_CREDENTIALS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.6.2");
+    pub const TCG_CE_RELEVANT_MANIFESTS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.6.3");
+    pub const TCG_CE_VIRTUAL_PLATFORM_ATTESTATION_SERVICE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.6.4");
+    pub const TCG_CE_MIGRATION_CONTROLLER_ATTESTATION_SERVICE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.6.5");
+    pub const TCG_CE_MIGRATION_CONTROLLER_REGISTRATION_SERVICE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.6.6");
+    pub const TCG_CE_VIRTUAL_PLATFORM_BACKUP_SERVICE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.6.7");
+    pub const TCG_KP: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.23.133.8");
+    pub const TCG_KP_EK_CERTIFICATE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.8.1");
+    pub const TCG_KP_PLATFORM_CERTIFICATE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.8.2");
+    pub const TCG_KP_AIK_CERTIFICATE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.23.133.8.3");
+}
 pub const DB: super::Database<'static> = super::Database(&[
     (&fips202::NIST_ALGORITHMS, "nistAlgorithms"),
     (&fips202::HASH_ALGS, "hashAlgs"),
@@ -4506,4 +4578,88 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc8894::ID_SENDER_NONCE, "id-senderNonce"),
     (&rfc8894::ID_RECIPIENT_NONCE, "id-recipientNonce"),
     (&rfc8894::ID_TRANSACTION_ID, "id-transactionID"),
+    (&tcgtpm::TCG_ORGANIZATION, "tcgOrganization"),
+    (&tcgtpm::TCG_TCPA_SPEC_VERSION, "tcg-tcpaSpecVersion"),
+    (&tcgtpm::TCG_SV_TPM_12, "tcg-sv-tpm12"),
+    (&tcgtpm::TCG_SV_TPM_20, "tcg-sv-tpm20"),
+    (&tcgtpm::TCG_ATTRIBUTE, "tcg-attribute"),
+    (&tcgtpm::TCG_AT_TPM_MANUFACTURER, "tcg-at-tpmManufacturer"),
+    (
+        &tcgtpm::TCG_AT_SECURITY_QUALITIES,
+        "tcg-at-securityQualities",
+    ),
+    (
+        &tcgtpm::TCG_AT_TPM_PROTECTION_PROFILE,
+        "tcg-at-tpmProtectionProfile",
+    ),
+    (
+        &tcgtpm::TCG_AT_TPM_SECURITY_TARGET,
+        "tcg-at-tpmSecurityTarget",
+    ),
+    (
+        &tcgtpm::TCG_AT_TBB_PROTECTION_PROFILE,
+        "tcg-at-tbbProtectionProfile",
+    ),
+    (
+        &tcgtpm::TCG_AT_TBB_SECURITY_TARGET,
+        "tcg-at-tbbSecurityTarget",
+    ),
+    (&tcgtpm::TCG_AT_TPM_ID_LABEL, "tcg-at-tpmIdLabel"),
+    (&tcgtpm::TCG_AT_TPM_SPECIFICATION, "tcg-at-tpmSpecification"),
+    (
+        &tcgtpm::TCG_AT_TCG_PLATFORM_SPECIFICATION,
+        "tcg-at-tcgPlatformSpecification",
+    ),
+    (
+        &tcgtpm::TCG_AT_TPM_SECURITY_ASSERTIONS,
+        "tcg-at-tpmSecurityAssertions",
+    ),
+    (
+        &tcgtpm::TCG_AT_TBB_SECURITY_ASSERTIONS,
+        "tcg-at-tbbSecurityAssertions",
+    ),
+    (&tcgtpm::TCG_AT_TPM_MODEL, "tcg-at-tpmModel"),
+    (&tcgtpm::TCG_AT_TPM_VERSION, "tcg-at-tpmVersion"),
+    (
+        &tcgtpm::TCG_AT_PLATFORM_MANUFACTURER,
+        "tcg-at-platformManufacturer",
+    ),
+    (&tcgtpm::TCG_AT_PLATFORM_MODEL, "tcg-at-platformModel"),
+    (&tcgtpm::TCG_AT_PLATFORM_VERSION, "tcg-at-platformVersion"),
+    (&tcgtpm::TCG_PROTOCOL, "tcg-protocol"),
+    (&tcgtpm::TCG_PRT_TPM_ID_PROTOCOL, "tcg-prt-tpmIdProtocol"),
+    (&tcgtpm::TCG_ALGORITHM, "tcg-algorithm"),
+    (&tcgtpm::TCG_ALGORITHM_NULL, "tcg-algorithm-null"),
+    (&tcgtpm::TCG_CE, "tcg-ce"),
+    (
+        &tcgtpm::TCG_CE_RELEVANT_CREDENTIALS,
+        "tcg-ce-relevantCredentials",
+    ),
+    (
+        &tcgtpm::TCG_CE_RELEVANT_MANIFESTS,
+        "tcg-ce-relevantManifests",
+    ),
+    (
+        &tcgtpm::TCG_CE_VIRTUAL_PLATFORM_ATTESTATION_SERVICE,
+        "tcg-ce-virtualPlatformAttestationService",
+    ),
+    (
+        &tcgtpm::TCG_CE_MIGRATION_CONTROLLER_ATTESTATION_SERVICE,
+        "tcg-ce-migrationControllerAttestationService",
+    ),
+    (
+        &tcgtpm::TCG_CE_MIGRATION_CONTROLLER_REGISTRATION_SERVICE,
+        "tcg-ce-migrationControllerRegistrationService",
+    ),
+    (
+        &tcgtpm::TCG_CE_VIRTUAL_PLATFORM_BACKUP_SERVICE,
+        "tcg-ce-virtualPlatformBackupService",
+    ),
+    (&tcgtpm::TCG_KP, "tcg-kp"),
+    (&tcgtpm::TCG_KP_EK_CERTIFICATE, "tcg-kp-EKCertificate"),
+    (
+        &tcgtpm::TCG_KP_PLATFORM_CERTIFICATE,
+        "tcg-kp-PlatformCertificate",
+    ),
+    (&tcgtpm::TCG_KP_AIK_CERTIFICATE, "tcg-kp-AIKCertificate"),
 ]);

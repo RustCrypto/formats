@@ -25,6 +25,8 @@ const MDS: &[(&str, &str)] = &[
     // https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
     ("fips202", include_str!("../fips202.md")),
     ("rfc8894", include_str!("../rfc8894.md")),
+    // Created from: https://trustedcomputinggroup.org
+    ("tcgtpm", include_str!("../tcg-tpm.md")),
 ];
 
 // Bases defined in other places.
