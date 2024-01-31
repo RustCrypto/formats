@@ -105,7 +105,7 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
 }
 
 #[inline(always)]
-fn write_length(content_length: usize) -> Result<Vec<u8>, Error> {
+pub fn write_length(content_length: usize) -> Result<Vec<u8>, Error> {
     let len_len = length_encoding_bytes(content_length.try_into()?)?;
     if !cfg!(fuzzing) {
         debug_assert!(len_len <= 8, "Invalid vector len_len {len_len}");
@@ -418,7 +418,7 @@ impl<'a> Size for VLByteSlice<'a> {
 }
 
 #[cfg(feature = "std")]
-mod rw {
+pub(super) mod rw {
     use super::*;
     use crate::{Deserialize, Serialize};
 
@@ -429,9 +429,7 @@ mod rw {
     ///
     /// The length and number of bytes read are returned.
     #[inline]
-    pub(super) fn read_variable_length<R: std::io::Read>(
-        bytes: &mut R,
-    ) -> Result<(usize, usize), Error> {
+    pub fn read_variable_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize), Error> {
         // The length is encoded in the first two bits of the first byte.
         let mut len_len_byte = [0u8; 1];
         if bytes.read(&mut len_len_byte)? == 0 {
