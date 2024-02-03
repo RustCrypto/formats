@@ -86,7 +86,7 @@ pub trait EncodePublicKey {
         Ok(self.to_public_key_der()?.write_der_file(path)?)
     }
 
-    /// Write ASN.1 DER-encoded public key to the given path
+    /// Write ASN.1 PEM-encoded public key to the given path
     #[cfg(all(feature = "pem", feature = "std"))]
     fn write_public_key_pem_file(
         &self,
