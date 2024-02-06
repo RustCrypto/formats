@@ -103,9 +103,9 @@ dependencies = [
 
 [[package]]
 name = "async-signature"
-version = "0.6.0-pre.0"
+version = "0.6.0-pre.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6e5fa81ca8ec32e14b1245e1b64370c3999d8550aae98adac787415303871f8"
+checksum = "c897aed69d0c15f782c3ae93cfc51c97cac8a45c28585f26a31255b1f03312ed"
 dependencies = [
  "signature",
 ]
@@ -219,11 +219,11 @@ dependencies = [
 
 [[package]]
 name = "block-buffer"
-version = "0.11.0-pre.4"
+version = "0.11.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0edadbde8e0243b49d434f9a23ec0590af201f400a34d7d51049284e4a77c568"
+checksum = "3ded684142010808eb980d9974ef794da2bcf97d13396143b1515e9f0fb4a10e"
 dependencies = [
- "crypto-common 0.2.0-pre.4",
+ "crypto-common 0.2.0-pre.5",
 ]
 
 [[package]]
@@ -370,8 +370,8 @@ dependencies = [
  "pkcs5",
  "rand",
  "rsa",
- "sha1 0.11.0-pre.2",
- "sha2 0.11.0-pre.2",
+ "sha1 0.11.0-pre.3",
+ "sha2 0.11.0-pre.3",
  "sha3",
  "signature",
  "spki",
@@ -473,9 +473,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-common"
-version = "0.2.0-pre.4"
+version = "0.2.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "806e4e3731d44f1340b069551225b44c2056c105cad9e67f0c46266db8a3a6b9"
+checksum = "b7aa2ec04f5120b830272a481e8d9d8ba4dda140d2cda59b0f1110d5eb93c38e"
 dependencies = [
  "getrandom",
  "hybrid-array",
@@ -549,24 +549,24 @@ dependencies = [
 
 [[package]]
 name = "digest"
-version = "0.11.0-pre.7"
+version = "0.11.0-pre.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "957713a19ffdda287c63772e607f848512f67ba948f17d8e42cb8d50fd98a786"
+checksum = "065d93ead7c220b85d5b4be4795d8398eac4ff68b5ee63895de0a3c1fb6edf25"
 dependencies = [
- "block-buffer 0.11.0-pre.4",
+ "block-buffer 0.11.0-pre.5",
  "const-oid",
- "crypto-common 0.2.0-pre.4",
+ "crypto-common 0.2.0-pre.5",
  "subtle",
 ]
 
 [[package]]
 name = "ecdsa"
-version = "0.17.0-pre.4"
+version = "0.17.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12cc615703dcff86386153ad5dabbf2544f2ed8fbacb881e1ea440410220660f"
+checksum = "d7e045ee5c360512162782f3d4cb07d2f4ce8c4ef9bf7c77ec16d1cf60b3d5ca"
 dependencies = [
  "der",
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
  "elliptic-curve",
  "rfc6979",
  "signature",
@@ -581,13 +581,13 @@ checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
 
 [[package]]
 name = "elliptic-curve"
-version = "0.14.0-pre.3"
+version = "0.14.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5a28b26e8b4a94186ac649acffa41ba13ca853bd33e44b00fc1c3bd30bfeebe"
+checksum = "4a1775af172997a40c14854c3a9fde9e03e5772084b334b6a0bb18bf7f93ac16"
 dependencies = [
  "base16ct",
  "crypto-bigint",
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
  "ff",
  "group",
  "hybrid-array",
@@ -827,18 +827,18 @@ dependencies = [
 
 [[package]]
 name = "hmac"
-version = "0.13.0-pre.2"
+version = "0.13.0-pre.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fac01891f12d968a2737928c9af2532abdc750e56a890fdbcafdfff17017678"
+checksum = "ffd790a0795ee332ed3e8959e5b177beb70d7112eb7d345428ec17427897d5ce"
 dependencies = [
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
 ]
 
 [[package]]
 name = "hybrid-array"
-version = "0.2.0-rc.1"
+version = "0.2.0-rc.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b700a69c9d992339e82b6cda619873ee17768be06e80ed5ef07c50c50d499ab"
+checksum = "dcda354500b318c287a6b91c1cfbc42edd53d52d259a80783ceb5e3986fca2b2"
 dependencies = [
  "typenum",
  "zeroize",
@@ -1013,13 +1013,12 @@ checksum = "0ab1bc2a289d34bd04a330323ac98a1b4bc82c9d9fcb1e66b63caa84da26b575"
 [[package]]
 name = "p256"
 version = "0.14.0-pre.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00a9c7e3fe894f553af8fb20c69c66ecc35d27f8f30a420ecb59a7ab2d3b43d7"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#5d1c252c2defb5808f55329f3e2955ca72d7f8b5"
 dependencies = [
  "ecdsa",
  "elliptic-curve",
  "primeorder",
- "sha2 0.11.0-pre.2",
+ "sha2 0.11.0-pre.3",
 ]
 
 [[package]]
@@ -1076,11 +1075,11 @@ dependencies = [
  "cms",
  "const-oid",
  "der",
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
  "hex-literal",
  "pkcs5",
  "pkcs8",
- "sha2 0.11.0-pre.2",
+ "sha2 0.11.0-pre.3",
  "spki",
  "whirlpool",
  "x509-cert",
@@ -1132,8 +1131,7 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 [[package]]
 name = "primeorder"
 version = "0.14.0-pre.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "896702506434e6dd77119b240a2b347a25d985f230d014fb1a04207df9434fa6"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#5d1c252c2defb5808f55329f3e2955ca72d7f8b5"
 dependencies = [
  "elliptic-curve",
 ]
@@ -1273,11 +1271,11 @@ checksum = "c707298afce11da2efef2f600116fa93ffa7a032b5d7b628aa17711ec81383ca"
 
 [[package]]
 name = "rfc6979"
-version = "0.5.0-pre.2"
+version = "0.5.0-pre.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ca433f6da88ec508578cac524a1602a437964cf049ffb39f1509e8696d43e79"
+checksum = "045972f2f66b9467a2f6834b7fd0f9b23ca214b4a8700b880c36edb726e96da6"
 dependencies = [
- "hmac 0.13.0-pre.2",
+ "hmac 0.13.0-pre.3",
  "subtle",
 ]
 
@@ -1305,19 +1303,19 @@ dependencies = [
 
 [[package]]
 name = "rsa"
-version = "0.10.0-pre.0"
+version = "0.10.0-pre.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5eb33a74436b840d3c82469b8b31fadcf2acd8c26ea09ba3ec99ff09ba0c2c20"
+checksum = "43e0089f12e510517c97e1adc17d0f8374efbabdd021dfb7645d6619f85633e9"
 dependencies = [
  "const-oid",
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
  "num-bigint-dig",
  "num-integer",
  "num-traits",
  "pkcs1",
  "pkcs8",
  "rand_core",
- "sha2 0.11.0-pre.2",
+ "sha2 0.11.0-pre.3",
  "signature",
  "spki",
  "subtle",
@@ -1529,13 +1527,13 @@ dependencies = [
 
 [[package]]
 name = "sha1"
-version = "0.11.0-pre.2"
+version = "0.11.0-pre.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "301ed48dd873557d86a1843ebcdd511b628f13ec5401a0efa7007dc5a595eb1f"
+checksum = "3885de8cb916f223718c1ccd47a840b91f806333e76002dc5cb3862154b4fed3"
 dependencies = [
  "cfg-if",
  "cpufeatures",
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
 ]
 
 [[package]]
@@ -1551,32 +1549,32 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.11.0-pre.2"
+version = "0.11.0-pre.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e18b939d4051b69874cbdb8f55de6a14ae44b357ccb94bdbd0a2122f8f875a46"
+checksum = "8f33549bf3064b62478926aa89cbfc7c109aab66ae8f0d5d2ef839e482cc30d6"
 dependencies = [
  "cfg-if",
  "cpufeatures",
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
 ]
 
 [[package]]
 name = "sha3"
-version = "0.11.0-pre.2"
+version = "0.11.0-pre.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cecb44e361133b3304a1b3e325a1d8c999339fec8c19762b55e1509a17d6806"
+checksum = "f32c02b9987a647a3d6af14c3e88df86594e4283050d9d8ee3a035df247785b9"
 dependencies = [
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
  "keccak",
 ]
 
 [[package]]
 name = "signature"
-version = "2.3.0-pre.2"
+version = "2.3.0-pre.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "017ea2f120415e4bf9c6177425b40386f207284147564e19d196c7bc90483c08"
+checksum = "1700c22ba9ce32c7b0a1495068a906c3552e7db386af7cf865162e0dea498523"
 dependencies = [
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
  "rand_core",
 ]
 
@@ -1849,10 +1847,9 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 [[package]]
 name = "whirlpool"
 version = "0.11.0-pre.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cec642e8edbd0e3208e65839cb886fe230e084bdc17d9d660c77556fe2f7d1ff"
+source = "git+https://github.com/RustCrypto/hashes.git#e4dcf120629bd6461eff9ca1b281736336de423c"
 dependencies = [
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
 ]
 
 [[package]]
@@ -1975,8 +1972,8 @@ dependencies = [
  "rand",
  "rsa",
  "rstest",
- "sha1 0.11.0-pre.2",
- "sha2 0.11.0-pre.2",
+ "sha1 0.11.0-pre.3",
+ "sha2 0.11.0-pre.3",
  "signature",
  "spki",
  "tempfile",
@@ -2000,14 +1997,14 @@ version = "0.3.0-pre"
 dependencies = [
  "const-oid",
  "der",
- "digest 0.11.0-pre.7",
+ "digest 0.11.0-pre.8",
  "hex-literal",
  "lazy_static",
  "rand",
  "rand_core",
  "rsa",
- "sha1 0.11.0-pre.2",
- "sha2 0.11.0-pre.2",
+ "sha1 0.11.0-pre.3",
+ "sha2 0.11.0-pre.3",
  "signature",
  "spki",
  "x509-cert",
