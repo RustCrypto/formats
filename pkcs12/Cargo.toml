@@ -20,14 +20,14 @@ spki = { version = "=0.8.0-pre.0" }
 x509-cert = { version = "=0.3.0-pre", default-features = false, features = ["pem"] }
 const-oid = { version = "=0.10.0-pre.2", features = ["db"] }
 cms = "=0.3.0-pre"
-digest = { version = "0.11.0-pre.7", features=["alloc"], optional = true }
+digest = { version = "0.11.0-pre.8", features=["alloc"], optional = true }
 zeroize = "1.6.0"
 
 [dev-dependencies]
 hex-literal = "0.4"
 pkcs8 = { version = "=0.11.0-pre.0", features = ["pkcs5", "getrandom"] }
 pkcs5 = {version = "=0.8.0-pre.0", features = ["pbes2", "3des"]}
-sha2 = "=0.11.0-pre.2"
+sha2 = "=0.11.0-pre.3"
 whirlpool = "=0.11.0-pre.2"
 
 [features]

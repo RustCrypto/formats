@@ -21,19 +21,19 @@ spki = { version = "=0.8.0-pre.0", features = ["alloc"] }
 
 # optional dependencies
 arbitrary = { version = "1.3", features = ["derive"], optional = true }
-async-signature = { version = "=0.6.0-pre.0", features = ["digest", "rand_core"], optional = true }
+async-signature = { version = "=0.6.0-pre.1", features = ["digest", "rand_core"], optional = true }
 sha1 = { version = "0.11.0-pre.2", optional = true }
-signature = { version = "=2.3.0-pre.2", features = ["rand_core"], optional = true }
+signature = { version = "=2.3.0-pre.3", features = ["rand_core"], optional = true }
 tls_codec = { version = "0.4.0", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
 hex-literal = "0.4"
 rand = "0.8.5"
-rsa = { version = "=0.10.0-pre.0", features = ["sha2"] }
-ecdsa = { version = "=0.17.0-pre.4", features = ["digest", "pem"] }
+rsa = { version = "=0.10.0-pre.1", features = ["sha2"] }
+ecdsa = { version = "=0.17.0-pre.5", features = ["digest", "pem"] }
 p256 = "=0.14.0-pre.0"
 rstest = "0.18"
-sha2 = { version = "=0.11.0-pre.2", features = ["oid"] }
+sha2 = { version = "=0.11.0-pre.3", features = ["oid"] }
 tempfile = "3.5.0"
 tokio = { version = "1.36.0", features = ["macros", "rt"] }
 x509-cert-test-support = { path = "./test-support" }
