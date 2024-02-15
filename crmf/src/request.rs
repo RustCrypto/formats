@@ -9,7 +9,7 @@ use x509_cert::attr::Attribute;
 use x509_cert::ext::Extensions;
 use x509_cert::name::Name;
 use x509_cert::serial_number::SerialNumber;
-use x509_cert::time::{Time, Validity};
+use x509_cert::time::Time;
 use x509_cert::Version;
 
 use crate::controls::Controls;
