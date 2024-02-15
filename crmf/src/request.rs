@@ -9,7 +9,7 @@ use x509_cert::attr::Attribute;
 use x509_cert::ext::Extensions;
 use x509_cert::name::Name;
 use x509_cert::serial_number::SerialNumber;
-use x509_cert::time::{Time, Validity};
+use x509_cert::time::Time;
 use x509_cert::Version;
 
 use crate::controls::Controls;
@@ -113,7 +113,7 @@ pub struct CertTemplate {
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
     pub issuer: Option<Name>,
     #[asn1(context_specific = "4", tag_mode = "IMPLICIT", optional = "true")]
-    pub validity: Option<Validity>,
+    pub validity: Option<OptionalValidity>,
     #[asn1(context_specific = "5", tag_mode = "EXPLICIT", optional = "true")]
     pub subject: Option<Name>,
     #[asn1(context_specific = "6", tag_mode = "IMPLICIT", optional = "true")]
