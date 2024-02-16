@@ -87,7 +87,7 @@ impl<P: Profile> SerialNumber<P> {
     /// of output from the CSPRNG.
     ///
     /// The specified length does not include the length of the prefix, the maximum length must be
-    /// equal or below 19 (to account for leading sign disembiguation, and the maximum length of 20).
+    /// equal or below 19 (to account for leading sign disambiguation, and the maximum length of 20).
     ///
     /// [ballot 164]: https://cabforum.org/2016/03/31/ballot-164/
     pub fn generate_with_prefix(
