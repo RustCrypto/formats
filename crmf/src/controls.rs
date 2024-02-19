@@ -179,35 +179,35 @@ pub enum EncryptedKey {
 pub struct EncryptedValue {
     #[asn1(
         context_specific = "0",
-        tag_mode = "EXPLICIT",
+        tag_mode = "IMPLICIT",
         constructed = "true",
         optional = "true"
     )]
     pub intended_alg: Option<AlgorithmIdentifierOwned>,
     #[asn1(
         context_specific = "1",
-        tag_mode = "EXPLICIT",
+        tag_mode = "IMPLICIT",
         constructed = "true",
         optional = "true"
     )]
     pub sym_alg: Option<AlgorithmIdentifierOwned>,
     #[asn1(
         context_specific = "2",
-        tag_mode = "EXPLICIT",
+        tag_mode = "IMPLICIT",
         constructed = "false",
         optional = "true"
     )]
     pub enc_sym_key: Option<BitString>,
     #[asn1(
         context_specific = "3",
-        tag_mode = "EXPLICIT",
+        tag_mode = "IMPLICIT",
         constructed = "true",
         optional = "true"
     )]
     pub key_alg: Option<AlgorithmIdentifierOwned>,
     #[asn1(
         context_specific = "4",
-        tag_mode = "EXPLICIT",
+        tag_mode = "IMPLICIT",
         constructed = "false",
         optional = "true"
     )]
