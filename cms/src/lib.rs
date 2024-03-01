@@ -28,8 +28,8 @@ extern crate alloc;
 extern crate std;
 
 pub mod attr;
-pub mod authenveloped_data;
 pub mod authenticated_data;
+pub mod authenveloped_data;
 pub mod builder;
 pub mod cert;
 pub mod compressed_data;

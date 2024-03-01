@@ -3,10 +3,14 @@
 use der::{asn1::SetOfVec, Sequence};
 use x509_cert::attr::Attribute;
 
-use crate::{authenticated_data::MessageAuthenticationCode, content_info::CmsVersion, enveloped_data::{EncryptedContentInfo, OriginatorInfo, RecipientInfos}};
+use crate::{
+    authenticated_data::MessageAuthenticationCode,
+    content_info::CmsVersion,
+    enveloped_data::{EncryptedContentInfo, OriginatorInfo, RecipientInfos},
+};
 
 /// The `AuthEnvelopedData` type is defined in [RFC 5083 Section 4].
-/// 
+///
 /// ```text
 /// AuthEnvelopedData ::= SEQUENCE {
 ///     version CMSVersion,
@@ -17,7 +21,7 @@ use crate::{authenticated_data::MessageAuthenticationCode, content_info::CmsVers
 ///     mac MessageAuthenticationCode,
 ///     unauthAttrs [2] IMPLICIT UnauthAttributes OPTIONAL }
 /// ```
-/// 
+///
 /// [RFC 5083 Section 4]: https://www.rfc-editor.org/rfc/rfc5083#section-4
 #[derive(Clone, Debug, Sequence)]
 #[allow(missing_docs)]
@@ -46,7 +50,7 @@ pub struct AuthEnvelopedData {
         constructed = "true",
         optional = "true"
     )]
-    pub unauth_attrs: Option<UnauthAttributes>
+    pub unauth_attrs: Option<UnauthAttributes>,
 }
 
 /// ```text
