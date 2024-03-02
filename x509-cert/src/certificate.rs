@@ -5,7 +5,7 @@ use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use core::{cmp::Ordering, fmt::Debug};
 use der::asn1::BitString;
-use der::{Decode, Enumerated, Error, ErrorKind, Sequence, Tag, ValueOrd};
+use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd};
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 #[cfg(feature = "pem")]
@@ -116,7 +116,7 @@ pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertificateInner<P: Profile = Rfc5280> {
+pub struct TbsCertificateInner<P: Profile + 'static = Rfc5280> {
     /// The certificate version
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
@@ -149,12 +149,14 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// Returns an error if multiple of these extensions is present. Returns
     /// `Ok(None)` if the extension is not present. Returns a decoding error
     /// if decoding failed. Otherwise returns the extension.
-    pub fn get<'a, T: Decode<'a> + AssociatedOid>(&'a self) -> Result<Option<(bool, T)>, Error> {
+    pub fn get<'a, T: Decode<'a> + AssociatedOid>(
+        &'a self,
+    ) -> Result<Option<(bool, T)>, <T as Decode<'a>>::Error> {
         let mut iter = self.filter::<T>().peekable();
         match iter.next() {
             None => Ok(None),
             Some(item) => match iter.peek() {
-                Some(..) => Err(ErrorKind::Failed.into()),
+                Some(..) => Err(der::Error::from(ErrorKind::Failed).into()),
                 None => Ok(Some(item?)),
             },
         }
@@ -165,7 +167,7 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// Returns a filtered iterator over all the extensions with the OID.
     pub fn filter<'a, T: Decode<'a> + AssociatedOid>(
         &'a self,
-    ) -> impl 'a + Iterator<Item = Result<(bool, T), Error>> {
+    ) -> impl 'a + Iterator<Item = Result<(bool, T), <T as Decode<'a>>::Error>> {
         self.extensions
             .as_deref()
             .unwrap_or(&[])
@@ -194,7 +196,7 @@ pub type Certificate = CertificateInner<Rfc5280>;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct CertificateInner<P: Profile = Rfc5280> {
+pub struct CertificateInner<P: Profile + 'static = Rfc5280> {
     pub tbs_certificate: TbsCertificateInner<P>,
     pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitString,
@@ -223,7 +225,7 @@ impl<P: Profile> CertificateInner<P> {
     /// Parse a chain of pem-encoded certificates from a slice.
     ///
     /// Returns the list of certificates.
-    pub fn load_pem_chain(mut input: &[u8]) -> Result<Vec<Self>, Error> {
+    pub fn load_pem_chain(mut input: &[u8]) -> Result<Vec<Self>, der::Error> {
         fn find_boundary<T>(haystack: &[T], needle: &[T]) -> Option<usize>
         where
             for<'a> &'a [T]: PartialEq,

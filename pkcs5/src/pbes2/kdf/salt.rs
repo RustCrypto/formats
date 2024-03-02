@@ -56,6 +56,8 @@ impl AsRef<[u8]> for Salt {
 }
 
 impl<'a> DecodeValue<'a> for Salt {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let length = usize::try_from(header.length)?;
 

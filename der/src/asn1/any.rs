@@ -4,7 +4,7 @@
 
 use crate::{
     BytesRef, Choice, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, Header, Length,
-    Reader, Result, SliceReader, Tag, Tagged, ValueOrd, Writer,
+    Reader, SliceReader, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -40,7 +40,7 @@ impl<'a> AnyRef<'a> {
     };
 
     /// Create a new [`AnyRef`] from the provided [`Tag`] and DER bytes.
-    pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self> {
+    pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self, Error> {
         let value = BytesRef::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
         Ok(Self { tag, value })
     }
@@ -56,12 +56,12 @@ impl<'a> AnyRef<'a> {
     }
 
     /// Attempt to decode this [`AnyRef`] type into the inner value.
-    pub fn decode_as<T>(self) -> Result<T>
+    pub fn decode_as<T>(self) -> Result<T, <T as DecodeValue<'a>>::Error>
     where
         T: Choice<'a> + DecodeValue<'a>,
     {
         if !T::can_decode(self.tag) {
-            return Err(self.tag.unexpected_error(None));
+            return Err(self.tag.unexpected_error(None).into());
         }
 
         let header = Header {
@@ -71,7 +71,7 @@ impl<'a> AnyRef<'a> {
 
         let mut decoder = SliceReader::new(self.value())?;
         let result = T::decode_value(&mut decoder, header)?;
-        decoder.finish(result)
+        Ok(decoder.finish(result)?)
     }
 
     /// Is this value an ASN.1 `NULL` value?
@@ -81,14 +81,15 @@ impl<'a> AnyRef<'a> {
 
     /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
     /// nested reader and calling the provided argument with it.
-    pub fn sequence<F, T>(self, f: F) -> Result<T>
+    pub fn sequence<F, T, E>(self, f: F) -> Result<T, E>
     where
-        F: FnOnce(&mut SliceReader<'a>) -> Result<T>,
+        F: FnOnce(&mut SliceReader<'a>) -> Result<T, E>,
+        E: From<Error>,
     {
         self.tag.assert_eq(Tag::Sequence)?;
         let mut reader = SliceReader::new(self.value.as_slice())?;
         let result = f(&mut reader)?;
-        reader.finish(result)
+        Ok(reader.finish(result)?)
     }
 }
 
@@ -99,14 +100,18 @@ impl<'a> Choice<'a> for AnyRef<'a> {
 }
 
 impl<'a> Decode<'a> for AnyRef<'a> {
-    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<AnyRef<'a>> {
+    type Error = Error;
+
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<AnyRef<'a>, Error> {
         let header = Header::decode(reader)?;
         Self::decode_value(reader, header)
     }
 }
 
 impl<'a> DecodeValue<'a> for AnyRef<'a> {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+    type Error = Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
         Ok(Self {
             tag: header.tag,
             value: BytesRef::decode_value(reader, header)?,
@@ -115,11 +120,11 @@ impl<'a> DecodeValue<'a> for AnyRef<'a> {
 }
 
 impl EncodeValue for AnyRef<'_> {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         Ok(self.value.len())
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         writer.write(self.value())
     }
 }
@@ -131,7 +136,7 @@ impl Tagged for AnyRef<'_> {
 }
 
 impl ValueOrd for AnyRef<'_> {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         self.value.der_cmp(&other.value)
     }
 }
@@ -145,7 +150,7 @@ impl<'a> From<AnyRef<'a>> for BytesRef<'a> {
 impl<'a> TryFrom<&'a [u8]> for AnyRef<'a> {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<AnyRef<'a>> {
+    fn try_from(bytes: &'a [u8]) -> Result<AnyRef<'a>, Error> {
         AnyRef::from_der(bytes)
     }
 }
@@ -175,7 +180,7 @@ mod allocating {
 
     impl Any {
         /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
-        pub fn new(tag: Tag, bytes: impl Into<Box<[u8]>>) -> Result<Self> {
+        pub fn new(tag: Tag, bytes: impl Into<Box<[u8]>>) -> Result<Self, Error> {
             let value = BytesOwned::new(bytes)?;
 
             // Ensure the tag and value are a valid `AnyRef`.
@@ -189,7 +194,7 @@ mod allocating {
         }
 
         /// Attempt to decode this [`Any`] type into the inner value.
-        pub fn decode_as<'a, T>(&'a self) -> Result<T>
+        pub fn decode_as<'a, T>(&'a self) -> Result<T, <T as DecodeValue<'a>>::Error>
         where
             T: Choice<'a> + DecodeValue<'a>,
         {
@@ -197,7 +202,7 @@ mod allocating {
         }
 
         /// Encode the provided type as an [`Any`] value.
-        pub fn encode_from<T>(msg: &T) -> Result<Self>
+        pub fn encode_from<T>(msg: &T) -> Result<Self, Error>
         where
             T: Tagged + EncodeValue,
         {
@@ -211,9 +216,10 @@ mod allocating {
 
         /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
         /// nested reader and calling the provided argument with it.
-        pub fn sequence<'a, F, T>(&'a self, f: F) -> Result<T>
+        pub fn sequence<'a, F, T, E>(&'a self, f: F) -> Result<T, E>
         where
-            F: FnOnce(&mut SliceReader<'a>) -> Result<T>,
+            F: FnOnce(&mut SliceReader<'a>) -> Result<T, E>,
+            E: From<Error>,
         {
             AnyRef::from(self).sequence(f)
         }
@@ -234,25 +240,29 @@ mod allocating {
     }
 
     impl<'a> Decode<'a> for Any {
-        fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
+        type Error = Error;
+
+        fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Error> {
             let header = Header::decode(reader)?;
             Self::decode_value(reader, header)
         }
     }
 
     impl<'a> DecodeValue<'a> for Any {
-        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        type Error = Error;
+
+        fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
             let value = reader.read_vec(header.length)?;
             Self::new(header.tag, value)
         }
     }
 
     impl EncodeValue for Any {
-        fn value_len(&self) -> Result<Length> {
+        fn value_len(&self) -> Result<Length, Error> {
             Ok(self.value.len())
         }
 
-        fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+        fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
             writer.write(self.value.as_slice())
         }
     }
@@ -271,7 +281,7 @@ mod allocating {
     }
 
     impl ValueOrd for Any {
-        fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
             self.value.der_cmp(&other.value)
         }
     }

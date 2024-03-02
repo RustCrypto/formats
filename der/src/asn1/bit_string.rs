@@ -120,6 +120,8 @@ impl<'a> BitStringRef<'a> {
 impl_any_conversions!(BitStringRef<'a>, 'a);
 
 impl<'a> DecodeValue<'a> for BitStringRef<'a> {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let header = Header {
             tag: header.tag,
@@ -309,6 +311,8 @@ mod allocating {
     impl_any_conversions!(BitString);
 
     impl<'a> DecodeValue<'a> for BitString {
+        type Error = Error;
+
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             let inner_len = (header.length - Length::ONE)?;
             let unused_bits = reader.read_byte()?;
@@ -442,6 +446,8 @@ where
     T::Type: From<bool>,
     T::Type: core::ops::Shl<usize, Output = T::Type>,
 {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let position = reader.position();
         let bits = BitStringRef::decode_value(reader, header)?;

@@ -130,6 +130,8 @@ impl<P: Profile> EncodeValue for SerialNumber<P> {
 }
 
 impl<'a, P: Profile> DecodeValue<'a> for SerialNumber<P> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let inner = Int::decode_value(reader, header)?;
         let serial = Self {

@@ -315,6 +315,8 @@ impl From<&Tag> for u8 {
 }
 
 impl<'a> Decode<'a> for Tag {
+    type Error = Error;
+
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
         reader.read_byte().and_then(Self::try_from)
     }

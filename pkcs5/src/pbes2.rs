@@ -262,6 +262,8 @@ impl Parameters {
 }
 
 impl<'a> DecodeValue<'a> for Parameters {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AnyRef::decode_value(reader, header)?.try_into()
     }
@@ -370,6 +372,8 @@ impl EncryptionScheme {
 }
 
 impl<'a> Decode<'a> for EncryptionScheme {
+    type Error = der::Error;
+
     fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
         AlgorithmIdentifierRef::decode(reader).and_then(TryInto::try_into)
     }

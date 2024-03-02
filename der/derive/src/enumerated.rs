@@ -117,6 +117,8 @@ impl DeriveEnumerated {
 
         quote! {
             impl<#default_lifetime> ::der::DecodeValue<#default_lifetime> for #ident {
+                type Error = ::der::Error;
+
                 fn decode_value<R: ::der::Reader<#default_lifetime>>(
                     reader: &mut R,
                     header: ::der::Header

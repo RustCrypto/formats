@@ -9,7 +9,7 @@ pub(crate) use nested::NestedReader;
 
 use crate::{
     asn1::ContextSpecific, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag,
-    Header, Length, Result, Tag, TagMode, TagNumber,
+    Header, Length, Tag, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -30,7 +30,7 @@ pub trait Reader<'r>: Sized {
     /// the data at the current position in the decoder.
     ///
     /// Does not modify the decoder's state.
-    fn peek_header(&self) -> Result<Header>;
+    fn peek_header(&self) -> Result<Header, Error>;
 
     /// Get the position within the buffer.
     fn position(&self) -> Length;
@@ -42,13 +42,17 @@ pub trait Reader<'r>: Sized {
     /// - `Ok(slice)` on success
     /// - `Err(ErrorKind::Incomplete)` if there is not enough data
     /// - `Err(ErrorKind::Reader)` if the reader can't borrow from the input
-    fn read_slice(&mut self, len: Length) -> Result<&'r [u8]>;
+    fn read_slice(&mut self, len: Length) -> Result<&'r [u8], Error>;
 
     /// Attempt to decode an ASN.1 `CONTEXT-SPECIFIC` field with the
     /// provided [`TagNumber`].
-    fn context_specific<T>(&mut self, tag_number: TagNumber, tag_mode: TagMode) -> Result<Option<T>>
+    fn context_specific<T>(
+        &mut self,
+        tag_number: TagNumber,
+        tag_mode: TagMode,
+    ) -> Result<Option<T>, T::Error>
     where
-        T: DecodeValue<'r> + FixedTag,
+        T: DecodeValue<'r> + FixedTag + 'r,
     {
         Ok(match tag_mode {
             TagMode::Explicit => ContextSpecific::<T>::decode_explicit(self, tag_number)?,
@@ -58,8 +62,8 @@ pub trait Reader<'r>: Sized {
     }
 
     /// Decode a value which impls the [`Decode`] trait.
-    fn decode<T: Decode<'r>>(&mut self) -> Result<T> {
-        T::decode(self).map_err(|e| e.nested(self.position()))
+    fn decode<T: Decode<'r>>(&mut self) -> Result<T, T::Error> {
+        T::decode(self)
     }
 
     /// Return an error with the given [`ErrorKind`], annotating it with
@@ -70,7 +74,7 @@ pub trait Reader<'r>: Sized {
 
     /// Finish decoding, returning the given value if there is no
     /// remaining data, or an error otherwise
-    fn finish<T>(self, value: T) -> Result<T> {
+    fn finish<T>(self, value: T) -> Result<T, Error> {
         if !self.is_finished() {
             Err(ErrorKind::TrailingData {
                 decoded: self.position(),
@@ -100,7 +104,7 @@ pub trait Reader<'r>: Sized {
     /// [`Tag`] value.
     ///
     /// Does not modify the decoder's state.
-    fn peek_tag(&self) -> Result<Tag> {
+    fn peek_tag(&self) -> Result<Tag, Error> {
         match self.peek_byte() {
             Some(byte) => byte.try_into(),
             None => Err(Error::incomplete(self.input_len())),
@@ -108,7 +112,7 @@ pub trait Reader<'r>: Sized {
     }
 
     /// Read a single byte.
-    fn read_byte(&mut self) -> Result<u8> {
+    fn read_byte(&mut self) -> Result<u8, Error> {
         let mut buf = [0];
         self.read_into(&mut buf)?;
         Ok(buf[0])
@@ -120,25 +124,26 @@ pub trait Reader<'r>: Sized {
     /// # Returns
     /// - `Ok(slice)` if there is sufficient data
     /// - `Err(ErrorKind::Incomplete)` if there is not enough data
-    fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8]> {
+    fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8], Error> {
         let input = self.read_slice(buf.len().try_into()?)?;
         buf.copy_from_slice(input);
         Ok(buf)
     }
 
     /// Read nested data of the given length.
-    fn read_nested<'n, T, F>(&'n mut self, len: Length, f: F) -> Result<T>
+    fn read_nested<'n, T, F, E>(&'n mut self, len: Length, f: F) -> Result<T, E>
     where
-        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T>,
+        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T, E>,
+        E: From<Error>,
     {
         let mut reader = NestedReader::new(self, len)?;
         let ret = f(&mut reader)?;
-        reader.finish(ret)
+        Ok(reader.finish(ret)?)
     }
 
     /// Read a byte vector of the given length.
     #[cfg(feature = "alloc")]
-    fn read_vec(&mut self, len: Length) -> Result<Vec<u8>> {
+    fn read_vec(&mut self, len: Length) -> Result<Vec<u8>, Error> {
         let mut bytes = vec![0u8; usize::try_from(len)?];
         self.read_into(&mut bytes)?;
         Ok(bytes)
@@ -152,9 +157,10 @@ pub trait Reader<'r>: Sized {
 
     /// Read an ASN.1 `SEQUENCE`, creating a nested [`Reader`] for the body and
     /// calling the provided closure with it.
-    fn sequence<'n, F, T>(&'n mut self, f: F) -> Result<T>
+    fn sequence<'n, F, T, E>(&'n mut self, f: F) -> Result<T, E>
     where
-        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T>,
+        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T, E>,
+        E: From<Error>,
     {
         let header = Header::decode(self)?;
         header.tag.assert_eq(Tag::Sequence)?;
@@ -162,7 +168,7 @@ pub trait Reader<'r>: Sized {
     }
 
     /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
-    fn tlv_bytes(&mut self) -> Result<&'r [u8]> {
+    fn tlv_bytes(&mut self) -> Result<&'r [u8], Error> {
         let header = self.peek_header()?;
         let header_len = header.encoded_len()?;
         self.read_slice((header_len + header.length)?)

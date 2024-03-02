@@ -562,8 +562,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7e045ee5c360512162782f3d4cb07d2f4ce8c4ef9bf7c77ec16d1cf60b3d5ca"
+source = "git+https://github.com/turbocool3r/signatures?branch=custom-errors#d9d394ad7a87de8943a0eb39b85f316149ebb025"
 dependencies = [
  "der",
  "digest 0.11.0-pre.8",
@@ -1272,8 +1271,7 @@ checksum = "c707298afce11da2efef2f600116fa93ffa7a032b5d7b628aa17711ec81383ca"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "045972f2f66b9467a2f6834b7fd0f9b23ca214b4a8700b880c36edb726e96da6"
+source = "git+https://github.com/turbocool3r/signatures?branch=custom-errors#d9d394ad7a87de8943a0eb39b85f316149ebb025"
 dependencies = [
  "hmac 0.13.0-pre.3",
  "subtle",

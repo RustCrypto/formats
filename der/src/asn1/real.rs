@@ -8,13 +8,15 @@
 )]
 
 use crate::{
-    BytesRef, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, StrRef, Tag,
-    Writer,
+    BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, StrRef,
+    Tag, Writer,
 };
 
 use super::integer::uint::strip_leading_zeroes;
 
 impl<'a> DecodeValue<'a> for f64 {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = BytesRef::decode_value(reader, header)?.as_slice();
 

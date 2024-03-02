@@ -93,6 +93,8 @@ impl<'a> RsaPrivateKey<'a> {
 }
 
 impl<'a> DecodeValue<'a> for RsaPrivateKey<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             let version = Version::decode(reader)?;
@@ -215,6 +217,8 @@ pub struct OtherPrimeInfos<'a> {
 
 #[cfg(not(feature = "alloc"))]
 impl<'a> DecodeValue<'a> for OtherPrimeInfos<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
         // Placeholder decoder that always returns an error.
         // Uses `Tag::Integer` to signal an unsupported version.

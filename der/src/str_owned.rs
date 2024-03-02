@@ -2,8 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    referenced::OwnedToRef, BytesRef, DecodeValue, EncodeValue, Header, Length, Reader, Result,
-    StrRef, Writer,
+    referenced::OwnedToRef, BytesRef, DecodeValue, EncodeValue, Error, Header, Length, Reader,
+    Result, StrRef, Writer,
 };
 use alloc::string::String;
 use core::str;
@@ -69,6 +69,8 @@ impl AsRef<[u8]> for StrOwned {
 }
 
 impl<'a> DecodeValue<'a> for StrOwned {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Self::from_bytes(BytesRef::decode_value(reader, header)?.as_slice())
     }

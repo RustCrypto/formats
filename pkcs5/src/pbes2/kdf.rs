@@ -104,6 +104,8 @@ impl Kdf {
 }
 
 impl<'a> DecodeValue<'a> for Kdf {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AlgorithmIdentifierRef::decode_value(reader, header)?.try_into()
     }
@@ -222,6 +224,7 @@ impl Pbkdf2Params {
 }
 
 impl<'a> DecodeValue<'a> for Pbkdf2Params {
+    type Error = der::Error;
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AnyRef::decode_value(reader, header)?.try_into()
     }
@@ -419,6 +422,8 @@ impl ScryptParams {
 }
 
 impl<'a> DecodeValue<'a> for ScryptParams {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AnyRef::decode_value(reader, header)?.try_into()
     }

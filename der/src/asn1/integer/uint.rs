@@ -14,6 +14,8 @@ macro_rules! impl_encoding_traits {
     ($($uint:ty),+) => {
         $(
             impl<'a> DecodeValue<'a> for $uint {
+                type Error = $crate::Error;
+
                 fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
                     // Integers always encodes as a signed value, unsigned gets a leading 0x00 that
                     // needs to be stripped off. We need to provide room for it.
@@ -114,6 +116,8 @@ impl<'a> UintRef<'a> {
 impl_any_conversions!(UintRef<'a>, 'a);
 
 impl<'a> DecodeValue<'a> for UintRef<'a> {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = BytesRef::decode_value(reader, header)?.as_slice();
         let result = Self::new(decode_to_slice(bytes)?)?;
@@ -160,8 +164,8 @@ mod allocating {
     use crate::{
         ord::OrdIsValueOrd,
         referenced::{OwnedToRef, RefToOwned},
-        BytesOwned, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result,
-        Tag, Writer,
+        BytesOwned, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
+        Result, Tag, Writer,
     };
 
     /// Unsigned arbitrary precision ASN.1 `INTEGER` type.
@@ -206,6 +210,8 @@ mod allocating {
     impl_any_conversions!(Uint);
 
     impl<'a> DecodeValue<'a> for Uint {
+        type Error = Error;
+
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             let bytes = BytesOwned::decode_value(reader, header)?;
             let result = Self::new(decode_to_slice(bytes.as_slice())?)?;

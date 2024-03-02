@@ -2,7 +2,8 @@
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{
-    BytesRef, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, Tag,
+    Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -33,6 +34,8 @@ pub struct SequenceRef<'a> {
 }
 
 impl<'a> DecodeValue<'a> for SequenceRef<'a> {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Ok(Self {
             body: BytesRef::decode_value(reader, header)?,

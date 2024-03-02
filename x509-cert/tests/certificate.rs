@@ -38,6 +38,8 @@ pub struct DeferDecodeCertificate<'a> {
 }
 
 impl<'a> DecodeValue<'a> for DeferDecodeCertificate<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
         header: Header,
@@ -81,6 +83,8 @@ pub struct DeferDecodeTbsCertificate<'a> {
 }
 
 impl<'a> DecodeValue<'a> for DeferDecodeTbsCertificate<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
         header: Header,

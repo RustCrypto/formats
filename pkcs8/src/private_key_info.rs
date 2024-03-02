@@ -171,6 +171,8 @@ impl<'a> PrivateKeyInfo<'a> {
 }
 
 impl<'a> DecodeValue<'a> for PrivateKeyInfo<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
         header: Header,

@@ -1,6 +1,6 @@
 //! ASN.1 DER headers.
 
-use crate::{Decode, DerOrd, Encode, ErrorKind, Length, Reader, Result, Tag, Writer};
+use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Tag, Writer};
 use core::cmp::Ordering;
 
 /// ASN.1 DER headers: tag + length component of TLV-encoded values
@@ -24,6 +24,8 @@ impl Header {
 }
 
 impl<'a> Decode<'a> for Header {
+    type Error = Error;
+
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Header> {
         let tag = Tag::decode(reader)?;
 
