@@ -9,7 +9,7 @@ use der::pem;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Error type
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum Error {
     /// ASN.1 DER-related errors.

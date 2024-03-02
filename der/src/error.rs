@@ -11,17 +11,24 @@ use crate::asn1::ObjectIdentifier;
 #[cfg(feature = "pem")]
 use crate::pem;
 
+#[cfg(feature = "std")]
+use alloc::boxed::Box;
+
 /// Result type.
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Error type.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Debug)]
 pub struct Error {
     /// Kind of error.
     kind: ErrorKind,
 
     /// Position inside of message where error occurred.
     position: Option<Length>,
+
+    /// Source of the error.
+    #[cfg(feature = "std")]
+    source: Option<Box<dyn std::error::Error + Send + Sync + 'static>>,
 }
 
 impl Error {
@@ -30,6 +37,8 @@ impl Error {
         Error {
             kind,
             position: Some(position),
+            #[cfg(feature = "std")]
+            source: None,
         }
     }
 
@@ -48,13 +57,25 @@ impl Error {
     }
 
     /// Get the [`ErrorKind`] which occurred.
-    pub fn kind(self) -> ErrorKind {
+    pub fn kind(&self) -> ErrorKind {
         self.kind
     }
 
     /// Get the position inside of the message where the error occurred.
-    pub fn position(self) -> Option<Length> {
+    pub fn position(&self) -> Option<Length> {
         self.position
+    }
+
+    /// Set the source of this error. Useful for e.g. propagating an additional error with
+    /// [`ErrorKind::Value`].
+    ///
+    /// Overwrites any previously set source.
+    #[cfg(feature = "std")]
+    pub fn set_source<E>(&mut self, source: E)
+    where
+        E: std::error::Error + Send + Sync + 'static,
+    {
+        self.source = Some(Box::new(source));
     }
 
     /// For errors occurring inside of a nested message, extend the position
@@ -66,12 +87,11 @@ impl Error {
         Self {
             kind: self.kind,
             position,
+            #[cfg(feature = "std")]
+            source: self.source,
         }
     }
 }
-
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -85,11 +105,20 @@ impl fmt::Display for Error {
     }
 }
 
+impl Eq for Error {}
+impl PartialEq for Error {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind && self.position == other.position
+    }
+}
+
 impl From<ErrorKind> for Error {
     fn from(kind: ErrorKind) -> Error {
         Error {
             kind,
             position: None,
+            #[cfg(feature = "std")]
+            source: None,
         }
     }
 }
@@ -101,10 +130,12 @@ impl From<Infallible> for Error {
 }
 
 impl From<TryFromIntError> for Error {
-    fn from(_: TryFromIntError) -> Error {
+    fn from(_err: TryFromIntError) -> Error {
         Error {
             kind: ErrorKind::Overflow,
             position: None,
+            #[cfg(feature = "std")]
+            source: Some(Box::new(_err)),
         }
     }
 }
@@ -114,6 +145,8 @@ impl From<Utf8Error> for Error {
         Error {
             kind: ErrorKind::Utf8(err),
             position: None,
+            #[cfg(feature = "std")]
+            source: Some(Box::new(err)),
         }
     }
 }
@@ -155,6 +188,15 @@ impl From<std::io::Error> for Error {
 impl From<time::error::ComponentRange> for Error {
     fn from(_: time::error::ComponentRange) -> Error {
         ErrorKind::DateTime.into()
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.source
+            .as_ref()
+            .map(|source| source.as_ref() as &(dyn std::error::Error + 'static))
     }
 }
 

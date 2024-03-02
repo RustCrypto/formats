@@ -29,6 +29,9 @@
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 extern crate alloc;
 
+#[cfg(feature = "std")]
+extern crate std;
+
 mod error;
 
 pub mod pbes1;
