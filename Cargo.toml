@@ -67,4 +67,4 @@ whirlpool = { git = "https://github.com/RustCrypto/hashes.git" }
 
 # https://github.com/RustCrypto/formats/pull/1055
 # https://github.com/RustCrypto/signatures/pull/809
-ecdsa = { git = "https://github.com/turbocool3r/signatures", branch = "custom-errors" }
+ecdsa = { git = "https://github.com/RustCrypto/signatures" }
