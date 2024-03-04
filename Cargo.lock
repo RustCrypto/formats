@@ -562,7 +562,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.5"
-source = "git+https://github.com/turbocool3r/signatures?branch=custom-errors#d9d394ad7a87de8943a0eb39b85f316149ebb025"
+source = "git+https://github.com/RustCrypto/signatures?branch=master#c2f3ee6497d8ab8069c149c5c922a342eedd3334"
 dependencies = [
  "der",
  "digest 0.11.0-pre.8",
@@ -1271,7 +1271,7 @@ checksum = "c707298afce11da2efef2f600116fa93ffa7a032b5d7b628aa17711ec81383ca"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.3"
-source = "git+https://github.com/turbocool3r/signatures?branch=custom-errors#d9d394ad7a87de8943a0eb39b85f316149ebb025"
+source = "git+https://github.com/RustCrypto/signatures?branch=master#c2f3ee6497d8ab8069c149c5c922a342eedd3334"
 dependencies = [
  "hmac 0.13.0-pre.3",
  "subtle",
