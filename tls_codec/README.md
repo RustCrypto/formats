@@ -5,10 +5,10 @@
 [![][tls_codec-ci]][tls_codec-ci-link]
 ![Rust Version][rustc-image]
 
-|                                        | crates.io                                      | docs.rs                                                      |
-| -------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
-| [tls_codec](./tls_codec)               | [![][tls_codec]][tls_codec-link]               | [![Docs][tls_codec_docs]][tls_codec_docs-link]               |
-| [tls_codec_derive](./tls_codec_derive) | [![][tls_codec_derive]][tls_codec_derive-link] | [![Docs][tls_codec_derive_docs]][tls_codec_derive_docs-link] |
+|                    | crates.io                                      | docs.rs                                                      |
+| ------------------ | ---------------------------------------------- | ------------------------------------------------------------ |
+| `tls_codec`        | [![][tls_codec]][tls_codec-link]               | [![Docs][tls_codec_docs]][tls_codec_docs-link]               |
+| `tls_codec_derive` | [![][tls_codec_derive]][tls_codec_derive-link] | [![Docs][tls_codec_derive_docs]][tls_codec_derive_docs-link] |
 
 This crate implements the TLS codec as defined in [RFC 8446]
 as well as some extensions required by [MLS].
