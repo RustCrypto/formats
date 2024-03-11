@@ -47,6 +47,8 @@ builder = ["async-signature", "std", "sha1/default", "signature"]
 hazmat = []
 pem = ["der/pem", "spki/pem"]
 sct = ["dep:tls_codec"]
+fingerprint = ["spki/fingerprint"]
+base64 = ["spki/base64"]
 
 [package.metadata.docs.rs]
 all-features = true
