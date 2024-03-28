@@ -30,7 +30,7 @@ tempfile = "3"
 
 [features]
 alloc = ["der/alloc", "der/zeroize", "spki/alloc"]
-std = ["alloc", "der/std", "pkcs5?/std", "spki/std"]
+std = ["alloc", "der/std", "spki/std"]
 
 3des = ["encryption", "pkcs5/3des"]
 des-insecure = ["encryption", "pkcs5/des-insecure"]

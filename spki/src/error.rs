@@ -10,7 +10,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 use der::pem;
 
 /// Error type
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum Error {
     /// Algorithm parameters are missing.
@@ -65,11 +65,4 @@ impl From<pem::Error> for Error {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::Asn1(err) => Some(err),
-            _ => None,
-        }
-    }
-}
+impl std::error::Error for Error {}

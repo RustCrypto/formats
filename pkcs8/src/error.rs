@@ -9,7 +9,7 @@ use der::pem;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Error type
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum Error {
     /// ASN.1 DER-related errors.
@@ -48,17 +48,7 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::Asn1(err) => Some(err),
-            #[cfg(feature = "pkcs5")]
-            Error::EncryptedPrivateKey(err) => Some(err),
-            Error::PublicKey(err) => Some(err),
-            _ => None,
-        }
-    }
-}
+impl std::error::Error for Error {}
 
 impl From<der::Error> for Error {
     fn from(err: der::Error) -> Error {

@@ -3,13 +3,10 @@
 #![cfg(feature = "pkcs5")]
 
 use hex_literal::hex;
-use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfo};
+use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfo, PrivateKeyInfo};
 
 #[cfg(feature = "alloc")]
 use der::Encode;
-
-#[cfg(feature = "encryption")]
-use pkcs8::PrivateKeyInfo;
 
 #[cfg(feature = "pem")]
 use der::EncodePem;
