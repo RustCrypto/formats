@@ -354,7 +354,7 @@ fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<(), Error> {
 /// Write a file containing secret data to the filesystem
 // TODO(tarcieri): permissions hardening on Windows
 #[cfg(all(not(unix), feature = "std", feature = "zeroize"))]
-fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<()> {
+fn write_secret_file(path: impl AsRef<Path>, data: &[u8]) -> Result<(), Error> {
     fs::write(path, data)?;
     Ok(())
 }
