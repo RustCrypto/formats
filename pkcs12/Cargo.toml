@@ -7,7 +7,8 @@ Personal Information Exchange Syntax v1.1 (RFC7292)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/pkcs12"
+homepage = "https://github.com/RustCrypto/formats/tree/master/pkcs12"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "pkcs", "private"]
 readme = "README.md"

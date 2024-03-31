@@ -7,7 +7,8 @@ contains secrets (e.g. cryptographic keys)
 version = "0.3.0-pre.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/serdect"
+homepage = "https://github.com/RustCrypto/formats/tree/master/serdect"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parsing"]
 keywords = ["crypto", "constant-time", "serde"]
 readme = "README.md"

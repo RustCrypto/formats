@@ -7,7 +7,8 @@ described in RFC 4211
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/crmf"
+homepage = "https://github.com/RustCrypto/formats/tree/master/crmf"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto"]
 readme = "README.md"

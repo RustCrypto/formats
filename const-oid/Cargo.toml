@@ -9,7 +9,8 @@ as defined in ITU X.660, with support for BER/DER encoding/decoding as well as
 heapless no_std (i.e. embedded) support
 """
 documentation = "https://docs.rs/const-oid"
-repository = "https://github.com/RustCrypto/formats/tree/master/const-oid"
+homepage = "https://github.com/RustCrypto/formats/tree/master/const-oid"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["iso", "iec", "itu", "oid"]
 readme = "README.md"

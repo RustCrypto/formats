@@ -8,7 +8,8 @@ support for PKCS#8v2 asymmetric key packages (RFC 5958)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/pkcs8"
+homepage = "https://github.com/RustCrypto/formats/tree/master/pkcs8"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "pkcs", "private"]
 readme = "README.md"

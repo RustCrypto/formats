@@ -7,7 +7,8 @@ associated AlgorithmIdentifiers (i.e. OIDs)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/spki"
+homepage = "https://github.com/RustCrypto/formats/tree/master/spki"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "x509"]
 readme = "README.md"

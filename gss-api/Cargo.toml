@@ -7,7 +7,8 @@ Interface (GSS-API)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/gss-api"
+homepage = "https://github.com/RustCrypto/formats/tree/master/gss-api"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "authentication", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "gssapi", "kerberos", "krb5"]
 readme = "README.md"
