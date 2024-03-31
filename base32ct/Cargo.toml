@@ -9,7 +9,8 @@ constant-time operation and embedded-friendly no_std support
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/base32ct"
-repository = "https://github.com/RustCrypto/formats/tree/master/base32ct"
+homepage = "https://github.com/RustCrypto/formats/tree/master/base32ct"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto"]
 readme = "README.md"

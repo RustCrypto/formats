@@ -8,7 +8,8 @@ Elliptic-Curve-Point-to-Octet-String encoding
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/sec1"
+homepage = "https://github.com/RustCrypto/formats/tree/master/sec1"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "elliptic-curve", "secg"]
 readme = "README.md"

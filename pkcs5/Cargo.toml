@@ -7,7 +7,8 @@ Password-Based Cryptography Specification Version 2.1 (RFC 8018)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/pkcs5"
+homepage = "https://github.com/RustCrypto/formats/tree/master/pkcs5"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "key", "pkcs", "password"]
 readme = "README.md"

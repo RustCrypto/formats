@@ -7,7 +7,8 @@ Pure Rust implementation of the Timestamping Protocol as described in RFC 3161.
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/x509-tsp"
+homepage = "https://github.com/RustCrypto/formats/tree/master/x509-tsp"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "tsp", "timestamp"]
 readme = "README.md"

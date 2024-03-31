@@ -7,7 +7,8 @@ format as described in RFC 5280
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/x509-cert"
+homepage = "https://github.com/RustCrypto/formats/tree/master/x509-cert"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto"]
 readme = "README.md"

@@ -9,7 +9,8 @@ any usages of data-dependent branches/LUTs and thereby provides portable
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/base16ct"
-repository = "https://github.com/RustCrypto/formats/tree/master/base16ct"
+homepage = "https://github.com/RustCrypto/formats/tree/master/base16ct"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "hex", "hexadecimal"]
 readme = "README.md"
