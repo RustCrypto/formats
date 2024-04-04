@@ -36,6 +36,7 @@ toml = "0.8"
 [features]
 default = ["alloc"]
 alloc = ["base16ct/alloc", "serde/alloc"]
+derive = ["serde/derive"]
 
 [package.metadata.docs.rs]
 all-features = true
