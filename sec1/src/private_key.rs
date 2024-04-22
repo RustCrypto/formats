@@ -95,6 +95,8 @@ impl<'a> EcPrivateKey<'a> {
 }
 
 impl<'a> DecodeValue<'a> for EcPrivateKey<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             if u8::decode(reader)? != VERSION {

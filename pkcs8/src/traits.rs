@@ -138,7 +138,7 @@ pub trait EncodePrivateKey {
         Ok(self.to_pkcs8_der()?.write_der_file(path)?)
     }
 
-    /// Write ASN.1 DER-encoded PKCS#8 private key to the given path
+    /// Write ASN.1 PEM-encoded PKCS#8 private key to the given path
     #[cfg(all(feature = "pem", feature = "std"))]
     fn write_pkcs8_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         let doc = self.to_pkcs8_der()?;

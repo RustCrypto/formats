@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.65.0 # MSRV
+          - 1.75.0 # MSRV
           - stable
         target:
           - thumbv7em-none-eabi
@@ -42,6 +42,9 @@ jobs:
       - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features arbitrary,default,std,builder
 
   minimal-versions:
+    # Temporarily disabled until pkcs8 0.8.0-pre gets published
+    # see #1196
+    if: false
     uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
     with:
         working-directory: ${{ github.workflow }}
@@ -54,7 +57,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.65.0 # MSRV
+          - 1.75.0 # MSRV
           - stable
     steps:
       - uses: actions/checkout@v4

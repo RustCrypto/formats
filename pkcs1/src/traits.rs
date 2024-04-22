@@ -119,7 +119,7 @@ pub trait EncodeRsaPrivateKey {
         Ok(self.to_pkcs1_der()?.write_der_file(path)?)
     }
 
-    /// Write ASN.1 DER-encoded PKCS#1 private key to the given path.
+    /// Write ASN.1 PEM-encoded PKCS#1 private key to the given path.
     #[cfg(all(feature = "pem", feature = "std"))]
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         let doc = self.to_pkcs1_der()?;
@@ -146,7 +146,7 @@ pub trait EncodeRsaPublicKey {
         Ok(self.to_pkcs1_der()?.write_der_file(path)?)
     }
 
-    /// Write ASN.1 DER-encoded public key to the given path.
+    /// Write ASN.1 PEM-encoded public key to the given path.
     #[cfg(all(feature = "pem", feature = "std"))]
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         let doc = self.to_pkcs1_der()?;

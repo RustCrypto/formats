@@ -33,8 +33,10 @@ pub struct AlgorithmIdentifier<Params> {
 
 impl<'a, Params> DecodeValue<'a> for AlgorithmIdentifier<Params>
 where
-    Params: Choice<'a>,
+    Params: Choice<'a, Error = der::Error>,
 {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
@@ -60,11 +62,14 @@ where
     }
 }
 
-impl<'a, Params> Sequence<'a> for AlgorithmIdentifier<Params> where Params: Choice<'a> + Encode {}
+impl<'a, Params> Sequence<'a> for AlgorithmIdentifier<Params> where
+    Params: Choice<'a, Error = der::Error> + Encode
+{
+}
 
 impl<'a, Params> TryFrom<&'a [u8]> for AlgorithmIdentifier<Params>
 where
-    Params: Choice<'a> + Encode,
+    Params: Choice<'a, Error = der::Error> + Encode,
 {
     type Error = Error;
 
@@ -101,7 +106,7 @@ impl<Params> AlgorithmIdentifier<Params> {
         if self.oid == expected_oid {
             Ok(expected_oid)
         } else {
-            Err(Error::OidUnknown { oid: expected_oid })
+            Err(Error::OidUnknown { oid: self.oid })
         }
     }
 }
@@ -117,7 +122,7 @@ impl<'a> AlgorithmIdentifierRef<'a> {
         if actual_oid == expected_oid {
             Ok(actual_oid)
         } else {
-            Err(Error::OidUnknown { oid: expected_oid })
+            Err(Error::OidUnknown { oid: actual_oid })
         }
     }
 

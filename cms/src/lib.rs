@@ -29,6 +29,7 @@ extern crate std;
 
 pub mod attr;
 pub mod authenticated_data;
+pub mod authenveloped_data;
 pub mod builder;
 pub mod cert;
 pub mod compressed_data;
@@ -38,3 +39,4 @@ pub mod encrypted_data;
 pub mod enveloped_data;
 pub mod revocation;
 pub mod signed_data;
+pub mod timestamped_data;

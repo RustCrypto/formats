@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.65.0 # MSRV
+          - 1.71.0 # MSRV
           - stable
         target:
           - thumbv7em-none-eabi
@@ -38,9 +38,10 @@ jobs:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
       - uses: RustCrypto/actions/cargo-hack-install@master
-      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features std
+      - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features getrandom,std
 
   minimal-versions:
+    if: false # TODO: temp disabled due to unpublished prerelease dependencies
     uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
     with:
         working-directory: ${{ github.workflow }}
@@ -50,7 +51,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.65.0 # MSRV
+          - 1.71.0 # MSRV
           - stable
     steps:
       - uses: actions/checkout@v4

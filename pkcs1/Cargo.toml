@@ -1,28 +1,29 @@
 [package]
 name = "pkcs1"
-version = "0.7.5"
+version = "0.8.0-pre.0"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #1:
 RSA Cryptography Specifications Version 2.2 (RFC 8017)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/pkcs1"
+homepage = "https://github.com/RustCrypto/formats/tree/master/pkcs1"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "pem", "pkcs", "rsa"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.71"
 
 [dependencies]
-der = { version = "0.7", features = ["oid"] }
-spki = { version = "0.7" }
+der = { version = "=0.8.0-pre.0", features = ["oid"] }
+spki = { version = "=0.8.0-pre.0" }
 
 # optional dependencies
-pkcs8 = { version = "0.10", optional = true, default-features = false }
+pkcs8 = { version = "=0.11.0-pre.0", optional = true, default-features = false }
 
 [dev-dependencies]
-const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
+const-oid = { version = "=0.10.0-pre.2", features = ["db"] }
 hex-literal = "0.4"
 tempfile = "3"
 

@@ -49,6 +49,8 @@ macro_rules! impl_newtype {
         }
 
         impl<'a> ::der::DecodeValue<'a> for $newtype {
+            type Error = ::der::Error;
+
             fn decode_value<R: ::der::Reader<'a>>(
                 decoder: &mut R,
                 header: ::der::Header,

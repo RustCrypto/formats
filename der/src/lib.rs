@@ -110,6 +110,8 @@
 //! }
 //!
 //! impl<'a> DecodeValue<'a> for AlgorithmIdentifier<'a> {
+//!     type Error = der::Error;
+//!
 //!     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
 //!        // The `der::Decoder::Decode` method can be used to decode any
 //!        // type which impls the `Decode` trait, which is impl'd for
@@ -337,6 +339,7 @@ mod datetime;
 mod decode;
 mod encode;
 mod encode_ref;
+mod encoding_rules;
 mod error;
 mod header;
 mod length;
@@ -359,6 +362,7 @@ pub use crate::{
     decode::{Decode, DecodeOwned, DecodeValue},
     encode::{Encode, EncodeValue},
     encode_ref::{EncodeRef, EncodeValueRef},
+    encoding_rules::EncodingRules,
     error::{Error, ErrorKind, Result},
     header::Header,
     length::{IndefiniteLength, Length},

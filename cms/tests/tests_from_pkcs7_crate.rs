@@ -9,7 +9,7 @@ use pkcs5::pbes2::Pbkdf2Params;
 
 #[test]
 fn cms_decode_cert_example() {
-    let enc_ci = include_bytes!("../../pkcs7/tests/examples/certData.bin");
+    let enc_ci = include_bytes!("../tests/examples/certData.bin");
     let ci = ContentInfo::from_der(enc_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_DATA);
     assert_eq!(ci.content.value().len(), 781);
@@ -19,7 +19,7 @@ fn cms_decode_cert_example() {
 
 #[test]
 fn cms_decode_encrypted_key_example() {
-    let enc_ci = include_bytes!("../../pkcs7/tests/examples/keyEncryptedData.bin");
+    let enc_ci = include_bytes!("../tests/examples/keyEncryptedData.bin");
     let ci = ContentInfo::from_der(enc_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENCRYPTED_DATA);
     let data = EncryptedData::from_der(ci.content.to_der().unwrap().as_slice()).unwrap();
@@ -40,7 +40,7 @@ fn cms_decode_encrypted_key_example() {
         .to_der()
         .unwrap();
     let pbkdf2 = Pbkdf2Params::from_der(enc_pbkdf2.as_slice()).unwrap();
-    assert_eq!(hex!("ad2d4b4e87b34d67"), pbkdf2.salt);
+    assert_eq!(hex!("ad2d4b4e87b34d67"), pbkdf2.salt.as_ref());
     assert_eq!(2048, pbkdf2.iteration_count);
     assert_eq!(
         552u32,
@@ -54,8 +54,7 @@ fn cms_decode_encrypted_key_example() {
 
 #[test]
 fn cms_decode_signed_mdm_example() {
-    let der_signed_data_in_ci =
-        include_bytes!("../../pkcs7/tests/examples/apple_mdm_signature_der.bin");
+    let der_signed_data_in_ci = include_bytes!("../tests/examples/apple_mdm_signature_der.bin");
     let ci = ContentInfo::from_der(der_signed_data_in_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
@@ -81,7 +80,7 @@ fn cms_decode_signed_mdm_example() {
 
 #[test]
 fn cms_decode_signed_scep_example() {
-    let der_signed_data_in_ci = include_bytes!("../../pkcs7/tests/examples/scep_der.bin");
+    let der_signed_data_in_ci = include_bytes!("../tests/examples/scep_der.bin");
     let ci = ContentInfo::from_der(der_signed_data_in_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 
@@ -108,7 +107,7 @@ fn cms_decode_signed_scep_example() {
 
 #[test]
 fn cms_decode_signed_der() {
-    let der_signed_data_in_ci = include_bytes!("../../pkcs7/tests/examples/cms_der.bin");
+    let der_signed_data_in_ci = include_bytes!("../tests/examples/cms_der.bin");
     let ci = ContentInfo::from_der(der_signed_data_in_ci).unwrap();
     assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_SIGNED_DATA);
 

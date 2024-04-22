@@ -1,6 +1,6 @@
 //! Reader type for consuming nested TLV records within a DER document.
 
-use crate::{reader::Reader, Error, ErrorKind, Header, Length, Result};
+use crate::{reader::Reader, EncodingRules, Error, ErrorKind, Header, Length, Result};
 
 /// Reader type used by [`Reader::read_nested`].
 pub struct NestedReader<'i, R> {
@@ -51,6 +51,10 @@ impl<'i, 'r, R: Reader<'r>> NestedReader<'i, R> {
 }
 
 impl<'i, 'r, R: Reader<'r>> Reader<'r> for NestedReader<'i, R> {
+    fn encoding_rules(&self) -> EncodingRules {
+        self.inner.encoding_rules()
+    }
+
     fn input_len(&self) -> Length {
         self.input_len
     }

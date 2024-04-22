@@ -1,12 +1,15 @@
 //! Slice reader.
 
-use crate::{BytesRef, Decode, Error, ErrorKind, Header, Length, Reader, Result, Tag};
+use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Header, Length, Reader, Tag};
 
 /// [`Reader`] which consumes an input byte slice.
 #[derive(Clone, Debug)]
 pub struct SliceReader<'a> {
     /// Byte slice being decoded.
     bytes: BytesRef<'a>,
+
+    /// Encoding rules to apply when decoding the input.
+    encoding_rules: EncodingRules,
 
     /// Did the decoding operation fail?
     failed: bool,
@@ -17,9 +20,10 @@ pub struct SliceReader<'a> {
 
 impl<'a> SliceReader<'a> {
     /// Create a new slice reader for the given byte slice.
-    pub fn new(bytes: &'a [u8]) -> Result<Self> {
+    pub fn new(bytes: &'a [u8]) -> Result<Self, Error> {
         Ok(Self {
             bytes: BytesRef::new(bytes)?,
+            encoding_rules: EncodingRules::default(),
             failed: false,
             position: Length::ZERO,
         })
@@ -44,7 +48,7 @@ impl<'a> SliceReader<'a> {
 
     /// Obtain the remaining bytes in this slice reader from the current cursor
     /// position.
-    fn remaining(&self) -> Result<&'a [u8]> {
+    fn remaining(&self) -> Result<&'a [u8], Error> {
         if self.is_failed() {
             Err(ErrorKind::Failed.at(self.position))
         } else {
@@ -57,6 +61,10 @@ impl<'a> SliceReader<'a> {
 }
 
 impl<'a> Reader<'a> for SliceReader<'a> {
+    fn encoding_rules(&self) -> EncodingRules {
+        self.encoding_rules
+    }
+
     fn input_len(&self) -> Length {
         self.bytes.len()
     }
@@ -67,7 +75,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
             .and_then(|bytes| bytes.first().cloned())
     }
 
-    fn peek_header(&self) -> Result<Header> {
+    fn peek_header(&self) -> Result<Header, Error> {
         Header::decode(&mut self.clone())
     }
 
@@ -75,7 +83,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         self.position
     }
 
-    fn read_slice(&mut self, len: Length) -> Result<&'a [u8]> {
+    fn read_slice(&mut self, len: Length) -> Result<&'a [u8], Error> {
         if self.is_failed() {
             return Err(self.error(ErrorKind::Failed));
         }
@@ -92,14 +100,14 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         }
     }
 
-    fn decode<T: Decode<'a>>(&mut self) -> Result<T> {
+    fn decode<T: Decode<'a>>(&mut self) -> Result<T, T::Error> {
         if self.is_failed() {
-            return Err(self.error(ErrorKind::Failed));
+            return Err(self.error(ErrorKind::Failed).into());
         }
 
         T::decode(self).map_err(|e| {
             self.failed = true;
-            e.nested(self.position)
+            e
         })
     }
 
@@ -108,7 +116,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         kind.at(self.position)
     }
 
-    fn finish<T>(self, value: T) -> Result<T> {
+    fn finish<T>(self, value: T) -> Result<T, Error> {
         if self.is_failed() {
             Err(ErrorKind::Failed.at(self.position))
         } else if !self.is_finished() {

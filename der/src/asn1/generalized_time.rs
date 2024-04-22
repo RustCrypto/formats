@@ -4,15 +4,13 @@
 use crate::{
     datetime::{self, DateTime},
     ord::OrdIsValueOrd,
-    DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
+    Writer,
 };
 use core::time::Duration;
 
 #[cfg(feature = "std")]
-use {
-    crate::{asn1::AnyRef, Error},
-    std::time::SystemTime,
-};
+use {crate::asn1::AnyRef, std::time::SystemTime};
 
 #[cfg(feature = "time")]
 use time::PrimitiveDateTime;
@@ -77,6 +75,8 @@ impl GeneralizedTime {
 impl_any_conversions!(GeneralizedTime);
 
 impl<'a> DecodeValue<'a> for GeneralizedTime {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         if Self::LENGTH != usize::try_from(header.length)? {
             return Err(Self::TAG.value_error());
@@ -166,6 +166,8 @@ impl From<&DateTime> for GeneralizedTime {
 }
 
 impl<'a> DecodeValue<'a> for DateTime {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Ok(GeneralizedTime::decode_value(reader, header)?.into())
     }
@@ -189,6 +191,8 @@ impl OrdIsValueOrd for DateTime {}
 
 #[cfg(feature = "std")]
 impl<'a> DecodeValue<'a> for SystemTime {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Ok(GeneralizedTime::decode_value(reader, header)?.into())
     }
@@ -256,6 +260,8 @@ impl OrdIsValueOrd for SystemTime {}
 
 #[cfg(feature = "time")]
 impl<'a> DecodeValue<'a> for PrimitiveDateTime {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         GeneralizedTime::decode_value(reader, header)?.try_into()
     }

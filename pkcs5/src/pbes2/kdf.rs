@@ -1,8 +1,12 @@
 //! Key derivation functions.
 
+mod salt;
+
+pub use self::salt::Salt;
+
 use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
-    asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
+    asn1::{AnyRef, ObjectIdentifier},
     Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Tagged,
     Writer,
 };
@@ -40,15 +44,15 @@ type ScryptCost = u64;
 /// Password-based key derivation function.
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
-pub enum Kdf<'a> {
+pub enum Kdf {
     /// Password-Based Key Derivation Function 2 (PBKDF2).
-    Pbkdf2(Pbkdf2Params<'a>),
+    Pbkdf2(Pbkdf2Params),
 
     /// scrypt sequential memory-hard password hashing function.
-    Scrypt(ScryptParams<'a>),
+    Scrypt(ScryptParams),
 }
 
-impl<'a> Kdf<'a> {
+impl Kdf {
     /// Get derived key length in bytes, if defined.
     // TODO(tarcieri): rename to `key_size` to match `EncryptionScheme::key_size`?
     pub fn key_length(&self) -> Option<u16> {
@@ -67,7 +71,7 @@ impl<'a> Kdf<'a> {
     }
 
     /// Get [`Pbkdf2Params`] if it is the selected algorithm.
-    pub fn pbkdf2(&self) -> Option<&Pbkdf2Params<'a>> {
+    pub fn pbkdf2(&self) -> Option<&Pbkdf2Params> {
         match self {
             Self::Pbkdf2(params) => Some(params),
             _ => None,
@@ -75,7 +79,7 @@ impl<'a> Kdf<'a> {
     }
 
     /// Get [`ScryptParams`] if it is the selected algorithm.
-    pub fn scrypt(&self) -> Option<&ScryptParams<'a>> {
+    pub fn scrypt(&self) -> Option<&ScryptParams> {
         match self {
             Self::Scrypt(params) => Some(params),
             _ => None,
@@ -99,13 +103,15 @@ impl<'a> Kdf<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for Kdf<'a> {
+impl<'a> DecodeValue<'a> for Kdf {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AlgorithmIdentifierRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl EncodeValue for Kdf<'_> {
+impl EncodeValue for Kdf {
     fn value_len(&self) -> der::Result<Length> {
         self.oid().encoded_len()?
             + match self {
@@ -126,24 +132,24 @@ impl EncodeValue for Kdf<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for Kdf<'a> {}
+impl Sequence<'_> for Kdf {}
 
-impl<'a> From<Pbkdf2Params<'a>> for Kdf<'a> {
-    fn from(params: Pbkdf2Params<'a>) -> Self {
+impl From<Pbkdf2Params> for Kdf {
+    fn from(params: Pbkdf2Params) -> Self {
         Kdf::Pbkdf2(params)
     }
 }
 
-impl<'a> From<ScryptParams<'a>> for Kdf<'a> {
-    fn from(params: ScryptParams<'a>) -> Self {
+impl From<ScryptParams> for Kdf {
+    fn from(params: ScryptParams) -> Self {
         Kdf::Scrypt(params)
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Kdf<'a> {
+impl TryFrom<AlgorithmIdentifierRef<'_>> for Kdf {
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
+    fn try_from(alg: AlgorithmIdentifierRef<'_>) -> der::Result<Self> {
         if let Some(params) = alg.parameters {
             match alg.oid {
                 PBKDF2_OID => params.try_into().map(Self::Pbkdf2),
@@ -172,11 +178,11 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Kdf<'a> {
 /// ```
 ///
 /// [RFC 8018 Appendix A.2]: https://tools.ietf.org/html/rfc8018#appendix-A.2
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct Pbkdf2Params<'a> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Pbkdf2Params {
     /// PBKDF2 salt
     // TODO(tarcieri): support `CHOICE` with `otherSource`
-    pub salt: &'a [u8],
+    pub salt: Salt,
 
     /// PBKDF2 iteration count
     pub iteration_count: u32,
@@ -188,7 +194,7 @@ pub struct Pbkdf2Params<'a> {
     pub prf: Pbkdf2Prf,
 }
 
-impl<'a> Pbkdf2Params<'a> {
+impl Pbkdf2Params {
     /// Implementation defined maximum iteration count of 100,000,000.
     ///
     /// > For especially critical keys, or
@@ -203,12 +209,13 @@ impl<'a> Pbkdf2Params<'a> {
     const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: PBKDF2_OID };
 
     /// Initialize PBKDF2-SHA256 with the given iteration count and salt
-    pub fn hmac_with_sha256(iteration_count: u32, salt: &'a [u8]) -> Result<Self> {
+    pub fn hmac_with_sha256(iteration_count: u32, salt: &[u8]) -> Result<Self> {
         if iteration_count > Self::MAX_ITERATION_COUNT {
             return Err(Self::INVALID_ERR);
         }
+
         Ok(Self {
-            salt,
+            salt: salt.try_into().map_err(|_| Self::INVALID_ERR)?,
             iteration_count,
             key_length: None,
             prf: Pbkdf2Prf::HmacWithSha256,
@@ -216,15 +223,16 @@ impl<'a> Pbkdf2Params<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for Pbkdf2Params<'a> {
+impl<'a> DecodeValue<'a> for Pbkdf2Params {
+    type Error = der::Error;
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AnyRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl EncodeValue for Pbkdf2Params<'_> {
+impl EncodeValue for Pbkdf2Params {
     fn value_len(&self) -> der::Result<Length> {
-        let len = OctetStringRef::new(self.salt)?.encoded_len()?
+        let len = self.salt.encoded_len()?
             + self.iteration_count.encoded_len()?
             + self.key_length.encoded_len()?;
 
@@ -236,7 +244,7 @@ impl EncodeValue for Pbkdf2Params<'_> {
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
-        OctetStringRef::new(self.salt)?.encode(writer)?;
+        self.salt.encode(writer)?;
         self.iteration_count.encode(writer)?;
         self.key_length.encode(writer)?;
 
@@ -248,16 +256,16 @@ impl EncodeValue for Pbkdf2Params<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for Pbkdf2Params<'a> {}
+impl Sequence<'_> for Pbkdf2Params {}
 
-impl<'a> TryFrom<AnyRef<'a>> for Pbkdf2Params<'a> {
+impl TryFrom<AnyRef<'_>> for Pbkdf2Params {
     type Error = der::Error;
 
-    fn try_from(any: AnyRef<'a>) -> der::Result<Self> {
+    fn try_from(any: AnyRef<'_>) -> der::Result<Self> {
         any.sequence(|reader| {
             // TODO(tarcieri): support salt `CHOICE` w\ `AlgorithmIdentifier`
             Ok(Self {
-                salt: OctetStringRef::decode(reader)?.as_bytes(),
+                salt: reader.decode()?,
                 iteration_count: reader.decode()?,
                 key_length: reader.decode()?,
                 prf: Option::<AlgorithmIdentifierRef<'_>>::decode(reader)?
@@ -316,10 +324,10 @@ impl Default for Pbkdf2Prf {
     }
 }
 
-impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Pbkdf2Prf {
+impl TryFrom<AlgorithmIdentifierRef<'_>> for Pbkdf2Prf {
     type Error = der::Error;
 
-    fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
+    fn try_from(alg: AlgorithmIdentifierRef<'_>) -> der::Result<Self> {
         if let Some(params) = alg.parameters {
             // TODO(tarcieri): support non-NULL parameters?
             if !params.is_null() {
@@ -341,7 +349,7 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Pbkdf2Prf {
     }
 }
 
-impl<'a> From<Pbkdf2Prf> for AlgorithmIdentifierRef<'a> {
+impl From<Pbkdf2Prf> for AlgorithmIdentifierRef<'_> {
     fn from(prf: Pbkdf2Prf) -> Self {
         // TODO(tarcieri): support non-NULL parameters?
         let parameters = der::asn1::Null;
@@ -376,10 +384,10 @@ impl Encode for Pbkdf2Prf {
 /// ```
 ///
 /// [RFC 7914 Section 7.1]: https://datatracker.ietf.org/doc/html/rfc7914#section-7.1
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct ScryptParams<'a> {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ScryptParams {
     /// scrypt salt
-    pub salt: &'a [u8],
+    pub salt: Salt,
 
     /// CPU/Memory cost parameter `N`.
     pub cost_parameter: ScryptCost,
@@ -394,7 +402,7 @@ pub struct ScryptParams<'a> {
     pub key_length: Option<u16>,
 }
 
-impl<'a> ScryptParams<'a> {
+impl ScryptParams {
     #[cfg(feature = "pbes2")]
     const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: SCRYPT_OID };
 
@@ -402,9 +410,9 @@ impl<'a> ScryptParams<'a> {
     /// and a provided salt string.
     // TODO(tarcieri): encapsulate `scrypt::Params`?
     #[cfg(feature = "pbes2")]
-    pub fn from_params_and_salt(params: scrypt::Params, salt: &'a [u8]) -> Result<Self> {
+    pub fn from_params_and_salt(params: scrypt::Params, salt: &[u8]) -> Result<Self> {
         Ok(Self {
-            salt,
+            salt: salt.try_into().map_err(|_| Self::INVALID_ERR)?,
             cost_parameter: 1 << params.log_n(),
             block_size: params.r().try_into().map_err(|_| Self::INVALID_ERR)?,
             parallelization: params.p().try_into().map_err(|_| Self::INVALID_ERR)?,
@@ -413,15 +421,17 @@ impl<'a> ScryptParams<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for ScryptParams<'a> {
+impl<'a> DecodeValue<'a> for ScryptParams {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         AnyRef::decode_value(reader, header)?.try_into()
     }
 }
 
-impl EncodeValue for ScryptParams<'_> {
+impl EncodeValue for ScryptParams {
     fn value_len(&self) -> der::Result<Length> {
-        OctetStringRef::new(self.salt)?.encoded_len()?
+        self.salt.encoded_len()?
             + self.cost_parameter.encoded_len()?
             + self.block_size.encoded_len()?
             + self.parallelization.encoded_len()?
@@ -429,7 +439,7 @@ impl EncodeValue for ScryptParams<'_> {
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
-        OctetStringRef::new(self.salt)?.encode(writer)?;
+        self.salt.encode(writer)?;
         self.cost_parameter.encode(writer)?;
         self.block_size.encode(writer)?;
         self.parallelization.encode(writer)?;
@@ -438,15 +448,15 @@ impl EncodeValue for ScryptParams<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for ScryptParams<'a> {}
+impl Sequence<'_> for ScryptParams {}
 
-impl<'a> TryFrom<AnyRef<'a>> for ScryptParams<'a> {
+impl TryFrom<AnyRef<'_>> for ScryptParams {
     type Error = der::Error;
 
-    fn try_from(any: AnyRef<'a>) -> der::Result<Self> {
+    fn try_from(any: AnyRef<'_>) -> der::Result<Self> {
         any.sequence(|reader| {
             Ok(Self {
-                salt: OctetStringRef::decode(reader)?.as_bytes(),
+                salt: reader.decode()?,
                 cost_parameter: reader.decode()?,
                 block_size: reader.decode()?,
                 parallelization: reader.decode()?,
@@ -457,19 +467,19 @@ impl<'a> TryFrom<AnyRef<'a>> for ScryptParams<'a> {
 }
 
 #[cfg(feature = "pbes2")]
-impl<'a> TryFrom<ScryptParams<'a>> for scrypt::Params {
+impl TryFrom<ScryptParams> for scrypt::Params {
     type Error = Error;
 
-    fn try_from(params: ScryptParams<'a>) -> Result<scrypt::Params> {
+    fn try_from(params: ScryptParams) -> Result<scrypt::Params> {
         scrypt::Params::try_from(&params)
     }
 }
 
 #[cfg(feature = "pbes2")]
-impl<'a> TryFrom<&ScryptParams<'a>> for scrypt::Params {
+impl TryFrom<&ScryptParams> for scrypt::Params {
     type Error = Error;
 
-    fn try_from(params: &ScryptParams<'a>) -> Result<scrypt::Params> {
+    fn try_from(params: &ScryptParams) -> Result<scrypt::Params> {
         let n = params.cost_parameter;
 
         // Compute log2 and verify its correctness

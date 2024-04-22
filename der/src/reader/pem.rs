@@ -1,7 +1,7 @@
 //! Streaming PEM reader.
 
 use super::Reader;
-use crate::{Decode, Error, ErrorKind, Header, Length, Result};
+use crate::{Decode, EncodingRules, Error, ErrorKind, Header, Length, Result};
 use core::cell::RefCell;
 
 #[allow(clippy::arithmetic_side_effects)]
@@ -86,9 +86,7 @@ mod utils {
         fn as_slice(&self) -> &[u8] {
             &self.buf[self.pos..self.cap]
         }
-    }
 
-    impl<'i> BufReader<'i> {
         pub fn peek_byte(&self) -> Option<u8> {
             let s = self.as_slice();
             s.first().copied()
@@ -130,6 +128,9 @@ pub struct PemReader<'i> {
     /// Inner PEM decoder wrapped in a BufReader.
     reader: RefCell<utils::BufReader<'i>>,
 
+    /// Encoding rules to apply when decoding the input.
+    encoding_rules: EncodingRules,
+
     /// Input length (in bytes after Base64 decoding).
     input_len: Length,
 
@@ -148,6 +149,7 @@ impl<'i> PemReader<'i> {
 
         Ok(Self {
             reader: RefCell::new(reader),
+            encoding_rules: EncodingRules::default(),
             input_len,
             position: Length::ZERO,
         })
@@ -162,6 +164,10 @@ impl<'i> PemReader<'i> {
 
 #[cfg(feature = "pem")]
 impl<'i> Reader<'i> for PemReader<'i> {
+    fn encoding_rules(&self) -> EncodingRules {
+        self.encoding_rules
+    }
+
     fn input_len(&self) -> Length {
         self.input_len
     }

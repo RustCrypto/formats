@@ -4,10 +4,11 @@ description = """
 Constant-time serde serializer/deserializer helpers for data that potentially
 contains secrets (e.g. cryptographic keys)
 """
-version = "0.3.0-pre"
+version = "0.3.0-pre.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/serdect"
+homepage = "https://github.com/RustCrypto/formats/tree/master/serdect"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parsing"]
 keywords = ["crypto", "constant-time", "serde"]
 readme = "README.md"
@@ -35,6 +36,7 @@ toml = "0.8"
 [features]
 default = ["alloc"]
 alloc = ["base16ct/alloc", "serde/alloc"]
+derive = ["serde/derive"]
 
 [package.metadata.docs.rs]
 all-features = true

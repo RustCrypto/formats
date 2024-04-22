@@ -105,7 +105,7 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
 }
 
 #[inline(always)]
-fn write_length(content_length: usize) -> Result<Vec<u8>, Error> {
+pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
     let len_len = length_encoding_bytes(content_length.try_into()?)?;
     if !cfg!(fuzzing) {
         debug_assert!(len_len <= 8, "Invalid vector len_len {len_len}");
@@ -178,7 +178,7 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
         // This requires more computations but the other option would be to buffer
         // the entire content, which can end up requiring a lot of memory.
         let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
-        let mut length = write_length(content_length)?;
+        let mut length = write_variable_length(content_length)?;
         let len_len = length.len();
 
         let mut out = Vec::with_capacity(content_length + len_len);
@@ -418,7 +418,7 @@ impl<'a> Size for VLByteSlice<'a> {
 }
 
 #[cfg(feature = "std")]
-mod rw {
+pub mod rw {
     use super::*;
     use crate::{Deserialize, Serialize};
 
@@ -429,9 +429,7 @@ mod rw {
     ///
     /// The length and number of bytes read are returned.
     #[inline]
-    pub(super) fn read_variable_length<R: std::io::Read>(
-        bytes: &mut R,
-    ) -> Result<(usize, usize), Error> {
+    pub fn read_length<R: std::io::Read>(bytes: &mut R) -> Result<(usize, usize), Error> {
         // The length is encoded in the first two bits of the first byte.
         let mut len_len_byte = [0u8; 1];
         if bytes.read(&mut len_len_byte)? == 0 {
@@ -458,7 +456,7 @@ mod rw {
     impl<T: Deserialize> Deserialize for Vec<T> {
         #[inline(always)]
         fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
-            let (length, len_len) = read_variable_length(bytes)?;
+            let (length, len_len) = read_length(bytes)?;
 
             if length == 0 {
                 // An empty vector.
@@ -477,11 +475,11 @@ mod rw {
     }
 
     #[inline(always)]
-    pub(super) fn write_length<W: std::io::Write>(
+    pub fn write_length<W: std::io::Write>(
         writer: &mut W,
         content_length: usize,
     ) -> Result<usize, Error> {
-        let buf = super::write_length(content_length)?;
+        let buf = super::write_variable_length(content_length)?;
         let buf_len = buf.len();
         writer.write_all(&buf)?;
         Ok(buf_len)
@@ -525,9 +523,6 @@ mod rw {
     }
 }
 
-#[cfg(feature = "std")]
-use rw::*;
-
 /// Read/Write (std) based (de)serialization for [`VLBytes`].
 #[cfg(feature = "std")]
 mod rw_bytes {
@@ -553,26 +548,14 @@ mod rw_bytes {
             return Err(Error::InvalidVectorLength);
         }
 
-        let length_bytes = write_length(content_length)?;
+        let length_bytes = write_variable_length(content_length)?;
         let len_len = length_bytes.len();
         writer.write_all(&length_bytes)?;
 
         // Now serialize the elements
-        let mut written = 0;
-        written += writer.write(bytes)?;
+        writer.write_all(bytes)?;
 
-        if !cfg!(fuzzing) {
-            debug_assert_eq!(
-                written, content_length,
-                "{content_length} bytes should have been serialized but {written} were written",
-            );
-        }
-        if written != content_length {
-            return Err(Error::EncodingError(format!(
-                "{content_length} bytes should have been serialized but {written} were written",
-            )));
-        }
-        Ok(written + len_len)
+        Ok(content_length + len_len)
     }
 
     impl Serialize for VLBytes {
@@ -591,7 +574,7 @@ mod rw_bytes {
 
     impl Deserialize for VLBytes {
         fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
-            let (length, _) = read_variable_length(bytes)?;
+            let (length, _) = rw::read_length(bytes)?;
             if length == 0 {
                 return Ok(Self::new(vec![]));
             }
@@ -610,19 +593,8 @@ mod rw_bytes {
             let mut result = Self {
                 vec: vec![0u8; length],
             };
-            let read = bytes.read(result.vec.as_mut_slice())?;
-            if read == length {
-                return Ok(result);
-            }
-            if !cfg!(fuzzing) {
-                debug_assert_eq!(
-                    read, length,
-                    "Expected to read {length} bytes but {read} were read.",
-                );
-            }
-            Err(Error::DecodingError(format!(
-                "{read} bytes were read but {length} were expected",
-            )))
+            bytes.read_exact(result.vec.as_mut_slice())?;
+            Ok(result)
         }
     }
 

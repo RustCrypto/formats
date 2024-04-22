@@ -1,23 +1,24 @@
 [package]
 name = "x509-tsp"
-version = "0.1.0"
+version = "0.2.0-pre"
 edition = "2021"
 description = """
 Pure Rust implementation of the Timestamping Protocol as described in RFC 3161.
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/x509-tsp"
+homepage = "https://github.com/RustCrypto/formats/tree/master/x509-tsp"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "tsp", "timestamp"]
 readme = "README.md"
-rust-version = "1.65"
+rust-version = "1.75"
 
 [dependencies]
-der = { version = "0.7.6", features = ["alloc", "derive", "oid", "pem"] }
-cms = { version = "0.2.1", features = ["alloc"] }
-cmpv2 = { version = "0.2", features = ["alloc"] }
-x509-cert = { version = "0.2.4", default-features = false }
+der = { version = "=0.8.0-pre.0", features = ["alloc", "derive", "oid", "pem"] }
+cms = { version = "=0.3.0-pre", features = ["alloc"] }
+cmpv2 = { version = "=0.3.0-pre", features = ["alloc"] }
+x509-cert = { version = "=0.3.0-pre", default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.4.1"

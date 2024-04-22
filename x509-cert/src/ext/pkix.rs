@@ -9,8 +9,10 @@ mod access;
 mod authkeyid;
 mod keyusage;
 mod policymap;
+#[cfg(feature = "sct")]
+pub mod sct;
 
-use crate::attr::AttributeTypeAndValue;
+use crate::attr::Attribute;
 
 pub use access::{AccessDescription, AuthorityInfoAccessSyntax, SubjectInfoAccessSyntax};
 pub use authkeyid::AuthorityKeyIdentifier;
@@ -23,6 +25,12 @@ pub use crl::{
 };
 pub use keyusage::{ExtendedKeyUsage, KeyUsage, KeyUsages, PrivateKeyUsagePeriod};
 pub use policymap::{PolicyMapping, PolicyMappings};
+
+#[cfg(feature = "sct")]
+pub use sct::{
+    Error, HashAlgorithm, SerializedSct, SignatureAlgorithm, SignatureAndHashAlgorithm,
+    SignedCertificateTimestamp, SignedCertificateTimestampList, Version,
+};
 
 pub use const_oid::db::rfc5280::{
     ID_CE_INHIBIT_ANY_POLICY, ID_CE_ISSUER_ALT_NAME, ID_CE_SUBJECT_ALT_NAME,
@@ -112,13 +120,13 @@ impl_extension!(IssuerAltName, critical = false);
 ///
 /// [RFC 5280 Section 4.2.1.8]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.8
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct SubjectDirectoryAttributes(pub Vec<AttributeTypeAndValue>);
+pub struct SubjectDirectoryAttributes(pub Vec<Attribute>);
 
 impl AssociatedOid for SubjectDirectoryAttributes {
     const OID: ObjectIdentifier = ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES;
 }
 
-impl_newtype!(SubjectDirectoryAttributes, Vec<AttributeTypeAndValue>);
+impl_newtype!(SubjectDirectoryAttributes, Vec<Attribute>);
 impl_extension!(SubjectDirectoryAttributes, critical = false);
 
 /// InhibitAnyPolicy as defined in [RFC 5280 Section 4.2.1.14].

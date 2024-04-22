@@ -1,48 +1,55 @@
 [package]
 name = "x509-cert"
-version = "0.2.4"
+version = "0.3.0-pre"
 description = """
 Pure Rust implementation of the X.509 Public Key Infrastructure Certificate
 format as described in RFC 5280
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/x509-cert"
+homepage = "https://github.com/RustCrypto/formats/tree/master/x509-cert"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.75"
 
 [dependencies]
-const-oid = { version = "0.9.3", features = ["db"] }
-der = { version = "0.7.6", features = ["alloc", "derive", "flagset", "oid"] }
-spki = { version = "0.7.3", features = ["alloc"] }
+const-oid = { version = "=0.10.0-pre.2", features = ["db"] }
+der = { version = "=0.8.0-pre.0", features = ["alloc", "derive", "flagset", "oid"] }
+spki = { version = "=0.8.0-pre.0", features = ["alloc"] }
 
 # optional dependencies
 arbitrary = { version = "1.3", features = ["derive"], optional = true }
-sha1 = { version = "0.10.6", optional = true }
-signature = { version = "2.1.0", features = ["rand_core"], optional = true }
+async-signature = { version = "=0.6.0-pre.1", features = ["digest", "rand_core"], optional = true }
+sha1 = { version = "0.11.0-pre.2", optional = true }
+signature = { version = "=2.3.0-pre.3", features = ["rand_core"], optional = true }
+tls_codec = { version = "0.4.0", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
 hex-literal = "0.4"
 rand = "0.8.5"
-rsa = { version = "0.9.3", features = ["sha2"] }
-ecdsa = { version = "0.16.8", features = ["digest", "pem"] }
-p256 = "0.13.0"
-rstest = "0.18"
-sha2 = { version = "0.10", features = ["oid"] }
+rsa = { version = "=0.10.0-pre.1", features = ["sha2"] }
+ecdsa = { version = "=0.17.0-pre.5", features = ["digest", "pem"] }
+p256 = "=0.14.0-pre.0"
+rstest = "0.19"
+sha2 = { version = "=0.11.0-pre.3", features = ["oid"] }
 tempfile = "3.5.0"
+tokio = { version = "1.37.0", features = ["macros", "rt"] }
 x509-cert-test-support = { path = "./test-support" }
 
 [features]
 default = ["pem", "std"]
-std = ["const-oid/std", "der/std", "spki/std"]
+std = ["const-oid/std", "der/std", "spki/std", "tls_codec?/std"]
 
 arbitrary = ["dep:arbitrary", "std", "der/arbitrary", "spki/arbitrary"]
-builder = ["std", "sha1/default", "signature"]
+builder = ["async-signature", "std", "sha1/default", "signature"]
 hazmat = []
 pem = ["der/pem", "spki/pem"]
+sct = ["dep:tls_codec"]
+fingerprint = ["spki/fingerprint"]
+base64 = ["spki/base64"]
 
 [package.metadata.docs.rs]
 all-features = true

@@ -231,6 +231,8 @@ impl<'a> ::der::Choice<'a> for EncKeyWithIdChoice<'a> {
     }
 }
 impl<'a> ::der::Decode<'a> for EncKeyWithIdChoice<'a> {
+    type Error = ::der::Error;
+
     fn decode<R: ::der::Reader<'a>>(reader: &mut R) -> ::der::Result<Self> {
         let t = reader.peek_tag()?;
         if t == <Utf8StringRef<'a> as ::der::FixedTag>::TAG {

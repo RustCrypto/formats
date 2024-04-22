@@ -149,7 +149,7 @@ impl<'a> PrivateKeyInfo<'a> {
     #[cfg(feature = "encryption")]
     pub fn encrypt_with_params(
         &self,
-        pbes2_params: pbes2::Parameters<'_>,
+        pbes2_params: pbes2::Parameters,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
@@ -171,6 +171,8 @@ impl<'a> PrivateKeyInfo<'a> {
 }
 
 impl<'a> DecodeValue<'a> for PrivateKeyInfo<'a> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
         header: Header,

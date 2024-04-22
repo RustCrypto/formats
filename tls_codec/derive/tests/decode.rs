@@ -530,7 +530,7 @@ fn type_with_unknowns() {
 
 #[cfg(feature = "conditional_deserialization")]
 mod conditional_deserialization {
-    use tls_codec::{Deserialize, Serialize};
+    use tls_codec::{Deserialize, DeserializeBytes, Serialize, Size};
     use tls_codec_derive::{conditionally_deserializable, TlsSerialize, TlsSize};
 
     #[test]
@@ -551,6 +551,13 @@ mod conditional_deserialization {
 
         #[conditionally_deserializable]
         #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct NestedExampleStruct {
+            #[tls_codec(cd_field)]
+            nested_field: ExampleStruct,
+        }
+
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
         struct SecondExampleStruct {
             a: u8,
             b: u16,
@@ -565,11 +572,42 @@ mod conditional_deserialization {
             a: u8,
             b: u16,
         }
+
         let undeserializable_struct = UndeserializableExampleStruct { a: 1, b: 2 };
         let serialized = undeserializable_struct.tls_serialize_detached().unwrap();
         let deserializable_struct =
             DeserializableExampleStruct::tls_deserialize_exact(&*serialized).unwrap();
         assert_eq!(deserializable_struct.a, undeserializable_struct.a);
         assert_eq!(deserializable_struct.b, undeserializable_struct.b);
+    }
+
+    #[test]
+    fn nested_conditionally_deserializable() {
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct ExampleStruct {
+            a: u8,
+            b: u16,
+        }
+
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct NestedExampleStruct {
+            #[tls_codec(cd_field)]
+            nested_field: ExampleStruct,
+        }
+
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct GenericExampleStruct<T: Serialize + Size + Deserialize + DeserializeBytes> {
+            a: T,
+        }
+
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct NestedGenericExampleStruct<T: Serialize + Size + Deserialize + DeserializeBytes> {
+            #[tls_codec(cd_field)]
+            nested_field: GenericExampleStruct<T>,
+        }
     }
 }

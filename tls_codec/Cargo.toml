@@ -1,12 +1,13 @@
 [package]
 name = "tls_codec"
-version = "0.4.0"
+version = "0.4.2-pre.1"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/tls_codec/"
 description = "A pure Rust implementation of the TLS (de)serialization"
 readme = "README.md"
-repository = "https://github.com/RustCrypto/formats/tree/master/tls_codec"
+homepage = "https://github.com/RustCrypto/formats/tree/master/tls_codec"
+repository = "https://github.com/RustCrypto/formats"
 edition = "2021"
 rust-version = "1.60"
 
@@ -18,7 +19,7 @@ zeroize = { version = "1.7", default-features = false, features = [
 
 # optional dependencies
 arbitrary = { version = "1.3", features = ["derive"], optional = true }
-tls_codec_derive = { version = "=0.4.0", path = "./derive", optional = true }
+tls_codec_derive = { version = "=0.4.1", path = "./derive", optional = true }
 serde = { version = "1.0.184", features = ["derive"], optional = true }
 
 [dev-dependencies]

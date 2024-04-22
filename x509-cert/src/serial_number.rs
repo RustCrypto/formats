@@ -7,6 +7,8 @@ use der::{
     DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd,
     Writer,
 };
+#[cfg(feature = "builder")]
+use {alloc::vec, signature::rand_core::CryptoRngCore};
 
 use crate::certificate::{Profile, Rfc5280};
 
@@ -67,6 +69,56 @@ impl<P: Profile> SerialNumber<P> {
     }
 }
 
+#[cfg(feature = "builder")]
+impl<P: Profile> SerialNumber<P> {
+    /// Generates a random serial number from RNG.
+    ///
+    /// This follows the recommendation the CAB forum [ballot 164] and uses a minimum of 64 bits
+    /// of output from the CSPRNG. This currently defaults to a 17-bytes long serial number.
+    ///
+    /// [ballot 164]: https://cabforum.org/2016/03/31/ballot-164/
+    pub fn generate(rng: &mut impl CryptoRngCore) -> Result<Self> {
+        Self::generate_with_prefix(&[], 17, rng)
+    }
+
+    /// Generates a random serial number from RNG. Include a prefix value.
+    ///
+    /// This follows the recommendation the CAB forum [ballot 164] and uses a minimum of 64 bits
+    /// of output from the CSPRNG.
+    ///
+    /// The specified length does not include the length of the prefix, the maximum length must be
+    /// equal or below 19 (to account for leading sign disambiguation, and the maximum length of 20).
+    ///
+    /// [ballot 164]: https://cabforum.org/2016/03/31/ballot-164/
+    pub fn generate_with_prefix(
+        prefix: &[u8],
+        rand_len: usize,
+        rng: &mut impl CryptoRngCore,
+    ) -> Result<Self> {
+        // CABF requires a minimum of 64 bits of random
+        if rand_len < 8 {
+            return Err(ErrorKind::Failed.into());
+        }
+
+        if rand_len + prefix.len() > 19 {
+            return Err(ErrorKind::Failed.into());
+        }
+
+        let mut buf = vec![0; prefix.len() + rand_len];
+        buf[..prefix.len()].copy_from_slice(prefix);
+
+        let rand_buf = &mut buf[prefix.len()..];
+
+        // Make sure the first byte isn't 0, [`Int`] will otherwise optimize out the leading zeros,
+        // shorten the value of the serial and trigger false positives in linters.
+        while rand_buf[0] == 0 {
+            rng.fill_bytes(rand_buf);
+        }
+
+        Self::new(&buf)
+    }
+}
+
 impl<P: Profile> EncodeValue for SerialNumber<P> {
     fn value_len(&self) -> Result<Length> {
         self.inner.value_len()
@@ -78,6 +130,8 @@ impl<P: Profile> EncodeValue for SerialNumber<P> {
 }
 
 impl<'a, P: Profile> DecodeValue<'a> for SerialNumber<P> {
+    type Error = der::Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let inner = Int::decode_value(reader, header)?;
         let serial = Self {
@@ -192,5 +246,38 @@ mod tests {
             // Leading zeroes are ignored, due to canonicalization.
             assert_eq!(sn.to_string(), "01")
         }
+    }
+
+    #[cfg(feature = "builder")]
+    #[test]
+    fn serial_number_generate() {
+        let sn = SerialNumber::<Rfc5280>::generate(&mut rand::thread_rng()).unwrap();
+
+        // Underlying storage uses signed int for compatibility reasons,
+        // we may need to prefix the value with 0x00 to make it an unsigned.
+        // in which case the length is going to be 18.
+        assert!(matches!(sn.as_bytes().len(), 17..=18));
+
+        let sn =
+            SerialNumber::<Rfc5280>::generate_with_prefix(&[], 8, &mut rand::thread_rng()).unwrap();
+        assert!(matches!(sn.as_bytes().len(), 8..=9));
+
+        let sn =
+            SerialNumber::<Rfc5280>::generate_with_prefix(&[1, 2, 3], 8, &mut rand::thread_rng())
+                .unwrap();
+        assert!(matches!(sn.as_bytes().len(), 11..=12));
+        assert_eq!(&sn.as_bytes()[..3], &[1, 2, 3]);
+
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 7, &mut rand::thread_rng());
+        assert!(sn.is_err());
+
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 20, &mut rand::thread_rng());
+        assert!(sn.is_err());
+
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 19, &mut rand::thread_rng());
+        assert!(sn.is_ok());
+
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[1], 19, &mut rand::thread_rng());
+        assert!(sn.is_err());
     }
 }

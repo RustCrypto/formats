@@ -1,12 +1,13 @@
 //! X509 Certificate builder
 
 use alloc::vec;
+use async_signature::{AsyncRandomizedSigner, AsyncSigner};
 use core::fmt;
 use der::{asn1::BitString, referenced::OwnedToRef, Encode};
 use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, Signer};
 use spki::{
-    DynSignatureAlgorithmIdentifier, EncodePublicKey, SignatureBitStringEncoding,
-    SubjectPublicKeyInfoOwned, SubjectPublicKeyInfoRef,
+    AlgorithmIdentifier, DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier,
+    SignatureBitStringEncoding, SubjectPublicKeyInfoOwned, SubjectPublicKeyInfoRef,
 };
 
 use crate::{
@@ -22,6 +23,8 @@ use crate::{
     serial_number::SerialNumber,
     time::Validity,
 };
+
+const NULL_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("0.0.0");
 
 /// Error type
 #[derive(Debug)]
@@ -68,7 +71,8 @@ impl From<signature::Error> for Error {
     }
 }
 
-type Result<T> = core::result::Result<T, Error>;
+/// Result type
+pub type Result<T> = core::result::Result<T, Error>;
 
 /// The type of certificate to build
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -219,7 +223,7 @@ impl Profile {
 /// ```
 /// use der::Decode;
 /// use x509_cert::spki::SubjectPublicKeyInfoOwned;
-/// use x509_cert::builder::{CertificateBuilder, Profile};
+/// use x509_cert::builder::{CertificateBuilder, Profile, Builder};
 /// use x509_cert::name::Name;
 /// use x509_cert::serial_number::SerialNumber;
 /// use x509_cert::time::Validity;
@@ -251,21 +255,18 @@ impl Profile {
 ///     validity,
 ///     subject,
 ///     pub_key,
-///     &signer,
 /// )
-/// .expect("Create certificate");
+/// .expect("Create certificate builder");
+///
+/// let cert = builder.build(&signer).expect("Create certificate");
 /// ```
-pub struct CertificateBuilder<'s, S> {
+pub struct CertificateBuilder {
     tbs: TbsCertificate,
     extensions: Extensions,
-    cert_signer: &'s S,
+    profile: Profile,
 }
 
-impl<'s, S> CertificateBuilder<'s, S>
-where
-    S: Keypair + DynSignatureAlgorithmIdentifier,
-    S::VerifyingKey: EncodePublicKey,
-{
+impl CertificateBuilder {
     /// Creates a new certificate builder
     pub fn new(
         profile: Profile,
@@ -273,12 +274,12 @@ where
         mut validity: Validity,
         subject: Name,
         subject_public_key_info: SubjectPublicKeyInfoOwned,
-        cert_signer: &'s S,
     ) -> Result<Self> {
-        let verifying_key = cert_signer.verifying_key();
-        let signer_pub = SubjectPublicKeyInfoOwned::from_key(verifying_key)?;
+        let signature_alg = AlgorithmIdentifier {
+            oid: NULL_OID,
+            parameters: None,
+        };
 
-        let signature_alg = cert_signer.signature_algorithm_identifier()?;
         let issuer = profile.get_issuer(&subject);
 
         validity.not_before.rfc5280_adjust_utc_time()?;
@@ -303,15 +304,11 @@ where
             subject_unique_id: None,
         };
 
-        let extensions = profile.build_extensions(
-            tbs.subject_public_key_info.owned_to_ref(),
-            signer_pub.owned_to_ref(),
-            &tbs,
-        )?;
+        let extensions = Extensions::default();
         Ok(Self {
             tbs,
             extensions,
-            cert_signer,
+            profile,
         })
     }
 
@@ -344,31 +341,34 @@ where
 /// let subject = Name::from_str("CN=service.domination.world").unwrap();
 ///
 /// let signer = ecdsa_signer();
-/// let mut builder = RequestBuilder::new(subject, &signer).expect("Create certificate request");
+/// let mut builder = RequestBuilder::new(subject).expect("Create certificate request");
 /// builder
 ///     .add_extension(&SubjectAltName(vec![GeneralName::from(IpAddr::V4(
 ///         Ipv4Addr::new(192, 0, 2, 0),
 ///     ))]))
 ///     .unwrap();
 ///
-/// let cert_req = builder.build::<DerSignature>().unwrap();
+/// let cert_req = builder.build::<_, DerSignature>(&signer).unwrap();
 /// ```
-pub struct RequestBuilder<'s, S> {
+pub struct RequestBuilder {
     info: CertReqInfo,
     extension_req: ExtensionReq,
-    req_signer: &'s S,
 }
 
-impl<'s, S> RequestBuilder<'s, S>
-where
-    S: Keypair + DynSignatureAlgorithmIdentifier,
-    S::VerifyingKey: EncodePublicKey,
-{
+impl RequestBuilder {
     /// Creates a new certificate request builder
-    pub fn new(subject: Name, req_signer: &'s S) -> Result<Self> {
+    pub fn new(subject: Name) -> Result<Self> {
         let version = Default::default();
-        let verifying_key = req_signer.verifying_key();
-        let public_key = SubjectPublicKeyInfoOwned::from_key(verifying_key)?;
+
+        let algorithm = AlgorithmIdentifier {
+            oid: NULL_OID,
+            parameters: None,
+        };
+        let public_key = SubjectPublicKeyInfoOwned {
+            algorithm,
+            subject_public_key: BitString::from_bytes(&[]).expect("unable to parse empty object"),
+        };
+
         let attributes = Default::default();
         let extension_req = Default::default();
 
@@ -380,7 +380,6 @@ where
                 attributes,
             },
             extension_req,
-            req_signer,
         })
     }
 
@@ -406,64 +405,77 @@ where
 ///
 /// This trait defines the interface between builder and the signers.
 pub trait Builder: Sized {
-    /// The builder's object signer
-    type Signer;
-
     /// Type built by this builder
     type Output: Sized;
 
-    /// Return a reference to the signer.
-    fn signer(&self) -> &Self::Signer;
-
     /// Assemble the final object from signature.
-    fn assemble(self, signature: BitString) -> Result<Self::Output>;
+    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey;
 
     /// Finalize and return a serialization of the object for signature.
-    fn finalize(&mut self) -> der::Result<vec::Vec<u8>>;
+    fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey;
 
     /// Run the object through the signer and build it.
-    fn build<Signature>(mut self) -> Result<Self::Output>
+    fn build<S, Signature>(mut self, signer: &S) -> Result<Self::Output>
     where
-        Self::Signer: Signer<Signature>,
+        S: Signer<Signature>,
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
     {
-        let blob = self.finalize()?;
+        let blob = self.finalize(signer)?;
 
-        let signature = self.signer().try_sign(&blob)?.to_bitstring()?;
+        let signature = signer.try_sign(&blob)?.to_bitstring()?;
 
-        self.assemble(signature)
+        self.assemble(signature, signer)
     }
 
     /// Run the object through the signer and build it.
-    fn build_with_rng<Signature>(mut self, rng: &mut impl CryptoRngCore) -> Result<Self::Output>
+    fn build_with_rng<S, Signature>(
+        mut self,
+        signer: &S,
+        rng: &mut impl CryptoRngCore,
+    ) -> Result<Self::Output>
     where
-        Self::Signer: RandomizedSigner<Signature>,
+        S: RandomizedSigner<Signature>,
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
     {
-        let blob = self.finalize()?;
+        let blob = self.finalize(signer)?;
 
-        let signature = self
-            .signer()
-            .try_sign_with_rng(rng, &blob)?
-            .to_bitstring()?;
+        let signature = signer.try_sign_with_rng(rng, &blob)?.to_bitstring()?;
 
-        self.assemble(signature)
+        self.assemble(signature, signer)
     }
 }
 
-impl<'s, S> Builder for CertificateBuilder<'s, S>
-where
-    S: Keypair + DynSignatureAlgorithmIdentifier,
-    S::VerifyingKey: EncodePublicKey,
-{
-    type Signer = S;
+impl Builder for CertificateBuilder {
     type Output = Certificate;
 
-    fn signer(&self) -> &Self::Signer {
-        self.cert_signer
-    }
+    fn finalize<S>(&mut self, cert_signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        let verifying_key = cert_signer.verifying_key();
+        let signer_pub = SubjectPublicKeyInfoOwned::from_key(&verifying_key)?;
 
-    fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
+        self.tbs.signature = cert_signer.signature_algorithm_identifier()?;
+
+        let mut default_extensions = self.profile.build_extensions(
+            self.tbs.subject_public_key_info.owned_to_ref(),
+            signer_pub.owned_to_ref(),
+            &self.tbs,
+        )?;
+
+        self.extensions.append(&mut default_extensions);
+
         if !self.extensions.is_empty() {
             self.tbs.extensions = Some(self.extensions.clone());
         }
@@ -476,10 +488,14 @@ where
             }
         }
 
-        self.tbs.to_der()
+        self.tbs.to_der().map_err(Error::from)
     }
 
-    fn assemble(self, signature: BitString) -> Result<Self::Output> {
+    fn assemble<S>(self, signature: BitString, _signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
         let signature_algorithm = self.tbs.signature.clone();
 
         Ok(Certificate {
@@ -490,33 +506,119 @@ where
     }
 }
 
-impl<'s, S> Builder for RequestBuilder<'s, S>
-where
-    S: Keypair + DynSignatureAlgorithmIdentifier,
-    S::VerifyingKey: EncodePublicKey,
-{
-    type Signer = S;
+impl Builder for RequestBuilder {
     type Output = CertReq;
 
-    fn signer(&self) -> &Self::Signer {
-        self.req_signer
-    }
+    fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        let verifying_key = signer.verifying_key();
+        let public_key = SubjectPublicKeyInfoOwned::from_key(&verifying_key)?;
+        self.info.public_key = public_key;
 
-    fn finalize(&mut self) -> der::Result<vec::Vec<u8>> {
         self.info
             .attributes
             .insert(self.extension_req.clone().try_into()?)?;
 
-        self.info.to_der()
+        self.info.to_der().map_err(Error::from)
     }
 
-    fn assemble(self, signature: BitString) -> Result<Self::Output> {
-        let algorithm = self.req_signer.signature_algorithm_identifier()?;
+    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        let algorithm = signer.signature_algorithm_identifier()?;
 
         Ok(CertReq {
             info: self.info,
             algorithm,
             signature,
         })
+    }
+}
+
+/// Trait for async X509 builders
+///
+/// This trait defines the interface between builder and the signers.
+///
+/// This is the async counterpart of [`Builder`].
+#[allow(async_fn_in_trait)]
+pub trait AsyncBuilder: Sized {
+    /// Type built by this builder
+    type Output: Sized;
+
+    /// Assemble the final object from signature.
+    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey;
+
+    /// Finalize and return a serialization of the object for signature.
+    fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey;
+
+    /// Run the object through the signer and build it.
+    async fn build_async<S, Signature: 'static>(mut self, signer: &S) -> Result<Self::Output>
+    where
+        S: AsyncSigner<Signature>,
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+    {
+        let blob = self.finalize(signer)?;
+
+        let signature = signer.sign_async(&blob).await?.to_bitstring()?;
+
+        self.assemble(signature, signer)
+    }
+
+    /// Run the object through the signer and build it.
+    async fn build_with_rng_async<S, Signature: 'static>(
+        mut self,
+        signer: &S,
+        rng: &mut impl CryptoRngCore,
+    ) -> Result<Self::Output>
+    where
+        S: AsyncRandomizedSigner<Signature>,
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+    {
+        let blob = self.finalize(signer)?;
+
+        let signature = signer
+            .try_sign_with_rng_async(rng, &blob)
+            .await?
+            .to_bitstring()?;
+
+        self.assemble(signature, signer)
+    }
+}
+
+impl<T> AsyncBuilder for T
+where
+    T: Builder,
+{
+    type Output = <T as Builder>::Output;
+
+    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        <T as Builder>::assemble(self, signature, signer)
+    }
+
+    fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        <T as Builder>::finalize(self, signer)
     }
 }

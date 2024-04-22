@@ -1,12 +1,4 @@
-mod asn1;
-mod ldap;
-mod node;
-mod root;
-mod spec;
-
-pub use asn1::Asn1Parser;
-pub use ldap::LdapParser;
-pub use root::Root;
+use oiddbgen::{Asn1Parser, LdapParser, Root};
 
 // Update this database by downloading the CSV file here:
 // https://www.iana.org/assignments/ldap-parameters/ldap-parameters.xhtml#ldap-parameters-3
@@ -24,6 +16,7 @@ const RFCS: &[(&str, &str)] = &[
     ("rfc6962", include_str!("../rfc6962.txt")),
     ("rfc7107", include_str!("../rfc7107.txt")),
     ("rfc7299", include_str!("../rfc7299.txt")),
+    ("rfc7693", include_str!("../rfc7693.txt")),
     ("rfc8410", include_str!("../rfc8410.txt")),
 ];
 
@@ -32,6 +25,8 @@ const MDS: &[(&str, &str)] = &[
     // https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
     ("fips202", include_str!("../fips202.md")),
     ("rfc8894", include_str!("../rfc8894.md")),
+    // Created from: https://trustedcomputinggroup.org
+    ("tcgtpm", include_str!("../tcg-tpm.md")),
 ];
 
 // Bases defined in other places.
@@ -41,19 +36,19 @@ const NO_BASES: &[(&str, &str)] = &[("", "")];
 fn main() {
     let mut root = Root::default();
 
-    for (spec, name, oid) in LdapParser::new(LDAP).iter() {
-        root.add(&spec, &name, &oid);
+    for (spec, name, obid) in LdapParser::new(LDAP).iter() {
+        root.add(&spec, &name, &obid);
     }
 
     for (spec, body) in RFCS {
-        for (name, oid) in Asn1Parser::new(body, BASES).iter() {
-            root.add(spec, &name, &oid);
+        for (name, obid) in Asn1Parser::new(body, BASES).iter() {
+            root.add(spec, &name, &obid);
         }
     }
 
     for (spec, body) in MDS {
-        for (name, oid) in Asn1Parser::new(body, NO_BASES).iter() {
-            root.add(spec, &name, &oid);
+        for (name, obid) in Asn1Parser::new(body, NO_BASES).iter() {
+            root.add(spec, &name, &obid);
         }
     }
 

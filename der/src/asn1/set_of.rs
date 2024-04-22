@@ -12,7 +12,7 @@
 
 use crate::{
     arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error,
-    ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    ErrorKind, FixedTag, Header, Length, Reader, Tag, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -49,12 +49,12 @@ where
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
     #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
-    pub fn add(&mut self, new_elem: T) -> Result<()> {
+    pub fn add(&mut self, new_elem: T) -> Result<(), Error> {
         self.insert_ordered(new_elem)
     }
 
     /// Insert an item into this [`SetOf`].
-    pub fn insert(&mut self, item: T) -> Result<()> {
+    pub fn insert(&mut self, item: T) -> Result<(), Error> {
         self.inner.push(item)?;
         der_sort(self.inner.as_mut())
     }
@@ -63,7 +63,7 @@ where
     ///
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
-    pub fn insert_ordered(&mut self, item: T) -> Result<()> {
+    pub fn insert_ordered(&mut self, item: T) -> Result<(), Error> {
         // Ensure set elements are lexicographically ordered
         if let Some(last) = self.inner.last() {
             check_der_ordering(last, &item)?;
@@ -108,7 +108,9 @@ impl<'a, T, const N: usize> DecodeValue<'a> for SetOf<T, N>
 where
     T: Decode<'a> + DerOrd,
 {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+    type Error = T::Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         reader.read_nested(header.length, |reader| {
             let mut result = Self::new();
 
@@ -127,12 +129,12 @@ impl<'a, T, const N: usize> EncodeValue for SetOf<T, N>
 where
     T: 'a + Decode<'a> + Encode + DerOrd,
 {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         self.iter()
             .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         for elem in self.iter() {
             elem.encode(writer)?;
         }
@@ -154,7 +156,7 @@ where
 {
     type Error = Error;
 
-    fn try_from(mut arr: [T; N]) -> Result<SetOf<T, N>> {
+    fn try_from(mut arr: [T; N]) -> Result<SetOf<T, N>, Error> {
         der_sort(&mut arr)?;
 
         let mut result = SetOf::new();
@@ -171,7 +173,7 @@ impl<T, const N: usize> ValueOrd for SetOf<T, N>
 where
     T: DerOrd,
 {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         iter_cmp(self.iter(), other.iter())
     }
 }
@@ -232,7 +234,7 @@ where
     /// Note: this is an inherent method instead of an impl of the
     /// [`FromIterator`] trait in order to be fallible.
     #[allow(clippy::should_implement_trait)]
-    pub fn from_iter<I>(iter: I) -> Result<Self>
+    pub fn from_iter<I>(iter: I) -> Result<Self, Error>
     where
         I: IntoIterator<Item = T>,
     {
@@ -244,7 +246,7 @@ where
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
     #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
-    pub fn add(&mut self, item: T) -> Result<()> {
+    pub fn add(&mut self, item: T) -> Result<(), Error> {
         self.insert_ordered(item)
     }
 
@@ -252,7 +254,7 @@ where
     ///
     /// Note: this is an inherent method instead of an impl of the
     /// [`Extend`] trait in order to be fallible.
-    pub fn extend<I>(&mut self, iter: I) -> Result<()>
+    pub fn extend<I>(&mut self, iter: I) -> Result<(), Error>
     where
         I: IntoIterator<Item = T>,
     {
@@ -261,7 +263,7 @@ where
     }
 
     /// Insert an item into this [`SetOfVec`]. Must be unique.
-    pub fn insert(&mut self, item: T) -> Result<()> {
+    pub fn insert(&mut self, item: T) -> Result<(), Error> {
         self.inner.push(item);
         der_sort(&mut self.inner)
     }
@@ -270,7 +272,7 @@ where
     ///
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
-    pub fn insert_ordered(&mut self, item: T) -> Result<()> {
+    pub fn insert_ordered(&mut self, item: T) -> Result<(), Error> {
         // Ensure set elements are lexicographically ordered
         if let Some(last) = self.inner.last() {
             check_der_ordering(last, &item)?;
@@ -326,7 +328,9 @@ impl<'a, T> DecodeValue<'a> for SetOfVec<T>
 where
     T: Decode<'a> + DerOrd,
 {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+    type Error = T::Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         reader.read_nested(header.length, |reader| {
             let mut inner = Vec::new();
 
@@ -346,12 +350,12 @@ impl<'a, T> EncodeValue for SetOfVec<T>
 where
     T: 'a + Decode<'a> + Encode + DerOrd,
 {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         self.iter()
             .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         for elem in self.iter() {
             elem.encode(writer)?;
         }
@@ -385,7 +389,8 @@ where
 {
     type Error = Error;
 
-    fn try_from(mut vec: Vec<T>) -> Result<SetOfVec<T>> {
+    fn try_from(mut vec: Vec<T>) -> Result<SetOfVec<T>, Error> {
+        // TODO(tarcieri): use `[T]::sort_by` here?
         der_sort(vec.as_mut_slice())?;
         Ok(SetOfVec { inner: vec })
     }
@@ -398,7 +403,7 @@ where
 {
     type Error = Error;
 
-    fn try_from(arr: [T; N]) -> Result<SetOfVec<T>> {
+    fn try_from(arr: [T; N]) -> Result<SetOfVec<T>, Error> {
         Vec::from(arr).try_into()
     }
 }
@@ -408,7 +413,7 @@ impl<T> ValueOrd for SetOfVec<T>
 where
     T: DerOrd,
 {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         iter_cmp(self.iter(), other.iter())
     }
 }
@@ -421,11 +426,8 @@ where
     T: DerOrd + arbitrary::Arbitrary<'a>,
 {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Self::try_from(
-            u.arbitrary_iter()?
-                .collect::<std::result::Result<Vec<_>, _>>()?,
-        )
-        .map_err(|_| arbitrary::Error::IncorrectFormat)
+        Self::try_from(u.arbitrary_iter()?.collect::<Result<Vec<_>, _>>()?)
+            .map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 
     fn size_hint(_depth: usize) -> (usize, Option<usize>) {
@@ -434,7 +436,7 @@ where
 }
 
 /// Ensure set elements are lexicographically ordered using [`DerOrd`].
-fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<()> {
+fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<(), Error> {
     match a.der_cmp(b)? {
         Ordering::Less => Ok(()),
         Ordering::Equal => Err(ErrorKind::SetDuplicate.into()),
@@ -452,7 +454,7 @@ fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<()> {
 /// to support heapless `no_std` targets as well as to enable bubbling up
 /// sorting errors.
 #[allow(clippy::arithmetic_side_effects)]
-fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
+fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
     for i in 0..slice.len() {
         let mut j = i;
 
@@ -473,7 +475,7 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<()> {
 
 /// Validate the elements of a `SET OF`, ensuring that they are all in order
 /// and that there are no duplicates.
-fn validate<T: DerOrd>(slice: &[T]) -> Result<()> {
+fn validate<T: DerOrd>(slice: &[T]) -> Result<(), Error> {
     if let Some(len) = slice.len().checked_sub(1) {
         for i in 0..len {
             let j = i.checked_add(1).ok_or(ErrorKind::Overflow)?;

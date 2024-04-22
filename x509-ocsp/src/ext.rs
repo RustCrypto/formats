@@ -1,5 +1,6 @@
 //! OCSP Extensions
 
+use crate::OcspGeneralizedTime;
 use alloc::vec::Vec;
 use const_oid::{
     db::rfc6960::{
@@ -9,7 +10,7 @@ use const_oid::{
     AssociatedOid,
 };
 use der::{
-    asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, OctetString, Uint},
+    asn1::{Ia5String, ObjectIdentifier, OctetString, Uint},
     Sequence, ValueOrd,
 };
 use spki::AlgorithmIdentifierOwned;
@@ -19,7 +20,7 @@ use x509_cert::{
     name::Name,
 };
 
-#[cfg(feature = "rand_core")]
+#[cfg(feature = "rand")]
 use rand_core::CryptoRngCore;
 
 // x509-cert's is not exported
@@ -60,8 +61,11 @@ impl Nonce {
     /// ```text
     /// Nonce ::= OCTET STRING(SIZE(1..32))
     /// ```
-    #[cfg(feature = "rand_core")]
-    pub fn generate<R: CryptoRngCore>(rng: &mut R, length: usize) -> Result<Self, der::Error> {
+    #[cfg(feature = "rand")]
+    pub fn generate<R>(rng: &mut R, length: usize) -> Result<Self, der::Error>
+    where
+        R: CryptoRngCore,
+    {
         let mut bytes = alloc::vec![0; length];
         rng.fill_bytes(&mut bytes);
         Self::new(bytes)
@@ -69,23 +73,11 @@ impl Nonce {
 }
 
 /// CrlReferences extension as defined in [RFC 6960 Section 4.4.2]
-pub struct CrlReferences(pub Vec<CrlId>);
-
-impl_newtype!(CrlReferences, Vec<CrlId>);
-
-// It may be desirable for the OCSP responder to indicate the CRL on
-// which a revoked or onHold certificate is found.  This can be useful
-// where OCSP is used between repositories, and also as an auditing
-// mechanism.  The CRL may be specified by a URL (the URL at which the
-// CRL is available), a number (CRL number), or a time (the time at
-// which the relevant CRL was created).  These extensions will be
-// specified as singleExtensions.  The identifier for this extension
-// will be id-pkix-ocsp-crl, while the value will be CrlID.
-impl_extension!(CrlReferences, critical = false);
-
-impl AssociatedOid for CrlReferences {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_CRL;
-}
+///
+/// This does not seem to be its own type and just another name for CrlID
+///
+/// [RFC 6960 Section 4.4.2]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.2
+pub type CrlReferences = CrlId;
 
 /// CrlID structure as defined in [RFC 6960 Section 4.4.2].
 ///
@@ -107,7 +99,21 @@ pub struct CrlId {
     pub crl_num: Option<Uint>,
 
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub crl_time: Option<GeneralizedTime>,
+    pub crl_time: Option<OcspGeneralizedTime>,
+}
+
+// It may be desirable for the OCSP responder to indicate the CRL on
+// which a revoked or onHold certificate is found.  This can be useful
+// where OCSP is used between repositories, and also as an auditing
+// mechanism.  The CRL may be specified by a URL (the URL at which the
+// CRL is available), a number (CRL number), or a time (the time at
+// which the relevant CRL was created).  These extensions will be
+// specified as singleExtensions.  The identifier for this extension
+// will be id-pkix-ocsp-crl, while the value will be CrlID.
+impl_extension!(CrlId, critical = false);
+
+impl AssociatedOid for CrlId {
+    const OID: ObjectIdentifier = ID_PKIX_OCSP_CRL;
 }
 
 /// AcceptableResponses structure as defined in [RFC 6960 Section 4.4.3].
@@ -117,6 +123,7 @@ pub struct CrlId {
 /// ```
 ///
 /// [RFC 6960 Section 4.4.3]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.3
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AcceptableResponses(pub Vec<ObjectIdentifier>);
 
 impl_newtype!(AcceptableResponses, Vec<ObjectIdentifier>);
@@ -138,9 +145,9 @@ impl AssociatedOid for AcceptableResponses {
 /// ```
 ///
 /// [RFC 6960 Section 4.4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.4
-pub struct ArchiveCutoff(GeneralizedTime);
+pub struct ArchiveCutoff(pub OcspGeneralizedTime);
 
-impl_newtype!(ArchiveCutoff, GeneralizedTime);
+impl_newtype!(ArchiveCutoff, OcspGeneralizedTime);
 impl_extension!(ArchiveCutoff, critical = false);
 
 impl AssociatedOid for ArchiveCutoff {
@@ -176,6 +183,7 @@ impl_extension!(ServiceLocator, critical = false);
 /// ```
 ///
 /// [RFC 6960 Section 4.4.7.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.7.1
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PreferredSignatureAlgorithms(pub Vec<PreferredSignatureAlgorithm>);
 
 impl_newtype!(

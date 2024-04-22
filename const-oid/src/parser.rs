@@ -11,7 +11,7 @@ pub(crate) struct Parser {
     current_arc: Arc,
 
     /// BER/DER encoder
-    encoder: Encoder,
+    encoder: Encoder<{ ObjectIdentifier::MAX_SIZE }>,
 }
 
 impl Parser {

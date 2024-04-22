@@ -1,21 +1,22 @@
 [package]
 name = "spki"
-version = "0.7.3"
+version = "0.8.0-pre.0"
 description = """
 X.509 Subject Public Key Info (RFC5280) describing public keys as well as their
 associated AlgorithmIdentifiers (i.e. OIDs)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/spki"
+homepage = "https://github.com/RustCrypto/formats/tree/master/spki"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "x509"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.71"
 
 [dependencies]
-der = { version = "0.7.2", features = ["oid"] }
+der = { version = "=0.8.0-pre.0", features = ["oid"] }
 
 # Optional dependencies
 arbitrary = { version = "1.2", features = ["derive"], optional = true }

@@ -1,35 +1,35 @@
 [package]
 name = "pkcs12"
-version = "0.0.0"
+version = "0.2.0-pre"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #12:
 Personal Information Exchange Syntax v1.1 (RFC7292)
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/RustCrypto/formats/tree/master/pkcs12"
+homepage = "https://github.com/RustCrypto/formats/tree/master/pkcs12"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "pkcs", "private"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.75"
 
 [dependencies]
-der = { version = "0.7.8", features = ["alloc", "derive", "oid", "pem"] }
-spki = { version = "0.7" }
-x509-cert = { version = "0.2.3", default-features = false, features = ["pem"] }
-const-oid = { version = "0.9", features = ["db"] } # TODO: path = "../const-oid"
-cms = "0.2.1"
-digest = { version = "0.10.7", features=["alloc"], optional = true }
+der = { version = "=0.8.0-pre.0", features = ["alloc", "derive", "oid", "pem"] }
+spki = { version = "=0.8.0-pre.0" }
+x509-cert = { version = "=0.3.0-pre", default-features = false, features = ["pem"] }
+const-oid = { version = "=0.10.0-pre.2", features = ["db"] }
+cms = "=0.3.0-pre"
+digest = { version = "0.11.0-pre.8", features=["alloc"], optional = true }
 zeroize = "1.6.0"
 
 [dev-dependencies]
-hex-literal = "0.3.3"
-pkcs8 = { version = "0.10.2", features = ["pkcs5", "getrandom"] }
-pkcs5 = {version = "0.7.1", features = ["pbes2", "3des"]}
-subtle-encoding = "0.5.1"
-sha2 = "0.10.8"
-whirlpool = "0.10.4"
+hex-literal = "0.4"
+pkcs8 = { version = "=0.11.0-pre.0", features = ["pkcs5", "getrandom"] }
+pkcs5 = {version = "=0.8.0-pre.0", features = ["pbes2", "3des"]}
+sha2 = "=0.11.0-pre.3"
+whirlpool = "=0.11.0-pre.2"
 
 [features]
 kdf = ["dep:digest"]

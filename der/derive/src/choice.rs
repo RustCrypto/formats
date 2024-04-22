@@ -96,6 +96,8 @@ impl DeriveChoice {
             }
 
             impl<#lifetime> ::der::Decode<#lifetime> for #ident<#lt_params> {
+                type Error = ::der::Error;
+
                 fn decode<R: ::der::Reader<#lifetime>>(reader: &mut R) -> ::der::Result<Self> {
                     use der::Reader as _;
                     match reader.peek_tag()? {

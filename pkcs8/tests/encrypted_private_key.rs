@@ -89,14 +89,14 @@ fn decode_ed25519_encpriv_aes128_pbkdf2_sha1_der() {
     let pbes2_params = pk.encryption_algorithm.pbes2().unwrap();
     let pbkdf2_params = pbes2_params.kdf.pbkdf2().unwrap();
 
-    assert_eq!(pbkdf2_params.salt, hex!("e8765e01e43b6bad"));
+    assert_eq!(pbkdf2_params.salt.as_ref(), hex!("e8765e01e43b6bad"));
     assert_eq!(pbkdf2_params.iteration_count, 2048);
     assert_eq!(pbkdf2_params.key_length, None);
     assert_eq!(pbkdf2_params.prf, pbes2::Pbkdf2Prf::HmacWithSha1);
 
     match pbes2_params.encryption {
         pbes2::EncryptionScheme::Aes128Cbc { iv } => {
-            assert_eq!(iv, &hex!("223080a71bcd2b9a256d876c924979d2"));
+            assert_eq!(iv, hex!("223080a71bcd2b9a256d876c924979d2"));
         }
         other => panic!("unexpected encryption scheme: {:?}", other),
     }
@@ -121,14 +121,14 @@ fn decode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
     let pbes2_params = pk.encryption_algorithm.pbes2().unwrap();
     let pbkdf2_params = pbes2_params.kdf.pbkdf2().unwrap();
 
-    assert_eq!(pbkdf2_params.salt, hex!("79d982e70df91a88"));
+    assert_eq!(pbkdf2_params.salt.as_ref(), hex!("79d982e70df91a88"));
     assert_eq!(pbkdf2_params.iteration_count, 2048);
     assert_eq!(pbkdf2_params.key_length, None);
     assert_eq!(pbkdf2_params.prf, pbes2::Pbkdf2Prf::HmacWithSha256);
 
     match pbes2_params.encryption {
         pbes2::EncryptionScheme::Aes256Cbc { iv } => {
-            assert_eq!(iv, &hex!("b2d02d78b2efd9dff694cf8e0af40925"));
+            assert_eq!(iv, hex!("b2d02d78b2efd9dff694cf8e0af40925"));
         }
         other => panic!("unexpected encryption scheme: {:?}", other),
     }
@@ -164,7 +164,7 @@ fn encrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
     let pbes2_params = pkcs5::pbes2::Parameters::pbkdf2_sha256_aes256cbc(
         2048,
         &hex!("79d982e70df91a88"),
-        &hex!("b2d02d78b2efd9dff694cf8e0af40925"),
+        hex!("b2d02d78b2efd9dff694cf8e0af40925"),
     )
     .unwrap();
 
@@ -185,7 +185,7 @@ fn encrypt_ed25519_der_encpriv_aes256_scrypt() {
     let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes256cbc(
         pkcs5::scrypt::Params::new(15, 8, 1, 32).unwrap(),
         &hex!("E6211E2348AD69E0"),
-        &hex!("9BD0A6251F2254F9FD5963887C27CF01"),
+        hex!("9BD0A6251F2254F9FD5963887C27CF01"),
     )
     .unwrap();
 

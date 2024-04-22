@@ -58,6 +58,8 @@ impl AsRef<[u8]> for BytesRef<'_> {
 }
 
 impl<'a> DecodeValue<'a> for BytesRef<'a> {
+    type Error = Error;
+
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         reader.read_slice(header.length).and_then(Self::new)
     }

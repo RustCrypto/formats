@@ -34,10 +34,13 @@ macro_rules! impl_teletex_string {
 ///
 /// # Supported characters
 ///
-/// The standard defines a complex character set allowed in this type. However, quoting the ASN.1
-/// mailing list, "a sizable volume of software in the world treats TeletexString (T61String) as a
-/// simple 8-bit string with mostly Windows Latin 1 (superset of iso-8859-1) encoding".
+/// The standard defines a complex character set allowed in this type. However,
+/// [quoting the ASN.1 mailing list]:
 ///
+/// > "a sizable volume of software in the world treats TeletexString (T61String) as
+/// > a simple 8-bit string with mostly Windows Latin 1 (superset of iso-8859-1) encoding".
+///
+/// [quoting the ASN.1 mailing list]: https://www.mail-archive.com/asn1@asn1.org/msg00460.html
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct TeletexStringRef<'a> {
     /// Inner value

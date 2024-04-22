@@ -9,7 +9,8 @@ constant-time operation and embedded-friendly no_std support
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/base64ct"
-repository = "https://github.com/RustCrypto/formats/tree/master/base64ct"
+homepage = "https://github.com/RustCrypto/formats/tree/master/base64ct"
+repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "base64", "pem", "phc"]
 readme = "README.md"
@@ -17,7 +18,7 @@ edition = "2021"
 rust-version = "1.60"
 
 [dev-dependencies]
-base64 = "0.21"
+base64 = "0.22"
 # pinned to preserve MSRV
 proptest = { version = "=1.2.0", default-features = false, features = ["std"] }
 

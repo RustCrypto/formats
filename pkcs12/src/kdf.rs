@@ -1,5 +1,18 @@
-//! Implementation of the key derivation function
-//! [RFC 7292 Appendix B](https://datatracker.ietf.org/doc/html/rfc7292#appendix-B)
+//! Implementation of the PKCS#12 key derivation function as described in
+//! [RFC 7292 Appendix B](https://datatracker.ietf.org/doc/html/rfc7292#appendix-B).
+//!
+//! ## ⚠️ Security Warning
+//!
+//! This KDF is considered poor quality by today's standards as noted in the aforementioned RFC:
+//!
+//! > Note that this method for password privacy mode is not recommended
+//! > and is deprecated for new usage.  The procedures and algorithms
+//! > defined in PKCS #5 v2.1 should be used instead.
+//! > Specifically, PBES2 should be used as encryption scheme, with PBKDF2
+//! > as the key derivation function.
+//!
+//! See the [`pkcs5`](https://docs.rs/pkcs5) crate for an implementation of PKCS #5, or the
+//! [`argon2`](https://docs.rs/argon2) crate for a state-of-the-art password-based KDF.
 
 use alloc::{vec, vec::Vec};
 use der::asn1::BmpString;

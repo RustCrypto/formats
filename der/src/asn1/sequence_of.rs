@@ -1,8 +1,8 @@
 //! ASN.1 `SEQUENCE OF` support.
 
 use crate::{
-    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, FixedTag,
-    Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error,
+    FixedTag, Header, Length, Reader, Tag, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -29,7 +29,7 @@ impl<T, const N: usize> SequenceOf<T, N> {
     }
 
     /// Add an element to this [`SequenceOf`].
-    pub fn add(&mut self, element: T) -> Result<()> {
+    pub fn add(&mut self, element: T) -> Result<(), Error> {
         self.inner.push(element)
     }
 
@@ -66,7 +66,9 @@ impl<'a, T, const N: usize> DecodeValue<'a> for SequenceOf<T, N>
 where
     T: Decode<'a>,
 {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+    type Error = T::Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         reader.read_nested(header.length, |reader| {
             let mut sequence_of = Self::new();
 
@@ -83,12 +85,12 @@ impl<T, const N: usize> EncodeValue for SequenceOf<T, N>
 where
     T: Encode,
 {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         self.iter()
             .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         for elem in self.iter() {
             elem.encode(writer)?;
         }
@@ -105,7 +107,7 @@ impl<T, const N: usize> ValueOrd for SequenceOf<T, N>
 where
     T: DerOrd,
 {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         iter_cmp(self.iter(), other.iter())
     }
 }
@@ -131,7 +133,9 @@ impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
 where
     T: Decode<'a>,
 {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+    type Error = T::Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         let sequence_of = SequenceOf::<T, N>::decode_value(reader, header)?;
 
         // TODO(tarcieri): use `[T; N]::try_map` instead of `expect` when stable
@@ -141,7 +145,7 @@ where
                 .into_array()
                 .map(|elem| elem.expect("arrayvec length mismatch")))
         } else {
-            Err(Self::TAG.length_error())
+            Err(Self::TAG.length_error().into())
         }
     }
 }
@@ -150,12 +154,12 @@ impl<T, const N: usize> EncodeValue for [T; N]
 where
     T: Encode,
 {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         self.iter()
             .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         for elem in self {
             elem.encode(writer)?;
         }
@@ -172,7 +176,7 @@ impl<T, const N: usize> ValueOrd for [T; N]
 where
     T: DerOrd,
 {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         iter_cmp(self.iter(), other.iter())
     }
 }
@@ -182,7 +186,9 @@ impl<'a, T> DecodeValue<'a> for Vec<T>
 where
     T: Decode<'a>,
 {
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+    type Error = T::Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         reader.read_nested(header.length, |reader| {
             let mut sequence_of = Self::new();
 
@@ -200,12 +206,12 @@ impl<T> EncodeValue for Vec<T>
 where
     T: Encode,
 {
-    fn value_len(&self) -> Result<Length> {
+    fn value_len(&self) -> Result<Length, Error> {
         self.iter()
             .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
     }
 
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
         for elem in self {
             elem.encode(writer)?;
         }
@@ -224,7 +230,7 @@ impl<T> ValueOrd for Vec<T>
 where
     T: DerOrd,
 {
-    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         iter_cmp(self.iter(), other.iter())
     }
 }
