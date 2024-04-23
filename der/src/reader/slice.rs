@@ -21,9 +21,17 @@ pub struct SliceReader<'a> {
 impl<'a> SliceReader<'a> {
     /// Create a new slice reader for the given byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self, Error> {
+        Self::new_with_encoding_rules(bytes, EncodingRules::default())
+    }
+
+    /// Create a new slice reader with the given encoding rules.
+    pub fn new_with_encoding_rules(
+        bytes: &'a [u8],
+        encoding_rules: EncodingRules,
+    ) -> Result<Self, Error> {
         Ok(Self {
             bytes: BytesRef::new(bytes)?,
-            encoding_rules: EncodingRules::default(),
+            encoding_rules,
             failed: false,
             position: Length::ZERO,
         })
@@ -196,7 +204,7 @@ mod tests {
         assert_eq!(
             ErrorKind::TrailingData {
                 decoded: 3u8.into(),
-                remaining: 1u8.into()
+                remaining: 1u8.into(),
             },
             err.kind()
         );
