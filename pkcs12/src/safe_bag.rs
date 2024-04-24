@@ -7,16 +7,16 @@ use der::{AnyRef, Decode, Enumerated, Sequence};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
 
-/// The `SafeContents` type is defined in [RFC 7292 Section 4.1].
+/// The `SafeContents` type is defined in [RFC 7292 Section 4.2].
 ///
 /// ```text
 /// SafeContents ::= SEQUENCE OF SafeBag
 /// ```
 ///
-/// [RFC 7292 Section 4]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2
+/// [RFC 7292 Section 4.2]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2
 pub type SafeContents = Vec<SafeBag>;
 
-/// The `SafeBag` type is defined in [RFC 7292 Section 4.1].
+/// The `SafeBag` type is defined in [RFC 7292 Section 4.2].
 ///
 /// ```text
 /// SafeBag ::= SEQUENCE {
@@ -26,7 +26,7 @@ pub type SafeContents = Vec<SafeBag>;
 /// }
 /// ```
 ///
-/// [RFC 7292 Section 4]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2
+/// [RFC 7292 Section 4.2]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[allow(missing_docs)]
 pub struct SafeBag {
