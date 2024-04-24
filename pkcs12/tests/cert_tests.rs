@@ -1,21 +1,29 @@
 use cms::encrypted_data::EncryptedData;
-use const_oid::db::rfc5911::{ID_DATA, ID_ENCRYPTED_DATA};
-use const_oid::db::rfc5912::ID_SHA_256;
-use der::asn1::OctetString;
-use der::{Decode, Encode};
+use const_oid::db::{
+    rfc5911::{ID_DATA, ID_ENCRYPTED_DATA},
+    rfc5912::ID_SHA_256,
+};
+use der::{
+    asn1::{ContextSpecific, OctetString},
+    Decode, Encode,
+};
 use hex_literal::hex;
-
-use der::asn1::ContextSpecific;
-use pkcs12::authenticated_safe::AuthenticatedSafe;
-use pkcs12::cert_type::CertBag;
-use pkcs12::pbe_params::Pbkdf2Params;
-use pkcs12::pfx::Pfx;
-use pkcs12::pfx::Version;
-use pkcs12::safe_bag::SafeContents;
-
-use pkcs8::pkcs5::pbes2::{AES_256_CBC_OID, HMAC_WITH_SHA256_OID, PBES2_OID, PBKDF2_OID};
-use pkcs8::{pkcs5, EncryptedPrivateKeyInfo};
+use pkcs8::{
+    pkcs5::{
+        self,
+        pbes2::{AES_256_CBC_OID, HMAC_WITH_SHA256_OID, PBES2_OID, PBKDF2_OID},
+    },
+    EncryptedPrivateKeyInfo,
+};
 use spki::AlgorithmIdentifierOwned;
+
+use pkcs12::{
+    pbe_params::Pbkdf2Params,
+    pfx::Pfx,
+    pfx::Version,
+    safe_bag::SafeContents,
+    {AuthenticatedSafe, CertBag},
+};
 
 //    0 1871: SEQUENCE {
 //    4    1:   INTEGER 3
