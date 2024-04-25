@@ -598,7 +598,7 @@ fn test_create_password_recipient_info() {
     struct Aes128CbcPwriEncryptor<'a> {
         challenge_password: &'a [u8],
         key_encryption_iv: Iv<cbc::Encryptor<Aes128>>,
-        key_derivation_params: pkcs5::pbes2::Pbkdf2Params<'a>,
+        key_derivation_params: pkcs5::pbes2::Pbkdf2Params,
     }
     impl<'a> Aes128CbcPwriEncryptor<'a> {
         pub fn new(challenge_password: &'a [u8]) -> Self {
