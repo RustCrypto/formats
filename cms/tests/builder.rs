@@ -2,7 +2,7 @@
 
 use aes::Aes128;
 use cipher::block_padding::Pkcs7;
-use cipher::{BlockDecryptMut, KeyIvInit};
+use cipher::{BlockModeDecrypt, KeyIvInit};
 use cms::builder::{
     create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, SignedDataBuilder, SignerInfoBuilder,
@@ -478,10 +478,12 @@ fn test_build_pkcs7_scep_pkcsreq() {
     let iv = iv_octet_string.as_bytes();
     let encrypted_content_octet_string = encryption_info.encrypted_content.unwrap();
     let encrypted_content = encrypted_content_octet_string.as_bytes();
-    let csr_der_decrypted =
-        cbc::Decryptor::<Aes128>::new(content_encryption_key.as_slice().into(), iv.into())
-            .decrypt_padded_vec_mut::<Pkcs7>(encrypted_content)
-            .unwrap();
+    let csr_der_decrypted = cbc::Decryptor::<Aes128>::new(
+        content_encryption_key.as_slice().try_into().unwrap(),
+        iv.try_into().unwrap(),
+    )
+    .decrypt_padded_vec::<Pkcs7>(encrypted_content)
+    .unwrap();
     assert_eq!(csr_der_decrypted.as_slice(), csr_der)
 }
 

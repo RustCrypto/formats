@@ -19,10 +19,11 @@ use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
-use cipher::block_padding::Pkcs7;
-use cipher::rand_core::{CryptoRng, CryptoRngCore, RngCore};
-use cipher::BlockEncryptMut;
-use cipher::{Key, KeyIvInit, KeySizeUser};
+use cipher::{
+    block_padding::Pkcs7,
+    rand_core::{self, CryptoRng, CryptoRngCore, RngCore},
+    BlockModeEncrypt, Key, KeyIvInit, KeySizeUser,
+};
 use const_oid::ObjectIdentifier;
 use core::cmp::Ordering;
 use core::fmt;
@@ -55,6 +56,9 @@ pub enum Error {
     /// Public key errors propagated from the [`spki::Error`] type.
     PublicKey(spki::Error),
 
+    /// RNG error propagated for the [`rand_core::Error`] type.
+    Rng(rand_core::Error),
+
     /// Signing error propagated for the [`signature::Signer`] type.
     Signature(signature::Error),
 
@@ -67,6 +71,7 @@ impl fmt::Display for Error {
         match self {
             Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
             Error::PublicKey(err) => write!(f, "public key error: {}", err),
+            Error::Rng(err) => write!(f, "rng error: {}", err),
             Error::Signature(err) => write!(f, "signature error: {}", err),
             Error::Builder(message) => write!(f, "builder error: {message}"),
         }
@@ -88,6 +93,12 @@ impl From<spki::Error> for Error {
 impl From<signature::Error> for Error {
     fn from(err: signature::Error) -> Error {
         Error::Signature(err)
+    }
+}
+
+impl From<rand_core::Error> for Error {
+    fn from(err: rand_core::Error) -> Error {
+        Error::Rng(err)
     }
 }
 
@@ -998,7 +1009,7 @@ fn get_hasher(
 macro_rules! encrypt_block_mode {
     ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $rng:expr, $oid:expr) => {{
         let (key, iv) = match $key {
-            None => $block_mode::$typ::<$alg>::generate_key_iv($rng),
+            None => $block_mode::$typ::<$alg>::generate_key_iv_with_rng($rng)?,
             Some(key) => {
                 if key.len() != $alg::key_size() {
                     return Err(Error::Builder(String::from(
@@ -1007,13 +1018,13 @@ macro_rules! encrypt_block_mode {
                 }
                 (
                     Key::<$block_mode::$typ<$alg>>::from_slice(key).to_owned(),
-                    $block_mode::$typ::<$alg>::generate_iv($rng),
+                    $block_mode::$typ::<$alg>::generate_iv_with_rng($rng)?,
                 )
             }
         };
         let encryptor = $block_mode::$typ::<$alg>::new(&key.into(), &iv.into());
         Ok((
-            encryptor.encrypt_padded_vec_mut::<Pkcs7>($data),
+            encryptor.encrypt_padded_vec::<Pkcs7>($data),
             key.to_vec(),
             AlgorithmIdentifierOwned {
                 oid: $oid,
