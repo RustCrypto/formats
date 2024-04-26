@@ -3,14 +3,18 @@
 use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptParams};
 use crate::{Error, Result};
 use cbc::cipher::{
-    block_padding::Pkcs7, BlockCipher, BlockDecryptMut, BlockEncryptMut, KeyInit, KeyIvInit,
+    block_padding::Pkcs7, BlockCipher, BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt,
+    BlockModeEncrypt, KeyInit, KeyIvInit,
 };
 use pbkdf2::{
-    hmac::digest::{
-        block_buffer::Eager,
-        core_api::{BlockSizeUser, BufferKindUser, CoreProxy, FixedOutputCore, UpdateCore},
-        generic_array::typenum::{IsLess, Le, NonZero, U256},
-        HashMarker,
+    hmac::{
+        digest::{
+            block_buffer::Eager,
+            core_api::{BlockSizeUser, BufferKindUser, FixedOutputCore, UpdateCore},
+            typenum::{IsLess, Le, NonZero, U256},
+            HashMarker,
+        },
+        EagerHash,
     },
     pbkdf2_hmac,
 };
@@ -19,7 +23,7 @@ use scrypt::scrypt;
 /// Maximum size of a derived encryption key
 const MAX_KEY_LEN: usize = 32;
 
-fn cbc_encrypt<'a, C: BlockEncryptMut + BlockCipher + KeyInit>(
+fn cbc_encrypt<'a, C: BlockCipherEncrypt + BlockCipher + KeyInit>(
     es: EncryptionScheme,
     key: EncryptionKey,
     iv: &[u8],
@@ -28,11 +32,11 @@ fn cbc_encrypt<'a, C: BlockEncryptMut + BlockCipher + KeyInit>(
 ) -> Result<&'a [u8]> {
     cbc::Encryptor::<C>::new_from_slices(key.as_slice(), iv)
         .map_err(|_| es.to_alg_params_invalid())?
-        .encrypt_padded_mut::<Pkcs7>(buffer, pos)
+        .encrypt_padded::<Pkcs7>(buffer, pos)
         .map_err(|_| Error::EncryptFailed)
 }
 
-fn cbc_decrypt<'a, C: BlockDecryptMut + BlockCipher + KeyInit>(
+fn cbc_decrypt<'a, C: BlockCipherDecrypt + BlockCipher + KeyInit>(
     es: EncryptionScheme,
     key: EncryptionKey,
     iv: &[u8],
@@ -40,7 +44,7 @@ fn cbc_decrypt<'a, C: BlockDecryptMut + BlockCipher + KeyInit>(
 ) -> Result<&'a [u8]> {
     cbc::Decryptor::<C>::new_from_slices(key.as_slice(), iv)
         .map_err(|_| es.to_alg_params_invalid())?
-        .decrypt_padded_mut::<Pkcs7>(buffer)
+        .decrypt_padded::<Pkcs7>(buffer)
         .map_err(|_| Error::EncryptFailed)
 }
 
@@ -155,7 +159,7 @@ impl EncryptionKey {
     /// Derive key using PBKDF2.
     fn derive_with_pbkdf2<D>(password: &[u8], params: &Pbkdf2Params, length: usize) -> Self
     where
-        D: CoreProxy,
+        D: EagerHash,
         D::Core: Sync
             + HashMarker
             + UpdateCore
