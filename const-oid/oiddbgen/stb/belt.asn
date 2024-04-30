@@ -1,0 +1,53 @@
+Belt-module-v2 {iso(1) member-body(2) by(112) 0 2 0 34 101 31 module(1) ver2(2)}
+DEFINITIONS ::=
+BEGIN
+  belt OBJECT IDENTIFIER ::= {iso(1) member-body(2) by(112) 0 2 0 34 101 31}
+
+  belt-block128 OBJECT IDENTIFIER ::= {belt 3}
+  belt-block192 OBJECT IDENTIFIER ::= {belt 4}
+  belt-block256 OBJECT IDENTIFIER ::= {belt 5}
+  belt-wblock128 OBJECT IDENTIFIER ::= {belt 6}
+  belt-wblock192 OBJECT IDENTIFIER ::= {belt 7}
+  belt-wblock256 OBJECT IDENTIFIER ::= {belt 8}
+  belt-compress OBJECT IDENTIFIER ::= {belt 9}
+  belt-ecb128 OBJECT IDENTIFIER ::= {belt 11}
+  belt-ecb192 OBJECT IDENTIFIER ::= {belt 12}
+  belt-ecb256 OBJECT IDENTIFIER ::= {belt 13}
+  belt-cbc128 OBJECT IDENTIFIER ::= {belt 21}
+  belt-cbc192 OBJECT IDENTIFIER ::= {belt 22}
+  belt-cbc256 OBJECT IDENTIFIER ::= {belt 23}
+  belt-cfb128 OBJECT IDENTIFIER ::= {belt 31}
+  belt-cfb192 OBJECT IDENTIFIER ::= {belt 32}
+  belt-cfb256 OBJECT IDENTIFIER ::= {belt 33}
+  belt-ctr128 OBJECT IDENTIFIER ::= {belt 41}
+  belt-ctr192 OBJECT IDENTIFIER ::= {belt 42}
+  belt-ctr256 OBJECT IDENTIFIER ::= {belt 43}
+  belt-mac128 OBJECT IDENTIFIER ::= {belt 51}
+  belt-mac192 OBJECT IDENTIFIER ::= {belt 52}
+  belt-mac256 OBJECT IDENTIFIER ::= {belt 53}
+  belt-dwp128 OBJECT IDENTIFIER ::= {belt 61}
+  belt-dwp192 OBJECT IDENTIFIER ::= {belt 62}
+  belt-dwp256 OBJECT IDENTIFIER ::= {belt 63}
+  belt-che128 OBJECT IDENTIFIER ::= {belt 64}
+  belt-che192 OBJECT IDENTIFIER ::= {belt 65}
+  belt-che256 OBJECT IDENTIFIER ::= {belt 66}
+  belt-kwp128 OBJECT IDENTIFIER ::= {belt 71}
+  belt-kwp192 OBJECT IDENTIFIER ::= {belt 72}
+  belt-kwp256 OBJECT IDENTIFIER ::= {belt 73}
+  belt-hash OBJECT IDENTIFIER ::= {belt 81}
+  belt-keyexpand OBJECT IDENTIFIER ::= {belt 91}
+  belt-keyrep OBJECT IDENTIFIER ::= {belt 101}
+  belt-bde128 OBJECT IDENTIFIER ::= {belt 111}
+  belt-bde192 OBJECT IDENTIFIER ::= {belt 112}
+  belt-bde256 OBJECT IDENTIFIER ::= {belt 113}
+  belt-sde128 OBJECT IDENTIFIER ::= {belt 121}
+  belt-sde192 OBJECT IDENTIFIER ::= {belt 122}
+  belt-sde256 OBJECT IDENTIFIER ::= {belt 123}
+  belt-fmt128 OBJECT IDENTIFIER ::= {belt 131}
+  belt-fmt192 OBJECT IDENTIFIER ::= {belt 132}
+  belt-fmt256 OBJECT IDENTIFIER ::= {belt 133}
+
+  IV ::= OCTET STRING (SIZE(16))
+  KeyHeader ::= OCTET STRING (SIZE(16))
+  KeyLevel ::= OCTET STRING (SIZE(12))
+END

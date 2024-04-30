@@ -1,0 +1,129 @@
+Bpki-module-v1 {iso(1) member-body(2) by(112) 0 2 0 34 101 78 module(1) ver1(1)}
+DEFINITIONS ::=
+BEGIN
+  IMPORTS
+    CRLReason, Name
+      FROM PKIX1Explicit88 {iso(1) identified-organization(3)
+        dod(6) internet(1) security(5) mechanisms(5) pkix(7)
+        id-mod(0) id-pkix1-explicit-88(1)}
+    PKIStatusInfo
+      FROM PKIXTSP {iso(1) identified-organization(3) dod(6) internet(1)
+        security(5) mechanisms(5) pkix(7) id-mod(0) id-mod-tsp(13)}
+    belt-keywrap256
+      FROM Belt-module-v1 {iso(1) member-body(2) by(112) 0 2 0 34 101 31 1 1}
+    bign-pubkey, bign-curve256v1, bign-curve384v1, bign-curve512v1
+      FROM Bign-module-v2 {iso(1) member-body(2) by(112) 0 2 0 34 101 45 1 2}
+    hmac-hbelt
+      FROM Brng-module-v2 {iso(1) member-body(2) by(112) 0 2 0 34 101 47 1 2}
+    bels-share, bels-m0128v1, bels-m0192v1, bels-m0256v1
+      FROM Bels-module-v2 {iso(1) member-body(2) by(112) 0 2 0 34 101 60 1 2}
+    id-PBKDF2, id-PBES2
+      FROM PKCS5v2-1 {iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1)
+        pkcs-5(5) modules(16) pkcs5v2-1(2)};
+
+  bpki OBJECT IDENTIFIER ::= {iso(1) member-body(2) by(112) 0 2 0 34 101 78}
+
+  bpki-role OBJECT IDENTIFIER ::= {bpki 2}
+  bpki-role-ca0 OBJECT IDENTIFIER ::= {bpki-role 0}
+  bpki-role-ca1 OBJECT IDENTIFIER ::= {bpki-role 1}
+  bpki-role-ca2 OBJECT IDENTIFIER ::= {bpki-role 2}
+  bpki-role-aa OBJECT IDENTIFIER ::= {bpki-role 10}
+  bpki-role-ra OBJECT IDENTIFIER ::= {bpki-role 20}
+  bpki-role-ocsp OBJECT IDENTIFIER ::= {bpki-role 30}
+  bpki-role-tsa OBJECT IDENTIFIER ::= {bpki-role 31}
+  bpki-role-dvcs OBJECT IDENTIFIER ::= {bpki-role 32}
+  bpki-role-ids OBJECT IDENTIFIER ::= {bpki-role 33}
+  bpki-role-tls OBJECT IDENTIFIER ::= {bpki-role 50}
+  -- natural persons
+  bpki-role-np OBJECT IDENTIFIER ::= {bpki-role 60}
+  -- foreign natural persons
+  bpki-role-fnp OBJECT IDENTIFIER ::= {bpki-role 61}
+  -- legal representatives
+  bpki-role-lr OBJECT IDENTIFIER ::= {bpki-role 62}
+  -- autonomous cryptographic devices
+  bpki-role-acd OBJECT IDENTIFIER ::= {bpki-role 70}
+
+  -- extended key usage
+  bpki-eku OBJECT IDENTIFIER ::= {bpki 3}
+  --  server of Terminal Mode
+  bpki-eku-serverTM OBJECT IDENTIFIER ::= {bpki-eku 1}
+  --  client of Terminal Mode
+  bpki-eku-clientTM OBJECT IDENTIFIER ::= {bpki-eku 2}
+
+  -- attributes
+  bpki-at OBJECT IDENTIFIER ::= {bpki 4}
+  -- certificate validity period
+  bpki-at-certificateValidity OBJECT IDENTIFIER ::= {bpki-at 1}
+
+  -- content types
+  bpki-ct OBJECT IDENTIFIER ::= {bpki 5}
+  bpki-ct-enroll1-req OBJECT IDENTIFIER ::= {bpki-ct 1}
+  bpki-ct-enroll2-req OBJECT IDENTIFIER ::= {bpki-ct 2}
+  bpki-ct-reenroll-req OBJECT IDENTIFIER ::= {bpki-ct 3}
+  bpki-ct-spawn-req OBJECT IDENTIFIER ::= {bpki-ct 4}
+  bpki-ct-setpwd-req OBJECT IDENTIFIER ::= {bpki-ct 5}
+  bpki-ct-revoke-req OBJECT IDENTIFIER ::= {bpki-ct 6}
+  bpki-ct-resp OBJECT IDENTIFIER ::= {bpki-ct 7}
+
+  BPKIRevokeReq ::= SEQUENCE {
+    issuer          Name,
+    serialNumber    INTEGER,
+    revokePwd       UTF8String,
+    reasonCode      CRLReason,
+    invalidityDate  GeneralizedTime OPTIONAL,
+    comment         UTF8String OPTIONAL }
+
+  BPKIResp ::= SEQUENCE {
+    statusInfo  PKIStatusInfo,
+    requestId   OCTET STRING(SIZE(32)),
+    nonce       OCTET STRING(SIZE(8)) OPTIONAL }
+
+  BPKIRetrieveReq ::= SEQUENCE {
+    requestId   OCTET STRING(SIZE(32)),
+    nonce       OCTET STRING(SIZE(8)) }
+
+  PrivateKeyInfo ::= SEQUENCE {
+    version                  INTEGER(0),
+    keyAlgorithm             CHOICE {
+      bignPrivkeyAlgorithm   BignAlgorithmIdentifier,
+      belsSharekeyAlgorithm  BelsAlgorithmIdentifier },
+    key                      OCTET STRING }
+
+  BignAlgorithmIdentifier ::= SEQUENCE {
+    algorithm  OBJECT IDENTIFIER(bign-pubkey),
+    params     OBJECT IDENTIFIER(bign-curve256v1 | bign-curve384v1 |
+                                  bign-curve512v1) }
+
+  BelsAlgorithmIdentifier ::= SEQUENCE {
+    algorithm  OBJECT IDENTIFIER(bels-share),
+    params     OBJECT IDENTIFIER(bels-m0128v1 | bels-m0192v1 | bels-m0256v1) }
+
+  EncryptedPrivateKeyInfo ::= SEQUENCE {
+    encryptionAlgorithm  EncryptionAlgorithmIdentifier,
+    encryptedData        OCTET STRING }
+
+  EncryptionAlgorithmIdentifier ::= SEQUENCE {
+    algorithm   OBJECT IDENTIFIER(id-PBES2),
+    params      PBES2-params }
+
+  PBES2-params ::= SEQUENCE {
+    keyDerivationFunc PBKDF2AlgorithmIdentifier,
+    encryptionScheme  BeltKeywrapAlgorithmIdentifier }
+
+  PBKDF2AlgorithmIdentifier ::= SEQUENCE {
+    algorithm   OBJECT IDENTIFIER(id-PBKDF2),
+    params      PBKDF2-params }
+
+  BeltKeywrapAlgorithmIdentifier ::= SEQUENCE {
+    algorithm   OBJECT IDENTIFIER(belt-keywrap256),
+    params      NULL }
+
+  PBKDF2-params ::= SEQUENCE {
+    salt            OCTET STRING(SIZE(8)),
+    iterationCount  INTEGER (10000..MAX),
+    prf             PrfAlgorithmIdentifier }
+
+  PrfAlgorithmIdentifier ::= SEQUENCE {
+    algorithm OBJECT IDENTIFIER(hmac-hbelt),
+    params    NULL }
+END

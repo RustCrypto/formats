@@ -27,6 +27,14 @@ const MDS: &[(&str, &str)] = &[
     ("rfc8894", include_str!("../rfc8894.md")),
     // Created from: https://trustedcomputinggroup.org
     ("tcgtpm", include_str!("../tcg-tpm.md")),
+    // Created from:  https://github.com/bcrypto
+    ("belt", include_str!("../stb/belt.asn")),
+    ("bign", include_str!("../stb/bign.asn")),
+    ("bpki", include_str!("../stb/bpki.asn")),
+    ("btok", include_str!("../stb/btok.asn")),
+    ("brng", include_str!("../stb/brng.asn")),
+    ("bash", include_str!("../stb/bash.asn")),
+    ("bake", include_str!("../stb/bake.asn"))
 ];
 
 // Bases defined in other places.
