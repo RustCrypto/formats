@@ -72,7 +72,10 @@ fn decode_ec_p256_der() {
 fn decode_ec_bignp256_der() {
     let pk = PrivateKeyInfo::try_from(EC_BIGN_P256_DER_EXAMPLE).unwrap();
     assert_eq!(pk.version(), Version::V1);
-    assert_eq!(pk.algorithm.oid, "1.2.112.0.2.0.34.101.45.2.1".parse().unwrap());
+    assert_eq!(
+        pk.algorithm.oid,
+        "1.2.112.0.2.0.34.101.45.2.1".parse().unwrap()
+    );
 
     assert_eq!(
         pk.algorithm
@@ -85,7 +88,10 @@ fn decode_ec_bignp256_der() {
 
     // Extracted with:
     // $ openssl asn1parse -inform der -in tests/examples/bign256-priv.der
-    assert_eq!(pk.private_key, &hex!("1F66B5B84B7339674533F0329C74F21834281FED0732429E0C79235FC273E269"))
+    assert_eq!(
+        pk.private_key,
+        &hex!("1F66B5B84B7339674533F0329C74F21834281FED0732429E0C79235FC273E269")
+    )
 }
 
 // Test vector from RFC8410 Section 10.3:
