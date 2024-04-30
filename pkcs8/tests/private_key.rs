@@ -13,6 +13,9 @@ use der::{pem::LineEnding, EncodePem};
 /// Elliptic Curve (P-256) PKCS#8 private key encoded as ASN.1 DER
 const EC_P256_DER_EXAMPLE: &[u8] = include_bytes!("examples/p256-priv.der");
 
+/// Elliptic Curve (Bign P-256) PKCS#8 private key encoded as ASN.1 DER
+const EC_BIGN_P256_DER_EXAMPLE: &[u8] = include_bytes!("examples/bign256-priv.der");
+
 /// Ed25519 PKCS#8 v1 private key encoded as ASN.1 DER
 const ED25519_DER_V1_EXAMPLE: &[u8] = include_bytes!("examples/ed25519-priv-pkcs8v1.der");
 
@@ -28,6 +31,9 @@ const X25519_DER_EXAMPLE: &[u8] = include_bytes!("examples/x25519-priv.der");
 /// Elliptic Curve (P-256) PKCS#8 private key encoded as PEM
 #[cfg(feature = "pem")]
 const EC_P256_PEM_EXAMPLE: &str = include_str!("examples/p256-priv.pem");
+
+#[cfg(feature = "pem")]
+const EC_BIGN_P256_PEM_EXAMPLE: &str = include_str!("examples/bign256-priv.pem");
 
 /// Ed25519 PKCS#8 private key encoded as PEM
 #[cfg(feature = "pem")]
@@ -60,6 +66,26 @@ fn decode_ec_p256_der() {
     // Extracted with:
     // $ openssl asn1parse -inform der -in tests/examples/p256-priv.der
     assert_eq!(pk.private_key, &hex!("306B020101042069624171561A63340DE0E7D869F2A05492558E1A04868B6A9F854A866788188DA144034200041CACFFB55F2F2CEFD89D89EB374B2681152452802DEEA09916068137D839CF7FC481A44492304D7EF66AC117BEFE83A8D08F155F2B52F9F618DD447029048E0F")[..]);
+}
+
+#[test]
+fn decode_ec_bignp256_der() {
+    let pk = PrivateKeyInfo::try_from(EC_BIGN_P256_DER_EXAMPLE).unwrap();
+    assert_eq!(pk.version(), Version::V1);
+    assert_eq!(pk.algorithm.oid, "1.2.112.0.2.0.34.101.45.2.1".parse().unwrap());
+
+    assert_eq!(
+        pk.algorithm
+            .parameters
+            .unwrap()
+            .decode_as::<ObjectIdentifier>()
+            .unwrap(),
+        "1.2.112.0.2.0.34.101.45.3.1".parse().unwrap()
+    );
+
+    // Extracted with:
+    // $ openssl asn1parse -inform der -in tests/examples/bign256-priv.der
+    assert_eq!(pk.private_key, &hex!("1F66B5B84B7339674533F0329C74F21834281FED0732429E0C79235FC273E269"))
 }
 
 // Test vector from RFC8410 Section 10.3:
@@ -135,6 +161,14 @@ fn encode_ec_p256_der() {
 
 #[test]
 #[cfg(feature = "alloc")]
+fn encode_ec_bignp256_der() {
+    let pk = PrivateKeyInfo::try_from(EC_BIGN_P256_DER_EXAMPLE).unwrap();
+    let pk_encoded = pk.to_der().unwrap();
+    assert_eq!(EC_BIGN_P256_DER_EXAMPLE, pk_encoded);
+}
+
+#[test]
+#[cfg(feature = "alloc")]
 fn encode_ed25519_der_v1() {
     let pk = PrivateKeyInfo::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
     assert_eq!(ED25519_DER_V1_EXAMPLE, pk.to_der().unwrap());
@@ -163,6 +197,13 @@ fn encode_rsa_2048_der() {
 fn encode_ec_p256_pem() {
     let pk = PrivateKeyInfo::try_from(EC_P256_DER_EXAMPLE).unwrap();
     assert_eq!(EC_P256_PEM_EXAMPLE, pk.to_pem(LineEnding::LF).unwrap());
+}
+
+#[test]
+#[cfg(feature = "pem")]
+fn encode_ec_bignp256_pem() {
+    let pk = PrivateKeyInfo::try_from(EC_BIGN_P256_DER_EXAMPLE).unwrap();
+    assert_eq!(EC_BIGN_P256_PEM_EXAMPLE, pk.to_pem(LineEnding::LF).unwrap());
 }
 
 #[test]
