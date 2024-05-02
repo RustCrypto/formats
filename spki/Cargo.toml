@@ -13,7 +13,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "x509"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.71"
+rust-version = "1.72"
 
 [dependencies]
 der = { version = "=0.8.0-pre.0", features = ["oid"] }
@@ -21,7 +21,7 @@ der = { version = "=0.8.0-pre.0", features = ["oid"] }
 # Optional dependencies
 arbitrary = { version = "1.2", features = ["derive"], optional = true }
 base64ct = { version = "1", optional = true, default-features = false }
-sha2 = { version = "0.10", optional = true, default-features = false }
+sha2 = { version = "=0.11.0-pre.3", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.4"

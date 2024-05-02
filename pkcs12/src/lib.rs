@@ -14,21 +14,35 @@
     unused_qualifications
 )]
 
-use const_oid::ObjectIdentifier;
 extern crate alloc;
 
-pub mod authenticated_safe;
-pub mod bag_type;
-pub mod cert_type;
-pub mod crl_type;
-pub mod digest_info;
-pub mod mac_data;
 pub mod pbe_params;
 pub mod pfx;
 pub mod safe_bag;
 
 #[cfg(feature = "kdf")]
 pub mod kdf;
+
+mod authenticated_safe;
+mod bag_type;
+mod cert_type;
+mod crl_type;
+mod digest_info;
+mod mac_data;
+
+pub use crate::{
+    authenticated_safe::AuthenticatedSafe,
+    bag_type::BagType,
+    cert_type::{CertBag, CertTypes},
+    crl_type::{CrlBag, CrlTypes},
+    digest_info::DigestInfo,
+    mac_data::MacData,
+    pfx::Pfx,
+    safe_bag::SafeBag,
+};
+pub use cms;
+
+use const_oid::ObjectIdentifier;
 
 // pbe oids
 /// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
