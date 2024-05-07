@@ -46,7 +46,7 @@ pub fn encode_string(input: &[u8]) -> String {
     let res = encode(input, &mut dst).expect("dst length is correct");
 
     debug_assert_eq!(elen, res.len());
-    unsafe { crate::String::from_utf8_unchecked(dst) }
+    unsafe { String::from_utf8_unchecked(dst) }
 }
 
 /// Decode a single nibble of upper hex
