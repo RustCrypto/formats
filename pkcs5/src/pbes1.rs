@@ -91,8 +91,8 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Algorithm {
 
     fn try_from(alg: AlgorithmIdentifierRef<'a>) -> der::Result<Self> {
         // Ensure that we have a supported PBES1 algorithm identifier
-        let encryption = EncryptionScheme::try_from(alg.oid)
-            .map_err(|_| der::Tag::ObjectIdentifier.value_error())?;
+        let encryption =
+            EncryptionScheme::try_from(alg.oid).map_err(|_| Tag::ObjectIdentifier.value_error())?;
 
         let parameters = alg
             .parameters
@@ -153,7 +153,7 @@ impl TryFrom<AnyRef<'_>> for Parameters {
                 salt: OctetStringRef::decode(reader)?
                     .as_bytes()
                     .try_into()
-                    .map_err(|_| der::Tag::OctetString.value_error())?,
+                    .map_err(|_| Tag::OctetString.value_error())?,
                 iteration_count: reader.decode()?,
             })
         })
