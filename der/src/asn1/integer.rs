@@ -38,7 +38,7 @@ where
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 pub(crate) mod tests {
-    use crate::{Decode, Encode};
+    use crate::{Decode, Encode, ErrorKind, Tag};
 
     // Vectors from Section 5.7 of:
     // https://luca.ntop.org/Teaching/Appunti/asn1.html
@@ -149,6 +149,20 @@ pub(crate) mod tests {
         assert_eq!(I256_BYTES, 256u16.encode_to_slice(&mut buffer).unwrap());
         assert_eq!(I32767_BYTES, 32767u16.encode_to_slice(&mut buffer).unwrap());
         assert_eq!(I65535_BYTES, 65535u16.encode_to_slice(&mut buffer).unwrap());
+    }
+
+    /// Integers cannot be empty.
+    ///
+    /// From X.690 § 8.3.1: "The contents octets shall consist of one or more octets"
+    #[test]
+    fn reject_empty() {
+        const EMPTY_INT: &[u8] = &[0x02, 0x00];
+
+        let err = u8::from_der(EMPTY_INT).expect_err("empty INTEGER should return error");
+        assert_eq!(err.kind(), ErrorKind::Length { tag: Tag::Integer });
+
+        let err = i8::from_der(EMPTY_INT).expect_err("empty INTEGER should return error");
+        assert_eq!(err.kind(), ErrorKind::Length { tag: Tag::Integer });
     }
 
     /// Integers must be encoded with a minimum number of octets

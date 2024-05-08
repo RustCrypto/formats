@@ -20,6 +20,10 @@ macro_rules! impl_encoding_traits {
                     let mut buf = [0u8; Self::BITS as usize / 8];
                     let max_length = u32::from(header.length) as usize;
 
+                    if max_length == 0 {
+                        return Err(Tag::Integer.length_error());
+                    }
+
                     if max_length > buf.len() {
                         return Err(Self::TAG.non_canonical_error());
                     }
