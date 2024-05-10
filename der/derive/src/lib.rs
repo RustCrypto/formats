@@ -101,6 +101,13 @@
 //! Note: please open a GitHub Issue if you would like to request support
 //! for additional ASN.1 types.
 //!
+//! ### `#[asn1(tag_mode = "...")]` attribute: `EXPLICIT` vs `IMPLICIT`
+//!
+//! This attribute can be used to declare the tagging mode used for a field of a `struct`
+//! which derives [`Sequence`] or for a variant of an `enum` which derives [`Choice`].
+//! It allows to override the toplevel `tag_mode` attribute, for the fields and variants that
+//! specify it.
+//!
 //! [`der`]: https://docs.rs/der/
 //! [`Choice`]: derive@Choice
 //! [`Sequence`]: derive@Sequence
