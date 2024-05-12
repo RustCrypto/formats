@@ -2,7 +2,7 @@ use const_oid::db::rfc6960::ID_PKIX_OCSP_BASIC;
 use der::asn1::{Null, ObjectIdentifier};
 use der::{Decode, Encode};
 use hex_literal::hex;
-use x509_cert::ext::pkix::CrlReason;
+use x509_cert::{certificate::Rfc5280, ext::pkix::CrlReason};
 use x509_ocsp::Version::V1;
 use x509_ocsp::*;
 
@@ -16,7 +16,7 @@ fn decode_ocsp_req_ca_signed() {
     pub const PKIXALG_SHA1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
 
     let ocsp_req =
-        OcspRequest::from_der(&hex!("3051304F304D304B3049300906052B0E03021A05000414A87E303106E4E88565CFE952598FA6DA7C00532F0414246E2B2DD06A925151256901AA9A47A689E7402002100E4239AB85E2E6A27C52C6DE9B9078D9")[..]).unwrap();
+        OcspRequest::<Rfc5280>::from_der(&hex!("3051304F304D304B3049300906052B0E03021A05000414A87E303106E4E88565CFE952598FA6DA7C00532F0414246E2B2DD06A925151256901AA9A47A689E7402002100E4239AB85E2E6A27C52C6DE9B9078D9")[..]).unwrap();
     assert_eq!(ocsp_req.tbs_request.version, V1);
     //assert!(ocsp_req.tbs_request.requestor_name.is_none());
     assert_eq!(ocsp_req.tbs_request.request_list.len(), 1);
@@ -172,7 +172,7 @@ fn decode_ocsp_req_delegated() {
     pub const PKIXALG_SHA1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
 
     let ocsp_req =
-        OcspRequest::from_der(&hex!("304530433041303F303D300906052B0E03021A050004140F0D5890F551D42ACF5431B7F42A321F7B74A4730414771441A65D9526D01DFF953B628CEAB7B55D3B92020401017467")[..]).unwrap();
+        OcspRequest::<Rfc5280>::from_der(&hex!("304530433041303F303D300906052B0E03021A050004140F0D5890F551D42ACF5431B7F42A321F7B74A4730414771441A65D9526D01DFF953B628CEAB7B55D3B92020401017467")[..]).unwrap();
     assert_eq!(ocsp_req.tbs_request.version, V1);
     //assert!(ocsp_req.tbs_request.requestor_name.is_none());
     assert_eq!(ocsp_req.tbs_request.request_list.len(), 1);
