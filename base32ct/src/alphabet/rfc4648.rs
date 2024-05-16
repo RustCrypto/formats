@@ -56,3 +56,20 @@ impl Alphabet for Base32Upper {
     const ENCODER: &'static [EncodeStep] = &[EncodeStep(25, 41)];
     const PADDED: bool = true;
 }
+
+/// RFC4648 upper case Base32 encoding *without* padding.
+///
+/// ```text
+/// [A-Z]      [2-7]
+/// 0x41-0x5a, 0x32-0x37
+/// ```
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Base32UpperUnpadded;
+
+impl Alphabet for Base32UpperUnpadded {
+    const BASE: u8 = b'A';
+    const DECODER: &'static [DecodeStep] =
+        &[DecodeStep(b'A'..=b'Z', -64), DecodeStep(b'2'..=b'7', -23)];
+    const ENCODER: &'static [EncodeStep] = &[EncodeStep(25, 41)];
+    const PADDED: bool = false;
+}

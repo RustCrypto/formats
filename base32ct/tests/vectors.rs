@@ -2,7 +2,7 @@
 
 #![cfg(feature = "alloc")]
 
-use base32ct::{Base32, Base32Unpadded, Base32Upper, Encoding, Error};
+use base32ct::{Base32, Base32Unpadded, Base32Upper, Base32UpperUnpadded, Encoding, Error};
 
 #[derive(Debug)]
 struct TestVector {
@@ -55,6 +55,21 @@ const UPPER_PADDED_VECTORS: &[TestVector] = &[
     },
 ];
 
+const UPPER_UNPADDED_VECTORS: &[TestVector] = &[
+    TestVector {
+        decoded: &[0],
+        encoded: "AA",
+    },
+    TestVector {
+        decoded: &[1, 2, 3, 5, 9, 17, 33, 65, 129],
+        encoded: "AEBAGBIJCEQUDAI",
+    },
+    TestVector {
+        decoded: &[32, 7],
+        encoded: "EADQ",
+    },
+];
+
 #[test]
 fn decode_valid_base32() {
     for vector in LOWER_PADDED_VECTORS {
@@ -71,6 +86,13 @@ fn decode_valid_base32() {
     for vector in UPPER_PADDED_VECTORS {
         assert_eq!(
             &Base32Upper::decode_vec(vector.encoded).unwrap(),
+            vector.decoded
+        );
+    }
+
+    for vector in UPPER_UNPADDED_VECTORS {
+        assert_eq!(
+            &Base32UpperUnpadded::decode_vec(vector.encoded).unwrap(),
             vector.decoded
         );
     }
@@ -106,5 +128,12 @@ fn encode_base32() {
 
     for vector in UPPER_PADDED_VECTORS {
         assert_eq!(&Base32Upper::encode_string(vector.decoded), vector.encoded);
+    }
+
+    for vector in UPPER_UNPADDED_VECTORS {
+        assert_eq!(
+            &Base32UpperUnpadded::encode_string(vector.decoded),
+            vector.encoded
+        );
     }
 }
