@@ -1,0 +1,15 @@
+Bake-module-v1 {iso(1) member-body(2) by(112) 0 2 0 34 101 66 module(1) ver1(1)}
+DEFINITIONS ::=
+BEGIN
+  bake OBJECT IDENTIFIER ::= {iso(1) member-body(2) by(112) 0 2 0 34 101 66}
+
+  bake-bmqv OBJECT IDENTIFIER ::= {bake 11}
+  bake-bsts OBJECT IDENTIFIER ::= {bake 12}
+  bake-bpace OBJECT IDENTIFIER ::= {bake 21}
+  bake-dh OBJECT IDENTIFIER ::= {bake 31}
+  bake-kdf OBJECT IDENTIFIER ::= {bake 101}
+  bake-swu OBJECT IDENTIFIER ::= {bake 201}
+
+  bake-keys OBJECT IDENTIFIER ::= {bake keys(2)}
+  bake-pubkey OBJECT IDENTIFIER ::= {bake-keys 1}
+END

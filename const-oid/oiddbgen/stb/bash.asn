@@ -1,0 +1,34 @@
+Bash-module-v2 {iso(1) member-body(2) by(112) 0 2 0 34 101 77 module(1) ver2(2)}
+DEFINITIONS ::=
+BEGIN
+  IMPORTS
+    bign
+      FROM Bign-module-v2 {iso(1) member-body(2) by(112) 0 2 0 34 101 45
+        module(1) ver2(2)};
+
+  bash OBJECT IDENTIFIER ::= {iso(1) member-body(2) by(112) 0 2 0 34 101 77}
+
+  bash256 OBJECT IDENTIFIER ::= {bash 11}
+  bash384 OBJECT IDENTIFIER ::= {bash 12}
+  bash512 OBJECT IDENTIFIER ::= {bash 13}
+  bash-prg-hash2561 OBJECT IDENTIFIER ::= {bash 21}
+  bash-prg-hash2562 OBJECT IDENTIFIER ::= {bash 22}
+  bash-prg-hash3841 OBJECT IDENTIFIER ::= {bash 23}
+  bash-prg-hash3842 OBJECT IDENTIFIER ::= {bash 24}
+  bash-prg-hash5121 OBJECT IDENTIFIER ::= {bash 25}
+  bash-prg-hash5122 OBJECT IDENTIFIER ::= {bash 26}
+  bash-prg-ae1281 OBJECT IDENTIFIER ::= {bash 31}
+  bash-prg-ae1282 OBJECT IDENTIFIER ::= {bash 32}
+  bash-prg-ae1921 OBJECT IDENTIFIER ::= {bash 33}
+  bash-prg-ae1922 OBJECT IDENTIFIER ::= {bash 34}
+  bash-prg-ae2561 OBJECT IDENTIFIER ::= {bash 35}
+  bash-prg-ae2562 OBJECT IDENTIFIER ::= {bash 36}
+  bash-f OBJECT IDENTIFIER ::= {bash 101}
+
+  bign-with-bash256 OBJECT IDENTIFIER ::= {bign 13}
+  bign-with-bash384 OBJECT IDENTIFIER ::= {bign 14}
+  bign-with-bash512 OBJECT IDENTIFIER ::= {bign 15}
+  bign-ibs-with-bash256 OBJECT IDENTIFIER ::= {bign 73}
+  bign-ibs-with-bash384 OBJECT IDENTIFIER ::= {bign 74}
+  bign-ibs-with-bash512 OBJECT IDENTIFIER ::= {bign 75}
+END
