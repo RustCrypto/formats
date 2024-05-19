@@ -590,6 +590,12 @@ pub mod rfc2985 {
     pub const PKCS_9_AT_USER_PKCS_12: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.16.840.1.113730.3.1.216");
 }
+pub mod rfc3161 {
+    pub const ID_CT_TST_INFO: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.1.4");
+    pub const ID_AA_TIME_STAMP_TOKEN: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.2.14");
+}
 pub mod rfc3280 {
     pub const EMAIL: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.1");
@@ -3167,6 +3173,8 @@ pub const DB: super::Database<'static> = super::Database(&[
         "pkcs-9-at-countryOfResidence",
     ),
     (&rfc2985::PKCS_9_AT_USER_PKCS_12, "pkcs-9-at-userPKCS12"),
+    (&rfc3161::ID_CT_TST_INFO, "id-ct-TSTInfo"),
+    (&rfc3161::ID_AA_TIME_STAMP_TOKEN, "id-aa-timeStampToken"),
     (&rfc3280::EMAIL, "email"),
     (&rfc3280::EMAIL_ADDRESS, "emailAddress"),
     (&rfc3280::PSEUDONYM, "pseudonym"),
