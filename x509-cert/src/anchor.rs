@@ -1,8 +1,8 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
+use crate::certificate::{CertificateInner, Profile, Rfc5280, TbsCertificateInner};
 use crate::ext::pkix::{certpolicy::CertificatePolicies, NameConstraints};
 use crate::{ext::Extensions, name::Name};
-use crate::{Certificate, TbsCertificate};
 
 use alloc::string::String;
 use der::asn1::OctetString;
@@ -37,7 +37,7 @@ pub enum Version {
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 #[allow(missing_docs)]
-pub struct TrustAnchorInfo {
+pub struct TrustAnchorInfo<P: Profile + 'static = Rfc5280> {
     #[asn1(default = "Default::default")]
     pub version: Version,
 
@@ -49,7 +49,7 @@ pub struct TrustAnchorInfo {
     pub ta_title: Option<String>,
 
     #[asn1(optional = "true")]
-    pub cert_path: Option<CertPathControls>,
+    pub cert_path: Option<CertPathControls<P>>,
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", optional = "true")]
     pub extensions: Option<Extensions>,
@@ -70,11 +70,11 @@ pub struct TrustAnchorInfo {
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct CertPathControls {
+pub struct CertPathControls<P: Profile + 'static = Rfc5280> {
     pub ta_name: Name,
 
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
-    pub certificate: Option<Certificate>,
+    pub certificate: Option<CertificateInner<P>>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub policy_set: Option<CertificatePolicies>,
@@ -114,6 +114,9 @@ flags! {
 /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
 pub type CertPolicyFlags = FlagSet<CertPolicies>;
 
+/// TrustAnchorInfo allows for the representation of a single trust anchor.
+/// Defined in [RFC 5914 Section 3].
+///
 /// ```text
 /// TrustAnchorChoice ::= CHOICE {
 ///   certificate  Certificate,
@@ -121,15 +124,17 @@ pub type CertPolicyFlags = FlagSet<CertPolicies>;
 ///   taInfo       [2] EXPLICIT TrustAnchorInfo
 /// }
 /// ```
+///
+/// [RFC 5914 Section 3]: https://www.rfc-editor.org/rfc/rfc5914#section-3
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 #[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
-pub enum TrustAnchorChoice {
-    Certificate(Certificate),
+pub enum TrustAnchorChoice<P: Profile + 'static = Rfc5280> {
+    Certificate(CertificateInner<P>),
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
-    TbsCertificate(TbsCertificate),
+    TbsCertificate(TbsCertificateInner<P>),
 
     #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
-    TaInfo(TrustAnchorInfo),
+    TaInfo(TrustAnchorInfo<P>),
 }
