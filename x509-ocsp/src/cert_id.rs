@@ -2,7 +2,10 @@
 
 use der::{asn1::OctetString, Sequence};
 use spki::AlgorithmIdentifierOwned;
-use x509_cert::serial_number::SerialNumber;
+use x509_cert::{
+    certificate::{Profile, Rfc5280},
+    serial_number::SerialNumber,
+};
 
 /// CertID structure as defined in [RFC 6960 Section 4.1.1].
 ///
@@ -17,11 +20,11 @@ use x509_cert::serial_number::SerialNumber;
 /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct CertId {
+pub struct CertId<P: Profile + 'static = Rfc5280> {
     pub hash_algorithm: AlgorithmIdentifierOwned,
     pub issuer_name_hash: OctetString,
     pub issuer_key_hash: OctetString,
-    pub serial_number: SerialNumber,
+    pub serial_number: SerialNumber<P>,
 }
 
 impl From<&CertId> for CertId {

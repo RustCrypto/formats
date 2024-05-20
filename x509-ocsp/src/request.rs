@@ -7,7 +7,7 @@ use core::{default::Default, option::Option};
 use der::{asn1::BitString, Decode, Sequence};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
-    certificate::Certificate,
+    certificate::{CertificateInner, Profile, Rfc5280},
     ext::{pkix::name::GeneralName, Extensions},
 };
 
@@ -22,8 +22,8 @@ use x509_cert::{
 /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct OcspRequest {
-    pub tbs_request: TbsRequest,
+pub struct OcspRequest<P: Profile + 'static = Rfc5280> {
+    pub tbs_request: TbsRequest<P>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub optional_signature: Option<Signature>,
@@ -50,7 +50,7 @@ impl OcspRequest {
 /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Default, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct TbsRequest {
+pub struct TbsRequest<P: Profile + 'static = Rfc5280> {
     #[asn1(
         context_specific = "0",
         default = "Default::default",
@@ -61,7 +61,7 @@ pub struct TbsRequest {
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub requestor_name: Option<GeneralName>,
 
-    pub request_list: Vec<Request>,
+    pub request_list: Vec<Request<P>>,
 
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
     pub request_extensions: Option<Extensions>,
@@ -96,12 +96,12 @@ impl TbsRequest {
 /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct Signature {
+pub struct Signature<P: Profile + 'static = Rfc5280> {
     pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitString,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
-    pub certs: Option<Vec<Certificate>>,
+    pub certs: Option<Vec<CertificateInner<P>>>,
 }
 
 /// Request structure as defined in [RFC 6960 Section 4.1.1].
@@ -115,8 +115,8 @@ pub struct Signature {
 /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct Request {
-    pub req_cert: CertId,
+pub struct Request<P: Profile + 'static = Rfc5280> {
+    pub req_cert: CertId<P>,
 
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub single_request_extensions: Option<Extensions>,
