@@ -335,7 +335,7 @@ checksum = "2da6da31387c7e4ef160ffab6d5e7f00c42626fe39aea70a7b0f1773f7dd6c1b"
 name = "cmpv2"
 version = "0.3.0-pre"
 dependencies = [
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "crmf",
  "der",
  "hex-literal",
@@ -350,7 +350,7 @@ dependencies = [
  "aes",
  "cbc",
  "cipher",
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "der",
  "ecdsa",
  "getrandom",
@@ -378,6 +378,15 @@ checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 [[package]]
 name = "const-oid"
 version = "0.10.0-pre.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7e3352a27098ba6b09546e5f13b15165e6a88b5c2723afecb3ea9576b27e3ea"
+dependencies = [
+ "arbitrary",
+]
+
+[[package]]
+name = "const-oid"
+version = "0.10.0-pre.3"
 dependencies = [
  "arbitrary",
  "hex-literal",
@@ -431,7 +440,7 @@ name = "crmf"
 version = "0.3.0-pre"
 dependencies = [
  "cms",
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "der",
  "spki",
  "x509-cert",
@@ -467,7 +476,7 @@ version = "0.8.0-pre.0"
 dependencies = [
  "arbitrary",
  "bytes",
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "der_derive",
  "flagset",
  "hex-literal",
@@ -522,7 +531,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "065d93ead7c220b85d5b4be4795d8398eac4ff68b5ee63895de0a3c1fb6edf25"
 dependencies = [
  "block-buffer",
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "crypto-common",
  "subtle",
 ]
@@ -1017,7 +1026,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 name = "pkcs1"
 version = "0.8.0-pre.0"
 dependencies = [
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "der",
  "hex-literal",
  "pkcs8",
@@ -1030,7 +1039,7 @@ name = "pkcs12"
 version = "0.2.0-pre"
 dependencies = [
  "cms",
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "der",
  "digest",
  "hex-literal",
@@ -1263,7 +1272,7 @@ version = "0.10.0-pre.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43e0089f12e510517c97e1adc17d0f8374efbabdd021dfb7645d6619f85633e9"
 dependencies = [
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "digest",
  "num-bigint-dig",
  "num-integer",
@@ -1900,7 +1909,7 @@ version = "0.3.0-pre"
 dependencies = [
  "arbitrary",
  "async-signature",
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "der",
  "ecdsa",
  "hex-literal",
@@ -1931,7 +1940,7 @@ dependencies = [
 name = "x509-ocsp"
 version = "0.3.0-pre"
 dependencies = [
- "const-oid",
+ "const-oid 0.10.0-pre.2",
  "der",
  "digest",
  "hex-literal",
