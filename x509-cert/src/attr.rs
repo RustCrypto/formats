@@ -185,7 +185,7 @@ impl AttributeTypeAndValue {
             parser.add(c)?;
         }
 
-        let tag = match oid {
+        let tag = match oid.as_ref() {
             COUNTRY_NAME => Tag::PrintableString,
             DOMAIN_COMPONENT => Tag::Ia5String,
             // Serial numbers are formatted as Printable String as per RFC 5280 Appendix A.1:

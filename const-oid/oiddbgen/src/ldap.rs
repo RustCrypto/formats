@@ -10,10 +10,10 @@ impl<'a> LdapParser<'a> {
         self.0.lines().filter_map(|line| {
             let (name, next) = line.split_at(line.find(',').unwrap());
             let (.., next) = next[1..].split_at(next[1..].find(',').unwrap());
-            let (obid, spec) = next[1..].split_at(next[1..].find(',').unwrap());
+            let (oid, spec) = next[1..].split_at(next[1..].find(',').unwrap());
 
-            let indx = obid.find('.')?;
-            obid.split_at(indx).0.parse::<usize>().ok()?;
+            let indx = oid.find('.')?;
+            oid.split_at(indx).0.parse::<usize>().ok()?;
 
             if !spec.trim().starts_with(",[RFC") {
                 return None;
@@ -21,8 +21,8 @@ impl<'a> LdapParser<'a> {
 
             let spec = spec[2..][..spec.len() - 3].to_ascii_lowercase();
             let name = name.trim().to_string();
-            let obid = obid.trim().to_string();
-            Some((spec, name, obid))
+            let oid = oid.trim().to_string();
+            Some((spec, name, oid))
         })
     }
 }

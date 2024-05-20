@@ -15,7 +15,7 @@ mod gen;
 
 pub use gen::*;
 
-use crate::{Error, ObjectIdentifier};
+use crate::{Error, ObjectIdentifier, ObjectIdentifierRef};
 
 /// A const implementation of case-insensitive ASCII equals.
 const fn eq_case(lhs: &[u8], rhs: &[u8]) -> bool {
@@ -37,7 +37,7 @@ const fn eq_case(lhs: &[u8], rhs: &[u8]) -> bool {
 
 /// A query interface for OIDs/Names.
 #[derive(Copy, Clone)]
-pub struct Database<'a>(&'a [(&'a ObjectIdentifier, &'a str)]);
+pub struct Database<'a>(&'a [(&'a ObjectIdentifierRef, &'a str)]);
 
 impl<'a> Database<'a> {
     /// Looks up a name for an OID.
@@ -48,18 +48,31 @@ impl<'a> Database<'a> {
     where
         'a: 'b,
     {
-        Ok(self.by_oid(&oid.parse()?).unwrap_or(oid))
+        let oid_: ObjectIdentifier = oid.parse()?;
+        Ok(self.by_oid((&oid_).into()).unwrap_or(oid))
     }
 
     /// Finds a named oid by its associated OID.
-    pub const fn by_oid(&self, oid: &ObjectIdentifier) -> Option<&'a str> {
+    pub const fn by_oid(&self, oid: &ObjectIdentifierRef) -> Option<&'a str> {
         let mut i = 0;
 
+        let rhs = oid.as_bytes();
         while i < self.0.len() {
-            let lhs = self.0[i].0;
+            let lhs = self.0[i].0.as_bytes();
 
-            if lhs.ber.eq(&oid.ber) {
-                return Some(self.0[i].1);
+            'next: {
+                if rhs.len() == lhs.len() {
+                    let mut j = 0usize;
+
+                    while j < lhs.len() {
+                        if lhs[j] != rhs[j] {
+                            break 'next;
+                        }
+                        j += 1;
+                    }
+
+                    return Some(self.0[i].1);
+                }
             }
 
             i += 1;
@@ -69,7 +82,7 @@ impl<'a> Database<'a> {
     }
 
     /// Finds a named oid by its associated name.
-    pub const fn by_name(&self, name: &str) -> Option<&'a ObjectIdentifier> {
+    pub const fn by_name(&self, name: &str) -> Option<&'a ObjectIdentifierRef> {
         let mut i = 0;
 
         while i < self.0.len() {
@@ -110,7 +123,7 @@ impl<'a> Iterator for Names<'a> {
         while i < self.database.0.len() {
             let lhs = self.database.0[i].0;
 
-            if lhs.ber.eq(&self.oid.ber) {
+            if lhs.ber.eq(self.oid.ber.as_ref()) {
                 self.position = i + 1;
                 return Some(self.database.0[i].1);
             }
@@ -130,7 +143,7 @@ mod tests {
 
     #[test]
     fn by_oid() {
-        let cn = super::DB.by_oid(&CN).expect("cn not found");
+        let cn = super::DB.by_oid((CN).into()).expect("cn not found");
         assert_eq!("cn", cn);
 
         let none = ObjectIdentifier::new_unwrap("0.1.2.3.4.5.6.7.8.9");
@@ -140,7 +153,7 @@ mod tests {
     #[test]
     fn by_name() {
         let cn = super::DB.by_name("CN").expect("cn not found");
-        assert_eq!(&CN, cn);
+        assert_eq!(CN, cn);
 
         assert_eq!(None, super::DB.by_name("purplePeopleEater"));
     }

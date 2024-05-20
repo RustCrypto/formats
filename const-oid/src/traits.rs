@@ -1,11 +1,11 @@
 //! Trait definitions.
 
-use crate::ObjectIdentifier;
+use crate::{ObjectIdentifier, ObjectIdentifierRef};
 
 /// A trait which associates an OID with a type.
 pub trait AssociatedOid {
     /// The OID associated with this type.
-    const OID: ObjectIdentifier;
+    const OID: &'static ObjectIdentifierRef;
 }
 
 /// A trait which associates a dynamic, `&self`-dependent OID with a type,
@@ -20,6 +20,6 @@ pub trait DynAssociatedOid {
 
 impl<T: AssociatedOid> DynAssociatedOid for T {
     fn oid(&self) -> ObjectIdentifier {
-        T::OID
+        T::OID.try_into().unwrap()
     }
 }
