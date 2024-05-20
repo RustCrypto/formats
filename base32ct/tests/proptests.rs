@@ -6,8 +6,8 @@ use base32::Alphabet;
 use base32ct::{Base32 as Base32Ct, Base32Unpadded as Base32UnpaddedCt, Encoding};
 use proptest::{prelude::*, string::*};
 
-const RFC4648_PADDED: Alphabet = Alphabet::RFC4648 { padding: true };
-const RFC4648_UNPADDED: Alphabet = Alphabet::RFC4648 { padding: false };
+const RFC4648_PADDED: Alphabet = Alphabet::Rfc4648 { padding: true };
+const RFC4648_UNPADDED: Alphabet = Alphabet::Rfc4648 { padding: false };
 
 proptest! {
     /// Ensure `base32ct` decodes padded data encoded by `base32` ref crate.
