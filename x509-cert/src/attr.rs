@@ -185,12 +185,12 @@ impl AttributeTypeAndValue {
             parser.add(c)?;
         }
 
-        let tag = match oid.as_ref() {
-            COUNTRY_NAME => Tag::PrintableString,
-            DOMAIN_COMPONENT => Tag::Ia5String,
+        let tag = match oid.as_oid_ref() {
+            o if o == COUNTRY_NAME => Tag::PrintableString,
+            o if o == DOMAIN_COMPONENT => Tag::Ia5String,
             // Serial numbers are formatted as Printable String as per RFC 5280 Appendix A.1:
             // https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
-            SERIAL_NUMBER => Tag::PrintableString,
+            o if o == SERIAL_NUMBER => Tag::PrintableString,
             _ => Tag::Utf8String,
         };
 
@@ -229,7 +229,7 @@ impl FromStr for AttributeTypeAndValue {
 
         // Either decode or lookup the OID for the given key.
         let oid = match DB.by_name(key) {
-            Some(oid) => *oid,
+            Some(oid) => oid.try_into().unwrap(),
             None => ObjectIdentifier::new(key)?,
         };
 

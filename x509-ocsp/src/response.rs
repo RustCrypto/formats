@@ -1,9 +1,9 @@
 //! OCSP Response
 
-use const_oid::AssociatedOid;
+use const_oid::{AssociatedOid, ObjectIdentifier, ObjectIdentifierRef};
 use core::option::Option;
 use der::{
-    asn1::{Null, ObjectIdentifier, OctetString},
+    asn1::{Null, OctetString},
     Enumerated, Sequence,
 };
 
@@ -158,7 +158,7 @@ pub trait AsResponseBytes: AssociatedOid + der::Encode {
     /// Encodes the response bytes of successful OCSP responses
     fn to_response_bytes(&self) -> Result<ResponseBytes, der::Error> {
         Ok(ResponseBytes {
-            response_type: <Self as AssociatedOid>::OID,
+            response_type: <Self as AssociatedOid>::OID.try_into()?,
             response: OctetString::new(self.to_der()?)?,
         })
     }

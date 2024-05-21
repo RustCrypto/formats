@@ -59,7 +59,7 @@ pub trait AsExtension: AssociatedOid + der::Encode {
         let content = OctetString::new(<Self as der::Encode>::to_der(self)?)?;
 
         Ok(Extension {
-            extn_id: <Self as AssociatedOid>::OID,
+            extn_id: <Self as AssociatedOid>::OID.try_into().unwrap(),
             critical: self.critical(subject, extensions),
             extn_value: content,
         })

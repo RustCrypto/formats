@@ -2,7 +2,7 @@ use super::name::GeneralNames;
 use crate::serial_number::SerialNumber;
 
 use const_oid::db::rfc5280::ID_CE_AUTHORITY_KEY_IDENTIFIER;
-use const_oid::{AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifierRef};
 use der::asn1::OctetString;
 use der::Sequence;
 
@@ -33,7 +33,7 @@ pub struct AuthorityKeyIdentifier {
 }
 
 impl AssociatedOid for AuthorityKeyIdentifier {
-    const OID: ObjectIdentifier = ID_CE_AUTHORITY_KEY_IDENTIFIER;
+    const OID: &'static ObjectIdentifierRef = ID_CE_AUTHORITY_KEY_IDENTIFIER;
 }
 
 impl_extension!(AuthorityKeyIdentifier, critical = false);

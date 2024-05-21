@@ -7,10 +7,10 @@ use const_oid::{
         ID_PKIX_OCSP_ARCHIVE_CUTOFF, ID_PKIX_OCSP_CRL, ID_PKIX_OCSP_NONCE,
         ID_PKIX_OCSP_PREF_SIG_ALGS, ID_PKIX_OCSP_RESPONSE, ID_PKIX_OCSP_SERVICE_LOCATOR,
     },
-    AssociatedOid,
+    AssociatedOid, ObjectIdentifier, ObjectIdentifierRef,
 };
 use der::{
-    asn1::{Ia5String, ObjectIdentifier, OctetString, Uint},
+    asn1::{Ia5String, OctetString, Uint},
     Sequence, ValueOrd,
 };
 use spki::AlgorithmIdentifierOwned;
@@ -44,7 +44,7 @@ impl_newtype!(Nonce, OctetString);
 impl_extension!(Nonce, critical = false);
 
 impl AssociatedOid for Nonce {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_NONCE;
+    const OID: &'static ObjectIdentifierRef = ID_PKIX_OCSP_NONCE;
 }
 
 impl Nonce {
@@ -113,7 +113,7 @@ pub struct CrlId {
 impl_extension!(CrlId, critical = false);
 
 impl AssociatedOid for CrlId {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_CRL;
+    const OID: &'static ObjectIdentifierRef = ID_PKIX_OCSP_CRL;
 }
 
 /// AcceptableResponses structure as defined in [RFC 6960 Section 4.4.3].
@@ -135,7 +135,7 @@ impl_newtype!(AcceptableResponses, Vec<ObjectIdentifier>);
 impl_extension!(AcceptableResponses, critical = true);
 
 impl AssociatedOid for AcceptableResponses {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_RESPONSE;
+    const OID: &'static ObjectIdentifierRef = ID_PKIX_OCSP_RESPONSE;
 }
 
 /// ArchiveCutoff structure as defined in [RFC 6960 Section 4.4.4].
@@ -151,7 +151,7 @@ impl_newtype!(ArchiveCutoff, OcspGeneralizedTime);
 impl_extension!(ArchiveCutoff, critical = false);
 
 impl AssociatedOid for ArchiveCutoff {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_ARCHIVE_CUTOFF;
+    const OID: &'static ObjectIdentifierRef = ID_PKIX_OCSP_ARCHIVE_CUTOFF;
 }
 
 /// ServiceLocator structure as defined in [RFC 6960 Section 4.4.6].
@@ -171,7 +171,7 @@ pub struct ServiceLocator {
 }
 
 impl AssociatedOid for ServiceLocator {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_SERVICE_LOCATOR;
+    const OID: &'static ObjectIdentifierRef = ID_PKIX_OCSP_SERVICE_LOCATOR;
 }
 
 impl_extension!(ServiceLocator, critical = false);
@@ -193,7 +193,7 @@ impl_newtype!(
 impl_extension!(PreferredSignatureAlgorithms, critical = false);
 
 impl AssociatedOid for PreferredSignatureAlgorithms {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_PREF_SIG_ALGS;
+    const OID: &'static ObjectIdentifierRef = ID_PKIX_OCSP_PREF_SIG_ALGS;
 }
 
 /// PreferredSignatureAlgorithm structure as defined in [RFC 6960 Section 4.4.7.1].

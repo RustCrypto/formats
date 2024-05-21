@@ -68,7 +68,7 @@ impl TryFrom<Certificate> for ContentInfo {
             version: CmsVersion::V1,
             digest_algorithms: SetOfVec::default(),
             encap_content_info: EncapsulatedContentInfo {
-                econtent_type: const_oid::db::rfc5911::ID_DATA,
+                econtent_type: const_oid::db::rfc5911::ID_DATA.try_into()?,
                 econtent: None,
             },
             certificates: Some(certs),
@@ -80,7 +80,7 @@ impl TryFrom<Certificate> for ContentInfo {
         let content = AnyRef::try_from(signed_data.as_slice())?;
 
         Ok(ContentInfo {
-            content_type: const_oid::db::rfc5911::ID_SIGNED_DATA,
+            content_type: const_oid::db::rfc5911::ID_SIGNED_DATA.try_into()?,
             content: Any::from(content),
         })
     }
@@ -101,7 +101,7 @@ impl TryFrom<PkiPath> for ContentInfo {
             version: CmsVersion::V1,
             digest_algorithms: SetOfVec::default(),
             encap_content_info: EncapsulatedContentInfo {
-                econtent_type: const_oid::db::rfc5911::ID_DATA,
+                econtent_type: const_oid::db::rfc5911::ID_DATA.try_into()?,
                 econtent: None,
             },
             certificates: Some(certs),
@@ -113,7 +113,7 @@ impl TryFrom<PkiPath> for ContentInfo {
         let content = AnyRef::try_from(signed_data.as_slice())?;
 
         Ok(ContentInfo {
-            content_type: const_oid::db::rfc5911::ID_SIGNED_DATA,
+            content_type: const_oid::db::rfc5911::ID_SIGNED_DATA.try_into()?,
             content: Any::from(content),
         })
     }

@@ -4,9 +4,9 @@ use alloc::vec::Vec;
 
 use const_oid::{
     db::rfc5280::{ID_PE_AUTHORITY_INFO_ACCESS, ID_PE_SUBJECT_INFO_ACCESS},
-    AssociatedOid,
+    AssociatedOid, ObjectIdentifier, ObjectIdentifierRef,
 };
-use der::{asn1::ObjectIdentifier, Sequence, ValueOrd};
+use der::{Sequence, ValueOrd};
 
 /// AuthorityInfoAccessSyntax as defined in [RFC 5280 Section 4.2.2.1].
 ///
@@ -19,7 +19,7 @@ use der::{asn1::ObjectIdentifier, Sequence, ValueOrd};
 pub struct AuthorityInfoAccessSyntax(pub Vec<AccessDescription>);
 
 impl AssociatedOid for AuthorityInfoAccessSyntax {
-    const OID: ObjectIdentifier = ID_PE_AUTHORITY_INFO_ACCESS;
+    const OID: &'static ObjectIdentifierRef = ID_PE_AUTHORITY_INFO_ACCESS;
 }
 
 impl_newtype!(AuthorityInfoAccessSyntax, Vec<AccessDescription>);
@@ -36,7 +36,7 @@ impl_extension!(AuthorityInfoAccessSyntax, critical = false);
 pub struct SubjectInfoAccessSyntax(pub Vec<AccessDescription>);
 
 impl AssociatedOid for SubjectInfoAccessSyntax {
-    const OID: ObjectIdentifier = ID_PE_SUBJECT_INFO_ACCESS;
+    const OID: &'static ObjectIdentifierRef = ID_PE_SUBJECT_INFO_ACCESS;
 }
 
 impl_newtype!(SubjectInfoAccessSyntax, Vec<AccessDescription>);

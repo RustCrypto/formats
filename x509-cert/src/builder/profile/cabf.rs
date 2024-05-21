@@ -51,7 +51,7 @@ pub fn check_names_encoding(name: &Name, multiple_allowed: bool) -> Result<()> {
                 return Err(Error::NonUniqueATV);
             }
 
-            if !ordering.any(|attr| attr == &atv.oid) {
+            if !ordering.any(|attr| (*attr).eq(&atv.oid)) {
                 return Err(Error::InvalidAttribute { oid: atv.oid });
             }
         }
@@ -83,10 +83,10 @@ pub fn ca_certificate_naming(subject: &Name) -> Result<()> {
 
     for rdn in subject.0.iter() {
         for atv in rdn.0.iter() {
-            if !allowed.remove(&atv.oid) {
+            if !allowed.remove(atv.oid.as_oid_ref()) {
                 return Err(Error::InvalidAttribute { oid: atv.oid });
             }
-            required.remove(&atv.oid);
+            required.remove(atv.oid.as_oid_ref());
         }
     }
 

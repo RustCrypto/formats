@@ -94,7 +94,7 @@ impl From<&RevokedCert> for RevokedInfo {
             revocation_time: rc.revocation_date.into(),
             revocation_reason: match &rc.crl_entry_extensions {
                 Some(extns) => {
-                    let mut filter = extns.iter().filter(|extn| extn.extn_id == CrlReason::OID);
+                    let mut filter = extns.iter().filter(|extn| CrlReason::OID.eq(&extn.extn_id));
                     match filter.next() {
                         Some(extn) => CrlReason::from_der(extn.extn_value.as_bytes()).ok(),
                         None => None,

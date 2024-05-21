@@ -2,7 +2,7 @@
 
 use alloc::vec::Vec;
 
-use const_oid::{db::rfc5280::ID_CE_NAME_CONSTRAINTS, AssociatedOid, ObjectIdentifier};
+use const_oid::{db::rfc5280::ID_CE_NAME_CONSTRAINTS, AssociatedOid, ObjectIdentifierRef};
 use der::Sequence;
 
 use super::super::name::GeneralName;
@@ -28,7 +28,7 @@ pub struct NameConstraints {
 }
 
 impl AssociatedOid for NameConstraints {
-    const OID: ObjectIdentifier = ID_CE_NAME_CONSTRAINTS;
+    const OID: &'static ObjectIdentifierRef = ID_CE_NAME_CONSTRAINTS;
 }
 
 impl_extension!(NameConstraints, critical = true);

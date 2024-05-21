@@ -9,7 +9,7 @@ use crate::{
 use alloc::vec::Vec;
 
 use const_oid::db::rfc5912::ID_EXTENSION_REQ;
-use const_oid::{AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifierRef};
 use der::{
     asn1::{Any, BitString, SetOfVec},
     Decode, Enumerated, Sequence,
@@ -106,7 +106,7 @@ impl<'a> TryFrom<&'a [u8]> for CertReq {
 pub struct ExtensionReq(pub Vec<Extension>);
 
 impl AssociatedOid for ExtensionReq {
-    const OID: ObjectIdentifier = ID_EXTENSION_REQ;
+    const OID: &'static ObjectIdentifierRef = ID_EXTENSION_REQ;
 }
 
 impl_newtype!(ExtensionReq, Vec<Extension>);
@@ -119,7 +119,7 @@ impl TryFrom<ExtensionReq> for Attribute {
         values.insert(Any::encode_from(&extension_req.0)?)?;
 
         Ok(Attribute {
-            oid: ExtensionReq::OID,
+            oid: ExtensionReq::OID.try_into().unwrap(),
             values,
         })
     }
@@ -129,9 +129,9 @@ pub mod attributes {
     //! Set of attributes that may be associated to a request
 
     use alloc::vec;
-    use const_oid::AssociatedOid;
+    use const_oid::{AssociatedOid, ObjectIdentifier, ObjectIdentifierRef};
     use der::{
-        asn1::{Any, ObjectIdentifier, SetOfVec},
+        asn1::{Any, SetOfVec},
         EncodeValue, Length, Result, Tag, Tagged, Writer,
     };
 
@@ -145,7 +145,7 @@ pub mod attributes {
             let values = SetOfVec::try_from(vec![inner])?;
 
             Ok(Attribute {
-                oid: Self::OID,
+                oid: Self::OID.try_into().unwrap(),
                 values,
             })
         }
@@ -168,7 +168,8 @@ pub mod attributes {
     impl AsAttribute for ChallengePassword {}
 
     impl AssociatedOid for ChallengePassword {
-        const OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.7");
+        const OID: &'static ObjectIdentifierRef =
+            ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.7").as_oid_ref();
     }
 
     impl Tagged for ChallengePassword {

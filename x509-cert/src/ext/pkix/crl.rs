@@ -6,7 +6,7 @@ use const_oid::db::rfc5280::{
     ID_CE_CRL_DISTRIBUTION_POINTS, ID_CE_CRL_NUMBER, ID_CE_CRL_REASONS, ID_CE_DELTA_CRL_INDICATOR,
     ID_CE_FRESHEST_CRL,
 };
-use const_oid::{AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifierRef};
 pub use dp::IssuingDistributionPoint;
 
 use alloc::vec::Vec;
@@ -24,7 +24,7 @@ use der::{asn1::Uint, Enumerated};
 pub struct CrlNumber(pub Uint);
 
 impl AssociatedOid for CrlNumber {
-    const OID: ObjectIdentifier = ID_CE_CRL_NUMBER;
+    const OID: &'static ObjectIdentifierRef = ID_CE_CRL_NUMBER;
 }
 
 impl_newtype!(CrlNumber, Uint);
@@ -41,7 +41,7 @@ impl_extension!(CrlNumber, critical = false);
 pub struct BaseCrlNumber(pub Uint);
 
 impl AssociatedOid for BaseCrlNumber {
-    const OID: ObjectIdentifier = ID_CE_DELTA_CRL_INDICATOR;
+    const OID: &'static ObjectIdentifierRef = ID_CE_DELTA_CRL_INDICATOR;
 }
 
 impl_newtype!(BaseCrlNumber, Uint);
@@ -58,7 +58,7 @@ impl_extension!(BaseCrlNumber, critical = true);
 pub struct CrlDistributionPoints(pub Vec<dp::DistributionPoint>);
 
 impl AssociatedOid for CrlDistributionPoints {
-    const OID: ObjectIdentifier = ID_CE_CRL_DISTRIBUTION_POINTS;
+    const OID: &'static ObjectIdentifierRef = ID_CE_CRL_DISTRIBUTION_POINTS;
 }
 
 impl_newtype!(CrlDistributionPoints, Vec<dp::DistributionPoint>);
@@ -75,7 +75,7 @@ impl_extension!(CrlDistributionPoints, critical = false);
 pub struct FreshestCrl(pub Vec<dp::DistributionPoint>);
 
 impl AssociatedOid for FreshestCrl {
-    const OID: ObjectIdentifier = ID_CE_FRESHEST_CRL;
+    const OID: &'static ObjectIdentifierRef = ID_CE_FRESHEST_CRL;
 }
 
 impl_newtype!(FreshestCrl, Vec<dp::DistributionPoint>);
@@ -116,7 +116,7 @@ pub enum CrlReason {
 }
 
 impl AssociatedOid for CrlReason {
-    const OID: ObjectIdentifier = ID_CE_CRL_REASONS;
+    const OID: &'static ObjectIdentifierRef = ID_CE_CRL_REASONS;
 }
 
 impl_extension!(CrlReason, critical = false);

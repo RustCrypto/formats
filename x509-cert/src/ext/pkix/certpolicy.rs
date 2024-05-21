@@ -2,9 +2,10 @@
 
 use alloc::{string::String, vec::Vec};
 
-use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
-use const_oid::AssociatedOid;
-use der::asn1::{GeneralizedTime, Ia5String, ObjectIdentifier, Uint};
+use const_oid::{
+    db::rfc5912::ID_CE_CERTIFICATE_POLICIES, AssociatedOid, ObjectIdentifier, ObjectIdentifierRef,
+};
+use der::asn1::{GeneralizedTime, Ia5String, Uint};
 use der::{Any, Choice, Sequence, ValueOrd};
 
 /// CertificatePolicies as defined in [RFC 5280 Section 4.2.1.4].
@@ -22,7 +23,7 @@ use der::{Any, Choice, Sequence, ValueOrd};
 pub struct CertificatePolicies(pub Vec<PolicyInformation>);
 
 impl AssociatedOid for CertificatePolicies {
-    const OID: ObjectIdentifier = ID_CE_CERTIFICATE_POLICIES;
+    const OID: &'static ObjectIdentifierRef = ID_CE_CERTIFICATE_POLICIES;
 }
 
 impl_newtype!(CertificatePolicies, Vec<PolicyInformation>);

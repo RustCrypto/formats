@@ -28,7 +28,7 @@ impl HardwareModuleName {
     ///
     /// It will return `Ok(None)` if the [`OtherName`] contains another type.
     pub fn from_other_name(other_name: &OtherName) -> der::Result<Option<Self>> {
-        if other_name.type_id == ID_ON_HARDWARE_MODULE_NAME {
+        if ID_ON_HARDWARE_MODULE_NAME.eq(&other_name.type_id) {
             other_name.value.decode_as().map(Some)
         } else {
             Ok(None)
@@ -41,7 +41,7 @@ impl TryFrom<&HardwareModuleName> for OtherName {
 
     fn try_from(hmn: &HardwareModuleName) -> der::Result<Self> {
         Ok(Self {
-            type_id: ID_ON_HARDWARE_MODULE_NAME,
+            type_id: ID_ON_HARDWARE_MODULE_NAME.try_into().unwrap(),
             value: Any::encode_from(hmn)?,
         })
     }

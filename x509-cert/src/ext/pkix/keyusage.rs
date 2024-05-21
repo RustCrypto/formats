@@ -3,8 +3,8 @@ use alloc::vec::Vec;
 use const_oid::db::rfc5280::{
     ANY_EXTENDED_KEY_USAGE, ID_CE_EXT_KEY_USAGE, ID_CE_KEY_USAGE, ID_CE_PRIVATE_KEY_USAGE_PERIOD,
 };
-use const_oid::AssociatedOid;
-use der::asn1::{GeneralizedTime, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifier, ObjectIdentifierRef};
+use der::asn1::GeneralizedTime;
 use der::flagset::{flags, FlagSet};
 use der::Sequence;
 
@@ -48,7 +48,7 @@ flags! {
 pub struct KeyUsage(pub FlagSet<KeyUsages>);
 
 impl AssociatedOid for KeyUsage {
-    const OID: ObjectIdentifier = ID_CE_KEY_USAGE;
+    const OID: &'static ObjectIdentifierRef = ID_CE_KEY_USAGE;
 }
 
 impl_newtype!(KeyUsage, FlagSet<KeyUsages>);
@@ -133,7 +133,7 @@ impl KeyUsage {
 pub struct ExtendedKeyUsage(pub Vec<ObjectIdentifier>);
 
 impl AssociatedOid for ExtendedKeyUsage {
-    const OID: ObjectIdentifier = ID_CE_EXT_KEY_USAGE;
+    const OID: &'static ObjectIdentifierRef = ID_CE_EXT_KEY_USAGE;
 }
 
 impl_newtype!(ExtendedKeyUsage, Vec<ObjectIdentifier>);
@@ -158,7 +158,7 @@ impl crate::ext::AsExtension for ExtendedKeyUsage {
         //   anyExtendedKeyUsage OID but not the particular OID expected for the
         //   application.
 
-        !self.0.iter().any(|el| *el == ANY_EXTENDED_KEY_USAGE)
+        !self.0.iter().any(|el| ANY_EXTENDED_KEY_USAGE.eq(el))
     }
 }
 
@@ -185,7 +185,7 @@ pub struct PrivateKeyUsagePeriod {
 }
 
 impl AssociatedOid for PrivateKeyUsagePeriod {
-    const OID: ObjectIdentifier = ID_CE_PRIVATE_KEY_USAGE_PERIOD;
+    const OID: &'static ObjectIdentifierRef = ID_CE_PRIVATE_KEY_USAGE_PERIOD;
 }
 
 impl_extension!(PrivateKeyUsagePeriod, critical = false);

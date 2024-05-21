@@ -102,13 +102,13 @@ impl<'a> RsaPssParams<'a> {
     {
         Self {
             hash: AlgorithmIdentifierRef {
-                oid: D::OID,
+                oid: D::OID.try_into().unwrap(),
                 parameters: Some(AnyRef::NULL),
             },
             mask_gen: AlgorithmIdentifier {
                 oid: OID_MGF_1,
                 parameters: Some(AlgorithmIdentifierRef {
-                    oid: D::OID,
+                    oid: D::OID.try_into().unwrap(),
                     parameters: Some(AnyRef::NULL),
                 }),
             },
@@ -280,13 +280,13 @@ impl<'a> RsaOaepParams<'a> {
     {
         Self {
             hash: AlgorithmIdentifierRef {
-                oid: D::OID,
+                oid: D::OID.try_into().unwrap(),
                 parameters: Some(AnyRef::NULL),
             },
             mask_gen: AlgorithmIdentifier {
                 oid: OID_MGF_1,
                 parameters: Some(AlgorithmIdentifierRef {
-                    oid: D::OID,
+                    oid: D::OID.try_into().unwrap(),
                     parameters: Some(AnyRef::NULL),
                 }),
             },

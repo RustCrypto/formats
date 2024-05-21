@@ -1,6 +1,6 @@
 //! PKIX distribution point types
 
-use const_oid::{db::rfc5280::ID_PE_SUBJECT_INFO_ACCESS, AssociatedOid, ObjectIdentifier};
+use const_oid::{db::rfc5280::ID_PE_SUBJECT_INFO_ACCESS, AssociatedOid, ObjectIdentifierRef};
 use der::flagset::{flags, FlagSet};
 use der::{Sequence, ValueOrd};
 
@@ -61,7 +61,7 @@ pub struct IssuingDistributionPoint {
 }
 
 impl AssociatedOid for IssuingDistributionPoint {
-    const OID: ObjectIdentifier = ID_PE_SUBJECT_INFO_ACCESS;
+    const OID: &'static ObjectIdentifierRef = ID_PE_SUBJECT_INFO_ACCESS;
 }
 
 impl_extension!(IssuingDistributionPoint, critical = true);

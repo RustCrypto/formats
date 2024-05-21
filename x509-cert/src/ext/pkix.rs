@@ -17,7 +17,7 @@ use crate::attr::Attribute;
 pub use access::{AccessDescription, AuthorityInfoAccessSyntax, SubjectInfoAccessSyntax};
 pub use authkeyid::AuthorityKeyIdentifier;
 pub use certpolicy::CertificatePolicies;
-use const_oid::{AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifierRef};
 pub use constraints::{BasicConstraints, NameConstraints, PolicyConstraints};
 pub use crl::{
     BaseCrlNumber, CrlDistributionPoints, CrlNumber, CrlReason, FreshestCrl,
@@ -52,7 +52,7 @@ use der::asn1::OctetString;
 pub struct SubjectKeyIdentifier(pub OctetString);
 
 impl AssociatedOid for SubjectKeyIdentifier {
-    const OID: ObjectIdentifier = ID_CE_SUBJECT_KEY_IDENTIFIER;
+    const OID: &'static ObjectIdentifierRef = ID_CE_SUBJECT_KEY_IDENTIFIER;
 }
 
 impl_newtype!(SubjectKeyIdentifier, OctetString);
@@ -73,7 +73,7 @@ impl_key_identifier!(
 pub struct SubjectAltName(pub name::GeneralNames);
 
 impl AssociatedOid for SubjectAltName {
-    const OID: ObjectIdentifier = ID_CE_SUBJECT_ALT_NAME;
+    const OID: &'static ObjectIdentifierRef = ID_CE_SUBJECT_ALT_NAME;
 }
 
 impl_newtype!(SubjectAltName, name::GeneralNames);
@@ -106,7 +106,7 @@ impl crate::ext::AsExtension for SubjectAltName {
 pub struct IssuerAltName(pub name::GeneralNames);
 
 impl AssociatedOid for IssuerAltName {
-    const OID: ObjectIdentifier = ID_CE_ISSUER_ALT_NAME;
+    const OID: &'static ObjectIdentifierRef = ID_CE_ISSUER_ALT_NAME;
 }
 
 impl_newtype!(IssuerAltName, name::GeneralNames);
@@ -123,7 +123,7 @@ impl_extension!(IssuerAltName, critical = false);
 pub struct SubjectDirectoryAttributes(pub Vec<Attribute>);
 
 impl AssociatedOid for SubjectDirectoryAttributes {
-    const OID: ObjectIdentifier = ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES;
+    const OID: &'static ObjectIdentifierRef = ID_CE_SUBJECT_DIRECTORY_ATTRIBUTES;
 }
 
 impl_newtype!(SubjectDirectoryAttributes, Vec<Attribute>);
@@ -140,7 +140,7 @@ impl_extension!(SubjectDirectoryAttributes, critical = false);
 pub struct InhibitAnyPolicy(pub u32);
 
 impl AssociatedOid for InhibitAnyPolicy {
-    const OID: ObjectIdentifier = ID_CE_INHIBIT_ANY_POLICY;
+    const OID: &'static ObjectIdentifierRef = ID_CE_INHIBIT_ANY_POLICY;
 }
 
 impl_newtype!(InhibitAnyPolicy, u32);

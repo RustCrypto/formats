@@ -518,8 +518,7 @@ dependencies = [
 [[package]]
 name = "digest"
 version = "0.11.0-pre.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "065d93ead7c220b85d5b4be4795d8398eac4ff68b5ee63895de0a3c1fb6edf25"
+source = "git+https://github.com/baloo/traits.git?branch=baloo/wip/associated-oid#8dbbac9672acc8caba9a97332a719ce82122e83f"
 dependencies = [
  "block-buffer",
  "const-oid",
@@ -1471,8 +1470,7 @@ dependencies = [
 [[package]]
 name = "sha1"
 version = "0.11.0-pre.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3885de8cb916f223718c1ccd47a840b91f806333e76002dc5cb3862154b4fed3"
+source = "git+https://github.com/baloo/hashes.git?branch=baloo/wip/associated-oid#b1a781ce94de76d117fd4a07386b7e99859ec856"
 dependencies = [
  "cfg-if",
  "cpufeatures",

@@ -6,13 +6,10 @@ use crate::{
 use alloc::vec::Vec;
 use const_oid::{
     db::rfc6960::{ID_PKIX_OCSP_BASIC, ID_PKIX_OCSP_NONCE},
-    AssociatedOid,
+    AssociatedOid, ObjectIdentifier, ObjectIdentifierRef,
 };
 use core::{default::Default, option::Option};
-use der::{
-    asn1::{BitString, ObjectIdentifier},
-    Decode, Sequence,
-};
+use der::{asn1::BitString, Decode, Sequence};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{certificate::Certificate, ext::Extensions};
 
@@ -47,7 +44,7 @@ impl BasicOcspResponse {
 }
 
 impl AssociatedOid for BasicOcspResponse {
-    const OID: ObjectIdentifier = ID_PKIX_OCSP_BASIC;
+    const OID: &'static ObjectIdentifierRef = ID_PKIX_OCSP_BASIC;
 }
 
 impl AsResponseBytes for BasicOcspResponse {}
@@ -87,7 +84,7 @@ impl ResponseData {
     pub fn nonce(&self) -> Option<Nonce> {
         match &self.response_extensions {
             Some(extns) => {
-                let mut filter = extns.iter().filter(|e| e.extn_id == ID_PKIX_OCSP_NONCE);
+                let mut filter = extns.iter().filter(|e| ID_PKIX_OCSP_NONCE.eq(&e.extn_id));
                 match filter.next() {
                     Some(extn) => Nonce::from_der(extn.extn_value.as_bytes()).ok(),
                     None => None,

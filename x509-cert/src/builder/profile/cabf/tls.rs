@@ -102,9 +102,12 @@ impl Profile for Subordinate {
 
         // ## extKeyUsage MUST
         // Spec 7.1.2.10.6 CA Certificate Extended Key Usage
-        let mut eku = ExtendedKeyUsage(vec![ID_KP_SERVER_AUTH]);
+        let mut eku = ExtendedKeyUsage(vec![ID_KP_SERVER_AUTH
+            .try_into()
+            .map_err(der::Error::from)?]);
         if self.client_auth {
-            eku.0.push(ID_KP_CLIENT_AUTH);
+            eku.0
+                .push(ID_KP_CLIENT_AUTH.try_into().map_err(der::Error::from)?);
         }
 
         // ## authorityInformationAccess SHOULD
@@ -150,7 +153,7 @@ impl CertificateType {
                 let out = SetOfVec::<AttributeTypeAndValue>::from_iter(
                     rdn.0
                         .iter()
-                        .filter(|attr_value| attr_value.oid == rfc4519::COUNTRY_NAME)
+                        .filter(|attr_value| rfc4519::COUNTRY_NAME.eq(&attr_value.oid))
                         .cloned(),
                 )
                 .ok()?;
@@ -268,9 +271,12 @@ impl Profile for Subscriber {
 
         // ## extKeyUsage MUST
         // 7.1.2.7.10 Subscriber Certificate Extended Key Usage
-        let mut eku = ExtendedKeyUsage(vec![ID_KP_SERVER_AUTH]);
+        let mut eku = ExtendedKeyUsage(vec![ID_KP_SERVER_AUTH
+            .try_into()
+            .map_err(der::Error::from)?]);
         if self.client_auth {
-            eku.0.push(ID_KP_CLIENT_AUTH);
+            eku.0
+                .push(ID_KP_CLIENT_AUTH.try_into().map_err(der::Error::from)?);
         }
 
         // ## basicConstraints MUST
@@ -330,10 +336,10 @@ trait KeyType {
 #[cfg(feature = "hazmat")]
 impl<'a> KeyType for SubjectPublicKeyInfoRef<'a> {
     fn is_rsa(&self) -> bool {
-        self.algorithm.oid == rfc5912::RSA_ENCRYPTION
+        rfc5912::RSA_ENCRYPTION.eq(&self.algorithm.oid)
     }
 
     fn is_ecc(&self) -> bool {
-        self.algorithm.oid == rfc5912::ID_EC_PUBLIC_KEY
+        rfc5912::ID_EC_PUBLIC_KEY.eq(&self.algorithm.oid)
     }
 }

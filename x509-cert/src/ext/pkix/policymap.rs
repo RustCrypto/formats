@@ -1,8 +1,7 @@
 use alloc::vec::Vec;
 
 use const_oid::db::rfc5280::ID_CE_POLICY_MAPPINGS;
-use const_oid::AssociatedOid;
-use der::asn1::ObjectIdentifier;
+use const_oid::{AssociatedOid, ObjectIdentifier, ObjectIdentifierRef};
 use der::{Sequence, ValueOrd};
 
 /// PolicyMappings as defined in [RFC 5280 Section 4.2.1.5].
@@ -16,7 +15,7 @@ use der::{Sequence, ValueOrd};
 pub struct PolicyMappings(pub Vec<PolicyMapping>);
 
 impl AssociatedOid for PolicyMappings {
-    const OID: ObjectIdentifier = ID_CE_POLICY_MAPPINGS;
+    const OID: &'static ObjectIdentifierRef = ID_CE_POLICY_MAPPINGS;
 }
 
 impl_newtype!(PolicyMappings, Vec<PolicyMapping>);

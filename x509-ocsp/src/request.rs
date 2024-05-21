@@ -73,7 +73,7 @@ impl TbsRequest {
     pub fn nonce(&self) -> Option<Nonce> {
         match &self.request_extensions {
             Some(extns) => {
-                let mut filter = extns.iter().filter(|e| e.extn_id == ID_PKIX_OCSP_NONCE);
+                let mut filter = extns.iter().filter(|e| ID_PKIX_OCSP_NONCE.eq(&e.extn_id));
                 match filter.next() {
                     Some(extn) => Nonce::from_der(extn.extn_value.as_bytes()).ok(),
                     None => None,

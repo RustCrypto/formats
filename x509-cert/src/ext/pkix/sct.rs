@@ -6,7 +6,7 @@
 #![cfg(feature = "sct")]
 
 use alloc::{format, vec::Vec};
-use const_oid::{db::rfc6962::CT_PRECERT_SCTS, AssociatedOid, ObjectIdentifier};
+use const_oid::{db::rfc6962::CT_PRECERT_SCTS, AssociatedOid, ObjectIdentifierRef};
 use der::asn1::OctetString;
 use tls_codec::{
     DeserializeBytes, SerializeBytes, TlsByteVecU16, TlsDeserializeBytes, TlsSerializeBytes,
@@ -24,7 +24,7 @@ use tls_codec::{
 pub struct SignedCertificateTimestampList(OctetString);
 
 impl AssociatedOid for SignedCertificateTimestampList {
-    const OID: ObjectIdentifier = CT_PRECERT_SCTS;
+    const OID: &'static ObjectIdentifierRef = CT_PRECERT_SCTS;
 }
 
 impl_newtype!(SignedCertificateTimestampList, OctetString);

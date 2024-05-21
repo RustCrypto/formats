@@ -172,7 +172,7 @@ impl<P: Profile> TbsCertificateInner<P> {
             .as_deref()
             .unwrap_or(&[])
             .iter()
-            .filter(|e| e.extn_id == T::OID)
+            .filter(|e| T::OID.eq(&e.extn_id))
             .map(|e| Ok((e.critical, T::from_der(e.extn_value.as_bytes())?)))
     }
 }

@@ -75,3 +75,6 @@ ecdsa = { git = "https://github.com/RustCrypto/signatures" }
 
 # https://github.com/RustCrypto/password-hashes/pull/489
 scrypt = { git = "https://github.com/RustCrypto/password-hashes.git" }
+
+digest = { git = "https://github.com/baloo/traits.git", branch = "baloo/wip/associated-oid" }
+sha1   = { git = "https://github.com/baloo/hashes.git", branch = "baloo/wip/associated-oid" }

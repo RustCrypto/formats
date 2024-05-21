@@ -170,8 +170,8 @@ pub enum TpmVersion {
 impl TpmVersion {
     fn to_oid(&self) -> ObjectIdentifier {
         match self {
-            Self::Tpm12 => tcgtpm::TCG_SV_TPM_12,
-            Self::Tpm20 => tcgtpm::TCG_SV_TPM_20,
+            Self::Tpm12 => tcgtpm::TCG_SV_TPM_12.try_into().unwrap(),
+            Self::Tpm20 => tcgtpm::TCG_SV_TPM_20.try_into().unwrap(),
             #[cfg(feature = "hazmat")]
             Self::Other(o) => *o,
         }
