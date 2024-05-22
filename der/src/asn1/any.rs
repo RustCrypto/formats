@@ -23,7 +23,7 @@ use crate::SliceWriter;
 /// and useful concept which is still extensively used in things like
 /// PKI-related RFCs.
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct AnyRef<'a> {
     /// Tag representing the type of the encoded value.
     tag: Tag,
@@ -169,7 +169,7 @@ mod allocating {
     /// This type provides the same functionality as [`AnyRef`] but owns the
     /// backing data.
     #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-    #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+    #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
     pub struct Any {
         /// Tag representing the type of the encoded value.
         tag: Tag,

@@ -9,7 +9,7 @@ use alloc::{boxed::Box, vec::Vec};
 use core::cmp::Ordering;
 
 /// Byte slice newtype which respects the `Length::max()` limit.
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub(crate) struct BytesOwned {
     /// Precomputed `Length` (avoids possible panicking conversions)
     length: Length,

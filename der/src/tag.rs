@@ -48,7 +48,7 @@ impl<T: FixedTag> Tagged for T {
 /// - Bit 6: primitive (0) or constructed (1)
 /// - Bits 5-1: tag number
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Tag {
     /// `BOOLEAN` tag: `1`.
