@@ -6,7 +6,7 @@ pub use self::salt::Salt;
 
 use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
-    asn1::{AnyRef, ObjectIdentifier},
+    asn1::{AnyLike, AnyRef, ObjectIdentifier},
     Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Tagged,
     Writer,
 };
