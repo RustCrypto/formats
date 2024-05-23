@@ -23,8 +23,10 @@ pub trait Reader<'r>: Sized {
     /// Get the length of the input.
     fn input_len(&self) -> Length;
 
-    /// Peek at the next byte of input without modifying the cursor.
-    fn peek_byte(&self) -> Option<u8>;
+    /// Peek at the byte of the input at position `offset` relative to the current position.
+    ///
+    /// Does not modify the decoder's state.
+    fn peek_offset(&self, offset: usize) -> Option<u8>;
 
     /// Peek forward in the input data, attempting to decode a [`Header`] from
     /// the data at the current position in the decoder.
@@ -43,6 +45,11 @@ pub trait Reader<'r>: Sized {
     /// - `Err(ErrorKind::Incomplete)` if there is not enough data
     /// - `Err(ErrorKind::Reader)` if the reader can't borrow from the input
     fn read_slice(&mut self, len: Length) -> Result<&'r [u8], Error>;
+
+    /// Peek at the next byte of input without modifying the cursor.
+    fn peek_byte(&self) -> Option<u8> {
+        self.peek_offset(0)
+    }
 
     /// Attempt to decode an ASN.1 `CONTEXT-SPECIFIC` field with the
     /// provided [`TagNumber`].
@@ -100,15 +107,12 @@ pub trait Reader<'r>: Sized {
         self.position()
     }
 
-    /// Peek at the next byte in the decoder and attempt to decode it as a
+    /// Peek at the next bytes in the decoder and attempt to decode them as a
     /// [`Tag`] value.
     ///
     /// Does not modify the decoder's state.
-    fn peek_tag(&self) -> Result<Tag, Error> {
-        match self.peek_byte() {
-            Some(byte) => byte.try_into(),
-            None => Err(Error::incomplete(self.input_len())),
-        }
+    fn peek_tag(&self) -> Result<Option<Tag>, Error> {
+        Ok(Tag::peek(self)?)
     }
 
     /// Read a single byte.

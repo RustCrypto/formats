@@ -1,6 +1,6 @@
 //! ASN.1 `OPTIONAL` as mapped to Rust's `Option` type
 
-use crate::{Choice, Decode, DerOrd, Encode, Error, Length, Reader, Tag, Writer};
+use crate::{Choice, Decode, DerOrd, Encode, Error, Length, Reader, Writer};
 use core::cmp::Ordering;
 
 impl<'a, T> Decode<'a> for Option<T>
@@ -10,8 +10,8 @@ where
     type Error = T::Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Option<T>, Self::Error> {
-        if let Some(byte) = reader.peek_byte() {
-            if T::can_decode(Tag::try_from(byte)?) {
+        if let Some(tag) = reader.peek_tag()? {
+            if T::can_decode(tag) {
                 return T::decode(reader).map(Some);
             }
         }
