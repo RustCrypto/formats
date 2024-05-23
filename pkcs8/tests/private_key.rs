@@ -1,6 +1,6 @@
 //! PKCS#8 private key tests
 
-use der::asn1::ObjectIdentifier;
+use der::asn1::{AnyLike, ObjectIdentifier};
 use hex_literal::hex;
 use pkcs8::{PrivateKeyInfo, Version};
 
