@@ -31,7 +31,7 @@ mod utf8_string;
 mod videotex_string;
 
 pub use self::{
-    any::AnyRef,
+    any::{AnyLike, AnyRef},
     bit_string::{BitStringIter, BitStringRef},
     choice::Choice,
     context_specific::{ContextSpecific, ContextSpecificRef},

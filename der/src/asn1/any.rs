@@ -11,6 +11,12 @@ use core::cmp::Ordering;
 #[cfg(feature = "alloc")]
 use crate::SliceWriter;
 
+/// Trait representing value that will be serialized as Any
+pub trait AnyLike {
+    /// Is this value an ASN.1 `NULL` value?
+    fn is_null(&self) -> bool;
+}
+
 /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
 ///
 /// This is a zero-copy reference type which borrows from the input data.
@@ -74,11 +80,6 @@ impl<'a> AnyRef<'a> {
         Ok(decoder.finish(result)?)
     }
 
-    /// Is this value an ASN.1 `NULL` value?
-    pub fn is_null(self) -> bool {
-        self == Self::NULL
-    }
-
     /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
     /// nested reader and calling the provided argument with it.
     pub fn sequence<F, T, E>(self, f: F) -> Result<T, E>
@@ -90,6 +91,12 @@ impl<'a> AnyRef<'a> {
         let mut reader = SliceReader::new(self.value.as_slice())?;
         let result = f(&mut reader)?;
         Ok(reader.finish(result)?)
+    }
+}
+
+impl<'a> AnyLike for AnyRef<'a> {
+    fn is_null(&self) -> bool {
+        *self == Self::NULL
     }
 }
 
@@ -316,9 +323,8 @@ mod allocating {
         }
     }
 
-    impl Any {
-        /// Is this value an ASN.1 `NULL` value?
-        pub fn is_null(&self) -> bool {
+    impl AnyLike for Any {
+        fn is_null(&self) -> bool {
             self.owned_to_ref() == AnyRef::NULL
         }
     }
