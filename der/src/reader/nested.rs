@@ -59,11 +59,11 @@ impl<'i, 'r, R: Reader<'r>> Reader<'r> for NestedReader<'i, R> {
         self.input_len
     }
 
-    fn peek_byte(&self) -> Option<u8> {
+    fn peek_offset(&self, offset: usize) -> Option<u8> {
         if self.is_finished() {
             None
         } else {
-            self.inner.peek_byte()
+            self.inner.peek_offset(offset)
         }
     }
 
