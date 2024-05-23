@@ -1,7 +1,7 @@
 //! Traits for encoding/decoding SPKI public keys.
 
 use crate::{AlgorithmIdentifier, Error, Result, SubjectPublicKeyInfoRef};
-use der::{EncodeValue, Tagged};
+use der::{asn1::AnyLike, EncodeValue, Tagged};
 
 #[cfg(feature = "alloc")]
 use {
@@ -103,7 +103,7 @@ pub trait EncodePublicKey {
 /// This is useful for e.g. keys for digital signature algorithms.
 pub trait AssociatedAlgorithmIdentifier {
     /// Algorithm parameters.
-    type Params: Tagged + EncodeValue;
+    type Params: Tagged + EncodeValue + AnyLike;
 
     /// `AlgorithmIdentifier` for this structure.
     const ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;
@@ -141,7 +141,7 @@ where
 /// private keys.
 pub trait SignatureAlgorithmIdentifier {
     /// Algorithm parameters.
-    type Params: Tagged + EncodeValue;
+    type Params: Tagged + EncodeValue + AnyLike;
 
     /// `AlgorithmIdentifier` for the corresponding singature system.
     const SIGNATURE_ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;

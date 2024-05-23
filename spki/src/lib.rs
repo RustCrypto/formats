@@ -21,6 +21,7 @@
 //! Borrow the [`ObjectIdentifier`] first then use [`der::AnyRef::from`] or `.into()`:
 //!
 //! ```
+//! use der::asn1::AnyRef;
 //! use spki::{AlgorithmIdentifier, ObjectIdentifier};
 //!
 //! let alg_oid = "1.2.840.10045.2.1".parse::<ObjectIdentifier>().unwrap();
@@ -28,7 +29,7 @@
 //!
 //! let alg_id = AlgorithmIdentifier {
 //!     oid: alg_oid,
-//!     parameters: Some(params_oid)
+//!     parameters: Some(AnyRef::from(&params_oid))
 //! };
 //! ```
 

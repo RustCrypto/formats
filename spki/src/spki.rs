@@ -3,7 +3,7 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, BitStringRef},
+    asn1::{AnyLike, AnyRef, BitStringRef},
     Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, FixedTag, Header, Length, Reader,
     Sequence, ValueOrd, Writer,
 };
@@ -41,7 +41,7 @@ pub type SubjectPublicKeyInfoOwned = SubjectPublicKeyInfo<Any, BitString>;
 /// [RFC 5280 § 4.1.2.7]: https://tools.ietf.org/html/rfc5280#section-4.1.2.7
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SubjectPublicKeyInfo<Params, Key> {
+pub struct SubjectPublicKeyInfo<Params: AnyLike, Key> {
     /// X.509 [`AlgorithmIdentifier`] for the public key type
     pub algorithm: AlgorithmIdentifier<Params>,
 
@@ -51,7 +51,7 @@ pub struct SubjectPublicKeyInfo<Params, Key> {
 
 impl<'a, Params, Key> SubjectPublicKeyInfo<Params, Key>
 where
-    Params: Choice<'a, Error = der::Error> + Encode,
+    Params: AnyLike + Choice<'a, Error = der::Error> + Encode,
     // TODO: replace FixedTag with FixedTag<TAG = { Tag::BitString }> once
     // https://github.com/rust-lang/rust/issues/92827 is fixed
     Key: Decode<'a, Error = der::Error> + Encode + FixedTag,
@@ -84,7 +84,7 @@ where
 
 impl<'a: 'k, 'k, Params, Key: 'k> DecodeValue<'a> for SubjectPublicKeyInfo<Params, Key>
 where
-    Params: Choice<'a, Error = der::Error> + Encode,
+    Params: AnyLike + Choice<'a, Error = der::Error> + Encode,
     Key: Decode<'a, Error = der::Error>,
 {
     type Error = der::Error;
@@ -101,7 +101,7 @@ where
 
 impl<'a, Params, Key> EncodeValue for SubjectPublicKeyInfo<Params, Key>
 where
-    Params: Choice<'a, Error = der::Error> + Encode,
+    Params: AnyLike + Choice<'a, Error = der::Error> + Encode,
     Key: Encode,
 {
     fn value_len(&self) -> der::Result<Length> {
@@ -117,14 +117,14 @@ where
 
 impl<'a, Params, Key> Sequence<'a> for SubjectPublicKeyInfo<Params, Key>
 where
-    Params: Choice<'a, Error = der::Error> + Encode,
+    Params: AnyLike + Choice<'a, Error = der::Error> + Encode,
     Key: Decode<'a, Error = der::Error> + Encode + FixedTag,
 {
 }
 
 impl<'a, Params, Key> TryFrom<&'a [u8]> for SubjectPublicKeyInfo<Params, Key>
 where
-    Params: Choice<'a, Error = der::Error> + Encode,
+    Params: AnyLike + Choice<'a, Error = der::Error> + Encode,
     Key: Decode<'a, Error = der::Error> + Encode + FixedTag,
 {
     type Error = Error;
@@ -136,7 +136,7 @@ where
 
 impl<'a, Params, Key> ValueOrd for SubjectPublicKeyInfo<Params, Key>
 where
-    Params: Choice<'a, Error = der::Error> + DerOrd + Encode,
+    Params: AnyLike + Choice<'a, Error = der::Error> + DerOrd + Encode,
     Key: ValueOrd,
 {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
@@ -150,7 +150,7 @@ where
 #[cfg(feature = "alloc")]
 impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<SubjectPublicKeyInfo<Params, Key>> for Document
 where
-    Params: Choice<'a, Error = der::Error> + Encode,
+    Params: AnyLike + Choice<'a, Error = der::Error> + Encode,
     Key: Decode<'a, Error = der::Error> + Encode + FixedTag,
     BitStringRef<'a>: From<&'k Key>,
 {
@@ -164,7 +164,7 @@ where
 #[cfg(feature = "alloc")]
 impl<'a: 'k, 'k, Params, Key: 'k> TryFrom<&SubjectPublicKeyInfo<Params, Key>> for Document
 where
-    Params: Choice<'a, Error = der::Error> + Encode,
+    Params: AnyLike + Choice<'a, Error = der::Error> + Encode,
     Key: Decode<'a, Error = der::Error> + Encode + FixedTag,
     BitStringRef<'a>: From<&'k Key>,
 {
@@ -176,7 +176,10 @@ where
 }
 
 #[cfg(feature = "pem")]
-impl<Params, Key> PemLabel for SubjectPublicKeyInfo<Params, Key> {
+impl<Params, Key> PemLabel for SubjectPublicKeyInfo<Params, Key>
+where
+    Params: AnyLike,
+{
     const PEM_LABEL: &'static str = "PUBLIC KEY";
 }
 

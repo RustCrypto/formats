@@ -3,7 +3,7 @@
 use crate::{Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, Choice, ObjectIdentifier},
+    asn1::{AnyLike, AnyRef, Choice, ObjectIdentifier},
     Decode, DecodeValue, DerOrd, Encode, EncodeValue, Header, Length, Reader, Sequence, ValueOrd,
     Writer,
 };
@@ -22,7 +22,7 @@ use der::asn1::Any;
 /// [RFC 5280 Section 4.1.1.2]: https://tools.ietf.org/html/rfc5280#section-4.1.1.2
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct AlgorithmIdentifier<Params> {
+pub struct AlgorithmIdentifier<Params: AnyLike> {
     /// Algorithm OID, i.e. the `algorithm` field in the `AlgorithmIdentifier`
     /// ASN.1 schema.
     pub oid: ObjectIdentifier,
@@ -31,7 +31,7 @@ pub struct AlgorithmIdentifier<Params> {
     pub parameters: Option<Params>,
 }
 
-impl<'a, Params> DecodeValue<'a> for AlgorithmIdentifier<Params>
+impl<'a, Params: AnyLike> DecodeValue<'a> for AlgorithmIdentifier<Params>
 where
     Params: Choice<'a, Error = der::Error>,
 {
@@ -47,7 +47,7 @@ where
     }
 }
 
-impl<Params> EncodeValue for AlgorithmIdentifier<Params>
+impl<Params: AnyLike> EncodeValue for AlgorithmIdentifier<Params>
 where
     Params: Encode,
 {
@@ -62,12 +62,12 @@ where
     }
 }
 
-impl<'a, Params> Sequence<'a> for AlgorithmIdentifier<Params> where
+impl<'a, Params: AnyLike> Sequence<'a> for AlgorithmIdentifier<Params> where
     Params: Choice<'a, Error = der::Error> + Encode
 {
 }
 
-impl<'a, Params> TryFrom<&'a [u8]> for AlgorithmIdentifier<Params>
+impl<'a, Params: AnyLike> TryFrom<&'a [u8]> for AlgorithmIdentifier<Params>
 where
     Params: Choice<'a, Error = der::Error> + Encode,
 {
@@ -78,7 +78,7 @@ where
     }
 }
 
-impl<Params> ValueOrd for AlgorithmIdentifier<Params>
+impl<Params: AnyLike> ValueOrd for AlgorithmIdentifier<Params>
 where
     Params: DerOrd,
 {
@@ -100,7 +100,7 @@ pub type AlgorithmIdentifierWithOid = AlgorithmIdentifier<ObjectIdentifier>;
 #[cfg(feature = "alloc")]
 pub type AlgorithmIdentifierOwned = AlgorithmIdentifier<Any>;
 
-impl<Params> AlgorithmIdentifier<Params> {
+impl<Params: AnyLike> AlgorithmIdentifier<Params> {
     /// Assert the `algorithm` OID is an expected value.
     pub fn assert_algorithm_oid(&self, expected_oid: ObjectIdentifier) -> Result<ObjectIdentifier> {
         if self.oid == expected_oid {

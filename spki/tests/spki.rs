@@ -1,6 +1,6 @@
 //! `SubjectPublicKeyInfo` tests.
 
-use der::asn1::ObjectIdentifier;
+use der::asn1::{AnyLike, ObjectIdentifier};
 use hex_literal::hex;
 use spki::SubjectPublicKeyInfoRef;
 
