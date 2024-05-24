@@ -175,7 +175,7 @@ impl<'a> AlgorithmIdentifierRef<'a> {
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use der::referenced::*;
+    use der::{referenced::*, Tag};
 
     impl<'a> RefToOwned<'a> for AlgorithmIdentifierRef<'a> {
         type Owned = AlgorithmIdentifierOwned;
@@ -194,6 +194,14 @@ mod allocating {
                 oid: self.oid,
                 parameters: self.parameters.owned_to_ref(),
             }
+        }
+    }
+
+    impl From<&AlgorithmIdentifierRef<'_>> for Any {
+        fn from(alg: &AlgorithmIdentifierRef<'_>) -> Any {
+            let bytes = alg.to_der().expect("Algorithm invariant violated");
+
+            Any::new(Tag::Sequence, bytes).expect("Algorithm invariant violated")
         }
     }
 }
