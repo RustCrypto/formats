@@ -138,6 +138,21 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         }
     }
 
+    fn read_nested<'n, T, F, E>(&'n mut self, len: Length, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+        E: From<Error>,
+    {
+        if self.len() < len {
+            return Err(Error::Length.into());
+        }
+
+        let (mut prefix, remaining) = self.split_at(prefix_len);
+        let ret = f(&mut prefix)?;
+        *self = remaining;
+        Ok(ret)
+    }
+
     fn remaining_len(&self) -> Length {
         debug_assert!(self.position <= self.input_len());
         self.input_len().saturating_sub(self.position)

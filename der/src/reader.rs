@@ -1,11 +1,8 @@
 //! Reader trait.
 
-pub(crate) mod nested;
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
 pub(crate) mod slice;
-
-pub(crate) use nested::NestedReader;
 
 use crate::{
     asn1::ContextSpecific, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag,
@@ -133,13 +130,8 @@ pub trait Reader<'r>: Sized {
     /// Read nested data of the given length.
     fn read_nested<'n, T, F, E>(&'n mut self, len: Length, f: F) -> Result<T, E>
     where
-        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T, E>,
-        E: From<Error>,
-    {
-        let mut reader = NestedReader::new(self, len)?;
-        let ret = f(&mut reader)?;
-        Ok(reader.finish(ret)?)
-    }
+        F: FnOnce(&mut Self) -> Result<T, E>,
+        E: From<Error>;
 
     /// Read a byte vector of the given length.
     #[cfg(feature = "alloc")]
@@ -159,7 +151,7 @@ pub trait Reader<'r>: Sized {
     /// calling the provided closure with it.
     fn sequence<'n, F, T, E>(&'n mut self, f: F) -> Result<T, E>
     where
-        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T, E>,
+        F: FnOnce(&mut Self) -> Result<T, E>,
         E: From<Error>,
     {
         let header = Header::decode(self)?;

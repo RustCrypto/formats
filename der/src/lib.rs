@@ -7,23 +7,23 @@
 )]
 #![forbid(unsafe_code)]
 #![warn(
-    // TODO: re-enable this lint and fix its warnings
-    // clippy::arithmetic_side_effects,
-    clippy::cast_lossless,
-    clippy::cast_possible_truncation,
-    clippy::cast_possible_wrap,
-    clippy::cast_precision_loss,
-    clippy::cast_sign_loss,
-    clippy::checked_conversions,
-    clippy::implicit_saturating_sub,
-    clippy::mod_module_files,
-    clippy::panic,
-    clippy::panic_in_result_fn,
-    clippy::unwrap_used,
-    missing_docs,
-    rust_2018_idioms,
-    unused_lifetimes,
-    unused_qualifications
+// TODO: re-enable this lint and fix its warnings
+// clippy::arithmetic_side_effects,
+clippy::cast_lossless,
+clippy::cast_possible_truncation,
+clippy::cast_possible_wrap,
+clippy::cast_precision_loss,
+clippy::cast_sign_loss,
+clippy::checked_conversions,
+clippy::implicit_saturating_sub,
+clippy::mod_module_files,
+clippy::panic,
+clippy::panic_in_result_fn,
+clippy::unwrap_used,
+missing_docs,
+rust_2018_idioms,
+unused_lifetimes,
+unused_qualifications
 )]
 
 //! # Usage
@@ -367,7 +367,7 @@ pub use crate::{
     header::Header,
     length::{IndefiniteLength, Length},
     ord::{DerOrd, ValueOrd},
-    reader::{nested::NestedReader, slice::SliceReader, Reader},
+    reader::{slice::SliceReader, Reader},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
     writer::{slice::SliceWriter, Writer},
 };

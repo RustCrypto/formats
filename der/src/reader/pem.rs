@@ -209,4 +209,12 @@ impl<'i> Reader<'i> for PemReader<'i> {
 
         Ok(bytes)
     }
+
+    fn read_nested<'n, T, F, E>(&'n mut self, len: Length, f: F) -> std::result::Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> std::result::Result<T, E>,
+        E: From<Error>,
+    {
+        todo!()
+    }
 }
