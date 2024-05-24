@@ -2,11 +2,13 @@
 
 use crate::{Error, Result};
 use der::{
-    asn1::{AnyRef, ContextSpecificRef, ObjectIdentifier},
+    asn1::{Any, AnyRef, ContextSpecific, ObjectIdentifier},
+    oid::AssociatedOid,
+    referenced::{OwnedToRef, RefToOwned},
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Length, Reader, Sequence, Tag, TagMode,
     TagNumber, Writer,
 };
-use spki::AlgorithmIdentifierRef;
+use spki::{AlgorithmIdentifier, AlgorithmIdentifierOwned, AlgorithmIdentifierRef};
 
 const OID_SHA_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.26");
 const OID_MGF_1: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.8");
@@ -79,12 +81,12 @@ impl FixedTag for TrailerField {
 ///
 /// [RFC 8017 Appendix 2.3]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.3
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RsaPssParams<'a> {
+pub struct RsaPssParams {
     /// Hash Algorithm
-    pub hash: AlgorithmIdentifierRef<'a>,
+    pub hash: AlgorithmIdentifierOwned,
 
     /// Mask Generation Function (MGF)
-    pub mask_gen: AlgorithmIdentifierRef<'a>,
+    pub mask_gen: AlgorithmIdentifierOwned,
 
     /// Salt length
     pub salt_len: u8,
@@ -93,87 +95,85 @@ pub struct RsaPssParams<'a> {
     pub trailer_field: TrailerField,
 }
 
-impl<'a> RsaPssParams<'a> {
+impl RsaPssParams {
     /// Default RSA PSS Salt length in RsaPssParams
     pub const SALT_LEN_DEFAULT: u8 = 20;
 
-    //    /// Create new RsaPssParams for the provided digest and salt len
-    //    pub fn new<D>(salt_len: u8) -> Self
-    //    where
-    //        D: AssociatedOid,
-    //    {
-    //        Self {
-    //            hash: AlgorithmIdentifierRef {
-    //                oid: D::OID,
-    //                parameters: Some(AnyRef::NULL),
-    //            },
-    //            mask_gen: AlgorithmIdentifier {
-    //                oid: OID_MGF_1,
-    //                parameters: Some(AlgorithmIdentifierRef {
-    //                    oid: D::OID,
-    //                    parameters: Some(AnyRef::NULL),
-    //                }),
-    //            },
-    //            salt_len,
-    //            trailer_field: Default::default(),
-    //        }
-    //    }
+    /// Create new RsaPssParams for the provided digest and salt len
+    pub fn new<D>(salt_len: u8) -> Self
+    where
+        D: AssociatedOid,
+    {
+        Self {
+            hash: AlgorithmIdentifier {
+                oid: D::OID,
+                parameters: Some(Any::null()),
+            },
+            mask_gen: AlgorithmIdentifier {
+                oid: OID_MGF_1,
+                parameters: Some(Any::from(&AlgorithmIdentifierRef {
+                    oid: D::OID,
+                    parameters: Some(AnyRef::NULL),
+                })),
+            },
+            salt_len,
+            trailer_field: Default::default(),
+        }
+    }
 
-    fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
-        if self.hash == SHA_1_AI {
+    fn context_specific_hash(&self) -> Option<ContextSpecific<AlgorithmIdentifierOwned>> {
+        if self.hash.owned_to_ref() == SHA_1_AI {
             None
         } else {
-            Some(ContextSpecificRef {
+            Some(ContextSpecific {
                 tag_number: TagNumber::N0,
                 tag_mode: TagMode::Explicit,
-                value: &self.hash,
+                value: self.hash.clone(),
             })
         }
     }
 
-    fn context_specific_mask_gen(
-        &self,
-    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    fn context_specific_mask_gen(&self) -> Option<ContextSpecific<AlgorithmIdentifierOwned>> {
         if self.mask_gen == default_mgf1_sha1() {
             None
         } else {
-            Some(ContextSpecificRef {
+            Some(ContextSpecific {
                 tag_number: TagNumber::N1,
                 tag_mode: TagMode::Explicit,
-                value: &self.mask_gen,
+                value: self.mask_gen.clone(),
             })
         }
     }
 
-    fn context_specific_salt_len(&self) -> Option<ContextSpecificRef<'_, u8>> {
+    fn context_specific_salt_len(&self) -> Option<ContextSpecific<u8>> {
         if self.salt_len == RsaPssParams::SALT_LEN_DEFAULT {
             None
         } else {
-            Some(ContextSpecificRef {
+            Some(ContextSpecific {
                 tag_number: TagNumber::N2,
                 tag_mode: TagMode::Explicit,
-                value: &self.salt_len,
+                value: self.salt_len,
             })
         }
     }
 
-    fn context_specific_trailer_field(&self) -> Option<ContextSpecificRef<'_, TrailerField>> {
+    fn context_specific_trailer_field(&self) -> Option<ContextSpecific<TrailerField>> {
         if self.trailer_field == TrailerField::default() {
             None
         } else {
-            Some(ContextSpecificRef {
+            Some(ContextSpecific {
                 tag_number: TagNumber::N3,
                 tag_mode: TagMode::Explicit,
-                value: &self.trailer_field,
+                value: self.trailer_field,
             })
         }
     }
 }
 
-impl<'a> Default for RsaPssParams<'a> {
+impl Default for RsaPssParams {
     fn default() -> Self {
         Self {
-            hash: SHA_1_AI,
+            hash: SHA_1_AI.ref_to_owned(),
             mask_gen: default_mgf1_sha1(),
             salt_len: RsaPssParams::SALT_LEN_DEFAULT,
             trailer_field: Default::default(),
@@ -181,7 +181,7 @@ impl<'a> Default for RsaPssParams<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
+impl<'a> DecodeValue<'a> for RsaPssParams {
     type Error = der::Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
@@ -189,7 +189,7 @@ impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
             Ok(Self {
                 hash: reader
                     .context_specific(TagNumber::N0, TagMode::Explicit)?
-                    .unwrap_or(SHA_1_AI),
+                    .unwrap_or_else(|| SHA_1_AI.ref_to_owned()),
                 mask_gen: reader
                     .context_specific(TagNumber::N1, TagMode::Explicit)?
                     .unwrap_or_else(default_mgf1_sha1),
@@ -204,7 +204,7 @@ impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
     }
 }
 
-impl EncodeValue for RsaPssParams<'_> {
+impl EncodeValue for RsaPssParams {
     fn value_len(&self) -> der::Result<Length> {
         self.context_specific_hash().encoded_len()?
             + self.context_specific_mask_gen().encoded_len()?
@@ -221,23 +221,22 @@ impl EncodeValue for RsaPssParams<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for RsaPssParams<'a> {}
+impl<'a> Sequence<'a> for RsaPssParams {}
 
-impl<'a> TryFrom<&'a [u8]> for RsaPssParams<'a> {
+impl TryFrom<&[u8]> for RsaPssParams {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+    fn try_from(bytes: &[u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }
 }
 
 /// Default Mask Generation Function (MGF): SHA-1.
-fn default_mgf1_sha1<'a>() -> AlgorithmIdentifierRef<'a> {
-    AlgorithmIdentifierRef {
+fn default_mgf1_sha1() -> AlgorithmIdentifierOwned {
+    AlgorithmIdentifier {
         oid: OID_MGF_1,
         parameters: Some(
-            AnyRef::new(Tag::Sequence, SEQ_OID_SHA_1_DER)
-                .expect("error creating default MGF1 params"),
+            Any::new(Tag::Sequence, SEQ_OID_SHA_1_DER).expect("error creating default MGF1 params"),
         ),
     }
 }
@@ -258,106 +257,102 @@ fn default_mgf1_sha1<'a>() -> AlgorithmIdentifierRef<'a> {
 ///
 /// [RFC 8017 Appendix 2.1]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.1
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RsaOaepParams<'a> {
+pub struct RsaOaepParams {
     /// Hash Algorithm
-    pub hash: AlgorithmIdentifierRef<'a>,
+    pub hash: AlgorithmIdentifierOwned,
 
     /// Mask Generation Function (MGF)
-    pub mask_gen: AlgorithmIdentifierRef<'a>,
+    pub mask_gen: AlgorithmIdentifierOwned,
 
     /// The source (and possibly the value) of the label L
-    pub p_source: AlgorithmIdentifierRef<'a>,
+    pub p_source: AlgorithmIdentifierOwned,
 }
 
-impl<'a> RsaOaepParams<'a> {
-    //    /// Create new RsaPssParams for the provided digest and default (empty) label
-    //    pub fn new<D>() -> Self
-    //    where
-    //        D: AssociatedOid,
-    //    {
-    //        Self::new_with_label::<D>(&[])
-    //    }
-    //
-    //    /// Create new RsaPssParams for the provided digest and specified label
-    //    pub fn new_with_label<D>(label: &'a impl AsRef<[u8]>) -> Self
-    //    where
-    //        D: AssociatedOid,
-    //    {
-    //        Self {
-    //            hash: AlgorithmIdentifierRef {
-    //                oid: D::OID,
-    //                parameters: Some(AnyRef::NULL),
-    //            },
-    //            mask_gen: AlgorithmIdentifier {
-    //                oid: OID_MGF_1,
-    //                parameters: Some(AlgorithmIdentifierRef {
-    //                    oid: D::OID,
-    //                    parameters: Some(AnyRef::NULL),
-    //                }),
-    //            },
-    //            p_source: pspecicied_algorithm_identifier(label),
-    //        }
-    //    }
+impl RsaOaepParams {
+    /// Create new RsaPssParams for the provided digest and default (empty) label
+    pub fn new<D>() -> Self
+    where
+        D: AssociatedOid,
+    {
+        Self::new_with_label::<D>(&[])
+    }
 
-    fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
-        if self.hash == SHA_1_AI {
+    /// Create new RsaPssParams for the provided digest and specified label
+    pub fn new_with_label<D>(label: &impl AsRef<[u8]>) -> Self
+    where
+        D: AssociatedOid,
+    {
+        Self {
+            hash: AlgorithmIdentifier {
+                oid: D::OID,
+                parameters: Some(Any::null()),
+            },
+            mask_gen: AlgorithmIdentifier {
+                oid: OID_MGF_1,
+                parameters: Some(Any::from(&AlgorithmIdentifierRef {
+                    oid: D::OID,
+                    parameters: Some(AnyRef::NULL),
+                })),
+            },
+            p_source: pspecicied_algorithm_identifier(label),
+        }
+    }
+
+    fn context_specific_hash(&self) -> Option<ContextSpecific<AlgorithmIdentifierOwned>> {
+        if self.hash.owned_to_ref() == SHA_1_AI {
             None
         } else {
-            Some(ContextSpecificRef {
+            Some(ContextSpecific {
                 tag_number: TagNumber::N0,
                 tag_mode: TagMode::Explicit,
-                value: &self.hash,
+                value: self.hash.clone(),
             })
         }
     }
 
-    fn context_specific_mask_gen(
-        &self,
-    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    fn context_specific_mask_gen(&self) -> Option<ContextSpecific<AlgorithmIdentifierOwned>> {
         if self.mask_gen == default_mgf1_sha1() {
             None
         } else {
-            Some(ContextSpecificRef {
+            Some(ContextSpecific {
                 tag_number: TagNumber::N1,
                 tag_mode: TagMode::Explicit,
-                value: &self.mask_gen,
+                value: self.mask_gen.clone(),
             })
         }
     }
 
-    fn context_specific_p_source(
-        &self,
-    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    fn context_specific_p_source(&self) -> Option<ContextSpecific<AlgorithmIdentifierOwned>> {
         if self.p_source == default_pempty_string() {
             None
         } else {
-            Some(ContextSpecificRef {
+            Some(ContextSpecific {
                 tag_number: TagNumber::N2,
                 tag_mode: TagMode::Explicit,
-                value: &self.p_source,
+                value: self.p_source.clone(),
             })
         }
     }
 }
 
-impl<'a> Default for RsaOaepParams<'a> {
+impl Default for RsaOaepParams {
     fn default() -> Self {
         Self {
-            hash: SHA_1_AI,
+            hash: SHA_1_AI.ref_to_owned(),
             mask_gen: default_mgf1_sha1(),
             p_source: default_pempty_string(),
         }
     }
 }
 
-impl<'a> DecodeValue<'a> for RsaOaepParams<'a> {
+impl<'a> DecodeValue<'a> for RsaOaepParams {
     type Error = der::Error;
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 hash: reader
                     .context_specific(TagNumber::N0, TagMode::Explicit)?
-                    .unwrap_or(SHA_1_AI),
+                    .unwrap_or_else(|| SHA_1_AI.ref_to_owned()),
                 mask_gen: reader
                     .context_specific(TagNumber::N1, TagMode::Explicit)?
                     .unwrap_or_else(default_mgf1_sha1),
@@ -369,7 +364,7 @@ impl<'a> DecodeValue<'a> for RsaOaepParams<'a> {
     }
 }
 
-impl EncodeValue for RsaOaepParams<'_> {
+impl EncodeValue for RsaOaepParams {
     fn value_len(&self) -> der::Result<Length> {
         self.context_specific_hash().encoded_len()?
             + self.context_specific_mask_gen().encoded_len()?
@@ -384,26 +379,26 @@ impl EncodeValue for RsaOaepParams<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for RsaOaepParams<'a> {}
+impl<'a> Sequence<'a> for RsaOaepParams {}
 
-impl<'a> TryFrom<&'a [u8]> for RsaOaepParams<'a> {
+impl TryFrom<&[u8]> for RsaOaepParams {
     type Error = Error;
 
-    fn try_from(bytes: &'a [u8]) -> Result<Self> {
+    fn try_from(bytes: &[u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }
 }
 
-fn pspecicied_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentifierRef<'_> {
-    AlgorithmIdentifierRef {
+fn pspecicied_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentifierOwned {
+    AlgorithmIdentifier {
         oid: OID_PSPECIFIED,
         parameters: Some(
-            AnyRef::new(Tag::OctetString, label.as_ref()).expect("error creating OAEP params"),
+            Any::new(Tag::OctetString, label.as_ref()).expect("error creating OAEP params"),
         ),
     }
 }
 
 /// Default Source Algorithm, empty string
-fn default_pempty_string<'a>() -> AlgorithmIdentifierRef<'a> {
+fn default_pempty_string() -> AlgorithmIdentifierOwned {
     pspecicied_algorithm_identifier(&[])
 }
