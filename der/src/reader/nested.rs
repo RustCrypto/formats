@@ -59,7 +59,7 @@ impl<'i, 'r, R: Reader<'r>> Reader<'r> for NestedReader<'i, R> {
         self.input_len
     }
 
-    fn peek_byte(&self) -> Option<u8> {
+    fn peek_byte(&mut self) -> Option<u8> {
         if self.is_finished() {
             None
         } else {
@@ -67,7 +67,7 @@ impl<'i, 'r, R: Reader<'r>> Reader<'r> for NestedReader<'i, R> {
         }
     }
 
-    fn peek_header(&self) -> Result<Header> {
+    fn peek_header(&mut self) -> Result<Header> {
         if self.is_finished() {
             Err(Error::incomplete(self.offset()))
         } else {
