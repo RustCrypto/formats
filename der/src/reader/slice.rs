@@ -77,13 +77,13 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         self.bytes.len()
     }
 
-    fn peek_byte(&self) -> Option<u8> {
+    fn peek_byte(&mut self) -> Option<u8> {
         self.remaining()
             .ok()
             .and_then(|bytes| bytes.first().cloned())
     }
 
-    fn peek_header(&self) -> Result<Header, Error> {
+    fn peek_header(&mut self) -> Result<Header, Error> {
         Header::decode(&mut self.clone())
     }
 
@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn peek_tag() {
-        let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
+        let mut reader = SliceReader::new(EXAMPLE_MSG).unwrap();
         assert_eq!(reader.position(), Length::ZERO);
         assert_eq!(reader.peek_tag().unwrap(), Tag::Integer);
         assert_eq!(reader.position(), Length::ZERO); // Position unchanged
@@ -220,7 +220,7 @@ mod tests {
 
     #[test]
     fn peek_header() {
-        let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
+        let mut reader = SliceReader::new(EXAMPLE_MSG).unwrap();
         assert_eq!(reader.position(), Length::ZERO);
 
         let header = reader.peek_header().unwrap();

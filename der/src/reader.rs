@@ -23,16 +23,16 @@ pub trait Reader<'r>: Sized {
     /// Get the length of the input.
     fn input_len(&self) -> Length;
 
-    /// Peek at the next byte of input without modifying the cursor.
-    fn peek_byte(&self) -> Option<u8>;
+    /// Peek at the next byte of input without modifying the position within the reader.
+    fn peek_byte(&mut self) -> Option<u8>;
 
     /// Peek forward in the input data, attempting to decode a [`Header`] from
     /// the data at the current position in the decoder.
     ///
-    /// Does not modify the decoder's state.
-    fn peek_header(&self) -> Result<Header, Error>;
+    /// Does not modify the position within the reader.
+    fn peek_header(&mut self) -> Result<Header, Error>;
 
-    /// Get the position within the buffer.
+    /// Get the position within the reader in bytes.
     fn position(&self) -> Length;
 
     /// Attempt to read data borrowed directly from the input as a slice,
@@ -103,8 +103,8 @@ pub trait Reader<'r>: Sized {
     /// Peek at the next byte in the decoder and attempt to decode it as a
     /// [`Tag`] value.
     ///
-    /// Does not modify the decoder's state.
-    fn peek_tag(&self) -> Result<Tag, Error> {
+    /// Does not modify the position within the reader.
+    fn peek_tag(&mut self) -> Result<Tag, Error> {
         match self.peek_byte() {
             Some(byte) => byte.try_into(),
             None => Err(Error::incomplete(self.input_len())),
