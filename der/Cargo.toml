@@ -24,7 +24,7 @@ der_derive = { version = "=0.8.0-pre.0", optional = true }
 flagset = { version = "0.4.5", optional = true }
 pem-rfc7468 = { version = "=1.0.0-pre.0", optional = true, features = ["alloc"] }
 time = { version = "0.3.4", optional = true, default-features = false }
-zeroize = { version = "1.5", optional = true, default-features = false }
+zeroize = { version = "1.8", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.4.1"

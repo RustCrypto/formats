@@ -22,7 +22,7 @@ x509-cert = { version = "=0.3.0-pre", default-features = false, features = ["pem
 const-oid = { version = "=0.10.0-pre.2", features = ["db"] }
 cms = "=0.3.0-pre"
 digest = { version = "0.11.0-pre.8", features=["alloc"], optional = true }
-zeroize = "1.6.0"
+zeroize = "1.8.1"
 
 [dev-dependencies]
 hex-literal = "0.4"
