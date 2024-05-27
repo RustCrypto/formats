@@ -12,7 +12,7 @@ edition = "2021"
 rust-version = "1.60"
 
 [dependencies]
-zeroize = { version = "1.7", default-features = false, features = [
+zeroize = { version = "1.8", default-features = false, features = [
     "alloc",
     "zeroize_derive",
 ] }
