@@ -143,7 +143,7 @@ checksum = "d1ce0365f4d5fb6646220bb52fe547afd51796d90f914d4063cb0b032ebee088"
 
 [[package]]
 name = "base32ct"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "base32",
  "proptest",
