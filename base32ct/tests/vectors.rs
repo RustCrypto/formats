@@ -23,6 +23,18 @@ const LOWER_PADDED_VECTORS: &[TestVector] = &[
         decoded: &[32, 7],
         encoded: "eadq====",
     },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56],
+        encoded: "ci2fm===",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56, 0x78, 0x9a],
+        encoded: "ci2fm6e2",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc],
+        encoded: "ci2fm6e2xq======",
+    },
 ];
 
 const LOWER_UNPADDED_VECTORS: &[TestVector] = &[
@@ -37,6 +49,18 @@ const LOWER_UNPADDED_VECTORS: &[TestVector] = &[
     TestVector {
         decoded: &[32, 7],
         encoded: "eadq",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56],
+        encoded: "ci2fm",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56, 0x78, 0x9a],
+        encoded: "ci2fm6e2",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc],
+        encoded: "ci2fm6e2xq",
     },
 ];
 
@@ -53,6 +77,18 @@ const UPPER_PADDED_VECTORS: &[TestVector] = &[
         decoded: &[32, 7],
         encoded: "EADQ====",
     },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56],
+        encoded: "CI2FM===",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56, 0x78, 0x9a],
+        encoded: "CI2FM6E2",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc],
+        encoded: "CI2FM6E2XQ======",
+    },
 ];
 
 const UPPER_UNPADDED_VECTORS: &[TestVector] = &[
@@ -67,6 +103,18 @@ const UPPER_UNPADDED_VECTORS: &[TestVector] = &[
     TestVector {
         decoded: &[32, 7],
         encoded: "EADQ",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56],
+        encoded: "CI2FM",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56, 0x78, 0x9a],
+        encoded: "CI2FM6E2",
+    },
+    TestVector {
+        decoded: &[0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc],
+        encoded: "CI2FM6E2XQ",
     },
 ];
 
