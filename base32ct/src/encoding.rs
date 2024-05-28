@@ -226,7 +226,7 @@ impl<T: Alphabet> Encoding for T {
         } else if Self::PADDED {
             ((bytes.len() - 1) / 5 + 1) * 8
         } else {
-            (bytes.len() * 8) / 5 + 1
+            (bytes.len() * 8 + 4) / 5
         }
     }
 }
