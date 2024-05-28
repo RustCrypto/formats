@@ -258,3 +258,74 @@ fn remove_padding(mut input: &[u8]) -> Result<&[u8]> {
 
     Ok(input)
 }
+
+#[cfg(all(test, feature = "alloc"))]
+mod tests {
+    use crate::{Base32, Base32Unpadded, Encoding};
+
+    struct LenData {
+        fourty_bit_groups_len: usize,
+        last_group_len: usize,
+        padding_len: usize,
+    }
+
+    fn get_len_data(data_len: usize) -> LenData {
+        // More information about the calculation can be found at
+        // https://www.rfc-editor.org/rfc/rfc4648#section-6
+        let fourty_bit_groups_len = data_len / 5 * 8;
+        let (last_group_len, padding_len) = match data_len % 5 {
+            0 => (0, 0),
+            1 => (2, 6),
+            2 => (4, 4),
+            3 => (5, 3),
+            4 => (7, 1),
+            _ => unreachable!(),
+        };
+
+        LenData {
+            fourty_bit_groups_len,
+            last_group_len,
+            padding_len,
+        }
+    }
+
+    #[test]
+    fn unpadded_encoded_len() {
+        let mut buf = vec![];
+        assert_eq!(Base32Unpadded::encoded_len(&buf), 0);
+
+        for _ in 0..10 {
+            buf.push(b'a');
+            let LenData {
+                fourty_bit_groups_len,
+                last_group_len,
+                padding_len: _,
+            } = get_len_data(buf.len());
+
+            assert_eq!(
+                Base32Unpadded::encoded_len(&buf),
+                fourty_bit_groups_len + last_group_len
+            );
+        }
+    }
+
+    #[test]
+    fn padded_encoded_len() {
+        let mut buf = vec![];
+        assert_eq!(Base32::encoded_len(&buf), 0);
+
+        for _ in 0..10 {
+            buf.push(b'a');
+            let LenData {
+                fourty_bit_groups_len,
+                last_group_len,
+                padding_len,
+            } = get_len_data(buf.len());
+
+            assert_eq!(
+                Base32::encoded_len(&buf),
+                fourty_bit_groups_len + last_group_len + padding_len,
+            );
+        }
+    }
+}
