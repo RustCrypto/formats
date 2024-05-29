@@ -220,14 +220,9 @@ impl<T: Alphabet> Encoding for T {
         }
     }
 
+    #[inline]
     fn encoded_len(bytes: &[u8]) -> usize {
-        if bytes.is_empty() {
-            0
-        } else if Self::PADDED {
-            ((bytes.len() - 1) / 5 + 1) * 8
-        } else {
-            (bytes.len() * 8 + 4) / 5
-        }
+        encoded_len::<Self>(bytes.len())
     }
 }
 
@@ -257,6 +252,17 @@ fn remove_padding(mut input: &[u8]) -> Result<&[u8]> {
     }
 
     Ok(input)
+}
+
+/// Get the length of Base32 produced by encoding the given amount of bytes.
+pub const fn encoded_len<T: Encoding>(length: usize) -> usize {
+    if length == 0 {
+        0
+    } else if T::PADDED {
+        ((length - 1) / 5 + 1) * 8
+    } else {
+        (length * 8 + 4) / 5
+    }
 }
 
 #[cfg(all(test, feature = "alloc"))]
