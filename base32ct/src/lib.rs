@@ -59,6 +59,6 @@ mod error;
 
 pub use crate::{
     alphabet::rfc4648::{Base32, Base32Unpadded, Base32Upper, Base32UpperUnpadded},
-    encoding::Encoding,
+    encoding::{encoded_len, Encoding},
     error::{Error, Result},
 };
