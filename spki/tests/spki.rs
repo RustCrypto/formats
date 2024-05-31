@@ -5,7 +5,10 @@ use hex_literal::hex;
 use spki::SubjectPublicKeyInfoRef;
 
 #[cfg(feature = "alloc")]
-use der::Encode;
+use {
+    der::Encode,
+    spki::{AlgorithmIdentifier, AlgorithmIdentifierOwned},
+};
 
 #[cfg(feature = "pem")]
 use der::{pem::LineEnding, EncodePem};
@@ -158,4 +161,21 @@ fn encode_rsa_2048_pem() {
     let pk = SubjectPublicKeyInfoRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
     let pk_encoded = pk.to_pem(LineEnding::LF).unwrap();
     assert_eq!(RSA_2048_PEM_EXAMPLE, pk_encoded);
+}
+
+#[test]
+#[cfg(feature = "alloc")]
+fn build_hashset_of_digests() {
+    const SHA1: AlgorithmIdentifierOwned = AlgorithmIdentifier {
+        oid: ObjectIdentifier::new_unwrap("1.3.14.3.2.26"),
+        parameters: None,
+    };
+    const SHA256: AlgorithmIdentifierOwned = AlgorithmIdentifier {
+        oid: ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.1"),
+        parameters: None,
+    };
+
+    let mut hashes = std::collections::HashSet::new();
+    hashes.insert(SHA1);
+    hashes.insert(SHA256);
 }

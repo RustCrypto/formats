@@ -10,7 +10,7 @@ use core::cmp::Ordering;
 use crate::StrOwned;
 
 /// Byte slice newtype which respects the `Length::max()` limit.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub(crate) struct BytesRef<'a> {
     /// Precomputed `Length` (avoids possible panicking conversions)
     pub length: Length,
