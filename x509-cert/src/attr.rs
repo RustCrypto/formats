@@ -2,7 +2,7 @@
 
 use alloc::vec::Vec;
 use const_oid::db::{
-    rfc3280::{EMAIL, EMAIL_ADDRESS},
+    rfc3280::EMAIL_ADDRESS,
     rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT, SERIAL_NUMBER},
     Database, DB,
 };
@@ -194,7 +194,7 @@ impl AttributeTypeAndValue {
             SERIAL_NUMBER => Tag::PrintableString,
             // Email addresses are formatted as Ia5String as per RFC 5280 Appendix A.1:
             // https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
-            EMAIL | EMAIL_ADDRESS => Tag::Ia5String,
+            EMAIL_ADDRESS => Tag::Ia5String,
             _ => Tag::Utf8String,
         };
 
