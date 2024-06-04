@@ -20,6 +20,8 @@ use x509_cert::{
     spki::AlgorithmIdentifier,
 };
 
+pub use cmpv2;
+
 #[derive(Clone, Copy, Debug, Enumerated, Eq, PartialEq, PartialOrd, Ord)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]
