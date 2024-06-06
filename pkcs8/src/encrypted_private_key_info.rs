@@ -12,10 +12,7 @@ use pkcs5::EncryptionScheme;
 use der::SecretDocument;
 
 #[cfg(feature = "encryption")]
-use {
-    pkcs5::pbes2,
-    rand_core::{CryptoRng, RngCore},
-};
+use {pkcs5::pbes2, rand_core::CryptoRngCore};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -64,17 +61,11 @@ impl<'a> EncryptedPrivateKeyInfo<'a> {
     /// derived from the provided password.
     #[cfg(feature = "encryption")]
     pub(crate) fn encrypt(
-        mut rng: impl CryptoRng + RngCore,
+        rng: &mut impl CryptoRngCore,
         password: impl AsRef<[u8]>,
         doc: &[u8],
     ) -> Result<SecretDocument> {
-        let mut salt = [0u8; 16];
-        rng.fill_bytes(&mut salt);
-
-        let mut iv = [0u8; 16];
-        rng.fill_bytes(&mut iv);
-
-        let pbes2_params = pbes2::Parameters::scrypt_aes256cbc(Default::default(), &salt, iv)?;
+        let pbes2_params = pbes2::Parameters::recommended(rng);
         EncryptedPrivateKeyInfo::encrypt_with(pbes2_params, password, doc)
     }
 
