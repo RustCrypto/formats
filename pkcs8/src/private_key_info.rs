@@ -13,10 +13,7 @@ use der::SecretDocument;
 
 #[cfg(feature = "encryption")]
 use {
-    crate::EncryptedPrivateKeyInfo,
-    der::zeroize::Zeroizing,
-    pkcs5::pbes2,
-    rand_core::{CryptoRng, RngCore},
+    crate::EncryptedPrivateKeyInfo, der::zeroize::Zeroizing, pkcs5::pbes2, rand_core::CryptoRngCore,
 };
 
 #[cfg(feature = "pem")]
@@ -137,7 +134,7 @@ impl<'a> PrivateKeyInfo<'a> {
     #[cfg(feature = "encryption")]
     pub fn encrypt(
         &self,
-        rng: impl CryptoRng + RngCore,
+        rng: &mut impl CryptoRngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
