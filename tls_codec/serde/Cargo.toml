@@ -1,0 +1,8 @@
+[package]
+name = "tls_codec_serde"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = "1.0"
+tls_codec = { path = "../" }
