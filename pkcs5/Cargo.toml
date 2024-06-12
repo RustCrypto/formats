@@ -22,6 +22,7 @@ spki = { version = "=0.8.0-pre.0" }
 # optional dependencies
 cbc = { version = "=0.2.0-pre", optional = true }
 aes = { version = "=0.9.0-pre", optional = true, default-features = false }
+aes-gcm = { version = "0.10", optional = true, default-features = false, features = ["aes"] }
 des = { version = "=0.9.0-pre.0", optional = true, default-features = false }
 pbkdf2 = { version = "=0.13.0-pre.0", optional = true, default-features = false, features = ["hmac"] }
 rand_core = { version = "0.6.4", optional = true, default-features = false }
@@ -37,7 +38,7 @@ alloc = []
 3des = ["dep:des", "pbes2"]
 des-insecure = ["dep:des", "pbes2"]
 getrandom = ["rand_core/getrandom"]
-pbes2 = ["dep:aes", "dep:cbc", "dep:pbkdf2", "dep:scrypt", "dep:sha2"]
+pbes2 = ["dep:aes", "dep:cbc", "dep:pbkdf2", "dep:scrypt", "dep:sha2", "dep:aes-gcm"]
 sha1-insecure = ["dep:sha1", "pbes2"]
 
 [package.metadata.docs.rs]
