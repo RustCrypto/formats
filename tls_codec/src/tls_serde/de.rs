@@ -1,5 +1,7 @@
 use core::ops::{AddAssign, MulAssign, Neg};
+use std::println;
 
+use alloc::string::String;
 use serde::de::{
     self, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, VariantAccess,
     Visitor,
@@ -8,10 +10,12 @@ use serde::Deserialize;
 
 use super::error::{Error, Result};
 
+use crate::{Deserialize as _, DeserializeBytes as _, VLBytes};
+
 pub struct Deserializer<'de> {
-    // This string starts with the input data and characters are truncated off
+    // The input data and characters are truncated off
     // the beginning as data is parsed.
-    input: &'de str,
+    input: &'de [u8],
 }
 
 impl<'de> Deserializer<'de> {
@@ -19,7 +23,7 @@ impl<'de> Deserializer<'de> {
     // That way basic use cases are satisfied by something like
     // `serde_json::from_str(...)` while advanced use cases that require a
     // deserializer can make one with `serde_json::Deserializer::from_str(...)`.
-    pub fn from_str(input: &'de str) -> Self {
+    pub fn from_slice(input: &'de [u8]) -> Self {
         Deserializer { input }
     }
 }
@@ -28,12 +32,12 @@ impl<'de> Deserializer<'de> {
 // `from_xyz` methods such as `from_str`, `from_bytes`, or `from_reader`
 // depending on what Rust types the deserializer is able to consume as input.
 //
-// This basic deserializer supports only `from_str`.
-pub fn from_str<'a, T>(s: &'a str) -> Result<T>
+// This basic deserializer supports only `from_slice`.
+pub fn from_slice<'a, T>(s: &'a [u8]) -> Result<T>
 where
     T: Deserialize<'a>,
 {
-    let mut deserializer = Deserializer::from_str(s);
+    let mut deserializer = Deserializer::from_slice(s);
     let t = T::deserialize(&mut deserializer)?;
     if deserializer.input.is_empty() {
         Ok(t)
@@ -42,113 +46,105 @@ where
     }
 }
 
-// SERDE IS NOT A PARSING LIBRARY. This impl block defines a few basic parsing
-// functions from scratch. More complicated formats may wish to use a dedicated
-// parsing library to help implement their Serde deserializer.
-impl<'de> Deserializer<'de> {
-    // Look at the first character in the input without consuming it.
-    fn peek_char(&mut self) -> Result<char> {
-        self.input.chars().next().ok_or(Error::Eof)
-    }
+// // SERDE IS NOT A PARSING LIBRARY. This impl block defines a few basic parsing
+// // functions from scratch. More complicated formats may wish to use a dedicated
+// // parsing library to help implement their Serde deserializer.
+// impl<'de> Deserializer<'de> {
+//     // Look at the first character in the input without consuming it.
+//     fn peek_char(&mut self) -> Result<char> {
+//         self.input.chars().next().ok_or(Error::Eof)
+//     }
 
-    // Consume the first character in the input.
-    fn next_char(&mut self) -> Result<char> {
-        let ch = self.peek_char()?;
-        self.input = &self.input[ch.len_utf8()..];
-        Ok(ch)
-    }
+//     // Consume the first character in the input.
+//     fn next_char(&mut self) -> Result<char> {
+//         let ch = self.peek_char()?;
+//         self.input = &self.input[ch.len_utf8()..];
+//         Ok(ch)
+//     }
 
-    // Parse the JSON identifier `true` or `false`.
-    fn parse_bool(&mut self) -> Result<bool> {
-        if self.input.starts_with("true") {
-            self.input = &self.input["true".len()..];
-            Ok(true)
-        } else if self.input.starts_with("false") {
-            self.input = &self.input["false".len()..];
-            Ok(false)
-        } else {
-            Err(Error::ExpectedBoolean)
-        }
-    }
+//     // Parse the JSON identifier `true` or `false`.
+//     fn parse_bool(&mut self) -> Result<bool> {
+//         if self.input.starts_with("true") {
+//             self.input = &self.input["true".len()..];
+//             Ok(true)
+//         } else if self.input.starts_with("false") {
+//             self.input = &self.input["false".len()..];
+//             Ok(false)
+//         } else {
+//             Err(Error::ExpectedBoolean)
+//         }
+//     }
 
-    // Parse a group of decimal digits as an unsigned integer of type T.
-    //
-    // This implementation is a bit too lenient, for example `001` is not
-    // allowed in JSON. Also the various arithmetic operations can overflow and
-    // panic or return bogus data. But it is good enough for example code!
-    fn parse_unsigned<T>(&mut self) -> Result<T>
-    where
-        T: AddAssign<T> + MulAssign<T> + From<u8>,
-    {
-        let mut int = match self.next_char()? {
-            ch @ '0'..='9' => T::from(ch as u8 - b'0'),
-            _ => {
-                return Err(Error::ExpectedInteger);
-            }
-        };
-        loop {
-            match self.input.chars().next() {
-                Some(ch @ '0'..='9') => {
-                    self.input = &self.input[1..];
-                    int *= T::from(10);
-                    int += T::from(ch as u8 - b'0');
-                }
-                _ => {
-                    return Ok(int);
-                }
-            }
-        }
-    }
+//     // Parse a group of decimal digits as an unsigned integer of type T.
+//     //
+//     // This implementation is a bit too lenient, for example `001` is not
+//     // allowed in JSON. Also the various arithmetic operations can overflow and
+//     // panic or return bogus data. But it is good enough for example code!
+//     fn parse_unsigned<T>(&mut self) -> Result<T>
+//     where
+//         T: AddAssign<T> + MulAssign<T> + From<u8>,
+//     {
+//         let mut int = match self.next_char()? {
+//             ch @ '0'..='9' => T::from(ch as u8 - b'0'),
+//             _ => {
+//                 return Err(Error::ExpectedInteger);
+//             }
+//         };
+//         loop {
+//             match self.input.chars().next() {
+//                 Some(ch @ '0'..='9') => {
+//                     self.input = &self.input[1..];
+//                     int *= T::from(10);
+//                     int += T::from(ch as u8 - b'0');
+//                 }
+//                 _ => {
+//                     return Ok(int);
+//                 }
+//             }
+//         }
+//     }
 
-    // Parse a possible minus sign followed by a group of decimal digits as a
-    // signed integer of type T.
-    fn parse_signed<T>(&mut self) -> Result<T>
-    where
-        T: Neg<Output = T> + AddAssign<T> + MulAssign<T> + From<i8>,
-    {
-        // Optional minus sign, delegate to `parse_unsigned`, negate if negative.
-        unimplemented!()
-    }
+//     // Parse a possible minus sign followed by a group of decimal digits as a
+//     // signed integer of type T.
+//     fn parse_signed<T>(&mut self) -> Result<T>
+//     where
+//         T: Neg<Output = T> + AddAssign<T> + MulAssign<T> + From<i8>,
+//     {
+//         // Optional minus sign, delegate to `parse_unsigned`, negate if negative.
+//         unimplemented!()
+//     }
 
-    // Parse a string until the next '"' character.
-    //
-    // Makes no attempt to handle escape sequences. What did you expect? This is
-    // example code!
-    fn parse_string(&mut self) -> Result<&'de str> {
-        if self.next_char()? != '"' {
-            return Err(Error::ExpectedString);
-        }
-        match self.input.find('"') {
-            Some(len) => {
-                let s = &self.input[..len];
-                self.input = &self.input[len + 1..];
-                Ok(s)
-            }
-            None => Err(Error::Eof),
-        }
-    }
-}
+//     // Parse a string until the next '"' character.
+//     //
+//     // Makes no attempt to handle escape sequences. What did you expect? This is
+//     // example code!
+//     fn parse_string(&mut self) -> Result<&'de str> {
+//         if self.next_char()? != '"' {
+//             return Err(Error::ExpectedString);
+//         }
+//         match self.input.find('"') {
+//             Some(len) => {
+//                 let s = &self.input[..len];
+//                 self.input = &self.input[len + 1..];
+//                 Ok(s)
+//             }
+//             None => Err(Error::Eof),
+//         }
+//     }
+// }
 
 impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     type Error = Error;
 
     // Look at the input data to decide what Serde data model type to
-    // deserialize as. Not all data formats are able to support this operation.
+    // deserialize as.
+    // This is not supported for TLS.
     // Formats that support `deserialize_any` are known as self-describing.
-    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value>
+    fn deserialize_any<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        match self.peek_char()? {
-            'n' => self.deserialize_unit(visitor),
-            't' | 'f' => self.deserialize_bool(visitor),
-            '"' => self.deserialize_str(visitor),
-            '0'..='9' => self.deserialize_u64(visitor),
-            '-' => self.deserialize_i64(visitor),
-            '[' => self.deserialize_seq(visitor),
-            '{' => self.deserialize_map(visitor),
-            _ => Err(Error::Syntax),
-        }
+        unimplemented!("TLS is not self describing.")
     }
 
     // Uses the `parse_bool` parsing function defined above to read the JSON
@@ -156,20 +152,15 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     //
     // Parsing refers to looking at the input and deciding that it contains the
     // JSON value `true` or `false`.
-    //
-    // Deserialization refers to mapping that JSON value into Serde's data
-    // model by invoking one of the `Visitor` methods. In the case of JSON and
-    // bool that mapping is straightforward so the distinction may seem silly,
-    // but in other cases Deserializers sometimes perform non-obvious mappings.
-    // For example the TOML format has a Datetime type and Serde's data model
-    // does not. In the `toml` crate, a Datetime in the input is deserialized by
-    // mapping it to a Serde data model "struct" type with a special name and a
-    // single field containing the Datetime represented as a string.
     fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_bool(self.parse_bool()?)
+        // We parse bools as u8's
+        // XXX[syntax]: This is not in the TLS syntax.
+        let b = self.input[0] != 0;
+        self.input = &self.input[1..];
+        visitor.visit_bool(b)
     }
 
     // The `parse_signed` function is generic over the integer type `T` so here
@@ -178,56 +169,64 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i8(self.parse_signed()?)
+        unimplemented!()
     }
 
     fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i16(self.parse_signed()?)
+        unimplemented!()
     }
 
     fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i32(self.parse_signed()?)
+        unimplemented!()
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i64(self.parse_signed()?)
+        unimplemented!()
     }
 
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u8(self.parse_unsigned()?)
+        let v = self.input[0];
+        self.input = &self.input[1..];
+        visitor.visit_u8(v)
     }
 
     fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u16(self.parse_unsigned()?)
+        let v = u16::tls_deserialize(&mut (&self.input[0..2] as &[u8])).unwrap();
+        self.input = &self.input[2..];
+        visitor.visit_u16(v)
     }
 
     fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u32(self.parse_unsigned()?)
+        let v = u32::tls_deserialize(&mut (&self.input[0..4] as &[u8])).unwrap();
+        self.input = &self.input[4..];
+        visitor.visit_u32(v)
     }
 
     fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u64(self.parse_unsigned()?)
+        let v = u64::tls_deserialize(&mut (&self.input[0..8] as &[u8])).unwrap();
+        self.input = &self.input[8..];
+        visitor.visit_u64(v)
     }
 
     // Float parsing is stupidly hard.
@@ -262,7 +261,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_borrowed_str(self.parse_string()?)
+        println!("deserialise string | input: {:x?}", self.input);
+        // This is a variable length encoded byte vector.
+        let v = VLBytes::tls_deserialize(&mut self.input).unwrap();
+        let s = String::from_utf8(v.into()).unwrap();
+        visitor.visit_str(&s)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value>
@@ -300,12 +303,13 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        if self.input.starts_with("null") {
-            self.input = &self.input["null".len()..];
-            visitor.visit_none()
-        } else {
-            visitor.visit_some(self)
-        }
+        todo!();
+        // if self.input.starts_with("null") {
+        //     self.input = &self.input["null".len()..];
+        //     visitor.visit_none()
+        // } else {
+        //     visitor.visit_some(self)
+        // }
     }
 
     // In Serde, unit means an anonymous value containing no data.
@@ -313,12 +317,13 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        if self.input.starts_with("null") {
-            self.input = &self.input["null".len()..];
-            visitor.visit_unit()
-        } else {
-            Err(Error::ExpectedNull)
-        }
+        todo!();
+        // if self.input.starts_with("null") {
+        //     self.input = &self.input["null".len()..];
+        //     visitor.visit_unit()
+        // } else {
+        //     Err(Error::ExpectedNull)
+        // }
     }
 
     // Unit struct means a named value containing no data.
@@ -346,19 +351,34 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // Parse the opening bracket of the sequence.
-        if self.next_char()? == '[' {
-            // Give the visitor access to each element of the sequence.
-            let value = visitor.visit_seq(CommaSeparated::new(self))?;
-            // Parse the closing bracket of the sequence.
-            if self.next_char()? == ']' {
-                Ok(value)
-            } else {
-                Err(Error::ExpectedArrayEnd)
-            }
-        } else {
-            Err(Error::ExpectedArray)
-        }
+        println!("deserialize seq | input: {:x?}", self.input);
+
+        // Sequences first have the number of elements.
+        // XXX[syntax]: This only works for variable length encodings right now.
+        let (length, _read) = crate::quic_vec::rw::read_length(&mut self.input).unwrap();
+        let value = visitor.visit_seq(SeqParser::new(self, length))?;
+
+        // println!(
+        //     "deserialize seq | input: {:x?}\n\telements: {length}",
+        //     self.input
+        // );
+
+        Ok(value)
+        // Ok(value)
+        // todo!();
+        // // Parse the opening bracket of the sequence.
+        // if self.next_char()? == '[' {
+        //     // Give the visitor access to each element of the sequence.
+        //     let value = visitor.visit_seq(CommaSeparated::new(self))?;
+        //     // Parse the closing bracket of the sequence.
+        //     if self.next_char()? == ']' {
+        //         Ok(value)
+        //     } else {
+        //         Err(Error::ExpectedArrayEnd)
+        //     }
+        // } else {
+        //     Err(Error::ExpectedArray)
+        // }
     }
 
     // Tuples look just like sequences in JSON. Some formats may be able to
@@ -394,23 +414,22 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // Parse the opening brace of the map.
-        if self.next_char()? == '{' {
-            // Give the visitor access to each entry of the map.
-            let value = visitor.visit_map(CommaSeparated::new(self))?;
-            // Parse the closing brace of the map.
-            if self.next_char()? == '}' {
-                Ok(value)
-            } else {
-                Err(Error::ExpectedMapEnd)
-            }
-        } else {
-            Err(Error::ExpectedMap)
-        }
+        todo!();
+        // // Parse the opening brace of the map.
+        // if self.next_char()? == '{' {
+        //     // Give the visitor access to each entry of the map.
+        //     let value = visitor.visit_map(CommaSeparated::new(self))?;
+        //     // Parse the closing brace of the map.
+        //     if self.next_char()? == '}' {
+        //         Ok(value)
+        //     } else {
+        //         Err(Error::ExpectedMapEnd)
+        //     }
+        // } else {
+        //     Err(Error::ExpectedMap)
+        // }
     }
 
-    // Structs look just like maps in JSON.
-    //
     // Notice the `fields` parameter - a "struct" in the Serde data model means
     // that the `Deserialize` implementation is required to know what the fields
     // are before even looking at the input data. Any key-value pairing in which
@@ -424,7 +443,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        self.deserialize_map(visitor)
+        // Structs are sequences of the members in TLS syntax.
+        // But without size prefixes.
+        println!("name: {_name} | fields: {_fields:?}");
+        let value = visitor.visit_seq(StructParser::new(self))?;
+        Ok(value)
     }
 
     fn deserialize_enum<V>(
@@ -436,21 +459,22 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        if self.peek_char()? == '"' {
-            // Visit a unit variant.
-            visitor.visit_enum(self.parse_string()?.into_deserializer())
-        } else if self.next_char()? == '{' {
-            // Visit a newtype variant, tuple variant, or struct variant.
-            let value = visitor.visit_enum(Enum::new(self))?;
-            // Parse the matching close brace.
-            if self.next_char()? == '}' {
-                Ok(value)
-            } else {
-                Err(Error::ExpectedMapEnd)
-            }
-        } else {
-            Err(Error::ExpectedEnum)
-        }
+        todo!();
+        // if self.peek_char()? == '"' {
+        //     // Visit a unit variant.
+        //     visitor.visit_enum(self.parse_string()?.into_deserializer())
+        // } else if self.next_char()? == '{' {
+        //     // Visit a newtype variant, tuple variant, or struct variant.
+        //     let value = visitor.visit_enum(Enum::new(self))?;
+        //     // Parse the matching close brace.
+        //     if self.next_char()? == '}' {
+        //         Ok(value)
+        //     } else {
+        //         Err(Error::ExpectedMapEnd)
+        //     }
+        // } else {
+        //     Err(Error::ExpectedEnum)
+        // }
     }
 
     // An identifier in Serde is the type that identifies a field of a struct or
@@ -483,23 +507,21 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 }
 
-// In order to handle commas correctly when deserializing a JSON array or map,
-// we need to track whether we are on the first element or past the first
-// element.
-struct CommaSeparated<'a, 'de: 'a> {
+/// Reading sequences of values
+/// This is for structs where we don't know the length
+struct StructParser<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
-    first: bool,
 }
 
-impl<'a, 'de> CommaSeparated<'a, 'de> {
+impl<'a, 'de> StructParser<'a, 'de> {
     fn new(de: &'a mut Deserializer<'de>) -> Self {
-        CommaSeparated { de, first: true }
+        StructParser { de }
     }
 }
 
 // `SeqAccess` is provided to the `Visitor` to give it the ability to iterate
 // through elements of the sequence.
-impl<'de, 'a> SeqAccess<'de> for CommaSeparated<'a, 'de> {
+impl<'de, 'a> SeqAccess<'de> for StructParser<'a, 'de> {
     type Error = Error;
 
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
@@ -507,53 +529,41 @@ impl<'de, 'a> SeqAccess<'de> for CommaSeparated<'a, 'de> {
         T: DeserializeSeed<'de>,
     {
         // Check if there are no more elements.
-        if self.de.peek_char()? == ']' {
+        if self.de.input.is_empty() {
+            // XXX: This is not correct. We need to track the size of things.
             return Ok(None);
         }
-        // Comma is required before every element except the first.
-        if !self.first && self.de.next_char()? != ',' {
-            return Err(Error::ExpectedArrayComma);
-        }
-        self.first = false;
         // Deserialize an array element.
         seed.deserialize(&mut *self.de).map(Some)
     }
 }
 
-// `MapAccess` is provided to the `Visitor` to give it the ability to iterate
-// through entries of the map.
-impl<'de, 'a> MapAccess<'de> for CommaSeparated<'a, 'de> {
+struct SeqParser<'a, 'de: 'a> {
+    de: &'a mut Deserializer<'de>,
+    num_elments: usize,
+}
+
+impl<'a, 'de> SeqParser<'a, 'de> {
+    fn new(de: &'a mut Deserializer<'de>, num_elments: usize) -> Self {
+        SeqParser { de, num_elments }
+    }
+}
+
+impl<'de, 'a> SeqAccess<'de> for SeqParser<'a, 'de> {
     type Error = Error;
 
-    fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
     where
-        K: DeserializeSeed<'de>,
+        T: DeserializeSeed<'de>,
     {
-        // Check if there are no more entries.
-        if self.de.peek_char()? == '}' {
+        println!("next_element_seed: {:?}", self.de.input);
+        // Check if there are no more elements.
+        if self.de.input.is_empty() {
+            // XXX: This is not correct. We need to track the size of things.
             return Ok(None);
         }
-        // Comma is required before every entry except the first.
-        if !self.first && self.de.next_char()? != ',' {
-            return Err(Error::ExpectedMapComma);
-        }
-        self.first = false;
-        // Deserialize a map key.
+        // Deserialize an array element.
         seed.deserialize(&mut *self.de).map(Some)
-    }
-
-    fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value>
-    where
-        V: DeserializeSeed<'de>,
-    {
-        // It doesn't make a difference whether the colon is parsed at the end
-        // of `next_key_seed` or at the beginning of `next_value_seed`. In this
-        // case the code is a bit simpler having it here.
-        if self.de.next_char()? != ':' {
-            return Err(Error::ExpectedMapColon);
-        }
-        // Deserialize a map value.
-        seed.deserialize(&mut *self.de)
     }
 }
 
@@ -580,16 +590,17 @@ impl<'de, 'a> EnumAccess<'de> for Enum<'a, 'de> {
     where
         V: DeserializeSeed<'de>,
     {
-        // The `deserialize_enum` method parsed a `{` character so we are
-        // currently inside of a map. The seed will be deserializing itself from
-        // the key of the map.
-        let val = seed.deserialize(&mut *self.de)?;
-        // Parse the colon separating map key from value.
-        if self.de.next_char()? == ':' {
-            Ok((val, self))
-        } else {
-            Err(Error::ExpectedMapColon)
-        }
+        todo!();
+        // // The `deserialize_enum` method parsed a `{` character so we are
+        // // currently inside of a map. The seed will be deserializing itself from
+        // // the key of the map.
+        // let val = seed.deserialize(&mut *self.de)?;
+        // // Parse the colon separating map key from value.
+        // if self.de.next_char()? == ':' {
+        //     Ok((val, self))
+        // } else {
+        //     Err(Error::ExpectedMapColon)
+        // }
     }
 }
 
@@ -644,37 +655,93 @@ fn test_struct() {
         seq: Vec<String>,
     }
 
-    let j = r#"{"int":1,"seq":["a","b"]}"#;
+    let serialised = &[
+        0, 0, 0, 1, // 1u32
+        2, // vec with len 2
+        1, 0x61, // vec with len 1 and utf8 value
+        1, 0x62, // vec with len 1 and utf8 value
+    ];
     let expected = Test {
         int: 1,
         seq: vec!["a".to_owned(), "b".to_owned()],
     };
-    assert_eq!(expected, from_str(j).unwrap());
+
+    let deserialised = from_slice(serialised).unwrap();
+    assert_eq!(expected, deserialised);
 }
 
 #[test]
-fn test_enum() {
+fn test_nested_struct() {
+    use crate::alloc::{borrow::ToOwned, string::String, vec::Vec};
+
     #[derive(Deserialize, PartialEq, Debug)]
-    enum E {
-        Unit,
-        Newtype(u32),
-        Tuple(u32, u32),
-        Struct { a: u32 },
+    struct Other {
+        a: u8,
+        b: u16,
+        c: u32,
+        d: u64,
+        bytes: Vec<u8>,
     }
 
-    let j = r#""Unit""#;
-    let expected = E::Unit;
-    assert_eq!(expected, from_str(j).unwrap());
+    #[derive(Deserialize, PartialEq, Debug)]
+    struct Test {
+        int: u32,
+        other: Other,
+        seq: Vec<String>,
+    }
 
-    let j = r#"{"Newtype":1}"#;
-    let expected = E::Newtype(1);
-    assert_eq!(expected, from_str(j).unwrap());
+    let serialised = &[
+        0, 0, 0, 1, // 1u32
+        // Start other
+        9, // 9u8
+        0, 8, // 8u16
+        0, 0, 0, 3, //3u32
+        0, 0, 0, 0, 0, 0, 0, 2, // 2u64
+        3, 7, 8, 9, // vec[7, 8, 9]
+        // Start seq
+        2, // vec with len 2
+        1, 0x61, // vec with len 1 and utf8 value
+        1, 0x62, // vec with len 1 and utf8 value
+    ];
+    let expected = Test {
+        int: 1,
+        seq: vec!["a".to_owned(), "b".to_owned()],
+        other: Other {
+            a: 9,
+            b: 8,
+            c: 3,
+            d: 2,
+            bytes: vec![7, 8, 9],
+        },
+    };
 
-    let j = r#"{"Tuple":[1,2]}"#;
-    let expected = E::Tuple(1, 2);
-    assert_eq!(expected, from_str(j).unwrap());
-
-    let j = r#"{"Struct":{"a":1}}"#;
-    let expected = E::Struct { a: 1 };
-    assert_eq!(expected, from_str(j).unwrap());
+    let deserialised = from_slice(serialised).unwrap();
+    assert_eq!(expected, deserialised);
 }
+
+// #[test]
+// fn test_enum() {
+//     #[derive(Deserialize, PartialEq, Debug)]
+//     enum E {
+//         Unit,
+//         Newtype(u32),
+//         Tuple(u32, u32),
+//         Struct { a: u32 },
+//     }
+
+//     let j = r#""Unit""#;
+//     let expected = E::Unit;
+//     assert_eq!(expected, from_str(j).unwrap());
+
+//     let j = r#"{"Newtype":1}"#;
+//     let expected = E::Newtype(1);
+//     assert_eq!(expected, from_str(j).unwrap());
+
+//     let j = r#"{"Tuple":[1,2]}"#;
+//     let expected = E::Tuple(1, 2);
+//     assert_eq!(expected, from_str(j).unwrap());
+
+//     let j = r#"{"Struct":{"a":1}}"#;
+//     let expected = E::Struct { a: 1 };
+//     assert_eq!(expected, from_str(j).unwrap());
+// }

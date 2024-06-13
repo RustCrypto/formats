@@ -36,7 +36,7 @@ use core::fmt::{self, Display};
 use std::io::{Read, Write};
 
 #[cfg(feature = "serde")]
-pub mod serde;
+pub mod tls_serde;
 
 mod arrays;
 mod primitives;
