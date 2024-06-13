@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, MulAssign, Neg};
+use core::ops::{AddAssign, MulAssign, Neg};
 
 use serde::de::{
     self, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, VariantAccess,
@@ -6,7 +6,7 @@ use serde::de::{
 };
 use serde::Deserialize;
 
-use crate::error::{Error, Result};
+use super::error::{Error, Result};
 
 pub struct Deserializer<'de> {
     // This string starts with the input data and characters are truncated off
@@ -636,6 +636,8 @@ impl<'de, 'a> VariantAccess<'de> for Enum<'a, 'de> {
 
 #[test]
 fn test_struct() {
+    use crate::alloc::{borrow::ToOwned, string::String, vec::Vec};
+
     #[derive(Deserialize, PartialEq, Debug)]
     struct Test {
         int: u32,

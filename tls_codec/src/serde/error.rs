@@ -1,6 +1,7 @@
 use std;
 use std::fmt::{self, Display};
 
+use crate::alloc::string::{String, ToString};
 use serde::{de, ser};
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -38,6 +39,8 @@ pub enum Error {
     TrailingCharacters,
     Unsupported,
     CodecError,
+    VariableLengthError,
+    SequenceWithoutLength,
 }
 
 impl ser::Error for Error {

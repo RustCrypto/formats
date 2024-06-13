@@ -1,7 +1,11 @@
-use serde::{ser, Serialize};
-use tls_codec::{Serialize as _, VLByteSlice};
+use std::println;
 
-use crate::error::{Error, Result};
+use crate::alloc::vec::Vec;
+
+use crate::{Serialize as _, VLByteSlice};
+use serde::{ser, Serialize};
+
+use super::error::{Error, Result};
 
 pub struct Serializer {
     // This vector starts empty and JSON is appended as values are serialized.
@@ -12,7 +16,7 @@ pub struct Serializer {
 // functions such as `to_string`, `to_bytes`, or `to_writer` depending on what
 // Rust types the serializer is able to produce as output.
 //
-// This basic serializer supports only `to_string`.
+// This basic serializer supports only `to_bytes`.
 pub fn to_bytes<T>(value: &T) -> Result<Vec<u8>>
 where
     T: Serialize,
@@ -23,7 +27,7 @@ where
 }
 
 impl Serializer {
-    fn serialize<V: tls_codec::Serialize>(&mut self, v: V) -> Result<()> {
+    fn serialize<V: crate::Serialize>(&mut self, v: V) -> Result<()> {
         self.output
             .extend_from_slice(&v.tls_serialize_detached().map_err(|_| Error::CodecError)?);
         Ok(())
@@ -103,7 +107,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_str(self, v: &str) -> Result<()> {
-        unimplemented!()
+        v.as_bytes().serialize(&mut *self)
     }
 
     // XXX: Note that this is not correct in general, but for MLS.
@@ -125,12 +129,8 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        let mut tmp_serializer = Serializer { output: Vec::new() };
-        let value = T::serialize(self, &mut tmp_serializer)?;
-        self.output
-            .extend_from_slice(&v.tls_serialize_detached().map_err(|_| Error::CodecError)?);
-        // self.serialize::<Option<T>>(Option::None)
-        Ok(())
+        self.serialize(1u8)?;
+        value.serialize(self)
     }
 
     fn serialize_unit(self) -> Result<()> {
@@ -151,10 +151,14 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     fn serialize_unit_variant(
         self,
         _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
+        variant_index: u32,
+        _variant: &'static str,
     ) -> Result<()> {
-        self.serialize_str(variant)
+        // For TLS, we use the index.
+        // TODO: In TLS codec we allow variants, but only with a representation.
+        //       TLS syntax itself does not support enums like this. Check how
+        //       this is used.
+        self.serialize_u32(variant_index)
     }
 
     // As is done here, serializers are encouraged to treat newtype structs as
@@ -169,38 +173,38 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     // Note that newtype variant (and all of the other variant serialization
     // methods) refer exclusively to the "externally tagged" enum
     // representation.
-    //
-    // Serialize this to JSON in externally tagged form as `{ NAME: VALUE }`.
     fn serialize_newtype_variant<T>(
         self,
         _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
+        variant_index: u32,
+        _variant: &'static str,
         value: &T,
     ) -> Result<()>
     where
         T: ?Sized + Serialize,
     {
-        self.output += "{";
-        variant.serialize(&mut *self)?;
-        self.output += ":";
+        self.serialize_u32(variant_index)?;
         value.serialize(&mut *self)?;
-        self.output += "}";
         Ok(())
     }
 
     // Now we get to the serialization of compound types.
     //
     // The start of the sequence, each value, and the end are three separate
-    // method calls. This one is responsible only for serializing the start,
-    // which in JSON is `[`.
+    // method calls. This one is responsible only for serializing the start.
+    // In TLS this is the length
     //
-    // The length of the sequence may or may not be known ahead of time. This
-    // doesn't make a difference in JSON because the length is not represented
-    // explicitly in the serialized form. Some serializers may only be able to
-    // support sequences for which the length is known up front.
-    fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
-        self.output += "[";
+    // The length of the sequence may or may not be known ahead of time.
+    fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq> {
+        // Serialize the length as variable encoding. This only works for MLS/QUIC.
+        if let Some(len) = len {
+            self.output.extend_from_slice(
+                &crate::quic_vec::write_variable_length(len)
+                    .map_err(|_| Error::VariableLengthError)?,
+            );
+        } else {
+            return Err(Error::SequenceWithoutLength);
+        }
         Ok(self)
     }
 
@@ -226,43 +230,35 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     fn serialize_tuple_variant(
         self,
         _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
+        variant_index: u32,
+        _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant> {
-        self.output += "{";
-        variant.serialize(&mut *self)?;
-        self.output += ":[";
+        variant_index.serialize(&mut *self)?;
         Ok(self)
     }
 
     // Maps are represented in JSON as `{ K: V, K: V, ... }`.
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap> {
-        self.output += "{";
+        todo!();
+        // self.output += "{";
         Ok(self)
     }
 
-    // Structs look just like maps in JSON. In particular, JSON requires that we
-    // serialize the field names of the struct. Other formats may be able to
-    // omit the field names when serializing structs because the corresponding
-    // Deserialize implementation is required to know what the keys are without
-    // looking at the serialized data.
-    fn serialize_struct(self, _name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
-        self.serialize_map(Some(len))
+    // Just serialize one element after the other.
+    fn serialize_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeStruct> {
+        Ok(self)
     }
 
-    // Struct variants are represented in JSON as `{ NAME: { K: V, ... } }`.
-    // This is the externally tagged representation.
+    // Struct variants are represented in TLS syntax as the plain values
     fn serialize_struct_variant(
         self,
         _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
+        variant_index: u32,
+        _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
-        self.output += "{";
-        variant.serialize(&mut *self)?;
-        self.output += ":{";
+        variant_index.serialize(&mut *self)?;
         Ok(self)
     }
 }
@@ -285,15 +281,11 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('[') {
-            self.output += ",";
-        }
         value.serialize(&mut **self)
     }
 
     // Close the sequence.
     fn end(self) -> Result<()> {
-        self.output += "]";
         Ok(())
     }
 }
@@ -307,14 +299,16 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('[') {
-            self.output += ",";
-        }
+        todo!();
+        // if !self.output.ends_with('[') {
+        //     self.output += ",";
+        // }
         value.serialize(&mut **self)
     }
 
     fn end(self) -> Result<()> {
-        self.output += "]";
+        todo!();
+        // self.output += "]";
         Ok(())
     }
 }
@@ -328,27 +322,22 @@ impl<'a> ser::SerializeTupleStruct for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('[') {
-            self.output += ",";
-        }
+        todo!();
+        // if !self.output.ends_with('[') {
+        //     self.output += ",";
+        // }
         value.serialize(&mut **self)
     }
 
     fn end(self) -> Result<()> {
-        self.output += "]";
+        todo!();
+        // self.output += "]";
         Ok(())
     }
 }
 
 // Tuple variants are a little different. Refer back to the
-// `serialize_tuple_variant` method above:
-//
-//    self.output += "{";
-//    variant.serialize(&mut *self)?;
-//    self.output += ":[";
-//
-// So the `end` method in this impl is responsible for closing both the `]` and
-// the `}`.
+// `serialize_tuple_variant` method above. But we don't do any endings here.
 impl<'a> ser::SerializeTupleVariant for &'a mut Serializer {
     type Ok = ();
     type Error = Error;
@@ -357,14 +346,10 @@ impl<'a> ser::SerializeTupleVariant for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('[') {
-            self.output += ",";
-        }
         value.serialize(&mut **self)
     }
 
     fn end(self) -> Result<()> {
-        self.output += "]}";
         Ok(())
     }
 }
@@ -393,9 +378,10 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('{') {
-            self.output += ",";
-        }
+        todo!();
+        // if !self.output.ends_with('{') {
+        //     self.output += ",";
+        // }
         key.serialize(&mut **self)
     }
 
@@ -406,12 +392,14 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        self.output += ":";
+        todo!();
+        // self.output += ":";
         value.serialize(&mut **self)
     }
 
     fn end(self) -> Result<()> {
-        self.output += "}";
+        todo!();
+        // self.output += "}";
         Ok(())
     }
 }
@@ -422,44 +410,32 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
     type Ok = ();
     type Error = Error;
 
-    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
+    fn serialize_field<T>(&mut self, _key: &'static str, value: &T) -> Result<()>
     where
         T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('{') {
-            self.output += ",";
-        }
-        key.serialize(&mut **self)?;
-        self.output += ":";
+        // We don't care about the key. We just serialize the value.
         value.serialize(&mut **self)
     }
 
     fn end(self) -> Result<()> {
-        self.output += "}";
         Ok(())
     }
 }
 
-// Similar to `SerializeTupleVariant`, here the `end` method is responsible for
-// closing both of the curly braces opened by `serialize_struct_variant`.
+// Serialize struct values as the value itself.
 impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
     type Ok = ();
     type Error = Error;
 
-    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
+    fn serialize_field<T>(&mut self, _key: &'static str, value: &T) -> Result<()>
     where
         T: ?Sized + Serialize,
     {
-        if !self.output.ends_with('{') {
-            self.output += ",";
-        }
-        key.serialize(&mut **self)?;
-        self.output += ":";
         value.serialize(&mut **self)
     }
 
     fn end(self) -> Result<()> {
-        self.output += "}}";
         Ok(())
     }
 }
@@ -478,8 +454,13 @@ fn test_struct() {
         int: 1,
         seq: vec!["a", "b"],
     };
-    let expected = r#"{"int":1,"seq":["a","b"]}"#;
-    assert_eq!(to_string(&test).unwrap(), expected);
+    let expected = &[
+        0, 0, 0, 1, // 1u32
+        2, // vec with len 2
+        1, 0x61, // vec with len 1 and utf8 value
+        1, 0x62, // vec with len 1 and utf8 value
+    ];
+    assert_eq!(to_bytes(&test).unwrap(), expected);
 }
 
 #[test]
@@ -493,18 +474,28 @@ fn test_enum() {
     }
 
     let u = E::Unit;
-    let expected = r#""Unit""#;
-    assert_eq!(to_string(&u).unwrap(), expected);
+    let expected = &[0, 0, 0, 0]; // 0u32
+    assert_eq!(to_bytes(&u).unwrap(), expected);
 
     let n = E::Newtype(1);
-    let expected = r#"{"Newtype":1}"#;
-    assert_eq!(to_string(&n).unwrap(), expected);
+    let expected = [
+        0, 0, 0, 1, // 1u32
+        0, 0, 0, 1, // 1u32
+    ];
+    assert_eq!(to_bytes(&n).unwrap(), expected);
 
     let t = E::Tuple(1, 2);
-    let expected = r#"{"Tuple":[1,2]}"#;
-    assert_eq!(to_string(&t).unwrap(), expected);
+    let expected = [
+        0, 0, 0, 2, // 2u32
+        0, 0, 0, 1, // 1u32
+        0, 0, 0, 2, // u32
+    ];
+    assert_eq!(to_bytes(&t).unwrap(), expected);
 
     let s = E::Struct { a: 1 };
-    let expected = r#"{"Struct":{"a":1}}"#;
-    assert_eq!(to_string(&s).unwrap(), expected);
+    let expected = [
+        0, 0, 0, 3, // 3u32
+        0, 0, 0, 1, // 1u32
+    ];
+    assert_eq!(to_bytes(&s).unwrap(), expected);
 }
