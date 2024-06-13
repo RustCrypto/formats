@@ -232,7 +232,7 @@ impl Parameters {
         gcm_nonce: [u8; GCM_NONCE_SIZE],
     ) -> Result<Self> {
         let kdf = ScryptParams::from_params_and_salt(params, salt)?.into();
-        let encryption = EncryptionScheme::Aes128Gcm { iv: gcm_nonce };
+        let encryption = EncryptionScheme::Aes128Gcm { nonce: gcm_nonce };
         Ok(Self { kdf, encryption })
     }
 
@@ -249,7 +249,7 @@ impl Parameters {
         gcm_nonce: [u8; GCM_NONCE_SIZE],
     ) -> Result<Self> {
         let kdf = ScryptParams::from_params_and_salt(params, salt)?.into();
-        let encryption = EncryptionScheme::Aes256Gcm { iv: gcm_nonce };
+        let encryption = EncryptionScheme::Aes256Gcm { nonce: gcm_nonce };
         Ok(Self { kdf, encryption })
     }
 
@@ -372,13 +372,13 @@ pub enum EncryptionScheme {
     /// AES-128 in CBC mode
     Aes128Gcm {
         /// GCM nonce
-        iv: [u8; GCM_NONCE_SIZE],
+        nonce: [u8; GCM_NONCE_SIZE],
     },
 
     /// AES-256 in GCM mode
     Aes256Gcm {
         /// GCM nonce
-        iv: [u8; GCM_NONCE_SIZE],
+        nonce: [u8; GCM_NONCE_SIZE],
     },
 
     /// 3-Key Triple DES in CBC mode
@@ -464,10 +464,10 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
                 iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
             }),
             AES_128_GCM_OID => Ok(Self::Aes128Gcm {
-                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                nonce: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
             }),
             AES_256_GCM_OID => Ok(Self::Aes256Gcm {
-                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                nonce: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
             }),
             #[cfg(feature = "des-insecure")]
             DES_CBC_OID => Ok(Self::DesCbc {
@@ -494,8 +494,8 @@ impl<'a> TryFrom<&'a EncryptionScheme> for AlgorithmIdentifierRef<'a> {
             EncryptionScheme::Aes128Cbc { iv } => iv.as_slice(),
             EncryptionScheme::Aes192Cbc { iv } => iv.as_slice(),
             EncryptionScheme::Aes256Cbc { iv } => iv.as_slice(),
-            EncryptionScheme::Aes128Gcm { iv } => iv.as_slice(),
-            EncryptionScheme::Aes256Gcm { iv } => iv.as_slice(),
+            EncryptionScheme::Aes128Gcm { nonce } => nonce.as_slice(),
+            EncryptionScheme::Aes256Gcm { nonce } => nonce.as_slice(),
             #[cfg(feature = "des-insecure")]
             EncryptionScheme::DesCbc { iv } => iv.as_slice(),
             #[cfg(feature = "3des")]

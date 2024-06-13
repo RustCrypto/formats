@@ -164,8 +164,8 @@ pub fn encrypt_in_place<'b>(
         EncryptionScheme::Aes128Cbc { iv } => cbc_encrypt::<aes::Aes128Enc>(es, key, &iv, buf, pos),
         EncryptionScheme::Aes192Cbc { iv } => cbc_encrypt::<aes::Aes192Enc>(es, key, &iv, buf, pos),
         EncryptionScheme::Aes256Cbc { iv } => cbc_encrypt::<aes::Aes256Enc>(es, key, &iv, buf, pos),
-        EncryptionScheme::Aes128Gcm { iv } => aes_128_gcm_encrypt(es, key, &iv, buf, pos),
-        EncryptionScheme::Aes256Gcm { iv } => aes_256_gcm_encrypt(es, key, &iv, buf, pos),
+        EncryptionScheme::Aes128Gcm { nonce } => aes_128_gcm_encrypt(es, key, &nonce, buf, pos),
+        EncryptionScheme::Aes256Gcm { nonce } => aes_256_gcm_encrypt(es, key, &nonce, buf, pos),
         #[cfg(feature = "3des")]
         EncryptionScheme::DesEde3Cbc { iv } => cbc_encrypt::<des::TdesEde3>(es, key, &iv, buf, pos),
         #[cfg(feature = "des-insecure")]
@@ -188,8 +188,8 @@ pub fn decrypt_in_place<'a>(
         EncryptionScheme::Aes128Cbc { iv } => cbc_decrypt::<aes::Aes128Dec>(es, key, &iv, buf),
         EncryptionScheme::Aes192Cbc { iv } => cbc_decrypt::<aes::Aes192Dec>(es, key, &iv, buf),
         EncryptionScheme::Aes256Cbc { iv } => cbc_decrypt::<aes::Aes256Dec>(es, key, &iv, buf),
-        EncryptionScheme::Aes128Gcm { iv } => aes_128_gcm_decrypt(es, key, &iv, buf),
-        EncryptionScheme::Aes256Gcm { iv } => aes_256_gcm_decrypt(es, key, &iv, buf),
+        EncryptionScheme::Aes128Gcm { nonce } => aes_128_gcm_decrypt(es, key, &nonce, buf),
+        EncryptionScheme::Aes256Gcm { nonce } => aes_256_gcm_decrypt(es, key, &nonce, buf),
         #[cfg(feature = "3des")]
         EncryptionScheme::DesEde3Cbc { iv } => cbc_decrypt::<des::TdesEde3>(es, key, &iv, buf),
         #[cfg(feature = "des-insecure")]
