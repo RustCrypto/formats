@@ -1677,14 +1677,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tls_codec_serde"
-version = "0.1.0"
-dependencies = [
- "serde",
- "tls_codec 0.4.2-pre.1",
-]
-
-[[package]]
 name = "tokio"
 version = "1.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

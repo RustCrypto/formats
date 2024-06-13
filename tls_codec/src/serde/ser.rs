@@ -130,6 +130,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         self.output
             .extend_from_slice(&v.tls_serialize_detached().map_err(|_| Error::CodecError)?);
         // self.serialize::<Option<T>>(Option::None)
+        Ok(())
     }
 
     fn serialize_unit(self) -> Result<()> {

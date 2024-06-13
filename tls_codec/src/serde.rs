@@ -1,3 +1,5 @@
+pub(in crate::serde) use super::alloc::vec::Vec;
+
 mod de;
 mod error;
 mod ser;

@@ -35,6 +35,9 @@ use core::fmt::{self, Display};
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
+#[cfg(feature = "serde")]
+pub mod serde;
+
 mod arrays;
 mod primitives;
 mod quic_vec;

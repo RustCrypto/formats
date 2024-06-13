@@ -22,7 +22,6 @@ members = [
     "tai64",
     "tls_codec",
     "tls_codec/derive",
-    "tls_codec/serde",
     "x509-tsp",
     "x509-cert",
     "x509-cert/test-support",
