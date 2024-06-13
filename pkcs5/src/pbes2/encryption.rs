@@ -2,7 +2,7 @@
 
 use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptParams};
 use crate::{Error, Result};
-use aes_gcm::{Aes256Gcm, Aes128Gcm, KeyInit as GcmKeyInit, AeadInPlace, Nonce, Tag};
+use aes_gcm::{AeadInPlace, Aes128Gcm, Aes256Gcm, KeyInit as GcmKeyInit, Nonce, Tag};
 use cbc::cipher::{
     block_padding::Pkcs7, BlockCipher, BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt,
     BlockModeEncrypt, KeyInit, KeyIvInit,
@@ -60,11 +60,13 @@ fn aes_128_gcm_encrypt<'a>(
         return Err(Error::EncryptFailed);
     }
     let gcm = Aes128Gcm::new_from_slice(key.as_slice()).map_err(|_| es.to_alg_params_invalid())?;
-    let nonce : [u8; 12] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
+    let nonce: [u8; 12] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
     let nonce = Nonce::from(nonce);
-    let tag = gcm.encrypt_in_place_detached(&nonce, &[], &mut buffer[..pos]).map_err(|_| Error::EncryptFailed)?;
+    let tag = gcm
+        .encrypt_in_place_detached(&nonce, &[], &mut buffer[..pos])
+        .map_err(|_| Error::EncryptFailed)?;
     buffer[pos..].copy_from_slice(tag.as_ref());
-    Ok(&buffer[0..pos+16])
+    Ok(&buffer[0..pos + 16])
 }
 
 fn aes_128_gcm_decrypt<'a>(
@@ -80,11 +82,16 @@ fn aes_128_gcm_decrypt<'a>(
     };
 
     let gcm = Aes128Gcm::new_from_slice(key.as_slice()).map_err(|_| es.to_alg_params_invalid())?;
-    let nonce : [u8; 12] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
+    let nonce: [u8; 12] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
     let nonce = Nonce::from(nonce);
-    let tag: [u8; 16] = buffer[msg_len..].try_into().map_err(|_| Error::DecryptFailed)?;
+    let tag: [u8; 16] = buffer[msg_len..]
+        .try_into()
+        .map_err(|_| Error::DecryptFailed)?;
     let tag = Tag::from(tag);
-    if !gcm.decrypt_in_place_detached(&nonce, &[], &mut buffer[..msg_len], &tag).is_ok() {
+    if gcm
+        .decrypt_in_place_detached(&nonce, &[], &mut buffer[..msg_len], &tag)
+        .is_err()
+    {
         return Err(Error::DecryptFailed);
     }
 
@@ -102,11 +109,13 @@ fn aes_256_gcm_encrypt<'a>(
         return Err(Error::EncryptFailed);
     }
     let gcm = Aes256Gcm::new_from_slice(key.as_slice()).map_err(|_| es.to_alg_params_invalid())?;
-    let nonce : [u8; 12] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
+    let nonce: [u8; 12] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
     let nonce = Nonce::from(nonce);
-    let tag = gcm.encrypt_in_place_detached(&nonce, &[], &mut buffer[..pos]).map_err(|_| Error::EncryptFailed)?;
+    let tag = gcm
+        .encrypt_in_place_detached(&nonce, &[], &mut buffer[..pos])
+        .map_err(|_| Error::EncryptFailed)?;
     buffer[pos..].copy_from_slice(tag.as_ref());
-    Ok(&buffer[0..pos+16])
+    Ok(&buffer[0..pos + 16])
 }
 
 fn aes_256_gcm_decrypt<'a>(
@@ -122,17 +131,21 @@ fn aes_256_gcm_decrypt<'a>(
     };
 
     let gcm = Aes256Gcm::new_from_slice(key.as_slice()).map_err(|_| es.to_alg_params_invalid())?;
-    let nonce : [u8; 12] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
+    let nonce: [u8; 12] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
     let nonce = Nonce::from(nonce);
-    let tag: [u8; 16] = buffer[msg_len..].try_into().map_err(|_| Error::DecryptFailed)?;
+    let tag: [u8; 16] = buffer[msg_len..]
+        .try_into()
+        .map_err(|_| Error::DecryptFailed)?;
     let tag = Tag::from(tag);
-    if !gcm.decrypt_in_place_detached(&nonce, &[], &mut buffer[..msg_len], &tag).is_ok() {
+    if gcm
+        .decrypt_in_place_detached(&nonce, &[], &mut buffer[..msg_len], &tag)
+        .is_err()
+    {
         return Err(Error::DecryptFailed);
     }
 
     Ok(&buffer[..msg_len])
 }
-
 
 pub fn encrypt_in_place<'b>(
     params: &Parameters,
