@@ -49,61 +49,55 @@ fn cbc_decrypt<'a, C: BlockCipherDecrypt + BlockCipher + KeyInit>(
         .map_err(|_| Error::EncryptFailed)
 }
 
-fn gcm_encrypt<'a, C>(
+fn gcm_encrypt<'a, C, NonceSize, TagSize>(
     es: EncryptionScheme,
     key: EncryptionKey,
-    iv: &[u8],
+    nonce: Nonce<NonceSize>,
     buffer: &'a mut [u8],
     pos: usize,
 ) -> Result<&'a [u8]>
 where
     C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
-    aes_gcm::AesGcm<C, U12>: GcmKeyInit,
+    aes_gcm::AesGcm<C, NonceSize, TagSize>: GcmKeyInit,
+    TagSize: aes_gcm::TagSize,
+    NonceSize: aes::cipher::ArraySize,
 {
-    const TAG_SIZE: usize = 16;
-    const NONCE_SIZE: usize = 12;
-
-    if buffer.len() < TAG_SIZE + pos {
+    if buffer.len() < TagSize::USIZE + pos {
         return Err(Error::EncryptFailed);
     }
-    let gcm = <aes_gcm::AesGcm<C, U12> as GcmKeyInit>::new_from_slice(key.as_slice())
-        .map_err(|_| es.to_alg_params_invalid())?;
-    let nonce: [u8; NONCE_SIZE] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
-    let nonce = Nonce::from(nonce);
+    let gcm =
+        <aes_gcm::AesGcm<C, NonceSize, TagSize> as GcmKeyInit>::new_from_slice(key.as_slice())
+            .map_err(|_| es.to_alg_params_invalid())?;
     let tag = gcm
         .encrypt_in_place_detached(&nonce, &[], &mut buffer[..pos])
         .map_err(|_| Error::EncryptFailed)?;
     buffer[pos..].copy_from_slice(tag.as_ref());
-    Ok(&buffer[0..pos + TAG_SIZE])
+    Ok(&buffer[0..pos + TagSize::USIZE])
 }
 
-fn gcm_decrypt<'a, C>(
+fn gcm_decrypt<'a, C, NonceSize, TagSize>(
     es: EncryptionScheme,
     key: EncryptionKey,
-    iv: &[u8],
+    nonce: Nonce<NonceSize>,
     buffer: &'a mut [u8],
 ) -> Result<&'a [u8]>
 where
     C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
     aes_gcm::AesGcm<C, U12>: GcmKeyInit,
+    TagSize: aes_gcm::TagSize,
+    NonceSize: aes::cipher::ArraySize,
 {
-    const TAG_SIZE: usize = 16;
-    const NONCE_SIZE: usize = 12;
-
-    let msg_len = if buffer.len() < TAG_SIZE {
+    let msg_len = if buffer.len() < TagSize::USIZE {
         return Err(Error::DecryptFailed);
     } else {
-        buffer.len() - TAG_SIZE
+        buffer.len() - TagSize::USIZE
     };
 
-    let gcm = <aes_gcm::AesGcm<C, U12> as GcmKeyInit>::new_from_slice(key.as_slice())
+    let gcm = <aes_gcm::AesGcm<C, NonceSize> as GcmKeyInit>::new_from_slice(key.as_slice())
         .map_err(|_| es.to_alg_params_invalid())?;
-    let nonce: [u8; NONCE_SIZE] = iv.try_into().map_err(|_| es.to_alg_params_invalid())?;
-    let nonce = Nonce::from(nonce);
-    let tag: [u8; TAG_SIZE] = buffer[msg_len..]
-        .try_into()
-        .map_err(|_| Error::DecryptFailed)?;
-    let tag = Tag::from(tag);
+
+    let tag = Tag::try_from(&buffer[msg_len..]).map_err(|_| Error::DecryptFailed)?;
+
     if gcm
         .decrypt_in_place_detached(&nonce, &[], &mut buffer[..msg_len], &tag)
         .is_err()
@@ -132,10 +126,10 @@ pub fn encrypt_in_place<'b>(
         EncryptionScheme::Aes192Cbc { iv } => cbc_encrypt::<aes::Aes192Enc>(es, key, &iv, buf, pos),
         EncryptionScheme::Aes256Cbc { iv } => cbc_encrypt::<aes::Aes256Enc>(es, key, &iv, buf, pos),
         EncryptionScheme::Aes128Gcm { nonce } => {
-            gcm_encrypt::<aes::Aes128Enc>(es, key, &nonce, buf, pos)
+            gcm_encrypt::<aes::Aes128Enc, U12, U16>(es, key, Nonce::from(nonce), buf, pos)
         }
         EncryptionScheme::Aes256Gcm { nonce } => {
-            gcm_encrypt::<aes::Aes256Enc>(es, key, &nonce, buf, pos)
+            gcm_encrypt::<aes::Aes256Enc, U12, U16>(es, key, Nonce::from(nonce), buf, pos)
         }
         #[cfg(feature = "3des")]
         EncryptionScheme::DesEde3Cbc { iv } => cbc_encrypt::<des::TdesEde3>(es, key, &iv, buf, pos),
@@ -160,10 +154,10 @@ pub fn decrypt_in_place<'a>(
         EncryptionScheme::Aes192Cbc { iv } => cbc_decrypt::<aes::Aes192Dec>(es, key, &iv, buf),
         EncryptionScheme::Aes256Cbc { iv } => cbc_decrypt::<aes::Aes256Dec>(es, key, &iv, buf),
         EncryptionScheme::Aes128Gcm { nonce } => {
-            gcm_decrypt::<aes::Aes128Enc>(es, key, &nonce, buf)
+            gcm_decrypt::<aes::Aes128Enc, U12, U16>(es, key, Nonce::from(nonce), buf)
         }
         EncryptionScheme::Aes256Gcm { nonce } => {
-            gcm_decrypt::<aes::Aes256Enc>(es, key, &nonce, buf)
+            gcm_decrypt::<aes::Aes256Enc, U12, U16>(es, key, Nonce::from(nonce), buf)
         }
         #[cfg(feature = "3des")]
         EncryptionScheme::DesEde3Cbc { iv } => cbc_decrypt::<des::TdesEde3>(es, key, &iv, buf),
