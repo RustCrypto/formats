@@ -49,13 +49,13 @@ fn cbc_decrypt<'a, C: BlockCipherDecrypt + BlockCipher + KeyInit>(
         .map_err(|_| Error::EncryptFailed)
 }
 
-fn gcm_encrypt<'a, C, NonceSize, TagSize>(
+fn gcm_encrypt<C, NonceSize, TagSize>(
     es: EncryptionScheme,
     key: EncryptionKey,
     nonce: Nonce<NonceSize>,
-    buffer: &'a mut [u8],
+    buffer: &mut [u8],
     pos: usize,
-) -> Result<&'a [u8]>
+) -> Result<&[u8]>
 where
     C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
     aes_gcm::AesGcm<C, NonceSize, TagSize>: GcmKeyInit,
@@ -75,12 +75,12 @@ where
     Ok(&buffer[0..pos + TagSize::USIZE])
 }
 
-fn gcm_decrypt<'a, C, NonceSize, TagSize>(
+fn gcm_decrypt<C, NonceSize, TagSize>(
     es: EncryptionScheme,
     key: EncryptionKey,
     nonce: Nonce<NonceSize>,
-    buffer: &'a mut [u8],
-) -> Result<&'a [u8]>
+    buffer: &mut [u8],
+) -> Result<&[u8]>
 where
     C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
     aes_gcm::AesGcm<C, U12>: GcmKeyInit,
