@@ -12,7 +12,7 @@ use pbkdf2::{
         digest::{
             block_buffer::Eager,
             core_api::{BlockSizeUser, BufferKindUser, FixedOutputCore, UpdateCore},
-            typenum::{IsLess, Le, NonZero, UInt, UTerm, B0, B1, U12, U16, U256},
+            typenum::{IsLess, Le, NonZero, U12, U16, U256},
             HashMarker,
         },
         EagerHash,
@@ -58,7 +58,7 @@ fn gcm_encrypt<'a, C>(
 ) -> Result<&'a [u8]>
 where
     C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
-    aes_gcm::AesGcm<C, UInt<UInt<UInt<UInt<UTerm, B1>, B1>, B0>, B0>>: GcmKeyInit,
+    aes_gcm::AesGcm<C, U12>: GcmKeyInit,
 {
     const TAG_SIZE: usize = 16;
     const NONCE_SIZE: usize = 12;
@@ -85,7 +85,7 @@ fn gcm_decrypt<'a, C>(
 ) -> Result<&'a [u8]>
 where
     C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
-    aes_gcm::AesGcm<C, UInt<UInt<UInt<UInt<UTerm, B1>, B1>, B0>, B0>>: GcmKeyInit,
+    aes_gcm::AesGcm<C, U12>: GcmKeyInit,
 {
     const TAG_SIZE: usize = 16;
     const NONCE_SIZE: usize = 12;
