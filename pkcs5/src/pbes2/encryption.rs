@@ -87,10 +87,14 @@ where
     TagSize: aes_gcm::TagSize,
     NonceSize: aes::cipher::ArraySize,
 {
-    let msg_len = buffer.len().checked_sub(TagSize::USIZE).ok_or{Error::DecryptFailed)?;
+    let msg_len = buffer
+        .len()
+        .checked_sub(TagSize::USIZE)
+        .ok_or(Error::DecryptFailed)?;
 
-    let gcm = <aes_gcm::AesGcm<C, NonceSize, TagSize> as GcmKeyInit>::new_from_slice(key.as_slice())
-        .map_err(|_| es.to_alg_params_invalid())?;
+    let gcm =
+        <aes_gcm::AesGcm<C, NonceSize, TagSize> as GcmKeyInit>::new_from_slice(key.as_slice())
+            .map_err(|_| es.to_alg_params_invalid())?;
 
     let tag = Tag::try_from(&buffer[msg_len..]).map_err(|_| Error::DecryptFailed)?;
 
