@@ -83,17 +83,13 @@ fn gcm_decrypt<C, NonceSize, TagSize>(
 ) -> Result<&[u8]>
 where
     C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
-    aes_gcm::AesGcm<C, U12>: GcmKeyInit,
+    aes_gcm::AesGcm<C, NonceSize, TagSize>: GcmKeyInit,
     TagSize: aes_gcm::TagSize,
     NonceSize: aes::cipher::ArraySize,
 {
-    let msg_len = if buffer.len() < TagSize::USIZE {
-        return Err(Error::DecryptFailed);
-    } else {
-        buffer.len() - TagSize::USIZE
-    };
+    let msg_len = buffer.len().checked_sub(TagSize::USIZE).ok_or{Error::DecryptFailed)?;
 
-    let gcm = <aes_gcm::AesGcm<C, NonceSize> as GcmKeyInit>::new_from_slice(key.as_slice())
+    let gcm = <aes_gcm::AesGcm<C, NonceSize, TagSize> as GcmKeyInit>::new_from_slice(key.as_slice())
         .map_err(|_| es.to_alg_params_invalid())?;
 
     let tag = Tag::try_from(&buffer[msg_len..]).map_err(|_| Error::DecryptFailed)?;
