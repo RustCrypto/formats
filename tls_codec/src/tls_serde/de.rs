@@ -2,6 +2,7 @@ use core::ops::{AddAssign, MulAssign, Neg};
 use std::println;
 
 use alloc::string::String;
+use alloc::vec::Vec;
 use serde::de::{
     self, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, VariantAccess,
     Visitor,
@@ -364,21 +365,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         // );
 
         Ok(value)
-        // Ok(value)
-        // todo!();
-        // // Parse the opening bracket of the sequence.
-        // if self.next_char()? == '[' {
-        //     // Give the visitor access to each element of the sequence.
-        //     let value = visitor.visit_seq(CommaSeparated::new(self))?;
-        //     // Parse the closing bracket of the sequence.
-        //     if self.next_char()? == ']' {
-        //         Ok(value)
-        //     } else {
-        //         Err(Error::ExpectedArrayEnd)
-        //     }
-        // } else {
-        //     Err(Error::ExpectedArray)
-        // }
     }
 
     // Tuples look just like sequences in JSON. Some formats may be able to
@@ -557,13 +543,12 @@ impl<'de, 'a> SeqAccess<'de> for SeqParser<'a, 'de> {
         T: DeserializeSeed<'de>,
     {
         println!("next_element_seed: {:?}", self.de.input);
-        // Check if there are no more elements.
-        if self.de.input.is_empty() {
-            // XXX: This is not correct. We need to track the size of things.
-            return Ok(None);
+        if self.num_elments > 0 {
+            self.num_elments -= 1;
+            Ok(Some(DeserializeSeed::deserialize(seed, &mut *self.de)?))
+        } else {
+            Ok(None)
         }
-        // Deserialize an array element.
-        seed.deserialize(&mut *self.de).map(Some)
     }
 }
 
