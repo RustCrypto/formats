@@ -39,6 +39,14 @@ pub const AES_192_CBC_OID: ObjectIdentifier =
 pub const AES_256_CBC_OID: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.1.42");
 
+/// 128-bit Advanced Encryption Standard (AES) algorithm with Galois Counter Mode
+pub const AES_128_GCM_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.1.6");
+
+/// 256-bit Advanced Encryption Standard (AES) algorithm with Galois Counter Mode
+pub const AES_256_GCM_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.1.46");
+
 /// DES operating in CBC mode
 #[cfg(feature = "des-insecure")]
 pub const DES_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3.2.7");
@@ -54,6 +62,12 @@ pub const PBES2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.11
 
 /// AES cipher block size
 const AES_BLOCK_SIZE: usize = 16;
+
+/// GCM nonce size
+///
+/// We could use any value here but GCM is most efficient
+/// with 96 bit nonces
+const GCM_NONCE_SIZE: usize = 12;
 
 /// DES / Triple DES block size
 #[cfg(any(feature = "3des", feature = "des-insecure"))]
@@ -205,6 +219,40 @@ impl Parameters {
         Ok(Self { kdf, encryption })
     }
 
+    /// Initialize PBES2 parameters using scrypt as the password-based
+    /// key derivation function and AES-128-GCM as the symmetric cipher.
+    ///
+    /// For more information on scrypt parameters, see documentation for the
+    /// [`scrypt::Params`] struct.
+    // TODO(tarcieri): encapsulate `scrypt::Params`?
+    #[cfg(feature = "pbes2")]
+    pub fn scrypt_aes128gcm(
+        params: scrypt::Params,
+        salt: &[u8],
+        gcm_nonce: [u8; GCM_NONCE_SIZE],
+    ) -> Result<Self> {
+        let kdf = ScryptParams::from_params_and_salt(params, salt)?.into();
+        let encryption = EncryptionScheme::Aes128Gcm { nonce: gcm_nonce };
+        Ok(Self { kdf, encryption })
+    }
+
+    /// Initialize PBES2 parameters using scrypt as the password-based
+    /// key derivation function and AES-256-GCM as the symmetric cipher.
+    ///
+    /// For more information on scrypt parameters, see documentation for the
+    /// [`scrypt::Params`] struct.
+    // TODO(tarcieri): encapsulate `scrypt::Params`?
+    #[cfg(feature = "pbes2")]
+    pub fn scrypt_aes256gcm(
+        params: scrypt::Params,
+        salt: &[u8],
+        gcm_nonce: [u8; GCM_NONCE_SIZE],
+    ) -> Result<Self> {
+        let kdf = ScryptParams::from_params_and_salt(params, salt)?.into();
+        let encryption = EncryptionScheme::Aes256Gcm { nonce: gcm_nonce };
+        Ok(Self { kdf, encryption })
+    }
+
     /// Attempt to decrypt the given ciphertext, allocating and returning a
     /// byte vector containing the plaintext.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -321,6 +369,18 @@ pub enum EncryptionScheme {
         iv: [u8; AES_BLOCK_SIZE],
     },
 
+    /// AES-128 in CBC mode
+    Aes128Gcm {
+        /// GCM nonce
+        nonce: [u8; GCM_NONCE_SIZE],
+    },
+
+    /// AES-256 in GCM mode
+    Aes256Gcm {
+        /// GCM nonce
+        nonce: [u8; GCM_NONCE_SIZE],
+    },
+
     /// 3-Key Triple DES in CBC mode
     #[cfg(feature = "3des")]
     DesEde3Cbc {
@@ -343,6 +403,8 @@ impl EncryptionScheme {
             Self::Aes128Cbc { .. } => 16,
             Self::Aes192Cbc { .. } => 24,
             Self::Aes256Cbc { .. } => 32,
+            Self::Aes128Gcm { .. } => 16,
+            Self::Aes256Gcm { .. } => 32,
             #[cfg(feature = "des-insecure")]
             Self::DesCbc { .. } => 8,
             #[cfg(feature = "3des")]
@@ -356,6 +418,8 @@ impl EncryptionScheme {
             Self::Aes128Cbc { .. } => AES_128_CBC_OID,
             Self::Aes192Cbc { .. } => AES_192_CBC_OID,
             Self::Aes256Cbc { .. } => AES_256_CBC_OID,
+            Self::Aes128Gcm { .. } => AES_128_GCM_OID,
+            Self::Aes256Gcm { .. } => AES_256_GCM_OID,
             #[cfg(feature = "des-insecure")]
             Self::DesCbc { .. } => DES_CBC_OID,
             #[cfg(feature = "3des")]
@@ -399,6 +463,12 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
             AES_256_CBC_OID => Ok(Self::Aes256Cbc {
                 iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
             }),
+            AES_128_GCM_OID => Ok(Self::Aes128Gcm {
+                nonce: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+            }),
+            AES_256_GCM_OID => Ok(Self::Aes256Gcm {
+                nonce: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+            }),
             #[cfg(feature = "des-insecure")]
             DES_CBC_OID => Ok(Self::DesCbc {
                 iv: iv[0..DES_BLOCK_SIZE]
@@ -424,6 +494,8 @@ impl<'a> TryFrom<&'a EncryptionScheme> for AlgorithmIdentifierRef<'a> {
             EncryptionScheme::Aes128Cbc { iv } => iv.as_slice(),
             EncryptionScheme::Aes192Cbc { iv } => iv.as_slice(),
             EncryptionScheme::Aes256Cbc { iv } => iv.as_slice(),
+            EncryptionScheme::Aes128Gcm { nonce } => nonce.as_slice(),
+            EncryptionScheme::Aes256Gcm { nonce } => nonce.as_slice(),
             #[cfg(feature = "des-insecure")]
             EncryptionScheme::DesCbc { iv } => iv.as_slice(),
             #[cfg(feature = "3des")]
