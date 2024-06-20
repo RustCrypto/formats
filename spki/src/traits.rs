@@ -143,7 +143,7 @@ pub trait SignatureAlgorithmIdentifier {
     /// Algorithm parameters.
     type Params: Tagged + EncodeValue;
 
-    /// `AlgorithmIdentifier` for the corresponding singature system.
+    /// `AlgorithmIdentifier` for the corresponding signature system.
     const SIGNATURE_ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;
 }
 
@@ -153,7 +153,7 @@ pub trait SignatureAlgorithmIdentifier {
 /// private keys.
 #[cfg(feature = "alloc")]
 pub trait DynSignatureAlgorithmIdentifier {
-    /// `AlgorithmIdentifier` for the corresponding singature system.
+    /// `AlgorithmIdentifier` for the corresponding signature system.
     fn signature_algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned>;
 }
 

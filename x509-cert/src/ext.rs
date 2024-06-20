@@ -44,7 +44,7 @@ pub struct Extension {
 /// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
 pub type Extensions = alloc::vec::Vec<Extension>;
 
-/// Trait to be implemented by extensions to allow them to be formated as x509 v3 extensions by
+/// Trait to be implemented by extensions to allow them to be formatted as x509 v3 extensions by
 /// builder.
 pub trait AsExtension: AssociatedOid + der::Encode {
     /// Should the extension be marked critical

@@ -453,7 +453,7 @@ fn load_certificate_chains() {
 
 #[cfg(feature = "arbitrary")]
 #[test]
-// Purpose of this check is to ensure the arbitraty trait is provided for certificate variants
+// Purpose of this check is to ensure the arbitrary trait is provided for certificate variants
 #[allow(unused)]
 fn certificate_arbitrary() {
     fn check_arbitrary<'a>(_arbitrary: impl arbitrary::Arbitrary<'a>) {}

@@ -289,7 +289,7 @@ mod tests {
 
     #[test]
     fn encdec_normal() {
-        // The comments correspond to the decoded value from the ASN.1 playground when the bytes are inputed.
+        // The comments correspond to the decoded value from the ASN.1 playground when the bytes are inputted.
         {
             // rec1value R ::= 0
             let val = 0.0;
