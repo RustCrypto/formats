@@ -18,6 +18,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
+name = "aead"
+version = "0.6.0-pre.0"
+source = "git+https://github.com/RustCrypto/traits.git#0a3687b58e59d5d2e196f59ca883a2d46eb76abb"
+dependencies = [
+ "crypto-common",
+]
+
+[[package]]
 name = "aes"
 version = "0.9.0-pre"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -26,6 +34,19 @@ dependencies = [
  "cfg-if",
  "cipher",
  "cpufeatures",
+]
+
+[[package]]
+name = "aes-gcm"
+version = "0.11.0-pre"
+source = "git+https://github.com/RustCrypto/AEADs.git#ad109f38b03124e7498bfe5e9830d1328f811d27"
+dependencies = [
+ "aead",
+ "aes",
+ "cipher",
+ "ctr",
+ "ghash",
+ "subtle",
 ]
 
 [[package]]
@@ -468,6 +489,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctr"
+version = "0.10.0-pre"
+source = "git+https://github.com/RustCrypto/block-modes.git#a0051b2892626f4bd4f96c8ec7ca942a1047bb3c"
+dependencies = [
+ "cipher",
+]
+
+[[package]]
 name = "der"
 version = "0.8.0-pre.0"
 dependencies = [
@@ -723,6 +752,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ghash"
+version = "0.6.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43f25097bbd647ae1fdd2fd6bcf100b77c5151e26af9cc2d2e81742c2cac27b7"
+dependencies = [
+ "opaque-debug",
+ "polyval",
+]
+
+[[package]]
 name = "gimli"
 version = "0.28.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -855,9 +894,9 @@ dependencies = [
 
 [[package]]
 name = "lazy_static"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 dependencies = [
  "spin",
 ]
@@ -965,6 +1004,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ab1bc2a289d34bd04a330323ac98a1b4bc82c9d9fcb1e66b63caa84da26b575"
 
 [[package]]
+name = "opaque-debug"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
+
+[[package]]
 name = "p256"
 version = "0.14.0-pre.0"
 source = "git+https://github.com/RustCrypto/elliptic-curves.git#5d1c252c2defb5808f55329f3e2955ca72d7f8b5"
@@ -1054,6 +1099,7 @@ name = "pkcs5"
 version = "0.8.0-pre.0"
 dependencies = [
  "aes",
+ "aes-gcm",
  "cbc",
  "der",
  "des",
@@ -1077,6 +1123,18 @@ dependencies = [
  "spki",
  "subtle",
  "tempfile",
+]
+
+[[package]]
+name = "polyval"
+version = "0.7.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f3e1736974839c02569293a43b332c95269ccf635391bb7bbc75b41bef249b4"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "opaque-debug",
+ "universal-hash",
 ]
 
 [[package]]
@@ -1543,9 +1601,9 @@ checksum = "4dccd0940a2dcdf68d092b8cbab7dc0ad8fa938bf95787e1b916b0e3d0e8e970"
 
 [[package]]
 name = "spin"
-version = "0.5.2"
+version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
+checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 
 [[package]]
 name = "spki"
@@ -1775,6 +1833,16 @@ name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
+
+[[package]]
+name = "universal-hash"
+version = "0.6.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a05336f34009f6bb1c24794e2c04df87f4a0ced7a091692e395119f34fd3f4c5"
+dependencies = [
+ "crypto-common",
+ "subtle",
+]
 
 [[package]]
 name = "utf8parse"
