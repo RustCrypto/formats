@@ -1020,7 +1020,8 @@ macro_rules! encrypt_block_mode {
                     )));
                 }
                 (
-                    Key::<$block_mode::$typ<$alg>>::from_slice(key).to_owned(),
+                    Key::<$block_mode::$typ<$alg>>::try_from(key)
+                        .expect("size invariants violation"),
                     $block_mode::$typ::<$alg>::generate_iv_with_rng($rng)?,
                 )
             }
