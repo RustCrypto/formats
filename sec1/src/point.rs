@@ -210,7 +210,7 @@ where
         }
 
         let (x_bytes, y_bytes) = self.bytes[1..].split_at(Size::to_usize());
-        let x = Array::from_slice(x_bytes);
+        let x = x_bytes.try_into().expect("size invariants were violated");
 
         if self.is_compressed() {
             Coordinates::Compressed {
@@ -222,7 +222,7 @@ where
         } else {
             Coordinates::Uncompressed {
                 x,
-                y: Array::from_slice(y_bytes),
+                y: y_bytes.try_into().expect("size invariants were violated"),
             }
         }
     }
