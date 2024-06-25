@@ -106,6 +106,7 @@ impl Profile for Subordinate {
         if self.client_auth {
             eku.0.push(ID_KP_CLIENT_AUTH);
         }
+        extensions.push(eku.to_extension(&tbs.subject, &extensions)?);
 
         // ## authorityInformationAccess SHOULD
         // Spec 7.1.2.10.3 CA Certificate Authority Information Access
@@ -272,6 +273,7 @@ impl Profile for Subscriber {
         if self.client_auth {
             eku.0.push(ID_KP_CLIENT_AUTH);
         }
+        extensions.push(eku.to_extension(&tbs.subject, &extensions)?);
 
         // ## basicConstraints MUST
         // Spec: 7.1.2.7.8 Subscriber Certificate Basic Constraints

@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 
 use const_oid::db::rfc5280::{
-    ANY_EXTENDED_KEY_USAGE, ID_CE_EXT_KEY_USAGE, ID_CE_KEY_USAGE, ID_CE_PRIVATE_KEY_USAGE_PERIOD,
+    ID_CE_EXT_KEY_USAGE, ID_CE_KEY_USAGE, ID_CE_PRIVATE_KEY_USAGE_PERIOD,
 };
 use const_oid::AssociatedOid;
 use der::asn1::{GeneralizedTime, ObjectIdentifier};
@@ -138,29 +138,7 @@ impl AssociatedOid for ExtendedKeyUsage {
 
 impl_newtype!(ExtendedKeyUsage, Vec<ObjectIdentifier>);
 
-impl crate::ext::AsExtension for ExtendedKeyUsage {
-    fn critical(
-        &self,
-        _subject: &crate::name::Name,
-        _extensions: &[crate::ext::Extension],
-    ) -> bool {
-        // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
-        //   This extension MAY, at the option of the certificate issuer, be
-        //   either critical or non-critical.
-        //
-        //   If a CA includes extended key usages to satisfy such applications,
-        //   but does not wish to restrict usages of the key, the CA can include
-        //   the special KeyPurposeId anyExtendedKeyUsage in addition to the
-        //   particular key purposes required by the applications.  Conforming CAs
-        //   SHOULD NOT mark this extension as critical if the anyExtendedKeyUsage
-        //   KeyPurposeId is present.  Applications that require the presence of a
-        //   particular purpose MAY reject certificates that include the
-        //   anyExtendedKeyUsage OID but not the particular OID expected for the
-        //   application.
-
-        !self.0.iter().any(|el| *el == ANY_EXTENDED_KEY_USAGE)
-    }
-}
+impl_extension!(ExtendedKeyUsage, critical = false);
 
 /// PrivateKeyUsagePeriod as defined in [RFC 3280 Section 4.2.1.4].
 ///
