@@ -29,7 +29,7 @@ pub mod pkix;
 pub struct Extension {
     pub extn_id: ObjectIdentifier,
 
-    #[asn1(default = "Default::default")]
+    #[asn1(default = "bool::default")]
     pub critical: bool,
 
     pub extn_value: OctetString,
