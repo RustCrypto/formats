@@ -142,7 +142,7 @@ pub mod attributes {
     pub trait AsAttribute: AssociatedOid + Tagged + EncodeValue + Sized {
         /// Returns the Attribute with the content encoded.
         fn to_attribute(&self) -> Result<Attribute> {
-            let inner: Any = der::asn1::Any::encode_from(self)?;
+            let inner: Any = Any::encode_from(self)?;
 
             let values = SetOfVec::try_from(vec![inner])?;
 

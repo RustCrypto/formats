@@ -25,8 +25,8 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl From<Error> for core::fmt::Error {
-    fn from(_: Error) -> core::fmt::Error {
-        core::fmt::Error::default()
+impl From<Error> for fmt::Error {
+    fn from(_: Error) -> fmt::Error {
+        fmt::Error::default()
     }
 }

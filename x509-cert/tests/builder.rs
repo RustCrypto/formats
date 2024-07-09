@@ -165,6 +165,8 @@ fn leaf_certificate() {
         "e_subject_common_name_not_exactly_from_san",
         // Extended key usage needs to be added by end-user and is use-case dependent
         "e_sub_cert_eku_missing",
+        // Zlint got updated, fixed in master
+        "w_subject_common_name_included",
     ];
 
     zlint::check_certificate(pem.as_bytes(), &ignored);
@@ -242,6 +244,8 @@ fn pss_certificate() {
         "e_sub_cert_eku_missing",
         // zlint warns on RSAPSS signature algorithms
         "e_signature_algorithm_not_supported",
+        // Zlint got updated, fixed in master
+        "w_subject_common_name_included",
     ];
 
     zlint::check_certificate(pem.as_bytes(), ignored);
