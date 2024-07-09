@@ -66,6 +66,9 @@ jobs:
 
   fuzz:
     runs-on: ubuntu-latest
+    env:
+      # ignore unused_qualification errors
+      RUSTFLAGS: ""
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@nightly
