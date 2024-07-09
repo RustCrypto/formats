@@ -97,7 +97,7 @@ impl SequenceField {
                 !attrs.optional,
                 "`default`, and `optional` are mutually exclusive"
             );
-            lowerer.apply_default(&self.ident, default);
+            lowerer.apply_default(&self.ident, default, &self.field_type);
         }
 
         lowerer.into_tokens()
@@ -189,14 +189,17 @@ impl LowerFieldEncoder {
     }
 
     /// Handle default value for a type.
-    fn apply_default(&mut self, ident: &Ident, default: &Path) {
+    fn apply_default(&mut self, ident: &Ident, default: &Path, field_type: &Type) {
         let encoder = &self.encoder;
 
         self.encoder = quote! {
-            if &self.#ident == &#default() {
-                None
-            } else {
-                Some(#encoder)
+            {
+                let default_value: #field_type = #default();
+                if &self.#ident == &default_value {
+                    None
+                } else {
+                    Some(#encoder)
+                }
             }
         };
     }
