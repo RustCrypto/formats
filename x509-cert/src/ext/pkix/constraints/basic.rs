@@ -14,7 +14,7 @@ use der::Sequence;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct BasicConstraints {
-    #[asn1(default = "bool::default")]
+    #[asn1(default = "Default::default")]
     pub ca: bool,
     pub path_len_constraint: Option<u8>,
 }

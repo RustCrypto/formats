@@ -31,14 +31,14 @@ pub struct IssuingDistributionPoint {
     #[asn1(
         context_specific = "1",
         tag_mode = "IMPLICIT",
-        default = "bool::default"
+        default = "Default::default"
     )]
     pub only_contains_user_certs: bool,
 
     #[asn1(
         context_specific = "2",
         tag_mode = "IMPLICIT",
-        default = "bool::default"
+        default = "Default::default"
     )]
     pub only_contains_ca_certs: bool,
 
@@ -48,14 +48,14 @@ pub struct IssuingDistributionPoint {
     #[asn1(
         context_specific = "4",
         tag_mode = "IMPLICIT",
-        default = "bool::default"
+        default = "Default::default"
     )]
     pub indirect_crl: bool,
 
     #[asn1(
         context_specific = "5",
         tag_mode = "IMPLICIT",
-        default = "bool::default"
+        default = "Default::default"
     )]
     pub only_contains_attribute_certs: bool,
 }

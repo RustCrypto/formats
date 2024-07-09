@@ -61,7 +61,7 @@ pub struct GeneralSubtree {
     #[asn1(
         context_specific = "0",
         tag_mode = "IMPLICIT",
-        default = "u32::default"
+        default = "Default::default"
     )]
     pub minimum: u32,
 
