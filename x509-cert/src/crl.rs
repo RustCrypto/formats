@@ -1,5 +1,6 @@
 //! Certificate Revocation List types
 
+use crate::certificate::{Profile, Rfc5280};
 use crate::ext::Extensions;
 use crate::name::Name;
 use crate::serial_number::SerialNumber;
@@ -25,8 +26,8 @@ use spki::AlgorithmIdentifierOwned;
 /// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct CertificateList {
-    pub tbs_cert_list: TbsCertList,
+pub struct CertificateList<P: Profile + 'static = Rfc5280> {
+    pub tbs_cert_list: TbsCertList<P>,
     pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitString,
 }
@@ -47,8 +48,8 @@ pub struct CertificateList {
 /// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct RevokedCert {
-    pub serial_number: SerialNumber,
+pub struct RevokedCert<P: Profile + 'static = Rfc5280> {
+    pub serial_number: SerialNumber<P>,
     pub revocation_date: Time,
     pub crl_entry_extensions: Option<Extensions>,
 }
@@ -74,13 +75,13 @@ pub struct RevokedCert {
 /// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertList {
+pub struct TbsCertList<P: Profile + 'static = Rfc5280> {
     pub version: Version,
     pub signature: AlgorithmIdentifierOwned,
     pub issuer: Name,
     pub this_update: Time,
     pub next_update: Option<Time>,
-    pub revoked_certificates: Option<Vec<RevokedCert>>,
+    pub revoked_certificates: Option<Vec<RevokedCert<P>>>,
 
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
     pub crl_extensions: Option<Extensions>,

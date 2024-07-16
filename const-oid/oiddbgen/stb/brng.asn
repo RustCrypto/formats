@@ -1,0 +1,20 @@
+Brng-module-v2 {iso(1) member-body(2) by(112) 0 2 0 34 101 47 module(1) ver2(2)}
+DEFINITIONS ::=
+BEGIN
+  brng OBJECT IDENTIFIER ::= {1 2 112 0 2 0 34 101 47}
+
+  hmac-hspec OBJECT IDENTIFIER ::= {brng 11}
+  hmac-hbelt OBJECT IDENTIFIER ::= {brng 12}
+  brng-ctr-hspec OBJECT IDENTIFIER ::= {brng 21}
+  brng-ctr-hbelt OBJECT IDENTIFIER ::= {brng 22}
+  brng-ctr-stb11761 OBJECT IDENTIFIER ::= {brng 23}
+  brng-hmac-hspec OBJECT IDENTIFIER ::= {brng 31}
+  brng-hmac-hbelt OBJECT IDENTIFIER ::= {brng 32}
+
+  hotp-hspec OBJECT IDENTIFIER ::= {brng 111}
+  hotp-hbelt OBJECT IDENTIFIER ::= {brng 112}
+  totp-hspec OBJECT IDENTIFIER ::= {brng 121}
+  totp-hbelt OBJECT IDENTIFIER ::= {brng 122}
+  ocra-hspec OBJECT IDENTIFIER ::= {brng 131}
+  ocra-hbelt OBJECT IDENTIFIER ::= {brng 132}
+END

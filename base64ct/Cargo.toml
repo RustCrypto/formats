@@ -1,6 +1,6 @@
 [package]
 name = "base64ct"
-version = "1.6.0"
+version = "1.7.0-pre"
 description = """
 Pure Rust implementation of Base64 (RFC 4648) which avoids any usages of
 data-dependent branches/LUTs and thereby provides portable "best effort"
@@ -15,12 +15,11 @@ categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "base64", "pem", "phc"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.65"
 
 [dev-dependencies]
 base64 = "0.22"
-# pinned to preserve MSRV
-proptest = { version = "=1.2.0", default-features = false, features = ["std"] }
+proptest = { version = "1.5", default-features = false, features = ["std"] }
 
 [features]
 alloc = []

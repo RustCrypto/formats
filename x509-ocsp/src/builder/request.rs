@@ -7,6 +7,7 @@ use rand_core::CryptoRngCore;
 use signature::{RandomizedSigner, Signer};
 use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
+    certificate::Rfc5280,
     ext::{pkix::name::GeneralName, AsExtension},
     name::Name,
     Certificate,
@@ -59,7 +60,7 @@ use x509_cert::{
 /// ```
 #[derive(Clone, Debug, Default)]
 pub struct OcspRequestBuilder {
-    tbs: TbsRequest,
+    tbs: TbsRequest<Rfc5280>,
 }
 
 impl OcspRequestBuilder {

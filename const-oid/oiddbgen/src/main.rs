@@ -8,6 +8,7 @@ const LDAP: &str = include_str!("../ldap-parameters-3.csv");
 // https://www.rfc-editor.org/rfc/rfcNNNN.txt
 const RFCS: &[(&str, &str)] = &[
     ("rfc2985", include_str!("../rfc2985.txt")),
+    ("rfc3161", include_str!("../rfc3161.txt")),
     ("rfc5280", include_str!("../rfc5280.txt")),
     ("rfc5911", include_str!("../rfc5911.txt")),
     ("rfc5912", include_str!("../rfc5912.txt")),
@@ -27,6 +28,14 @@ const MDS: &[(&str, &str)] = &[
     ("rfc8894", include_str!("../rfc8894.md")),
     // Created from: https://trustedcomputinggroup.org
     ("tcgtpm", include_str!("../tcg-tpm.md")),
+    // Created from:  https://github.com/bcrypto
+    ("belt", include_str!("../stb/belt.asn")),
+    ("bign", include_str!("../stb/bign.asn")),
+    ("bpki", include_str!("../stb/bpki.asn")),
+    ("btok", include_str!("../stb/btok.asn")),
+    ("brng", include_str!("../stb/brng.asn")),
+    ("bash", include_str!("../stb/bash.asn")),
+    ("bake", include_str!("../stb/bake.asn"))
 ];
 
 // Bases defined in other places.

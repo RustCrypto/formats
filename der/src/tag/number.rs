@@ -18,7 +18,7 @@ use core::fmt;
 /// encoded by using a leading tag number of 31 (`0b11111`). This library
 /// deliberately does not support this: tag numbers greater than 30 are
 /// disallowed.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct TagNumber(pub(super) u8);
 
 impl TagNumber {

@@ -24,7 +24,7 @@ const INDEFINITE_LENGTH_OCTET: u8 = 0b10000000; // 0x80
 /// ASN.1-encoded length.
 ///
 /// Maximum length is defined by the [`Length::MAX`] constant (256 MiB).
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Length(u32);
 
 impl Length {

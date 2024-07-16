@@ -8,15 +8,15 @@ use self::variant::ChoiceVariant;
 use crate::{default_lifetime, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, Ident, Lifetime};
+use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
     /// Name of the enum type.
     ident: Ident,
 
-    /// Lifetime of the type.
-    lifetime: Option<Lifetime>,
+    /// Generics of the enum.
+    generics: Generics,
 
     /// Variants of this `Choice`.
     variants: Vec<ChoiceVariant>,
@@ -33,13 +33,6 @@ impl DeriveChoice {
             ),
         };
 
-        // TODO(tarcieri): properly handle multiple lifetimes
-        let lifetime = input
-            .generics
-            .lifetimes()
-            .next()
-            .map(|lt| lt.lifetime.clone());
-
         let type_attrs = TypeAttrs::parse(&input.attrs)?;
         let variants = data
             .variants
@@ -49,7 +42,7 @@ impl DeriveChoice {
 
         Ok(Self {
             ident: input.ident,
-            lifetime,
+            generics: input.generics.clone(),
             variants,
         })
     }
@@ -57,22 +50,25 @@ impl DeriveChoice {
     /// Lower the derived output into a [`TokenStream`].
     pub fn to_tokens(&self) -> TokenStream {
         let ident = &self.ident;
+        let mut generics = self.generics.clone();
 
-        let lifetime = match self.lifetime {
-            Some(ref lifetime) => quote!(#lifetime),
-            None => {
-                let lifetime = default_lifetime();
-                quote!(#lifetime)
-            }
-        };
+        // Use the first lifetime parameter as lifetime for Decode/Encode lifetime
+        // if none found, add one.
+        let lifetime = generics
+            .lifetimes()
+            .next()
+            .map(|lt| lt.lifetime.clone())
+            .unwrap_or_else(|| {
+                let lt = default_lifetime();
+                generics
+                    .params
+                    .insert(0, GenericParam::Lifetime(LifetimeParam::new(lt.clone())));
+                lt
+            });
 
-        // Lifetime parameters
-        // TODO(tarcieri): support multiple lifetimes
-        let lt_params = self
-            .lifetime
-            .as_ref()
-            .map(|_| lifetime.clone())
-            .unwrap_or_default();
+        // We may or may not have inserted a lifetime.
+        let (_, ty_generics, where_clause) = self.generics.split_for_impl();
+        let (impl_generics, _, _) = generics.split_for_impl();
 
         let mut can_decode_body = Vec::new();
         let mut decode_body = Vec::new();
@@ -89,13 +85,13 @@ impl DeriveChoice {
         }
 
         quote! {
-            impl<#lifetime> ::der::Choice<#lifetime> for #ident<#lt_params> {
+            impl #impl_generics ::der::Choice<#lifetime> for #ident #ty_generics #where_clause {
                 fn can_decode(tag: ::der::Tag) -> bool {
                     matches!(tag, #(#can_decode_body)|*)
                 }
             }
 
-            impl<#lifetime> ::der::Decode<#lifetime> for #ident<#lt_params> {
+            impl #impl_generics ::der::Decode<#lifetime> for #ident #ty_generics #where_clause {
                 type Error = ::der::Error;
 
                 fn decode<R: ::der::Reader<#lifetime>>(reader: &mut R) -> ::der::Result<Self> {
@@ -111,7 +107,7 @@ impl DeriveChoice {
                 }
             }
 
-            impl<#lt_params> ::der::EncodeValue for #ident<#lt_params> {
+            impl #impl_generics ::der::EncodeValue for #ident #ty_generics #where_clause {
                 fn encode_value(&self, encoder: &mut impl ::der::Writer) -> ::der::Result<()> {
                     match self {
                         #(#encode_body)*
@@ -125,7 +121,7 @@ impl DeriveChoice {
                 }
             }
 
-            impl<#lt_params> ::der::Tagged for #ident<#lt_params> {
+            impl #impl_generics ::der::Tagged for #ident #ty_generics #where_clause {
                 fn tag(&self) -> ::der::Tag {
                     match self {
                         #(#tagged_body)*
@@ -165,7 +161,7 @@ mod tests {
 
         let ir = DeriveChoice::new(input).unwrap();
         assert_eq!(ir.ident, "Time");
-        assert_eq!(ir.lifetime, None);
+        assert_eq!(ir.generics.lifetimes().next(), None);
         assert_eq!(ir.variants.len(), 2);
 
         let utc_time = &ir.variants[0];
@@ -205,7 +201,10 @@ mod tests {
 
         let ir = DeriveChoice::new(input).unwrap();
         assert_eq!(ir.ident, "ImplicitChoice");
-        assert_eq!(ir.lifetime.unwrap().to_string(), "'a");
+        assert_eq!(
+            ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
+            "'a"
+        );
         assert_eq!(ir.variants.len(), 3);
 
         let bit_string = &ir.variants[0];

@@ -1,0 +1,69 @@
+Bign-module-v2 {iso(1) member-body(2) by(112) 0 2 0 34 101 45 module(1) ver2(2)}
+DEFINITIONS ::=
+BEGIN
+  bign OBJECT IDENTIFIER ::= {iso(1) member-body(2) by(112) 0 2 0 34 101 45}
+
+  bign-with-hspec OBJECT IDENTIFIER ::= {bign 11}
+  bign-with-hbelt OBJECT IDENTIFIER ::= {bign 12}
+  bign-genec OBJECT IDENTIFIER ::= {bign 21}
+  bign-valec OBJECT IDENTIFIER ::= {bign 22}
+  bign-genkeypair OBJECT IDENTIFIER ::= {bign 31}
+  bign-valpubkey OBJECT IDENTIFIER ::= {bign 32}
+  bign-keytransport OBJECT IDENTIFIER ::= {bign 41}
+  bign-genk OBJECT IDENTIFIER ::= {bign 61}
+  bign-ibs-with-hspec OBJECT IDENTIFIER ::= {bign 71}
+  bign-ibs-with-hbelt OBJECT IDENTIFIER ::= {bign 72}
+
+  bign-keys OBJECT IDENTIFIER ::= {bign keys(2)}
+  bign-pubkey OBJECT IDENTIFIER ::= {bign-keys 1}
+
+  bign-curves OBJECT IDENTIFIER ::= {bign curves(3)}
+  bign-curve256v1 OBJECT IDENTIFIER ::= {bign-curves 1}
+  bign-curve384v1 OBJECT IDENTIFIER ::= {bign-curves 2}
+  bign-curve512v1 OBJECT IDENTIFIER ::= {bign-curves 3}
+
+  bign-fields OBJECT IDENTIFIER ::= {bign fields(4)}
+  bign-primefield OBJECT IDENTIFIER ::= {bign-fields prime(1)}
+
+  AlgorithmIdentifier ::= SEQUENCE {
+    algorithm   OBJECT IDENTIFIER,
+    parameters  ANY DEFINED BY algorithm OPTIONAL
+  }
+
+  DomainParameters ::= CHOICE {
+    specified  ECParameters,
+    named      OBJECT IDENTIFIER,
+    implicit   NULL
+  }
+
+  ECParameters ::= SEQUENCE {
+    version  INTEGER {ecpVer1(1)} (ecpVer1),
+    fieldID  FieldID,
+    curve    Curve,
+    base     OCTET STRING (SIZE(32|48|64)),
+    order    INTEGER,
+    cofactor INTEGER (1) OPTIONAL
+  }
+
+  FieldID ::= SEQUENCE {
+    fieldType   OBJECT IDENTIFIER (bign-primefield),
+    parameters  INTEGER
+  }
+
+  Curve ::= SEQUENCE {
+    a     OCTET STRING (SIZE(32|48|64)),
+    b     OCTET STRING (SIZE(32|48|64)),
+    seed  BIT STRING (SIZE(64))
+  }
+
+  PublicKey ::= BIT STRING (SIZE(512|768|1024))
+
+  SubjectPublicKeyInfo ::= SEQUENCE {
+    algorithm         AlgorithmIdentifier,
+    subjectPublicKey  PublicKey
+  }
+
+  Signature ::= BIT STRING (SIZE(384|576|768))
+  SignatureValue ::= OCTET STRING (SIZE(48|72|96))
+  IdSignatureValue ::= OCTET STRING (SIZE(112|168|224))
+END

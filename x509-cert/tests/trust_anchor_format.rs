@@ -3,8 +3,11 @@ use der::{
     Decode, Encode, SliceReader,
 };
 use hex_literal::hex;
-use x509_cert::anchor::{CertPolicies, TrustAnchorChoice};
-use x509_cert::ext::pkix::name::GeneralName;
+use x509_cert::{
+    anchor::{CertPolicies, TrustAnchorChoice},
+    certificate::Rfc5280,
+    ext::pkix::name::GeneralName,
+};
 
 #[test]
 fn decode_ta1() {
@@ -14,7 +17,7 @@ fn decode_ta1() {
     let der_encoded_cert = include_bytes!("examples/eca.der");
 
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
-    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
+    let tac = TrustAnchorChoice::<Rfc5280>::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_der().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -143,7 +146,7 @@ fn decode_ta2() {
     let der_encoded_cert = include_bytes!("examples/entrust.der");
 
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
-    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
+    let tac = TrustAnchorChoice::<Rfc5280>::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_der().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -263,7 +266,7 @@ fn decode_ta3() {
     let der_encoded_cert = include_bytes!("examples/exostar.der");
 
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
-    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
+    let tac = TrustAnchorChoice::<Rfc5280>::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_der().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);
@@ -390,7 +393,7 @@ fn decode_ta4() {
     let der_encoded_cert = include_bytes!("examples/raytheon.der");
 
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
-    let tac = TrustAnchorChoice::decode(&mut decoder).unwrap();
+    let tac = TrustAnchorChoice::<Rfc5280>::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_der().unwrap();
     println!("Original : {:02X?}", der_encoded_cert);
     println!("Reencoded: {:02X?}", reencoded_tac);

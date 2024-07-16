@@ -28,7 +28,7 @@ signature = { version = "=2.3.0-pre.3", optional = true, default-features = fals
 
 [dev-dependencies]
 hex-literal = "0.4.1"
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 rand = "0.8.5"
 rsa = { version = "=0.10.0-pre.1", default-features = false, features = ["sha2"] }
 sha1 = { version = "=0.11.0-pre.3", default-features = false, features = ["oid"] }

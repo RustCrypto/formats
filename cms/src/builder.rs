@@ -65,6 +65,9 @@ pub enum Error {
     Builder(String),
 }
 
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -204,7 +207,7 @@ impl<'s> Builder for SignerInfoBuilder<'s> {
                 Some(content) => {
                     let mut hasher = get_hasher(&self.digest_algorithm).ok_or_else(|| {
                         // Unsupported hash algorithm: {}, &self.digest_algorithm.oid.to_string()
-                        x509_cert::builder::Error::from(der::Error::from(ErrorKind::Failed))
+                        builder::Error::from(der::Error::from(ErrorKind::Failed))
                     })?;
                     // Only the octets comprising the value of the eContent
                     // OCTET STRING are input to the message digest algorithm, not the tag
@@ -283,7 +286,7 @@ impl<'s> Builder for SignerInfoBuilder<'s> {
             });
 
         let signature_value =
-            SignatureValue::new(signature.raw_bytes()).map_err(x509_cert::builder::Error::from)?;
+            SignatureValue::new(signature.raw_bytes()).map_err(builder::Error::from)?;
 
         let signature_algorithm = signer.signature_algorithm_identifier()?;
 
@@ -1096,7 +1099,8 @@ macro_rules! encrypt_block_mode {
                     )));
                 }
                 (
-                    Key::<$block_mode::$typ<$alg>>::from_slice(key).to_owned(),
+                    Key::<$block_mode::$typ<$alg>>::try_from(key)
+                        .expect("size invariants violation"),
                     $block_mode::$typ::<$alg>::generate_iv_with_rng($rng)?,
                 )
             }

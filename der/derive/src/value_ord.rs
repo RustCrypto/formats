@@ -8,15 +8,15 @@
 use crate::{FieldAttrs, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, Field, Ident, Lifetime, Variant};
+use syn::{DeriveInput, Field, Generics, Ident, Variant};
 
 /// Derive the `Enumerated` trait for an enum.
 pub(crate) struct DeriveValueOrd {
     /// Name of the enum.
     ident: Ident,
 
-    /// Lifetime of the struct.
-    lifetime: Option<Lifetime>,
+    /// Generics of the enum.
+    generics: Generics,
 
     /// Fields of structs or enum variants.
     fields: Vec<ValueField>,
@@ -30,13 +30,6 @@ impl DeriveValueOrd {
     pub fn new(input: DeriveInput) -> syn::Result<Self> {
         let ident = input.ident;
         let type_attrs = TypeAttrs::parse(&input.attrs)?;
-
-        // TODO(tarcieri): properly handle multiple lifetimes
-        let lifetime = input
-            .generics
-            .lifetimes()
-            .next()
-            .map(|lt| lt.lifetime.clone());
 
         let (fields, input_type) = match input.data {
             syn::Data::Enum(data) => (
@@ -62,7 +55,7 @@ impl DeriveValueOrd {
 
         Ok(Self {
             ident,
-            lifetime,
+            generics: input.generics.clone(),
             fields,
             input_type,
         })
@@ -72,13 +65,7 @@ impl DeriveValueOrd {
     pub fn to_tokens(&self) -> TokenStream {
         let ident = &self.ident;
 
-        // Lifetime parameters
-        // TODO(tarcieri): support multiple lifetimes
-        let lt_params = self
-            .lifetime
-            .as_ref()
-            .map(|lt| vec![lt.clone()])
-            .unwrap_or_default();
+        let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
 
         let mut body = Vec::new();
 
@@ -110,7 +97,7 @@ impl DeriveValueOrd {
         };
 
         quote! {
-            impl<#(#lt_params)*> ::der::ValueOrd for #ident<#(#lt_params)*> {
+            impl #impl_generics ::der::ValueOrd for #ident #ty_generics #where_clause {
                 fn value_cmp(&self, other: &Self) -> ::der::Result<::core::cmp::Ordering> {
                     #body
                 }

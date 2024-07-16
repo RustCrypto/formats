@@ -1,6 +1,10 @@
 #![cfg(all(feature = "builder", feature = "pem"))]
 
-use der::{asn1::PrintableString, pem::LineEnding, Decode, Encode, EncodePem};
+use der::{
+    asn1::{Ia5String, PrintableString},
+    pem::LineEnding,
+    EncodePem,
+};
 use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
 use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
@@ -9,7 +13,7 @@ use sha2::Sha256;
 use spki::SubjectPublicKeyInfoOwned;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{AsyncBuilder, Builder, CertificateBuilder, Profile, RequestBuilder},
+    builder::{profile, AsyncBuilder, Builder, CertificateBuilder, RequestBuilder},
     ext::pkix::{
         name::{DirectoryString, GeneralName},
         SubjectAltName,
@@ -21,6 +25,9 @@ use x509_cert::{
 };
 use x509_cert_test_support::{openssl, zlint};
 
+#[cfg(feature = "hazmat")]
+use x509_cert::builder::profile::cabf::tls::Tls12Options;
+
 const RSA_2048_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-pub.der");
 const PKCS8_PUBLIC_KEY_DER: &[u8] = include_bytes!("examples/p256-pub.der");
 
@@ -28,17 +35,15 @@ const PKCS8_PUBLIC_KEY_DER: &[u8] = include_bytes!("examples/p256-pub.der");
 fn root_ca_certificate() {
     let serial_number = SerialNumber::from(42u32);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
-    let profile = Profile::Root;
-    let subject = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US")
-        .unwrap()
-        .to_der()
-        .unwrap();
-    let subject = Name::from_der(&subject).unwrap();
+    let subject =
+        Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
+    let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
+
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = rsa_signer();
-    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+    let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
         .expect("Create certificate");
 
     let certificate = builder.build(&signer).unwrap();
@@ -54,17 +59,15 @@ fn root_ca_certificate() {
 fn root_ca_certificate_ecdsa() {
     let serial_number = SerialNumber::from(42u32);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
-    let profile = Profile::Root;
-    let subject = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US")
-        .unwrap()
-        .to_der()
-        .unwrap();
-    let subject = Name::from_der(&subject).unwrap();
+
+    let subject =
+        Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
+    let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
 
     let signer = ecdsa_signer();
-    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+    let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
         .expect("Create certificate");
 
     let certificate = builder.build::<_, DerSignature>(&signer).unwrap();
@@ -83,18 +86,21 @@ fn sub_ca_certificate() {
 
     let issuer =
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
-    let profile = Profile::SubCA {
-        issuer,
-        path_len_constraint: Some(0),
-    };
-
     let subject =
         Name::from_str("CN=World domination task force,O=World domination Inc,C=US").unwrap();
+    let profile = profile::cabf::tls::Subordinate {
+        subject,
+        issuer,
+        path_len_constraint: Some(0),
+        client_auth: false,
+        emits_ocsp_response: true,
+    };
+
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = ecdsa_signer();
-    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+    let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
         .expect("Create certificate");
 
     let certificate = builder.build::<_, DerSignature>(&signer).unwrap();
@@ -120,27 +126,31 @@ fn leaf_certificate() {
 
     let issuer =
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
-    let profile = Profile::Leaf {
+    let subject = Name::from_str("C=US").unwrap();
+    let profile = profile::cabf::tls::Subscriber {
+        certificate_type: profile::cabf::tls::CertificateType::domain_validated(
+            subject.clone(),
+            vec![GeneralName::DnsName(
+                Ia5String::new(b"example.com").unwrap(),
+            )],
+        )
+        .expect("create DomainValidated profile"),
         issuer: issuer.clone(),
-        enable_key_agreement: false,
-        enable_key_encipherment: false,
+        client_auth: false,
+
         #[cfg(feature = "hazmat")]
-        include_subject_key_identifier: true,
+        tls12_options: Tls12Options::default(),
+        #[cfg(feature = "hazmat")]
+        enable_data_encipherment: false,
     };
 
-    let subject = Name::from_str("CN=service.domination.world").unwrap();
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = ecdsa_signer();
-    let builder = CertificateBuilder::new(
-        profile,
-        serial_number.clone(),
-        validity,
-        subject.clone(),
-        pub_key.clone(),
-    )
-    .expect("Create certificate");
+    let builder =
+        CertificateBuilder::new(profile, serial_number.clone(), validity, pub_key.clone())
+            .expect("Create certificate");
 
     let certificate = builder.build::<_, DerSignature>(&signer).unwrap();
 
@@ -162,35 +172,13 @@ fn leaf_certificate() {
         "e_subject_common_name_not_exactly_from_san",
         // Extended key usage needs to be added by end-user and is use-case dependent
         "e_sub_cert_eku_missing",
-        // TODO(baloo): drop this in https://github.com/RustCrypto/formats/pull/1306
-        // CABF SC-62 marked commoName (CN) as not recommended
-        "w_subject_common_name_included",
+        // CABF BRs v2 now marks ski as NOT RECOMMEND. Users of zlint are intended to
+        // select either RFC5280 lint or CABF lint. We want the CABF lint here and
+        // should ignore the RFC5280 one.
+        "w_ext_subject_key_identifier_missing_sub_cert",
     ];
 
     zlint::check_certificate(pem.as_bytes(), &ignored);
-
-    #[cfg(feature = "hazmat")]
-    {
-        let profile = Profile::Leaf {
-            issuer,
-            enable_key_agreement: false,
-            enable_key_encipherment: false,
-            include_subject_key_identifier: false,
-        };
-        let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
-            .expect("Create certificate");
-
-        let certificate = builder.build::<_, DerSignature>(&signer).unwrap();
-
-        let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
-        println!("{}", openssl::check_certificate(pem.as_bytes()));
-
-        // Ignore warning about leaf not having SKI extension (this is a warning not a fail, as
-        // denoted by the `w_` prefix.
-        let mut ignored = ignored;
-        ignored.push("w_ext_subject_key_identifier_missing_sub_cert");
-        zlint::check_certificate(pem.as_bytes(), &ignored);
-    }
 }
 
 #[test]
@@ -200,20 +188,31 @@ fn pss_certificate() {
 
     let issuer =
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
-    let profile = Profile::Leaf {
+
+    let subject = Name::from_str("C=US").unwrap();
+    let profile = profile::cabf::tls::Subscriber {
+        certificate_type: profile::cabf::tls::CertificateType::domain_validated(
+            subject.clone(),
+            vec![GeneralName::DnsName(
+                Ia5String::new(b"example.com").unwrap(),
+            )],
+        )
+        .expect("create DomainValidated profile"),
+
         issuer,
-        enable_key_agreement: false,
-        enable_key_encipherment: false,
+        client_auth: false,
+
         #[cfg(feature = "hazmat")]
-        include_subject_key_identifier: true,
+        tls12_options: Tls12Options::default(),
+        #[cfg(feature = "hazmat")]
+        enable_data_encipherment: false,
     };
 
-    let subject = Name::from_str("CN=service.domination.world").unwrap();
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = rsa_pss_signer();
-    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+    let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
         .expect("Create certificate");
 
     let certificate = builder
@@ -240,9 +239,10 @@ fn pss_certificate() {
         "e_sub_cert_eku_missing",
         // zlint warns on RSAPSS signature algorithms
         "e_signature_algorithm_not_supported",
-        // TODO(baloo): drop this in https://github.com/RustCrypto/formats/pull/1306
-        // CABF SC-62 marked commoName (CN) as not recommended
-        "w_subject_common_name_included",
+        // CABF BRs v2 now marks ski as NOT RECOMMEND. Users of zlint are intended to
+        // select either RFC5280 lint or CABF lint. We want the CABF lint here and
+        // should ignore the RFC5280 one.
+        "w_ext_subject_key_identifier_missing_sub_cert",
     ];
 
     zlint::check_certificate(pem.as_bytes(), ignored);
@@ -338,17 +338,16 @@ fn dynamic_signer() {
 async fn async_builder() {
     let serial_number = SerialNumber::from(42u32);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
-    let profile = Profile::Root;
-    let subject = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US")
-        .unwrap()
-        .to_der()
-        .unwrap();
-    let subject = Name::from_der(&subject).unwrap();
+
+    let subject =
+        Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
+    let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
+
     let pub_key =
         SubjectPublicKeyInfoOwned::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
 
     let signer = ecdsa_signer();
-    let builder = CertificateBuilder::new(profile, serial_number, validity, subject, pub_key)
+    let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
         .expect("Create certificate");
 
     let certificate = builder

@@ -17,7 +17,7 @@ use der::{
 /// [`Profile`] allows the consumer of this crate to customize the behavior when parsing
 /// certificates.
 /// By default, parsing will be made in a rfc5280-compliant manner.
-pub trait Profile: PartialEq + Debug + Eq + Clone {
+pub trait Profile: PartialEq + Debug + Eq + Clone + Default {
     /// Checks to run when parsing serial numbers
     fn check_serial_number(serial: &SerialNumber<Self>) -> der::Result<()> {
         // See the note in `SerialNumber::new`: we permit lengths of 21 bytes here,
@@ -32,7 +32,7 @@ pub trait Profile: PartialEq + Debug + Eq + Clone {
 }
 
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 /// Parse certificates with rfc5280-compliant checks
 pub struct Rfc5280;
 
@@ -40,7 +40,7 @@ impl Profile for Rfc5280 {}
 
 #[cfg(feature = "hazmat")]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 /// Parse raw x509 certificate and disable all the checks
 pub struct Raw;
 
