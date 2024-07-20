@@ -21,10 +21,12 @@ use spki::SubjectPublicKeyInfoRef;
 /// Check Name encoding
 ///
 /// BR 7.1.4.1 Name Encoding
+///
+/// See <https://cabforum.org/working-groups/server/baseline-requirements/requirements/#7141-name-encoding>
 pub fn check_names_encoding(name: &Name, multiple_allowed: bool) -> Result<()> {
     // NOTE: RDNSequence may be empty (at least with tls Subscribers).
 
-    let ordering = vec![
+    let enforce_ordering = vec![
         rfc4519::DOMAIN_COMPONENT,
         rfc4519::COUNTRY_NAME,
         rfc2256::STATE_OR_PROVINCE_NAME,
@@ -37,7 +39,7 @@ pub fn check_names_encoding(name: &Name, multiple_allowed: bool) -> Result<()> {
         rfc4519::ORGANIZATIONAL_UNIT_NAME,
         rfc4519::COMMON_NAME,
     ];
-    let mut ordering = ordering.iter();
+    let mut ordering = enforce_ordering.iter();
 
     let mut seen = HashSet::new();
 
@@ -51,8 +53,12 @@ pub fn check_names_encoding(name: &Name, multiple_allowed: bool) -> Result<()> {
                 return Err(Error::NonUniqueATV);
             }
 
-            if !ordering.any(|attr| attr == &atv.oid) {
-                return Err(Error::InvalidAttribute { oid: atv.oid });
+            // If the type is in the list we should enforce ordering of
+            if enforce_ordering.iter().any(|attr| attr == &atv.oid) {
+                // then advance the iterator in that list, and make sure we respected it
+                if !ordering.any(|attr| attr == &atv.oid) {
+                    return Err(Error::InvalidAttribute { oid: atv.oid });
+                }
             }
         }
     }
@@ -210,4 +216,26 @@ pub mod tls;
 pub mod codesigning {
     //! <https://cabforum.org/wp-content/uploads/Baseline-Requirements-for-the-Issuance-and-Management-of-Code-Signing.v2.8.pdf>
     // TODO
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use core::str::FromStr;
+
+    #[test]
+    fn test_check_names() {
+        assert!(
+            check_names_encoding(&Name::from_str("C=US,ST=CA").expect("parse name"), false)
+                .is_err()
+        );
+        assert!(
+            check_names_encoding(&Name::from_str("ST=CA,C=US").expect("parse name"), false).is_ok()
+        );
+        assert!(check_names_encoding(
+            &Name::from_str("serialNumber=1234,ST=CA,C=US").expect("parse name"),
+            false
+        )
+        .is_ok());
+    }
 }
