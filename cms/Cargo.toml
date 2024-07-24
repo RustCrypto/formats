@@ -37,7 +37,7 @@ getrandom = "0.2"
 hex-literal = "0.4"
 pem-rfc7468 = "=1.0.0-pre.0"
 pkcs5 = "=0.8.0-pre.0"
-pbkdf2 = "0.12.2"
+pbkdf2 = "0.13.0-pre.0"
 rand = "0.8.5"
 rsa = { version = "=0.10.0-pre.1", features = ["sha2"] }
 ecdsa = { version = "=0.17.0-pre.5", features = ["digest", "pem"] }
