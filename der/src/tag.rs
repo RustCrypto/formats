@@ -26,7 +26,7 @@ pub trait Tagged {
 }
 
 /// Types which are [`FixedTag`] always have a known [`Tag`] type.
-impl<T: FixedTag> Tagged for T {
+impl<T: FixedTag + ?Sized> Tagged for T {
     fn tag(&self) -> Tag {
         T::TAG
     }
