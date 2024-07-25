@@ -33,6 +33,19 @@ pub struct SequenceRef<'a> {
     body: BytesRef<'a>,
 }
 
+impl<'a> SequenceRef<'a> {
+    /// Borrow the inner byte slice.
+    pub fn as_bytes(&self) -> &'a [u8] {
+        self.body.as_slice()
+    }
+}
+
+impl AsRef<[u8]> for SequenceRef<'_> {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
 impl<'a> DecodeValue<'a> for SequenceRef<'a> {
     type Error = Error;
 
