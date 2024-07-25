@@ -375,9 +375,6 @@ pub use crate::{
 #[cfg(feature = "alloc")]
 pub use crate::{asn1::Any, document::Document};
 
-#[cfg(feature = "bigint")]
-pub use crypto_bigint as bigint;
-
 #[cfg(feature = "derive")]
 pub use der_derive::{Choice, Enumerated, Sequence, ValueOrd};
 
