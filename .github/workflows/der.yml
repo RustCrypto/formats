@@ -100,4 +100,4 @@ jobs:
           toolchain: ${{ matrix.rust }}
       - uses: RustCrypto/actions/cargo-hack-install@master
       - run: cargo hack test --feature-powerset
-        working-directory: der/derive
+        working-directory: der_derive
