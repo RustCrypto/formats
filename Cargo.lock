@@ -364,7 +364,7 @@ version = "0.3.0-pre"
 dependencies = [
  "const-oid 0.10.0-pre.2",
  "crmf",
- "der",
+ "der 0.8.0-pre.0",
  "hex-literal",
  "spki",
  "x509-cert",
@@ -378,7 +378,7 @@ dependencies = [
  "cbc",
  "cipher",
  "const-oid 0.10.0-pre.2",
- "der",
+ "der 0.8.0-pre.0",
  "ecdsa",
  "getrandom",
  "hex-literal",
@@ -468,7 +468,7 @@ version = "0.3.0-pre"
 dependencies = [
  "cms",
  "const-oid 0.10.0-pre.2",
- "der",
+ "der 0.8.0-pre.0",
  "spki",
  "x509-cert",
 ]
@@ -508,11 +508,25 @@ dependencies = [
 [[package]]
 name = "der"
 version = "0.8.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b489fd2221710c1dd46637d66b984161fb66134f81437a8489800306bcc2ecea"
+dependencies = [
+ "arbitrary",
+ "const-oid 0.10.0-pre.2",
+ "der_derive 0.8.0-pre.0",
+ "flagset",
+ "pem-rfc7468 1.0.0-pre.0",
+ "zeroize",
+]
+
+[[package]]
+name = "der"
+version = "0.8.0-rc.0"
 dependencies = [
  "arbitrary",
  "bytes",
- "const-oid 0.10.0-pre.2",
- "der_derive",
+ "const-oid 0.10.0-rc.0",
+ "der_derive 0.8.0-rc.0",
  "flagset",
  "hex-literal",
  "pem-rfc7468 1.0.0-rc.0",
@@ -524,6 +538,17 @@ dependencies = [
 [[package]]
 name = "der_derive"
 version = "0.8.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd1ee9778ac378876dc78f546d2821fae40a1b69ec8d82f3745392d69ff89ce6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "der_derive"
+version = "0.8.0-rc.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -576,7 +601,7 @@ name = "ecdsa"
 version = "0.17.0-pre.5"
 source = "git+https://github.com/RustCrypto/signatures#c2f3ee6497d8ab8069c149c5c922a342eedd3334"
 dependencies = [
- "der",
+ "der 0.8.0-pre.0",
  "digest",
  "elliptic-curve",
  "rfc6979",
@@ -797,7 +822,7 @@ dependencies = [
 name = "gss-api"
 version = "0.2.0-pre"
 dependencies = [
- "der",
+ "der 0.8.0-pre.0",
  "hex-literal",
  "spki",
  "x509-cert",
@@ -1087,7 +1112,7 @@ name = "pkcs1"
 version = "0.8.0-pre.0"
 dependencies = [
  "const-oid 0.10.0-pre.2",
- "der",
+ "der 0.8.0-pre.0",
  "hex-literal",
  "pkcs8",
  "spki",
@@ -1100,7 +1125,7 @@ version = "0.2.0-pre"
 dependencies = [
  "cms",
  "const-oid 0.10.0-pre.2",
- "der",
+ "der 0.8.0-pre.0",
  "digest",
  "hex-literal",
  "pkcs5",
@@ -1119,7 +1144,7 @@ dependencies = [
  "aes",
  "aes-gcm",
  "cbc",
- "der",
+ "der 0.8.0-pre.0",
  "des",
  "hex-literal",
  "pbkdf2 0.13.0-pre.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1134,7 +1159,7 @@ dependencies = [
 name = "pkcs8"
 version = "0.11.0-pre.0"
 dependencies = [
- "der",
+ "der 0.8.0-pre.0",
  "hex-literal",
  "pkcs5",
  "rand_core",
@@ -1471,7 +1496,7 @@ name = "sec1"
 version = "0.8.0-pre.1"
 dependencies = [
  "base16ct",
- "der",
+ "der 0.8.0-pre.0",
  "hex-literal",
  "hybrid-array",
  "pkcs8",
@@ -1623,7 +1648,7 @@ version = "0.8.0-pre.0"
 dependencies = [
  "arbitrary",
  "base64ct 1.6.0",
- "der",
+ "der 0.8.0-pre.0",
  "hex-literal",
  "sha2",
  "tempfile",
@@ -2017,7 +2042,7 @@ dependencies = [
  "arbitrary",
  "async-signature",
  "const-oid 0.10.0-pre.2",
- "der",
+ "der 0.8.0-pre.0",
  "ecdsa",
  "hex-literal",
  "p256",
@@ -2048,7 +2073,7 @@ name = "x509-ocsp"
 version = "0.3.0-pre"
 dependencies = [
  "const-oid 0.10.0-pre.2",
- "der",
+ "der 0.8.0-pre.0",
  "digest",
  "hex-literal",
  "lazy_static",
@@ -2068,7 +2093,7 @@ version = "0.2.0-pre"
 dependencies = [
  "cmpv2",
  "cms",
- "der",
+ "der 0.8.0-pre.0",
  "hex-literal",
  "x509-cert",
 ]
