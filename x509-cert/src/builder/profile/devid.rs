@@ -27,9 +27,17 @@ use crate::{
     },
     name::Name,
 };
-use const_oid::db::tcgtpm;
 use der::{asn1::OctetString, ErrorKind};
 use spki::{ObjectIdentifier, SubjectPublicKeyInfoRef};
+
+// TODO(tarcieri): use this when `const-oid` has been bumped to v0.10.0-rc.0
+//use const_oid::db::tcgtpm;
+#[allow(missing_docs)]
+pub mod tcgtpm {
+    use const_oid::ObjectIdentifier;
+    pub const TCG_SV_TPM_12: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.23.133.1.0");
+    pub const TCG_SV_TPM_20: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.23.133.1.2");
+}
 
 /// DevID Certificate
 ///
