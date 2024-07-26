@@ -17,7 +17,7 @@ x509-cert = "*"
 members = ["."]
 
 [patch.crates-io]
-der         = { path = "../../der" }
-der_derive  = { path = "../../der/derive" }
+der = { path = "../../der" }
+der_derive = { path = "../../der_derive" }
 pem-rfc7468 = { path = "../../pem-rfc7468" }
-spki        = { path = "../../spki" }
+spki = { path = "../../spki" }
