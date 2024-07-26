@@ -64,14 +64,9 @@ x509-ocsp = { path = "./x509-ocsp" }
 p256 = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
 # Pending a release of 0.11.0-pre.2
 whirlpool = { git = "https://github.com/RustCrypto/hashes.git" }
-# Pending a release of 0.2.0-pre
-cbc = { git = "https://github.com/RustCrypto/block-modes.git" }
 # Pending a release of 0.11.0-pre
 salsa20 = { git = "https://github.com/RustCrypto/stream-ciphers.git" }
-# Pending a release of 0.11.0-pre
-aes-gcm = { git = "https://github.com/RustCrypto/AEADs.git" }
 aead = { git = "https://github.com/RustCrypto/traits.git" }
-ctr = { git = "https://github.com/RustCrypto/block-modes.git" }
 
 # https://github.com/RustCrypto/formats/pull/1055
 # https://github.com/RustCrypto/signatures/pull/809
