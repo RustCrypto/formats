@@ -34,7 +34,7 @@ zeroize = { version = "1.8.1", optional = true }
 [dev-dependencies]
 getrandom = "0.2"
 hex-literal = "0.4"
-pem-rfc7468 = "=1.0.0-pre.0"
+pem-rfc7468 = "=1.0.0-rc.0"
 pkcs5 = "=0.8.0-pre.0"
 rand = "0.8.5"
 rsa = { version = "=0.10.0-pre.1", features = ["sha2"] }

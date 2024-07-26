@@ -383,7 +383,7 @@ dependencies = [
  "getrandom",
  "hex-literal",
  "p256",
- "pem-rfc7468",
+ "pem-rfc7468 1.0.0-rc.0",
  "pkcs5",
  "rand",
  "rsa",
@@ -515,7 +515,7 @@ dependencies = [
  "der_derive",
  "flagset",
  "hex-literal",
- "pem-rfc7468",
+ "pem-rfc7468 1.0.0-rc.0",
  "proptest",
  "time",
  "zeroize",
@@ -602,7 +602,7 @@ dependencies = [
  "ff",
  "group",
  "hybrid-array",
- "pem-rfc7468",
+ "pem-rfc7468 1.0.0-pre.0",
  "pkcs8",
  "rand_core",
  "sec1",
@@ -1057,6 +1057,15 @@ dependencies = [
 [[package]]
 name = "pem-rfc7468"
 version = "1.0.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76a65e1c27d1680f8805b3f8c9949f08d6aa5d6cbd088c9896e64a53821dc27d"
+dependencies = [
+ "base64ct 1.6.0",
+]
+
+[[package]]
+name = "pem-rfc7468"
+version = "1.0.0-rc.0"
 dependencies = [
  "base64ct 1.6.0",
 ]
