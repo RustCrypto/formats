@@ -1,6 +1,6 @@
 [package]
 name = "spki"
-version = "0.8.0-pre.0"
+version = "0.8.0-rc.0"
 description = """
 X.509 Subject Public Key Info (RFC5280) describing public keys as well as their
 associated AlgorithmIdentifiers (i.e. OIDs)
@@ -16,7 +16,7 @@ edition = "2021"
 rust-version = "1.72"
 
 [dependencies]
-der = { version = "=0.8.0-pre.0", features = ["oid"] }
+der = { version = "0.8.0-rc.0", features = ["oid"] }
 
 # Optional dependencies
 arbitrary = { version = "1.2", features = ["derive"], optional = true }
