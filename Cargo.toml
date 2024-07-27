@@ -59,18 +59,4 @@ x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
-
-# Pending a release of 0.14.0-pre.1
-p256 = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
-# Pending a release of 0.11.0-pre.2
-whirlpool = { git = "https://github.com/RustCrypto/hashes.git" }
-# Pending a release of 0.11.0-pre
-salsa20 = { git = "https://github.com/RustCrypto/stream-ciphers.git" }
-aead = { git = "https://github.com/RustCrypto/traits.git" }
-
-# https://github.com/RustCrypto/formats/pull/1055
-# https://github.com/RustCrypto/signatures/pull/809
-ecdsa = { git = "https://github.com/RustCrypto/signatures" }
-
-# https://github.com/RustCrypto/password-hashes/pull/489
-scrypt = { git = "https://github.com/RustCrypto/password-hashes.git" }
+rsa = { git = "https://github.com/RustCrypto/RSA/", branch = "use-latest-prereleases" }
