@@ -387,7 +387,7 @@ dependencies = [
  "hex-literal",
  "p256",
  "pem-rfc7468",
- "pkcs5",
+ "pkcs5 0.8.0-rc.0",
  "rand",
  "rsa",
  "sha1",
@@ -1082,7 +1082,7 @@ dependencies = [
  "der",
  "digest",
  "hex-literal",
- "pkcs5",
+ "pkcs5 0.8.0-rc.1",
  "pkcs8",
  "sha2",
  "spki",
@@ -1094,6 +1094,16 @@ dependencies = [
 [[package]]
 name = "pkcs5"
 version = "0.8.0-rc.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49f7844403c0bf02e9a4a3fbb8015f1f6f2f1eb221ffaafd4a8bfdc7143c05e3"
+dependencies = [
+ "der",
+ "spki",
+]
+
+[[package]]
+name = "pkcs5"
+version = "0.8.0-rc.1"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -1115,7 +1125,7 @@ version = "0.11.0-rc.0"
 dependencies = [
  "der",
  "hex-literal",
- "pkcs5",
+ "pkcs5 0.8.0-rc.1",
  "rand_core",
  "spki",
  "subtle",
