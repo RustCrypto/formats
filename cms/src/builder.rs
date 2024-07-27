@@ -1111,7 +1111,7 @@ macro_rules! encrypt_block_mode {
             key.to_vec(),
             AlgorithmIdentifierOwned {
                 oid: $oid,
-                parameters: Some(Any::new(der::Tag::OctetString, iv.to_vec())?),
+                parameters: Some(Any::new(Tag::OctetString, iv.to_vec())?),
             },
         ))
     }};
@@ -1175,7 +1175,7 @@ pub fn create_content_type_attribute(content_type: ObjectIdentifier) -> Result<A
 pub fn create_message_digest_attribute(message_digest: &[u8]) -> Result<Attribute> {
     let message_digest_der = OctetStringRef::new(message_digest)?;
     let message_digest_attribute_value =
-        AttributeValue::new(der::Tag::OctetString, message_digest_der.as_bytes())?;
+        AttributeValue::new(Tag::OctetString, message_digest_der.as_bytes())?;
     let mut values = SetOfVec::new();
     values.insert(message_digest_attribute_value)?;
     let attribute = Attribute {

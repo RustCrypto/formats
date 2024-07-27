@@ -2,7 +2,7 @@
 
 use aes::Aes128;
 use cipher::block_padding::Pkcs7;
-use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, Key, KeyIvInit};
+use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, KeyIvInit};
 use cms::builder::{
     create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
@@ -593,8 +593,13 @@ fn test_create_signing_attribute() {
 }
 
 #[test]
-/// This demonstrates and tests PasswordRecipientInfoBuilder according to RFC3211,
+/// This demonstrates and tests creating and receiving a CMS message using
+/// PasswordRecipientInfoBuilder (pwri) according to RFC3211,
 /// using Aes128Cbc for encryption of the content-encryption key (CEK).
+/// Note: if you want to create a CMS message using pwri, you have to implement
+/// an encryptor, that is supported by sender and receiver. The following
+/// implementation uses AES128-CBC and can be used as a template for other
+/// encryption methods.
 fn test_create_password_recipient_info() {
     // First define an Encryptor, which is used to encrypt the content-encryption key
     // for a recipient of the CMS message.
@@ -640,7 +645,8 @@ fn test_create_password_recipient_info() {
             );
 
             // Encrypt first time
-            let mut encryptor = cbc::Encryptor::<Aes128>::new(&key_encryption_key.into(), &self.key_encryption_iv.into());
+            let mut encryptor: cbc::Encryptor<Aes128> =
+                cbc::Encryptor::<Aes128>::new(&key_encryption_key.into(), &self.key_encryption_iv);
             // Allocate memory for encrypted cek and pre-fill with unencrypted key for in-place
             // encryption.
             let mut encrypted_cek_blocks: Vec<aes::Block> = padded_content_encryption_key
@@ -710,7 +716,8 @@ fn test_create_password_recipient_info() {
             iteration_count,
             &mut key_encryption_key,
         );
-        let key_encryption_key = Key<cbc::Decryptor::<Aes128>>::try_from( key_encryption_key).unwrap();
+        let key_encryption_key =
+            cipher::Key::<cbc::Decryptor<Aes128>>::try_from(key_encryption_key).unwrap();
 
         // Decrypt twice according to RFC 3211
         assert_eq!(
@@ -740,7 +747,7 @@ fn test_create_password_recipient_info() {
             Iv::<cbc::Decryptor<Aes128>>::from(padded_cek_blocks[padded_cek_blocks.len() - 2]);
         let iv_encrypted_block = padded_cek_blocks[padded_cek_blocks.len() - 1];
         let mut iv = Iv::<cbc::Decryptor<Aes128>>::from([0_u8; 16]);
-        cbc::Decryptor::<aes::Aes128>::new(&key_encryption_key.from_slice(), &iv_pre)
+        cbc::Decryptor::<aes::Aes128>::new(&key_encryption_key.into(), &iv_pre)
             .decrypt_block_b2b(&iv_encrypted_block, &mut iv);
 
         // 2. Using the decrypted n'th ciphertext block as the IV, decrypt the 1st ... n-1'th
@@ -753,8 +760,8 @@ fn test_create_password_recipient_info() {
         // Decryption is in-place.
         let iv2_bytes = get_iv_from_algorithm_identifier(&recipient_info.key_enc_alg);
         assert!(iv2_bytes.as_bytes().len() == iv_size_in_bytes);
-        let iv2 = Iv::<cbc::Decryptor<Aes128>>::from_slice(iv2_bytes.as_bytes());
-        cbc::Decryptor::<aes::Aes128>::new(&&key_encryption_key.into(), iv2)
+        let iv2 = Iv::<cbc::Decryptor<Aes128>>::try_from(iv2_bytes.as_bytes()).unwrap();
+        cbc::Decryptor::<aes::Aes128>::new(&key_encryption_key, &iv2)
             .decrypt_blocks(padded_cek_blocks.as_mut_slice());
 
         let padded_cek: Vec<u8> = padded_cek_blocks
@@ -846,10 +853,10 @@ fn test_create_password_recipient_info() {
     if let RecipientInfo::Pwri(recipient_info) = recipient_info {
         let decrypted_content_encryption_key =
             cms_pwri_decrypt_content_encryption_key(recipient_info, challenge_password);
-        let key = cipher::Key::<cbc::Encryptor<Aes128>>::from_slice(
+        let content_encryption_key = cipher::Key::<cbc::Encryptor<Aes128>>::try_from(
             decrypted_content_encryption_key.as_slice(),
         )
-        .to_owned();
+        .unwrap();
         let algorithm_params_der = enveloped_data
             .encrypted_content
             .content_enc_alg
@@ -858,11 +865,15 @@ fn test_create_password_recipient_info() {
             .to_der()
             .unwrap();
         let iv = Iv::<cbc::Decryptor<Aes128>>::try_from(
-            OctetStringRef::from_der(algorithm_params_der.as_slice()).unwrap()
+            OctetStringRef::from_der(algorithm_params_der.as_slice())
+                .unwrap()
+                .as_bytes(),
         )
         .unwrap();
-        let content = cbc::Decryptor::<Aes128>::new(&decrypted_content_encryption_key.into(), iv)
-            .decrypt_padded_vec_mut::<Pkcs7>(
+        let decryptor: cbc::Decryptor<Aes128> =
+            cbc::Decryptor::<Aes128>::new(&content_encryption_key, &iv);
+        let decrypted_content = decryptor
+            .decrypt_padded_vec::<Pkcs7>(
                 enveloped_data
                     .encrypted_content
                     .encrypted_content
@@ -872,7 +883,7 @@ fn test_create_password_recipient_info() {
             .unwrap();
         // This is the final test: do we get the original content?
         assert_eq!(
-            content.as_slice(),
+            decrypted_content,
             "Arbitrary unencrypted content".as_bytes()
         )
     };
