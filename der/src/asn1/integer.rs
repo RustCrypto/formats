@@ -3,7 +3,7 @@
 pub(super) mod int;
 pub(super) mod uint;
 
-use core::{cmp::Ordering, mem};
+use core::{cmp::Ordering, mem::size_of};
 
 use crate::{EncodeValue, Result, SliceWriter};
 
@@ -22,7 +22,7 @@ where
     T: Copy + EncodeValue + Sized,
 {
     const MAX_INT_SIZE: usize = 16;
-    debug_assert!(mem::size_of::<T>() <= MAX_INT_SIZE);
+    debug_assert!(size_of::<T>() <= MAX_INT_SIZE);
 
     let mut buf1 = [0u8; MAX_INT_SIZE];
     let mut encoder1 = SliceWriter::new(&mut buf1);

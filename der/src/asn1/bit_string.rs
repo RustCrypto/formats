@@ -6,6 +6,9 @@ use crate::{
 };
 use core::{cmp::Ordering, iter::FusedIterator};
 
+#[cfg(feature = "flagset")]
+use core::mem::size_of_val;
+
 /// ASN.1 `BIT STRING` type.
 ///
 /// This type contains a sequence of any number of bits, modeled internally as
@@ -454,7 +457,7 @@ where
 
         let mut flags = T::none().bits();
 
-        if bits.bit_len() > core::mem::size_of_val(&flags) * 8 {
+        if bits.bit_len() > size_of_val(&flags) * 8 {
             return Err(Error::new(ErrorKind::Overlength, position));
         }
 

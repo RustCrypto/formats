@@ -1,9 +1,5 @@
 target/
 **/*.rs.bk
 
-# IDEs
+# CLion IDE
 .idea
-.vscode
-
-# Artifacts
-*.orig

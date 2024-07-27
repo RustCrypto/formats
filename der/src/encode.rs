@@ -69,7 +69,7 @@ pub trait Encode {
 
 impl<T> Encode for T
 where
-    T: EncodeValue + Tagged,
+    T: EncodeValue + Tagged + ?Sized,
 {
     /// Compute the length of this value in bytes when encoded as ASN.1 DER.
     fn encoded_len(&self) -> Result<Length> {
@@ -109,7 +109,10 @@ pub trait EncodePem: Encode + PemLabel {
 }
 
 #[cfg(feature = "pem")]
-impl<T: Encode + PemLabel> EncodePem for T {
+impl<T> EncodePem for T
+where
+    T: Encode + PemLabel + ?Sized,
+{
     fn to_pem(&self, line_ending: LineEnding) -> Result<String> {
         let der_len = usize::try_from(self.encoded_len()?)?;
         let pem_len = pem::encapsulated_len(Self::PEM_LABEL, line_ending, der_len)?;

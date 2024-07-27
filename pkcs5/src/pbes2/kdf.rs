@@ -11,6 +11,9 @@ use der::{
     Writer,
 };
 
+#[cfg(feature = "pbes2")]
+use core::mem::size_of;
+
 /// Password-Based Key Derivation Function (PBKDF2) OID.
 pub const PBKDF2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12");
 
@@ -483,7 +486,7 @@ impl TryFrom<&ScryptParams> for scrypt::Params {
         let n = params.cost_parameter;
 
         // Compute log2 and verify its correctness
-        let log_n = ((8 * core::mem::size_of::<ScryptCost>() as u32) - n.leading_zeros() - 1) as u8;
+        let log_n = ((8 * size_of::<ScryptCost>() as u32) - n.leading_zeros() - 1) as u8;
 
         if 1 << log_n != n {
             return Err(ScryptParams::INVALID_ERR);
