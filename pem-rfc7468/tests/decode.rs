@@ -110,3 +110,18 @@ fn ed25519_example() {
     let label = pem_rfc7468::decode_label(pem).unwrap();
     assert_eq!(label, "ED25519 CERT");
 }
+
+#[test]
+fn line_width_detection() {
+    let pem_64cols = include_bytes!("examples/pkcs1.pem");
+    assert_eq!(
+        pem_rfc7468::detect_base64_line_width(pem_64cols).unwrap(),
+        64
+    );
+
+    let pem_70cols = include_bytes!("examples/ssh-id_ed25519.pem");
+    assert_eq!(
+        pem_rfc7468::detect_base64_line_width(pem_70cols).unwrap(),
+        70
+    );
+}
