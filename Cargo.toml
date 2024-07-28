@@ -58,5 +58,3 @@ tls_codec_derive = { path = "./tls_codec/derive" }
 x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
-
-rsa = { git = "https://github.com/RustCrypto/RSA/", branch = "use-latest-prereleases" }
