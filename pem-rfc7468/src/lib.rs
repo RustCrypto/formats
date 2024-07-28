@@ -63,7 +63,7 @@ mod error;
 mod grammar;
 
 pub use crate::{
-    decoder::{decode, decode_label, Decoder},
+    decoder::{decode, decode_label, detect_base64_line_width, Decoder},
     encoder::{encapsulated_len, encapsulated_len_wrapped, encode, encoded_len, Encoder},
     error::{Error, Result},
 };
