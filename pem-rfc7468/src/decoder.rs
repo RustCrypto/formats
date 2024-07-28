@@ -62,6 +62,13 @@ pub fn decode_label(pem: &[u8]) -> Result<&str> {
     Ok(Encapsulation::try_from(pem)?.label())
 }
 
+/// Attempt to detect the Base64 line width for the given PEM document.
+///
+/// NOTE: not constant time with respect to the input.
+pub fn detect_base64_line_width(pem: &[u8]) -> Result<usize> {
+    Ok(Encapsulation::try_from(pem)?.encapsulated_text_line_width())
+}
+
 /// Buffered PEM decoder.
 ///
 /// Stateful buffered decoder type which decodes an input PEM document according
@@ -88,7 +95,17 @@ impl<'i> Decoder<'i> {
         let encapsulation = Encapsulation::try_from(pem)?;
         let type_label = encapsulation.label();
         let base64 = Base64Decoder::new_wrapped(encapsulation.encapsulated_text, line_width)?;
+
         Ok(Self { type_label, base64 })
+    }
+
+    /// Create a new PEM [`Decoder`] which automatically detects the line width the input is wrapped
+    /// at and flexibly handles widths other than the default 64-characters.
+    ///
+    /// Note: unlike `new` and `new_wrapped`, this method is not constant-time.
+    pub fn new_detect_wrap(pem: &'i [u8]) -> Result<Self> {
+        let line_width = detect_base64_line_width(pem)?;
+        Self::new_wrapped(pem, line_width)
     }
 
     /// Get the PEM type label for the input document.
@@ -223,6 +240,16 @@ impl<'a> Encapsulation<'a> {
     /// Get the label parsed from the encapsulation boundaries.
     pub fn label(self) -> &'a str {
         self.label
+    }
+
+    /// Detect the line width of the encapsulated text by looking for the position of the first EOL.
+    pub fn encapsulated_text_line_width(self) -> usize {
+        // TODO(tarcieri): handle empty space between the pre-encapsulation boundary and Base64
+        self.encapsulated_text
+            .iter()
+            .copied()
+            .position(|c| matches!(c, grammar::CHAR_CR | grammar::CHAR_LF))
+            .unwrap_or(self.encapsulated_text.len())
     }
 }
 
