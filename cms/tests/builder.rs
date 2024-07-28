@@ -716,8 +716,7 @@ fn test_create_password_recipient_info() {
             iteration_count,
             &mut key_encryption_key,
         );
-        let key_encryption_key =
-            cipher::Key::<cbc::Decryptor<Aes128>>::try_from(key_encryption_key).unwrap();
+        let key_encryption_key = cipher::Key::<cbc::Decryptor<Aes128>>::from(key_encryption_key);
 
         // Decrypt twice according to RFC 3211
         assert_eq!(
@@ -747,13 +746,13 @@ fn test_create_password_recipient_info() {
             Iv::<cbc::Decryptor<Aes128>>::from(padded_cek_blocks[padded_cek_blocks.len() - 2]);
         let iv_encrypted_block = padded_cek_blocks[padded_cek_blocks.len() - 1];
         let mut iv = Iv::<cbc::Decryptor<Aes128>>::from([0_u8; 16]);
-        cbc::Decryptor::<aes::Aes128>::new(&key_encryption_key.into(), &iv_pre)
+        cbc::Decryptor::<aes::Aes128>::new(&key_encryption_key, &iv_pre)
             .decrypt_block_b2b(&iv_encrypted_block, &mut iv);
 
         // 2. Using the decrypted n'th ciphertext block as the IV, decrypt the 1st ... n-1'th
         //    ciphertext blocks. This strips the outer layer of encryption.
         // Decryption is in-place.
-        cbc::Decryptor::<aes::Aes128>::new(&key_encryption_key.into(), &iv)
+        cbc::Decryptor::<aes::Aes128>::new(&key_encryption_key, &iv)
             .decrypt_blocks(padded_cek_blocks.as_mut_slice());
 
         // 3. Decrypt the inner layer of encryption using the KEK.
