@@ -386,6 +386,7 @@ dependencies = [
  "getrandom",
  "hex-literal",
  "p256",
+ "pbkdf2",
  "pem-rfc7468",
  "pkcs5 0.8.0-rc.0",
  "rand",
