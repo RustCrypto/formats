@@ -54,17 +54,14 @@ impl DeriveSequence {
 
         // Use the first lifetime parameter as lifetime for Decode/Encode lifetime
         // if none found, add one.
-        let lifetime = generics
-            .lifetimes()
-            .next()
-            .map(|lt| lt.lifetime.clone())
-            .unwrap_or_else(|| {
-                let lt = default_lifetime();
-                generics
-                    .params
-                    .insert(0, GenericParam::Lifetime(LifetimeParam::new(lt.clone())));
-                lt
-            });
+        let maybe_lifetime = generics.lifetimes().next().map(|lt| lt.lifetime.clone());
+        let lifetime = maybe_lifetime.unwrap_or_else(|| {
+            let lt = default_lifetime();
+            generics
+                .params
+                .insert(0, GenericParam::Lifetime(LifetimeParam::new(lt.clone())));
+            lt
+        });
 
         // We may or may not have inserted a lifetime.
         let (_, ty_generics, where_clause) = self.generics.split_for_impl();
