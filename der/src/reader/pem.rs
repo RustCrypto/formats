@@ -2,6 +2,7 @@
 
 use super::Reader;
 use crate::{Decode, EncodingRules, Error, ErrorKind, Header, Length, Result};
+use core::cell::RefCell;
 
 #[allow(clippy::arithmetic_side_effects)]
 mod utils {
@@ -125,7 +126,7 @@ mod utils {
 #[derive(Clone)]
 pub struct PemReader<'i> {
     /// Inner PEM decoder wrapped in a BufReader.
-    reader: utils::BufReader<'i>,
+    reader: RefCell<utils::BufReader<'i>>,
 
     /// Encoding rules to apply when decoding the input.
     encoding_rules: EncodingRules,
@@ -147,7 +148,7 @@ impl<'i> PemReader<'i> {
         let input_len = Length::try_from(reader.remaining_len())?;
 
         Ok(Self {
-            reader,
+            reader: RefCell::new(reader),
             encoding_rules: EncodingRules::default(),
             input_len,
             position: Length::ZERO,
@@ -157,7 +158,7 @@ impl<'i> PemReader<'i> {
     /// Get the PEM label which will be used in the encapsulation boundaries
     /// for this document.
     pub fn type_label(&self) -> &'i str {
-        self.reader.type_label()
+        self.reader.borrow().type_label()
     }
 }
 
@@ -171,15 +172,15 @@ impl<'i> Reader<'i> for PemReader<'i> {
         self.input_len
     }
 
-    fn peek_byte(&mut self) -> Option<u8> {
+    fn peek_byte(&self) -> Option<u8> {
         if self.is_finished() {
             None
         } else {
-            self.reader.peek_byte()
+            self.reader.borrow().peek_byte()
         }
     }
 
-    fn peek_header(&mut self) -> Result<Header> {
+    fn peek_header(&self) -> Result<Header> {
         if self.is_finished() {
             Err(Error::incomplete(self.offset()))
         } else {
@@ -197,12 +198,13 @@ impl<'i> Reader<'i> for PemReader<'i> {
     }
 
     fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8]> {
-        let bytes = self.reader.copy_to_slice(buf)?;
+        let bytes = self.reader.borrow_mut().copy_to_slice(buf)?;
+
         self.position = (self.position + bytes.len())?;
 
         debug_assert_eq!(
             self.position,
-            (self.input_len - Length::try_from(self.reader.remaining_len())?)?
+            (self.input_len - Length::try_from(self.reader.borrow().remaining_len())?)?
         );
 
         Ok(bytes)
