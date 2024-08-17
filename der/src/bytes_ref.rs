@@ -49,6 +49,16 @@ impl<'a> BytesRef<'a> {
     pub fn is_empty(self) -> bool {
         self.len() == Length::ZERO
     }
+
+    /// Get a prefix of a [`BytesRef`] of the given length.
+    pub fn prefix(self, length: Length) -> Result<Self> {
+        let inner = self
+            .as_slice()
+            .get(..usize::try_from(length)?)
+            .ok_or_else(|| Error::incomplete(self.length))?;
+
+        Ok(Self { length, inner })
+    }
 }
 
 impl AsRef<[u8]> for BytesRef<'_> {

@@ -91,6 +91,28 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         self.position
     }
 
+    /// Read nested data of the given length.
+    fn read_nested<T, F, E>(&mut self, len: Length, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+        E: From<Error>,
+    {
+        let prefix_len = (self.position + len)?;
+        let mut nested_reader = self.clone();
+        nested_reader.bytes = self.bytes.prefix(prefix_len)?;
+
+        let ret = f(&mut nested_reader);
+        self.position = nested_reader.position;
+        self.failed = nested_reader.failed;
+
+        ret.and_then(|value| {
+            nested_reader.finish(value).map_err(|e| {
+                self.failed = true;
+                e.into()
+            })
+        })
+    }
+
     fn read_slice(&mut self, len: Length) -> Result<&'a [u8], Error> {
         if self.is_failed() {
             return Err(self.error(ErrorKind::Failed));
