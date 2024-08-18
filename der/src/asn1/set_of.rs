@@ -118,8 +118,8 @@ where
                 result.inner.push(T::decode(reader)?)?;
             }
 
+            // Ensure elements of the `SetOf` are sorted and will serialize as valid DER
             der_sort(result.inner.as_mut())?;
-            validate(result.inner.as_ref())?;
             Ok(result)
         })
     }
@@ -339,7 +339,6 @@ where
             }
 
             der_sort(inner.as_mut())?;
-            validate(inner.as_ref())?;
             Ok(Self { inner })
         })
     }
@@ -466,27 +465,6 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
                     slice.swap(j - 1, j);
                     j -= 1;
                 }
-            }
-        }
-    }
-
-    Ok(())
-}
-
-/// Validate the elements of a `SET OF`, ensuring that they are all in order
-/// and that there are no duplicates.
-fn validate<T: DerOrd>(slice: &[T]) -> Result<(), Error> {
-    if let Some(len) = slice.len().checked_sub(1) {
-        for i in 0..len {
-            let j = i.checked_add(1).ok_or(ErrorKind::Overflow)?;
-
-            match slice.get(i..=j) {
-                Some([a, b]) => {
-                    if a.der_cmp(b)? != Ordering::Less {
-                        return Err(ErrorKind::SetOrdering.into());
-                    }
-                }
-                _ => return Err(Tag::Set.value_error()),
             }
         }
     }
