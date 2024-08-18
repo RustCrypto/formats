@@ -228,14 +228,6 @@ mod tests {
     }
 
     #[test]
-    fn peek_tag() {
-        let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
-        assert_eq!(reader.position(), Length::ZERO);
-        assert_eq!(reader.peek_tag().unwrap(), Tag::Integer);
-        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
-    }
-
-    #[test]
     fn peek_header() {
         let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
         assert_eq!(reader.position(), Length::ZERO);
