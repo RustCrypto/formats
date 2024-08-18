@@ -1,11 +1,8 @@
 //! Reader trait.
 
-pub(crate) mod nested;
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
 pub(crate) mod slice;
-
-pub(crate) use nested::NestedReader;
 
 use crate::{
     asn1::ContextSpecific, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag,
@@ -34,6 +31,12 @@ pub trait Reader<'r>: Sized {
 
     /// Get the position within the buffer.
     fn position(&self) -> Length;
+
+    /// Read nested data of the given length.
+    fn read_nested<T, F, E>(&mut self, len: Length, f: F) -> Result<T, E>
+    where
+        E: From<Error>,
+        F: FnOnce(&mut Self) -> Result<T, E>;
 
     /// Attempt to read data borrowed directly from the input as a slice,
     /// updating the internal cursor position.
@@ -130,17 +133,6 @@ pub trait Reader<'r>: Sized {
         Ok(buf)
     }
 
-    /// Read nested data of the given length.
-    fn read_nested<'n, T, F, E>(&'n mut self, len: Length, f: F) -> Result<T, E>
-    where
-        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T, E>,
-        E: From<Error>,
-    {
-        let mut reader = NestedReader::new(self, len)?;
-        let ret = f(&mut reader)?;
-        Ok(reader.finish(ret)?)
-    }
-
     /// Read a byte vector of the given length.
     #[cfg(feature = "alloc")]
     fn read_vec(&mut self, len: Length) -> Result<Vec<u8>, Error> {
@@ -157,9 +149,9 @@ pub trait Reader<'r>: Sized {
 
     /// Read an ASN.1 `SEQUENCE`, creating a nested [`Reader`] for the body and
     /// calling the provided closure with it.
-    fn sequence<'n, F, T, E>(&'n mut self, f: F) -> Result<T, E>
+    fn sequence<F, T, E>(&mut self, f: F) -> Result<T, E>
     where
-        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T, E>,
+        F: FnOnce(&mut Self) -> Result<T, E>,
         E: From<Error>,
     {
         let header = Header::decode(self)?;

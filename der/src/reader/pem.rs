@@ -1,7 +1,7 @@
 //! Streaming PEM reader.
 
 use super::Reader;
-use crate::{Decode, EncodingRules, ErrorKind, Header, Length, Result};
+use crate::{Decode, EncodingRules, Error, ErrorKind, Header, Length};
 use pem_rfc7468::Decoder;
 
 /// `Reader` type which decodes PEM on-the-fly.
@@ -28,7 +28,7 @@ impl<'i> PemReader<'i> {
     /// Create a new PEM reader which decodes data on-the-fly.
     ///
     /// Uses the default 64-character line wrapping.
-    pub fn new(pem: &'i [u8]) -> Result<Self> {
+    pub fn new(pem: &'i [u8]) -> crate::Result<Self> {
         let decoder = Decoder::new(pem)?;
         let input_len = Length::try_from(decoder.remaining_len())?;
 
@@ -50,8 +50,8 @@ impl<'i> PemReader<'i> {
     /// output buffer.
     ///
     /// Attempts to fill the entire buffer, returning an error if there is not enough data.
-    pub fn peek_into(&self, buf: &mut [u8]) -> Result<()> {
-        self.decoder.clone().decode(buf)?;
+    pub fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()> {
+        self.clone().read_into(buf)?;
         Ok(())
     }
 }
@@ -72,7 +72,7 @@ impl<'i> Reader<'i> for PemReader<'i> {
         self.peek_into(&mut byte).ok().map(|_| byte[0])
     }
 
-    fn peek_header(&self) -> Result<Header> {
+    fn peek_header(&self) -> crate::Result<Header> {
         Header::decode(&mut self.clone())
     }
 
@@ -80,20 +80,40 @@ impl<'i> Reader<'i> for PemReader<'i> {
         self.position
     }
 
-    fn read_slice(&mut self, _len: Length) -> Result<&'i [u8]> {
+    fn read_nested<T, F, E>(&mut self, len: Length, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+        E: From<Error>,
+    {
+        let nested_input_len = (self.position + len)?;
+        if nested_input_len > self.input_len {
+            return Err(Error::incomplete(self.input_len).into());
+        }
+
+        let orig_input_len = self.input_len;
+        self.input_len = nested_input_len;
+        let ret = f(self);
+        self.input_len = orig_input_len;
+        ret
+    }
+
+    fn read_slice(&mut self, _len: Length) -> crate::Result<&'i [u8]> {
         // Can't borrow from PEM because it requires decoding
         Err(ErrorKind::Reader.into())
     }
 
-    fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8]> {
-        let bytes = self.decoder.decode(buf)?;
-        self.position = (self.position + bytes.len())?;
+    fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> crate::Result<&'o [u8]> {
+        let new_position = (self.position + buf.len())?;
+        if new_position > self.input_len {
+            return Err(ErrorKind::Incomplete {
+                expected_len: new_position,
+                actual_len: self.input_len,
+            }
+            .at(self.position));
+        }
 
-        debug_assert_eq!(
-            self.position,
-            (self.input_len - Length::try_from(self.decoder.remaining_len())?)?
-        );
-
-        Ok(bytes)
+        self.decoder.decode(buf)?;
+        self.position = new_position;
+        Ok(buf)
     }
 }
