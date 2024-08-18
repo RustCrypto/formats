@@ -110,19 +110,18 @@ pub trait Reader<'r>: Sized {
     /// the data at the current position in the decoder.
     ///
     /// Does not modify the decoder's state.
+    #[deprecated(since = "0.8.0-rc.1", note = "use `Header::peek` instead")]
     fn peek_header(&self) -> Result<Header, Error> {
-        let mut buf = [0u8; Header::MAX_SIZE];
+        Header::peek(self)
+    }
 
-        for i in 2..Header::MAX_SIZE {
-            let slice = &mut buf[0..i];
-            if self.peek_into(slice).is_ok() {
-                if let Ok(header) = Header::from_der(slice) {
-                    return Ok(header);
-                }
-            }
+    /// Peek at the next byte in the reader.
+    #[deprecated(since = "0.8.0-rc.1", note = "use `Tag::peek` instead")]
+    fn peek_tag(&self) -> Result<Tag, Error> {
+        match self.peek_byte() {
+            Some(byte) => byte.try_into(),
+            None => Err(Error::incomplete(self.input_len())),
         }
-
-        Header::from_der(&buf)
     }
 
     /// Read a single byte.
@@ -172,7 +171,7 @@ pub trait Reader<'r>: Sized {
 
     /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
     fn tlv_bytes(&mut self) -> Result<&'r [u8], Error> {
-        let header = self.peek_header()?;
+        let header = Header::peek(self)?;
         let header_len = header.encoded_len()?;
         self.read_slice((header_len + header.length)?)
     }

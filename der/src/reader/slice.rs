@@ -165,7 +165,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
 #[allow(clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::SliceReader;
-    use crate::{Decode, ErrorKind, Length, Reader, Tag};
+    use crate::{Decode, ErrorKind, Length, Reader};
     use hex_literal::hex;
 
     // INTEGER: 42
@@ -225,16 +225,5 @@ mod tests {
             },
             err.kind()
         );
-    }
-
-    #[test]
-    fn peek_header() {
-        let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
-        assert_eq!(reader.position(), Length::ZERO);
-
-        let header = reader.peek_header().unwrap();
-        assert_eq!(header.tag, Tag::Integer);
-        assert_eq!(header.length, Length::ONE);
-        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
 }
