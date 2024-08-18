@@ -502,7 +502,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.8.0-rc.0"
+version = "0.8.0-rc.1"
 dependencies = [
  "arbitrary",
  "bytes",
@@ -569,8 +569,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fad051af2b2d2f356d716138c76775929be913deb5b4ea217cd2613535936bef"
+source = "git+https://github.com/RustCrypto/signatures#cf34cd2ffdbf5579b3fa2d1a5361464484e86ee3"
 dependencies = [
  "der",
  "digest",
@@ -1304,8 +1303,7 @@ checksum = "c707298afce11da2efef2f600116fa93ffa7a032b5d7b628aa17711ec81383ca"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "871ee76a3eee98b0f805e5d1caf26929f4565073c580c053a55f886fc15dea49"
+source = "git+https://github.com/RustCrypto/signatures#cf34cd2ffdbf5579b3fa2d1a5361464484e86ee3"
 dependencies = [
  "hmac",
  "subtle",
