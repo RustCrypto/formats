@@ -11,6 +11,9 @@ use der::Encode;
 #[cfg(feature = "pem")]
 use der::EncodePem;
 
+#[cfg(feature = "encryption")]
+use pkcs8::EncryptedPrivateKeyInfoOwned;
+
 /// Ed25519 PKCS#8 private key plaintext encoded as ASN.1 DER
 #[cfg(feature = "encryption")]
 const ED25519_DER_PLAINTEXT_EXAMPLE: &[u8] = include_bytes!("examples/ed25519-priv-pkcs8v1.der");
@@ -184,7 +187,8 @@ fn decrypt_ed25519_der_encpriv_aes256_scrypt() {
 #[cfg(feature = "encryption")]
 #[test]
 fn decrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
-    let enc_pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES128_GCM_SCRYPT_EXAMPLE).unwrap();
+    let enc_pk =
+        EncryptedPrivateKeyInfoOwned::try_from(ED25519_DER_AES128_GCM_SCRYPT_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
 }
@@ -213,7 +217,8 @@ fn encrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
 #[cfg(feature = "encryption")]
 #[test]
 fn decrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
-    let enc_pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_GCM_SCRYPT_EXAMPLE).unwrap();
+    let enc_pk =
+        EncryptedPrivateKeyInfoOwned::try_from(ED25519_DER_AES256_GCM_SCRYPT_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
 }
