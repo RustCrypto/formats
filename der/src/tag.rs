@@ -140,6 +140,16 @@ pub enum Tag {
 }
 
 impl Tag {
+    /// Peek at the next byte in the reader and attempt to decode it as a [`Tag`] value.
+    ///
+    /// Does not modify the reader's state.
+    pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
+        match reader.peek_byte() {
+            Some(byte) => byte.try_into(),
+            None => Err(Error::incomplete(reader.input_len())),
+        }
+    }
+
     /// Assert that this [`Tag`] matches the provided expected tag.
     ///
     /// On mismatch, returns an [`Error`] with [`ErrorKind::TagUnexpected`].
@@ -402,8 +412,8 @@ impl fmt::Debug for Tag {
 
 #[cfg(test)]
 mod tests {
-    use super::TagNumber;
-    use super::{Class, Tag};
+    use super::{Class, Tag, TagNumber};
+    use crate::{Length, Reader, SliceReader};
 
     #[test]
     fn tag_class() {
@@ -458,5 +468,14 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    fn peek() {
+        let reader = SliceReader::new(&[0x02]).unwrap();
+        assert_eq!(reader.position(), Length::ZERO);
+        assert_eq!(Tag::peek(&reader).unwrap(), Tag::Integer);
+        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
 }

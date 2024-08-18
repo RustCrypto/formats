@@ -125,17 +125,6 @@ pub trait Reader<'r>: Sized {
         Header::from_der(&buf)
     }
 
-    /// Peek at the next byte in the decoder and attempt to decode it as a
-    /// [`Tag`] value.
-    ///
-    /// Does not modify the decoder's state.
-    fn peek_tag(&self) -> Result<Tag, Error> {
-        match self.peek_byte() {
-            Some(byte) => byte.try_into(),
-            None => Err(Error::incomplete(self.input_len())),
-        }
-    }
-
     /// Read a single byte.
     fn read_byte(&mut self) -> Result<u8, Error> {
         let mut buf = [0];

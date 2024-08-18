@@ -96,7 +96,7 @@ impl DeriveChoice {
 
                 fn decode<R: ::der::Reader<#lifetime>>(reader: &mut R) -> ::der::Result<Self> {
                     use der::Reader as _;
-                    match reader.peek_tag()? {
+                    match ::der::Tag::peek(reader)? {
                         #(#decode_body)*
                         actual => Err(der::ErrorKind::TagUnexpected {
                             expected: None,
