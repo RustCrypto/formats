@@ -20,14 +20,11 @@ pub trait Reader<'r>: Sized {
     /// Get the length of the input.
     fn input_len(&self) -> Length;
 
-    /// Peek at the next byte of input without modifying the cursor.
-    fn peek_byte(&self) -> Option<u8>;
-
-    /// Peek forward in the input data, attempting to decode a [`Header`] from
-    /// the data at the current position in the decoder.
+    /// Peek at the decoded PEM without updating the internal state, writing into the provided
+    /// output buffer.
     ///
-    /// Does not modify the decoder's state.
-    fn peek_header(&self) -> Result<Header, Error>;
+    /// Attempts to fill the entire buffer, returning an error if there is not enough data.
+    fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()>;
 
     /// Get the position within the buffer.
     fn position(&self) -> Length;
@@ -101,6 +98,31 @@ pub trait Reader<'r>: Sized {
     /// which consumes nested input messages)
     fn offset(&self) -> Length {
         self.position()
+    }
+
+    /// Peek at the next byte of input without modifying the cursor.
+    fn peek_byte(&self) -> Option<u8> {
+        let mut byte = [0];
+        self.peek_into(&mut byte).ok().map(|_| byte[0])
+    }
+
+    /// Peek forward in the input data, attempting to decode a [`Header`] from
+    /// the data at the current position in the decoder.
+    ///
+    /// Does not modify the decoder's state.
+    fn peek_header(&self) -> Result<Header, Error> {
+        let mut buf = [0u8; Header::MAX_SIZE];
+
+        for i in 2..Header::MAX_SIZE {
+            let slice = &mut buf[0..i];
+            if self.peek_into(slice).is_ok() {
+                if let Ok(header) = Header::from_der(slice) {
+                    return Ok(header);
+                }
+            }
+        }
+
+        Header::from_der(&buf)
     }
 
     /// Peek at the next byte in the decoder and attempt to decode it as a

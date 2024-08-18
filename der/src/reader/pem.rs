@@ -1,7 +1,7 @@
 //! Streaming PEM reader.
 
 use super::Reader;
-use crate::{Decode, EncodingRules, Error, ErrorKind, Header, Length};
+use crate::{EncodingRules, Error, ErrorKind, Length};
 use pem_rfc7468::Decoder;
 
 /// `Reader` type which decodes PEM on-the-fly.
@@ -45,15 +45,6 @@ impl<'i> PemReader<'i> {
     pub fn type_label(&self) -> &'i str {
         self.decoder.type_label()
     }
-
-    /// Peek at the decoded PEM without updating the internal state, writing into the provided
-    /// output buffer.
-    ///
-    /// Attempts to fill the entire buffer, returning an error if there is not enough data.
-    pub fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()> {
-        self.clone().read_into(buf)?;
-        Ok(())
-    }
 }
 
 #[cfg(feature = "pem")]
@@ -67,13 +58,9 @@ impl<'i> Reader<'i> for PemReader<'i> {
         self.input_len
     }
 
-    fn peek_byte(&self) -> Option<u8> {
-        let mut byte = [0];
-        self.peek_into(&mut byte).ok().map(|_| byte[0])
-    }
-
-    fn peek_header(&self) -> crate::Result<Header> {
-        Header::decode(&mut self.clone())
+    fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()> {
+        self.clone().read_into(buf)?;
+        Ok(())
     }
 
     fn position(&self) -> Length {
