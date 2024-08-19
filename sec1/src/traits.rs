@@ -11,7 +11,7 @@ use {crate::LineEnding, alloc::string::String, der::pem::PemLabel};
 #[cfg(feature = "pkcs8")]
 use {
     crate::{EcPrivateKey, ALGORITHM_OID},
-    der::Decode,
+    der::{asn1::OctetStringRef, Decode},
 };
 
 #[cfg(feature = "std")]
@@ -88,7 +88,7 @@ pub trait EncodeEcPrivateKey {
 #[cfg(feature = "pkcs8")]
 impl<T> DecodeEcPrivateKey for T
 where
-    T: for<'a> TryFrom<pkcs8::PrivateKeyInfo<'a>, Error = pkcs8::Error>,
+    T: for<'a> TryFrom<pkcs8::PrivateKeyInfoRef<'a>, Error = pkcs8::Error>,
 {
     fn from_sec1_der(private_key: &[u8]) -> Result<Self> {
         let params_oid = EcPrivateKey::from_der(private_key)?
@@ -100,7 +100,9 @@ where
             parameters: params_oid.as_ref().map(Into::into),
         };
 
-        Ok(Self::try_from(pkcs8::PrivateKeyInfo {
+        let private_key = OctetStringRef::new(private_key)?;
+
+        Ok(Self::try_from(pkcs8::PrivateKeyInfoRef {
             algorithm,
             private_key,
             public_key: None,
@@ -112,10 +114,10 @@ where
 impl<T: pkcs8::EncodePrivateKey> EncodeEcPrivateKey for T {
     fn to_sec1_der(&self) -> Result<SecretDocument> {
         let doc = self.to_pkcs8_der()?;
-        let pkcs8_key = pkcs8::PrivateKeyInfo::from_der(doc.as_bytes())?;
+        let pkcs8_key = pkcs8::PrivateKeyInfoRef::from_der(doc.as_bytes())?;
         pkcs8_key.algorithm.assert_algorithm_oid(ALGORITHM_OID)?;
 
-        let mut pkcs1_key = EcPrivateKey::from_der(pkcs8_key.private_key)?;
+        let mut pkcs1_key = EcPrivateKey::from_der(pkcs8_key.private_key.as_bytes())?;
         pkcs1_key.parameters = Some(pkcs8_key.algorithm.parameters_oid()?.into());
         pkcs1_key.try_into()
     }
