@@ -15,7 +15,7 @@ use {
 #[cfg(feature = "pkcs8")]
 use {
     crate::{ALGORITHM_ID, ALGORITHM_OID},
-    der::asn1::BitStringRef,
+    der::asn1::{BitStringRef, OctetStringRef},
 };
 
 #[cfg(feature = "std")]
@@ -157,10 +157,11 @@ pub trait EncodeRsaPublicKey {
 #[cfg(feature = "pkcs8")]
 impl<T> DecodeRsaPrivateKey for T
 where
-    T: for<'a> TryFrom<pkcs8::PrivateKeyInfo<'a>, Error = pkcs8::Error>,
+    T: for<'a> TryFrom<pkcs8::PrivateKeyInfoRef<'a>, Error = pkcs8::Error>,
 {
     fn from_pkcs1_der(private_key: &[u8]) -> Result<Self> {
-        Ok(Self::try_from(pkcs8::PrivateKeyInfo {
+        let private_key = OctetStringRef::new(private_key)?;
+        Ok(Self::try_from(pkcs8::PrivateKeyInfoRef {
             algorithm: ALGORITHM_ID,
             private_key,
             public_key: None,
@@ -185,9 +186,9 @@ where
 impl<T: pkcs8::EncodePrivateKey> EncodeRsaPrivateKey for T {
     fn to_pkcs1_der(&self) -> Result<SecretDocument> {
         let pkcs8_doc = self.to_pkcs8_der()?;
-        let pkcs8_key = pkcs8::PrivateKeyInfo::from_der(pkcs8_doc.as_bytes())?;
+        let pkcs8_key = pkcs8::PrivateKeyInfoRef::from_der(pkcs8_doc.as_bytes())?;
         pkcs8_key.algorithm.assert_algorithm_oid(ALGORITHM_OID)?;
-        RsaPrivateKey::from_der(pkcs8_key.private_key)?.try_into()
+        RsaPrivateKey::from_der(pkcs8_key.private_key.as_bytes())?.try_into()
     }
 }
 

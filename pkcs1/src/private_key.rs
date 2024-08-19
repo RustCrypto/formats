@@ -6,8 +6,8 @@ pub(crate) mod other_prime_info;
 use crate::{Error, Result, RsaPublicKey, Version};
 use core::fmt;
 use der::{
-    asn1::UintRef, Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag,
-    Writer,
+    asn1::{OctetStringRef, UintRef},
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -169,6 +169,14 @@ impl<'a> TryFrom<&'a [u8]> for RsaPrivateKey<'a> {
 
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
+    }
+}
+
+impl<'a> TryFrom<OctetStringRef<'a>> for RsaPrivateKey<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: OctetStringRef<'a>) -> Result<Self> {
+        Ok(Self::from_der(bytes.as_bytes())?)
     }
 }
 
