@@ -1,6 +1,6 @@
 //! PKCS#8 private key tests
 
-use der::asn1::ObjectIdentifier;
+use der::asn1::{ObjectIdentifier, OctetStringRef};
 use hex_literal::hex;
 use pkcs8::{PrivateKeyInfo, Version};
 
@@ -90,7 +90,10 @@ fn decode_ec_bignp256_der() {
     // $ openssl asn1parse -inform der -in tests/examples/bign256-priv.der
     assert_eq!(
         pk.private_key,
-        &hex!("1F66B5B84B7339674533F0329C74F21834281FED0732429E0C79235FC273E269")
+        OctetStringRef::new(&hex!(
+            "1F66B5B84B7339674533F0329C74F21834281FED0732429E0C79235FC273E269"
+        ))
+        .unwrap()
     )
 }
 
@@ -127,10 +130,7 @@ fn decode_ed25519_der_v2() {
     assert_eq!(pk.algorithm.oid, "1.3.101.112".parse().unwrap());
     assert_eq!(pk.algorithm.parameters, None);
     assert_eq!(pk.private_key.as_ref(), PRIV_KEY);
-    assert_eq!(
-        pk.public_key.as_ref().map(|p| p.as_ref()),
-        Some(&PUB_KEY[..])
-    );
+    assert_eq!(pk.public_key.and_then(|p| p.as_bytes()), Some(&PUB_KEY[..]));
 }
 
 #[test]
