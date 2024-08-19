@@ -3,13 +3,13 @@
 use crate::{Error, Result};
 use core::fmt;
 use der::{
-    asn1::OctetStringRef, Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader,
-    Sequence, Writer,
+    asn1::OctetStringRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length,
+    Reader, Sequence, Writer,
 };
 use pkcs5::EncryptionScheme;
 
 #[cfg(feature = "alloc")]
-use {alloc::boxed::Box, der::SecretDocument};
+use der::{asn1::OctetString, SecretDocument};
 
 #[cfg(feature = "encryption")]
 use {pkcs5::pbes2, rand_core::CryptoRngCore};
@@ -48,7 +48,8 @@ pub struct EncryptedPrivateKeyInfo<Data> {
 
 impl<'a, Data> EncryptedPrivateKeyInfo<Data>
 where
-    Data: AsRef<[u8]> + From<&'a [u8]>,
+    Data: DecodeValue<'a, Error = der::Error> + EncodeValue + FixedTag + 'a,
+    Data: AsRef<[u8]>,
 {
     /// Attempt to decrypt this encrypted private key using the provided
     /// password to derive an encryption key.
@@ -81,6 +82,7 @@ where
         doc: &[u8],
     ) -> Result<SecretDocument> {
         let encrypted_data = pbes2_params.encrypt(password, doc)?;
+        let encrypted_data = OctetStringRef::new(&encrypted_data)?;
 
         EncryptedPrivateKeyInfo {
             encryption_algorithm: pbes2_params.into(),
@@ -92,7 +94,7 @@ where
 
 impl<'a, Data> DecodeValue<'a> for EncryptedPrivateKeyInfo<Data>
 where
-    Data: From<&'a [u8]>,
+    Data: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
 {
     type Error = der::Error;
 
@@ -100,7 +102,7 @@ where
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 encryption_algorithm: reader.decode()?,
-                encrypted_data: OctetStringRef::decode(reader)?.as_bytes().into(),
+                encrypted_data: reader.decode()?,
             })
         })
     }
@@ -108,28 +110,27 @@ where
 
 impl<Data> EncodeValue for EncryptedPrivateKeyInfo<Data>
 where
-    Data: AsRef<[u8]>,
+    Data: EncodeValue + FixedTag,
 {
     fn value_len(&self) -> der::Result<Length> {
-        self.encryption_algorithm.encoded_len()?
-            + OctetStringRef::new(self.encrypted_data.as_ref())?.encoded_len()?
+        self.encryption_algorithm.encoded_len()? + self.encrypted_data.encoded_len()?
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
         self.encryption_algorithm.encode(writer)?;
-        OctetStringRef::new(self.encrypted_data.as_ref())?.encode(writer)?;
+        self.encrypted_data.encode(writer)?;
         Ok(())
     }
 }
 
 impl<'a, Data> Sequence<'a> for EncryptedPrivateKeyInfo<Data> where
-    Data: AsRef<[u8]> + From<&'a [u8]>
+    Data: DecodeValue<'a, Error = der::Error> + EncodeValue + FixedTag + 'a
 {
 }
 
 impl<'a, Data> TryFrom<&'a [u8]> for EncryptedPrivateKeyInfo<Data>
 where
-    Data: AsRef<[u8]> + From<&'a [u8]> + 'a,
+    Data: DecodeValue<'a, Error = der::Error> + EncodeValue + FixedTag + 'a,
 {
     type Error = Error;
 
@@ -149,7 +150,7 @@ impl<Data> fmt::Debug for EncryptedPrivateKeyInfo<Data> {
 #[cfg(feature = "alloc")]
 impl<'a, Data> TryFrom<EncryptedPrivateKeyInfo<Data>> for SecretDocument
 where
-    Data: AsRef<[u8]> + From<&'a [u8]>,
+    Data: DecodeValue<'a, Error = der::Error> + EncodeValue + FixedTag + 'a,
 {
     type Error = Error;
 
@@ -161,7 +162,7 @@ where
 #[cfg(feature = "alloc")]
 impl<'a, Data> TryFrom<&EncryptedPrivateKeyInfo<Data>> for SecretDocument
 where
-    Data: AsRef<[u8]> + From<&'a [u8]>,
+    Data: DecodeValue<'a, Error = der::Error> + EncodeValue + FixedTag + 'a,
 {
     type Error = Error;
 
@@ -175,9 +176,9 @@ impl<Data> PemLabel for EncryptedPrivateKeyInfo<Data> {
     const PEM_LABEL: &'static str = "ENCRYPTED PRIVATE KEY";
 }
 
-/// [`EncryptedPrivateKeyInfo`] with `&[u8]` encrypted data.
-pub type EncryptedPrivateKeyInfoRef<'a> = EncryptedPrivateKeyInfo<&'a [u8]>;
+/// [`EncryptedPrivateKeyInfo`] with [`OctetStringRef`] encrypted data.
+pub type EncryptedPrivateKeyInfoRef<'a> = EncryptedPrivateKeyInfo<OctetStringRef<'a>>;
 
 #[cfg(feature = "alloc")]
-/// [`EncryptedPrivateKeyInfo`] with `Box<[u8]>` encrypted data.
-pub type EncryptedPrivateKeyInfoOwned = EncryptedPrivateKeyInfo<Box<[u8]>>;
+/// [`EncryptedPrivateKeyInfo`] with [`OctetString`] encrypted data.
+pub type EncryptedPrivateKeyInfoOwned = EncryptedPrivateKeyInfo<OctetString>;

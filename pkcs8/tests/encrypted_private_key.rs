@@ -2,6 +2,7 @@
 
 #![cfg(feature = "pkcs5")]
 
+use der::asn1::OctetStringRef;
 use hex_literal::hex;
 use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfoRef, PrivateKeyInfoRef};
 
@@ -130,7 +131,9 @@ fn decode_ed25519_encpriv_aes128_pbkdf2_sha1_der() {
     // $ openssl asn1parse -inform der -in tests/examples/ed25519-encpriv-aes128-sha1.der
     assert_eq!(
         pk.encrypted_data,
-        &hex!("4B4D091548EAC381EE7663B21234CD4FF3C9DF664D713394CACCEA7C9B982BD8F29910FABCA4BF7BE0431FAC5C4D657BE997C1F5BF40E2DA465AC1FCC2E30470")
+        OctetStringRef::new(
+            &hex!("4B4D091548EAC381EE7663B21234CD4FF3C9DF664D713394CACCEA7C9B982BD8F29910FABCA4BF7BE0431FAC5C4D657BE997C1F5BF40E2DA465AC1FCC2E30470")
+        ).unwrap()
     );
 }
 
@@ -163,7 +166,9 @@ fn decode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
     // $ openssl asn1parse -inform der -in tests/examples/ed25519-encpriv-aes256-sha256.der
     assert_eq!(
         pk.encrypted_data,
-        &hex!("D0CD6C770F4BB87176422305C17401809E226674CE74185D221BFDAA95069890C8882FCE02B05D41BCBF54B035595BCD4154B32593708469B86AACF8815A7B2B")
+        OctetStringRef::new(
+            &hex!("D0CD6C770F4BB87176422305C17401809E226674CE74185D221BFDAA95069890C8882FCE02B05D41BCBF54B035595BCD4154B32593708469B86AACF8815A7B2B")
+        ).unwrap()
     );
 }
 
