@@ -13,7 +13,7 @@ use pkcs8::{
         self,
         pbes2::{AES_256_CBC_OID, HMAC_WITH_SHA256_OID, PBES2_OID, PBKDF2_OID},
     },
-    EncryptedPrivateKeyInfo,
+    EncryptedPrivateKeyInfoRef,
 };
 use spki::AlgorithmIdentifierOwned;
 
@@ -242,9 +242,9 @@ fn decode_sample_pfx() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfo> =
+                let cs: ContextSpecific<EncryptedPrivateKeyInfoRef<'_>> =
                     ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
-                let mut ciphertext = cs.value.encrypted_data.to_vec();
+                let mut ciphertext = cs.value.encrypted_data.as_bytes().to_vec();
                 let plaintext = cs
                     .value
                     .encryption_algorithm
@@ -628,9 +628,9 @@ fn decode_sample_pfx2() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfo> =
+                let cs: ContextSpecific<EncryptedPrivateKeyInfoRef<'_>> =
                     ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
-                let mut ciphertext = cs.value.encrypted_data.to_vec();
+                let mut ciphertext = cs.value.encrypted_data.as_bytes().to_vec();
                 let plaintext = cs
                     .value
                     .encryption_algorithm
