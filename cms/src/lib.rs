@@ -37,6 +37,7 @@ pub mod content_info;
 pub mod digested_data;
 pub mod encrypted_data;
 pub mod enveloped_data;
+pub mod kemri;
 pub mod revocation;
 pub mod signed_data;
 pub mod timestamped_data;
