@@ -387,7 +387,7 @@ dependencies = [
  "hex-literal",
  "p256",
  "pem-rfc7468",
- "pkcs5 0.8.0-rc.0",
+ "pkcs5",
  "rand",
  "rsa",
  "sha1",
@@ -569,7 +569,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.7"
-source = "git+https://github.com/RustCrypto/signatures#cf34cd2ffdbf5579b3fa2d1a5361464484e86ee3"
+source = "git+https://github.com/baloo/signatures?branch=baloo/pkcs8/api-change#2ec8160db97f1cdbd656e6b411683011f5d0f3bf"
 dependencies = [
  "der",
  "digest",
@@ -588,8 +588,7 @@ checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
 [[package]]
 name = "elliptic-curve"
 version = "0.14.0-pre.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ed8e96bb573517f42470775f8ef1b9cd7595de52ba7a8e19c48325a92c8fe4f"
+source = "git+https://github.com/baloo/traits.git?branch=baloo/elliptic-curve/pkcs8-API-break#df6f7ab4b577adcc68e0a5a1a50f0d17b3dfc949"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -1081,23 +1080,13 @@ dependencies = [
  "der",
  "digest",
  "hex-literal",
- "pkcs5 0.8.0-rc.1",
+ "pkcs5",
  "pkcs8",
  "sha2",
  "spki",
  "whirlpool",
  "x509-cert",
  "zeroize",
-]
-
-[[package]]
-name = "pkcs5"
-version = "0.8.0-rc.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49f7844403c0bf02e9a4a3fbb8015f1f6f2f1eb221ffaafd4a8bfdc7143c05e3"
-dependencies = [
- "der",
- "spki",
 ]
 
 [[package]]
@@ -1124,7 +1113,7 @@ version = "0.11.0-rc.0"
 dependencies = [
  "der",
  "hex-literal",
- "pkcs5 0.8.0-rc.1",
+ "pkcs5",
  "rand_core",
  "spki",
  "subtle",
@@ -1303,7 +1292,7 @@ checksum = "c707298afce11da2efef2f600116fa93ffa7a032b5d7b628aa17711ec81383ca"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.4"
-source = "git+https://github.com/RustCrypto/signatures#cf34cd2ffdbf5579b3fa2d1a5361464484e86ee3"
+source = "git+https://github.com/baloo/signatures?branch=baloo/pkcs8/api-change#2ec8160db97f1cdbd656e6b411683011f5d0f3bf"
 dependencies = [
  "hmac",
  "subtle",
@@ -1334,8 +1323,7 @@ dependencies = [
 [[package]]
 name = "rsa"
 version = "0.10.0-pre.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57e864e43f5d003321ab452feea6450f9611d7be6726489b4ec051da34774c62"
+source = "git+https://github.com/baloo/RSA?branch=baloo/pkcs8/api-changes#40113d8f924edc984a78449f244c6b47659bdc65"
 dependencies = [
  "const-oid",
  "digest",

@@ -85,7 +85,7 @@ pub(crate) mod encrypted_private_key_info;
 
 pub use crate::{
     error::{Error, Result},
-    private_key_info::PrivateKeyInfo,
+    private_key_info::{PrivateKeyInfo, PrivateKeyInfoRef},
     traits::DecodePrivateKey,
     version::Version,
 };
@@ -96,7 +96,7 @@ pub use spki::{
 
 #[cfg(feature = "alloc")]
 pub use {
-    crate::traits::EncodePrivateKey,
+    crate::{private_key_info::PrivateKeyInfoOwned, traits::EncodePrivateKey},
     der::{Document, SecretDocument},
     spki::EncodePublicKey,
 };
@@ -104,8 +104,13 @@ pub use {
 #[cfg(feature = "pem")]
 pub use der::pem::LineEnding;
 
+#[cfg(all(feature = "alloc", feature = "pkcs5"))]
+pub use encrypted_private_key_info::EncryptedPrivateKeyInfoOwned;
 #[cfg(feature = "pkcs5")]
-pub use {encrypted_private_key_info::EncryptedPrivateKeyInfo, pkcs5};
+pub use {
+    encrypted_private_key_info::{EncryptedPrivateKeyInfo, EncryptedPrivateKeyInfoRef},
+    pkcs5,
+};
 
 #[cfg(feature = "rand_core")]
 pub use rand_core;
