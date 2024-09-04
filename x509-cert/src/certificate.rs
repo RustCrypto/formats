@@ -171,6 +171,8 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// boolean.
     ///
     /// ```
+    /// # #[cfg(feature = "pem")]
+    /// # fn pemonly() {
     /// # const CERT_PEM: &str = include_str!("../tests/examples/amazon.pem");
     /// use x509_cert::{der::DecodePem, ext::pkix::BasicConstraints, Certificate};
     /// let certificate = Certificate::from_pem(CERT_PEM.as_bytes()).expect("parse certificate");
@@ -179,6 +181,7 @@ impl<P: Profile> TbsCertificateInner<P> {
     ///     .expect("Failed to parse extension")
     ///     .expect("Basic constraints expected");
     /// # let _ = constraints;
+    /// # }
     /// ```
     ///
     /// # Errors
@@ -204,6 +207,8 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// Returns a filtered iterator over all the extensions with the OID.
     ///
     /// ```
+    /// # #[cfg(feature = "pem")]
+    /// # fn pemonly() {
     /// # const CERT_PEM: &str = include_str!("../tests/examples/amazon.pem");
     /// use x509_cert::{der::DecodePem, ext::pkix::BasicConstraints, Certificate};
     /// let certificate = Certificate::from_pem(CERT_PEM.as_bytes()).expect("parse certificate");
@@ -212,6 +217,7 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// while let Some(Ok((critical, extension))) = extensions_found.next() {
     ///     println!("Found (critical={critical}): {extension:?}");
     /// }
+    /// # }
     /// ```
     ///
     /// # Safety
