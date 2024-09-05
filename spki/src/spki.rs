@@ -21,9 +21,13 @@ use crate::{fingerprint, FingerprintBytes};
 use der::pem::PemLabel;
 
 /// [`SubjectPublicKeyInfo`] with [`AnyRef`] algorithm parameters, and [`BitStringRef`] params.
+///
+/// This is the borrowing-pendant to [`SubjectPublicKeyInfoOwned`].
 pub type SubjectPublicKeyInfoRef<'a> = SubjectPublicKeyInfo<AnyRef<'a>, BitStringRef<'a>>;
 
 /// [`SubjectPublicKeyInfo`] with [`Any`] algorithm parameters, and [`BitString`] params.
+///
+/// This is the owning-pendant to [`SubjectPublicKeyInfoRef`].
 #[cfg(feature = "alloc")]
 pub type SubjectPublicKeyInfoOwned = SubjectPublicKeyInfo<Any, BitString>;
 
