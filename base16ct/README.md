@@ -42,7 +42,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/base16ct
+[crate-image]: https://img.shields.io/crates/v/base16ct
 [crate-link]: https://crates.io/crates/base16ct
 [docs-image]: https://docs.rs/base16ct/badge.svg
 [docs-link]: https://docs.rs/base16ct/

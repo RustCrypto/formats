@@ -68,7 +68,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/gss-api
+[crate-image]: https://img.shields.io/crates/v/gss-api
 [crate-link]: https://crates.io/crates/gss-api
 [docs-image]: https://docs.rs/gss-api/badge.svg
 [docs-link]: https://docs.rs/gss-api/

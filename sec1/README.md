@@ -40,7 +40,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/sec1
+[crate-image]: https://img.shields.io/crates/v/sec1
 [crate-link]: https://crates.io/crates/sec1
 [docs-image]: https://docs.rs/sec1/badge.svg
 [docs-link]: https://docs.rs/sec1/

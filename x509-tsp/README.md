@@ -33,7 +33,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/x509-tsp
+[crate-image]: https://img.shields.io/crates/v/x509-tsp
 [crate-link]: https://crates.io/crates/x509-tsp
 [docs-image]: https://docs.rs/x509-tsp/badge.svg
 [docs-link]: https://docs.rs/x509-tsp/

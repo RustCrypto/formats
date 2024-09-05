@@ -35,7 +35,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/cmpv2
+[crate-image]: https://img.shields.io/crates/v/cmpv2
 [crate-link]: https://crates.io/crates/cmpv2
 [docs-image]: https://docs.rs/cmpv2/badge.svg
 [docs-link]: https://docs.rs/cmpv2/

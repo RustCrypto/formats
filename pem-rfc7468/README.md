@@ -80,7 +80,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/pem-rfc7468
+[crate-image]: https://img.shields.io/crates/v/pem-rfc7468
 [crate-link]: https://crates.io/crates/pem-rfc7468
 [docs-image]: https://docs.rs/pem-rfc7468/badge.svg
 [docs-link]: https://docs.rs/pem-rfc7468/

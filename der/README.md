@@ -71,7 +71,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/der
+[crate-image]: https://img.shields.io/crates/v/der
 [crate-link]: https://crates.io/crates/der
 [docs-image]: https://docs.rs/der/badge.svg
 [docs-link]: https://docs.rs/der/
