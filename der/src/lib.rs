@@ -291,6 +291,12 @@
 //! # }
 //! ```
 //!
+//! ## Owned vs Borrowed
+//!
+//! This crate exposes owned and borrowed objects for representing the same structure.
+//!
+//! [`RefToOwned`] and [`OwnedToRef`] are provided to convert objects from one to the other.
+//!
 //! # See also
 //! For more information about ASN.1 DER we recommend the following guides:
 //!
@@ -322,6 +328,8 @@
 //! [`UintRef`]: asn1::UintRef
 //! [`UtcTime`]: asn1::UtcTime
 //! [`Utf8StringRef`]: asn1::Utf8StringRef
+//! [`RefToOwned`]: referenced::RefToOwned
+//! [`OwnedToRef`]: referenced::OwnedToRef
 
 #[cfg(feature = "alloc")]
 #[allow(unused_imports)]
