@@ -13,7 +13,7 @@ use cms::enveloped_data::RecipientInfo::Ktri;
 use cms::enveloped_data::{EnvelopedData, RecipientIdentifier, RecipientInfo};
 use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
-use der::asn1::{OctetString, PrintableString, SetOfVec, Utf8StringRef};
+use der::asn1::{OctetString, PrintableString, SetOfVec};
 use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
 use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
@@ -24,8 +24,7 @@ use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
 use signature::Verifier;
 use spki::AlgorithmIdentifierOwned;
-use x509_cert::attr::{Attribute, AttributeTypeAndValue, AttributeValue};
-use x509_cert::name::{RdnSequence, RelativeDistinguishedName};
+use x509_cert::attr::{Attribute, AttributeValue};
 use x509_cert::serial_number::SerialNumber;
 
 // TODO bk replace this by const_oid definitions as soon as released
@@ -50,30 +49,18 @@ fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {
 }
 
 fn signer_identifier(id: i32) -> SignerIdentifier {
-    let mut rdn_sequence = RdnSequence::default();
-    let rdn = &[AttributeTypeAndValue {
-        oid: const_oid::db::rfc4519::CN,
-        value: Any::from(Utf8StringRef::new(&format!("test client {id}")).unwrap()),
-    }];
-    let set_of_vector = SetOfVec::try_from(rdn.to_vec()).unwrap();
-    rdn_sequence.push(RelativeDistinguishedName::from(set_of_vector));
+    let issuer = format!("CN=test client {id}").parse().unwrap();
     SignerIdentifier::IssuerAndSerialNumber(IssuerAndSerialNumber {
-        issuer: rdn_sequence,
+        issuer,
         serial_number: SerialNumber::new(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
             .expect("failed to create a serial number"),
     })
 }
 
 fn recipient_identifier(id: i32) -> RecipientIdentifier {
-    let mut rdn_sequence = RdnSequence::default();
-    let rdn = &[AttributeTypeAndValue {
-        oid: const_oid::db::rfc4519::CN,
-        value: Any::from(Utf8StringRef::new(&format!("test client {id}")).unwrap()),
-    }];
-    let set_of_vector = SetOfVec::try_from(rdn.to_vec()).unwrap();
-    rdn_sequence.push(RelativeDistinguishedName::from(set_of_vector));
+    let issuer = format!("CN=test client {id}").parse().unwrap();
     RecipientIdentifier::IssuerAndSerialNumber(IssuerAndSerialNumber {
-        issuer: rdn_sequence,
+        issuer,
         serial_number: SerialNumber::new(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
             .expect("failed to create a serial number"),
     })

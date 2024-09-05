@@ -1,9 +1,16 @@
 //! Name-related definitions as defined in X.501 (and updated by RFC 5280).
 
-use crate::attr::AttributeTypeAndValue;
+use crate::{attr::AttributeTypeAndValue, ext::pkix::name::DirectoryString};
 use alloc::vec::Vec;
+use const_oid::{
+    db::{rfc3280, rfc4519},
+    ObjectIdentifier,
+};
 use core::{fmt, str::FromStr};
-use der::{asn1::SetOfVec, Encode};
+use der::{
+    asn1::{Any, Ia5StringRef, PrintableStringRef, SetOfVec},
+    Encode,
+};
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
 ///
@@ -11,8 +18,229 @@ use der::{asn1::SetOfVec, Encode};
 /// Name ::= CHOICE { rdnSequence  RDNSequence }
 /// ```
 ///
+/// To build name, the syntax described in [RFC 4514 Section 3] is expected.
+///
+/// The following attribute names are recognized:
+/// ```text
+///      String  X.500 AttributeType
+///      ------  --------------------------------------------
+///      CN      commonName (2.5.4.3)
+///      L       localityName (2.5.4.7)
+///      ST      stateOrProvinceName (2.5.4.8)
+///      O       organizationName (2.5.4.10)
+///      OU      organizationalUnitName (2.5.4.11)
+///      C       countryName (2.5.4.6)
+///      STREET  streetAddress (2.5.4.9)
+///      DC      domainComponent (0.9.2342.19200300.100.1.25)
+///      UID     userId (0.9.2342.19200300.100.1.1)
+///
+/// ```
+///
+/// # Example
+///
+/// ```
+/// use std::str::FromStr;
+/// use x509_cert::name::Name;
+///
+/// // Multiple syntaxes are supported by `from_str`:
+/// let subject = Name::from_str("CN=example.com").unwrap();
+/// let subject = Name::from_str("C=US; ST=California; L=Los Angeles; O=InternetCorporationforAssignedNamesandNumbers; CN=www.example.org").unwrap();
+/// let subject = Name::from_str("C=US,ST=California,L=Los Angeles,O=InternetCorporationforAssignedNamesandNumbers,CN=www.example.org").unwrap();
+/// let subject = Name::from_str("C=US/ST=California/L=Los Angeles/O=InternetCorporationforAssignedNamesandNumbers/CN=www.example.org").unwrap();
+/// let subject = Name::from_str("UID=jsmith,DC=example,DC=net").unwrap();
+/// let subject = Name::from_str("OU=Sales+CN=J.  Smith,DC=example,DC=net").unwrap();
+/// let subject = Name::from_str(r#"CN=James \"Jim\" Smith\, III,DC=example,DC=net"#).unwrap();
+/// let subject = Name::from_str(r#"CN=Before\0dAfter,DC=example,DC=net"#).unwrap();
+/// let subject = Name::from_str("1.3.6.1.4.1.1466.0=#04024869").unwrap();
+/// ```
+///
+/// [RFC 4514 Section 3]: https://www.rfc-editor.org/rfc/rfc4514#section-3
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
-pub type Name = RdnSequence;
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Name(RdnSequence);
+
+// This will implement `From<RdnSequence>` which is provided as an escape hatch to build names
+// from `bmpString`, `TeletexString`, or `UniversalString`:
+// ```
+// When CAs have previously issued certificates with issuer fields with
+// attributes encoded using TeletexString, BMPString, or
+// UniversalString, then the CA MAY continue to use these encodings of
+// the DirectoryString to preserve backward compatibility.
+// ```
+impl_newtype!(Name, RdnSequence);
+
+impl Name {
+    /// Is this [`Name`] empty?
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Returns the number of [`RelativeDistinguishedName`] elements in this [`Name`].
+    pub fn len(&self) -> usize {
+        self.0 .0.len()
+    }
+
+    /// Returns an iterator over the inner [`AttributeTypeAndValue`]s.
+    ///
+    /// This iterator does not expose which attributes are grouped together as
+    /// [`RelativeDistinguishedName`]s. If you need this, use [`Self::iter_rdn`].
+    #[inline]
+    pub fn iter(&self) -> impl Iterator<Item = &'_ AttributeTypeAndValue> + '_ {
+        self.0 .0.iter().flat_map(move |rdn| rdn.0.as_slice())
+    }
+
+    /// Returns an iterator over the inner [`RelativeDistinguishedName`]s.
+    #[inline]
+    pub fn iter_rdn(&self) -> impl Iterator<Item = &'_ RelativeDistinguishedName> + '_ {
+        self.0 .0.iter()
+    }
+}
+
+impl Name {
+    /// Returns the element found in the name identified by `oid`
+    ///
+    /// This will return `Ok(None)` if no such element is present.
+    ///
+    /// If more than one attribute is present with the specified OID, only the first attribute is
+    /// returned. Later elements should be fetched using [`Name::iter`].
+    ///
+    /// # Errors
+    ///
+    /// This will return [`der::Error`] if the content is not serialized as expected
+    pub fn by_oid<'a, T>(&'a self, oid: ObjectIdentifier) -> der::Result<Option<T>>
+    where
+        T: TryFrom<&'a Any, Error = der::Error>,
+        T: fmt::Debug,
+    {
+        self.iter()
+            .filter(|atav| atav.oid == oid)
+            .map(|atav| T::try_from(&atav.value))
+            .next()
+            .transpose()
+    }
+
+    /// Returns the Common Name (CN) found in the name.
+    ///
+    /// This will return `Ok(None)` if no CN is found.
+    ///
+    /// If more than one value is present, only the first is returned.
+    /// Later elements should be fetched using [`Name::iter`].
+    ///
+    /// # Errors
+    ///
+    /// This will return [`der::Error`] if the content is not serialized as a string.
+    pub fn common_name(&self) -> der::Result<Option<DirectoryString>> {
+        self.by_oid(rfc4519::COMMON_NAME)
+    }
+
+    /// Returns the Country (C) found in the name.
+    ///
+    /// This will return `Ok(None)` if no Country is found.
+    ///
+    /// If more than one value is present, only the first is returned.
+    /// Later elements should be fetched using [`Name::iter`].
+    ///
+    /// # Errors
+    ///
+    /// This will return [`der::Error`] if the content is not serialized as a printableString.
+    pub fn country(&self) -> der::Result<Option<PrintableStringRef<'_>>> {
+        self.by_oid(rfc4519::COUNTRY_NAME)
+    }
+
+    /// Returns the State or Province (ST) found in the name.
+    ///
+    /// This will return `Ok(None)` if no State or Province is found.
+    ///
+    /// If more than one value is present, only the first is returned.
+    /// Later elements should be fetched using [`Name::iter`].
+    ///
+    /// # Errors
+    ///
+    /// This will return [`der::Error`] if the content is not serialized as a string.
+    pub fn state_or_province(&self) -> der::Result<Option<DirectoryString>> {
+        self.by_oid(rfc4519::ST)
+    }
+
+    /// Returns the Locality (L) found in the name.
+    ///
+    /// This will return `Ok(None)` if no Locality is found.
+    ///
+    /// If more than one value is present, only the first is returned.
+    /// Later elements should be fetched using [`Name::iter`].
+    ///
+    /// # Errors
+    ///
+    /// This will return [`der::Error`] if the content is not serialized as a string.
+    pub fn locality(&self) -> der::Result<Option<DirectoryString>> {
+        self.by_oid(rfc4519::LOCALITY_NAME)
+    }
+
+    /// Returns the Organization (O) found in the name.
+    ///
+    /// This will return `Ok(None)` if no Organization is found.
+    ///
+    /// If more than one value is present, only the first is returned.
+    /// Later elements should be fetched using [`Name::iter`].
+    ///
+    /// # Errors
+    ///
+    /// This will return [`der::Error`] if the content is not serialized as a string.
+    pub fn organization(&self) -> der::Result<Option<DirectoryString>> {
+        self.by_oid(rfc4519::ORGANIZATION_NAME)
+    }
+
+    /// Returns the Organization Unit (OU) found in the name.
+    ///
+    /// This will return `Ok(None)` if no Organization Unit is found.
+    ///
+    /// If more than one value is present, only the first is returned.
+    /// Later elements should be fetched using [`Name::iter`].
+    ///
+    /// # Errors
+    ///
+    /// This will return [`der::Error`] if the content is not serialized as a string.
+    pub fn organization_unit(&self) -> der::Result<Option<DirectoryString>> {
+        self.by_oid(rfc4519::ORGANIZATIONAL_UNIT_NAME)
+    }
+
+    /// Returns the Email Address (emailAddress) found in the name.
+    ///
+    /// This will return `Ok(None)` if no email address is found.
+    ///
+    /// If more than one value is present, only the first is returned.
+    /// Later elements should be fetched using [`Name::iter`].
+    ///
+    /// # Errors
+    ///
+    /// This will return [`der::Error`] if the content is not serialized as an ia5String.
+    pub fn email_address(&self) -> der::Result<Option<Ia5StringRef<'_>>> {
+        self.by_oid(rfc3280::EMAIL_ADDRESS)
+    }
+}
+
+/// Parse a [`Name`] string.
+///
+/// Follows the rules in [RFC 4514].
+///
+/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+impl FromStr for Name {
+    type Err = der::Error;
+
+    fn from_str(s: &str) -> der::Result<Self> {
+        Ok(Self(RdnSequence::from_str(s)?))
+    }
+}
+
+/// Serializes the name according to the rules in [RFC 4514].
+///
+/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+impl fmt::Display for Name {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 /// X.501 RDNSequence as defined in [RFC 5280 Section 4.1.2.4].
 ///

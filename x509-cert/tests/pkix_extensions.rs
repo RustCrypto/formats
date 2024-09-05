@@ -580,37 +580,31 @@ fn decode_cert() {
         true
     );
 
-    let mut counter = 0;
-    let i = cert.tbs_certificate().issuer().iter();
-    for rdn in i {
-        let i1 = rdn.iter();
-        for atav in i1 {
-            if 0 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "US"
-                );
-            } else if 1 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Test Certificates 2011"
-                );
-            } else if 2 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.3");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Trust Anchor"
-                );
-            }
-            counter += 1;
+    for (counter, atav) in cert.tbs_certificate().issuer().iter().enumerate() {
+        if 0 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.6");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "US"
+            );
+        } else if 1 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.10");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Test Certificates 2011"
+            );
+        } else if 2 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.3");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Trust Anchor"
+            );
         }
     }
 
@@ -631,37 +625,31 @@ fn decode_cert() {
         1924936200
     );
 
-    counter = 0;
-    let i = cert.tbs_certificate().subject().iter();
-    for rdn in i {
-        let i1 = rdn.iter();
-        for atav in i1 {
-            if 0 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "US"
-                );
-            } else if 1 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Test Certificates 2011"
-                );
-            } else if 2 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.3");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Good CA"
-                );
-            }
-            counter += 1;
+    for (counter, atav) in cert.tbs_certificate().subject().iter().enumerate() {
+        if 0 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.6");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "US"
+            );
+        } else if 1 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.10");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Test Certificates 2011"
+            );
+        } else if 2 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.3");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Good CA"
+            );
         }
     }
 
@@ -696,10 +684,8 @@ fn decode_cert() {
 
     // TODO - parse and compare public key
 
-    counter = 0;
     let exts = cert.tbs_certificate().extensions().unwrap();
-    let i = exts.iter();
-    for ext in i {
+    for (counter, ext) in exts.iter().enumerate() {
         if 0 == counter {
             assert_eq!(
                 ext.extn_id.to_string(),
@@ -746,8 +732,6 @@ fn decode_cert() {
             assert_eq!(bc.ca, true);
             assert_eq!(bc.path_len_constraint, Option::None);
         }
-
-        counter += 1;
     }
     assert_eq!(
         cert.signature_algorithm().oid.to_string(),

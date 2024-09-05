@@ -33,37 +33,31 @@ fn decode_name() {
         Name::from_der(&hex!("3040310B3009060355040613025553311F301D060355040A1316546573742043657274696669636174657320323031313110300E06035504031307476F6F64204341")[..]);
     let rdn1a = rdn1.unwrap();
 
-    let mut counter = 0;
-    let i = rdn1a.iter();
-    for rdn in i {
-        let i1 = rdn.iter();
-        for atav in i1 {
-            if 0 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "US"
-                );
-            } else if 1 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Test Certificates 2011"
-                );
-            } else if 2 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.3");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Good CA"
-                );
-            }
-            counter += 1;
+    for (counter, atav) in rdn1a.iter().enumerate() {
+        if 0 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.6");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "US"
+            );
+        } else if 1 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.10");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Test Certificates 2011"
+            );
+        } else if 2 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.3");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Good CA"
+            );
         }
     }
 
@@ -365,4 +359,54 @@ fn rdns_serde() {
             assert_eq!(brdns, rdns);
         }
     }
+}
+
+#[cfg(feature = "std")]
+#[test]
+fn access_attributes() {
+    use std::str::FromStr;
+
+    let name = Name::from_str("emailAddress=foo@example.com,UID=identity:ds.group.3891111,OU=management:ds.group.3891111,CN=OQFAvDNDWs.google.com,O=Google LLC,L=Mountain View,ST=California,C=US").unwrap();
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.common_name().unwrap().unwrap()),
+        "OQFAvDNDWs.google.com"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.country().unwrap().unwrap()),
+        "US"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.state_or_province().unwrap().unwrap()),
+        "California"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.locality().unwrap().unwrap()),
+        "Mountain View"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.organization().unwrap().unwrap()),
+        "Google LLC"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.organization_unit().unwrap().unwrap()),
+        "management:ds.group.3891111"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.email_address().unwrap().unwrap()),
+        "foo@example.com"
+    );
+
+    let name = Name::from_str("C=DE,C=US").unwrap();
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.country().unwrap().unwrap()),
+        "US"
+    );
 }
