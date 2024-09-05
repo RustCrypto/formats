@@ -1,9 +1,12 @@
 //! X.501 time types as defined in RFC 5280
 
-use core::fmt;
-use core::time::Duration;
+use core::{fmt, marker::PhantomData, time::Duration};
 use der::asn1::{GeneralizedTime, UtcTime};
-use der::{Choice, DateTime, Sequence, ValueOrd};
+use der::{
+    Choice, DateTime, DecodeValue, Encode, FixedTag, Header, Length, Reader, Sequence, ValueOrd,
+};
+
+use crate::certificate::{Profile, Rfc5280};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -79,6 +82,19 @@ impl Time {
 
         Ok(())
     }
+
+    /// Check time is in compliance with [RFC5280 section 4.1.2.5]
+    /// ```text
+    /// CAs conforming to this profile MUST always encode certificate validity dates through the year 2049 as UTCTime
+    /// ```
+    ///
+    /// [RFC5280 section 4.1.2.5]: https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.5
+    pub(crate) fn check_rfc5280_utc_time(&self) -> der::Result<()> {
+        if self.to_date_time().year() <= UtcTime::MAX_YEAR && matches!(self, Time::GeneralTime(_)) {
+            return Err(UtcTime::TAG.value_error());
+        }
+        Ok(())
+    }
 }
 
 impl fmt::Display for Time {
@@ -132,13 +148,15 @@ impl TryFrom<SystemTime> for Time {
 /// ```
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
-pub struct Validity {
+#[derive(Copy, Clone, Debug, Eq, PartialEq, ValueOrd)]
+pub struct Validity<P: Profile + 'static = Rfc5280> {
     /// notBefore value
     pub not_before: Time,
 
     /// notAfter value
     pub not_after: Time,
+
+    _profile: PhantomData<P>,
 }
 
 impl Validity {
@@ -151,6 +169,47 @@ impl Validity {
         Ok(Self {
             not_before: Time::try_from(now)?,
             not_after: Time::try_from(then)?,
+            _profile: PhantomData,
         })
     }
 }
+
+impl<'a, P: Profile + 'static> DecodeValue<'a> for Validity<P> {
+    type Error = ::der::Error;
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            let not_before = reader.decode()?;
+            let not_after = reader.decode()?;
+            let out = Self {
+                not_before,
+                not_after,
+                _profile: PhantomData,
+            };
+            P::check_validity_encoding(&out)?;
+
+            Ok(out)
+        })
+    }
+}
+
+impl<P: Profile + 'static> ::der::EncodeValue for Validity<P> {
+    fn value_len(&self) -> ::der::Result<::der::Length> {
+        P::check_validity_encoding(self)?;
+
+        [
+            self.not_before.encoded_len()?,
+            self.not_after.encoded_len()?,
+        ]
+        .into_iter()
+        .try_fold(Length::ZERO, |acc, len| acc + len)
+    }
+    fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+        P::check_validity_encoding(self)?;
+
+        self.not_before.encode(writer)?;
+        self.not_after.encode(writer)?;
+        Ok(())
+    }
+}
+
+impl<'a, P: Profile + 'static> Sequence<'a> for Validity<P> {}

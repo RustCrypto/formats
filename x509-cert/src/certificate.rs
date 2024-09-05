@@ -29,6 +29,13 @@ pub trait Profile: PartialEq + Debug + Eq + Clone + Default {
             Ok(())
         }
     }
+
+    /// Checks the date is encoded as UTCTime if below 2050 cutoff date
+    fn check_validity_encoding(validity: &Validity<Self>) -> der::Result<()> {
+        validity.not_before.check_rfc5280_utc_time()?;
+        validity.not_after.check_rfc5280_utc_time()?;
+        Ok(())
+    }
 }
 
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
@@ -47,6 +54,9 @@ pub struct Raw;
 #[cfg(feature = "hazmat")]
 impl Profile for Raw {
     fn check_serial_number(_serial: &SerialNumber<Self>) -> der::Result<()> {
+        Ok(())
+    }
+    fn check_validity_encoding(_validity: &Validity<Self>) -> der::Result<()> {
         Ok(())
     }
 }
@@ -129,7 +139,7 @@ pub struct TbsCertificateInner<P: Profile + 'static = Rfc5280> {
     pub serial_number: SerialNumber<P>,
     pub signature: AlgorithmIdentifierOwned,
     pub issuer: Name,
-    pub validity: Validity,
+    pub validity: Validity<P>,
     pub subject: Name,
     pub subject_public_key_info: SubjectPublicKeyInfoOwned,
 
