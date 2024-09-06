@@ -6,10 +6,10 @@ use const_oid::{
     db::{rfc3280, rfc4519},
     ObjectIdentifier,
 };
-use core::{fmt, str::FromStr};
+use core::{cmp::Ordering, fmt, str::FromStr};
 use der::{
     asn1::{Any, Ia5StringRef, PrintableStringRef, SetOfVec},
-    Encode,
+    DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Tag, ValueOrd, Writer,
 };
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
@@ -58,17 +58,74 @@ use der::{
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct Name(RdnSequence);
+pub struct Name(pub(crate) RdnSequence);
 
-// This will implement `From<RdnSequence>` which is provided as an escape hatch to build names
-// from `bmpString`, `TeletexString`, or `UniversalString`:
-// ```
-// When CAs have previously issued certificates with issuer fields with
-// attributes encoded using TeletexString, BMPString, or
-// UniversalString, then the CA MAY continue to use these encodings of
-// the DirectoryString to preserve backward compatibility.
-// ```
-impl_newtype!(Name, RdnSequence);
+impl Name {
+    /// Build a name from an [`RdnSequence`].
+    ///
+    ///
+    /// This is provided as an escape hatch (see [RFC 5280 Section 4.1.2.4]) to build
+    /// names from `bmpString`, `TeletexString`, or `UniversalString`:
+    /// ```text
+    /// When CAs have previously issued certificates with issuer fields with
+    /// attributes encoded using TeletexString, BMPString, or
+    /// UniversalString, then the CA MAY continue to use these encodings of
+    /// the DirectoryString to preserve backward compatibility.
+    /// ```
+    ///
+    /// # Safety
+    ///
+    /// As the name implies, this is a dangerous helper. You are responsible for ensuring the
+    /// [`RdnSequence`] complies with the RFC.
+    ///
+    /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+    #[cfg(feature = "hazmat")]
+    pub fn hazmat_from_rdn_sequence(value: RdnSequence) -> Self {
+        Self(value)
+    }
+}
+
+impl From<Name> for RdnSequence {
+    #[inline]
+    fn from(value: Name) -> Self {
+        value.0
+    }
+}
+
+impl AsRef<RdnSequence> for Name {
+    #[inline]
+    fn as_ref(&self) -> &RdnSequence {
+        &self.0
+    }
+}
+
+impl FixedTag for Name {
+    const TAG: Tag = <RdnSequence as FixedTag>::TAG;
+}
+
+impl<'a> DecodeValue<'a> for Name {
+    type Error = der::Error;
+
+    fn decode_value<R: Reader<'a>>(decoder: &mut R, header: Header) -> der::Result<Self> {
+        Ok(Self(RdnSequence::decode_value(decoder, header)?))
+    }
+}
+
+impl EncodeValue for Name {
+    fn encode_value(&self, encoder: &mut impl Writer) -> der::Result<()> {
+        self.0.encode_value(encoder)
+    }
+
+    fn value_len(&self) -> der::Result<Length> {
+        self.0.value_len()
+    }
+}
+
+impl ValueOrd for Name {
+    fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
+        self.0.value_cmp(&other.0)
+    }
+}
 
 impl Name {
     /// Is this [`Name`] empty?

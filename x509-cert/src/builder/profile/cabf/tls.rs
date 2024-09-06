@@ -22,7 +22,7 @@ use crate::{
         },
         AsExtension, Extension,
     },
-    name::{Name, RdnSequence, RelativeDistinguishedName},
+    name::{Name, RelativeDistinguishedName},
 };
 use spki::SubjectPublicKeyInfoRef;
 
@@ -159,8 +159,7 @@ impl CertificateType {
             .filter(|rdn| !rdn.is_empty())
             .collect();
 
-        let subject: RdnSequence = rdns.into();
-        let subject: Name = subject.into();
+        let subject: Name = Name(rdns.into());
 
         Ok(Self::DomainValidated(DomainValidated { subject, names }))
     }
