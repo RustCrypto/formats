@@ -60,9 +60,6 @@ x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
 # Temp patches to external crates
-# https://github.com/RustCrypto/signatures/pull/851
-ecdsa = { git = "https://github.com/baloo/signatures", branch = "baloo/pkcs8/api-change" }
-# https://github.com/RustCrypto/RSA/pull/446
-rsa = { git = "https://github.com/baloo/RSA", branch = "baloo/pkcs8/api-changes" }
-# https://github.com/RustCrypto/traits/pull/1650
-elliptic-curve = { git = "https://github.com/baloo/traits.git", branch ="baloo/elliptic-curve/pkcs8-API-break" }
+ecdsa = { git = "https://github.com/RustCrypto/signatures" }
+elliptic-curve = { git = "https://github.com/RustCrypto/traits" }
+rsa = { git = "https://github.com/RustCrypto/RSA" }
