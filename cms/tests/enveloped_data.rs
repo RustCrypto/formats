@@ -49,8 +49,8 @@ fn reencode_enveloped_data_ktri_test() {
                 );
                 match &ktri.rid {
                     RecipientIdentifier::IssuerAndSerialNumber(iasn) => {
-                        assert_eq!(cert.tbs_certificate.issuer, iasn.issuer);
-                        assert_eq!(cert.tbs_certificate.serial_number, iasn.serial_number);
+                        assert_eq!(cert.tbs_certificate.issuer(), &iasn.issuer);
+                        assert_eq!(cert.tbs_certificate.serial_number(), &iasn.serial_number);
                     }
                     _ => panic!(),
                 }
@@ -146,8 +146,8 @@ fn reencode_enveloped_data_kari_test() {
                 for rk in &kari.recipient_enc_keys {
                     match &rk.rid {
                         KeyAgreeRecipientIdentifier::IssuerAndSerialNumber(iasn) => {
-                            assert_eq!(cert.tbs_certificate.issuer, iasn.issuer);
-                            assert_eq!(cert.tbs_certificate.serial_number, iasn.serial_number);
+                            assert_eq!(cert.tbs_certificate.issuer(), &iasn.issuer);
+                            assert_eq!(cert.tbs_certificate.serial_number(), &iasn.serial_number);
                         }
                         _ => panic!(),
                     }
@@ -375,8 +375,11 @@ fn reencode_enveloped_data_multi_test() {
                 );
                 match &ktri.rid {
                     RecipientIdentifier::IssuerAndSerialNumber(iasn) => {
-                        assert_eq!(rsa_cert.tbs_certificate.issuer, iasn.issuer);
-                        assert_eq!(rsa_cert.tbs_certificate.serial_number, iasn.serial_number);
+                        assert_eq!(rsa_cert.tbs_certificate.issuer(), &iasn.issuer);
+                        assert_eq!(
+                            rsa_cert.tbs_certificate.serial_number(),
+                            &iasn.serial_number
+                        );
                     }
                     _ => panic!(),
                 }
@@ -415,8 +418,11 @@ fn reencode_enveloped_data_multi_test() {
                 for rk in &kari.recipient_enc_keys {
                     match &rk.rid {
                         KeyAgreeRecipientIdentifier::IssuerAndSerialNumber(iasn) => {
-                            assert_eq!(ec_cert.tbs_certificate.issuer, iasn.issuer);
-                            assert_eq!(ec_cert.tbs_certificate.serial_number, iasn.serial_number);
+                            assert_eq!(ec_cert.tbs_certificate.issuer(), &iasn.issuer);
+                            assert_eq!(
+                                ec_cert.tbs_certificate.serial_number(),
+                                &iasn.serial_number
+                            );
                         }
                         _ => panic!(),
                     }
