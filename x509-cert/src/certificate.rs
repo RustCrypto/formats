@@ -1,6 +1,6 @@
 //! Certificate types
 
-use crate::{name::Name, serial_number::SerialNumber, time::Validity};
+use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use core::{cmp::Ordering, fmt::Debug};
@@ -143,26 +143,78 @@ pub struct TbsCertificateInner<P: Profile = Rfc5280> {
     /// require later versions. Care should be taken in order to ensure
     /// standards compliance.
     #[asn1(context_specific = "0", default = "Default::default")]
-    pub version: Version,
+    pub(crate) version: Version,
 
-    pub serial_number: SerialNumber<P>,
-    pub signature: AlgorithmIdentifierOwned,
-    pub issuer: Name,
-    pub validity: Validity<P>,
-    pub subject: Name,
-    pub subject_public_key_info: SubjectPublicKeyInfoOwned,
+    pub(crate) serial_number: SerialNumber<P>,
+    pub(crate) signature: AlgorithmIdentifierOwned,
+    pub(crate) issuer: Name,
+    pub(crate) validity: Validity<P>,
+    pub(crate) subject: Name,
+    pub(crate) subject_public_key_info: SubjectPublicKeyInfoOwned,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub issuer_unique_id: Option<BitString>,
+    pub(crate) issuer_unique_id: Option<BitString>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub subject_unique_id: Option<BitString>,
+    pub(crate) subject_unique_id: Option<BitString>,
 
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
-    pub extensions: Option<crate::ext::Extensions>,
+    pub(crate) extensions: Option<ext::Extensions>,
 }
 
 impl<P: Profile> TbsCertificateInner<P> {
+    /// Version of this certificate.
+    pub fn version(&self) -> Version {
+        self.version
+    }
+
+    /// Serial number of this certificate.
+    pub fn serial_number(&self) -> &SerialNumber<P> {
+        &self.serial_number
+    }
+
+    /// Signature algorithm identifier.
+    pub fn signature(&self) -> &AlgorithmIdentifierOwned {
+        &self.signature
+    }
+
+    /// Certificate issuer.
+    pub fn issuer(&self) -> &Name {
+        &self.issuer
+    }
+
+    /// Validity period for this certificate.
+    pub fn validity(&self) -> &Validity<P> {
+        &self.validity
+    }
+
+    /// Subject of this certificate.
+    pub fn subject(&self) -> &Name {
+        &self.subject
+    }
+
+    /// Subject Public Key Info (SPKI): public key information about this certificate including
+    /// algorithm identifier and key data.
+    pub fn subject_public_key_info(&self) -> &SubjectPublicKeyInfoOwned {
+        &self.subject_public_key_info
+    }
+
+    /// Issuer unique ID.
+    pub fn issuer_unique_id(&self) -> &Option<BitString> {
+        &self.issuer_unique_id
+    }
+
+    /// Subject unique ID.
+    pub fn subject_unique_id(&self) -> &Option<BitString> {
+        &self.subject_unique_id
+    }
+
+    /// Certificate extensions.
+    pub fn extensions(&self) -> &ext::Extensions {
+        static EMPTY_EXTENSIONS: ext::Extensions = Vec::new();
+        self.extensions.as_ref().unwrap_or(&EMPTY_EXTENSIONS)
+    }
+
     /// Decodes a single extension
     ///
     /// Returns `Ok(None)` if the extension is not present.

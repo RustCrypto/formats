@@ -137,22 +137,22 @@ fn reencode_cert() {
 
     // TODO - defer decode then re-encode version field
 
-    let encoded_serial = parsed_tbs.serial_number.to_der().unwrap();
+    let encoded_serial = parsed_tbs.serial_number().to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.serial_number, encoded_serial);
 
-    let encoded_signature = parsed_tbs.signature.to_der().unwrap();
+    let encoded_signature = parsed_tbs.signature().to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.signature, encoded_signature);
 
-    let encoded_issuer = parsed_tbs.issuer.to_der().unwrap();
+    let encoded_issuer = parsed_tbs.issuer().to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.issuer, encoded_issuer);
 
-    let encoded_validity = parsed_tbs.validity.to_der().unwrap();
+    let encoded_validity = parsed_tbs.validity().to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.validity, encoded_validity);
 
-    let encoded_subject = parsed_tbs.subject.to_der().unwrap();
+    let encoded_subject = parsed_tbs.subject().to_der().unwrap();
     assert_eq!(parsed_coverage_tbs.subject, encoded_subject);
 
-    let encoded_subject_public_key_info = parsed_tbs.subject_public_key_info.to_der().unwrap();
+    let encoded_subject_public_key_info = parsed_tbs.subject_public_key_info().to_der().unwrap();
     assert_eq!(
         parsed_coverage_tbs.subject_public_key_info,
         encoded_subject_public_key_info
@@ -160,7 +160,7 @@ fn reencode_cert() {
 
     // TODO - either encode as context specific or decode to sequence. for know lop off context
     // specific tag and length
-    let encoded_extensions = parsed_tbs.extensions.to_der().unwrap();
+    let encoded_extensions = parsed_tbs.extensions().to_der().unwrap();
     assert_eq!(&parsed_coverage_tbs.extensions[4..], encoded_extensions);
 }
 
@@ -199,7 +199,7 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
     println!("{:?}", cert);
-    let exts = cert.tbs_certificate.extensions.unwrap();
+    let exts = cert.tbs_certificate.extensions();
     for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
         assert_eq!(ext.extn_id.to_string(), *oid);
         assert_eq!(ext.critical, *crit);
@@ -208,22 +208,22 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
 
-    assert_eq!(cert.tbs_certificate.version, Version::V3);
+    assert_eq!(cert.tbs_certificate.version(), Version::V3);
     let target_serial: [u8; 16] = [
         0x7F, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x49, 0xCF, 0x70, 0x66, 0x4D, 0x00, 0x00, 0x00,
         0x02,
     ];
     assert_eq!(
-        cert.tbs_certificate.serial_number,
-        SerialNumber::new(&target_serial).unwrap()
+        cert.tbs_certificate.serial_number(),
+        &SerialNumber::new(&target_serial).unwrap()
     );
     assert_eq!(
-        cert.tbs_certificate.signature.oid.to_string(),
+        cert.tbs_certificate.signature().oid.to_string(),
         "1.2.840.113549.1.1.11"
     );
     assert_eq!(
         cert.tbs_certificate
-            .signature
+            .signature()
             .parameters
             .as_ref()
             .unwrap()
@@ -232,14 +232,14 @@ fn decode_cert() {
     );
     assert!(cert
         .tbs_certificate
-        .signature
+        .signature()
         .parameters
         .as_ref()
         .unwrap()
         .is_null());
 
     let mut counter = 0;
-    let i = cert.tbs_certificate.issuer.0.iter();
+    let i = cert.tbs_certificate.issuer().0.iter();
     for rdn in i {
         let i1 = rdn.0.iter();
         for atav in i1 {
@@ -278,7 +278,7 @@ fn decode_cert() {
 
     assert_eq!(
         cert.tbs_certificate
-            .validity
+            .validity()
             .not_before
             .to_unix_duration()
             .as_secs(),
@@ -286,7 +286,7 @@ fn decode_cert() {
     );
     assert_eq!(
         cert.tbs_certificate
-            .validity
+            .validity()
             .not_after
             .to_unix_duration()
             .as_secs(),
@@ -294,7 +294,7 @@ fn decode_cert() {
     );
 
     counter = 0;
-    let i = cert.tbs_certificate.subject.0.iter();
+    let i = cert.tbs_certificate.subject().0.iter();
     for rdn in i {
         let i1 = rdn.0.iter();
         for atav in i1 {
@@ -338,7 +338,7 @@ fn decode_cert() {
 
     assert_eq!(
         cert.tbs_certificate
-            .subject_public_key_info
+            .subject_public_key_info()
             .algorithm
             .oid
             .to_string(),
@@ -346,7 +346,7 @@ fn decode_cert() {
     );
     assert_eq!(
         cert.tbs_certificate
-            .subject_public_key_info
+            .subject_public_key_info()
             .algorithm
             .parameters
             .as_ref()
@@ -356,7 +356,7 @@ fn decode_cert() {
     );
     assert!(cert
         .tbs_certificate
-        .subject_public_key_info
+        .subject_public_key_info()
         .algorithm
         .parameters
         .as_ref()
@@ -365,7 +365,7 @@ fn decode_cert() {
 
     // TODO - parse and compare public key
 
-    let exts = cert.tbs_certificate.extensions.as_ref().unwrap();
+    let exts = cert.tbs_certificate.extensions();
     for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
         assert_eq!(ext.extn_id.to_string(), *oid);
         assert_eq!(ext.critical, *crit);
@@ -408,7 +408,7 @@ fn decode_cert_negative_serial_number() {
 
     let cert = Certificate::from_der(der_encoded_cert).unwrap();
     assert_eq!(
-        cert.tbs_certificate.serial_number.as_bytes(),
+        cert.tbs_certificate.serial_number().as_bytes(),
         // INTEGER (125 bit) -2.370157924795571e+37
         &[238, 43, 61, 235, 212, 33, 222, 20, 168, 98, 172, 4, 243, 221, 196, 1]
     );
@@ -429,13 +429,13 @@ fn decode_cert_overlength_serial_number() {
 
     let cert = CertificateInner::<x509_cert::certificate::Raw>::from_pem(pem_encoded_cert).unwrap();
     assert_eq!(
-        cert.tbs_certificate.serial_number.as_bytes(),
+        cert.tbs_certificate.serial_number().as_bytes(),
         &[
             0, 132, 206, 11, 246, 160, 254, 130, 78, 229, 229, 6, 202, 168, 157, 120, 198, 21, 1,
             98, 87, 113
         ]
     );
-    assert_eq!(cert.tbs_certificate.serial_number.as_bytes().len(), 22);
+    assert_eq!(cert.tbs_certificate.serial_number().as_bytes().len(), 22);
 
     let reencoded = cert.to_pem(LineEnding::LF).unwrap();
     assert_eq!(pem_encoded_cert, reencoded.as_bytes());
