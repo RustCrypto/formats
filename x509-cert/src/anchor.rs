@@ -37,7 +37,7 @@ pub enum Version {
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 #[allow(missing_docs)]
-pub struct TrustAnchorInfo<P: Profile + 'static = Rfc5280> {
+pub struct TrustAnchorInfo<P: Profile = Rfc5280> {
     #[asn1(default = "Default::default")]
     pub version: Version,
 
@@ -70,7 +70,7 @@ pub struct TrustAnchorInfo<P: Profile + 'static = Rfc5280> {
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct CertPathControls<P: Profile + 'static = Rfc5280> {
+pub struct CertPathControls<P: Profile = Rfc5280> {
     pub ta_name: Name,
 
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
@@ -129,7 +129,7 @@ pub type CertPolicyFlags = FlagSet<CertPolicies>;
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 #[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
-pub enum TrustAnchorChoice<P: Profile + 'static = Rfc5280> {
+pub enum TrustAnchorChoice<P: Profile = Rfc5280> {
     Certificate(CertificateInner<P>),
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
