@@ -14,6 +14,8 @@ use der::{
     DecodePem,
 };
 
+use crate::time::Time;
+
 /// [`Profile`] allows the consumer of this crate to customize the behavior when parsing
 /// certificates.
 /// By default, parsing will be made in a rfc5280-compliant manner.
@@ -29,11 +31,25 @@ pub trait Profile: PartialEq + Debug + Eq + Clone + Default {
             Ok(())
         }
     }
+
+    /// Adjustements to the time to run while serializing validity.
+    /// See [RFC 5280 Section 4.1.2.5]:
+    /// ```text
+    /// CAs conforming to this profile MUST always encode certificate
+    /// validity dates through the year 2049 as UTCTime; certificate validity
+    /// dates in 2050 or later MUST be encoded as GeneralizedTime.
+    /// ```
+    ///
+    /// [RFC 5280 Section 4.1.2.5]: https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.5
+    fn time_encoding(mut time: Time) -> der::Result<Time> {
+        time.rfc5280_adjust_utc_time()?;
+        Ok(time)
+    }
 }
 
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
-/// Parse certificates with rfc5280-compliant checks
+/// Parse and serialize certificates in rfc5280-compliant manner
 pub struct Rfc5280;
 
 impl Profile for Rfc5280 {}
@@ -41,13 +57,16 @@ impl Profile for Rfc5280 {}
 #[cfg(feature = "hazmat")]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
-/// Parse raw x509 certificate and disable all the checks
+/// Parse raw x509 certificate and disable all the checks and modification to the underlying data.
 pub struct Raw;
 
 #[cfg(feature = "hazmat")]
 impl Profile for Raw {
     fn check_serial_number(_serial: &SerialNumber<Self>) -> der::Result<()> {
         Ok(())
+    }
+    fn time_encoding(time: Time) -> der::Result<Time> {
+        Ok(time)
     }
 }
 
@@ -129,7 +148,7 @@ pub struct TbsCertificateInner<P: Profile + 'static = Rfc5280> {
     pub serial_number: SerialNumber<P>,
     pub signature: AlgorithmIdentifierOwned,
     pub issuer: Name,
-    pub validity: Validity,
+    pub validity: Validity<P>,
     pub subject: Name,
     pub subject_public_key_info: SubjectPublicKeyInfoOwned,
 
