@@ -66,13 +66,13 @@ mod builder {
                     parameters: Some(Null.into()),
                 },
                 issuer_name_hash: OctetString::new(
-                    D::digest(issuer.tbs_certificate.subject.to_der()?).to_vec(),
+                    D::digest(issuer.tbs_certificate.subject().to_der()?).to_vec(),
                 )?,
                 issuer_key_hash: OctetString::new(
                     D::digest(
                         issuer
                             .tbs_certificate
-                            .subject_public_key_info
+                            .subject_public_key_info()
                             .subject_public_key
                             .raw_bytes(),
                     )
@@ -93,7 +93,7 @@ mod builder {
         where
             D: Digest + AssociatedOid,
         {
-            Self::from_issuer::<D>(issuer, cert.tbs_certificate.serial_number.clone())
+            Self::from_issuer::<D>(issuer, cert.tbs_certificate.serial_number().clone())
         }
     }
 }
