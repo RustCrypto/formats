@@ -569,7 +569,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.7"
-source = "git+https://github.com/baloo/signatures?branch=baloo/pkcs8/api-change#2ec8160db97f1cdbd656e6b411683011f5d0f3bf"
+source = "git+https://github.com/RustCrypto/signatures#25e14015c9445f90f58733b75fde935744d1ba4f"
 dependencies = [
  "der",
  "digest",
@@ -588,7 +588,7 @@ checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
 [[package]]
 name = "elliptic-curve"
 version = "0.14.0-pre.6"
-source = "git+https://github.com/baloo/traits.git?branch=baloo/elliptic-curve/pkcs8-API-break#df6f7ab4b577adcc68e0a5a1a50f0d17b3dfc949"
+source = "git+https://github.com/RustCrypto/traits#64277691b0abeef47b6a8725939ad90cd1727b7e"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -1292,7 +1292,7 @@ checksum = "c707298afce11da2efef2f600116fa93ffa7a032b5d7b628aa17711ec81383ca"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.4"
-source = "git+https://github.com/baloo/signatures?branch=baloo/pkcs8/api-change#2ec8160db97f1cdbd656e6b411683011f5d0f3bf"
+source = "git+https://github.com/RustCrypto/signatures#25e14015c9445f90f58733b75fde935744d1ba4f"
 dependencies = [
  "hmac",
  "subtle",
@@ -1323,7 +1323,7 @@ dependencies = [
 [[package]]
 name = "rsa"
 version = "0.10.0-pre.2"
-source = "git+https://github.com/baloo/RSA?branch=baloo/pkcs8/api-changes#40113d8f924edc984a78449f244c6b47659bdc65"
+source = "git+https://github.com/RustCrypto/RSA#aeedb5adf5297892fcb9e11f7c0f6c0157005c58"
 dependencies = [
  "const-oid",
  "digest",
