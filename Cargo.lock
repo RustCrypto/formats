@@ -1061,7 +1061,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkcs1"
-version = "0.8.0-rc.0"
+version = "0.8.0-rc.1"
 dependencies = [
  "const-oid",
  "der",
@@ -1109,7 +1109,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.11.0-rc.0"
+version = "0.11.0-rc.1"
 dependencies = [
  "der",
  "hex-literal",
@@ -1442,7 +1442,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.8.0-rc.0"
+version = "0.8.0-rc.1"
 dependencies = [
  "base16ct",
  "der",
@@ -1872,7 +1872,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
