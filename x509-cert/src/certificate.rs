@@ -19,7 +19,7 @@ use crate::time::Time;
 /// [`Profile`] allows the consumer of this crate to customize the behavior when parsing
 /// certificates.
 /// By default, parsing will be made in a rfc5280-compliant manner.
-pub trait Profile: PartialEq + Debug + Eq + Clone + Default {
+pub trait Profile: PartialEq + Debug + Eq + Clone + Default + 'static {
     /// Checks to run when parsing serial numbers
     fn check_serial_number(serial: &SerialNumber<Self>) -> der::Result<()> {
         // See the note in `SerialNumber::new`: we permit lengths of 21 bytes here,
@@ -135,7 +135,7 @@ pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertificateInner<P: Profile + 'static = Rfc5280> {
+pub struct TbsCertificateInner<P: Profile = Rfc5280> {
     /// The certificate version
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
@@ -215,7 +215,7 @@ pub type Certificate = CertificateInner<Rfc5280>;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct CertificateInner<P: Profile + 'static = Rfc5280> {
+pub struct CertificateInner<P: Profile = Rfc5280> {
     pub tbs_certificate: TbsCertificateInner<P>,
     pub signature_algorithm: AlgorithmIdentifierOwned,
     pub signature: BitString,

@@ -133,7 +133,7 @@ impl TryFrom<SystemTime> for Time {
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueOrd)]
-pub struct Validity<P: Profile + 'static = Rfc5280> {
+pub struct Validity<P: Profile = Rfc5280> {
     /// notBefore value
     pub not_before: Time,
 
@@ -145,7 +145,7 @@ pub struct Validity<P: Profile + 'static = Rfc5280> {
 
 impl<P> Validity<P>
 where
-    P: Profile + 'static,
+    P: Profile,
 {
     /// Creates a `Validity` which starts now and lasts for `duration`.
     #[cfg(feature = "std")]
@@ -161,7 +161,7 @@ where
     }
 }
 
-impl<'a, P: Profile + 'static> DecodeValue<'a> for Validity<P> {
+impl<'a, P: Profile> DecodeValue<'a> for Validity<P> {
     type Error = ::der::Error;
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
         reader.read_nested(header.length, |reader| {
@@ -178,7 +178,7 @@ impl<'a, P: Profile + 'static> DecodeValue<'a> for Validity<P> {
     }
 }
 
-impl<P: Profile + 'static> ::der::EncodeValue for Validity<P> {
+impl<P: Profile> ::der::EncodeValue for Validity<P> {
     fn value_len(&self) -> ::der::Result<::der::Length> {
         [
             P::time_encoding(self.not_before)?.encoded_len()?,
@@ -194,4 +194,4 @@ impl<P: Profile + 'static> ::der::EncodeValue for Validity<P> {
     }
 }
 
-impl<'a, P: Profile + 'static> Sequence<'a> for Validity<P> {}
+impl<'a, P: Profile> Sequence<'a> for Validity<P> {}
