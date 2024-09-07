@@ -560,7 +560,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.7"
-source = "git+https://github.com/RustCrypto/signatures#25e14015c9445f90f58733b75fde935744d1ba4f"
+source = "git+https://github.com/RustCrypto/signatures#839cbdabfe3538b347ac4186eb504658cf46e6c6"
 dependencies = [
  "der",
  "digest",
@@ -578,8 +578,9 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
 name = "elliptic-curve"
-version = "0.14.0-pre.6"
-source = "git+https://github.com/RustCrypto/traits#64277691b0abeef47b6a8725939ad90cd1727b7e"
+version = "0.14.0-rc.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0532f93842f7a74b76f927c2495bf3557faa1db03adf829f9e7ecb8307f5785f"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -1015,8 +1016,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 [[package]]
 name = "p256"
 version = "0.14.0-pre.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c32c18a74d9dda1314d2f945fb3e274848822f63f264a9e4d3f783e29b3bc1f"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#75ba0874af2cb5c79ce7a5a64b6be9925765f5b4"
 dependencies = [
  "ecdsa",
  "elliptic-curve",
@@ -1150,8 +1150,7 @@ dependencies = [
 [[package]]
 name = "primeorder"
 version = "0.14.0-pre.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bed0c431186675ad845922b903d28c7faa2b634a6d130fb7b50bb289f5a4d52"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#75ba0874af2cb5c79ce7a5a64b6be9925765f5b4"
 dependencies = [
  "elliptic-curve",
 ]
@@ -1286,7 +1285,7 @@ checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.4"
-source = "git+https://github.com/RustCrypto/signatures#25e14015c9445f90f58733b75fde935744d1ba4f"
+source = "git+https://github.com/RustCrypto/signatures#839cbdabfe3538b347ac4186eb504658cf46e6c6"
 dependencies = [
  "hmac",
  "subtle",
