@@ -310,9 +310,27 @@ pub type Certificate = CertificateInner<Rfc5280>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct CertificateInner<P: Profile = Rfc5280> {
-    pub tbs_certificate: TbsCertificateInner<P>,
-    pub signature_algorithm: AlgorithmIdentifierOwned,
-    pub signature: BitString,
+    pub(crate) tbs_certificate: TbsCertificateInner<P>,
+    pub(crate) signature_algorithm: AlgorithmIdentifierOwned,
+    pub(crate) signature: BitString,
+}
+
+impl<P: Profile> CertificateInner<P> {
+    /// Get the [`TbsCertificateInner`] (i.e. the part the signature is computed over).
+    pub fn tbs_certificate(&self) -> &TbsCertificateInner<P> {
+        &self.tbs_certificate
+    }
+
+    /// Signature algorithm.
+    pub fn signature_algorithm(&self) -> &AlgorithmIdentifierOwned {
+        &self.signature_algorithm
+    }
+
+    /// Signature over the certificate using the algorithm identified in
+    /// [`CertificateInner::signature_algorithm`].
+    pub fn signature(&self) -> &BitString {
+        &self.signature
+    }
 }
 
 #[cfg(feature = "pem")]

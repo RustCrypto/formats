@@ -58,7 +58,7 @@ fn p10cr_req_message_test() {
     match &message.body {
         PkiBody::P10cr(p10crs) => {
             assert_eq!(
-                ee_cert.tbs_certificate.subject().to_string(),
+                ee_cert.tbs_certificate().subject().to_string(),
                 p10crs.info.subject.to_string()
             );
         }

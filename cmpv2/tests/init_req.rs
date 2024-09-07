@@ -235,7 +235,7 @@ fn ir_rsp_message_test() {
     let header = &message.header;
     match &header.sender {
         GeneralName::DirectoryName(name) => {
-            assert_eq!(server_cert.tbs_certificate.subject(), name)
+            assert_eq!(server_cert.tbs_certificate().subject(), name)
         }
         _ => panic!(),
     }
