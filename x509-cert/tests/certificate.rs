@@ -160,7 +160,7 @@ fn reencode_cert() {
 
     // TODO - either encode as context specific or decode to sequence. for know lop off context
     // specific tag and length
-    let encoded_extensions = parsed_tbs.extensions().to_der().unwrap();
+    let encoded_extensions = parsed_tbs.extensions().unwrap().to_der().unwrap();
     assert_eq!(&parsed_coverage_tbs.extensions[4..], encoded_extensions);
 }
 
@@ -199,7 +199,7 @@ fn decode_cert() {
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
     println!("{:?}", cert);
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
         assert_eq!(ext.extn_id.to_string(), *oid);
         assert_eq!(ext.critical, *crit);
@@ -365,7 +365,7 @@ fn decode_cert() {
 
     // TODO - parse and compare public key
 
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
         assert_eq!(ext.extn_id.to_string(), *oid);
         assert_eq!(ext.critical, *crit);

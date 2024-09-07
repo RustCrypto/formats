@@ -211,7 +211,7 @@ fn decode_cert() {
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     for (i, ext) in exts.iter().enumerate() {
         match i {
             0 => {
@@ -697,7 +697,7 @@ fn decode_cert() {
     // TODO - parse and compare public key
 
     counter = 0;
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     let i = exts.iter();
     for ext in i {
         if 0 == counter {
@@ -776,49 +776,49 @@ fn decode_cert() {
     let der_encoded_cert = include_bytes!("examples/0954e2343dd5efe0a7f0967d69caf33e5f893720.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds extended key usage and name constraints vs above samples
     let der_encoded_cert = include_bytes!("examples/0fcc78fbbca9f32b08b19b032b84f2c86a128f35.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds logotype (which is unrecognized) vs above samples
     let der_encoded_cert = include_bytes!("examples/15b05c4865410c6b3ff76a4e8f3d87276756bd0c.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert features an EC key unlike the above samples
     let der_encoded_cert = include_bytes!("examples/16ee54e48c76eaa1052e09010d8faefee95e5ebb.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds issuer alt name vs above samples
     let der_encoded_cert = include_bytes!("examples/342cd9d3062da48c346965297f081ebc2ef68fdc.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds policy constraints vs above samples
     let der_encoded_cert = include_bytes!("examples/2049a5b28f104b2c6e1a08546f9cfc0353d6fd30.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds subject alt name vs above samples
     let der_encoded_cert = include_bytes!("examples/21723e7a0fb61a0bd4a29879b82a02b2fb4ad096.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds subject directory attributes vs above samples
@@ -826,7 +826,7 @@ fn decode_cert() {
         include_bytes!("examples/085B1E2F40254F9C7A2387BE9FF4EC116C326E10.fake.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds private key usage period (and an unprocessed Entrust extension) vs above samples
@@ -834,7 +834,7 @@ fn decode_cert() {
         include_bytes!("examples/554D5FF11DA613A155584D8D4AA07F67724D8077.fake.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds OCSP no check vs above samples
@@ -842,7 +842,7 @@ fn decode_cert() {
         include_bytes!("examples/28879DABB0FD11618FB74E47BE049D2933866D53.fake.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 
     // This cert adds PIV NACI indicator vs above samples
@@ -850,7 +850,7 @@ fn decode_cert() {
         include_bytes!("examples/288C8BCFEE6B89D110DAE2C9873897BF7FF53382.fake.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    let exts = cert.tbs_certificate().extensions();
+    let exts = cert.tbs_certificate().extensions().unwrap();
     spin_over_exts(exts);
 }
 

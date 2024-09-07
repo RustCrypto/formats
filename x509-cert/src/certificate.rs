@@ -210,9 +210,8 @@ impl<P: Profile> TbsCertificateInner<P> {
     }
 
     /// Certificate extensions.
-    pub fn extensions(&self) -> &ext::Extensions {
-        static EMPTY_EXTENSIONS: ext::Extensions = Vec::new();
-        self.extensions.as_ref().unwrap_or(&EMPTY_EXTENSIONS)
+    pub fn extensions(&self) -> Option<&ext::Extensions> {
+        self.extensions.as_ref()
     }
 
     /// Decodes a single extension
