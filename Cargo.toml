@@ -61,5 +61,6 @@ x509-ocsp = { path = "./x509-ocsp" }
 
 # Temp patches to external crates
 ecdsa = { git = "https://github.com/RustCrypto/signatures" }
-elliptic-curve = { git = "https://github.com/RustCrypto/traits" }
 rsa = { git = "https://github.com/RustCrypto/RSA" }
+# https://github.com/RustCrypto/elliptic-curves/pull/1075
+p256 = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
