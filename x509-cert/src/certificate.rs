@@ -228,7 +228,7 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// use x509_cert::{der::DecodePem, ext::pkix::BasicConstraints, Certificate};
     /// let certificate = Certificate::from_pem(CERT_PEM.as_bytes()).expect("parse certificate");
     ///
-    /// let (critical, constraints) = certificate.tbs_certificate.get_extension::<BasicConstraints>()
+    /// let (critical, constraints) = certificate.tbs_certificate().get_extension::<BasicConstraints>()
     ///     .expect("Failed to parse extension")
     ///     .expect("Basic constraints expected");
     /// # let _ = constraints;
@@ -264,7 +264,7 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// use x509_cert::{der::DecodePem, ext::pkix::BasicConstraints, Certificate};
     /// let certificate = Certificate::from_pem(CERT_PEM.as_bytes()).expect("parse certificate");
     ///
-    /// let mut extensions_found = certificate.tbs_certificate.filter_extensions::<BasicConstraints>();
+    /// let mut extensions_found = certificate.tbs_certificate().filter_extensions::<BasicConstraints>();
     /// while let Some(Ok((critical, extension))) = extensions_found.next() {
     ///     println!("Found (critical={critical}): {extension:?}");
     /// }
