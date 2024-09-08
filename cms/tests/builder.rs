@@ -56,9 +56,7 @@ fn signer_identifier(id: i32) -> SignerIdentifier {
         value: Any::from(Utf8StringRef::new(&format!("test client {id}")).unwrap()),
     }];
     let set_of_vector = SetOfVec::try_from(rdn.to_vec()).unwrap();
-    rdn_sequence
-        .0
-        .push(RelativeDistinguishedName::from(set_of_vector));
+    rdn_sequence.push(RelativeDistinguishedName::from(set_of_vector));
     SignerIdentifier::IssuerAndSerialNumber(IssuerAndSerialNumber {
         issuer: rdn_sequence,
         serial_number: SerialNumber::new(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
@@ -73,9 +71,7 @@ fn recipient_identifier(id: i32) -> RecipientIdentifier {
         value: Any::from(Utf8StringRef::new(&format!("test client {id}")).unwrap()),
     }];
     let set_of_vector = SetOfVec::try_from(rdn.to_vec()).unwrap();
-    rdn_sequence
-        .0
-        .push(RelativeDistinguishedName::from(set_of_vector));
+    rdn_sequence.push(RelativeDistinguishedName::from(set_of_vector));
     RecipientIdentifier::IssuerAndSerialNumber(IssuerAndSerialNumber {
         issuer: rdn_sequence,
         serial_number: SerialNumber::new(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06])

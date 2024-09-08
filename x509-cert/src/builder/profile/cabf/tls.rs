@@ -145,7 +145,6 @@ impl CertificateType {
         // TODO(baloo): not very happy with all that, might as well throw that in a helper
         // or something.
         let rdns: vec::Vec<RelativeDistinguishedName> = subject
-            .0
             .iter()
             .filter_map(|rdn| {
                 let out = SetOfVec::<AttributeTypeAndValue>::from_iter(
