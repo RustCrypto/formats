@@ -127,7 +127,9 @@ fn cr_rsp_message_test() {
     let server_cert = Certificate::from_der(enc_server_cert).unwrap();
     let header = &message.header;
     match &header.sender {
-        GeneralName::DirectoryName(name) => assert_eq!(server_cert.tbs_certificate.subject, *name),
+        GeneralName::DirectoryName(name) => {
+            assert_eq!(server_cert.tbs_certificate().subject(), name)
+        }
         _ => panic!(),
     }
     match &header.recipient {

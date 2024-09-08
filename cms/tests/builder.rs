@@ -522,7 +522,7 @@ fn test_degenerate_certificates_only_cms() {
     };
 
     let original_cert = x509_cert::Certificate::from_pem(cert_buf).unwrap();
-    assert_eq!(original_cert.signature, extracted_cert.signature)
+    assert_eq!(original_cert.signature(), extracted_cert.signature())
 }
 
 #[test]
