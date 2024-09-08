@@ -136,7 +136,7 @@ pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct TbsCertificateInner<P: Profile = Rfc5280> {
-    /// The certificate version
+    /// The certificate version.
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
     /// fields such as `issuer_unique_id`, `subject_unique_id` and `extensions`
@@ -163,32 +163,40 @@ pub struct TbsCertificateInner<P: Profile = Rfc5280> {
 }
 
 impl<P: Profile> TbsCertificateInner<P> {
-    /// Version of this certificate.
+    /// [`Version`] of this certificate (v1/v2/v3).
     pub fn version(&self) -> Version {
         self.version
     }
 
     /// Serial number of this certificate.
+    ///
+    /// X.509 serial numbers are used to uniquely identify certificates issued by a given
+    /// Certificate Authority (CA) identified in the `issuer` field.
     pub fn serial_number(&self) -> &SerialNumber<P> {
         &self.serial_number
     }
 
-    /// Signature algorithm identifier.
+    /// Identifies the signature algorithm that this `TBSCertificate` should be signed with.
+    ///
+    /// In a signed certificate, matches [`CertificateInner::signature_algorithm`].
     pub fn signature(&self) -> &AlgorithmIdentifierOwned {
         &self.signature
     }
 
-    /// Certificate issuer.
+    /// Certificate issuer: [`Name`] of the Certificate Authority (CA) which issued this
+    /// certificate.
     pub fn issuer(&self) -> &Name {
         &self.issuer
     }
 
-    /// Validity period for this certificate.
+    /// Validity period for this certificate: time range in which a certificate is considered valid,
+    /// after which it expires.
     pub fn validity(&self) -> &Validity<P> {
         &self.validity
     }
 
-    /// Subject of this certificate.
+    /// Subject of this certificate: entity that the certificate is intended to represent or
+    /// authenticate, e.g. an individual, a device, or an organization.
     pub fn subject(&self) -> &Name {
         &self.subject
     }
@@ -199,26 +207,38 @@ impl<P: Profile> TbsCertificateInner<P> {
         &self.subject_public_key_info
     }
 
-    /// Issuer unique ID.
+    /// Issuer unique ID: unique identifier representing the issuing CA, as defined by the
+    /// issuing CA.
+    ///
+    /// (NOTE: added in X.509 v2)
     pub fn issuer_unique_id(&self) -> &Option<BitString> {
         &self.issuer_unique_id
     }
 
-    /// Subject unique ID.
+    /// Subject unique ID: unique identifier representing the certificate subject, as defined by the
+    /// issuing CA.
+    ///
+    /// (NOTE: added in X.509 v2)
     pub fn subject_unique_id(&self) -> &Option<BitString> {
         &self.subject_unique_id
     }
 
     /// Certificate extensions.
+    ///
+    /// Additional fields in a digital certificate that provide extra information beyond the
+    /// standard fields. These extensions enhance the functionality and flexibility of certificates,
+    /// allowing them to convey more specific details about the certificate's usage and constraints.
+    ///
+    /// (NOTE: added in X.509 v3)
     pub fn extensions(&self) -> Option<&ext::Extensions> {
         self.extensions.as_ref()
     }
 
-    /// Decodes a single extension
+    /// Decodes a single extension.
     ///
     /// Returns `Ok(None)` if the extension is not present.
     ///
-    /// Otherwise returns the extension, and indicates if the extension was marked critical in the
+    /// Otherwise, returns the extension, and indicates if the extension was marked critical in the
     /// boolean.
     ///
     /// ```
@@ -320,13 +340,13 @@ impl<P: Profile> CertificateInner<P> {
         &self.tbs_certificate
     }
 
-    /// Signature algorithm.
+    /// Signature algorithm used to sign the serialization of [`CertificateInner::tbs_certificate`].
     pub fn signature_algorithm(&self) -> &AlgorithmIdentifierOwned {
         &self.signature_algorithm
     }
 
-    /// Signature over the certificate using the algorithm identified in
-    /// [`CertificateInner::signature_algorithm`].
+    /// Signature over the DER serialization of [`CertificateInner::tbs_certificate`] using the
+    /// algorithm identified in [`CertificateInner::signature_algorithm`].
     pub fn signature(&self) -> &BitString {
         &self.signature
     }
