@@ -140,17 +140,6 @@ pub type DistinguishedName = RdnSequence;
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RelativeDistinguishedName(pub SetOfVec<AttributeTypeAndValue>);
 
-impl RelativeDistinguishedName {
-    /// Converts an RelativeDistinguishedName string into an encoded RelativeDistinguishedName
-    #[deprecated(
-        since = "0.2.1",
-        note = "use RelativeDistinguishedName::from_str(...)?.to_der()"
-    )]
-    pub fn encode_from_string(s: &str) -> Result<Vec<u8>, der::Error> {
-        Self::from_str(s)?.to_der()
-    }
-}
-
 /// Parse a [`RelativeDistinguishedName`] string.
 ///
 /// This function follows the rules in [RFC 4514].
