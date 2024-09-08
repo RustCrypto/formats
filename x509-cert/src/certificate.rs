@@ -165,13 +165,34 @@ pub struct TbsCertificateInner<P: Profile = Rfc5280> {
 impl<P: Profile> TbsCertificateInner<P> {
     /// Decodes a single extension
     ///
-    /// Returns an error if multiple of these extensions is present. Returns
-    /// `Ok(None)` if the extension is not present. Returns a decoding error
-    /// if decoding failed. Otherwise returns the extension.
-    pub fn get<'a, T: Decode<'a> + AssociatedOid>(
+    /// Returns `Ok(None)` if the extension is not present.
+    ///
+    /// Otherwise returns the extension, and indicates if the extension was marked critical in the
+    /// boolean.
+    ///
+    /// ```
+    /// # #[cfg(feature = "pem")]
+    /// # fn pemonly() {
+    /// # const CERT_PEM: &str = include_str!("../tests/examples/amazon.pem");
+    /// use x509_cert::{der::DecodePem, ext::pkix::BasicConstraints, Certificate};
+    /// let certificate = Certificate::from_pem(CERT_PEM.as_bytes()).expect("parse certificate");
+    ///
+    /// let (critical, constraints) = certificate.tbs_certificate.get_extension::<BasicConstraints>()
+    ///     .expect("Failed to parse extension")
+    ///     .expect("Basic constraints expected");
+    /// # let _ = constraints;
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if multiple of these extensions are present.
+    ///
+    /// Returns a decoding error if decoding failed.
+    pub fn get_extension<'a, T: Decode<'a> + AssociatedOid>(
         &'a self,
     ) -> Result<Option<(bool, T)>, <T as Decode<'a>>::Error> {
-        let mut iter = self.filter::<T>().peekable();
+        let mut iter = self.filter_extensions::<T>().peekable();
         match iter.next() {
             None => Ok(None),
             Some(item) => match iter.peek() {
@@ -184,7 +205,28 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// Filters extensions by an associated OID
     ///
     /// Returns a filtered iterator over all the extensions with the OID.
-    pub fn filter<'a, T: Decode<'a> + AssociatedOid>(
+    ///
+    /// ```
+    /// # #[cfg(feature = "pem")]
+    /// # fn pemonly() {
+    /// # const CERT_PEM: &str = include_str!("../tests/examples/amazon.pem");
+    /// use x509_cert::{der::DecodePem, ext::pkix::BasicConstraints, Certificate};
+    /// let certificate = Certificate::from_pem(CERT_PEM.as_bytes()).expect("parse certificate");
+    ///
+    /// let mut extensions_found = certificate.tbs_certificate.filter_extensions::<BasicConstraints>();
+    /// while let Some(Ok((critical, extension))) = extensions_found.next() {
+    ///     println!("Found (critical={critical}): {extension:?}");
+    /// }
+    /// # }
+    /// ```
+    ///
+    /// # Safety
+    ///
+    /// According to [RFC 5290 section 4.2], extensions should not appear more than once.
+    /// A better alternative is to use [`TbsCertificateInner::get_extension`] instead.
+    ///
+    /// [RFC 5290 section 4.2]: https://www.rfc-editor.org/rfc/rfc5280#section-4.2
+    pub fn filter_extensions<'a, T: Decode<'a> + AssociatedOid>(
         &'a self,
     ) -> impl 'a + Iterator<Item = Result<(bool, T), <T as Decode<'a>>::Error>> {
         self.extensions
