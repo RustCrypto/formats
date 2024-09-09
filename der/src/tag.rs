@@ -108,6 +108,9 @@ pub enum Tag {
     /// `VisibleString` tag: `26`.
     VisibleString,
 
+    /// `GeneralString` tag: `27`.
+    GeneralString,
+
     /// `BMPString` tag: `30`.
     BmpString,
 
@@ -223,6 +226,7 @@ impl Tag {
             Tag::UtcTime => 0x17,
             Tag::GeneralizedTime => 0x18,
             Tag::VisibleString => 0x1A,
+            Tag::GeneralString => 0x1B,
             Tag::BmpString => 0x1E,
             Tag::Application {
                 constructed,
@@ -292,6 +296,7 @@ impl TryFrom<u8> for Tag {
             0x17 => Ok(Tag::UtcTime),
             0x18 => Ok(Tag::GeneralizedTime),
             0x1A => Ok(Tag::VisibleString),
+            0x1B => Ok(Tag::GeneralString),
             0x1E => Ok(Tag::BmpString),
             0x30 => Ok(Tag::Sequence), // constructed
             0x31 => Ok(Tag::Set),      // constructed
@@ -371,6 +376,7 @@ impl fmt::Display for Tag {
             Tag::UtcTime => f.write_str("UTCTime"),
             Tag::GeneralizedTime => f.write_str("GeneralizedTime"),
             Tag::VisibleString => f.write_str("VisibleString"),
+            Tag::GeneralString => f.write_str("GeneralString"),
             Tag::BmpString => f.write_str("BMPString"),
             Tag::Sequence => f.write_str("SEQUENCE"),
             Tag::Application {
