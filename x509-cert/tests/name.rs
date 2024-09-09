@@ -36,7 +36,7 @@ fn decode_name() {
     let mut counter = 0;
     let i = rdn1a.iter();
     for rdn in i {
-        let i1 = rdn.0.iter();
+        let i1 = rdn.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -99,7 +99,7 @@ fn decode_rdn() {
     //        :   }
     let rdn1 =
         RelativeDistinguishedName::from_der(&hex!("310B3009060355040613025553")[..]).unwrap();
-    let i = rdn1.0.iter();
+    let i = rdn1.iter();
     for atav in i {
         let oid = atav.oid;
         assert_eq!(oid.to_string(), "2.5.4.6");
@@ -125,7 +125,7 @@ fn decode_rdn() {
         &hex!("311F300A060355040A0C03313233301106035504030C0A4A4F484E20534D495448")[..],
     )
     .unwrap();
-    let mut i = rdn2a.0.iter();
+    let mut i = rdn2a.iter();
     let atav1a = i.next().unwrap();
     let oid2 = atav1a.oid;
     assert_eq!(oid2.to_string(), "2.5.4.10");
@@ -143,8 +143,8 @@ fn decode_rdn() {
     assert_eq!(utf8a.to_string(), "JOHN SMITH");
 
     let mut from_scratch = RelativeDistinguishedName::default();
-    assert!(from_scratch.0.insert(atav1a.clone()).is_ok());
-    assert!(from_scratch.0.insert(atav2a.clone()).is_ok());
+    assert!(from_scratch.insert(atav1a.clone()).is_ok());
+    assert!(from_scratch.insert(atav2a.clone()).is_ok());
     let reencoded = from_scratch.to_der().unwrap();
     assert_eq!(
         reencoded,
@@ -152,9 +152,7 @@ fn decode_rdn() {
     );
 
     let mut from_scratch2 = RelativeDistinguishedName::default();
-    assert!(from_scratch2.0.insert_ordered(atav2a.clone()).is_ok());
-    // fails when caller adds items not in DER lexicographical order
-    assert!(from_scratch2.0.insert_ordered(atav1a.clone()).is_err());
+    assert!(from_scratch2.insert(atav2a.clone()).is_ok());
 
     // allow out-of-order RDNs (see: RustCrypto/formats#625)
     assert!(RelativeDistinguishedName::from_der(
@@ -357,7 +355,7 @@ fn rdns_serde() {
             let rdns = RdnSequence::from_der(&der).unwrap();
 
             for (l, r) in brdns.iter().zip(rdns.iter()) {
-                for (ll, rr) in l.0.iter().zip(r.0.iter()) {
+                for (ll, rr) in l.iter().zip(r.iter()) {
                     assert_eq!(ll, rr);
                 }
 

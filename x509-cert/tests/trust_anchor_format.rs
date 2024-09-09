@@ -92,7 +92,7 @@ fn decode_ta1() {
             counter = 0;
             let i = cert_path.ta_name.iter();
             for rdn in i {
-                let i1 = rdn.0.iter();
+                let i1 = rdn.iter();
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -169,7 +169,7 @@ fn decode_ta2() {
             let mut counter = 0;
             let i = cert_path.ta_name.iter();
             for rdn in i {
-                let i1 = rdn.0.iter();
+                let i1 = rdn.iter();
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -216,7 +216,7 @@ fn decode_ta2() {
                     GeneralName::DirectoryName(dn) => {
                         let i = dn.iter();
                         for rdn in i {
-                            let i1 = rdn.0.iter();
+                            let i1 = rdn.iter();
                             for atav in i1 {
                                 if 0 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -296,7 +296,7 @@ fn decode_ta3() {
             let mut counter = 0;
             let i = cert_path.ta_name.iter();
             for rdn in i {
-                let i1 = rdn.0.iter();
+                let i1 = rdn.iter();
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -343,7 +343,7 @@ fn decode_ta3() {
                     GeneralName::DirectoryName(dn) => {
                         let i = dn.iter();
                         for rdn in i {
-                            let i1 = rdn.0.iter();
+                            let i1 = rdn.iter();
                             for atav in i1 {
                                 if 0 == counter {
                                     assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -416,7 +416,7 @@ fn decode_ta4() {
             let mut counter = 0;
             let i = cert_path.ta_name.iter();
             for rdn in i {
-                let i1 = rdn.0.iter();
+                let i1 = rdn.iter();
                 for atav in i1 {
                     if 0 == counter {
                         assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");

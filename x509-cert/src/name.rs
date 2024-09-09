@@ -153,7 +153,29 @@ pub type DistinguishedName = RdnSequence;
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct RelativeDistinguishedName(pub SetOfVec<AttributeTypeAndValue>);
+pub struct RelativeDistinguishedName(pub(crate) SetOfVec<AttributeTypeAndValue>);
+
+impl RelativeDistinguishedName {
+    /// Is this [`RelativeDistinguishedName`] empty?
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Iterate over this [`RelativeDistinguishedName`].
+    pub fn iter(&self) -> impl Iterator<Item = &AttributeTypeAndValue> {
+        self.0.iter()
+    }
+
+    /// Length of this [`RelativeDistinguishedName`].
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Insert an [`AttributeTypeAndValue`] into this [`RelativeDistinguishedName`]. Must be unique.
+    pub fn insert(&mut self, item: AttributeTypeAndValue) -> Result<(), der::Error> {
+        self.0.insert(item)
+    }
+}
 
 /// Parse a [`RelativeDistinguishedName`] string.
 ///
