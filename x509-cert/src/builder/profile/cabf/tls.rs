@@ -148,8 +148,7 @@ impl CertificateType {
             .iter()
             .filter_map(|rdn| {
                 let out = SetOfVec::<AttributeTypeAndValue>::from_iter(
-                    rdn.0
-                        .iter()
+                    rdn.iter()
                         .filter(|attr_value| attr_value.oid == rfc4519::COUNTRY_NAME)
                         .cloned(),
                 )
@@ -157,7 +156,7 @@ impl CertificateType {
 
                 Some(RelativeDistinguishedName(out))
             })
-            .filter(|rdn| !rdn.0.is_empty())
+            .filter(|rdn| !rdn.is_empty())
             .collect();
 
         let subject: Name = rdns.into();

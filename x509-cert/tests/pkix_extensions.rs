@@ -583,7 +583,7 @@ fn decode_cert() {
     let mut counter = 0;
     let i = cert.tbs_certificate().issuer().iter();
     for rdn in i {
-        let i1 = rdn.0.iter();
+        let i1 = rdn.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
@@ -634,7 +634,7 @@ fn decode_cert() {
     counter = 0;
     let i = cert.tbs_certificate().subject().iter();
     for rdn in i {
-        let i1 = rdn.0.iter();
+        let i1 = rdn.iter();
         for atav in i1 {
             if 0 == counter {
                 assert_eq!(atav.oid.to_string(), "2.5.4.6");
