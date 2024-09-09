@@ -239,7 +239,7 @@ fn decode_cert() {
         .is_null());
 
     let mut counter = 0;
-    let i = cert.tbs_certificate().issuer().0.iter();
+    let i = cert.tbs_certificate().issuer().iter();
     for rdn in i {
         let i1 = rdn.0.iter();
         for atav in i1 {
@@ -294,7 +294,7 @@ fn decode_cert() {
     );
 
     counter = 0;
-    let i = cert.tbs_certificate().subject().0.iter();
+    let i = cert.tbs_certificate().subject().iter();
     for rdn in i {
         let i1 = rdn.0.iter();
         for atav in i1 {

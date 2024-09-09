@@ -34,7 +34,7 @@ fn decode_name() {
     let rdn1a = rdn1.unwrap();
 
     let mut counter = 0;
-    let i = rdn1a.0.iter();
+    let i = rdn1a.iter();
     for rdn in i {
         let i1 = rdn.0.iter();
         for atav in i1 {
@@ -338,7 +338,7 @@ fn rdns_serde() {
         let mut brdns = RdnSequence::default();
         for rdn in rdns.iter() {
             let sofv = SetOfVec::try_from(rdn.to_vec()).unwrap();
-            brdns.0.push(RelativeDistinguishedName::from(sofv));
+            brdns.push(RelativeDistinguishedName::from(sofv));
         }
 
         // Check that serialization matches the expected output.
@@ -356,7 +356,7 @@ fn rdns_serde() {
 
             let rdns = RdnSequence::from_der(&der).unwrap();
 
-            for (l, r) in brdns.0.iter().zip(rdns.0.iter()) {
+            for (l, r) in brdns.iter().zip(rdns.iter()) {
                 for (ll, rr) in l.0.iter().zip(r.0.iter()) {
                     assert_eq!(ll, rr);
                 }

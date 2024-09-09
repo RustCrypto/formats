@@ -23,7 +23,7 @@ pub type Name = RdnSequence;
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct RdnSequence(pub Vec<RelativeDistinguishedName>);
+pub struct RdnSequence(Vec<RelativeDistinguishedName>);
 
 impl RdnSequence {
     /// Converts an `RDNSequence` string into an encoded `RDNSequence`.
@@ -35,6 +35,21 @@ impl RdnSequence {
     /// Is this [`RdnSequence`] empty?
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+
+    /// Iterate over this [`RdnSequence`].
+    pub fn iter(&self) -> impl Iterator<Item = &RelativeDistinguishedName> {
+        self.0.iter()
+    }
+
+    /// Length of this [`RdnSequence`].
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Push a [`RelativeDistinguishedName`] onto this [`RdnSequence`].
+    pub fn push(&mut self, name: RelativeDistinguishedName) {
+        self.0.push(name)
     }
 }
 

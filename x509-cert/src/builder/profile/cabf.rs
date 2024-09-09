@@ -43,7 +43,7 @@ pub fn check_names_encoding(name: &Name, multiple_allowed: bool) -> Result<()> {
 
     let mut seen = HashSet::new();
 
-    for rdn in name.0.iter() {
+    for rdn in name.iter() {
         if rdn.0.len() != 1 {
             return Err(Error::NonUniqueRdn);
         }
@@ -87,7 +87,7 @@ pub fn ca_certificate_naming(subject: &Name) -> Result<()> {
 
     check_names_encoding(subject, false)?;
 
-    for rdn in subject.0.iter() {
+    for rdn in subject.iter() {
         for atv in rdn.0.iter() {
             if !allowed.remove(&atv.oid) {
                 return Err(Error::InvalidAttribute { oid: atv.oid });
