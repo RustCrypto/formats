@@ -81,53 +81,44 @@ fn decode_ta1() {
             ];
 
             let cert_path = tai.cert_path.as_ref().unwrap();
-            let mut counter = 0;
             let exts = cert_path.policy_set.as_ref().unwrap();
-            let i = exts.0.iter();
-            for ext in i {
+            for (counter, ext) in exts.0.iter().enumerate() {
                 assert_eq!(policy_ids[counter], ext.policy_identifier.to_string());
-                counter += 1;
             }
 
-            counter = 0;
-            let i = cert_path.ta_name.iter();
-            for rdn in i {
-                let i1 = rdn.iter();
-                for atav in i1 {
-                    if 0 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "US"
-                        );
-                    } else if 1 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "U.S. Government"
-                        );
-                    } else if 2 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "ECA"
-                        );
-                    } else if 3 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.3");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "ECA Root CA 4"
-                        );
-                    }
-                    counter += 1;
+            for (counter, atav) in cert_path.ta_name.iter().enumerate() {
+                if 0 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.6");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "US"
+                    );
+                } else if 1 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.10");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "U.S. Government"
+                    );
+                } else if 2 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.11");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "ECA"
+                    );
+                } else if 3 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.3");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "ECA Root CA 4"
+                    );
                 }
             }
 
@@ -166,84 +157,72 @@ fn decode_ta2() {
 
             let cert_path = tai.cert_path.as_ref().unwrap();
 
-            let mut counter = 0;
-            let i = cert_path.ta_name.iter();
-            for rdn in i {
-                let i1 = rdn.iter();
-                for atav in i1 {
-                    if 0 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "US"
-                        );
-                    } else if 1 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "Entrust"
-                        );
-                    } else if 2 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "Certification Authorities"
-                        );
-                    } else if 3 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "Entrust Managed Services NFI Root CA"
-                        );
-                    }
-                    counter += 1;
+            for (counter, atav) in cert_path.ta_name.iter().enumerate() {
+                if 0 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.6");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "US"
+                    );
+                } else if 1 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.10");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "Entrust"
+                    );
+                } else if 2 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.11");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "Certification Authorities"
+                    );
+                } else if 3 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.11");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "Entrust Managed Services NFI Root CA"
+                    );
                 }
             }
 
             let nc = cert_path.name_constr.as_ref().unwrap();
-            counter = 0;
             let gsi = nc.excluded_subtrees.as_ref().unwrap().iter();
             for gs in gsi {
                 match &gs.base {
                     GeneralName::DirectoryName(dn) => {
-                        let i = dn.iter();
-                        for rdn in i {
-                            let i1 = rdn.iter();
-                            for atav in i1 {
-                                if 0 == counter {
-                                    assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                                    assert_eq!(
-                                        PrintableStringRef::try_from(&atav.value)
-                                            .unwrap()
-                                            .to_string(),
-                                        "US"
-                                    );
-                                } else if 1 == counter {
-                                    assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                                    assert_eq!(
-                                        PrintableStringRef::try_from(&atav.value)
-                                            .unwrap()
-                                            .to_string(),
-                                        "U.S. Government"
-                                    );
-                                } else if 2 == counter {
-                                    assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                                    assert_eq!(
-                                        PrintableStringRef::try_from(&atav.value)
-                                            .unwrap()
-                                            .to_string(),
-                                        "DoD"
-                                    );
-                                }
-                                counter += 1;
+                        for (counter, atav) in dn.iter().enumerate() {
+                            if 0 == counter {
+                                assert_eq!(atav.oid.to_string(), "2.5.4.6");
+                                assert_eq!(
+                                    PrintableStringRef::try_from(&atav.value)
+                                        .unwrap()
+                                        .to_string(),
+                                    "US"
+                                );
+                            } else if 1 == counter {
+                                assert_eq!(atav.oid.to_string(), "2.5.4.10");
+                                assert_eq!(
+                                    PrintableStringRef::try_from(&atav.value)
+                                        .unwrap()
+                                        .to_string(),
+                                    "U.S. Government"
+                                );
+                            } else if 2 == counter {
+                                assert_eq!(atav.oid.to_string(), "2.5.4.11");
+                                assert_eq!(
+                                    PrintableStringRef::try_from(&atav.value)
+                                        .unwrap()
+                                        .to_string(),
+                                    "DoD"
+                                );
                             }
                         }
                     }
@@ -293,84 +272,72 @@ fn decode_ta3() {
                 cert_path.policy_flags.unwrap()
             );
 
-            let mut counter = 0;
-            let i = cert_path.ta_name.iter();
-            for rdn in i {
-                let i1 = rdn.iter();
-                for atav in i1 {
-                    if 0 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "US"
-                        );
-                    } else if 1 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "Exostar LLC"
-                        );
-                    } else if 2 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "Certification Authorities"
-                        );
-                    } else if 3 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.3");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "Exostar Federated Identity Service Root CA 1"
-                        );
-                    }
-                    counter += 1;
+            for (counter, atav) in cert_path.ta_name.iter().enumerate() {
+                if 0 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.6");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "US"
+                    );
+                } else if 1 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.10");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "Exostar LLC"
+                    );
+                } else if 2 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.11");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "Certification Authorities"
+                    );
+                } else if 3 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.3");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "Exostar Federated Identity Service Root CA 1"
+                    );
                 }
             }
 
             let nc = cert_path.name_constr.as_ref().unwrap();
-            counter = 0;
             let gsi = nc.excluded_subtrees.as_ref().unwrap().iter();
             for gs in gsi {
                 match &gs.base {
                     GeneralName::DirectoryName(dn) => {
-                        let i = dn.iter();
-                        for rdn in i {
-                            let i1 = rdn.iter();
-                            for atav in i1 {
-                                if 0 == counter {
-                                    assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                                    assert_eq!(
-                                        PrintableStringRef::try_from(&atav.value)
-                                            .unwrap()
-                                            .to_string(),
-                                        "US"
-                                    );
-                                } else if 1 == counter {
-                                    assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                                    assert_eq!(
-                                        PrintableStringRef::try_from(&atav.value)
-                                            .unwrap()
-                                            .to_string(),
-                                        "U.S. Government"
-                                    );
-                                } else if 2 == counter {
-                                    assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                                    assert_eq!(
-                                        PrintableStringRef::try_from(&atav.value)
-                                            .unwrap()
-                                            .to_string(),
-                                        "DoD"
-                                    );
-                                }
-                                counter += 1;
+                        for (counter, atav) in dn.iter().enumerate() {
+                            if 0 == counter {
+                                assert_eq!(atav.oid.to_string(), "2.5.4.6");
+                                assert_eq!(
+                                    PrintableStringRef::try_from(&atav.value)
+                                        .unwrap()
+                                        .to_string(),
+                                    "US"
+                                );
+                            } else if 1 == counter {
+                                assert_eq!(atav.oid.to_string(), "2.5.4.10");
+                                assert_eq!(
+                                    PrintableStringRef::try_from(&atav.value)
+                                        .unwrap()
+                                        .to_string(),
+                                    "U.S. Government"
+                                );
+                            } else if 2 == counter {
+                                assert_eq!(atav.oid.to_string(), "2.5.4.11");
+                                assert_eq!(
+                                    PrintableStringRef::try_from(&atav.value)
+                                        .unwrap()
+                                        .to_string(),
+                                    "DoD"
+                                );
                             }
                         }
                     }
@@ -413,41 +380,35 @@ fn decode_ta4() {
 
             let cert_path = tai.cert_path.as_ref().unwrap();
 
-            let mut counter = 0;
-            let i = cert_path.ta_name.iter();
-            for rdn in i {
-                let i1 = rdn.iter();
-                for atav in i1 {
-                    if 0 == counter {
-                        assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");
-                        assert_eq!(
-                            Ia5StringRef::try_from(&atav.value).unwrap().to_string(),
-                            "com"
-                        );
-                    } else if 1 == counter {
-                        assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");
-                        assert_eq!(
-                            Ia5StringRef::try_from(&atav.value).unwrap().to_string(),
-                            "raytheon"
-                        );
-                    } else if 2 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "CAs"
-                        );
-                    } else if 3 == counter {
-                        assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                        assert_eq!(
-                            PrintableStringRef::try_from(&atav.value)
-                                .unwrap()
-                                .to_string(),
-                            "RaytheonRoot"
-                        );
-                    }
-                    counter += 1;
+            for (counter, atav) in cert_path.ta_name.iter().enumerate() {
+                if 0 == counter {
+                    assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");
+                    assert_eq!(
+                        Ia5StringRef::try_from(&atav.value).unwrap().to_string(),
+                        "com"
+                    );
+                } else if 1 == counter {
+                    assert_eq!(atav.oid.to_string(), "0.9.2342.19200300.100.1.25");
+                    assert_eq!(
+                        Ia5StringRef::try_from(&atav.value).unwrap().to_string(),
+                        "raytheon"
+                    );
+                } else if 2 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.10");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "CAs"
+                    );
+                } else if 3 == counter {
+                    assert_eq!(atav.oid.to_string(), "2.5.4.11");
+                    assert_eq!(
+                        PrintableStringRef::try_from(&atav.value)
+                            .unwrap()
+                            .to_string(),
+                        "RaytheonRoot"
+                    );
                 }
             }
 

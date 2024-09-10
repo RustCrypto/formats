@@ -145,7 +145,7 @@ impl CertificateType {
         // TODO(baloo): not very happy with all that, might as well throw that in a helper
         // or something.
         let rdns: vec::Vec<RelativeDistinguishedName> = subject
-            .iter()
+            .iter_rdn()
             .filter_map(|rdn| {
                 let out = SetOfVec::<AttributeTypeAndValue>::from_iter(
                     rdn.iter()
@@ -159,7 +159,7 @@ impl CertificateType {
             .filter(|rdn| !rdn.is_empty())
             .collect();
 
-        let subject: Name = rdns.into();
+        let subject: Name = Name(rdns.into());
 
         Ok(Self::DomainValidated(DomainValidated { subject, names }))
     }

@@ -238,41 +238,35 @@ fn decode_cert() {
         .unwrap()
         .is_null());
 
-    let mut counter = 0;
-    let i = cert.tbs_certificate().issuer().iter();
-    for rdn in i {
-        let i1 = rdn.iter();
-        for atav in i1 {
-            if 0 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "US"
-                );
-            } else if 1 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Mock"
-                );
-            } else if 2 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                assert_eq!(
-                    Utf8StringRef::try_from(&atav.value).unwrap().to_string(),
-                    "IdenTrust Services LLC"
-                );
-            } else if 3 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.3");
-                assert_eq!(
-                    Utf8StringRef::try_from(&atav.value).unwrap().to_string(),
-                    "PTE IdenTrust Global Common Root CA 1"
-                );
-            }
-            counter += 1;
+    for (counter, atav) in cert.tbs_certificate().issuer().iter().enumerate() {
+        if 0 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.6");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "US"
+            );
+        } else if 1 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.10");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Mock"
+            );
+        } else if 2 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.10");
+            assert_eq!(
+                Utf8StringRef::try_from(&atav.value).unwrap().to_string(),
+                "IdenTrust Services LLC"
+            );
+        } else if 3 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.3");
+            assert_eq!(
+                Utf8StringRef::try_from(&atav.value).unwrap().to_string(),
+                "PTE IdenTrust Global Common Root CA 1"
+            );
         }
     }
 
@@ -293,46 +287,40 @@ fn decode_cert() {
         1516628593
     );
 
-    counter = 0;
-    let i = cert.tbs_certificate().subject().iter();
-    for rdn in i {
-        let i1 = rdn.iter();
-        for atav in i1 {
-            // Yes, this cert features RDNs encoded in reverse order
-            if 0 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.3");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Test Federal Bridge CA"
-                );
-            } else if 1 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.11");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "TestFPKI"
-                );
-            } else if 2 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "U.S. Government"
-                );
-            } else if 3 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "US"
-                );
-            }
-            counter += 1;
+    for (counter, atav) in cert.tbs_certificate().subject().iter().enumerate() {
+        // Yes, this cert features RDNs encoded in reverse order
+        if 0 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.3");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Test Federal Bridge CA"
+            );
+        } else if 1 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.11");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "TestFPKI"
+            );
+        } else if 2 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.10");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "U.S. Government"
+            );
+        } else if 3 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.6");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "US"
+            );
         }
     }
 

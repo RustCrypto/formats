@@ -36,7 +36,7 @@ fn decode_rsa_2048_der() {
 
     // Check all the RDNs.
     assert_eq!(cr.info.subject.len(), NAMES.len());
-    for (name, (oid, val)) in cr.info.subject.iter().zip(NAMES) {
+    for (name, (oid, val)) in cr.info.subject.iter_rdn().zip(NAMES) {
         let kind = name.iter().next().unwrap();
         let value = match kind.value.tag() {
             Tag::Utf8String => Utf8StringRef::try_from(&kind.value).unwrap().as_str(),
