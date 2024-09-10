@@ -2,7 +2,7 @@ use core::fmt;
 use core::marker::PhantomData;
 
 use serde::{
-    de::{Error, Visitor},
+    de::{Error, Unexpected, Visitor},
     Serializer,
 };
 
@@ -84,11 +84,15 @@ impl<'de, 'b, T: LengthCheck> Visitor<'de> for StrIntoBufVisitor<'b, T> {
     where
         E: Error,
     {
-        if !T::length_check(self.0.len() * 2, v.len()) {
-            return Err(Error::invalid_length(v.len(), &self));
-        }
-        // TODO: Map `base16ct::Error::InvalidLength` to `Error::invalid_length`.
-        base16ct::mixed::decode(v, self.0).map_err(E::custom)
+        base16ct::mixed::decode(v, self.0).map_err(|err| match err {
+            base16ct::Error::InvalidLength => {
+                Error::invalid_length(v.len(), &"an even number of hex digits")
+            }
+            base16ct::Error::InvalidEncoding => Error::invalid_value(
+                Unexpected::Other("<potentially secret hex string>"),
+                &"a sequence of hex digits (0-9,a-f,A-F)",
+            ),
+        })
     }
 }
 
