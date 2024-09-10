@@ -194,6 +194,10 @@ where
     }
 
     /// Add an extension to this certificate
+    ///
+    /// Extensions need to implement [`AsExtension`], examples may be found in
+    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
+    /// [the implementors](../ext/trait.AsExtension.html#implementors).
     pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
         let ext = extension.to_extension(&self.tbs.subject, &self.extensions)?;
         self.extensions.push(ext);
@@ -265,6 +269,10 @@ impl RequestBuilder {
     }
 
     /// Add an extension to this certificate request
+    ///
+    /// Extensions need to implement [`AsExtension`], examples may be found in
+    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
+    /// [the implementors](../ext/trait.AsExtension.html#implementors).
     pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
         let ext = extension.to_extension(&self.info.subject, &self.extension_req.0)?;
 
