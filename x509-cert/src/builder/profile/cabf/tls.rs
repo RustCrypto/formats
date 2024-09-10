@@ -13,7 +13,7 @@ use const_oid::db::rfc5912;
 
 use crate::{
     attr::AttributeTypeAndValue,
-    builder::{Profile, Result},
+    builder::{BuildProfile, Result},
     certificate::TbsCertificate,
     ext::{
         pkix::{
@@ -50,7 +50,7 @@ pub struct Subordinate {
     pub client_auth: bool,
 }
 
-impl Profile for Subordinate {
+impl BuildProfile for Subordinate {
     fn get_issuer(&self, _subject: &Name) -> Name {
         self.issuer.clone()
     }
@@ -231,7 +231,7 @@ pub struct Tls12Options {
     pub enable_key_agreement: bool,
 }
 
-impl Profile for Subscriber {
+impl BuildProfile for Subscriber {
     fn get_issuer(&self, _subject: &Name) -> Name {
         self.issuer.clone()
     }
