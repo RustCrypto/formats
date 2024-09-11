@@ -5,7 +5,7 @@ use alloc::vec;
 use std::collections::HashSet;
 
 use crate::{
-    builder::{BuildProfile, Error, Result},
+    builder::{BuilderProfile, Error, Result},
     certificate::TbsCertificate,
     ext::{
         pkix::{
@@ -123,7 +123,7 @@ impl Root {
     }
 }
 
-impl BuildProfile for Root {
+impl BuilderProfile for Root {
     fn get_issuer(&self, subject: &Name) -> Name {
         subject.clone()
     }

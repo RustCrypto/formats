@@ -21,13 +21,13 @@ use crate::{
 
 pub mod profile;
 
-use self::profile::BuildProfile;
+use self::profile::BuilderProfile;
 
 #[deprecated(
     since = "0.3.0",
-    note = "please use `x509_cert::builder::profile::BuildProfile` instead"
+    note = "please use `x509_cert::builder::profile::BuilderProfile` instead"
 )]
-pub use self::profile::BuildProfile as Profile;
+pub use self::profile::BuilderProfile as Profile;
 
 const NULL_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("0.0.0");
 
@@ -152,7 +152,7 @@ pub struct CertificateBuilder<P> {
 
 impl<P> CertificateBuilder<P>
 where
-    P: BuildProfile,
+    P: BuilderProfile,
 {
     /// Creates a new certificate builder
     pub fn new(
@@ -352,7 +352,7 @@ pub trait Builder: Sized {
 
 impl<P> Builder for CertificateBuilder<P>
 where
-    P: BuildProfile,
+    P: BuilderProfile,
 {
     type Output = Certificate;
 
