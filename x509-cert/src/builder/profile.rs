@@ -1,6 +1,6 @@
 //! Certificate profiles
 //!
-//! Profiles need implement by the [`BuildProfile`] trait.
+//! Profiles need implement by the [`BuilderProfile`] trait.
 //! They may then be consumed by a [`builder::CertificateBuilder`].
 //!
 //!
@@ -29,7 +29,7 @@ pub mod devid;
 /// generate a [`cabf::Root`], or a TLS [`cabf::tls::Subscriber`] certificate.
 ///
 /// See [implementors](#implementors) for a full list of existing profiles.
-pub trait BuildProfile {
+pub trait BuilderProfile {
     /// Issuer to be used for issued certificates
     fn get_issuer(&self, subject: &Name) -> Name;
 
