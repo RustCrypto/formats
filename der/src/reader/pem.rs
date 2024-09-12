@@ -6,7 +6,6 @@ use pem_rfc7468::Decoder;
 
 /// `Reader` type which decodes PEM on-the-fly.
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 #[derive(Clone)]
 pub struct PemReader<'i> {
     /// Inner PEM decoder.
@@ -23,7 +22,6 @@ pub struct PemReader<'i> {
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl<'i> PemReader<'i> {
     /// Create a new PEM reader which decodes data on-the-fly.
     ///
@@ -48,7 +46,6 @@ impl<'i> PemReader<'i> {
 }
 
 #[cfg(feature = "pem")]
-#[cfg_attr(docsrs, doc(cfg(feature = "pem")))]
 impl<'i> Reader<'i> for PemReader<'i> {
     fn encoding_rules(&self) -> EncodingRules {
         self.encoding_rules
