@@ -336,9 +336,6 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Pbkdf2Prf {
             if !params.is_null() {
                 return Err(params.tag().value_error());
             }
-        } else {
-            // TODO(tarcieri): support OPTIONAL parameters?
-            return Err(Tag::Null.value_error());
         }
 
         match alg.oid {
