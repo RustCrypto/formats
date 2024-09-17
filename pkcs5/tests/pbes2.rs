@@ -115,7 +115,10 @@ fn decode_pbes2_pbkdf2_sha256_aes256cbc_without_null_parameter() {
     let params = scheme.pbes2().unwrap();
 
     let pbkdf2_params = params.kdf.pbkdf2().unwrap();
-    assert_eq!(pbkdf2_params.salt.as_bytes(), &hex!("0C12AA39D743D1633DDBB615A5EC1B6A"));
+    assert_eq!(
+        pbkdf2_params.salt.as_bytes(),
+        &hex!("0C12AA39D743D1633DDBB615A5EC1B6A")
+    );
     assert_eq!(pbkdf2_params.iteration_count, 2048);
     assert_eq!(pbkdf2_params.key_length, None);
     assert_eq!(pbkdf2_params.prf, pbes2::Pbkdf2Prf::HmacWithSha256);
