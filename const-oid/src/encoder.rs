@@ -105,10 +105,9 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
         self.bytes[self.cursor] = hi | mask;
         self.cursor = checked_add!(self.cursor, 1);
 
-        if remaining_len > 0 {
-            self.encode_base128(lo, remaining_len - 1)
-        } else {
-            Ok(self)
+        match remaining_len.checked_sub(1) {
+            Some(len) => self.encode_base128(lo, len),
+            None => Ok(self),
         }
     }
 }
