@@ -159,6 +159,18 @@ where
             _profile: PhantomData,
         })
     }
+
+    /// Creates a `Validity` which starts now and does not expire.
+    #[cfg(all(feature = "std", feature = "hazmat"))]
+    pub fn infinity() -> der::Result<Self> {
+        let now = SystemTime::now();
+
+        Ok(Self {
+            not_before: Time::try_from(now)?,
+            not_after: Time::INFINITY,
+            _profile: PhantomData,
+        })
+    }
 }
 
 impl<'a, P: Profile> DecodeValue<'a> for Validity<P> {
