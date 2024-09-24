@@ -321,7 +321,7 @@ fn rdns_serde() {
             "1.3.6.1.4.1.1466.0=#04024869",
             &[&[AttributeTypeAndValue {
                 oid: ObjectIdentifier::new("1.3.6.1.4.1.1466.0").unwrap(),
-                value: Any::from(OctetStringRef::new(&[b'H', b'i']).unwrap()),
+                value: Any::from(OctetStringRef::new(b"Hi").unwrap()),
             }]],
         ),
     ];
