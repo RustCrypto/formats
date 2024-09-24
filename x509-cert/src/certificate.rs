@@ -19,7 +19,7 @@ use crate::time::Time;
 /// [`Profile`] allows the consumer of this crate to customize the behavior when parsing
 /// certificates.
 /// By default, parsing will be made in a rfc5280-compliant manner.
-pub trait Profile: PartialEq + Debug + Eq + Clone + Default + 'static {
+pub trait Profile: PartialEq + Debug + Eq + Clone + Copy + Default + 'static {
     /// Checks to run when parsing serial numbers
     fn check_serial_number(serial: &SerialNumber<Self>) -> der::Result<()> {
         // See the note in `SerialNumber::new`: we permit lengths of 21 bytes here,
@@ -48,7 +48,7 @@ pub trait Profile: PartialEq + Debug + Eq + Clone + Default + 'static {
 }
 
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 /// Parse and serialize certificates in rfc5280-compliant manner
 pub struct Rfc5280;
 
@@ -56,7 +56,7 @@ impl Profile for Rfc5280 {}
 
 #[cfg(feature = "hazmat")]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 /// Parse raw x509 certificate and disable all the checks and modification to the underlying data.
 pub struct Raw;
 
