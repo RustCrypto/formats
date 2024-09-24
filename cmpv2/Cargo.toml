@@ -13,7 +13,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.81"
 
 [dependencies]
 crmf = "=0.3.0-pre"

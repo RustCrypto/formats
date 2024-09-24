@@ -12,7 +12,7 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "tsp", "timestamp"]
 readme = "README.md"
-rust-version = "1.75"
+rust-version = "1.81"
 
 [dependencies]
 der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid", "pem"] }

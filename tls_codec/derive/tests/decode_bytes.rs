@@ -240,9 +240,9 @@ fn enum_with_custom_serialized_field() {
 
 #[test]
 fn that_skip_attribute_on_struct_works() {
-    fn test<T: DeserializeBytes>(test: T, expected: T)
+    fn test<T>(test: T, expected: T)
     where
-        T: std::fmt::Debug + PartialEq + SerializeBytes + Size,
+        T: DeserializeBytes + std::fmt::Debug + PartialEq + SerializeBytes + Size,
     {
         let serialized = test.tls_serialize().unwrap();
         let (deserialized, rest) = T::tls_deserialize_bytes(&serialized).unwrap();

@@ -461,12 +461,12 @@ pub trait AsyncBuilder: Sized {
         S::VerifyingKey: EncodePublicKey;
 
     /// Run the object through the signer and build it.
-    async fn build_async<S, Signature: 'static>(mut self, signer: &S) -> Result<Self::Output>
+    async fn build_async<S, Signature>(mut self, signer: &S) -> Result<Self::Output>
     where
         S: AsyncSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
-        Signature: SignatureBitStringEncoding,
+        Signature: SignatureBitStringEncoding + 'static,
     {
         let blob = self.finalize(signer)?;
 
@@ -476,7 +476,7 @@ pub trait AsyncBuilder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    async fn build_with_rng_async<S, Signature: 'static>(
+    async fn build_with_rng_async<S, Signature>(
         mut self,
         signer: &S,
         rng: &mut impl CryptoRngCore,
@@ -485,7 +485,7 @@ pub trait AsyncBuilder: Sized {
         S: AsyncRandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
-        Signature: SignatureBitStringEncoding,
+        Signature: SignatureBitStringEncoding + 'static,
     {
         let blob = self.finalize(signer)?;
 

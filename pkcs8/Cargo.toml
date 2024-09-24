@@ -14,7 +14,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-i
 keywords = ["crypto", "key", "pkcs", "private"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.72"
+rust-version = "1.81"
 
 [dependencies]
 der = { version = "0.8.0-rc.0", features = ["oid"] }
