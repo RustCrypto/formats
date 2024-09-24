@@ -13,7 +13,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "x509"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.81"
 
 [dependencies]
 const-oid = { version = "0.10.0-rc.0", default-features = false, features = ["db"] }
