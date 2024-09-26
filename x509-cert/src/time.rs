@@ -147,6 +147,15 @@ impl<P> Validity<P>
 where
     P: Profile,
 {
+    /// Creates a `Validity` with the provided bounds
+    pub const fn new(not_before: Time, not_after: Time) -> Self {
+        Self {
+            not_before,
+            not_after,
+            _profile: PhantomData,
+        }
+    }
+
     /// Creates a `Validity` which starts now and lasts for `duration`.
     #[cfg(feature = "std")]
     pub fn from_now(duration: Duration) -> der::Result<Self> {
