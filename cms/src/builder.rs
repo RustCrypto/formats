@@ -35,7 +35,7 @@ use digest::Digest;
 use rsa::Pkcs1v15Encrypt;
 use sha2::digest;
 use signature::digest::DynDigest;
-use signature::{Keypair, Signer};
+use signature::{Keypair, RandomizedSigner, Signer};
 use spki::{
     AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
     SignatureBitStringEncoding,
@@ -398,6 +398,28 @@ impl<'s> SignedDataBuilder<'s> {
     {
         let signer_info = signer_info_builder
             .build::<S, Signature>(signer)
+            .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+        self.signer_infos.push(signer_info);
+
+        Ok(self)
+    }
+
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub fn add_signer_info_with_rng<S, Signature>(
+        &mut self,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
+        rng: &mut impl CryptoRngCore,
+    ) -> Result<&mut Self>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S: RandomizedSigner<Signature>,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+    {
+        let signer_info = signer_info_builder
+            .build_with_rng::<S, Signature>(signer, rng)
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
         self.signer_infos.push(signer_info);
 
