@@ -41,7 +41,7 @@ x509-cert-test-support = { path = "./test-support" }
 
 [features]
 default = ["pem", "std"]
-std = ["const-oid/std", "der/std", "spki/std", "tls_codec?/std"]
+std = ["der/std", "spki/std", "tls_codec?/std"]
 
 arbitrary = ["dep:arbitrary", "std", "der/arbitrary", "spki/arbitrary"]
 builder = ["async-signature", "std", "sha1/default", "signature"]
