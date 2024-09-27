@@ -19,7 +19,8 @@ use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
 use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
-use rsa::pkcs1v15::{SigningKey, VerifyingKey};
+use rsa::pkcs1v15;
+use rsa::pss;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
 use signature::Verifier;
@@ -38,9 +39,14 @@ const RFC8894_ID_TRANSACTION_ID: ObjectIdentifier =
 const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.der");
 const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("examples/p256-priv.der");
 
-fn rsa_signer() -> SigningKey<Sha256> {
+fn rsa_pss_signer() -> pss::SigningKey<Sha256> {
     let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
-    SigningKey::<Sha256>::new(private_key)
+    pss::SigningKey::<Sha256>::new(private_key)
+}
+
+fn rsa_pkcs1v15_signer() -> pkcs1v15::SigningKey<Sha256> {
+    let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    pkcs1v15::SigningKey::<Sha256>::new(private_key)
 }
 
 fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {
@@ -80,7 +86,7 @@ fn test_build_signed_data() {
         ),
     };
     // Create multiple signer infos
-    let signer = rsa_signer();
+    let signer = rsa_pkcs1v15_signer();
     let digest_algorithm = AlgorithmIdentifierOwned {
         oid: const_oid::db::rfc5912::ID_SHA_256,
         parameters: None,
@@ -108,6 +114,20 @@ fn test_build_signed_data() {
     )
     .expect("Could not create ECDSA SignerInfoBuilder");
 
+    let signer_3 = rsa_pss_signer();
+    let digest_algorithm = AlgorithmIdentifierOwned {
+        oid: const_oid::db::rfc5912::ID_SHA_256,
+        parameters: None,
+    };
+    let external_message_digest = None;
+    let signer_info_builder_3 = SignerInfoBuilder::new(
+        signer_identifier(3),
+        digest_algorithm.clone(),
+        &content,
+        external_message_digest,
+    )
+    .expect("Could not create RSA SignerInfoBuilder");
+
     let certificate_buf = include_bytes!("examples/ValidCertificatePathTest1EE.pem");
     let certificate = x509_cert::Certificate::from_pem(certificate_buf).unwrap();
 
@@ -118,16 +138,22 @@ fn test_build_signed_data() {
         .expect("could not add a digest algorithm")
         .add_certificate(CertificateChoices::Certificate(certificate))
         .expect("error adding certificate")
-        .add_signer_info::<SigningKey<Sha256>, rsa::pkcs1v15::Signature>(
+        .add_signer_info::<pkcs1v15::SigningKey<Sha256>, rsa::pkcs1v15::Signature>(
             signer_info_builder_1,
             &signer,
         )
-        .expect("error adding RSA signer info")
+        .expect("error adding PKCS1v15 RSA signer info")
         .add_signer_info::<ecdsa::SigningKey<NistP256>, p256::ecdsa::DerSignature>(
             signer_info_builder_2,
             &signer_2,
         )
         .expect("error adding P256 signer info")
+        .add_signer_info_with_rng::<pss::SigningKey<Sha256>, pss::Signature>(
+            signer_info_builder_3,
+            &signer_3,
+            &mut OsRng,
+        )
+        .expect("error adding PKCS1v15 RSA signer info")
         .build()
         .expect("building signed data failed");
     let signed_data_pkcs7_der = signed_data_pkcs7
@@ -302,7 +328,7 @@ fn test_build_pkcs7_scep_pkcsreq() {
     let signer = {
         let sender_rsa_key_pem = include_str!("examples/sceptest_key.pem");
         let sender_rsa_key = RsaPrivateKey::from_pkcs8_pem(sender_rsa_key_pem).unwrap();
-        SigningKey::<Sha256>::new(sender_rsa_key)
+        pkcs1v15::SigningKey::<Sha256>::new(sender_rsa_key)
     };
     let digest_algorithm = AlgorithmIdentifierOwned {
         oid: const_oid::db::rfc5912::ID_SHA_256,
@@ -364,7 +390,7 @@ fn test_build_pkcs7_scep_pkcsreq() {
         .unwrap()
         .add_certificate(CertificateChoices::Certificate(certificate))
         .unwrap()
-        .add_signer_info::<SigningKey<Sha256>, rsa::pkcs1v15::Signature>(
+        .add_signer_info::<pkcs1v15::SigningKey<Sha256>, rsa::pkcs1v15::Signature>(
             signer_info_builder,
             &signer,
         )
@@ -399,7 +425,7 @@ fn test_build_pkcs7_scep_pkcsreq() {
         let verifier = {
             let verifier_rsa_key_pem = include_str!("examples/sceptest_key.pem");
             let verifier_rsa_key = RsaPrivateKey::from_pkcs8_pem(verifier_rsa_key_pem).unwrap();
-            VerifyingKey::<Sha256>::new(RsaPublicKey::from(verifier_rsa_key))
+            pkcs1v15::VerifyingKey::<Sha256>::new(RsaPublicKey::from(verifier_rsa_key))
         };
         assert!(verifier
             .verify(signed_attributes_der.as_slice(), &signature)
