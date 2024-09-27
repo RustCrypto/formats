@@ -4,6 +4,7 @@ use crate::{
     attr::{Attribute, AttributeValue, Attributes},
     ext::Extension,
     name::Name,
+    AlgorithmIdentifier, SubjectPublicKeyInfo,
 };
 
 use alloc::vec::Vec;
@@ -14,7 +15,6 @@ use der::{
     asn1::{Any, BitString, SetOfVec},
     Decode, Enumerated, Sequence,
 };
-use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -52,7 +52,7 @@ pub struct CertReqInfo {
     pub subject: Name,
 
     /// Subject public key info.
-    pub public_key: SubjectPublicKeyInfoOwned,
+    pub public_key: SubjectPublicKeyInfo,
 
     /// Request attributes.
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
@@ -76,7 +76,7 @@ pub struct CertReq {
     pub info: CertReqInfo,
 
     /// Signature algorithm identifier.
-    pub algorithm: AlgorithmIdentifierOwned,
+    pub algorithm: AlgorithmIdentifier,
 
     /// Signature.
     pub signature: BitString,

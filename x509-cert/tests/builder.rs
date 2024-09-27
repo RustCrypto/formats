@@ -10,7 +10,7 @@ use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
-use spki::SubjectPublicKeyInfoOwned;
+use spki::SubjectPublicKeyInfo;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
     builder::{profile, AsyncBuilder, Builder, CertificateBuilder, RequestBuilder},
@@ -39,8 +39,7 @@ fn root_ca_certificate() {
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
     let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
 
-    let pub_key =
-        SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
+    let pub_key = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = rsa_signer();
     let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
@@ -63,8 +62,7 @@ fn root_ca_certificate_ecdsa() {
     let subject =
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
     let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
-    let pub_key =
-        SubjectPublicKeyInfoOwned::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
+    let pub_key = SubjectPublicKeyInfo::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
 
     let signer = ecdsa_signer();
     let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
@@ -96,8 +94,7 @@ fn sub_ca_certificate() {
         emits_ocsp_response: true,
     };
 
-    let pub_key =
-        SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
+    let pub_key = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = ecdsa_signer();
     let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
@@ -144,8 +141,7 @@ fn leaf_certificate() {
         enable_data_encipherment: false,
     };
 
-    let pub_key =
-        SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
+    let pub_key = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = ecdsa_signer();
     let builder =
@@ -208,8 +204,7 @@ fn pss_certificate() {
         enable_data_encipherment: false,
     };
 
-    let pub_key =
-        SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
+    let pub_key = SubjectPublicKeyInfo::try_from(RSA_2048_DER_EXAMPLE).expect("get rsa pub key");
 
     let signer = rsa_pss_signer();
     let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
@@ -343,8 +338,7 @@ async fn async_builder() {
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
     let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
 
-    let pub_key =
-        SubjectPublicKeyInfoOwned::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
+    let pub_key = SubjectPublicKeyInfo::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
 
     let signer = ecdsa_signer();
     let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
