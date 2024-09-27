@@ -363,6 +363,7 @@ name = "cms"
 version = "0.3.0-pre"
 dependencies = [
  "aes",
+ "async-signature",
  "cbc",
  "cipher",
  "const-oid",
@@ -380,6 +381,7 @@ dependencies = [
  "sha3",
  "signature",
  "spki",
+ "tokio",
  "x509-cert",
  "zeroize",
 ]
