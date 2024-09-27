@@ -559,8 +559,9 @@ dependencies = [
 
 [[package]]
 name = "ecdsa"
-version = "0.17.0-pre.7"
-source = "git+https://github.com/RustCrypto/signatures#839cbdabfe3538b347ac4186eb504658cf46e6c6"
+version = "0.17.0-pre.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e62f2041a28c40b8884b79fbd19bc7457d76c6397767831e9ff4029fc0473a9"
 dependencies = [
  "der",
  "digest",
@@ -578,9 +579,9 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
 name = "elliptic-curve"
-version = "0.14.0-rc.0"
+version = "0.14.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0532f93842f7a74b76f927c2495bf3557faa1db03adf829f9e7ecb8307f5785f"
+checksum = "cc43715037532dc2d061e5c97e81b684c28993d52a4fa4eb7d2ce2826d78f2f2"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -1015,8 +1016,9 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "p256"
-version = "0.14.0-pre.1"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#75ba0874af2cb5c79ce7a5a64b6be9925765f5b4"
+version = "0.14.0-pre.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71f3fd64a9cad9c26ed7f734b152196d5e56376b9957c832bcca0de48a708080"
 dependencies = [
  "ecdsa",
  "elliptic-curve",
@@ -1149,8 +1151,9 @@ dependencies = [
 
 [[package]]
 name = "primeorder"
-version = "0.14.0-pre.1"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#75ba0874af2cb5c79ce7a5a64b6be9925765f5b4"
+version = "0.14.0-pre.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b794117b388378d55629f78f61e64e182baa200bf59c1a8205e0c46508ce5873"
 dependencies = [
  "elliptic-curve",
 ]
@@ -1285,7 +1288,8 @@ checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.4"
-source = "git+https://github.com/RustCrypto/signatures#839cbdabfe3538b347ac4186eb504658cf46e6c6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "871ee76a3eee98b0f805e5d1caf26929f4565073c580c053a55f886fc15dea49"
 dependencies = [
  "hmac",
  "subtle",
