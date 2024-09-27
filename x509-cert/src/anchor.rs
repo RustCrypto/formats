@@ -4,11 +4,13 @@ use crate::certificate::{CertificateInner, Profile, Rfc5280, TbsCertificateInner
 use crate::ext::pkix::{certpolicy::CertificatePolicies, NameConstraints};
 use crate::{ext::Extensions, name::Name};
 
+use crate::SubjectPublicKeyInfo;
 use alloc::string::String;
-use der::asn1::OctetString;
-use der::flagset::{flags, FlagSet};
-use der::{Choice, Enumerated, Sequence};
-use spki::SubjectPublicKeyInfoOwned;
+use der::{
+    asn1::OctetString,
+    flagset::{flags, FlagSet},
+    Choice, Enumerated, Sequence,
+};
 
 /// Version identifier for TrustAnchorInfo
 #[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Enumerated)]
@@ -41,7 +43,7 @@ pub struct TrustAnchorInfo<P: Profile = Rfc5280> {
     #[asn1(default = "Default::default")]
     pub version: Version,
 
-    pub pub_key: SubjectPublicKeyInfoOwned,
+    pub pub_key: SubjectPublicKeyInfo,
 
     pub key_id: OctetString,
 

@@ -1,17 +1,18 @@
 //! Certificate Revocation List types
 
-use crate::certificate::{Profile, Rfc5280};
-use crate::ext::Extensions;
-use crate::name::Name;
-use crate::serial_number::SerialNumber;
-use crate::time::Time;
-use crate::Version;
+use crate::{
+    certificate::{Profile, Rfc5280},
+    ext::Extensions,
+    name::Name,
+    serial_number::SerialNumber,
+    time::Time,
+    AlgorithmIdentifier, Version,
+};
 
 use alloc::vec::Vec;
 
 use der::asn1::BitString;
 use der::{Sequence, ValueOrd};
-use spki::AlgorithmIdentifierOwned;
 
 /// `CertificateList` as defined in [RFC 5280 Section 5.1].
 ///
@@ -28,7 +29,7 @@ use spki::AlgorithmIdentifierOwned;
 #[allow(missing_docs)]
 pub struct CertificateList<P: Profile = Rfc5280> {
     pub tbs_cert_list: TbsCertList<P>,
-    pub signature_algorithm: AlgorithmIdentifierOwned,
+    pub signature_algorithm: AlgorithmIdentifier,
     pub signature: BitString,
 }
 
@@ -77,7 +78,7 @@ pub struct RevokedCert<P: Profile = Rfc5280> {
 #[allow(missing_docs)]
 pub struct TbsCertList<P: Profile = Rfc5280> {
     pub version: Version,
-    pub signature: AlgorithmIdentifierOwned,
+    pub signature: AlgorithmIdentifier,
     pub issuer: Name,
     pub this_update: Time,
     pub next_update: Option<Time>,

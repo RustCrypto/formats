@@ -1,12 +1,11 @@
 //! Certificate types
 
 use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
+use crate::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use core::{cmp::Ordering, fmt::Debug};
-use der::asn1::BitString;
-use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd};
-use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
+use der::{asn1::BitString, Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd};
 
 #[cfg(feature = "pem")]
 use der::{
@@ -146,11 +145,11 @@ pub struct TbsCertificateInner<P: Profile = Rfc5280> {
     pub(crate) version: Version,
 
     pub(crate) serial_number: SerialNumber<P>,
-    pub(crate) signature: AlgorithmIdentifierOwned,
+    pub(crate) signature: AlgorithmIdentifier,
     pub(crate) issuer: Name,
     pub(crate) validity: Validity<P>,
     pub(crate) subject: Name,
-    pub(crate) subject_public_key_info: SubjectPublicKeyInfoOwned,
+    pub(crate) subject_public_key_info: SubjectPublicKeyInfo,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub(crate) issuer_unique_id: Option<BitString>,
@@ -179,7 +178,7 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// Identifies the signature algorithm that this `TBSCertificate` should be signed with.
     ///
     /// In a signed certificate, matches [`CertificateInner::signature_algorithm`].
-    pub fn signature(&self) -> &AlgorithmIdentifierOwned {
+    pub fn signature(&self) -> &AlgorithmIdentifier {
         &self.signature
     }
 
@@ -203,7 +202,7 @@ impl<P: Profile> TbsCertificateInner<P> {
 
     /// Subject Public Key Info (SPKI): public key information about this certificate including
     /// algorithm identifier and key data.
-    pub fn subject_public_key_info(&self) -> &SubjectPublicKeyInfoOwned {
+    pub fn subject_public_key_info(&self) -> &SubjectPublicKeyInfo {
         &self.subject_public_key_info
     }
 
@@ -330,7 +329,7 @@ pub type Certificate = CertificateInner<Rfc5280>;
 #[allow(missing_docs)]
 pub struct CertificateInner<P: Profile = Rfc5280> {
     pub(crate) tbs_certificate: TbsCertificateInner<P>,
-    pub(crate) signature_algorithm: AlgorithmIdentifierOwned,
+    pub(crate) signature_algorithm: AlgorithmIdentifier,
     pub(crate) signature: BitString,
 }
 
@@ -341,7 +340,7 @@ impl<P: Profile> CertificateInner<P> {
     }
 
     /// Signature algorithm used to sign the serialization of [`CertificateInner::tbs_certificate`].
-    pub fn signature_algorithm(&self) -> &AlgorithmIdentifierOwned {
+    pub fn signature_algorithm(&self) -> &AlgorithmIdentifier {
         &self.signature_algorithm
     }
 
