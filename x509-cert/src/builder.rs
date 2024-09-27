@@ -466,7 +466,7 @@ pub trait AsyncBuilder: Sized {
         S: AsyncSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
-        Signature: SignatureBitStringEncoding + 'static,
+        Signature: SignatureBitStringEncoding,
     {
         let blob = self.finalize(signer)?;
 
@@ -485,7 +485,7 @@ pub trait AsyncBuilder: Sized {
         S: AsyncRandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
-        Signature: SignatureBitStringEncoding + 'static,
+        Signature: SignatureBitStringEncoding,
     {
         let blob = self.finalize(signer)?;
 
