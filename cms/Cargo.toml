@@ -38,8 +38,8 @@ pem-rfc7468 = "1.0.0-rc.1"
 pkcs5 = "0.8.0-rc.1"
 rand = "0.8.5"
 rsa = { version = "=0.10.0-pre.2", features = ["sha2"] }
-ecdsa = { version = "=0.17.0-pre.7", features = ["digest", "pem"] }
-p256 = "=0.14.0-pre.1"
+ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
+p256 = "=0.14.0-pre.2"
 
 [features]
 alloc = ["der/alloc"]
