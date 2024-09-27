@@ -595,3 +595,75 @@ fn test_create_signing_attribute() {
         "Invalid tag number in signing time attribute value"
     );
 }
+
+#[tokio::test]
+async fn async_builder() {
+    // Make some content
+    let content = EncapsulatedContentInfo {
+        econtent_type: const_oid::db::rfc5911::ID_DATA,
+        econtent: Some(
+            Any::new(
+                Tag::OctetString,
+                OctetString::new(vec![48]).unwrap().to_der().unwrap(),
+            )
+            .unwrap(),
+        ),
+    };
+    // Create multiple signer infos
+    let signer_1 = rsa_pkcs1v15_signer();
+    let digest_algorithm = AlgorithmIdentifierOwned {
+        oid: const_oid::db::rfc5912::ID_SHA_256,
+        parameters: None,
+    };
+    let external_message_digest = None;
+    let signer_info_builder_1 = SignerInfoBuilder::new(
+        signer_identifier(1),
+        digest_algorithm.clone(),
+        &content,
+        external_message_digest,
+    )
+    .expect("Could not create RSA SignerInfoBuilder");
+
+    let signer_3 = rsa_pss_signer();
+    let digest_algorithm = AlgorithmIdentifierOwned {
+        oid: const_oid::db::rfc5912::ID_SHA_256,
+        parameters: None,
+    };
+    let external_message_digest = None;
+    let signer_info_builder_3 = SignerInfoBuilder::new(
+        signer_identifier(3),
+        digest_algorithm.clone(),
+        &content,
+        external_message_digest,
+    )
+    .expect("Could not create RSA SignerInfoBuilder");
+
+    let mut builder = SignedDataBuilder::new(&content);
+
+    let signed_data_pkcs7 = builder
+        .add_digest_algorithm(digest_algorithm)
+        .expect("could not add a digest algorithm")
+        .add_signer_info_async::<pkcs1v15::SigningKey<Sha256>, rsa::pkcs1v15::Signature>(
+            signer_info_builder_1,
+            &signer_1,
+        )
+        .await
+        .expect("error adding PKCS1v15 RSA signer info")
+        .add_signer_info_with_rng_async::<pss::SigningKey<Sha256>, pss::Signature>(
+            signer_info_builder_3,
+            &signer_3,
+            &mut OsRng,
+        )
+        .await
+        .expect("error adding PKCS1v15 RSA signer info")
+        .build()
+        .expect("building signed data failed");
+    let signed_data_pkcs7_der = signed_data_pkcs7
+        .to_der()
+        .expect("conversion of signed data to DER failed.");
+    println!(
+        "{}",
+        pem_rfc7468::encode_string("PKCS7", LineEnding::LF, &signed_data_pkcs7_der)
+            .expect("PEM encoding of signed data DER failed")
+    );
+}
