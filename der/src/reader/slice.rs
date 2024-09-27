@@ -130,9 +130,8 @@ impl<'a> Reader<'a> for SliceReader<'a> {
             return Err(self.error(ErrorKind::Failed).into());
         }
 
-        T::decode(self).map_err(|e| {
+        T::decode(self).inspect_err(|_| {
             self.failed = true;
-            e
         })
     }
 
