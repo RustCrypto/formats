@@ -28,9 +28,9 @@ dependencies = [
 
 [[package]]
 name = "aes"
-version = "0.9.0-pre.1"
+version = "0.9.0-pre.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "183b3b4639f8f7237857117abb74f3dc8648b77e67ff78d9cb6959fd7e76f387"
+checksum = "e7856582c758ade85d71daf27ec6bcea6c1c73913692b07b8dffea2dc03531c9"
 dependencies = [
  "cfg-if",
  "cipher",
@@ -40,8 +40,7 @@ dependencies = [
 [[package]]
 name = "aes-gcm"
 version = "0.11.0-pre.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4ca4317859cecdb9849cf94087998a04efc7beedc07855836cb2534fd9aa4db"
+source = "git+https://github.com/RustCrypto/AEADs.git#ad456ad32930ee2cc58e466478fe757822c22f7f"
 dependencies = [
  "aead",
  "aes",
@@ -260,9 +259,9 @@ checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
 name = "cbc"
-version = "0.2.0-pre.1"
+version = "0.2.0-pre.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f400d6c533c8e3b0545892ac95831d897c816335fec5d2d57d886a241acf13e"
+checksum = "e0729a0a8422deb6056b8fcd89c42b724fe27e69458fa006f00c63cbffffd91b"
 dependencies = [
  "cipher",
 ]
@@ -311,9 +310,9 @@ dependencies = [
 
 [[package]]
 name = "cipher"
-version = "0.5.0-pre.6"
+version = "0.5.0-pre.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c71c893d5a1e8257048dbb29954d2e1f85f091a150304f1defe4ca2806da5d3f"
+checksum = "5b1425e6ce000f05a73096556cabcfb6a10a3ffe3bb4d75416ca8f00819c0b6a"
 dependencies = [
  "crypto-common",
  "inout",
@@ -486,9 +485,9 @@ dependencies = [
 
 [[package]]
 name = "ctr"
-version = "0.10.0-pre.1"
+version = "0.10.0-pre.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f1637b299862a663dd5af70ee109d53555eff68b99b454fe535ed6599b0e9b3"
+checksum = "77e1482d284b80d7fddb211666d513dc5e23b0cc3a03ad398ff70543827c789f"
 dependencies = [
  "cipher",
 ]
@@ -540,9 +539,9 @@ dependencies = [
 
 [[package]]
 name = "des"
-version = "0.9.0-pre.1"
+version = "0.9.0-pre.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "291fd90b2979cd5898c7065de0ceef1b7b9c477fe9b3389e995fa8c2cef7cc56"
+checksum = "76239c731adb4b5204cfeec47bd06ec1071d9477a0d32bbb83dc7d8c599efe63"
 dependencies = [
  "cipher",
 ]
@@ -1418,8 +1417,7 @@ checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
 [[package]]
 name = "salsa20"
 version = "0.11.0-pre.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea4ef53595bd236cf843530a2db25c792acb34e619320d0423e6cbc6d8e3c8c5"
+source = "git+https://github.com/RustCrypto/stream-ciphers.git#9fcbf802c3ec29672f6fa2f22fc6ac1abce24996"
 dependencies = [
  "cfg-if",
  "cipher",

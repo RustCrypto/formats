@@ -61,3 +61,8 @@ x509-ocsp = { path = "./x509-ocsp" }
 
 # Temp patches to external crates
 rsa = { git = "https://github.com/RustCrypto/RSA" }
+
+# https://github.com/RustCrypto/AEADs/pull/632
+aes-gcm = { git = "https://github.com/RustCrypto/AEADs.git" }
+# https://github.com/RustCrypto/stream-ciphers/pull/368
+salsa20 = { git = "https://github.com/RustCrypto/stream-ciphers.git" }

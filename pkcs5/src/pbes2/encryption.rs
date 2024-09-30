@@ -4,7 +4,7 @@ use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptPa
 use crate::{Error, Result};
 use aes_gcm::{AeadInPlace, KeyInit as GcmKeyInit, Nonce, Tag};
 use cbc::cipher::{
-    block_padding::Pkcs7, BlockCipher, BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt,
+    block_padding::Pkcs7, BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt,
     BlockModeEncrypt, KeyInit, KeyIvInit,
 };
 use pbkdf2::{
@@ -24,7 +24,7 @@ use scrypt::scrypt;
 /// Maximum size of a derived encryption key
 const MAX_KEY_LEN: usize = 32;
 
-fn cbc_encrypt<'a, C: BlockCipherEncrypt + BlockCipher + KeyInit>(
+fn cbc_encrypt<'a, C: BlockCipherEncrypt + KeyInit>(
     es: EncryptionScheme,
     key: EncryptionKey,
     iv: &[u8],
@@ -37,7 +37,7 @@ fn cbc_encrypt<'a, C: BlockCipherEncrypt + BlockCipher + KeyInit>(
         .map_err(|_| Error::EncryptFailed)
 }
 
-fn cbc_decrypt<'a, C: BlockCipherDecrypt + BlockCipher + KeyInit>(
+fn cbc_decrypt<'a, C: BlockCipherDecrypt + KeyInit>(
     es: EncryptionScheme,
     key: EncryptionKey,
     iv: &[u8],
@@ -57,10 +57,10 @@ fn gcm_encrypt<C, NonceSize, TagSize>(
     pos: usize,
 ) -> Result<&[u8]>
 where
-    C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
+    C: BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
     aes_gcm::AesGcm<C, NonceSize, TagSize>: GcmKeyInit,
     TagSize: aes_gcm::TagSize,
-    NonceSize: aes::cipher::ArraySize,
+    NonceSize: aes::cipher::array::ArraySize,
 {
     if buffer.len() < TagSize::USIZE + pos {
         return Err(Error::EncryptFailed);
@@ -82,10 +82,10 @@ fn gcm_decrypt<C, NonceSize, TagSize>(
     buffer: &mut [u8],
 ) -> Result<&[u8]>
 where
-    C: BlockCipher + BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
+    C: BlockSizeUser<BlockSize = U16> + GcmKeyInit + BlockCipherEncrypt,
     aes_gcm::AesGcm<C, NonceSize, TagSize>: GcmKeyInit,
     TagSize: aes_gcm::TagSize,
-    NonceSize: aes::cipher::ArraySize,
+    NonceSize: aes::cipher::array::ArraySize,
 {
     let msg_len = buffer
         .len()
