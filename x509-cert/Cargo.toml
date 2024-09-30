@@ -33,7 +33,7 @@ rand = "0.8.5"
 rsa = { version = "=0.10.0-pre.2", features = ["sha2"] }
 ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
 p256 = "=0.14.0-pre.2"
-rstest = "0.22"
+rstest = "0.23"
 sha2 = { version = "=0.11.0-pre.4", features = ["oid"] }
 tempfile = "3.5.0"
 tokio = { version = "1.40.0", features = ["macros", "rt"] }
