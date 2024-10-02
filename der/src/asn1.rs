@@ -20,6 +20,7 @@ mod octet_string;
 mod oid;
 mod optional;
 mod printable_string;
+mod private;
 #[cfg(feature = "real")]
 mod real;
 mod sequence;
@@ -41,6 +42,7 @@ pub use self::{
     null::Null,
     octet_string::OctetStringRef,
     printable_string::PrintableStringRef,
+    private::{Private, PrivateRef},
     sequence::{Sequence, SequenceRef},
     sequence_of::{SequenceOf, SequenceOfIter},
     set_of::{SetOf, SetOfIter},

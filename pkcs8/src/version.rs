@@ -35,7 +35,7 @@ impl<'a> Decode<'a> for Version {
 
 impl Encode for Version {
     fn encoded_len(&self) -> der::Result<der::Length> {
-        der::Length::from(1u8).for_tlv()
+        der::Length::from(1u8).for_tlv(Self::TAG)
     }
 
     fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {

@@ -1,4 +1,4 @@
-//! Context-specific field.
+//! Private field.
 
 use crate::{
     asn1::AnyRef, Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error,
@@ -6,13 +6,13 @@ use crate::{
 };
 use core::cmp::Ordering;
 
-/// Context-specific field which wraps an owned inner value.
+/// Private field which wraps an owned inner value.
 ///
-/// This type decodes/encodes a field which is specific to a particular context
-/// and is identified by a [`TagNumber`].
+/// This type encodes a field which is whose meaning is specific to a given
+/// enterprise and is identified by a [`TagNumber`].
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct ContextSpecific<T> {
-    /// Context-specific tag number sans the leading `0b10000000` class
+pub struct Private<T> {
+    /// Private tag number sans the leading `0b10000000` class
     /// identifier bit and `0b100000` constructed flag.
     pub tag_number: TagNumber,
 
@@ -23,21 +23,17 @@ pub struct ContextSpecific<T> {
     pub value: T,
 }
 
-impl<T> ContextSpecific<T> {
-    /// Attempt to decode an `EXPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
+impl<T> Private<T> {
+    /// Attempt to decode an `EXPLICIT` ASN.1 `PRIVATE` field with the
     /// provided [`TagNumber`].
     ///
-    /// This method has the following behavior which is designed to simplify
-    /// handling of extension fields, which are denoted in an ASN.1 schema
-    /// using the `...` ellipsis extension marker:
+    /// This method has the following behavior:
     ///
-    /// - Skips over [`ContextSpecific`] fields with a tag number lower than
-    ///   the current one, consuming and ignoring them.
-    /// - Returns `Ok(None)` if a [`ContextSpecific`] field with a higher tag
+    /// - Returns `Ok(None)` if a [`Private`] field with a different tag
     ///   number is encountered. These fields are not consumed in this case,
-    ///   allowing a field with a lower tag number to be omitted, then the
-    ///   higher numbered field consumed as a follow-up.
-    /// - Returns `Ok(None)` if anything other than a [`ContextSpecific`] field
+    ///   allowing a field with a different tag number to be omitted, then the
+    ///   matching field consumed as a follow-up.
+    /// - Returns `Ok(None)` if anything other than a [`Private`] field
     ///   is encountered.
     pub fn decode_explicit<'a, R: Reader<'a>>(
         reader: &mut R,
@@ -49,7 +45,7 @@ impl<T> ContextSpecific<T> {
         Self::decode_with(reader, tag_number, |reader| Self::decode(reader))
     }
 
-    /// Attempt to decode an `IMPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
+    /// Attempt to decode an `IMPLICIT` ASN.1 `PRIVATE` field with the
     /// provided [`TagNumber`].
     ///
     /// This method otherwise behaves the same as `decode_explicit`,
@@ -78,7 +74,7 @@ impl<T> ContextSpecific<T> {
         })
     }
 
-    /// Attempt to decode a context-specific field with the given
+    /// Attempt to decode a private field with the given
     /// helper callback.
     fn decode_with<'a, F, R: Reader<'a>, E>(
         reader: &mut R,
@@ -90,12 +86,10 @@ impl<T> ContextSpecific<T> {
         E: From<Error>,
     {
         while let Some(tag) = Tag::peek_optional(reader)? {
-            if !tag.is_context_specific() || (tag.number() > tag_number) {
+            if !tag.is_private() || (tag.number() != tag_number) {
                 break;
-            } else if tag.number() == tag_number {
-                return Some(f(reader)).transpose();
             } else {
-                AnyRef::decode(reader)?;
+                return Some(f(reader)).transpose();
             }
         }
 
@@ -103,16 +97,16 @@ impl<T> ContextSpecific<T> {
     }
 }
 
-impl<'a, T> Choice<'a> for ContextSpecific<T>
+impl<'a, T> Choice<'a> for Private<T>
 where
     T: Decode<'a> + Tagged,
 {
     fn can_decode(tag: Tag) -> bool {
-        tag.is_context_specific()
+        tag.is_private()
     }
 }
 
-impl<'a, T> Decode<'a> for ContextSpecific<T>
+impl<'a, T> Decode<'a> for Private<T>
 where
     T: Decode<'a>,
 {
@@ -122,7 +116,7 @@ where
         let header = Header::decode(reader)?;
 
         match header.tag {
-            Tag::ContextSpecific {
+            Tag::Private {
                 number,
                 constructed: true,
             } => Ok(Self {
@@ -135,7 +129,7 @@ where
     }
 }
 
-impl<T> EncodeValue for ContextSpecific<T>
+impl<T> EncodeValue for Private<T>
 where
     T: EncodeValue + Tagged,
 {
@@ -154,7 +148,7 @@ where
     }
 }
 
-impl<T> Tagged for ContextSpecific<T>
+impl<T> Tagged for Private<T>
 where
     T: Tagged,
 {
@@ -164,22 +158,22 @@ where
             TagMode::Implicit => self.value.tag().is_constructed(),
         };
 
-        Tag::ContextSpecific {
+        Tag::Private {
             number: self.tag_number,
             constructed,
         }
     }
 }
 
-impl<'a, T> TryFrom<AnyRef<'a>> for ContextSpecific<T>
+impl<'a, T> TryFrom<AnyRef<'a>> for Private<T>
 where
     T: Decode<'a>,
 {
     type Error = T::Error;
 
-    fn try_from(any: AnyRef<'a>) -> Result<ContextSpecific<T>, Self::Error> {
+    fn try_from(any: AnyRef<'a>) -> Result<Private<T>, Self::Error> {
         match any.tag() {
-            Tag::ContextSpecific {
+            Tag::Private {
                 number,
                 constructed: true,
             } => Ok(Self {
@@ -192,7 +186,7 @@ where
     }
 }
 
-impl<T> ValueOrd for ContextSpecific<T>
+impl<T> ValueOrd for Private<T>
 where
     T: EncodeValue + ValueOrd + Tagged,
 {
@@ -204,13 +198,13 @@ where
     }
 }
 
-/// Context-specific field reference.
+/// Private field reference.
 ///
-/// This type encodes a field which is specific to a particular context
-/// and is identified by a [`TagNumber`].
+/// This type encodes a field which is whose meaning is specific to a given
+/// enterprise and is identified by a [`TagNumber`].
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct ContextSpecificRef<'a, T> {
-    /// Context-specific tag number sans the leading `0b10000000` class
+pub struct PrivateRef<'a, T> {
+    /// Private tag number sans the leading `0b11000000` class
     /// identifier bit and `0b100000` constructed flag.
     pub tag_number: TagNumber,
 
@@ -221,10 +215,10 @@ pub struct ContextSpecificRef<'a, T> {
     pub value: &'a T,
 }
 
-impl<'a, T> ContextSpecificRef<'a, T> {
-    /// Convert to a [`ContextSpecific`].
-    fn encoder(&self) -> ContextSpecific<EncodeValueRef<'a, T>> {
-        ContextSpecific {
+impl<'a, T> PrivateRef<'a, T> {
+    /// Convert to a [`Private`].
+    fn encoder(&self) -> Private<EncodeValueRef<'a, T>> {
+        Private {
             tag_number: self.tag_number,
             tag_mode: self.tag_mode,
             value: EncodeValueRef(self.value),
@@ -232,7 +226,7 @@ impl<'a, T> ContextSpecificRef<'a, T> {
     }
 }
 
-impl<T> EncodeValue for ContextSpecificRef<'_, T>
+impl<'a, T> EncodeValue for PrivateRef<'a, T>
 where
     T: EncodeValue + Tagged,
 {
@@ -245,7 +239,7 @@ where
     }
 }
 
-impl<T> Tagged for ContextSpecificRef<'_, T>
+impl<'a, T> Tagged for PrivateRef<'a, T>
 where
     T: Tagged,
 {
@@ -257,7 +251,7 @@ where
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use super::ContextSpecific;
+    use super::Private;
     use crate::{asn1::BitStringRef, Decode, Encode, SliceReader, TagMode, TagNumber};
     use hex_literal::hex;
 
@@ -267,7 +261,7 @@ mod tests {
 
     #[test]
     fn round_trip() {
-        let field = ContextSpecific::<BitStringRef<'_>>::from_der(EXAMPLE_BYTES).unwrap();
+        let field = Private::<BitStringRef<'_>>::from_der(EXAMPLE_BYTES).unwrap();
         assert_eq!(field.tag_number.value(), 1);
         assert_eq!(
             field.value,
@@ -280,26 +274,26 @@ mod tests {
     }
 
     #[test]
-    fn context_specific_with_explicit_field() {
+    fn private_with_explicit_field() {
         let tag_number = TagNumber::new(0);
 
         // Empty message
         let mut reader = SliceReader::new(&[]).unwrap();
         assert_eq!(
-            ContextSpecific::<u8>::decode_explicit(&mut reader, tag_number).unwrap(),
+            Private::<u8>::decode_explicit(&mut reader, tag_number).unwrap(),
             None
         );
 
-        // Message containing a non-context-specific type
+        // Message containing a non-private type
         let mut reader = SliceReader::new(&hex!("020100")).unwrap();
         assert_eq!(
-            ContextSpecific::<u8>::decode_explicit(&mut reader, tag_number).unwrap(),
+            Private::<u8>::decode_explicit(&mut reader, tag_number).unwrap(),
             None
         );
 
-        // Message containing an EXPLICIT context-specific field
+        // Message containing an EXPLICIT private field
         let mut reader = SliceReader::new(&hex!("A003020100")).unwrap();
-        let field = ContextSpecific::<u8>::decode_explicit(&mut reader, tag_number)
+        let field = Private::<u8>::decode_explicit(&mut reader, tag_number)
             .unwrap()
             .unwrap();
 
@@ -309,20 +303,20 @@ mod tests {
     }
 
     #[test]
-    fn context_specific_with_implicit_field() {
+    fn private_with_implicit_field() {
         // From RFC8410 Section 10.3:
         // <https://datatracker.ietf.org/doc/html/rfc8410#section-10.3>
         //
         //    81  33:   [1] 00 19 BF 44 09 69 84 CD FE 85 41 BA C1 67 DC 3B
         //                  96 C8 50 86 AA 30 B6 B6 CB 0C 5C 38 AD 70 31 66
         //                  E1
-        let context_specific_implicit_bytes =
+        let private_implicit_bytes =
             hex!("81210019BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
 
         let tag_number = TagNumber::new(1);
 
-        let mut reader = SliceReader::new(&context_specific_implicit_bytes).unwrap();
-        let field = ContextSpecific::<BitStringRef<'_>>::decode_implicit(&mut reader, tag_number)
+        let mut reader = SliceReader::new(&private_implicit_bytes).unwrap();
+        let field = Private::<BitStringRef<'_>>::decode_implicit(&mut reader, tag_number)
             .unwrap()
             .unwrap();
 
@@ -330,26 +324,26 @@ mod tests {
         assert_eq!(field.tag_mode, TagMode::Implicit);
         assert_eq!(
             field.value.as_bytes().unwrap(),
-            &context_specific_implicit_bytes[3..]
+            &private_implicit_bytes[3..]
         );
     }
 
     #[test]
-    fn context_specific_skipping_unknown_field() {
+    fn private_skipping_unknown_field() {
         let tag = TagNumber::new(1);
         let mut reader = SliceReader::new(&hex!("A003020100A103020101")).unwrap();
-        let field = ContextSpecific::<u8>::decode_explicit(&mut reader, tag)
+        let field = Private::<u8>::decode_explicit(&mut reader, tag)
             .unwrap()
             .unwrap();
         assert_eq!(field.value, 1);
     }
 
     #[test]
-    fn context_specific_returns_none_on_greater_tag_number() {
+    fn private_returns_none_on_greater_tag_number() {
         let tag = TagNumber::new(0);
         let mut reader = SliceReader::new(&hex!("A103020101")).unwrap();
         assert_eq!(
-            ContextSpecific::<u8>::decode_explicit(&mut reader, tag).unwrap(),
+            Private::<u8>::decode_explicit(&mut reader, tag).unwrap(),
             None
         );
     }
