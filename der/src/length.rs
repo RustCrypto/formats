@@ -1,6 +1,6 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Reader, Result, SliceWriter, Writer};
+use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Reader, Result, SliceWriter, Tag, Writer};
 use core::{
     cmp::Ordering,
     fmt,
@@ -51,8 +51,8 @@ impl Length {
 
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`
     /// is the length of the inner "value" portion of the message.
-    pub fn for_tlv(self) -> Result<Self> {
-        Self::ONE + self.encoded_len()? + self
+    pub fn for_tlv(self, tag: Tag) -> Result<Self> {
+        tag.encoded_len()? + self.encoded_len()? + self
     }
 
     /// Perform saturating addition of two lengths.

@@ -5,12 +5,15 @@
 mod internal_macros;
 
 mod any;
+mod any_custom_class;
+mod application;
 mod bit_string;
 #[cfg(feature = "alloc")]
 mod bmp_string;
 mod boolean;
 mod choice;
 mod context_specific;
+mod custom_class;
 mod generalized_time;
 mod ia5_string;
 mod integer;
@@ -20,6 +23,7 @@ mod octet_string;
 mod oid;
 mod optional;
 mod printable_string;
+mod private;
 #[cfg(feature = "real")]
 mod real;
 mod sequence;
@@ -32,15 +36,24 @@ mod videotex_string;
 
 pub use self::{
     any::AnyRef,
+    any_custom_class::{AnyCustomClassExplicit, AnyCustomClassImplicit},
+    application::{
+        ApplicationExplicit, ApplicationExplicitRef, ApplicationImplicit, ApplicationImplicitRef,
+    },
     bit_string::{BitStringIter, BitStringRef},
     choice::Choice,
-    context_specific::{ContextSpecific, ContextSpecificRef},
+    //context_specific::{ContextSpecific, ContextSpecificRef},
+    context_specific::{
+        ContextSpecificExplicit, ContextSpecificExplicitRef, ContextSpecificImplicit,
+        ContextSpecificImplicitRef,
+    },
     generalized_time::GeneralizedTime,
     ia5_string::Ia5StringRef,
     integer::{int::IntRef, uint::UintRef},
     null::Null,
     octet_string::OctetStringRef,
     printable_string::PrintableStringRef,
+    private::{PrivateExplicit, PrivateExplicitRef, PrivateImplicit, PrivateImplicitRef},
     sequence::{Sequence, SequenceRef},
     sequence_of::{SequenceOf, SequenceOfIter},
     set_of::{SetOf, SetOfIter},

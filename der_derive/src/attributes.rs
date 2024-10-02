@@ -92,7 +92,7 @@ pub(crate) struct FieldAttrs {
     pub asn1_type: Option<Asn1Type>,
 
     /// Value of the `#[asn1(context_specific = "...")] attribute if provided.
-    pub context_specific: Option<TagNumber>,
+    pub class: Option<ClassNum>,
 
     /// Indicates name of function that supplies the default value, which will be used in cases
     /// where encoding is omitted per DER and to omit the encoding per DER
@@ -126,7 +126,7 @@ impl FieldAttrs {
     /// Parse attributes from a struct field or enum variant.
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> syn::Result<Self> {
         let mut asn1_type = None;
-        let mut context_specific = None;
+        let mut class = None;
         let mut default = None;
         let mut extensible = None;
         let mut optional = None;
@@ -139,11 +139,34 @@ impl FieldAttrs {
         for attr in parsed_attrs {
             // `context_specific = "..."` attribute
             if let Some(tag_number) = attr.parse_value("context_specific")? {
-                if context_specific.is_some() {
-                    abort!(attr.name, "duplicate ASN.1 `context_specific` attribute");
+                if class.is_some() {
+                    abort!(
+                        attr.name,
+                        "duplicate ASN.1 class attribute (`application`, `context_specific`, `private`)"
+                    );
                 }
 
-                context_specific = Some(tag_number);
+                class = Some(ClassNum::ContextSpecific(tag_number));
+            // `private = "..."` attribute
+            } else if let Some(tag_number) = attr.parse_value("private")? {
+                if class.is_some() {
+                    abort!(
+                        attr.name,
+                        "duplicate ASN.1 class attribute (`application`, `context_specific`, `private`)"
+                    );
+                }
+
+                class = Some(ClassNum::Private(tag_number));
+            // `application = "..."` attribute
+            } else if let Some(tag_number) = attr.parse_value("application")? {
+                if class.is_some() {
+                    abort!(
+                    attr.name,
+                    "duplicate ASN.1 class attribute (`application`, `context_specific`, `private`)"
+                );
+                }
+
+                class = Some(ClassNum::Application(tag_number));
             // `default` attribute
             } else if attr.parse_value::<String>("default")?.is_some() {
                 if default.is_some() {
@@ -202,7 +225,7 @@ impl FieldAttrs {
 
         Ok(Self {
             asn1_type,
-            context_specific,
+            class,
             default,
             extensible: extensible.unwrap_or_default(),
             optional: optional.unwrap_or_default(),
@@ -213,11 +236,8 @@ impl FieldAttrs {
 
     /// Get the expected [`Tag`] for this field.
     pub fn tag(&self) -> syn::Result<Option<Tag>> {
-        match self.context_specific {
-            Some(tag_number) => Ok(Some(Tag::ContextSpecific {
-                constructed: self.constructed,
-                number: tag_number,
-            })),
+        match self.class {
+            Some(ref class) => Ok(Some(class.get_tag(self.constructed))),
 
             None => match self.tag_mode {
                 TagMode::Explicit => Ok(self.asn1_type.map(Tag::Universal)),
@@ -231,37 +251,28 @@ impl FieldAttrs {
 
     /// Get a `der::Decoder` object which respects these field attributes.
     pub fn decoder(&self) -> TokenStream {
-        if let Some(tag_number) = self.context_specific {
-            let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
-            let tag_number = tag_number.to_tokens();
+        if let Some(ref class) = self.class {
+            let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or(quote!(_));
+            let ClassTokens {
+                tag_type,
+                tag_number,
+                class_type,
+                ..
+            } = class.to_tokens(type_params, self.tag_mode);
 
-            let context_specific = match self.tag_mode {
-                TagMode::Explicit => {
-                    if self.extensible || self.is_optional() {
-                        quote! {
-                            ::der::asn1::ContextSpecific::<#type_params>::decode_explicit(
-                                reader,
-                                #tag_number
-                            )?
-                        }
-                    } else {
-                        quote! {
-                            match ::der::asn1::ContextSpecific::<#type_params>::decode(reader)? {
-                                field if field.tag_number == #tag_number => Some(field),
-                                _ => None
-                            }
-                        }
-                    }
-                }
-                TagMode::Implicit => {
-                    quote! {
-                        ::der::asn1::ContextSpecific::<#type_params>::decode_implicit(
-                            reader,
-                            #tag_number
-                        )?
-                    }
-                }
-            };
+            // let context_specific =
+            //     if self.tag_mode == TagMode::Implicit || self.extensible || self.is_optional() {
+            //         quote! {
+            //             #class_type::decode_skipping(
+            //                 reader
+            //             )?
+            //         }
+            //     } else {
+            //         quote! {
+            //             #class_type::decode_skipping(reader)?
+            //         }
+            //     };
+            let context_specific = quote! { #class_type::decode_skipping(reader)? };
 
             if self.is_optional() {
                 if let Some(default) = &self.default {
@@ -269,12 +280,16 @@ impl FieldAttrs {
                 } else {
                     quote!(#context_specific.map(|cs| cs.value))
                 }
+            // }else{
+            //     quote!(#context_specific.map(|cs| cs.value))
+            // }
+            //}
             } else {
                 // TODO(tarcieri): better error handling?
                 let constructed = self.constructed;
                 quote! {
                     #context_specific.ok_or_else(|| {
-                        der::Tag::ContextSpecific {
+                        #tag_type {
                             number: #tag_number,
                             constructed: #constructed
                         }.value_error()
@@ -297,14 +312,20 @@ impl FieldAttrs {
 
     /// Get tokens to encode the binding using `::der::EncodeValue`.
     pub fn value_encode(&self, binding: &TokenStream) -> TokenStream {
-        match self.context_specific {
-            Some(tag_number) => {
-                let tag_number = tag_number.to_tokens();
-                let tag_mode = self.tag_mode.to_tokens();
+        match self.class {
+            Some(ref class) => {
+                let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or(quote!(_));
+                let ClassTokens { ref_type, .. } = class.to_tokens(type_params, self.tag_mode);
+
+                let binding = if self.asn1_type.is_none() {
+                    quote!(#binding)
+                } else {
+                    // TODO(dishmaker): needed because of From<&str> for Utf8StringRef
+                    // eg. #[asn1(type = "UTF8String")] Utf8String(String)
+                    quote!(&#binding.try_into()?)
+                };
                 quote! {
-                    ::der::asn1::ContextSpecificRef {
-                        tag_number: #tag_number,
-                        tag_mode: #tag_mode,
+                    #ref_type {
                         value: #binding,
                     }.encode_value(encoder)
                 }
@@ -390,5 +411,100 @@ impl AttrNameValue {
         } else {
             None
         })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum ClassNum {
+    ContextSpecific(TagNumber),
+    Private(TagNumber),
+    Application(TagNumber),
+}
+
+pub(crate) struct ClassTokens {
+    pub tag_type: TokenStream,
+    pub tag_number: TokenStream,
+
+    pub class_type: TokenStream,
+    pub ref_type: TokenStream,
+}
+
+impl ClassNum {
+    pub fn to_tokens(&self, type_params: TokenStream, tag_mode: TagMode) -> ClassTokens {
+        match (tag_mode, self) {
+            (TagMode::Explicit, Self::ContextSpecific(tag_number)) => {
+                let tag_number_u16 = tag_number.to_tokens_u16();
+                ClassTokens {
+                    tag_type: quote!(::der::Tag::ContextSpecific),
+                    class_type: quote!(::der::asn1::ContextSpecificExplicit::<#tag_number_u16, #type_params>),
+                    ref_type: quote!(::der::asn1::ContextSpecificExplicitRef::<'_, #tag_number_u16, #type_params>),
+                    tag_number: tag_number.to_tokens(),
+                }
+            }
+            (TagMode::Implicit, Self::ContextSpecific(tag_number)) => {
+                let tag_number_u16 = tag_number.to_tokens_u16();
+                ClassTokens {
+                    tag_type: quote!(::der::Tag::ContextSpecific),
+                    class_type: quote!(::der::asn1::ContextSpecificImplicit::<#tag_number_u16, #type_params>),
+                    ref_type: quote!(::der::asn1::ContextSpecificImplicitRef::<'_, #tag_number_u16, #type_params>),
+                    tag_number: tag_number.to_tokens(),
+                }
+            }
+            (TagMode::Explicit, Self::Private(tag_number)) => {
+                let tag_number_u16 = tag_number.to_tokens_u16();
+
+                ClassTokens {
+                    tag_type: quote!(::der::Tag::Private),
+                    class_type: quote!(::der::asn1::PrivateExplicit::<#tag_number_u16, #type_params>),
+                    ref_type: quote!(::der::asn1::PrivateExplicitRef::<'_, #tag_number_u16, #type_params>),
+                    tag_number: tag_number.to_tokens(),
+                }
+            }
+            (TagMode::Implicit, Self::Private(tag_number)) => {
+                let tag_number_u16 = tag_number.to_tokens_u16();
+
+                ClassTokens {
+                    tag_type: quote!(::der::Tag::Private),
+                    class_type: quote!(::der::asn1::PrivateImplicit::<#tag_number_u16, #type_params>),
+                    ref_type: quote!(::der::asn1::PrivateImplicitRef::<'_, #tag_number_u16, #type_params>),
+                    tag_number: tag_number.to_tokens(),
+                }
+            }
+            (TagMode::Explicit, Self::Application(tag_number)) => {
+                let tag_number_u16 = tag_number.to_tokens_u16();
+                ClassTokens {
+                    tag_type: quote!(::der::Tag::Application),
+                    class_type: quote!(::der::asn1::ApplicationExplicit::<#tag_number_u16, #type_params>),
+                    ref_type: quote!(::der::asn1::ApplicationExplicitRef::<'_, #tag_number_u16, #type_params>),
+                    tag_number: tag_number.to_tokens(),
+                }
+            }
+            (TagMode::Implicit, Self::Application(tag_number)) => {
+                let tag_number_u16 = tag_number.to_tokens_u16();
+                ClassTokens {
+                    tag_type: quote!(::der::Tag::Application),
+                    class_type: quote!(::der::asn1::ApplicationImplicit::<#tag_number_u16, #type_params>),
+                    ref_type: quote!(::der::asn1::ApplicationImplicitRef::<'_, #tag_number_u16, #type_params>),
+                    tag_number: tag_number.to_tokens(),
+                }
+            }
+        }
+    }
+
+    pub fn get_tag(&self, constructed: bool) -> Tag {
+        match self {
+            ClassNum::ContextSpecific(number) => Tag::ContextSpecific {
+                constructed,
+                number: *number,
+            },
+            ClassNum::Private(number) => Tag::Private {
+                constructed,
+                number: *number,
+            },
+            ClassNum::Application(number) => Tag::Application {
+                constructed,
+                number: *number,
+            },
+        }
     }
 }

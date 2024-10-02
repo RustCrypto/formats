@@ -3,9 +3,9 @@
 use crate::{Error, Result, Version};
 use core::fmt;
 use der::{
-    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
-    Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
-    TagNumber, Writer,
+    asn1::{AnyRef, BitStringRef, ContextSpecificImplicit, OctetStringRef},
+    Class, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence,
+    TagNumber, Tagged, Writer,
 };
 use spki::AlgorithmIdentifier;
 
@@ -28,7 +28,10 @@ use der::pem::PemLabel;
 use subtle::{Choice, ConstantTimeEq};
 
 /// Context-specific tag number for the public key.
-const PUBLIC_KEY_TAG: TagNumber = TagNumber::N1;
+const PUBLIC_KEY_TAG: u16 = 1;
+
+/// Context-specific tag number for the public key.
+const PUBLIC_KEY_TAG_NUMBER: TagNumber = TagNumber(PUBLIC_KEY_TAG);
 
 /// PKCS#8 `PrivateKeyInfo`.
 ///
@@ -174,14 +177,12 @@ where
     PubKey: BitStringLike,
 {
     /// Get a `BIT STRING` representation of the public key, if present.
-    fn public_key_bit_string(&self) -> Option<ContextSpecific<BitStringRef<'_>>> {
+    fn public_key_bit_string(
+        &self,
+    ) -> Option<ContextSpecificImplicit<PUBLIC_KEY_TAG, BitStringRef<'_>>> {
         self.public_key.as_ref().map(|pk| {
             let value = pk.as_bit_string();
-            ContextSpecific {
-                tag_number: PUBLIC_KEY_TAG,
-                tag_mode: TagMode::Implicit,
-                value,
-            }
+            ContextSpecificImplicit { value }
         })
     }
 }
@@ -200,14 +201,16 @@ where
             let version = Version::decode(reader)?;
             let algorithm = reader.decode()?;
             let private_key = Key::decode(reader)?;
+
             let public_key =
-                reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
+                ContextSpecificImplicit::<PUBLIC_KEY_TAG, PubKey>::decode_skipping(reader)?;
+            let public_key = public_key.map(|key| key.value);
 
             if version.has_public_key() != public_key.is_some() {
                 return Err(reader.error(
                     der::Tag::ContextSpecific {
                         constructed: true,
-                        number: PUBLIC_KEY_TAG,
+                        number: PUBLIC_KEY_TAG_NUMBER,
                     }
                     .value_error()
                     .kind(),
@@ -216,7 +219,10 @@ where
 
             // Ignore any remaining extension fields
             while !reader.is_finished() {
-                reader.decode::<ContextSpecific<AnyRef<'_>>>()?;
+                let any = reader.decode::<AnyRef<'_>>()?;
+                if any.tag().class() != Class::ContextSpecific {
+                    return Err(reader.error(any.tag().value_error().kind()));
+                }
             }
 
             Ok(Self {

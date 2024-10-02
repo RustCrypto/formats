@@ -6,6 +6,7 @@ mod mode;
 mod number;
 
 pub use self::{class::Class, mode::TagMode, number::TagNumber};
+pub use self::{class::CLASS_APPLICATION, class::CLASS_CONTEXT_SPECIFIC, class::CLASS_PRIVATE};
 
 use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Writer};
 use core::{cmp::Ordering, fmt};
@@ -143,14 +144,39 @@ pub enum Tag {
 }
 
 impl Tag {
-    /// Peek at the next byte in the reader and attempt to decode it as a [`Tag`] value.
+    /// Maximum number of octets in a DER encoding of a [`Tag`] using the
+    /// rules implemented by this crate.
+    pub(crate) const MAX_SIZE: usize = 4;
+
+    /// Peek at the next bytes in the reader and attempt to decode it as a [`Tag`] value.
     ///
     /// Does not modify the reader's state.
     pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
-        match reader.peek_byte() {
-            Some(byte) => byte.try_into(),
-            None => Err(Error::incomplete(reader.input_len())),
+        Self::peek_optional(reader)?.ok_or_else(|| Error::incomplete(reader.input_len()))
+    }
+
+    pub(crate) fn peek_optional<'a>(reader: &impl Reader<'a>) -> Result<Option<Self>> {
+        let mut buf = [0u8; Self::MAX_SIZE];
+
+        if reader.peek_into(&mut buf[0..1]).is_err() {
+            return Ok(None);
+        };
+
+        if let Ok(tag) = Self::from_der(&buf[0..1]) {
+            return Ok(Some(tag));
         }
+
+        for i in 2..Self::MAX_SIZE {
+            let slice = &mut buf[0..i];
+            if reader.peek_into(slice).is_err() {
+                continue;
+            }
+            if let Ok(tag) = Self::from_der(slice) {
+                return Ok(Some(tag));
+            }
+        }
+
+        Err(Error::new(ErrorKind::TagNumberInvalid, reader.position()))
     }
 
     /// Assert that this [`Tag`] matches the provided expected tag.
@@ -165,7 +191,7 @@ impl Tag {
     }
 
     /// Get the [`Class`] that corresponds to this [`Tag`].
-    pub fn class(self) -> Class {
+    pub const fn class(self) -> Class {
         match self {
             Tag::Application { .. } => Class::Application,
             Tag::ContextSpecific { .. } => Class::ContextSpecific,
@@ -174,73 +200,68 @@ impl Tag {
         }
     }
 
-    /// Get the [`TagNumber`] (lower 6-bits) for this tag.
+    /// Get the [`TagNumber`] for this tag.
     pub fn number(self) -> TagNumber {
-        TagNumber(self.octet() & TagNumber::MASK)
+        match self {
+            Tag::Boolean => TagNumber(1),
+            Tag::Integer => TagNumber(2),
+            Tag::BitString => TagNumber(3),
+            Tag::OctetString => TagNumber(4),
+            Tag::Null => TagNumber(5),
+            Tag::ObjectIdentifier => TagNumber(6),
+            Tag::Real => TagNumber(9),
+            Tag::Enumerated => TagNumber(10),
+            Tag::Utf8String => TagNumber(12),
+            Tag::Sequence => TagNumber(16),
+            Tag::Set => TagNumber(17),
+            Tag::NumericString => TagNumber(18),
+            Tag::PrintableString => TagNumber(19),
+            Tag::TeletexString => TagNumber(20),
+            Tag::VideotexString => TagNumber(21),
+            Tag::Ia5String => TagNumber(22),
+            Tag::UtcTime => TagNumber(23),
+            Tag::GeneralizedTime => TagNumber(24),
+            Tag::VisibleString => TagNumber(26),
+            Tag::GeneralString => TagNumber(27),
+            Tag::BmpString => TagNumber(30),
+            Tag::Application { number, .. } => number,
+            Tag::ContextSpecific { number, .. } => number,
+            Tag::Private { number, .. } => number,
+        }
     }
 
     /// Does this tag represent a constructed (as opposed to primitive) field?
-    pub fn is_constructed(self) -> bool {
-        self.octet() & CONSTRUCTED_FLAG != 0
+    pub const fn is_constructed(self) -> bool {
+        match self {
+            Tag::Sequence | Tag::Set => true,
+            Tag::Application { constructed, .. }
+            | Tag::ContextSpecific { constructed, .. }
+            | Tag::Private { constructed, .. } => constructed,
+            _ => false,
+        }
     }
 
     /// Is this an application tag?
-    pub fn is_application(self) -> bool {
-        self.class() == Class::Application
+    pub const fn is_application(self) -> bool {
+        matches!(self, Tag::Application { .. })
     }
 
     /// Is this a context-specific tag?
-    pub fn is_context_specific(self) -> bool {
-        self.class() == Class::ContextSpecific
+    pub const fn is_context_specific(self) -> bool {
+        matches!(self, Tag::ContextSpecific { .. })
     }
 
     /// Is this a private tag?
-    pub fn is_private(self) -> bool {
-        self.class() == Class::Private
+    pub const fn is_private(self) -> bool {
+        matches!(self, Tag::Private { .. })
     }
 
     /// Is this a universal tag?
-    pub fn is_universal(self) -> bool {
-        self.class() == Class::Universal
-    }
-
-    /// Get the octet encoding for this [`Tag`].
-    pub fn octet(self) -> u8 {
-        match self {
-            Tag::Boolean => 0x01,
-            Tag::Integer => 0x02,
-            Tag::BitString => 0x03,
-            Tag::OctetString => 0x04,
-            Tag::Null => 0x05,
-            Tag::ObjectIdentifier => 0x06,
-            Tag::Real => 0x09,
-            Tag::Enumerated => 0x0A,
-            Tag::Utf8String => 0x0C,
-            Tag::Sequence => 0x10 | CONSTRUCTED_FLAG,
-            Tag::Set => 0x11 | CONSTRUCTED_FLAG,
-            Tag::NumericString => 0x12,
-            Tag::PrintableString => 0x13,
-            Tag::TeletexString => 0x14,
-            Tag::VideotexString => 0x15,
-            Tag::Ia5String => 0x16,
-            Tag::UtcTime => 0x17,
-            Tag::GeneralizedTime => 0x18,
-            Tag::VisibleString => 0x1A,
-            Tag::GeneralString => 0x1B,
-            Tag::BmpString => 0x1E,
-            Tag::Application {
-                constructed,
-                number,
-            }
-            | Tag::ContextSpecific {
-                constructed,
-                number,
-            }
-            | Tag::Private {
-                constructed,
-                number,
-            } => self.class().octet(constructed, number),
-        }
+    pub const fn is_universal(self) -> bool {
+        !matches!(
+            self,
+            Tag::Application { .. } | Tag::ContextSpecific { .. } | Tag::Private { .. }
+        )
     }
 
     /// Create an [`Error`] for an invalid [`Length`].
@@ -271,85 +292,144 @@ impl Tag {
     }
 }
 
-impl TryFrom<u8> for Tag {
-    type Error = Error;
-
-    fn try_from(byte: u8) -> Result<Tag> {
-        let constructed = byte & CONSTRUCTED_FLAG != 0;
-        let number = TagNumber::try_from(byte & TagNumber::MASK)?;
-
-        match byte {
-            0x01 => Ok(Tag::Boolean),
-            0x02 => Ok(Tag::Integer),
-            0x03 => Ok(Tag::BitString),
-            0x04 => Ok(Tag::OctetString),
-            0x05 => Ok(Tag::Null),
-            0x06 => Ok(Tag::ObjectIdentifier),
-            0x09 => Ok(Tag::Real),
-            0x0A => Ok(Tag::Enumerated),
-            0x0C => Ok(Tag::Utf8String),
-            0x12 => Ok(Tag::NumericString),
-            0x13 => Ok(Tag::PrintableString),
-            0x14 => Ok(Tag::TeletexString),
-            0x15 => Ok(Tag::VideotexString),
-            0x16 => Ok(Tag::Ia5String),
-            0x17 => Ok(Tag::UtcTime),
-            0x18 => Ok(Tag::GeneralizedTime),
-            0x1A => Ok(Tag::VisibleString),
-            0x1B => Ok(Tag::GeneralString),
-            0x1E => Ok(Tag::BmpString),
-            0x30 => Ok(Tag::Sequence), // constructed
-            0x31 => Ok(Tag::Set),      // constructed
-            0x40..=0x7E => Ok(Tag::Application {
-                constructed,
-                number,
-            }),
-            0x80..=0xBE => Ok(Tag::ContextSpecific {
-                constructed,
-                number,
-            }),
-            0xC0..=0xFE => Ok(Tag::Private {
-                constructed,
-                number,
-            }),
-            _ => Err(ErrorKind::TagUnknown { byte }.into()),
-        }
-    }
-}
-
-impl From<Tag> for u8 {
-    fn from(tag: Tag) -> u8 {
-        tag.octet()
-    }
-}
-
-impl From<&Tag> for u8 {
-    fn from(tag: &Tag) -> u8 {
-        u8::from(*tag)
-    }
-}
-
 impl<'a> Decode<'a> for Tag {
     type Error = Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
-        reader.read_byte().and_then(Self::try_from)
+        let first_byte = reader.read_byte()?;
+
+        let tag = match first_byte {
+            0x01 => Tag::Boolean,
+            0x02 => Tag::Integer,
+            0x03 => Tag::BitString,
+            0x04 => Tag::OctetString,
+            0x05 => Tag::Null,
+            0x06 => Tag::ObjectIdentifier,
+            0x09 => Tag::Real,
+            0x0A => Tag::Enumerated,
+            0x0C => Tag::Utf8String,
+            0x12 => Tag::NumericString,
+            0x13 => Tag::PrintableString,
+            0x14 => Tag::TeletexString,
+            0x15 => Tag::VideotexString,
+            0x16 => Tag::Ia5String,
+            0x17 => Tag::UtcTime,
+            0x18 => Tag::GeneralizedTime,
+            0x1A => Tag::VisibleString,
+            0x1B => Tag::GeneralString,
+            0x1E => Tag::BmpString,
+            0x30 => Tag::Sequence, // constructed
+            0x31 => Tag::Set,      // constructed
+            0x40..=0x7F => {
+                let (constructed, number) = parse_parts(first_byte, reader)?;
+
+                Tag::Application {
+                    constructed,
+                    number,
+                }
+            }
+            0x80..=0xBF => {
+                let (constructed, number) = parse_parts(first_byte, reader)?;
+
+                Tag::ContextSpecific {
+                    constructed,
+                    number,
+                }
+            }
+            0xC0..=0xFF => {
+                let (constructed, number) = parse_parts(first_byte, reader)?;
+
+                Tag::Private {
+                    constructed,
+                    number,
+                }
+            }
+            byte => return Err(ErrorKind::TagUnknown { byte }.into()),
+        };
+
+        Ok(tag)
     }
+}
+
+fn parse_parts<'a, R: Reader<'a>>(first_byte: u8, reader: &mut R) -> Result<(bool, TagNumber)> {
+    let constructed = first_byte & CONSTRUCTED_FLAG != 0;
+    let first_number_part = first_byte & TagNumber::MASK;
+
+    if first_number_part != TagNumber::MASK {
+        return Ok((constructed, TagNumber::new(first_number_part.into())));
+    }
+
+    let mut multi_byte_tag_number = 0;
+
+    for _ in 0..Tag::MAX_SIZE - 2 {
+        multi_byte_tag_number <<= 7;
+
+        let byte = reader.read_byte()?;
+        multi_byte_tag_number |= u16::from(byte & 0x7F);
+
+        if byte & 0x80 == 0 {
+            return Ok((constructed, TagNumber::new(multi_byte_tag_number)));
+        }
+    }
+
+    let byte = reader.read_byte()?;
+    if multi_byte_tag_number > u16::MAX >> 7 || byte & 0x80 != 0 {
+        return Err(ErrorKind::TagNumberInvalid.into());
+    }
+    multi_byte_tag_number |= u16::from(byte & 0x7F);
+
+    Ok((constructed, TagNumber::new(multi_byte_tag_number)))
 }
 
 impl Encode for Tag {
     fn encoded_len(&self) -> Result<Length> {
-        Ok(Length::ONE)
+        let number = self.number().value();
+
+        let length = if number <= 30 {
+            Length::ONE
+        } else {
+            Length::new(number.ilog2() as u16 / 7 + 2)
+        };
+
+        Ok(length)
     }
 
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
-        writer.write_byte(self.into())
+        let mut first_byte = self.class() as u8 | u8::from(self.is_constructed()) << 5;
+
+        let number = self.number().value();
+
+        if number <= 30 {
+            first_byte |= number as u8;
+            writer.write_byte(first_byte)?;
+        } else {
+            first_byte |= 0x1F;
+            writer.write_byte(first_byte)?;
+
+            let extra_bytes = number.ilog2() as u16 / 7 + 1;
+
+            for shift in (0..extra_bytes).rev() {
+                let mut byte = (number >> (shift * 7)) as u8 & 0x7f;
+
+                if shift != 0 {
+                    byte |= 0x80;
+                }
+
+                writer.write_byte(byte)?;
+            }
+        }
+
+        Ok(())
     }
 }
 
 impl DerOrd for Tag {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        Ok(self.octet().cmp(&other.octet()))
+        Ok(self
+            .class()
+            .cmp(&other.class())
+            .then_with(|| self.is_constructed().cmp(&other.is_constructed()))
+            .then_with(|| self.number().cmp(&other.number())))
     }
 }
 
@@ -412,7 +492,7 @@ impl fmt::Display for Tag {
 
 impl fmt::Debug for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Tag(0x{:02x}: {})", u8::from(*self), self)
+        write!(f, "Tag(0x{:02x}: {})", self.number().value(), self)
     }
 }
 

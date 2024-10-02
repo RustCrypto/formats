@@ -130,6 +130,213 @@ mod choice {
             #[asn1(context_specific = "2", type = "UTF8String")]
             Utf8String(String),
         }
+        // #[derive(Debug, Eq, PartialEq)]
+        // pub enum ImplicitChoice<'a> {
+        //     BitString(BitStringRef<'a>),
+        //     Time(GeneralizedTime),
+        //     Utf8String(String),
+        // }
+
+        // impl<'a> ::der::Choice<'a> for ImplicitChoice<'a> {
+        //     fn can_decode(tag: ::der::Tag) -> bool {
+        //         match tag {
+        //             ::der::Tag::ContextSpecific {
+        //                 constructed: false,
+        //                 number: ::der::TagNumber(0u16),
+        //             }
+        //             | ::der::Tag::ContextSpecific {
+        //                 constructed: false,
+        //                 number: ::der::TagNumber(1u16),
+        //             }
+        //             | ::der::Tag::ContextSpecific {
+        //                 constructed: false,
+        //                 number: ::der::TagNumber(2u16),
+        //             } => true,
+        //             _ => false,
+        //         }
+        //     }
+        // }
+        // impl<'a> ::der::Decode<'a> for ImplicitChoice<'a> {
+        //     type Error = ::der::Error;
+        //     fn decode<R: ::der::Reader<'a>>(reader: &mut R) -> ::der::Result<Self> {
+        //         use der::Reader as _;
+        //         match ::der::Tag::peek(reader)? {
+        //             ::der::Tag::ContextSpecific {
+        //                 constructed: false,
+        //                 number: ::der::TagNumber(0u16),
+        //             } => {
+        //                 Ok(
+        //                     Self::BitString(
+        //                         ::der::asn1::ContextSpecificImplicit::<
+        //                             0u16,
+        //                             ::der::asn1::BitStringRef,
+        //                         >::decode_skipping(reader)?
+        //                             .ok_or_else(|| {
+        //                                 ::der::Tag::ContextSpecific {
+        //                                     number: ::der::TagNumber(0u16),
+        //                                     constructed: false,
+        //                                 }
+        //                                     .value_error()
+        //                             })?
+        //                             .value
+        //                             .try_into()?,
+        //                     ),
+        //                 )
+        //             }
+        //             ::der::Tag::ContextSpecific {
+        //                 constructed: false,
+        //                 number: ::der::TagNumber(1u16),
+        //             } => {
+        //                 Ok(
+        //                     Self::Time(
+        //                         ::der::asn1::ContextSpecificImplicit::<
+        //                             1u16,
+        //                             ::der::asn1::GeneralizedTime,
+        //                         >::decode_skipping(reader)?
+        //                             .ok_or_else(|| {
+        //                                 ::der::Tag::ContextSpecific {
+        //                                     number: ::der::TagNumber(1u16),
+        //                                     constructed: false,
+        //                                 }
+        //                                     .value_error()
+        //                             })?
+        //                             .value
+        //                             .try_into()?,
+        //                     ),
+        //                 )
+        //             }
+        //             ::der::Tag::ContextSpecific {
+        //                 constructed: false,
+        //                 number: ::der::TagNumber(2u16),
+        //             } => {
+        //                 Ok(
+        //                     Self::Utf8String(
+        //                         ::der::asn1::ContextSpecificImplicit::<
+        //                             2u16,
+        //                             ::der::asn1::Utf8StringRef,
+        //                         >::decode_skipping(reader)?
+        //                             .ok_or_else(|| {
+        //                                 ::der::Tag::ContextSpecific {
+        //                                     number: ::der::TagNumber(2u16),
+        //                                     constructed: false,
+        //                                 }
+        //                                     .value_error()
+        //                             })?
+        //                             .value
+        //                             .try_into()?,
+        //                     ),
+        //                 )
+        //             }
+        //             actual => {
+        //                 Err(
+        //                     der::ErrorKind::TagUnexpected {
+        //                         expected: None,
+        //                         actual,
+        //                     }
+        //                         .into(),
+        //                 )
+        //             }
+        //         }
+        //     }
+        // }
+        // impl<'a> ::der::EncodeValue for ImplicitChoice<'a> {
+        //     fn encode_value(
+        //         &self,
+        //         encoder: &mut impl ::der::Writer,
+        //     ) -> ::der::Result<()> {
+        //         match self {
+        //             Self::BitString(variant) => {
+        //                 ::der::asn1::ContextSpecificImplicitRef::<
+        //                     '_,
+        //                     0u16,
+        //                     ::der::asn1::BitStringRef,
+        //                 > {
+        //                     value: &variant.try_into()?,
+        //                 }
+        //                     .encode_value(encoder)
+        //             }
+        //             Self::Time(variant) => {
+        //                 ::der::asn1::ContextSpecificImplicitRef::<
+        //                     '_,
+        //                     1u16,
+        //                     ::der::asn1::GeneralizedTime,
+        //                 > {
+        //                     value: &variant.try_into()?,
+        //                 }
+        //                     .encode_value(encoder)
+        //             }
+        //             Self::Utf8String(variant) => {
+        //                 ::der::asn1::ContextSpecificImplicitRef::<
+        //                     '_,
+        //                     2u16,
+        //                     ::der::asn1::Utf8StringRef,
+        //                 > {
+
+        //                     value: &variant.try_into()?,
+        //                 }
+        //                     .encode_value(encoder)
+        //             }
+        //         }
+        //     }
+        //     fn value_len(&self) -> ::der::Result<::der::Length> {
+        //         match self {
+        //             Self::BitString(variant) => {
+        //                 ::der::asn1::ContextSpecificImplicitRef::<
+        //                     '_,
+        //                     0u16,
+        //                     ::der::asn1::BitStringRef,
+        //                 > {
+        //                     value: variant,
+        //                 }
+        //                     .value_len()
+        //             }
+        //             Self::Time(variant) => {
+        //                 ::der::asn1::ContextSpecificImplicitRef::<
+        //                     '_,
+        //                     1u16,
+        //                     ::der::asn1::GeneralizedTime,
+        //                 > {
+        //                     value: variant,
+        //                 }
+        //                     .value_len()
+        //             }
+        //             Self::Utf8String(variant) => {
+        //                 ::der::asn1::ContextSpecificImplicitRef::<
+        //                     '_,
+        //                     2u16,
+        //                     ::der::asn1::Utf8StringRef,
+        //                 > {
+        //                     value: &variant.try_into()?,
+        //                 }
+        //                     .value_len()
+        //             }
+        //         }
+        //     }
+        // }
+        // impl<'a> ::der::Tagged for ImplicitChoice<'a> {
+        //     fn tag(&self) -> ::der::Tag {
+        //         match self {
+        //             Self::BitString(_) => {
+        //                 ::der::Tag::ContextSpecific {
+        //                     constructed: false,
+        //                     number: ::der::TagNumber(0u16),
+        //                 }
+        //             }
+        //             Self::Time(_) => {
+        //                 ::der::Tag::ContextSpecific {
+        //                     constructed: false,
+        //                     number: ::der::TagNumber(1u16),
+        //                 }
+        //             }
+        //             Self::Utf8String(_) => {
+        //                 ::der::Tag::ContextSpecific {
+        //                     constructed: false,
+        //                     number: ::der::TagNumber(2u16),
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         impl<'a> ImplicitChoice<'a> {
             pub fn bit_string(&self) -> Option<BitStringRef<'a>> {

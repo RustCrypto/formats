@@ -2,7 +2,7 @@
 
 use crate::{Error, Result};
 use der::{
-    asn1::{AnyRef, ContextSpecificRef, ObjectIdentifier},
+    asn1::{AnyRef, ContextSpecificExplicitRef, ObjectIdentifier},
     oid::AssociatedOid,
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Length, Reader, Sequence, Tag, TagMode,
     TagNumber, Writer,
@@ -117,51 +117,46 @@ impl<'a> RsaPssParams<'a> {
         }
     }
 
-    fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    fn context_specific_hash(
+        &self,
+    ) -> Option<ContextSpecificExplicitRef<'_, 0, AlgorithmIdentifierRef<'a>>> {
         if self.hash == SHA_1_AI {
             None
         } else {
-            Some(ContextSpecificRef {
-                tag_number: TagNumber::N0,
-                tag_mode: TagMode::Explicit,
-                value: &self.hash,
-            })
+            Some(ContextSpecificExplicitRef { value: &self.hash })
         }
     }
 
     fn context_specific_mask_gen(
         &self,
-    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>>> {
+    ) -> Option<ContextSpecificExplicitRef<'_, 1, AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>>>
+    {
         if self.mask_gen == default_mgf1_sha1() {
             None
         } else {
-            Some(ContextSpecificRef {
-                tag_number: TagNumber::N1,
-                tag_mode: TagMode::Explicit,
+            Some(ContextSpecificExplicitRef {
                 value: &self.mask_gen,
             })
         }
     }
 
-    fn context_specific_salt_len(&self) -> Option<ContextSpecificRef<'_, u8>> {
+    fn context_specific_salt_len(&self) -> Option<ContextSpecificExplicitRef<'_, 2, u8>> {
         if self.salt_len == RsaPssParams::SALT_LEN_DEFAULT {
             None
         } else {
-            Some(ContextSpecificRef {
-                tag_number: TagNumber::N2,
-                tag_mode: TagMode::Explicit,
+            Some(ContextSpecificExplicitRef {
                 value: &self.salt_len,
             })
         }
     }
 
-    fn context_specific_trailer_field(&self) -> Option<ContextSpecificRef<'_, TrailerField>> {
+    fn context_specific_trailer_field(
+        &self,
+    ) -> Option<ContextSpecificExplicitRef<'_, 3, TrailerField>> {
         if self.trailer_field == TrailerField::default() {
             None
         } else {
-            Some(ContextSpecificRef {
-                tag_number: TagNumber::N3,
-                tag_mode: TagMode::Explicit,
+            Some(ContextSpecificExplicitRef {
                 value: &self.trailer_field,
             })
         }
@@ -186,16 +181,16 @@ impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 hash: reader
-                    .context_specific(TagNumber::N0, TagMode::Explicit)?
+                    .context_specific(TagNumber(0), TagMode::Explicit)?
                     .unwrap_or(SHA_1_AI),
                 mask_gen: reader
-                    .context_specific(TagNumber::N1, TagMode::Explicit)?
+                    .context_specific(TagNumber(1), TagMode::Explicit)?
                     .unwrap_or_else(default_mgf1_sha1),
                 salt_len: reader
-                    .context_specific(TagNumber::N2, TagMode::Explicit)?
+                    .context_specific(TagNumber(2), TagMode::Explicit)?
                     .unwrap_or(RsaPssParams::SALT_LEN_DEFAULT),
                 trailer_field: reader
-                    .context_specific(TagNumber::N3, TagMode::Explicit)?
+                    .context_specific(TagNumber(3), TagMode::Explicit)?
                     .unwrap_or_default(),
             })
         })
@@ -294,27 +289,24 @@ impl<'a> RsaOaepParams<'a> {
         }
     }
 
-    fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    fn context_specific_hash(
+        &self,
+    ) -> Option<ContextSpecificExplicitRef<'_, 0, AlgorithmIdentifierRef<'a>>> {
         if self.hash == SHA_1_AI {
             None
         } else {
-            Some(ContextSpecificRef {
-                tag_number: TagNumber::N0,
-                tag_mode: TagMode::Explicit,
-                value: &self.hash,
-            })
+            Some(ContextSpecificExplicitRef { value: &self.hash })
         }
     }
 
     fn context_specific_mask_gen(
         &self,
-    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>>> {
+    ) -> Option<ContextSpecificExplicitRef<'_, 1, AlgorithmIdentifier<AlgorithmIdentifierRef<'a>>>>
+    {
         if self.mask_gen == default_mgf1_sha1() {
             None
         } else {
-            Some(ContextSpecificRef {
-                tag_number: TagNumber::N1,
-                tag_mode: TagMode::Explicit,
+            Some(ContextSpecificExplicitRef {
                 value: &self.mask_gen,
             })
         }
@@ -322,13 +314,11 @@ impl<'a> RsaOaepParams<'a> {
 
     fn context_specific_p_source(
         &self,
-    ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifierRef<'a>>> {
+    ) -> Option<ContextSpecificExplicitRef<'_, 2, AlgorithmIdentifierRef<'a>>> {
         if self.p_source == default_pempty_string() {
             None
         } else {
-            Some(ContextSpecificRef {
-                tag_number: TagNumber::N2,
-                tag_mode: TagMode::Explicit,
+            Some(ContextSpecificExplicitRef {
                 value: &self.p_source,
             })
         }
@@ -351,13 +341,13 @@ impl<'a> DecodeValue<'a> for RsaOaepParams<'a> {
         reader.read_nested(header.length, |reader| {
             Ok(Self {
                 hash: reader
-                    .context_specific(TagNumber::N0, TagMode::Explicit)?
+                    .context_specific(TagNumber(0), TagMode::Explicit)?
                     .unwrap_or(SHA_1_AI),
                 mask_gen: reader
-                    .context_specific(TagNumber::N1, TagMode::Explicit)?
+                    .context_specific(TagNumber(1), TagMode::Explicit)?
                     .unwrap_or_else(default_mgf1_sha1),
                 p_source: reader
-                    .context_specific(TagNumber::N2, TagMode::Explicit)?
+                    .context_specific(TagNumber(2), TagMode::Explicit)?
                     .unwrap_or_else(default_pempty_string),
             })
         })

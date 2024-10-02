@@ -1,8 +1,8 @@
 //! Slice writer.
 
 use crate::{
-    asn1::*, Encode, EncodeValue, ErrorKind, Header, Length, Result, Tag, TagMode, TagNumber,
-    Tagged, Writer,
+    asn1::*, Class, Encode, EncodeValue, EncodeValueRef, ErrorKind, Header, Length, Result, Tag,
+    TagMode, TagNumber, Tagged, Writer,
 };
 
 /// [`Writer`] which encodes DER into a mutable output byte slice.
@@ -76,12 +76,21 @@ impl<'a> SliceWriter<'a> {
     where
         T: EncodeValue + Tagged,
     {
-        ContextSpecificRef {
-            tag_number,
-            tag_mode,
-            value,
+        match tag_mode {
+            TagMode::Explicit => AnyCustomClassExplicit {
+                tag_number,
+                class: Class::ContextSpecific,
+                value: EncodeValueRef(value),
+            }
+            .encode(self),
+            TagMode::Implicit => AnyCustomClassImplicit {
+                tag_number,
+                class: Class::ContextSpecific,
+                value: EncodeValueRef(value),
+                constructed: value.tag().is_constructed(),
+            }
+            .encode(self),
         }
-        .encode(self)
     }
 
     /// Encode an ASN.1 `SEQUENCE` of the given length.
@@ -137,14 +146,39 @@ impl<'a> Writer for SliceWriter<'a> {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::SliceWriter;
-    use crate::{Encode, ErrorKind, Length};
+    use crate::{Encode, ErrorKind, Length, TagMode, TagNumber};
 
     #[test]
     fn overlength_message() {
         let mut buffer = [];
         let mut writer = SliceWriter::new(&mut buffer);
         let err = false.encode(&mut writer).err().unwrap();
+
         assert_eq!(err.kind(), ErrorKind::Overlength);
         assert_eq!(err.position(), Some(Length::ONE));
+    }
+
+    #[test]
+    fn context_specific_explicit() {
+        let mut buffer = [0u8; 16];
+        let mut writer = SliceWriter::new(&mut buffer);
+        writer
+            .context_specific(TagNumber(1), TagMode::Explicit, &false)
+            .unwrap();
+
+        let written = writer.finish().unwrap();
+        assert_eq!(written, &[0xA1, 0x03, /* BOOLEAN */ 0x01, 0x01, 0x00]);
+    }
+
+    #[test]
+    fn context_specific_implicit() {
+        let mut buffer = [0u8; 16];
+        let mut writer = SliceWriter::new(&mut buffer);
+        writer
+            .context_specific(TagNumber(1), TagMode::Implicit, &false)
+            .unwrap();
+
+        let written = writer.finish().unwrap();
+        assert_eq!(written, &[0x81, 0x01, 0x00]);
     }
 }

@@ -64,12 +64,7 @@ impl ::der::EncodeValue for SafeBag {
         use ::der::Encode as _;
         [
             self.bag_id.encoded_len()?,
-            ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber::N0,
-                tag_mode: ::der::TagMode::Explicit,
-                value: &content,
-            }
-            .encoded_len()?,
+            ::der::asn1::ContextSpecificExplicitRef::<0, _> { value: &content }.encoded_len()?,
             self.bag_attributes.encoded_len()?,
         ]
         .into_iter()
@@ -79,12 +74,7 @@ impl ::der::EncodeValue for SafeBag {
         use ::der::Encode as _;
         self.bag_id.encode(writer)?;
         let content = AnyRef::from_der(&self.bag_value)?;
-        ::der::asn1::ContextSpecificRef {
-            tag_number: ::der::TagNumber::N0,
-            tag_mode: ::der::TagMode::Explicit,
-            value: &content,
-        }
-        .encode(writer)?;
+        ::der::asn1::ContextSpecificExplicitRef::<0, _> { value: &content }.encode(writer)?;
         self.bag_attributes.encode(writer)?;
         Ok(())
     }

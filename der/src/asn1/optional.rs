@@ -10,8 +10,8 @@ where
     type Error = T::Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Option<T>, Self::Error> {
-        if let Some(byte) = reader.peek_byte() {
-            if T::can_decode(Tag::try_from(byte)?) {
+        if let Some(tag) = Tag::peek_optional(reader)? {
+            if T::can_decode(tag) {
                 return T::decode(reader).map(Some);
             }
         }

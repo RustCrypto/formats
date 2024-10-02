@@ -15,7 +15,7 @@ pub struct Header {
 
 impl Header {
     /// Maximum number of DER octets a header can be in this crate.
-    pub(crate) const MAX_SIZE: usize = 1 + Length::MAX_SIZE;
+    pub(crate) const MAX_SIZE: usize = Tag::MAX_SIZE + Length::MAX_SIZE;
 
     /// Create a new [`Header`] from a [`Tag`] and a specified length.
     ///

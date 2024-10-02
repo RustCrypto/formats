@@ -5,8 +5,9 @@ pub(crate) mod pem;
 pub(crate) mod slice;
 
 use crate::{
-    asn1::ContextSpecific, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag,
-    Header, Length, Tag, TagMode, TagNumber,
+    asn1::{AnyCustomClassExplicit, AnyCustomClassImplicit},
+    Class, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag, Header, Length,
+    Tag, TagMode, TagNumber,
 };
 
 #[cfg(feature = "alloc")]
@@ -55,10 +56,19 @@ pub trait Reader<'r>: Sized {
         T: DecodeValue<'r> + FixedTag + 'r,
     {
         Ok(match tag_mode {
-            TagMode::Explicit => ContextSpecific::<T>::decode_explicit(self, tag_number)?,
-            TagMode::Implicit => ContextSpecific::<T>::decode_implicit(self, tag_number)?,
-        }
-        .map(|field| field.value))
+            TagMode::Explicit => AnyCustomClassExplicit::<T>::decode_skipping(
+                Class::ContextSpecific,
+                tag_number,
+                self,
+            )?
+            .map(|field| field.value),
+            TagMode::Implicit => AnyCustomClassImplicit::<T>::decode_skipping(
+                Class::ContextSpecific,
+                tag_number,
+                self,
+            )?
+            .map(|field| field.value),
+        })
     }
 
     /// Decode a value which impls the [`Decode`] trait.
@@ -118,10 +128,7 @@ pub trait Reader<'r>: Sized {
     /// Peek at the next byte in the reader.
     #[deprecated(since = "0.8.0-rc.1", note = "use `Tag::peek` instead")]
     fn peek_tag(&self) -> Result<Tag, Error> {
-        match self.peek_byte() {
-            Some(byte) => byte.try_into(),
-            None => Err(Error::incomplete(self.input_len())),
-        }
+        Tag::peek(self)
     }
 
     /// Read a single byte.
