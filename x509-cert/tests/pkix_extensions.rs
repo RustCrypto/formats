@@ -1160,9 +1160,9 @@ fn decode_idp() {
     );
 
     // Nonsensical tag where BIT STRING tag should be
-    let reason_flags = ReasonFlags::from_der(&hex!("FF03079F80"));
+    let reason_flags = ReasonFlags::from_der(&hex!("2503079F80"));
     let err = reason_flags.err().unwrap();
-    assert_eq!(ErrorKind::TagNumberInvalid, err.kind());
+    assert_eq!(ErrorKind::TagUnknown { byte: 0x25 }, err.kind());
 
     // INTEGER tag where BIT STRING expected
     let reason_flags = ReasonFlags::from_der(&hex!("0203079F80"));

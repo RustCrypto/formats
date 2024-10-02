@@ -1,6 +1,6 @@
 //! Choice variant IR and lowerings
 
-use crate::{FieldAttrs, Tag, TypeAttrs};
+use crate::{attributes::ClassTokens, FieldAttrs, Tag, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Fields, Ident, Path, Type, Variant};
@@ -123,16 +123,26 @@ impl ChoiceVariant {
     pub(super) fn to_value_len_tokens(&self) -> TokenStream {
         let ident = &self.ident;
 
-        match self.attrs.context_specific {
-            Some(tag_number) => {
-                let tag_number = tag_number.to_tokens();
-                let tag_mode = self.attrs.tag_mode.to_tokens();
+        match self.attrs.class {
+            Some(ref class) => {
+                let type_params: TokenStream = self
+                    .attrs
+                    .asn1_type
+                    .map(|ty| ty.type_path())
+                    .unwrap_or(quote!(_));
+                let ClassTokens { ref_type, .. } =
+                    class.to_tokens(type_params, self.attrs.tag_mode);
 
+                let variant_into = if self.attrs.asn1_type.is_none() {
+                    quote! { variant }
+                } else {
+                    // TODO(dishmaker): needed because of From<&str> for Utf8StringRef
+                    // eg. #[asn1(type = "UTF8String")] Utf8String(String)
+                    quote! { &variant.try_into()? }
+                };
                 quote! {
-                    Self::#ident(variant) => ::der::asn1::ContextSpecificRef {
-                        tag_number: #tag_number,
-                        tag_mode: #tag_mode,
-                        value: variant,
+                    Self::#ident(variant) => #ref_type {
+                        value: #variant_into,
                     }.value_len(),
                 }
             }
@@ -154,7 +164,10 @@ impl ChoiceVariant {
 #[cfg(test)]
 mod tests {
     use super::ChoiceVariant;
-    use crate::{choice::variant::TagOrPath, Asn1Type, FieldAttrs, Tag, TagMode, TagNumber};
+    use crate::{
+        attributes::ClassNum, choice::variant::TagOrPath, Asn1Type, FieldAttrs, Tag, TagMode,
+        TagNumber,
+    };
     use proc_macro2::Span;
     use quote::quote;
     use syn::Ident;
@@ -254,7 +267,7 @@ mod tests {
                 let ident = Ident::new("ExplicitVariant", Span::call_site());
                 let attrs = FieldAttrs {
                     constructed,
-                    context_specific: Some(TagNumber(tag_number)),
+                    class: Some(ClassNum::ContextSpecific(TagNumber(tag_number))),
                     ..Default::default()
                 };
                 assert_eq!(attrs.tag_mode, TagMode::Explicit);
@@ -339,7 +352,7 @@ mod tests {
 
                 let attrs = FieldAttrs {
                     constructed,
-                    context_specific: Some(TagNumber(tag_number)),
+                    class: Some(ClassNum::ContextSpecific(TagNumber(tag_number))),
                     tag_mode: TagMode::Implicit,
                     ..Default::default()
                 };
