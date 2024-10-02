@@ -25,6 +25,9 @@ const MDS: &[(&str, &str)] = &[
     // Created from:
     // https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
     ("fips202", include_str!("../fips202.md")),
+    ("fips203", include_str!("../fips203.md")),
+    ("fips204", include_str!("../fips204.md")),
+    ("fips205", include_str!("../fips205.md")),
     ("rfc8894", include_str!("../rfc8894.md")),
     // Created from: https://trustedcomputinggroup.org
     ("tcgtpm", include_str!("../tcg-tpm.md")),
@@ -35,7 +38,7 @@ const MDS: &[(&str, &str)] = &[
     ("btok", include_str!("../stb/btok.asn")),
     ("brng", include_str!("../stb/brng.asn")),
     ("bash", include_str!("../stb/bash.asn")),
-    ("bake", include_str!("../stb/bake.asn"))
+    ("bake", include_str!("../stb/bake.asn")),
 ];
 
 // Bases defined in other places.
