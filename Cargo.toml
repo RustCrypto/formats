@@ -8,6 +8,7 @@ members = [
     "cms",
     "const-oid",
     "crmf",
+    "cryptopan",
     "der",
     "der_derive",
     "gss-api",
