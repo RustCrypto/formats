@@ -1867,6 +1867,54 @@ pub mod rfc5280 {
         crate::ObjectIdentifier::new_unwrap("2.5.29.9");
     pub const ID_AT: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4");
 }
+pub mod rfc5753 {
+    pub const ANSI_X_9_62: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.10045");
+    pub const ID_EC_PUBLIC_KEY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");
+    pub const ID_HMAC_WITH_SHA_384: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.10");
+    pub const ID_HMAC_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.11");
+    pub const ID_HMAC_WITH_SHA_224: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.8");
+    pub const ID_HMAC_WITH_SHA_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.9");
+    pub const SECG_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.11.0");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.11.1");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.11.2");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.11.3");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_224_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.14.0");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_256_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.14.1");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_384_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.14.2");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_512_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.14.3");
+    pub const MQV_SINGLE_PASS_SHA_224_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.15.0");
+    pub const MQV_SINGLE_PASS_SHA_256_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.15.1");
+    pub const MQV_SINGLE_PASS_SHA_384_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.15.2");
+    pub const MQV_SINGLE_PASS_SHA_512_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.15.3");
+    pub const X_9_63_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.63.0");
+    pub const MQV_SINGLE_PASS_SHA_1_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.63.0.16");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_1_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.63.0.2");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_1_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.63.0.3");
+}
 pub mod rfc5911 {
     pub const ID_PBKDF_2: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12");
@@ -4505,6 +4553,74 @@ pub const DB: super::Database<'static> = super::Database(&[
         "id-ce-subjectDirectoryAttributes",
     ),
     (&rfc5280::ID_AT, "id-at"),
+    (&rfc5753::ANSI_X_9_62, "ansi-x9-62"),
+    (&rfc5753::ID_EC_PUBLIC_KEY, "id-ecPublicKey"),
+    (&rfc5753::ID_HMAC_WITH_SHA_384, "id-hmacWithSHA384"),
+    (&rfc5753::ID_HMAC_WITH_SHA_512, "id-hmacWithSHA512"),
+    (&rfc5753::ID_HMAC_WITH_SHA_224, "id-hmacWithSHA224"),
+    (&rfc5753::ID_HMAC_WITH_SHA_256, "id-hmacWithSHA256"),
+    (&rfc5753::SECG_SCHEME, "secg-scheme"),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha224kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha256kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha384kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha512kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_224_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha224kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_256_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha256kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_384_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha384kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_512_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha512kdf-scheme",
+    ),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_224_KDF_SCHEME,
+        "mqvSinglePass-sha224kdf-scheme",
+    ),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_256_KDF_SCHEME,
+        "mqvSinglePass-sha256kdf-scheme",
+    ),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_384_KDF_SCHEME,
+        "mqvSinglePass-sha384kdf-scheme",
+    ),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_512_KDF_SCHEME,
+        "mqvSinglePass-sha512kdf-scheme",
+    ),
+    (&rfc5753::X_9_63_SCHEME, "x9-63-scheme"),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_1_KDF_SCHEME,
+        "mqvSinglePass-sha1kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_1_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha1kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_1_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha1kdf-scheme",
+    ),
     (&rfc5911::ID_PBKDF_2, "id-PBKDF2"),
     (&rfc5911::ID_DATA, "id-data"),
     (&rfc5911::ID_SIGNED_DATA, "id-signedData"),
