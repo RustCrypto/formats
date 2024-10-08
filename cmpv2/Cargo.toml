@@ -1,6 +1,6 @@
 [package]
 name = "cmpv2"
-version = "0.3.0-pre"
+version = "0.3.0-pre.0"
 description = """
 Pure Rust implementation of the Certificate Management Protocol (CMP) as
 described in RFC 4210
@@ -16,10 +16,10 @@ edition = "2021"
 rust-version = "1.81"
 
 [dependencies]
-crmf = "=0.3.0-pre"
+crmf = "=0.3.0-pre.0"
 der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "flagset", "oid"] }
 spki = { version = "0.8.0-rc.0" }
-x509-cert = { version = "=0.3.0-pre", default-features = false }
+x509-cert = { version = "=0.3.0-pre.0", default-features = false }
 
 [dev-dependencies]
 const-oid = { version = "0.10.0-rc.0", features = ["db"] }

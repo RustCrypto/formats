@@ -1,6 +1,6 @@
 [package]
 name = "x509-cert"
-version = "0.3.0-pre"
+version = "0.3.0-pre.0"
 description = """
 Pure Rust implementation of the X.509 Public Key Infrastructure Certificate
 format as described in RFC 5280
