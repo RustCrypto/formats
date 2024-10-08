@@ -6,8 +6,8 @@ mod field;
 use crate::{default_lifetime, TypeAttrs};
 use field::SequenceField;
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
+use quote::{quote, ToTokens};
+use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam, Path};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
@@ -19,6 +19,9 @@ pub(crate) struct DeriveSequence {
 
     /// Fields of the struct.
     fields: Vec<SequenceField>,
+
+    /// Error type for `DecodeValue` implementation.
+    error: Option<Path>,
 }
 
 impl DeriveSequence {
@@ -32,7 +35,7 @@ impl DeriveSequence {
             ),
         };
 
-        let type_attrs = TypeAttrs::parse(&input.attrs)?;
+        let mut type_attrs = TypeAttrs::parse(&input.attrs)?;
 
         let fields = data
             .fields
@@ -44,6 +47,7 @@ impl DeriveSequence {
             ident: input.ident,
             generics: input.generics.clone(),
             fields,
+            error: type_attrs.error.take(),
         })
     }
 
@@ -84,14 +88,20 @@ impl DeriveSequence {
             encode_fields.push(quote!(#field.encode(writer)?;));
         }
 
+        let error = self
+            .error
+            .as_ref()
+            .map(ToTokens::to_token_stream)
+            .unwrap_or_else(|| quote! { ::der::Error });
+
         quote! {
             impl #impl_generics ::der::DecodeValue<#lifetime> for #ident #ty_generics #where_clause {
-                type Error = ::der::Error;
+                type Error = #error;
 
                 fn decode_value<R: ::der::Reader<#lifetime>>(
                     reader: &mut R,
                     header: ::der::Header,
-                ) -> ::der::Result<Self> {
+                ) -> ::core::result::Result<Self, #error> {
                     use ::der::{Decode as _, DecodeValue as _, Reader as _};
 
                     reader.read_nested(header.length, |reader| {

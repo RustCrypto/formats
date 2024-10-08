@@ -2,11 +2,10 @@
 //! the purposes of decoding/encoding ASN.1 `ENUMERATED` types as mapped to
 //! enum variants.
 
-use crate::attributes::AttrNameValue;
 use crate::{default_lifetime, ATTR_NAME};
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, Variant};
+use quote::{quote, ToTokens};
+use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, LitStr, Path, Variant};
 
 /// Valid options for the `#[repr]` attribute on `Enumerated` types.
 const REPR_TYPES: &[&str] = &["u8", "u16", "u32"];
@@ -24,6 +23,9 @@ pub(crate) struct DeriveEnumerated {
 
     /// Variants of this enum.
     variants: Vec<EnumeratedVariant>,
+
+    /// Error type for `DecodeValue` implementation.
+    error: Option<Path>,
 }
 
 impl DeriveEnumerated {
@@ -40,22 +42,30 @@ impl DeriveEnumerated {
         // Reject `asn1` attributes, parse the `repr` attribute
         let mut repr: Option<Ident> = None;
         let mut integer = false;
+        let mut error: Option<Path> = None;
 
         for attr in &input.attrs {
             if attr.path().is_ident(ATTR_NAME) {
-                let kvs = match AttrNameValue::parse_attribute(attr) {
-                    Ok(kvs) => kvs,
-                    Err(e) => abort!(attr, e),
-                };
-                for anv in kvs {
-                    if anv.name.is_ident("type") {
-                        match anv.value.value().as_str() {
+                attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("type") {
+                        let value: LitStr = meta.value()?.parse()?;
+                        match value.value().as_str() {
                             "ENUMERATED" => integer = false,
                             "INTEGER" => integer = true,
-                            s => abort!(anv.value, format_args!("`type = \"{s}\"` is unsupported")),
+                            s => abort!(value, format_args!("`type = \"{s}\"` is unsupported")),
                         }
+                    } else if meta.path.is_ident("error") {
+                        let path: Path = meta.value()?.parse()?;
+                        error = Some(path);
+                    } else {
+                        return Err(syn::Error::new_spanned(
+                            &meta.path,
+                            "invalid `asn1` attribute (valid options are `type` and `error`)",
+                        ));
                     }
-                }
+
+                    Ok(())
+                })?;
             } else if attr.path().is_ident("repr") {
                 if repr.is_some() {
                     abort!(
@@ -97,6 +107,7 @@ impl DeriveEnumerated {
             })?,
             variants,
             integer,
+            error,
         })
     }
 
@@ -115,14 +126,20 @@ impl DeriveEnumerated {
             try_from_body.push(variant.to_try_from_tokens());
         }
 
+        let error = self
+            .error
+            .as_ref()
+            .map(ToTokens::to_token_stream)
+            .unwrap_or_else(|| quote! { ::der::Error });
+
         quote! {
             impl<#default_lifetime> ::der::DecodeValue<#default_lifetime> for #ident {
-                type Error = ::der::Error;
+                type Error = #error;
 
                 fn decode_value<R: ::der::Reader<#default_lifetime>>(
                     reader: &mut R,
                     header: ::der::Header
-                ) -> ::der::Result<Self> {
+                ) -> ::core::result::Result<Self, #error> {
                     <#repr as ::der::DecodeValue>::decode_value(reader, header)?.try_into()
                 }
             }
@@ -142,12 +159,12 @@ impl DeriveEnumerated {
             }
 
             impl TryFrom<#repr> for #ident {
-                type Error = ::der::Error;
+                type Error = #error;
 
-                fn try_from(n: #repr) -> ::der::Result<Self> {
+                fn try_from(n: #repr) -> ::core::result::Result<Self, #error> {
                     match n {
                         #(#try_from_body)*
-                        _ => Err(#tag.value_error())
+                        _ => Err(#tag.value_error().into())
                     }
                 }
             }

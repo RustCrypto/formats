@@ -7,8 +7,8 @@ mod variant;
 use self::variant::ChoiceVariant;
 use crate::{default_lifetime, TypeAttrs};
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
+use quote::{quote, ToTokens};
+use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam, Path};
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
@@ -20,6 +20,9 @@ pub(crate) struct DeriveChoice {
 
     /// Variants of this `Choice`.
     variants: Vec<ChoiceVariant>,
+
+    /// Error type for `DecodeValue` implementation.
+    error: Option<Path>,
 }
 
 impl DeriveChoice {
@@ -33,7 +36,7 @@ impl DeriveChoice {
             ),
         };
 
-        let type_attrs = TypeAttrs::parse(&input.attrs)?;
+        let mut type_attrs = TypeAttrs::parse(&input.attrs)?;
         let variants = data
             .variants
             .iter()
@@ -44,6 +47,7 @@ impl DeriveChoice {
             ident: input.ident,
             generics: input.generics.clone(),
             variants,
+            error: type_attrs.error.take(),
         })
     }
 
@@ -84,6 +88,12 @@ impl DeriveChoice {
             tagged_body.push(variant.to_tagged_tokens());
         }
 
+        let error = self
+            .error
+            .as_ref()
+            .map(ToTokens::to_token_stream)
+            .unwrap_or_else(|| quote! { ::der::Error });
+
         quote! {
             impl #impl_generics ::der::Choice<#lifetime> for #ident #ty_generics #where_clause {
                 fn can_decode(tag: ::der::Tag) -> bool {
@@ -92,17 +102,20 @@ impl DeriveChoice {
             }
 
             impl #impl_generics ::der::Decode<#lifetime> for #ident #ty_generics #where_clause {
-                type Error = ::der::Error;
+                type Error = #error;
 
-                fn decode<R: ::der::Reader<#lifetime>>(reader: &mut R) -> ::der::Result<Self> {
+                fn decode<R: ::der::Reader<#lifetime>>(reader: &mut R) -> ::core::result::Result<Self, #error> {
                     use der::Reader as _;
                     match ::der::Tag::peek(reader)? {
                         #(#decode_body)*
-                        actual => Err(der::ErrorKind::TagUnexpected {
-                            expected: None,
-                            actual
-                        }
-                        .into()),
+                        actual => Err(::der::Error::new(
+                            ::der::ErrorKind::TagUnexpected {
+                                expected: None,
+                                actual
+                            },
+                            reader.position()
+                        ).into()
+                        ),
                     }
                 }
             }

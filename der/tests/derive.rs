@@ -11,10 +11,29 @@
 // TODO: fix needless_question_mark in the derive crate
 #![allow(clippy::bool_assert_comparison, clippy::needless_question_mark)]
 
+#[derive(Debug)]
+#[allow(dead_code)]
+pub struct CustomError(der::Error);
+
+impl From<der::Error> for CustomError {
+    fn from(value: der::Error) -> Self {
+        Self(value)
+    }
+}
+
+impl From<std::convert::Infallible> for CustomError {
+    fn from(_value: std::convert::Infallible) -> Self {
+        unreachable!()
+    }
+}
+
 /// Custom derive test cases for the `Choice` macro.
 mod choice {
+    use super::CustomError;
+
     /// `Choice` with `EXPLICIT` tagging.
     mod explicit {
+        use super::CustomError;
         use der::{
             asn1::{GeneralizedTime, UtcTime},
             Choice, Decode, Encode, SliceWriter,
@@ -50,6 +69,13 @@ mod choice {
             }
         }
 
+        #[derive(Choice)]
+        #[asn1(error = CustomError)]
+        pub enum WithCustomError {
+            #[asn1(type = "GeneralizedTime")]
+            Foo(GeneralizedTime),
+        }
+
         const UTC_TIMESTAMP_DER: &[u8] = &hex!("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a");
         const GENERAL_TIMESTAMP_DER: &[u8] =
             &hex!("18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a");
@@ -61,6 +87,10 @@ mod choice {
 
             let general_time = Time::from_der(GENERAL_TIMESTAMP_DER).unwrap();
             assert_eq!(general_time.to_unix_duration().as_secs(), 673573540);
+
+            let WithCustomError::Foo(with_custom_error) =
+                WithCustomError::from_der(GENERAL_TIMESTAMP_DER).unwrap();
+            assert_eq!(with_custom_error.to_unix_duration().as_secs(), 673573540);
         }
 
         #[test]
@@ -154,6 +184,7 @@ mod choice {
 
 /// Custom derive test cases for the `Enumerated` macro.
 mod enumerated {
+    use super::CustomError;
     use der::{Decode, Encode, Enumerated, SliceWriter};
     use hex_literal::hex;
 
@@ -176,6 +207,14 @@ mod enumerated {
     const UNSPECIFIED_DER: &[u8] = &hex!("0a 01 00");
     const KEY_COMPROMISE_DER: &[u8] = &hex!("0a 01 01");
 
+    #[derive(Enumerated, Copy, Clone, Eq, PartialEq, Debug)]
+    #[asn1(error = CustomError)]
+    #[repr(u32)]
+    pub enum EnumWithCustomError {
+        Unspecified = 0,
+        Specified = 1,
+    }
+
     #[test]
     fn decode() {
         let unspecified = CrlReason::from_der(UNSPECIFIED_DER).unwrap();
@@ -183,6 +222,9 @@ mod enumerated {
 
         let key_compromise = CrlReason::from_der(KEY_COMPROMISE_DER).unwrap();
         assert_eq!(CrlReason::KeyCompromise, key_compromise);
+
+        let custom_error_enum = EnumWithCustomError::from_der(UNSPECIFIED_DER).unwrap();
+        assert_eq!(custom_error_enum, EnumWithCustomError::Unspecified);
     }
 
     #[test]
@@ -202,6 +244,7 @@ mod enumerated {
 /// Custom derive test cases for the `Sequence` macro.
 #[cfg(feature = "oid")]
 mod sequence {
+    use super::CustomError;
     use core::marker::PhantomData;
     use der::{
         asn1::{AnyRef, ObjectIdentifier, SetOf},
@@ -383,6 +426,12 @@ mod sequence {
         pub typed_context_specific_optional: Option<&'a [u8]>,
     }
 
+    #[derive(Sequence)]
+    #[asn1(error = CustomError)]
+    pub struct TypeWithCustomError {
+        pub simple: bool,
+    }
+
     #[test]
     fn idp_test() {
         let idp = IssuingDistributionPointExample::from_der(&hex!("30038101FF")).unwrap();
@@ -444,6 +493,9 @@ mod sequence {
             PRIME256V1_OID,
             ObjectIdentifier::try_from(algorithm_identifier.parameters.unwrap()).unwrap()
         );
+
+        let t = TypeWithCustomError::from_der(&hex!("30030101FF")).unwrap();
+        assert!(t.simple);
     }
 
     #[test]
