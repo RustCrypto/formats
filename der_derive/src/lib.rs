@@ -144,7 +144,7 @@ mod value_ord;
 
 use crate::{
     asn1_type::Asn1Type,
-    attributes::{FieldAttrs, TypeAttrs, ATTR_NAME},
+    attributes::{ErrorType, FieldAttrs, TypeAttrs, ATTR_NAME},
     choice::DeriveChoice,
     enumerated::DeriveEnumerated,
     sequence::DeriveSequence,

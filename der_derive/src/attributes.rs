@@ -2,10 +2,32 @@
 
 use crate::{Asn1Type, Tag, TagMode, TagNumber};
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use quote::{quote, ToTokens};
 use std::{fmt::Debug, str::FromStr};
 use syn::punctuated::Punctuated;
 use syn::{parse::Parse, parse::ParseStream, Attribute, Ident, LitStr, Path, Token};
+
+/// Error type used by the structure
+#[derive(Debug, Clone, Default, Eq, PartialEq)]
+pub(crate) enum ErrorType {
+    /// Represents the ::der::Error type
+    #[default]
+    Der,
+    /// Represents an error designed by Path
+    Custom(Path),
+}
+
+impl ToTokens for ErrorType {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Self::Der => {
+                let err = quote! { ::der::Error };
+                err.to_tokens(tokens)
+            }
+            Self::Custom(path) => path.to_tokens(tokens),
+        }
+    }
+}
 
 /// Attribute name.
 pub(crate) const ATTR_NAME: &str = "asn1";
@@ -18,7 +40,7 @@ pub(crate) struct TypeAttrs {
     ///
     /// The default value is `EXPLICIT`.
     pub tag_mode: TagMode,
-    pub error: Option<Path>,
+    pub error: ErrorType,
 }
 
 impl TypeAttrs {
@@ -44,7 +66,7 @@ impl TypeAttrs {
                         abort!(attr, "duplicate ASN.1 `error` attribute");
                     }
 
-                    error = Some(meta.value()?.parse()?);
+                    error = Some(ErrorType::Custom(meta.value()?.parse()?));
                 } else {
                     return Err(syn::Error::new_spanned(
                         attr,
@@ -58,7 +80,7 @@ impl TypeAttrs {
 
         Ok(Self {
             tag_mode: tag_mode.unwrap_or_default(),
-            error,
+            error: error.unwrap_or_default(),
         })
     }
 }
