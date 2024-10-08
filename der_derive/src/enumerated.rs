@@ -2,7 +2,7 @@
 //! the purposes of decoding/encoding ASN.1 `ENUMERATED` types as mapped to
 //! enum variants.
 
-use crate::{default_lifetime, ATTR_NAME};
+use crate::{default_lifetime, ErrorType, ATTR_NAME};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, LitStr, Path, Variant};
@@ -25,7 +25,7 @@ pub(crate) struct DeriveEnumerated {
     variants: Vec<EnumeratedVariant>,
 
     /// Error type for `DecodeValue` implementation.
-    error: Option<Path>,
+    error: ErrorType,
 }
 
 impl DeriveEnumerated {
@@ -42,7 +42,7 @@ impl DeriveEnumerated {
         // Reject `asn1` attributes, parse the `repr` attribute
         let mut repr: Option<Ident> = None;
         let mut integer = false;
-        let mut error: Option<Path> = None;
+        let mut error: Option<ErrorType> = None;
 
         for attr in &input.attrs {
             if attr.path().is_ident(ATTR_NAME) {
@@ -56,7 +56,7 @@ impl DeriveEnumerated {
                         }
                     } else if meta.path.is_ident("error") {
                         let path: Path = meta.value()?.parse()?;
-                        error = Some(path);
+                        error = Some(ErrorType::Custom(path));
                     } else {
                         return Err(syn::Error::new_spanned(
                             &meta.path,
@@ -107,7 +107,7 @@ impl DeriveEnumerated {
             })?,
             variants,
             integer,
-            error,
+            error: error.unwrap_or_default(),
         })
     }
 
@@ -126,11 +126,7 @@ impl DeriveEnumerated {
             try_from_body.push(variant.to_try_from_tokens());
         }
 
-        let error = self
-            .error
-            .as_ref()
-            .map(ToTokens::to_token_stream)
-            .unwrap_or_else(|| quote! { ::der::Error });
+        let error = self.error.to_token_stream();
 
         quote! {
             impl<#default_lifetime> ::der::DecodeValue<#default_lifetime> for #ident {
