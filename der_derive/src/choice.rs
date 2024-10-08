@@ -5,10 +5,10 @@
 mod variant;
 
 use self::variant::ChoiceVariant;
-use crate::{default_lifetime, TypeAttrs};
+use crate::{default_lifetime, ErrorType, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam, Path};
+use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
 
 /// Derive the `Choice` trait for an enum.
 pub(crate) struct DeriveChoice {
@@ -22,7 +22,7 @@ pub(crate) struct DeriveChoice {
     variants: Vec<ChoiceVariant>,
 
     /// Error type for `DecodeValue` implementation.
-    error: Option<Path>,
+    error: ErrorType,
 }
 
 impl DeriveChoice {
@@ -36,7 +36,7 @@ impl DeriveChoice {
             ),
         };
 
-        let mut type_attrs = TypeAttrs::parse(&input.attrs)?;
+        let type_attrs = TypeAttrs::parse(&input.attrs)?;
         let variants = data
             .variants
             .iter()
@@ -47,7 +47,7 @@ impl DeriveChoice {
             ident: input.ident,
             generics: input.generics.clone(),
             variants,
-            error: type_attrs.error.take(),
+            error: type_attrs.error.clone(),
         })
     }
 
@@ -88,11 +88,7 @@ impl DeriveChoice {
             tagged_body.push(variant.to_tagged_tokens());
         }
 
-        let error = self
-            .error
-            .as_ref()
-            .map(ToTokens::to_token_stream)
-            .unwrap_or_else(|| quote! { ::der::Error });
+        let error = self.error.to_token_stream();
 
         quote! {
             impl #impl_generics ::der::Choice<#lifetime> for #ident #ty_generics #where_clause {
