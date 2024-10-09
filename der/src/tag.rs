@@ -504,6 +504,7 @@ impl fmt::Debug for Tag {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::{Class, Tag, TagNumber};
     use crate::{Decode, Encode, Length, Reader, SliceReader};
@@ -564,7 +565,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn peek() {
         let reader = SliceReader::new(&[0x02]).unwrap();
         assert_eq!(reader.position(), Length::ZERO);
@@ -599,6 +599,7 @@ mod tests {
         let result = Tag::decode(&mut reader);
         assert!(result.is_err());
     }
+
     #[test]
     fn decode_private() {
         const TAG_PRIVATE: [u8; 4] = [0xFF, 0x83, 0xFF, 0x70];
