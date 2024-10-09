@@ -377,6 +377,7 @@ fn parse_parts<'a, R: Reader<'a>>(first_byte: u8, reader: &mut R) -> Result<(boo
     Err(Error::new(ErrorKind::TagNumberInvalid, reader.position()))
 }
 
+/// Length of encoded tag depends only on number it encodes
 fn tag_length(tag_number: u16) -> Length {
     if tag_number <= 30 {
         Length::ONE
@@ -389,6 +390,21 @@ fn tag_length(tag_number: u16) -> Length {
     }
 }
 
+fn tag_class_number_bytes(
+    class: Class,
+    tag_number: TagNumber,
+    constructed: bool,
+    buf: &mut [u8; Tag::MAX_SIZE],
+) -> &[u8] {
+    let mut first_byte = class as u8;
+    if constructed {
+        first_byte |= CONSTRUCTED_FLAG;
+    }
+    let num = tag_number.value();
+    tag_number_bytes(first_byte, num, buf)
+}
+
+/// Tag contains class bits, constructed flag and number
 #[allow(clippy::cast_possible_truncation)]
 fn tag_number_bytes(first_byte: u8, num: u16, buf: &mut [u8; Tag::MAX_SIZE]) -> &[u8] {
     if num <= 30 {
@@ -418,14 +434,9 @@ impl Encode for Tag {
     }
 
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
-        let mut first_byte = self.class() as u8;
-        if self.is_constructed() {
-            first_byte |= CONSTRUCTED_FLAG;
-        }
-        let num = self.number().value();
-
         let mut buf = [0u8; Tag::MAX_SIZE];
-        let tag_bytes = tag_number_bytes(first_byte, num, &mut buf);
+        let tag_bytes =
+            tag_class_number_bytes(self.class(), self.number(), self.is_constructed(), &mut buf);
         writer.write(tag_bytes)
     }
 }
@@ -499,7 +510,10 @@ impl fmt::Display for Tag {
 
 impl fmt::Debug for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Tag(0x{:02x}: {})", self.number().value(), self)
+        let mut buf = [0u8; Tag::MAX_SIZE];
+        let tag_bytes =
+            tag_class_number_bytes(self.class(), self.number(), self.is_constructed(), &mut buf);
+        write!(f, "Tag({:02X?}: {})", tag_bytes, self)
     }
 }
 

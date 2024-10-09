@@ -80,7 +80,6 @@ mod tests {
     use crate::{asn1::BitStringRef, Decode, Encode, SliceReader};
     use hex_literal::hex;
 
-    // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`
     const EXAMPLE_BYTES: &[u8] =
         &hex!("E123032100A3A7EAE3A8373830BC47E1167BC50E1DB551999651E0E2DC587623438EAC3F31");
 

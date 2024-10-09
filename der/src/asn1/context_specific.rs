@@ -22,28 +22,6 @@ pub type ContextSpecificExplicitRef<'a, const TAG: u16, T> =
 pub type ContextSpecificImplicitRef<'a, const TAG: u16, T> =
     CustomClassImplicitRef<'a, TAG, T, CLASS_CONTEXT_SPECIFIC>;
 
-// pub fn decode_implicit<'a, R: Reader<'a>, T: Tagged + DecodeValue<'a>>(
-//     number: TagNumber,
-//     reader: &mut R,
-// ) -> Result<Option<T>, T::Error> {
-//     match AnyCustomClassImplicit::decode_skipping(Class::ContextSpecific, number, reader) {
-//         Ok(Some(custom)) => Ok(Some(custom.value)),
-//         Ok(None) => Ok(None),
-//         Err(err) => Err(err),
-//     }
-// }
-
-// pub fn decode_explicit<'a, R: Reader<'a>, T: Decode<'a>>(
-//     number: TagNumber,
-//     reader: &mut R,
-// ) -> Result<Option<T>, T::Error> {
-//     match AnyCustomClassExplicit::decode_skipping(Class::ContextSpecific, number, reader) {
-//         Ok(Some(custom)) => Ok(Some(custom.value)),
-//         Ok(None) => Ok(None),
-//         Err(err) => Err(err),
-//     }
-// }
-
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
