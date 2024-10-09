@@ -13,7 +13,7 @@ use der::Encode;
 use der::EncodePem;
 
 #[cfg(feature = "encryption")]
-use pkcs8::EncryptedPrivateKeyInfoOwned;
+use pkcs8::{EncryptedPrivateKeyInfoOwned, PrivateKeyInfoRef};
 
 /// Ed25519 PKCS#8 private key plaintext encoded as ASN.1 DER
 #[cfg(feature = "encryption")]
