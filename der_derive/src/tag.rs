@@ -7,6 +7,7 @@ use std::{
     fmt::{self, Display},
     str::FromStr,
 };
+use syn::{parse::Parse, LitStr};
 
 /// Tag "IR" type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -74,6 +75,21 @@ impl TagMode {
         match self {
             TagMode::Explicit => quote!(::der::TagMode::Explicit),
             TagMode::Implicit => quote!(::der::TagMode::Implicit),
+        }
+    }
+}
+
+impl Parse for TagMode {
+    fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
+        let s: LitStr = input.parse()?;
+
+        match s.value().as_str() {
+            "EXPLICIT" | "explicit" => Ok(TagMode::Explicit),
+            "IMPLICIT" | "implicit" => Ok(TagMode::Implicit),
+            _ => Err(syn::Error::new(
+                s.span(),
+                "invalid tag mode (supported modes are `EXPLICIT` and `IMPLICIT`)",
+            )),
         }
     }
 }
