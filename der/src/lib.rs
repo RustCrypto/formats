@@ -63,8 +63,8 @@
 //! - [`Utf8StringRef`]: ASN.1 `UTF8String`.
 //!
 //! Context specific fields can be modeled using these generic types:
-//! - [`ContextSpecific`]: decoder/encoder for owned context-specific fields
-//! - [`ContextSpecificRef`]: encode-only type for references to context-specific fields
+//! - [`ContextSpecificExplicit`]: decoder/encoder for owned context-specific fields
+//! - [`ContextSpecificExplicitRef`]: encode-only type for references to context-specific fields
 //!
 //! ## Example
 //! The following example implements X.509's `AlgorithmIdentifier` message type
@@ -309,8 +309,10 @@
 //!
 //! [`Any`]: asn1::Any
 //! [`AnyRef`]: asn1::AnyRef
-//! [`ContextSpecific`]: asn1::ContextSpecific
-//! [`ContextSpecificRef`]: asn1::ContextSpecificRef
+//! [`ContextSpecificExplicit`]: asn1::ContextSpecificExplicit
+//! [`ContextSpecificExplicitRef`]: asn1::ContextSpecificExplicitRef
+//! [`ContextSpecificImplicit`]: asn1::ContextSpecificImplicit
+//! [`ContextSpecificImplicitRef`]: asn1::ContextSpecificImplicitRef
 //! [`BitString`]: asn1::BitString
 //! [`BitStringRef`]: asn1::BitStringRef
 //! [`GeneralizedTime`]: asn1::GeneralizedTime

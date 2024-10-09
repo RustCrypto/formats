@@ -216,7 +216,7 @@ where
             let value = T::decode_value(
                 &mut reader,
                 Header {
-                    tag: tag,
+                    tag,
                     length: content.len().try_into()?,
                 },
             )?;
