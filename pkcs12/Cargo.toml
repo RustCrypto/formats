@@ -21,8 +21,10 @@ spki = { version = "0.8.0-rc.0" }
 x509-cert = { version = "=0.3.0-pre.0", default-features = false, features = ["pem"] }
 const-oid = { version = "0.10.0-rc.0", features = ["db"] }
 cms = "=0.3.0-pre.0"
+
+# optional dependencies
 digest = { version = "0.11.0-pre.9", features = ["alloc"], optional = true }
-zeroize = "1.8.1"
+zeroize = { version = "1.8.1", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.4"
@@ -32,7 +34,7 @@ sha2 = "=0.11.0-pre.4"
 whirlpool = "=0.11.0-pre.4"
 
 [features]
-kdf = ["dep:digest"]
+kdf = ["dep:digest", "dep:zeroize"]
 
 [package.metadata.docs.rs]
 all-features = true
