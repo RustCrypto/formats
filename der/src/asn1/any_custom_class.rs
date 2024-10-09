@@ -147,6 +147,9 @@ where
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Self::Error> {
         let header = Header::decode(reader)?;
 
+        // TODO(dishmaker): x509-cert tests fail due to read_nested:
+        // let value = T::decode_value(reader, header)?;
+
         let value = reader.read_nested(header.length, |reader| T::decode_value(reader, header))?;
 
         if header.tag.is_constructed() != value.tag().is_constructed() {
