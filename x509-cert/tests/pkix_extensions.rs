@@ -1,7 +1,10 @@
 //! Certificate tests
 #![allow(clippy::bool_assert_comparison)]
+use const_oid::db::rfc5280::*;
+use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 use const_oid::AssociatedOid;
 use der::asn1::{Ia5StringRef, OctetString, PrintableStringRef, Utf8StringRef};
+use der::TagNumber;
 use der::{Decode, Encode, ErrorKind, Length, Tag, Tagged};
 use hex_literal::hex;
 use x509_cert::ext::pkix::crl::dp::{DistributionPoint, ReasonFlags, Reasons};
@@ -10,9 +13,6 @@ use x509_cert::ext::pkix::*;
 use x509_cert::ext::Extensions;
 use x509_cert::name::Name;
 use x509_cert::{serial_number::SerialNumber, Certificate, Version};
-
-use const_oid::db::rfc5280::*;
-use const_oid::db::rfc5912::ID_CE_CERTIFICATE_POLICIES;
 
 fn spin_over_exts(exts: &Extensions) {
     for ext in exts {
@@ -840,8 +840,6 @@ fn decode_cert() {
 
 #[test]
 fn decode_idp() {
-    use der::TagNumber;
-
     // IDP from 04A8739769B3C090A11DCDFABA3CF33F4BEF21F3.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp = IssuingDistributionPoint::from_der(&hex!("30038201FF")).unwrap();
     assert_eq!(idp.only_contains_ca_certs, true);
@@ -1109,10 +1107,13 @@ fn decode_idp() {
             panic!("Expected FullName")
         }
     }
+}
 
-    //---------------------------------
-    // Negative tests
-    //---------------------------------
+//---------------------------------
+// Negative tests
+//---------------------------------
+#[test]
+fn decode_idp_negative_reasonflags() {
     // Value contains more than length value indicates
     let reason_flags = ReasonFlags::from_der(&hex!("0302079F80"));
     let err = reason_flags.err().unwrap();
@@ -1131,19 +1132,6 @@ fn decode_idp() {
         ErrorKind::Incomplete {
             expected_len: 6u8.into(),
             actual_len: 5u8.into()
-        },
-        err.kind()
-    );
-
-    // Value incomplete relative to length value
-    let idp =
-        IssuingDistributionPoint::from_der(&hex!("3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8304079F80"));
-    let err = idp.err().unwrap();
-    assert_eq!(err.position().unwrap(), 103u8.into());
-    assert_eq!(
-        ErrorKind::Incomplete {
-            expected_len: 106u8.into(),
-            actual_len: 105u8.into()
         },
         err.kind()
     );
@@ -1174,7 +1162,26 @@ fn decode_idp() {
         },
         err.kind()
     );
+}
 
+#[test]
+fn decode_idp_negative_incomplete() {
+    // Value incomplete relative to length value
+    let idp =
+        IssuingDistributionPoint::from_der(&hex!("3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8304079F80"));
+    let err = idp.err().unwrap();
+    assert_eq!(err.position().unwrap(), 103u8.into());
+    assert_eq!(
+        ErrorKind::Incomplete {
+            expected_len: 106u8.into(),
+            actual_len: 105u8.into()
+        },
+        err.kind()
+    );
+}
+
+#[test]
+fn decode_idp_negative_constructed() {
     // Context specific tag that should be primitive is constructed
     let idp = IssuingDistributionPoint::from_der(&hex!("3003A201FF"));
     let err = idp.err().unwrap();
@@ -1187,19 +1194,28 @@ fn decode_idp() {
         },
         err.kind()
     );
+}
 
+#[test]
+fn decode_idp_negative_bool_long() {
     // Boolean value is two bytes long
     let idp =
         IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358402FFFF"));
     let err = idp.err().unwrap();
     assert_eq!(ErrorKind::Length { tag: Tag::Boolean }, err.kind());
+}
 
+#[test]
+fn decode_idp_negative_bool_invalid() {
     // Boolean value is neither 0x00 nor 0xFF
     let idp =
         IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C20434135840175"));
     let err = idp.err().unwrap();
     assert_eq!(ErrorKind::Noncanonical { tag: Tag::Boolean }, err.kind());
+}
 
+#[test]
+fn decode_idp_negative_length_rdn() {
     // Length on second RDN in first name indicates more bytes than are present
     let idp =
         IssuingDistributionPoint::from_der(&hex!("30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13995465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358401FF"));
