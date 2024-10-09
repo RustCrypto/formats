@@ -47,7 +47,6 @@ tokio = { version = "1.40.0", features = ["macros", "rt"] }
 alloc = ["der/alloc"]
 std = ["der/std", "spki/std"]
 builder = ["aes", "async-signature", "cbc", "cipher", "rsa", "sha1", "sha2", "sha3", "signature", "std", "spki/alloc", "x509-cert/builder", "zeroize"]
-pem = ["alloc", "der/pem"]
 
 [package.metadata.docs.rs]
 all-features = true
