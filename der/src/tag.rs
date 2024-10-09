@@ -359,10 +359,12 @@ fn parse_parts<'a, R: Reader<'a>>(first_byte: u8, reader: &mut R) -> Result<(boo
         return Ok((constructed, TagNumber::new(first_number_part.into())));
     }
 
-    let mut multi_byte_tag_number = 0;
+    let mut multi_byte_tag_number: u16 = 0;
 
-    for _ in 0..Tag::MAX_SIZE - 2 {
-        multi_byte_tag_number <<= 7;
+    for _ in 0..Tag::MAX_SIZE - 1 {
+        multi_byte_tag_number = multi_byte_tag_number
+            .checked_mul(0x80)
+            .ok_or_else(|| Error::new(ErrorKind::TagNumberInvalid, reader.position()))?;
 
         let byte = reader.read_byte()?;
         multi_byte_tag_number |= u16::from(byte & 0x7F);
@@ -372,54 +374,59 @@ fn parse_parts<'a, R: Reader<'a>>(first_byte: u8, reader: &mut R) -> Result<(boo
         }
     }
 
-    let byte = reader.read_byte()?;
-    if multi_byte_tag_number > u16::MAX >> 7 || byte & 0x80 != 0 {
-        return Err(ErrorKind::TagNumberInvalid.into());
-    }
-    multi_byte_tag_number |= u16::from(byte & 0x7F);
+    Err(Error::new(ErrorKind::TagNumberInvalid, reader.position()))
+}
 
-    Ok((constructed, TagNumber::new(multi_byte_tag_number)))
+fn tag_length(tag_number: u16) -> Length {
+    if tag_number <= 30 {
+        Length::ONE
+    } else if tag_number < 0x80 {
+        Length::new(2)
+    } else if tag_number < 0x80 * 0x80 {
+        Length::new(3)
+    } else {
+        Length::new(4)
+    }
+}
+
+#[allow(clippy::cast_possible_truncation)]
+fn tag_number_bytes(first_byte: u8, num: u16, buf: &mut [u8; Tag::MAX_SIZE]) -> &[u8] {
+    if num <= 30 {
+        buf[0] = first_byte | num as u8;
+        &buf[..1]
+    } else if num < 0x80 {
+        buf[0] = first_byte | 0x1F;
+        buf[1] = num as u8;
+        &buf[..2]
+    } else if num < 0x80 * 0x80 {
+        buf[0] = first_byte | 0x1F;
+        buf[1] = 0x80 | (num >> 7) as u8;
+        buf[2] = (num & 0x7F) as u8;
+        &buf[..3]
+    } else {
+        buf[0] = first_byte | 0x1F;
+        buf[1] = 0x80 | (num >> 14) as u8;
+        buf[2] = 0x80 | (num >> 7) as u8;
+        buf[3] = (num & 0x7F) as u8;
+        &buf[..4]
+    }
 }
 
 impl Encode for Tag {
     fn encoded_len(&self) -> Result<Length> {
-        let number = self.number().value();
-
-        let length = if number <= 30 {
-            Length::ONE
-        } else {
-            Length::new(number.ilog2() as u16 / 7 + 2)
-        };
-
-        Ok(length)
+        Ok(tag_length(self.number().value()))
     }
 
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
-        let mut first_byte = self.class() as u8 | u8::from(self.is_constructed()) << 5;
-
-        let number = self.number().value();
-
-        if number <= 30 {
-            first_byte |= number as u8;
-            writer.write_byte(first_byte)?;
-        } else {
-            first_byte |= 0x1F;
-            writer.write_byte(first_byte)?;
-
-            let extra_bytes = number.ilog2() as u16 / 7 + 1;
-
-            for shift in (0..extra_bytes).rev() {
-                let mut byte = (number >> (shift * 7)) as u8 & 0x7f;
-
-                if shift != 0 {
-                    byte |= 0x80;
-                }
-
-                writer.write_byte(byte)?;
-            }
+        let mut first_byte = self.class() as u8;
+        if self.is_constructed() {
+            first_byte |= CONSTRUCTED_FLAG;
         }
+        let num = self.number().value();
 
-        Ok(())
+        let mut buf = [0u8; Tag::MAX_SIZE];
+        let tag_bytes = tag_number_bytes(first_byte, num, &mut buf);
+        writer.write(tag_bytes)
     }
 }
 
@@ -499,7 +506,7 @@ impl fmt::Debug for Tag {
 #[cfg(test)]
 mod tests {
     use super::{Class, Tag, TagNumber};
-    use crate::{Length, Reader, SliceReader};
+    use crate::{Decode, Encode, Length, Reader, SliceReader};
 
     #[test]
     fn tag_class() {
@@ -563,5 +570,52 @@ mod tests {
         assert_eq!(reader.position(), Length::ZERO);
         assert_eq!(Tag::peek(&reader).unwrap(), Tag::Integer);
         assert_eq!(reader.position(), Length::ZERO); // Position unchanged
+    }
+
+    #[test]
+    fn decode_application() {
+        const TAG_APPLICATION: [u8; 2] = [0x7F, 0x21];
+        let mut reader = SliceReader::new(&TAG_APPLICATION).unwrap();
+        let tag = Tag::decode(&mut reader).unwrap();
+
+        assert_eq!(
+            tag,
+            Tag::Application {
+                constructed: true,
+                number: TagNumber(33)
+            }
+        );
+
+        let mut buf = [0u8; 8];
+        let encoded = tag.encode_to_slice(&mut buf).unwrap();
+
+        assert_eq!(TAG_APPLICATION, encoded);
+    }
+
+    #[test]
+    fn decode_private_out_of_range() {
+        const TAG_PRIVATE: [u8; 4] = [0xFF, 0xFF, 0xFF, 0x7f];
+        let mut reader = SliceReader::new(&TAG_PRIVATE).unwrap();
+        let result = Tag::decode(&mut reader);
+        assert!(result.is_err());
+    }
+    #[test]
+    fn decode_private() {
+        const TAG_PRIVATE: [u8; 4] = [0xFF, 0x83, 0xFF, 0x70];
+        let mut reader = SliceReader::new(&TAG_PRIVATE).unwrap();
+        let tag = Tag::decode(&mut reader).unwrap();
+
+        assert_eq!(
+            tag,
+            Tag::Private {
+                constructed: true,
+                number: TagNumber(0xfff0)
+            }
+        );
+
+        let mut buf = [0u8; 8];
+        let encoded = tag.encode_to_slice(&mut buf).unwrap();
+
+        assert_eq!(TAG_PRIVATE, encoded);
     }
 }
