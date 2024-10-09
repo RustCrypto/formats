@@ -322,13 +322,10 @@ mod tests {
         assert_eq!(
             field.to_decode_tokens().to_string(),
             quote! {
-                let implicit_field = ::der::asn1::ContextSpecific::<>::decode_implicit(
-                        reader,
-                        ::der::TagNumber(0)
-                    )?
+                let implicit_field = ::der::asn1::ContextSpecificImplicit::<0u16, _>::decode_skipping(reader)?
                     .ok_or_else(|| {
-                        der::Tag::ContextSpecific {
-                            number: ::der::TagNumber(0),
+                        ::der::Tag::ContextSpecific {
+                            number: ::der::TagNumber(0u16),
                             constructed: false
                         }
                         .value_error()
@@ -341,9 +338,7 @@ mod tests {
         assert_eq!(
             field.to_encode_tokens().to_string(),
             quote! {
-                ::der::asn1::ContextSpecificRef {
-                    tag_number: ::der::TagNumber(0),
-                    tag_mode: ::der::TagMode::Implicit,
+                ::der::asn1::ContextSpecificImplicitRef::<'_, 0u16, _> {
                     value: &self.implicit_field,
                 }
             }

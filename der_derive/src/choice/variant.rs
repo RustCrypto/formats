@@ -262,23 +262,23 @@ mod tests {
 
     #[test]
     fn explicit() {
-        for tag_number in [0, 1, 2, 3] {
+        for tag_number_u16 in [0, 1, 2, 3] {
             for constructed in [false, true] {
                 let ident = Ident::new("ExplicitVariant", Span::call_site());
                 let attrs = FieldAttrs {
                     constructed,
-                    class: Some(ClassNum::ContextSpecific(TagNumber(tag_number))),
+                    class: Some(ClassNum::ContextSpecific(TagNumber(tag_number_u16))),
                     ..Default::default()
                 };
                 assert_eq!(attrs.tag_mode, TagMode::Explicit);
 
                 let tag = TagOrPath::Tag(Tag::ContextSpecific {
                     constructed,
-                    number: TagNumber(tag_number),
+                    number: TagNumber(tag_number_u16),
                 });
 
                 let variant = ChoiceVariant { ident, attrs, tag };
-                let tag_number = TagNumber(tag_number).to_tokens();
+                let tag_number = TagNumber(tag_number_u16).to_tokens();
 
                 assert_eq!(
                     variant.to_decode_tokens().to_string(),
@@ -287,12 +287,9 @@ mod tests {
                             constructed: #constructed,
                             number: #tag_number,
                         } => Ok(Self::ExplicitVariant(
-                            match ::der::asn1::ContextSpecific::<>::decode(reader)? {
-                                field if field.tag_number == #tag_number => Some(field),
-                                _ => None
-                            }
+                            ::der::asn1::ContextSpecificExplicit::<#tag_number_u16, _>::decode_skipping(reader)?
                             .ok_or_else(|| {
-                                der::Tag::ContextSpecific {
+                                ::der::Tag::ContextSpecific {
                                     number: #tag_number,
                                     constructed: #constructed
                                 }
@@ -307,9 +304,7 @@ mod tests {
                 assert_eq!(
                     variant.to_encode_value_tokens().to_string(),
                     quote! {
-                        Self::ExplicitVariant(variant) => ::der::asn1::ContextSpecificRef {
-                            tag_number: #tag_number,
-                            tag_mode: ::der::TagMode::Explicit,
+                        Self::ExplicitVariant(variant) => ::der::asn1::ContextSpecificExplicitRef::<'_, #tag_number_u16, _> {
                             value: variant,
                         }
                         .encode_value(encoder),
@@ -320,9 +315,7 @@ mod tests {
                 assert_eq!(
                     variant.to_value_len_tokens().to_string(),
                     quote! {
-                        Self::ExplicitVariant(variant) => ::der::asn1::ContextSpecificRef {
-                            tag_number: #tag_number,
-                            tag_mode: ::der::TagMode::Explicit,
+                        Self::ExplicitVariant(variant) => ::der::asn1::ContextSpecificExplicitRef::<'_, #tag_number_u16, _> {
                             value: variant,
                         }
                         .value_len(),
@@ -346,24 +339,24 @@ mod tests {
 
     #[test]
     fn implicit() {
-        for tag_number in [0, 1, 2, 3] {
+        for tag_number_u16 in [0, 1, 2, 3] {
             for constructed in [false, true] {
                 let ident = Ident::new("ImplicitVariant", Span::call_site());
 
                 let attrs = FieldAttrs {
                     constructed,
-                    class: Some(ClassNum::ContextSpecific(TagNumber(tag_number))),
+                    class: Some(ClassNum::ContextSpecific(TagNumber(tag_number_u16))),
                     tag_mode: TagMode::Implicit,
                     ..Default::default()
                 };
 
                 let tag = TagOrPath::Tag(Tag::ContextSpecific {
                     constructed,
-                    number: TagNumber(tag_number),
+                    number: TagNumber(tag_number_u16),
                 });
 
                 let variant = ChoiceVariant { ident, attrs, tag };
-                let tag_number = TagNumber(tag_number).to_tokens();
+                let tag_number = TagNumber(tag_number_u16).to_tokens();
 
                 assert_eq!(
                     variant.to_decode_tokens().to_string(),
@@ -372,12 +365,9 @@ mod tests {
                             constructed: #constructed,
                             number: #tag_number,
                         } => Ok(Self::ImplicitVariant(
-                            ::der::asn1::ContextSpecific::<>::decode_implicit(
-                                reader,
-                                #tag_number
-                            )?
+                            ::der::asn1::ContextSpecificImplicit::<#tag_number_u16, _>::decode_skipping(reader)?
                             .ok_or_else(|| {
-                                der::Tag::ContextSpecific {
+                                ::der::Tag::ContextSpecific {
                                   number: #tag_number,
                                   constructed: #constructed
                                 }
@@ -392,9 +382,7 @@ mod tests {
                 assert_eq!(
                     variant.to_encode_value_tokens().to_string(),
                     quote! {
-                        Self::ImplicitVariant(variant) => ::der::asn1::ContextSpecificRef {
-                            tag_number: #tag_number,
-                            tag_mode: ::der::TagMode::Implicit,
+                        Self::ImplicitVariant(variant) => ::der::asn1::ContextSpecificImplicitRef::<'_, #tag_number_u16, _> {
                             value: variant,
                         }
                         .encode_value(encoder),
@@ -405,9 +393,7 @@ mod tests {
                 assert_eq!(
                     variant.to_value_len_tokens().to_string(),
                     quote! {
-                        Self::ImplicitVariant(variant) => ::der::asn1::ContextSpecificRef {
-                            tag_number: #tag_number,
-                            tag_mode: ::der::TagMode::Implicit,
+                        Self::ImplicitVariant(variant) => ::der::asn1::ContextSpecificImplicitRef::<'_, #tag_number_u16, _> {
                             value: variant,
                         }
                         .value_len(),
