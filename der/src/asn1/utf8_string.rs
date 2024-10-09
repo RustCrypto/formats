@@ -68,6 +68,14 @@ impl<'a> From<Utf8StringRef<'a>> for AnyRef<'a> {
     }
 }
 
+impl<'a> TryFrom<&'a str> for Utf8StringRef<'a> {
+    type Error = Error;
+
+    fn try_from(s: &'a str) -> Result<Self> {
+        Self::new(s)
+    }
+}
+
 impl<'a> fmt::Debug for Utf8StringRef<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Utf8String({:?})", self.as_str())
@@ -111,6 +119,15 @@ impl<'a> TryFrom<AnyRef<'a>> for String {
 
     fn try_from(any: AnyRef<'a>) -> Result<String> {
         Utf8StringRef::try_from(any).map(|s| s.as_str().to_owned())
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> TryFrom<&'a String> for Utf8StringRef<'a> {
+    type Error = Error;
+
+    fn try_from(s: &'a String) -> Result<Self> {
+        Self::new(s.as_str())
     }
 }
 

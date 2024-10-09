@@ -77,7 +77,7 @@ impl Asn1Type {
             | Asn1Type::PrintableString
             | Asn1Type::TeletexString
             | Asn1Type::VideotexString
-            | Asn1Type::Utf8String => quote!(#type_path::new(#binding)?),
+            | Asn1Type::Utf8String => quote!(#type_path::try_from(#binding)?),
             _ => quote!(#type_path::try_from(#binding)?),
         }
     }

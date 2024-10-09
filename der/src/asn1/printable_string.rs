@@ -204,6 +204,12 @@ mod allocation {
         }
     }
 
+    impl<'a> From<&'a PrintableString> for PrintableStringRef<'a> {
+        fn from(printable_string: &'a PrintableString) -> PrintableStringRef<'a> {
+            printable_string.owned_to_ref()
+        }
+    }
+
     impl<'a> RefToOwned<'a> for PrintableStringRef<'a> {
         type Owned = PrintableString;
         fn ref_to_owned(&self) -> Self::Owned {
