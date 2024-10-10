@@ -15,9 +15,9 @@ edition = "2021"
 rust-version = "1.81"
 
 [dependencies]
-der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid", "pem"] }
+der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid"] }
 spki = { version = "0.8.0-rc.0" }
-x509-cert = { version = "=0.3.0-pre.0", default-features = false, features = ["pem"] }
+x509-cert = { version = "=0.3.0-pre.0", default-features = false }
 const-oid = { version = "0.10.0-rc.0", features = ["db"] }
 
 # optional dependencies
@@ -42,6 +42,7 @@ rsa = { version = "=0.10.0-pre.3", features = ["sha2"] }
 ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
 p256 = "=0.14.0-pre.2"
 tokio = { version = "1.40.0", features = ["macros", "rt"] }
+x509-cert = { version = "=0.3.0-pre.0", features = ["pem"] }
 
 [features]
 alloc = ["der/alloc"]
