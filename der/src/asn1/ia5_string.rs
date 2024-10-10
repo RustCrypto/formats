@@ -137,15 +137,21 @@ mod allocation {
     }
 
     impl<'a> From<Ia5StringRef<'a>> for Ia5String {
-        fn from(international_string: Ia5StringRef<'a>) -> Ia5String {
-            let inner = international_string.inner.into();
+        fn from(ia5_string: Ia5StringRef<'a>) -> Ia5String {
+            let inner = ia5_string.inner.into();
             Self { inner }
         }
     }
 
     impl<'a> From<&'a Ia5String> for AnyRef<'a> {
-        fn from(international_string: &'a Ia5String) -> AnyRef<'a> {
-            AnyRef::from_tag_and_value(Tag::Ia5String, (&international_string.inner).into())
+        fn from(ia5_string: &'a Ia5String) -> AnyRef<'a> {
+            AnyRef::from_tag_and_value(Tag::Ia5String, (&ia5_string.inner).into())
+        }
+    }
+
+    impl<'a> From<&'a Ia5String> for Ia5StringRef<'a> {
+        fn from(ia5_string: &'a Ia5String) -> Ia5StringRef<'a> {
+            ia5_string.owned_to_ref()
         }
     }
 
