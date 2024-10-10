@@ -45,7 +45,6 @@ tokio = { version = "1.40.0", features = ["macros", "rt"] }
 x509-cert = { version = "=0.3.0-pre.0", features = ["pem"] }
 
 [features]
-alloc = ["der/alloc"]
 std = ["der/std", "spki/std"]
 builder = ["aes", "async-signature", "cbc", "cipher", "rsa", "sha1", "sha2", "sha3", "signature", "std", "spki/alloc", "x509-cert/builder", "zeroize"]
 
