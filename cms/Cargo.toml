@@ -46,7 +46,21 @@ x509-cert = { version = "=0.3.0-pre.0", features = ["pem"] }
 
 [features]
 std = ["der/std", "spki/std"]
-builder = ["aes", "async-signature", "cbc", "cipher", "rsa", "sha1", "sha2", "sha3", "signature", "std", "spki/alloc", "x509-cert/builder", "zeroize"]
+builder = [
+    "dep:aes",
+    "dep:async-signature",
+    "dep:cbc",
+    "dep:cipher",
+    "dep:rsa",
+    "dep:sha1",
+    "dep:sha2",
+    "dep:sha3",
+    "dep:signature",
+    "std",
+    "spki/alloc",
+    "x509-cert/builder",
+    "dep:zeroize"
+]
 
 [package.metadata.docs.rs]
 all-features = true
