@@ -2638,6 +2638,30 @@ pub mod rfc7107 {
     pub const ID_STI: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.9");
 }
+pub mod rfc7292 {
+    pub const RSADSI: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549");
+    pub const PKCS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1");
+    pub const PKCS_12: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12");
+    pub const PKCS_12_PBE_IDS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1");
+    pub const PBE_WITH_SHA_AND_128_BIT_RC_4: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.1");
+    pub const PBE_WITH_SHA_AND_40_BIT_RC_4: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.2");
+    pub const PBE_WITH_SHA_AND_3_KEY_TRIPLE_DES_CBC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.3");
+    pub const PBE_WITH_SHA_AND_2_KEY_TRIPLE_DES_CBC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.4");
+    pub const PBE_WITH_SHA_AND_128_BIT_RC_2_CBC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.5");
+    pub const PBEWITH_SHA_AND_40_BIT_RC_2_CBC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.6");
+    pub const BAGTYPES: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.10.1");
+}
 pub mod rfc7299 {
     pub const ID_PKIX: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7");
@@ -5205,6 +5229,35 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc7107::ID_TSP, "id-tsp"),
     (&rfc7107::ID_SKD, "id-skd"),
     (&rfc7107::ID_STI, "id-sti"),
+    (&rfc7292::RSADSI, "rsadsi"),
+    (&rfc7292::PKCS, "pkcs"),
+    (&rfc7292::PKCS_12, "pkcs-12"),
+    (&rfc7292::PKCS_12_PBE_IDS, "pkcs-12PbeIds"),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_128_BIT_RC_4,
+        "pbeWithSHAAnd128BitRC4",
+    ),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_40_BIT_RC_4,
+        "pbeWithSHAAnd40BitRC4",
+    ),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_3_KEY_TRIPLE_DES_CBC,
+        "pbeWithSHAAnd3-KeyTripleDES-CBC",
+    ),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_2_KEY_TRIPLE_DES_CBC,
+        "pbeWithSHAAnd2-KeyTripleDES-CBC",
+    ),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_128_BIT_RC_2_CBC,
+        "pbeWithSHAAnd128BitRC2-CBC",
+    ),
+    (
+        &rfc7292::PBEWITH_SHA_AND_40_BIT_RC_2_CBC,
+        "pbewithSHAAnd40BitRC2-CBC",
+    ),
+    (&rfc7292::BAGTYPES, "bagtypes"),
     (&rfc7299::ID_PKIX, "id-pkix"),
     (&rfc7299::ID_MOD, "id-mod"),
     (&rfc7299::ID_PE, "id-pe"),
