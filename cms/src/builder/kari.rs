@@ -7,6 +7,11 @@
 //!
 //!
 
+use super::AlgorithmIdentifierOwned;
+use super::UserKeyingMaterial;
+
+use der::{asn1::OctetString, Sequence};
+
 /// The `EccCmsSharedInfo` type is defined in [RFC 5753 Section 7.2].
 ///
 /// ```text
