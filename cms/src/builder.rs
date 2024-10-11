@@ -45,6 +45,10 @@ use x509_cert::attr::{Attribute, AttributeValue, Attributes};
 use x509_cert::builder::{self, AsyncBuilder, Builder};
 use zeroize::Zeroize;
 
+// Modules
+mod kari;
+mod utils;
+
 /// Error type
 #[derive(Debug)]
 #[non_exhaustive]
