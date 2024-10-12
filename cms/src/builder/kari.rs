@@ -7,9 +7,9 @@
 //!
 //!
 
-use super::AlgorithmIdentifierOwned;
-use super::UserKeyingMaterial;
+use super::{AlgorithmIdentifierOwned, UserKeyingMaterial};
 
+use const_oid::ObjectIdentifier;
 use der::{asn1::OctetString, Sequence};
 
 /// The `EccCmsSharedInfo` type is defined in [RFC 5753 Section 7.2].
@@ -37,4 +37,45 @@ pub struct EccCmsSharedInfo {
     /// Length of the generated KEK, in bits, represented as a 32-bit number
     #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "true")]
     pub supp_pub_info: OctetString,
+}
+
+/// Represents supported key agreement algorithm for ECC - as defined in [RFC 5753 Section 7.1.4].
+///
+/// As per [RFC 5753 Section 8], the following are supported:
+/// - dhSinglePass-stdDH-sha224kdf-scheme
+/// - dhSinglePass-stdDH-sha256kdf-scheme
+/// - dhSinglePass-stdDH-sha384kdf-scheme
+/// - dhSinglePass-stdDH-sha512kdf-scheme
+///
+/// [RFC 5753 Section 7.1.4]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.1.4
+/// [RFC 5753 Section 8]: https://datatracker.ietf.org/doc/html/rfc5753#section-8
+
+pub enum KeyAgreementAlgorithm {
+    /// dhSinglePass-stdDH-sha224kdf-scheme
+    SinglePassStdDhSha224Kdf,
+    /// dhSinglePass-stdDH-sha256kdf-scheme
+    SinglePassStdDhSha256Kdf,
+    /// dhSinglePass-stdDH-sha384kdf-scheme
+    SinglePassStdDhSha384Kdf,
+    /// dhSinglePass-stdDH-sh512df-scheme
+    SinglePassStdDhSha512Kdf,
+}
+impl KeyAgreementAlgorithm {
+    /// Return the OID of the algorithm.
+    pub fn oid(&self) -> ObjectIdentifier {
+        match self {
+            Self::SinglePassStdDhSha224Kdf => {
+                const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME
+            }
+            Self::SinglePassStdDhSha256Kdf => {
+                const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME
+            }
+            Self::SinglePassStdDhSha384Kdf => {
+                const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME
+            }
+            Self::SinglePassStdDhSha512Kdf => {
+                const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME
+            }
+        }
+    }
 }
