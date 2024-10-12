@@ -41,7 +41,24 @@ pub struct EccCmsSharedInfo {
 
 /// Represents supported key agreement algorithm for ECC - as defined in [RFC 5753 Section 7.1.4].
 ///
-/// As per [RFC 5753 Section 8], the following are supported:
+/// As per [RFC 5753 Section 8]:
+/// ```text
+///  Implementations that support EnvelopedData with the ephemeral-static
+///  ECDH standard primitive:
+///
+///  - MUST support the dhSinglePass-stdDH-sha256kdf-scheme key
+///    agreement algorithm, the id-aes128-wrap key wrap algorithm, and
+///    the id-aes128-cbc content encryption algorithm; and
+/// - MAY support the dhSinglePass-stdDH-sha1kdf-scheme, dhSinglePass-
+///     stdDH-sha224kdf-scheme, dhSinglePass-stdDH-sha384kdf-scheme, and
+///     dhSinglePass-stdDH-sha512kdf-scheme key agreement algorithms;
+///     the id-alg-CMS3DESwrap, id-aes192-wrap, and id-aes256-wrap key
+///     wrap algorithms; and the des-ede3-cbc, id-aes192-cbc, and id-
+///     aes256-cbc content encryption algorithms; other algorithms MAY
+///     also be supported.
+/// ```
+///
+/// As such the following are currently supported:
 /// - dhSinglePass-stdDH-sha224kdf-scheme
 /// - dhSinglePass-stdDH-sha256kdf-scheme
 /// - dhSinglePass-stdDH-sha384kdf-scheme
@@ -49,7 +66,6 @@ pub struct EccCmsSharedInfo {
 ///
 /// [RFC 5753 Section 7.1.4]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.1.4
 /// [RFC 5753 Section 8]: https://datatracker.ietf.org/doc/html/rfc5753#section-8
-
 pub enum KeyAgreementAlgorithm {
     /// dhSinglePass-stdDH-sha224kdf-scheme
     SinglePassStdDhSha224Kdf,
