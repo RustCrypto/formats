@@ -16,8 +16,7 @@ use cms::enveloped_data::{
 };
 use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
-use der::asn1::{OctetString, OctetStringRef, PrintableString, SetOfVec, Utf8StringRef};
-use der::asn1::{OctetString, PrintableString, SetOfVec};
+use der::asn1::{OctetString, OctetStringRef, PrintableString, SetOfVec};
 use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
 use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
