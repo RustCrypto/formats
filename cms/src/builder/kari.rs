@@ -8,7 +8,8 @@
 
 use super::{utils::HashDigest, AlgorithmIdentifierOwned, UserKeyingMaterial};
 use const_oid::ObjectIdentifier;
-use der::{asn1::OctetString, Sequence};
+use der::{asn1::OctetString, Any, Sequence};
+use elliptic_curve::{CurveArithmetic, PublicKey};
 
 /// The `EccCmsSharedInfo` type is defined in [RFC 5753 Section 7.2].
 ///
@@ -100,6 +101,37 @@ impl From<&KeyAgreementAlgorithm> for HashDigest {
             KeyAgreementAlgorithm::SinglePassStdDhSha256Kdf => Self::Sha256,
             KeyAgreementAlgorithm::SinglePassStdDhSha384Kdf => Self::Sha384,
             KeyAgreementAlgorithm::SinglePassStdDhSha512Kdf => Self::Sha512,
+        }
+    }
+}
+
+/// Contains information required to encrypt the content encryption key with a method based on ECC key agreement
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum EcKeyEncryptionInfo<C>
+where
+    C: CurveArithmetic,
+{
+    /// Encrypt key with EC
+    Ec(PublicKey<C>),
+}
+impl<C> EcKeyEncryptionInfo<C>
+where
+    C: CurveArithmetic + const_oid::AssociatedOid,
+{
+    /// Returns the OID associated with the curve used in this `EcKeyEncryptionInfo`.
+    pub fn get_oid(&self) -> ObjectIdentifier {
+        C::OID
+    }
+}
+impl<C> From<&EcKeyEncryptionInfo<C>> for AlgorithmIdentifierOwned
+where
+    C: CurveArithmetic + const_oid::AssociatedOid,
+{
+    fn from(ec_key_encryption_info: &EcKeyEncryptionInfo<C>) -> Self {
+        let parameters = Some(Any::from(&ec_key_encryption_info.get_oid()));
+        AlgorithmIdentifierOwned {
+            oid: elliptic_curve::ALGORITHM_OID, // id-ecPublicKey
+            parameters,                         // Curve OID
         }
     }
 }
