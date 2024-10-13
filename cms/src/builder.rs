@@ -729,7 +729,11 @@ pub trait PwriEncryptor {
     /// including eventual parameters (e.g. the used iv).
     fn key_encryption_algorithm(&self) -> Result<AlgorithmIdentifierOwned>;
     /// Encrypt the padded content-encryption key twice following RFC 3211, § 2.3.1
-    fn encrypt_rfc3211(&self, padded_content_encryption_key: &[u8]) -> Result<Vec<u8>>;
+    fn encrypt_rfc3211(
+        &self,
+        padded_content_encryption_key: &[u8],
+        rng: &mut impl CryptoRngCore
+    ) -> Result<Vec<u8>>;
 }
 
 /// Builds a `PasswordRecipientInfo` according to RFC 5652 § 6 and RFC 3211.
@@ -827,7 +831,10 @@ where
     /// Build a `PasswordRecipientInfoBuilder`. See RFC 5652 § 6.2.1
     fn build(&mut self, content_encryption_key: &[u8]) -> Result<RecipientInfo> {
         let padded_cek = self.pad_content_encryption_key(content_encryption_key)?;
-        let encrypted_key = self.key_encryptor.encrypt_rfc3211(padded_cek.as_slice())?;
+        let encrypted_key = self.key_encryptor.encrypt_rfc3211(
+            padded_cek.as_slice(),
+            self.rng,
+        )?;
         let enc_key = OctetString::new(encrypted_key)?;
         Ok(RecipientInfo::Pwri(PasswordRecipientInfo {
             version: self.recipient_info_version(),

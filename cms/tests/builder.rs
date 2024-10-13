@@ -25,6 +25,7 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::{SigningKey, VerifyingKey};
+use rsa::rand_core::CryptoRngCore;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
 use signature::Verifier;
@@ -629,6 +630,7 @@ fn test_create_password_recipient_info() {
         fn encrypt_rfc3211(
             &self,
             padded_content_encryption_key: &[u8],
+            rng: &mut impl CryptoRngCore,
         ) -> Result<Vec<u8>, cms::builder::Error> {
             if padded_content_encryption_key.len() < 2 * Self::BLOCK_LENGTH_BITS / 8 {
                 return Err(cms::builder::Error::Builder(
@@ -825,7 +827,7 @@ fn test_create_password_recipient_info() {
     let recipient_info_builder =
         PasswordRecipientInfoBuilder::new(key_encryptor, &mut rng).unwrap();
 
-    let mut rng = OsRng;
+    //let mut rng = OsRng;
     let mut builder = EnvelopedDataBuilder::new(
         None,
         "Arbitrary unencrypted content".as_bytes(),
