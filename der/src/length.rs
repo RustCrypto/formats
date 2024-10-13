@@ -7,10 +7,6 @@ use core::{
     ops::{Add, Sub},
 };
 
-/// Maximum number of octets in a DER encoding of a [`Length`] using the
-/// rules implemented by this crate.
-const MAX_DER_OCTETS: usize = 5;
-
 /// Maximum length as a `u32` (256 MiB).
 const MAX_U32: u32 = 0xfff_ffff;
 
@@ -36,6 +32,10 @@ impl Length {
 
     /// Maximum length currently supported: 256 MiB
     pub const MAX: Self = Self(MAX_U32);
+
+    /// Maximum number of octets in a DER encoding of a [`Length`] using the
+    /// rules implemented by this crate.
+    pub(crate) const MAX_SIZE: usize = 5;
 
     /// Create a new [`Length`] for any value which fits inside of a [`u16`].
     ///
@@ -277,8 +277,8 @@ impl Encode for Length {
 
 impl DerOrd for Length {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        let mut buf1 = [0u8; MAX_DER_OCTETS];
-        let mut buf2 = [0u8; MAX_DER_OCTETS];
+        let mut buf1 = [0u8; Self::MAX_SIZE];
+        let mut buf2 = [0u8; Self::MAX_SIZE];
 
         let mut encoder1 = SliceWriter::new(&mut buf1);
         encoder1.encode(self)?;

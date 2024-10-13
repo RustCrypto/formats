@@ -96,6 +96,14 @@ impl<'a> From<OctetStringRef<'a>> for &'a [u8] {
     }
 }
 
+impl<'a> TryFrom<&'a [u8]> for OctetStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(byte_slice: &'a [u8]) -> Result<Self, Error> {
+        OctetStringRef::new(byte_slice)
+    }
+}
+
 #[cfg(feature = "alloc")]
 pub use self::allocating::OctetString;
 
@@ -204,6 +212,18 @@ mod allocating {
         }
     }
 
+    impl From<OctetStringRef<'_>> for Vec<u8> {
+        fn from(octet_string: OctetStringRef<'_>) -> Vec<u8> {
+            Vec::from(octet_string.as_bytes())
+        }
+    }
+
+    impl From<OctetString> for Vec<u8> {
+        fn from(octet_string: OctetString) -> Vec<u8> {
+            octet_string.into_bytes()
+        }
+    }
+
     // Implement by hand because the derive would create invalid values.
     // Use the constructor to create a valid value.
     #[cfg(feature = "arbitrary")]
@@ -220,10 +240,11 @@ mod allocating {
 
 #[cfg(feature = "bytes")]
 mod bytes {
-    use super::OctetString;
+    use super::{OctetString, OctetStringRef};
     use crate::{
         DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, Tag, Writer,
     };
+    use alloc::vec::Vec;
     use bytes::Bytes;
 
     impl<'a> DecodeValue<'a> for Bytes {
@@ -246,6 +267,18 @@ mod bytes {
 
     impl FixedTag for Bytes {
         const TAG: Tag = Tag::OctetString;
+    }
+
+    impl From<OctetStringRef<'_>> for Bytes {
+        fn from(octet_string: OctetStringRef<'_>) -> Bytes {
+            Vec::from(octet_string).into()
+        }
+    }
+
+    impl From<OctetString> for Bytes {
+        fn from(octet_string: OctetString) -> Bytes {
+            Vec::from(octet_string).into()
+        }
     }
 }
 

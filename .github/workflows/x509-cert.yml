@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.75.0 # MSRV
+          - 1.81.0 # MSRV
           - stable
         target:
           - thumbv7em-none-eabi
@@ -45,15 +45,15 @@ jobs:
     if: false # TODO: temp disabled due to unpublished prerelease dependencies
     uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
     with:
-        working-directory: ${{ github.workflow }}
-        install-zlint: true
+      working-directory: ${{ github.workflow }}
+      install-zlint: true
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         rust:
-          - 1.75.0 # MSRV
+          - 1.81.0 # MSRV
           - stable
     steps:
       - uses: actions/checkout@v4
@@ -61,9 +61,15 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
       - uses: RustCrypto/actions/cargo-hack-install@master
-      - name: Install zlint
-        uses: RustCrypto/actions/zlint-install@master
-      - run: cargo hack test --feature-powerset --exclude-features base64
+      - uses: RustCrypto/actions/zlint-install@master
+      - run: cargo test --no-default-features
+      - run: cargo test
+      - run: cargo test --features arbitrary
+      - run: cargo test --features hazmat
+      - run: cargo test --features sct
+      - run: cargo hack test --feature-powerset --exclude-features arbitrary,base64,fingerprint,hazmat,sct
+      - run: cargo test --all-features
+      - run: cargo test --all-features --release
 
   fuzz:
     runs-on: ubuntu-latest

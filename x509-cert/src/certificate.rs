@@ -1,12 +1,11 @@
 //! Certificate types
 
-use crate::{name::Name, serial_number::SerialNumber, time::Validity};
+use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
+use crate::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use core::{cmp::Ordering, fmt::Debug};
-use der::asn1::BitString;
-use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd};
-use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
+use der::{asn1::BitString, Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd};
 
 #[cfg(feature = "pem")]
 use der::{
@@ -14,10 +13,12 @@ use der::{
     DecodePem,
 };
 
+use crate::time::Time;
+
 /// [`Profile`] allows the consumer of this crate to customize the behavior when parsing
 /// certificates.
 /// By default, parsing will be made in a rfc5280-compliant manner.
-pub trait Profile: PartialEq + Debug + Eq + Clone + Default {
+pub trait Profile: PartialEq + Debug + Eq + Clone + Copy + Default + 'static {
     /// Checks to run when parsing serial numbers
     fn check_serial_number(serial: &SerialNumber<Self>) -> der::Result<()> {
         // See the note in `SerialNumber::new`: we permit lengths of 21 bytes here,
@@ -29,25 +30,42 @@ pub trait Profile: PartialEq + Debug + Eq + Clone + Default {
             Ok(())
         }
     }
+
+    /// Adjustements to the time to run while serializing validity.
+    /// See [RFC 5280 Section 4.1.2.5]:
+    /// ```text
+    /// CAs conforming to this profile MUST always encode certificate
+    /// validity dates through the year 2049 as UTCTime; certificate validity
+    /// dates in 2050 or later MUST be encoded as GeneralizedTime.
+    /// ```
+    ///
+    /// [RFC 5280 Section 4.1.2.5]: https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.5
+    fn time_encoding(mut time: Time) -> der::Result<Time> {
+        time.rfc5280_adjust_utc_time()?;
+        Ok(time)
+    }
 }
 
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
-/// Parse certificates with rfc5280-compliant checks
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
+/// Parse and serialize certificates in rfc5280-compliant manner
 pub struct Rfc5280;
 
 impl Profile for Rfc5280 {}
 
 #[cfg(feature = "hazmat")]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
-/// Parse raw x509 certificate and disable all the checks
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
+/// Parse raw x509 certificate and disable all the checks and modification to the underlying data.
 pub struct Raw;
 
 #[cfg(feature = "hazmat")]
 impl Profile for Raw {
     fn check_serial_number(_serial: &SerialNumber<Self>) -> der::Result<()> {
         Ok(())
+    }
+    fn time_encoding(time: Time) -> der::Result<Time> {
+        Ok(time)
     }
 }
 
@@ -116,43 +134,135 @@ pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertificateInner<P: Profile + 'static = Rfc5280> {
-    /// The certificate version
+pub struct TbsCertificateInner<P: Profile = Rfc5280> {
+    /// The certificate version.
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
     /// fields such as `issuer_unique_id`, `subject_unique_id` and `extensions`
     /// require later versions. Care should be taken in order to ensure
     /// standards compliance.
     #[asn1(context_specific = "0", default = "Default::default")]
-    pub version: Version,
+    pub(crate) version: Version,
 
-    pub serial_number: SerialNumber<P>,
-    pub signature: AlgorithmIdentifierOwned,
-    pub issuer: Name,
-    pub validity: Validity,
-    pub subject: Name,
-    pub subject_public_key_info: SubjectPublicKeyInfoOwned,
+    pub(crate) serial_number: SerialNumber<P>,
+    pub(crate) signature: AlgorithmIdentifier,
+    pub(crate) issuer: Name,
+    pub(crate) validity: Validity<P>,
+    pub(crate) subject: Name,
+    pub(crate) subject_public_key_info: SubjectPublicKeyInfo,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
-    pub issuer_unique_id: Option<BitString>,
+    pub(crate) issuer_unique_id: Option<BitString>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub subject_unique_id: Option<BitString>,
+    pub(crate) subject_unique_id: Option<BitString>,
 
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
-    pub extensions: Option<crate::ext::Extensions>,
+    pub(crate) extensions: Option<ext::Extensions>,
 }
 
 impl<P: Profile> TbsCertificateInner<P> {
-    /// Decodes a single extension
+    /// [`Version`] of this certificate (v1/v2/v3).
+    pub fn version(&self) -> Version {
+        self.version
+    }
+
+    /// Serial number of this certificate.
     ///
-    /// Returns an error if multiple of these extensions is present. Returns
-    /// `Ok(None)` if the extension is not present. Returns a decoding error
-    /// if decoding failed. Otherwise returns the extension.
-    pub fn get<'a, T: Decode<'a> + AssociatedOid>(
+    /// X.509 serial numbers are used to uniquely identify certificates issued by a given
+    /// Certificate Authority (CA) identified in the `issuer` field.
+    pub fn serial_number(&self) -> &SerialNumber<P> {
+        &self.serial_number
+    }
+
+    /// Identifies the signature algorithm that this `TBSCertificate` should be signed with.
+    ///
+    /// In a signed certificate, matches [`CertificateInner::signature_algorithm`].
+    pub fn signature(&self) -> &AlgorithmIdentifier {
+        &self.signature
+    }
+
+    /// Certificate issuer: [`Name`] of the Certificate Authority (CA) which issued this
+    /// certificate.
+    pub fn issuer(&self) -> &Name {
+        &self.issuer
+    }
+
+    /// Validity period for this certificate: time range in which a certificate is considered valid,
+    /// after which it expires.
+    pub fn validity(&self) -> &Validity<P> {
+        &self.validity
+    }
+
+    /// Subject of this certificate: entity that the certificate is intended to represent or
+    /// authenticate, e.g. an individual, a device, or an organization.
+    pub fn subject(&self) -> &Name {
+        &self.subject
+    }
+
+    /// Subject Public Key Info (SPKI): public key information about this certificate including
+    /// algorithm identifier and key data.
+    pub fn subject_public_key_info(&self) -> &SubjectPublicKeyInfo {
+        &self.subject_public_key_info
+    }
+
+    /// Issuer unique ID: unique identifier representing the issuing CA, as defined by the
+    /// issuing CA.
+    ///
+    /// (NOTE: added in X.509 v2)
+    pub fn issuer_unique_id(&self) -> &Option<BitString> {
+        &self.issuer_unique_id
+    }
+
+    /// Subject unique ID: unique identifier representing the certificate subject, as defined by the
+    /// issuing CA.
+    ///
+    /// (NOTE: added in X.509 v2)
+    pub fn subject_unique_id(&self) -> &Option<BitString> {
+        &self.subject_unique_id
+    }
+
+    /// Certificate extensions.
+    ///
+    /// Additional fields in a digital certificate that provide extra information beyond the
+    /// standard fields. These extensions enhance the functionality and flexibility of certificates,
+    /// allowing them to convey more specific details about the certificate's usage and constraints.
+    ///
+    /// (NOTE: added in X.509 v3)
+    pub fn extensions(&self) -> Option<&ext::Extensions> {
+        self.extensions.as_ref()
+    }
+
+    /// Decodes a single extension.
+    ///
+    /// Returns `Ok(None)` if the extension is not present.
+    ///
+    /// Otherwise, returns the extension, and indicates if the extension was marked critical in the
+    /// boolean.
+    ///
+    /// ```
+    /// # #[cfg(feature = "pem")]
+    /// # fn pemonly() {
+    /// # const CERT_PEM: &str = include_str!("../tests/examples/amazon.pem");
+    /// use x509_cert::{der::DecodePem, ext::pkix::BasicConstraints, Certificate};
+    /// let certificate = Certificate::from_pem(CERT_PEM.as_bytes()).expect("parse certificate");
+    ///
+    /// let (critical, constraints) = certificate.tbs_certificate().get_extension::<BasicConstraints>()
+    ///     .expect("Failed to parse extension")
+    ///     .expect("Basic constraints expected");
+    /// # let _ = constraints;
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if multiple of these extensions are present.
+    ///
+    /// Returns a decoding error if decoding failed.
+    pub fn get_extension<'a, T: Decode<'a> + AssociatedOid>(
         &'a self,
     ) -> Result<Option<(bool, T)>, <T as Decode<'a>>::Error> {
-        let mut iter = self.filter::<T>().peekable();
+        let mut iter = self.filter_extensions::<T>().peekable();
         match iter.next() {
             None => Ok(None),
             Some(item) => match iter.peek() {
@@ -165,7 +275,28 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// Filters extensions by an associated OID
     ///
     /// Returns a filtered iterator over all the extensions with the OID.
-    pub fn filter<'a, T: Decode<'a> + AssociatedOid>(
+    ///
+    /// ```
+    /// # #[cfg(feature = "pem")]
+    /// # fn pemonly() {
+    /// # const CERT_PEM: &str = include_str!("../tests/examples/amazon.pem");
+    /// use x509_cert::{der::DecodePem, ext::pkix::BasicConstraints, Certificate};
+    /// let certificate = Certificate::from_pem(CERT_PEM.as_bytes()).expect("parse certificate");
+    ///
+    /// let mut extensions_found = certificate.tbs_certificate().filter_extensions::<BasicConstraints>();
+    /// while let Some(Ok((critical, extension))) = extensions_found.next() {
+    ///     println!("Found (critical={critical}): {extension:?}");
+    /// }
+    /// # }
+    /// ```
+    ///
+    /// # Safety
+    ///
+    /// According to [RFC 5290 section 4.2], extensions should not appear more than once.
+    /// A better alternative is to use [`TbsCertificateInner::get_extension`] instead.
+    ///
+    /// [RFC 5290 section 4.2]: https://www.rfc-editor.org/rfc/rfc5280#section-4.2
+    pub fn filter_extensions<'a, T: Decode<'a> + AssociatedOid>(
         &'a self,
     ) -> impl 'a + Iterator<Item = Result<(bool, T), <T as Decode<'a>>::Error>> {
         self.extensions
@@ -196,10 +327,28 @@ pub type Certificate = CertificateInner<Rfc5280>;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct CertificateInner<P: Profile + 'static = Rfc5280> {
-    pub tbs_certificate: TbsCertificateInner<P>,
-    pub signature_algorithm: AlgorithmIdentifierOwned,
-    pub signature: BitString,
+pub struct CertificateInner<P: Profile = Rfc5280> {
+    pub(crate) tbs_certificate: TbsCertificateInner<P>,
+    pub(crate) signature_algorithm: AlgorithmIdentifier,
+    pub(crate) signature: BitString,
+}
+
+impl<P: Profile> CertificateInner<P> {
+    /// Get the [`TbsCertificateInner`] (i.e. the part the signature is computed over).
+    pub fn tbs_certificate(&self) -> &TbsCertificateInner<P> {
+        &self.tbs_certificate
+    }
+
+    /// Signature algorithm used to sign the serialization of [`CertificateInner::tbs_certificate`].
+    pub fn signature_algorithm(&self) -> &AlgorithmIdentifier {
+        &self.signature_algorithm
+    }
+
+    /// Signature over the DER serialization of [`CertificateInner::tbs_certificate`] using the
+    /// algorithm identified in [`CertificateInner::signature_algorithm`].
+    pub fn signature(&self) -> &BitString {
+        &self.signature
+    }
 }
 
 #[cfg(feature = "pem")]

@@ -14,12 +14,33 @@ pub struct Header {
 }
 
 impl Header {
+    /// Maximum number of DER octets a header can be in this crate.
+    pub(crate) const MAX_SIZE: usize = 1 + Length::MAX_SIZE;
+
     /// Create a new [`Header`] from a [`Tag`] and a specified length.
     ///
     /// Returns an error if the length exceeds the limits of [`Length`].
     pub fn new(tag: Tag, length: impl TryInto<Length>) -> Result<Self> {
         let length = length.try_into().map_err(|_| ErrorKind::Overflow)?;
         Ok(Self { tag, length })
+    }
+
+    /// Peek forward in the reader, attempting to decode a [`Header`] at the current position.
+    ///
+    /// Does not modify the reader's state.
+    pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
+        let mut buf = [0u8; Self::MAX_SIZE];
+
+        for i in 2..Self::MAX_SIZE {
+            let slice = &mut buf[0..i];
+            if reader.peek_into(slice).is_ok() {
+                if let Ok(header) = Self::from_der(slice) {
+                    return Ok(header);
+                }
+            }
+        }
+
+        Self::from_der(&buf)
     }
 }
 
@@ -58,5 +79,27 @@ impl DerOrd for Header {
             Ordering::Equal => self.length.der_cmp(&other.length),
             ordering => Ok(ordering),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Header;
+    use crate::{Length, Reader, SliceReader, Tag};
+    use hex_literal::hex;
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    fn peek() {
+        // INTEGER: 42
+        const EXAMPLE_MSG: &[u8] = &hex!("02012A00");
+
+        let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
+        assert_eq!(reader.position(), Length::ZERO);
+
+        let header = Header::peek(&reader).unwrap();
+        assert_eq!(header.tag, Tag::Integer);
+        assert_eq!(header.length, Length::ONE);
+        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
 }

@@ -1,12 +1,13 @@
 //! X.501 time types as defined in RFC 5280
 
-use core::fmt;
-use core::time::Duration;
+use core::{fmt, marker::PhantomData, time::Duration};
 use der::asn1::{GeneralizedTime, UtcTime};
-use der::{Choice, DateTime, Sequence, ValueOrd};
+use der::{Choice, DateTime, DecodeValue, Encode, Header, Length, Reader, Sequence, ValueOrd};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
+
+use crate::certificate::{Profile, Rfc5280};
 
 /// X.501 `Time` as defined in [RFC 5280 Section 4.1.2.5].
 ///
@@ -68,7 +69,6 @@ impl Time {
 
     /// Convert time to UTCTime representation
     /// As per RFC 5280: 4.1.2.5, date through 2049 should be expressed as UTC Time.
-    #[cfg(feature = "builder")]
     pub(crate) fn rfc5280_adjust_utc_time(&mut self) -> der::Result<()> {
         if let Time::GeneralTime(t) = self {
             let date = t.to_date_time();
@@ -132,16 +132,30 @@ impl TryFrom<SystemTime> for Time {
 /// ```
 /// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
-pub struct Validity {
+#[derive(Copy, Clone, Debug, Eq, PartialEq, ValueOrd)]
+pub struct Validity<P: Profile = Rfc5280> {
     /// notBefore value
     pub not_before: Time,
 
     /// notAfter value
     pub not_after: Time,
+
+    _profile: PhantomData<P>,
 }
 
-impl Validity {
+impl<P> Validity<P>
+where
+    P: Profile,
+{
+    /// Creates a `Validity` with the provided bounds
+    pub const fn new(not_before: Time, not_after: Time) -> Self {
+        Self {
+            not_before,
+            not_after,
+            _profile: PhantomData,
+        }
+    }
+
     /// Creates a `Validity` which starts now and lasts for `duration`.
     #[cfg(feature = "std")]
     pub fn from_now(duration: Duration) -> der::Result<Self> {
@@ -151,6 +165,54 @@ impl Validity {
         Ok(Self {
             not_before: Time::try_from(now)?,
             not_after: Time::try_from(then)?,
+            _profile: PhantomData,
+        })
+    }
+
+    /// Creates a `Validity` which starts now and does not expire.
+    #[cfg(all(feature = "std", feature = "hazmat"))]
+    pub fn infinity() -> der::Result<Self> {
+        let now = SystemTime::now();
+
+        Ok(Self {
+            not_before: Time::try_from(now)?,
+            not_after: Time::INFINITY,
+            _profile: PhantomData,
         })
     }
 }
+
+impl<'a, P: Profile> DecodeValue<'a> for Validity<P> {
+    type Error = ::der::Error;
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
+        reader.read_nested(header.length, |reader| {
+            let not_before = reader.decode()?;
+            let not_after = reader.decode()?;
+            let out = Self {
+                not_before,
+                not_after,
+                _profile: PhantomData,
+            };
+
+            Ok(out)
+        })
+    }
+}
+
+impl<P: Profile> ::der::EncodeValue for Validity<P> {
+    fn value_len(&self) -> ::der::Result<::der::Length> {
+        [
+            P::time_encoding(self.not_before)?.encoded_len()?,
+            P::time_encoding(self.not_after)?.encoded_len()?,
+        ]
+        .into_iter()
+        .try_fold(Length::ZERO, |acc, len| acc + len)
+    }
+    fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+        P::time_encoding(self.not_before)?.encode(writer)?;
+        P::time_encoding(self.not_after)?.encode(writer)?;
+        Ok(())
+    }
+}
+
+impl<'a, P: Profile> Sequence<'a> for Validity<P> {}

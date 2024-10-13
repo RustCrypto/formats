@@ -166,6 +166,12 @@ mod allocation {
         }
     }
 
+    impl<'a> From<&'a TeletexString> for TeletexStringRef<'a> {
+        fn from(teletex_string: &'a TeletexString) -> TeletexStringRef<'a> {
+            teletex_string.owned_to_ref()
+        }
+    }
+
     impl<'a> RefToOwned<'a> for TeletexStringRef<'a> {
         type Owned = TeletexString;
         fn ref_to_owned(&self) -> Self::Owned {

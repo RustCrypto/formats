@@ -19,9 +19,6 @@
     unused_qualifications
 )]
 
-#[cfg(feature = "std")]
-extern crate std;
-
 #[macro_use]
 mod checked;
 

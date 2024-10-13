@@ -108,6 +108,9 @@ pub enum Tag {
     /// `VisibleString` tag: `26`.
     VisibleString,
 
+    /// `GeneralString` tag: `27`.
+    GeneralString,
+
     /// `BMPString` tag: `30`.
     BmpString,
 
@@ -140,6 +143,16 @@ pub enum Tag {
 }
 
 impl Tag {
+    /// Peek at the next byte in the reader and attempt to decode it as a [`Tag`] value.
+    ///
+    /// Does not modify the reader's state.
+    pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
+        match reader.peek_byte() {
+            Some(byte) => byte.try_into(),
+            None => Err(Error::incomplete(reader.input_len())),
+        }
+    }
+
     /// Assert that this [`Tag`] matches the provided expected tag.
     ///
     /// On mismatch, returns an [`Error`] with [`ErrorKind::TagUnexpected`].
@@ -213,6 +226,7 @@ impl Tag {
             Tag::UtcTime => 0x17,
             Tag::GeneralizedTime => 0x18,
             Tag::VisibleString => 0x1A,
+            Tag::GeneralString => 0x1B,
             Tag::BmpString => 0x1E,
             Tag::Application {
                 constructed,
@@ -282,6 +296,7 @@ impl TryFrom<u8> for Tag {
             0x17 => Ok(Tag::UtcTime),
             0x18 => Ok(Tag::GeneralizedTime),
             0x1A => Ok(Tag::VisibleString),
+            0x1B => Ok(Tag::GeneralString),
             0x1E => Ok(Tag::BmpString),
             0x30 => Ok(Tag::Sequence), // constructed
             0x31 => Ok(Tag::Set),      // constructed
@@ -361,6 +376,7 @@ impl fmt::Display for Tag {
             Tag::UtcTime => f.write_str("UTCTime"),
             Tag::GeneralizedTime => f.write_str("GeneralizedTime"),
             Tag::VisibleString => f.write_str("VisibleString"),
+            Tag::GeneralString => f.write_str("GeneralString"),
             Tag::BmpString => f.write_str("BMPString"),
             Tag::Sequence => f.write_str("SEQUENCE"),
             Tag::Application {
@@ -402,8 +418,8 @@ impl fmt::Debug for Tag {
 
 #[cfg(test)]
 mod tests {
-    use super::TagNumber;
-    use super::{Class, Tag};
+    use super::{Class, Tag, TagNumber};
+    use crate::{Length, Reader, SliceReader};
 
     #[test]
     fn tag_class() {
@@ -458,5 +474,14 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    fn peek() {
+        let reader = SliceReader::new(&[0x02]).unwrap();
+        assert_eq!(reader.position(), Length::ZERO);
+        assert_eq!(Tag::peek(&reader).unwrap(), Tag::Integer);
+        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
 }

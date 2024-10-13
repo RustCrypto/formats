@@ -1,6 +1,6 @@
 [package]
 name = "x509-cert"
-version = "0.3.0-pre"
+version = "0.3.0-pre.0"
 description = """
 Pure Rust implementation of the X.509 Public Key Infrastructure Certificate
 format as described in RFC 5280
@@ -13,7 +13,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.81"
 
 [dependencies]
 const-oid = { version = "0.10.0-rc.0", features = ["db"] }
@@ -30,18 +30,18 @@ tls_codec = { version = "0.4.0", default-features = false, features = ["derive"]
 [dev-dependencies]
 hex-literal = "0.4"
 rand = "0.8.5"
-rsa = { version = "=0.10.0-pre.2", features = ["sha2"] }
-ecdsa = { version = "=0.17.0-pre.7", features = ["digest", "pem"] }
-p256 = "=0.14.0-pre.1"
-rstest = "0.21"
+rsa = { version = "=0.10.0-pre.3", features = ["sha2"] }
+ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
+p256 = "=0.14.0-pre.2"
+rstest = "0.23"
 sha2 = { version = "=0.11.0-pre.4", features = ["oid"] }
 tempfile = "3.5.0"
-tokio = { version = "1.38.1", features = ["macros", "rt"] }
+tokio = { version = "1.40.0", features = ["macros", "rt"] }
 x509-cert-test-support = { path = "./test-support" }
 
 [features]
 default = ["pem", "std"]
-std = ["const-oid/std", "der/std", "spki/std", "tls_codec?/std"]
+std = ["der/std", "spki/std", "tls_codec?/std"]
 
 arbitrary = ["dep:arbitrary", "std", "der/arbitrary", "spki/arbitrary"]
 builder = ["async-signature", "std", "sha1/default", "signature"]

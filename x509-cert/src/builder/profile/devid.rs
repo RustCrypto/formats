@@ -16,7 +16,7 @@
 use alloc::vec;
 
 use crate::{
-    builder::{Profile, Result},
+    builder::{BuilderProfile, Result},
     certificate::TbsCertificate,
     ext::{
         pkix::{
@@ -112,7 +112,7 @@ impl DevId {
     }
 }
 
-impl Profile for DevId {
+impl BuilderProfile for DevId {
     fn get_issuer(&self, _subject: &Name) -> Name {
         self.issuer.clone()
     }

@@ -1,6 +1,6 @@
 //! ASN.1 DER-encoded documents stored on the heap.
 
-use crate::{Decode, Encode, Error, FixedTag, Length, Reader, SliceReader, Tag, Writer};
+use crate::{Decode, Encode, Error, FixedTag, Header, Length, Reader, SliceReader, Tag, Writer};
 use alloc::vec::Vec;
 use core::fmt::{self, Debug};
 
@@ -148,7 +148,7 @@ impl<'a> Decode<'a> for Document {
     type Error = Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Document, Error> {
-        let header = reader.peek_header()?;
+        let header = Header::peek(reader)?;
         let length = (header.encoded_len()? + header.length)?;
         let bytes = reader.read_slice(length)?;
 
@@ -323,7 +323,7 @@ impl ZeroizeOnDrop for SecretDocument {}
 /// Attempt to decode a ASN.1 `SEQUENCE` from the given decoder, returning the
 /// entire sequence including the header.
 fn decode_sequence<'a>(decoder: &mut SliceReader<'a>) -> Result<&'a [u8], Error> {
-    let header = decoder.peek_header()?;
+    let header = Header::peek(decoder)?;
     header.tag.assert_eq(Tag::Sequence)?;
 
     let len = (header.encoded_len()? + header.length)?;

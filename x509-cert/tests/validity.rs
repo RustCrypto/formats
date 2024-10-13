@@ -4,6 +4,8 @@ use der::{Decode, Encode};
 use hex_literal::hex;
 use x509_cert::time::Validity;
 
+use x509_cert::certificate::Rfc5280;
+
 #[test]
 fn decode_validity() {
     // Decode Validity from GoodCACert.crt in NIST's PKITS certificate collection
@@ -11,7 +13,7 @@ fn decode_validity() {
     // 104  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 119  13:       UTCTime 31/12/2030 08:30:00 GMT
     //        :       }
-    let val1 = Validity::from_der(
+    let val1 = Validity::<Rfc5280>::from_der(
         &hex!("301E170D3130303130313038333030305A170D3330313233313038333030305A")[..],
     )
     .unwrap();
@@ -21,7 +23,7 @@ fn decode_validity() {
     //  99  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 114  13:       UTCTime 01/01/2011 08:30:00 GMT
     //        :       }
-    let val2 = Validity::from_der(
+    let val2 = Validity::<Rfc5280>::from_der(
         &hex!("301E170D3130303130313038333030305A170D3131303130313038333030305A")[..],
     )
     .unwrap();
@@ -51,7 +53,7 @@ fn decode_validity() {
     //  99  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 114  15:       GeneralizedTime 01/01/2050 12:01:00 GMT
     //        :       }
-    let val3 = Validity::from_der(
+    let val3 = Validity::<Rfc5280>::from_der(
         &hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..],
     )
     .unwrap();
@@ -71,7 +73,7 @@ fn decode_validity() {
     //  99  15:       GeneralizedTime 01/01/2002 12:01:00 GMT
     // 116  13:       UTCTime 31/12/2030 08:30:00 GMT
     //        :       }
-    let val4 = Validity::from_der(
+    let val4 = Validity::<Rfc5280>::from_der(
         &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..],
     )
     .unwrap();
@@ -94,7 +96,7 @@ fn encode_validity() {
     // 104  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 119  13:       UTCTime 31/12/2030 08:30:00 GMT
     //        :       }
-    let val1 = Validity::from_der(
+    let val1 = Validity::<Rfc5280>::from_der(
         &hex!("301E170D3130303130313038333030305A170D3330313233313038333030305A")[..],
     )
     .unwrap();
@@ -109,7 +111,7 @@ fn encode_validity() {
     //  99  13:       UTCTime 01/01/2010 08:30:00 GMT
     // 114  15:       GeneralizedTime 01/01/2050 12:01:00 GMT
     //        :       }
-    let val3 = Validity::from_der(
+    let val3 = Validity::<Rfc5280>::from_der(
         &hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..],
     )
     .unwrap();
@@ -119,18 +121,38 @@ fn encode_validity() {
         &hex!("3020170D3130303130313038333030305A180F32303530303130313132303130305A")[..]
     );
 
+    #[cfg(feature = "hazmat")]
+    {
+        use x509_cert::certificate::Raw;
+
+        // Decode Validity from ValidGeneralizedTimenotBeforeDateTest4EE.crt in NIST's PKITS certificate collection
+        //  97  32:     SEQUENCE {
+        //  99  15:       GeneralizedTime 01/01/2002 12:01:00 GMT
+        // 116  13:       UTCTime 31/12/2030 08:30:00 GMT
+        //        :       }
+        let val4 = Validity::<Raw>::from_der(
+            &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..],
+        )
+        .unwrap();
+        let b4 = val4.to_der().unwrap();
+        assert_eq!(
+            b4,
+            &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..]
+        );
+    }
+
     // Decode Validity from ValidGeneralizedTimenotBeforeDateTest4EE.crt in NIST's PKITS certificate collection
     //  97  32:     SEQUENCE {
     //  99  15:       GeneralizedTime 01/01/2002 12:01:00 GMT
     // 116  13:       UTCTime 31/12/2030 08:30:00 GMT
     //        :       }
-    let val4 = Validity::from_der(
+    let val5 = Validity::<Rfc5280>::from_der(
         &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..],
     )
     .unwrap();
-    let b4 = val4.to_der().unwrap();
+    let b5 = val5.to_der().unwrap();
     assert_eq!(
-        b4,
-        &hex!("3020180F32303032303130313132303130305A170D3330313233313038333030305A")[..]
+        b5,
+        &hex!("301E170D3032303130313132303130305A170D3330313233313038333030305A")[..]
     );
 }

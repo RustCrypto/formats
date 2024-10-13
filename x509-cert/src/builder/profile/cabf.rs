@@ -5,7 +5,7 @@ use alloc::vec;
 use std::collections::HashSet;
 
 use crate::{
-    builder::{Error, Profile, Result},
+    builder::{BuilderProfile, Error, Result},
     certificate::TbsCertificate,
     ext::{
         pkix::{
@@ -43,12 +43,12 @@ pub fn check_names_encoding(name: &Name, multiple_allowed: bool) -> Result<()> {
 
     let mut seen = HashSet::new();
 
-    for rdn in name.0.iter() {
-        if rdn.0.len() != 1 {
+    for rdn in name.iter_rdn() {
+        if rdn.len() != 1 {
             return Err(Error::NonUniqueRdn);
         }
 
-        for atv in rdn.0.iter() {
+        for atv in rdn.iter() {
             if !multiple_allowed && !seen.insert(atv.oid) {
                 return Err(Error::NonUniqueATV);
             }
@@ -87,13 +87,11 @@ pub fn ca_certificate_naming(subject: &Name) -> Result<()> {
 
     check_names_encoding(subject, false)?;
 
-    for rdn in subject.0.iter() {
-        for atv in rdn.0.iter() {
-            if !allowed.remove(&atv.oid) {
-                return Err(Error::InvalidAttribute { oid: atv.oid });
-            }
-            required.remove(&atv.oid);
+    for atv in subject.iter() {
+        if !allowed.remove(&atv.oid) {
+            return Err(Error::InvalidAttribute { oid: atv.oid });
         }
+        required.remove(&atv.oid);
     }
 
     if !required.is_empty() {
@@ -125,7 +123,7 @@ impl Root {
     }
 }
 
-impl Profile for Root {
+impl BuilderProfile for Root {
     fn get_issuer(&self, subject: &Name) -> Name {
         subject.clone()
     }

@@ -325,6 +325,90 @@ pub mod fips202 {
     pub const ID_SHA_3_384: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.9");
 }
+pub mod fips203 {
+    pub const NIST_ALGORITHMS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4");
+    pub const KEMS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.4");
+    pub const ID_ALG_ML_KEM_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.4.1");
+    pub const ID_ALG_ML_KEM_768: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.4.2");
+    pub const ID_ALG_ML_KEM_1024: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.4.3");
+}
+pub mod fips204 {
+    pub const NIST_ALGORITHMS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4");
+    pub const SIG_ALGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3");
+    pub const ID_ML_DSA_44: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.17");
+    pub const ID_ML_DSA_65: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.18");
+    pub const ID_ML_DSA_87: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.19");
+    pub const ID_HASH_ML_DSA_44_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.32");
+    pub const ID_HASH_ML_DSA_65_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.33");
+    pub const ID_HASH_ML_DSA_87_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.34");
+}
+pub mod fips205 {
+    pub const NIST_ALGORITHMS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4");
+    pub const SIG_ALGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3");
+    pub const ID_SLH_DSA_SHA_2_128_S: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.20");
+    pub const ID_SLH_DSA_SHA_2_128_F: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.21");
+    pub const ID_SLH_DSA_SHA_2_192_S: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.22");
+    pub const ID_SLH_DSA_SHA_2_192_F: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.23");
+    pub const ID_SLH_DSA_SHA_2_256_S: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.24");
+    pub const ID_SLH_DSA_SHA_2_256_F: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.25");
+    pub const ID_SLH_DSA_SHAKE_128_S: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.26");
+    pub const ID_SLH_DSA_SHAKE_128_F: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.27");
+    pub const ID_SLH_DSA_SHAKE_192_S: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.28");
+    pub const ID_SLH_DSA_SHAKE_192_F: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.29");
+    pub const ID_SLH_DSA_SHAKE_256_S: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.30");
+    pub const ID_SLH_DSA_SHAKE_256_F: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.31");
+    pub const ID_HASH_SLH_DSA_SHA_2_128_S_WITH_SHA_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.35");
+    pub const ID_HASH_SLH_DSA_SHA_2_128_F_WITH_SHA_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.36");
+    pub const ID_HASH_SLH_DSA_SHA_2_192_S_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.37");
+    pub const ID_HASH_SLH_DSA_SHA_2_192_F_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.38");
+    pub const ID_HASH_SLH_DSA_SHA_2_256_S_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.39");
+    pub const ID_HASH_SLH_DSA_SHA_2_256_F_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.40");
+    pub const ID_HASH_SLH_DSA_SHAKE_128_S_WITH_SHAKE_128: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.41");
+    pub const ID_HASH_SLH_DSA_SHAKE_128_F_WITH_SHAKE_128: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.42");
+    pub const ID_HASH_SLH_DSA_SHAKE_192_S_WITH_SHAKE_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.43");
+    pub const ID_HASH_SLH_DSA_SHAKE_192_F_WITH_SHAKE_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.44");
+    pub const ID_HASH_SLH_DSA_SHAKE_256_S_WITH_SHAKE_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.45");
+    pub const ID_HASH_SLH_DSA_SHAKE_256_F_WITH_SHAKE_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.46");
+}
 pub mod rfc1274 {
     pub const TEXT_ENCODED_OR_ADDRESS: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("0.9.2342.19200300.100.1.2");
@@ -1783,6 +1867,54 @@ pub mod rfc5280 {
         crate::ObjectIdentifier::new_unwrap("2.5.29.9");
     pub const ID_AT: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4");
 }
+pub mod rfc5753 {
+    pub const ANSI_X_9_62: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.10045");
+    pub const ID_EC_PUBLIC_KEY: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");
+    pub const ID_HMAC_WITH_SHA_384: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.10");
+    pub const ID_HMAC_WITH_SHA_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.11");
+    pub const ID_HMAC_WITH_SHA_224: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.8");
+    pub const ID_HMAC_WITH_SHA_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.2.9");
+    pub const SECG_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.11.0");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.11.1");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.11.2");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.11.3");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_224_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.14.0");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_256_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.14.1");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_384_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.14.2");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_512_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.14.3");
+    pub const MQV_SINGLE_PASS_SHA_224_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.15.0");
+    pub const MQV_SINGLE_PASS_SHA_256_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.15.1");
+    pub const MQV_SINGLE_PASS_SHA_384_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.15.2");
+    pub const MQV_SINGLE_PASS_SHA_512_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.132.1.15.3");
+    pub const X_9_63_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.63.0");
+    pub const MQV_SINGLE_PASS_SHA_1_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.63.0.16");
+    pub const DH_SINGLE_PASS_STD_DH_SHA_1_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.63.0.2");
+    pub const DH_SINGLE_PASS_COFACTOR_DH_SHA_1_KDF_SCHEME: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.63.0.3");
+}
 pub mod rfc5911 {
     pub const ID_PBKDF_2: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12");
@@ -2506,6 +2638,30 @@ pub mod rfc7107 {
     pub const ID_STI: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.9");
 }
+pub mod rfc7292 {
+    pub const RSADSI: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549");
+    pub const PKCS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1");
+    pub const PKCS_12: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12");
+    pub const PKCS_12_PBE_IDS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1");
+    pub const PBE_WITH_SHA_AND_128_BIT_RC_4: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.1");
+    pub const PBE_WITH_SHA_AND_40_BIT_RC_4: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.2");
+    pub const PBE_WITH_SHA_AND_3_KEY_TRIPLE_DES_CBC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.3");
+    pub const PBE_WITH_SHA_AND_2_KEY_TRIPLE_DES_CBC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.4");
+    pub const PBE_WITH_SHA_AND_128_BIT_RC_2_CBC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.5");
+    pub const PBEWITH_SHA_AND_40_BIT_RC_2_CBC: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.6");
+    pub const BAGTYPES: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.10.1");
+}
 pub mod rfc7299 {
     pub const ID_PKIX: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7");
@@ -2972,6 +3128,90 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&fips202::ID_SHA_3_224, "id-sha3-224"),
     (&fips202::ID_SHA_3_256, "id-sha3-256"),
     (&fips202::ID_SHA_3_384, "id-sha3-384"),
+    (&fips203::NIST_ALGORITHMS, "nistAlgorithms"),
+    (&fips203::KEMS, "kems"),
+    (&fips203::ID_ALG_ML_KEM_512, "id-alg-ml-kem-512"),
+    (&fips203::ID_ALG_ML_KEM_768, "id-alg-ml-kem-768"),
+    (&fips203::ID_ALG_ML_KEM_1024, "id-alg-ml-kem-1024"),
+    (&fips204::NIST_ALGORITHMS, "nistAlgorithms"),
+    (&fips204::SIG_ALGS, "sigAlgs"),
+    (&fips204::ID_ML_DSA_44, "id-ml-dsa-44"),
+    (&fips204::ID_ML_DSA_65, "id-ml-dsa-65"),
+    (&fips204::ID_ML_DSA_87, "id-ml-dsa-87"),
+    (
+        &fips204::ID_HASH_ML_DSA_44_WITH_SHA_512,
+        "id-hash-ml-dsa-44-with-sha512",
+    ),
+    (
+        &fips204::ID_HASH_ML_DSA_65_WITH_SHA_512,
+        "id-hash-ml-dsa-65-with-sha512",
+    ),
+    (
+        &fips204::ID_HASH_ML_DSA_87_WITH_SHA_512,
+        "id-hash-ml-dsa-87-with-sha512",
+    ),
+    (&fips205::NIST_ALGORITHMS, "nistAlgorithms"),
+    (&fips205::SIG_ALGS, "sigAlgs"),
+    (&fips205::ID_SLH_DSA_SHA_2_128_S, "id-slh-dsa-sha2-128s"),
+    (&fips205::ID_SLH_DSA_SHA_2_128_F, "id-slh-dsa-sha2-128f"),
+    (&fips205::ID_SLH_DSA_SHA_2_192_S, "id-slh-dsa-sha2-192s"),
+    (&fips205::ID_SLH_DSA_SHA_2_192_F, "id-slh-dsa-sha2-192f"),
+    (&fips205::ID_SLH_DSA_SHA_2_256_S, "id-slh-dsa-sha2-256s"),
+    (&fips205::ID_SLH_DSA_SHA_2_256_F, "id-slh-dsa-sha2-256f"),
+    (&fips205::ID_SLH_DSA_SHAKE_128_S, "id-slh-dsa-shake-128s"),
+    (&fips205::ID_SLH_DSA_SHAKE_128_F, "id-slh-dsa-shake-128f"),
+    (&fips205::ID_SLH_DSA_SHAKE_192_S, "id-slh-dsa-shake-192s"),
+    (&fips205::ID_SLH_DSA_SHAKE_192_F, "id-slh-dsa-shake-192f"),
+    (&fips205::ID_SLH_DSA_SHAKE_256_S, "id-slh-dsa-shake-256s"),
+    (&fips205::ID_SLH_DSA_SHAKE_256_F, "id-slh-dsa-shake-256f"),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHA_2_128_S_WITH_SHA_256,
+        "id-hash-slh-dsa-sha2-128s-with-sha256",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHA_2_128_F_WITH_SHA_256,
+        "id-hash-slh-dsa-sha2-128f-with-sha256",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHA_2_192_S_WITH_SHA_512,
+        "id-hash-slh-dsa-sha2-192s-with-sha512",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHA_2_192_F_WITH_SHA_512,
+        "id-hash-slh-dsa-sha2-192f-with-sha512",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHA_2_256_S_WITH_SHA_512,
+        "id-hash-slh-dsa-sha2-256s-with-sha512",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHA_2_256_F_WITH_SHA_512,
+        "id-hash-slh-dsa-sha2-256f-with-sha512",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHAKE_128_S_WITH_SHAKE_128,
+        "id-hash-slh-dsa-shake-128s-with-shake128",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHAKE_128_F_WITH_SHAKE_128,
+        "id-hash-slh-dsa-shake-128f-with-shake128",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHAKE_192_S_WITH_SHAKE_256,
+        "id-hash-slh-dsa-shake-192s-with-shake256",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHAKE_192_F_WITH_SHAKE_256,
+        "id-hash-slh-dsa-shake-192f-with-shake256",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHAKE_256_S_WITH_SHAKE_256,
+        "id-hash-slh-dsa-shake-256s-with-shake256",
+    ),
+    (
+        &fips205::ID_HASH_SLH_DSA_SHAKE_256_F_WITH_SHAKE_256,
+        "id-hash-slh-dsa-shake-256f-with-shake256",
+    ),
     (&rfc1274::TEXT_ENCODED_OR_ADDRESS, "textEncodedORAddress"),
     (&rfc1274::OTHER_MAILBOX, "otherMailbox"),
     (&rfc1274::LAST_MODIFIED_TIME, "lastModifiedTime"),
@@ -4337,6 +4577,74 @@ pub const DB: super::Database<'static> = super::Database(&[
         "id-ce-subjectDirectoryAttributes",
     ),
     (&rfc5280::ID_AT, "id-at"),
+    (&rfc5753::ANSI_X_9_62, "ansi-x9-62"),
+    (&rfc5753::ID_EC_PUBLIC_KEY, "id-ecPublicKey"),
+    (&rfc5753::ID_HMAC_WITH_SHA_384, "id-hmacWithSHA384"),
+    (&rfc5753::ID_HMAC_WITH_SHA_512, "id-hmacWithSHA512"),
+    (&rfc5753::ID_HMAC_WITH_SHA_224, "id-hmacWithSHA224"),
+    (&rfc5753::ID_HMAC_WITH_SHA_256, "id-hmacWithSHA256"),
+    (&rfc5753::SECG_SCHEME, "secg-scheme"),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha224kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha256kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha384kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha512kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_224_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha224kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_256_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha256kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_384_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha384kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_512_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha512kdf-scheme",
+    ),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_224_KDF_SCHEME,
+        "mqvSinglePass-sha224kdf-scheme",
+    ),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_256_KDF_SCHEME,
+        "mqvSinglePass-sha256kdf-scheme",
+    ),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_384_KDF_SCHEME,
+        "mqvSinglePass-sha384kdf-scheme",
+    ),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_512_KDF_SCHEME,
+        "mqvSinglePass-sha512kdf-scheme",
+    ),
+    (&rfc5753::X_9_63_SCHEME, "x9-63-scheme"),
+    (
+        &rfc5753::MQV_SINGLE_PASS_SHA_1_KDF_SCHEME,
+        "mqvSinglePass-sha1kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_STD_DH_SHA_1_KDF_SCHEME,
+        "dhSinglePass-stdDH-sha1kdf-scheme",
+    ),
+    (
+        &rfc5753::DH_SINGLE_PASS_COFACTOR_DH_SHA_1_KDF_SCHEME,
+        "dhSinglePass-cofactorDH-sha1kdf-scheme",
+    ),
     (&rfc5911::ID_PBKDF_2, "id-PBKDF2"),
     (&rfc5911::ID_DATA, "id-data"),
     (&rfc5911::ID_SIGNED_DATA, "id-signedData"),
@@ -4921,6 +5229,35 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc7107::ID_TSP, "id-tsp"),
     (&rfc7107::ID_SKD, "id-skd"),
     (&rfc7107::ID_STI, "id-sti"),
+    (&rfc7292::RSADSI, "rsadsi"),
+    (&rfc7292::PKCS, "pkcs"),
+    (&rfc7292::PKCS_12, "pkcs-12"),
+    (&rfc7292::PKCS_12_PBE_IDS, "pkcs-12PbeIds"),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_128_BIT_RC_4,
+        "pbeWithSHAAnd128BitRC4",
+    ),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_40_BIT_RC_4,
+        "pbeWithSHAAnd40BitRC4",
+    ),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_3_KEY_TRIPLE_DES_CBC,
+        "pbeWithSHAAnd3-KeyTripleDES-CBC",
+    ),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_2_KEY_TRIPLE_DES_CBC,
+        "pbeWithSHAAnd2-KeyTripleDES-CBC",
+    ),
+    (
+        &rfc7292::PBE_WITH_SHA_AND_128_BIT_RC_2_CBC,
+        "pbeWithSHAAnd128BitRC2-CBC",
+    ),
+    (
+        &rfc7292::PBEWITH_SHA_AND_40_BIT_RC_2_CBC,
+        "pbewithSHAAnd40BitRC2-CBC",
+    ),
+    (&rfc7292::BAGTYPES, "bagtypes"),
     (&rfc7299::ID_PKIX, "id-pkix"),
     (&rfc7299::ID_MOD, "id-mod"),
     (&rfc7299::ID_PE, "id-pe"),

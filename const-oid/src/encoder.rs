@@ -73,27 +73,9 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
                 self.cursor = 1;
                 Ok(self)
             }
-            // TODO(tarcieri): finer-grained overflow safety / checked arithmetic
-            #[allow(clippy::arithmetic_side_effects)]
             State::Body => {
-                // Total number of bytes in encoded arc - 1
                 let nbytes = base128_len(arc);
-
-                // Shouldn't overflow on any 16-bit+ architectures
-                if self.cursor + nbytes + 1 > MAX_SIZE {
-                    return Err(Error::Length);
-                }
-
-                let new_cursor = self.cursor + nbytes + 1;
-
-                // TODO(tarcieri): use `?` when stable in `const fn`
-                match self.encode_base128_byte(arc, nbytes, false) {
-                    Ok(mut encoder) => {
-                        encoder.cursor = new_cursor;
-                        Ok(encoder)
-                    }
-                    Err(err) => Err(err),
-                }
+                self.encode_base128(arc, nbytes)
             }
         }
     }
@@ -113,23 +95,19 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
     }
 
     /// Encode a single byte of a Base 128 value.
-    const fn encode_base128_byte(mut self, mut n: u32, i: usize, continued: bool) -> Result<Self> {
-        let mask = if continued { 0b10000000 } else { 0 };
+    const fn encode_base128(mut self, n: u32, remaining_len: usize) -> Result<Self> {
+        if self.cursor >= MAX_SIZE {
+            return Err(Error::Length);
+        }
 
-        // Underflow checked by branch
-        #[allow(clippy::arithmetic_side_effects)]
-        if n > 0x80 {
-            self.bytes[checked_add!(self.cursor, i)] = (n & 0b1111111) as u8 | mask;
-            n >>= 7;
+        let mask = if remaining_len > 0 { 0b10000000 } else { 0 };
+        let (hi, lo) = split_high_bits(n);
+        self.bytes[self.cursor] = hi | mask;
+        self.cursor = checked_add!(self.cursor, 1);
 
-            if i > 0 {
-                self.encode_base128_byte(n, i.saturating_sub(1), true)
-            } else {
-                Err(Error::Base128)
-            }
-        } else {
-            self.bytes[self.cursor] = n as u8 | mask;
-            Ok(self)
+        match remaining_len.checked_sub(1) {
+            Some(len) => self.encode_base128(lo, len),
+            None => Ok(self),
         }
     }
 }
@@ -143,6 +121,29 @@ const fn base128_len(arc: Arc) -> usize {
         0x200000..=0x1fffffff => 3,
         _ => 4,
     }
+}
+
+/// Split the highest 7-bits of an [`Arc`] from the rest of an arc.
+///
+/// Returns: `(hi, lo)`
+// TODO(tarcieri): always use checked arithmetic
+#[allow(clippy::arithmetic_side_effects)]
+const fn split_high_bits(arc: Arc) -> (u8, Arc) {
+    if arc < 0x80 {
+        return (arc as u8, 0);
+    }
+
+    let hi_bit = 32 - arc.leading_zeros();
+    let hi_bit_mod7 = hi_bit % 7;
+    let upper_bit_pos = hi_bit
+        - if hi_bit > 0 && hi_bit_mod7 == 0 {
+            7
+        } else {
+            hi_bit_mod7
+        };
+    let upper_bits = arc >> upper_bit_pos;
+    let lower_bits = arc ^ (upper_bits << upper_bit_pos);
+    (upper_bits as u8, lower_bits)
 }
 
 #[cfg(test)]

@@ -1,11 +1,8 @@
 //! Reader trait.
 
-pub(crate) mod nested;
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
 pub(crate) mod slice;
-
-pub(crate) use nested::NestedReader;
 
 use crate::{
     asn1::ContextSpecific, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag,
@@ -23,17 +20,20 @@ pub trait Reader<'r>: Sized {
     /// Get the length of the input.
     fn input_len(&self) -> Length;
 
-    /// Peek at the next byte of input without modifying the position within the reader.
-    fn peek_byte(&mut self) -> Option<u8>;
-
-    /// Peek forward in the input data, attempting to decode a [`Header`] from
-    /// the data at the current position in the decoder.
+    /// Peek at the decoded PEM without updating the internal state, writing into the provided
+    /// output buffer.
     ///
-    /// Does not modify the position within the reader.
-    fn peek_header(&mut self) -> Result<Header, Error>;
+    /// Attempts to fill the entire buffer, returning an error if there is not enough data.
+    fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()>;
 
-    /// Get the position within the reader in bytes.
+    /// Get the position within the buffer.
     fn position(&self) -> Length;
+
+    /// Read nested data of the given length.
+    fn read_nested<T, F, E>(&mut self, len: Length, f: F) -> Result<T, E>
+    where
+        E: From<Error>,
+        F: FnOnce(&mut Self) -> Result<T, E>;
 
     /// Attempt to read data borrowed directly from the input as a slice,
     /// updating the internal cursor position.
@@ -100,11 +100,24 @@ pub trait Reader<'r>: Sized {
         self.position()
     }
 
-    /// Peek at the next byte in the decoder and attempt to decode it as a
-    /// [`Tag`] value.
+    /// Peek at the next byte of input without modifying the cursor.
+    fn peek_byte(&self) -> Option<u8> {
+        let mut byte = [0];
+        self.peek_into(&mut byte).ok().map(|_| byte[0])
+    }
+
+    /// Peek forward in the input data, attempting to decode a [`Header`] from
+    /// the data at the current position in the decoder.
     ///
-    /// Does not modify the position within the reader.
-    fn peek_tag(&mut self) -> Result<Tag, Error> {
+    /// Does not modify the decoder's state.
+    #[deprecated(since = "0.8.0-rc.1", note = "use `Header::peek` instead")]
+    fn peek_header(&self) -> Result<Header, Error> {
+        Header::peek(self)
+    }
+
+    /// Peek at the next byte in the reader.
+    #[deprecated(since = "0.8.0-rc.1", note = "use `Tag::peek` instead")]
+    fn peek_tag(&self) -> Result<Tag, Error> {
         match self.peek_byte() {
             Some(byte) => byte.try_into(),
             None => Err(Error::incomplete(self.input_len())),
@@ -130,17 +143,6 @@ pub trait Reader<'r>: Sized {
         Ok(buf)
     }
 
-    /// Read nested data of the given length.
-    fn read_nested<'n, T, F, E>(&'n mut self, len: Length, f: F) -> Result<T, E>
-    where
-        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T, E>,
-        E: From<Error>,
-    {
-        let mut reader = NestedReader::new(self, len)?;
-        let ret = f(&mut reader)?;
-        Ok(reader.finish(ret)?)
-    }
-
     /// Read a byte vector of the given length.
     #[cfg(feature = "alloc")]
     fn read_vec(&mut self, len: Length) -> Result<Vec<u8>, Error> {
@@ -157,9 +159,9 @@ pub trait Reader<'r>: Sized {
 
     /// Read an ASN.1 `SEQUENCE`, creating a nested [`Reader`] for the body and
     /// calling the provided closure with it.
-    fn sequence<'n, F, T, E>(&'n mut self, f: F) -> Result<T, E>
+    fn sequence<F, T, E>(&mut self, f: F) -> Result<T, E>
     where
-        F: FnOnce(&mut NestedReader<'n, Self>) -> Result<T, E>,
+        F: FnOnce(&mut Self) -> Result<T, E>,
         E: From<Error>,
     {
         let header = Header::decode(self)?;
@@ -169,7 +171,7 @@ pub trait Reader<'r>: Sized {
 
     /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
     fn tlv_bytes(&mut self) -> Result<&'r [u8], Error> {
-        let header = self.peek_header()?;
+        let header = Header::peek(self)?;
         let header_len = header.encoded_len()?;
         self.read_slice((header_len + header.length)?)
     }

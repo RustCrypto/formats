@@ -43,7 +43,6 @@ impl<'a> ::der::DecodeValue<'a> for SafeBag {
         reader: &mut R,
         header: ::der::Header,
     ) -> ::der::Result<Self> {
-        use ::der::Reader as _;
         reader.read_nested(header.length, |reader| {
             let bag_id = reader.decode()?;
             let bag_value = match reader.tlv_bytes() {

@@ -1,12 +1,12 @@
 //! Traits for parsing objects from PKCS#8 encoded documents
 
-use crate::{Error, PrivateKeyInfo, Result};
+use crate::{Error, PrivateKeyInfoRef, Result};
 
 #[cfg(feature = "alloc")]
 use der::SecretDocument;
 
 #[cfg(feature = "encryption")]
-use {crate::EncryptedPrivateKeyInfo, rand_core::CryptoRngCore};
+use {crate::EncryptedPrivateKeyInfoRef, rand_core::CryptoRngCore};
 
 #[cfg(feature = "pem")]
 use {
@@ -31,7 +31,7 @@ pub trait DecodePrivateKey: Sized {
     /// (binary format) and attempt to decrypt it using the provided password.
     #[cfg(feature = "encryption")]
     fn from_pkcs8_encrypted_der(bytes: &[u8], password: impl AsRef<[u8]>) -> Result<Self> {
-        let doc = EncryptedPrivateKeyInfo::try_from(bytes)?.decrypt(password)?;
+        let doc = EncryptedPrivateKeyInfoRef::try_from(bytes)?.decrypt(password)?;
         Self::from_pkcs8_der(doc.as_bytes())
     }
 
@@ -46,7 +46,7 @@ pub trait DecodePrivateKey: Sized {
     fn from_pkcs8_pem(s: &str) -> Result<Self> {
         // Validate PEM label
         let label = pem::decode_label(s.as_bytes())?;
-        PrivateKeyInfo::validate_pem_label(label)?;
+        PrivateKeyInfoRef::validate_pem_label(label)?;
 
         let doc = SecretDocument::from_pem(s)?.1;
         Self::from_pkcs8_der(doc.as_bytes())
@@ -63,7 +63,7 @@ pub trait DecodePrivateKey: Sized {
     #[cfg(all(feature = "encryption", feature = "pem"))]
     fn from_pkcs8_encrypted_pem(s: &str, password: impl AsRef<[u8]>) -> Result<Self> {
         let (label, doc) = SecretDocument::from_pem(s)?;
-        EncryptedPrivateKeyInfo::validate_pem_label(label)?;
+        EncryptedPrivateKeyInfoRef::validate_pem_label(label)?;
         Self::from_pkcs8_encrypted_der(doc.as_bytes(), password)
     }
 
@@ -78,17 +78,17 @@ pub trait DecodePrivateKey: Sized {
     #[cfg(all(feature = "pem", feature = "std"))]
     fn read_pkcs8_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         let (label, doc) = SecretDocument::read_pem_file(path)?;
-        PrivateKeyInfo::validate_pem_label(&label)?;
+        PrivateKeyInfoRef::validate_pem_label(&label)?;
         Self::from_pkcs8_der(doc.as_bytes())
     }
 }
 
 impl<T> DecodePrivateKey for T
 where
-    T: for<'a> TryFrom<PrivateKeyInfo<'a>, Error = Error>,
+    T: for<'a> TryFrom<PrivateKeyInfoRef<'a>, Error = Error>,
 {
     fn from_pkcs8_der(bytes: &[u8]) -> Result<Self> {
-        Self::try_from(PrivateKeyInfo::try_from(bytes)?)
+        Self::try_from(PrivateKeyInfoRef::try_from(bytes)?)
     }
 }
 
@@ -106,14 +106,14 @@ pub trait EncodePrivateKey {
         rng: &mut impl CryptoRngCore,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
-        EncryptedPrivateKeyInfo::encrypt(rng, password, self.to_pkcs8_der()?.as_bytes())
+        EncryptedPrivateKeyInfoRef::encrypt(rng, password, self.to_pkcs8_der()?.as_bytes())
     }
 
     /// Serialize this private key as PEM-encoded PKCS#8 with the given [`LineEnding`].
     #[cfg(feature = "pem")]
     fn to_pkcs8_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
         let doc = self.to_pkcs8_der()?;
-        Ok(doc.to_pem(PrivateKeyInfo::PEM_LABEL, line_ending)?)
+        Ok(doc.to_pem(PrivateKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 
     /// Serialize this private key as an encrypted PEM-encoded PKCS#8 private
@@ -126,7 +126,7 @@ pub trait EncodePrivateKey {
         line_ending: LineEnding,
     ) -> Result<Zeroizing<String>> {
         let doc = self.to_pkcs8_encrypted_der(rng, password)?;
-        Ok(doc.to_pem(EncryptedPrivateKeyInfo::PEM_LABEL, line_ending)?)
+        Ok(doc.to_pem(EncryptedPrivateKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 
     /// Write ASN.1 DER-encoded PKCS#8 private key to the given path
@@ -139,6 +139,6 @@ pub trait EncodePrivateKey {
     #[cfg(all(feature = "pem", feature = "std"))]
     fn write_pkcs8_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         let doc = self.to_pkcs8_der()?;
-        Ok(doc.write_pem_file(path, PrivateKeyInfo::PEM_LABEL, line_ending)?)
+        Ok(doc.write_pem_file(path, PrivateKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 }

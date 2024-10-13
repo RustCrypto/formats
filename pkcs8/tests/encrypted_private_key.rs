@@ -2,14 +2,18 @@
 
 #![cfg(feature = "pkcs5")]
 
+use der::asn1::OctetStringRef;
 use hex_literal::hex;
-use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfo, PrivateKeyInfo};
+use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfoRef, PrivateKeyInfoRef};
 
 #[cfg(feature = "alloc")]
 use der::Encode;
 
 #[cfg(feature = "pem")]
 use der::EncodePem;
+
+#[cfg(feature = "encryption")]
+use pkcs8::EncryptedPrivateKeyInfoOwned;
 
 /// Ed25519 PKCS#8 private key plaintext encoded as ASN.1 DER
 #[cfg(feature = "encryption")]
@@ -101,7 +105,7 @@ const PASSWORD: &[u8] = b"hunter42"; // Bad password; don't actually use outside
 
 #[test]
 fn decode_ed25519_encpriv_aes128_pbkdf2_sha1_der() {
-    let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES128_PBKDF2_SHA1_EXAMPLE).unwrap();
+    let pk = EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_AES128_PBKDF2_SHA1_EXAMPLE).unwrap();
 
     assert_eq!(
         pk.encryption_algorithm.oid(),
@@ -127,13 +131,16 @@ fn decode_ed25519_encpriv_aes128_pbkdf2_sha1_der() {
     // $ openssl asn1parse -inform der -in tests/examples/ed25519-encpriv-aes128-sha1.der
     assert_eq!(
         pk.encrypted_data,
-        &hex!("4B4D091548EAC381EE7663B21234CD4FF3C9DF664D713394CACCEA7C9B982BD8F29910FABCA4BF7BE0431FAC5C4D657BE997C1F5BF40E2DA465AC1FCC2E30470")
+        OctetStringRef::new(
+            &hex!("4B4D091548EAC381EE7663B21234CD4FF3C9DF664D713394CACCEA7C9B982BD8F29910FABCA4BF7BE0431FAC5C4D657BE997C1F5BF40E2DA465AC1FCC2E30470")
+        ).unwrap()
     );
 }
 
 #[test]
 fn decode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
-    let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
+    let pk =
+        EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
 
     assert_eq!(
         pk.encryption_algorithm.oid(),
@@ -159,7 +166,9 @@ fn decode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
     // $ openssl asn1parse -inform der -in tests/examples/ed25519-encpriv-aes256-sha256.der
     assert_eq!(
         pk.encrypted_data,
-        &hex!("D0CD6C770F4BB87176422305C17401809E226674CE74185D221BFDAA95069890C8882FCE02B05D41BCBF54B035595BCD4154B32593708469B86AACF8815A7B2B")
+        OctetStringRef::new(
+            &hex!("D0CD6C770F4BB87176422305C17401809E226674CE74185D221BFDAA95069890C8882FCE02B05D41BCBF54B035595BCD4154B32593708469B86AACF8815A7B2B")
+        ).unwrap()
     );
 }
 
@@ -167,7 +176,7 @@ fn decode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
 #[test]
 fn decrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
     let enc_pk =
-        EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
+        EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
 }
@@ -175,7 +184,7 @@ fn decrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
 #[cfg(feature = "encryption")]
 #[test]
 fn decrypt_ed25519_der_encpriv_aes256_scrypt() {
-    let enc_pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_SCRYPT_EXAMPLE).unwrap();
+    let enc_pk = EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_AES256_SCRYPT_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
 }
@@ -183,7 +192,8 @@ fn decrypt_ed25519_der_encpriv_aes256_scrypt() {
 #[cfg(feature = "encryption")]
 #[test]
 fn decrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
-    let enc_pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES128_GCM_SCRYPT_EXAMPLE).unwrap();
+    let enc_pk =
+        EncryptedPrivateKeyInfoOwned::try_from(ED25519_DER_AES128_GCM_SCRYPT_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
 }
@@ -198,7 +208,7 @@ fn encrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
     )
     .unwrap();
 
-    let pk_plaintext = PrivateKeyInfo::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
+    let pk_plaintext = PrivateKeyInfoRef::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
     let pk_encrypted = pk_plaintext
         .encrypt_with_params(scrypt_params, PASSWORD)
         .unwrap();
@@ -212,7 +222,8 @@ fn encrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
 #[cfg(feature = "encryption")]
 #[test]
 fn decrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
-    let enc_pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_GCM_SCRYPT_EXAMPLE).unwrap();
+    let enc_pk =
+        EncryptedPrivateKeyInfoOwned::try_from(ED25519_DER_AES256_GCM_SCRYPT_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
 }
@@ -227,7 +238,7 @@ fn encrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
     )
     .unwrap();
 
-    let pk_plaintext = PrivateKeyInfo::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
+    let pk_plaintext = PrivateKeyInfoRef::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
     let pk_encrypted = pk_plaintext
         .encrypt_with_params(scrypt_params, PASSWORD)
         .unwrap();
@@ -248,7 +259,7 @@ fn encrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
     )
     .unwrap();
 
-    let pk_plaintext = PrivateKeyInfo::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
+    let pk_plaintext = PrivateKeyInfoRef::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
     let pk_encrypted = pk_plaintext
         .encrypt_with_params(pbes2_params, PASSWORD)
         .unwrap();
@@ -269,7 +280,7 @@ fn encrypt_ed25519_der_encpriv_aes256_scrypt() {
     )
     .unwrap();
 
-    let pk_plaintext = PrivateKeyInfo::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
+    let pk_plaintext = PrivateKeyInfoRef::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
     let pk_encrypted = pk_plaintext
         .encrypt_with_params(scrypt_params, PASSWORD)
         .unwrap();
@@ -280,7 +291,8 @@ fn encrypt_ed25519_der_encpriv_aes256_scrypt() {
 #[test]
 #[cfg(feature = "alloc")]
 fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
-    let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
+    let pk =
+        EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
     assert_eq!(
         ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE,
         &pk.to_der().unwrap()
@@ -290,7 +302,8 @@ fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
 #[test]
 #[cfg(feature = "pem")]
 fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_pem() {
-    let pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
+    let pk =
+        EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE).unwrap();
     assert_eq!(
         ED25519_PEM_AES256_PBKDF2_SHA256_EXAMPLE,
         pk.to_pem(Default::default()).unwrap()
@@ -300,7 +313,8 @@ fn encode_ed25519_encpriv_aes256_pbkdf2_sha256_pem() {
 #[test]
 #[cfg(feature = "3des")]
 fn decrypt_ed25519_der_encpriv_des3_pbkdf2_sha256() {
-    let enc_pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_DES3_PBKDF2_SHA256_EXAMPLE).unwrap();
+    let enc_pk =
+        EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_DES3_PBKDF2_SHA256_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
 }
@@ -308,7 +322,8 @@ fn decrypt_ed25519_der_encpriv_des3_pbkdf2_sha256() {
 #[test]
 #[cfg(feature = "des-insecure")]
 fn decrypt_ed25519_der_encpriv_des_pbkdf2_sha256() {
-    let enc_pk = EncryptedPrivateKeyInfo::try_from(ED25519_DER_DES_PBKDF2_SHA256_EXAMPLE).unwrap();
+    let enc_pk =
+        EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_DES_PBKDF2_SHA256_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
 }

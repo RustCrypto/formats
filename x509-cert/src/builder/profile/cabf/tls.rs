@@ -13,7 +13,7 @@ use const_oid::db::rfc5912;
 
 use crate::{
     attr::AttributeTypeAndValue,
-    builder::{Profile, Result},
+    builder::{BuilderProfile, Result},
     certificate::TbsCertificate,
     ext::{
         pkix::{
@@ -50,7 +50,7 @@ pub struct Subordinate {
     pub client_auth: bool,
 }
 
-impl Profile for Subordinate {
+impl BuilderProfile for Subordinate {
     fn get_issuer(&self, _subject: &Name) -> Name {
         self.issuer.clone()
     }
@@ -145,12 +145,10 @@ impl CertificateType {
         // TODO(baloo): not very happy with all that, might as well throw that in a helper
         // or something.
         let rdns: vec::Vec<RelativeDistinguishedName> = subject
-            .0
-            .iter()
+            .iter_rdn()
             .filter_map(|rdn| {
                 let out = SetOfVec::<AttributeTypeAndValue>::from_iter(
-                    rdn.0
-                        .iter()
+                    rdn.iter()
                         .filter(|attr_value| attr_value.oid == rfc4519::COUNTRY_NAME)
                         .cloned(),
                 )
@@ -158,10 +156,10 @@ impl CertificateType {
 
                 Some(RelativeDistinguishedName(out))
             })
-            .filter(|rdn| !rdn.0.is_empty())
+            .filter(|rdn| !rdn.is_empty())
             .collect();
 
-        let subject: Name = rdns.into();
+        let subject: Name = Name(rdns.into());
 
         Ok(Self::DomainValidated(DomainValidated { subject, names }))
     }
@@ -233,7 +231,7 @@ pub struct Tls12Options {
     pub enable_key_agreement: bool,
 }
 
-impl Profile for Subscriber {
+impl BuilderProfile for Subscriber {
     fn get_issuer(&self, _subject: &Name) -> Name {
         self.issuer.clone()
     }

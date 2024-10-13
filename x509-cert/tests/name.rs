@@ -33,37 +33,31 @@ fn decode_name() {
         Name::from_der(&hex!("3040310B3009060355040613025553311F301D060355040A1316546573742043657274696669636174657320323031313110300E06035504031307476F6F64204341")[..]);
     let rdn1a = rdn1.unwrap();
 
-    let mut counter = 0;
-    let i = rdn1a.0.iter();
-    for rdn in i {
-        let i1 = rdn.0.iter();
-        for atav in i1 {
-            if 0 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.6");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "US"
-                );
-            } else if 1 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.10");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Test Certificates 2011"
-                );
-            } else if 2 == counter {
-                assert_eq!(atav.oid.to_string(), "2.5.4.3");
-                assert_eq!(
-                    PrintableStringRef::try_from(&atav.value)
-                        .unwrap()
-                        .to_string(),
-                    "Good CA"
-                );
-            }
-            counter += 1;
+    for (counter, atav) in rdn1a.iter().enumerate() {
+        if 0 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.6");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "US"
+            );
+        } else if 1 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.10");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Test Certificates 2011"
+            );
+        } else if 2 == counter {
+            assert_eq!(atav.oid.to_string(), "2.5.4.3");
+            assert_eq!(
+                PrintableStringRef::try_from(&atav.value)
+                    .unwrap()
+                    .to_string(),
+                "Good CA"
+            );
         }
     }
 
@@ -99,7 +93,7 @@ fn decode_rdn() {
     //        :   }
     let rdn1 =
         RelativeDistinguishedName::from_der(&hex!("310B3009060355040613025553")[..]).unwrap();
-    let i = rdn1.0.iter();
+    let i = rdn1.iter();
     for atav in i {
         let oid = atav.oid;
         assert_eq!(oid.to_string(), "2.5.4.6");
@@ -125,7 +119,7 @@ fn decode_rdn() {
         &hex!("311F300A060355040A0C03313233301106035504030C0A4A4F484E20534D495448")[..],
     )
     .unwrap();
-    let mut i = rdn2a.0.iter();
+    let mut i = rdn2a.iter();
     let atav1a = i.next().unwrap();
     let oid2 = atav1a.oid;
     assert_eq!(oid2.to_string(), "2.5.4.10");
@@ -143,8 +137,8 @@ fn decode_rdn() {
     assert_eq!(utf8a.to_string(), "JOHN SMITH");
 
     let mut from_scratch = RelativeDistinguishedName::default();
-    assert!(from_scratch.0.insert(atav1a.clone()).is_ok());
-    assert!(from_scratch.0.insert(atav2a.clone()).is_ok());
+    assert!(from_scratch.insert(atav1a.clone()).is_ok());
+    assert!(from_scratch.insert(atav2a.clone()).is_ok());
     let reencoded = from_scratch.to_der().unwrap();
     assert_eq!(
         reencoded,
@@ -152,9 +146,7 @@ fn decode_rdn() {
     );
 
     let mut from_scratch2 = RelativeDistinguishedName::default();
-    assert!(from_scratch2.0.insert_ordered(atav2a.clone()).is_ok());
-    // fails when caller adds items not in DER lexicographical order
-    assert!(from_scratch2.0.insert_ordered(atav1a.clone()).is_err());
+    assert!(from_scratch2.insert(atav2a.clone()).is_ok());
 
     // allow out-of-order RDNs (see: RustCrypto/formats#625)
     assert!(RelativeDistinguishedName::from_der(
@@ -329,7 +321,7 @@ fn rdns_serde() {
             "1.3.6.1.4.1.1466.0=#04024869",
             &[&[AttributeTypeAndValue {
                 oid: ObjectIdentifier::new("1.3.6.1.4.1.1466.0").unwrap(),
-                value: Any::from(OctetStringRef::new(&[b'H', b'i']).unwrap()),
+                value: Any::from(OctetStringRef::new(b"Hi").unwrap()),
             }]],
         ),
     ];
@@ -338,7 +330,7 @@ fn rdns_serde() {
         let mut brdns = RdnSequence::default();
         for rdn in rdns.iter() {
             let sofv = SetOfVec::try_from(rdn.to_vec()).unwrap();
-            brdns.0.push(RelativeDistinguishedName::from(sofv));
+            brdns.push(RelativeDistinguishedName::from(sofv));
         }
 
         // Check that serialization matches the expected output.
@@ -356,8 +348,8 @@ fn rdns_serde() {
 
             let rdns = RdnSequence::from_der(&der).unwrap();
 
-            for (l, r) in brdns.0.iter().zip(rdns.0.iter()) {
-                for (ll, rr) in l.0.iter().zip(r.0.iter()) {
+            for (l, r) in brdns.iter().zip(rdns.iter()) {
+                for (ll, rr) in l.iter().zip(r.iter()) {
                     assert_eq!(ll, rr);
                 }
 
@@ -367,4 +359,54 @@ fn rdns_serde() {
             assert_eq!(brdns, rdns);
         }
     }
+}
+
+#[cfg(feature = "std")]
+#[test]
+fn access_attributes() {
+    use std::str::FromStr;
+
+    let name = Name::from_str("emailAddress=foo@example.com,UID=identity:ds.group.3891111,OU=management:ds.group.3891111,CN=OQFAvDNDWs.google.com,O=Google LLC,L=Mountain View,ST=California,C=US").unwrap();
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.common_name().unwrap().unwrap()),
+        "OQFAvDNDWs.google.com"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.country().unwrap().unwrap()),
+        "US"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.state_or_province().unwrap().unwrap()),
+        "California"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.locality().unwrap().unwrap()),
+        "Mountain View"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.organization().unwrap().unwrap()),
+        "Google LLC"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.organization_unit().unwrap().unwrap()),
+        "management:ds.group.3891111"
+    );
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.email_address().unwrap().unwrap()),
+        "foo@example.com"
+    );
+
+    let name = Name::from_str("C=DE,C=US").unwrap();
+
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.country().unwrap().unwrap()),
+        "US"
+    );
 }

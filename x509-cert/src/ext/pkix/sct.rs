@@ -3,8 +3,6 @@
 //!
 //! [Certificate Transparency RFC 6962]: https://datatracker.ietf.org/doc/html/rfc6962
 
-#![cfg(feature = "sct")]
-
 use alloc::{format, vec::Vec};
 use const_oid::{db::rfc6962::CT_PRECERT_SCTS, AssociatedOid, ObjectIdentifier};
 use der::asn1::OctetString;

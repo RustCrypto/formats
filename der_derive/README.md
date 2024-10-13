@@ -37,7 +37,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/der_derive
+[crate-image]: https://img.shields.io/crates/v/der_derive
 [crate-link]: https://crates.io/crates/der_derive
 [docs-image]: https://docs.rs/der_derive/badge.svg
 [docs-link]: https://docs.rs/der_derive/

@@ -12,13 +12,13 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "tsp", "timestamp"]
 readme = "README.md"
-rust-version = "1.75"
+rust-version = "1.81"
 
 [dependencies]
 der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid", "pem"] }
-cms = { version = "=0.3.0-pre", features = ["alloc"] }
-cmpv2 = { version = "=0.3.0-pre", features = ["alloc"] }
-x509-cert = { version = "=0.3.0-pre", default-features = false }
+cms = { version = "=0.3.0-pre.0" }
+cmpv2 = { version = "=0.3.0-pre.0", features = ["alloc"] }
+x509-cert = { version = "=0.3.0-pre.0", default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.4.1"

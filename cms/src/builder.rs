@@ -19,6 +19,7 @@ use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
+use async_signature::{AsyncRandomizedSigner, AsyncSigner};
 use cipher::{
     block_padding::Pkcs7,
     rand_core::{self, CryptoRng, CryptoRngCore, RngCore},
@@ -34,7 +35,7 @@ use digest::Digest;
 use rsa::Pkcs1v15Encrypt;
 use sha2::digest;
 use signature::digest::DynDigest;
-use signature::{Keypair, Signer};
+use signature::{Keypair, RandomizedSigner, Signer};
 use spki::{
     AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
     SignatureBitStringEncoding,
@@ -42,7 +43,7 @@ use spki::{
 use std::time::SystemTime;
 use std::vec;
 use x509_cert::attr::{Attribute, AttributeValue, Attributes};
-use x509_cert::builder::{self, Builder};
+use x509_cert::builder::{self, AsyncBuilder, Builder};
 use zeroize::Zeroize;
 
 /// Error type
@@ -397,6 +398,73 @@ impl<'s> SignedDataBuilder<'s> {
     {
         let signer_info = signer_info_builder
             .build::<S, Signature>(signer)
+            .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+        self.signer_infos.push(signer_info);
+
+        Ok(self)
+    }
+
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub fn add_signer_info_with_rng<S, Signature>(
+        &mut self,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
+        rng: &mut impl CryptoRngCore,
+    ) -> Result<&mut Self>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S: RandomizedSigner<Signature>,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+    {
+        let signer_info = signer_info_builder
+            .build_with_rng::<S, Signature>(signer, rng)
+            .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+        self.signer_infos.push(signer_info);
+
+        Ok(self)
+    }
+
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub async fn add_signer_info_async<S, Signature>(
+        &mut self,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
+    ) -> Result<&mut Self>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S: AsyncSigner<Signature>,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding + 'static,
+    {
+        let signer_info = signer_info_builder
+            .build_async::<S, Signature>(signer)
+            .await
+            .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+        self.signer_infos.push(signer_info);
+
+        Ok(self)
+    }
+
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub async fn add_signer_info_with_rng_async<S, Signature>(
+        &mut self,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
+        rng: &mut impl CryptoRngCore,
+    ) -> Result<&mut Self>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S: AsyncRandomizedSigner<Signature>,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding + 'static,
+    {
+        let signer_info = signer_info_builder
+            .build_with_rng_async::<S, Signature>(signer, rng)
+            .await
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
         self.signer_infos.push(signer_info);
 

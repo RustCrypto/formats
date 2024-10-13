@@ -10,12 +10,14 @@ const RFCS: &[(&str, &str)] = &[
     ("rfc2985", include_str!("../rfc2985.txt")),
     ("rfc3161", include_str!("../rfc3161.txt")),
     ("rfc5280", include_str!("../rfc5280.txt")),
+    ("rfc5753", include_str!("../rfc5753.txt")),
     ("rfc5911", include_str!("../rfc5911.txt")),
     ("rfc5912", include_str!("../rfc5912.txt")),
     ("rfc6268", include_str!("../rfc6268.txt")),
     ("rfc6960", include_str!("../rfc6960.txt")),
     ("rfc6962", include_str!("../rfc6962.txt")),
     ("rfc7107", include_str!("../rfc7107.txt")),
+    ("rfc7292", include_str!("../rfc7292.txt")),
     ("rfc7299", include_str!("../rfc7299.txt")),
     ("rfc7693", include_str!("../rfc7693.txt")),
     ("rfc8410", include_str!("../rfc8410.txt")),
@@ -25,6 +27,9 @@ const MDS: &[(&str, &str)] = &[
     // Created from:
     // https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
     ("fips202", include_str!("../fips202.md")),
+    ("fips203", include_str!("../fips203.md")),
+    ("fips204", include_str!("../fips204.md")),
+    ("fips205", include_str!("../fips205.md")),
     ("rfc8894", include_str!("../rfc8894.md")),
     // Created from: https://trustedcomputinggroup.org
     ("tcgtpm", include_str!("../tcg-tpm.md")),
@@ -35,7 +40,7 @@ const MDS: &[(&str, &str)] = &[
     ("btok", include_str!("../stb/btok.asn")),
     ("brng", include_str!("../stb/brng.asn")),
     ("bash", include_str!("../stb/bash.asn")),
-    ("bake", include_str!("../stb/bake.asn"))
+    ("bake", include_str!("../stb/bake.asn")),
 ];
 
 // Bases defined in other places.

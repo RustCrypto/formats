@@ -6,8 +6,7 @@ use core::fmt;
 use der::{asn1::BitString, referenced::OwnedToRef, Encode};
 use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, Signer};
 use spki::{
-    AlgorithmIdentifier, DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier,
-    SignatureBitStringEncoding, SubjectPublicKeyInfoOwned,
+    DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier, SignatureBitStringEncoding,
 };
 
 use crate::{
@@ -17,11 +16,18 @@ use crate::{
     request::{attributes::AsAttribute, CertReq, CertReqInfo, ExtensionReq},
     serial_number::SerialNumber,
     time::Validity,
+    AlgorithmIdentifier, SubjectPublicKeyInfo,
 };
 
 pub mod profile;
 
-use self::profile::Profile;
+use self::profile::BuilderProfile;
+
+#[deprecated(
+    since = "0.3.0",
+    note = "please use `x509_cert::builder::profile::BuilderProfile` instead"
+)]
+pub use self::profile::BuilderProfile as Profile;
 
 const NULL_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("0.0.0");
 
@@ -101,7 +107,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 ///
 /// ```
 /// use der::Decode;
-/// use x509_cert::spki::SubjectPublicKeyInfoOwned;
+/// use x509_cert::spki::SubjectPublicKeyInfo;
 /// use x509_cert::builder::{CertificateBuilder, Builder, profile};
 /// use x509_cert::name::Name;
 /// use x509_cert::serial_number::SerialNumber;
@@ -125,7 +131,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 /// let subject = Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
 /// let profile = profile::cabf::Root::new(false,subject).expect("Create root profile");
 ///
-/// let pub_key = SubjectPublicKeyInfoOwned::try_from(RSA_2048_DER).expect("get rsa pub key");
+/// let pub_key = SubjectPublicKeyInfo::try_from(RSA_2048_DER).expect("get rsa pub key");
 ///
 /// let mut signer = rsa_signer();
 /// let mut builder = CertificateBuilder::new(
@@ -146,14 +152,14 @@ pub struct CertificateBuilder<P> {
 
 impl<P> CertificateBuilder<P>
 where
-    P: Profile,
+    P: BuilderProfile,
 {
     /// Creates a new certificate builder
     pub fn new(
         profile: P,
         serial_number: SerialNumber,
         mut validity: Validity,
-        subject_public_key_info: SubjectPublicKeyInfoOwned,
+        subject_public_key_info: SubjectPublicKeyInfo,
     ) -> Result<Self> {
         let signature_alg = AlgorithmIdentifier {
             oid: NULL_OID,
@@ -194,6 +200,10 @@ where
     }
 
     /// Add an extension to this certificate
+    ///
+    /// Extensions need to implement [`AsExtension`], examples may be found in
+    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
+    /// [the implementors](../ext/trait.AsExtension.html#implementors).
     pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
         let ext = extension.to_extension(&self.tbs.subject, &self.extensions)?;
         self.extensions.push(ext);
@@ -245,7 +255,7 @@ impl RequestBuilder {
             oid: NULL_OID,
             parameters: None,
         };
-        let public_key = SubjectPublicKeyInfoOwned {
+        let public_key = SubjectPublicKeyInfo {
             algorithm,
             subject_public_key: BitString::from_bytes(&[]).expect("unable to parse empty object"),
         };
@@ -265,6 +275,10 @@ impl RequestBuilder {
     }
 
     /// Add an extension to this certificate request
+    ///
+    /// Extensions need to implement [`AsExtension`], examples may be found in
+    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
+    /// [the implementors](../ext/trait.AsExtension.html#implementors).
     pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
         let ext = extension.to_extension(&self.info.subject, &self.extension_req.0)?;
 
@@ -338,7 +352,7 @@ pub trait Builder: Sized {
 
 impl<P> Builder for CertificateBuilder<P>
 where
-    P: Profile,
+    P: BuilderProfile,
 {
     type Output = Certificate;
 
@@ -348,7 +362,7 @@ where
         S::VerifyingKey: EncodePublicKey,
     {
         let verifying_key = cert_signer.verifying_key();
-        let signer_pub = SubjectPublicKeyInfoOwned::from_key(&verifying_key)?;
+        let signer_pub = SubjectPublicKeyInfo::from_key(&verifying_key)?;
 
         self.tbs.signature = cert_signer.signature_algorithm_identifier()?;
 
@@ -399,7 +413,7 @@ impl Builder for RequestBuilder {
         S::VerifyingKey: EncodePublicKey,
     {
         let verifying_key = signer.verifying_key();
-        let public_key = SubjectPublicKeyInfoOwned::from_key(&verifying_key)?;
+        let public_key = SubjectPublicKeyInfo::from_key(&verifying_key)?;
         self.info.public_key = public_key;
 
         self.info
@@ -447,7 +461,7 @@ pub trait AsyncBuilder: Sized {
         S::VerifyingKey: EncodePublicKey;
 
     /// Run the object through the signer and build it.
-    async fn build_async<S, Signature: 'static>(mut self, signer: &S) -> Result<Self::Output>
+    async fn build_async<S, Signature>(mut self, signer: &S) -> Result<Self::Output>
     where
         S: AsyncSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
@@ -462,7 +476,7 @@ pub trait AsyncBuilder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    async fn build_with_rng_async<S, Signature: 'static>(
+    async fn build_with_rng_async<S, Signature>(
         mut self,
         signer: &S,
         rng: &mut impl CryptoRngCore,

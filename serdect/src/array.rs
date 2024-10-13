@@ -57,7 +57,7 @@ impl LengthCheck for ExactLength {
 /// Deserialize from hex when using human-readable formats or binary if the
 /// format is binary. Fails if the `buffer` isn't the exact same size as the
 /// resulting array.
-pub fn deserialize_hex_or_bin<'de, D>(buffer: &mut [u8], deserializer: D) -> Result<(), D::Error>
+pub fn deserialize_hex_or_bin<'de, D>(buffer: &mut [u8], deserializer: D) -> Result<&[u8], D::Error>
 where
     D: Deserializer<'de>,
 {

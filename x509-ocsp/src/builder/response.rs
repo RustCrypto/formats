@@ -40,7 +40,7 @@ use x509_cert::{
 /// let req = OcspRequest::from_der(OCSP_REQ_DER).unwrap();
 /// let ca = Certificate::from_der(CA_DER).unwrap();
 ///
-/// let mut builder = OcspResponseBuilder::new(ca.tbs_certificate.subject.clone())
+/// let mut builder = OcspResponseBuilder::new(ca.tbs_certificate().subject().clone())
 ///     .with_single_response(
 ///         SingleResponse::new(
 ///             req.tbs_request.request_list[0].req_cert.clone(),

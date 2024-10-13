@@ -2,7 +2,7 @@ use core::fmt;
 use core::marker::PhantomData;
 
 use serde::{
-    de::{Error, Visitor},
+    de::{Error, Unexpected, Visitor},
     Serializer,
 };
 
@@ -74,7 +74,7 @@ pub(crate) trait LengthCheck {
 pub(crate) struct StrIntoBufVisitor<'b, T: LengthCheck>(pub &'b mut [u8], pub PhantomData<T>);
 
 impl<'de, 'b, T: LengthCheck> Visitor<'de> for StrIntoBufVisitor<'b, T> {
-    type Value = ();
+    type Value = &'b [u8];
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         T::expecting(formatter, "a string", self.0.len() * 2)
@@ -84,13 +84,15 @@ impl<'de, 'b, T: LengthCheck> Visitor<'de> for StrIntoBufVisitor<'b, T> {
     where
         E: Error,
     {
-        if !T::length_check(self.0.len() * 2, v.len()) {
-            return Err(Error::invalid_length(v.len(), &self));
-        }
-        // TODO: Map `base16ct::Error::InvalidLength` to `Error::invalid_length`.
-        base16ct::mixed::decode(v, self.0)
-            .map(|_| ())
-            .map_err(E::custom)
+        base16ct::mixed::decode(v, self.0).map_err(|err| match err {
+            base16ct::Error::InvalidLength => {
+                Error::invalid_length(v.len(), &"an even number of hex digits")
+            }
+            base16ct::Error::InvalidEncoding => Error::invalid_value(
+                Unexpected::Other("<potentially secret hex string>"),
+                &"a sequence of hex digits (0-9,a-f,A-F)",
+            ),
+        })
     }
 }
 
@@ -116,7 +118,7 @@ impl<'de> Visitor<'de> for StrIntoVecVisitor {
 pub(crate) struct SliceVisitor<'b, T: LengthCheck>(pub &'b mut [u8], pub PhantomData<T>);
 
 impl<'de, 'b, T: LengthCheck> Visitor<'de> for SliceVisitor<'b, T> {
-    type Value = ();
+    type Value = &'b [u8];
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         T::expecting(formatter, "an array", self.0.len())
@@ -131,7 +133,7 @@ impl<'de, 'b, T: LengthCheck> Visitor<'de> for SliceVisitor<'b, T> {
         if T::length_check(self.0.len(), v.len()) {
             let buffer = &mut self.0[..v.len()];
             buffer.copy_from_slice(v);
-            return Ok(());
+            return Ok(buffer);
         }
 
         Err(E::invalid_length(v.len(), &self))
@@ -147,7 +149,7 @@ impl<'de, 'b, T: LengthCheck> Visitor<'de> for SliceVisitor<'b, T> {
         if T::length_check(self.0.len(), v.len()) {
             let buffer = &mut self.0[..v.len()];
             buffer.swap_with_slice(&mut v);
-            return Ok(());
+            return Ok(buffer);
         }
 
         Err(E::invalid_length(v.len(), &self))

@@ -4,11 +4,13 @@ use crate::certificate::{CertificateInner, Profile, Rfc5280, TbsCertificateInner
 use crate::ext::pkix::{certpolicy::CertificatePolicies, NameConstraints};
 use crate::{ext::Extensions, name::Name};
 
+use crate::SubjectPublicKeyInfo;
 use alloc::string::String;
-use der::asn1::OctetString;
-use der::flagset::{flags, FlagSet};
-use der::{Choice, Enumerated, Sequence};
-use spki::SubjectPublicKeyInfoOwned;
+use der::{
+    asn1::OctetString,
+    flagset::{flags, FlagSet},
+    Choice, Enumerated, Sequence,
+};
 
 /// Version identifier for TrustAnchorInfo
 #[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Enumerated)]
@@ -37,11 +39,11 @@ pub enum Version {
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 #[allow(missing_docs)]
-pub struct TrustAnchorInfo<P: Profile + 'static = Rfc5280> {
+pub struct TrustAnchorInfo<P: Profile = Rfc5280> {
     #[asn1(default = "Default::default")]
     pub version: Version,
 
-    pub pub_key: SubjectPublicKeyInfoOwned,
+    pub pub_key: SubjectPublicKeyInfo,
 
     pub key_id: OctetString,
 
@@ -70,7 +72,7 @@ pub struct TrustAnchorInfo<P: Profile + 'static = Rfc5280> {
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct CertPathControls<P: Profile + 'static = Rfc5280> {
+pub struct CertPathControls<P: Profile = Rfc5280> {
     pub ta_name: Name,
 
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
@@ -129,7 +131,7 @@ pub type CertPolicyFlags = FlagSet<CertPolicies>;
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 #[allow(clippy::large_enum_variant)]
 #[allow(missing_docs)]
-pub enum TrustAnchorChoice<P: Profile + 'static = Rfc5280> {
+pub enum TrustAnchorChoice<P: Profile = Rfc5280> {
     Certificate(CertificateInner<P>),
 
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]

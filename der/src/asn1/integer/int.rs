@@ -30,6 +30,8 @@ macro_rules! impl_encoding_traits {
 
                     let bytes = reader.read_into(&mut buf[..max_length])?;
 
+                    // We actually want the conversion to overflow here
+                    #[allow(clippy::cast_possible_wrap)]
                     let result = if is_highest_bit_set(bytes) {
                         <$uint>::from_be_bytes(decode_to_array(bytes)?) as $int
                     } else {
@@ -48,6 +50,8 @@ macro_rules! impl_encoding_traits {
             impl EncodeValue for $int {
                 fn value_len(&self) -> Result<Length> {
                     if *self < 0 {
+                        // We actually want the conversion to overflow here
+                        #[allow(clippy::cast_sign_loss)]
                         negative_encoded_len(&(*self as $uint).to_be_bytes())
                     } else {
                         uint::encoded_len(&self.to_be_bytes())
@@ -56,6 +60,8 @@ macro_rules! impl_encoding_traits {
 
                 fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
                     if *self < 0 {
+                        // We actually want the conversion to overflow here
+                        #[allow(clippy::cast_sign_loss)]
                         encode_bytes(writer, &(*self as $uint).to_be_bytes())
                     } else {
                         uint::encode_bytes(writer, &self.to_be_bytes())

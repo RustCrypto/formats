@@ -1,6 +1,6 @@
 //! Slice reader.
 
-use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Header, Length, Reader, Tag};
+use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Length, Reader, Tag};
 
 /// [`Reader`] which consumes an input byte slice.
 #[derive(Clone, Debug)]
@@ -77,18 +77,35 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         self.bytes.len()
     }
 
-    fn peek_byte(&mut self) -> Option<u8> {
-        self.remaining()
-            .ok()
-            .and_then(|bytes| bytes.first().cloned())
-    }
-
-    fn peek_header(&mut self) -> Result<Header, Error> {
-        Header::decode(&mut self.clone())
+    fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()> {
+        self.clone().read_into(buf)?;
+        Ok(())
     }
 
     fn position(&self) -> Length {
         self.position
+    }
+
+    /// Read nested data of the given length.
+    fn read_nested<T, F, E>(&mut self, len: Length, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+        E: From<Error>,
+    {
+        let prefix_len = (self.position + len)?;
+        let mut nested_reader = self.clone();
+        nested_reader.bytes = self.bytes.prefix(prefix_len)?;
+
+        let ret = f(&mut nested_reader);
+        self.position = nested_reader.position;
+        self.failed = nested_reader.failed;
+
+        ret.and_then(|value| {
+            nested_reader.finish(value).map_err(|e| {
+                self.failed = true;
+                e.into()
+            })
+        })
     }
 
     fn read_slice(&mut self, len: Length) -> Result<&'a [u8], Error> {
@@ -113,9 +130,8 @@ impl<'a> Reader<'a> for SliceReader<'a> {
             return Err(self.error(ErrorKind::Failed).into());
         }
 
-        T::decode(self).map_err(|e| {
+        T::decode(self).inspect_err(|_| {
             self.failed = true;
-            e
         })
     }
 
@@ -148,7 +164,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
 #[allow(clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::SliceReader;
-    use crate::{Decode, ErrorKind, Length, Reader, Tag};
+    use crate::{Decode, ErrorKind, Length, Reader};
     use hex_literal::hex;
 
     // INTEGER: 42
@@ -208,24 +224,5 @@ mod tests {
             },
             err.kind()
         );
-    }
-
-    #[test]
-    fn peek_tag() {
-        let mut reader = SliceReader::new(EXAMPLE_MSG).unwrap();
-        assert_eq!(reader.position(), Length::ZERO);
-        assert_eq!(reader.peek_tag().unwrap(), Tag::Integer);
-        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
-    }
-
-    #[test]
-    fn peek_header() {
-        let mut reader = SliceReader::new(EXAMPLE_MSG).unwrap();
-        assert_eq!(reader.position(), Length::ZERO);
-
-        let header = reader.peek_header().unwrap();
-        assert_eq!(header.tag, Tag::Integer);
-        assert_eq!(header.length, Length::ONE);
-        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
 }

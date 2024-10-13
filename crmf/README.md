@@ -35,7 +35,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/crmf
+[crate-image]: https://img.shields.io/crates/v/crmf
 [crate-link]: https://crates.io/crates/crmf
 [docs-image]: https://docs.rs/crmf/badge.svg
 [docs-link]: https://docs.rs/crmf/

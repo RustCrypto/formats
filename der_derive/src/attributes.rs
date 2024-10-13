@@ -2,10 +2,32 @@
 
 use crate::{Asn1Type, Tag, TagMode, TagNumber};
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use quote::{quote, ToTokens};
 use std::{fmt::Debug, str::FromStr};
 use syn::punctuated::Punctuated;
 use syn::{parse::Parse, parse::ParseStream, Attribute, Ident, LitStr, Path, Token};
+
+/// Error type used by the structure
+#[derive(Debug, Clone, Default, Eq, PartialEq)]
+pub(crate) enum ErrorType {
+    /// Represents the ::der::Error type
+    #[default]
+    Der,
+    /// Represents an error designed by Path
+    Custom(Path),
+}
+
+impl ToTokens for ErrorType {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Self::Der => {
+                let err = quote! { ::der::Error };
+                err.to_tokens(tokens)
+            }
+            Self::Custom(path) => path.to_tokens(tokens),
+        }
+    }
+}
 
 /// Attribute name.
 pub(crate) const ATTR_NAME: &str = "asn1";
@@ -18,37 +40,47 @@ pub(crate) struct TypeAttrs {
     ///
     /// The default value is `EXPLICIT`.
     pub tag_mode: TagMode,
+    pub error: ErrorType,
 }
 
 impl TypeAttrs {
     /// Parse attributes from a struct field or enum variant.
     pub fn parse(attrs: &[Attribute]) -> syn::Result<Self> {
         let mut tag_mode = None;
+        let mut error = None;
 
-        let mut parsed_attrs = Vec::new();
-        AttrNameValue::from_attributes(attrs, &mut parsed_attrs)?;
-
-        for attr in parsed_attrs {
-            // `tag_mode = "..."` attribute
-            let mode = attr.parse_value("tag_mode")?.ok_or_else(|| {
-                syn::Error::new_spanned(
-                    &attr.name,
-                    "invalid `asn1` attribute (valid options are `tag_mode`)",
-                )
-            })?;
-
-            if tag_mode.is_some() {
-                return Err(syn::Error::new_spanned(
-                    &attr.name,
-                    "duplicate ASN.1 `tag_mode` attribute",
-                ));
+        attrs.iter().try_for_each(|attr| {
+            if !attr.path().is_ident(ATTR_NAME) {
+                return Ok(());
             }
 
-            tag_mode = Some(mode);
-        }
+            attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("tag_mode") {
+                    if tag_mode.is_some() {
+                        abort!(attr, "duplicate ASN.1 `tag_mode` attribute");
+                    }
+
+                    tag_mode = Some(meta.value()?.parse()?);
+                } else if meta.path.is_ident("error") {
+                    if error.is_some() {
+                        abort!(attr, "duplicate ASN.1 `error` attribute");
+                    }
+
+                    error = Some(ErrorType::Custom(meta.value()?.parse()?));
+                } else {
+                    return Err(syn::Error::new_spanned(
+                        attr,
+                        "invalid `asn1` attribute (valid options are `tag_mode` and `error`)",
+                    ));
+                }
+
+                Ok(())
+            })
+        })?;
 
         Ok(Self {
             tag_mode: tag_mode.unwrap_or_default(),
+            error: error.unwrap_or_default(),
         })
     }
 }

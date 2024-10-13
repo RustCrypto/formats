@@ -1,6 +1,8 @@
 use alloc::string::String;
-use der::asn1::{PrintableString, TeletexString};
-use der::{Choice, ValueOrd};
+use der::{
+    asn1::{Any, PrintableString, TeletexString},
+    Choice, FixedTag, Header, Reader, ValueOrd,
+};
 
 /// DirectoryString as defined in [RFC 5280 Section 4.2.1.4].
 ///
@@ -50,4 +52,42 @@ pub enum DirectoryString {
 
     #[asn1(type = "UTF8String")]
     Utf8String(String),
+}
+
+impl<'a> TryFrom<&'a Any> for DirectoryString {
+    type Error = der::Error;
+    fn try_from(any: &'a Any) -> der::Result<Self> {
+        any.decode_as()
+    }
+}
+
+impl<'a> der::DecodeValue<'a> for DirectoryString {
+    type Error = der::Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
+        match header.tag {
+            PrintableString::TAG => {
+                PrintableString::decode_value(reader, header).map(Self::PrintableString)
+            }
+            TeletexString::TAG => {
+                TeletexString::decode_value(reader, header).map(Self::TeletexString)
+            }
+            String::TAG => String::decode_value(reader, header).map(Self::Utf8String),
+            actual => Err(der::ErrorKind::TagUnexpected {
+                expected: None,
+                actual,
+            }
+            .into()),
+        }
+    }
+}
+
+impl AsRef<str> for DirectoryString {
+    fn as_ref(&self) -> &str {
+        match self {
+            Self::PrintableString(s) => s.as_ref(),
+            Self::TeletexString(s) => s.as_ref(),
+            Self::Utf8String(s) => s.as_ref(),
+        }
+    }
 }
