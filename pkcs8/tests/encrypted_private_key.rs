@@ -4,7 +4,7 @@
 
 use der::asn1::OctetStringRef;
 use hex_literal::hex;
-use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfoRef, PrivateKeyInfoRef};
+use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfoRef};
 
 #[cfg(feature = "alloc")]
 use der::Encode;
