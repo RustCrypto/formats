@@ -36,6 +36,8 @@ pub enum Error {
     Version,
 }
 
+impl core::error::Error for Error {}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -77,6 +79,3 @@ impl From<pkcs8::spki::Error> for Error {
         Error::Pkcs8(pkcs8::Error::PublicKey(err))
     }
 }
-
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
