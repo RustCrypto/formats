@@ -70,8 +70,7 @@ impl fmt::Display for Error {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
+impl core::error::Error for Error {}
 
 impl From<base64ct::Error> for Error {
     fn from(err: base64ct::Error) -> Error {
