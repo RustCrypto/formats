@@ -685,9 +685,8 @@ fn test_create_password_recipient_info() {
         key_encryption_iv: Iv<cbc::Encryptor<Aes128>>,
         key_derivation_params: pkcs5::pbes2::Pbkdf2Params,
     }
-    impl<'a> Aes128CbcPwriEncryptor<'a> {
-        pub fn new(challenge_password: &'a [u8]) -> Self {
-            let mut rng = OsRng;
+    impl<'a, R> Aes128CbcPwriEncryptor<'a, R> {
+        pub fn new(challenge_password: &'a [u8], &mut rng: R) -> Self {
             let mut key_encryption_iv = [0u8; 16];
             rng.fill_bytes(key_encryption_iv.as_mut_slice());
             Aes128CbcPwriEncryptor {
@@ -901,7 +900,7 @@ fn test_create_password_recipient_info() {
     // Create recipient info
     let recipient_info_builder = PasswordRecipientInfoBuilder::new(key_encryptor).unwrap();
 
-    //let mut rng = OsRng;
+    let mut the_one_and_only_rng = OsRng;
     let mut builder = EnvelopedDataBuilder::new(
         None,
         "Arbitrary unencrypted content".as_bytes(),
@@ -912,7 +911,7 @@ fn test_create_password_recipient_info() {
     let enveloped_data = builder
         .add_recipient_info(recipient_info_builder)
         .expect("Could not add a recipient info")
-        .build_with_rng(&mut rng)
+        .build_with_rng(&mut the_one_and_only_rng)
         .expect("Building EnvelopedData failed");
     let enveloped_data_der = enveloped_data
         .to_der()
