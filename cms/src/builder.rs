@@ -438,7 +438,7 @@ impl<'s> SignedDataBuilder<'s> {
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S: AsyncSigner<Signature>,
         S::VerifyingKey: EncodePublicKey,
-        Signature: SignatureBitStringEncoding + 'static,
+        Signature: SignatureBitStringEncoding,
     {
         let signer_info = signer_info_builder
             .build_async::<S, Signature>(signer)
@@ -461,7 +461,7 @@ impl<'s> SignedDataBuilder<'s> {
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S: AsyncRandomizedSigner<Signature>,
         S::VerifyingKey: EncodePublicKey,
-        Signature: SignatureBitStringEncoding + 'static,
+        Signature: SignatureBitStringEncoding,
     {
         let signer_info = signer_info_builder
             .build_with_rng_async::<S, Signature>(signer, rng)

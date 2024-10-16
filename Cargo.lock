@@ -1038,7 +1038,7 @@ dependencies = [
 
 [[package]]
 name = "pem-rfc7468"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "base64ct 1.6.0",
 ]
@@ -1440,7 +1440,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.8.0-rc.2"
+version = "0.8.0-rc.3"
 dependencies = [
  "base16ct",
  "der",
@@ -1864,7 +1864,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
