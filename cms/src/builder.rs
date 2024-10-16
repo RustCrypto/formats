@@ -935,9 +935,10 @@ where
         rng: &mut Self::Rng,
     ) -> Result<RecipientInfo> {
         let padded_cek = self.pad_content_encryption_key(content_encryption_key, rng)?;
-        let encrypted_key = self
-            .key_encryptor
-            .encrypt_rfc3211(padded_cek.as_slice(), rng)?;
+        let encrypted_key = self.key_encryptor.encrypt_rfc3211(
+            padded_cek.as_slice(),
+            rng,
+        )?;
         let enc_key = OctetString::new(encrypted_key)?;
         Ok(RecipientInfo::Pwri(PasswordRecipientInfo {
             version: self.recipient_info_version(),
