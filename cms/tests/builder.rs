@@ -22,11 +22,9 @@ use p256::{pkcs8::DecodePrivateKey, NistP256};
 use pem_rfc7468::LineEnding;
 use pkcs5::pbes2::Pbkdf2Params;
 use rand::rngs::OsRng;
-use rand::RngCore;
 use rsa::pkcs1::DecodeRsaPrivateKey;
-use rsa::pkcs1v15;
-use rsa::pss;
 use rsa::rand_core::CryptoRngCore;
+use rsa::{pkcs1v15, pss};
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;
 use signature::Verifier;
@@ -685,13 +683,15 @@ fn test_create_password_recipient_info() {
         key_encryption_iv: Iv<cbc::Encryptor<Aes128>>,
         key_derivation_params: pkcs5::pbes2::Pbkdf2Params,
     }
-    impl<'a, R> Aes128CbcPwriEncryptor<'a, R> {
-        pub fn new(challenge_password: &'a [u8], &mut rng: R) -> Self {
+    impl<'a> Aes128CbcPwriEncryptor<'a> {
+        pub fn new(challenge_password: &'a [u8], rng: &mut impl CryptoRngCore) -> Self {
             let mut key_encryption_iv = [0u8; 16];
             rng.fill_bytes(key_encryption_iv.as_mut_slice());
+            let key_encryption_iv = key_encryption_iv.into();
+
             Aes128CbcPwriEncryptor {
                 challenge_password,
-                key_encryption_iv: key_encryption_iv.into(),
+                key_encryption_iv,
                 key_derivation_params: pkcs5::pbes2::Pbkdf2Params::hmac_with_sha256(
                     60_000, // use >=600_000 in real world applications
                     b"salz",
@@ -703,9 +703,9 @@ fn test_create_password_recipient_info() {
     impl<'a> PwriEncryptor for Aes128CbcPwriEncryptor<'a> {
         const BLOCK_LENGTH_BITS: usize = 128; // AES block length
         fn encrypt_rfc3211(
-            &self,
+            &mut self,
             padded_content_encryption_key: &[u8],
-            rng: &mut impl CryptoRngCore,
+            _rng: &mut impl CryptoRngCore,
         ) -> Result<Vec<u8>, cms::builder::Error> {
             if padded_content_encryption_key.len() < 2 * Self::BLOCK_LENGTH_BITS / 8 {
                 return Err(cms::builder::Error::Builder(
@@ -892,15 +892,17 @@ fn test_create_password_recipient_info() {
         content_encryption_key
     }
 
+    let mut the_one_and_only_rng = OsRng;
+
     // Encrypt the content-encryption key (CEK) using custom encryptor
     // of type `Aes128CbcPwriEncryptor`:
     let challenge_password = "chellange pazzw0rd";
-    let key_encryptor = Aes128CbcPwriEncryptor::new(challenge_password.as_bytes());
+    let key_encryptor =
+        Aes128CbcPwriEncryptor::new(challenge_password.as_bytes(), &mut the_one_and_only_rng);
 
     // Create recipient info
     let recipient_info_builder = PasswordRecipientInfoBuilder::new(key_encryptor).unwrap();
 
-    let mut the_one_and_only_rng = OsRng;
     let mut builder = EnvelopedDataBuilder::new(
         None,
         "Arbitrary unencrypted content".as_bytes(),
