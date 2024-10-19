@@ -49,6 +49,10 @@ use zeroize::Zeroize;
 mod kari;
 mod utils;
 
+// Exports
+pub use kari::{EcKeyEncryptionInfo, KeyAgreeRecipientInfoBuilder, KeyAgreementAlgorithm};
+pub use utils::kw::KeyWrapAlgorithm;
+
 /// Error type
 #[derive(Debug)]
 #[non_exhaustive]
@@ -690,64 +694,6 @@ where
             key_enc_alg,
             enc_key,
         }))
-    }
-}
-
-/// Builds a `KeyAgreeRecipientInfo` according to RFC 5652 § 6.
-/// This type uses key agreement:  the recipient's public key and the sender's
-/// private key are used to generate a pairwise symmetric key, then
-/// the content-encryption key is encrypted in the pairwise symmetric key.
-pub struct KeyAgreeRecipientInfoBuilder<R: ?Sized> {
-    /// A CHOICE with three alternatives specifying the sender's key agreement public key.
-    pub originator: OriginatorIdentifierOrKey,
-    /// Optional information which helps generating different keys every time.
-    pub ukm: Option<UserKeyingMaterial>,
-    /// Encryption algorithm to be used for key encryption
-    pub key_enc_alg: AlgorithmIdentifierOwned,
-    _rng: PhantomData<R>,
-}
-
-impl<R> KeyAgreeRecipientInfoBuilder<R> {
-    /// Creates a `KeyAgreeRecipientInfoBuilder`
-    pub fn new(
-        originator: OriginatorIdentifierOrKey,
-        ukm: Option<UserKeyingMaterial>,
-        key_enc_alg: AlgorithmIdentifierOwned,
-    ) -> Result<Self> {
-        Ok(KeyAgreeRecipientInfoBuilder {
-            originator,
-            ukm,
-            key_enc_alg,
-            _rng: PhantomData,
-        })
-    }
-}
-
-impl<R: ?Sized> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R>
-where
-    R: CryptoRng,
-{
-    type Rng = R;
-
-    /// Returns the RecipientInfoType
-    fn recipient_info_type(&self) -> RecipientInfoType {
-        RecipientInfoType::Kari
-    }
-
-    /// Returns the `CMSVersion` for this `RecipientInfo`
-    fn recipient_info_version(&self) -> CmsVersion {
-        CmsVersion::V3
-    }
-
-    /// Build a `KeyAgreeRecipientInfoBuilder`. See RFC 5652 § 6.2.1
-    fn build_with_rng(
-        &mut self,
-        _content_encryption_key: &[u8],
-        _rng: &mut Self::Rng,
-    ) -> Result<RecipientInfo> {
-        Err(Error::Builder(String::from(
-            "Building KeyAgreeRecipientInfo is not implemented, yet.",
-        )))
     }
 }
 
