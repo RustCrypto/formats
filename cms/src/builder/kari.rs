@@ -14,6 +14,8 @@ use super::{
 };
 
 // Crate imports
+#[cfg(doc)]
+use crate::enveloped_data::EnvelopedData;
 use crate::{
     content_info::CmsVersion,
     enveloped_data::{
