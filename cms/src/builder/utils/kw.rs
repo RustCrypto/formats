@@ -5,7 +5,7 @@
 
 use alloc::{string::String, vec::Vec};
 
-use crate::builder::{Error, Result};
+use crate::builder::{ContentEncryptionAlgorithm, Error, Result};
 use aes_kw::Kek;
 use const_oid::ObjectIdentifier;
 use der::Any;
@@ -37,7 +37,7 @@ use spki::AlgorithmIdentifierOwned;
 ///
 /// [RFC 5753 Section 8]: https://datatracker.ietf.org/doc/html/rfc5753#section-8
 /// [RFC 5753 Section 7.1.5]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.1.5
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum KeyWrapAlgorithm {
     /// id-aes128-wrap
     Aes128,
@@ -126,6 +126,18 @@ impl From<KeyWrapAlgorithm> for AlgorithmIdentifierOwned {
         Self {
             oid: kw_algo.oid(),
             parameters: kw_algo.parameters(),
+        }
+    }
+}
+impl From<ContentEncryptionAlgorithm> for KeyWrapAlgorithm {
+    /// Convert a `ContentEncryptionAlgorithm` to a `KeyWrapAlgorithm`.
+    ///
+    /// Conversion is done matching encryption strength.
+    fn from(ce_algo: ContentEncryptionAlgorithm) -> Self {
+        match ce_algo {
+            ContentEncryptionAlgorithm::Aes128Cbc => Self::Aes128,
+            ContentEncryptionAlgorithm::Aes192Cbc => Self::Aes192,
+            ContentEncryptionAlgorithm::Aes256Cbc => Self::Aes256,
         }
     }
 }
@@ -344,6 +356,21 @@ mod tests {
                 parameters: None,
             }
         )
+    }
+    #[test]
+    fn test_keywrapalgorithm_from_contentencryptionalgorithm() {
+        assert_eq!(
+            KeyWrapAlgorithm::from(ContentEncryptionAlgorithm::Aes128Cbc),
+            KeyWrapAlgorithm::Aes128
+        );
+        assert_eq!(
+            KeyWrapAlgorithm::from(ContentEncryptionAlgorithm::Aes192Cbc),
+            KeyWrapAlgorithm::Aes192
+        );
+        assert_eq!(
+            KeyWrapAlgorithm::from(ContentEncryptionAlgorithm::Aes256Cbc),
+            KeyWrapAlgorithm::Aes256
+        );
     }
 
     #[test]
