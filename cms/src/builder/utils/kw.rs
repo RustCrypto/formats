@@ -222,7 +222,7 @@ impl From<KeyWrapper> for Vec<u8> {
 /// - Aes192
 /// - Aes256
 ///
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum WrappingKey {
     /// id-aes128-wrap
     Aes128([u8; 16]),
@@ -329,9 +329,6 @@ mod tests {
         assert_eq!(KeyWrapAlgorithm::Aes192.key_size_in_bits(), 192);
         assert_eq!(KeyWrapAlgorithm::Aes256.key_size_in_bits(), 256);
     }
-
-    #[test]
-    fn test_wrappingkey_from_keywrapalgorithm() {}
 
     #[test]
     fn test_algorithmidentifierowned_from_keywrapalgorithm() {
@@ -489,6 +486,22 @@ mod tests {
         let vec = Vec::from(key_wrapper);
         assert_eq!(vec.len(), 40);
         assert_eq!(vec[0], 0);
+    }
+
+    #[test]
+    fn test_wrappingkey_from_keywrapalgorithm() {
+        assert_eq!(
+            WrappingKey::from(&KeyWrapAlgorithm::Aes128),
+            WrappingKey::Aes128([0u8; 16])
+        );
+        assert_eq!(
+            WrappingKey::from(&KeyWrapAlgorithm::Aes192),
+            WrappingKey::Aes192([0u8; 24])
+        );
+        assert_eq!(
+            WrappingKey::from(&KeyWrapAlgorithm::Aes256),
+            WrappingKey::Aes256([0u8; 32])
+        );
     }
 
     #[test]
