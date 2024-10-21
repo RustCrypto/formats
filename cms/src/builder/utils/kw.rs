@@ -154,7 +154,7 @@ impl From<ContentEncryptionAlgorithm> for KeyWrapAlgorithm {
 /// - yield the inner wrapping-key as a mutable reference (e.g. to use with a KDF)
 /// - convert to Vec<u8> to obtain Owned data to the wrapped key
 #[derive(Debug, Clone, Copy)]
-pub(in crate::builder) struct KeyWrapper {
+pub struct KeyWrapper {
     /// Wrapping key
     wrapping_key: WrappingKey,
     /// Wrapped key

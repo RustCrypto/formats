@@ -8,9 +8,8 @@
 
 // Super imports
 use super::{
-    utils::{try_ansi_x963_kdf, HashDigest, KeyWrapper},
-    AlgorithmIdentifierOwned, CryptoRngCore, KeyWrapAlgorithm, RecipientInfoBuilder,
-    RecipientInfoType, Result, UserKeyingMaterial,
+    utils::KeyWrapper, AlgorithmIdentifierOwned, CryptoRngCore, KeyWrapAlgorithm,
+    RecipientInfoBuilder, RecipientInfoType, Result, UserKeyingMaterial,
 };
 
 // Crate imports
@@ -25,21 +24,25 @@ use crate::{
 };
 
 // Internal imports
-use const_oid::{AssociatedOid, ObjectIdentifier};
+use const_oid::{db::rfc5753, AssociatedOid, ObjectIdentifier};
 use der::{
     asn1::{BitString, OctetString},
     Any, Decode, Encode, Sequence,
 };
 
+// Core imports
+use core::marker::PhantomData;
+
 // Alloc imports
-use alloc::{vec, vec::Vec};
+use alloc::{string::String, vec, vec::Vec};
 
 // RustCrypto imports
+use digest::{Digest, FixedOutputReset};
 use elliptic_curve::{
-    ecdh::EphemeralSecret,
+    ecdh::{EphemeralSecret, SharedSecret},
     point::PointCompression,
     sec1::{FromEncodedPoint, ModulusSize, ToEncodedPoint},
-    AffinePoint, CurveArithmetic, FieldBytesSize, PublicKey,
+    AffinePoint, Curve, CurveArithmetic, FieldBytesSize, PublicKey,
 };
 
 /// The `EccCmsSharedInfo` type is defined in [RFC 5753 Section 7.2].
@@ -96,46 +99,61 @@ pub struct EccCmsSharedInfo {
 ///
 /// [RFC 5753 Section 7.1.4]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.1.4
 /// [RFC 5753 Section 8]: https://datatracker.ietf.org/doc/html/rfc5753#section-8
-#[allow(clippy::enum_variant_names)]
-#[derive(Clone, Copy)]
-pub enum KeyAgreementAlgorithm {
-    /// dhSinglePass-stdDH-sha224kdf-scheme
-    SinglePassStdDhSha224Kdf,
-    /// dhSinglePass-stdDH-sha256kdf-scheme
-    SinglePassStdDhSha256Kdf,
-    /// dhSinglePass-stdDH-sha384kdf-scheme
-    SinglePassStdDhSha384Kdf,
-    /// dhSinglePass-stdDH-sh512df-scheme
-    SinglePassStdDhSha512Kdf,
+pub trait KeyAgreementAlgorithm {
+    /// Compute a shared key with the provided parameters
+    fn kdf<C>(
+        secret: &SharedSecret<C>,
+        shared_info: &EccCmsSharedInfo,
+        key_wrapper: &mut KeyWrapper,
+    ) -> Result<()>
+    where
+        C: Curve;
 }
-impl KeyAgreementAlgorithm {
-    /// Return the OID of the algorithm.
-    fn oid(&self) -> ObjectIdentifier {
-        match self {
-            Self::SinglePassStdDhSha224Kdf => {
-                const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME
-            }
-            Self::SinglePassStdDhSha256Kdf => {
-                const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME
-            }
-            Self::SinglePassStdDhSha384Kdf => {
-                const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME
-            }
-            Self::SinglePassStdDhSha512Kdf => {
-                const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME
-            }
-        }
+
+/// Support for EnvelopedData with the ephemeral-static ECDH cofactor primitive
+pub struct DhSinglePassStdDhKdf<D> {
+    digest: PhantomData<D>,
+}
+
+impl<D> KeyAgreementAlgorithm for DhSinglePassStdDhKdf<D>
+where
+    D: Digest + FixedOutputReset,
+{
+    fn kdf<C>(
+        secret: &SharedSecret<C>,
+        shared_info: &EccCmsSharedInfo,
+        key_wrapper: &mut KeyWrapper,
+    ) -> Result<()>
+    where
+        C: Curve,
+    {
+        let shared_info_der = shared_info.to_der()?;
+        let secret_bytes = secret.raw_secret_bytes();
+
+        ansi_x963_kdf::derive_key_into::<D>(&secret_bytes, &shared_info_der, key_wrapper.as_mut())
+            .map_err(|_| {
+                super::Error::Builder(String::from(
+                    "Could not generate a shared secret via ansi-x9.63-kdf SHA-224",
+                ))
+            })?;
+        Ok(())
     }
 }
-impl From<&KeyAgreementAlgorithm> for HashDigest {
-    fn from(ka_algo: &KeyAgreementAlgorithm) -> Self {
-        match ka_algo {
-            KeyAgreementAlgorithm::SinglePassStdDhSha224Kdf => Self::Sha224,
-            KeyAgreementAlgorithm::SinglePassStdDhSha256Kdf => Self::Sha256,
-            KeyAgreementAlgorithm::SinglePassStdDhSha384Kdf => Self::Sha384,
-            KeyAgreementAlgorithm::SinglePassStdDhSha512Kdf => Self::Sha512,
-        }
-    }
+
+impl AssociatedOid for DhSinglePassStdDhKdf<sha2::Sha224> {
+    const OID: ObjectIdentifier = rfc5753::DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME;
+}
+
+impl AssociatedOid for DhSinglePassStdDhKdf<sha2::Sha256> {
+    const OID: ObjectIdentifier = rfc5753::DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME;
+}
+
+impl AssociatedOid for DhSinglePassStdDhKdf<sha2::Sha384> {
+    const OID: ObjectIdentifier = rfc5753::DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME;
+}
+
+impl AssociatedOid for DhSinglePassStdDhKdf<sha2::Sha512> {
+    const OID: ObjectIdentifier = rfc5753::DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME;
 }
 
 /// Contains information required to encrypt the content encryption key with a method based on ECC key agreement
@@ -173,10 +191,11 @@ where
 /// This type uses key agreement:  the recipient's public key and the sender's
 /// private key are used to generate a pairwise symmetric key, then
 /// the content-encryption key is encrypted in the pairwise symmetric key.
-pub struct KeyAgreeRecipientInfoBuilder<'a, R, C>
+pub struct KeyAgreeRecipientInfoBuilder<'a, R, C, KA>
 where
     R: CryptoRngCore,
     C: CurveArithmetic,
+    KA: KeyAgreementAlgorithm,
 {
     /// Optional information which helps generating different keys every time.
     pub ukm: Option<UserKeyingMaterial>,
@@ -185,40 +204,41 @@ where
     /// Recipient key info
     pub eckey_encryption_info: EcKeyEncryptionInfo<C>,
     /// Content encryption algorithm
-    pub key_agreement_algorithm: KeyAgreementAlgorithm,
-    /// Content encryption algorithm
     pub key_wrap_algorithm: KeyWrapAlgorithm,
+    /// Content encryption algorithm
+    key_agreement_algorithm: PhantomData<KA>,
     /// Rng
     rng: &'a mut R,
 }
 
-impl<'a, R, C> KeyAgreeRecipientInfoBuilder<'a, R, C>
+impl<'a, R, C, KA> KeyAgreeRecipientInfoBuilder<'a, R, C, KA>
 where
     R: CryptoRngCore,
     C: CurveArithmetic,
+    KA: KeyAgreementAlgorithm,
 {
     /// Creates a `KeyAgreeRecipientInfoBuilder`
     pub fn new(
         ukm: Option<UserKeyingMaterial>,
         rid: KeyAgreeRecipientIdentifier,
         eckey_encryption_info: EcKeyEncryptionInfo<C>,
-        key_agreement_algorithm: KeyAgreementAlgorithm,
         key_wrap_algorithm: KeyWrapAlgorithm,
         rng: &'a mut R,
-    ) -> Result<KeyAgreeRecipientInfoBuilder<'a, R, C>> {
+    ) -> Result<Self> {
         Ok(KeyAgreeRecipientInfoBuilder {
             ukm,
             eckey_encryption_info,
-            key_agreement_algorithm,
             key_wrap_algorithm,
             rid,
+            key_agreement_algorithm: PhantomData,
             rng,
         })
     }
 }
-impl<'a, R, C> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<'a, R, C>
+impl<'a, R, C, KA> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<'a, R, C, KA>
 where
     R: CryptoRngCore,
+    KA: KeyAgreementAlgorithm + AssociatedOid,
     C: CurveArithmetic + AssociatedOid + PointCompression,
     AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
     FieldBytesSize<C>: ModulusSize,
@@ -265,8 +285,6 @@ where
                 // Compute a shared secret with recipient public key. Non-uniformly random, but will be used as input for KDF later.
                 let non_uniformly_random_shared_secret =
                     ephemeral_secret.diffie_hellman(&recipient_public_key);
-                let non_uniformly_random_shared_secret_bytes =
-                    non_uniformly_random_shared_secret.raw_secret_bytes();
 
                 // Generate shared info for KDF
                 // As per https://datatracker.ietf.org/doc/html/rfc5753#section-7.2"
@@ -304,19 +322,16 @@ where
                     entity_u_info,
                     supp_pub_info: OctetString::new(key_wrap_algo_keysize_bits_in_be_bytes)?,
                 };
-                let shared_info_der = shared_info.to_der()?;
 
                 // Init a wrapping key (KEK) based on KeyWrapAlgorithm and on CEK (i.e. key to wrap) size
                 let mut key_wrapper =
                     KeyWrapper::try_new(&self.key_wrap_algorithm, content_encryption_key.len())?;
 
                 // Derive the Key Encryption Key (KEK) from Shared Secret using ANSI X9.63 KDF
-                let digest = HashDigest::from(&self.key_agreement_algorithm);
-                try_ansi_x963_kdf(
-                    non_uniformly_random_shared_secret_bytes.as_slice(),
-                    &shared_info_der,
+                KA::kdf(
+                    &non_uniformly_random_shared_secret,
+                    &shared_info,
                     &mut key_wrapper,
-                    &digest,
                 )?;
 
                 // Wrap the Content Encryption Key (CEK) with the KEK
@@ -328,7 +343,7 @@ where
                     ephemeral_public_key_encoded_point,
                     AlgorithmIdentifierOwned::from(&self.eckey_encryption_info),
                     AlgorithmIdentifierOwned {
-                        oid: self.key_agreement_algorithm.oid(),
+                        oid: KA::OID,
                         parameters: Some(Any::from_der(&key_wrap_algorithm_der)?),
                     },
                 )
@@ -385,40 +400,20 @@ mod tests {
     #[test]
     fn test_keyagreementalgorithm_oid() {
         assert_eq!(
-            KeyAgreementAlgorithm::SinglePassStdDhSha224Kdf.oid(),
-            const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME
+            DhSinglePassStdDhKdf::<sha2::Sha224>::OID,
+            rfc5753::DH_SINGLE_PASS_STD_DH_SHA_224_KDF_SCHEME
         );
         assert_eq!(
-            KeyAgreementAlgorithm::SinglePassStdDhSha256Kdf.oid(),
-            const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME
+            DhSinglePassStdDhKdf::<sha2::Sha256>::OID,
+            rfc5753::DH_SINGLE_PASS_STD_DH_SHA_256_KDF_SCHEME
         );
         assert_eq!(
-            KeyAgreementAlgorithm::SinglePassStdDhSha384Kdf.oid(),
-            const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME
+            DhSinglePassStdDhKdf::<sha2::Sha384>::OID,
+            rfc5753::DH_SINGLE_PASS_STD_DH_SHA_384_KDF_SCHEME
         );
         assert_eq!(
-            KeyAgreementAlgorithm::SinglePassStdDhSha512Kdf.oid(),
-            const_oid::db::rfc5753::DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME
-        );
-    }
-
-    #[test]
-    fn test_from_keyagreementalgorithm_for_hashdigest() {
-        assert_eq!(
-            HashDigest::from(&KeyAgreementAlgorithm::SinglePassStdDhSha224Kdf),
-            HashDigest::Sha224
-        );
-        assert_eq!(
-            HashDigest::from(&KeyAgreementAlgorithm::SinglePassStdDhSha256Kdf),
-            HashDigest::Sha256
-        );
-        assert_eq!(
-            HashDigest::from(&KeyAgreementAlgorithm::SinglePassStdDhSha384Kdf),
-            HashDigest::Sha384
-        );
-        assert_eq!(
-            HashDigest::from(&KeyAgreementAlgorithm::SinglePassStdDhSha512Kdf),
-            HashDigest::Sha512
+            DhSinglePassStdDhKdf::<sha2::Sha512>::OID,
+            rfc5753::DH_SINGLE_PASS_STD_DH_SHA_512_KDF_SCHEME
         );
     }
 

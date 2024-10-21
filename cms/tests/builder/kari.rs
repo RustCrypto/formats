@@ -1,7 +1,7 @@
 use cms::{
     builder::{
-        ContentEncryptionAlgorithm, EcKeyEncryptionInfo, EnvelopedDataBuilder,
-        KeyAgreeRecipientInfoBuilder, KeyAgreementAlgorithm, KeyWrapAlgorithm,
+        ContentEncryptionAlgorithm, DhSinglePassStdDhKdf, EcKeyEncryptionInfo,
+        EnvelopedDataBuilder, KeyAgreeRecipientInfoBuilder, KeyWrapAlgorithm,
     },
     cert::IssuerAndSerialNumber,
     content_info::ContentInfo,
@@ -41,15 +41,15 @@ fn test_build_enveloped_data_ec() {
 
     // KARI builder
     let mut rng = OsRng;
-    let kari_builder = KeyAgreeRecipientInfoBuilder::new(
-        None,
-        key_agreement_recipient_identifier,
-        EcKeyEncryptionInfo::Ec(recipient_public_key),
-        KeyAgreementAlgorithm::SinglePassStdDhSha256Kdf,
-        KeyWrapAlgorithm::Aes128,
-        &mut rng,
-    )
-    .expect("Could not create a KeyAgreeRecipientInfoBuilder");
+    let kari_builder =
+        KeyAgreeRecipientInfoBuilder::<_, _, DhSinglePassStdDhKdf<sha2::Sha256>>::new(
+            None,
+            key_agreement_recipient_identifier,
+            EcKeyEncryptionInfo::Ec(recipient_public_key),
+            KeyWrapAlgorithm::Aes128,
+            &mut rng,
+        )
+        .expect("Could not create a KeyAgreeRecipientInfoBuilder");
 
     // Enveloped data builder
     let mut rng = OsRng;

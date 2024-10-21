@@ -50,8 +50,10 @@ mod kari;
 mod utils;
 
 // Exports
-pub use kari::{EcKeyEncryptionInfo, KeyAgreeRecipientInfoBuilder, KeyAgreementAlgorithm};
-pub use utils::kw::KeyWrapAlgorithm;
+pub use kari::{
+    DhSinglePassStdDhKdf, EcKeyEncryptionInfo, KeyAgreeRecipientInfoBuilder, KeyAgreementAlgorithm,
+};
+pub use utils::kw::{KeyWrapAlgorithm, KeyWrapper};
 
 /// Error type
 #[derive(Debug)]
