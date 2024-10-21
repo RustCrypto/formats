@@ -33,7 +33,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38e4da00d9978020ddaa556c1747cfcafc3f375cfadb109acfe8b752cfc373bf"
 dependencies = [
  "cfg-if",
- "cipher 0.5.0-pre.7",
+ "cipher",
  "cpufeatures",
 ]
 
@@ -43,8 +43,8 @@ version = "0.11.0-pre.2"
 source = "git+https://github.com/RustCrypto/AEADs.git#976052da8e274544f0cd6b292f38a0d0a2934849"
 dependencies = [
  "aead",
- "aes 0.9.0-pre.2",
- "cipher 0.5.0-pre.7",
+ "aes",
+ "cipher",
  "ctr",
  "ghash",
  "subtle",
@@ -52,11 +52,11 @@ dependencies = [
 
 [[package]]
 name = "aes-kw"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69fa2b352dcefb5f7f3a5fb840e02665d311d878955380515e4fd50095dd3d8c"
+version = "0.3.0-pre"
+source = "git+https://github.com/RustCrypto/key-wraps.git#c9437ce4933822252863fd64fc06c631405ad8b1"
 dependencies = [
- "aes 0.8.4",
+ "aes",
+ "const-oid",
 ]
 
 [[package]]
@@ -226,7 +226,7 @@ name = "cbc"
 version = "0.2.0-pre.2"
 source = "git+https://github.com/RustCrypto/block-modes.git#3ec1c8191dea30def40c033513bbc8bdb3a9cd78"
 dependencies = [
- "cipher 0.5.0-pre.7",
+ "cipher",
 ]
 
 [[package]]
@@ -268,8 +268,8 @@ version = "0.5.0-pre.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "276974d2acb7cf592603150941fc1ff6442acdeb1dc653ac2825928f4703c131"
 dependencies = [
- "crypto-common 0.2.0-rc.1",
- "inout 0.2.0-rc.3",
+ "crypto-common",
+ "inout",
 ]
 
 [[package]]
@@ -318,7 +318,7 @@ dependencies = [
  "ansi-x963-kdf",
  "async-signature",
  "cbc",
- "cipher 0.5.0-pre.7",
+ "cipher",
  "const-oid",
  "der",
  "ecdsa",
@@ -446,7 +446,7 @@ name = "ctr"
 version = "0.10.0-pre.2"
 source = "git+https://github.com/RustCrypto/block-modes.git#3ec1c8191dea30def40c033513bbc8bdb3a9cd78"
 dependencies = [
- "cipher 0.5.0-pre.7",
+ "cipher",
 ]
 
 [[package]]
@@ -501,7 +501,7 @@ version = "0.9.0-pre.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fee752f2df22a55f0f703c8eabfeb36990559e1b836263e35580a4186e1cca0a"
 dependencies = [
- "cipher 0.5.0-pre.7",
+ "cipher",
 ]
 
 [[package]]
@@ -512,7 +512,7 @@ checksum = "6c478574b20020306f98d61c8ca3322d762e1ff08117422ac6106438605ea516"
 dependencies = [
  "block-buffer",
  "const-oid",
- "crypto-common 0.2.0-rc.1",
+ "crypto-common",
  "subtle",
 ]
 
@@ -640,16 +640,6 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "slab",
-]
-
-[[package]]
-name = "generic-array"
-version = "0.14.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
-dependencies = [
- "typenum",
- "version_check",
 ]
 
 [[package]]
@@ -999,7 +989,7 @@ dependencies = [
 name = "pkcs5"
 version = "0.8.0-rc.3"
 dependencies = [
- "aes 0.9.0-pre.2",
+ "aes",
  "aes-gcm",
  "cbc",
  "der",
@@ -1356,7 +1346,7 @@ version = "0.11.0-pre.2"
 source = "git+https://github.com/RustCrypto/stream-ciphers.git#94f861690846f3237e103f8c67ff3c9e4cbda28a"
 dependencies = [
  "cfg-if",
- "cipher 0.5.0-pre.7",
+ "cipher",
 ]
 
 [[package]]
@@ -1733,7 +1723,7 @@ version = "0.6.0-rc.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3517d72c5ca6d60f9f2e85d2c772e2652830062a685105a528d19dd823cf87d5"
 dependencies = [
- "crypto-common 0.2.0-rc.1",
+ "crypto-common",
  "subtle",
 ]
 
