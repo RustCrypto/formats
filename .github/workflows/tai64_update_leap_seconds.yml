@@ -1,0 +1,27 @@
+name: Update Leap Seconds
+on:
+  schedule:
+    - cron: 0 0 * * 1
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update leap seconds in code
+        run: |
+          curl -o leap_seconds_list -L https://data.iana.org/time-zones/data/leap-seconds.list
+          number=$(grep -v '^#' leap_seconds_list | tail -n1 | awk '{print $2}')
+          sed -i "s/\(1970-01-01 00:00:\)[0-9]\+ TAI/\1${number} TAI/" tai64/src/lib.rs
+          sed -i -E 's/(Self\()[0-9]+ \+ \(1 << 62\)\)/\1'"${number}"' + (1 << 62))/' tai64/src/lib.rs
+          rm leap_seconds_list
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: update leap seconds in tai64
+          title: Update leap seconds in tai64
+          body: 'Following this source: https://data.iana.org/time-zones/data/leap-seconds.list, the leap seconds counter has been updated.'
+          branch: update-leap-seconds
+          base: master
