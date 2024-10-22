@@ -25,3 +25,4 @@ jobs:
           body: 'Following this source: https://data.iana.org/time-zones/data/leap-seconds.list, the leap seconds counter has been updated.'
           branch: update-leap-seconds
           base: master
+          delete-branch: true
