@@ -8,9 +8,8 @@
 use crate::{EcParameters, Error, Result};
 use core::fmt;
 use der::{
-    asn1::{BitStringRef, ContextSpecific, ContextSpecificRef, OctetStringRef},
-    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, TagMode,
-    TagNumber, Writer,
+    asn1::{BitStringRef, ContextSpecificExplicit, ContextSpecificExplicitRef, OctetStringRef},
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, Writer,
 };
 
 #[cfg(all(feature = "alloc", feature = "zeroize"))]
@@ -31,10 +30,10 @@ use der::pem::PemLabel;
 const VERSION: u8 = 1;
 
 /// Context-specific tag number for the elliptic curve parameters.
-const EC_PARAMETERS_TAG: TagNumber = TagNumber::new(0);
+const EC_PARAMETERS_TAG: u16 = 0;
 
 /// Context-specific tag number for the public key.
-const PUBLIC_KEY_TAG: TagNumber = TagNumber::new(1);
+const PUBLIC_KEY_TAG: u16 = 1;
 
 /// SEC1 elliptic curve private key.
 ///
@@ -71,25 +70,19 @@ pub struct EcPrivateKey<'a> {
 }
 
 impl<'a> EcPrivateKey<'a> {
-    fn context_specific_parameters(&self) -> Option<ContextSpecificRef<'_, EcParameters>> {
-        self.parameters.as_ref().map(|params| ContextSpecificRef {
-            tag_number: EC_PARAMETERS_TAG,
-            tag_mode: TagMode::Explicit,
-            value: params,
-        })
+    fn context_specific_parameters(
+        &self,
+    ) -> Option<ContextSpecificExplicitRef<'_, EC_PARAMETERS_TAG, EcParameters>> {
+        self.parameters
+            .as_ref()
+            .map(|params| ContextSpecificExplicitRef { value: params })
     }
 
     fn context_specific_public_key(
         &self,
-    ) -> der::Result<Option<ContextSpecific<BitStringRef<'a>>>> {
+    ) -> der::Result<Option<ContextSpecificExplicit<PUBLIC_KEY_TAG, BitStringRef<'a>>>> {
         self.public_key
-            .map(|pk| {
-                BitStringRef::from_bytes(pk).map(|value| ContextSpecific {
-                    tag_number: PUBLIC_KEY_TAG,
-                    tag_mode: TagMode::Explicit,
-                    value,
-                })
-            })
+            .map(|pk| BitStringRef::from_bytes(pk).map(|value| ContextSpecificExplicit { value }))
             .transpose()
     }
 }
@@ -104,9 +97,19 @@ impl<'a> DecodeValue<'a> for EcPrivateKey<'a> {
             }
 
             let private_key = OctetStringRef::decode(reader)?.as_bytes();
-            let parameters = reader.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
-            let public_key = reader
-                .context_specific::<BitStringRef<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?
+
+            let parameters =
+                ContextSpecificExplicit::<EC_PARAMETERS_TAG, EcParameters>::decode_skipping(
+                    reader,
+                )?;
+            let parameters = parameters.map(|p| p.value);
+
+            let public_key =
+                ContextSpecificExplicit::<PUBLIC_KEY_TAG, BitStringRef<'_>>::decode_skipping(
+                    reader,
+                )?;
+            let public_key = public_key
+                .map(|key| key.value)
                 .map(|bs| bs.as_bytes().ok_or_else(|| Tag::BitString.value_error()))
                 .transpose()?;
 
