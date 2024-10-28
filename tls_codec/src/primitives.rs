@@ -7,7 +7,6 @@ use crate::{DeserializeBytes, SerializeBytes, U24};
 use super::{Deserialize, Error, Serialize, Size};
 
 use core::marker::PhantomData;
-use std::boxed::Box;
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
@@ -373,39 +372,48 @@ impl<T> SerializeBytes for PhantomData<T> {
     }
 }
 
-impl<T: Size> Size for Box<T> {
-    #[inline(always)]
-    fn tls_serialized_len(&self) -> usize {
-        self.as_ref().tls_serialized_len()
-    }
-}
+#[cfg(feature = "std")]
+pub mod box_impls {
+    use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size};
 
-impl<T: Serialize> Serialize for Box<T> {
-    #[cfg(feature = "std")]
-    #[inline(always)]
-    fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-        self.as_ref().tls_serialize(writer)
-    }
-}
+    use std::{
+        boxed::Box,
+        io::{Read, Write},
+        vec::Vec,
+    };
 
-impl<T: SerializeBytes> SerializeBytes for Box<T> {
-    #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        self.as_ref().tls_serialize()
+    impl<T: Size> Size for Box<T> {
+        #[inline(always)]
+        fn tls_serialized_len(&self) -> usize {
+            self.as_ref().tls_serialized_len()
+        }
     }
-}
 
-impl<T: Deserialize> Deserialize for Box<T> {
-    #[cfg(feature = "std")]
-    #[inline(always)]
-    fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-        T::tls_deserialize(bytes).map(Box::new)
+    impl<T: Serialize> Serialize for Box<T> {
+        #[inline(always)]
+        fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            self.as_ref().tls_serialize(writer)
+        }
     }
-}
 
-impl<T: DeserializeBytes> DeserializeBytes for Box<T> {
-    #[inline(always)]
-    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        T::tls_deserialize_bytes(bytes).map(|(v, r)| (Box::new(v), r))
+    impl<T: SerializeBytes> SerializeBytes for Box<T> {
+        #[inline(always)]
+        fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+            self.as_ref().tls_serialize()
+        }
+    }
+
+    impl<T: Deserialize> Deserialize for Box<T> {
+        #[inline(always)]
+        fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
+            T::tls_deserialize(bytes).map(Box::new)
+        }
+    }
+
+    impl<T: DeserializeBytes> DeserializeBytes for Box<T> {
+        #[inline(always)]
+        fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+            T::tls_deserialize_bytes(bytes).map(|(v, r)| (Box::new(v), r))
+        }
     }
 }
