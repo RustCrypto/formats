@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.0.0 (2024-10-29)
+### Changed
+- bump zeroize from 1.4.2 to 1.4.3 ([#187])
+- Lint improvements ([#824])
+- bump zeroize from 1.5.7 to 1.6.0 ([#956])
+- bump zeroize from 1.7.0 to 1.8.1 ([#1419])
+
+### Fixed
+- fix TAI offset and verify with GH Action ([#1583])
+
+[#187]: https://github.com/RustCrypto/formats/pull/187
+[#824]: https://github.com/RustCrypto/formats/pull/824
+[#956]: https://github.com/RustCrypto/formats/pull/956
+[#1419]: https://github.com/RustCrypto/formats/pull/1419
+[#1583]: https://github.com/RustCrypto/formats/pull/1583
+
 ## 4.0.0 (2021-11-04)
 ### Changed
 - Upgrade to Rust 2021 edition; MSRV 1.56+

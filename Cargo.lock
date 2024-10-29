@@ -1626,7 +1626,7 @@ dependencies = [
 
 [[package]]
 name = "tai64"
-version = "5.0.0-pre"
+version = "5.0.0"
 dependencies = [
  "serde",
  "zeroize",
