@@ -1,7 +1,6 @@
 //! Arcs are integer values which exist within an OID's hierarchy.
 
 use crate::{Error, Result};
-use core::mem::size_of;
 
 #[cfg(doc)]
 use crate::ObjectIdentifier;
@@ -25,7 +24,7 @@ pub(crate) const ARC_MAX_FIRST: Arc = 2;
 pub(crate) const ARC_MAX_SECOND: Arc = 39;
 
 /// Maximum number of bytes supported in an arc.
-const ARC_MAX_BYTES: usize = size_of::<Arc>();
+const ARC_MAX_BYTES: usize = (Arc::BITS as usize).div_ceil(7);
 
 /// Maximum value of the last byte in an arc.
 const ARC_MAX_LAST_OCTET: u8 = 0b11110000; // Max bytes of leading 1-bits

@@ -49,11 +49,15 @@ impl Parser {
                 }
                 Err(err) => Err(err),
             },
-            // TODO(tarcieri): checked arithmetic
-            #[allow(clippy::arithmetic_side_effects)]
             [byte @ b'0'..=b'9', remaining @ ..] => {
                 let digit = byte.saturating_sub(b'0');
-                self.current_arc = self.current_arc * 10 + digit as Arc;
+                self.current_arc = match self.current_arc.checked_mul(10) {
+                    Some(arc) => match arc.checked_add(digit as Arc) {
+                        Some(arc) => arc,
+                        None => return Err(Error::ArcTooBig),
+                    },
+                    None => return Err(Error::ArcTooBig),
+                };
                 self.parse_bytes(remaining)
             }
             [b'.', remaining @ ..] => {
