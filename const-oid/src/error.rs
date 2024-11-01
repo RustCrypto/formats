@@ -37,6 +37,9 @@ pub enum Error {
     /// OID length is invalid (too short or too long).
     Length,
 
+    /// Repeated `..` characters in input data.
+    RepeatedDot,
+
     /// Trailing `.` character at end of input.
     TrailingDot,
 }
@@ -53,6 +56,7 @@ impl Error {
             Error::DigitExpected { .. } => panic!("OID expected to start with digit"),
             Error::Empty => panic!("OID value is empty"),
             Error::Length => panic!("OID length invalid"),
+            Error::RepeatedDot => panic!("repeated consecutive '..' characters in OID"),
             Error::TrailingDot => panic!("OID ends with invalid trailing '.'"),
         }
     }
@@ -69,6 +73,7 @@ impl fmt::Display for Error {
             }
             Error::Empty => f.write_str("OID value is empty"),
             Error::Length => f.write_str("OID length invalid"),
+            Error::RepeatedDot => f.write_str("repeated consecutive '..' characters in OID"),
             Error::TrailingDot => f.write_str("OID ends with invalid trailing '.'"),
         }
     }
