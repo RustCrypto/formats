@@ -58,3 +58,11 @@ tls_codec_derive = { path = "./tls_codec/derive" }
 x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
+
+# https://github.com/RustCrypto/key-wraps/pull/34
+# https://github.com/RustCrypto/key-wraps/pull/35
+aes-kw = { git = "https://github.com/RustCrypto/key-wraps.git" }
+
+# https://github.com/RustCrypto/KDFs/pull/102
+ansi-x963-kdf = { git = "https://github.com/RustCrypto/KDFs.git" }
+
