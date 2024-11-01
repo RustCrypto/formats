@@ -34,9 +34,9 @@ const EXAMPLE_OID_LARGE_ARC_1_BER: &[u8] = &hex!("0992268993F22C640101");
 const EXAMPLE_OID_LARGE_ARC_1: ObjectIdentifier =
     ObjectIdentifier::new_unwrap(EXAMPLE_OID_LARGE_ARC_1_STR);
 
-/// Example OID value with a large arc
-const EXAMPLE_OID_LARGE_ARC_2_STR: &str = "1.2.840.10045.4.3.4.1111111111";
-const EXAMPLE_OID_LARGE_ARC_2_BER: &[u8] = &hex!("2A8648CE3D0403048491E8EB47");
+/// Example OID value with a large arc (namely `u32::MAX`, the edge case)
+const EXAMPLE_OID_LARGE_ARC_2_STR: &str = "1.2.4294967295";
+const EXAMPLE_OID_LARGE_ARC_2_BER: &[u8] = &hex!("2A8FFFFFFF7F");
 const EXAMPLE_OID_LARGE_ARC_2: ObjectIdentifier =
     ObjectIdentifier::new_unwrap(crate::EXAMPLE_OID_LARGE_ARC_2_STR);
 
@@ -87,16 +87,11 @@ fn from_bytes() {
     assert_eq!(oid_largearc1.arc(6).unwrap(), 1);
     assert_eq!(oid_largearc1, EXAMPLE_OID_LARGE_ARC_1);
 
-    // 1.2.840.10045.4.3.4.1111111111
+    // 1.2.4294967295
     let oid_largearc2 = ObjectIdentifier::from_bytes(EXAMPLE_OID_LARGE_ARC_2_BER).unwrap();
     assert_eq!(oid_largearc2.arc(0).unwrap(), 1);
     assert_eq!(oid_largearc2.arc(1).unwrap(), 2);
-    assert_eq!(oid_largearc2.arc(2).unwrap(), 840);
-    assert_eq!(oid_largearc2.arc(3).unwrap(), 10045);
-    assert_eq!(oid_largearc2.arc(4).unwrap(), 4);
-    assert_eq!(oid_largearc2.arc(5).unwrap(), 3);
-    assert_eq!(oid_largearc2.arc(6).unwrap(), 4);
-    assert_eq!(oid_largearc2.arc(7).unwrap(), 1111111111);
+    assert_eq!(oid_largearc2.arc(2).unwrap(), 4294967295);
     assert_eq!(oid_largearc2, EXAMPLE_OID_LARGE_ARC_2);
 
     // Empty
@@ -140,6 +135,14 @@ fn from_str() {
     assert_eq!(oid_largearc1.arc(6).unwrap(), 1);
     assert_eq!(oid_largearc1, EXAMPLE_OID_LARGE_ARC_1);
 
+    let oid_largearc2 = EXAMPLE_OID_LARGE_ARC_2_STR
+        .parse::<ObjectIdentifier>()
+        .unwrap();
+    assert_eq!(oid_largearc2.arc(0).unwrap(), 1);
+    assert_eq!(oid_largearc2.arc(1).unwrap(), 2);
+    assert_eq!(oid_largearc2.arc(2).unwrap(), 4294967295);
+    assert_eq!(oid_largearc2, EXAMPLE_OID_LARGE_ARC_2);
+
     // Truncated
     assert_eq!(
         "1.2.840.10045.2.".parse::<ObjectIdentifier>(),
@@ -165,8 +168,16 @@ fn display() {
     assert_eq!(EXAMPLE_OID_1.to_string(), EXAMPLE_OID_1_STR);
     assert_eq!(EXAMPLE_OID_2.to_string(), EXAMPLE_OID_2_STR);
     assert_eq!(
+        EXAMPLE_OID_LARGE_ARC_0.to_string(),
+        EXAMPLE_OID_LARGE_ARC_0_STR
+    );
+    assert_eq!(
         EXAMPLE_OID_LARGE_ARC_1.to_string(),
         EXAMPLE_OID_LARGE_ARC_1_STR
+    );
+    assert_eq!(
+        EXAMPLE_OID_LARGE_ARC_2.to_string(),
+        EXAMPLE_OID_LARGE_ARC_2_STR
     );
 }
 
