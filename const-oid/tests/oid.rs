@@ -242,6 +242,11 @@ fn parse_invalid_second_arc() {
 }
 
 #[test]
+fn parse_invalid_repeat_dots() {
+    assert_eq!(ObjectIdentifier::new("1.2..3.4"), Err(Error::RepeatedDot))
+}
+
+#[test]
 fn parent() {
     let child = oid("1.2.3.4");
     let parent = child.parent().unwrap();
