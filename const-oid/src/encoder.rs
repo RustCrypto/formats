@@ -51,6 +51,7 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
     }
 
     /// Encode an [`Arc`] as base 128 into the internal buffer.
+    #[allow(clippy::panic_in_result_fn)]
     pub(crate) const fn arc(mut self, arc: Arc) -> Result<Self> {
         match self.state {
             State::Initial => {
@@ -61,15 +62,24 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
                 self.state = State::FirstArc(arc);
                 Ok(self)
             }
-            // Ensured not to overflow by `ARC_MAX_SECOND` check
-            #[allow(clippy::arithmetic_side_effects)]
             State::FirstArc(first_arc) => {
                 if arc > ARC_MAX_SECOND {
                     return Err(Error::ArcInvalid { arc });
                 }
 
                 self.state = State::Body;
-                self.bytes[0] = (first_arc * (ARC_MAX_SECOND + 1)) as u8 + arc as u8;
+                self.bytes[0] = match (ARC_MAX_SECOND + 1).checked_mul(first_arc) {
+                    // TODO(tarcieri): use `and_then` when const traits are stable
+                    Some(n) => match n.checked_add(arc) {
+                        Some(byte) => byte as u8,
+                        None => {
+                            // TODO(tarcieri): use `unreachable!`
+                            panic!("overflow prevented by ARC_MAX_SECOND check")
+                        }
+                    },
+                    // TODO(tarcieri): use `unreachable!`
+                    None => panic!("overflow prevented by ARC_MAX_SECOND check"),
+                };
                 self.cursor = 1;
                 Ok(self)
             }
