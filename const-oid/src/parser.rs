@@ -59,6 +59,7 @@ impl Parser {
                     None => 0,
                 };
 
+                // TODO(tarcieri): use `and_then` when const traits are stable
                 self.current_arc = match arc.checked_mul(10) {
                     Some(arc) => match arc.checked_add(digit as Arc) {
                         None => return Err(Error::ArcTooBig),
