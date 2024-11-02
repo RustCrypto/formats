@@ -126,21 +126,29 @@ const fn base128_len(arc: Arc) -> usize {
 /// Split the highest 7-bits of an [`Arc`] from the rest of an arc.
 ///
 /// Returns: `(hi, lo)`
-// TODO(tarcieri): always use checked arithmetic
-#[allow(clippy::arithmetic_side_effects)]
+#[inline]
 const fn split_high_bits(arc: Arc) -> (u8, Arc) {
     if arc < 0x80 {
         return (arc as u8, 0);
     }
 
-    let hi_bit = 32 - arc.leading_zeros();
+    let hi_bit = match 32u32.checked_sub(arc.leading_zeros()) {
+        Some(bit) => bit,
+        None => unreachable!(),
+    };
+
     let hi_bit_mod7 = hi_bit % 7;
-    let upper_bit_pos = hi_bit
-        - if hi_bit > 0 && hi_bit_mod7 == 0 {
-            7
-        } else {
-            hi_bit_mod7
-        };
+    let upper_bit_offset = if hi_bit > 0 && hi_bit_mod7 == 0 {
+        7
+    } else {
+        hi_bit_mod7
+    };
+
+    let upper_bit_pos = match hi_bit.checked_sub(upper_bit_offset) {
+        Some(bit) => bit,
+        None => unreachable!(),
+    };
+
     let upper_bits = arc >> upper_bit_pos;
     let lower_bits = arc ^ (upper_bits << upper_bit_pos);
     (upper_bits as u8, lower_bits)
