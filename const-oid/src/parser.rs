@@ -63,7 +63,7 @@ impl Parser {
                 self.current_arc = match arc.checked_mul(10) {
                     Some(arc) => match arc.checked_add(digit as Arc) {
                         None => return Err(Error::ArcTooBig),
-                        arc => arc,
+                        Some(arc) => Some(arc),
                     },
                     None => return Err(Error::ArcTooBig),
                 };

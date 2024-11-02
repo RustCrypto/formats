@@ -24,7 +24,7 @@ enum State {
     /// Initial state - no arcs yet encoded.
     Initial,
 
-    /// First arc parsed.
+    /// First arc has been supplied and stored as the wrapped [`Arc`].
     FirstArc(Arc),
 
     /// Encoding base 128 body of the OID.
@@ -83,10 +83,7 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
                 self.cursor = 1;
                 Ok(self)
             }
-            State::Body => {
-                let nbytes = base128_len(arc);
-                self.encode_base128(arc, nbytes)
-            }
+            State::Body => self.encode_base128(arc),
         }
     }
 
@@ -104,64 +101,48 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
         Ok(ObjectIdentifier { ber })
     }
 
-    /// Encode a single byte of a Base 128 value.
-    const fn encode_base128(mut self, n: u32, remaining_len: usize) -> Result<Self> {
-        if self.cursor >= MAX_SIZE {
+    /// Encode base 128.
+    const fn encode_base128(mut self, arc: Arc) -> Result<Self> {
+        let nbytes = base128_len(arc);
+        let end_pos = checked_add!(self.cursor, nbytes);
+
+        if end_pos > MAX_SIZE {
             return Err(Error::Length);
         }
 
-        let mask = if remaining_len > 0 { 0b10000000 } else { 0 };
-        let (hi, lo) = split_hi_bits(n);
-        self.bytes[self.cursor] = hi | mask;
-        self.cursor = checked_add!(self.cursor, 1);
-
-        match remaining_len.checked_sub(1) {
-            Some(len) => self.encode_base128(lo, len),
-            None => Ok(self),
+        let mut i = 0;
+        while i < nbytes {
+            // TODO(tarcieri): use `?` when stable in `const fn`
+            self.bytes[self.cursor] = match base128_byte(arc, i, nbytes) {
+                Ok(byte) => byte,
+                Err(e) => return Err(e),
+            };
+            self.cursor = checked_add!(self.cursor, 1);
+            i = checked_add!(i, 1);
         }
+
+        Ok(self)
     }
 }
 
-/// Compute the length - 1 of an arc when encoded in base 128.
+/// Compute the length of an arc when encoded in base 128.
 const fn base128_len(arc: Arc) -> usize {
     match arc {
-        0..=0x7f => 0,
-        0x80..=0x3fff => 1,
-        0x4000..=0x1fffff => 2,
-        0x200000..=0x1fffffff => 3,
-        _ => 4,
+        0..=0x7f => 1,
+        0x80..=0x3fff => 2,
+        0x4000..=0x1fffff => 3,
+        0x200000..=0x1fffffff => 4,
+        _ => 5,
     }
 }
 
-/// Split the highest 7-bits of an [`Arc`] from the rest of an arc.
-///
-/// Returns: `(hi, lo)`
-#[inline]
-const fn split_hi_bits(arc: Arc) -> (u8, Arc) {
-    if arc < 0x80 {
-        return (arc as u8, 0);
-    }
-
-    let hi_bit = match 32u32.checked_sub(arc.leading_zeros()) {
-        Some(bit) => bit,
-        None => unreachable!(),
-    };
-
-    let hi_bit_mod7 = hi_bit % 7;
-    let upper_bit_offset = if hi_bit > 0 && hi_bit_mod7 == 0 {
-        7
-    } else {
-        hi_bit_mod7
-    };
-
-    let upper_bit_pos = match hi_bit.checked_sub(upper_bit_offset) {
-        Some(bit) => bit,
-        None => unreachable!(),
-    };
-
-    let upper_bits = arc >> upper_bit_pos;
-    let lower_bits = arc ^ (upper_bits << upper_bit_pos);
-    (upper_bits as u8, lower_bits)
+/// Compute the big endian base 128 encoding of the given [`Arc`] at the given byte.
+const fn base128_byte(arc: Arc, pos: usize, total: usize) -> Result<u8> {
+    debug_assert!(pos < total);
+    let last_byte = checked_add!(pos, 1) == total;
+    let mask = if last_byte { 0 } else { 0b10000000 };
+    let shift = checked_sub!(checked_sub!(total, pos), 1) * 7;
+    Ok(((arc >> shift) & 0b1111111) as u8 | mask)
 }
 
 #[cfg(test)]
@@ -174,9 +155,14 @@ mod tests {
     const EXAMPLE_OID_BER: &[u8] = &hex!("2A8648CE3D0201");
 
     #[test]
-    fn split_hi_bits_with_gaps() {
-        assert_eq!(super::split_hi_bits(0x3a00002), (0x1d, 0x2));
-        assert_eq!(super::split_hi_bits(0x3a08000), (0x1d, 0x8000));
+    fn base128_byte() {
+        let example_arc = 0x44332211;
+        assert_eq!(super::base128_len(example_arc), 5);
+        assert_eq!(super::base128_byte(example_arc, 0, 5).unwrap(), 0b10000100);
+        assert_eq!(super::base128_byte(example_arc, 1, 5).unwrap(), 0b10100001);
+        assert_eq!(super::base128_byte(example_arc, 2, 5).unwrap(), 0b11001100);
+        assert_eq!(super::base128_byte(example_arc, 3, 5).unwrap(), 0b11000100);
+        assert_eq!(super::base128_byte(example_arc, 4, 5).unwrap(), 0b10001);
     }
 
     #[test]
