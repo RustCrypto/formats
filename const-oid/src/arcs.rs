@@ -26,8 +26,8 @@ pub(crate) const ARC_MAX_SECOND: Arc = 39;
 
 /// Maximum number of bytes supported in an arc.
 ///
-/// Note that OIDs are LEB128 encoded (i.e. base 128), so we must consider how many bytes are
-/// required when each byte can only represent 7-bits of the input.
+/// Note that OIDs are base 128 encoded (with continuation bits), so we must consider how many bytes
+/// are required when each byte can only represent 7-bits of the input.
 const ARC_MAX_BYTES: usize = (Arc::BITS as usize).div_ceil(7);
 
 /// Maximum value of the last byte in an arc.
