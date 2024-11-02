@@ -389,6 +389,8 @@ version = "0.10.0-rc.2"
 dependencies = [
  "arbitrary",
  "hex-literal",
+ "proptest",
+ "regex",
 ]
 
 [[package]]

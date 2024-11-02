@@ -22,6 +22,8 @@ arbitrary = { version = "1.2", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 hex-literal = "0.4"
+proptest = "1"
+regex = "1"
 
 [features]
 db = []
