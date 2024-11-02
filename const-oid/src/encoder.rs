@@ -111,7 +111,7 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
         }
 
         let mask = if remaining_len > 0 { 0b10000000 } else { 0 };
-        let (hi, lo) = split_high_bits(n);
+        let (hi, lo) = split_hi_bits(n);
         self.bytes[self.cursor] = hi | mask;
         self.cursor = checked_add!(self.cursor, 1);
 
@@ -137,7 +137,7 @@ const fn base128_len(arc: Arc) -> usize {
 ///
 /// Returns: `(hi, lo)`
 #[inline]
-const fn split_high_bits(arc: Arc) -> (u8, Arc) {
+const fn split_hi_bits(arc: Arc) -> (u8, Arc) {
     if arc < 0x80 {
         return (arc as u8, 0);
     }
@@ -172,6 +172,12 @@ mod tests {
 
     /// OID `1.2.840.10045.2.1` encoded as ASN.1 BER/DER
     const EXAMPLE_OID_BER: &[u8] = &hex!("2A8648CE3D0201");
+
+    #[test]
+    fn split_hi_bits_with_gaps() {
+        assert_eq!(super::split_hi_bits(0x3a00002), (0x1d, 0x2));
+        assert_eq!(super::split_hi_bits(0x3a08000), (0x1d, 0x8000));
+    }
 
     #[test]
     fn encode() {
