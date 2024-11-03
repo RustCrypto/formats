@@ -38,6 +38,8 @@ pub enum Error {
     Length,
 
     /// Arithmetic overflow (or underflow) errors.
+    ///
+    /// These generally indicate a bug in the `const-oid` crate.
     Overflow,
 
     /// Repeated `..` characters in input data.
