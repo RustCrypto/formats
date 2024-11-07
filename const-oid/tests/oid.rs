@@ -29,52 +29,85 @@ const EXAMPLE_OID_LARGE_ARC_0: ObjectIdentifier =
     ObjectIdentifier::new_unwrap(crate::EXAMPLE_OID_LARGE_ARC_0_STR);
 
 /// Example OID value with a large arc
-const EXAMPLE_OID_LARGE_ARC_1_STR: &str = "0.9.2342.19200300.100.1.1";
-const EXAMPLE_OID_LARGE_ARC_1_BER: &[u8] = &hex!("0992268993F22C640101");
+const EXAMPLE_OID_LARGE_ARC_1_STR: &str = "1.1.1.60817410.1";
+const EXAMPLE_OID_LARGE_ARC_1_BER: &[u8] = &hex!("29019D80800201");
 const EXAMPLE_OID_LARGE_ARC_1: ObjectIdentifier =
     ObjectIdentifier::new_unwrap(EXAMPLE_OID_LARGE_ARC_1_STR);
+
+/// Example OID value with a large arc (namely `u32::MAX`, the edge case)
+const EXAMPLE_OID_LARGE_ARC_2_STR: &str = "1.2.4294967295";
+const EXAMPLE_OID_LARGE_ARC_2_BER: &[u8] = &hex!("2A8FFFFFFF7F");
+const EXAMPLE_OID_LARGE_ARC_2: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap(crate::EXAMPLE_OID_LARGE_ARC_2_STR);
 
 /// Create an OID from a string.
 pub fn oid(s: &str) -> ObjectIdentifier {
     ObjectIdentifier::new(s).unwrap()
 }
 
+/// 0.9.2342.19200300.100.1.1
 #[test]
-fn from_bytes() {
-    let oid0 = ObjectIdentifier::from_bytes(EXAMPLE_OID_0_BER).unwrap();
-    assert_eq!(oid0.arc(0).unwrap(), 0);
-    assert_eq!(oid0.arc(1).unwrap(), 9);
-    assert_eq!(oid0.arc(2).unwrap(), 2342);
-    assert_eq!(oid0, EXAMPLE_OID_0);
+fn from_bytes_oid_0() {
+    let oid = ObjectIdentifier::from_bytes(EXAMPLE_OID_0_BER).unwrap();
+    assert_eq!(oid, EXAMPLE_OID_0);
+    assert_eq!(oid.arc(0).unwrap(), 0);
+    assert_eq!(oid.arc(1).unwrap(), 9);
+    assert_eq!(oid.arc(2).unwrap(), 2342);
+}
 
-    let oid1 = ObjectIdentifier::from_bytes(EXAMPLE_OID_1_BER).unwrap();
-    assert_eq!(oid1.arc(0).unwrap(), 1);
-    assert_eq!(oid1.arc(1).unwrap(), 2);
-    assert_eq!(oid1.arc(2).unwrap(), 840);
-    assert_eq!(oid1, EXAMPLE_OID_1);
+/// 1.2.840.10045.2.1
+#[test]
+fn from_bytes_oid_1() {
+    let oid = ObjectIdentifier::from_bytes(EXAMPLE_OID_1_BER).unwrap();
+    assert_eq!(oid, EXAMPLE_OID_1);
+    assert_eq!(oid.arc(0).unwrap(), 1);
+    assert_eq!(oid.arc(1).unwrap(), 2);
+    assert_eq!(oid.arc(2).unwrap(), 840);
+}
 
-    let oid2 = ObjectIdentifier::from_bytes(EXAMPLE_OID_2_BER).unwrap();
-    assert_eq!(oid2.arc(0).unwrap(), 2);
-    assert_eq!(oid2.arc(1).unwrap(), 16);
-    assert_eq!(oid2.arc(2).unwrap(), 840);
-    assert_eq!(oid2, EXAMPLE_OID_2);
+/// 2.16.840.1.101.3.4.1.42
+#[test]
+fn from_bytes_oid_2() {
+    let oid = ObjectIdentifier::from_bytes(EXAMPLE_OID_2_BER).unwrap();
+    assert_eq!(oid, EXAMPLE_OID_2);
+    assert_eq!(oid.arc(0).unwrap(), 2);
+    assert_eq!(oid.arc(1).unwrap(), 16);
+    assert_eq!(oid.arc(2).unwrap(), 840);
+}
 
-    let oid_largearc0 = ObjectIdentifier::from_bytes(EXAMPLE_OID_LARGE_ARC_0_BER).unwrap();
-    assert_eq!(oid_largearc0.arc(0).unwrap(), 1);
-    assert_eq!(oid_largearc0.arc(1).unwrap(), 2);
-    assert_eq!(oid_largearc0.arc(2).unwrap(), 16384);
-    assert_eq!(oid_largearc0.arc(3), None);
-    assert_eq!(oid_largearc0, EXAMPLE_OID_LARGE_ARC_0);
+/// 1.2.16384
+#[test]
+fn from_bytes_oid_largearc_0() {
+    let oid = ObjectIdentifier::from_bytes(EXAMPLE_OID_LARGE_ARC_0_BER).unwrap();
+    assert_eq!(oid, EXAMPLE_OID_LARGE_ARC_0);
+    assert_eq!(oid.arc(0).unwrap(), 1);
+    assert_eq!(oid.arc(1).unwrap(), 2);
+    assert_eq!(oid.arc(2).unwrap(), 16384);
+    assert_eq!(oid.arc(3), None);
+}
 
-    let oid_largearc1 = ObjectIdentifier::from_bytes(EXAMPLE_OID_LARGE_ARC_1_BER).unwrap();
-    assert_eq!(oid_largearc1.arc(0).unwrap(), 0);
-    assert_eq!(oid_largearc1.arc(1).unwrap(), 9);
-    assert_eq!(oid_largearc1.arc(2).unwrap(), 2342);
-    assert_eq!(oid_largearc1.arc(3).unwrap(), 19200300);
-    assert_eq!(oid_largearc1.arc(4).unwrap(), 100);
-    assert_eq!(oid_largearc1.arc(5).unwrap(), 1);
-    assert_eq!(oid_largearc1.arc(6).unwrap(), 1);
-    assert_eq!(oid_largearc1, EXAMPLE_OID_LARGE_ARC_1);
+/// 1.1.1.60817410.1
+#[test]
+fn from_bytes_oid_largearc_1() {
+    let oid = ObjectIdentifier::from_bytes(EXAMPLE_OID_LARGE_ARC_1_BER).unwrap();
+    assert_eq!(oid, EXAMPLE_OID_LARGE_ARC_1);
+    assert_eq!(oid.arc(0).unwrap(), 1);
+    assert_eq!(oid.arc(1).unwrap(), 1);
+    assert_eq!(oid.arc(2).unwrap(), 1);
+    assert_eq!(oid.arc(3).unwrap(), 60817410);
+    assert_eq!(oid.arc(4).unwrap(), 1);
+    assert_eq!(oid.arc(5), None);
+}
+
+/// 1.2.4294967295
+#[test]
+fn from_bytes_oid_largearc_2() {
+    let oid = ObjectIdentifier::from_bytes(EXAMPLE_OID_LARGE_ARC_2_BER).unwrap();
+    assert_eq!(oid, EXAMPLE_OID_LARGE_ARC_2);
+    assert_eq!(oid.arc(0).unwrap(), 1);
+    assert_eq!(oid.arc(1).unwrap(), 2);
+    assert_eq!(oid.arc(2).unwrap(), 4294967295);
+    assert_eq!(oid.arc(3), None);
 
     // Empty
     assert_eq!(ObjectIdentifier::from_bytes(&[]), Err(Error::Empty));
@@ -108,14 +141,20 @@ fn from_str() {
     let oid_largearc1 = EXAMPLE_OID_LARGE_ARC_1_STR
         .parse::<ObjectIdentifier>()
         .unwrap();
-    assert_eq!(oid_largearc1.arc(0).unwrap(), 0);
-    assert_eq!(oid_largearc1.arc(1).unwrap(), 9);
-    assert_eq!(oid_largearc1.arc(2).unwrap(), 2342);
-    assert_eq!(oid_largearc1.arc(3).unwrap(), 19200300);
-    assert_eq!(oid_largearc1.arc(4).unwrap(), 100);
-    assert_eq!(oid_largearc1.arc(5).unwrap(), 1);
-    assert_eq!(oid_largearc1.arc(6).unwrap(), 1);
+    assert_eq!(oid_largearc1.arc(0).unwrap(), 1);
+    assert_eq!(oid_largearc1.arc(1).unwrap(), 1);
+    assert_eq!(oid_largearc1.arc(2).unwrap(), 1);
+    assert_eq!(oid_largearc1.arc(3).unwrap(), 60817410);
+    assert_eq!(oid_largearc1.arc(4).unwrap(), 1);
     assert_eq!(oid_largearc1, EXAMPLE_OID_LARGE_ARC_1);
+
+    let oid_largearc2 = EXAMPLE_OID_LARGE_ARC_2_STR
+        .parse::<ObjectIdentifier>()
+        .unwrap();
+    assert_eq!(oid_largearc2.arc(0).unwrap(), 1);
+    assert_eq!(oid_largearc2.arc(1).unwrap(), 2);
+    assert_eq!(oid_largearc2.arc(2).unwrap(), 4294967295);
+    assert_eq!(oid_largearc2, EXAMPLE_OID_LARGE_ARC_2);
 
     // Truncated
     assert_eq!(
@@ -142,8 +181,16 @@ fn display() {
     assert_eq!(EXAMPLE_OID_1.to_string(), EXAMPLE_OID_1_STR);
     assert_eq!(EXAMPLE_OID_2.to_string(), EXAMPLE_OID_2_STR);
     assert_eq!(
+        EXAMPLE_OID_LARGE_ARC_0.to_string(),
+        EXAMPLE_OID_LARGE_ARC_0_STR
+    );
+    assert_eq!(
         EXAMPLE_OID_LARGE_ARC_1.to_string(),
         EXAMPLE_OID_LARGE_ARC_1_STR
+    );
+    assert_eq!(
+        EXAMPLE_OID_LARGE_ARC_2.to_string(),
+        EXAMPLE_OID_LARGE_ARC_2_STR
     );
 }
 
@@ -205,6 +252,11 @@ fn parse_invalid_second_arc() {
         ObjectIdentifier::new("1.40.840.10045.3.1.7"),
         Err(Error::ArcInvalid { arc: 40 })
     );
+}
+
+#[test]
+fn parse_invalid_repeat_dots() {
+    assert_eq!(ObjectIdentifier::new("1.2..3.4"), Err(Error::RepeatedDot))
 }
 
 #[test]

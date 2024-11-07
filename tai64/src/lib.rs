@@ -36,8 +36,8 @@ const NANOS_PER_SECOND: u32 = 1_000_000_000;
 pub struct Tai64(pub u64);
 
 impl Tai64 {
-    /// Unix epoch in `TAI64`: 1970-01-01 00:00:10 TAI.
-    pub const UNIX_EPOCH: Self = Self(10 + (1 << 62));
+    /// Unix epoch in `TAI64`: 1970-01-01 00:00:37 TAI.
+    pub const UNIX_EPOCH: Self = Self(37 + (1 << 62));
 
     /// Length of serialized `TAI64` timestamp in bytes.
     pub const BYTE_SIZE: usize = 8;
@@ -151,7 +151,7 @@ impl Zeroize for Tai64N {
 }
 
 impl Tai64N {
-    /// Unix epoch in `TAI64N`: 1970-01-01 00:00:10 TAI.
+    /// Unix epoch in `TAI64N`: 1970-01-01 00:00:37 TAI.
     pub const UNIX_EPOCH: Self = Self(Tai64::UNIX_EPOCH, 0);
 
     /// Length of serialized `TAI64N` timestamp.

@@ -24,7 +24,7 @@ enum State {
     /// Initial state - no arcs yet encoded.
     Initial,
 
-    /// First arc parsed.
+    /// First arc has been supplied and stored as the wrapped [`Arc`].
     FirstArc(Arc),
 
     /// Encoding base 128 body of the OID.
@@ -61,22 +61,20 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
                 self.state = State::FirstArc(arc);
                 Ok(self)
             }
-            // Ensured not to overflow by `ARC_MAX_SECOND` check
-            #[allow(clippy::arithmetic_side_effects)]
             State::FirstArc(first_arc) => {
                 if arc > ARC_MAX_SECOND {
                     return Err(Error::ArcInvalid { arc });
                 }
 
                 self.state = State::Body;
-                self.bytes[0] = (first_arc * (ARC_MAX_SECOND + 1)) as u8 + arc as u8;
+                self.bytes[0] = checked_add!(
+                    checked_mul!(checked_add!(ARC_MAX_SECOND, 1), first_arc),
+                    arc
+                ) as u8;
                 self.cursor = 1;
                 Ok(self)
             }
-            State::Body => {
-                let nbytes = base128_len(arc);
-                self.encode_base128(arc, nbytes)
-            }
+            State::Body => self.encode_base128(arc),
         }
     }
 
@@ -94,56 +92,48 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
         Ok(ObjectIdentifier { ber })
     }
 
-    /// Encode a single byte of a Base 128 value.
-    const fn encode_base128(mut self, n: u32, remaining_len: usize) -> Result<Self> {
-        if self.cursor >= MAX_SIZE {
+    /// Encode base 128.
+    const fn encode_base128(mut self, arc: Arc) -> Result<Self> {
+        let nbytes = base128_len(arc);
+        let end_pos = checked_add!(self.cursor, nbytes);
+
+        if end_pos > MAX_SIZE {
             return Err(Error::Length);
         }
 
-        let mask = if remaining_len > 0 { 0b10000000 } else { 0 };
-        let (hi, lo) = split_high_bits(n);
-        self.bytes[self.cursor] = hi | mask;
-        self.cursor = checked_add!(self.cursor, 1);
-
-        match remaining_len.checked_sub(1) {
-            Some(len) => self.encode_base128(lo, len),
-            None => Ok(self),
+        let mut i = 0;
+        while i < nbytes {
+            // TODO(tarcieri): use `?` when stable in `const fn`
+            self.bytes[self.cursor] = match base128_byte(arc, i, nbytes) {
+                Ok(byte) => byte,
+                Err(e) => return Err(e),
+            };
+            self.cursor = checked_add!(self.cursor, 1);
+            i = checked_add!(i, 1);
         }
+
+        Ok(self)
     }
 }
 
-/// Compute the length - 1 of an arc when encoded in base 128.
+/// Compute the length of an arc when encoded in base 128.
 const fn base128_len(arc: Arc) -> usize {
     match arc {
-        0..=0x7f => 0,
-        0x80..=0x3fff => 1,
-        0x4000..=0x1fffff => 2,
-        0x200000..=0x1fffffff => 3,
-        _ => 4,
+        0..=0x7f => 1,
+        0x80..=0x3fff => 2,
+        0x4000..=0x1fffff => 3,
+        0x200000..=0x1fffffff => 4,
+        _ => 5,
     }
 }
 
-/// Split the highest 7-bits of an [`Arc`] from the rest of an arc.
-///
-/// Returns: `(hi, lo)`
-// TODO(tarcieri): always use checked arithmetic
-#[allow(clippy::arithmetic_side_effects)]
-const fn split_high_bits(arc: Arc) -> (u8, Arc) {
-    if arc < 0x80 {
-        return (arc as u8, 0);
-    }
-
-    let hi_bit = 32 - arc.leading_zeros();
-    let hi_bit_mod7 = hi_bit % 7;
-    let upper_bit_pos = hi_bit
-        - if hi_bit > 0 && hi_bit_mod7 == 0 {
-            7
-        } else {
-            hi_bit_mod7
-        };
-    let upper_bits = arc >> upper_bit_pos;
-    let lower_bits = arc ^ (upper_bits << upper_bit_pos);
-    (upper_bits as u8, lower_bits)
+/// Compute the big endian base 128 encoding of the given [`Arc`] at the given byte.
+const fn base128_byte(arc: Arc, pos: usize, total: usize) -> Result<u8> {
+    debug_assert!(pos < total);
+    let last_byte = checked_add!(pos, 1) == total;
+    let mask = if last_byte { 0 } else { 0b10000000 };
+    let shift = checked_sub!(checked_sub!(total, pos), 1) * 7;
+    Ok(((arc >> shift) & 0b1111111) as u8 | mask)
 }
 
 #[cfg(test)]
@@ -154,6 +144,17 @@ mod tests {
 
     /// OID `1.2.840.10045.2.1` encoded as ASN.1 BER/DER
     const EXAMPLE_OID_BER: &[u8] = &hex!("2A8648CE3D0201");
+
+    #[test]
+    fn base128_byte() {
+        let example_arc = 0x44332211;
+        assert_eq!(super::base128_len(example_arc), 5);
+        assert_eq!(super::base128_byte(example_arc, 0, 5).unwrap(), 0b10000100);
+        assert_eq!(super::base128_byte(example_arc, 1, 5).unwrap(), 0b10100001);
+        assert_eq!(super::base128_byte(example_arc, 2, 5).unwrap(), 0b11001100);
+        assert_eq!(super::base128_byte(example_arc, 3, 5).unwrap(), 0b11000100);
+        assert_eq!(super::base128_byte(example_arc, 4, 5).unwrap(), 0b10001);
+    }
 
     #[test]
     fn encode() {

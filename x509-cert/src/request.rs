@@ -19,6 +19,12 @@ use der::{
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
 
+#[cfg(feature = "builder")]
+mod builder;
+
+#[cfg(feature = "builder")]
+pub use self::builder::RequestBuilder;
+
 /// Version identifier for certification request information.
 ///
 /// (RFC 2986 designates `0` as the only valid version)

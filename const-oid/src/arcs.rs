@@ -1,21 +1,21 @@
 //! Arcs are integer values which exist within an OID's hierarchy.
 
 use crate::{Error, Result};
-use core::mem::size_of;
 
 #[cfg(doc)]
 use crate::ObjectIdentifier;
 
-/// Type alias used to represent an "arc" (i.e. integer identifier value).
+/// Type alias used to represent an "arc", i.e. integer identifier value, where an OID comprises a
+/// sequence of arcs.
 ///
-/// X.660 does not define a maximum size of an arc.
+/// X.660 does not define a maximum size of an arc. We instead follow Mozilla* conventions for
+/// maximum values of an arc, with a maximum value of 2^32-1 (4294967295), a.k.a. [`u32::MAX`]
+/// with [`Arc`] being a type alias for [`u32`].
 ///
-/// The current representation is `u32`, which has been selected as being
-/// sufficient to cover the current PKCS/PKIX use cases this library has been
-/// used in conjunction with.
+/// Note that this means we deliberately do *NOT* support UUIDs used as OIDs.
 ///
-/// Future versions may potentially make it larger if a sufficiently important
-/// use case is discovered.
+/// *NOTE: please see this study for a survey of how various OID libraries handle maximum arcs:
+/// <https://misc.daniel-marschall.de/asn.1/oid_facts.html>
 pub type Arc = u32;
 
 /// Maximum value of the first arc in an OID.
@@ -25,7 +25,10 @@ pub(crate) const ARC_MAX_FIRST: Arc = 2;
 pub(crate) const ARC_MAX_SECOND: Arc = 39;
 
 /// Maximum number of bytes supported in an arc.
-const ARC_MAX_BYTES: usize = size_of::<Arc>();
+///
+/// Note that OIDs are base 128 encoded (with continuation bits), so we must consider how many bytes
+/// are required when each byte can only represent 7-bits of the input.
+const ARC_MAX_BYTES: usize = (Arc::BITS as usize).div_ceil(7);
 
 /// Maximum value of the last byte in an arc.
 const ARC_MAX_LAST_OCTET: u8 = 0b11110000; // Max bytes of leading 1-bits
