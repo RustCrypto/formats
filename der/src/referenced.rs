@@ -38,7 +38,10 @@ impl<T> OwnedToRef for Option<T>
 where
     T: OwnedToRef,
 {
-    type Borrowed<'a> = Option<T::Borrowed<'a>> where T: 'a;
+    type Borrowed<'a>
+        = Option<T::Borrowed<'a>>
+    where
+        T: 'a;
 
     fn owned_to_ref(&self) -> Self::Borrowed<'_> {
         self.as_ref().map(|o| o.owned_to_ref())
