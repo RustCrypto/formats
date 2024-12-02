@@ -164,7 +164,11 @@ where
 
 impl<const TAG: u16, T, const CLASS: u8> Tagged for CustomClassExplicit<TAG, T, CLASS> {
     fn tag(&self) -> Tag {
-        expected_tag_constructed(Class::from(CLASS), TagNumber(TAG), true)
+        // ISO/IEC 8825-1:2021
+        // 8.14.3 If implicit tagging (see Rec. ITU-T X.680 | ISO/IEC 8824-1, 31.2.7) was not used in the definition of the type, the
+        // encoding shall be constructed and the contents octets shall be the complete base encoding [Encode].
+        let constructed = true;
+        expected_tag_constructed(Class::from(CLASS), TagNumber(TAG), constructed)
     }
 }
 
@@ -173,6 +177,10 @@ where
     T: FixedTag,
 {
     fn tag(&self) -> Tag {
+        // ISO/IEC 8825-1:2021
+        // 8.14.4 If implicit tagging was used in the definition of the type, then:
+        // a) the encoding shall be constructed if the base encoding is constructed, and shall be primitive otherwise; and
+        // b) the contents octets shall be the same as the contents octets [EncodeValue] of the base encoding.
         let constructed = <T as FixedTag>::TAG.is_constructed();
         expected_tag_constructed(Class::from(CLASS), TagNumber(TAG), constructed)
     }
