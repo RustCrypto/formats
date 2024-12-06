@@ -3,3 +3,6 @@ target/
 
 # CLion IDE
 .idea
+
+# VS Code IDE
+.vscode
