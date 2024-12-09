@@ -1,7 +1,9 @@
 //! Certificate tests
 
 use der::{
-    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, PrintableStringRef, Utf8StringRef},
+    asn1::{
+        BitStringRef, ContextSpecificExplicit, ObjectIdentifier, PrintableStringRef, Utf8StringRef,
+    },
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
 };
 use hex_literal::hex;
@@ -90,7 +92,7 @@ impl<'a> DecodeValue<'a> for DeferDecodeTbsCertificate<'a> {
         header: Header,
     ) -> der::Result<DeferDecodeTbsCertificate<'a>> {
         reader.read_nested(header.length, |reader| {
-            let version = ContextSpecific::decode_explicit(reader, ::der::TagNumber::N0)?
+            let version = ContextSpecificExplicit::<0, u8>::decode_skipping(reader)?
                 .map(|cs| cs.value)
                 .unwrap_or_else(Default::default);
 
