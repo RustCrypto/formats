@@ -19,7 +19,7 @@ rust-version = "1.65"
 
 [dev-dependencies]
 base32 = "0.5"
-proptest = { version = "1.5", default-features = false, features = ["std"] }
+proptest = { version = "1.6", default-features = false, features = ["std"] }
 
 [features]
 alloc = []
