@@ -32,7 +32,7 @@ proptest = "1"
 
 [features]
 alloc = ["zeroize?/alloc"]
-std = ["alloc"]
+std = ["alloc", "pem-rfc7468?/std"]
 
 arbitrary = ["dep:arbitrary", "const-oid?/arbitrary", "std"]
 bytes = ["dep:bytes", "alloc"]
