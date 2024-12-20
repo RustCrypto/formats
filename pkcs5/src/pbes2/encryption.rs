@@ -178,7 +178,7 @@ impl EncryptionKey {
     pub fn derive_from_password(password: &[u8], kdf: &Kdf, key_size: usize) -> Result<Self> {
         // if the kdf params defined a key length, ensure it matches the required key size
         if let Some(len) = kdf.key_length() {
-            if key_size != len.into() {
+            if key_size != usize::from(len) {
                 return Err(kdf.to_alg_params_invalid());
             }
         }
