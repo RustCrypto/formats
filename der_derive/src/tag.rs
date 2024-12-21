@@ -23,6 +23,24 @@ pub(crate) enum Tag {
         /// Context-specific tag number
         number: TagNumber,
     },
+
+    /// Private tags with an associated [`TagNumber`].
+    Private {
+        /// Is the inner ASN.1 type constructed?
+        constructed: bool,
+
+        /// Private tag number
+        number: TagNumber,
+    },
+
+    /// Application tags with an associated [`TagNumber`].
+    Application {
+        /// Is the inner ASN.1 type constructed?
+        constructed: bool,
+
+        /// Application tag number
+        number: TagNumber,
+    },
 }
 
 impl Tag {
@@ -34,16 +52,36 @@ impl Tag {
                 constructed,
                 number,
             } => {
-                let constructed = if constructed {
-                    quote!(true)
-                } else {
-                    quote!(false)
-                };
-
                 let number = number.to_tokens();
 
                 quote! {
                     ::der::Tag::ContextSpecific {
+                        constructed: #constructed,
+                        number: #number,
+                    }
+                }
+            }
+            Tag::Private {
+                constructed,
+                number,
+            } => {
+                let number = number.to_tokens();
+
+                quote! {
+                    ::der::Tag::Private {
+                        constructed: #constructed,
+                        number: #number,
+                    }
+                }
+            }
+            Tag::Application {
+                constructed,
+                number,
+            } => {
+                let number: TokenStream = number.to_tokens();
+
+                quote! {
+                    ::der::Tag::Application {
                         constructed: #constructed,
                         number: #number,
                     }
@@ -71,6 +109,7 @@ pub(crate) enum TagMode {
 impl TagMode {
     /// Lower this [`TagMode`] to a [`TokenStream`] with the `der`
     /// crate's corresponding enum variant for this tag mode.
+    #[allow(dead_code)]
     pub fn to_tokens(self) -> TokenStream {
         match self {
             TagMode::Explicit => quote!(::der::TagMode::Explicit),
@@ -117,48 +156,18 @@ impl Display for TagMode {
 
 /// ASN.1 tag numbers (i.e. lower 5 bits of a [`Tag`]).
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub(crate) struct TagNumber(pub u8);
+pub(crate) struct TagNumber(pub u16);
 
 impl TagNumber {
-    /// Maximum tag number supported (inclusive).
-    pub const MAX: u8 = 30;
-
     /// Get tokens describing this tag.
     pub fn to_tokens(self) -> TokenStream {
-        match self.0 {
-            0 => quote!(::der::TagNumber::N0),
-            1 => quote!(::der::TagNumber::N1),
-            2 => quote!(::der::TagNumber::N2),
-            3 => quote!(::der::TagNumber::N3),
-            4 => quote!(::der::TagNumber::N4),
-            5 => quote!(::der::TagNumber::N5),
-            6 => quote!(::der::TagNumber::N6),
-            7 => quote!(::der::TagNumber::N7),
-            8 => quote!(::der::TagNumber::N8),
-            9 => quote!(::der::TagNumber::N9),
-            10 => quote!(::der::TagNumber::N10),
-            11 => quote!(::der::TagNumber::N11),
-            12 => quote!(::der::TagNumber::N12),
-            13 => quote!(::der::TagNumber::N13),
-            14 => quote!(::der::TagNumber::N14),
-            15 => quote!(::der::TagNumber::N15),
-            16 => quote!(::der::TagNumber::N16),
-            17 => quote!(::der::TagNumber::N17),
-            18 => quote!(::der::TagNumber::N18),
-            19 => quote!(::der::TagNumber::N19),
-            20 => quote!(::der::TagNumber::N20),
-            21 => quote!(::der::TagNumber::N21),
-            22 => quote!(::der::TagNumber::N22),
-            23 => quote!(::der::TagNumber::N23),
-            24 => quote!(::der::TagNumber::N24),
-            25 => quote!(::der::TagNumber::N25),
-            26 => quote!(::der::TagNumber::N26),
-            27 => quote!(::der::TagNumber::N27),
-            28 => quote!(::der::TagNumber::N28),
-            29 => quote!(::der::TagNumber::N29),
-            30 => quote!(::der::TagNumber::N30),
-            _ => unreachable!("tag number out of range: {}", self),
-        }
+        let number = self.0;
+        quote!(::der::TagNumber(#number))
+    }
+
+    pub fn to_tokens_u16(self) -> TokenStream {
+        let number = self.0;
+        quote!(#number)
     }
 }
 
@@ -166,13 +175,9 @@ impl FromStr for TagNumber {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, ParseError> {
-        let n = s.parse::<u8>().map_err(|_| ParseError)?;
+        let n = s.parse::<u16>().map_err(|_| ParseError)?;
 
-        if n <= Self::MAX {
-            Ok(Self(n))
-        } else {
-            Err(ParseError)
-        }
+        Ok(Self(n))
     }
 }
 
