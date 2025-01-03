@@ -193,9 +193,9 @@ pub struct PkiStatusInfo<'a> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct ErrorMsgContent<'a> {
-    pki_status_info: PkiStatusInfo<'a>,
-    error_code: Option<u64>,
-    error_details: Option<PkiFreeText<'a>>,
+    pub pki_status_info: PkiStatusInfo<'a>,
+    pub error_code: Option<u64>,
+    pub error_details: Option<PkiFreeText<'a>>,
 }
 
 /// The `CertConfirmContent` type is defined in [RFC 4210 Section 5.2.18].
