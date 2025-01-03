@@ -1,3 +1,5 @@
+//! Less strict Context-specific, Application or Private field.
+
 use crate::{
     Class, Decode, DecodeValue, Encode, EncodeValue, Error, Header, Length, Reader, Tag, TagNumber,
     Tagged, Writer,
@@ -56,7 +58,7 @@ where
         tag_number: TagNumber,
         reader: &mut R,
     ) -> Result<Option<Self>, T::Error> {
-        decode_peeking(reader, class, tag_number, |reader| {
+        peek_decode_optional(reader, class, tag_number, |reader| {
             Self::decode_checked(class, tag_number, reader)
         })
     }
@@ -94,7 +96,7 @@ where
         tag_number: TagNumber,
         reader: &mut R,
     ) -> Result<Option<Self>, T::Error> {
-        decode_peeking::<_, _, T::Error, _>(reader, class, tag_number, |reader| {
+        peek_decode_optional::<_, _, T::Error, _>(reader, class, tag_number, |reader| {
             Self::decode_checked(class, tag_number, reader)
         })
     }
@@ -201,7 +203,7 @@ impl<T> Tagged for AnyCustomClassImplicit<T> {
 
 /// Attempt to decode a custom class-tagged field with the given
 /// helper callback.
-fn decode_peeking<'a, F, R: Reader<'a>, E, T>(
+fn peek_decode_optional<'a, F, R: Reader<'a>, E, T>(
     reader: &mut R,
     expected_class: Class,
     expected_number: TagNumber,
@@ -234,6 +236,8 @@ fn is_unskippable_tag(tag: Tag, expected_class: Class, expected_number: TagNumbe
         Class::Application => tag.number() > expected_number,
         Class::ContextSpecific => tag.number() > expected_number,
         Class::Private => tag.number() != expected_number,
+
+        // probably unreachable
         Class::Universal => tag.number() != expected_number,
     }
 }

@@ -20,56 +20,6 @@ pub type PrivateExplicitRef<'a, const TAG: u16, T> =
 pub type PrivateImplicitRef<'a, const TAG: u16, T> =
     CustomClassImplicitRef<'a, TAG, T, CLASS_PRIVATE>;
 
-// /// Private field reference.
-// ///
-// /// This type encodes a field which is whose meaning is specific to a given
-// /// enterprise and is identified by a [`TagNumber`].
-// #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-// pub struct PrivateRef<'a, T> {
-//     /// Private tag number sans the leading `0b11000000` class
-//     /// identifier bit and `0b100000` constructed flag.
-//     pub tag_number: TagNumber,
-
-//     /// Tag mode: `EXPLICIT` VS `IMPLICIT`.
-//     pub tag_mode: TagMode,
-
-//     /// Value of the field.
-//     pub value: &'a T,
-// }
-
-// impl<'a, T> PrivateRef<'a, T> {
-//     /// Convert to a [`Private`].
-//     fn encoder(&self) -> Private<EncodeValueRef<'a, T>> {
-//         Private {
-//             tag_number: self.tag_number,
-//             tag_mode: self.tag_mode,
-//             value: EncodeValueRef(self.value),
-//         }
-//     }
-// }
-
-// impl<'a, T> EncodeValue for PrivateRef<'a, T>
-// where
-//     T: EncodeValue + Tagged,
-// {
-//     fn value_len(&self) -> Result<Length, Error> {
-//         self.encoder().value_len()
-//     }
-
-//     fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
-//         self.encoder().encode_value(writer)
-//     }
-// }
-
-// impl<'a, T> Tagged for PrivateRef<'a, T>
-// where
-//     T: Tagged,
-// {
-//     fn tag(&self) -> Tag {
-//         self.encoder().tag()
-//     }
-// }
-
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
