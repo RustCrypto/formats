@@ -42,7 +42,6 @@ pub use self::{
     },
     bit_string::{BitStringIter, BitStringRef},
     choice::Choice,
-    //context_specific::{ContextSpecific, ContextSpecificRef},
     context_specific::{
         ContextSpecificExplicit, ContextSpecificExplicitRef, ContextSpecificImplicit,
         ContextSpecificImplicitRef,

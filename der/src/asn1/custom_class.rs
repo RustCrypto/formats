@@ -1,3 +1,5 @@
+//! Context-specific, Application or Private field.
+
 use super::any_custom_class::{
     expected_tag_constructed, AnyCustomClassExplicit, AnyCustomClassImplicit,
 };
@@ -9,20 +11,32 @@ use crate::{
 };
 use core::cmp::Ordering;
 
-/// Application, Context-specific or Private class field which wraps an owned inner value.
+/// Application, Context-specific or Private class field which wraps an owned inner value `T`.
 ///
 /// This type decodes/encodes a field which is specific to a particular context
-/// and is identified by a [`TagNumber`].
+/// and is identified by a [`TagNumber`] in `TAG` generic parameter.
+///
+/// - Encodes: always with `TAG` and `CLASS` generic parameter, with inner tag and value.
+///
+/// - Decodes: only if `TAG` and `CLASS` generic parameter matches data.
+///
+/// Note that only 2 most significant bits of `CLASS` are used.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct CustomClassExplicit<const TAG: u16, T, const CLASS: u8> {
     /// Value of the field.
     pub value: T,
 }
 
-/// Application, Context-specific or Private class field which wraps an owned inner value.
+/// Application, Context-specific or Private class field which wraps an owned inner value `T`.
 ///
 /// This type decodes/encodes a field which is specific to a particular context
-/// and is identified by a [`TagNumber`].
+/// and is identified by a [`TagNumber`] in `TAG` generic parameter.
+///
+/// - Encodes: always with `TAG` and `CLASS` generic parameter, with inner value only (implicit, without inner tag).
+///
+/// - Decodes: only if `TAG` and `CLASS` generic parameter matches data.
+///
+/// Note that only 2 most significant bits of `CLASS` are used.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct CustomClassImplicit<const TAG: u16, T, const CLASS: u8> {
     /// Value of the field.
