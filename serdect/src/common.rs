@@ -7,7 +7,7 @@ use serde::{
 };
 
 #[cfg(feature = "alloc")]
-use ::{alloc::vec::Vec, serde::Serialize};
+use {alloc::vec::Vec, serde::Serialize};
 
 #[cfg(not(feature = "alloc"))]
 use serde::ser::Error as SerError;
