@@ -8,7 +8,7 @@ use super::{Alphabet, DecodeStep, EncodeStep};
 /// [A-Z]      [a-z]      [0-9]      +     /
 /// 0x41-0x5a, 0x61-0x7a, 0x30-0x39, 0x2b, 0x2f
 /// ```
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Base64;
 
 impl Alphabet for Base64 {
@@ -25,7 +25,7 @@ impl Alphabet for Base64 {
 /// [A-Z]      [a-z]      [0-9]      +     /
 /// 0x41-0x5a, 0x61-0x7a, 0x30-0x39, 0x2b, 0x2f
 /// ```
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Base64Unpadded;
 
 impl Alphabet for Base64Unpadded {

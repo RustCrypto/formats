@@ -1,6 +1,6 @@
 [package]
 name = "const-oid"
-version = "0.10.0-rc.2"
+version = "0.10.0-rc.3"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -18,10 +18,12 @@ edition = "2021"
 rust-version = "1.81"
 
 [dependencies]
-arbitrary = { version = "1.2", optional = true, features = ["derive"] }
+arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 hex-literal = "0.4"
+proptest = "1"
+regex = "1"
 
 [features]
 db = []

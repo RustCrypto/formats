@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- [#1628](https://github.com/RustCrypto/formats/pull/1628) Bump MSRV to 1.74
+
 ## 0.4.1
 
 - [#1284](https://github.com/RustCrypto/formats/pull/1284): implement `U24`. A `U24` integer type can be used for length encoding in three bytes.

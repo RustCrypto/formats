@@ -4,7 +4,7 @@ description = """
 Constant-time serde serializer/deserializer helpers for data that potentially
 contains secrets (e.g. cryptographic keys)
 """
-version = "0.3.0-rc.0"
+version = "0.3.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 homepage = "https://github.com/RustCrypto/formats/tree/master/serdect"
@@ -19,7 +19,7 @@ rust-version = "1.70"
 base16ct = { version = "0.2", default-features = false }
 serde = { version = "1.0.184", default-features = false }
 
-# optional features
+# optional featuresw
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]

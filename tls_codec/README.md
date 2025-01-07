@@ -37,7 +37,7 @@ serialization/deserialization
 
 ## Minimum Supported Rust Version
 
-This crate requires **Rust 1.70.0** at a minimum.
+This crate requires **Rust 1.74.0** at a minimum.
 
 We may change the MSRV in the future, but it will be accompanied by a minor
 version bump.
@@ -68,7 +68,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [rfc 8446]: https://tools.ietf.org/html/rfc8446
-[mls]: https://messaginglayersecurity.rocks/mls-protocol/draft-ietf-mls-protocol.html
+[mls]: https://www.rfc-editor.org/rfc/rfc9420.html
 [tls_codec-ci]: https://img.shields.io/github/actions/workflow/status/RustCrypto/formats/tls_codec.yml?branch=master&style=for-the-badge
 [tls_codec-ci-link]: https://github.com/RustCrypto/formats/actions/workflows/tls_codec.yml
 [tls_codec]: https://img.shields.io/crates/v/tls_codec?style=for-the-badge

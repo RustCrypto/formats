@@ -69,7 +69,7 @@ pub enum PkiBody<'a> {
     #[asn1(context_specific = "6", tag_mode = "EXPLICIT", constructed = "true")]
     Popdecr(PopoDecKeyRespContent<'a>),
     #[asn1(context_specific = "7", tag_mode = "EXPLICIT", constructed = "true")]
-    KUr(CertReqMessages),
+    Kur(CertReqMessages),
     #[asn1(context_specific = "8", tag_mode = "EXPLICIT", constructed = "true")]
     Kup(CertRepMessage<'a>),
     #[asn1(context_specific = "9", tag_mode = "EXPLICIT", constructed = "true")]
