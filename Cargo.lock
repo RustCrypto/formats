@@ -363,6 +363,7 @@ dependencies = [
  "getrandom",
  "hex-literal",
  "p256",
+ "pbkdf2",
  "pem-rfc7468",
  "pkcs5",
  "rand",
