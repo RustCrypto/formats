@@ -1867,6 +1867,40 @@ pub mod rfc5280 {
         crate::ObjectIdentifier::new_unwrap("2.5.29.9");
     pub const ID_AT: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4");
 }
+pub mod rfc5639 {
+    pub const ELLIPTIC_CURVE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1");
+    pub const VERSION_ONE: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1");
+    pub const BRAINPOOL_P_160_R_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.1");
+    pub const BRAINPOOL_P_320_T_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.10");
+    pub const BRAINPOOL_P_384_R_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.11");
+    pub const BRAINPOOL_P_384_T_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.12");
+    pub const BRAINPOOL_P_512_R_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.13");
+    pub const BRAINPOOL_P_512_T_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.14");
+    pub const BRAINPOOL_P_160_T_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.2");
+    pub const BRAINPOOL_P_192_R_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.3");
+    pub const BRAINPOOL_P_192_T_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.4");
+    pub const BRAINPOOL_P_224_R_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.5");
+    pub const BRAINPOOL_P_224_T_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.6");
+    pub const BRAINPOOL_P_256_R_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.7");
+    pub const BRAINPOOL_P_256_T_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.8");
+    pub const BRAINPOOL_P_320_R_1: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.36.3.3.2.8.1.1.9");
+}
 pub mod rfc5753 {
     pub const ANSI_X_9_62: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.10045");
@@ -4577,6 +4611,22 @@ pub const DB: super::Database<'static> = super::Database(&[
         "id-ce-subjectDirectoryAttributes",
     ),
     (&rfc5280::ID_AT, "id-at"),
+    (&rfc5639::ELLIPTIC_CURVE, "ellipticCurve"),
+    (&rfc5639::VERSION_ONE, "versionOne"),
+    (&rfc5639::BRAINPOOL_P_160_R_1, "brainpoolP160r1"),
+    (&rfc5639::BRAINPOOL_P_320_T_1, "brainpoolP320t1"),
+    (&rfc5639::BRAINPOOL_P_384_R_1, "brainpoolP384r1"),
+    (&rfc5639::BRAINPOOL_P_384_T_1, "brainpoolP384t1"),
+    (&rfc5639::BRAINPOOL_P_512_R_1, "brainpoolP512r1"),
+    (&rfc5639::BRAINPOOL_P_512_T_1, "brainpoolP512t1"),
+    (&rfc5639::BRAINPOOL_P_160_T_1, "brainpoolP160t1"),
+    (&rfc5639::BRAINPOOL_P_192_R_1, "brainpoolP192r1"),
+    (&rfc5639::BRAINPOOL_P_192_T_1, "brainpoolP192t1"),
+    (&rfc5639::BRAINPOOL_P_224_R_1, "brainpoolP224r1"),
+    (&rfc5639::BRAINPOOL_P_224_T_1, "brainpoolP224t1"),
+    (&rfc5639::BRAINPOOL_P_256_R_1, "brainpoolP256r1"),
+    (&rfc5639::BRAINPOOL_P_256_T_1, "brainpoolP256t1"),
+    (&rfc5639::BRAINPOOL_P_320_R_1, "brainpoolP320r1"),
     (&rfc5753::ANSI_X_9_62, "ansi-x9-62"),
     (&rfc5753::ID_EC_PUBLIC_KEY, "id-ecPublicKey"),
     (&rfc5753::ID_HMAC_WITH_SHA_384, "id-hmacWithSHA384"),
