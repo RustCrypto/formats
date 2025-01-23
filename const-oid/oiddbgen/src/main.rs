@@ -21,6 +21,7 @@ const RFCS: &[(&str, &str)] = &[
     ("rfc7299", include_str!("../rfc7299.txt")),
     ("rfc7693", include_str!("../rfc7693.txt")),
     ("rfc8410", include_str!("../rfc8410.txt")),
+    ("rfc5639", include_str!("../rfc5639.txt")),
 ];
 
 const MDS: &[(&str, &str)] = &[
@@ -44,7 +45,10 @@ const MDS: &[(&str, &str)] = &[
 ];
 
 // Bases defined in other places.
-const BASES: &[(&str, &str)] = &[("id-ad-ocsp", "1.3.6.1.5.5.7.48.1")];
+const BASES: &[(&str, &str)] = &[
+    ("id-ad-ocsp", "1.3.6.1.5.5.7.48.1"),
+    ("ecStdCurvesAndGeneration", "1.3.36.3.3.2.8"),
+];
 const NO_BASES: &[(&str, &str)] = &[("", "")];
 
 fn main() {
