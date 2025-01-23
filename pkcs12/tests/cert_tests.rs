@@ -4,7 +4,7 @@ use const_oid::db::{
     rfc5912::ID_SHA_256,
 };
 use der::{
-    asn1::{ContextSpecific, OctetString},
+    asn1::{AnyCustomClassExplicit, OctetString},
     Decode, Encode,
 };
 use hex_literal::hex;
@@ -199,8 +199,7 @@ fn decode_sample_pfx() {
     for cert_bag in cert_bags {
         match cert_bag.bag_id {
             pkcs12::PKCS_12_CERT_BAG_OID => {
-                let cs: der::asn1::ContextSpecific<CertBag> =
-                    ContextSpecific::from_der(&cert_bag.bag_value).unwrap();
+                let cs = AnyCustomClassExplicit::<CertBag>::from_der(&cert_bag.bag_value).unwrap();
                 let cb = cs.value;
                 assert_eq!(
                     include_bytes!("examples/cert.der"),
@@ -242,8 +241,10 @@ fn decode_sample_pfx() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfoRef<'_>> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
+                let cs = AnyCustomClassExplicit::<EncryptedPrivateKeyInfoRef<'_>>::from_der(
+                    &safe_bag.bag_value,
+                )
+                .unwrap();
                 let mut ciphertext = cs.value.encrypted_data.as_bytes().to_vec();
                 let plaintext = cs
                     .value
@@ -606,8 +607,7 @@ fn decode_sample_pfx2() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_CERT_BAG_OID => {
-                let cs: ContextSpecific<CertBag> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
+                let cs = AnyCustomClassExplicit::<CertBag>::from_der(&safe_bag.bag_value).unwrap();
                 assert_eq!(
                     include_bytes!("examples/cert.der"),
                     cs.value.cert_value.as_bytes()
@@ -628,8 +628,10 @@ fn decode_sample_pfx2() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfoRef<'_>> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
+                let cs = AnyCustomClassExplicit::<EncryptedPrivateKeyInfoRef<'_>>::from_der(
+                    &safe_bag.bag_value,
+                )
+                .unwrap();
                 let mut ciphertext = cs.value.encrypted_data.as_bytes().to_vec();
                 let plaintext = cs
                     .value
