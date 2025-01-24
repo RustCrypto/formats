@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.4.2
+
 - [#1628](https://github.com/RustCrypto/formats/pull/1628) Bump MSRV to 1.74
 
 ## 0.4.1
