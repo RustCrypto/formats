@@ -378,7 +378,7 @@ pub trait BitStringLike {
     fn as_bit_string(&self) -> BitStringRef<'_>;
 }
 
-impl<'a> BitStringLike for BitStringRef<'a> {
+impl BitStringLike for BitStringRef<'_> {
     fn as_bit_string(&self) -> BitStringRef<'_> {
         BitStringRef::from(self)
     }
