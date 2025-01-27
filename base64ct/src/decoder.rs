@@ -253,7 +253,7 @@ impl<'i, E: Encoding> Decoder<'i, E> {
 }
 
 #[cfg(feature = "std")]
-impl<'i, E: Encoding> io::Read for Decoder<'i, E> {
+impl<E: Encoding> io::Read for Decoder<'_, E> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if self.is_finished() {
             return Ok(0);
@@ -344,7 +344,7 @@ pub struct Line<'i> {
     remaining: &'i [u8],
 }
 
-impl<'i> Default for Line<'i> {
+impl Default for Line<'_> {
     fn default() -> Self {
         Self::new(&[])
     }
