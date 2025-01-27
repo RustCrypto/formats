@@ -145,7 +145,7 @@ pub struct NegTokenTarg<'a> {
     ///  processed by the target (accept_incomplete) and a mechToken
     ///  sent by the initiator and processed by the target
     ///  (accept_completed).
-    ///
+    //
     //  For those targets that support piggybacking the initial mechToken,
     //  an optimistic negotiation response is possible and includes in that
     //  case a responseToken which may continue the authentication exchange
@@ -154,7 +154,7 @@ pub struct NegTokenTarg<'a> {
     //  the responseToken is used to carry the tokens specific to the
     //  mechanism selected. For subsequent tokens (if any) returned by the
     //  target, negResult, and supportedMech are not present.
-
+    //
     //  For the last token returned by the target, the mechListMIC, when
     //  present, is a MIC computed over the MechTypes using the selected
     //  mechanism.
