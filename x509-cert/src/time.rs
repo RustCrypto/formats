@@ -215,4 +215,4 @@ impl<P: Profile> ::der::EncodeValue for Validity<P> {
     }
 }
 
-impl<'a, P: Profile> Sequence<'a> for Validity<P> {}
+impl<P: Profile> Sequence<'_> for Validity<P> {}

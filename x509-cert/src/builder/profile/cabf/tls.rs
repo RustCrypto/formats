@@ -328,7 +328,7 @@ trait KeyType {
 }
 
 #[cfg(feature = "hazmat")]
-impl<'a> KeyType for SubjectPublicKeyInfoRef<'a> {
+impl KeyType for SubjectPublicKeyInfoRef<'_> {
     fn is_rsa(&self) -> bool {
         self.algorithm.oid == rfc5912::RSA_ENCRYPTION
     }
