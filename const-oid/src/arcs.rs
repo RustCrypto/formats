@@ -111,7 +111,7 @@ impl<'a> Arcs<'a> {
     }
 }
 
-impl<'a> Iterator for Arcs<'a> {
+impl Iterator for Arcs<'_> {
     type Item = Arc;
 
     fn next(&mut self) -> Option<Arc> {
