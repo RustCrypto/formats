@@ -458,7 +458,7 @@ pub enum Coordinates<'a, Size: ModulusSize> {
     },
 }
 
-impl<'a, Size: ModulusSize> Coordinates<'a, Size> {
+impl<Size: ModulusSize> Coordinates<'_, Size> {
     /// Get the tag octet needed to encode this set of [`Coordinates`]
     pub fn tag(&self) -> Tag {
         match self {
