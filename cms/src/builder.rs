@@ -179,7 +179,7 @@ impl<'s> SignerInfoBuilder<'s> {
     }
 }
 
-impl<'s> Builder for SignerInfoBuilder<'s> {
+impl Builder for SignerInfoBuilder<'_> {
     type Output = SignerInfo;
 
     /// Calculate the data to be signed
