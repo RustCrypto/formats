@@ -145,7 +145,7 @@ impl<'i> From<Decoder<'i>> for Base64Decoder<'i> {
 }
 
 #[cfg(feature = "std")]
-impl<'i> io::Read for Decoder<'i> {
+impl io::Read for Decoder<'_> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.base64.read(buf)
     }

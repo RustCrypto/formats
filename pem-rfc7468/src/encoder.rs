@@ -286,7 +286,7 @@ impl<'l, 'o> Encoder<'l, 'o> {
 }
 
 #[cfg(feature = "std")]
-impl<'l, 'o> io::Write for Encoder<'l, 'o> {
+impl io::Write for Encoder<'_, '_> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.encode(buf)?;
         Ok(buf.len())
