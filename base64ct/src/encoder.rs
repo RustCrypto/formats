@@ -166,7 +166,7 @@ impl<'o, E: Encoding> Encoder<'o, E> {
 }
 
 #[cfg(feature = "std")]
-impl<'o, E: Encoding> io::Write for Encoder<'o, E> {
+impl<E: Encoding> io::Write for Encoder<'_, E> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.encode(buf)?;
         Ok(buf.len())

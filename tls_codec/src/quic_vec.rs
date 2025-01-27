@@ -387,7 +387,7 @@ impl Size for &VLBytes {
 
 pub struct VLByteSlice<'a>(pub &'a [u8]);
 
-impl<'a> fmt::Debug for VLByteSlice<'a> {
+impl fmt::Debug for VLByteSlice<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "VLByteSlice {{ ")?;
         write_hex(f, self.0)?;
@@ -395,7 +395,7 @@ impl<'a> fmt::Debug for VLByteSlice<'a> {
     }
 }
 
-impl<'a> VLByteSlice<'a> {
+impl VLByteSlice<'_> {
     /// Get the raw slice.
     #[inline(always)]
     pub fn as_slice(&self) -> &[u8] {
@@ -403,14 +403,14 @@ impl<'a> VLByteSlice<'a> {
     }
 }
 
-impl<'a> Size for &VLByteSlice<'a> {
+impl Size for &VLByteSlice<'_> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.0)
     }
 }
 
-impl<'a> Size for VLByteSlice<'a> {
+impl Size for VLByteSlice<'_> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.0)
@@ -598,13 +598,13 @@ mod rw_bytes {
         }
     }
 
-    impl<'a> Serialize for &VLByteSlice<'a> {
+    impl Serialize for &VLByteSlice<'_> {
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
             tls_serialize_bytes(writer, self.0)
         }
     }
 
-    impl<'a> Serialize for VLByteSlice<'a> {
+    impl Serialize for VLByteSlice<'_> {
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
             tls_serialize_bytes(writer, self.0)
         }

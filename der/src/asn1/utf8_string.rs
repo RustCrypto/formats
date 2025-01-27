@@ -76,7 +76,7 @@ impl<'a> TryFrom<&'a str> for Utf8StringRef<'a> {
     }
 }
 
-impl<'a> fmt::Debug for Utf8StringRef<'a> {
+impl fmt::Debug for Utf8StringRef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Utf8String({:?})", self.as_str())
     }

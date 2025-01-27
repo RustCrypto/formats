@@ -146,7 +146,7 @@ impl<'a> TryFrom<&'a [u8]> for EcPrivateKey<'a> {
     }
 }
 
-impl<'a> fmt::Debug for EcPrivateKey<'a> {
+impl fmt::Debug for EcPrivateKey<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EcPrivateKey")
             .field("parameters", &self.parameters)

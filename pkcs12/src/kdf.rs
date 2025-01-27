@@ -105,8 +105,8 @@ where
         Pkcs12KeyType::Mac => vec![3u8; block_size],
     };
 
-    let slen = block_size * ((salt.len() + block_size - 1) / block_size);
-    let plen = block_size * ((pass.len() + block_size - 1) / block_size);
+    let slen = block_size * salt.len().div_ceil(block_size);
+    let plen = block_size * pass.len().div_ceil(block_size);
     let ilen = slen + plen;
     let mut init_key = vec![0u8; ilen];
     // 2. Concatenate copies of the salt together to create a string S of

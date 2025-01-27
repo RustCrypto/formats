@@ -190,7 +190,7 @@ impl<'a> TryFrom<BitStringRef<'a>> for &'a [u8] {
     }
 }
 
-impl<'a> FixedTag for BitStringRef<'a> {
+impl FixedTag for BitStringRef<'_> {
     const TAG: Tag = Tag::BitString;
 }
 
@@ -401,7 +401,7 @@ pub struct BitStringIter<'a> {
     position: usize,
 }
 
-impl<'a> Iterator for BitStringIter<'a> {
+impl Iterator for BitStringIter<'_> {
     type Item = bool;
 
     #[allow(clippy::arithmetic_side_effects)]
@@ -417,13 +417,13 @@ impl<'a> Iterator for BitStringIter<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for BitStringIter<'a> {
+impl ExactSizeIterator for BitStringIter<'_> {
     fn len(&self) -> usize {
         self.bit_string.bit_len()
     }
 }
 
-impl<'a> FusedIterator for BitStringIter<'a> {}
+impl FusedIterator for BitStringIter<'_> {}
 
 #[cfg(feature = "flagset")]
 impl<T: flagset::Flags> FixedTag for flagset::FlagSet<T> {

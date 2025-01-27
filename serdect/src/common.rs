@@ -22,17 +22,17 @@ where
 {
     #[cfg(feature = "alloc")]
     if UPPERCASE {
-        return base16ct::upper::encode_string(value.as_ref()).serialize(serializer);
+        base16ct::upper::encode_string(value.as_ref()).serialize(serializer)
     } else {
-        return base16ct::lower::encode_string(value.as_ref()).serialize(serializer);
+        base16ct::lower::encode_string(value.as_ref()).serialize(serializer)
     }
     #[cfg(not(feature = "alloc"))]
     {
         let _ = value;
         let _ = serializer;
-        return Err(S::Error::custom(
+        Err(S::Error::custom(
             "serializer is human readable, which requires the `alloc` crate feature",
-        ));
+        ))
     }
 }
 
@@ -73,7 +73,7 @@ pub(crate) trait LengthCheck {
 
 pub(crate) struct StrIntoBufVisitor<'b, T: LengthCheck>(pub &'b mut [u8], pub PhantomData<T>);
 
-impl<'de, 'b, T: LengthCheck> Visitor<'de> for StrIntoBufVisitor<'b, T> {
+impl<'b, T: LengthCheck> Visitor<'_> for StrIntoBufVisitor<'b, T> {
     type Value = &'b [u8];
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -100,7 +100,7 @@ impl<'de, 'b, T: LengthCheck> Visitor<'de> for StrIntoBufVisitor<'b, T> {
 pub(crate) struct StrIntoVecVisitor;
 
 #[cfg(feature = "alloc")]
-impl<'de> Visitor<'de> for StrIntoVecVisitor {
+impl Visitor<'_> for StrIntoVecVisitor {
     type Value = Vec<u8>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -117,7 +117,7 @@ impl<'de> Visitor<'de> for StrIntoVecVisitor {
 
 pub(crate) struct SliceVisitor<'b, T: LengthCheck>(pub &'b mut [u8], pub PhantomData<T>);
 
-impl<'de, 'b, T: LengthCheck> Visitor<'de> for SliceVisitor<'b, T> {
+impl<'b, T: LengthCheck> Visitor<'_> for SliceVisitor<'b, T> {
     type Value = &'b [u8];
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -160,7 +160,7 @@ impl<'de, 'b, T: LengthCheck> Visitor<'de> for SliceVisitor<'b, T> {
 pub(crate) struct VecVisitor;
 
 #[cfg(feature = "alloc")]
-impl<'de> Visitor<'de> for VecVisitor {
+impl Visitor<'_> for VecVisitor {
     type Value = Vec<u8>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {

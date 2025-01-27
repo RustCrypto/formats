@@ -168,7 +168,7 @@ impl<'a> RsaPssParams<'a> {
     }
 }
 
-impl<'a> Default for RsaPssParams<'a> {
+impl Default for RsaPssParams<'_> {
     fn default() -> Self {
         Self {
             hash: SHA_1_AI,
@@ -335,7 +335,7 @@ impl<'a> RsaOaepParams<'a> {
     }
 }
 
-impl<'a> Default for RsaOaepParams<'a> {
+impl Default for RsaOaepParams<'_> {
     fn default() -> Self {
         Self {
             hash: SHA_1_AI,

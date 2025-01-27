@@ -54,7 +54,7 @@ pub struct InitialContextToken<'a> {
     pub inner_context_token: AnyRef<'a>,
 }
 
-impl<'a> FixedTag for InitialContextToken<'a> {
+impl FixedTag for InitialContextToken<'_> {
     const TAG: Tag = Tag::Application {
         constructed: true,
         number: TagNumber::new(0),
@@ -72,7 +72,7 @@ impl<'a> DecodeValue<'a> for InitialContextToken<'a> {
     }
 }
 
-impl<'a> EncodeValue for InitialContextToken<'a> {
+impl EncodeValue for InitialContextToken<'_> {
     fn value_len(&self) -> der::Result<Length> {
         self.this_mech.encoded_len()? + self.inner_context_token.encoded_len()?
     }

@@ -89,7 +89,7 @@ impl ::der::EncodeValue for SafeBag {
         Ok(())
     }
 }
-impl<'a> ::der::Sequence<'a> for SafeBag {}
+impl ::der::Sequence<'_> for SafeBag {}
 
 /// Version for the PrivateKeyInfo structure as defined in [RFC 5208 Section 5].
 ///

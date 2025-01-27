@@ -86,7 +86,7 @@ where
     }
 }
 
-impl<'a: 'k, 'k, Params, Key: 'k> DecodeValue<'a> for SubjectPublicKeyInfo<Params, Key>
+impl<'a, Params, Key> DecodeValue<'a> for SubjectPublicKeyInfo<Params, Key>
 where
     Params: Choice<'a, Error = der::Error> + Encode,
     Key: Decode<'a, Error = der::Error>,

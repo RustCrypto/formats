@@ -248,7 +248,7 @@ impl<'a> ::der::Decode<'a> for EncKeyWithIdChoice<'a> {
         }
     }
 }
-impl<'a> ::der::EncodeValue for EncKeyWithIdChoice<'a> {
+impl ::der::EncodeValue for EncKeyWithIdChoice<'_> {
     fn encode_value(&self, encoder: &mut impl ::der::Writer) -> ::der::Result<()> {
         match self {
             Self::String(variant) => variant.encode_value(encoder),
