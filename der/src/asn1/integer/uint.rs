@@ -134,7 +134,7 @@ impl<'a> DecodeValue<'a> for UintRef<'a> {
     }
 }
 
-impl<'a> EncodeValue for UintRef<'a> {
+impl EncodeValue for UintRef<'_> {
     fn value_len(&self) -> Result<Length> {
         encoded_len(self.inner.as_slice())
     }
@@ -155,11 +155,11 @@ impl<'a> From<&UintRef<'a>> for UintRef<'a> {
     }
 }
 
-impl<'a> FixedTag for UintRef<'a> {
+impl FixedTag for UintRef<'_> {
     const TAG: Tag = Tag::Integer;
 }
 
-impl<'a> OrdIsValueOrd for UintRef<'a> {}
+impl OrdIsValueOrd for UintRef<'_> {}
 
 #[cfg(feature = "alloc")]
 mod allocating {

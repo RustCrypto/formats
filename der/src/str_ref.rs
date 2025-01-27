@@ -70,7 +70,7 @@ impl<'a> DecodeValue<'a> for StrRef<'a> {
     }
 }
 
-impl<'a> EncodeValue for StrRef<'a> {
+impl EncodeValue for StrRef<'_> {
     fn value_len(&self) -> Result<Length> {
         Ok(self.length)
     }

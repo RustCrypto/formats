@@ -151,7 +151,7 @@ impl<'a> DecodeValue<'a> for IntRef<'a> {
     }
 }
 
-impl<'a> EncodeValue for IntRef<'a> {
+impl EncodeValue for IntRef<'_> {
     fn value_len(&self) -> Result<Length> {
         // Signed integers always hold their full encoded form.
         Ok(self.inner.len())
@@ -168,11 +168,11 @@ impl<'a> From<&IntRef<'a>> for IntRef<'a> {
     }
 }
 
-impl<'a> FixedTag for IntRef<'a> {
+impl FixedTag for IntRef<'_> {
     const TAG: Tag = Tag::Integer;
 }
 
-impl<'a> OrdIsValueOrd for IntRef<'a> {}
+impl OrdIsValueOrd for IntRef<'_> {}
 
 #[cfg(feature = "alloc")]
 mod allocating {

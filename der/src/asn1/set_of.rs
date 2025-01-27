@@ -193,7 +193,7 @@ impl<'a, T> Iterator for SetOfIter<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for SetOfIter<'a, T> {}
+impl<T> ExactSizeIterator for SetOfIter<'_, T> {}
 
 /// ASN.1 `SET OF` backed by a [`Vec`].
 ///

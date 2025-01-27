@@ -234,7 +234,7 @@ impl<'a, T> ContextSpecificRef<'a, T> {
     }
 }
 
-impl<'a, T> EncodeValue for ContextSpecificRef<'a, T>
+impl<T> EncodeValue for ContextSpecificRef<'_, T>
 where
     T: EncodeValue + Tagged,
 {
@@ -247,7 +247,7 @@ where
     }
 }
 
-impl<'a, T> Tagged for ContextSpecificRef<'a, T>
+impl<T> Tagged for ContextSpecificRef<'_, T>
 where
     T: Tagged,
 {

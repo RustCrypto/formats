@@ -75,7 +75,7 @@ impl<'a> From<VideotexStringRef<'a>> for &'a [u8] {
     }
 }
 
-impl<'a> fmt::Debug for VideotexStringRef<'a> {
+impl fmt::Debug for VideotexStringRef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "VideotexString({:?})", self.as_str())
     }

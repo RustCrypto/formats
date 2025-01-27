@@ -127,7 +127,7 @@ impl<'a, T> Iterator for SequenceOfIter<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for SequenceOfIter<'a, T> {}
+impl<T> ExactSizeIterator for SequenceOfIter<'_, T> {}
 
 impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
 where

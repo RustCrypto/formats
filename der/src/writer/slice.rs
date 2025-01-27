@@ -126,7 +126,7 @@ impl<'a> SliceWriter<'a> {
     }
 }
 
-impl<'a> Writer for SliceWriter<'a> {
+impl Writer for SliceWriter<'_> {
     fn write(&mut self, slice: &[u8]) -> Result<()> {
         self.reserve(slice.len())?.copy_from_slice(slice);
         Ok(())
