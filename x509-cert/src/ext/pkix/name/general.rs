@@ -62,19 +62,18 @@ pub enum GeneralName {
     RegisteredId(ObjectIdentifier),
 }
 
-#[cfg(feature = "std")]
-impl From<std::net::IpAddr> for GeneralName {
-    fn from(ip: std::net::IpAddr) -> Self {
+impl From<core::net::IpAddr> for GeneralName {
+    fn from(ip: core::net::IpAddr) -> Self {
         // Safety: this is unfailable here, OctetString will issue an error if you go
         // over 256MiB, here the buffer is at most 16 bytes (ipv6). The two `expect`s
         // below are safe.
         let buf = match ip {
-            std::net::IpAddr::V4(v) => {
+            core::net::IpAddr::V4(v) => {
                 let value = v.octets();
                 OctetString::new(&value[..])
                     .expect("OctetString is not expected to fail with a 4 bytes long buffer")
             }
-            std::net::IpAddr::V6(v) => {
+            core::net::IpAddr::V6(v) => {
                 let value = v.octets();
                 OctetString::new(&value[..])
                     .expect("OctetString is not expected to fail with a 16 bytes long buffer")
@@ -85,7 +84,7 @@ impl From<std::net::IpAddr> for GeneralName {
     }
 }
 
-#[cfg(all(feature = "std", test))]
+#[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
@@ -93,7 +92,7 @@ mod tests {
 
     #[test]
     fn test_convert() {
-        use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+        use core::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
         let localhost_v4 = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
         let localhost_v6 = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
