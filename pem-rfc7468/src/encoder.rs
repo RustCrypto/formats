@@ -135,13 +135,13 @@ fn encapsulated_len_inner(
 ) -> Result<usize> {
     [
         PRE_ENCAPSULATION_BOUNDARY.len(),
-        label.as_bytes().len(),
+        label.len(),
         ENCAPSULATION_BOUNDARY_DELIMITER.len(),
         line_ending.len(),
         base64_len,
         line_ending.len(),
         POST_ENCAPSULATION_BOUNDARY.len(),
-        label.as_bytes().len(),
+        label.len(),
         ENCAPSULATION_BOUNDARY_DELIMITER.len(),
         line_ending.len(),
     ]
