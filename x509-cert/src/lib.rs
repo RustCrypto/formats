@@ -7,7 +7,10 @@
 )]
 #![forbid(unsafe_code)]
 #![warn(
+    clippy::alloc_instead_of_core,
     clippy::mod_module_files,
+    clippy::std_instead_of_alloc,
+    clippy::std_instead_of_core,
     clippy::unwrap_used,
     missing_docs,
     rust_2018_idioms,
