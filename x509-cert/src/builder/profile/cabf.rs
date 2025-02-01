@@ -1,8 +1,8 @@
 //! CA/Browser forum specific profiles
 //!
 //! <https://cabforum.org/wp-content/uploads/CA-Browser-Forum-BR-v2.0.1.pdf>
-use alloc::vec;
-use std::collections::HashSet;
+
+use alloc::{collections::BTreeSet, vec};
 
 use crate::{
     builder::{BuilderProfile, Error, Result},
@@ -41,7 +41,7 @@ pub fn check_names_encoding(name: &Name, multiple_allowed: bool) -> Result<()> {
     ];
     let mut ordering = enforce_ordering.iter();
 
-    let mut seen = HashSet::new();
+    let mut seen = BTreeSet::new();
 
     for rdn in name.iter_rdn() {
         if rdn.len() != 1 {
@@ -70,12 +70,12 @@ pub fn check_names_encoding(name: &Name, multiple_allowed: bool) -> Result<()> {
 ///
 /// BR 7.1.2.10.2 CA Certificate Naming
 pub fn ca_certificate_naming(subject: &Name) -> Result<()> {
-    let mut required = HashSet::from([
+    let mut required = BTreeSet::from([
         rfc4519::COUNTRY_NAME,
         rfc4519::ORGANIZATION_NAME,
         rfc4519::COMMON_NAME,
     ]);
-    let mut allowed = HashSet::from([
+    let mut allowed = BTreeSet::from([
         rfc4519::COUNTRY_NAME,
         rfc2256::STATE_OR_PROVINCE_NAME,
         rfc4519::LOCALITY_NAME,
