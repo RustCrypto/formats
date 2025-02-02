@@ -153,7 +153,7 @@ impl<'o, E: Encoding> Encoder<'o, E> {
 
     /// Perform Base64 encoding operation.
     fn perform_encode(&mut self, input: &[u8]) -> Result<usize, Error> {
-        let mut len = E::encode(input, self.remaining())?.as_bytes().len();
+        let mut len = E::encode(input, self.remaining())?.len();
 
         // Insert newline characters into the output as needed
         if let Some(line_wrapper) = &mut self.line_wrapper {

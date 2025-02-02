@@ -700,7 +700,7 @@ fn test_create_password_recipient_info() {
             }
         }
     }
-    impl<'a> PwriEncryptor for Aes128CbcPwriEncryptor<'a> {
+    impl PwriEncryptor for Aes128CbcPwriEncryptor<'_> {
         const BLOCK_LENGTH_BITS: usize = 128; // AES block length
         fn encrypt_rfc3211(
             &mut self,

@@ -22,7 +22,7 @@ impl StrOwned {
     /// Create a new [`StrOwned`], ensuring that the byte representation of
     /// the provided `str` value is shorter than `Length::max()`.
     pub fn new(s: String) -> Result<Self> {
-        let length = Length::try_from(s.as_bytes().len())?;
+        let length = Length::try_from(s.len())?;
 
         Ok(Self { inner: s, length })
     }

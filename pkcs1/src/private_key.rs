@@ -250,7 +250,7 @@ impl EncodeValue for OtherPrimeInfos<'_> {
 }
 
 #[cfg(not(feature = "alloc"))]
-impl<'a> der::FixedTag for OtherPrimeInfos<'a> {
+impl der::FixedTag for OtherPrimeInfos<'_> {
     const TAG: Tag = Tag::Sequence;
 }
 
