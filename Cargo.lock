@@ -360,7 +360,7 @@ dependencies = [
  "const-oid",
  "der",
  "ecdsa",
- "getrandom 0.3.0",
+ "getrandom 0.3.1",
  "hex-literal",
  "p256",
  "pbkdf2",
@@ -693,9 +693,9 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71393ecc86efbf00e4ca13953979ba8b94cfe549a4b74cc26d8b62f4d8feac2b"
+checksum = "43a49c392881ce6d5c3b8cb70f98717b7c07aabbdff06687b9030dbfbe2725f8"
 dependencies = [
  "cfg-if",
  "libc",
