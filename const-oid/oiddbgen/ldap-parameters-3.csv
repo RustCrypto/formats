@@ -201,7 +201,7 @@ generalizedTimeMatch,M,2.5.13.27,[RFC4517]
 generalizedTimeOrderingMatch,M,2.5.13.28,[RFC4517]
 generationQualifier,A,2.5.4.44,[RFC4519]
 givenName,A,2.5.4.42,[RFC4519]
-GN,A,RESERVED,[RFC4519]
+GN,A,2.5.4.42,[RFC4519],"should be reserved, overridden. context: issue_1647"
 governingStructureRule,A,2.5.21.10,[RFC4512]
 groupOfNames,O,2.5.6.9,[RFC4519]
 groupOfUniqueNames,O,2.5.6.17,[RFC4519]
