@@ -410,3 +410,12 @@ fn access_attributes() {
         "US"
     );
 }
+
+#[cfg(feature = "std")]
+#[test]
+fn decode_given_name() {
+    use std::str::FromStr;
+
+    Name::from_str("GN=my_name,SN=my_sn").unwrap();
+    Name::from_str("givenName=my_name,SN=my_sn").unwrap();
+}
