@@ -10,10 +10,17 @@ impl<'a> LdapParser<'a> {
         self.0.lines().filter_map(|line| {
             let (name, next) = line.split_at(line.find(',').unwrap());
             let (.., next) = next[1..].split_at(next[1..].find(',').unwrap());
-            let (obid, spec) = next[1..].split_at(next[1..].find(',').unwrap());
+            let (obid, next) = next[1..].split_at(next[1..].find(',').unwrap());
 
             let indx = obid.find('.')?;
             obid.split_at(indx).0.parse::<usize>().ok()?;
+
+            let spec = if let Some(boundary) = next[1..].find(',') {
+                let (spec, _comment) = next[..].split_at(boundary + 1);
+                spec
+            } else {
+                next
+            };
 
             if !spec.trim().starts_with(",[RFC") {
                 return None;

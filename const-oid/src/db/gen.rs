@@ -1543,6 +1543,7 @@ pub mod rfc4519 {
     pub const SN: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4.4");
     pub const SURNAME: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4.4");
     pub const NAME: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4.41");
+    pub const GN: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4.42");
     pub const GIVEN_NAME: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4.42");
     pub const INITIALS: crate::ObjectIdentifier = crate::ObjectIdentifier::new_unwrap("2.5.4.43");
     pub const GENERATION_QUALIFIER: crate::ObjectIdentifier =
@@ -4373,6 +4374,7 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc4519::SN, "sn"),
     (&rfc4519::SURNAME, "surname"),
     (&rfc4519::NAME, "name"),
+    (&rfc4519::GN, "GN"),
     (&rfc4519::GIVEN_NAME, "givenName"),
     (&rfc4519::INITIALS, "initials"),
     (&rfc4519::GENERATION_QUALIFIER, "generationQualifier"),
