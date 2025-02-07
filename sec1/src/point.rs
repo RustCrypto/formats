@@ -15,7 +15,7 @@ use core::{
     str,
 };
 use hybrid_array::{
-    typenum::{U1, U24, U28, U32, U48, U66},
+    typenum::{U1, U24, U28, U32, U48, U66, U8},
     Array, ArraySize,
 };
 
@@ -68,8 +68,8 @@ macro_rules! impl_modulus_size {
     }
 }
 
-// Support for 192-bit, 224-bit, 256-bit, 384-bit, and 521-bit modulus sizes
-impl_modulus_size!(U24, U28, U32, U48, U66);
+// Support for 64-bit, 192-bit, 224-bit, 256-bit, 384-bit, and 528-bit modulus sizes
+impl_modulus_size!(U8, U24, U28, U32, U48, U66);
 
 /// SEC1 encoded curve point.
 ///
