@@ -14,10 +14,7 @@ use core::{
     ops::{Add, Sub},
     str,
 };
-use hybrid_array::{
-    typenum::{U1, U24, U28, U32, U48, U66},
-    Array, ArraySize,
-};
+use hybrid_array::{typenum::U1, Array, ArraySize};
 
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
@@ -34,7 +31,9 @@ use zeroize::Zeroize;
 /// Trait for supported modulus sizes which precomputes the typenums for various point encodings so
 /// they don't need to be included as bounds.
 // TODO(tarcieri): replace this all with const generic expressions.
-pub trait ModulusSize: 'static + ArraySize + Copy + Debug {
+pub trait ModulusSize:
+    'static + ArraySize + Copy + Debug + Add<U1, Output = Self::CompressedPointSize>
+{
     /// Size of a compressed point for the given elliptic curve when encoded using the SEC1
     /// `Elliptic-Curve-Point-to-Octet-String` algorithm (including leading `0x02` or `0x03`
     /// tag byte).
@@ -50,26 +49,20 @@ pub trait ModulusSize: 'static + ArraySize + Copy + Debug {
 
     /// Size of an untagged point for given elliptic curve, i.e. size of two serialized base field
     /// elements when concatenated.
-    type UntaggedPointSize: 'static
-        + ArraySize
-        + Copy
-        + Debug
-        + Add<U1, Output = Self::UncompressedPointSize>
-        + Sub<Self, Output = Self>;
+    type UntaggedPointSize: 'static + ArraySize + Copy + Debug + Sub<Self, Output = Self>;
 }
 
-macro_rules! impl_modulus_size {
-    ($($size:ty),+) => {
-        $(impl ModulusSize for $size {
-            type CompressedPointSize = <$size as Add<U1>>::Output;
-            type UncompressedPointSize = <Self::UntaggedPointSize as Add<U1>>::Output;
-            type UntaggedPointSize = <$size as Add>::Output;
-        })+
-    }
+impl<T> ModulusSize for T
+where
+    T: 'static + ArraySize + Copy + Debug,
+    T: Add<U1, Output: 'static + ArraySize + Copy + Debug>,
+    T: Add<T, Output: 'static + ArraySize + Copy + Debug + Sub<T, Output = T>>,
+    <T as Add<U1>>::Output: Add<T, Output: 'static + ArraySize + Copy + Debug>,
+{
+    type CompressedPointSize = <T as Add<U1>>::Output;
+    type UncompressedPointSize = <Self::CompressedPointSize as Add<T>>::Output;
+    type UntaggedPointSize = <T as Add<T>>::Output;
 }
-
-// Support for 192-bit, 224-bit, 256-bit, 384-bit, and 521-bit modulus sizes
-impl_modulus_size!(U24, U28, U32, U48, U66);
 
 /// SEC1 encoded curve point.
 ///
