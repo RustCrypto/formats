@@ -1,7 +1,6 @@
 //! ASN.1 tag numbers
 
 use super::Tag;
-use crate::{Error, ErrorKind, Result};
 use core::fmt;
 
 /// ASN.1 tag numbers (i.e. lower 5 bits of a [`Tag`]).
@@ -11,15 +10,14 @@ use core::fmt;
 /// > bits 5 to 1 shall encode the number of the tag as a binary integer with
 /// > bit 5 as the most significant bit.
 ///
-/// This library supports tag numbers ranging from zero to 30 (inclusive),
-/// which can be represented as a single identifier octet.
+/// This library supports tag numbers ranging from zero to 30 (inclusive) for
+/// universal tags and arbitrary 32-bit tag numbers for application, private
+/// and context-specific tags.
 ///
 /// Section 8.1.2.4 describes how to support multi-byte tag numbers, which are
-/// encoded by using a leading tag number of 31 (`0b11111`). This library
-/// deliberately does not support this: tag numbers greater than 30 are
-/// disallowed.
+/// encoded by using a leading tag number of 31 (`0b11111`).
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
-pub struct TagNumber(pub(super) u8);
+pub struct TagNumber(pub u32);
 
 impl TagNumber {
     /// Tag number `0`
@@ -118,20 +116,9 @@ impl TagNumber {
     /// Mask value used to obtain the tag number from a tag octet.
     pub(super) const MASK: u8 = 0b11111;
 
-    /// Maximum tag number supported (inclusive).
-    const MAX: u8 = 30;
-
     /// Create a new tag number (const-friendly).
-    ///
-    /// Panics if the tag number is greater than `30`.
-    /// For a fallible conversion, use [`TryFrom`] instead.
-    pub const fn new(byte: u8) -> Self {
-        #[allow(clippy::panic)]
-        if byte > Self::MAX {
-            panic!("tag number out of range");
-        }
-
-        Self(byte)
+    pub const fn new(value: u32) -> Self {
+        Self(value)
     }
 
     /// Create an `APPLICATION` tag with this tag number.
@@ -159,25 +146,8 @@ impl TagNumber {
     }
 
     /// Get the inner value.
-    pub fn value(self) -> u8 {
+    pub fn value(self) -> u32 {
         self.0
-    }
-}
-
-impl TryFrom<u8> for TagNumber {
-    type Error = Error;
-
-    fn try_from(byte: u8) -> Result<Self> {
-        match byte {
-            0..=Self::MAX => Ok(Self(byte)),
-            _ => Err(ErrorKind::TagNumberInvalid.into()),
-        }
-    }
-}
-
-impl From<TagNumber> for u8 {
-    fn from(tag_number: TagNumber) -> u8 {
-        tag_number.0
     }
 }
 
@@ -192,7 +162,7 @@ impl fmt::Display for TagNumber {
 #[cfg(feature = "arbitrary")]
 impl<'a> arbitrary::Arbitrary<'a> for TagNumber {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Self::new(u.int_in_range(0..=Self::MAX)?))
+        Ok(Self::new(u.int_in_range(0..=30)?))
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
