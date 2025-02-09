@@ -359,6 +359,8 @@ mod writer;
 
 #[cfg(feature = "alloc")]
 mod bytes_owned;
+#[cfg(all(debug_assertions, feature = "std"))]
+mod debug;
 #[cfg(feature = "alloc")]
 mod document;
 #[cfg(feature = "alloc")]
@@ -382,6 +384,9 @@ pub use crate::{
 
 #[cfg(feature = "alloc")]
 pub use crate::{asn1::Any, document::Document};
+
+#[cfg(all(debug_assertions, feature = "std"))]
+pub use crate::debug::debug_print;
 
 #[cfg(feature = "derive")]
 pub use der_derive::{Choice, Enumerated, Sequence, ValueOrd};
