@@ -6,8 +6,8 @@ use crate::cert::CertificateChoices;
 use crate::content_info::{CmsVersion, ContentInfo};
 use crate::enveloped_data::{
     EncryptedContentInfo, EncryptedKey, EnvelopedData, KekIdentifier, KeyTransRecipientInfo,
-    OriginatorIdentifierOrKey, OriginatorInfo, PasswordRecipientInfo, RecipientIdentifier,
-    RecipientInfo, RecipientInfos, UserKeyingMaterial,
+    OriginatorInfo, PasswordRecipientInfo, RecipientIdentifier, RecipientInfo, RecipientInfos,
+    UserKeyingMaterial,
 };
 use crate::revocation::{RevocationInfoChoice, RevocationInfoChoices};
 use crate::signed_data::{
