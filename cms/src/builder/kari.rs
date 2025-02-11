@@ -191,7 +191,7 @@ where
 /// This type uses key agreement:  the recipient's public key and the sender's
 /// private key are used to generate a pairwise symmetric key, then
 /// the content-encryption key is encrypted in the pairwise symmetric key.
-pub struct KeyAgreeRecipientInfoBuilder<'a, R, C, KA>
+pub struct KeyAgreeRecipientInfoBuilder<R, C, KA>
 where
     R: CryptoRngCore,
     C: CurveArithmetic,
@@ -208,10 +208,10 @@ where
     /// Content encryption algorithm
     key_agreement_algorithm: PhantomData<KA>,
     /// Rng
-    rng: &'a mut R,
+    _rng: PhantomData<R>,
 }
 
-impl<'a, R, C, KA> KeyAgreeRecipientInfoBuilder<'a, R, C, KA>
+impl<R, C, KA> KeyAgreeRecipientInfoBuilder<R, C, KA>
 where
     R: CryptoRngCore,
     C: CurveArithmetic,
@@ -223,7 +223,6 @@ where
         rid: KeyAgreeRecipientIdentifier,
         eckey_encryption_info: EcKeyEncryptionInfo<C>,
         key_wrap_algorithm: KeyWrapAlgorithm,
-        rng: &'a mut R,
     ) -> Result<Self> {
         Ok(KeyAgreeRecipientInfoBuilder {
             ukm,
@@ -231,11 +230,11 @@ where
             key_wrap_algorithm,
             rid,
             key_agreement_algorithm: PhantomData,
-            rng,
+            _rng: PhantomData,
         })
     }
 }
-impl<'a, R, C, KA> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<'a, R, C, KA>
+impl<R, C, KA> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R, C, KA>
 where
     R: CryptoRngCore,
     KA: KeyAgreementAlgorithm + AssociatedOid,
@@ -243,6 +242,9 @@ where
     AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
     FieldBytesSize<C>: ModulusSize,
 {
+    /// Associated Rng type
+    type Rng = R;
+
     /// Returns the RecipientInfoType
     fn recipient_info_type(&self) -> RecipientInfoType {
         RecipientInfoType::Kari
@@ -268,7 +270,11 @@ where
     /// [RFC 5753 Section 3.1.1]: https://datatracker.ietf.org/doc/html/rfc5753#section-3.1.1
     /// [RFC 5753 Section 3.1.2]: https://datatracker.ietf.org/doc/html/rfc5753#section-3.1.2
     /// [RFC 5753 Section 3.2.1]: https://datatracker.ietf.org/doc/html/rfc5753#section-3.2.1
-    fn build(&mut self, content_encryption_key: &[u8]) -> Result<RecipientInfo> {
+    fn build_with_rng(
+        &mut self,
+        content_encryption_key: &[u8],
+        rng: &mut Self::Rng,
+    ) -> Result<RecipientInfo> {
         // Encrypt key
         let (
             encrypted_key,
@@ -278,7 +284,7 @@ where
         ) = match self.eckey_encryption_info {
             EcKeyEncryptionInfo::Ec(recipient_public_key) => {
                 // Generate ephemeral key using ecdh
-                let ephemeral_secret = EphemeralSecret::random(self.rng);
+                let ephemeral_secret = EphemeralSecret::random(rng);
                 let ephemeral_public_key_encoded_point =
                     ephemeral_secret.public_key().to_encoded_point(false);
 
