@@ -130,12 +130,12 @@ where
         let shared_info_der = shared_info.to_der()?;
         let secret_bytes = secret.raw_secret_bytes();
 
-        ansi_x963_kdf::derive_key_into::<D>(&secret_bytes, &shared_info_der, key_wrapper.as_mut())
+        ansi_x963_kdf::derive_key_into::<D>(secret_bytes, &shared_info_der, key_wrapper.as_mut())
             .map_err(|_| {
-                super::Error::Builder(String::from(
-                    "Could not generate a shared secret via ansi-x9.63-kdf SHA-224",
-                ))
-            })?;
+            super::Error::Builder(String::from(
+                "Could not generate a shared secret via ansi-x9.63-kdf",
+            ))
+        })?;
         Ok(())
     }
 }
