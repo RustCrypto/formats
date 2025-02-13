@@ -204,8 +204,6 @@ pub(crate) fn calculate_value(byte: u8) -> Result<(usize, usize), Error> {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-    use std::vec::Vec;
 
     use super::*;
 
@@ -227,7 +225,7 @@ mod tests {
     ];
 
     #[test]
-    fn test_size() {
+    fn tls_serialized_len() {
         for (value, len, _) in TESTS {
             assert_eq!(
                 TlsVarInt::try_from(value)
@@ -238,8 +236,11 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
-    fn test_tls_serde() {
+    fn tls_serialize() {
+        use crate::alloc::vec::Vec;
+
         for (value, len, bytes) in TESTS {
             let mut buf = Vec::new();
             let written = TlsVarInt::try_from(value)
@@ -249,11 +250,13 @@ mod tests {
             assert_eq!(written, len, "{value}");
             assert_eq!(buf.len(), len, "{value}");
             assert_eq!(&buf[..], bytes, "{value}");
+        }
+    }
 
-            let out = TlsVarInt::tls_deserialize(&mut Cursor::new(bytes))
-                .expect("tls deserialize failed");
-            assert_eq!(out, TlsVarInt::try_from(value).expect("value too large"));
-
+    #[test]
+    fn tls_deserialize_bytes() {
+        for (value, len, bytes) in TESTS {
+            assert_eq!(len, bytes.len());
             let (out, remainder) =
                 TlsVarInt::tls_deserialize_bytes(bytes).expect("tls deserialize bytes failed");
             assert_eq!(remainder.len(), 0);
@@ -261,15 +264,34 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
-    fn test_non_canonical_encoding() {
-        let out = TlsVarInt::tls_deserialize(&mut Cursor::new(&[0x40, 0x25]))
-            .expect("tls deserialize failed");
-        assert_eq!(out, TlsVarInt(37));
+    fn tls_deserialize() {
+        use std::io::Cursor;
 
+        for (value, len, bytes) in TESTS {
+            assert_eq!(len, bytes.len());
+            let out = TlsVarInt::tls_deserialize(&mut Cursor::new(bytes))
+                .expect("tls deserialize failed");
+            assert_eq!(out, TlsVarInt::try_from(value).expect("value too large"));
+        }
+    }
+
+    #[test]
+    fn non_canonical_encoding_deserialize_bytes() {
         let (out, remaining) =
             TlsVarInt::tls_deserialize_bytes(&[0x40, 0x25]).expect("tls deserialize bytes failed");
         assert_eq!(remaining.len(), 0);
+        assert_eq!(out, TlsVarInt(37));
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn non_canonical_encoding_deserialize() {
+        use std::io::Cursor;
+
+        let out = TlsVarInt::tls_deserialize(&mut Cursor::new(&[0x40, 0x25]))
+            .expect("tls deserialize failed");
         assert_eq!(out, TlsVarInt(37));
     }
 }
