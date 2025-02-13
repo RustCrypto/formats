@@ -141,7 +141,6 @@ impl Deserialize for TlsVarInt {
 }
 
 impl DeserializeBytes for TlsVarInt {
-    #[cfg(feature = "std")]
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
@@ -149,14 +148,16 @@ impl DeserializeBytes for TlsVarInt {
     {
         let (len_byte, mut remainder) = u8::tls_deserialize_bytes(bytes)?;
 
-        let (value, value_len) = calculate_value(len_byte)?;
+        let (value, len) = calculate_value(len_byte)?;
         let mut value: u64 = value.try_into().map_err(|_| Error::InvalidInput)?;
 
-        for _ in 1..value_len {
+        for _ in 1..len {
             let (next, next_remainder) = u8::tls_deserialize_bytes(remainder)?;
             remainder = next_remainder;
             value = (value << 8) + u64::from(next);
         }
+
+        check_min_len(value, len)?;
 
         Ok((TlsVarInt(value), remainder))
     }
