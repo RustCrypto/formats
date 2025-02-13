@@ -377,6 +377,7 @@ fn parse_parts<'a, R: Reader<'a>>(first_byte: u8, reader: &mut R) -> Result<(boo
 }
 
 impl Encode for Tag {
+    #[allow(clippy::cast_possible_truncation)]
     fn encoded_len(&self) -> Result<Length> {
         let number = self.number().value();
 
@@ -389,6 +390,7 @@ impl Encode for Tag {
         Ok(length)
     }
 
+    #[allow(clippy::cast_possible_truncation)]
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         let mut first_byte = self.class() as u8 | u8::from(self.is_constructed()) << 5;
 

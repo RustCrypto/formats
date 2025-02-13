@@ -17,6 +17,7 @@ use core::fmt;
 /// encoded by using a leading tag number of 31 (`0b11111`).
 ///
 /// This library supports tag numbers with 16 bit values
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct TagNumber(pub u16);
 
@@ -155,18 +156,5 @@ impl TagNumber {
 impl fmt::Display for TagNumber {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-// Implement by hand because the derive would create invalid values.
-// Use the constructor to create a valid value.
-#[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for TagNumber {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Self::new(u.int_in_range(0..=Self::MAX)?))
-    }
-
-    fn size_hint(depth: usize) -> (usize, Option<usize>) {
-        u8::size_hint(depth)
     }
 }
