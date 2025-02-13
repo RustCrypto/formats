@@ -278,6 +278,9 @@ mod tests {
     }
 
     #[test]
+    // Note: MLS requires minimum-size encoding
+    // <https://www.rfc-editor.org/rfc/rfc9420.html#name-variable-size-vector-length>
+    #[cfg_attr(feature = "mls", should_panic)]
     fn non_canonical_encoding_deserialize_bytes() {
         let (out, remaining) =
             TlsVarInt::tls_deserialize_bytes(&[0x40, 0x25]).expect("tls deserialize bytes failed");
@@ -287,6 +290,9 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
+    // Note: MLS requires minimum-size encoding
+    // <https://www.rfc-editor.org/rfc/rfc9420.html#name-variable-size-vector-length>
+    #[cfg_attr(feature = "mls", should_panic)]
     fn non_canonical_encoding_deserialize() {
         use std::io::Cursor;
 
