@@ -1,9 +1,6 @@
 //! Sequence field IR and lowerings
 
-use crate::{
-    attributes::{Class, ClassTokens},
-    Asn1Type, FieldAttrs, TagMode, TypeAttrs,
-};
+use crate::{Asn1Type, FieldAttrs, TagMode, TagNumber, TypeAttrs};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, Ident, Path, Type};
@@ -68,8 +65,8 @@ impl SequenceField {
                 "`type` and `default` are mutually exclusive"
             );
 
-            // TODO(tarcieri): support for fields with defaults?
-            if self.attrs.class.is_none() {
+            // TODO(tarcieri): support for context-specific fields with defaults?
+            if self.attrs.context_specific.is_none() {
                 lowerer.apply_default(default, &self.field_type);
             }
         }
@@ -91,8 +88,8 @@ impl SequenceField {
             lowerer.apply_asn1_type(ty, attrs.optional);
         }
 
-        if let Some(class) = &attrs.class {
-            lowerer.apply_class(class, &attrs.tag_mode, attrs.optional)
+        if let Some(tag_number) = &attrs.context_specific {
+            lowerer.apply_context_specific(tag_number, &attrs.tag_mode, attrs.optional);
         }
 
         if let Some(default) = &attrs.default {
@@ -207,21 +204,22 @@ impl LowerFieldEncoder {
         };
     }
 
-    /// Apply the non-universal class.
-    fn apply_class(&mut self, class: &Class, tag_mode: &TagMode, optional: bool) {
+    /// Make this field context-specific.
+    fn apply_context_specific(
+        &mut self,
+        tag_number: &TagNumber,
+        tag_mode: &TagMode,
+        optional: bool,
+    ) {
         let encoder = &self.encoder;
+        let number_tokens = tag_number.to_tokens();
         let mode_tokens = tag_mode.to_tokens();
-        let ClassTokens {
-            tag_number,
-            ref_type,
-            ..
-        } = class.to_tokens();
 
         if optional {
             self.encoder = quote! {
                 #encoder.as_ref().map(|field| {
-                    #ref_type {
-                        tag_number: #tag_number,
+                    ::der::asn1::ContextSpecificRef {
+                        tag_number: #number_tokens,
                         tag_mode: #mode_tokens,
                         value: field,
                     }
@@ -229,8 +227,8 @@ impl LowerFieldEncoder {
             };
         } else {
             self.encoder = quote! {
-                #ref_type {
-                    tag_number: #tag_number,
+                ::der::asn1::ContextSpecificRef {
+                    tag_number: #number_tokens,
                     tag_mode: #mode_tokens,
                     value: &#encoder,
                 }
@@ -242,7 +240,7 @@ impl LowerFieldEncoder {
 #[cfg(test)]
 mod tests {
     use super::SequenceField;
-    use crate::{attributes::Class, FieldAttrs, TagMode, TagNumber};
+    use crate::{FieldAttrs, TagMode, TagNumber};
     use proc_macro2::Span;
     use quote::quote;
     use syn::{punctuated::Punctuated, Ident, Path, PathSegment, Type, TypePath};
@@ -271,7 +269,7 @@ mod tests {
 
         let attrs = FieldAttrs {
             asn1_type: None,
-            class: None,
+            context_specific: None,
             default: None,
             extensible: false,
             optional: false,
@@ -311,7 +309,7 @@ mod tests {
 
         let attrs = FieldAttrs {
             asn1_type: None,
-            class: Some(Class::ContextSpecific(TagNumber(0))),
+            context_specific: Some(TagNumber(0)),
             default: None,
             extensible: false,
             optional: false,
