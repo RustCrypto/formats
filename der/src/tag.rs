@@ -495,8 +495,10 @@ impl fmt::Debug for Tag {
 
 #[cfg(test)]
 mod tests {
+    use hex_literal::hex;
+
     use super::{Class, Tag, TagNumber};
-    use crate::{Length, Reader, SliceReader};
+    use crate::{Decode, ErrorKind, Length, Reader, SliceReader};
 
     #[test]
     fn tag_class() {
@@ -560,5 +562,24 @@ mod tests {
         assert_eq!(reader.position(), Length::ZERO);
         assert_eq!(Tag::peek(&reader).unwrap(), Tag::Integer);
         assert_eq!(reader.position(), Length::ZERO); // Position unchanged
+    }
+
+    #[test]
+    fn decoding() {
+        // valid tag number but must be in short form
+        assert_eq!(
+            ErrorKind::TagNumberInvalid,
+            Tag::from_der(&hex!("FF03")).unwrap_err().kind()
+        );
+        // universal tag with long form
+        assert_eq!(
+            ErrorKind::TagNumberInvalid,
+            Tag::from_der(&hex!("1FFF")).unwrap_err().kind()
+        );
+        // leading zeros in long form
+        assert_eq!(
+            ErrorKind::TagNumberInvalid,
+            Tag::from_der(&hex!("5F8020")).unwrap_err().kind()
+        );
     }
 }
