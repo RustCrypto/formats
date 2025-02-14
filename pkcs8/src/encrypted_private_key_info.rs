@@ -12,7 +12,7 @@ use pkcs5::EncryptionScheme;
 use der::{asn1::OctetString, SecretDocument};
 
 #[cfg(feature = "encryption")]
-use {pkcs5::pbes2, rand_core::CryptoRngCore};
+use {pkcs5::pbes2, rand_core::CryptoRng};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -64,8 +64,8 @@ where
     /// Encrypt the given ASN.1 DER document using a symmetric encryption key
     /// derived from the provided password.
     #[cfg(feature = "encryption")]
-    pub(crate) fn encrypt(
-        rng: &mut impl CryptoRngCore,
+    pub(crate) fn encrypt<R: CryptoRng>(
+        rng: &mut R,
         password: impl AsRef<[u8]>,
         doc: &[u8],
     ) -> Result<SecretDocument> {
