@@ -89,9 +89,7 @@ impl<T> ContextSpecific<T> {
         F: FnOnce(&mut R) -> Result<Self, E>,
         E: From<Error>,
     {
-        while let Some(octet) = reader.peek_byte() {
-            let tag = Tag::try_from(octet)?;
-
+        while let Some(tag) = Tag::peek_optional(reader)? {
             if !tag.is_context_specific() || (tag.number() > tag_number) {
                 break;
             } else if tag.number() == tag_number {
