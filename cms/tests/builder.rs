@@ -32,6 +32,10 @@ use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, AttributeValue};
 use x509_cert::serial_number::SerialNumber;
 
+// Modules
+#[path = "builder/kari.rs"]
+mod kari;
+
 // TODO bk replace this by const_oid definitions as soon as released
 const RFC8894_ID_MESSAGE_TYPE: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("2.16.840.1.113733.1.9.2");
