@@ -6,5 +6,3 @@
 //! - kdf: KDF using ANSI-x9.63 Key Derivation Function
 
 pub(super) mod kw;
-
-pub(super) use kw::KeyWrapper;

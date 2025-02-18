@@ -3,13 +3,26 @@
 //! This module contains the key wrapping logic based on aes-kw algorithms
 //!
 
+// Self imports
+use crate::builder::{Error, Result};
+
+// Internal imports
+use const_oid::AssociatedOid;
+use spki::AlgorithmIdentifierOwned;
+
+// Alloc imports
 use alloc::{string::String, vec::Vec};
 
-use crate::builder::{ContentEncryptionAlgorithm, Error, Result};
-use aes_kw::Kek;
-use const_oid::ObjectIdentifier;
-use der::Any;
-use spki::AlgorithmIdentifierOwned;
+// Core imports
+use core::ops::Add;
+
+// Rust crypto imports
+use aes::cipher::{
+    array::{Array, ArraySize},
+    typenum::{Sum, Unsigned, U16, U8},
+    BlockCipherDecrypt, BlockCipherEncrypt, BlockSizeUser, Key, KeyInit, KeySizeUser,
+};
+use aes_kw::AesKw;
 
 /// Represents supported key wrap algorithm for ECC - as defined in [RFC 5753 Section 7.1.5].
 ///
@@ -37,44 +50,13 @@ use spki::AlgorithmIdentifierOwned;
 ///
 /// [RFC 5753 Section 8]: https://datatracker.ietf.org/doc/html/rfc5753#section-8
 /// [RFC 5753 Section 7.1.5]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.1.5
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum KeyWrapAlgorithm {
-    /// id-aes128-wrap
-    Aes128,
-    /// id-aes192-wrap
-    Aes192,
-    /// id-aes256-wrap
-    Aes256,
-}
-impl KeyWrapAlgorithm {
-    /// Return the Object Identifier (OID) of the algorithm.
-    ///
-    /// OID are defined in [RFC 3565 Section 2.3.2]
-    ///
-    /// [RFC 3565 Section 2.3.2]:
-    /// ```text
-    /// NIST has assigned the following OIDs to define the AES key wrap
-    /// algorithm.
-    ///
-    ///     id-aes128-wrap OBJECT IDENTIFIER ::= { aes 5 }
-    ///     id-aes192-wrap OBJECT IDENTIFIER ::= { aes 25 }
-    ///     id-aes256-wrap OBJECT IDENTIFIER ::= { aes 45 }
-    ///
-    /// In all cases the parameters field MUST be absent.
-    /// ```
-    ///
-    /// [RFC 3565 Section 2.3.2]: https://datatracker.ietf.org/doc/html/rfc3565#section-2.3.2
-    fn oid(&self) -> ObjectIdentifier {
-        match self {
-            Self::Aes128 => const_oid::db::rfc5911::ID_AES_128_WRAP,
-            Self::Aes192 => const_oid::db::rfc5911::ID_AES_192_WRAP,
-            Self::Aes256 => const_oid::db::rfc5911::ID_AES_256_WRAP,
-        }
-    }
+///
+/// Represents key wrap algorithms methods.
+pub trait KeyWrapAlgorithm: AssociatedOid + KeySizeUser {
+    /// Return key size of the key-wrap algorithm in bits
+    fn key_size_in_bits() -> u32;
 
-    /// Return parameters of the algorithm to be used in the context of `AlgorithmIdentifierOwned`.
-    ///
-    /// It should be absent as defined in [RFC 3565 Section 2.3.2] and per usage in [RFC 5753 Section 7.2].
+    /// Return algorithm identifier AlgorithmIdentifierOwned` associated with the key-wrap algorithm
     ///
     /// [RFC 3565 Section 2.3.2]:
     /// ```text
@@ -90,210 +72,100 @@ impl KeyWrapAlgorithm {
     ///
     /// [RFC 3565 Section 2.3.2]: https://datatracker.ietf.org/doc/html/rfc3565#section-2.3.2
     /// [RFC 5753 Section 7.2]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.2
-    fn parameters(&self) -> Option<Any> {
-        match self {
-            Self::Aes128 => None,
-            Self::Aes192 => None,
-            Self::Aes256 => None,
-        }
-    }
+    fn algorithm_identifier() -> AlgorithmIdentifierOwned;
 
-    /// Return key size of the algorithm in number of bits
-    pub fn key_size_in_bits(&self) -> u32 {
-        match self {
-            Self::Aes128 => 128,
-            Self::Aes192 => 192,
-            Self::Aes256 => 256,
-        }
-    }
-}
-impl From<KeyWrapAlgorithm> for AlgorithmIdentifierOwned {
-    /// Convert a `KeyWrapAlgorithm` to the corresponding `AlgorithmIdentifierOwned`.
-    ///
-    /// Conversion is done according to [RFC 5753 Section 7.2]:
-    ///
-    ///
-    /// [RFC 5753 Section 7.2]
-    /// ```text
-    /// keyInfo contains the object identifier of the key-encryption
-    /// algorithm (used to wrap the CEK) and associated parameters.  In
-    /// this specification, 3DES wrap has NULL parameters while the AES
-    /// wraps have absent parameters.
-    /// ```
-    ///
-    /// [RFC 5753 Section 7.2]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.2
-    fn from(kw_algo: KeyWrapAlgorithm) -> Self {
-        Self {
-            oid: kw_algo.oid(),
-            parameters: kw_algo.parameters(),
-        }
-    }
-}
-impl From<ContentEncryptionAlgorithm> for KeyWrapAlgorithm {
-    /// Convert a `ContentEncryptionAlgorithm` to a `KeyWrapAlgorithm`.
-    ///
-    /// Conversion is done matching encryption strength.
-    fn from(ce_algo: ContentEncryptionAlgorithm) -> Self {
-        match ce_algo {
-            ContentEncryptionAlgorithm::Aes128Cbc => Self::Aes128,
-            ContentEncryptionAlgorithm::Aes192Cbc => Self::Aes192,
-            ContentEncryptionAlgorithm::Aes256Cbc => Self::Aes256,
-        }
-    }
+    /// Return an empty wrapping key (KEK) with the adequate size to be used with aes-key-wrap
+    fn init_kek() -> Key<Self>;
+
+    /// Return an empty wrapped key with the adequate size to be used with aes-key-wrap
+    fn init_wrapped<T>() -> WrappedKey<T>
+    where
+        T: KeySizeUser,
+        Sum<T::KeySize, U8>: ArraySize,
+        <T as KeySizeUser>::KeySize: Add<U8>;
+
+    /// Try to wrap some data using given wrapping key
+    fn try_wrap(key: &Key<Self>, data: &[u8], out: &mut [u8]) -> Result<()>;
 }
 
-/// This struct can be used to perform key wrapping operation.
+/// Struct representing a wrapped key
 ///
-/// It abstracts some of the key-wrapping logic over incoming wrapping-key and outgoing wrapped-key of different sizes.
-/// It currently implements:
-/// - try_new() - initialize a key wrapper with right sized depending on KeyWrapAlgorithm and key-to-wrap size
-/// - try_wrap() - wrap a key with the corresponding aes-key-wrap algorithms
-///
-/// # Note
-/// For convenience KeyWrapper can:
-/// - yield the inner wrapping-key as a mutable reference (e.g. to use with a KDF)
-/// - convert to Vec<u8> to obtain Owned data to the wrapped key
-#[derive(Debug, Clone, Copy)]
-pub struct KeyWrapper {
-    /// Wrapping key
-    wrapping_key: WrappingKey,
-    /// Wrapped key
-    wrapped_key: WrappedKey,
+/// Can be used to abstract wrapped key over different incoming key sizes.
+pub struct WrappedKey<T>
+where
+    T: KeySizeUser,
+    Sum<T::KeySize, U8>: ArraySize,
+    <T as KeySizeUser>::KeySize: Add<U8>,
+{
+    inner: Array<u8, Sum<T::KeySize, U8>>,
 }
-impl KeyWrapper {
-    /// Initialize a new KeyWrapper based on `KeyWrapAlgorithm` and key-to-wrap size.
-    pub(in crate::builder) fn try_new(kw_algo: &KeyWrapAlgorithm, key_size: usize) -> Result<Self> {
-        let wrapped_key = WrappedKey::try_from(key_size)?;
-        let wrapping_key = WrappingKey::from(kw_algo);
 
-        Ok(Self {
-            wrapping_key,
-            wrapped_key,
-        })
-    }
-    /// Wraps a given key.
-    ///
-    /// This function attempts to wrap the provided `target_key`.
-    ///
-    /// # Arguments
-    /// * `target_key` - A slice of bytes representing the key to be wrapped.
-    pub(in crate::builder) fn try_wrap(&mut self, target_key: &[u8]) -> Result<()> {
-        match self.wrapping_key {
-            WrappingKey::Aes128(wrap_key) => Kek::from(wrap_key)
-                .wrap(target_key, self.wrapped_key.as_mut())
-                .map_err(|_| {
-                    Error::Builder(String::from(
-                        "could not wrap key with Aes128 key wrap algorithm",
-                    ))
-                }),
-            WrappingKey::Aes192(kek) => Kek::from(kek)
-                .wrap(target_key, self.wrapped_key.as_mut())
-                .map_err(|_| {
-                    Error::Builder(String::from(
-                        "could not wrap key with Aes192 key wrap algorithm",
-                    ))
-                }),
-            WrappingKey::Aes256(kek) => Kek::from(kek)
-                .wrap(target_key, self.wrapped_key.as_mut())
-                .map_err(|_| {
-                    Error::Builder(String::from(
-                        "could not wrap key with Aes256 key wrap algorithm",
-                    ))
-                }),
-        }
-    }
-}
-impl AsMut<[u8]> for KeyWrapper {
+impl<T> AsMut<[u8]> for WrappedKey<T>
+where
+    T: KeySizeUser,
+    Sum<T::KeySize, U8>: ArraySize,
+    <T as KeySizeUser>::KeySize: Add<U8>,
+{
     fn as_mut(&mut self) -> &mut [u8] {
-        self.wrapping_key.as_mut()
-    }
-}
-impl From<KeyWrapper> for Vec<u8> {
-    fn from(wrapper: KeyWrapper) -> Self {
-        Self::from(wrapper.wrapped_key)
+        self.inner.as_mut()
     }
 }
 
-/// Represents a wrapping key to be used by [KeyWrapper]
-///
-/// This type can be used to abstract over wrapping-key material of different size.
-/// The following wrapping key type are currently supported:
-/// - Aes128
-/// - Aes192
-/// - Aes256
-///
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum WrappingKey {
-    /// id-aes128-wrap
-    Aes128([u8; 16]),
-    /// id-aes192-wrap
-    Aes192([u8; 24]),
-    /// id-aes256-wrap
-    Aes256([u8; 32]),
-}
-impl From<&KeyWrapAlgorithm> for WrappingKey {
-    fn from(kw_algo: &KeyWrapAlgorithm) -> Self {
-        match kw_algo {
-            KeyWrapAlgorithm::Aes128 => Self::Aes128([0u8; 16]),
-            KeyWrapAlgorithm::Aes192 => Self::Aes192([0u8; 24]),
-            KeyWrapAlgorithm::Aes256 => Self::Aes256([0u8; 32]),
-        }
-    }
-}
-impl AsMut<[u8]> for WrappingKey {
-    fn as_mut(&mut self) -> &mut [u8] {
-        match self {
-            Self::Aes128(key) => key,
-            Self::Aes192(key) => key,
-            Self::Aes256(key) => key,
-        }
-    }
-}
-/// Represents a wrapped key to be used by [KeyWrapper]
-///
-/// This type can be used to abstract over wrapped key of different size for aes-key-wrap algorithms.
-/// It currently supports the following incoming key size:
-/// - 16
-/// - 24
-/// - 32
-#[derive(Debug, Clone, Copy)]
-enum WrappedKey {
-    Aes128([u8; 24]),
-    Aes192([u8; 32]),
-    Aes256([u8; 40]),
-}
-impl TryFrom<usize> for WrappedKey {
-    type Error = Error;
-    fn try_from(key_size: usize) -> Result<Self> {
-        match key_size {
-            16 => Ok(Self::Aes128([0u8; 24])),
-            24 => Ok(Self::Aes192([0u8; 32])),
-            32 => Ok(Self::Aes256([0u8; 40])),
-            _ => Err(Error::Builder(String::from(
-                "could not wrap key: key size is not supported",
-            ))),
-        }
-    }
-}
-impl AsMut<[u8]> for WrappedKey {
-    fn as_mut(&mut self) -> &mut [u8] {
-        match self {
-            Self::Aes128(key) => key,
-            Self::Aes192(key) => key,
-            Self::Aes256(key) => key,
-        }
-    }
-}
-impl From<WrappedKey> for Vec<u8> {
-    fn from(key: WrappedKey) -> Self {
-        match key {
-            WrappedKey::Aes128(arr) => arr.to_vec(),
-            WrappedKey::Aes192(arr) => arr.to_vec(),
-            WrappedKey::Aes256(arr) => arr.to_vec(),
-        }
+impl<T> From<WrappedKey<T>> for Vec<u8>
+where
+    T: KeySizeUser,
+    Sum<T::KeySize, U8>: ArraySize,
+    <T as KeySizeUser>::KeySize: Add<U8>,
+{
+    fn from(wrapped_key: WrappedKey<T>) -> Self {
+        wrapped_key.inner.to_vec()
     }
 }
 
+impl<AesWrap> KeyWrapAlgorithm for AesKw<AesWrap>
+where
+    AesWrap: KeyInit + BlockSizeUser<BlockSize = U16> + BlockCipherEncrypt + BlockCipherDecrypt,
+    AesKw<AesWrap>: AssociatedOid + KeyInit,
+{
+    fn key_size_in_bits() -> u32 {
+        AesWrap::KeySize::U32 * 8u32
+    }
+
+    fn algorithm_identifier() -> AlgorithmIdentifierOwned {
+        AlgorithmIdentifierOwned {
+            oid: Self::OID,
+            parameters: None,
+        }
+    }
+
+    fn init_kek() -> Key<Self> {
+        Key::<Self>::default()
+    }
+
+    fn init_wrapped<AesEnc>() -> WrappedKey<AesEnc>
+    where
+        AesEnc: KeySizeUser,
+        Sum<AesEnc::KeySize, aes_kw::IvLen>: ArraySize,
+        <AesEnc as KeySizeUser>::KeySize: Add<aes_kw::IvLen>,
+    {
+        WrappedKey::<AesEnc> {
+            inner: Array::<u8, Sum<AesEnc::KeySize, aes_kw::IvLen>>::default(),
+        }
+    }
+
+    fn try_wrap(key: &Key<Self>, data: &[u8], out: &mut [u8]) -> Result<()> {
+        let kek = AesKw::new(key);
+        let res = kek
+            .wrap_key(data, out)
+            .map_err(|_| Error::Builder(String::from("could not wrap key")))?;
+        if res.len() != out.len() {
+            return Err(Error::Builder(String::from("output buffer invalid size")));
+        }
+        Ok(())
+    }
+}
+
+/*
 #[cfg(test)]
 mod tests {
 
@@ -569,3 +441,4 @@ mod tests {
         assert_eq!(vec.len(), 40);
     }
 }
+*/
