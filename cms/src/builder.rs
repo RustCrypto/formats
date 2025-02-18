@@ -53,7 +53,7 @@ mod utils;
 pub use kari::{
     DhSinglePassStdDhKdf, EcKeyEncryptionInfo, KeyAgreeRecipientInfoBuilder, KeyAgreementAlgorithm,
 };
-pub use utils::kw::{KeyWrapAlgorithm, KeyWrapper};
+pub use utils::kw::KeyWrapAlgorithm;
 
 /// Error type
 #[derive(Debug)]

@@ -53,7 +53,7 @@ dependencies = [
 [[package]]
 name = "aes-kw"
 version = "0.3.0-pre"
-source = "git+https://github.com/RustCrypto/key-wraps.git#c9437ce4933822252863fd64fc06c631405ad8b1"
+source = "git+https://github.com/RustCrypto/key-wraps.git#bb4402822ec6b876d87b85f6495b8a4ca9a295bd"
 dependencies = [
  "aes",
  "const-oid",

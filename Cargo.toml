@@ -67,6 +67,14 @@ x509-ocsp = { path = "./x509-ocsp" }
 # https://github.com/RustCrypto/signatures/pull/923
 ecdsa   = { git = "https://github.com/RustCrypto/signatures.git" }
 rfc6979 = { git = "https://github.com/RustCrypto/signatures.git" }
+# https://github.com/RustCrypto/key-wraps/pull/34
+# https://github.com/RustCrypto/key-wraps/pull/35
+# https://github.com/RustCrypto/key-wraps/pull/39
+aes-kw = { git = "https://github.com/RustCrypto/key-wraps.git" }
+
+
+# https://github.com/RustCrypto/KDFs/pull/102
+ansi-x963-kdf = { git = "https://github.com/RustCrypto/KDFs.git" }
 
 
 # https://github.com/RustCrypto/traits/pull/1777

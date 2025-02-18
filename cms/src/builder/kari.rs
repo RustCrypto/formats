@@ -8,8 +8,9 @@
 
 // Super imports
 use super::{
-    utils::KeyWrapper, AlgorithmIdentifierOwned, CryptoRngCore, KeyWrapAlgorithm,
-    RecipientInfoBuilder, RecipientInfoType, Result, UserKeyingMaterial,
+    utils::kw::{KeyWrapAlgorithm, WrappedKey},
+    AlgorithmIdentifierOwned, CryptoRngCore, RecipientInfoBuilder, RecipientInfoType, Result,
+    UserKeyingMaterial,
 };
 
 // Crate imports
@@ -31,12 +32,17 @@ use der::{
 };
 
 // Core imports
-use core::marker::PhantomData;
+use core::{marker::PhantomData, ops::Add};
 
 // Alloc imports
 use alloc::{string::String, vec, vec::Vec};
 
 // RustCrypto imports
+use aes::cipher::{
+    array::ArraySize,
+    typenum::{Sum, U8},
+    KeySizeUser,
+};
 use digest::{Digest, FixedOutputReset};
 use elliptic_curve::{
     ecdh::{EphemeralSecret, SharedSecret},
@@ -101,13 +107,16 @@ pub struct EccCmsSharedInfo {
 /// [RFC 5753 Section 8]: https://datatracker.ietf.org/doc/html/rfc5753#section-8
 pub trait KeyAgreementAlgorithm {
     /// Compute a shared key with the provided parameters
-    fn kdf<C>(
+    fn kdf<C, Enc>(
         secret: &SharedSecret<C>,
         shared_info: &EccCmsSharedInfo,
-        key_wrapper: &mut KeyWrapper,
+        key_wrapper: &mut WrappedKey<Enc>,
     ) -> Result<()>
     where
-        C: Curve;
+        C: Curve,
+        Enc: KeySizeUser,
+        Sum<Enc::KeySize, U8>: ArraySize,
+        <Enc as KeySizeUser>::KeySize: Add<U8>;
 }
 
 /// Support for EnvelopedData with the ephemeral-static ECDH cofactor primitive
@@ -119,13 +128,16 @@ impl<D> KeyAgreementAlgorithm for DhSinglePassStdDhKdf<D>
 where
     D: Digest + FixedOutputReset,
 {
-    fn kdf<C>(
+    fn kdf<C, Enc>(
         secret: &SharedSecret<C>,
         shared_info: &EccCmsSharedInfo,
-        key_wrapper: &mut KeyWrapper,
+        key_wrapper: &mut WrappedKey<Enc>,
     ) -> Result<()>
     where
         C: Curve,
+        Enc: KeySizeUser,
+        Sum<Enc::KeySize, U8>: ArraySize,
+        <Enc as KeySizeUser>::KeySize: Add<U8>,
     {
         let shared_info_der = shared_info.to_der()?;
         let secret_bytes = secret.raw_secret_bytes();
@@ -174,11 +186,11 @@ where
         C::OID
     }
 }
-impl<C> From<&EcKeyEncryptionInfo<C>> for AlgorithmIdentifierOwned
+impl<C> From<EcKeyEncryptionInfo<C>> for AlgorithmIdentifierOwned
 where
     C: CurveArithmetic + AssociatedOid,
 {
-    fn from(ec_key_encryption_info: &EcKeyEncryptionInfo<C>) -> Self {
+    fn from(ec_key_encryption_info: EcKeyEncryptionInfo<C>) -> Self {
         let parameters = Some(Any::from(&ec_key_encryption_info.get_oid()));
         AlgorithmIdentifierOwned {
             oid: elliptic_curve::ALGORITHM_OID, // id-ecPublicKey
@@ -191,56 +203,66 @@ where
 /// This type uses key agreement:  the recipient's public key and the sender's
 /// private key are used to generate a pairwise symmetric key, then
 /// the content-encryption key is encrypted in the pairwise symmetric key.
-pub struct KeyAgreeRecipientInfoBuilder<R, C, KA>
+pub struct KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
 where
     R: CryptoRngCore,
     C: CurveArithmetic,
     KA: KeyAgreementAlgorithm,
+    KW: KeyWrapAlgorithm,
+    Enc: KeySizeUser,
 {
     /// Optional information which helps generating different keys every time.
     pub ukm: Option<UserKeyingMaterial>,
-    /// Encryption algorithm to be used for key encryption
+    /// Recipient identifier
     pub rid: KeyAgreeRecipientIdentifier,
     /// Recipient key info
     pub eckey_encryption_info: EcKeyEncryptionInfo<C>,
-    /// Content encryption algorithm
-    pub key_wrap_algorithm: KeyWrapAlgorithm,
-    /// Content encryption algorithm
+    /// Key agreement algorithm
     key_agreement_algorithm: PhantomData<KA>,
+    /// Key wrap algorithm
+    key_wrap_algorithm: PhantomData<KW>,
+    /// Content encryption cipher
+    enc_cipher: PhantomData<Enc>,
     /// Rng
     _rng: PhantomData<R>,
 }
 
-impl<R, C, KA> KeyAgreeRecipientInfoBuilder<R, C, KA>
+impl<R, C, KA, KW, Enc> KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
 where
     R: CryptoRngCore,
     C: CurveArithmetic,
     KA: KeyAgreementAlgorithm,
+    KW: KeyWrapAlgorithm,
+    Enc: KeySizeUser,
 {
     /// Creates a `KeyAgreeRecipientInfoBuilder`
     pub fn new(
         ukm: Option<UserKeyingMaterial>,
         rid: KeyAgreeRecipientIdentifier,
         eckey_encryption_info: EcKeyEncryptionInfo<C>,
-        key_wrap_algorithm: KeyWrapAlgorithm,
     ) -> Result<Self> {
         Ok(KeyAgreeRecipientInfoBuilder {
             ukm,
             eckey_encryption_info,
-            key_wrap_algorithm,
             rid,
             key_agreement_algorithm: PhantomData,
+            key_wrap_algorithm: PhantomData,
+            enc_cipher: PhantomData,
             _rng: PhantomData,
         })
     }
 }
-impl<R, C, KA> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R, C, KA>
+impl<R, C, KA, KW, Enc> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
 where
     R: CryptoRngCore,
     KA: KeyAgreementAlgorithm + AssociatedOid,
     C: CurveArithmetic + AssociatedOid + PointCompression,
     AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
     FieldBytesSize<C>: ModulusSize,
+    KW: KeyWrapAlgorithm,
+    Enc: KeySizeUser,
+    Sum<Enc::KeySize, U8>: ArraySize,
+    <Enc as KeySizeUser>::KeySize: Add<U8>,
 {
     /// Associated Rng type
     type Rng = R;
@@ -300,8 +322,7 @@ where
                 // this specification, 3DES wrap has NULL parameters while the AES
                 // wraps have absent parameters.
                 // ```
-                let key_wrap_algorithm_identifier: AlgorithmIdentifierOwned =
-                    self.key_wrap_algorithm.into();
+                let key_wrap_algorithm_identifier = KW::algorithm_identifier();
                 let key_wrap_algorithm_der = key_wrap_algorithm_identifier.to_der()?;
 
                 // As per https://datatracker.ietf.org/doc/html/rfc5753#section-7.2"
@@ -321,7 +342,7 @@ where
                 // (For example, for AES-256 it would be 00 00 01 00.)
                 // ```
                 let key_wrap_algo_keysize_bits_in_be_bytes: [u8; 4] =
-                    self.key_wrap_algorithm.key_size_in_bits().to_be_bytes();
+                    KW::key_size_in_bits().to_be_bytes();
 
                 let shared_info = EccCmsSharedInfo {
                     key_info: key_wrap_algorithm_identifier,
@@ -330,24 +351,24 @@ where
                 };
 
                 // Init a wrapping key (KEK) based on KeyWrapAlgorithm and on CEK (i.e. key to wrap) size
-                let mut key_wrapper =
-                    KeyWrapper::try_new(&self.key_wrap_algorithm, content_encryption_key.len())?;
+                let kek = KW::init_kek();
+                let mut wrapped: WrappedKey<Enc> = KW::init_wrapped();
 
                 // Derive the Key Encryption Key (KEK) from Shared Secret using ANSI X9.63 KDF
                 KA::kdf(
                     &non_uniformly_random_shared_secret,
                     &shared_info,
-                    &mut key_wrapper,
+                    &mut wrapped,
                 )?;
 
                 // Wrap the Content Encryption Key (CEK) with the KEK
-                key_wrapper.try_wrap(content_encryption_key)?;
+                KW::try_wrap(&kek, content_encryption_key, wrapped.as_mut())?;
 
                 // Return data
                 (
-                    Vec::from(key_wrapper),
+                    Vec::from(wrapped),
                     ephemeral_public_key_encoded_point,
-                    AlgorithmIdentifierOwned::from(&self.eckey_encryption_info),
+                    self.eckey_encryption_info.into(),
                     AlgorithmIdentifierOwned {
                         oid: KA::OID,
                         parameters: Some(Any::from_der(&key_wrap_algorithm_der)?),
@@ -441,7 +462,7 @@ mod tests {
                 oid: ObjectIdentifier::new_unwrap("1.2.840.10045.2.1"),
                 parameters: Some(ObjectIdentifier::new_unwrap("1.2.840.10045.3.1.7").into()),
             },
-            AlgorithmIdentifierOwned::from(&ec_key_encryption_info)
+            AlgorithmIdentifierOwned::from(ec_key_encryption_info)
         )
     }
 }
