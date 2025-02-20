@@ -115,13 +115,10 @@ pub trait Reader<'r>: Sized {
         Header::peek(self)
     }
 
-    /// Peek at the next byte in the reader.
+    /// Peek at the next tag in the reader.
     #[deprecated(since = "0.8.0-rc.1", note = "use `Tag::peek` instead")]
     fn peek_tag(&self) -> Result<Tag, Error> {
-        match self.peek_byte() {
-            Some(byte) => byte.try_into(),
-            None => Err(Error::incomplete(self.input_len())),
-        }
+        Tag::peek(self)
     }
 
     /// Read a single byte.
