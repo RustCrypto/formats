@@ -215,7 +215,7 @@ pub(crate) fn is_nth_bit_one<const N: usize>(bytes: &[u8]) -> bool {
 pub(crate) fn mnth_bits_to_u8<const M: usize, const N: usize>(bytes: &[u8]) -> u8 {
     let bit_m = is_nth_bit_one::<M>(bytes);
     let bit_n = is_nth_bit_one::<N>(bytes);
-    (bit_m as u8) << 1 | bit_n as u8
+    ((bit_m as u8) << 1) | bit_n as u8
 }
 
 /// Decode an f64 as its sign, exponent, and mantissa in u64 and in that order, using bit shifts and masks.
@@ -224,7 +224,7 @@ pub(crate) fn mnth_bits_to_u8<const M: usize, const N: usize>(bytes: &[u8]) -> u
 pub(crate) fn decode_f64(f: f64) -> (u64, u64, u64) {
     let bits = f.to_bits();
     let sign = bits >> 63;
-    let exponent = bits >> 52 & 0x7ff;
+    let exponent = (bits >> 52) & 0x7ff;
     let exponent_bytes_no_bias = (exponent as i16 - 1023).to_be_bytes();
     let exponent_no_bias = u64::from_be_bytes([
         0x0,
@@ -245,7 +245,7 @@ pub(crate) fn encode_f64(sign: u64, exponent: u64, mantissa: u64) -> f64 {
     // Add the bias to the exponent
     let exponent_with_bias =
         (i16::from_be_bytes([exponent.to_be_bytes()[6], exponent.to_be_bytes()[7]]) + 1023) as u64;
-    let bits = sign << 63 | exponent_with_bias << 52 | (mantissa - 1);
+    let bits = (sign << 63) | (exponent_with_bias << 52) | (mantissa - 1);
     f64::from_bits(bits)
 }
 
