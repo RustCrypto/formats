@@ -73,7 +73,7 @@ where
 {
     /// Compute the length of this value in bytes when encoded as ASN.1 DER.
     fn encoded_len(&self) -> Result<Length> {
-        self.value_len().and_then(|len| len.for_tlv())
+        self.value_len().and_then(|len| len.for_tlv(self.tag()))
     }
 
     /// Encode this value as ASN.1 DER using the provided [`Writer`].
