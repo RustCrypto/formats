@@ -3,19 +3,19 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, BitStringRef},
     Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, FixedTag, Header, Length, Reader,
     Sequence, ValueOrd, Writer,
+    asn1::{AnyRef, BitStringRef},
 };
 
 #[cfg(feature = "alloc")]
 use der::{
-    asn1::{Any, BitString},
     Document,
+    asn1::{Any, BitString},
 };
 
 #[cfg(feature = "fingerprint")]
-use crate::{fingerprint, FingerprintBytes};
+use crate::{FingerprintBytes, fingerprint};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
