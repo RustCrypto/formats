@@ -151,11 +151,11 @@ dependencies = [
 
 [[package]]
 name = "block-padding"
-version = "0.4.0-rc.2"
+version = "0.4.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6868e23cd7a5b2e18fb2e9a583910b88b8d645dd21017aafc5d0439cf16ae6d6"
+checksum = "ee88d14c41bbae2e333f574a27fc73d96fe1039e5a356c20d06a7f2a34cd8e5a"
 dependencies = [
- "hybrid-array 0.2.3",
+ "hybrid-array 0.3.0",
 ]
 
 [[package]]
