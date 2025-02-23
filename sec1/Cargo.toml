@@ -13,13 +13,13 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "elliptic-curve", "secg"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
 base16ct = { version = "0.2", optional = true, default-features = false }
 der = { version = "0.8.0-rc.0", optional = true, features = ["oid"] }
-hybrid-array = { version = "0.2.3", optional = true, default-features = false }
+hybrid-array = { version = "0.3", optional = true, default-features = false }
 pkcs8 = { version = "0.11.0-rc.1", optional = true, default-features = false }
 serdect = { version = "0.3.0-rc.0", optional = true, default-features = false, features = ["alloc"] }
 subtle = { version = "2", optional = true, default-features = false }

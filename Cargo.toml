@@ -16,7 +16,7 @@ members = [
     "pkcs5",
     "pkcs8",
     "pkcs12",
-    "sec1",
+    # "sec1",
     "serdect",
     "spki",
     "tai64",
@@ -26,6 +26,9 @@ members = [
     "x509-cert",
     "x509-cert/test-support",
     "x509-ocsp"
+]
+exclude = [
+    "sec1",
 ]
 
 [profile.dev]
@@ -49,7 +52,7 @@ pkcs1 = { path = "./pkcs1" }
 pkcs5 = { path = "./pkcs5" }
 pkcs8 = { path = "./pkcs8" }
 pkcs12 = { path = "./pkcs12" }
-sec1 = { path = "./sec1" }
+# sec1 = { path = "./sec1" }
 serdect = { path = "./serdect" }
 spki = { path = "./spki" }
 tai64 = { path = "./tai64" }
