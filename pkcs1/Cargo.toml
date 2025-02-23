@@ -24,7 +24,7 @@ pkcs8 = { version = "0.11.0-rc.1", optional = true, default-features = false }
 
 [dev-dependencies]
 const-oid = { version = "0.10.0-rc.0", features = ["db"] }
-hex-literal = "0.4"
+hex-literal = "1"
 tempfile = "3"
 
 [features]

@@ -21,7 +21,7 @@ rust-version = "1.85"
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 
 [dev-dependencies]
-hex-literal = "0.4"
+hex-literal = "1"
 proptest = "1"
 regex = "1"
 

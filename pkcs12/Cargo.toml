@@ -27,7 +27,7 @@ digest = { version = "0.11.0-pre.9", features = ["alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.4"
+hex-literal = "1"
 pkcs8 = { version = "0.11.0-rc.1", features = ["pkcs5", "getrandom"] }
 pkcs5 = { version = "0.8.0-rc.0", features = ["pbes2", "3des"] }
 sha2 = "=0.11.0-pre.4"
