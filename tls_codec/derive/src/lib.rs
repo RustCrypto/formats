@@ -376,7 +376,7 @@ impl TlsAttr {
             }
         }
 
-        if attr.path().get_ident().map_or(true, |id| id != ATTR_IDENT) {
+        if attr.path().get_ident().is_none_or(|id| id != ATTR_IDENT) {
             return Ok(Vec::new());
         }
         attr.parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)?
