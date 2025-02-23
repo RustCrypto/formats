@@ -10,8 +10,8 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["asn1", "der", "crypto", "itu", "pkcs"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.71"
+edition = "2024"
+rust-version = "1.85"
 
 [lib]
 proc-macro = true
