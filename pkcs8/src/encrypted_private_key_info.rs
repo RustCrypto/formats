@@ -3,13 +3,13 @@
 use crate::{Error, Result};
 use core::fmt;
 use der::{
-    asn1::OctetStringRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length,
-    Reader, Sequence, Writer,
+    Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, Writer,
+    asn1::OctetStringRef,
 };
 use pkcs5::EncryptionScheme;
 
 #[cfg(feature = "alloc")]
-use der::{asn1::OctetString, SecretDocument};
+use der::{SecretDocument, asn1::OctetString};
 
 #[cfg(feature = "encryption")]
 use {pkcs5::pbes2, rand_core::CryptoRng};
