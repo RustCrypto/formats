@@ -1,6 +1,6 @@
 use der::{
-    asn1::{AnyRef, ObjectIdentifier},
     DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Tag, Writer,
+    asn1::{AnyRef, ObjectIdentifier},
 };
 
 /// Elliptic curve parameters as described in

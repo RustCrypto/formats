@@ -14,13 +14,13 @@ use core::{
     ops::{Add, Sub},
     str,
 };
-use hybrid_array::{typenum::U1, Array, ArraySize};
+use hybrid_array::{Array, ArraySize, typenum::U1};
 
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
 #[cfg(feature = "serde")]
-use serdect::serde::{de, ser, Deserialize, Serialize};
+use serdect::serde::{Deserialize, Serialize, de, ser};
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConditionallySelectable};
@@ -574,7 +574,9 @@ mod tests {
     const IDENTITY_BYTES: [u8; 1] = [0];
 
     /// Example uncompressed point
-    const UNCOMPRESSED_BYTES: [u8; 65] = hex!("0411111111111111111111111111111111111111111111111111111111111111112222222222222222222222222222222222222222222222222222222222222222");
+    const UNCOMPRESSED_BYTES: [u8; 65] = hex!(
+        "0411111111111111111111111111111111111111111111111111111111111111112222222222222222222222222222222222222222222222222222222222222222"
+    );
 
     /// Example compressed point: `UNCOMPRESSED_BYTES` after point compression
     const COMPRESSED_BYTES: [u8; 33] =
@@ -703,7 +705,9 @@ mod tests {
 
     #[test]
     fn from_untagged_point() {
-        let untagged_bytes = hex!("11111111111111111111111111111111111111111111111111111111111111112222222222222222222222222222222222222222222222222222222222222222");
+        let untagged_bytes = hex!(
+            "11111111111111111111111111111111111111111111111111111111111111112222222222222222222222222222222222222222222222222222222222222222"
+        );
         let uncompressed_point = EncodedPoint::from_untagged_bytes(&untagged_bytes.into());
         assert_eq!(uncompressed_point.as_bytes(), &UNCOMPRESSED_BYTES[..]);
     }
