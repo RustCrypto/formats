@@ -1,5 +1,5 @@
-use criterion::{criterion_group, criterion_main};
 use criterion::{BatchSize, Criterion};
+use criterion::{criterion_group, criterion_main};
 
 use tls_codec::*;
 
