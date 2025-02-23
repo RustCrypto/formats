@@ -1,8 +1,8 @@
 //! Context-specific field.
 
 use crate::{
-    asn1::AnyRef, Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error,
-    Header, Length, Reader, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer,
+    Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error, Header,
+    Length, Reader, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer, asn1::AnyRef,
 };
 use core::cmp::Ordering;
 
@@ -260,7 +260,7 @@ where
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::ContextSpecific;
-    use crate::{asn1::BitStringRef, Decode, Encode, SliceReader, TagMode, TagNumber};
+    use crate::{Decode, Encode, SliceReader, TagMode, TagNumber, asn1::BitStringRef};
     use hex_literal::hex;
 
     // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`

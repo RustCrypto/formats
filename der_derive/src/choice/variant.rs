@@ -154,7 +154,7 @@ impl ChoiceVariant {
 #[cfg(test)]
 mod tests {
     use super::ChoiceVariant;
-    use crate::{choice::variant::TagOrPath, Asn1Type, FieldAttrs, Tag, TagMode, TagNumber};
+    use crate::{Asn1Type, FieldAttrs, Tag, TagMode, TagNumber, choice::variant::TagOrPath};
     use proc_macro2::Span;
     use quote::quote;
     use syn::Ident;

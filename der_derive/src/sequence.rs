@@ -3,10 +3,10 @@
 
 mod field;
 
-use crate::{default_lifetime, ErrorType, TypeAttrs};
+use crate::{ErrorType, TypeAttrs, default_lifetime};
 use field::SequenceField;
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
 
 /// Derive the `Sequence` trait for a struct

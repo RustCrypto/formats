@@ -2,10 +2,10 @@
 
 use crate::{Asn1Type, Tag, TagMode, TagNumber};
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use std::{fmt::Debug, str::FromStr};
 use syn::punctuated::Punctuated;
-use syn::{parse::Parse, parse::ParseStream, Attribute, Ident, LitStr, Path, Token};
+use syn::{Attribute, Ident, LitStr, Path, Token, parse::Parse, parse::ParseStream};
 
 /// Error type used by the structure
 #[derive(Debug, Clone, Default, Eq, PartialEq)]

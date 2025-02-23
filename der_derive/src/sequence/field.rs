@@ -243,7 +243,7 @@ mod tests {
     use crate::{FieldAttrs, TagMode, TagNumber};
     use proc_macro2::Span;
     use quote::quote;
-    use syn::{punctuated::Punctuated, Ident, Path, PathSegment, Type, TypePath};
+    use syn::{Ident, Path, PathSegment, Type, TypePath, punctuated::Punctuated};
 
     /// Create a [`Type::Path`].
     pub fn type_path(ident: Ident) -> Type {

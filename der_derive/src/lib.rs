@@ -159,7 +159,7 @@ mod value_ord;
 
 use crate::{
     asn1_type::Asn1Type,
-    attributes::{ErrorType, FieldAttrs, TypeAttrs, ATTR_NAME},
+    attributes::{ATTR_NAME, ErrorType, FieldAttrs, TypeAttrs},
     choice::DeriveChoice,
     enumerated::DeriveEnumerated,
     sequence::DeriveSequence,
@@ -168,7 +168,7 @@ use crate::{
 };
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-use syn::{parse_macro_input, DeriveInput, Lifetime};
+use syn::{DeriveInput, Lifetime, parse_macro_input};
 
 /// Get the default lifetime.
 fn default_lifetime() -> Lifetime {

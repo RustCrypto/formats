@@ -35,8 +35,8 @@ mod choice {
     mod explicit {
         use super::CustomError;
         use der::{
-            asn1::{GeneralizedTime, UtcTime},
             Choice, Decode, Encode, SliceWriter,
+            asn1::{GeneralizedTime, UtcTime},
         };
         use hex_literal::hex;
         use std::time::Duration;
@@ -112,8 +112,8 @@ mod choice {
     /// `Choice` with `IMPLICIT` tagging.
     mod implicit {
         use der::{
-            asn1::{BitStringRef, GeneralizedTime},
             Choice, Decode, Encode, SliceWriter,
+            asn1::{BitStringRef, GeneralizedTime},
         };
         use hex_literal::hex;
 
@@ -247,8 +247,8 @@ mod sequence {
     use super::CustomError;
     use core::marker::PhantomData;
     use der::{
-        asn1::{AnyRef, ObjectIdentifier, SetOf},
         Decode, Encode, Sequence, ValueOrd,
+        asn1::{AnyRef, ObjectIdentifier, SetOf},
     };
     use hex_literal::hex;
 

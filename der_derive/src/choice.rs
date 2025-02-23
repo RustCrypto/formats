@@ -5,9 +5,9 @@
 mod variant;
 
 use self::variant::ChoiceVariant;
-use crate::{default_lifetime, ErrorType, TypeAttrs};
+use crate::{ErrorType, TypeAttrs, default_lifetime};
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
 
 /// Derive the `Choice` trait for an enum.

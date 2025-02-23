@@ -1,8 +1,8 @@
 //! Slice writer.
 
 use crate::{
-    asn1::*, Encode, EncodeValue, ErrorKind, Header, Length, Result, Tag, TagMode, TagNumber,
-    Tagged, Writer,
+    Encode, EncodeValue, ErrorKind, Header, Length, Result, Tag, TagMode, TagNumber, Tagged,
+    Writer, asn1::*,
 };
 
 /// [`Writer`] which encodes DER into a mutable output byte slice.

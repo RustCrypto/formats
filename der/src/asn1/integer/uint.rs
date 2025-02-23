@@ -2,8 +2,8 @@
 
 use super::value_cmp;
 use crate::{
-    ord::OrdIsValueOrd, AnyRef, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag,
-    Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    AnyRef, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
+    Result, Tag, ValueOrd, Writer, ord::OrdIsValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -163,12 +163,12 @@ impl OrdIsValueOrd for UintRef<'_> {}
 
 #[cfg(feature = "alloc")]
 mod allocating {
-    use super::{decode_to_slice, encoded_len, strip_leading_zeroes, UintRef};
+    use super::{UintRef, decode_to_slice, encoded_len, strip_leading_zeroes};
     use crate::{
-        ord::OrdIsValueOrd,
-        referenced::{OwnedToRef, RefToOwned},
         BytesOwned, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
         Result, Tag, Writer,
+        ord::OrdIsValueOrd,
+        referenced::{OwnedToRef, RefToOwned},
     };
 
     /// Unsigned arbitrary precision ASN.1 `INTEGER` type.
@@ -354,8 +354,8 @@ fn needs_leading_zero(bytes: &[u8]) -> bool {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use super::{decode_to_array, UintRef};
-    use crate::{asn1::integer::tests::*, AnyRef, Decode, Encode, ErrorKind, SliceWriter, Tag};
+    use super::{UintRef, decode_to_array};
+    use crate::{AnyRef, Decode, Encode, ErrorKind, SliceWriter, Tag, asn1::integer::tests::*};
 
     #[test]
     fn decode_to_array_no_leading_zero() {

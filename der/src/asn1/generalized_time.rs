@@ -2,10 +2,10 @@
 #![cfg_attr(feature = "arbitrary", allow(clippy::arithmetic_side_effects))]
 
 use crate::{
-    datetime::{self, DateTime},
-    ord::OrdIsValueOrd,
     DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
     Writer,
+    datetime::{self, DateTime},
+    ord::OrdIsValueOrd,
 };
 use core::time::Duration;
 
@@ -87,7 +87,23 @@ impl<'a> DecodeValue<'a> for GeneralizedTime {
 
         match bytes {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
-            [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
+            [
+                y1,
+                y2,
+                y3,
+                y4,
+                mon1,
+                mon2,
+                day1,
+                day2,
+                hour1,
+                hour2,
+                min1,
+                min2,
+                sec1,
+                sec2,
+                b'Z',
+            ] => {
                 let year = u16::from(datetime::decode_decimal(Self::TAG, y1, y2)?)
                     .checked_mul(100)
                     .and_then(|y| {

@@ -1,6 +1,6 @@
 //! ASN.1 `PrintableString` support.
 
-use crate::{asn1::AnyRef, FixedTag, Result, StrRef, Tag};
+use crate::{FixedTag, Result, StrRef, Tag, asn1::AnyRef};
 use core::{fmt, ops::Deref};
 
 macro_rules! impl_printable_string {
@@ -122,9 +122,9 @@ mod allocation {
     use super::PrintableStringRef;
 
     use crate::{
+        BytesRef, Error, FixedTag, Result, StrOwned, Tag,
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
-        BytesRef, Error, FixedTag, Result, StrOwned, Tag,
     };
     use alloc::string::String;
     use core::{fmt, ops::Deref};
