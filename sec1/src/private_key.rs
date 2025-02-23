@@ -8,9 +8,9 @@
 use crate::{EcParameters, Error, Result};
 use core::fmt;
 use der::{
-    asn1::{BitStringRef, ContextSpecific, ContextSpecificRef, OctetStringRef},
     Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, TagMode,
     TagNumber, Writer,
+    asn1::{BitStringRef, ContextSpecific, ContextSpecificRef, OctetStringRef},
 };
 
 #[cfg(all(feature = "alloc", feature = "zeroize"))]

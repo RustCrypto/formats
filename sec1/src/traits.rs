@@ -10,8 +10,8 @@ use {crate::LineEnding, alloc::string::String, der::pem::PemLabel};
 
 #[cfg(feature = "pkcs8")]
 use {
-    crate::{EcPrivateKey, ALGORITHM_OID},
-    der::{asn1::OctetStringRef, Decode},
+    crate::{ALGORITHM_OID, EcPrivateKey},
+    der::{Decode, asn1::OctetStringRef},
 };
 
 #[cfg(feature = "std")]
