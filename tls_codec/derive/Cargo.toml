@@ -8,8 +8,8 @@ description = "Derive macros for the tls_codec trait"
 readme = "../README.md"
 homepage = "https://github.com/RustCrypto/formats/tree/master/tls_codec/derive"
 repository = "https://github.com/RustCrypto/formats"
-edition = "2021"
-rust-version = "1.74"
+edition = "2024"
+rust-version = "1.85"
 
 [lib]
 proc-macro = true

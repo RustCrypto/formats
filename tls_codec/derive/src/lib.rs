@@ -369,7 +369,7 @@ impl TlsAttr {
     /// `#[tls_codec(discriminant = <number>)]`, and `#[tls_codec(skip)]`.
     fn parse(attr: &Attribute) -> Result<Vec<TlsAttr>> {
         fn lit(e: &Expr) -> Result<&Lit> {
-            if let Expr::Lit(ExprLit { ref lit, .. }) = e {
+            if let Expr::Lit(ExprLit { lit, .. }) = e {
                 Ok(lit)
             } else {
                 Err(syn::Error::new_spanned(e, "expected literal"))
