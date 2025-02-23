@@ -26,7 +26,7 @@ subtle = { version = "2", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.4"
+hex-literal = "1"
 tempfile = "3"
 
 [features]
