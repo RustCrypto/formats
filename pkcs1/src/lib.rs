@@ -43,7 +43,7 @@ pub use crate::{
 
 #[cfg(feature = "alloc")]
 pub use crate::{
-    private_key::{other_prime_info::OtherPrimeInfo, OtherPrimeInfos},
+    private_key::{OtherPrimeInfos, other_prime_info::OtherPrimeInfo},
     traits::{EncodeRsaPrivateKey, EncodeRsaPublicKey},
 };
 

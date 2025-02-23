@@ -6,8 +6,8 @@ pub(crate) mod other_prime_info;
 use crate::{Error, Result, RsaPublicKey, Version};
 use core::fmt;
 use der::{
-    asn1::{OctetStringRef, UintRef},
     Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, Writer,
+    asn1::{OctetStringRef, UintRef},
 };
 
 #[cfg(feature = "alloc")]

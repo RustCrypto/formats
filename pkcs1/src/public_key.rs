@@ -2,8 +2,8 @@
 
 use crate::{Error, Result};
 use der::{
-    asn1::UintRef, Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence,
-    Writer,
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer,
+    asn1::UintRef,
 };
 
 #[cfg(feature = "alloc")]

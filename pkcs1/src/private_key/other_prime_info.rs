@@ -1,7 +1,7 @@
 //! PKCS#1 OtherPrimeInfo support.
 
 use der::{
-    asn1::UintRef, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer,
+    DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer, asn1::UintRef,
 };
 
 /// PKCS#1 OtherPrimeInfo as defined in [RFC 8017 Appendix 1.2].
