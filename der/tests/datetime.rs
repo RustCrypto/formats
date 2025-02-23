@@ -1,6 +1,6 @@
 //! Tests for the [`DateTime`] type.
 
-use der::{asn1::UtcTime, DateTime, Decode, Encode};
+use der::{DateTime, Decode, Encode, asn1::UtcTime};
 use proptest::prelude::*;
 
 proptest! {
@@ -44,11 +44,7 @@ fn make_datetime(year: u16, month: u8, day: u8, hour: u8, min: u8, sec: u8) -> D
     let max_day = if month == 2 {
         let is_leap_year = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 
-        if is_leap_year {
-            29
-        } else {
-            28
-        }
+        if is_leap_year { 29 } else { 28 }
     } else {
         30
     };

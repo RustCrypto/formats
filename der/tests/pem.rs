@@ -3,9 +3,9 @@
 #![cfg(all(feature = "derive", feature = "oid", feature = "pem"))]
 
 use der::{
+    Decode, DecodePem, EncodePem, Sequence,
     asn1::{BitString, ObjectIdentifier},
     pem::{LineEnding, PemLabel},
-    Decode, DecodePem, EncodePem, Sequence,
 };
 
 /// Example SPKI document encoded as DER.

@@ -12,8 +12,8 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parsing"]
 keywords = ["crypto", "constant-time", "serde"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.70"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
 base16ct = { version = "0.2", default-features = false }
@@ -25,7 +25,7 @@ zeroize = { version = "1", optional = true, default-features = false }
 [dev-dependencies]
 bincode = "1"
 ciborium = "0.2"
-hex-literal = "0.4"
+hex-literal = "1"
 proptest = "1"
 rmp-serde = "1"
 serde = { version = "1.0.184", default-features = false, features = ["derive"] }

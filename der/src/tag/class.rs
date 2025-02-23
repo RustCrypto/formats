@@ -1,6 +1,6 @@
 //! Class of an ASN.1 tag.
 
-use super::{TagNumber, CONSTRUCTED_FLAG};
+use super::{CONSTRUCTED_FLAG, TagNumber};
 use core::fmt;
 
 /// Class of an ASN.1 tag.

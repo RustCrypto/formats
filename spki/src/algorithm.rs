@@ -3,9 +3,9 @@
 use crate::{Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, Choice, ObjectIdentifier},
     Decode, DecodeValue, DerOrd, Encode, EncodeValue, Header, Length, Reader, Sequence, ValueOrd,
     Writer,
+    asn1::{AnyRef, Choice, ObjectIdentifier},
 };
 
 #[cfg(feature = "alloc")]

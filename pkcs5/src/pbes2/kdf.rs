@@ -6,9 +6,9 @@ pub use self::salt::Salt;
 
 use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
-    asn1::{AnyRef, ObjectIdentifier},
     Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Tagged,
     Writer,
+    asn1::{AnyRef, ObjectIdentifier},
 };
 
 #[cfg(feature = "pbes2")]

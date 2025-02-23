@@ -153,7 +153,7 @@ impl<'a> arbitrary::Arbitrary<'a> for BytesRef<'a> {
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::BytesRef;
-    use crate::{referenced::RefToOwned, BytesOwned};
+    use crate::{BytesOwned, referenced::RefToOwned};
 
     impl<'a> RefToOwned<'a> for BytesRef<'a> {
         type Owned = BytesOwned;

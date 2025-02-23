@@ -268,12 +268,12 @@ use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::{
-    self, parse_macro_input, punctuated::Punctuated, token::Comma, Attribute, Data, DeriveInput,
-    Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit, Member, Meta, Result, Token, Type,
+    self, Attribute, Data, DeriveInput, Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit,
+    Member, Meta, Result, Token, Type, parse_macro_input, punctuated::Punctuated, token::Comma,
 };
 
 #[cfg(feature = "conditional_deserialization")]
-use syn::{parse_quote, ConstParam, ImplGenerics, ItemStruct, TypeGenerics};
+use syn::{ConstParam, ImplGenerics, ItemStruct, TypeGenerics, parse_quote};
 
 /// Attribute name to identify attributes to be processed by derive-macros in this crate.
 const ATTR_IDENT: &str = "tls_codec";
@@ -369,14 +369,14 @@ impl TlsAttr {
     /// `#[tls_codec(discriminant = <number>)]`, and `#[tls_codec(skip)]`.
     fn parse(attr: &Attribute) -> Result<Vec<TlsAttr>> {
         fn lit(e: &Expr) -> Result<&Lit> {
-            if let Expr::Lit(ExprLit { ref lit, .. }) = e {
+            if let Expr::Lit(ExprLit { lit, .. }) = e {
                 Ok(lit)
             } else {
                 Err(syn::Error::new_spanned(e, "expected literal"))
             }
         }
 
-        if attr.path().get_ident().map_or(true, |id| id != ATTR_IDENT) {
+        if attr.path().get_ident().is_none_or(|id| id != ATTR_IDENT) {
             return Ok(Vec::new());
         }
         attr.parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)?
@@ -738,8 +738,8 @@ fn define_discriminant_constants(
                     Span::call_site(),
                     "The tls_codec discriminant attribute is missing. \
                     Once you start using paths in #[tls_codec(discriminant = \"path::to::const::or::enum::variant\"], \
-                    You **have** to provide the discriminant attribute on every single variant.")
-                );
+                    You **have** to provide the discriminant attribute on every single variant.",
+                ));
             } else {
                 quote! {
                     #[allow(non_upper_case_globals)]
@@ -1335,8 +1335,8 @@ fn set_cd_fields_generic(
     value: proc_macro2::TokenStream,
 ) -> ItemStruct {
     use syn::{
-        parse::{Parse, Parser},
         AngleBracketedGenericArguments, PathArguments,
+        parse::{Parse, Parser},
     };
 
     item_struct.fields.iter_mut().for_each(|field| {
@@ -1345,8 +1345,7 @@ fn set_cd_fields_generic(
             if let Type::Path(path) = &mut field.ty {
                 // If there is already an AngleBracketedGenericArguments, we just add the const generic at the end.
                 if let Some(segment) = path.path.segments.last_mut() {
-                    if let PathArguments::AngleBracketed(ref mut argument) = &mut segment.arguments
-                    {
+                    if let PathArguments::AngleBracketed(argument) = &mut segment.arguments {
                         argument.args.push(parse_quote! {#value});
                     } else {
                         // If there is no AngleBracketedGenericArguments, we create one and add the const generic.

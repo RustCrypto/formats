@@ -20,7 +20,7 @@ extern crate std;
 use core::{fmt, ops, time::Duration};
 
 #[cfg(feature = "serde")]
-use serde::{de, ser, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de, ser};
 
 #[cfg(feature = "std")]
 use std::time::{SystemTime, UNIX_EPOCH};

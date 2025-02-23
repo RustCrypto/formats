@@ -13,8 +13,8 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["asn1", "crypto", "itu", "pkcs"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
 arbitrary = { version = "1.4", features = ["derive"], optional = true }
@@ -27,7 +27,7 @@ time = { version = "0.3.4", optional = true, default-features = false }
 zeroize = { version = "1.8", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.4.1"
+hex-literal = "1"
 proptest = "1"
 
 [features]

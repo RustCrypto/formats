@@ -4,31 +4,39 @@ members = [
     "base16ct",
     "base32ct",
     "base64ct",
-    "cmpv2",
-    "cms",
+    #"cmpv2",
+    #"cms",
     "const-oid",
-    "crmf",
+    #"crmf",
     "der",
     "der_derive",
-    "gss-api",
+    #"gss-api",
     "pem-rfc7468",
     "pkcs1",
     "pkcs5",
     "pkcs8",
-    "pkcs12",
-    # "sec1",
+    #"pkcs12",
+    "sec1",
     "serdect",
     "spki",
     "tai64",
     "tls_codec",
     "tls_codec/derive",
+    #"x509-tsp",
+    #"x509-cert",
+    #"x509-cert/test-support",
+    #"x509-ocsp"
+]
+exclude = [
+    "cmpv2",
+    "cms",
+    "crmf",
+    "gss-api",
+    "pkcs12",
     "x509-tsp",
     "x509-cert",
     "x509-cert/test-support",
     "x509-ocsp"
-]
-exclude = [
-    "sec1",
 ]
 
 [profile.dev]
@@ -41,23 +49,23 @@ opt-level = 2
 base16ct = { path = "./base16ct" }
 base32ct = { path = "./base32ct" }
 base64ct = { path = "./base64ct" }
-cmpv2 = { path = "./cmpv2" }
-cms = { path = "./cms" }
+#cmpv2 = { path = "./cmpv2" }
+#cms = { path = "./cms" }
 const-oid = { path = "./const-oid" }
-crmf = { path = "./crmf" }
+#crmf = { path = "./crmf" }
 der = { path = "./der" }
 der_derive = { path = "./der_derive" }
 pem-rfc7468 = { path = "./pem-rfc7468" }
 pkcs1 = { path = "./pkcs1" }
 pkcs5 = { path = "./pkcs5" }
 pkcs8 = { path = "./pkcs8" }
-pkcs12 = { path = "./pkcs12" }
-# sec1 = { path = "./sec1" }
+#pkcs12 = { path = "./pkcs12" }
+sec1 = { path = "./sec1" }
 serdect = { path = "./serdect" }
 spki = { path = "./spki" }
 tai64 = { path = "./tai64" }
 tls_codec = { path = "./tls_codec" }
 tls_codec_derive = { path = "./tls_codec/derive" }
-x509-tsp = { path = "./x509-tsp" }
-x509-cert = { path = "./x509-cert" }
-x509-ocsp = { path = "./x509-ocsp" }
+#x509-tsp = { path = "./x509-tsp" }
+#x509-cert = { path = "./x509-cert" }
+#x509-ocsp = { path = "./x509-ocsp" }

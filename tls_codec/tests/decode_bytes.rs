@@ -1,4 +1,4 @@
-use tls_codec::{DeserializeBytes, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32, TlsByteVecU8};
+use tls_codec::{DeserializeBytes, TlsByteVecU8, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32};
 
 #[test]
 fn deserialize_tls_byte_vec_u8() {

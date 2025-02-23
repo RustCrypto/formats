@@ -270,8 +270,28 @@ impl FromStr for DateTime {
 
     fn from_str(s: &str) -> Result<Self> {
         match *s.as_bytes() {
-            [year1, year2, year3, year4, b'-', month1, month2, b'-', day1, day2, b'T', hour1, hour2, b':', min1, min2, b':', sec1, sec2, b'Z'] =>
-            {
+            [
+                year1,
+                year2,
+                year3,
+                year4,
+                b'-',
+                month1,
+                month2,
+                b'-',
+                day1,
+                day2,
+                b'T',
+                hour1,
+                hour2,
+                b':',
+                min1,
+                min2,
+                b':',
+                sec1,
+                sec2,
+                b'Z',
+            ] => {
                 let tag = Tag::GeneralizedTime;
                 let year = decode_year(&[year1, year2, year3, year4])?;
                 let month = decode_decimal(tag, month1, month2).map_err(|_| ErrorKind::DateTime)?;

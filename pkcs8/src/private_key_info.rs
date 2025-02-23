@@ -3,16 +3,16 @@
 use crate::{Error, Result, Version};
 use core::fmt;
 use der::{
-    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
     TagNumber, Writer,
+    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
 };
 use spki::AlgorithmIdentifier;
 
 #[cfg(feature = "alloc")]
 use der::{
-    asn1::{Any, BitString, OctetString},
     SecretDocument,
+    asn1::{Any, BitString, OctetString},
 };
 
 #[cfg(feature = "encryption")]

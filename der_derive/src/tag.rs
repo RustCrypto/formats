@@ -7,7 +7,7 @@ use std::{
     fmt::{self, Display},
     str::FromStr,
 };
-use syn::{parse::Parse, LitStr};
+use syn::{LitStr, parse::Parse};
 
 /// Tag "IR" type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

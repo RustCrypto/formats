@@ -1,10 +1,10 @@
 //! ASN.1 `UTCTime` support.
 
 use crate::{
-    datetime::{self, DateTime},
-    ord::OrdIsValueOrd,
     DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
     Writer,
+    datetime::{self, DateTime},
+    ord::OrdIsValueOrd,
 };
 use core::time::Duration;
 
@@ -94,7 +94,21 @@ impl<'a> DecodeValue<'a> for UtcTime {
 
         match bytes {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
-            [year1, year2, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
+            [
+                year1,
+                year2,
+                mon1,
+                mon2,
+                day1,
+                day2,
+                hour1,
+                hour2,
+                min1,
+                min2,
+                sec1,
+                sec2,
+                b'Z',
+            ] => {
                 let year = u16::from(datetime::decode_decimal(Self::TAG, year1, year2)?);
                 let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
                 let day = datetime::decode_decimal(Self::TAG, day1, day2)?;

@@ -375,9 +375,9 @@ pub use crate::{
     header::Header,
     length::{IndefiniteLength, Length},
     ord::{DerOrd, ValueOrd},
-    reader::{slice::SliceReader, Reader},
+    reader::{Reader, slice::SliceReader},
     tag::{Class, FixedTag, Tag, TagMode, TagNumber, Tagged},
-    writer::{slice::SliceWriter, Writer},
+    writer::{Writer, slice::SliceWriter},
 };
 
 #[cfg(feature = "alloc")]

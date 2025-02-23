@@ -2,8 +2,8 @@ use core::fmt;
 use core::marker::PhantomData;
 
 use serde::{
-    de::{Error, Unexpected, Visitor},
     Serializer,
+    de::{Error, Unexpected, Visitor},
 };
 
 #[cfg(feature = "alloc")]

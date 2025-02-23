@@ -1,6 +1,6 @@
 //! ASN.1 `IA5String` support.
 
-use crate::{asn1::AnyRef, FixedTag, Result, StrRef, Tag};
+use crate::{FixedTag, Result, StrRef, Tag, asn1::AnyRef};
 use core::{fmt, ops::Deref};
 
 macro_rules! impl_ia5_string {
@@ -88,9 +88,9 @@ pub use self::allocation::Ia5String;
 mod allocation {
     use super::Ia5StringRef;
     use crate::{
+        Error, FixedTag, Result, StrOwned, Tag,
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
-        Error, FixedTag, Result, StrOwned, Tag,
     };
     use alloc::string::String;
     use core::{fmt, ops::Deref};

@@ -54,3 +54,6 @@ base64 = ["spki/base64"]
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[patch.crates-io]
+const-oid = { git = "https://github.com/RustCrypto/formats.git" }

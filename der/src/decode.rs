@@ -4,7 +4,7 @@ use crate::{EncodingRules, Error, FixedTag, Header, Reader, SliceReader};
 use core::marker::PhantomData;
 
 #[cfg(feature = "pem")]
-use crate::{pem::PemLabel, PemReader};
+use crate::{PemReader, pem::PemLabel};
 
 #[cfg(doc)]
 use crate::{Length, Tag};

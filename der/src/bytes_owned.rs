@@ -2,8 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    referenced::OwnedToRef, BytesRef, DecodeValue, DerOrd, EncodeValue, Error, Header, Length,
-    Reader, Result, StrRef, Writer,
+    BytesRef, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StrRef,
+    Writer, referenced::OwnedToRef,
 };
 use alloc::{boxed::Box, vec::Vec};
 use core::cmp::Ordering;

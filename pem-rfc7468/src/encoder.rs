@@ -1,8 +1,8 @@
 //! PEM encoder.
 
 use crate::{
-    grammar, Base64Encoder, Error, LineEnding, Result, BASE64_WRAP_WIDTH,
-    ENCAPSULATION_BOUNDARY_DELIMITER, POST_ENCAPSULATION_BOUNDARY, PRE_ENCAPSULATION_BOUNDARY,
+    BASE64_WRAP_WIDTH, Base64Encoder, ENCAPSULATION_BOUNDARY_DELIMITER, Error, LineEnding,
+    POST_ENCAPSULATION_BOUNDARY, PRE_ENCAPSULATION_BOUNDARY, Result, grammar,
 };
 use base64ct::{Base64, Encoding};
 use core::str;

@@ -8,8 +8,8 @@ description = "A pure Rust implementation of the TLS (de)serialization"
 readme = "README.md"
 homepage = "https://github.com/RustCrypto/formats/tree/master/tls_codec"
 repository = "https://github.com/RustCrypto/formats"
-edition = "2021"
-rust-version = "1.74"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
 zeroize = { version = "1.8", default-features = false, features = [

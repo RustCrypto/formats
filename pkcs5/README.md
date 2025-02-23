@@ -12,13 +12,6 @@ Password-Based Cryptography Specification Version 2.1 ([RFC 8018]).
 
 [Documentation][docs-link]
 
-## Minimum Supported Rust Version
-
-This crate requires **Rust 1.71** at a minimum.
-
-We may change the MSRV in the future, but it will be accompanied by a minor
-version bump.
-
 ## License
 
 Licensed under either of:

@@ -1,8 +1,8 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, EncodeValue, Error, FixedTag, Length, Result, StrRef, Tag,
-    Writer,
+    EncodeValue, Error, FixedTag, Length, Result, StrRef, Tag, Writer, asn1::AnyRef,
+    ord::OrdIsValueOrd,
 };
 use core::{fmt, ops::Deref, str};
 

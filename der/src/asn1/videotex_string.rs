@@ -1,6 +1,6 @@
 //! ASN.1 `VideotexString` support.
 
-use crate::{asn1::AnyRef, FixedTag, Result, StrRef, Tag};
+use crate::{FixedTag, Result, StrRef, Tag, asn1::AnyRef};
 use core::{fmt, ops::Deref};
 
 /// ASN.1 `VideotexString` type.

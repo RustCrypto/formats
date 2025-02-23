@@ -5,8 +5,8 @@ pub(crate) mod pem;
 pub(crate) mod slice;
 
 use crate::{
-    asn1::ContextSpecific, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag,
-    Header, Length, Tag, TagMode, TagNumber,
+    Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag, Header, Length, Tag,
+    TagMode, TagNumber, asn1::ContextSpecific,
 };
 
 #[cfg(feature = "alloc")]

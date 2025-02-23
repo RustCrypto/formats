@@ -4,7 +4,7 @@
 
 use der::asn1::OctetStringRef;
 use hex_literal::hex;
-use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfoRef, PrivateKeyInfoRef};
+use pkcs8::{EncryptedPrivateKeyInfoRef, pkcs5::pbes2};
 
 #[cfg(feature = "alloc")]
 use der::Encode;
@@ -13,7 +13,7 @@ use der::Encode;
 use der::EncodePem;
 
 #[cfg(feature = "encryption")]
-use pkcs8::EncryptedPrivateKeyInfoOwned;
+use pkcs8::{EncryptedPrivateKeyInfoOwned, PrivateKeyInfoRef};
 
 /// Ed25519 PKCS#8 private key plaintext encoded as ASN.1 DER
 #[cfg(feature = "encryption")]

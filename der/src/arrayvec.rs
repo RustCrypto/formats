@@ -38,7 +38,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
     /// Get an element from this [`ArrayVec`].
     pub fn get(&self, index: usize) -> Option<&T> {
         match self.elements.get(index) {
-            Some(Some(ref item)) => Some(item),
+            Some(Some(item)) => Some(item),
             _ => None,
         }
     }

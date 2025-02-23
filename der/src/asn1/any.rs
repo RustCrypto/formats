@@ -161,7 +161,7 @@ pub use self::allocating::Any;
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::{referenced::*, BytesOwned};
+    use crate::{BytesOwned, referenced::*};
     use alloc::boxed::Box;
 
     /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.

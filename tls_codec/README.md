@@ -35,13 +35,6 @@ serialization/deserialization
 - Serialize for `(T, U)` and `(T, U, V)` where `T, U, V` implement Serialize`
 - Deserialize for `(T, U)` and `(T, U, V)` where `T, U, V` implement Deserialize`
 
-## Minimum Supported Rust Version
-
-This crate requires **Rust 1.74.0** at a minimum.
-
-We may change the MSRV in the future, but it will be accompanied by a minor
-version bump.
-
 ## License
 
 Licensed under either of:
@@ -62,7 +55,7 @@ dual licensed as above, without any additional terms or conditions.
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg?style=for-the-badge
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 [license-image]: https://img.shields.io/badge/license-Apache2.0-blue.svg?style=for-the-badge
-[rustc-image]: https://img.shields.io/badge/rustc-1.70+-blue.svg?style=for-the-badge
+[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg?style=for-the-badge
 
 [//]: # (links)
 

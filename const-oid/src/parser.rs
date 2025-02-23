@@ -1,6 +1,6 @@
 //! OID string parser with `const` support.
 
-use crate::{encoder::Encoder, Arc, Error, ObjectIdentifier, Result};
+use crate::{Arc, Error, ObjectIdentifier, Result, encoder::Encoder};
 
 /// Const-friendly OID string parser.
 ///

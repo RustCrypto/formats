@@ -2,9 +2,9 @@
 //! the purposes of decoding/encoding ASN.1 `ENUMERATED` types as mapped to
 //! enum variants.
 
-use crate::{default_lifetime, ErrorType, ATTR_NAME};
+use crate::{ATTR_NAME, ErrorType, default_lifetime};
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::{DeriveInput, Expr, ExprLit, Ident, Lit, LitInt, LitStr, Path, Variant};
 
 /// Valid options for the `#[repr]` attribute on `Enumerated` types.

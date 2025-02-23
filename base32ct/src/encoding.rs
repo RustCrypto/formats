@@ -1,6 +1,6 @@
 //! Base32 encoding trait.
 
-use crate::{alphabet::Alphabet, Error, Result};
+use crate::{Error, Result, alphabet::Alphabet};
 use core::str;
 
 #[cfg(feature = "alloc")]

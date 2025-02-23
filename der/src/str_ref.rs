@@ -83,7 +83,7 @@ impl EncodeValue for StrRef<'_> {
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::StrRef;
-    use crate::{referenced::RefToOwned, StrOwned};
+    use crate::{StrOwned, referenced::RefToOwned};
 
     impl<'a> RefToOwned<'a> for StrRef<'a> {
         type Owned = StrOwned;
