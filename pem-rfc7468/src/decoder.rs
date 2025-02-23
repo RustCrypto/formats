@@ -11,8 +11,8 @@
 //! [RFC 4648]: https://datatracker.ietf.org/doc/html/rfc4648
 
 use crate::{
-    grammar, Base64Decoder, Error, Result, BASE64_WRAP_WIDTH, POST_ENCAPSULATION_BOUNDARY,
-    PRE_ENCAPSULATION_BOUNDARY,
+    BASE64_WRAP_WIDTH, Base64Decoder, Error, POST_ENCAPSULATION_BOUNDARY,
+    PRE_ENCAPSULATION_BOUNDARY, Result, grammar,
 };
 use core::str;
 

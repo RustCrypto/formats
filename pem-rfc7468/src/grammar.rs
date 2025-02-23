@@ -4,7 +4,7 @@
 //! The grammar described below is intended to follow the "ABNF (Strict)"
 //! subset of the grammar as described in Section 3 Figure 3.
 
-use crate::{Error, Result, PRE_ENCAPSULATION_BOUNDARY};
+use crate::{Error, PRE_ENCAPSULATION_BOUNDARY, Result};
 use core::str;
 
 /// NUL char
