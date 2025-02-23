@@ -11,14 +11,6 @@ format in Rust.
 
 [Documentation][docs-link]
 
-## Minimum Supported Rust Version
-
-Rust **1.60** or newer.
-
-In the future, we reserve the right to change MSRV (i.e. MSRV is out-of-scope
-for this crate's SemVer guarantees), however when we do it will be accompanied by
-a minor version bump.
-
 ## License
 
 Licensed under either of:
@@ -41,7 +33,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/tai64/badge.svg
 [docs-link]: https://docs.rs/tai64/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.60+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/tai64.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/tai64.yml
 
