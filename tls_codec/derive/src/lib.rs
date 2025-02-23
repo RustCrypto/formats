@@ -1345,8 +1345,7 @@ fn set_cd_fields_generic(
             if let Type::Path(path) = &mut field.ty {
                 // If there is already an AngleBracketedGenericArguments, we just add the const generic at the end.
                 if let Some(segment) = path.path.segments.last_mut() {
-                    if let PathArguments::AngleBracketed(ref mut argument) = &mut segment.arguments
-                    {
+                    if let PathArguments::AngleBracketed(argument) = &mut segment.arguments {
                         argument.args.push(parse_quote! {#value});
                     } else {
                         // If there is no AngleBracketedGenericArguments, we create one and add the const generic.
