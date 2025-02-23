@@ -4,18 +4,18 @@ use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptPa
 use crate::{Error, Result};
 use aes_gcm::{AeadInPlace, KeyInit as GcmKeyInit, Nonce, Tag};
 use cbc::cipher::{
-    block_padding::Pkcs7, BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt,
-    BlockModeEncrypt, KeyInit, KeyIvInit,
+    BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt, BlockModeEncrypt, KeyInit, KeyIvInit,
+    block_padding::Pkcs7,
 };
 use pbkdf2::{
     hmac::{
+        EagerHash,
         digest::{
+            HashMarker,
             block_buffer::Eager,
             core_api::{BlockSizeUser, BufferKindUser, FixedOutputCore, UpdateCore},
             typenum::{IsLess, Le, NonZero, U12, U16, U256},
-            HashMarker,
         },
-        EagerHash,
     },
     pbkdf2_hmac,
 };
@@ -196,7 +196,7 @@ impl EncryptionKey {
                     Pbkdf2Prf::HmacWithSha1 => {
                         return Err(Error::UnsupportedAlgorithm {
                             oid: super::HMAC_WITH_SHA1_OID,
-                        })
+                        });
                     }
                     Pbkdf2Prf::HmacWithSha224 => EncryptionKey::derive_with_pbkdf2::<sha2::Sha224>(
                         password,

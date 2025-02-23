@@ -8,14 +8,14 @@ mod kdf;
 mod encryption;
 
 pub use self::kdf::{
-    Kdf, Pbkdf2Params, Pbkdf2Prf, Salt, ScryptParams, HMAC_WITH_SHA1_OID, HMAC_WITH_SHA256_OID,
-    PBKDF2_OID, SCRYPT_OID,
+    HMAC_WITH_SHA1_OID, HMAC_WITH_SHA256_OID, Kdf, PBKDF2_OID, Pbkdf2Params, Pbkdf2Prf, SCRYPT_OID,
+    Salt, ScryptParams,
 };
 
 use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
-    asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Writer,
+    asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
 };
 
 #[cfg(feature = "rand_core")]
