@@ -72,10 +72,12 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/const-oid
+[crate-image]: https://img.shields.io/crates/v/const-oid?logo=rust
 [crate-link]: https://crates.io/crates/const-oid
 [docs-image]: https://docs.rs/const-oid/badge.svg
 [docs-link]: https://docs.rs/const-oid/
+[build-image]: https://github.com/RustCrypto/formats/actions/workflows/const-oid.yml/badge.svg
+[build-link]: https://github.com/RustCrypto/formats/actions/workflows/const-oid.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
