@@ -347,6 +347,36 @@ mod allocating {
         }
     }
 
+    // /// Hack for simplifying the custom derive use case.
+    // impl<'a> TryFrom<Vec<u8>> for BitStringRef<'a> {
+    //     type Error = Error;
+
+    //     fn try_from(bytes: Vec<u8>) -> Result<BitStringRef<'a>> {
+    //         BitStringRef::from_bytes(&bytes)
+    //     }
+    // }
+
+    /// Hack for simplifying the custom derive use case.
+    impl<'a> TryFrom<&'a Vec<u8>> for BitStringRef<'a> {
+        type Error = Error;
+
+        fn try_from(bytes: &'a Vec<u8>) -> Result<BitStringRef<'a>> {
+            BitStringRef::from_bytes(bytes)
+        }
+    }
+
+    /// Hack for simplifying the custom derive use case.
+    impl<'a> TryFrom<BitStringRef<'a>> for Vec<u8> {
+        type Error = Error;
+
+        fn try_from(bit_string: BitStringRef<'a>) -> Result<Vec<u8>> {
+            bit_string
+                .as_bytes()
+                .map(|bytes| bytes.to_vec())
+                .ok_or_else(|| Tag::BitString.value_error())
+        }
+    }
+
     impl ValueOrd for BitString {
         fn value_cmp(&self, other: &Self) -> Result<Ordering> {
             match self.unused_bits.cmp(&other.unused_bits) {
