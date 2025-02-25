@@ -15,8 +15,7 @@ impl fmt::Display for InvalidLengthError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for InvalidLengthError {}
+impl core::error::Error for InvalidLengthError {}
 
 /// Invalid encoding of provided Base64 string.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -28,8 +27,7 @@ impl fmt::Display for InvalidEncodingError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for InvalidEncodingError {}
+impl core::error::Error for InvalidEncodingError {}
 
 /// Generic error, union of [`InvalidLengthError`] and [`InvalidEncodingError`].
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -80,5 +78,4 @@ impl From<Error> for std::io::Error {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
+impl core::error::Error for Error {}
