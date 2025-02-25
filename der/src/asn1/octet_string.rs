@@ -96,21 +96,11 @@ impl<'a> From<OctetStringRef<'a>> for &'a [u8] {
     }
 }
 
-impl<'a> From<&'a [u8]> for OctetStringRef<'a> {
-    fn from(byte_slice: &'a [u8]) -> Self {
-        OctetStringRef::new(byte_slice).expect("byte_slice to be sane length")
-    }
-}
+impl<'a> TryFrom<&'a [u8]> for OctetStringRef<'a> {
+    type Error = Error;
 
-impl<'a> From<&&'a [u8]> for OctetStringRef<'a> {
-    fn from(byte_slice: &&'a [u8]) -> Self {
-        From::<&'a [u8]>::from(byte_slice)
-    }
-}
-
-impl<'a> From<&&&'a [u8]> for OctetStringRef<'a> {
-    fn from(byte_slice: &&&'a [u8]) -> Self {
-        From::<&'a [u8]>::from(byte_slice)
+    fn try_from(byte_slice: &'a [u8]) -> Result<Self, Error> {
+        OctetStringRef::new(byte_slice)
     }
 }
 
