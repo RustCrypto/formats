@@ -19,7 +19,7 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-base64ct = { version = "1.4" }
+base64ct = { version = "1.7.0-rc.0" }
 
 [features]
 alloc = ["base64ct/alloc"]
