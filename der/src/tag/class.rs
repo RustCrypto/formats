@@ -1,6 +1,5 @@
 //! Class of an ASN.1 tag.
 
-use super::{CONSTRUCTED_FLAG, TagNumber};
 use core::fmt;
 
 /// Class of an ASN.1 tag.
@@ -28,14 +27,6 @@ pub enum Class {
 
     /// `PRIVATE`: types whose meaning is specific to a given enterprise.
     Private = 0b11000000,
-}
-
-impl Class {
-    /// Compute the identifier octet for a tag number of this class.
-    #[allow(clippy::arithmetic_side_effects)]
-    pub(super) fn octet(self, constructed: bool, number: TagNumber) -> u8 {
-        self as u8 | number.value() | (u8::from(constructed) * CONSTRUCTED_FLAG)
-    }
 }
 
 impl fmt::Display for Class {
