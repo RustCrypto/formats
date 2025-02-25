@@ -456,6 +456,15 @@ mod sequence {
     #[derive(Sequence, Default, Eq, PartialEq, Debug)]
     #[asn1(tag_mode = "IMPLICIT")]
     pub struct TypeCheckOwnedSequenceFieldAttributeCombinations {
+        /// Without deref = "true" macro generates an error:
+        ///
+        /// the trait `From<Vec<u8>>` is not implemented for `BitStringRef<'_>`
+        #[asn1(type = "OCTET STRING", deref = "true")]
+        pub owned_bytes: Vec<u8>,
+
+        #[asn1(type = "BIT STRING", deref = "true")]
+        pub owned_bits: Vec<u8>,
+
         /// pure Vec<.> Needs additional deref in the derive macro
         /// for the `OctetStringRef::try_from`
         #[asn1(type = "OCTET STRING", context_specific = "0", deref = "true")]
@@ -508,12 +517,18 @@ mod sequence {
     #[test]
     fn type_combinations_alloc_instance() {
         let obj = TypeCheckOwnedSequenceFieldAttributeCombinations {
+            owned_bytes: vec![0xAA, 0xBB],
+            owned_bits: vec![0xCC, 0xDD],
+
             owned_implicit_bytes: vec![0, 1],
             owned_implicit_bits: vec![2, 3],
+
             owned_explicit_bytes: vec![4, 5],
             owned_explicit_bits: vec![6, 7],
+
             owned_optional_implicit_bits: Some(vec![8, 9]),
             owned_optional_implicit_bytes: Some(vec![10, 11]),
+
             owned_optional_explicit_bits: Some(vec![12, 13]),
             owned_optional_explicit_bytes: Some(vec![14, 15]),
 
