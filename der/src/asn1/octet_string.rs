@@ -109,7 +109,7 @@ impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
     type Error = Error;
 
     fn try_from(byte_slice: &&'a [u8]) -> Result<Self, Error> {
-        TryFrom::<&'a [u8]>::try_from(byte_slice)
+        OctetStringRef::new(byte_slice)
     }
 }
 
