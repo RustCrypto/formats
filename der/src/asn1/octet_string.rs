@@ -113,7 +113,6 @@ impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
     }
 }
 
-
 #[cfg(feature = "alloc")]
 pub use self::allocating::OctetString;
 
