@@ -531,8 +531,6 @@ mod sequence {
 
             owned_optional_explicit_bits: Some(vec![12, 13]),
             owned_optional_explicit_bytes: Some(vec![14, 15]),
-
-            ..Default::default()
         };
 
         let der_encoded = obj.to_der().unwrap();
