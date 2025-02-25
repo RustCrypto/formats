@@ -347,15 +347,6 @@ mod allocating {
         }
     }
 
-    // /// Hack for simplifying the custom derive use case.
-    // impl<'a> TryFrom<Vec<u8>> for BitStringRef<'a> {
-    //     type Error = Error;
-
-    //     fn try_from(bytes: Vec<u8>) -> Result<BitStringRef<'a>> {
-    //         BitStringRef::from_bytes(&bytes)
-    //     }
-    // }
-
     /// Hack for simplifying the custom derive use case.
     impl<'a> TryFrom<&'a Vec<u8>> for BitStringRef<'a> {
         type Error = Error;
