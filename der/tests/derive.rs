@@ -404,7 +404,7 @@ mod sequence {
     const ALGORITHM_IDENTIFIER_DER: &[u8] =
         &hex!("30 13 06 07 2a 86 48 ce 3d 02 01 06 08 2a 86 48 ce 3d 03 01 07");
 
-    #[derive(Sequence)]
+    #[derive(Sequence, Default, Eq, PartialEq, Debug)]
     #[asn1(tag_mode = "IMPLICIT")]
     pub struct TypeCheckExpandedSequenceFieldAttributeCombinations<'a> {
         pub simple: bool,
@@ -423,7 +423,34 @@ mod sequence {
         #[asn1(context_specific = "3", default = "default_false_example")]
         pub context_specific_default: bool,
         #[asn1(type = "BIT STRING", context_specific = "4", optional = "true")]
-        pub typed_context_specific_optional: Option<&'a [u8]>,
+        pub typed_context_specific_optional_bits: Option<&'a [u8]>,
+        #[asn1(type = "OCTET STRING", context_specific = "5", optional = "true")]
+        pub typed_context_specific_optional_implicit: Option<&'a [u8]>,
+        #[asn1(
+            type = "OCTET STRING",
+            context_specific = "6",
+            optional = "true",
+            tag_mode = "EXPLICIT"
+        )]
+        pub typed_context_specific_optional_explicit: Option<&'a [u8]>,
+    }
+
+    #[test]
+    fn type_combinations_instance() {
+        let obj = TypeCheckExpandedSequenceFieldAttributeCombinations {
+            context_specific_optional: Some(true),
+            typed_context_specific: &[0, 1],
+            typed_context_specific_optional_bits: Some(&[2, 3]),
+            typed_context_specific_optional_implicit: Some(&[4, 5, 6]),
+            typed_context_specific_optional_explicit: Some(&[7, 8]),
+
+            ..Default::default()
+        };
+
+        let der_encoded = obj.to_der().unwrap();
+        let obj_decoded =
+            TypeCheckExpandedSequenceFieldAttributeCombinations::from_der(&der_encoded).unwrap();
+        assert_eq!(obj, obj_decoded);
     }
 
     #[derive(Sequence)]
