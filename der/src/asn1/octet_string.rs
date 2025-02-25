@@ -104,6 +104,7 @@ impl<'a> TryFrom<&'a [u8]> for OctetStringRef<'a> {
     }
 }
 
+/// Hack for simplifying the custom derive use case.
 impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
     type Error = Error;
 
