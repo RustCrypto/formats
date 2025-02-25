@@ -46,7 +46,7 @@ fn cbc_decrypt<'a, C: BlockCipherDecrypt + KeyInit>(
     cbc::Decryptor::<C>::new_from_slices(key.as_slice(), iv)
         .map_err(|_| es.to_alg_params_invalid())?
         .decrypt_padded::<Pkcs7>(buffer)
-        .map_err(|_| Error::EncryptFailed)
+        .map_err(|_| Error::DecryptFailed)
 }
 
 fn gcm_encrypt<C, NonceSize, TagSize>(
