@@ -23,8 +23,8 @@ members = [
     "tls_codec",
     "tls_codec/derive",
     #"x509-tsp",
-    #"x509-cert",
-    #"x509-cert/test-support",
+    "x509-cert",
+    "x509-cert/test-support",
     #"x509-ocsp"
 ]
 exclude = [
@@ -34,8 +34,6 @@ exclude = [
     "gss-api",
     "pkcs12",
     "x509-tsp",
-    "x509-cert",
-    "x509-cert/test-support",
     "x509-ocsp"
 ]
 
@@ -67,5 +65,35 @@ tai64 = { path = "./tai64" }
 tls_codec = { path = "./tls_codec" }
 tls_codec_derive = { path = "./tls_codec/derive" }
 #x509-tsp = { path = "./x509-tsp" }
-#x509-cert = { path = "./x509-cert" }
+x509-cert = { path = "./x509-cert" }
 #x509-ocsp = { path = "./x509-ocsp" }
+
+# https://github.com/RustCrypto/signatures/pull/913
+ecdsa = { git = "https://github.com/RustCrypto/signatures.git" }
+
+# https://github.com/RustCrypto/traits/pull/1777
+elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
+signature      = { git = "https://github.com/RustCrypto/traits.git" }
+
+# https://github.com/RustCrypto/RSA/pull/478
+rsa = { git = "https://github.com/baloo/RSA.git", branch = "baloo/rand-core/0.9.0" }
+
+pbkdf2 = { git = "https://github.com/RustCrypto/password-hashes.git" }
+
+sha1 = { git = "https://github.com/RustCrypto/hashes.git" }
+sha2 = { git = "https://github.com/RustCrypto/hashes.git" }
+
+hmac = { git = "https://github.com/RustCrypto/MACs.git" }
+
+
+# https://github.com/zkcrypto/ff/pull/122
+ff = { git = "https://github.com/pinkforest/ff.git", branch = "bump-rand-core" }
+
+# https://github.com/zkcrypto/group/pull/56
+# https://github.com/zkcrypto/group/pull/57
+group = { git = "https://github.com/baloo/group.git", branch = "baloo/relax-rng" }
+
+crypto-bigint = { git = "https://github.com/RustCrypto/crypto-bigint.git" }
+
+# https://github.com/RustCrypto/elliptic-curves/pull/1125
+p256 = { git = "https://github.com/baloo/elliptic-curves.git", branch = "baloo/edition-2024" }
