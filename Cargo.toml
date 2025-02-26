@@ -5,7 +5,7 @@ members = [
     "base32ct",
     "base64ct",
     #"cmpv2",
-    #"cms",
+    "cms",
     "const-oid",
     #"crmf",
     "der",
@@ -29,7 +29,6 @@ members = [
 ]
 exclude = [
     "cmpv2",
-    "cms",
     "crmf",
     "gss-api",
     "pkcs12",
@@ -48,7 +47,7 @@ base16ct = { path = "./base16ct" }
 base32ct = { path = "./base32ct" }
 base64ct = { path = "./base64ct" }
 #cmpv2 = { path = "./cmpv2" }
-#cms = { path = "./cms" }
+cms = { path = "./cms" }
 const-oid = { path = "./const-oid" }
 #crmf = { path = "./crmf" }
 der = { path = "./der" }
@@ -72,6 +71,7 @@ x509-cert = { path = "./x509-cert" }
 ecdsa = { git = "https://github.com/RustCrypto/signatures.git" }
 
 # https://github.com/RustCrypto/traits/pull/1777
+crypto-common = { git = "https://github.com/baloo/traits.git", branch = "baloo/relax-sized-rng" }
 elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
 signature      = { git = "https://github.com/RustCrypto/traits.git" }
 
@@ -82,6 +82,7 @@ pbkdf2 = { git = "https://github.com/RustCrypto/password-hashes.git" }
 
 sha1 = { git = "https://github.com/RustCrypto/hashes.git" }
 sha2 = { git = "https://github.com/RustCrypto/hashes.git" }
+sha3 = { git = "https://github.com/RustCrypto/hashes.git" }
 
 hmac = { git = "https://github.com/RustCrypto/MACs.git" }
 
