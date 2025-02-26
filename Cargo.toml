@@ -77,8 +77,10 @@ rfc6979 = { git = "https://github.com/RustCrypto/signatures.git" }
 
 
 # https://github.com/RustCrypto/traits/pull/1777
-elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
-signature      = { git = "https://github.com/RustCrypto/traits.git" }
+crypto-common  = { git = "https://github.com/baloo/traits.git", branch = "baloo/relax-sized-rng" }
+elliptic-curve = { git = "https://github.com/baloo/traits.git", branch = "baloo/relax-sized-rng" }
+signature      = { git = "https://github.com/baloo/traits.git", branch = "baloo/relax-sized-rng" }
+aead           = { git = "https://github.com/baloo/traits.git", branch = "baloo/relax-sized-rng" }
 
 # https://github.com/RustCrypto/RSA/pull/478
 rsa = { git = "https://github.com/RustCrypto/RSA.git" }
@@ -103,3 +105,8 @@ crypto-primes = { git = "https://github.com/entropyxyz/crypto-primes.git" }
 # https://github.com/RustCrypto/elliptic-curves/pull/1125
 # https://github.com/RustCrypto/elliptic-curves/pull/1131
 p256 = { git = "https://github.com/baloo/elliptic-curves.git", branch = "baloo/group/try-from-rng" }
+
+cbc = { git = "https://github.com/RustCrypto/block-modes.git" }
+ctr = { git = "https://github.com/RustCrypto/block-modes.git" }
+aes-gcm = { git = "https://github.com/baloo/AEADs.git", branch = "baloo/inout-v2" }
+salsa20 = { git = "https://github.com/RustCrypto/stream-ciphers.git" }

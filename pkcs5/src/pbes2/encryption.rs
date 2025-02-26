@@ -2,7 +2,7 @@
 
 use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptParams};
 use crate::{Error, Result};
-use aes_gcm::{AeadInPlace, KeyInit as GcmKeyInit, Nonce, Tag};
+use aes_gcm::{KeyInit as GcmKeyInit, Nonce, Tag, aead::AeadInOut};
 use cbc::cipher::{
     BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt, BlockModeEncrypt, KeyInit, KeyIvInit,
     block_padding::Pkcs7,
@@ -69,7 +69,7 @@ where
         <aes_gcm::AesGcm<C, NonceSize, TagSize> as GcmKeyInit>::new_from_slice(key.as_slice())
             .map_err(|_| es.to_alg_params_invalid())?;
     let tag = gcm
-        .encrypt_in_place_detached(&nonce, &[], &mut buffer[..pos])
+        .encrypt_inout_detached(&nonce, &[], (&mut buffer[..pos]).into())
         .map_err(|_| Error::EncryptFailed)?;
     buffer[pos..].copy_from_slice(tag.as_ref());
     Ok(&buffer[0..pos + TagSize::USIZE])
@@ -99,7 +99,7 @@ where
     let tag = Tag::try_from(&buffer[msg_len..]).map_err(|_| Error::DecryptFailed)?;
 
     if gcm
-        .decrypt_in_place_detached(&nonce, &[], &mut buffer[..msg_len], &tag)
+        .decrypt_inout_detached(&nonce, &[], (&mut buffer[..msg_len]).into(), &tag)
         .is_err()
     {
         return Err(Error::DecryptFailed);
