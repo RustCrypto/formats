@@ -1,10 +1,10 @@
 //! PKCS#10 Certification Request types
 
 use crate::{
+    AlgorithmIdentifier, SubjectPublicKeyInfo,
     attr::{Attribute, AttributeValue, Attributes},
     ext::Extension,
     name::Name,
-    AlgorithmIdentifier, SubjectPublicKeyInfo,
 };
 
 use alloc::vec::Vec;
@@ -12,8 +12,8 @@ use alloc::vec::Vec;
 use const_oid::db::rfc5912::ID_EXTENSION_REQ;
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::{
-    asn1::{Any, BitString, SetOfVec},
     Decode, Enumerated, Sequence,
+    asn1::{Any, BitString, SetOfVec},
 };
 
 #[cfg(feature = "pem")]
@@ -137,8 +137,8 @@ pub mod attributes {
     use alloc::vec;
     use const_oid::AssociatedOid;
     use der::{
-        asn1::{Any, ObjectIdentifier, SetOfVec},
         EncodeValue, Length, Result, Tag, Tagged, Writer,
+        asn1::{Any, ObjectIdentifier, SetOfVec},
     };
 
     use crate::{attr::Attribute, ext::pkix::name::DirectoryString};

@@ -23,8 +23,8 @@ members = [
     "tls_codec",
     "tls_codec/derive",
     #"x509-tsp",
-    #"x509-cert",
-    #"x509-cert/test-support",
+    "x509-cert",
+    "x509-cert/test-support",
     #"x509-ocsp"
 ]
 exclude = [
@@ -35,8 +35,6 @@ exclude = [
     "gss-api",
     "pkcs12",
     "x509-tsp",
-    "x509-cert",
-    "x509-cert/test-support",
     "x509-ocsp"
 ]
 
@@ -68,11 +66,32 @@ tai64 = { path = "./tai64" }
 tls_codec = { path = "./tls_codec" }
 tls_codec_derive = { path = "./tls_codec/derive" }
 #x509-tsp = { path = "./x509-tsp" }
-#x509-cert = { path = "./x509-cert" }
+x509-cert = { path = "./x509-cert" }
 #x509-ocsp = { path = "./x509-ocsp" }
 
+
+# https://github.com/RustCrypto/signatures/pull/913
+# https://github.com/RustCrypto/signatures/pull/923
+ecdsa   = { git = "https://github.com/RustCrypto/signatures.git" }
+rfc6979 = { git = "https://github.com/RustCrypto/signatures.git" }
+
+
+# https://github.com/RustCrypto/traits/pull/1777
+elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
+signature      = { git = "https://github.com/RustCrypto/traits.git" }
+
+# https://github.com/RustCrypto/RSA/pull/478
+# https://github.com/RustCrypto/RSA/pull/504
+rsa = { git = "https://github.com/RustCrypto/RSA.git" }
+
 # https://github.com/RustCrypto/password-hashes/pull/577
+# https://github.com/RustCrypto/password-hashes/pull/578
 pbkdf2 = { git = "https://github.com/RustCrypto/password-hashes.git" }
 scrypt = { git = "https://github.com/RustCrypto/password-hashes.git" }
 
-hmac = { git = "https://github.com/RustCrypto/MACs.git" }
+crypto-bigint = { git = "https://github.com/RustCrypto/crypto-bigint.git" }
+crypto-primes = { git = "https://github.com/entropyxyz/crypto-primes.git" }
+
+# https://github.com/RustCrypto/elliptic-curves/pull/1125
+# https://github.com/RustCrypto/elliptic-curves/pull/1131
+p256 = { git = "https://github.com/RustCrypto/elliptic-curves.git" }

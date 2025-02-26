@@ -2,7 +2,7 @@
 
 use alloc::vec::Vec;
 
-use const_oid::{db::rfc5280::ID_CE_NAME_CONSTRAINTS, AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifier, db::rfc5280::ID_CE_NAME_CONSTRAINTS};
 use der::Sequence;
 
 use super::super::name::GeneralName;

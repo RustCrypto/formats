@@ -1,7 +1,7 @@
 //! PKIX distribution point types
 
-use const_oid::{db::rfc5280::ID_PE_SUBJECT_INFO_ACCESS, AssociatedOid, ObjectIdentifier};
-use der::flagset::{flags, FlagSet};
+use const_oid::{AssociatedOid, ObjectIdentifier, db::rfc5280::ID_PE_SUBJECT_INFO_ACCESS};
+use der::flagset::{FlagSet, flags};
 use der::{Sequence, ValueOrd};
 
 use crate::ext::pkix::name::{DistributionPointName, GeneralNames};

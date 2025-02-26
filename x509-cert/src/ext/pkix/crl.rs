@@ -11,7 +11,7 @@ pub use dp::IssuingDistributionPoint;
 
 use alloc::vec::Vec;
 
-use der::{asn1::Uint, Enumerated};
+use der::{Enumerated, asn1::Uint};
 
 /// CrlNumber as defined in [RFC 5280 Section 5.2.3].
 ///

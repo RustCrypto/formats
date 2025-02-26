@@ -1,6 +1,6 @@
 use der::{
-    asn1::{Ia5StringRef, PrintableStringRef},
     Decode, Encode, SliceReader,
+    asn1::{Ia5StringRef, PrintableStringRef},
 };
 use hex_literal::hex;
 use x509_cert::{

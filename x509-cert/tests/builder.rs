@@ -1,22 +1,23 @@
 #![cfg(all(feature = "builder", feature = "pem"))]
 
 use der::{
+    EncodePem,
     asn1::{Ia5String, PrintableString},
     pem::LineEnding,
-    EncodePem,
 };
-use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
+use p256::{NistP256, ecdsa::DerSignature, pkcs8::DecodePrivateKey};
 use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
+use signature::rand_core::TryRngCore;
 use spki::SubjectPublicKeyInfo;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{profile, AsyncBuilder, Builder, CertificateBuilder, RequestBuilder},
+    builder::{AsyncBuilder, Builder, CertificateBuilder, RequestBuilder, profile},
     ext::pkix::{
-        name::{DirectoryString, GeneralName},
         SubjectAltName,
+        name::{DirectoryString, GeneralName},
     },
     name::Name,
     request,
@@ -211,7 +212,7 @@ fn pss_certificate() {
         .expect("Create certificate");
 
     let certificate = builder
-        .build_with_rng::<_, rsa::pss::Signature>(&signer, &mut rand::thread_rng())
+        .build_with_rng::<_, rsa::pss::Signature, _>(&signer, &mut rand::rng())
         .unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
@@ -315,7 +316,7 @@ fn dynamic_signer() {
     let csr_builder = RequestBuilder::new(subject).expect("construct builder");
 
     let csr = if true {
-        let req_signer = p256::ecdsa::SigningKey::random(&mut OsRng);
+        let req_signer = p256::ecdsa::SigningKey::random(&mut OsRng.unwrap_mut());
         csr_builder
             .build::<_, p256::ecdsa::DerSignature>(&req_signer)
             .expect("Sign request")
