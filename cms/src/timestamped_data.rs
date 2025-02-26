@@ -5,8 +5,8 @@ use crate::content_info::ContentInfo;
 use alloc::{string::String, vec::Vec};
 use const_oid::ObjectIdentifier;
 use der::{
-    asn1::{Ia5String, OctetString, OctetStringRef},
     Any, Choice, Enumerated, Sequence,
+    asn1::{Ia5String, OctetString, OctetStringRef},
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{

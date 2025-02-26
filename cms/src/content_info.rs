@@ -5,9 +5,9 @@ use crate::revocation::RevocationInfoChoices;
 use crate::signed_data::EncapsulatedContentInfo;
 use crate::signed_data::{CertificateSet, SignedData, SignerInfos};
 use core::cmp::Ordering;
-use der::asn1::SetOfVec;
 use der::Encode;
-use der::{asn1::ObjectIdentifier, Any, AnyRef, Enumerated, Sequence, ValueOrd};
+use der::asn1::SetOfVec;
+use der::{Any, AnyRef, Enumerated, Sequence, ValueOrd, asn1::ObjectIdentifier};
 use x509_cert::{Certificate, PkiPath};
 
 /// The `OtherCertificateFormat` type is defined in [RFC 5652 Section 10.2.5].

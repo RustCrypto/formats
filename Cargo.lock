@@ -266,6 +266,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f46ad14479a25103f283c0f10005961cf086d8dc42205bb44c46ac563475dca6"
 
 [[package]]
+name = "cms"
+version = "0.3.0-pre.0"
+dependencies = [
+ "aes",
+ "cbc",
+ "cipher",
+ "const-oid",
+ "der",
+ "ecdsa",
+ "getrandom 0.3.2",
+ "hex-literal 0.4.1",
+ "p256",
+ "pbkdf2",
+ "pem-rfc7468",
+ "pkcs5",
+ "rand 0.9.0",
+ "rsa",
+ "sha1",
+ "sha2",
+ "sha3",
+ "signature",
+ "spki",
+ "tokio",
+ "x509-cert",
+ "zeroize",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.10.1"
 dependencies = [
@@ -343,6 +371,7 @@ version = "0.2.0-rc.2"
 source = "git+https://github.com/RustCrypto/traits.git#2dc47f8d1461a2a7a22b68e2afafeb4b59e13420"
 dependencies = [
  "hybrid-array",
+ "rand_core 0.9.3",
 ]
 
 [[package]]
@@ -727,6 +756,15 @@ name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
+
+[[package]]
+name = "keccak"
+version = "0.2.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7cdd4f0dc5807b9a2b25dd48a3f58e862606fe7bd47f41ecde36e97422d7e90"
+dependencies = [
+ "cpufeatures",
+]
 
 [[package]]
 name = "lazy_static"
@@ -1352,6 +1390,16 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "sha3"
+version = "0.11.0-pre.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1bc997d7a5fa67cc1e352b2001124d28edb948b4e7a16567f9b3c1e51952524"
+dependencies = [
+ "digest",
+ "keccak",
 ]
 
 [[package]]
