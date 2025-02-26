@@ -91,12 +91,18 @@ pub(crate) struct FieldAttrs {
     /// Value of the `#[asn1(type = "...")]` attribute if provided.
     pub asn1_type: Option<Asn1Type>,
 
+    /// Is the inner type constructed?
+    pub constructed: bool,
+
     /// Value of the `#[asn1(context_specific = "...")] attribute if provided.
     pub context_specific: Option<TagNumber>,
 
     /// Indicates name of function that supplies the default value, which will be used in cases
     /// where encoding is omitted per DER and to omit the encoding per DER
     pub default: Option<Path>,
+
+    /// Shold we add `&` before `self.field_name`?
+    pub should_deref: bool,
 
     /// Is this field "extensible", i.e. preceded by the `...` extensibility marker?
     pub extensible: bool,
@@ -110,9 +116,6 @@ pub(crate) struct FieldAttrs {
     /// Inherits from the type-level tagging mode if specified, or otherwise
     /// defaults to `EXPLICIT`.
     pub tag_mode: TagMode,
-
-    /// Is the inner type constructed?
-    pub constructed: bool,
 }
 
 impl FieldAttrs {
@@ -126,12 +129,13 @@ impl FieldAttrs {
     /// Parse attributes from a struct field or enum variant.
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> syn::Result<Self> {
         let mut asn1_type = None;
+        let mut constructed = None;
         let mut context_specific = None;
         let mut default = None;
+        let mut should_deref = None;
         let mut extensible = None;
         let mut optional = None;
         let mut tag_mode = None;
-        let mut constructed = None;
 
         let mut parsed_attrs = Vec::new();
         AttrNameValue::from_attributes(attrs, &mut parsed_attrs)?;
@@ -156,6 +160,12 @@ impl FieldAttrs {
                         format_args!("error parsing ASN.1 `default` attribute: {e}"),
                     )
                 })?);
+            // `deref` attribute
+            } else if let Some(de) = attr.parse_value("deref")? {
+                if should_deref.is_some() {
+                    abort!(attr.name, "duplicate ASN.1 `deref` attribute");
+                }
+                should_deref = Some(de);
             // `extensible` attribute
             } else if let Some(ext) = attr.parse_value("extensible")? {
                 if extensible.is_some() {
@@ -195,19 +205,20 @@ impl FieldAttrs {
                 abort!(
                     attr.name,
                     "unknown field-level `asn1` attribute \
-                    (valid options are `context_specific`, `type`)",
+                    (valid options are `constructed`, `context_specific`, `default`, `deref`, `extensible`, `optional`, `tag_mode`, `type`)",
                 );
             }
         }
 
         Ok(Self {
             asn1_type,
+            constructed: constructed.unwrap_or_default(),
             context_specific,
             default,
+            should_deref: should_deref.unwrap_or_default(),
             extensible: extensible.unwrap_or_default(),
             optional: optional.unwrap_or_default(),
             tag_mode: tag_mode.unwrap_or(type_attrs.tag_mode),
-            constructed: constructed.unwrap_or_default(),
         })
     }
 

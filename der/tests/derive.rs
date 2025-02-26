@@ -453,6 +453,92 @@ mod sequence {
         assert_eq!(obj, obj_decoded);
     }
 
+    #[derive(Sequence, Default, Eq, PartialEq, Debug)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    pub struct TypeCheckOwnedSequenceFieldAttributeCombinations {
+        /// Without deref = "true" macro generates an error:
+        ///
+        /// the trait `From<Vec<u8>>` is not implemented for `BitStringRef<'_>`
+        #[asn1(type = "OCTET STRING", deref = "true")]
+        pub owned_bytes: Vec<u8>,
+
+        #[asn1(type = "BIT STRING", deref = "true")]
+        pub owned_bits: Vec<u8>,
+
+        /// pure Vec<.> Needs additional deref in the derive macro
+        /// for the `OctetStringRef::try_from`
+        #[asn1(type = "OCTET STRING", context_specific = "0", deref = "true")]
+        pub owned_implicit_bytes: Vec<u8>,
+
+        /// deref
+        #[asn1(type = "BIT STRING", context_specific = "1", deref = "true")]
+        pub owned_implicit_bits: Vec<u8>,
+
+        /// deref
+        #[asn1(
+            type = "OCTET STRING",
+            context_specific = "2",
+            deref = "true",
+            tag_mode = "EXPLICIT"
+        )]
+        pub owned_explicit_bytes: Vec<u8>,
+
+        /// deref
+        #[asn1(
+            type = "BIT STRING",
+            context_specific = "3",
+            deref = "true",
+            tag_mode = "EXPLICIT"
+        )]
+        pub owned_explicit_bits: Vec<u8>,
+
+        /// Option<Vec<..>> does not need deref
+        #[asn1(type = "BIT STRING", context_specific = "4", optional = "true")]
+        pub owned_optional_implicit_bits: Option<Vec<u8>>,
+        #[asn1(type = "OCTET STRING", context_specific = "5", optional = "true")]
+        pub owned_optional_implicit_bytes: Option<Vec<u8>>,
+
+        #[asn1(
+            type = "OCTET STRING",
+            context_specific = "6",
+            optional = "true",
+            tag_mode = "EXPLICIT"
+        )]
+        pub owned_optional_explicit_bits: Option<Vec<u8>>,
+        #[asn1(
+            type = "OCTET STRING",
+            context_specific = "7",
+            optional = "true",
+            tag_mode = "EXPLICIT"
+        )]
+        pub owned_optional_explicit_bytes: Option<Vec<u8>>,
+    }
+
+    #[test]
+    fn type_combinations_alloc_instance() {
+        let obj = TypeCheckOwnedSequenceFieldAttributeCombinations {
+            owned_bytes: vec![0xAA, 0xBB],
+            owned_bits: vec![0xCC, 0xDD],
+
+            owned_implicit_bytes: vec![0, 1],
+            owned_implicit_bits: vec![2, 3],
+
+            owned_explicit_bytes: vec![4, 5],
+            owned_explicit_bits: vec![6, 7],
+
+            owned_optional_implicit_bits: Some(vec![8, 9]),
+            owned_optional_implicit_bytes: Some(vec![10, 11]),
+
+            owned_optional_explicit_bits: Some(vec![12, 13]),
+            owned_optional_explicit_bytes: Some(vec![14, 15]),
+        };
+
+        let der_encoded = obj.to_der().unwrap();
+        let obj_decoded =
+            TypeCheckOwnedSequenceFieldAttributeCombinations::from_der(&der_encoded).unwrap();
+        assert_eq!(obj, obj_decoded);
+    }
+
     #[derive(Sequence)]
     #[asn1(error = CustomError)]
     pub struct TypeWithCustomError {
