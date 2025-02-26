@@ -5,7 +5,7 @@ members = [
     "base32ct",
     #"base64ct",
     #"cmpv2",
-    #"cms",
+    "cms",
     "const-oid",
     #"crmf",
     "der",
@@ -30,7 +30,6 @@ members = [
 exclude = [
     "base64ct",
     "cmpv2",
-    "cms",
     "crmf",
     "gss-api",
     "pkcs12",
@@ -49,7 +48,7 @@ base16ct = { path = "./base16ct" }
 base32ct = { path = "./base32ct" }
 base64ct = { path = "./base64ct" }
 #cmpv2 = { path = "./cmpv2" }
-#cms = { path = "./cms" }
+cms = { path = "./cms" }
 const-oid = { path = "./const-oid" }
 #crmf = { path = "./crmf" }
 der = { path = "./der" }

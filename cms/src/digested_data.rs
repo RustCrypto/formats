@@ -1,5 +1,5 @@
 //! DigestedData-related types
-use der::{asn1::OctetString, Sequence};
+use der::{Sequence, asn1::OctetString};
 
 use spki::AlgorithmIdentifierOwned;
 
