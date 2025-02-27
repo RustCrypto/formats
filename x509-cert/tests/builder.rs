@@ -6,7 +6,9 @@ use der::{
     EncodePem,
 };
 use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
-use rand::rngs::OsRng;
+use rand::{rngs::OsRng};
+use signature::
+rand_core::TryRngCore;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
@@ -211,7 +213,7 @@ fn pss_certificate() {
         .expect("Create certificate");
 
     let certificate = builder
-        .build_with_rng::<_, rsa::pss::Signature>(&signer, &mut rand::thread_rng())
+        .build_with_rng::<_, rsa::pss::Signature, _>(&signer, &mut rand::rng())
         .unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
@@ -315,7 +317,7 @@ fn dynamic_signer() {
     let csr_builder = RequestBuilder::new(subject).expect("construct builder");
 
     let csr = if true {
-        let req_signer = p256::ecdsa::SigningKey::random(&mut OsRng);
+        let req_signer = p256::ecdsa::SigningKey::random(&mut OsRng.unwrap_mut());
         csr_builder
             .build::<_, p256::ecdsa::DerSignature>(&req_signer)
             .expect("Sign request")

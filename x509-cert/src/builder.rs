@@ -1,10 +1,10 @@
 //! X509 Certificate builder
 
 use alloc::vec;
-use async_signature::{AsyncRandomizedSigner, AsyncSigner};
 use core::fmt;
 use der::{asn1::BitString, referenced::OwnedToRef, Encode};
-use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, Signer};
+use signature::{rand_core::CryptoRng, Keypair, RandomizedSigner, Signer,
+AsyncRandomizedSigner, AsyncSigner};
 use spki::{
     DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier, SignatureBitStringEncoding,
 };
@@ -250,16 +250,17 @@ pub trait Builder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    fn build_with_rng<S, Signature>(
+    fn build_with_rng<S, Signature, R>(
         mut self,
         signer: &S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<Self::Output>
     where
         S: RandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R:CryptoRng,
     {
         let blob = self.finalize(signer)?;
 
@@ -361,16 +362,16 @@ pub trait AsyncBuilder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    async fn build_with_rng_async<S, Signature>(
+    async fn build_with_rng_async<S, Signature,R>(
         mut self,
         signer: &S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<Self::Output>
     where
         S: AsyncRandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
-        Signature: SignatureBitStringEncoding,
+        Signature: SignatureBitStringEncoding,R:CryptoRng+?Sized
     {
         let blob = self.finalize(signer)?;
 
