@@ -227,6 +227,15 @@ mod allocating {
         }
     }
 
+    /// Hack for simplifying the custom derive use case.
+    impl<'a> TryFrom<&'a Vec<u8>> for OctetStringRef<'a> {
+        type Error = Error;
+
+        fn try_from(byte_vec: &'a Vec<u8>) -> Result<Self, Error> {
+            OctetStringRef::new(byte_vec)
+        }
+    }
+
     impl From<OctetString> for Vec<u8> {
         fn from(octet_string: OctetString) -> Vec<u8> {
             octet_string.into_bytes()

@@ -70,16 +70,7 @@ impl Asn1Type {
     /// Get a `der::Encoder` object for a particular ASN.1 type
     pub fn encoder(self, binding: &TokenStream) -> TokenStream {
         let type_path = self.type_path();
-
-        match self {
-            Asn1Type::Ia5String
-            | Asn1Type::OctetString
-            | Asn1Type::PrintableString
-            | Asn1Type::TeletexString
-            | Asn1Type::VideotexString
-            | Asn1Type::Utf8String => quote!(#type_path::try_from(#binding)?),
-            _ => quote!(#type_path::try_from(#binding)?),
-        }
+        quote!(#type_path::try_from(#binding)?)
     }
 
     /// Get the Rust type path for a particular ASN.1 type.

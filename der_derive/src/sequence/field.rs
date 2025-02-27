@@ -79,6 +79,10 @@ impl SequenceField {
         let mut lowerer = LowerFieldEncoder::new(&self.ident);
         let attrs = &self.attrs;
 
+        if self.attrs.should_deref {
+            lowerer.apply_deref();
+        }
+
         if let Some(ty) = &attrs.asn1_type {
             // TODO(tarcieri): default in conjunction with ASN.1 types?
             debug_assert!(
@@ -188,6 +192,18 @@ impl LowerFieldEncoder {
         };
     }
 
+    /// Changes field access, for example from:
+    ///
+    /// `self.field1`
+    ///
+    /// to:
+    ///
+    /// `&self.field1`
+    fn apply_deref(&mut self) {
+        let encoder = &self.encoder;
+        self.encoder = quote!(&#encoder);
+    }
+
     /// Handle default value for a type.
     fn apply_default(&mut self, ident: &Ident, default: &Path, field_type: &Type) {
         let encoder = &self.encoder;
@@ -275,6 +291,7 @@ mod tests {
             optional: false,
             tag_mode: TagMode::Explicit,
             constructed: false,
+            should_deref: false,
         };
 
         let field_type = Ident::new("String", span);
@@ -315,6 +332,7 @@ mod tests {
             optional: false,
             tag_mode: TagMode::Implicit,
             constructed: false,
+            should_deref: false,
         };
 
         let field_type = Ident::new("String", span);
