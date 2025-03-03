@@ -7,7 +7,7 @@ members = [
     #"cmpv2",
     "cms",
     "const-oid",
-    #"crmf",
+    "crmf",
     "der",
     "der_derive",
     #"gss-api",
@@ -30,7 +30,6 @@ members = [
 exclude = [
     "base64ct",
     "cmpv2",
-    "crmf",
     "gss-api",
     "pkcs12",
     "x509-tsp",
@@ -50,7 +49,7 @@ base64ct = { path = "./base64ct" }
 #cmpv2 = { path = "./cmpv2" }
 cms = { path = "./cms" }
 const-oid = { path = "./const-oid" }
-#crmf = { path = "./crmf" }
+crmf = { path = "./crmf" }
 der = { path = "./der" }
 der_derive = { path = "./der_derive" }
 pem-rfc7468 = { path = "./pem-rfc7468" }
