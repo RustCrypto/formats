@@ -1,14 +1,14 @@
 //! ocsp response decode tests
 
 use der::{
-    asn1::{Null, ObjectIdentifier, OctetString},
     DateTime, Decode, Encode,
+    asn1::{Null, ObjectIdentifier, OctetString},
 };
 use hex_literal::hex;
 use lazy_static::lazy_static;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
-    ext::{pkix::CrlReason, Extension},
+    ext::{Extension, pkix::CrlReason},
     name::Name,
     serial_number::SerialNumber,
 };

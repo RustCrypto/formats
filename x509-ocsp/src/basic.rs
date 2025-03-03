@@ -1,17 +1,17 @@
 //! Basic OCSP Response
 
 use crate::{
-    ext::Nonce, AsResponseBytes, CertId, CertStatus, OcspGeneralizedTime, ResponderId, Version,
+    AsResponseBytes, CertId, CertStatus, OcspGeneralizedTime, ResponderId, Version, ext::Nonce,
 };
 use alloc::vec::Vec;
 use const_oid::{
-    db::rfc6960::{ID_PKIX_OCSP_BASIC, ID_PKIX_OCSP_NONCE},
     AssociatedOid,
+    db::rfc6960::{ID_PKIX_OCSP_BASIC, ID_PKIX_OCSP_NONCE},
 };
 use core::{default::Default, option::Option};
 use der::{
-    asn1::{BitString, ObjectIdentifier},
     Decode, Sequence,
+    asn1::{BitString, ObjectIdentifier},
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{certificate::Certificate, ext::Extensions};
@@ -126,12 +126,12 @@ pub struct SingleResponse {
 
 #[cfg(feature = "builder")]
 mod builder {
-    use crate::{builder::Error, CertId, CertStatus, OcspGeneralizedTime, SingleResponse};
+    use crate::{CertId, CertStatus, OcspGeneralizedTime, SingleResponse, builder::Error};
     use const_oid::AssociatedOid;
     use digest::Digest;
     use x509_cert::{
-        crl::CertificateList, ext::AsExtension, name::Name, serial_number::SerialNumber,
-        Certificate,
+        Certificate, crl::CertificateList, ext::AsExtension, name::Name,
+        serial_number::SerialNumber,
     };
 
     impl SingleResponse {
