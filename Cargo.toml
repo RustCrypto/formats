@@ -15,7 +15,7 @@ members = [
     "pkcs1",
     "pkcs5",
     "pkcs8",
-    #"pkcs12",
+    "pkcs12",
     "sec1",
     "serdect",
     "spki",
@@ -29,7 +29,6 @@ members = [
 ]
 exclude = [
     "base64ct",
-    "pkcs12",
     "x509-tsp",
     "x509-ocsp"
 ]
@@ -54,7 +53,7 @@ pem-rfc7468 = { path = "./pem-rfc7468" }
 pkcs1 = { path = "./pkcs1" }
 pkcs5 = { path = "./pkcs5" }
 pkcs8 = { path = "./pkcs8" }
-#pkcs12 = { path = "./pkcs12" }
+pkcs12 = { path = "./pkcs12" }
 sec1 = { path = "./sec1" }
 serdect = { path = "./serdect" }
 spki = { path = "./spki" }

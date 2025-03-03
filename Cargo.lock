@@ -932,6 +932,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "pkcs12"
+version = "0.2.0-pre"
+dependencies = [
+ "cms",
+ "const-oid",
+ "der",
+ "digest",
+ "hex-literal 1.0.0",
+ "pkcs5",
+ "pkcs8",
+ "sha2",
+ "spki",
+ "whirlpool",
+ "x509-cert",
+ "zeroize",
+]
+
+[[package]]
 name = "pkcs5"
 version = "0.8.0-rc.3"
 dependencies = [
@@ -1705,6 +1723,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9683f9a5a998d873c0d21fcbe3c083009670149a8fab228644b8bd36b2c48cb3"
 dependencies = [
  "wit-bindgen-rt",
+]
+
+[[package]]
+name = "whirlpool"
+version = "0.11.0-pre.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41fbe8695cb6a786fed7267063bda1ad9be6d3d9067b071e6e4cc6d8ac19b176"
+dependencies = [
+ "digest",
 ]
 
 [[package]]
