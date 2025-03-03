@@ -1,14 +1,14 @@
 //! PKIBody type
 
-use der::asn1::Null;
 use der::Choice;
+use der::asn1::Null;
 
 use crmf::request::CertReqMessages;
 use x509_cert::request::CertReq;
 
 use crate::ann::{CaKeyUpdAnnContent, CertAnnContent, CrlAnnContent, RevAnnContent};
 use crate::certified_key_pair::KeyRecRepContent;
-use crate::gen::{GenMsgContent, GenRepContent};
+use crate::gp::{GenMsgContent, GenRepContent};
 use crate::message::PkiMessages;
 use crate::poll::{PollRepContent, PollReqContent};
 use crate::pop::{PopoDecKeyChallContent, PopoDecKeyRespContent};

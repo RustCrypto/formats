@@ -5,10 +5,10 @@ use der::asn1::{GeneralizedTime, OctetString, Utf8StringRef};
 use der::{Enumerated, Sequence};
 
 use spki::AlgorithmIdentifierOwned;
-use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::Certificate;
+use x509_cert::ext::pkix::name::GeneralName;
 
-use crate::gen::InfoTypeAndValue;
+use crate::gp::InfoTypeAndValue;
 
 /// The `PKIHeader` type is defined in [RFC 4210 Section 5.1.1].
 ///

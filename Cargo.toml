@@ -4,7 +4,7 @@ members = [
     "base16ct",
     "base32ct",
     #"base64ct",
-    #"cmpv2",
+    "cmpv2",
     "cms",
     "const-oid",
     "crmf",
@@ -29,7 +29,6 @@ members = [
 ]
 exclude = [
     "base64ct",
-    "cmpv2",
     "gss-api",
     "pkcs12",
     "x509-tsp",
@@ -46,7 +45,7 @@ opt-level = 2
 base16ct = { path = "./base16ct" }
 base32ct = { path = "./base32ct" }
 base64ct = { path = "./base64ct" }
-#cmpv2 = { path = "./cmpv2" }
+cmpv2 = { path = "./cmpv2" }
 cms = { path = "./cms" }
 const-oid = { path = "./const-oid" }
 crmf = { path = "./crmf" }
