@@ -1867,6 +1867,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "x509-tsp"
+version = "0.2.0-pre"
+dependencies = [
+ "cmpv2",
+ "cms",
+ "der",
+ "hex-literal 0.4.1",
+ "x509-cert",
+]
+
+[[package]]
 name = "zerocopy"
 version = "0.8.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
