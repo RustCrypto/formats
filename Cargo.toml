@@ -25,11 +25,10 @@ members = [
     "x509-tsp",
     "x509-cert",
     "x509-cert/test-support",
-    #"x509-ocsp"
+    "x509-ocsp"
 ]
 exclude = [
     "base64ct",
-    "x509-ocsp"
 ]
 
 [profile.dev]
@@ -61,7 +60,7 @@ tls_codec = { path = "./tls_codec" }
 tls_codec_derive = { path = "./tls_codec/derive" }
 x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
-#x509-ocsp = { path = "./x509-ocsp" }
+x509-ocsp = { path = "./x509-ocsp" }
 
 
 # https://github.com/RustCrypto/signatures/pull/913

@@ -1,6 +1,6 @@
 //! X.509 OCSP CertID
 
-use der::{asn1::OctetString, Sequence};
+use der::{Sequence, asn1::OctetString};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
     certificate::{Profile, Rfc5280},
@@ -36,15 +36,15 @@ impl From<&CertId> for CertId {
 
 #[cfg(feature = "builder")]
 mod builder {
-    use crate::{builder::Error, CertId};
+    use crate::{CertId, builder::Error};
     use const_oid::AssociatedOid;
     use der::{
-        asn1::{Null, OctetString},
         Encode,
+        asn1::{Null, OctetString},
     };
     use digest::Digest;
     use spki::AlgorithmIdentifierOwned;
-    use x509_cert::{serial_number::SerialNumber, Certificate};
+    use x509_cert::{Certificate, serial_number::SerialNumber};
 
     impl CertId {
         /// Generates a `CertID` by running the issuer's subject and key through the specified
