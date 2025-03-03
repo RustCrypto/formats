@@ -306,6 +306,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cms"
+version = "0.3.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "956098b1603285c33972193d6f62c8389d3d8548693a4077baa08ff0a8da97c7"
+dependencies = [
+ "const-oid",
+ "der",
+ "spki",
+ "x509-cert",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.10.0"
 dependencies = [
@@ -356,6 +368,17 @@ checksum = "6b50826342786a51a89e2da3a28f1c32b06e387201bc2d19791f622c673706b1"
 dependencies = [
  "cast",
  "itertools",
+]
+
+[[package]]
+name = "crmf"
+version = "0.3.0-pre.0"
+dependencies = [
+ "cms 0.3.0-pre.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "const-oid",
+ "der",
+ "spki",
+ "x509-cert",
 ]
 
 [[package]]
