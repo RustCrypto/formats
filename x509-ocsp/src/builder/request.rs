@@ -1,16 +1,16 @@
 //! OCSP request builder
 
-use crate::{builder::Error, OcspRequest, Request, Signature, TbsRequest, Version};
+use crate::{OcspRequest, Request, Signature, TbsRequest, Version, builder::Error};
 use alloc::vec::Vec;
 use der::Encode;
-use rand_core::CryptoRngCore;
+use rand_core::CryptoRng;
 use signature::{RandomizedSigner, Signer};
 use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
-    certificate::Rfc5280,
-    ext::{pkix::name::GeneralName, AsExtension},
-    name::Name,
     Certificate,
+    certificate::Rfc5280,
+    ext::{AsExtension, pkix::name::GeneralName},
+    name::Name,
 };
 
 /// X509 OCSP Request builder
@@ -139,15 +139,16 @@ impl OcspRequestBuilder {
 
     /// Consumes the builder and returns a signed [`OcspRequest`]. Errors when the algorithm
     /// identifier encoding, message encoding, or signature generation fails.
-    pub fn sign_with_rng<S, Sig>(
+    pub fn sign_with_rng<S, Sig, R>(
         self,
         signer: &mut S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
         certificate_chain: Option<Vec<Certificate>>,
     ) -> Result<OcspRequest, Error>
     where
         S: RandomizedSigner<Sig> + DynSignatureAlgorithmIdentifier,
         Sig: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let signature_algorithm = signer.signature_algorithm_identifier()?;
         let signature = signer
