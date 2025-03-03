@@ -61,7 +61,7 @@ impl<'a> DecodeValue<'a> for f64 {
                 n_bytes[7 - pos] = *byte;
             }
             let n = u64::from_be_bytes(n_bytes);
-            // Multiply byt 2^F corresponds to just a left shift
+            // Multiply byte 2^F corresponds to just a left shift
             let mantissa = n << scaling_factor;
             // Create the f64
             Ok(encode_f64(sign, exponent, mantissa))
@@ -838,7 +838,7 @@ mod tests {
     #[test]
     fn validation_cases() {
         // Caveat: these test cases are validated on the ASN.1 playground: https://asn1.io/asn1playground/ .
-        // The test case consists in inputing the bytes in the "decode" field and checking that the decoded
+        // The test case consists in inputting the bytes in the "decode" field and checking that the decoded
         // value corresponds to the one encoded here.
         // This tool encodes _all_ values that are non-zero in the ISO 6093 NR3 representation.
         // This does not seem to perfectly adhere to the ITU specifications, Special Cases section.

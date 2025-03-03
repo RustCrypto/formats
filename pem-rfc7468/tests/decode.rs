@@ -20,8 +20,8 @@ fn binary_example() {
 }
 
 #[test]
-fn pkcs1_example_with_preceeding_junk() {
-    let pem = include_bytes!("examples/pkcs1_with_preceeding_junk.pem");
+fn pkcs1_example_with_preceding_junk() {
+    let pem = include_bytes!("examples/pkcs1_with_preceding_junk.pem");
     let mut buf = [0u8; 2048];
     let (label, decoded) = pem_rfc7468::decode(pem, &mut buf).unwrap();
     assert_eq!(label, "RSA PRIVATE KEY");

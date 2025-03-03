@@ -26,7 +26,7 @@ This document lists the OIDs for
 - HashSLH-DSA-SHAKE-256s-with-shake256, and
 - HashSLH-DSA-SHAKE-256f-with-shake256.
 
-This file was manually created, as there exists no offical document that is easily parsable.
+This file was manually created, as there exists no official document that is easily parsable.
 The SLH-DSA standard is specified in [FIPS 205](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.205.pdf).
 The OIDs are defined in [Computer Security Objects Register (CSOR)]
 (https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration),
