@@ -31,7 +31,7 @@ pub trait Profile: PartialEq + Debug + Eq + Clone + Copy + Default + 'static {
         }
     }
 
-    /// Adjustements to the time to run while serializing validity.
+    /// Adjustments to the time to run while serializing validity.
     /// See [RFC 5280 Section 4.1.2.5]:
     /// ```text
     /// CAs conforming to this profile MUST always encode certificate

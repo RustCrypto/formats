@@ -3,7 +3,7 @@ Object Identifiers (OID) for TCG TPM
 
 This document lists the OIDs for TPM registered by the Trusted Computing Group.
 
-This file was manually created, as there exists no offical document that is easily parsable.
+This file was manually created, as there exists no official document that is easily parsable.
 
 tcgOrganization OBJECT IDENTIFIER ::= { joint-iso-ccitt(2) international-organizations(23) 133 }
 

@@ -5,7 +5,7 @@ This document lists the OIDs for
 - ML-KEM-768, and
 - ML-KEM-1024.
 
-This file was manually created, as there exists no offical document that is easily parsable.
+This file was manually created, as there exists no official document that is easily parsable.
 The ML-KEM standard is specified in [FIPS 203](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf).
 The OIDs are defined in [Computer Security Objects Register (CSOR)]
 (https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration),

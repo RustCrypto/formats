@@ -101,7 +101,7 @@ pub(crate) struct FieldAttrs {
     /// where encoding is omitted per DER and to omit the encoding per DER
     pub default: Option<Path>,
 
-    /// Shold we add `&` before `self.field_name`?
+    /// Should we add `&` before `self.field_name`?
     pub should_deref: bool,
 
     /// Is this field "extensible", i.e. preceded by the `...` extensibility marker?
