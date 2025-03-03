@@ -347,6 +347,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "crmf"
+version = "0.3.0-pre.0"
+dependencies = [
+ "cms",
+ "const-oid",
+ "der",
+ "spki",
+ "x509-cert",
+]
+
+[[package]]
 name = "crunchy"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
