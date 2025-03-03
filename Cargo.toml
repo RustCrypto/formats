@@ -10,7 +10,7 @@ members = [
     "crmf",
     "der",
     "der_derive",
-    #"gss-api",
+    "gss-api",
     "pem-rfc7468",
     "pkcs1",
     "pkcs5",
@@ -29,7 +29,6 @@ members = [
 ]
 exclude = [
     "base64ct",
-    "gss-api",
     "pkcs12",
     "x509-tsp",
     "x509-ocsp"
