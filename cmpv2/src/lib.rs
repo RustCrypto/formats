@@ -21,7 +21,7 @@ extern crate std;
 pub mod ann;
 pub mod body;
 pub mod certified_key_pair;
-pub mod gen;
+pub mod gp;
 pub mod header;
 pub mod message;
 pub mod oob;

@@ -1,8 +1,8 @@
 //! OCSP GeneralizedTime implementation
 
 use der::{
-    asn1::{GeneralizedTime, UtcTime},
     DateTime,
+    asn1::{GeneralizedTime, UtcTime},
 };
 use x509_cert::{impl_newtype, time::Time};
 

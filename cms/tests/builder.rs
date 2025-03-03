@@ -4,9 +4,9 @@ use aes::Aes128;
 use cipher::block_padding::Pkcs7;
 use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, KeyIvInit};
 use cms::builder::{
-    create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
-    KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
-    SignedDataBuilder, SignerInfoBuilder,
+    ContentEncryptionAlgorithm, EnvelopedDataBuilder, KeyEncryptionInfo,
+    KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor, SignedDataBuilder,
+    SignerInfoBuilder, create_signing_time_attribute,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -18,14 +18,14 @@ use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
 use der::asn1::{OctetString, OctetStringRef, PrintableString, SetOfVec};
 use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
-use p256::{pkcs8::DecodePrivateKey, NistP256};
+use p256::{NistP256, pkcs8::DecodePrivateKey};
 use pem_rfc7468::LineEnding;
 use pkcs5::pbes2::Pbkdf2Params;
 use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::rand_core::CryptoRngCore;
-use rsa::{pkcs1v15, pss};
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
+use rsa::{pkcs1v15, pss};
 use sha2::Sha256;
 use signature::Verifier;
 use spki::AlgorithmIdentifierOwned;
@@ -426,9 +426,11 @@ fn test_build_pkcs7_scep_pkcsreq() {
             let verifier_rsa_key = RsaPrivateKey::from_pkcs8_pem(verifier_rsa_key_pem).unwrap();
             pkcs1v15::VerifyingKey::<Sha256>::new(RsaPublicKey::from(verifier_rsa_key))
         };
-        assert!(verifier
-            .verify(signed_attributes_der.as_slice(), &signature)
-            .is_ok());
+        assert!(
+            verifier
+                .verify(signed_attributes_der.as_slice(), &signature)
+                .is_ok()
+        );
     }
 
     // Decode contained enveloped data
