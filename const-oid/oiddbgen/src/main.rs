@@ -22,6 +22,7 @@ const RFCS: &[(&str, &str)] = &[
     ("rfc7693", include_str!("../rfc7693.txt")),
     ("rfc8410", include_str!("../rfc8410.txt")),
     ("rfc5639", include_str!("../rfc5639.txt")),
+    ("rfc9688", include_str!("../rfc9688.txt")),
 ];
 
 const MDS: &[(&str, &str)] = &[
