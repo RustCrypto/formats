@@ -663,6 +663,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gss-api"
+version = "0.2.0-pre"
+dependencies = [
+ "der",
+ "hex-literal 0.4.1",
+ "spki",
+ "x509-cert",
+]
+
+[[package]]
 name = "half"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
