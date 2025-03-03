@@ -7,8 +7,8 @@ use const_oid::ObjectIdentifier;
 use crmf::pop::ProofOfPossession;
 use der::{Decode, Encode};
 use hex_literal::hex;
-use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::Certificate;
+use x509_cert::ext::pkix::name::GeneralName;
 
 #[test]
 fn ir_req_header_test() {
