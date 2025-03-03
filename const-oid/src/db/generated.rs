@@ -2932,6 +2932,62 @@ pub mod rfc8894 {
     pub const ID_TRANSACTION_ID: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.16.840.1.113733.1.9.7");
 }
+pub mod rfc9688 {
+    pub const RSA_ENCRYPTION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.1");
+    pub const ID_MOD_SHA_3_OIDS_2023: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.0.78");
+    pub const ID_ALG: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3");
+    pub const ID_ALG_HKDF_WITH_SHA_3_224: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.32");
+    pub const ID_ALG_HKDF_WITH_SHA_3_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.33");
+    pub const ID_ALG_HKDF_WITH_SHA_3_384: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.34");
+    pub const ID_ALG_HKDF_WITH_SHA_3_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.16.3.35");
+    pub const X_9_44: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.9.44");
+    pub const X_9_44_COMPONENTS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.9.44.1");
+    pub const ID_KDF_KDF_2: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.9.44.1.1");
+    pub const ID_KDF_KDF_3: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.3.133.16.840.9.44.1.2");
+    pub const HASH_ALGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2");
+    pub const ID_SHA_3_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.10");
+    pub const ID_HMAC_WITH_SHA_3_224: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.13");
+    pub const ID_HMAC_WITH_SHA_3_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.14");
+    pub const ID_HMAC_WITH_SHA_3_384: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.15");
+    pub const ID_HMAC_WITH_SHA_3_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.16");
+    pub const ID_KMAC_128: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.21");
+    pub const ID_KMAC_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.22");
+    pub const ID_SHA_3_224: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.7");
+    pub const ID_SHA_3_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.8");
+    pub const ID_SHA_3_384: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.2.9");
+    pub const SIG_ALGS: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3");
+    pub const ID_ECDSA_WITH_SHA_3_256: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.10");
+    pub const ID_ECDSA_WITH_SHA_3_384: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.11");
+    pub const ID_ECDSA_WITH_SHA_3_512: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.12");
+    pub const ID_ECDSA_WITH_SHA_3_224: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.9");
+}
 pub mod tcgtpm {
     pub const TCG_ORGANIZATION: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("2.23.133");
@@ -5433,6 +5489,45 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc8894::ID_SENDER_NONCE, "id-senderNonce"),
     (&rfc8894::ID_RECIPIENT_NONCE, "id-recipientNonce"),
     (&rfc8894::ID_TRANSACTION_ID, "id-transactionID"),
+    (&rfc9688::RSA_ENCRYPTION, "rsaEncryption"),
+    (&rfc9688::ID_MOD_SHA_3_OIDS_2023, "id-mod-sha3-oids-2023"),
+    (&rfc9688::ID_ALG, "id-alg"),
+    (
+        &rfc9688::ID_ALG_HKDF_WITH_SHA_3_224,
+        "id-alg-hkdf-with-sha3-224",
+    ),
+    (
+        &rfc9688::ID_ALG_HKDF_WITH_SHA_3_256,
+        "id-alg-hkdf-with-sha3-256",
+    ),
+    (
+        &rfc9688::ID_ALG_HKDF_WITH_SHA_3_384,
+        "id-alg-hkdf-with-sha3-384",
+    ),
+    (
+        &rfc9688::ID_ALG_HKDF_WITH_SHA_3_512,
+        "id-alg-hkdf-with-sha3-512",
+    ),
+    (&rfc9688::X_9_44, "x9-44"),
+    (&rfc9688::X_9_44_COMPONENTS, "x9-44-components"),
+    (&rfc9688::ID_KDF_KDF_2, "id-kdf-kdf2"),
+    (&rfc9688::ID_KDF_KDF_3, "id-kdf-kdf3"),
+    (&rfc9688::HASH_ALGS, "hashAlgs"),
+    (&rfc9688::ID_SHA_3_512, "id-sha3-512"),
+    (&rfc9688::ID_HMAC_WITH_SHA_3_224, "id-hmacWithSHA3-224"),
+    (&rfc9688::ID_HMAC_WITH_SHA_3_256, "id-hmacWithSHA3-256"),
+    (&rfc9688::ID_HMAC_WITH_SHA_3_384, "id-hmacWithSHA3-384"),
+    (&rfc9688::ID_HMAC_WITH_SHA_3_512, "id-hmacWithSHA3-512"),
+    (&rfc9688::ID_KMAC_128, "id-kmac128"),
+    (&rfc9688::ID_KMAC_256, "id-kmac256"),
+    (&rfc9688::ID_SHA_3_224, "id-sha3-224"),
+    (&rfc9688::ID_SHA_3_256, "id-sha3-256"),
+    (&rfc9688::ID_SHA_3_384, "id-sha3-384"),
+    (&rfc9688::SIG_ALGS, "sigAlgs"),
+    (&rfc9688::ID_ECDSA_WITH_SHA_3_256, "id-ecdsa-with-sha3-256"),
+    (&rfc9688::ID_ECDSA_WITH_SHA_3_384, "id-ecdsa-with-sha3-384"),
+    (&rfc9688::ID_ECDSA_WITH_SHA_3_512, "id-ecdsa-with-sha3-512"),
+    (&rfc9688::ID_ECDSA_WITH_SHA_3_224, "id-ecdsa-with-sha3-224"),
     (&tcgtpm::TCG_ORGANIZATION, "tcgOrganization"),
     (&tcgtpm::TCG_TCPA_SPEC_VERSION, "tcg-tcpaSpecVersion"),
     (&tcgtpm::TCG_SV_TPM_12, "tcg-sv-tpm12"),
