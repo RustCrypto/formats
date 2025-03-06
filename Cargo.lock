@@ -380,9 +380,9 @@ dependencies = [
 
 [[package]]
 name = "digest"
-version = "0.11.0-pre.9"
+version = "0.11.0-pre.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf2e3d6615d99707295a9673e889bf363a04b2a466bd320c65a72536f7577379"
+checksum = "6c478574b20020306f98d61c8ca3322d762e1ff08117422ac6106438605ea516"
 dependencies = [
  "block-buffer",
  "crypto-common",
@@ -499,8 +499,7 @@ checksum = "bcaaec4551594c969335c98c903c1397853d4198408ea609190f420500f6be71"
 [[package]]
 name = "hmac"
 version = "0.13.0-pre.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4b1fb14e4df79f9406b434b60acef9f45c26c50062cccf1346c6103b8c47d58"
+source = "git+https://github.com/RustCrypto/MACs.git#48d909bc7c028df8ccbc4bd746e9315d2cb8757a"
 dependencies = [
  "digest",
 ]
@@ -626,8 +625,7 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 [[package]]
 name = "pbkdf2"
 version = "0.13.0-pre.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85e11753d5193f26dc27ae698e0b536b5e511b7799c5ac475ec10783f26d164a"
+source = "git+https://github.com/RustCrypto/password-hashes.git#70e379e1e5a5666e29713e9445171ac460575f43"
 dependencies = [
  "digest",
  "hmac",
@@ -906,8 +904,7 @@ dependencies = [
 [[package]]
 name = "scrypt"
 version = "0.12.0-pre.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a91394d9fa36fde88b8b976973db9fe6a0e4b32eea79f0ca13ba1b818daa3b2"
+source = "git+https://github.com/RustCrypto/password-hashes.git#70e379e1e5a5666e29713e9445171ac460575f43"
 dependencies = [
  "pbkdf2",
  "salsa20",
@@ -999,9 +996,9 @@ dependencies = [
 
 [[package]]
 name = "sha1"
-version = "0.11.0-pre.4"
+version = "0.11.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9540978cef7a8498211c1b1c14e5ce920fe5bd524ea84f4a3d72d4602515ae93"
+checksum = "55f44e40722caefdd99383c25d3ae52a1094a1951215ae76f68837ece4e7f566"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -1010,9 +1007,9 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.11.0-pre.4"
+version = "0.11.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "540c0893cce56cdbcfebcec191ec8e0f470dd1889b6e7a0b503e310a94a168f5"
+checksum = "19b4241d1a56954dce82cecda5c8e9c794eef6f53abe5e5216bac0a0ea71ffa7"
 dependencies = [
  "cfg-if",
  "cpufeatures",
