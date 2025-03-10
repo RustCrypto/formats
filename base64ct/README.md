@@ -65,7 +65,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/base64ct
+[crate-image]: https://img.shields.io/crates/v/base64ct?logo=rust
 [crate-link]: https://crates.io/crates/base64ct
 [docs-image]: https://docs.rs/base64ct/badge.svg
 [docs-link]: https://docs.rs/base64ct/
