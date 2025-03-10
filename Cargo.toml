@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "base16ct",
     "base32ct",
-    "base64ct",
+    #"base64ct",
     #"cmpv2",
     #"cms",
     "const-oid",
@@ -28,6 +28,7 @@ members = [
     #"x509-ocsp"
 ]
 exclude = [
+    "base64ct",
     "cmpv2",
     "cms",
     "crmf",
