@@ -19,9 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reject zero-length decode requests ([#1387])
 - use `core::error::Error` ([#1681])
 
-[#1670]: https://github.com/RustCrypto/formats/pull/1670
-[#1578]: https://github.com/RustCrypto/formats/pull/1578
 [#1387]: https://github.com/RustCrypto/formats/pull/1387
+[#1578]: https://github.com/RustCrypto/formats/pull/1578
+[#1670]: https://github.com/RustCrypto/formats/pull/1670
+[#1681]: https://github.com/RustCrypto/formats/pull/1681
 
 ## 1.6.0 (2023-02-26)
 ### Changed
