@@ -143,7 +143,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> FixedTag for SetOf<T, N>
+impl<T, const N: usize> FixedTag for SetOf<T, N>
 where
     T: DerOrd,
 {
