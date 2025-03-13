@@ -104,7 +104,7 @@ impl<'i, E: Encoding> Decoder<'i, E> {
     /// - `Ok(bytes)` if the expected amount of data was read
     /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read
     pub fn decode<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8], Error> {
-        if self.is_finished() {
+        if self.is_finished() && !out.is_empty() {
             return Err(InvalidLength);
         }
 
@@ -589,6 +589,21 @@ mod tests {
 
         assert_eq!(len, MULTILINE_PADDED_BIN.len());
         assert_eq!(buf.as_slice(), MULTILINE_PADDED_BIN);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn decode_empty_at_end() {
+        let mut decoder = Decoder::<Base64>::new(b"AAAA").unwrap();
+
+        // Strip initial bytes
+        let mut buf = vec![0u8; 3];
+        assert_eq!(decoder.decode(&mut buf), Ok(&vec![0u8; 3][..]));
+
+        // Now try to read nothing from the end
+        let mut buf: Vec<u8> = vec![];
+
+        assert_eq!(decoder.decode(&mut buf), Ok(&[][..]));
     }
 
     /// Core functionality of a decoding test
