@@ -11,6 +11,7 @@ use core::{fmt, str::FromStr, time::Duration};
 #[cfg(feature = "std")]
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use const_range::const_contains_u8;
 #[cfg(feature = "time")]
 use time::PrimitiveDateTime;
 
@@ -71,16 +72,23 @@ impl DateTime {
     /// Create a new [`DateTime`] from the given UTC time components.
     // TODO(tarcieri): checked arithmetic
     #[allow(clippy::arithmetic_side_effects)]
-    pub fn new(year: u16, month: u8, day: u8, hour: u8, minutes: u8, seconds: u8) -> Result<Self> {
+    pub const fn new(
+        year: u16,
+        month: u8,
+        day: u8,
+        hour: u8,
+        minutes: u8,
+        seconds: u8,
+    ) -> Result<Self> {
         // Basic validation of the components.
         if year < MIN_YEAR
-            || !(1..=12).contains(&month)
-            || !(1..=31).contains(&day)
-            || !(0..=23).contains(&hour)
-            || !(0..=59).contains(&minutes)
-            || !(0..=59).contains(&seconds)
+            || !const_contains_u8(1..=12, month)
+            || !const_contains_u8(1..=31, day)
+            || !const_contains_u8(0..=23, hour)
+            || !const_contains_u8(0..=59, minutes)
+            || !const_contains_u8(0..=59, seconds)
         {
-            return Err(ErrorKind::DateTime.into());
+            return Error::from_kind(ErrorKind::DateTime);
         }
 
         let leap_years =
@@ -428,6 +436,22 @@ fn decode_year(year: &[u8; 4]) -> Result<u16> {
     let hi = decode_decimal(tag, year[0], year[1]).map_err(|_| ErrorKind::DateTime)?;
     let lo = decode_decimal(tag, year[2], year[3]).map_err(|_| ErrorKind::DateTime)?;
     Ok(u16::from(hi) * 100 + u16::from(lo))
+}
+
+mod const_range {
+    use core::ops::RangeInclusive;
+
+    /// const [`RangeInclusive::contains`]
+    #[inline]
+    pub const fn const_contains_u8(range: RangeInclusive<u8>, item: u8) -> bool {
+        item >= *range.start() && item <= *range.end()
+    }
+
+    /// const [`RangeInclusive::contains`]
+    #[inline]
+    pub const fn const_contains_u16(range: RangeInclusive<u16>, item: u16) -> bool {
+        item >= *range.start() && item <= *range.end()
+    }
 }
 
 #[cfg(test)]
