@@ -102,13 +102,8 @@ impl<'i, E: Encoding> Decoder<'i, E> {
     ///
     /// # Returns
     /// - `Ok(bytes)` if the expected amount of data was read
-    /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read, or
-    ///   if the output buffer has a length of 0
+    /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read
     pub fn decode<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8], Error> {
-        if out.is_empty() {
-            return Err(InvalidLength);
-        }
-
         if self.is_finished() {
             return Err(InvalidLength);
         }
@@ -552,8 +547,6 @@ mod tests {
     use crate::{Base64, Base64Unpadded, Decoder, alphabet::Alphabet, test_vectors::*};
 
     #[cfg(feature = "std")]
-    use crate::Error::InvalidLength;
-    #[cfg(feature = "std")]
     use {alloc::vec::Vec, std::io::Read};
 
     #[test]
@@ -596,16 +589,6 @@ mod tests {
 
         assert_eq!(len, MULTILINE_PADDED_BIN.len());
         assert_eq!(buf.as_slice(), MULTILINE_PADDED_BIN);
-    }
-
-    #[cfg(feature = "std")]
-    #[test]
-    fn reject_empty_read() {
-        let mut decoder = Decoder::<Base64>::new(b"AAAA").unwrap();
-
-        let mut buf: Vec<u8> = vec![];
-
-        assert_eq!(decoder.decode(&mut buf), Err(InvalidLength));
     }
 
     /// Core functionality of a decoding test
