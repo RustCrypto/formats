@@ -87,6 +87,10 @@ impl<'i> Reader<'i> for PemReader<'i> {
     }
 
     fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> crate::Result<&'o [u8]> {
+        if buf.is_empty() {
+            return Ok(buf);
+        }
+
         let new_position = (self.position + buf.len())?;
         if new_position > self.input_len {
             return Err(ErrorKind::Incomplete {
