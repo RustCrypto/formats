@@ -125,9 +125,9 @@ where
     }
 }
 
-impl<'a, T, const N: usize> EncodeValue for SetOf<T, N>
+impl<T, const N: usize> EncodeValue for SetOf<T, N>
 where
-    T: 'a + Decode<'a> + Encode + DerOrd,
+    T: Encode + DerOrd,
 {
     fn value_len(&self) -> Result<Length, Error> {
         self.iter()
@@ -143,9 +143,9 @@ where
     }
 }
 
-impl<'a, T, const N: usize> FixedTag for SetOf<T, N>
+impl<T, const N: usize> FixedTag for SetOf<T, N>
 where
-    T: Decode<'a> + DerOrd,
+    T: DerOrd,
 {
     const TAG: Tag = Tag::Set;
 }
@@ -345,9 +345,9 @@ where
 }
 
 #[cfg(feature = "alloc")]
-impl<'a, T> EncodeValue for SetOfVec<T>
+impl<T> EncodeValue for SetOfVec<T>
 where
-    T: 'a + Decode<'a> + Encode + DerOrd,
+    T: Encode + DerOrd,
 {
     fn value_len(&self) -> Result<Length, Error> {
         self.iter()
