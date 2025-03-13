@@ -47,6 +47,7 @@ impl Length {
     /// Create a new [`Length`] for any value which fits inside the length type.
     ///
     /// This function is const-safe and therefore useful for [`Length`] constants.
+    #[allow(clippy::cast_possible_truncation)]
     pub(crate) const fn new_usize(len: usize) -> Result<Self> {
         if len > (u32::MAX as usize) {
             Err(Error::from_kind(ErrorKind::Overflow))
