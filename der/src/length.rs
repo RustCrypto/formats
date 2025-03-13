@@ -44,6 +44,18 @@ impl Length {
         Self(value as u32)
     }
 
+    /// Create a new [`Length`] for any value which fits inside the length type.
+    ///
+    /// This function is const-safe and therefore useful for [`Length`] constants.
+    #[allow(clippy::cast_possible_truncation)]
+    pub(crate) const fn new_usize(len: usize) -> Result<Self> {
+        if len > (u32::MAX as usize) {
+            Err(Error::from_kind(ErrorKind::Overflow))
+        } else {
+            Ok(Length(len as u32))
+        }
+    }
+
     /// Is this length equal to zero?
     pub fn is_zero(self) -> bool {
         self == Self::ZERO
@@ -192,9 +204,7 @@ impl TryFrom<usize> for Length {
     type Error = Error;
 
     fn try_from(len: usize) -> Result<Length> {
-        u32::try_from(len)
-            .map_err(|_| ErrorKind::Overflow)?
-            .try_into()
+        Length::new_usize(len)
     }
 }
 

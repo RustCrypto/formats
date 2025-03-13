@@ -28,11 +28,14 @@ impl<'a> BytesRef<'a> {
 
     /// Create a new [`BytesRef`], ensuring that the provided `slice` value
     /// is shorter than `Length::max()`.
-    pub fn new(slice: &'a [u8]) -> Result<Self> {
-        Ok(Self {
-            length: Length::try_from(slice.len())?,
-            inner: slice,
-        })
+    pub const fn new(slice: &'a [u8]) -> Result<Self> {
+        match Length::new_usize(slice.len()) {
+            Ok(length) => Ok(Self {
+                length,
+                inner: slice,
+            }),
+            Err(err) => Err(err),
+        }
     }
 
     /// Borrow the inner byte slice
