@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.7.3 (2025-03-13)
+### Changed
+- Don't fail with `InvalidLength` when reading nothing at end of data ([#1716]).
+
+[#1716]: https://github.com/RustCrypto/formats/pull/1716
+
 ## 1.7.2 (2025-03-13)
 ### Changed
 - Revert [#1387]: reject zero-length decode requests as it's a breaking change ([#1714])
