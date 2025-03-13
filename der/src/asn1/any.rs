@@ -40,9 +40,11 @@ impl<'a> AnyRef<'a> {
     };
 
     /// Create a new [`AnyRef`] from the provided [`Tag`] and DER bytes.
-    pub fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self, Error> {
-        let value = BytesRef::new(bytes).map_err(|_| ErrorKind::Length { tag })?;
-        Ok(Self { tag, value })
+    pub const fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self, Error> {
+        match BytesRef::new(bytes) {
+            Ok(value) => Ok(Self { tag, value }),
+            Err(_) => Err(Error::from_kind(ErrorKind::Length { tag })),
+        }
     }
 
     /// Infallible creation of an [`AnyRef`] from a [`BytesRef`].

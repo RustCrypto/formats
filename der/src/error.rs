@@ -26,10 +26,17 @@ pub struct Error {
 
 impl Error {
     /// Create a new [`Error`].
-    pub fn new(kind: ErrorKind, position: Length) -> Error {
+    pub const fn new(kind: ErrorKind, position: Length) -> Error {
         Error {
             kind,
             position: Some(position),
+        }
+    }
+    /// Create a new [`Error`], without known position.
+    pub(crate) const fn from_kind(kind: ErrorKind) -> Error {
+        Error {
+            kind,
+            position: None,
         }
     }
 
@@ -86,10 +93,7 @@ impl fmt::Display for Error {
 
 impl From<ErrorKind> for Error {
     fn from(kind: ErrorKind) -> Error {
-        Error {
-            kind,
-            position: None,
-        }
+        Error::from_kind(kind)
     }
 }
 
