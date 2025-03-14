@@ -5,7 +5,6 @@ use crate::{FieldAttrs, TypeAttrs};
 use syn::{Field, Ident};
 
 /// "IR" for a field of a derived `BitString`.
-
 pub(super) struct BitStringField {
     /// Variant name.
     pub(super) ident: Ident,
@@ -16,7 +15,6 @@ pub(super) struct BitStringField {
 
 impl BitStringField {
     /// Create a new [`BitStringField`] from the input [`Field`].
-
     pub(super) fn new(field: &Field, type_attrs: &TypeAttrs) -> syn::Result<Self> {
         let ident = field.ident.as_ref().cloned().ok_or_else(|| {
             syn::Error::new_spanned(

@@ -13,7 +13,7 @@ use crate::{Error, ErrorKind, Tag};
 /// }
 /// ```
 ///
-/// ```
+/// ```rust,ignore
 /// use der::BitString;
 ///
 /// /// Bit length of 3..=4
