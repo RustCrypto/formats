@@ -34,6 +34,7 @@ sha2 = "=0.11.0-pre.4"
 whirlpool = "=0.11.0-pre.4"
 
 [features]
+default = ["pem"]
 kdf = ["dep:digest", "dep:zeroize"]
 pem = ["der/pem", "x509-cert/pem"]
 
