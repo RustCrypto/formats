@@ -318,7 +318,18 @@ pub fn derive_value_ord(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Derive the [`BitString`] on a bool `struct`.
+/// Derive the [`BitString`] on a `struct` with bool fields.
+///
+/// ```ignore
+/// use der::BitString;
+///
+/// #[derive(BitString)]
+/// pub struct MyFlags {
+///     pub flag_0: bool,
+///     pub flag_1: bool,
+///     pub flag_2: bool,
+/// }
+/// ```
 #[proc_macro_derive(BitString, attributes(asn1))]
 pub fn derive_bitstring(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
