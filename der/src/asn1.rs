@@ -5,7 +5,7 @@
 mod internal_macros;
 
 mod any;
-mod bit_string;
+pub(crate) mod bit_string;
 #[cfg(feature = "alloc")]
 mod bmp_string;
 mod boolean;
