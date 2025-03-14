@@ -16,11 +16,11 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid", "pem"] }
-spki = { version = "0.8.0-rc.0" }
-x509-cert = { version = "=0.3.0-pre.0", default-features = false, features = ["pem"] }
-const-oid = { version = "0.10.0-rc.0", features = ["db"] }
-cms = "=0.3.0-pre.0"
+der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid"], default-features = false }
+spki = { version = "0.8.0-rc.0", default-features = false }
+x509-cert = { version = "=0.3.0-pre.0", default-features = false }
+const-oid = { version = "0.10.0-rc.0", features = ["db"], default-features = false }
+cms = { version = "=0.3.0-pre.0", default-features = false }
 
 # optional dependencies
 digest = { version = "0.11.0-pre.9", features = ["alloc"], optional = true }
@@ -34,7 +34,9 @@ sha2 = "=0.11.0-pre.4"
 whirlpool = "=0.11.0-pre.4"
 
 [features]
+default = ["pem"]
 kdf = ["dep:digest", "dep:zeroize"]
+pem = ["der/pem", "x509-cert/pem"]
 
 [package.metadata.docs.rs]
 all-features = true
