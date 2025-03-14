@@ -351,7 +351,7 @@ mod tests {
     #[test]
     fn max_valid_generalized_time() {
         let example_bytes = "\x18\x0f99991231235959Z".as_bytes();
-        let utc_time = GeneralizedTime::from_der(&example_bytes).unwrap();
+        let utc_time = GeneralizedTime::from_der(example_bytes).unwrap();
         assert_eq!(utc_time.to_unix_duration().as_secs(), 253402300799);
 
         let mut buf = [0u8; 128];
@@ -363,36 +363,36 @@ mod tests {
     #[test]
     fn invalid_year_generalized_time() {
         let example_bytes = "\x18\x0f999@1231235959Z".as_bytes();
-        assert!(GeneralizedTime::from_der(&example_bytes).is_err());
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
     }
 
     #[test]
     fn invalid_month_generalized_time() {
         let example_bytes = "\x18\x0f99991331235959Z".as_bytes();
-        assert!(GeneralizedTime::from_der(&example_bytes).is_err());
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
     }
 
     #[test]
     fn invalid_day_generalized_time() {
         let example_bytes = "\x18\x0f99991232235959Z".as_bytes();
-        assert!(GeneralizedTime::from_der(&example_bytes).is_err());
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
     }
 
     #[test]
     fn invalid_hour_generalized_time() {
         let example_bytes = "\x18\x0f99991231245959Z".as_bytes();
-        assert!(GeneralizedTime::from_der(&example_bytes).is_err());
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
     }
 
     #[test]
     fn invalid_minute_generalized_time() {
         let example_bytes = "\x18\x0f99991231236059Z".as_bytes();
-        assert!(GeneralizedTime::from_der(&example_bytes).is_err());
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
     }
 
     #[test]
     fn invalid_second_generalized_time() {
         let example_bytes = "\x18\x0f99991231235960Z".as_bytes();
-        assert!(GeneralizedTime::from_der(&example_bytes).is_err());
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
     }
 }
