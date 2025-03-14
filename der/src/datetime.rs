@@ -70,8 +70,6 @@ impl DateTime {
     };
 
     /// Create a new [`DateTime`] from the given UTC time components.
-    // TODO(tarcieri): checked arithmetic
-    #[allow(clippy::arithmetic_side_effects)]
     pub const fn new(
         year: u16,
         month: u8,
@@ -80,6 +78,25 @@ impl DateTime {
         minutes: u8,
         seconds: u8,
     ) -> Result<Self> {
+        match Self::from_ymd_hms(year, month, day, hour, minutes, seconds) {
+            Some(date) => Ok(date),
+            None => Err(Error::from_kind(ErrorKind::DateTime)),
+        }
+    }
+
+    /// Create a new [`DateTime`] from the given UTC time components.
+    ///
+    /// Returns `None` if the value is outside the supported date range.
+    // TODO(tarcieri): checked arithmetic
+    #[allow(clippy::arithmetic_side_effects)]
+    pub(crate) const fn from_ymd_hms(
+        year: u16,
+        month: u8,
+        day: u8,
+        hour: u8,
+        minutes: u8,
+        seconds: u8,
+    ) -> Option<Self> {
         // Basic validation of the components.
         if year < MIN_YEAR
             || !const_contains_u8(1..=12, month)
@@ -88,7 +105,7 @@ impl DateTime {
             || !const_contains_u8(0..=59, minutes)
             || !const_contains_u8(0..=59, seconds)
         {
-            return Error::from_kind(ErrorKind::DateTime);
+            return None;
         }
 
         let leap_years =
@@ -110,28 +127,28 @@ impl DateTime {
             10 => (273, 31),
             11 => (304, 30),
             12 => (334, 31),
-            _ => return Err(ErrorKind::DateTime.into()),
+            _ => return None,
         };
 
         if day > mdays || day == 0 {
-            return Err(ErrorKind::DateTime.into());
+            return None;
         }
 
-        ydays += u16::from(day) - 1;
+        ydays += day as u16 - 1;
 
         if is_leap_year && month > 2 {
             ydays += 1;
         }
 
-        let days = u64::from(year - 1970) * 365 + u64::from(leap_years) + u64::from(ydays);
-        let time = u64::from(seconds) + (u64::from(minutes) * 60) + (u64::from(hour) * 3600);
+        let days = ((year - 1970) as u64) * 365 + leap_years as u64 + ydays as u64;
+        let time = seconds as u64 + (minutes as u64 * 60) + (hour as u64 * 3600);
         let unix_duration = Duration::from_secs(time + days * 86400);
 
-        if unix_duration > MAX_UNIX_DURATION {
-            return Err(ErrorKind::DateTime.into());
+        if unix_duration.as_secs() > MAX_UNIX_DURATION.as_secs() {
+            return None;
         }
 
-        Ok(Self {
+        Some(Self {
             year,
             month,
             day,
@@ -144,7 +161,7 @@ impl DateTime {
 
     /// Compute a [`DateTime`] from the given [`Duration`] since the `UNIX_EPOCH`.
     ///
-    /// Returns `None` if the value is outside the supported date range.
+    /// Returns `Err` if the value is outside the supported date range.
     // TODO(tarcieri): checked arithmetic
     #[allow(clippy::arithmetic_side_effects)]
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
@@ -446,12 +463,6 @@ mod const_range {
     pub const fn const_contains_u8(range: RangeInclusive<u8>, item: u8) -> bool {
         item >= *range.start() && item <= *range.end()
     }
-
-    /// const [`RangeInclusive::contains`]
-    #[inline]
-    pub const fn const_contains_u16(range: RangeInclusive<u16>, item: u16) -> bool {
-        item >= *range.start() && item <= *range.end()
-    }
 }
 
 #[cfg(test)]
@@ -469,6 +480,29 @@ mod tests {
         assert!(is_date_valid(2000, 2, 29, 0, 0, 0));
         assert!(!is_date_valid(2001, 2, 29, 0, 0, 0));
         assert!(!is_date_valid(2100, 2, 29, 0, 0, 0));
+    }
+
+    #[test]
+    fn invalid_dates() {
+        assert!(!is_date_valid(2, 3, 25, 0, 0, 0));
+
+        assert!(is_date_valid(1970, 1, 26, 0, 0, 0));
+        assert!(!is_date_valid(1969, 1, 26, 0, 0, 0));
+        assert!(!is_date_valid(1968, 1, 26, 0, 0, 0));
+        assert!(!is_date_valid(1600, 1, 26, 0, 0, 0));
+
+        assert!(is_date_valid(2039, 2, 27, 0, 0, 0));
+        assert!(!is_date_valid(2039, 2, 27, 255, 0, 0));
+        assert!(!is_date_valid(2039, 2, 27, 0, 255, 0));
+        assert!(!is_date_valid(2039, 2, 27, 0, 0, 255));
+
+        assert!(is_date_valid(2055, 12, 31, 0, 0, 0));
+        assert!(is_date_valid(2055, 12, 31, 23, 0, 0));
+        assert!(!is_date_valid(2055, 12, 31, 24, 0, 0));
+        assert!(is_date_valid(2055, 12, 31, 0, 59, 0));
+        assert!(!is_date_valid(2055, 12, 31, 0, 60, 0));
+        assert!(is_date_valid(2055, 12, 31, 0, 0, 59));
+        assert!(!is_date_valid(2055, 12, 31, 0, 0, 60));
     }
 
     #[test]
