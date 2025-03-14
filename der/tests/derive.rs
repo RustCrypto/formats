@@ -627,6 +627,164 @@ mod sequence {
     }
 }
 
+/// Custom derive test cases for the `BitString` macro.
+#[cfg(feature = "std")]
+mod bitstring {
+    use der::BitString;
+    use der::Decode;
+    use der::Encode;
+    use hex_literal::hex;
+
+    const BITSTRING_EXAMPLE: &[u8] = &hex!("03 03 06 03 80");
+
+    // this BitString allows only 10..=10 bits
+    #[derive(BitString)]
+    pub struct MyBitStringTest {
+        pub first_bit: bool,
+        pub second_bit: bool,
+        pub third_bit: bool,
+        pub fourth_bit: bool,
+        pub a: bool,
+        pub b: bool,
+        pub almost_least_significant: bool,
+        pub least_significant_bit: bool,
+
+        // second byte
+        pub second_byte_bit: bool,
+        pub second_byte_bit2: bool,
+    }
+
+    #[test]
+    fn decode_bitstring() {
+        let test_flags = MyBitStringTest::from_der(BITSTRING_EXAMPLE).unwrap();
+
+        assert!(!test_flags.first_bit);
+
+        assert!(test_flags.almost_least_significant);
+        assert!(test_flags.least_significant_bit);
+        assert!(test_flags.second_byte_bit);
+        assert!(!test_flags.second_byte_bit2);
+
+        let reencoded = test_flags.to_der().unwrap();
+
+        assert_eq!(reencoded, BITSTRING_EXAMPLE);
+    }
+
+    /// this BitString will allow only 3..=4 bits
+    #[derive(BitString)]
+    pub struct MyBitString3or4 {
+        pub bit_0: bool,
+        pub bit_1: bool,
+        pub bit_2: bool,
+
+        #[asn1(optional = "true")]
+        pub bit_3: bool,
+    }
+
+    #[test]
+    fn decode_bitstring_3_used_first_lit() {
+        // 5 unused bits, so 3 used
+        let bits_3 = MyBitString3or4::from_der(&hex!("03 02 05 80")).unwrap();
+
+        assert!(bits_3.bit_0);
+        assert!(!bits_3.bit_1);
+        assert!(!bits_3.bit_2);
+        assert!(!bits_3.bit_3);
+    }
+    #[test]
+    fn decode_bitstring_3_used_all_lit() {
+        // 5 unused bits, so 3 used
+        let bits_3 = MyBitString3or4::from_der(&hex!("03 02 05 FF")).unwrap();
+
+        assert!(bits_3.bit_0);
+        assert!(bits_3.bit_1);
+        assert!(bits_3.bit_2);
+        assert!(!bits_3.bit_3);
+    }
+
+    #[test]
+    fn decode_bitstring_4_used_all_lit() {
+        // 4 unused bits, so 4 used
+        let bits_3 = MyBitString3or4::from_der(&hex!("03 02 04 FF")).unwrap();
+
+        assert!(bits_3.bit_0);
+        assert!(bits_3.bit_1);
+        assert!(bits_3.bit_2);
+        assert!(bits_3.bit_3);
+    }
+
+    #[test]
+    fn decode_invalid_bitstring_5_used() {
+        // 3 unused bits, so 5 used
+        assert!(MyBitString3or4::from_der(&hex!("03 02 03 FF")).is_err());
+    }
+
+    #[test]
+    fn decode_invalid_bitstring_2_used() {
+        // 6 unused bits, so 2 used
+        assert!(MyBitString3or4::from_der(&hex!("03 02 06 FF")).is_err());
+    }
+
+    #[test]
+    fn encode_3_zero_bits() {
+        let encoded_3_zeros = MyBitString3or4 {
+            bit_0: false,
+            bit_1: false,
+            bit_2: false,
+            bit_3: false,
+        }
+        .to_der()
+        .unwrap();
+
+        // 3 bits used, 5 unused
+        assert_eq!(encoded_3_zeros, hex!("03 02 05 00"));
+    }
+
+    #[test]
+    fn encode_3_one_bits() {
+        let encoded_3_zeros = MyBitString3or4 {
+            bit_0: true,
+            bit_1: true,
+            bit_2: true,
+            bit_3: false,
+        }
+        .to_der()
+        .unwrap();
+
+        // 3 bits used, 5 unused
+        assert_eq!(encoded_3_zeros, hex!("03 02 05 E0"));
+    }
+
+    #[test]
+    fn encode_4_one_bits() {
+        let encoded_4_zeros = MyBitString3or4 {
+            bit_0: true,
+            bit_1: true,
+            bit_2: true,
+            bit_3: true,
+        }
+        .to_der()
+        .unwrap();
+
+        // 4 bits used, 4 unused
+        assert_eq!(encoded_4_zeros, hex!("03 02 04 F0"));
+    }
+
+    #[test]
+    fn encode_optional_one_4_used() {
+        let encoded_4_zeros = MyBitString3or4 {
+            bit_0: false,
+            bit_1: false,
+            bit_2: false,
+            bit_3: true,
+        }
+        .to_der()
+        .unwrap();
+
+        // 4 bits used, 4 unused
+        assert_eq!(encoded_4_zeros, hex!("03 02 04 10"));
+    }
+}
 mod infer_default {
     //! When another crate might define a PartialEq for another type, the use of
     //! `default="Default::default"` in the der derivation will not provide enough

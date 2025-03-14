@@ -365,6 +365,7 @@ mod document;
 mod str_owned;
 
 pub use crate::{
+    asn1::bit_string::fixed_len_bit_string::FixedLenBitString,
     asn1::{AnyRef, Choice, Sequence},
     datetime::DateTime,
     decode::{Decode, DecodeOwned, DecodeValue},
@@ -384,7 +385,7 @@ pub use crate::{
 pub use crate::{asn1::Any, document::Document};
 
 #[cfg(feature = "derive")]
-pub use der_derive::{Choice, Enumerated, Sequence, ValueOrd};
+pub use der_derive::{BitString, Choice, Enumerated, Sequence, ValueOrd};
 
 #[cfg(feature = "flagset")]
 pub use flagset;

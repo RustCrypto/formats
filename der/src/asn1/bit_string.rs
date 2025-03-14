@@ -1,5 +1,7 @@
 //! ASN.1 `BIT STRING` support.
 
+pub mod fixed_len_bit_string;
+
 use crate::{
     BytesRef, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
     Result, Tag, ValueOrd, Writer,
@@ -117,6 +119,17 @@ impl<'a> BitStringRef<'a> {
             bit_string: self,
             position: 0,
         }
+    }
+
+    /// Returns Some(bit) if index is valid
+    pub fn get(&self, position: usize) -> Option<bool> {
+        if position >= self.bit_len() {
+            return None;
+        }
+
+        let byte = self.raw_bytes().get(position / 8)?;
+        let bitmask = 1u8 << (7 - (position % 8));
+        Some(byte & bitmask != 0)
     }
 }
 
@@ -308,6 +321,11 @@ mod allocating {
         /// Iterator over the bits of this `BIT STRING`.
         pub fn bits(&self) -> BitStringIter<'_> {
             BitStringRef::from(self).bits()
+        }
+
+        /// Returns Some(bit) if index is valid
+        pub fn get(&self, position: usize) -> Option<bool> {
+            BitStringRef::from(self).get(position)
         }
     }
 
