@@ -16,11 +16,11 @@ use crate::{
     builder::{BuilderProfile, Result},
     certificate::TbsCertificate,
     ext::{
-        pkix::{
-            name::GeneralNames, AuthorityKeyIdentifier, BasicConstraints, ExtendedKeyUsage,
-            KeyUsage, KeyUsages, SubjectKeyIdentifier,
-        },
         AsExtension, Extension,
+        pkix::{
+            AuthorityKeyIdentifier, BasicConstraints, ExtendedKeyUsage, KeyUsage, KeyUsages,
+            SubjectKeyIdentifier, name::GeneralNames,
+        },
     },
     name::{Name, RelativeDistinguishedName},
 };
