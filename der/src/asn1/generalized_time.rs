@@ -40,7 +40,7 @@ impl GeneralizedTime {
     }
 
     /// Convert this [`GeneralizedTime`] into a [`DateTime`].
-    pub fn to_date_time(&self) -> DateTime {
+    pub const fn to_date_time(&self) -> DateTime {
         self.0
     }
 
