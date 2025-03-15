@@ -131,9 +131,7 @@ impl FromStr for TagNumber {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, ParseError> {
-        let n = s.parse::<u32>().map_err(|_| ParseError)?;
-
-        Ok(Self(n))
+        s.parse::<u32>().map(Self).map_err(|_| ParseError)
     }
 }
 
