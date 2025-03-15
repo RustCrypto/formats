@@ -56,7 +56,7 @@ impl<'a> SliceReader<'a> {
 
     /// Obtain the remaining bytes in this slice reader from the current cursor
     /// position.
-    fn remaining(&self) -> Result<&'a [u8], Error> {
+    pub(crate) fn remaining(&self) -> Result<&'a [u8], Error> {
         if self.is_failed() {
             Err(ErrorKind::Failed.at(self.position))
         } else {

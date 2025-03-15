@@ -34,10 +34,23 @@ pub trait Decode<'a>: Sized + 'a {
     }
 
     /// Parse `Self` from the provided DER-encoded byte slice.
+    ///
+    /// Returns [`ErrorKind::TrailingData`] if message is incomplete.
     fn from_der(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let mut reader = SliceReader::new(bytes)?;
         let result = Self::decode(&mut reader)?;
         Ok(reader.finish(result)?)
+    }
+
+    /// Parse `Self` from the provided DER-encoded byte slice.
+    ///
+    /// Returns remaining byte slice, without checking for incomplete message.
+    fn from_der_partial(bytes: &'a [u8]) -> Result<(Self, &'a [u8]), Self::Error> {
+        let mut reader = SliceReader::new(bytes)?;
+        let result = Self::decode(&mut reader)?;
+
+        let remaining = reader.remaining()?;
+        Ok((result, remaining))
     }
 }
 
