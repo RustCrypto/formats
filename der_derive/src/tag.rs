@@ -117,48 +117,13 @@ impl Display for TagMode {
 
 /// ASN.1 tag numbers (i.e. lower 5 bits of a [`Tag`]).
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub(crate) struct TagNumber(pub u8);
+pub(crate) struct TagNumber(pub u32);
 
 impl TagNumber {
-    /// Maximum tag number supported (inclusive).
-    pub const MAX: u8 = 30;
-
     /// Get tokens describing this tag.
     pub fn to_tokens(self) -> TokenStream {
-        match self.0 {
-            0 => quote!(::der::TagNumber::new(0)),
-            1 => quote!(::der::TagNumber::new(1)),
-            2 => quote!(::der::TagNumber::new(2)),
-            3 => quote!(::der::TagNumber::new(3)),
-            4 => quote!(::der::TagNumber::new(4)),
-            5 => quote!(::der::TagNumber::new(5)),
-            6 => quote!(::der::TagNumber::new(6)),
-            7 => quote!(::der::TagNumber::new(7)),
-            8 => quote!(::der::TagNumber::new(8)),
-            9 => quote!(::der::TagNumber::new(9)),
-            10 => quote!(::der::TagNumber::new(10)),
-            11 => quote!(::der::TagNumber::new(11)),
-            12 => quote!(::der::TagNumber::new(12)),
-            13 => quote!(::der::TagNumber::new(13)),
-            14 => quote!(::der::TagNumber::new(14)),
-            15 => quote!(::der::TagNumber::new(15)),
-            16 => quote!(::der::TagNumber::new(16)),
-            17 => quote!(::der::TagNumber::new(17)),
-            18 => quote!(::der::TagNumber::new(18)),
-            19 => quote!(::der::TagNumber::new(19)),
-            20 => quote!(::der::TagNumber::new(20)),
-            21 => quote!(::der::TagNumber::new(21)),
-            22 => quote!(::der::TagNumber::new(22)),
-            23 => quote!(::der::TagNumber::new(23)),
-            24 => quote!(::der::TagNumber::new(24)),
-            25 => quote!(::der::TagNumber::new(25)),
-            26 => quote!(::der::TagNumber::new(26)),
-            27 => quote!(::der::TagNumber::new(27)),
-            28 => quote!(::der::TagNumber::new(28)),
-            29 => quote!(::der::TagNumber::new(29)),
-            30 => quote!(::der::TagNumber::new(30)),
-            _ => unreachable!("tag number out of range: {}", self),
-        }
+        let num = self.0;
+        quote!(::der::TagNumber(#num))
     }
 }
 
@@ -166,13 +131,9 @@ impl FromStr for TagNumber {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, ParseError> {
-        let n = s.parse::<u8>().map_err(|_| ParseError)?;
+        let n = s.parse::<u32>().map_err(|_| ParseError)?;
 
-        if n <= Self::MAX {
-            Ok(Self(n))
-        } else {
-            Err(ParseError)
-        }
+        Ok(Self(n))
     }
 }
 

@@ -348,11 +348,11 @@ mod tests {
             quote! {
                 let implicit_field = ::der::asn1::ContextSpecific::<>::decode_implicit(
                         reader,
-                        ::der::TagNumber::new(0)
+                        ::der::TagNumber(0u32)
                     )?
                     .ok_or_else(|| {
                         der::Tag::ContextSpecific {
-                            number: ::der::TagNumber::new(0),
+                            number: ::der::TagNumber(0u32),
                             constructed: false
                         }
                         .value_error()
@@ -366,7 +366,7 @@ mod tests {
             field.to_encode_tokens().to_string(),
             quote! {
                 ::der::asn1::ContextSpecificRef {
-                    tag_number: ::der::TagNumber::new(0),
+                    tag_number: ::der::TagNumber(0u32),
                     tag_mode: ::der::TagMode::Implicit,
                     value: &self.implicit_field,
                 }

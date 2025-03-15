@@ -20,7 +20,6 @@ use core::fmt;
 pub struct TagNumber(pub u32);
 
 impl TagNumber {
-
     /// Mask value used to obtain the tag number from a tag octet.
     pub(super) const MASK: u8 = 0b11111;
 
