@@ -385,9 +385,7 @@ pub use crate::{
 pub use crate::{asn1::Any, document::Document};
 
 #[cfg(feature = "derive")]
-pub use der_derive::{
-    BitString, Choice, Enumerated, Sequence, SequenceDecode, SequenceEncode, ValueOrd,
-};
+pub use der_derive::{BitString, Choice, DecodeValue, EncodeValue, Enumerated, Sequence, ValueOrd};
 
 #[cfg(feature = "flagset")]
 pub use flagset;

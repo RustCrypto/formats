@@ -627,12 +627,12 @@ mod sequence {
     }
 }
 
-/// Custom derive test cases for the `SequenceEncode` macro.
-mod sequence_encode {
-    use der::{Encode, FixedTag, SequenceEncode, Tag};
+/// Custom derive test cases for the `EncodeValue` macro.
+mod encode_value {
+    use der::{Encode, EncodeValue, FixedTag, Tag};
     use hex_literal::hex;
 
-    #[derive(SequenceEncode, Default, Eq, PartialEq, Debug)]
+    #[derive(EncodeValue, Default, Eq, PartialEq, Debug)]
     #[asn1(tag_mode = "IMPLICIT")]
     pub struct EncodeOnlyCheck<'a> {
         #[asn1(type = "OCTET STRING", context_specific = "5")]
@@ -654,12 +654,12 @@ mod sequence_encode {
     }
 }
 
-/// Custom derive test cases for the `SequenceDecode` macro.
-mod sequence_decode {
-    use der::{Decode, FixedTag, SequenceDecode, Tag};
+/// Custom derive test cases for the `DecodeValue` macro.
+mod decode_value {
+    use der::{Decode, DecodeValue, FixedTag, Tag};
     use hex_literal::hex;
 
-    #[derive(SequenceDecode, Default, Eq, PartialEq, Debug)]
+    #[derive(DecodeValue, Default, Eq, PartialEq, Debug)]
     #[asn1(tag_mode = "IMPLICIT")]
     pub struct DecodeOnlyCheck<'a> {
         #[asn1(type = "OCTET STRING", context_specific = "5")]
