@@ -261,7 +261,7 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Derive the [`Sequence`][1] trait on a `struct`.
+/// Derive the [`DecodeValue`][1], [`EncodeValue`][2], [`Sequence`][3] traits on a `struct`.
 ///
 /// This custom derive macro can be used to automatically impl the
 /// `Sequence` trait for any struct which can be decoded/encoded as an
@@ -289,16 +289,42 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
 ///
 /// # `#[asn1(type = "...")]` attribute
 ///
-/// See [toplevel documentation for the `der_derive` crate][2] for more
+/// See [toplevel documentation for the `der_derive` crate][4] for more
 /// information about the `#[asn1]` attribute.
 ///
-/// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
-/// [2]: https://docs.rs/der_derive/
+/// [1]: https://docs.rs/der/latest/der/trait.DecodeValue.html
+/// [2]: https://docs.rs/der/latest/der/trait.EncodeValue.html
+/// [3]: https://docs.rs/der/latest/der/trait.Sequence.html
+/// [4]: https://docs.rs/der_derive/
 #[proc_macro_derive(Sequence, attributes(asn1))]
 pub fn derive_sequence(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match DeriveSequence::new(input) {
-        Ok(t) => t.to_tokens().into(),
+        Ok(t) => t.to_tokens_all().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
+}
+
+/// Derive the [`EncodeValue`][1] trait on a `struct`.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.EncodeValue.html
+#[proc_macro_derive(SequenceEncode, attributes(asn1))]
+pub fn derive_sequence_encode(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match DeriveSequence::new(input) {
+        Ok(t) => t.to_tokens_encode().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
+}
+
+/// Derive the [`DecodeValue`][1] trait on a `struct`.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.DecodeValue.html
+#[proc_macro_derive(SequenceDecode, attributes(asn1))]
+pub fn derive_sequence_decode(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match DeriveSequence::new(input) {
+        Ok(t) => t.to_tokens_decode().into(),
         Err(e) => e.to_compile_error().into(),
     }
 }

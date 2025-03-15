@@ -627,6 +627,56 @@ mod sequence {
     }
 }
 
+/// Custom derive test cases for the `SequenceEncode` macro.
+mod sequence_encode {
+    use der::{Encode, FixedTag, SequenceEncode, Tag};
+    use hex_literal::hex;
+
+    #[derive(SequenceEncode, Default, Eq, PartialEq, Debug)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    pub struct EncodeOnlyCheck<'a> {
+        #[asn1(type = "OCTET STRING", context_specific = "5")]
+        pub field: &'a [u8],
+    }
+    impl FixedTag for EncodeOnlyCheck<'_> {
+        const TAG: Tag = Tag::Sequence;
+    }
+
+    #[test]
+    fn sequence_encode_only_to_der() {
+        let obj = EncodeOnlyCheck {
+            field: &[0x33, 0x44],
+        };
+
+        let der_encoded = obj.to_der().unwrap();
+
+        assert_eq!(der_encoded, hex!("30 04 85 02 33 44"));
+    }
+}
+
+/// Custom derive test cases for the `SequenceDecode` macro.
+mod sequence_decode {
+    use der::{Decode, FixedTag, SequenceDecode, Tag};
+    use hex_literal::hex;
+
+    #[derive(SequenceDecode, Default, Eq, PartialEq, Debug)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    pub struct DecodeOnlyCheck<'a> {
+        #[asn1(type = "OCTET STRING", context_specific = "5")]
+        pub field: &'a [u8],
+    }
+    impl FixedTag for DecodeOnlyCheck<'_> {
+        const TAG: Tag = Tag::Sequence;
+    }
+
+    #[test]
+    fn sequence_decode_only_from_der() {
+        let obj = DecodeOnlyCheck::from_der(&hex!("30 04 85 02 33 44")).unwrap();
+
+        assert_eq!(obj.field, &[0x33, 0x44]);
+    }
+}
+
 /// Custom derive test cases for the `BitString` macro.
 #[cfg(feature = "std")]
 mod bitstring {
