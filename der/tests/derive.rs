@@ -499,7 +499,7 @@ mod sequence {
         pub owned_optional_implicit_bytes: Option<Vec<u8>>,
 
         #[asn1(
-            type = "OCTET STRING",
+            type = "BIT STRING",
             context_specific = "6",
             optional = "true",
             tag_mode = "EXPLICIT"
