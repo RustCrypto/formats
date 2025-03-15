@@ -7,7 +7,7 @@ use core::marker::PhantomData;
 use crate::{PemReader, pem::PemLabel};
 
 #[cfg(doc)]
-use crate::{Length, Tag};
+use crate::{ErrorKind, Length, Tag};
 
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
