@@ -189,7 +189,7 @@ impl Tag {
     }
 
     /// Get the [`Class`] that corresponds to this [`Tag`].
-    pub fn class(self) -> Class {
+    pub const fn class(self) -> Class {
         match self {
             Tag::Application { .. } => Class::Application,
             Tag::ContextSpecific { .. } => Class::ContextSpecific,
@@ -199,29 +199,29 @@ impl Tag {
     }
 
     /// Get the [`TagNumber`] for this tag.
-    pub fn number(self) -> TagNumber {
+    pub const fn number(self) -> TagNumber {
         match self {
-            Tag::Boolean => TagNumber::N1,
-            Tag::Integer => TagNumber::N2,
-            Tag::BitString => TagNumber::N3,
-            Tag::OctetString => TagNumber::N4,
-            Tag::Null => TagNumber::N5,
-            Tag::ObjectIdentifier => TagNumber::N6,
-            Tag::Real => TagNumber::N9,
-            Tag::Enumerated => TagNumber::N10,
-            Tag::Utf8String => TagNumber::N12,
-            Tag::Sequence => TagNumber::N16,
-            Tag::Set => TagNumber::N17,
-            Tag::NumericString => TagNumber::N18,
-            Tag::PrintableString => TagNumber::N19,
-            Tag::TeletexString => TagNumber::N20,
-            Tag::VideotexString => TagNumber::N21,
-            Tag::Ia5String => TagNumber::N22,
-            Tag::UtcTime => TagNumber::N23,
-            Tag::GeneralizedTime => TagNumber::N24,
-            Tag::VisibleString => TagNumber::N26,
-            Tag::GeneralString => TagNumber::N27,
-            Tag::BmpString => TagNumber::N30,
+            Tag::Boolean => TagNumber::new(1),
+            Tag::Integer => TagNumber::new(2),
+            Tag::BitString => TagNumber::new(3),
+            Tag::OctetString => TagNumber::new(4),
+            Tag::Null => TagNumber::new(5),
+            Tag::ObjectIdentifier => TagNumber::new(6),
+            Tag::Real => TagNumber::new(9),
+            Tag::Enumerated => TagNumber::new(10),
+            Tag::Utf8String => TagNumber::new(12),
+            Tag::Sequence => TagNumber::new(16),
+            Tag::Set => TagNumber::new(17),
+            Tag::NumericString => TagNumber::new(18),
+            Tag::PrintableString => TagNumber::new(19),
+            Tag::TeletexString => TagNumber::new(20),
+            Tag::VideotexString => TagNumber::new(21),
+            Tag::Ia5String => TagNumber::new(22),
+            Tag::UtcTime => TagNumber::new(23),
+            Tag::GeneralizedTime => TagNumber::new(24),
+            Tag::VisibleString => TagNumber::new(26),
+            Tag::GeneralString => TagNumber::new(27),
+            Tag::BmpString => TagNumber::new(30),
             Tag::Application { number, .. } => number,
             Tag::ContextSpecific { number, .. } => number,
             Tag::Private { number, .. } => number,

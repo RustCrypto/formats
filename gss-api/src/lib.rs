@@ -140,7 +140,7 @@ mod tests {
             AnyRef::new(
                 Tag::ContextSpecific {
                     constructed: true,
-                    number: TagNumber::N0
+                    number: TagNumber::new(0)
                 },
                 &inner_bytes
             )
@@ -153,7 +153,7 @@ mod tests {
             inner_context_token: AnyRef::new(
                 Tag::ContextSpecific {
                     constructed: true,
-                    number: TagNumber::N0,
+                    number: TagNumber::new(0),
                 },
                 &inner_bytes,
             )

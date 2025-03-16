@@ -90,7 +90,7 @@ impl<'a> DecodeValue<'a> for DeferDecodeTbsCertificate<'a> {
         header: Header,
     ) -> der::Result<DeferDecodeTbsCertificate<'a>> {
         reader.read_nested(header.length, |reader| {
-            let version = ContextSpecific::decode_explicit(reader, ::der::TagNumber::N0)?
+            let version = ContextSpecific::decode_explicit(reader, ::der::TagNumber::new(0))?
                 .map(|cs| cs.value)
                 .unwrap_or_else(Default::default);
 
