@@ -362,6 +362,35 @@ mod sequence {
         pub subject_public_key: &'a [u8],
     }
 
+    #[test]
+    fn decode_spki() {
+        let spki_bytes = hex!(
+        // first SPKI
+        "30 1A
+            30 0D 
+                06 09
+                    2A 86 48 86 F7 0D 01 01 01 
+                05 00
+            03 09
+                00 A0 A1 A2 A3 A4 A5 A6 A7"
+        // second SPKI
+        "30 1A
+            30 0D 
+                06 09
+                    2A 86 48 86 F7 0D 01 01 01 
+                05 00
+            03 09
+                00 B0 B1 B2 B3 B4 B5 B6 B7");
+
+        // decode first
+        let (spki, remaining) = SubjectPublicKeyInfo::from_der_partial(&spki_bytes).unwrap();
+        assert_eq!(spki.subject_public_key, hex!("A0 A1 A2 A3 A4 A5 A6 A7"));
+
+        // decode second
+        let (spki, _) = SubjectPublicKeyInfo::from_der_partial(remaining).unwrap();
+        assert_eq!(spki.subject_public_key, hex!("B0 B1 B2 B3 B4 B5 B6 B7"));
+    }
+
     /// PKCS#8v2 `OneAsymmetricKey`
     #[derive(Sequence)]
     pub struct OneAsymmetricKey<'a> {
