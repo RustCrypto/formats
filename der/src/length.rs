@@ -7,9 +7,6 @@ use core::{
     ops::{Add, Sub},
 };
 
-/// Maximum length as a `u32` (256 MiB).
-const MAX_U32: u32 = 0xfff_ffff;
-
 /// Octet identifying an indefinite length as described in X.690 Section
 /// 8.1.3.6.1:
 ///
@@ -18,8 +15,6 @@ const MAX_U32: u32 = 0xfff_ffff;
 const INDEFINITE_LENGTH_OCTET: u8 = 0b10000000; // 0x80
 
 /// ASN.1-encoded length.
-///
-/// Maximum length is defined by the [`Length::MAX`] constant (256 MiB).
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Length(u32);
 
@@ -30,8 +25,8 @@ impl Length {
     /// Length of `1`
     pub const ONE: Self = Self(1);
 
-    /// Maximum length currently supported: 256 MiB
-    pub const MAX: Self = Self(MAX_U32);
+    /// Maximum length (`u32::MAX`).
+    pub const MAX: Self = Self(u32::MAX);
 
     /// Maximum number of octets in a DER encoding of a [`Length`] using the
     /// rules implemented by this crate.
@@ -94,7 +89,7 @@ impl Length {
             0x80..=0xFF => Some(0x81),
             0x100..=0xFFFF => Some(0x82),
             0x10000..=0xFFFFFF => Some(0x83),
-            0x1000000..=MAX_U32 => Some(0x84),
+            0x1000000..=0xFFFFFFFF => Some(0x84),
             _ => None,
         }
     }
@@ -107,7 +102,7 @@ impl Add for Length {
         self.0
             .checked_add(other.0)
             .ok_or_else(|| ErrorKind::Overflow.into())
-            .and_then(TryInto::try_into)
+            .map(Self)
     }
 }
 
@@ -131,7 +126,7 @@ impl Add<u32> for Length {
     type Output = Result<Self>;
 
     fn add(self, other: u32) -> Result<Self> {
-        self + Length::try_from(other)?
+        self + Length::from(other)
     }
 }
 
@@ -158,7 +153,7 @@ impl Sub for Length {
         self.0
             .checked_sub(other.0)
             .ok_or_else(|| ErrorKind::Overflow.into())
-            .and_then(TryInto::try_into)
+            .map(Self)
     }
 }
 
@@ -182,21 +177,15 @@ impl From<u16> for Length {
     }
 }
 
-impl From<Length> for u32 {
-    fn from(length: Length) -> u32 {
-        length.0
+impl From<u32> for Length {
+    fn from(len: u32) -> Length {
+        Length(len)
     }
 }
 
-impl TryFrom<u32> for Length {
-    type Error = Error;
-
-    fn try_from(len: u32) -> Result<Length> {
-        if len <= Self::MAX.0 {
-            Ok(Length(len))
-        } else {
-            Err(ErrorKind::Overflow.into())
-        }
+impl From<Length> for u32 {
+    fn from(length: Length) -> u32 {
+        length.0
     }
 }
 
@@ -236,7 +225,7 @@ impl<'a> Decode<'a> for Length {
                         | u32::from(reader.read_byte()?);
                 }
 
-                let length = Length::try_from(decoded_len)?;
+                let length = Length::from(decoded_len);
 
                 // X.690 Section 10.1: DER lengths must be encoded with a minimum
                 // number of octets
@@ -261,8 +250,7 @@ impl Encode for Length {
             0x80..=0xFF => Ok(Length(2)),
             0x100..=0xFFFF => Ok(Length(3)),
             0x10000..=0xFFFFFF => Ok(Length(4)),
-            0x1000000..=MAX_U32 => Ok(Length(5)),
-            _ => Err(ErrorKind::Overflow.into()),
+            0x1000000..=0xFFFFFFFF => Ok(Length(5)),
         }
     }
 
@@ -311,7 +299,7 @@ impl fmt::Display for Length {
 #[cfg(feature = "arbitrary")]
 impl<'a> arbitrary::Arbitrary<'a> for Length {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Self(u.int_in_range(0..=MAX_U32)?))
+        Ok(Self(u.arbitrary()?))
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
@@ -454,7 +442,7 @@ mod tests {
         );
 
         assert_eq!(
-            Length::try_from(0x10000u32).unwrap(),
+            Length::from(0x10000u32),
             Length::from_der(&[0x83, 0x01, 0x00, 0x00]).unwrap()
         );
     }
@@ -487,8 +475,7 @@ mod tests {
 
         assert_eq!(
             &[0x83, 0x01, 0x00, 0x00],
-            Length::try_from(0x10000u32)
-                .unwrap()
+            Length::from(0x10000u32)
                 .encode_to_slice(&mut buffer)
                 .unwrap()
         );
@@ -507,10 +494,7 @@ mod tests {
         // It also supports definite lengths.
         let length = IndefiniteLength::from_der(&[0x83, 0x01, 0x00, 0x00]).unwrap();
         assert!(length.is_definite());
-        assert_eq!(
-            Length::try_from(0x10000u32).unwrap(),
-            length.try_into().unwrap()
-        );
+        assert_eq!(Length::from(0x10000u32), length.try_into().unwrap());
     }
 
     #[test]
