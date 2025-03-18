@@ -1,8 +1,8 @@
 //! PKIMessage type
 
 use alloc::vec::Vec;
-use der::asn1::BitString;
 use der::Sequence;
+use der::asn1::BitString;
 
 use crate::body::PkiBody;
 use crate::header::{CmpCertificate, PkiHeader};

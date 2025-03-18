@@ -1,15 +1,15 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
 use crate::certificate::{CertificateInner, Profile, Rfc5280, TbsCertificateInner};
-use crate::ext::pkix::{certpolicy::CertificatePolicies, NameConstraints};
+use crate::ext::pkix::{NameConstraints, certpolicy::CertificatePolicies};
 use crate::{ext::Extensions, name::Name};
 
 use crate::SubjectPublicKeyInfo;
 use alloc::string::String;
 use der::{
-    asn1::OctetString,
-    flagset::{flags, FlagSet},
     Choice, Enumerated, Sequence,
+    asn1::OctetString,
+    flagset::{FlagSet, flags},
 };
 
 /// Version identifier for TrustAnchorInfo
