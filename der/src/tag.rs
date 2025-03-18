@@ -201,27 +201,27 @@ impl Tag {
     /// Get the [`TagNumber`] for this tag.
     pub const fn number(self) -> TagNumber {
         match self {
-            Tag::Boolean => TagNumber::new(1),
-            Tag::Integer => TagNumber::new(2),
-            Tag::BitString => TagNumber::new(3),
-            Tag::OctetString => TagNumber::new(4),
-            Tag::Null => TagNumber::new(5),
-            Tag::ObjectIdentifier => TagNumber::new(6),
-            Tag::Real => TagNumber::new(9),
-            Tag::Enumerated => TagNumber::new(10),
-            Tag::Utf8String => TagNumber::new(12),
-            Tag::Sequence => TagNumber::new(16),
-            Tag::Set => TagNumber::new(17),
-            Tag::NumericString => TagNumber::new(18),
-            Tag::PrintableString => TagNumber::new(19),
-            Tag::TeletexString => TagNumber::new(20),
-            Tag::VideotexString => TagNumber::new(21),
-            Tag::Ia5String => TagNumber::new(22),
-            Tag::UtcTime => TagNumber::new(23),
-            Tag::GeneralizedTime => TagNumber::new(24),
-            Tag::VisibleString => TagNumber::new(26),
-            Tag::GeneralString => TagNumber::new(27),
-            Tag::BmpString => TagNumber::new(30),
+            Tag::Boolean => TagNumber(1),
+            Tag::Integer => TagNumber(2),
+            Tag::BitString => TagNumber(3),
+            Tag::OctetString => TagNumber(4),
+            Tag::Null => TagNumber(5),
+            Tag::ObjectIdentifier => TagNumber(6),
+            Tag::Real => TagNumber(9),
+            Tag::Enumerated => TagNumber(10),
+            Tag::Utf8String => TagNumber(12),
+            Tag::Sequence => TagNumber(16),
+            Tag::Set => TagNumber(17),
+            Tag::NumericString => TagNumber(18),
+            Tag::PrintableString => TagNumber(19),
+            Tag::TeletexString => TagNumber(20),
+            Tag::VideotexString => TagNumber(21),
+            Tag::Ia5String => TagNumber(22),
+            Tag::UtcTime => TagNumber(23),
+            Tag::GeneralizedTime => TagNumber(24),
+            Tag::VisibleString => TagNumber(26),
+            Tag::GeneralString => TagNumber(27),
+            Tag::BmpString => TagNumber(30),
             Tag::Application { number, .. } => number,
             Tag::ContextSpecific { number, .. } => number,
             Tag::Private { number, .. } => number,
@@ -353,7 +353,7 @@ fn parse_parts<'a, R: Reader<'a>>(first_byte: u8, reader: &mut R) -> Result<(boo
     let first_number_part = first_byte & TagNumber::MASK;
 
     if first_number_part != TagNumber::MASK {
-        return Ok((constructed, TagNumber::new(first_number_part.into())));
+        return Ok((constructed, TagNumber(first_number_part.into())));
     }
 
     let mut multi_byte_tag_number = 0;
@@ -367,7 +367,7 @@ fn parse_parts<'a, R: Reader<'a>>(first_byte: u8, reader: &mut R) -> Result<(boo
                 return Err(ErrorKind::TagNumberInvalid.into());
             }
 
-            return Ok((constructed, TagNumber::new(multi_byte_tag_number)));
+            return Ok((constructed, TagNumber(multi_byte_tag_number)));
         } else if i == 0 && multi_byte_tag_number == 0 {
             // 8.1.2.4.2c says "bits 7 to 1 of the first subsequent octet shall not all be zero"
             return Err(ErrorKind::TagNumberInvalid.into());
@@ -530,7 +530,7 @@ mod tests {
 
         for num in 0..=30 {
             for &constructed in &[false, true] {
-                let number = TagNumber::new(num);
+                let number = TagNumber(num);
 
                 assert_eq!(
                     Tag::Application {
@@ -567,21 +567,21 @@ mod tests {
         assert_eq!(
             Tag::Application {
                 constructed: false,
-                number: TagNumber::new(0x4001)
+                number: TagNumber(0x4001)
             },
             Tag::from_der(&hex!("5F818001")).expect("bits 7 to 1 are zero")
         );
         assert_eq!(
             Tag::ContextSpecific {
                 constructed: false,
-                number: TagNumber::new(0x200001)
+                number: TagNumber(0x200001)
             },
             Tag::from_der(&hex!("9F81808001")).expect("bits 7 to 1 are zero two times")
         );
         assert_eq!(
             Tag::Private {
                 constructed: false,
-                number: TagNumber::new(u32::MAX)
+                number: TagNumber(u32::MAX)
             },
             Tag::from_der(&hex!("DF8FFFFFFF7F")).expect("private tag 2^32-1")
         );

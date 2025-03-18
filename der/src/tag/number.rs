@@ -23,7 +23,11 @@ impl TagNumber {
     /// Mask value used to obtain the tag number from a tag octet.
     pub(super) const MASK: u8 = 0b11111;
 
-    /// Create a new tag number (const-friendly).
+    /// Create a new tag number.
+    #[deprecated(
+        since = "0.8.0",
+        note = "use TagNumber(value) directly as inner field is now pub"
+    )]
     pub const fn new(value: u32) -> Self {
         Self(value)
     }
@@ -69,7 +73,7 @@ impl fmt::Display for TagNumber {
 #[cfg(feature = "arbitrary")]
 impl<'a> arbitrary::Arbitrary<'a> for TagNumber {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Self::new(u.int_in_range(0..=30)?))
+        Ok(Self(u.int_in_range(0..=30)?))
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
