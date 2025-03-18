@@ -27,7 +27,7 @@ use der::pem::PemLabel;
 use subtle::{Choice, ConstantTimeEq};
 
 /// Context-specific tag number for the public key.
-const PUBLIC_KEY_TAG: TagNumber = TagNumber::new(1);
+const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 
 /// PKCS#8 `PrivateKeyInfo`.
 ///

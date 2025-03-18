@@ -31,10 +31,10 @@ use der::pem::PemLabel;
 const VERSION: u8 = 1;
 
 /// Context-specific tag number for the elliptic curve parameters.
-const EC_PARAMETERS_TAG: TagNumber = TagNumber::new(0);
+const EC_PARAMETERS_TAG: TagNumber = TagNumber(0);
 
 /// Context-specific tag number for the public key.
-const PUBLIC_KEY_TAG: TagNumber = TagNumber::new(1);
+const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 
 /// SEC1 elliptic curve private key.
 ///

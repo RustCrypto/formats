@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn context_specific_with_explicit_field() {
-        let tag_number = TagNumber::new(0);
+        let tag_number = TagNumber(0);
 
         // Empty message
         let mut reader = SliceReader::new(&[]).unwrap();
@@ -319,7 +319,7 @@ mod tests {
         let context_specific_implicit_bytes =
             hex!("81210019BF44096984CDFE8541BAC167DC3B96C85086AA30B6B6CB0C5C38AD703166E1");
 
-        let tag_number = TagNumber::new(1);
+        let tag_number = TagNumber(1);
 
         let mut reader = SliceReader::new(&context_specific_implicit_bytes).unwrap();
         let field = ContextSpecific::<BitStringRef<'_>>::decode_implicit(&mut reader, tag_number)
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn context_specific_skipping_unknown_field() {
-        let tag = TagNumber::new(1);
+        let tag = TagNumber(1);
         let mut reader = SliceReader::new(&hex!("A003020100A103020101")).unwrap();
         let field = ContextSpecific::<u8>::decode_explicit(&mut reader, tag)
             .unwrap()
@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn context_specific_returns_none_on_greater_tag_number() {
-        let tag = TagNumber::new(0);
+        let tag = TagNumber(0);
         let mut reader = SliceReader::new(&hex!("A103020101")).unwrap();
         assert_eq!(
             ContextSpecific::<u8>::decode_explicit(&mut reader, tag).unwrap(),
