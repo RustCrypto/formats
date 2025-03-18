@@ -8,7 +8,7 @@
 [![Project Chat][chat-image]][chat-link]
 
 Pure Rust embedded-friendly implementation of the Distinguished Encoding Rules (DER)
-for Abstract Syntax Notation One (ASN.1) as described in ITU X.690.
+for Abstract Syntax Notation One (ASN.1) as described in [ITU X.690].
 
 [Documentation][docs-link]
 
@@ -64,7 +64,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/der
+[crate-image]: https://img.shields.io/crates/v/der?logo=rust
 [crate-link]: https://crates.io/crates/der
 [docs-image]: https://docs.rs/der/badge.svg
 [docs-link]: https://docs.rs/der/
@@ -78,6 +78,7 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
+[ITU X.690]: https://www.itu.int/rec/T-REC-X.690/en
 [`cms`]: https://github.com/RustCrypto/formats/tree/master/cms
 [`pkcs1`]: https://github.com/RustCrypto/formats/tree/master/pkcs1
 [`pkcs5`]: https://github.com/RustCrypto/formats/tree/master/pkcs5
