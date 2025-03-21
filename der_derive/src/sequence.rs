@@ -7,7 +7,7 @@ use crate::{ErrorType, TypeAttrs, default_lifetime};
 use field::SequenceField;
 use proc_macro2::TokenStream;
 use quote::{ToTokens, quote};
-use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
+use syn::{DeriveInput, GenericParam, Generics, Ident, Lifetime, LifetimeParam};
 
 /// Derive the `Sequence` trait for a struct
 pub(crate) struct DeriveSequence {
@@ -51,13 +51,10 @@ impl DeriveSequence {
         })
     }
 
-    /// Lower the derived output into a [`TokenStream`].
-    pub fn to_tokens(&self) -> TokenStream {
-        let ident = &self.ident;
+    /// Use the first lifetime parameter as lifetime for Decode/Encode lifetime
+    /// if none found, add one.
+    fn calc_lifetime(&self) -> (Generics, Lifetime) {
         let mut generics = self.generics.clone();
-
-        // Use the first lifetime parameter as lifetime for Decode/Encode lifetime
-        // if none found, add one.
         let lifetime = generics
             .lifetimes()
             .next()
@@ -69,23 +66,39 @@ impl DeriveSequence {
                     .insert(0, GenericParam::Lifetime(LifetimeParam::new(lt.clone())));
                 lt
             });
-
         // We may or may not have inserted a lifetime.
+        (generics, lifetime)
+    }
+
+    /// Lower the derived output into a [`TokenStream`] for Sequence trait impl.
+    pub fn to_tokens_sequence_trait(&self) -> TokenStream {
+        let ident = &self.ident;
+
+        let (der_generics, lifetime) = self.calc_lifetime();
+
         let (_, ty_generics, where_clause) = self.generics.split_for_impl();
-        let (impl_generics, _, _) = generics.split_for_impl();
+        let (impl_generics, _, _) = der_generics.split_for_impl();
+
+        quote! {
+            impl #impl_generics ::der::Sequence<#lifetime> for #ident #ty_generics #where_clause {}
+        }
+    }
+
+    /// Lower the derived output into a [`TokenStream`] for DecodeValue trait impl.
+    pub fn to_tokens_decode(&self) -> TokenStream {
+        let ident = &self.ident;
+
+        let (der_generics, lifetime) = self.calc_lifetime();
+
+        let (_, ty_generics, where_clause) = self.generics.split_for_impl();
+        let (impl_generics, _, _) = der_generics.split_for_impl();
 
         let mut decode_body = Vec::new();
         let mut decode_result = Vec::new();
-        let mut encoded_lengths = Vec::new();
-        let mut encode_fields = Vec::new();
 
         for field in &self.fields {
             decode_body.push(field.to_decode_tokens());
             decode_result.push(&field.ident);
-
-            let field = field.to_encode_tokens();
-            encoded_lengths.push(quote!(#field.encoded_len()?));
-            encode_fields.push(quote!(#field.encode(writer)?;));
         }
 
         let error = self.error.to_token_stream();
@@ -109,6 +122,26 @@ impl DeriveSequence {
                     })
                 }
             }
+        }
+    }
+
+    /// Lower the derived output into a [`TokenStream`] for EncodeValue trait impl.
+    pub fn to_tokens_encode(&self) -> TokenStream {
+        let ident = &self.ident;
+
+        let (_, ty_generics, where_clause) = self.generics.split_for_impl();
+        let (impl_generics, _, _) = self.generics.split_for_impl();
+
+        let mut encoded_lengths = Vec::new();
+        let mut encode_fields = Vec::new();
+
+        for field in &self.fields {
+            let field = field.to_encode_tokens();
+            encoded_lengths.push(quote!(#field.encoded_len()?));
+            encode_fields.push(quote!(#field.encode(writer)?;));
+        }
+
+        quote! {
 
             impl #impl_generics ::der::EncodeValue for #ident #ty_generics #where_clause {
                 fn value_len(&self) -> ::der::Result<::der::Length> {
@@ -127,8 +160,22 @@ impl DeriveSequence {
                     Ok(())
                 }
             }
+        }
+    }
 
-            impl #impl_generics ::der::Sequence<#lifetime> for #ident #ty_generics #where_clause {}
+    /// Lower the derived output into a [`TokenStream`] for trait impls:
+    /// - EncodeValue
+    /// - DecodeValue
+    /// - Sequence
+    pub fn to_tokens_all(&self) -> TokenStream {
+        let decode_tokens = self.to_tokens_decode();
+        let encode_tokens = self.to_tokens_encode();
+        let sequence_trait_tokens = self.to_tokens_sequence_trait();
+
+        quote! {
+            #decode_tokens
+            #encode_tokens
+            #sequence_trait_tokens
         }
     }
 }
