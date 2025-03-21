@@ -193,6 +193,34 @@ impl<'a> TryFrom<&&'a [u8]> for BitStringRef<'a> {
     }
 }
 
+/// Hack for simplifying the custom derive use case.
+impl<'a, const N: usize> TryFrom<&'a [u8; N]> for BitStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8; N]) -> Result<BitStringRef<'a>> {
+        BitStringRef::from_bytes(bytes)
+    }
+}
+
+/// Hack for simplifying the custom derive use case.
+impl<'a, const N: usize> TryFrom<BitStringRef<'a>> for [u8; N] {
+    type Error = Error;
+
+    fn try_from(bit_string: BitStringRef<'a>) -> Result<Self> {
+        let expected_len = Length::new_usize(N)?;
+        let bytes = bit_string
+            .as_bytes()
+            .ok_or_else(|| Tag::BitString.value_error())?;
+
+        bytes.try_into().map_err(|_| {
+            Error::from_kind(ErrorKind::Incomplete {
+                expected_len,
+                actual_len: bit_string.byte_len(),
+            })
+        })
+    }
+}
+
 impl<'a> TryFrom<BitStringRef<'a>> for &'a [u8] {
     type Error = Error;
 

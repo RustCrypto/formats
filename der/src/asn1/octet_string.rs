@@ -113,6 +113,30 @@ impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
     }
 }
 
+/// Hack for simplifying the custom derive use case.
+impl<'a, const N: usize> TryFrom<&'a [u8; N]> for OctetStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(byte_slice: &'a [u8; N]) -> Result<Self, Error> {
+        OctetStringRef::new(byte_slice)
+    }
+}
+
+/// Hack for simplifying the custom derive use case.
+impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
+    type Error = Error;
+
+    fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
+        let expected_len = Length::new_usize(N)?;
+        octet_string.as_bytes().try_into().map_err(|_| {
+            Error::from_kind(ErrorKind::Incomplete {
+                expected_len,
+                actual_len: octet_string.len(),
+            })
+        })
+    }
+}
+
 #[cfg(feature = "alloc")]
 pub use self::allocating::OctetString;
 
