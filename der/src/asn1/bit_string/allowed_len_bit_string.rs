@@ -27,7 +27,7 @@ use crate::{Error, ErrorKind, Tag};
 ///     flag4: bool,
 /// }
 /// ```
-pub trait FixedLenBitString {
+pub trait AllowedLenBitString {
     /// Implementer must specify how many bits are allowed
     const ALLOWED_LEN_RANGE: RangeInclusive<u16>;
 
@@ -35,7 +35,7 @@ pub trait FixedLenBitString {
     fn check_bit_len(bit_len: u16) -> Result<(), Error> {
         let allowed_len_range = Self::ALLOWED_LEN_RANGE;
 
-        // forces allowed range to eg. 3..=4
+        // forces allowed range to e.g. 3..=4
         if !allowed_len_range.contains(&bit_len) {
             Err(ErrorKind::Length {
                 tag: Tag::BitString,

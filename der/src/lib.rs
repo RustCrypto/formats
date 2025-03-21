@@ -365,7 +365,7 @@ mod document;
 mod str_owned;
 
 pub use crate::{
-    asn1::bit_string::fixed_len_bit_string::FixedLenBitString,
+    asn1::bit_string::allowed_len_bit_string::AllowedLenBitString,
     asn1::{AnyRef, Choice, Sequence},
     datetime::DateTime,
     decode::{Decode, DecodeOwned, DecodeValue},

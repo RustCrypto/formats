@@ -47,7 +47,7 @@ impl DeriveBitString {
                 if started_optionals {
                     abort!(
                         input.ident,
-                        "derive `BitString` only supports optional fields one after another",
+                        "derive `BitString` only supports trailing optional fields one after another",
                     )
                 }
             } else {
@@ -133,7 +133,7 @@ impl DeriveBitString {
             impl ::der::FixedTag for #ident #ty_generics #where_clause {
                 const TAG: der::Tag = ::der::Tag::BitString;
             }
-            impl ::der::FixedLenBitString for #ident #ty_generics #where_clause {
+            impl ::der::AllowedLenBitString for #ident #ty_generics #where_clause {
                 const ALLOWED_LEN_RANGE: ::core::ops::RangeInclusive<u16> = #min_expected_fields..=#max_expected_fields;
             }
 
@@ -145,7 +145,7 @@ impl DeriveBitString {
                     header: ::der::Header,
                 ) -> ::core::result::Result<Self, ::der::Error> {
                     use ::der::{Decode as _, DecodeValue as _, Reader as _};
-                    use ::der::FixedLenBitString as _;
+                    use ::der::AllowedLenBitString as _;
 
 
                     let bs = ::der::asn1::BitStringRef::decode_value(reader, header)?;
@@ -170,7 +170,7 @@ impl DeriveBitString {
 
                 fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
                     use ::der::Encode as _;
-                    use der::FixedLenBitString as _;
+                    use ::der::AllowedLenBitString as _;
 
                     let arr = [#(#encode_bytes),*];
                     let last_byte_bits = (#max_expected_fields % 8) as u8;

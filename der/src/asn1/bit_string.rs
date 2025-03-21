@@ -1,6 +1,6 @@
 //! ASN.1 `BIT STRING` support.
 
-pub mod fixed_len_bit_string;
+pub mod allowed_len_bit_string;
 
 use crate::{
     BytesRef, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
