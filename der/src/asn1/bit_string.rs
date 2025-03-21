@@ -205,17 +205,9 @@ impl<'a, const N: usize> TryFrom<BitStringRef<'a>> for [u8; N] {
     type Error = Error;
 
     fn try_from(bit_string: BitStringRef<'a>) -> Result<Self> {
-        let expected_len = Length::try_from(N)?;
-        let bytes = bit_string
-            .as_bytes()
-            .ok_or_else(|| Tag::BitString.value_error())?;
+        let bytes: &[u8] = TryFrom::try_from(bit_string)?;
 
-        bytes.try_into().map_err(|_| {
-            Error::from_kind(ErrorKind::Incomplete {
-                expected_len,
-                actual_len: bit_string.byte_len(),
-            })
-        })
+        bytes.try_into().map_err(|_| Tag::BitString.length_error())
     }
 }
 

@@ -125,13 +125,10 @@ impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
     type Error = Error;
 
     fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
-        let expected_len = Length::try_from(N)?;
-        octet_string.as_bytes().try_into().map_err(|_| {
-            Error::from_kind(ErrorKind::Incomplete {
-                expected_len,
-                actual_len: octet_string.len(),
-            })
-        })
+        octet_string
+            .as_bytes()
+            .try_into()
+            .map_err(|_| Tag::OctetString.length_error())
     }
 }
 
