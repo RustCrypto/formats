@@ -699,7 +699,9 @@ mod bitstring {
         assert_eq!(reencoded, BITSTRING_EXAMPLE);
     }
 
-    /// this BitString will allow only 3..=4 bits
+    /// this BitString will allow only 3..=4 bits in Decode
+    ///
+    /// but will always Encode 4 bits
     #[derive(BitString)]
     pub struct MyBitString3or4 {
         pub bit_0: bool,
@@ -765,8 +767,8 @@ mod bitstring {
         .to_der()
         .unwrap();
 
-        // 3 bits used, 5 unused
-        assert_eq!(encoded_3_zeros, hex!("03 02 05 00"));
+        // 4 bits used, 4 unused
+        assert_eq!(encoded_3_zeros, hex!("03 02 04 00"));
     }
 
     #[test]
@@ -780,8 +782,8 @@ mod bitstring {
         .to_der()
         .unwrap();
 
-        // 3 bits used, 5 unused
-        assert_eq!(encoded_3_zeros, hex!("03 02 05 E0"));
+        // 4 bits used, 4 unused
+        assert_eq!(encoded_3_zeros, hex!("03 02 04 E0"));
     }
 
     #[test]
@@ -812,6 +814,107 @@ mod bitstring {
 
         // 4 bits used, 4 unused
         assert_eq!(encoded_4_zeros, hex!("03 02 04 10"));
+    }
+
+    /// ```asn1
+    /// PasswordFlags ::= BIT STRING {
+    ///     case-sensitive (0),
+    ///     local (1),
+    ///     change-disabled (2),
+    ///     unblock-disabled (3),
+    ///     initialized (4),
+    ///     needs-padding (5),
+    ///     unblockingPassword (6),
+    ///     soPassword (7),
+    ///     disable-allowed (8),
+    ///     integrity-protected (9),
+    ///     confidentiality-protected (10),
+    ///     exchangeRefData (11),
+    ///     resetRetryCounter1 (12),
+    ///     resetRetryCounter2 (13),
+    ///     context-dependent (14),
+    ///     multiStepProtocol (15)
+    /// }
+    ///  ```
+    #[derive(Clone, Debug, Eq, PartialEq, BitString)]
+    pub struct PasswordFlags {
+        /// case-sensitive (0)
+        pub case_sensitive: bool,
+
+        /// local (1)
+        pub local: bool,
+
+        /// change-disabled (2)
+        pub change_disabled: bool,
+
+        /// unblock-disabled (3)
+        pub unblock_disabled: bool,
+
+        /// initialized (4)
+        pub initialized: bool,
+
+        /// needs-padding (5)
+        pub needs_padding: bool,
+
+        /// unblockingPassword (6)
+        pub unblocking_password: bool,
+
+        /// soPassword (7)
+        pub so_password: bool,
+
+        /// disable-allowed (8)
+        pub disable_allowed: bool,
+
+        /// integrity-protected (9)
+        pub integrity_protected: bool,
+
+        /// confidentiality-protected (10)
+        pub confidentiality_protected: bool,
+
+        /// exchangeRefData (11)
+        pub exchange_ref_data: bool,
+
+        /// Second edition 2016-05-15
+        /// resetRetryCounter1 (12)
+        #[asn1(optional = "true")]
+        pub reset_retry_counter1: bool,
+
+        /// resetRetryCounter2 (13)
+        #[asn1(optional = "true")]
+        pub reset_retry_counter2: bool,
+
+        /// context-dependent (14)
+        #[asn1(optional = "true")]
+        pub context_dependent: bool,
+
+        /// multiStepProtocol (15)
+        #[asn1(optional = "true")]
+        pub multi_step_protocol: bool,
+
+        /// fake_bit_for_testing (16)
+        #[asn1(optional = "true")]
+        pub fake_bit_for_testing: bool,
+    }
+
+    const PASS_FLAGS_EXAMPLE_IN: &[u8] = &hex!("03 03 04 FF FF");
+    const PASS_FLAGS_EXAMPLE_OUT: &[u8] = &hex!("03 04 07 FF F0 00");
+
+    #[test]
+    fn decode_short_bitstring_2_bytes() {
+        let pass_flags = PasswordFlags::from_der(PASS_FLAGS_EXAMPLE_IN).unwrap();
+
+        // case-sensitive (0)
+        assert!(pass_flags.case_sensitive);
+
+        // exchangeRefData (11)
+        assert!(pass_flags.exchange_ref_data);
+
+        // resetRetryCounter1 (12)
+        assert!(!pass_flags.reset_retry_counter1);
+
+        let reencoded = pass_flags.to_der().unwrap();
+
+        assert_eq!(reencoded, PASS_FLAGS_EXAMPLE_OUT);
     }
 }
 mod infer_default {

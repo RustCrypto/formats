@@ -35,11 +35,25 @@ impl DeriveBitString {
 
         let type_attrs = TypeAttrs::parse(&input.attrs)?;
 
-        let fields = data
+        let fields: Vec<_> = data
             .fields
             .iter()
             .map(|field| BitStringField::new(field, &type_attrs))
             .collect::<syn::Result<_>>()?;
+
+        let mut started_optionals = false;
+        for field in &fields {
+            if !field.attrs.optional {
+                if started_optionals {
+                    abort!(
+                        input.ident,
+                        "derive `BitString` only supports optional fields one after another",
+                    )
+                }
+            } else {
+                started_optionals = true;
+            }
+        }
 
         Ok(Self {
             ident: input.ident,
@@ -75,14 +89,18 @@ impl DeriveBitString {
 
         let mut min_expected_fields: u16 = 0;
         let mut max_expected_fields: u16 = 0;
+        let mut started_optionals = false;
         for field in &self.fields {
             max_expected_fields += 1;
 
-            if !field.attrs.optional {
+            if field.attrs.optional {
+                started_optionals = true;
+            }
+            if !started_optionals {
                 min_expected_fields += 1;
             }
         }
-        let min_expected_bytes = (min_expected_fields + 7) / 8;
+        let max_expected_bytes = (max_expected_fields + 7) / 8;
 
         for (i, field) in self.fields.iter().enumerate().rev() {
             let field_name = &field.ident;
@@ -147,7 +165,7 @@ impl DeriveBitString {
 
             impl #impl_generics ::der::EncodeValue for #ident #ty_generics #where_clause {
                 fn value_len(&self) -> der::Result<der::Length> {
-                    Ok(der::Length::new(#min_expected_bytes + 1))
+                    Ok(der::Length::new(#max_expected_bytes + 1))
                 }
 
                 fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
@@ -155,25 +173,7 @@ impl DeriveBitString {
                     use der::FixedLenBitString as _;
 
                     let arr = [#(#encode_bytes),*];
-
-                    let min_bits = {
-                        let max_bits = *Self::ALLOWED_LEN_RANGE.end();
-                        let last_byte_bits = (max_bits % 8) as u8;
-                        let bs = ::der::asn1::BitStringRef::new(8 - last_byte_bits, &arr)?;
-
-                        let mut min_bits = *Self::ALLOWED_LEN_RANGE.start();
-
-                        // find last lit bit
-                        for bit_index in Self::ALLOWED_LEN_RANGE.rev() {
-                            if bs.get(bit_index as usize).unwrap_or_default() {
-                                min_bits = bit_index + 1;
-                                break;
-                            }
-                        }
-                        min_bits
-                    };
-
-                    let last_byte_bits = (min_bits % 8) as u8;
+                    let last_byte_bits = (#max_expected_fields % 8) as u8;
                     let bs = ::der::asn1::BitStringRef::new(8 - last_byte_bits, &arr)?;
                     bs.encode_value(writer)
                 }
