@@ -113,7 +113,6 @@ impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
     }
 }
 
-/// Hack for simplifying the custom derive use case.
 impl<'a, const N: usize> TryFrom<&'a [u8; N]> for OctetStringRef<'a> {
     type Error = Error;
 
@@ -122,7 +121,6 @@ impl<'a, const N: usize> TryFrom<&'a [u8; N]> for OctetStringRef<'a> {
     }
 }
 
-/// Hack for simplifying the custom derive use case.
 impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
     type Error = Error;
 

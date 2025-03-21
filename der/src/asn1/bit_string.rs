@@ -193,7 +193,6 @@ impl<'a> TryFrom<&&'a [u8]> for BitStringRef<'a> {
     }
 }
 
-/// Hack for simplifying the custom derive use case.
 impl<'a, const N: usize> TryFrom<&'a [u8; N]> for BitStringRef<'a> {
     type Error = Error;
 
@@ -202,7 +201,6 @@ impl<'a, const N: usize> TryFrom<&'a [u8; N]> for BitStringRef<'a> {
     }
 }
 
-/// Hack for simplifying the custom derive use case.
 impl<'a, const N: usize> TryFrom<BitStringRef<'a>> for [u8; N] {
     type Error = Error;
 
