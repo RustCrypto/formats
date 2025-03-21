@@ -207,7 +207,7 @@ impl<'a, const N: usize> TryFrom<BitStringRef<'a>> for [u8; N] {
     type Error = Error;
 
     fn try_from(bit_string: BitStringRef<'a>) -> Result<Self> {
-        let expected_len = Length::new_usize(N)?;
+        let expected_len = Length::try_from(N)?;
         let bytes = bit_string
             .as_bytes()
             .ok_or_else(|| Tag::BitString.value_error())?;
