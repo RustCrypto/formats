@@ -193,6 +193,24 @@ impl<'a> TryFrom<&&'a [u8]> for BitStringRef<'a> {
     }
 }
 
+impl<'a, const N: usize> TryFrom<&'a [u8; N]> for BitStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(bytes: &'a [u8; N]) -> Result<BitStringRef<'a>> {
+        BitStringRef::from_bytes(bytes)
+    }
+}
+
+impl<'a, const N: usize> TryFrom<BitStringRef<'a>> for [u8; N] {
+    type Error = Error;
+
+    fn try_from(bit_string: BitStringRef<'a>) -> Result<Self> {
+        let bytes: &[u8] = TryFrom::try_from(bit_string)?;
+
+        bytes.try_into().map_err(|_| Tag::BitString.length_error())
+    }
+}
+
 impl<'a> TryFrom<BitStringRef<'a>> for &'a [u8] {
     type Error = Error;
 

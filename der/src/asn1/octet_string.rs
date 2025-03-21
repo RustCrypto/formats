@@ -113,6 +113,25 @@ impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
     }
 }
 
+impl<'a, const N: usize> TryFrom<&'a [u8; N]> for OctetStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(byte_slice: &'a [u8; N]) -> Result<Self, Error> {
+        OctetStringRef::new(byte_slice)
+    }
+}
+
+impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
+    type Error = Error;
+
+    fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
+        octet_string
+            .as_bytes()
+            .try_into()
+            .map_err(|_| Tag::OctetString.length_error())
+    }
+}
+
 #[cfg(feature = "alloc")]
 pub use self::allocating::OctetString;
 

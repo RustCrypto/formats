@@ -528,7 +528,7 @@ mod sequence {
         pub owned_optional_implicit_bytes: Option<Vec<u8>>,
 
         #[asn1(
-            type = "OCTET STRING",
+            type = "BIT STRING",
             context_specific = "6",
             optional = "true",
             tag_mode = "EXPLICIT"
@@ -565,6 +565,85 @@ mod sequence {
         let der_encoded = obj.to_der().unwrap();
         let obj_decoded =
             TypeCheckOwnedSequenceFieldAttributeCombinations::from_der(&der_encoded).unwrap();
+        assert_eq!(obj, obj_decoded);
+    }
+
+    #[derive(Sequence, Default, Eq, PartialEq, Debug)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    pub struct TypeCheckArraysSequenceFieldAttributeCombinations {
+        #[asn1(type = "OCTET STRING", deref = "true")]
+        pub array_bytes: [u8; 2],
+
+        #[asn1(type = "BIT STRING", deref = "true")]
+        pub array_bits: [u8; 2],
+
+        #[asn1(type = "OCTET STRING", context_specific = "0", deref = "true")]
+        pub array_implicit_bytes: [u8; 2],
+
+        #[asn1(type = "BIT STRING", context_specific = "1", deref = "true")]
+        pub array_implicit_bits: [u8; 2],
+
+        #[asn1(
+            type = "OCTET STRING",
+            context_specific = "2",
+            tag_mode = "EXPLICIT",
+            deref = "true"
+        )]
+        pub array_explicit_bytes: [u8; 2],
+
+        #[asn1(
+            type = "BIT STRING",
+            context_specific = "3",
+            tag_mode = "EXPLICIT",
+            deref = "true"
+        )]
+        pub array_explicit_bits: [u8; 2],
+
+        #[asn1(type = "BIT STRING", context_specific = "4", optional = "true")]
+        pub array_optional_implicit_bits: Option<[u8; 2]>,
+
+        #[asn1(type = "OCTET STRING", context_specific = "5", optional = "true")]
+        pub array_optional_implicit_bytes: Option<[u8; 2]>,
+
+        #[asn1(
+            type = "BIT STRING",
+            context_specific = "6",
+            optional = "true",
+            tag_mode = "EXPLICIT"
+        )]
+        pub array_optional_explicit_bits: Option<[u8; 2]>,
+
+        #[asn1(
+            type = "OCTET STRING",
+            context_specific = "7",
+            optional = "true",
+            tag_mode = "EXPLICIT"
+        )]
+        pub array_optional_explicit_bytes: Option<[u8; 2]>,
+    }
+
+    #[test]
+    fn type_combinations_arrays_instance() {
+        let obj = TypeCheckArraysSequenceFieldAttributeCombinations {
+            array_bytes: [0xAA, 0xBB],
+            array_bits: [0xCC, 0xDD],
+
+            array_implicit_bytes: [0, 1],
+            array_implicit_bits: [2, 3],
+
+            array_explicit_bytes: [4, 5],
+            array_explicit_bits: [6, 7],
+
+            array_optional_implicit_bits: Some([8, 9]),
+            array_optional_implicit_bytes: Some([10, 11]),
+
+            array_optional_explicit_bits: Some([12, 13]),
+            array_optional_explicit_bytes: Some([14, 15]),
+        };
+
+        let der_encoded = obj.to_der().unwrap();
+        let obj_decoded =
+            TypeCheckArraysSequenceFieldAttributeCombinations::from_der(&der_encoded).unwrap();
         assert_eq!(obj, obj_decoded);
     }
 
