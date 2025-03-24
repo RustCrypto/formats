@@ -11,7 +11,7 @@
 // TODO: fix needless_question_mark in the derive crate
 #![allow(clippy::needless_question_mark)]
 
-/// Custom derive test cases for the `Sequence` macro with heapless crate, without alloc.
+/// Custom derive test cases for the `Sequence` macro, without alloc.
 mod sequence {
     use der::Decode;
     use der::Encode;
