@@ -7,7 +7,9 @@
 //!
 //! $ cargo expand --test derive_heapless --all-features
 
-#![cfg(all(feature = "derive"))]
+#![cfg(feature = "derive")]
+// TODO: fix needless_question_mark in the derive crate
+#![allow(clippy::needless_question_mark)]
 
 /// Custom derive test cases for the `Sequence` macro with heapless crate, without alloc.
 mod sequence {
@@ -91,7 +93,7 @@ mod sequence {
 
         let der_encoded = obj.encode_to_slice(&mut buf).unwrap();
         let obj_decoded =
-            TypeCheckArraysSequenceFieldAttributeCombinations::from_der(&der_encoded).unwrap();
+            TypeCheckArraysSequenceFieldAttributeCombinations::from_der(der_encoded).unwrap();
         assert_eq!(obj, obj_decoded);
     }
 }
@@ -141,5 +143,25 @@ FB E7 1F 85 26 15 60 73  7C 24 B0 10 24 F9 2A 02
         let pk_encoded = public_key.encode_to_slice(&mut buf).unwrap();
 
         assert_eq!(pk_encoded, ROMANIA_PUBLIC_KEY);
+    }
+
+    #[derive(Sequence, Debug, Clone)]
+    pub struct HeaplessTypeCheck {
+        #[asn1(type = "OCTET STRING", deref = "true")]
+        pub octet_string_heapless: heapless::Vec<u8, 16>,
+
+        #[asn1(type = "OCTET STRING", deref = "true", tag_mode = "IMPLICIT")]
+        pub octet_string_heapless_implicit: heapless::Vec<u8, 16>,
+
+        #[asn1(context_specific = "0", type = "OCTET STRING", optional = "true")]
+        pub opt_octet_string_heapless: Option<heapless::Vec<u8, 16>>,
+
+        #[asn1(
+            context_specific = "1",
+            type = "OCTET STRING",
+            optional = "true",
+            tag_mode = "IMPLICIT"
+        )]
+        pub opt_octet_string_heapless_implicit: Option<heapless::Vec<u8, 16>>,
     }
 }
