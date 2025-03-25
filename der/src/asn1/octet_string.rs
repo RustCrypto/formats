@@ -132,6 +132,27 @@ impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
     }
 }
 
+#[cfg(feature = "heapless")]
+impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for heapless::Vec<u8, N> {
+    type Error = Error;
+
+    fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
+        octet_string
+            .as_bytes()
+            .try_into()
+            .map_err(|_| Tag::OctetString.length_error())
+    }
+}
+
+#[cfg(feature = "heapless")]
+impl<'a, const N: usize> TryFrom<&'a heapless::Vec<u8, N>> for OctetStringRef<'a> {
+    type Error = Error;
+
+    fn try_from(byte_vec: &'a heapless::Vec<u8, N>) -> Result<Self, Error> {
+        OctetStringRef::new(byte_vec)
+    }
+}
+
 #[cfg(feature = "alloc")]
 pub use self::allocating::OctetString;
 
