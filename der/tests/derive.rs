@@ -706,6 +706,69 @@ mod decode_value {
     }
 }
 
+/// Custom derive test cases for the `DecodeValue` + `EncodeValue` macro combo.
+mod decode_encode_value {
+    use der::{
+        Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, IsConstructed, Length,
+        Sequence, SliceReader, SliceWriter, Tag, TagNumber,
+    };
+    use hex_literal::hex;
+
+    /// Example of a structure, that does not have a tag
+    #[derive(DecodeValue, EncodeValue, Default, Eq, PartialEq, Debug)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    struct DecodeEncodeCheck<'a> {
+        #[asn1(type = "OCTET STRING", context_specific = "5")]
+        field: &'a [u8],
+    }
+    impl IsConstructed for DecodeEncodeCheck<'_> {
+        const CONSTRUCTED: bool = true;
+    }
+
+    // TODO(dishmaker): fix test after IMPLICIT/EXPLICIT trait split
+    // #[derive(Sequence, Default, Eq, PartialEq, Debug)]
+    // #[asn1(tag_mode = "IMPLICIT")]
+    // struct ImplicitWrapper<'a> {
+    //     #[asn1(context_specific = "0")]
+    //     implicit_decode_encode: DecodeEncodeCheck<'a>,
+    // }
+
+    #[test]
+    fn sequence_decode_encode_custom_implicit() {
+        // TODO(dishmaker): fix test after IMPLICIT/EXPLICIT trait split
+        // let obj = ImplicitWrapper {
+        //     implicit_decode_encode: DecodeEncodeCheck {
+        //         field: &[0x33, 0x44],
+        //     },
+        // };
+
+        // let der_encoded = obj.to_der().unwrap();
+
+        // assert_eq!(der_encoded, hex!("80 04 85 02 33 44"));
+        // let obj_decoded = ImplicitWrapper::from_der(&der_encoded);
+        // assert_eq!(obj, obj_decoded);
+
+        let header = Header {
+            tag: Tag::ContextSpecific {
+                constructed: true,
+                number: TagNumber(0),
+            },
+            length: Length::new(6u16),
+        };
+        let obj = DecodeEncodeCheck {
+            field: &[0x33, 0x44],
+        };
+
+        let mut buf = [0u8; 100];
+        let mut writer = SliceWriter::new(&mut buf);
+        obj.encode_value(&mut writer).unwrap();
+        let len = obj.value_len().unwrap();
+
+        let mut reader = SliceReader::new(&mut buf).unwrap();
+        DecodeEncodeCheck::decode_value(&mut reader, header);
+    }
+}
+
 /// Custom derive test cases for the `BitString` macro.
 #[cfg(feature = "std")]
 mod bitstring {
