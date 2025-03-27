@@ -180,6 +180,57 @@ mod choice {
             assert_eq!(TIME_DER, encoder.finish().unwrap());
         }
     }
+
+    mod generic_implicit {
+        use der::{
+            Choice, Decode, Encode, SliceWriter,
+            asn1::{BitStringRef, GeneralizedTime},
+        };
+        use hex_literal::hex;
+
+        /// PKCS#15 ObjectValue
+        #[derive(Choice, Clone, Debug, Eq, PartialEq)]
+        pub enum ObjectValue<T>
+        where
+            for<'a> T: Encode + Decode<'a> + EncodeValue + Tagged,
+        {
+            #[asn1(tag_mode = "EXPLICIT")]
+            Indirect(ReferencedValue),
+
+            #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
+            Direct(T),
+        }
+
+        /// ```asn1
+        /// RSAPublicKeyChoice ::= CHOICE {
+        ///     raw RSAPublicKey,
+        ///     spki [1] SubjectPublicKeyInfo, -- See ISO/IEC 9594-8. Must contain a public RSA key.
+        ///     ...
+        /// }
+        /// ```
+        #[derive(Choice, Clone, Debug, Eq, PartialEq)]
+        #[serde(deny_unknown_fields)]
+        pub enum RSAPublicKeyChoice {
+            /// `raw RSAPublicKey`
+            Raw(RSAPublicKey),
+        }
+
+        // TODO
+        pub type ReferencedValue = ReferencedValueChoice;
+
+        /// ```asn1
+        /// ReferencedValue {Type} ::= CHOICE {
+        ///     path Path,
+        ///     url URL
+        ///     } (CONSTRAINED BY {-- 'path' or 'url' shall point to an object of type -- Type})
+        /// ```
+        #[derive(Clone, Debug, Eq, PartialEq, Choice, Serialize, Deserialize)]
+        pub enum ReferencedValueChoice {
+            Path(Path),
+            // todo
+            URL(Url),
+        }
+    }
 }
 
 /// Custom derive test cases for the `Enumerated` macro.
