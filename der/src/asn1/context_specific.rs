@@ -258,7 +258,10 @@ where
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::ContextSpecific;
-    use crate::{Decode, Encode, SliceReader, TagMode, TagNumber, asn1::BitStringRef};
+    use crate::{
+        Decode, Encode, SliceReader, TagMode, TagNumber,
+        asn1::{BitStringRef, ContextSpecificRef, SetOf, Utf8StringRef},
+    };
     use hex_literal::hex;
 
     // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`
@@ -352,5 +355,76 @@ mod tests {
             ContextSpecific::<u8>::decode_explicit(&mut reader, tag).unwrap(),
             None
         );
+    }
+
+    #[test]
+    fn context_specific_explicit_ref() {
+        let mut set = SetOf::new();
+        set.insert(8u16).unwrap();
+        set.insert(7u16).unwrap();
+
+        let field = ContextSpecificRef::<SetOf<u16, 2>> {
+            value: &set,
+            tag_number: TagNumber(2),
+            tag_mode: TagMode::Explicit,
+        };
+
+        let mut buf = [0u8; 16];
+        let encoded = field.encode_to_slice(&mut buf).unwrap();
+        assert_eq!(
+            encoded,
+            &[
+                /* CONTEXT-SPECIFIC [2] */ 0xA2, 0x08, /* SET 0x11 | 0x20 */ 0x31, 0x06,
+                /* INTEGER */ 0x02, 0x01, 0x07, /* INTEGER */ 0x02, 0x01, 0x08
+            ]
+        );
+
+        let mut reader = SliceReader::new(encoded).unwrap();
+        let field = ContextSpecific::<SetOf<u16, 2>>::decode_explicit(&mut reader, TagNumber(2))
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(field.value.len(), 2);
+        assert_eq!(field.value.get(0).cloned(), Some(7));
+        assert_eq!(field.value.get(1).cloned(), Some(8));
+    }
+
+    #[test]
+    fn context_specific_implicit_ref() {
+        let hello = Utf8StringRef::new("Hello").unwrap();
+        let world = Utf8StringRef::new("world").unwrap();
+
+        let mut set = SetOf::new();
+        set.insert(hello).unwrap();
+        set.insert(world).unwrap();
+
+        let field = ContextSpecificRef::<SetOf<Utf8StringRef<'_>, 2>> {
+            value: &set,
+            tag_number: TagNumber(2),
+            tag_mode: TagMode::Implicit,
+        };
+
+        let mut buf = [0u8; 16];
+        let encoded = field.encode_to_slice(&mut buf).unwrap();
+        assert_eq!(
+            encoded,
+            &[
+                0xA2, 0x0E, // CONTEXT-SPECIFIC [2]
+                0x0C, 0x05, b'H', b'e', b'l', b'l', b'o', // UTF8String "Hello"
+                0x0C, 0x05, b'w', b'o', b'r', b'l', b'd', // UTF8String "world"
+            ]
+        );
+
+        let mut reader = SliceReader::new(encoded).unwrap();
+        let field = ContextSpecific::<SetOf<Utf8StringRef<'_>, 2>>::decode_implicit(
+            &mut reader,
+            TagNumber(2),
+        )
+        .unwrap()
+        .unwrap();
+
+        assert_eq!(field.value.len(), 2);
+        assert_eq!(field.value.get(0).cloned(), Some(hello));
+        assert_eq!(field.value.get(1).cloned(), Some(world));
     }
 }
