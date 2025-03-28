@@ -441,8 +441,19 @@ mod sequence {
         pub typed: &'a [u8],
         #[asn1(context_specific = "0")]
         pub context_specific: bool,
+
         #[asn1(optional = "true")]
         pub optional: Option<bool>,
+
+        #[asn1(type = "OCTET STRING", optional = "true")]
+        pub optional_octet_string: Option<&'a [u8]>,
+
+        #[asn1(type = "BIT STRING", optional = "true")]
+        pub optional_bit_string: Option<&'a [u8]>,
+
+        #[asn1(optional = "true")]
+        pub optional_oid: Option<ObjectIdentifier>,
+
         #[asn1(default = "default_false_example")]
         pub default: bool,
         #[asn1(type = "BIT STRING", context_specific = "1")]
