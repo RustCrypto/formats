@@ -183,21 +183,45 @@ mod choice {
 
     mod generic_implicit {
         use der::{
-            Choice, Decode, Encode, SliceWriter,
+            Choice, Decode, DecodeValue, Encode, EncodeValue, FixedTag, IsConstructed, Sequence,
+            SliceWriter, Tagged,
             asn1::{BitStringRef, GeneralizedTime},
         };
+
         use hex_literal::hex;
 
         /// PKCS#15 ObjectValue
+        /// ```asn1
+        /// ObjectValue { Type } ::= CHOICE {
+        ///     indirect Path,
+        ///     direct [0] Type,
+        ///     }
+        /// ```
+        ///
+        /// Example:
+        /// ```txt
+        ///
+        /// 30 06
+        ///      30 04
+        ///           04 02 43 32
+        /// ```
+        ///
+        /// ```txt
+        /// value ObjectValue CHOICE
+        ///     indirect ReferencedValue CHOICE
+        ///         path Path SEQUENCE: tag = [UNIVERSAL 16] constructed; length = 4
+        ///             efidOrPath OCTET STRING: tag = [UNIVERSAL 4] primitive; length = 2
+        ///                 0x4332
+        ///
+        /// ```
         #[derive(Choice, Clone, Debug, Eq, PartialEq)]
         pub enum ObjectValue<T>
         where
-            for<'a> T: Encode + Decode<'a> + EncodeValue + Tagged,
+            for<'a> T: Encode + Decode<'a> + EncodeValue + DecodeValue<'a> + FixedTag,
         {
-            #[asn1(tag_mode = "EXPLICIT")]
-            Indirect(ReferencedValue),
+            Indirect(Path),
 
-            #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
+            #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
             Direct(T),
         }
 
@@ -209,26 +233,37 @@ mod choice {
         /// }
         /// ```
         #[derive(Choice, Clone, Debug, Eq, PartialEq)]
-        #[serde(deny_unknown_fields)]
         pub enum RSAPublicKeyChoice {
             /// `raw RSAPublicKey`
             Raw(RSAPublicKey),
+
+            /// `spki [1] SubjectPublicKeyInfo`
+            #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
+            Spki(()),
+        }
+        #[derive(Sequence, Clone, Debug, Eq, PartialEq)]
+
+        pub struct RSAPublicKey {
+            rsa_key_field: u8,
         }
 
-        // TODO
-        pub type ReferencedValue = ReferencedValueChoice;
+        // pub type ReferencedValue = Path;
 
-        /// ```asn1
-        /// ReferencedValue {Type} ::= CHOICE {
-        ///     path Path,
-        ///     url URL
-        ///     } (CONSTRAINED BY {-- 'path' or 'url' shall point to an object of type -- Type})
-        /// ```
-        #[derive(Clone, Debug, Eq, PartialEq, Choice, Serialize, Deserialize)]
-        pub enum ReferencedValueChoice {
-            Path(Path),
-            // todo
-            URL(Url),
+        #[derive(Sequence, Clone, Debug, Eq, PartialEq)]
+        pub struct Path {
+            path_field: u8,
+        }
+
+        #[test]
+        fn test_roundtrip_objectvalue_rsa() {
+            let rsa_key = RSAPublicKey { rsa_key_field: 1 };
+            let rsa_choice = RSAPublicKeyChoice::Raw(rsa_key);
+            let object_value = ObjectValue::Direct(rsa_choice);
+
+            let obj_der = object_value.to_der().unwrap();
+
+            let dec_object_value = ObjectValue::<RSAPublicKeyChoice>::from_der(obj_der).unwrap();
+            assert_eq!(dec_object_value, object_value);
         }
     }
 }
