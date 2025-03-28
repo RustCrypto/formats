@@ -180,6 +180,92 @@ mod choice {
             assert_eq!(TIME_DER, encoder.finish().unwrap());
         }
     }
+
+    mod generic_implicit {
+        use der::{
+            Choice, Decode, DecodeValue, Encode, EncodeValue, FixedTag, IsConstructed, Sequence,
+            SliceWriter, Tagged,
+            asn1::{BitStringRef, GeneralizedTime},
+        };
+
+        use hex_literal::hex;
+
+        /// PKCS#15 ObjectValue
+        /// ```asn1
+        /// ObjectValue { Type } ::= CHOICE {
+        ///     indirect Path,
+        ///     direct [0] Type,
+        ///     }
+        /// ```
+        ///
+        /// Example:
+        /// ```txt
+        ///
+        /// 30 06
+        ///      30 04
+        ///           04 02 43 32
+        /// ```
+        ///
+        /// ```txt
+        /// value ObjectValue CHOICE
+        ///     indirect ReferencedValue CHOICE
+        ///         path Path SEQUENCE: tag = [UNIVERSAL 16] constructed; length = 4
+        ///             efidOrPath OCTET STRING: tag = [UNIVERSAL 4] primitive; length = 2
+        ///                 0x4332
+        ///
+        /// ```
+        #[derive(Choice, Clone, Debug, Eq, PartialEq)]
+        pub enum ObjectValue<T>
+        where
+            for<'a> T: Encode + Decode<'a> + EncodeValue + DecodeValue<'a> + FixedTag,
+        {
+            Indirect(Path),
+
+            #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
+            Direct(T),
+        }
+
+        /// ```asn1
+        /// RSAPublicKeyChoice ::= CHOICE {
+        ///     raw RSAPublicKey,
+        ///     spki [1] SubjectPublicKeyInfo, -- See ISO/IEC 9594-8. Must contain a public RSA key.
+        ///     ...
+        /// }
+        /// ```
+        #[derive(Choice, Clone, Debug, Eq, PartialEq)]
+        pub enum RSAPublicKeyChoice {
+            /// `raw RSAPublicKey`
+            Raw(RSAPublicKey),
+
+            /// `spki [1] SubjectPublicKeyInfo`
+            #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
+            Spki(()),
+        }
+        #[derive(Sequence, Clone, Debug, Eq, PartialEq)]
+
+        pub struct RSAPublicKey {
+            rsa_key_field: u8,
+        }
+
+        // pub type ReferencedValue = Path;
+
+        #[derive(Sequence, Clone, Debug, Eq, PartialEq)]
+        pub struct Path {
+            path_field: u8,
+        }
+
+        #[test]
+        fn test_roundtrip_objectvalue_rsa() {
+            let rsa_key = RSAPublicKey { rsa_key_field: 1 };
+            let rsa_choice = RSAPublicKeyChoice::Raw(rsa_key);
+            let object_value = ObjectValue::Direct(rsa_choice);
+
+            let obj_der = object_value.to_der().unwrap();
+
+            let dec_object_value = ObjectValue::<RSAPublicKeyChoice>::from_der(obj_der).unwrap();
+            assert_eq!(dec_object_value, object_value);
+        }
+    }
 }
 
 /// Custom derive test cases for the `Enumerated` macro.
