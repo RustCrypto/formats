@@ -1,6 +1,6 @@
 //! ASN.1 tag numbers
 
-use super::Tag;
+use super::{Class, Tag};
 use core::fmt;
 
 /// ASN.1 tag numbers (i.e. lower 5 bits of a [`Tag`]).
@@ -33,7 +33,7 @@ impl TagNumber {
     }
 
     /// Create an `APPLICATION` tag with this tag number.
-    pub fn application(self, constructed: bool) -> Tag {
+    pub const fn application(self, constructed: bool) -> Tag {
         Tag::Application {
             constructed,
             number: self,
@@ -41,7 +41,7 @@ impl TagNumber {
     }
 
     /// Create a `CONTEXT-SPECIFIC` tag with this tag number.
-    pub fn context_specific(self, constructed: bool) -> Tag {
+    pub const fn context_specific(self, constructed: bool) -> Tag {
         Tag::ContextSpecific {
             constructed,
             number: self,
@@ -49,10 +49,19 @@ impl TagNumber {
     }
 
     /// Create a `PRIVATE` tag with this tag number.
-    pub fn private(self, constructed: bool) -> Tag {
+    pub const fn private(self, constructed: bool) -> Tag {
         Tag::Private {
             constructed,
             number: self,
+        }
+    }
+    /// Create a `APPLICATION`, `CONTEXT-SPECIFIC` or `PRIVATE` tag with this tag number.
+    pub const fn custom_class(self, class: Class, constructed: bool) -> Option<Tag> {
+        match class {
+            Class::Universal => None,
+            Class::Application => Some(self.application(constructed)),
+            Class::ContextSpecific => Some(self.context_specific(constructed)),
+            Class::Private => Some(self.private(constructed)),
         }
     }
 
