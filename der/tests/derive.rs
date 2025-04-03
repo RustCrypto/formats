@@ -112,7 +112,7 @@ mod choice {
     /// `Choice` with `IMPLICIT` tagging.
     mod implicit {
         use der::{
-            Choice, Decode, Encode, SliceWriter,
+            Choice, Decode, Encode, Sequence, SliceWriter,
             asn1::{BitStringRef, GeneralizedTime},
         };
         use hex_literal::hex;
@@ -178,6 +178,13 @@ mod choice {
             let mut encoder = SliceWriter::new(&mut buf);
             cs_time.encode(&mut encoder).unwrap();
             assert_eq!(TIME_DER, encoder.finish().unwrap());
+        }
+
+        /// Test case for `CHOICE` inside `[0]` `EXPLICIT` tag in `SEQUENCE`.
+        #[derive(Sequence, Debug, Eq, PartialEq)]
+        pub struct ExplicitChoiceInsideSequence<'a> {
+            #[asn1(tag_mode = "EXPLICIT", context_specific = "0")]
+            choice_field: ImplicitChoice<'a>,
         }
     }
 }
@@ -709,12 +716,11 @@ mod decode_value {
 /// Custom derive test cases for the `DecodeValue` + `EncodeValue` macro combo.
 mod decode_encode_value {
     use der::{
-        Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, IsConstructed, Length,
-        Sequence, SliceReader, SliceWriter, Tag, TagNumber,
+        DecodeValue, EncodeValue, Header, IsConstructed, Length, SliceReader, SliceWriter, Tag,
+        TagNumber,
     };
-    use hex_literal::hex;
 
-    /// Example of a structure, that does not have a tag
+    /// Example of a structure, that does not have a tag and is not a sequence
     #[derive(DecodeValue, EncodeValue, Default, Eq, PartialEq, Debug)]
     #[asn1(tag_mode = "IMPLICIT")]
     struct DecodeEncodeCheck<'a> {
@@ -762,10 +768,9 @@ mod decode_encode_value {
         let mut buf = [0u8; 100];
         let mut writer = SliceWriter::new(&mut buf);
         obj.encode_value(&mut writer).unwrap();
-        let len = obj.value_len().unwrap();
 
-        let mut reader = SliceReader::new(&mut buf).unwrap();
-        DecodeEncodeCheck::decode_value(&mut reader, header);
+        let mut reader = SliceReader::new(&buf).unwrap();
+        let _ = DecodeEncodeCheck::decode_value(&mut reader, header);
     }
 }
 
