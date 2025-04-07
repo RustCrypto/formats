@@ -17,13 +17,13 @@ rust-version = "1.81"
 
 [dependencies]
 const-oid = { version = "0.10.0-rc.0", features = ["db"] }
-der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "flagset", "oid"] }
+der = { version = "0.8.0-rc.1", features = ["alloc", "derive", "flagset", "oid"] }
 spki = { version = "0.8.0-rc.0", features = ["alloc"] }
 
 # optional dependencies
 arbitrary = { version = "1.4", features = ["derive"], optional = true }
 async-signature = { version = "=0.6.0-pre.4", features = ["digest", "rand_core"], optional = true }
-sha1 = { version = "0.11.0-pre.4", optional = true }
+sha1 = { version = "0.11.0-pre.4",  default-features = false, optional = true }
 signature = { version = "=2.3.0-pre.4", features = ["rand_core"], optional = true }
 tls_codec = { version = "0.4.0", default-features = false, features = ["derive"], optional = true }
 
@@ -44,7 +44,7 @@ default = ["pem", "std"]
 std = ["der/std", "spki/std", "tls_codec?/std"]
 
 arbitrary = ["dep:arbitrary", "std", "der/arbitrary", "spki/arbitrary"]
-builder = ["async-signature", "std", "sha1/default", "signature"]
+builder = ["dep:async-signature", "dep:sha1", "dep:signature"]
 hazmat = []
 pem = ["der/pem", "spki/pem"]
 sct = ["dep:tls_codec"]
