@@ -143,7 +143,10 @@ mod tests {
     use hex_literal::hex;
 
     /// OID `1.2.840.10045.2.1` encoded as ASN.1 BER/DER
-    const EXAMPLE_OID_BER: &[u8] = &hex!("2A8648CE3D0201");
+    const EXAMPLE_OID_BER: &[u8] = &hex!("2A 86 48 CE 3D 02 01");
+
+    /// OID `1.1.1.270000000` encoded as ASN.1 BER/DER
+    const EXAMPLE_LONG_OID_BER: &[u8] = &hex!("29 01 81 80 DF BF 00");
 
     #[test]
     fn base128_byte() {
@@ -166,5 +169,15 @@ mod tests {
         let encoder = encoder.arc(2).unwrap();
         let encoder = encoder.arc(1).unwrap();
         assert_eq!(&encoder.bytes[..encoder.cursor], EXAMPLE_OID_BER);
+    }
+
+    #[test]
+    fn encode_large() {
+        let encoder = Encoder::<7>::new();
+        let encoder = encoder.arc(1).unwrap();
+        let encoder = encoder.arc(1).unwrap();
+        let encoder = encoder.arc(1).unwrap();
+        let encoder = encoder.arc(270000000).unwrap();
+        assert_eq!(&encoder.bytes[..encoder.cursor], EXAMPLE_LONG_OID_BER);
     }
 }
