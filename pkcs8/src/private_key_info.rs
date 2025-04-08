@@ -95,7 +95,7 @@ pub struct PrivateKeyInfo<Params, Key, PubKey> {
     /// X.509 `AlgorithmIdentifier` for the private key type.
     pub algorithm: AlgorithmIdentifier<Params>,
 
-    /// Private key data.
+    /// Private key data. Exact content format is different between algorithms.
     pub private_key: Key,
 
     /// Public key data, optionally available if version is V2.
