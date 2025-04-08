@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.10.1 (2025-04-08)
+### Added
+- RFC9688 OIDs ([#1692])
+
+### Fixed
+- Encoder `base128_len` calculation ([#1753])
+
+[#1692]: https://github.com/RustCrypto/formats/pull/1692
+[#1753]: https://github.com/RustCrypto/formats/pull/1753
+
 ## 0.10.0 (2025-02-24)
 ### Added
 - `ObjectIdentifier::starts_with` ([#964])
