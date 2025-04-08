@@ -43,7 +43,7 @@ rand = "0.8.5"
 rsa = { version = "=0.10.0-pre.3", features = ["sha2"] }
 ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
 p256 = "=0.14.0-pre.2"
-tokio = { version = "1.43.0", features = ["macros", "rt"] }
+tokio = { version = "1.43.1", features = ["macros", "rt"] }
 x509-cert = { version = "=0.3.0-pre.0", features = ["pem"] }
 
 [features]
