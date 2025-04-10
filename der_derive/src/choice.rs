@@ -97,6 +97,10 @@ impl DeriveChoice {
                 }
             }
 
+            impl #impl_generics ::der::IsConstructed for #ident #ty_generics #where_clause {
+                const CONSTRUCTED: bool = true;
+            }
+
             impl #impl_generics ::der::Decode<#lifetime> for #ident #ty_generics #where_clause {
                 type Error = #error;
 

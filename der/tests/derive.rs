@@ -112,7 +112,7 @@ mod choice {
     /// `Choice` with `IMPLICIT` tagging.
     mod implicit {
         use der::{
-            Choice, Decode, Encode, SliceWriter,
+            Choice, Decode, Encode, Sequence, SliceWriter,
             asn1::{BitStringRef, GeneralizedTime},
         };
         use hex_literal::hex;
@@ -178,6 +178,13 @@ mod choice {
             let mut encoder = SliceWriter::new(&mut buf);
             cs_time.encode(&mut encoder).unwrap();
             assert_eq!(TIME_DER, encoder.finish().unwrap());
+        }
+
+        /// Test case for `CHOICE` inside `[0]` `EXPLICIT` tag in `SEQUENCE`.
+        #[derive(Sequence, Debug, Eq, PartialEq)]
+        pub struct ExplicitChoiceInsideSequence<'a> {
+            #[asn1(tag_mode = "EXPLICIT", context_specific = "0")]
+            choice_field: ImplicitChoice<'a>,
         }
     }
 }
@@ -703,6 +710,67 @@ mod decode_value {
         let obj = DecodeOnlyCheck::from_der(&hex!("30 04 85 02 33 44")).unwrap();
 
         assert_eq!(obj.field, &[0x33, 0x44]);
+    }
+}
+
+/// Custom derive test cases for the `DecodeValue` + `EncodeValue` macro combo.
+mod decode_encode_value {
+    use der::{
+        DecodeValue, EncodeValue, Header, IsConstructed, Length, SliceReader, SliceWriter, Tag,
+        TagNumber,
+    };
+
+    /// Example of a structure, that does not have a tag and is not a sequence
+    #[derive(DecodeValue, EncodeValue, Default, Eq, PartialEq, Debug)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    struct DecodeEncodeCheck<'a> {
+        #[asn1(type = "OCTET STRING", context_specific = "5")]
+        field: &'a [u8],
+    }
+    impl IsConstructed for DecodeEncodeCheck<'_> {
+        const CONSTRUCTED: bool = true;
+    }
+
+    // TODO(dishmaker): fix test after IMPLICIT/EXPLICIT trait split
+    // #[derive(Sequence, Default, Eq, PartialEq, Debug)]
+    // #[asn1(tag_mode = "IMPLICIT")]
+    // struct ImplicitWrapper<'a> {
+    //     #[asn1(context_specific = "0")]
+    //     implicit_decode_encode: DecodeEncodeCheck<'a>,
+    // }
+
+    #[test]
+    fn sequence_decode_encode_custom_implicit() {
+        // TODO(dishmaker): fix test after IMPLICIT/EXPLICIT trait split
+        // let obj = ImplicitWrapper {
+        //     implicit_decode_encode: DecodeEncodeCheck {
+        //         field: &[0x33, 0x44],
+        //     },
+        // };
+
+        // let der_encoded = obj.to_der().unwrap();
+
+        // assert_eq!(der_encoded, hex!("80 04 85 02 33 44"));
+        // let obj_decoded = ImplicitWrapper::from_der(&der_encoded);
+        // assert_eq!(obj, obj_decoded);
+
+        let header = Header {
+            tag: Tag::ContextSpecific {
+                constructed: true,
+                number: TagNumber(0),
+            },
+            length: Length::new(6u16),
+        };
+        let obj = DecodeEncodeCheck {
+            field: &[0x33, 0x44],
+        };
+
+        let mut buf = [0u8; 100];
+        let mut writer = SliceWriter::new(&mut buf);
+        obj.encode_value(&mut writer).unwrap();
+
+        let mut reader = SliceReader::new(&buf).unwrap();
+        let _ = DecodeEncodeCheck::decode_value(&mut reader, header);
     }
 }
 
