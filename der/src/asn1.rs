@@ -5,6 +5,7 @@
 mod internal_macros;
 
 mod any;
+mod any_custom_class;
 pub(crate) mod bit_string;
 #[cfg(feature = "alloc")]
 mod bmp_string;
@@ -32,6 +33,7 @@ mod videotex_string;
 
 pub use self::{
     any::AnyRef,
+    any_custom_class::{AnyCustomClassExplicit, AnyCustomClassImplicit},
     bit_string::{BitStringIter, BitStringRef},
     choice::Choice,
     context_specific::{ContextSpecific, ContextSpecificRef},
