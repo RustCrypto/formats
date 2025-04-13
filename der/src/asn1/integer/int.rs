@@ -302,6 +302,75 @@ mod allocating {
             IntRef { inner }
         }
     }
+
+    macro_rules! impl_from_traits {
+        ($($int:ty),+) => {
+            $(
+                impl TryFrom<$int> for Int {
+                    type Error = $crate::Error;
+
+                    fn try_from(value: $int) -> $crate::Result<Self> {
+                        let mut buf  = [0u8; 16];
+                        let mut writer = $crate::SliceWriter::new(&mut buf[..]);
+                        value.encode_value(&mut writer)?;
+                        let buf = writer.finish()?;
+                        Int::new(buf)
+                    }
+                }
+            )+
+        };
+    }
+
+    impl_from_traits!(i8, i16, i32, i64, i128);
+
+    #[cfg(test)]
+    #[allow(clippy::unwrap_used)]
+    mod tests {
+        use super::Int;
+
+        #[test]
+        fn from_uint() {
+            assert_eq!(Int::try_from(i8::MIN).unwrap().as_bytes(), &[0x80]);
+            assert_eq!(Int::try_from(i8::MAX).unwrap().as_bytes(), &[0x7F]);
+            assert_eq!(Int::try_from(i16::MIN).unwrap().as_bytes(), &[0x80, 0]);
+            assert_eq!(Int::try_from(i16::MAX).unwrap().as_bytes(), &[0x7F, 0xFF]);
+            assert_eq!(
+                Int::try_from(i32::MIN).unwrap().as_bytes(),
+                &[0x80, 0, 0, 0]
+            );
+            assert_eq!(
+                Int::try_from(i32::MAX).unwrap().as_bytes(),
+                &[0x7F, 0xFF, 0xFF, 0xFF]
+            );
+            assert_eq!(
+                Int::try_from(i64::MIN).unwrap().as_bytes(),
+                &[
+                    0x80, 0, 0, 0, //
+                    0, 0, 0, 0
+                ]
+            );
+            assert_eq!(
+                Int::try_from(i64::MAX).unwrap().as_bytes(),
+                &[
+                    0x7F, 0xFF, 0xFF, 0xFF, //
+                    0xFF, 0xFF, 0xFF, 0xFF //
+                ]
+            );
+            assert_eq!(
+                Int::try_from(i128::MIN).unwrap().as_bytes(),
+                &[0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            );
+            assert_eq!(
+                Int::try_from(i128::MAX).unwrap().as_bytes(),
+                &[
+                    0x7F, 0xFF, 0xFF, 0xFF, //
+                    0xFF, 0xFF, 0xFF, 0xFF, //
+                    0xFF, 0xFF, 0xFF, 0xFF, //
+                    0xFF, 0xFF, 0xFF, 0xFF, //
+                ]
+            );
+        }
+    }
 }
 
 /// Ensure `INTEGER` is canonically encoded.
