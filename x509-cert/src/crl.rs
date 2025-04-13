@@ -14,6 +14,9 @@ use alloc::vec::Vec;
 use der::asn1::BitString;
 use der::{Sequence, ValueOrd};
 
+#[cfg(feature = "pem")]
+use der::pem::PemLabel;
+
 /// `CertificateList` as defined in [RFC 5280 Section 5.1].
 ///
 /// ```text
@@ -31,6 +34,11 @@ pub struct CertificateList<P: Profile = Rfc5280> {
     pub tbs_cert_list: TbsCertList<P>,
     pub signature_algorithm: AlgorithmIdentifier,
     pub signature: BitString,
+}
+
+#[cfg(feature = "pem")]
+impl<P: Profile> PemLabel for CertificateList<P> {
+    const PEM_LABEL: &'static str = "X509 CRL";
 }
 
 /// Implicit intermediate structure from the ASN.1 definition of `TBSCertList`.
