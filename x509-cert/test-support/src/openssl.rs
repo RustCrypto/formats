@@ -38,6 +38,10 @@ pub fn check_certificate(pem: &[u8]) -> String {
     check_openssl_output(&["x509"], pem)
 }
 
+pub fn check_crl(pem: &[u8]) -> String {
+    check_openssl_output(&["crl"], pem)
+}
+
 pub fn check_request(pem: &[u8]) -> String {
     check_openssl_output(&["req", "-verify"], pem)
 }
