@@ -79,6 +79,12 @@ impl Time {
 
         Ok(())
     }
+
+    /// Creates a `Time` from the current date.
+    #[cfg(feature = "std")]
+    pub fn now() -> der::Result<Self> {
+        SystemTime::now().try_into()
+    }
 }
 
 impl fmt::Display for Time {
