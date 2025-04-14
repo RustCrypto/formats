@@ -54,17 +54,13 @@ impl Asn1Type {
 
     /// Get a `der::Decoder` object for a particular ASN.1 type
     pub fn decoder(self) -> TokenStream {
-        match self {
-            Asn1Type::BitString => quote!(::der::asn1::BitStringRef::decode(reader)?),
-            Asn1Type::Ia5String => quote!(::der::asn1::Ia5StringRef::decode(reader)?),
-            Asn1Type::GeneralizedTime => quote!(::der::asn1::GeneralizedTime::decode(reader)?),
-            Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef::decode(reader)?),
-            Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef::decode(reader)?),
-            Asn1Type::TeletexString => quote!(::der::asn1::TeletexStringRef::decode(reader)?),
-            Asn1Type::VideotexString => quote!(::der::asn1::VideotexStringRef::decode(reader)?),
-            Asn1Type::UtcTime => quote!(::der::asn1::UtcTime::decode(reader)?),
-            Asn1Type::Utf8String => quote!(::der::asn1::Utf8StringRef::decode(reader)?),
-        }
+        let type_path = self.type_path();
+        quote!(#type_path::decode(reader)?)
+    }
+    /// Get a `der::Decoder` optional object for a particular ASN.1 type
+    pub fn decoder_optional(self) -> TokenStream {
+        let type_path = self.type_path();
+        quote!(Option::<#type_path>::decode(reader)?)
     }
 
     /// Get a `der::Encoder` object for a particular ASN.1 type

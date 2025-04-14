@@ -300,9 +300,15 @@ impl FieldAttrs {
                 }
             })
         } else {
-            self.asn1_type
-                .map(|ty| ty.decoder())
-                .unwrap_or_else(|| quote!(reader.decode()?))
+            if self.is_optional() {
+                self.asn1_type
+                    .map(|ty| ty.decoder_optional())
+                    .unwrap_or_else(|| quote!(reader.decode()?))
+            } else {
+                self.asn1_type
+                    .map(|ty| ty.decoder())
+                    .unwrap_or_else(|| quote!(reader.decode()?))
+            }
         }
     }
 
