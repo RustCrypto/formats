@@ -1,7 +1,7 @@
 //! Context-specific field.
 
 use crate::{
-    Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error, Header,
+    Choice, Class, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error, Header,
     Length, Reader, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer, asn1::AnyRef,
 };
 use core::cmp::Ordering;
@@ -46,7 +46,9 @@ impl<T> ContextSpecific<T> {
     where
         T: Decode<'a>,
     {
-        Self::decode_with(reader, tag_number, |reader| Self::decode(reader))
+        peek_decode_optional(reader, Class::ContextSpecific, tag_number, |reader| {
+            Self::decode(reader)
+        })
     }
 
     /// Attempt to decode an `IMPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
@@ -62,45 +64,50 @@ impl<T> ContextSpecific<T> {
     where
         T: DecodeValue<'a> + Tagged,
     {
-        Self::decode_with::<_, _, T::Error>(reader, tag_number, |reader| {
-            let header = Header::decode(reader)?;
-            let value = T::decode_value(reader, header)?;
+        peek_decode_optional::<Self, _, _, T::Error>(
+            reader,
+            Class::ContextSpecific,
+            tag_number,
+            |reader| {
+                let header = Header::decode(reader)?;
+                let value = T::decode_value(reader, header)?;
 
-            if header.tag.is_constructed() != value.tag().is_constructed() {
-                return Err(header.tag.non_canonical_error().into());
-            }
+                if header.tag.is_constructed() != value.tag().is_constructed() {
+                    return Err(header.tag.non_canonical_error().into());
+                }
 
-            Ok(Self {
-                tag_number,
-                tag_mode: TagMode::Implicit,
-                value,
-            })
-        })
+                Ok(Self {
+                    tag_number,
+                    tag_mode: TagMode::Implicit,
+                    value,
+                })
+            },
+        )
     }
+}
 
-    /// Attempt to decode a context-specific field with the given
-    /// helper callback.
-    fn decode_with<'a, F, R: Reader<'a>, E>(
-        reader: &mut R,
-        tag_number: TagNumber,
-        f: F,
-    ) -> Result<Option<Self>, E>
-    where
-        F: FnOnce(&mut R) -> Result<Self, E>,
-        E: From<Error>,
-    {
-        while let Some(tag) = Tag::peek_optional(reader)? {
-            if !tag.is_context_specific() || (tag.number() > tag_number) {
-                break;
-            } else if tag.number() == tag_number {
-                return Some(f(reader)).transpose();
-            } else {
-                AnyRef::decode(reader)?;
-            }
-        }
-
-        Ok(None)
+/// Attempt to decode a context-specific (or any given class) field
+/// with the given helper callback.
+fn peek_decode_optional<'a, T, F, R: Reader<'a>, E>(
+    reader: &mut R,
+    class: Class,
+    tag_number: TagNumber,
+    f: F,
+) -> Result<Option<T>, E>
+where
+    F: FnOnce(&mut R) -> Result<T, E>,
+    E: From<Error>,
+{
+    // Peek tag or ignore end of stream
+    let Some(tag) = Tag::peek_optional(reader)? else {
+        return Ok(None);
+    };
+    // Ignore tags with different numbers
+    if tag.class() != class || tag.number() != tag_number {
+        return Ok(None);
     }
+    // Tag matches - callback reads tag and decodes value
+    Some(f(reader)).transpose()
 }
 
 impl<'a, T> Choice<'a> for ContextSpecific<T>
@@ -338,13 +345,11 @@ mod tests {
     }
 
     #[test]
-    fn context_specific_skipping_unknown_field() {
+    fn context_specific_not_skipping_unknown_field() {
         let tag = TagNumber(1);
         let mut reader = SliceReader::new(&hex!("A003020100A103020101")).unwrap();
-        let field = ContextSpecific::<u8>::decode_explicit(&mut reader, tag)
-            .unwrap()
-            .unwrap();
-        assert_eq!(field.value, 1);
+        let field = ContextSpecific::<u8>::decode_explicit(&mut reader, tag).unwrap();
+        assert_eq!(field, None);
     }
 
     #[test]
