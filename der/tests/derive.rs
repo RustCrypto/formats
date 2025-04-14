@@ -441,8 +441,19 @@ mod sequence {
         pub typed: &'a [u8],
         #[asn1(context_specific = "0")]
         pub context_specific: bool,
+
         #[asn1(optional = "true")]
         pub optional: Option<bool>,
+
+        #[asn1(type = "OCTET STRING", optional = "true")]
+        pub optional_octet_string: Option<&'a [u8]>,
+
+        #[asn1(type = "BIT STRING", optional = "true")]
+        pub optional_bit_string: Option<&'a [u8]>,
+
+        #[asn1(optional = "true")]
+        pub optional_oid: Option<ObjectIdentifier>,
+
         #[asn1(default = "default_false_example")]
         pub default: bool,
         #[asn1(type = "BIT STRING", context_specific = "1")]
@@ -467,6 +478,9 @@ mod sequence {
     #[test]
     fn type_combinations_instance() {
         let obj = TypeCheckExpandedSequenceFieldAttributeCombinations {
+            optional: Some(true),
+            optional_octet_string: Some(&[0xAA, 0xBB]),
+            optional_bit_string: Some(&[0xCC, 0xDD]),
             context_specific_optional: Some(true),
             typed_context_specific: &[0, 1],
             typed_context_specific_optional_bits: Some(&[2, 3]),
@@ -477,6 +491,7 @@ mod sequence {
         };
 
         let der_encoded = obj.to_der().unwrap();
+
         let obj_decoded =
             TypeCheckExpandedSequenceFieldAttributeCombinations::from_der(&der_encoded).unwrap();
         assert_eq!(obj, obj_decoded);
