@@ -271,7 +271,7 @@ mod sequence {
     // ```
     //
     // [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
-    #[derive(Sequence)]
+    #[derive(Sequence, Default)]
     pub struct IssuingDistributionPointExample {
         // Omit distributionPoint and only_some_reasons because corresponding structs are not
         // available here and are not germane to the example
@@ -599,6 +599,28 @@ mod sequence {
         assert_eq!(idp.only_contains_cacerts, false);
         assert_eq!(idp.indirect_crl, false);
         assert_eq!(idp.only_contains_attribute_certs, true);
+    }
+
+    #[test]
+    fn idp_encode_twice() {
+        let mut vec_buf = Vec::new();
+
+        IssuingDistributionPointExample {
+            only_contains_user_certs: true,
+            ..Default::default()
+        }
+        .encode_to_vec(&mut vec_buf)
+        .unwrap();
+
+        // encode to the same vec by appending
+        IssuingDistributionPointExample {
+            only_contains_cacerts: true,
+            ..Default::default()
+        }
+        .encode_to_vec(&mut vec_buf)
+        .unwrap();
+
+        assert_eq!(vec_buf, hex!("30038101FF 30038201FF"));
     }
 
     // demonstrates default field that is not context specific
