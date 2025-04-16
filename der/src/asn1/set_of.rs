@@ -25,7 +25,7 @@ use {alloc::vec::Vec, core::slice};
 /// and does not depend on `alloc` support.
 // TODO(tarcieri): use `ArrayVec` when/if it's merged into `core`
 // See: https://github.com/rust-lang/rfcs/pull/2990
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct SetOf<T, const N: usize>
 where
     T: DerOrd,
@@ -200,7 +200,7 @@ impl<T> ExactSizeIterator for SetOfIter<'_, T> {}
 /// This type implements an append-only `SET OF` type which is heap-backed
 /// and depends on `alloc` support.
 #[cfg(feature = "alloc")]
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct SetOfVec<T>
 where
     T: DerOrd,
