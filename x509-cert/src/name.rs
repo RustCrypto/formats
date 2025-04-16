@@ -57,7 +57,7 @@ use der::{
 /// [RFC 4514 Section 3]: https://www.rfc-editor.org/rfc/rfc4514#section-3
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Name(pub(crate) RdnSequence);
 
 impl Name {
@@ -307,7 +307,7 @@ impl fmt::Display for Name {
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct RdnSequence(Vec<RelativeDistinguishedName>);
 
 impl RdnSequence {
@@ -437,7 +437,7 @@ pub type DistinguishedName = RdnSequence;
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct RelativeDistinguishedName(pub(crate) SetOfVec<AttributeTypeAndValue>);
 
 impl RelativeDistinguishedName {
