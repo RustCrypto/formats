@@ -1843,6 +1843,7 @@ dependencies = [
  "arbitrary",
  "const-oid",
  "der",
+ "digest",
  "ecdsa",
  "hex-literal 0.4.1",
  "p256",
