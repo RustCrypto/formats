@@ -32,7 +32,7 @@ alloc = ["der/alloc"]
 std = ["der/std", "spki/std"]
 
 pem = ["alloc", "der/pem"]
-digest = ["dep:digest", "spki/digest"]
+digest = ["dep:digest", "x509-cert/digest"]
 
 [package.metadata.docs.rs]
 all-features = true

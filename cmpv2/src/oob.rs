@@ -9,8 +9,7 @@ use x509_cert::certificate::{Profile, Rfc5280};
 
 #[cfg(feature = "digest")]
 use {
-    der::{Encode, asn1::Null, oid::AssociatedOid},
-    spki::DigestWriter,
+    der::{asn1::Null, oid::AssociatedOid},
     x509_cert::{certificate::CertificateInner, ext::pkix::name::GeneralName},
 };
 
@@ -67,10 +66,6 @@ where
     where
         D: digest::Digest + AssociatedOid,
     {
-        let mut digest = D::new();
-
-        cert.encode(&mut DigestWriter(&mut digest))?;
-
         Ok(Self {
             hash_alg: Some(AlgorithmIdentifierOwned {
                 oid: D::OID,
@@ -80,7 +75,7 @@ where
                 issuer: GeneralName::DirectoryName(cert.tbs_certificate().issuer().clone()),
                 serial_number: cert.tbs_certificate().serial_number().clone(),
             }),
-            hash_val: BitString::from_bytes(&digest.finalize())?,
+            hash_val: BitString::from_bytes(&cert.hash::<D>()?)?,
         })
     }
 }
