@@ -6,6 +6,13 @@ use der::asn1::BitString;
 use crmf::controls::CertId;
 use spki::AlgorithmIdentifierOwned;
 
+#[cfg(feature = "digest")]
+use {
+    der::{Encode, asn1::Null, oid::AssociatedOid},
+    spki::DigestWriter,
+    x509_cert::{Certificate, ext::pkix::name::GeneralName},
+};
+
 use crate::header::CmpCertificate;
 
 /// The `OOBCert` type is defined in [RFC 4210 Section 5.2.5].
@@ -47,4 +54,29 @@ pub struct OobCertHash {
     )]
     pub cert_id: Option<CertId>,
     pub hash_val: BitString,
+}
+
+#[cfg(feature = "digest")]
+impl OobCertHash {
+    /// Create an [`OobCertHash`] from a given certificate
+    pub fn from_certificate<D>(cert: &Certificate) -> der::Result<Self>
+    where
+        D: digest::Digest + AssociatedOid,
+    {
+        let mut digest = D::new();
+
+        cert.encode(&mut DigestWriter(&mut digest))?;
+
+        Ok(Self {
+            hash_alg: Some(AlgorithmIdentifierOwned {
+                oid: D::OID,
+                parameters: Some(Null.into()),
+            }),
+            cert_id: Some(CertId {
+                issuer: GeneralName::DirectoryName(cert.tbs_certificate().issuer().clone()),
+                serial_number: cert.tbs_certificate().serial_number().clone(),
+            }),
+            hash_val: BitString::from_bytes(&digest.finalize())?,
+        })
+    }
 }

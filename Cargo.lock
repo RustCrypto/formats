@@ -272,6 +272,7 @@ dependencies = [
  "const-oid",
  "crmf",
  "der",
+ "digest",
  "hex-literal 0.4.1",
  "spki",
  "x509-cert",
