@@ -399,6 +399,9 @@ pub use {
     pem_rfc7468 as pem,
 };
 
+#[cfg(feature = "digest")]
+pub use crate::writer::digest::DigestWriter;
+
 #[cfg(feature = "time")]
 pub use time;
 
