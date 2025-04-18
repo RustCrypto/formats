@@ -5,12 +5,13 @@ use der::asn1::BitString;
 
 use crmf::controls::CertId;
 use spki::AlgorithmIdentifierOwned;
+use x509_cert::certificate::{Profile, Rfc5280};
 
 #[cfg(feature = "digest")]
 use {
     der::{Encode, asn1::Null, oid::AssociatedOid},
     spki::DigestWriter,
-    x509_cert::{Certificate, ext::pkix::name::GeneralName},
+    x509_cert::{certificate::CertificateInner, ext::pkix::name::GeneralName},
 };
 
 use crate::header::CmpCertificate;
@@ -38,7 +39,7 @@ pub type OobCert = CmpCertificate;
 /// [RFC 4210 Section 5.2.5]: https://www.rfc-editor.org/rfc/rfc4210#section-5.2.5
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct OobCertHash {
+pub struct OobCertHash<P: Profile = Rfc5280> {
     #[asn1(
         context_specific = "0",
         tag_mode = "EXPLICIT",
@@ -52,14 +53,17 @@ pub struct OobCertHash {
         constructed = "true",
         optional = "true"
     )]
-    pub cert_id: Option<CertId>,
+    pub cert_id: Option<CertId<P>>,
     pub hash_val: BitString,
 }
 
 #[cfg(feature = "digest")]
-impl OobCertHash {
+impl<P> OobCertHash<P>
+where
+    P: Profile,
+{
     /// Create an [`OobCertHash`] from a given certificate
-    pub fn from_certificate<D>(cert: &Certificate) -> der::Result<Self>
+    pub fn from_certificate<D>(cert: &CertificateInner<P>) -> der::Result<Self>
     where
         D: digest::Digest + AssociatedOid,
     {
