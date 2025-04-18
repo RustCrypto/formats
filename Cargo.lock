@@ -322,6 +322,7 @@ dependencies = [
  "bytes",
  "const-oid",
  "der_derive",
+ "digest",
  "flagset",
  "heapless",
  "hex-literal",
