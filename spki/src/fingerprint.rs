@@ -3,6 +3,8 @@
 use der::Writer;
 use sha2::{Digest, Sha256};
 
+use crate::DigestWriter;
+
 /// Size of a SHA-256 SPKI fingerprint in bytes.
 pub(crate) const SIZE: usize = 32;
 
@@ -36,7 +38,6 @@ impl Builder {
 
 impl Writer for Builder {
     fn write(&mut self, der_bytes: &[u8]) -> der::Result<()> {
-        self.digest.update(der_bytes);
-        Ok(())
+        DigestWriter(&mut self.digest).write(der_bytes)
     }
 }
