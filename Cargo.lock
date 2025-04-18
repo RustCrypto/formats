@@ -1478,6 +1478,7 @@ dependencies = [
  "arbitrary",
  "base64ct",
  "der",
+ "digest",
  "hex-literal 1.0.0",
  "sha2",
  "tempfile",
