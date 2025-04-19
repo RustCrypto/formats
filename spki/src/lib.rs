@@ -43,6 +43,9 @@ mod error;
 mod spki;
 mod traits;
 
+#[cfg(feature = "digest")]
+mod digest;
+
 #[cfg(feature = "fingerprint")]
 mod fingerprint;
 
@@ -66,6 +69,9 @@ pub use {
     },
     der::Document,
 };
+
+#[cfg(feature = "digest")]
+pub use crate::digest::DigestWriter;
 
 #[cfg(feature = "fingerprint")]
 pub use crate::fingerprint::FingerprintBytes;

@@ -12,8 +12,8 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "authentication", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "gssapi", "kerberos", "krb5"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
 der = { version = "0.8.0-rc.0", features = ["oid", "alloc"] }
