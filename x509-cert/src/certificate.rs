@@ -1,16 +1,22 @@
 //! Certificate types
 
-use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use crate::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use core::{cmp::Ordering, fmt::Debug};
-use der::{asn1::BitString, Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd};
+use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd, asn1::BitString};
 
 #[cfg(feature = "pem")]
 use der::{
-    pem::{self, PemLabel},
     DecodePem,
+    pem::{self, PemLabel},
+};
+
+#[cfg(feature = "digest")]
+use {
+    der::{DigestWriter, Encode},
+    digest::{Digest, Output},
 };
 
 use crate::time::Time;
@@ -418,5 +424,23 @@ impl<P: Profile> CertificateInner<P> {
         }
 
         Ok(certs)
+    }
+}
+
+#[cfg(feature = "digest")]
+impl<P> CertificateInner<P>
+where
+    P: Profile,
+{
+    /// Return the hash of the DER serialization of this cetificate
+    pub fn hash<D>(&self) -> der::Result<Output<D>>
+    where
+        D: Digest,
+    {
+        let mut digest = D::new();
+
+        self.encode(&mut DigestWriter(&mut digest))?;
+
+        Ok(digest.finalize())
     }
 }

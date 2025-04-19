@@ -2,8 +2,8 @@
 
 use alloc::vec::Vec;
 
-use der::asn1::{Int, OctetString};
 use der::Sequence;
+use der::asn1::{Int, OctetString};
 
 use crate::{certified_key_pair::CertifiedKeyPair, header::CmpCertificate, status::PkiStatusInfo};
 

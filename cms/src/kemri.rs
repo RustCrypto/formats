@@ -5,7 +5,7 @@ use crate::{
     enveloped_data::{EncryptedKey, RecipientIdentifier, UserKeyingMaterial},
 };
 use const_oid::ObjectIdentifier;
-use der::{asn1::OctetString, Sequence};
+use der::{Sequence, asn1::OctetString};
 use spki::AlgorithmIdentifierOwned;
 
 /// From [RFC9629 Section 3]

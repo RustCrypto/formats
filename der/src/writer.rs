@@ -1,5 +1,7 @@
 //! Writer trait.
 
+#[cfg(feature = "digest")]
+pub(crate) mod digest;
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
 pub(crate) mod slice;
