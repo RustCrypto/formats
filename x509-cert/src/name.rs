@@ -3,13 +3,13 @@
 use crate::{attr::AttributeTypeAndValue, ext::pkix::name::DirectoryString};
 use alloc::vec::Vec;
 use const_oid::{
-    db::{rfc3280, rfc4519},
     ObjectIdentifier,
+    db::{rfc3280, rfc4519},
 };
 use core::{cmp::Ordering, fmt, str::FromStr};
 use der::{
-    asn1::{Any, Ia5StringRef, PrintableStringRef, SetOfVec},
     DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Tag, ValueOrd, Writer,
+    asn1::{Any, Ia5StringRef, PrintableStringRef, SetOfVec},
 };
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
@@ -136,7 +136,7 @@ impl Name {
 
     /// Returns the number of [`RelativeDistinguishedName`] elements in this [`Name`].
     pub fn len(&self) -> usize {
-        self.0 .0.len()
+        self.0.0.len()
     }
 
     /// Returns an iterator over the inner [`AttributeTypeAndValue`]s.
@@ -145,13 +145,13 @@ impl Name {
     /// [`RelativeDistinguishedName`]s. If you need this, use [`Self::iter_rdn`].
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &'_ AttributeTypeAndValue> + '_ {
-        self.0 .0.iter().flat_map(move |rdn| rdn.0.as_slice())
+        self.0.0.iter().flat_map(move |rdn| rdn.0.as_slice())
     }
 
     /// Returns an iterator over the inner [`RelativeDistinguishedName`]s.
     #[inline]
     pub fn iter_rdn(&self) -> impl Iterator<Item = &'_ RelativeDistinguishedName> + '_ {
-        self.0 .0.iter()
+        self.0.0.iter()
     }
 }
 

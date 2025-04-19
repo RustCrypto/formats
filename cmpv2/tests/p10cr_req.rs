@@ -2,8 +2,8 @@ use cmpv2::body::PkiBody;
 use cmpv2::message::PkiMessage;
 use der::{Decode, Encode};
 use hex_literal::hex;
-use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::Certificate;
+use x509_cert::ext::pkix::name::GeneralName;
 
 #[test]
 fn p10cr_req_message_test() {
