@@ -2,20 +2,20 @@
 
 use alloc::vec::Vec;
 use const_oid::db::{
+    DB, Database,
     rfc3280::EMAIL_ADDRESS,
     rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT, SERIAL_NUMBER},
-    Database, DB,
 };
 use core::{
     fmt::{self, Write},
     str::FromStr,
 };
 use der::{
+    Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd,
     asn1::{
         Any, Ia5StringRef, ObjectIdentifier, PrintableStringRef, SetOfVec, TeletexStringRef,
         Utf8StringRef,
     },
-    Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd,
 };
 
 /// X.501 `AttributeType` as defined in [RFC 5280 Appendix A.1].
@@ -85,7 +85,7 @@ pub type Attributes = SetOfVec<Attribute>;
 ///
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd, Hash)]
 #[allow(missing_docs)]
 pub struct AttributeTypeAndValue {
     pub oid: AttributeType,

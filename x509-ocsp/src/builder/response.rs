@@ -1,18 +1,18 @@
 //! OCSP response builder
 
 use crate::{
-    builder::Error, BasicOcspResponse, OcspGeneralizedTime, OcspResponse, ResponderId,
-    ResponseData, SingleResponse, Version,
+    BasicOcspResponse, OcspGeneralizedTime, OcspResponse, ResponderId, ResponseData,
+    SingleResponse, Version, builder::Error,
 };
 use alloc::vec::Vec;
 use der::Encode;
-use rand_core::CryptoRngCore;
+use rand_core::CryptoRng;
 use signature::{RandomizedSigner, Signer};
 use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
+    Certificate,
     ext::{AsExtension, Extensions},
     name::Name,
-    Certificate,
 };
 
 /// X509 OCSP Response builder
@@ -158,16 +158,17 @@ impl OcspResponseBuilder {
     /// signed.
     ///
     /// [RFC 6960 Section 2.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.4
-    pub fn sign_with_rng<S, Sig>(
+    pub fn sign_with_rng<S, Sig, R>(
         self,
         signer: &mut S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
         certificate_chain: Option<Vec<Certificate>>,
         produced_at: OcspGeneralizedTime,
     ) -> Result<OcspResponse, Error>
     where
         S: RandomizedSigner<Sig> + DynSignatureAlgorithmIdentifier,
         Sig: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let tbs_response_data = self.into_response_data(produced_at);
         let signature_algorithm = signer.signature_algorithm_identifier()?;
