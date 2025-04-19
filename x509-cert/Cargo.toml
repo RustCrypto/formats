@@ -12,29 +12,28 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-const-oid = { version = "0.10.0-rc.0", features = ["db"] }
+const-oid = { version = "0.10.0", features = ["db"] }
 der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "flagset", "oid"] }
 spki = { version = "0.8.0-rc.0", features = ["alloc"] }
 
 # optional dependencies
 arbitrary = { version = "1.4", features = ["derive"], optional = true }
-async-signature = { version = "=0.6.0-pre.4", features = ["digest", "rand_core"], optional = true }
-sha1 = { version = "0.11.0-pre.4", optional = true }
-signature = { version = "=2.3.0-pre.4", features = ["rand_core"], optional = true }
+sha1 = { version = "0.11.0-pre.5", optional = true }
+signature = { version = "=2.3.0-pre.6", features = ["rand_core"], optional = true }
 tls_codec = { version = "0.4.0", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
 hex-literal = "0.4"
-rand = "0.8.5"
-rsa = { version = "=0.10.0-pre.3", features = ["sha2"] }
+rand = "0.9"
+rsa = { version = "=0.10.0-pre.4", features = ["sha2"] }
 ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
 p256 = "=0.14.0-pre.2"
 rstest = "0.24"
-sha2 = { version = "=0.11.0-pre.4", features = ["oid"] }
+sha2 = { version = "=0.11.0-pre.5", features = ["oid"] }
 tempfile = "3.5.0"
 tokio = { version = "1.43.1", features = ["macros", "rt"] }
 x509-cert-test-support = { path = "./test-support" }
@@ -44,7 +43,7 @@ default = ["pem", "std"]
 std = ["der/std", "spki/std", "tls_codec?/std"]
 
 arbitrary = ["dep:arbitrary", "std", "der/arbitrary", "spki/arbitrary"]
-builder = ["async-signature", "std", "sha1/default", "signature"]
+builder = ["std", "sha1/default", "signature"]
 hazmat = []
 pem = ["der/pem", "spki/pem"]
 sct = ["dep:tls_codec"]
@@ -54,6 +53,3 @@ base64 = ["spki/base64"]
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
-
-[patch.crates-io]
-const-oid = { git = "https://github.com/RustCrypto/formats.git" }

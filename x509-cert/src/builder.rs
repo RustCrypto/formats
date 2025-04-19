@@ -1,20 +1,25 @@
 //! X509 Certificate builder
 
 use alloc::vec;
-use async_signature::{AsyncRandomizedSigner, AsyncSigner};
 use core::fmt;
-use der::{asn1::BitString, referenced::OwnedToRef, Encode};
-use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, Signer};
+use der::{Encode, asn1::BitString, referenced::OwnedToRef};
+use signature::{
+    AsyncRandomizedSigner, AsyncSigner, Keypair, RandomizedSigner, Signer, rand_core::CryptoRng,
+};
 use spki::{
     DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier, SignatureBitStringEncoding,
 };
 
 use crate::{
-    certificate::{Certificate, TbsCertificate, Version},
-    ext::{AsExtension, Extensions},
-    serial_number::SerialNumber,
-    time::Validity,
     AlgorithmIdentifier, SubjectPublicKeyInfo,
+    certificate::{Certificate, TbsCertificate, Version},
+    crl::{CertificateList, RevokedCert, TbsCertList},
+    ext::{
+        AsExtension, Extensions,
+        pkix::{AuthorityKeyIdentifier, CrlNumber, SubjectKeyIdentifier},
+    },
+    serial_number::SerialNumber,
+    time::{Time, Validity},
 };
 
 pub mod profile;
@@ -78,8 +83,14 @@ impl fmt::Display for Error {
                 f,
                 "Each RelativeDistinguishedName MUST contain exactly one AttributeTypeAndValue."
             ),
-            Error::NonUniqueATV => write!(f, "Each Name MUST NOT contain more than one instance of a given AttributeTypeAndValue"),
-            Error::InvalidAttribute{oid} => write!(f, "Non-ordered attribute or invalid attribute found (oid={oid})"),
+            Error::NonUniqueATV => write!(
+                f,
+                "Each Name MUST NOT contain more than one instance of a given AttributeTypeAndValue"
+            ),
+            Error::InvalidAttribute { oid } => write!(
+                f,
+                "Non-ordered attribute or invalid attribute found (oid={oid})"
+            ),
             Error::MissingAttributes => write!(f, "Not all required elements were specified"),
         }
     }
@@ -250,16 +261,13 @@ pub trait Builder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    fn build_with_rng<S, Signature>(
-        mut self,
-        signer: &S,
-        rng: &mut impl CryptoRngCore,
-    ) -> Result<Self::Output>
+    fn build_with_rng<S, Signature, R>(mut self, signer: &S, rng: &mut R) -> Result<Self::Output>
     where
         S: RandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let blob = self.finalize(signer)?;
 
@@ -361,16 +369,17 @@ pub trait AsyncBuilder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    async fn build_with_rng_async<S, Signature>(
+    async fn build_with_rng_async<S, Signature, R>(
         mut self,
         signer: &S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<Self::Output>
     where
         S: AsyncRandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let blob = self.finalize(signer)?;
 
@@ -403,5 +412,121 @@ where
         S::VerifyingKey: EncodePublicKey,
     {
         <T as Builder>::finalize(self, signer)
+    }
+}
+
+/// X.509 CRL builder
+pub struct CrlBuilder {
+    tbs: TbsCertList,
+}
+
+impl CrlBuilder {
+    /// Create a `CrlBuilder` with the given issuer and the given monotonic [`CrlNumber`]
+    #[cfg(feature = "std")]
+    pub fn new(issuer: &Certificate, crl_number: CrlNumber) -> der::Result<Self> {
+        let this_update = Time::now()?;
+        Self::new_with_this_update(issuer, crl_number, this_update)
+    }
+
+    /// Create a `CrlBuilder` with the given issuer, a given monotonic [`CrlNumber`], and valid
+    /// from the given `this_update` start validity date.
+    pub fn new_with_this_update(
+        issuer: &Certificate,
+        crl_number: CrlNumber,
+        this_update: Time,
+    ) -> der::Result<Self> {
+        // Replaced later when the finalize is called
+        let signature_alg = AlgorithmIdentifier {
+            oid: NULL_OID,
+            parameters: None,
+        };
+
+        let issuer_name = issuer.tbs_certificate.subject().clone();
+
+        let mut crl_extensions = Extensions::new();
+        crl_extensions.push(crl_number.to_extension(&issuer_name, &crl_extensions)?);
+        let aki = match issuer
+            .tbs_certificate
+            .get_extension::<AuthorityKeyIdentifier>()?
+        {
+            Some((_, aki)) => aki,
+            None => {
+                let ski = SubjectKeyIdentifier::try_from(
+                    issuer
+                        .tbs_certificate
+                        .subject_public_key_info()
+                        .owned_to_ref(),
+                )?;
+                AuthorityKeyIdentifier {
+                    // KeyIdentifier must be the same as subjectKeyIdentifier
+                    key_identifier: Some(ski.0.clone()),
+                    // other fields must not be present.
+                    ..Default::default()
+                }
+            }
+        };
+        crl_extensions.push(aki.to_extension(&issuer_name, &crl_extensions)?);
+
+        let tbs = TbsCertList {
+            version: Version::V2,
+            signature: signature_alg,
+            issuer: issuer_name,
+            this_update,
+            next_update: None,
+            revoked_certificates: None,
+            crl_extensions: Some(crl_extensions),
+        };
+
+        Ok(Self { tbs })
+    }
+
+    /// Make the CRL valid until the given `next_update`
+    pub fn with_next_update(mut self, next_update: Option<Time>) -> Self {
+        self.tbs.next_update = next_update;
+        self
+    }
+
+    /// Add certificates to the revocation list
+    pub fn with_certificates<I>(mut self, revoked: I) -> Self
+    where
+        I: Iterator<Item = RevokedCert>,
+    {
+        let certificates = self
+            .tbs
+            .revoked_certificates
+            .get_or_insert_with(vec::Vec::new);
+
+        let mut revoked: vec::Vec<RevokedCert> = revoked.collect();
+        certificates.append(&mut revoked);
+
+        self
+    }
+}
+
+impl Builder for CrlBuilder {
+    type Output = CertificateList;
+
+    fn finalize<S>(&mut self, cert_signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        self.tbs.signature = cert_signer.signature_algorithm_identifier()?;
+
+        self.tbs.to_der().map_err(Error::from)
+    }
+
+    fn assemble<S>(self, signature: BitString, _signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        let signature_algorithm = self.tbs.signature.clone();
+
+        Ok(CertificateList {
+            tbs_cert_list: self.tbs,
+            signature_algorithm,
+            signature,
+        })
     }
 }

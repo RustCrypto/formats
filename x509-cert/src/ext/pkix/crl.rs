@@ -11,7 +11,7 @@ pub use dp::IssuingDistributionPoint;
 
 use alloc::vec::Vec;
 
-use der::{asn1::Uint, Enumerated};
+use der::{Enumerated, asn1::Uint};
 
 /// CrlNumber as defined in [RFC 5280 Section 5.2.3].
 ///
@@ -29,6 +29,22 @@ impl AssociatedOid for CrlNumber {
 
 impl_newtype!(CrlNumber, Uint);
 impl_extension!(CrlNumber, critical = false);
+
+macro_rules! impl_from_traits {
+    ($($uint:ty),+) => {
+        $(
+            impl TryFrom<$uint> for CrlNumber {
+                type Error = der::Error;
+
+                fn try_from(value: $uint) -> der::Result<Self> {
+                    Uint::try_from(value).map(Self)
+                }
+            }
+        )+
+    }
+}
+
+impl_from_traits!(u8, u16, u32, u64, u128);
 
 /// BaseCRLNumber as defined in [RFC 5280 Section 5.2.4].
 ///

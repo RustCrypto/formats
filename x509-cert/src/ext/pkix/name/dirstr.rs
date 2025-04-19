@@ -1,7 +1,7 @@
 use alloc::string::String;
 use der::{
-    asn1::{Any, PrintableString, TeletexString},
     Choice, FixedTag, Header, Reader, ValueOrd,
+    asn1::{Any, PrintableString, TeletexString},
 };
 
 /// DirectoryString as defined in [RFC 5280 Section 4.2.1.4].

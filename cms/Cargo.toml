@@ -11,36 +11,35 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "p7b", "pkcs7", "signing"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-const-oid = { version = "0.10.0-rc.0", features = ["db"] }
+const-oid = { version = "0.10", features = ["db"] }
 der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid"] }
 spki = { version = "0.8.0-rc.0" }
 x509-cert = { version = "=0.3.0-pre.0", default-features = false }
 
 # optional dependencies
-aes = { version = "=0.9.0-pre.2", optional = true }
-async-signature = { version = "=0.6.0-pre.4", features = ["digest", "rand_core"], optional = true }
+aes = { version = "=0.9.0-pre.3", optional = true }
 cbc = { version = "=0.2.0-pre.2", optional = true }
-cipher = { version = "=0.5.0-pre.7", features = ["alloc", "block-padding", "rand_core"], optional = true }
-rsa = { version = "=0.10.0-pre.3", optional = true }
-sha1 = { version = "=0.11.0-pre.4", optional = true }
-sha2 = { version = "=0.11.0-pre.4", optional = true }
-sha3 = { version = "=0.11.0-pre.4", optional = true }
-signature = { version = "=2.3.0-pre.4", features = ["digest", "alloc"], optional = true }
+cipher = { version = "=0.5.0-pre.8", features = ["alloc", "block-padding", "rand_core"], optional = true }
+rsa = { version = "=0.10.0-pre.4", optional = true }
+sha1 = { version = "=0.11.0-pre.5", optional = true }
+sha2 = { version = "=0.11.0-pre.5", optional = true }
+sha3 = { version = "=0.11.0-pre.5", optional = true }
+signature = { version = "=2.3.0-pre.6", features = ["digest", "alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true }
 
 [dev-dependencies]
-aes = "=0.9.0-pre.2"
+aes = "=0.9.0-pre.3"
 getrandom = "0.3"
 hex-literal = "0.4"
 pem-rfc7468 = "1.0.0-rc.1"
 pkcs5 = "0.8.0-rc.1"
 pbkdf2 = "0.13.0-pre.0"
-rand = "0.8.5"
-rsa = { version = "=0.10.0-pre.3", features = ["sha2"] }
+rand = "0.9"
+rsa = { version = "=0.10.0-pre.4", features = ["sha2"] }
 ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
 p256 = "=0.14.0-pre.2"
 tokio = { version = "1.43.1", features = ["macros", "rt"] }
@@ -50,7 +49,6 @@ x509-cert = { version = "=0.3.0-pre.0", features = ["pem"] }
 std = ["der/std", "spki/std"]
 builder = [
     "dep:aes",
-    "dep:async-signature",
     "dep:cbc",
     "dep:cipher",
     "dep:rsa",
