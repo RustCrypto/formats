@@ -273,6 +273,46 @@ mod allocating {
             UintRef { inner }
         }
     }
+
+    macro_rules! impl_from_traits {
+        ($($uint:ty),+) => {
+            $(
+                impl TryFrom<$uint> for Uint {
+                    type Error = $crate::Error;
+
+                    fn try_from(value: $uint) -> $crate::Result<Self> {
+                        let mut buf  = [0u8; 17];
+                        let mut writer = $crate::SliceWriter::new(&mut buf[..]);
+                        value.encode_value(&mut writer)?;
+                        let buf = writer.finish()?;
+                        Uint::new(buf)
+                    }
+                }
+            )+
+        };
+    }
+
+    impl_from_traits!(u8, u16, u32, u64, u128);
+
+    #[cfg(test)]
+    #[allow(clippy::unwrap_used)]
+    mod tests {
+        use super::Uint;
+
+        #[test]
+        fn from_uint() {
+            assert_eq!(Uint::try_from(u8::MIN).unwrap().as_bytes(), &[0]);
+            assert_eq!(Uint::try_from(u8::MAX).unwrap().as_bytes(), &[0xFF]);
+            assert_eq!(Uint::try_from(u16::MIN).unwrap().as_bytes(), &[0]);
+            assert_eq!(Uint::try_from(u16::MAX).unwrap().as_bytes(), &[0xFF; 2]);
+            assert_eq!(Uint::try_from(u32::MIN).unwrap().as_bytes(), &[0]);
+            assert_eq!(Uint::try_from(u32::MAX).unwrap().as_bytes(), &[0xFF; 4]);
+            assert_eq!(Uint::try_from(u64::MIN).unwrap().as_bytes(), &[0]);
+            assert_eq!(Uint::try_from(u64::MAX).unwrap().as_bytes(), &[0xFF; 8]);
+            assert_eq!(Uint::try_from(u128::MIN).unwrap().as_bytes(), &[0]);
+            assert_eq!(Uint::try_from(u128::MAX).unwrap().as_bytes(), &[0xFF; 16]);
+        }
+    }
 }
 
 /// Decode an unsigned integer into a big endian byte slice with all leading
