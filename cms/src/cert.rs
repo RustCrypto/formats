@@ -3,10 +3,10 @@
 pub use x509_cert as x509;
 
 use core::cmp::Ordering;
-use der::{asn1::ObjectIdentifier, Any, Choice, Sequence, ValueOrd};
+use der::{Any, Choice, Sequence, ValueOrd, asn1::ObjectIdentifier};
+use x509_cert::Certificate;
 use x509_cert::name::Name;
 use x509_cert::serial_number::SerialNumber;
-use x509_cert::Certificate;
 
 /// The `CertificateChoices` type is defined in [RFC 5652 Section 10.2.2]. Attribute certificate
 /// support is not presently implemented.

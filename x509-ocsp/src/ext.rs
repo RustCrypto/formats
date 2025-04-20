@@ -3,25 +3,25 @@
 use crate::OcspGeneralizedTime;
 use alloc::vec::Vec;
 use const_oid::{
+    AssociatedOid,
     db::rfc6960::{
         ID_PKIX_OCSP_ARCHIVE_CUTOFF, ID_PKIX_OCSP_CRL, ID_PKIX_OCSP_NONCE,
         ID_PKIX_OCSP_PREF_SIG_ALGS, ID_PKIX_OCSP_RESPONSE, ID_PKIX_OCSP_SERVICE_LOCATOR,
     },
-    AssociatedOid,
 };
 use der::{
-    asn1::{Ia5String, ObjectIdentifier, OctetString, Uint},
     Sequence, ValueOrd,
+    asn1::{Ia5String, ObjectIdentifier, OctetString, Uint},
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
-    ext::{pkix::AuthorityInfoAccessSyntax, AsExtension, Extension},
+    ext::{AsExtension, Extension, pkix::AuthorityInfoAccessSyntax},
     impl_newtype,
     name::Name,
 };
 
 #[cfg(feature = "rand")]
-use rand_core::CryptoRngCore;
+use rand_core::CryptoRng;
 
 // x509-cert's is not exported
 macro_rules! impl_extension {
@@ -64,7 +64,7 @@ impl Nonce {
     #[cfg(feature = "rand")]
     pub fn generate<R>(rng: &mut R, length: usize) -> Result<Self, der::Error>
     where
-        R: CryptoRngCore,
+        R: CryptoRng + ?Sized,
     {
         let mut bytes = alloc::vec![0; length];
         rng.fill_bytes(&mut bytes);

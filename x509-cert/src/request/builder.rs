@@ -1,16 +1,16 @@
 use alloc::vec;
 
-use der::{asn1::BitString, Encode};
+use der::{Encode, asn1::BitString};
 use signature::Keypair;
 use spki::{
     AlgorithmIdentifier, DynSignatureAlgorithmIdentifier, EncodePublicKey, SubjectPublicKeyInfo,
 };
 
 use crate::{
-    builder::{Builder, Error, Result, NULL_OID},
+    builder::{Builder, Error, NULL_OID, Result},
     ext::AsExtension,
     name::Name,
-    request::{attributes::AsAttribute, CertReq, CertReqInfo, ExtensionReq},
+    request::{CertReq, CertReqInfo, ExtensionReq, attributes::AsAttribute},
 };
 
 /// Builder for X509 Certificate Requests (CSR)

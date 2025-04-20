@@ -1,7 +1,7 @@
 //! AuthenticatedData-related types
 
-use der::asn1::OctetString;
 use der::Sequence;
+use der::asn1::OctetString;
 
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;

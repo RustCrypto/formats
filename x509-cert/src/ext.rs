@@ -1,7 +1,7 @@
 //! Standardized X.509 Certificate Extensions
 
 use const_oid::AssociatedOid;
-use der::{asn1::OctetString, Sequence, ValueOrd};
+use der::{Sequence, ValueOrd, asn1::OctetString};
 use spki::ObjectIdentifier;
 
 pub mod pkix;

@@ -4,10 +4,10 @@
 use der::{DateTime, Decode, Encode};
 use hex_literal::hex;
 use lazy_static::lazy_static;
-use rsa::{pkcs1v15::SigningKey, pkcs8::DecodePrivateKey, RsaPrivateKey};
+use rsa::{RsaPrivateKey, pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
 use sha1::Sha1;
 use sha2::{Sha224, Sha256, Sha384, Sha512};
-use x509_cert::{name::Name, serial_number::SerialNumber, Certificate};
+use x509_cert::{Certificate, name::Name, serial_number::SerialNumber};
 use x509_ocsp::builder::*;
 use x509_ocsp::{ext::*, *};
 

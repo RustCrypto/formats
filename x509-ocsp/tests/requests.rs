@@ -1,6 +1,6 @@
 //! ocsp request decode tests
 
-use der::{asn1::ObjectIdentifier, Decode, Encode};
+use der::{Decode, Encode, asn1::ObjectIdentifier};
 use hex_literal::hex;
 use x509_cert::{ext::Extension, serial_number::SerialNumber};
 use x509_ocsp::{ext::Nonce, *};

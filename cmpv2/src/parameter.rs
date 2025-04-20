@@ -1,7 +1,7 @@
 //! Parameter types
 
-use der::asn1::OctetString;
 use der::Sequence;
+use der::asn1::OctetString;
 
 use spki::AlgorithmIdentifierOwned;
 

@@ -19,11 +19,8 @@ use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
-use async_signature::{AsyncRandomizedSigner, AsyncSigner};
 use cipher::{
-    block_padding::Pkcs7,
-    rand_core::{self, CryptoRng, CryptoRngCore, RngCore},
-    BlockModeEncrypt, Key, KeyIvInit, KeySizeUser,
+    BlockModeEncrypt, Key, KeyIvInit, KeySizeUser, block_padding::Pkcs7, rand_core::CryptoRng,
 };
 use const_oid::ObjectIdentifier;
 use core::cmp::Ordering;
@@ -35,8 +32,9 @@ use der::{Any, AnyRef, DateTime, Decode, Encode, ErrorKind, Tag};
 use digest::Digest;
 use rsa::Pkcs1v15Encrypt;
 use sha2::digest;
-use signature::digest::DynDigest;
-use signature::{Keypair, RandomizedSigner, Signer};
+use signature::{
+    AsyncRandomizedSigner, AsyncSigner, Keypair, RandomizedSigner, Signer, digest::DynDigest,
+};
 use spki::{
     AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
     SignatureBitStringEncoding,
@@ -57,8 +55,8 @@ pub enum Error {
     /// Public key errors propagated from the [`spki::Error`] type.
     PublicKey(spki::Error),
 
-    /// RNG error propagated for the [`rand_core::Error`] type.
-    Rng(rand_core::Error),
+    /// RNG error.
+    Rng,
 
     /// Signing error propagated for the [`signature::Signer`] type.
     Signature(signature::Error),
@@ -75,7 +73,7 @@ impl fmt::Display for Error {
         match self {
             Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
             Error::PublicKey(err) => write!(f, "public key error: {}", err),
-            Error::Rng(err) => write!(f, "rng error: {}", err),
+            Error::Rng => write!(f, "rng error"),
             Error::Signature(err) => write!(f, "signature error: {}", err),
             Error::Builder(message) => write!(f, "builder error: {message}"),
         }
@@ -97,12 +95,6 @@ impl From<spki::Error> for Error {
 impl From<signature::Error> for Error {
     fn from(err: signature::Error) -> Error {
         Error::Signature(err)
-    }
-}
-
-impl From<rand_core::Error> for Error {
-    fn from(err: rand_core::Error) -> Error {
-        Error::Rng(err)
     }
 }
 
@@ -407,20 +399,21 @@ impl<'s> SignedDataBuilder<'s> {
 
     /// Add a signer info. The signature will be calculated. Note that the encapsulated content
     /// must not be changed after the first signer info was added.
-    pub fn add_signer_info_with_rng<S, Signature>(
+    pub fn add_signer_info_with_rng<S, Signature, R>(
         &mut self,
         signer_info_builder: SignerInfoBuilder<'_>,
         signer: &S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<&mut Self>
     where
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S: RandomizedSigner<Signature>,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let signer_info = signer_info_builder
-            .build_with_rng::<S, Signature>(signer, rng)
+            .build_with_rng::<S, Signature, R>(signer, rng)
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
         self.signer_infos.push(signer_info);
 
@@ -451,20 +444,21 @@ impl<'s> SignedDataBuilder<'s> {
 
     /// Add a signer info. The signature will be calculated. Note that the encapsulated content
     /// must not be changed after the first signer info was added.
-    pub async fn add_signer_info_with_rng_async<S, Signature>(
+    pub async fn add_signer_info_with_rng_async<S, Signature, R>(
         &mut self,
         signer_info_builder: SignerInfoBuilder<'_>,
         signer: &S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<&mut Self>
     where
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S: AsyncRandomizedSigner<Signature>,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let signer_info = signer_info_builder
-            .build_with_rng_async::<S, Signature>(signer, rng)
+            .build_with_rng_async::<S, Signature, R>(signer, rng)
             .await
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
         self.signer_infos.push(signer_info);
@@ -585,7 +579,7 @@ impl<'s> SignedDataBuilder<'s> {
 /// formats. All implementations must implement this trait.
 pub trait RecipientInfoBuilder {
     /// Associated Rng type
-    type Rng: CryptoRngCore;
+    type Rng: CryptoRng + ?Sized;
 
     /// Return the recipient info type
     fn recipient_info_type(&self) -> RecipientInfoType;
@@ -628,7 +622,7 @@ pub enum KeyEncryptionInfo {
 
 /// Builds a `KeyTransRecipientInfo` according to RFC 5652 § 6.
 /// This type uses the recipient's public key to encrypt the content-encryption key.
-pub struct KeyTransRecipientInfoBuilder<R> {
+pub struct KeyTransRecipientInfoBuilder<R: ?Sized> {
     /// Identifies the recipient
     pub rid: RecipientIdentifier,
     /// Info for key encryption
@@ -647,9 +641,9 @@ impl<R> KeyTransRecipientInfoBuilder<R> {
     }
 }
 
-impl<R> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<R>
+impl<R: ?Sized> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<R>
 where
-    R: CryptoRngCore,
+    R: CryptoRng,
 {
     type Rng = R;
 
@@ -699,7 +693,7 @@ where
 /// This type uses key agreement:  the recipient's public key and the sender's
 /// private key are used to generate a pairwise symmetric key, then
 /// the content-encryption key is encrypted in the pairwise symmetric key.
-pub struct KeyAgreeRecipientInfoBuilder<R> {
+pub struct KeyAgreeRecipientInfoBuilder<R: ?Sized> {
     /// A CHOICE with three alternatives specifying the sender's key agreement public key.
     pub originator: OriginatorIdentifierOrKey,
     /// Optional information which helps generating different keys every time.
@@ -725,9 +719,9 @@ impl<R> KeyAgreeRecipientInfoBuilder<R> {
     }
 }
 
-impl<R> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R>
+impl<R: ?Sized> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R>
 where
-    R: CryptoRngCore,
+    R: CryptoRng,
 {
     type Rng = R;
 
@@ -756,7 +750,7 @@ where
 /// Builds a `KekRecipientInfo` according to RFC 5652 § 6.
 /// Uses symmetric key-encryption keys: the content-encryption key is
 /// encrypted in a previously distributed symmetric key-encryption key.
-pub struct KekRecipientInfoBuilder<R> {
+pub struct KekRecipientInfoBuilder<R: ?Sized> {
     /// Specifies a symmetric key-encryption key that was previously distributed to the sender and
     /// one or more recipients.
     pub kek_id: KekIdentifier,
@@ -776,9 +770,9 @@ impl<R> KekRecipientInfoBuilder<R> {
     }
 }
 
-impl<R> RecipientInfoBuilder for KekRecipientInfoBuilder<R>
+impl<R: ?Sized> RecipientInfoBuilder for KekRecipientInfoBuilder<R>
 where
-    R: CryptoRngCore,
+    R: CryptoRng,
 {
     type Rng = R;
 
@@ -819,16 +813,16 @@ pub trait PwriEncryptor {
     /// including eventual parameters (e.g. the used iv).
     fn key_encryption_algorithm(&self) -> Result<AlgorithmIdentifierOwned>;
     /// Encrypt the padded content-encryption key twice following RFC 3211, § 2.3.1
-    fn encrypt_rfc3211(
+    fn encrypt_rfc3211<R: CryptoRng + ?Sized>(
         &mut self,
         padded_content_encryption_key: &[u8],
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<Vec<u8>>;
 }
 
 /// Builds a `PasswordRecipientInfo` according to RFC 5652 § 6 and RFC 3211.
 /// Uses a password or shared secret value to encrypt the content-encryption key.
-pub struct PasswordRecipientInfoBuilder<P, R>
+pub struct PasswordRecipientInfoBuilder<P, R: ?Sized>
 where
     P: PwriEncryptor,
 {
@@ -867,10 +861,10 @@ where
     }
 }
 
-impl<P, R> PasswordRecipientInfoBuilder<P, R>
+impl<P, R: ?Sized> PasswordRecipientInfoBuilder<P, R>
 where
     P: PwriEncryptor,
-    R: CryptoRngCore,
+    R: CryptoRng,
 {
     /// Wrap the content-encryption key according to [RFC 3211, §2.3.1]:
     ///     ....
@@ -914,7 +908,7 @@ where
 impl<P, R> RecipientInfoBuilder for PasswordRecipientInfoBuilder<P, R>
 where
     P: PwriEncryptor,
-    R: CryptoRngCore,
+    R: CryptoRng + ?Sized,
 {
     type Rng = R;
 
@@ -950,7 +944,7 @@ where
 
 /// Builds an `OtherRecipientInfo` according to RFC 5652 § 6.
 /// This type makes no assumption about the encryption method or the needed information.
-pub struct OtherRecipientInfoBuilder<R> {
+pub struct OtherRecipientInfoBuilder<R: ?Sized> {
     /// Identifies the key management technique.
     pub ori_type: ObjectIdentifier,
     /// Contains the protocol data elements needed by a recipient using the identified key
@@ -973,7 +967,7 @@ impl<R> OtherRecipientInfoBuilder<R> {
 
 impl<R> RecipientInfoBuilder for OtherRecipientInfoBuilder<R>
 where
-    R: CryptoRngCore,
+    R: CryptoRng + ?Sized,
 {
     type Rng = R;
 
@@ -1020,7 +1014,7 @@ impl ContentEncryptionAlgorithm {
 }
 
 /// Builds CMS `EnvelopedData` according to RFC 5652 § 6.
-pub struct EnvelopedDataBuilder<'c, R> {
+pub struct EnvelopedDataBuilder<'c, R: ?Sized> {
     originator_info: Option<OriginatorInfo>,
     recipient_infos: Vec<Box<dyn RecipientInfoBuilder<Rng = R> + 'c>>,
     unencrypted_content: &'c [u8],
@@ -1057,7 +1051,7 @@ impl<'c, R> EnvelopedDataBuilder<'c, R> {
 
 impl<'c, R> EnvelopedDataBuilder<'c, R>
 where
-    R: CryptoRngCore,
+    R: CryptoRng + ?Sized,
 {
     /// Add recipient info. A builder is used, which generates a `RecipientInfo` according to
     /// RFC 5652 § 6.2, when `EnvelopedData` is built.
@@ -1218,7 +1212,7 @@ fn get_hasher(
 macro_rules! encrypt_block_mode {
     ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $rng:expr, $oid:expr) => {{
         let (key, iv) = match $key {
-            None => $block_mode::$typ::<$alg>::generate_key_iv_with_rng($rng)?,
+            None => $block_mode::$typ::<$alg>::generate_key_iv_with_rng($rng),
             Some(key) => {
                 if key.len() != $alg::key_size() {
                     return Err(Error::Builder(String::from(
@@ -1228,7 +1222,7 @@ macro_rules! encrypt_block_mode {
                 (
                     Key::<$block_mode::$typ<$alg>>::try_from(key)
                         .expect("size invariants violation"),
-                    $block_mode::$typ::<$alg>::generate_iv_with_rng($rng)?,
+                    $block_mode::$typ::<$alg>::generate_iv_with_rng($rng),
                 )
             }
         };
@@ -1256,7 +1250,7 @@ fn encrypt_data<R>(
     rng: &mut R,
 ) -> Result<(Vec<u8>, Vec<u8>, AlgorithmIdentifierOwned)>
 where
-    R: CryptoRng + RngCore,
+    R: CryptoRng + ?Sized,
 {
     match encryption_algorithm_identifier {
         ContentEncryptionAlgorithm::Aes128Cbc => encrypt_block_mode!(

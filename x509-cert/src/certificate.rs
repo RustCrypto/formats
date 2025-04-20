@@ -1,16 +1,16 @@
 //! Certificate types
 
-use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use crate::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use core::{cmp::Ordering, fmt::Debug};
-use der::{asn1::BitString, Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd};
+use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd, asn1::BitString};
 
 #[cfg(feature = "pem")]
 use der::{
-    pem::{self, PemLabel},
     DecodePem,
+    pem::{self, PemLabel},
 };
 
 use crate::time::Time;

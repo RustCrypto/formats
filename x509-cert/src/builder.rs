@@ -1,20 +1,21 @@
 //! X509 Certificate builder
 
 use alloc::vec;
-use async_signature::{AsyncRandomizedSigner, AsyncSigner};
 use core::fmt;
-use der::{asn1::BitString, referenced::OwnedToRef, Encode};
-use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, Signer};
+use der::{Encode, asn1::BitString, referenced::OwnedToRef};
+use signature::{
+    AsyncRandomizedSigner, AsyncSigner, Keypair, RandomizedSigner, Signer, rand_core::CryptoRng,
+};
 use spki::{
     DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier, SignatureBitStringEncoding,
 };
 
 use crate::{
+    AlgorithmIdentifier, SubjectPublicKeyInfo,
     certificate::{Certificate, TbsCertificate, Version},
     ext::{AsExtension, Extensions},
     serial_number::SerialNumber,
     time::Validity,
-    AlgorithmIdentifier, SubjectPublicKeyInfo,
 };
 
 pub mod profile;
@@ -78,8 +79,14 @@ impl fmt::Display for Error {
                 f,
                 "Each RelativeDistinguishedName MUST contain exactly one AttributeTypeAndValue."
             ),
-            Error::NonUniqueATV => write!(f, "Each Name MUST NOT contain more than one instance of a given AttributeTypeAndValue"),
-            Error::InvalidAttribute{oid} => write!(f, "Non-ordered attribute or invalid attribute found (oid={oid})"),
+            Error::NonUniqueATV => write!(
+                f,
+                "Each Name MUST NOT contain more than one instance of a given AttributeTypeAndValue"
+            ),
+            Error::InvalidAttribute { oid } => write!(
+                f,
+                "Non-ordered attribute or invalid attribute found (oid={oid})"
+            ),
             Error::MissingAttributes => write!(f, "Not all required elements were specified"),
         }
     }
@@ -250,16 +257,13 @@ pub trait Builder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    fn build_with_rng<S, Signature>(
-        mut self,
-        signer: &S,
-        rng: &mut impl CryptoRngCore,
-    ) -> Result<Self::Output>
+    fn build_with_rng<S, Signature, R>(mut self, signer: &S, rng: &mut R) -> Result<Self::Output>
     where
         S: RandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let blob = self.finalize(signer)?;
 
@@ -361,16 +365,17 @@ pub trait AsyncBuilder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    async fn build_with_rng_async<S, Signature>(
+    async fn build_with_rng_async<S, Signature, R>(
         mut self,
         signer: &S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<Self::Output>
     where
         S: AsyncRandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let blob = self.finalize(signer)?;
 

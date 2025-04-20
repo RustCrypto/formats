@@ -1,12 +1,12 @@
 //! Certificate Revocation List types
 
 use crate::{
+    AlgorithmIdentifier, Version,
     certificate::{Profile, Rfc5280},
     ext::Extensions,
     name::Name,
     serial_number::SerialNumber,
     time::Time,
-    AlgorithmIdentifier, Version,
 };
 
 use alloc::vec::Vec;

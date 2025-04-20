@@ -1,4 +1,4 @@
-use const_oid::{db::rfc5280::ID_CE_POLICY_CONSTRAINTS, AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifier, db::rfc5280::ID_CE_POLICY_CONSTRAINTS};
 use der::Sequence;
 
 /// Policy constraints extension as defined in [RFC 5280 Section 4.2.1.11].

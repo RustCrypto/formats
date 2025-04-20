@@ -1,7 +1,7 @@
 //! OOB-related types
 
-use der::asn1::BitString;
 use der::Sequence;
+use der::asn1::BitString;
 
 use crmf::controls::CertId;
 use spki::AlgorithmIdentifierOwned;

@@ -8,10 +8,10 @@ use crate::{
     builder::{BuilderProfile, Error, Result},
     certificate::TbsCertificate,
     ext::{
+        AsExtension, Extension,
         pkix::{
             AuthorityKeyIdentifier, BasicConstraints, KeyUsage, KeyUsages, SubjectKeyIdentifier,
         },
-        AsExtension, Extension,
     },
     name::Name,
 };
@@ -230,10 +230,12 @@ mod tests {
         assert!(
             check_names_encoding(&Name::from_str("ST=CA,C=US").expect("parse name"), false).is_ok()
         );
-        assert!(check_names_encoding(
-            &Name::from_str("serialNumber=1234,ST=CA,C=US").expect("parse name"),
-            false
-        )
-        .is_ok());
+        assert!(
+            check_names_encoding(
+                &Name::from_str("serialNumber=1234,ST=CA,C=US").expect("parse name"),
+                false
+            )
+            .is_ok()
+        );
     }
 }
