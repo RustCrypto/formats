@@ -18,9 +18,9 @@ use core::ops::Add;
 
 // Rust crypto imports
 use aes::cipher::{
-    array::{Array, ArraySize},
-    typenum::{Sum, Unsigned, U16, U8},
     BlockCipherDecrypt, BlockCipherEncrypt, BlockSizeUser, Key, KeyInit, KeySizeUser,
+    array::{Array, ArraySize},
+    typenum::{Sum, U8, U16, Unsigned},
 };
 use aes_kw::AesKw;
 
