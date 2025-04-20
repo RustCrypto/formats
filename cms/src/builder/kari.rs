@@ -8,9 +8,9 @@
 
 // Super imports
 use super::{
-    utils::kw::{KeyWrapAlgorithm, WrappedKey},
-    AlgorithmIdentifierOwned, CryptoRngCore, RecipientInfoBuilder, RecipientInfoType, Result,
+    AlgorithmIdentifierOwned, CryptoRng, RecipientInfoBuilder, RecipientInfoType, Result,
     UserKeyingMaterial,
+    utils::kw::{KeyWrapAlgorithm, WrappedKey},
 };
 
 // Crate imports
@@ -25,10 +25,10 @@ use crate::{
 };
 
 // Internal imports
-use const_oid::{db::rfc5753, AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifier, db::rfc5753};
 use der::{
-    asn1::{BitString, OctetString},
     Any, Decode, Encode, Sequence,
+    asn1::{BitString, OctetString},
 };
 
 // Core imports
@@ -39,16 +39,16 @@ use alloc::{string::String, vec, vec::Vec};
 
 // RustCrypto imports
 use aes::cipher::{
+    KeySizeUser,
     array::ArraySize,
     typenum::{Sum, U8},
-    KeySizeUser,
 };
 use digest::{Digest, FixedOutputReset};
 use elliptic_curve::{
+    AffinePoint, Curve, CurveArithmetic, FieldBytesSize, PublicKey,
     ecdh::{EphemeralSecret, SharedSecret},
     point::PointCompression,
     sec1::{FromEncodedPoint, ModulusSize, ToEncodedPoint},
-    AffinePoint, Curve, CurveArithmetic, FieldBytesSize, PublicKey,
 };
 
 /// The `EccCmsSharedInfo` type is defined in [RFC 5753 Section 7.2].
@@ -203,9 +203,8 @@ where
 /// This type uses key agreement:  the recipient's public key and the sender's
 /// private key are used to generate a pairwise symmetric key, then
 /// the content-encryption key is encrypted in the pairwise symmetric key.
-pub struct KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
+pub struct KeyAgreeRecipientInfoBuilder<R: ?Sized, C, KA, KW, Enc>
 where
-    R: CryptoRngCore,
     C: CurveArithmetic,
     KA: KeyAgreementAlgorithm,
     KW: KeyWrapAlgorithm,
@@ -227,9 +226,8 @@ where
     _rng: PhantomData<R>,
 }
 
-impl<R, C, KA, KW, Enc> KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
+impl<R: ?Sized, C, KA, KW, Enc> KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
 where
-    R: CryptoRngCore,
     C: CurveArithmetic,
     KA: KeyAgreementAlgorithm,
     KW: KeyWrapAlgorithm,
@@ -252,9 +250,10 @@ where
         })
     }
 }
-impl<R, C, KA, KW, Enc> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
+impl<R: ?Sized, C, KA, KW, Enc> RecipientInfoBuilder
+    for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
 where
-    R: CryptoRngCore,
+    R: CryptoRng,
     KA: KeyAgreementAlgorithm + AssociatedOid,
     C: CurveArithmetic + AssociatedOid + PointCompression,
     AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
@@ -399,7 +398,7 @@ mod tests {
     use std::eprintln;
 
     use super::*;
-    use p256::{pkcs8::DecodePublicKey, NistP256, PublicKey};
+    use p256::{NistP256, PublicKey, pkcs8::DecodePublicKey};
 
     /// Generate a test P256 EcKeyEncryptionInfo
     fn get_test_ec_key_info() -> EcKeyEncryptionInfo<NistP256> {

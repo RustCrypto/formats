@@ -9,9 +9,9 @@ use cms::{
     enveloped_data::KeyAgreeRecipientIdentifier,
 };
 use der::{Any, AnyRef, Encode};
-use p256::{pkcs8::DecodePrivateKey, SecretKey};
+use p256::{SecretKey, pkcs8::DecodePrivateKey};
 use pem_rfc7468::LineEnding;
-use rand::rngs::OsRng;
+use rand::{TryRngCore, rngs::OsRng};
 use x509_cert::serial_number::SerialNumber;
 
 fn key_agreement_recipient_identifier(id: i32) -> KeyAgreeRecipientIdentifier {
@@ -42,7 +42,7 @@ fn test_build_enveloped_data_ec() {
 
     // KARI builder
     let kari_builder = KeyAgreeRecipientInfoBuilder::<
-        OsRng,
+        _,
         _,
         DhSinglePassStdDhKdf<sha2::Sha256>,
         AesKw<aes::Aes192>,
@@ -55,7 +55,7 @@ fn test_build_enveloped_data_ec() {
     .expect("Could not create a KeyAgreeRecipientInfoBuilder");
 
     // Enveloped data builder
-    let mut rng = OsRng;
+    let mut rng = OsRng.unwrap_err();
     let mut builder = EnvelopedDataBuilder::new(
         None,
         "Arbitrary unencrypted content, encrypted using ECC".as_bytes(),
