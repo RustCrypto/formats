@@ -5,7 +5,7 @@
 use crate::{ErrorKind, Result};
 
 /// Array-backed append-only vector type.
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub(crate) struct ArrayVec<T, const N: usize> {
     /// Elements of the set.
     elements: [Option<T>; N],
