@@ -15,7 +15,11 @@ use der::{
 };
 
 #[cfg(feature = "fingerprint")]
-use crate::{FingerprintBytes, fingerprint};
+use {
+    crate::{DigestWriter, FingerprintBytes},
+    digest::Digest,
+    sha2::Sha256,
+};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -80,9 +84,9 @@ where
     /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
     #[cfg(feature = "fingerprint")]
     pub fn fingerprint_bytes(&self) -> Result<FingerprintBytes> {
-        let mut builder = fingerprint::Builder::new();
-        self.encode(&mut builder)?;
-        Ok(builder.finish())
+        let mut hash = Sha256::new();
+        self.encode(&mut DigestWriter(&mut hash))?;
+        Ok(hash.finalize().into())
     }
 }
 

@@ -43,8 +43,8 @@ mod error;
 mod spki;
 mod traits;
 
-#[cfg(feature = "fingerprint")]
-mod fingerprint;
+#[cfg(feature = "digest")]
+mod digest;
 
 pub use crate::{
     algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef, AlgorithmIdentifierWithOid},
@@ -67,5 +67,18 @@ pub use {
     der::Document,
 };
 
+#[cfg(feature = "digest")]
+pub use crate::digest::DigestWriter;
+
+/// Size of a SHA-256 SPKI fingerprint in bytes.
 #[cfg(feature = "fingerprint")]
-pub use crate::fingerprint::FingerprintBytes;
+pub(crate) const SIZE: usize = 32;
+
+/// Raw bytes of a SPKI fingerprint i.e. SHA-256 digest of
+/// `SubjectPublicKeyInfo`'s DER encoding.
+///
+/// See [RFC7469 § 2.1.1] for more information.
+///
+/// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
+#[cfg(feature = "fingerprint")]
+pub type FingerprintBytes = [u8; SIZE];
