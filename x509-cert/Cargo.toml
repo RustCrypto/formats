@@ -28,7 +28,7 @@ signature = { version = "=2.3.0-pre.6", features = ["rand_core"], optional = tru
 tls_codec = { version = "0.4.0", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
-hex-literal = "0.4"
+hex-literal = "1.0"
 rand = "0.9"
 rsa = { version = "=0.10.0-pre.4", features = ["sha2"] }
 ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
