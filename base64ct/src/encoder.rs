@@ -74,7 +74,7 @@ impl<'o, E: Encoding> Encoder<'o, E> {
     /// Encode the provided buffer as Base64, writing it to the output buffer.
     ///
     /// # Returns
-    /// - `Ok(bytes)` if the expected amount of data was read
+    /// - `Ok(())` if the expected amount of data was read
     /// - `Err(Error::InvalidLength)` if there is insufficient space in the output buffer
     pub fn encode(&mut self, mut input: &[u8]) -> Result<(), Error> {
         // If there's data in the block buffer, fill it
