@@ -22,7 +22,7 @@ x509-cert = { version = "=0.3.0-pre.0", default-features = false }
 
 [dev-dependencies]
 der = { version = "0.8.0-rc.0", features = ["oid", "pem", "alloc"] }
-hex-literal = "1.0"
+hex-literal = "1"
 x509-cert = { version = "=0.3.0-pre.0", default-features = false, features = ["pem"] }
 
 [features]

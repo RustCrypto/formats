@@ -21,4 +21,4 @@ cmpv2 = { version = "=0.3.0-pre.0", features = ["alloc"] }
 x509-cert = { version = "=0.3.0-pre.0", default-features = false }
 
 [dev-dependencies]
-hex-literal = "1.0.0"
+hex-literal = "1"
