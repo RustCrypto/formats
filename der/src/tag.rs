@@ -33,6 +33,8 @@ impl<T: FixedTag + ?Sized> Tagged for T {
 }
 
 /// Types which have a constant ASN.1 constructed bit.
+///
+/// Auto-implemented on all types that implement [`FixedTag`].
 pub trait IsConstructed {
     /// ASN.1 constructed bit
     const CONSTRUCTED: bool;
