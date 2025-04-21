@@ -261,7 +261,7 @@ pub const fn encoded_len<T: Encoding>(length: usize) -> usize {
     } else if T::PADDED {
         ((length - 1) / 5 + 1) * 8
     } else {
-        (length * 8 + 4) / 5
+        (length * 8).div_ceil(5)
     }
 }
 

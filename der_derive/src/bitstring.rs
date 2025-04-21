@@ -100,7 +100,7 @@ impl DeriveBitString {
                 min_expected_fields += 1;
             }
         }
-        let max_expected_bytes = (max_expected_fields + 7) / 8;
+        let max_expected_bytes = max_expected_fields.div_ceil(8);
 
         for (i, field) in self.fields.iter().enumerate().rev() {
             let field_name = &field.ident;
