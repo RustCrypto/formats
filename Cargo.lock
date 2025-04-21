@@ -290,7 +290,7 @@ dependencies = [
  "crmf",
  "der",
  "digest",
- "hex-literal 0.4.1",
+ "hex-literal",
  "spki",
  "x509-cert",
 ]
@@ -310,7 +310,7 @@ dependencies = [
  "ecdsa",
  "elliptic-curve",
  "getrandom 0.3.2",
- "hex-literal 0.4.1",
+ "hex-literal",
  "p256",
  "pbkdf2",
  "pem-rfc7468",
@@ -332,7 +332,7 @@ name = "const-oid"
 version = "0.10.1"
 dependencies = [
  "arbitrary",
- "hex-literal 1.0.0",
+ "hex-literal",
  "proptest",
  "regex",
 ]
@@ -446,7 +446,7 @@ dependencies = [
  "der_derive",
  "flagset",
  "heapless",
- "hex-literal 1.0.0",
+ "hex-literal",
  "pem-rfc7468",
  "proptest",
  "time",
@@ -690,7 +690,7 @@ name = "gss-api"
 version = "0.2.0-pre"
 dependencies = [
  "der",
- "hex-literal 0.4.1",
+ "hex-literal",
  "spki",
  "x509-cert",
 ]
@@ -735,12 +735,6 @@ name = "hermit-abi"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbd780fe5cc30f81464441920d82ac8740e2e46b29a6fad543ddd075229ce37e"
-
-[[package]]
-name = "hex-literal"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fe2267d4ed49bc07b63801559be28c718ea06c4738b7a03c94df7386d2cde46"
 
 [[package]]
 name = "hex-literal"
@@ -957,7 +951,7 @@ version = "0.8.0-rc.1"
 dependencies = [
  "const-oid",
  "der",
- "hex-literal 1.0.0",
+ "hex-literal",
  "pkcs8",
  "spki",
  "tempfile",
@@ -971,7 +965,7 @@ dependencies = [
  "const-oid",
  "der",
  "digest",
- "hex-literal 1.0.0",
+ "hex-literal",
  "pkcs5",
  "pkcs8",
  "sha2",
@@ -990,7 +984,7 @@ dependencies = [
  "cbc",
  "der",
  "des",
- "hex-literal 1.0.0",
+ "hex-literal",
  "pbkdf2",
  "rand_core 0.9.3",
  "scrypt",
@@ -1004,7 +998,7 @@ name = "pkcs8"
 version = "0.11.0-rc.2"
 dependencies = [
  "der",
- "hex-literal 1.0.0",
+ "hex-literal",
  "pkcs5",
  "rand_core 0.9.3",
  "spki",
@@ -1369,7 +1363,7 @@ version = "0.8.0-rc.4"
 dependencies = [
  "base16ct",
  "der",
- "hex-literal 1.0.0",
+ "hex-literal",
  "hybrid-array",
  "pkcs8",
  "serdect",
@@ -1442,7 +1436,7 @@ dependencies = [
  "base16ct",
  "bincode",
  "ciborium",
- "hex-literal 1.0.0",
+ "hex-literal",
  "proptest",
  "rmp-serde",
  "serde",
@@ -1510,7 +1504,7 @@ dependencies = [
  "base64ct",
  "der",
  "digest",
- "hex-literal 1.0.0",
+ "hex-literal",
  "sha2",
  "tempfile",
 ]
@@ -1875,7 +1869,7 @@ dependencies = [
  "der",
  "digest",
  "ecdsa",
- "hex-literal 0.4.1",
+ "hex-literal",
  "p256",
  "rand 0.9.1",
  "rsa",
@@ -1906,7 +1900,7 @@ dependencies = [
  "const-oid",
  "der",
  "digest",
- "hex-literal 0.4.1",
+ "hex-literal",
  "lazy_static",
  "rand 0.9.1",
  "rand_core 0.9.3",
@@ -1925,7 +1919,7 @@ dependencies = [
  "cmpv2",
  "cms",
  "der",
- "hex-literal 0.4.1",
+ "hex-literal",
  "x509-cert",
 ]
 
