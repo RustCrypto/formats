@@ -51,6 +51,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "aes-kw"
+version = "0.3.0-pre"
+source = "git+https://github.com/RustCrypto/key-wraps.git#15f7dd084793ea67360a8f66f771a8e420c1657f"
+dependencies = [
+ "aes",
+ "const-oid",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -64,6 +73,14 @@ name = "anes"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
+
+[[package]]
+name = "ansi-x963-kdf"
+version = "0.0.1"
+source = "git+https://github.com/RustCrypto/KDFs.git#b1d7fe67b3053deef498563adcf415ec631d1cd8"
+dependencies = [
+ "digest",
+]
 
 [[package]]
 name = "anstyle"
@@ -282,11 +299,15 @@ name = "cms"
 version = "0.3.0-pre.0"
 dependencies = [
  "aes",
+ "aes-kw",
+ "ansi-x963-kdf",
  "cbc",
  "cipher",
  "const-oid",
  "der",
+ "digest",
  "ecdsa",
+ "elliptic-curve",
  "getrandom 0.3.2",
  "hex-literal 0.4.1",
  "p256",
@@ -510,6 +531,7 @@ dependencies = [
  "digest",
  "ff",
  "group",
+ "hkdf",
  "hybrid-array",
  "pem-rfc7468",
  "pkcs8",
@@ -724,6 +746,15 @@ name = "hex-literal"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bcaaec4551594c969335c98c903c1397853d4198408ea609190f420500f6be71"
+
+[[package]]
+name = "hkdf"
+version = "0.13.0-pre.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0aaa7579d1176645cee5dc206aa74873b5b3be479af9606025f9b8905bcf597b"
+dependencies = [
+ "hmac",
+]
 
 [[package]]
 name = "hmac"
