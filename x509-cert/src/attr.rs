@@ -155,7 +155,7 @@ impl AttributeTypeAndValue {
         };
 
         // Decode der bytes from hex.
-        let mut bytes = Vec::with_capacity((val.len() + 1) / 2);
+        let mut bytes = Vec::with_capacity(val.len().div_ceil(2));
 
         while let (Some(h), Some(l)) = (iter.next(), iter.next()) {
             let mut byte = 0u8;
