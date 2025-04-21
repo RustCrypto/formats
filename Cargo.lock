@@ -77,7 +77,7 @@ checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 [[package]]
 name = "ansi-x963-kdf"
 version = "0.0.1"
-source = "git+https://github.com/RustCrypto/KDFs.git?branch=master#b1d7fe67b3053deef498563adcf415ec631d1cd8"
+source = "git+https://github.com/RustCrypto/KDFs.git#b1d7fe67b3053deef498563adcf415ec631d1cd8"
 dependencies = [
  "digest",
 ]
@@ -95,14 +95,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dde20b3d026af13f561bdd0f15edf01fc734f0dafcedbaf42bba506a9517f223"
 dependencies = [
  "derive_arbitrary",
-]
-
-[[package]]
-name = "async-signature"
-version = "0.6.0-pre.4"
-source = "git+https://github.com/RustCrypto/traits.git#2dc47f8d1461a2a7a22b68e2afafeb4b59e13420"
-dependencies = [
- "signature",
 ]
 
 [[package]]
@@ -309,7 +301,6 @@ dependencies = [
  "aes",
  "aes-kw",
  "ansi-x963-kdf",
- "async-signature",
  "cbc",
  "cipher",
  "const-oid",

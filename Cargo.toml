@@ -74,7 +74,7 @@ aes-kw = { git = "https://github.com/RustCrypto/key-wraps.git" }
 
 
 # https://github.com/RustCrypto/KDFs/pull/102
-ansi-x963-kdf = { git = "https://github.com/RustCrypto/KDFs.git", branch = "master" }
+ansi-x963-kdf = { git = "https://github.com/RustCrypto/KDFs.git" }
 
 
 # https://github.com/RustCrypto/traits/pull/1777
@@ -82,7 +82,6 @@ crypto-common  = { git = "https://github.com/RustCrypto/traits.git" }
 elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
 signature      = { git = "https://github.com/RustCrypto/traits.git" }
 aead           = { git = "https://github.com/RustCrypto/traits.git" }
-async-signature = { git = "https://github.com/RustCrypto/traits.git" }
 
 # https://github.com/RustCrypto/RSA/pull/478
 # https://github.com/RustCrypto/RSA/pull/504

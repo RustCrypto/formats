@@ -24,7 +24,6 @@ x509-cert = { version = "=0.3.0-pre.0", default-features = false }
 aes = { version = "=0.9.0-pre.3", optional = true }
 aes-kw = { version ="=0.3.0-pre", optional = true }
 ansi-x963-kdf = { version = "0.0.1", optional = true }
-async-signature = { version = "=0.6.0-pre.4", features = ["digest", "rand_core"], optional = true }
 cbc = { version = "=0.2.0-pre.2", optional = true }
 cipher = { version = "=0.5.0-pre.8", features = ["alloc", "block-padding", "rand_core"], optional = true }
 digest = { version = "0.11.0-pre.10", optional = true }
@@ -56,7 +55,6 @@ builder = [
     "dep:aes",
     "dep:aes-kw",
     "dep:ansi-x963-kdf",
-    "dep:async-signature",
     "dep:cbc",
     "dep:cipher",
     "dep:digest",
