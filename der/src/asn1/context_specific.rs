@@ -63,8 +63,14 @@ impl<T> ContextSpecific<T> {
         T: DecodeValue<'a> + Tagged,
     {
         Self::decode_with::<_, _, T::Error>(reader, tag_number, |reader| {
+            // Decode IMPLICIT header
             let header = Header::decode(reader)?;
-            let value = T::decode_value(reader, header)?;
+
+            // read_nested checks if header matches decoded length
+            let value = reader.read_nested(header.length, |reader| {
+                // Decode inner IMPLICIT value
+                T::decode_value(reader, header)
+            })?;
 
             if header.tag.is_constructed() != value.tag().is_constructed() {
                 return Err(header.tag.non_canonical_error().into());
@@ -119,6 +125,7 @@ where
     type Error = T::Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Self::Error> {
+        // Decode EXPLICIT header
         let header = Header::decode(reader)?;
 
         match header.tag {
@@ -128,7 +135,10 @@ where
             } => Ok(Self {
                 tag_number: number,
                 tag_mode: TagMode::default(),
-                value: reader.read_nested(header.length, |reader| T::decode(reader))?,
+                value: reader.read_nested(header.length, |reader| {
+                    // Decode inner tag-length-value of EXPLICIT
+                    T::decode(reader)
+                })?,
             }),
             tag => Err(tag.unexpected_error(None).into()),
         }

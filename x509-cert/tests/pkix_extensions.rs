@@ -843,8 +843,6 @@ fn decode_cert() {
 
 #[test]
 fn decode_idp() {
-    use der::TagNumber;
-
     // IDP from 04A8739769B3C090A11DCDFABA3CF33F4BEF21F3.crl in PKITS 2048 in ficam-scvp-testing repo
     let idp = IssuingDistributionPoint::from_der(&hex!("30038201FF")).unwrap();
     assert_eq!(idp.only_contains_ca_certs, true);
@@ -1112,7 +1110,11 @@ fn decode_idp() {
             panic!("Expected FullName")
         }
     }
+}
 
+#[test]
+fn decode_idp_negative() {
+    use der::TagNumber;
     //---------------------------------
     // Negative tests
     //---------------------------------
@@ -1143,7 +1145,7 @@ fn decode_idp() {
         "3067A060A05EA45C305A310B3009060355040613025553311F301D060355040A131654657374204365727469666963617465732032303137311C301A060355040B13136F6E6C79536F6D65526561736F6E7320434133310C300A0603550403130343524C8304079F80"
     ));
     let err = idp.err().unwrap();
-    assert_eq!(err.position().unwrap(), 103u8.into());
+    assert_eq!(err.position().unwrap(), 105u8.into());
     assert_eq!(
         ErrorKind::Incomplete {
             expected_len: 106u8.into(),
@@ -1197,7 +1199,13 @@ fn decode_idp() {
         "30820168A0820161A082015DA4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434136A4753073310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353129302706035504031320696E6469726563742043524C20666F7220696E64697265637443524C20434137A46D306B310B3009060355040613025553311F301D060355040A13165465737420436572746966696361746573203230313731183016060355040B130F696E64697265637443524C204341353121301F0603550403131843524C3120666F7220696E64697265637443524C204341358402FFFF"
     ));
     let err = idp.err().unwrap();
-    assert_eq!(ErrorKind::Length { tag: Tag::Boolean }, err.kind());
+    assert_eq!(
+        ErrorKind::Incomplete {
+            expected_len: Length::new(365),
+            actual_len: Length::new(364)
+        },
+        err.kind()
+    );
 
     // Boolean value is neither 0x00 nor 0xFF
     let idp = IssuingDistributionPoint::from_der(&hex!(
