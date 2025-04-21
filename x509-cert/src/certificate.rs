@@ -13,6 +13,13 @@ use der::{
     pem::{self, PemLabel},
 };
 
+#[cfg(feature = "digest")]
+use {
+    der::Encode,
+    digest::{Digest, Output},
+    spki::DigestWriter,
+};
+
 use crate::time::Time;
 
 /// [`Profile`] allows the consumer of this crate to customize the behavior when parsing
@@ -418,5 +425,23 @@ impl<P: Profile> CertificateInner<P> {
         }
 
         Ok(certs)
+    }
+}
+
+#[cfg(feature = "digest")]
+impl<P> CertificateInner<P>
+where
+    P: Profile,
+{
+    /// Return the hash of the DER serialization of this cetificate
+    pub fn hash<D>(&self) -> der::Result<Output<D>>
+    where
+        D: Digest,
+    {
+        let mut digest = D::new();
+
+        self.encode(&mut DigestWriter(&mut digest))?;
+
+        Ok(digest.finalize())
     }
 }

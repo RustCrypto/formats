@@ -9,7 +9,10 @@ use cms::enveloped_data::EnvelopedData;
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
 use x509_cert::attr::AttributeTypeAndValue;
 use x509_cert::ext::pkix::name::GeneralName;
-use x509_cert::serial_number::SerialNumber;
+use x509_cert::{
+    certificate::{Profile, Rfc5280},
+    serial_number::SerialNumber,
+};
 
 /// The `Controls` type is defined in [RFC 4211 Section 6].
 ///
@@ -231,7 +234,7 @@ pub type KeyGenParameters = OctetString;
 /// ```
 ///
 /// [RFC 4211 Section 6.5]: https://www.rfc-editor.org/rfc/rfc4211#section-6.5
-pub type OldCertId = CertId;
+pub type OldCertId<P> = CertId<P>;
 
 /// The `CertId` control is defined in [RFC 4211 Section 6.5].
 ///
@@ -244,9 +247,9 @@ pub type OldCertId = CertId;
 /// [RFC 4211 Section 6.5]: https://www.rfc-editor.org/rfc/rfc4211#section-6.5
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct CertId {
+pub struct CertId<P: Profile = Rfc5280> {
     pub issuer: GeneralName,
-    pub serial_number: SerialNumber,
+    pub serial_number: SerialNumber<P>,
 }
 
 /// The `ProtocolEncrKey` control is defined in [RFC 4211 Section 6.6].
