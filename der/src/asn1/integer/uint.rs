@@ -265,9 +265,9 @@ mod allocating {
         }
     }
 
-    impl OwnedToRef for Uint {
-        type Borrowed<'a> = UintRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+    impl<'a> OwnedToRef<'a> for Uint {
+        type Borrowed = UintRef<'a>;
+        fn owned_to_ref(&self) -> Self::Borrowed {
             let inner = self.inner.owned_to_ref();
 
             UintRef { inner }

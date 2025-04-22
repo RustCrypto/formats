@@ -4,6 +4,8 @@ use crate::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
+use der::asn1::BitStringRef;
+use der::referenced::DerCow;
 use core::{cmp::Ordering, fmt::Debug};
 use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd, asn1::BitString};
 
@@ -160,6 +162,37 @@ pub struct TbsCertificateInner<P: Profile = Rfc5280> {
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub(crate) issuer_unique_id: Option<BitString>,
+
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
+    pub(crate) subject_unique_id: Option<BitString>,
+
+    #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
+    pub(crate) extensions: Option<ext::Extensions>,
+}
+
+
+
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
+#[allow(missing_docs)]
+pub struct TbsCertificateInnerCow<'a, P: Profile = Rfc5280> {
+    /// The certificate version.
+    ///
+    /// Note that this value defaults to Version 1 per the RFC. However,
+    /// fields such as `issuer_unique_id`, `subject_unique_id` and `extensions`
+    /// require later versions. Care should be taken in order to ensure
+    /// standards compliance.
+    #[asn1(context_specific = "0", default = "Default::default")]
+    pub(crate) version: Version,
+
+    pub(crate) serial_number: SerialNumber<P>,
+    pub(crate) signature: AlgorithmIdentifier,
+    pub(crate) issuer: Name,
+    pub(crate) validity: Validity<P>,
+    pub(crate) subject: Name,
+    pub(crate) subject_public_key_info: SubjectPublicKeyInfo,
+
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
+    pub(crate) issuer_unique_id: Option<DerCow<BitStringRef<'a>>>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub(crate) subject_unique_id: Option<BitString>,

@@ -441,10 +441,12 @@ mod allocating {
         }
     }
 
-    impl OwnedToRef for BitString {
-        type Borrowed<'a> = BitStringRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
-            self.into()
+    impl<'a> OwnedToRef<'a> for BitString {
+        type Borrowed = BitStringRef<'a>;
+        fn owned_to_ref(&'a self) -> Self::Borrowed {
+            // Ensured to parse successfully in constructor
+            BitStringRef::new(self.unused_bits, &self.inner)
+                .expect("invalid BIT STRING")
         }
     }
 }

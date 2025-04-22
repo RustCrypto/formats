@@ -181,9 +181,9 @@ mod allocation {
         }
     }
 
-    impl OwnedToRef for TeletexString {
-        type Borrowed<'a> = TeletexStringRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+    impl<'a> OwnedToRef<'a> for TeletexString {
+        type Borrowed = TeletexStringRef<'a>;
+        fn owned_to_ref(&'a self) -> Self::Borrowed {
             TeletexStringRef {
                 inner: self.inner.owned_to_ref(),
             }

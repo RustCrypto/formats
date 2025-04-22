@@ -311,9 +311,9 @@ mod allocating {
         }
     }
 
-    impl OwnedToRef for Any {
-        type Borrowed<'a> = AnyRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+    impl<'a> OwnedToRef<'a> for Any {
+        type Borrowed = AnyRef<'a>;
+        fn owned_to_ref(&'a self) -> Self::Borrowed {
             self.into()
         }
     }

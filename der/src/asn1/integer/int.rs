@@ -294,9 +294,9 @@ mod allocating {
         }
     }
 
-    impl OwnedToRef for Int {
-        type Borrowed<'a> = IntRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+    impl<'a> OwnedToRef<'a> for Int {
+        type Borrowed = IntRef<'a>;
+        fn owned_to_ref(&self) -> Self::Borrowed {
             let inner = self.inner.owned_to_ref();
 
             IntRef { inner }

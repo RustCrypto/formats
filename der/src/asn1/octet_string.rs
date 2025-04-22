@@ -1,9 +1,9 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    BytesRef, Decode, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
-    Tag, Writer, asn1::AnyRef, ord::OrdIsValueOrd,
+    asn1::AnyRef, ord::OrdIsValueOrd, referenced::RefToOwned, BytesRef, Decode, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Tag, Writer
 };
+
 
 /// ASN.1 `OCTET STRING` type: borrowed form.
 ///
@@ -254,9 +254,9 @@ mod allocating {
         }
     }
 
-    impl OwnedToRef for OctetString {
-        type Borrowed<'a> = OctetStringRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+    impl<'a> OwnedToRef<'a> for OctetString {
+        type Borrowed = OctetStringRef<'a>;
+        fn owned_to_ref(&'a self) -> Self::Borrowed {
             self.into()
         }
     }
