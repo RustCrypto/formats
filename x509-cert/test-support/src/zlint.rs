@@ -140,16 +140,19 @@ Rounds = 100
 
 pub fn check_certificate(pem: &[u8], ignored: &[&str]) {
     let tmp_dir = tempdir().expect("create tempdir");
-    let config_path = tmp_dir.path().join("config.toml");
-    let cert_path = tmp_dir.path().join("cert.pem");
+    let config_path = tmp_dir.path().join("zlint_config.toml");
+    let cert_path = tmp_dir.path().join("zlint_cert.pem");
 
-    let mut config_file = File::create(&config_path).expect("create config file");
-    config_file
-        .write_all(ZLINT_CONFIG.as_bytes())
-        .expect("Create config file");
-
-    let mut cert_file = File::create(&cert_path).expect("create pem file");
-    cert_file.write_all(pem).expect("Create pem file");
+    {
+        let mut config_file = File::create(&config_path).expect("create config file");
+        config_file
+            .write_all(ZLINT_CONFIG.as_bytes())
+            .expect("Create config file");
+    }
+    {
+        let mut cert_file = File::create(&cert_path).expect("create pem file");
+        cert_file.write_all(pem).expect("Create pem file");
+    }
 
     let mut child = Command::new("zlint")
         .arg("-pretty")
@@ -167,13 +170,16 @@ pub fn check_certificate(pem: &[u8], ignored: &[&str]) {
         });
 
     let mut stdout = child.stdout.take().unwrap();
+
+    let output_buf = {
+        let mut buf = Vec::new();
+        stdout.read_to_end(&mut buf).expect("read zlint output");
+        buf
+    };
+
     let exit_status = child.wait().expect("get zlint status");
 
     assert!(exit_status.success(), "zlint failed");
-    let mut output_buf = Vec::new();
-    stdout
-        .read_to_end(&mut output_buf)
-        .expect("read zlint output");
 
     let output: LintResult = serde_json::from_slice(&output_buf).expect("parse zlint output");
 
