@@ -1,6 +1,6 @@
 //! Negotiation-related types
 use der::{
-    AnyRef, Choice, Enumerated, Sequence,
+    Choice, DecodeValue, EncodeValue, Enumerated, FixedTag, Sequence, Tag,
     asn1::{BitString, OctetStringRef},
 };
 
@@ -295,14 +295,8 @@ pub enum NegState {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Sequence)]
 pub struct NegHints<'a> {
     /// SHOULD<5> contain the string "not_defined_in_RFC4178@please_ignore".
-    /// This is currently `AnyRef` as `GeneralString` is not part of the `der` crate
-    #[asn1(
-        context_specific = "0",
-        optional = "true",
-        tag_mode = "IMPLICIT",
-        constructed = "true"
-    )]
-    pub hint_name: Option<AnyRef<'a>>, // TODO: GeneralString
+    #[asn1(context_specific = "0", optional = "true")]
+    pub hint_name: Option<GeneralStringRef<'a>>, // TODO: der GeneralString
 
     /// Never present. MUST be omitted by the sender. Note that the encoding rules, as specified in [X690], require that this structure not be present at all, not just be zero.
     ///
@@ -356,6 +350,37 @@ pub struct NegTokenInit2<'a> {
     pub mech_list_mic: Option<OctetStringRef<'a>>,
 }
 
+/// This is currently `OctetStringRef` as `GeneralString` is not part of the `der` crate
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct GeneralStringRef<'a> {
+    /// Raw contents, unchecked
+    pub contents: OctetStringRef<'a>,
+}
+impl FixedTag for GeneralStringRef<'_> {
+    const TAG: Tag = Tag::GeneralString;
+}
+impl<'a> DecodeValue<'a> for GeneralStringRef<'a> {
+    type Error = der::Error;
+
+    fn decode_value<R: der::Reader<'a>>(
+        reader: &mut R,
+        header: der::Header,
+    ) -> Result<Self, Self::Error> {
+        Ok(Self {
+            contents: OctetStringRef::decode_value(reader, header)?,
+        })
+    }
+}
+impl EncodeValue for GeneralStringRef<'_> {
+    fn value_len(&self) -> der::Result<der::Length> {
+        self.contents.value_len()
+    }
+
+    fn encode_value(&self, encoder: &mut impl der::Writer) -> der::Result<()> {
+        self.contents.encode_value(encoder)
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
@@ -389,7 +414,13 @@ mod tests {
         );
         assert_eq!(
             b"not_defined_in_RFC4178@please_ignore",
-            &neg_token.neg_hints.unwrap().hint_name.unwrap().value()[2..]
+            &neg_token
+                .neg_hints
+                .unwrap()
+                .hint_name
+                .unwrap()
+                .contents
+                .as_bytes()
         );
     }
 
