@@ -1,6 +1,5 @@
 //! A module for working with referenced data.
 
-
 use crate::FixedTag;
 
 /// A trait for borrowing data from an owned struct
@@ -27,7 +26,7 @@ pub trait OwnedToRef<'a> {
 /// own the content.
 pub trait RefToOwned<'a> {
     /// The resulting type after obtaining ownership.
-    type Owned: OwnedToRef<'a ,Borrowed = Self>
+    type Owned: OwnedToRef<'a, Borrowed = Self>
     where
         Self: 'a;
 
@@ -39,8 +38,7 @@ impl<'a, T> OwnedToRef<'a> for Option<T>
 where
     T: OwnedToRef<'a>,
 {
-    type Borrowed
-        = Option<T::Borrowed>;
+    type Borrowed = Option<T::Borrowed>;
 
     fn owned_to_ref(&'a self) -> Self::Borrowed {
         self.as_ref().map(|o| o.owned_to_ref())
@@ -102,25 +100,23 @@ where
     const TAG: crate::Tag = B::TAG;
 }
 
-impl<'a, B> PartialEq for DerCow<'a, B>
-where
-    B: RefToOwned<'a> + Sized + PartialEq,
-    <B as RefToOwned<'a>>::Owned: PartialEq + OwnedToRef<'a>,
-{
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Borrowed(l0), Self::Borrowed(r0)) => l0 == r0,
-            (Self::Owned(l0), Self::Owned(r0)) => l0 == r0,
-            (Self::Owned(l0), Self::Borrowed(r0)) => {
-                let l1 = l0.owned_to_ref();
-                &l1 == *r0
-            },
-            _ => false,
-        }
-    }
-}
-
-
+// impl<'a, B> PartialEq for DerCow<'a, B>
+// where
+//     B: RefToOwned<'a> + Sized + PartialEq,
+//     <B as RefToOwned<'a>>::Owned: PartialEq + OwnedToRef<'a>,
+// {
+//     fn eq(&self, other: &Self) -> bool {
+//         match (self, other) {
+//             (Self::Borrowed(l0), Self::Borrowed(r0)) => l0 == r0,
+//             (Self::Owned(l0), Self::Owned(r0)) => l0 == r0,
+//             (Self::Owned(l0), Self::Borrowed(r0)) => {
+//                 let l1 = l0.owned_to_ref();
+//                 *r0 == &l1
+//             }
+//             _ => false,
+//         }
+//     }
+// }
 
 // impl<'a, B> Deref for DerCow<'a, B>
 // where

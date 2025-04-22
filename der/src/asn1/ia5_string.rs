@@ -166,7 +166,7 @@ mod allocation {
 
     impl<'a> OwnedToRef<'a> for Ia5String {
         type Borrowed = Ia5StringRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed {
+        fn owned_to_ref(&'a self) -> Self::Borrowed {
             Ia5StringRef {
                 inner: self.inner.owned_to_ref(),
             }

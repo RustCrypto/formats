@@ -4,9 +4,9 @@ use crate::{AlgorithmIdentifier, SubjectPublicKeyInfo};
 use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
+use core::{cmp::Ordering, fmt::Debug};
 use der::asn1::BitStringRef;
 use der::referenced::DerCow;
-use core::{cmp::Ordering, fmt::Debug};
 use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd, asn1::BitString};
 
 #[cfg(feature = "pem")]
@@ -169,8 +169,6 @@ pub struct TbsCertificateInner<P: Profile = Rfc5280> {
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
     pub(crate) extensions: Option<ext::Extensions>,
 }
-
-
 
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
