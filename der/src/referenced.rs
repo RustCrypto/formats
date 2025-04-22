@@ -12,7 +12,9 @@ use crate::FixedTag;
 /// the whole structure.
 pub trait OwnedToRef<'a> {
     /// The resulting type referencing back to Self
-    type Borrowed: 'a;
+    type Borrowed: 'a
+    where
+        Self: 'a;
 
     /// Creates a new object referencing back to the self for storage
     fn owned_to_ref(&'a self) -> Self::Borrowed;
@@ -36,7 +38,7 @@ pub trait RefToOwned<'a> {
 
 impl<'a, T> OwnedToRef<'a> for Option<T>
 where
-    T: OwnedToRef<'a>,
+    T: OwnedToRef<'a> + 'a,
 {
     type Borrowed = Option<T::Borrowed>;
 
@@ -100,23 +102,23 @@ where
     const TAG: crate::Tag = B::TAG;
 }
 
-// impl<'a, B> PartialEq for DerCow<'a, B>
-// where
-//     B: RefToOwned<'a> + Sized + PartialEq,
-//     <B as RefToOwned<'a>>::Owned: PartialEq + OwnedToRef<'a>,
-// {
-//     fn eq(&self, other: &Self) -> bool {
-//         match (self, other) {
-//             (Self::Borrowed(l0), Self::Borrowed(r0)) => l0 == r0,
-//             (Self::Owned(l0), Self::Owned(r0)) => l0 == r0,
-//             (Self::Owned(l0), Self::Borrowed(r0)) => {
-//                 let l1 = l0.owned_to_ref();
-//                 *r0 == &l1
-//             }
-//             _ => false,
-//         }
-//     }
-// }
+impl<'a, B> PartialEq for DerCow<'a, B>
+where
+    B: RefToOwned<'a> + Sized + PartialEq,
+    <B as RefToOwned<'a>>::Owned: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Borrowed(l0), Self::Borrowed(r0)) => l0 == r0,
+            (Self::Owned(l0), Self::Owned(r0)) => l0 == r0,
+            (Self::Owned(l0), Self::Borrowed(r0)) => {
+                let l1 = l0.owned_to_ref();
+                *r0 == &l1
+            }
+            _ => false,
+        }
+    }
+}
 
 // impl<'a, B> Deref for DerCow<'a, B>
 // where
