@@ -296,7 +296,7 @@ pub enum NegState {
 pub struct NegHints<'a> {
     /// SHOULD<5> contain the string "not_defined_in_RFC4178@please_ignore".
     #[asn1(context_specific = "0", optional = "true")]
-    pub hint_name: Option<GeneralStringRef<'a>>, // TODO: der GeneralString
+    pub hint_name: Option<GeneralStringRef<'a>>,
 
     /// Never present. MUST be omitted by the sender. Note that the encoding rules, as specified in [X690], require that this structure not be present at all, not just be zero.
     ///
