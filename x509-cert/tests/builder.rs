@@ -1,4 +1,4 @@
-#![cfg(all(feature = "builder", feature = "pem"))]
+#![cfg(all(feature = "builder", feature = "pem", feature = "std"))]
 
 use der::{
     EncodePem,

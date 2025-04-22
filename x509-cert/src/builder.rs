@@ -115,7 +115,8 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 /// X509 Certificate builder
 ///
-/// ```
+#[cfg_attr(feature = "std", doc = "```")]
+#[cfg_attr(not(feature = "std"), doc = "```ignore")]
 /// use der::Decode;
 /// use x509_cert::spki::SubjectPublicKeyInfo;
 /// use x509_cert::builder::{CertificateBuilder, Builder, profile};
