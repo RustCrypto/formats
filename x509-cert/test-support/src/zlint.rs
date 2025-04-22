@@ -8,7 +8,6 @@ use std::{
     fs::File,
     io::{self, Read, Write},
     process::{Command, Stdio},
-    thread,
 };
 use tempfile::tempdir;
 
@@ -172,25 +171,19 @@ pub fn check_certificate(pem: &[u8], ignored: &[&str]) {
 
     let mut stdout = child.stdout.take().unwrap();
 
-    // read stdout in another thread
-    let output_handle = thread::spawn(move || {
-        let mut output_buf = Vec::new();
-        stdout
-            .read_to_end(&mut output_buf)
-            .expect("read zlint output");
-        output_buf
-    });
+    let output_buf = {
+        let mut buf = Vec::new();
+        stdout.read_to_end(&mut buf).expect("read zlint output");
+        buf
+    };
+
     let exit_status = child.wait().expect("get zlint status");
 
     assert!(exit_status.success(), "zlint failed");
 
-    let output_buf = output_handle.join().expect("stdout thread to join");
     let output: LintResult = serde_json::from_slice(&output_buf).expect("parse zlint output");
 
     assert!(output.check_lints(ignored));
-
-    std::fs::remove_file(config_path).expect("tmp file to be removed");
-    std::fs::remove_file(cert_path).expect("tmp file to be removed");
 }
 
 #[test]
