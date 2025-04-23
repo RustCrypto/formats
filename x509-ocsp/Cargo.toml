@@ -24,7 +24,7 @@ x509-cert = { version = "=0.3.0-pre.0", default-features = false }
 # Optional
 digest = { version = "=0.11.0-pre.10", optional = true, default-features = false, features = ["oid"] }
 rand_core = { version = "0.9", optional = true, default-features = false }
-signature = { version = "=2.3.0-pre.6", optional = true, default-features = false, features = ["digest", "rand_core"] }
+signature = { version = "=3.0.0-pre", optional = true, default-features = false, features = ["digest", "rand_core"] }
 
 [dev-dependencies]
 hex-literal = "1"

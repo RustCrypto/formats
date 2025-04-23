@@ -24,7 +24,7 @@ spki = { version = "0.8.0-rc.0", features = ["alloc"] }
 arbitrary = { version = "1.4", features = ["derive"], optional = true }
 digest = { version = "0.11.0-pre.10", optional = true, default-features = false }
 sha1 = { version = "0.11.0-pre.5", default-features = false, optional = true }
-signature = { version = "=2.3.0-pre.6", features = ["rand_core"], optional = true }
+signature = { version = "=3.0.0-pre", features = ["rand_core"], optional = true }
 tls_codec = { version = "0.4.0", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]

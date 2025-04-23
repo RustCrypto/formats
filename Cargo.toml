@@ -92,7 +92,6 @@ rsa = { git = "https://github.com/RustCrypto/RSA.git" }
 pbkdf2 = { git = "https://github.com/RustCrypto/password-hashes.git" }
 scrypt = { git = "https://github.com/RustCrypto/password-hashes.git" }
 
-crypto-bigint = { git = "https://github.com/RustCrypto/crypto-bigint.git" }
 crypto-primes = { git = "https://github.com/entropyxyz/crypto-primes.git" }
 
 # https://github.com/RustCrypto/elliptic-curves/pull/1125
