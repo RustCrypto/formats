@@ -2,7 +2,7 @@ use crate::{DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Tag, Wri
 
 use super::OctetStringRef;
 
-/// This is currently `OctetStringRef` as `GeneralString` is not part of the `der` crate
+/// This is currently `OctetStringRef` internally, as `GeneralString` is not fully implemented yet
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct GeneralStringRef<'a> {
     /// Raw contents, unchecked
