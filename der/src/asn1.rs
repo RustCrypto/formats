@@ -11,6 +11,7 @@ mod bmp_string;
 mod boolean;
 mod choice;
 mod context_specific;
+mod general_string;
 mod generalized_time;
 mod ia5_string;
 mod integer;
@@ -35,6 +36,7 @@ pub use self::{
     bit_string::{BitStringIter, BitStringRef},
     choice::Choice,
     context_specific::{ContextSpecific, ContextSpecificRef},
+    general_string::GeneralStringRef,
     generalized_time::GeneralizedTime,
     ia5_string::Ia5StringRef,
     integer::{int::IntRef, uint::UintRef},

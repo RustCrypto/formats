@@ -1,7 +1,7 @@
 //! Negotiation-related types
 use der::{
-    Choice, DecodeValue, EncodeValue, Enumerated, FixedTag, Sequence, Tag,
-    asn1::{BitString, OctetStringRef},
+    Choice, Enumerated, Sequence,
+    asn1::{BitString, GeneralStringRef, OctetStringRef},
 };
 
 use crate::MechType;
@@ -350,37 +350,6 @@ pub struct NegTokenInit2<'a> {
     pub mech_list_mic: Option<OctetStringRef<'a>>,
 }
 
-/// This is currently `OctetStringRef` as `GeneralString` is not part of the `der` crate
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct GeneralStringRef<'a> {
-    /// Raw contents, unchecked
-    pub contents: OctetStringRef<'a>,
-}
-impl FixedTag for GeneralStringRef<'_> {
-    const TAG: Tag = Tag::GeneralString;
-}
-impl<'a> DecodeValue<'a> for GeneralStringRef<'a> {
-    type Error = der::Error;
-
-    fn decode_value<R: der::Reader<'a>>(
-        reader: &mut R,
-        header: der::Header,
-    ) -> Result<Self, Self::Error> {
-        Ok(Self {
-            contents: OctetStringRef::decode_value(reader, header)?,
-        })
-    }
-}
-impl EncodeValue for GeneralStringRef<'_> {
-    fn value_len(&self) -> der::Result<der::Length> {
-        self.contents.value_len()
-    }
-
-    fn encode_value(&self, encoder: &mut impl der::Writer) -> der::Result<()> {
-        self.contents.encode_value(encoder)
-    }
-}
-
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
@@ -419,7 +388,7 @@ mod tests {
                 .unwrap()
                 .hint_name
                 .unwrap()
-                .contents
+                .__contents
                 .as_bytes()
         );
     }
