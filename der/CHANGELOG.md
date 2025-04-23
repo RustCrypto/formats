@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 (UNRELEASED)
+
+### Added
+- `EncodingRules` enum ([#1321])
+- Custom error types support to the `Decode` and `DecodeValue` traits ([#1055])
+- `Decode::from_ber` ([#1389])
+- Documentation for field-level `tag_mode` attribute ([#1401])
+- `Hash` implementation for `AlgorithmIdentifier` ([#1414])
+- `SequenceRef::as_bytes` and `AsRef<[u8]>` impl ([#1454])
+- `Reader::peek_into` ([#1478])
+- `GeneralString` variant to `Tag` ([#1512])
+- conversions from `OctetString(Ref)` to `Vec`/`Bytes` ([#1540])
+- Custom error types in derive macros. ([#1560])
+- Support for tags beyond 30 ([#1651])
+- const `::new` to `Length`, `BytesRef`, and `AnyRef` ([#1713])
+- const `GeneralizedTime::from_date_time` ([#1718])
+- `Decode::from_der_partial` (#1725)
+- conversions between `BitStringRef`/`OctetStringRef` and `[u8; N]` ([#1731])
+- add class bits consts for Application and Private tag support ([#1721])
+- conversions between `heapless:Vec<u8>` and `OctetStringRef` ([#1735])
+- impl `Hash` for `SetOf` ([#1764])
+- implement `Uint`/`Int` conversions from native types ([#1762])
+
+### Changed
+- Bump `const-oid` to v0.10 ([#1676])
+- Return `Tag::Integer.length_error()` on empty ints ([#1400])
+- have `Reader::peek*` methods take `&mut self` ([#1418])
+- allow all blanket impls on `?Sized` types ([#1451])
+- refactor `Tag::peek` ([#1479])
+- refactor `Header::peek` ([#1480])
+- use `core::error::Error` ([#1553])
+- Use 2024 edition, bump MSRV to 1.85 ([#1670])
+- Reject zero lengths reads ([#1716])
+- deprecate `TagNumber::new` ([#1727])
+
+### Fixed
+- fix append in `Encode::encode_to_vec` ([#1760])
+- fix derive optional OCTET/BIT STRING on `Option<&[u8]>` ([#1737])
+
+### Removed
+- `TagNumber::N0..N30` consts (#1724)
+- 256MiB limit on `Length` ([#1726])
+
+[#1055]: https://github.com/RustCrypto/formats/pull/1055
+[#1321]: https://github.com/RustCrypto/formats/pull/1321
+[#1389]: https://github.com/RustCrypto/formats/pull/1389
+[#1400]: https://github.com/RustCrypto/formats/pull/1400
+[#1401]: https://github.com/RustCrypto/formats/pull/1401
+[#1414]: https://github.com/RustCrypto/formats/pull/1414
+[#1418]: https://github.com/RustCrypto/formats/pull/1418
+[#1451]: https://github.com/RustCrypto/formats/pull/1451
+[#1454]: https://github.com/RustCrypto/formats/pull/1454
+[#1478]: https://github.com/RustCrypto/formats/pull/1478
+[#1479]: https://github.com/RustCrypto/formats/pull/1479
+[#1480]: https://github.com/RustCrypto/formats/pull/1480
+[#1512]: https://github.com/RustCrypto/formats/pull/1512
+[#1540]: https://github.com/RustCrypto/formats/pull/1540
+[#1553]: https://github.com/RustCrypto/formats/pull/1553
+[#1560]: https://github.com/RustCrypto/formats/pull/1560
+[#1651]: https://github.com/RustCrypto/formats/pull/1651
+[#1670]: https://github.com/RustCrypto/formats/pull/1670
+[#1676]: https://github.com/RustCrypto/formats/pull/1676
+[#1713]: https://github.com/RustCrypto/formats/pull/1713
+[#1716]: https://github.com/RustCrypto/formats/pull/1716
+[#1718]: https://github.com/RustCrypto/formats/pull/1718
+[#1721]: https://github.com/RustCrypto/formats/pull/1721
+[#1724]: https://github.com/RustCrypto/formats/pull/1724
+[#1725]: https://github.com/RustCrypto/formats/pull/1725
+[#1726]: https://github.com/RustCrypto/formats/pull/1726
+[#1727]: https://github.com/RustCrypto/formats/pull/1727
+[#1731]: https://github.com/RustCrypto/formats/pull/1731
+[#1735]: https://github.com/RustCrypto/formats/pull/1735
+[#1737]: https://github.com/RustCrypto/formats/pull/1737
+[#1760]: https://github.com/RustCrypto/formats/pull/1760
+[#1762]: https://github.com/RustCrypto/formats/pull/1762
+[#1764]: https://github.com/RustCrypto/formats/pull/1764
+
 ## 0.7.10 (2024-04-18)
 ### Fixed
 - append in `Encode::encode_to_vec` (backport [#1760])
