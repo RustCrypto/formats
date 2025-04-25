@@ -5,7 +5,7 @@ use core::fmt;
 use der::{
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
     TagNumber, Writer,
-    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
+    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
 };
 use spki::AlgorithmIdentifier;
 
@@ -25,6 +25,9 @@ use der::pem::PemLabel;
 
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
+
+/// Context-specific tag number for attributes.
+const ATTRIBUTES_TAG: TagNumber = TagNumber(0);
 
 /// Context-specific tag number for the public key.
 const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
@@ -199,6 +202,10 @@ where
             let version = Version::decode(reader)?;
             let algorithm = reader.decode()?;
             let private_key = Key::decode(reader)?;
+
+            let _attributes =
+                reader.context_specific::<SequenceRef<'_>>(ATTRIBUTES_TAG, TagMode::Implicit)?;
+
             let public_key =
                 reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
 
