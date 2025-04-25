@@ -1,7 +1,7 @@
 //! Negotiation-related types
 use der::{
-    AnyRef, Choice, Enumerated, Sequence,
-    asn1::{BitString, OctetStringRef},
+    Choice, Enumerated, Sequence,
+    asn1::{BitString, GeneralStringRef, OctetStringRef},
 };
 
 use crate::MechType;
@@ -295,14 +295,8 @@ pub enum NegState {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Sequence)]
 pub struct NegHints<'a> {
     /// SHOULD<5> contain the string "not_defined_in_RFC4178@please_ignore".
-    /// This is currently `AnyRef` as `GeneralString` is not part of the `der` crate
-    #[asn1(
-        context_specific = "0",
-        optional = "true",
-        tag_mode = "IMPLICIT",
-        constructed = "true"
-    )]
-    pub hint_name: Option<AnyRef<'a>>, // TODO: GeneralString
+    #[asn1(context_specific = "0", optional = "true")]
+    pub hint_name: Option<GeneralStringRef<'a>>,
 
     /// Never present. MUST be omitted by the sender. Note that the encoding rules, as specified in [X690], require that this structure not be present at all, not just be zero.
     ///
@@ -389,7 +383,7 @@ mod tests {
         );
         assert_eq!(
             b"not_defined_in_RFC4178@please_ignore",
-            &neg_token.neg_hints.unwrap().hint_name.unwrap().value()[2..]
+            &neg_token.neg_hints.unwrap().hint_name.unwrap().as_bytes()
         );
     }
 
