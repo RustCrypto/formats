@@ -1,12 +1,18 @@
 use crate::{BytesRef, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader, Tag, Writer};
 
-/// This is currently `OctetStringRef` internally, as `GeneralString` is not fully implemented yet
+/// This is currently `&[u8]` internally, as `GeneralString` is not fully implemented yet
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct GeneralStringRef<'a> {
     /// Raw contents, unchecked
-    #[doc(hidden)]
-    pub __contents: &'a [u8],
+    inner: BytesRef<'a>,
 }
+impl<'a> GeneralStringRef<'a> {
+    /// This is currently `&[u8]` internally, as `GeneralString` is not fully implemented yet
+    pub fn as_bytes(&self) -> &'a [u8] {
+        self.inner.as_slice()
+    }
+}
+
 impl FixedTag for GeneralStringRef<'_> {
     const TAG: Tag = Tag::GeneralString;
 }
@@ -15,16 +21,16 @@ impl<'a> DecodeValue<'a> for GeneralStringRef<'a> {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         Ok(Self {
-            __contents: BytesRef::decode_value(reader, header)?.as_slice(),
+            inner: BytesRef::decode_value(reader, header)?,
         })
     }
 }
 impl EncodeValue for GeneralStringRef<'_> {
     fn value_len(&self) -> crate::Result<Length> {
-        BytesRef::new(self.__contents)?.value_len()
+        self.inner.value_len()
     }
 
     fn encode_value(&self, encoder: &mut impl Writer) -> crate::Result<()> {
-        BytesRef::new(self.__contents)?.encode_value(encoder)
+        self.inner.encode_value(encoder)
     }
 }

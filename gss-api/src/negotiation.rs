@@ -383,7 +383,7 @@ mod tests {
         );
         assert_eq!(
             b"not_defined_in_RFC4178@please_ignore",
-            &neg_token.neg_hints.unwrap().hint_name.unwrap().__contents
+            &neg_token.neg_hints.unwrap().hint_name.unwrap().as_bytes()
         );
     }
 
