@@ -32,6 +32,17 @@ impl<T: FixedTag + ?Sized> Tagged for T {
     }
 }
 
+/// Types which have a constant ASN.1 constructed bit.
+pub trait IsConstructed {
+    /// ASN.1 constructed bit
+    const CONSTRUCTED: bool;
+}
+
+/// Types which are [`FixedTag`] always known if they are constructed (or primitive).
+impl<T: FixedTag + ?Sized> IsConstructed for T {
+    const CONSTRUCTED: bool = T::TAG.is_constructed();
+}
+
 /// ASN.1 tags.
 ///
 /// Tags are the leading identifier octet of the Tag-Length-Value encoding
@@ -229,7 +240,7 @@ impl Tag {
     }
 
     /// Does this tag represent a constructed (as opposed to primitive) field?
-    pub fn is_constructed(self) -> bool {
+    pub const fn is_constructed(self) -> bool {
         match self {
             Tag::Sequence | Tag::Set => true,
             Tag::Application { constructed, .. }

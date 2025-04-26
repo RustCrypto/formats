@@ -112,7 +112,7 @@ mod choice {
     /// `Choice` with `IMPLICIT` tagging.
     mod implicit {
         use der::{
-            Choice, Decode, Encode, SliceWriter,
+            Choice, Decode, Encode, Sequence, SliceWriter,
             asn1::{BitStringRef, GeneralizedTime},
         };
         use hex_literal::hex;
@@ -178,6 +178,13 @@ mod choice {
             let mut encoder = SliceWriter::new(&mut buf);
             cs_time.encode(&mut encoder).unwrap();
             assert_eq!(TIME_DER, encoder.finish().unwrap());
+        }
+
+        /// Test case for `CHOICE` inside `[0]` `EXPLICIT` tag in `SEQUENCE`.
+        #[derive(Sequence, Debug, Eq, PartialEq)]
+        pub struct ExplicitChoiceInsideSequence<'a> {
+            #[asn1(tag_mode = "EXPLICIT", context_specific = "0")]
+            choice_field: ImplicitChoice<'a>,
         }
     }
 }
@@ -740,6 +747,21 @@ mod decode_value {
         let obj = DecodeOnlyCheck::from_der(&hex!("30 04 85 02 33 44")).unwrap();
 
         assert_eq!(obj.field, &[0x33, 0x44]);
+    }
+}
+
+/// Custom derive test cases for the `DecodeValue` + `EncodeValue` macro combo.
+mod decode_encode_value {
+    use der::{DecodeValue, EncodeValue, IsConstructed};
+
+    /// Example of a structure, that does not have a tag and is not a sequence
+    /// but can be encoded as `[0] IMPLICIT`
+    #[derive(DecodeValue, EncodeValue, Default, Eq, PartialEq, Debug)]
+    struct DecodeEncodeCheck {
+        field: bool,
+    }
+    impl IsConstructed for DecodeEncodeCheck {
+        const CONSTRUCTED: bool = true;
     }
 }
 

@@ -3,6 +3,7 @@
 use crate::{
     Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error, Header,
     Length, Reader, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer, asn1::AnyRef,
+    tag::IsConstructed,
 };
 use core::cmp::Ordering;
 
@@ -60,7 +61,7 @@ impl<T> ContextSpecific<T> {
         tag_number: TagNumber,
     ) -> Result<Option<Self>, T::Error>
     where
-        T: DecodeValue<'a> + Tagged,
+        T: DecodeValue<'a> + IsConstructed,
     {
         Self::decode_with::<_, _, T::Error>(reader, tag_number, |reader| {
             // Decode IMPLICIT header
@@ -72,7 +73,7 @@ impl<T> ContextSpecific<T> {
                 T::decode_value(reader, header)
             })?;
 
-            if header.tag.is_constructed() != value.tag().is_constructed() {
+            if header.tag.is_constructed() != T::CONSTRUCTED {
                 return Err(header.tag.non_canonical_error().into());
             }
 
