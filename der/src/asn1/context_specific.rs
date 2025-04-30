@@ -185,6 +185,8 @@ where
             // 8.14.4 If implicit tagging was used in the definition of the type, then:
             // a) the encoding shall be constructed if the base encoding is constructed, and shall be primitive otherwise; and
             // b) the contents octets shall be the same as the contents octets [EncodeValue] of the base encoding.
+            //
+            // TODO(dishmaker): use IsConstructed trait for IMPLICIT
             TagMode::Implicit => self.value.tag().is_constructed(),
         };
 
