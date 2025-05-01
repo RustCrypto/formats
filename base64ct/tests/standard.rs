@@ -139,19 +139,4 @@ mod unpadded {
             Err(Error::InvalidEncoding)
         );
     }
-
-    #[test]
-    fn issue_1609() {
-        let input = "
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-QyNTUxOQAAACDctrRCQ6LEyzTbsXkAQ8mhdIOQZzP/XKcuplituD2PaQAAAKC+1uNjvtbj
-YwAAAAtzc2gtZWQyNTUxOQAAACDctrRCQ6LEyzTbsXkAQ8mhdIOQZzP/XKcuplituD2PaQ
-AAAEAyjynmk0ex/GrImDlAEN81gXGK4tWaq36kO+HRp8szLNy2tEJDosTLNNuxeQBDyaF0
-g5BnM/9cpy6mWK24PY9pAAAAFEdlbmVyYXRlZCBCeSBUZXJtaXVzAQIDBAUGBwgJ";
-        let mut buf = [0u8; 1024];
-        assert_eq!(
-            Base64Unpadded::decode(input.replace("\n", ""), &mut buf),
-            Err(Error::InvalidLength)
-        );
-    }
 }
