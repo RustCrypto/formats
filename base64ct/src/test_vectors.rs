@@ -69,7 +69,14 @@ pub(crate) const MULTILINE_UNPADDED_BIN: &[u8] = &[
     64, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 1, 2, 3, 4, 5, 6, 7,
 ];
 
-pub(crate) const MULTILINE_UNPADDED_BASE64_70_64: &[u8] = &[
+pub(crate) const MULTILINE_UNPADDED_BASE64_ISSUE1609: &str =
+    "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n\
+QyNTUxOQAAACDctrRCQ6LEyzTbsXkAQ8mhdIOQZzP/XKcuplituD2PaQAAAKC+1uNjvtbj\n\
+YwAAAAtzc2gtZWQyNTUxOQAAACDctrRCQ6LEyzTbsXkAQ8mhdIOQZzP/XKcuplituD2PaQ\n\
+AAAEAyjynmk0ex/GrImDlAEN81gXGK4tWaq36kO+HRp8szLNy2tEJDosTLNNuxeQBDyaF0\n\
+g5BnM/9cpy6mWK24PY9pAAAAFEdlbmVyYXRlZCBCeSBUZXJtaXVzAQIDBAUGBwgJ";
+
+pub(crate) const MULTILINE_UNPADDED_BIN_ISSUE1609: &[u8] = &[
     0x6f, 0x70, 0x65, 0x6e, 0x73, 0x73, 0x68, 0x2d, 0x6b, 0x65, 0x79, 0x2d, 0x76, 0x31, 0x00, 0x00,
     0x00, 0x00, 0x04, 0x6e, 0x6f, 0x6e, 0x65, 0x00, 0x00, 0x00, 0x04, 0x6e, 0x6f, 0x6e, 0x65, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x33, 0x00, 0x00, 0x00, 0x0b, 0x73,

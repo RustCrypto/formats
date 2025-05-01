@@ -581,16 +581,13 @@ mod tests {
 
     #[test]
     fn issue_1609() {
-        let input = "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n\
-            QyNTUxOQAAACDctrRCQ6LEyzTbsXkAQ8mhdIOQZzP/XKcuplituD2PaQAAAKC+1uNjvtbj\n\
-            YwAAAAtzc2gtZWQyNTUxOQAAACDctrRCQ6LEyzTbsXkAQ8mhdIOQZzP/XKcuplituD2PaQ\n\
-            AAAEAyjynmk0ex/GrImDlAEN81gXGK4tWaq36kO+HRp8szLNy2tEJDosTLNNuxeQBDyaF0\n\
-            g5BnM/9cpy6mWK24PY9pAAAAFEdlbmVyYXRlZCBCeSBUZXJtaXVzAQIDBAUGBwgJ";
-
-        let mut buf = [0u8; 1024];
-
-        let mut dec = Decoder::<Base64Unpadded>::new_wrapped(input.as_bytes(), 70).unwrap();
-        assert_eq!(dec.decode(&mut buf), Ok(MULTILINE_UNPADDED_BASE64_70_64));
+        decode_test(MULTILINE_UNPADDED_BIN_ISSUE1609, || {
+            Decoder::<Base64Unpadded>::new_wrapped(
+                MULTILINE_UNPADDED_BASE64_ISSUE1609.as_bytes(),
+                70,
+            )
+            .unwrap()
+        })
     }
 
     #[cfg(feature = "std")]
