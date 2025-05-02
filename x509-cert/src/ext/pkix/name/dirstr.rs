@@ -1,7 +1,9 @@
+use alloc::borrow::Cow;
 use alloc::string::String;
+use alloc::string::ToString;
 use der::{
     Choice, FixedTag, Header, Reader, ValueOrd,
-    asn1::{Any, PrintableString, TeletexString},
+    asn1::{Any, BmpString, PrintableString, TeletexString},
 };
 
 /// DirectoryString as defined in [RFC 5280 Section 4.2.1.4].
@@ -52,6 +54,9 @@ pub enum DirectoryString {
 
     #[asn1(type = "UTF8String")]
     Utf8String(String),
+
+    #[asn1(type = "BMPString")]
+    BmpString(BmpString),
 }
 
 impl<'a> TryFrom<&'a Any> for DirectoryString {
@@ -73,6 +78,7 @@ impl<'a> der::DecodeValue<'a> for DirectoryString {
                 TeletexString::decode_value(reader, header).map(Self::TeletexString)
             }
             String::TAG => String::decode_value(reader, header).map(Self::Utf8String),
+            BmpString::TAG => BmpString::decode_value(reader, header).map(Self::BmpString),
             actual => Err(der::ErrorKind::TagUnexpected {
                 expected: None,
                 actual,
@@ -81,13 +87,28 @@ impl<'a> der::DecodeValue<'a> for DirectoryString {
         }
     }
 }
+impl DirectoryString {
+    /// Returns `Borrowed` variant for UTF-8 compatible strings
+    /// and `Owned` variant otherwise.
+    pub fn value(&self) -> Cow<'_, str> {
+        match self {
+            Self::PrintableString(s) => Cow::Borrowed(s.as_ref()),
+            Self::TeletexString(s) => Cow::Borrowed(s.as_ref()),
+            Self::Utf8String(s) => Cow::Borrowed(s.as_ref()),
+            Self::BmpString(s) => Cow::Owned(s.to_string()),
+        }
+    }
+}
 
 impl AsRef<str> for DirectoryString {
+    // #[deprecated(since = "0.3.0-pre.0", note = "use `DirectoryString::value` instead")]
     fn as_ref(&self) -> &str {
         match self {
             Self::PrintableString(s) => s.as_ref(),
             Self::TeletexString(s) => s.as_ref(),
             Self::Utf8String(s) => s.as_ref(),
+            // TODO(dishmaker): BMPString as ref
+            Self::BmpString(_s) => "",
         }
     }
 }
