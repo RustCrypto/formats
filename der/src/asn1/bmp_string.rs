@@ -2,7 +2,7 @@
 
 use crate::{
     BytesOwned, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, Tag,
-    Writer,
+    Writer, ord::OrdIsValueOrd,
 };
 use alloc::{boxed::Box, vec::Vec};
 use core::{fmt, str::FromStr};
@@ -116,6 +116,18 @@ impl FromStr for BmpString {
 
     fn from_str(s: &str) -> Result<Self> {
         Self::from_utf8(s)
+    }
+}
+
+impl OrdIsValueOrd for BmpString {}
+
+/// Hack for simplifying the custom derive use case,
+/// as there is no `BmpStringRef` yet.
+impl From<&BmpString> for BmpString {
+    fn from(value: &BmpString) -> Self {
+        BmpString {
+            bytes: value.bytes.clone(),
+        }
     }
 }
 

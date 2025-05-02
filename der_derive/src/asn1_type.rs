@@ -34,6 +34,9 @@ pub(crate) enum Asn1Type {
 
     /// ASN.1 `UTF8String`.
     Utf8String,
+
+    /// ASN.1 `BMPString`.
+    BmpString,
 }
 
 impl Asn1Type {
@@ -49,6 +52,7 @@ impl Asn1Type {
             Asn1Type::VideotexString => quote!(::der::Tag::VideotexString),
             Asn1Type::UtcTime => quote!(::der::Tag::UtcTime),
             Asn1Type::Utf8String => quote!(::der::Tag::Utf8String),
+            Asn1Type::BmpString => quote!(::der::Tag::BmpString),
         }
     }
 
@@ -82,6 +86,7 @@ impl Asn1Type {
             Asn1Type::VideotexString => quote!(::der::asn1::VideotexStringRef),
             Asn1Type::UtcTime => quote!(::der::asn1::UtcTime),
             Asn1Type::Utf8String => quote!(::der::asn1::Utf8StringRef),
+            Asn1Type::BmpString => quote!(::der::asn1::BmpString),
         }
     }
 }
@@ -100,6 +105,7 @@ impl FromStr for Asn1Type {
             "VideotexString" => Ok(Self::VideotexString),
             "UTCTime" => Ok(Self::UtcTime),
             "UTF8String" => Ok(Self::Utf8String),
+            "BMPString" => Ok(Self::BmpString),
             _ => Err(ParseError),
         }
     }
@@ -117,6 +123,7 @@ impl fmt::Display for Asn1Type {
             Asn1Type::VideotexString => "VideotexString",
             Asn1Type::UtcTime => "UTCTime",
             Asn1Type::Utf8String => "UTF8String",
+            Asn1Type::BmpString => "BMPString",
         })
     }
 }
