@@ -251,23 +251,23 @@ impl Tag {
     }
 
     /// Is this an application tag?
-    pub fn is_application(self) -> bool {
-        self.class() == Class::Application
+    pub const fn is_application(self) -> bool {
+        matches!(self.class(), Class::Application)
     }
 
     /// Is this a context-specific tag?
-    pub fn is_context_specific(self) -> bool {
-        self.class() == Class::ContextSpecific
+    pub const fn is_context_specific(self) -> bool {
+        matches!(self.class(), Class::ContextSpecific)
     }
 
     /// Is this a private tag?
-    pub fn is_private(self) -> bool {
-        self.class() == Class::Private
+    pub const fn is_private(self) -> bool {
+        matches!(self.class(), Class::Private)
     }
 
     /// Is this a universal tag?
-    pub fn is_universal(self) -> bool {
-        self.class() == Class::Universal
+    pub const fn is_universal(self) -> bool {
+        matches!(self.class(), Class::Universal)
     }
 
     /// Create an [`Error`] for an invalid [`Length`].
