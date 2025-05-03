@@ -52,8 +52,9 @@ impl Length {
     }
 
     /// Is this length equal to zero?
-    pub fn is_zero(self) -> bool {
-        self == Self::ZERO
+    pub const fn is_zero(self) -> bool {
+        let value = self.0;
+        value == 0
     }
 
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`

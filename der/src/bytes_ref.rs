@@ -2,7 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StrRef, Writer,
+    BytesOwned, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StrRef,
+    Writer,
 };
 use core::cmp::Ordering;
 
@@ -35,6 +36,14 @@ impl<'a> BytesRef<'a> {
                 inner: slice,
             }),
             Err(err) => Err(err),
+        }
+    }
+    /// Create [`BytesRef`] from allocated [`BytesOwned`].
+    #[cfg(feature = "alloc")]
+    pub const fn from_owned(owned: &'a BytesOwned) -> Self {
+        Self {
+            length: owned.len(),
+            inner: owned.as_slice(),
         }
     }
 
