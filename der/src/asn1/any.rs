@@ -235,7 +235,7 @@ mod allocating {
         }
 
         /// Create a new [`AnyRef`] from the provided [`Any`] owned tag and bytes.
-        pub const fn to_ref<'a>(&'a self) -> AnyRef<'a> {
+        pub const fn to_ref(&self) -> AnyRef<'_> {
             AnyRef {
                 tag: self.tag,
                 value: self.value.to_ref(),

@@ -46,7 +46,7 @@ impl BytesOwned {
     }
 
     /// Create [`BytesRef`] from allocated [`BytesOwned`].
-    pub const fn to_ref<'a>(&'a self) -> BytesRef<'a> {
+    pub const fn to_ref(&self) -> BytesRef<'_> {
         BytesRef {
             length: self.length,
             inner: &self.inner,
