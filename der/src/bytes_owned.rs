@@ -31,18 +31,26 @@ impl BytesOwned {
     }
 
     /// Borrow the inner byte slice
-    pub fn as_slice(&self) -> &[u8] {
+    pub const fn as_slice(&self) -> &[u8] {
         &self.inner
     }
 
     /// Get the [`Length`] of this [`BytesRef`]
-    pub fn len(&self) -> Length {
+    pub const fn len(&self) -> Length {
         self.length
     }
 
     /// Is this [`BytesOwned`] empty?
-    pub fn is_empty(&self) -> bool {
-        self.len() == Length::ZERO
+    pub const fn is_empty(&self) -> bool {
+        self.len().is_zero()
+    }
+
+    /// Create [`BytesRef`] from allocated [`BytesOwned`].
+    pub const fn to_ref(&self) -> BytesRef<'_> {
+        BytesRef {
+            length: self.length,
+            inner: &self.inner,
+        }
     }
 }
 

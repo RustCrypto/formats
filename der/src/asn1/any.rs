@@ -233,6 +233,14 @@ mod allocating {
                 value: BytesOwned::default(),
             }
         }
+
+        /// Create a new [`AnyRef`] from the provided [`Any`] owned tag and bytes.
+        pub const fn to_ref(&self) -> AnyRef<'_> {
+            AnyRef {
+                tag: self.tag,
+                value: self.value.to_ref(),
+            }
+        }
     }
 
     impl Choice<'_> for Any {
@@ -272,7 +280,7 @@ mod allocating {
     impl<'a> From<&'a Any> for AnyRef<'a> {
         fn from(any: &'a Any) -> AnyRef<'a> {
             // Ensured to parse successfully in constructor
-            AnyRef::new(any.tag, any.value.as_slice()).expect("invalid ANY")
+            any.to_ref()
         }
     }
 
