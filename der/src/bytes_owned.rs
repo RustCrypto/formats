@@ -44,6 +44,14 @@ impl BytesOwned {
     pub const fn is_empty(&self) -> bool {
         self.len().is_zero()
     }
+
+    /// Create [`BytesRef`] from allocated [`BytesOwned`].
+    pub const fn to_ref<'a>(&'a self) -> BytesRef<'a> {
+        BytesRef {
+            length: self.length,
+            inner: &self.inner,
+        }
+    }
 }
 
 impl AsRef<[u8]> for BytesOwned {

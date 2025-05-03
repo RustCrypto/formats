@@ -47,15 +47,6 @@ impl<'a> AnyRef<'a> {
         }
     }
 
-    /// Create a new [`AnyRef`] from the provided [`Any`] owned tag and bytes.
-    #[cfg(feature = "alloc")]
-    pub const fn from_owned(owned: &'a Any) -> Self {
-        AnyRef {
-            tag: owned.tag,
-            value: BytesRef::from_owned(&owned.value),
-        }
-    }
-
     /// Infallible creation of an [`AnyRef`] from a [`BytesRef`].
     pub(crate) fn from_tag_and_value(tag: Tag, value: BytesRef<'a>) -> Self {
         Self { tag, value }
@@ -183,10 +174,10 @@ mod allocating {
     #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
     pub struct Any {
         /// Tag representing the type of the encoded value.
-        pub(super) tag: Tag,
+        tag: Tag,
 
         /// Inner value encoded as bytes.
-        pub(super) value: BytesOwned,
+        value: BytesOwned,
     }
 
     impl Any {
@@ -242,6 +233,14 @@ mod allocating {
                 value: BytesOwned::default(),
             }
         }
+
+        /// Create a new [`AnyRef`] from the provided [`Any`] owned tag and bytes.
+        pub const fn to_ref<'a>(&'a self) -> AnyRef<'a> {
+            AnyRef {
+                tag: self.tag,
+                value: self.value.to_ref(),
+            }
+        }
     }
 
     impl Choice<'_> for Any {
@@ -281,7 +280,7 @@ mod allocating {
     impl<'a> From<&'a Any> for AnyRef<'a> {
         fn from(any: &'a Any) -> AnyRef<'a> {
             // Ensured to parse successfully in constructor
-            AnyRef::from_owned(any)
+            any.to_ref()
         }
     }
 
