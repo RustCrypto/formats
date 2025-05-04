@@ -84,7 +84,7 @@ impl fmt::Display for Error {
         write!(f, "{}", self.kind)?;
 
         if let Some(pos) = self.position {
-            write!(f, " at DER byte {}", pos)?;
+            write!(f, " at DER byte {pos}")?;
         }
 
         Ok(())
@@ -320,27 +320,26 @@ impl fmt::Display for ErrorKind {
                 actual_len,
             } => write!(
                 f,
-                "ASN.1 DER message is incomplete: expected {}, actual {}",
-                expected_len, actual_len
+                "ASN.1 DER message is incomplete: expected {expected_len}, actual {actual_len}"
             ),
             #[cfg(feature = "std")]
-            ErrorKind::Io(err) => write!(f, "I/O error: {:?}", err),
+            ErrorKind::Io(err) => write!(f, "I/O error: {err:?}"),
             ErrorKind::IndefiniteLength => write!(f, "indefinite length disallowed"),
-            ErrorKind::Length { tag } => write!(f, "incorrect length for {}", tag),
+            ErrorKind::Length { tag } => write!(f, "incorrect length for {tag}"),
             ErrorKind::Noncanonical { tag } => {
-                write!(f, "ASN.1 {} not canonically encoded as DER", tag)
+                write!(f, "ASN.1 {tag} not canonically encoded as DER")
             }
             ErrorKind::OidMalformed => write!(f, "malformed OID"),
             #[cfg(feature = "oid")]
             ErrorKind::OidUnknown { oid } => {
-                write!(f, "unknown/unsupported OID: {}", oid)
+                write!(f, "unknown/unsupported OID: {oid}")
             }
             ErrorKind::SetDuplicate => write!(f, "SET OF contains duplicate"),
             ErrorKind::SetOrdering => write!(f, "SET OF ordering error"),
             ErrorKind::Overflow => write!(f, "integer overflow"),
             ErrorKind::Overlength => write!(f, "ASN.1 DER message is too long"),
             #[cfg(feature = "pem")]
-            ErrorKind::Pem(e) => write!(f, "PEM error: {}", e),
+            ErrorKind::Pem(e) => write!(f, "PEM error: {e}"),
             #[cfg(feature = "std")]
             ErrorKind::PermissionDenied => write!(f, "permission denied"),
             ErrorKind::Reader => write!(f, "reader does not support the requested operation"),
@@ -350,23 +349,22 @@ impl fmt::Display for ErrorKind {
                 write!(f, "unexpected ASN.1 DER tag: ")?;
 
                 if let Some(tag) = expected {
-                    write!(f, "expected {}, ", tag)?;
+                    write!(f, "expected {tag}, ")?;
                 }
 
-                write!(f, "got {}", actual)
+                write!(f, "got {actual}")
             }
             ErrorKind::TagUnknown { byte } => {
-                write!(f, "unknown/unsupported ASN.1 DER tag: 0x{:02x}", byte)
+                write!(f, "unknown/unsupported ASN.1 DER tag: 0x{byte:02x}")
             }
             ErrorKind::TrailingData { decoded, remaining } => {
                 write!(
                     f,
-                    "trailing data at end of DER message: decoded {} bytes, {} bytes remaining",
-                    decoded, remaining
+                    "trailing data at end of DER message: decoded {decoded} bytes, {remaining} bytes remaining"
                 )
             }
-            ErrorKind::Utf8(e) => write!(f, "{}", e),
-            ErrorKind::Value { tag } => write!(f, "malformed ASN.1 DER value for {}", tag),
+            ErrorKind::Utf8(e) => write!(f, "{e}"),
+            ErrorKind::Value { tag } => write!(f, "malformed ASN.1 DER value for {tag}"),
         }
     }
 }

@@ -52,9 +52,6 @@ fn make_datetime(year: u16, month: u8, day: u8, hour: u8, min: u8, sec: u8) -> D
     let day = if day > max_day { max_day } else { day };
 
     DateTime::new(year, month, day, hour, min, sec).unwrap_or_else(|e| {
-        panic!(
-            "invalid DateTime: {:02}-{:02}-{:02}T{:02}:{:02}:{:02}: {}",
-            year, month, day, hour, min, sec, e
-        );
+        panic!("invalid DateTime: {year:02}-{month:02}-{day:02}T{hour:02}:{min:02}:{sec:02}: {e}");
     })
 }

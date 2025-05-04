@@ -133,14 +133,14 @@ impl From<&BmpString> for BmpString {
 
 impl fmt::Debug for BmpString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "BmpString(\"{}\")", self)
+        write!(f, "BmpString(\"{self}\")")
     }
 }
 
 impl fmt::Display for BmpString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for c in self.chars() {
-            write!(f, "{}", c)?;
+            write!(f, "{c}")?;
         }
         Ok(())
     }
