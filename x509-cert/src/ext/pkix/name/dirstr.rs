@@ -99,16 +99,3 @@ impl DirectoryString {
         }
     }
 }
-
-impl AsRef<str> for DirectoryString {
-    // #[deprecated(since = "0.3.0-pre.0", note = "use `DirectoryString::value` instead")]
-    fn as_ref(&self) -> &str {
-        match self {
-            Self::PrintableString(s) => s.as_ref(),
-            Self::TeletexString(s) => s.as_ref(),
-            Self::Utf8String(s) => s.as_ref(),
-            // TODO(dishmaker): BMPString as ref
-            Self::BmpString(_s) => "",
-        }
-    }
-}
