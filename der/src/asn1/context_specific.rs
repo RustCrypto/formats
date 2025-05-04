@@ -1,7 +1,7 @@
 //! Context-specific field.
 
 use crate::{
-    Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error, Header,
+    Choice, Class, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, Error, Header,
     Length, Reader, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer, asn1::AnyRef,
     tag::IsConstructed,
 };
@@ -47,7 +47,10 @@ impl<T> ContextSpecific<T> {
     where
         T: Decode<'a>,
     {
-        Self::decode_with(reader, tag_number, |reader| Self::decode(reader))
+        if !peek_tag_matches(reader, Class::ContextSpecific, tag_number)? {
+            return Ok(None);
+        }
+        Ok(Some(Self::decode(reader)?))
     }
 
     /// Attempt to decode an `IMPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
@@ -63,51 +66,52 @@ impl<T> ContextSpecific<T> {
     where
         T: DecodeValue<'a> + IsConstructed,
     {
-        Self::decode_with::<_, _, T::Error>(reader, tag_number, |reader| {
-            // Decode IMPLICIT header
-            let header = Header::decode(reader)?;
+        // Peek tag number
+        if !peek_tag_matches::<_, T::Error>(reader, Class::ContextSpecific, tag_number)? {
+            return Ok(None);
+        }
+        // Decode IMPLICIT header
+        let header = Header::decode(reader)?;
 
-            // read_nested checks if header matches decoded length
-            let value = reader.read_nested(header.length, |reader| {
-                // Decode inner IMPLICIT value
-                T::decode_value(reader, header)
-            })?;
+        // read_nested checks if header matches decoded length
+        let value = reader.read_nested(header.length, |reader| {
+            // Decode inner IMPLICIT value
+            T::decode_value(reader, header)
+        })?;
 
-            if header.tag.is_constructed() != T::CONSTRUCTED {
-                return Err(header.tag.non_canonical_error().into());
-            }
-
-            Ok(Self {
-                tag_number,
-                tag_mode: TagMode::Implicit,
-                value,
-            })
-        })
-    }
-
-    /// Attempt to decode a context-specific field with the given
-    /// helper callback.
-    fn decode_with<'a, F, R: Reader<'a>, E>(
-        reader: &mut R,
-        tag_number: TagNumber,
-        f: F,
-    ) -> Result<Option<Self>, E>
-    where
-        F: FnOnce(&mut R) -> Result<Self, E>,
-        E: From<Error>,
-    {
-        while let Some(tag) = Tag::peek_optional(reader)? {
-            if !tag.is_context_specific() || (tag.number() > tag_number) {
-                break;
-            } else if tag.number() == tag_number {
-                return Some(f(reader)).transpose();
-            } else {
-                AnyRef::decode(reader)?;
-            }
+        // the encoding shall be constructed if the base encoding is constructed
+        if header.tag.is_constructed() != T::CONSTRUCTED {
+            return Err(header.tag.non_canonical_error().into());
         }
 
-        Ok(None)
+        Ok(Some(Self {
+            tag_number,
+            tag_mode: TagMode::Implicit,
+            value,
+        }))
     }
+}
+
+/// Returns true if given context-specific (or any given class) field
+/// should be decoded, based on peeked tag.
+fn peek_tag_matches<'a, R: Reader<'a>, E>(
+    reader: &mut R,
+    expected_class: Class,
+    expected_tag_number: TagNumber,
+) -> Result<bool, E>
+where
+    E: From<Error>,
+{
+    // Peek tag or ignore end of stream
+    let Some(tag) = Tag::peek_optional(reader)? else {
+        return Ok(false);
+    };
+    // Ignore tags with different numbers
+    if tag.class() != expected_class || tag.number() != expected_tag_number {
+        return Ok(false);
+    }
+    // Tag matches
+    Ok(true)
 }
 
 impl<'a, T> Choice<'a> for ContextSpecific<T>
@@ -132,6 +136,7 @@ where
         match header.tag {
             Tag::ContextSpecific {
                 number,
+                // encoding shall be constructed
                 constructed: true,
             } => Ok(Self {
                 tag_number: number,
@@ -171,7 +176,17 @@ where
 {
     fn tag(&self) -> Tag {
         let constructed = match self.tag_mode {
+            // ISO/IEC 8825-1:2021
+            // 8.14.3 If implicit tagging (see Rec. ITU-T X.680 | ISO/IEC 8824-1, 31.2.7) was not used in the definition of the type, the
+            // encoding shall be constructed and the contents octets shall be the complete base encoding [Encode].
             TagMode::Explicit => true,
+
+            // ISO/IEC 8825-1:2021
+            // 8.14.4 If implicit tagging was used in the definition of the type, then:
+            // a) the encoding shall be constructed if the base encoding is constructed, and shall be primitive otherwise; and
+            // b) the contents octets shall be the same as the contents octets [EncodeValue] of the base encoding.
+            //
+            // TODO(dishmaker): use IsConstructed trait for IMPLICIT
             TagMode::Implicit => self.value.tag().is_constructed(),
         };
 
@@ -349,13 +364,11 @@ mod tests {
     }
 
     #[test]
-    fn context_specific_skipping_unknown_field() {
+    fn context_specific_not_skipping_unknown_field() {
         let tag = TagNumber(1);
         let mut reader = SliceReader::new(&hex!("A003020100A103020101")).unwrap();
-        let field = ContextSpecific::<u8>::decode_explicit(&mut reader, tag)
-            .unwrap()
-            .unwrap();
-        assert_eq!(field.value, 1);
+        let field = ContextSpecific::<u8>::decode_explicit(&mut reader, tag).unwrap();
+        assert_eq!(field, None);
     }
 
     #[test]
