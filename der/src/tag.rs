@@ -440,11 +440,9 @@ impl Encode for Tag {
 
 impl DerOrd for Tag {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        Ok(self
-            .class()
-            .cmp(&other.class())
-            .then_with(|| self.is_constructed().cmp(&other.is_constructed()))
-            .then_with(|| self.number().cmp(&other.number())))
+        Ok((self.class().cmp(&other.class()))
+            .then_with(|| self.number().cmp(&other.number()))
+            .then_with(|| self.is_constructed().cmp(&other.is_constructed())))
     }
 }
 
@@ -513,10 +511,12 @@ impl fmt::Debug for Tag {
 
 #[cfg(test)]
 mod tests {
+    use core::cmp::Ordering;
+
     use hex_literal::hex;
 
     use super::{Class, Tag, TagNumber};
-    use crate::{Decode, ErrorKind, Length, Reader, SliceReader};
+    use crate::{Decode, DerOrd, ErrorKind, Length, Reader, SliceReader};
 
     #[test]
     fn tag_class() {
@@ -638,5 +638,94 @@ mod tests {
         assert_eq!(reader.position(), Length::ZERO);
         assert_eq!(Tag::peek(&reader).unwrap(), Tag::Integer);
         assert_eq!(reader.position(), Length::ZERO); // Position unchanged
+    }
+
+    #[test]
+    fn tag_order() {
+        // T-REC-X.680-202102
+        // 8.6 The canonical order for tags is based on the outermost tag of each type and is defined as follows:
+        // a) those elements or alternatives with universal class tags shall appear first, followed by those with
+        // application class tags, followed by those with context-specific tags, followed by those with private class
+        // tags;
+        // b) within each class of tags, the elements or alternatives shall appear in ascending order of their tag
+        // numbers.
+        assert_eq!(Tag::Boolean.der_cmp(&Tag::Integer), Ok(Ordering::Less));
+        assert_eq!(Tag::Integer.der_cmp(&Tag::Null), Ok(Ordering::Less));
+        assert_eq!(Tag::Null.der_cmp(&Tag::Sequence), Ok(Ordering::Less));
+        assert_eq!(Tag::Sequence.der_cmp(&Tag::Ia5String), Ok(Ordering::Less));
+        assert_eq!(Tag::Ia5String.der_cmp(&Tag::BmpString), Ok(Ordering::Less));
+
+        // universal class, then application class
+        assert_eq!(
+            Tag::BmpString.der_cmp(&Tag::Application {
+                constructed: true,
+                number: TagNumber(0)
+            }),
+            Ok(Ordering::Less)
+        );
+        // ascending tag numbers
+        assert_eq!(
+            Tag::Application {
+                constructed: true,
+                number: TagNumber(0)
+            }
+            .der_cmp(&Tag::Application {
+                constructed: true,
+                number: TagNumber(1)
+            }),
+            Ok(Ordering::Less)
+        );
+
+        // ignore constructed bit
+        assert_eq!(
+            Tag::Application {
+                constructed: true,
+                number: TagNumber(1)
+            }
+            .der_cmp(&Tag::Application {
+                constructed: false,
+                number: TagNumber(2)
+            }),
+            Ok(Ordering::Less)
+        );
+
+        // for same tag numbers, order by constructed bit
+        assert_eq!(
+            Tag::Application {
+                constructed: false,
+                number: TagNumber(2)
+            }
+            .der_cmp(&Tag::Application {
+                constructed: true,
+                number: TagNumber(2)
+            }),
+            Ok(Ordering::Less)
+        );
+
+        // application class is before context-specific class
+        assert_eq!(
+            Tag::Application {
+                constructed: true,
+                number: TagNumber(2)
+            }
+            .der_cmp(&Tag::ContextSpecific {
+                constructed: true,
+                number: TagNumber(0)
+            }),
+            Ok(Ordering::Less)
+        );
+
+        // context-specific class is before private class
+        assert_eq!(
+            Tag::ContextSpecific {
+                constructed: true,
+                number: TagNumber(10)
+            }
+            .der_cmp(&Tag::Private {
+                constructed: true,
+                number: TagNumber(0)
+            }),
+            Ok(Ordering::Less)
+        );
     }
 }
