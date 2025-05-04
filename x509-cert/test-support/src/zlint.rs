@@ -74,10 +74,9 @@ impl<'de> Deserialize<'de> for LintStatus {
                             "warn" => Status::Warn,
                             "info" => Status::Info,
                             other => {
-                                return Err(M::Error::custom(format!(
-                                    "unsupported value: {}",
-                                    other,
-                                )))
+                                return Err(M::Error::custom(
+                                    format!("unsupported value: {other}",),
+                                ))
                             }
                         });
                     }
@@ -111,7 +110,7 @@ impl LintResult {
             }
         }
 
-        eprintln!("failed lints: {:?}", failed);
+        eprintln!("failed lints: {failed:?}");
 
         failed.is_empty()
     }
@@ -166,7 +165,7 @@ pub fn check_certificate(pem: &[u8], ignored: &[&str]) {
             io::ErrorKind::NotFound => {
                 panic!("error running 'zlint': command not found. Is it installed?")
             }
-            _ => panic!("error running 'zlint': {:?}", e),
+            _ => panic!("error running 'zlint': {e:?}"),
         });
 
     let mut stdout = child.stdout.take().unwrap();

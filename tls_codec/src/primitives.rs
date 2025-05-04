@@ -104,8 +104,7 @@ impl<T: DeserializeBytes> DeserializeBytes for Option<T> {
                 Ok((Some(element), remainder))
             }
             _ => Err(Error::DecodingError(alloc::format!(
-                "Trying to decode Option<T> with {} for option. It must be 0 for None and 1 for Some.",
-                some_or_none
+                "Trying to decode Option<T> with {some_or_none} for option. It must be 0 for None and 1 for Some."
             ))),
         }
     }

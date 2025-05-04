@@ -156,8 +156,8 @@ impl Display for SerialNumber {
 
         while let Some(byte) = iter.next() {
             match iter.peek() {
-                Some(_) => write!(f, "{:02X}:", byte)?,
-                None => write!(f, "{:02X}", byte)?,
+                Some(_) => write!(f, "{byte:02X}:")?,
+                None => write!(f, "{byte:02X}")?,
             }
         }
 

@@ -38,10 +38,10 @@ impl fmt::Display for Error {
             Error::AlgorithmParametersMissing => {
                 f.write_str("AlgorithmIdentifier parameters missing")
             }
-            Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
+            Error::Asn1(err) => write!(f, "ASN.1 error: {err}"),
             Error::KeyMalformed => f.write_str("SPKI cryptographic key data malformed"),
             Error::OidUnknown { oid } => {
-                write!(f, "unknown/unsupported algorithm OID: {}", oid)
+                write!(f, "unknown/unsupported algorithm OID: {oid}")
             }
         }
     }

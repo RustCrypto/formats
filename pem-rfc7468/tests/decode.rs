@@ -64,7 +64,7 @@ fn header_of_length_64_with_vec() {
     let pem = include_bytes!("examples/chosen_header.pem");
     match pem_rfc7468::decode_vec(pem) {
         Err(pem_rfc7468::Error::HeaderDisallowed) => (),
-        res => panic!("Expected HeaderDisallowed error; Found {:?}", res),
+        res => panic!("Expected HeaderDisallowed error; Found {res:?}"),
     }
 }
 

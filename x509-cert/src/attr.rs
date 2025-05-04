@@ -272,7 +272,7 @@ impl fmt::Display for AttributeTypeAndValue {
                 match c {
                     '#' if i == 0 => write!(f, "\\#")?,
                     ' ' if i == 0 || iter.peek().is_none() => write!(f, "\\ ")?,
-                    '"' | '+' | ',' | ';' | '<' | '>' | '\\' => write!(f, "\\{}", c)?,
+                    '"' | '+' | ',' | ';' | '<' | '>' | '\\' => write!(f, "\\{c}")?,
                     '\x00'..='\x1f' | '\x7f' => write!(f, "\\{:02x}", c as u8)?,
                     _ => f.write_char(c)?,
                 }
@@ -282,7 +282,7 @@ impl fmt::Display for AttributeTypeAndValue {
 
             write!(f, "{}=#", self.oid)?;
             for c in value {
-                write!(f, "{:02x}", c)?;
+                write!(f, "{c:02x}")?;
             }
         }
 

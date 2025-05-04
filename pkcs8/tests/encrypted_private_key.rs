@@ -124,7 +124,7 @@ fn decode_ed25519_encpriv_aes128_pbkdf2_sha1_der() {
         pbes2::EncryptionScheme::Aes128Cbc { iv } => {
             assert_eq!(iv, hex!("223080a71bcd2b9a256d876c924979d2"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 
     // Extracted with:
@@ -159,7 +159,7 @@ fn decode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
         pbes2::EncryptionScheme::Aes256Cbc { iv } => {
             assert_eq!(iv, hex!("b2d02d78b2efd9dff694cf8e0af40925"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 
     // Extracted with:

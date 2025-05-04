@@ -14,14 +14,13 @@ fn run_combinations(prfs: &[&str]) {
 
     for aes_mode in ["aes-128-cbc", "aes-192-cbc", "aes-256-cbc"] {
         for prf in prfs {
-            let algid_path = format!("./tests/examples/pbes2_{}_{}_algid.der", aes_mode, prf);
+            let algid_path = format!("./tests/examples/pbes2_{aes_mode}_{prf}_algid.der");
             let algid_bytes = fs::read(&algid_path)
                 .unwrap_or_else(|err| panic!("Failed to read from {algid_path}: {err}"));
             let scheme = pkcs5::EncryptionScheme::try_from(algid_bytes.as_slice())
                 .unwrap_or_else(|err| panic!("Failed to interpret scheme {aes_mode} {prf}: {err}"));
 
-            let ciphertext_path =
-                format!("./tests/examples/pbes2_{}_{}_ciphertext.bin", aes_mode, prf);
+            let ciphertext_path = format!("./tests/examples/pbes2_{aes_mode}_{prf}_ciphertext.bin");
             let mut ciphertext_bytes = fs::read(&ciphertext_path)
                 .unwrap_or_else(|err| panic!("Failed to read from {ciphertext_path}: {err}"));
 

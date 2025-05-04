@@ -346,12 +346,12 @@ fn rdns_serde() {
         }
 
         // Check that serialization matches the expected output.
-        eprintln!("output: {}", output);
-        assert_eq!(*output, format!("{}", brdns));
+        eprintln!("output: {output}");
+        assert_eq!(*output, format!("{brdns}"));
 
         // Check that all inputs deserializize as expected.
         for input in inputs.iter() {
-            eprintln!("input: {}", input);
+            eprintln!("input: {input}");
 
             let der = input
                 .parse::<RdnSequence>()

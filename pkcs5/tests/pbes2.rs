@@ -82,7 +82,7 @@ fn decode_pbes2_pbkdf2_sha1_aes128cbc() {
         pbes2::EncryptionScheme::Aes128Cbc { iv } => {
             assert_eq!(iv, hex!("223080a71bcd2b9a256d876c924979d2"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 }
 
@@ -102,7 +102,7 @@ fn decode_pbes2_pbkdf2_sha256_aes256cbc() {
         pbes2::EncryptionScheme::Aes256Cbc { iv } => {
             assert_eq!(iv, hex!("b2d02d78b2efd9dff694cf8e0af40925"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 }
 
@@ -127,7 +127,7 @@ fn decode_pbes2_pbkdf2_sha256_aes256cbc_without_null_parameter() {
         pbes2::EncryptionScheme::Aes256Cbc { iv } => {
             assert_eq!(iv, hex!("BABA52272B5A30263D62F81AE27AD768"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 }
 
@@ -148,7 +148,7 @@ fn decode_pbes2_scrypt_aes256cbc() {
         pbes2::EncryptionScheme::Aes256Cbc { iv } => {
             assert_eq!(iv, hex!("9BD0A6251F2254F9FD5963887C27CF01"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 }
 
@@ -169,7 +169,7 @@ fn decode_pbes2_pbkdf2_sha256_desede3cbc() {
         pbes2::EncryptionScheme::DesEde3Cbc { iv } => {
             assert_eq!(iv, hex!("97E8F53AB0ACA359"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 }
 
@@ -190,7 +190,7 @@ fn decode_pbes2_pbkdf2_sha256_descbc() {
         pbes2::EncryptionScheme::DesCbc { iv } => {
             assert_eq!(iv, hex!("F4AAF206A18DE7AD"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 }
 

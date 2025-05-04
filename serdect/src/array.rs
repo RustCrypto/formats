@@ -50,7 +50,7 @@ impl LengthCheck for ExactLength {
         data_type: &str,
         data_length: usize,
     ) -> fmt::Result {
-        write!(formatter, "{} of length {}", data_type, data_length)
+        write!(formatter, "{data_type} of length {data_length}")
     }
 }
 

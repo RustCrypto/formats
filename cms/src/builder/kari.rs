@@ -418,7 +418,7 @@ mod tests {
             249, 246, 24, 221, 68, 112, 41, 4, 142, 15,
         ];
         let p256_public_key = PublicKey::from_public_key_der(public_key_der_bytes)
-            .map_err(|e| eprintln!("{}", e))
+            .map_err(|e| eprintln!("{e}"))
             .expect("Getting PublicKey failed");
         EcKeyEncryptionInfo::Ec(p256_public_key)
     }

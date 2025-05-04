@@ -363,8 +363,8 @@ impl fmt::Display for RdnSequence {
         // As per RFC 4514 Section 2.1, the elements are reversed
         for (i, atv) in self.0.iter().rev().enumerate() {
             match i {
-                0 => write!(f, "{}", atv)?,
-                _ => write!(f, ",{}", atv)?,
+                0 => write!(f, "{atv}")?,
+                _ => write!(f, ",{atv}")?,
             }
         }
 
@@ -494,8 +494,8 @@ impl fmt::Display for RelativeDistinguishedName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (i, atv) in self.0.iter().enumerate() {
             match i {
-                0 => write!(f, "{}", atv)?,
-                _ => write!(f, "+{}", atv)?,
+                0 => write!(f, "{atv}")?,
+                _ => write!(f, "+{atv}")?,
             }
         }
 

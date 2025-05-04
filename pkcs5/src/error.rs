@@ -43,7 +43,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::AlgorithmParametersInvalid { oid } => {
-                write!(f, "PKCS#5 parameters for algorithm {} are invalid", oid)
+                write!(f, "PKCS#5 parameters for algorithm {oid} are invalid")
             }
             Error::DecryptFailed => f.write_str("PKCS#5 decryption failed"),
             Error::EncryptFailed => f.write_str("PKCS#5 encryption failed"),
@@ -52,7 +52,7 @@ impl fmt::Display for Error {
                 f.write_str("PKCS#5 encryption/decryption unsupported for PBES1 (won't fix)")
             }
             Error::UnsupportedAlgorithm { oid } => {
-                write!(f, "PKCS#5 algorithm {} is unsupported", oid)
+                write!(f, "PKCS#5 algorithm {oid} is unsupported")
             }
         }
     }

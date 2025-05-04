@@ -329,7 +329,7 @@ impl fmt::Display for Error {
             Error::NanosInvalid => "invalid number of nanoseconds",
         };
 
-        write!(f, "{}", description)
+        write!(f, "{description}")
     }
 }
 
