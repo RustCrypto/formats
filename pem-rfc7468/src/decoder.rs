@@ -265,8 +265,7 @@ impl<'a> TryFrom<&'a [u8]> for Encapsulation<'a> {
 ///
 /// Returns `Error::HeaderDisallowed` if headers are encountered.
 fn check_for_headers(pem: &[u8], err: Error) -> Error {
-    if err == Error::Base64(base64ct::Error::InvalidEncoding)
-        && pem.contains(&grammar::CHAR_COLON)
+    if err == Error::Base64(base64ct::Error::InvalidEncoding) && pem.contains(&grammar::CHAR_COLON)
     {
         Error::HeaderDisallowed
     } else {

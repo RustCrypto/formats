@@ -20,8 +20,7 @@ fn run_combinations(prfs: &[&str]) {
             let scheme = pkcs5::EncryptionScheme::try_from(algid_bytes.as_slice())
                 .unwrap_or_else(|err| panic!("Failed to interpret scheme {aes_mode} {prf}: {err}"));
 
-            let ciphertext_path =
-                format!("./tests/examples/pbes2_{aes_mode}_{prf}_ciphertext.bin");
+            let ciphertext_path = format!("./tests/examples/pbes2_{aes_mode}_{prf}_ciphertext.bin");
             let mut ciphertext_bytes = fs::read(&ciphertext_path)
                 .unwrap_or_else(|err| panic!("Failed to read from {ciphertext_path}: {err}"));
 

@@ -74,9 +74,9 @@ impl<'de> Deserialize<'de> for LintStatus {
                             "warn" => Status::Warn,
                             "info" => Status::Info,
                             other => {
-                                return Err(M::Error::custom(format!(
-                                    "unsupported value: {other}",
-                                )))
+                                return Err(M::Error::custom(
+                                    format!("unsupported value: {other}",),
+                                ))
                             }
                         });
                     }

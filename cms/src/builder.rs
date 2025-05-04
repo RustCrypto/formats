@@ -832,7 +832,8 @@ where
         let content_encryption_key_length = content_encryption_key.len();
         let padded_key_length_wo_padding = 1 + 3 + content_encryption_key_length;
         let key_enc_alg_blocklength_bytes = P::BLOCK_LENGTH_BITS / 8;
-        let padding_length = (2 * key_enc_alg_blocklength_bytes).saturating_sub(padded_key_length_wo_padding);
+        let padding_length =
+            (2 * key_enc_alg_blocklength_bytes).saturating_sub(padded_key_length_wo_padding);
 
         let cek_byte_count: u8 = content_encryption_key.len().try_into().map_err(|_| {
             Error::Builder("Content encryption key length must not exceed 255".to_string())

@@ -1406,9 +1406,8 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
         Span::call_site(),
     );
     let annotated_item_visibility = annotated_item.vis.clone();
-    let doc_string_deserializable = format!(
-        "Alias for the deserializable version of the [`{annotated_item_ident}`]."
-    );
+    let doc_string_deserializable =
+        format!("Alias for the deserializable version of the [`{annotated_item_ident}`].");
     let doc_string_undeserializable = format!(
         "Alias for the version of the [`{annotated_item_ident}`] that cannot be deserialized."
     );
