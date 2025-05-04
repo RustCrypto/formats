@@ -182,6 +182,19 @@ where
 }
 
 #[cfg(feature = "alloc")]
+fn decode_value_vec_inner<'a, T: Decode<'a>, R: Reader<'a>>(
+    reader: &mut R,
+) -> Result<Vec<T>, T::Error> {
+    let mut sequence_of = Vec::<T>::new();
+
+    while !reader.is_finished() {
+        sequence_of.push(T::decode(reader)?);
+    }
+
+    Ok(sequence_of)
+}
+
+#[cfg(feature = "alloc")]
 impl<'a, T> DecodeValue<'a> for Vec<T>
 where
     T: Decode<'a>,
@@ -189,15 +202,7 @@ where
     type Error = T::Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        reader.read_nested(header.length, |reader| {
-            let mut sequence_of = Self::new();
-
-            while !reader.is_finished() {
-                sequence_of.push(T::decode(reader)?);
-            }
-
-            Ok(sequence_of)
-        })
+        reader.read_nested(header.length, decode_value_vec_inner)
     }
 }
 
