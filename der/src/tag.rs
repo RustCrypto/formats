@@ -178,16 +178,15 @@ impl Tag {
             return Ok(Some(tag));
         }
 
-        for i in 2..Self::MAX_SIZE {
+        for i in 2..=Self::MAX_SIZE {
             let slice = &mut buf[0..i];
-            if reader.peek_into(slice).is_ok() {
-                if let Ok(tag) = Self::from_der(slice) {
-                    return Ok(Some(tag));
-                }
+            reader.peek_into(slice)?;
+
+            if let Ok(tag) = Self::from_der(slice) {
+                return Ok(Some(tag));
             }
         }
-
-        Some(Self::from_der(&buf)).transpose()
+        Err(ErrorKind::TagNumberInvalid.into())
     }
 
     /// Assert that this [`Tag`] matches the provided expected tag.
@@ -634,15 +633,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unwrap_used)]
-    fn peek() {
-        let reader = SliceReader::new(&[0x02]).unwrap();
-        assert_eq!(reader.position(), Length::ZERO);
-        assert_eq!(Tag::peek(&reader).unwrap(), Tag::Integer);
-        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
-    }
-
-    #[test]
     fn tag_order() {
         // T-REC-X.680-202102
         // 8.6 The canonical order for tags is based on the outermost tag of each type and is defined as follows:
@@ -728,6 +718,37 @@ mod tests {
                 number: TagNumber(0)
             }),
             Ok(Ordering::Less)
+        );
+    }
+
+    #[test]
+    fn peek() {
+        let reader = SliceReader::new(&[0x02]).expect("valid reader");
+        assert_eq!(reader.position(), Length::ZERO);
+        assert_eq!(Tag::peek(&reader).expect("peeked tag"), Tag::Integer);
+        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
+    }
+
+    #[test]
+    fn peek_long_tags() {
+        let reader = SliceReader::new(&hex!("DF8FFFFFFF7F")).expect("valid reader");
+        assert_eq!(
+            Tag::peek(&reader).expect("peeked tag"),
+            Tag::Private {
+                constructed: false,
+                number: TagNumber(u32::MAX)
+            }
+        );
+    }
+
+    #[test]
+    fn negative_peek_long_tags() {
+        let reader = SliceReader::new(&hex!("DF8FFFFFFFFF")).expect("valid reader");
+        assert_eq!(
+            Tag::peek(&reader)
+                .expect_err("tag ends in 0xFF, so 7+ bytes needed")
+                .kind(),
+            ErrorKind::TagNumberInvalid,
         );
     }
 }
