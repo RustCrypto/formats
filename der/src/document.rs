@@ -137,7 +137,7 @@ impl Debug for Document {
         f.write_str("Document(")?;
 
         for byte in self.as_bytes() {
-            write!(f, "{:02X}", byte)?;
+            write!(f, "{byte:02X}")?;
         }
 
         f.write_str(")")
