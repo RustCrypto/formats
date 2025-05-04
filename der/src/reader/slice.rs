@@ -66,6 +66,13 @@ impl<'a> SliceReader<'a> {
                 .ok_or_else(|| Error::incomplete(self.input_len()))
         }
     }
+    /// Creates new [`SliceReader`] without advancing current reader.
+    pub(crate) fn new_nested_reader(&mut self, len: Length) -> Result<Self, Error> {
+        let prefix_len = (self.position + len)?;
+        let mut nested_reader = self.clone();
+        nested_reader.bytes = self.bytes.prefix(prefix_len)?;
+        Ok(nested_reader)
+    }
 }
 
 impl<'a> Reader<'a> for SliceReader<'a> {
@@ -92,10 +99,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         F: FnOnce(&mut Self) -> Result<T, E>,
         E: From<Error>,
     {
-        let prefix_len = (self.position + len)?;
-        let mut nested_reader = self.clone();
-        nested_reader.bytes = self.bytes.prefix(prefix_len)?;
-
+        let mut nested_reader = self.new_nested_reader(len)?;
         let ret = f(&mut nested_reader);
         self.position = nested_reader.position;
         self.failed = nested_reader.failed;
