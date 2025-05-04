@@ -327,7 +327,7 @@ fn dynamic_signer() {
 
     let csr_pem = csr.to_pem(LineEnding::LF).expect("format CSR");
 
-    println!("{}", csr_pem);
+    println!("{csr_pem}");
 }
 
 #[tokio::test]

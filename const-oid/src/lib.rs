@@ -248,7 +248,7 @@ impl<const MAX_SIZE: usize> TryFrom<&ObjectIdentifierRef> for ObjectIdentifier<M
 
 impl<const MAX_SIZE: usize> fmt::Debug for ObjectIdentifier<MAX_SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ObjectIdentifier({})", self)
+        write!(f, "ObjectIdentifier({self})")
     }
 }
 
@@ -363,7 +363,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a ObjectIdentifierRef {
 
 impl fmt::Debug for ObjectIdentifierRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ObjectIdentifierRef({})", self)
+        write!(f, "ObjectIdentifierRef({self})")
     }
 }
 
@@ -372,7 +372,7 @@ impl fmt::Display for ObjectIdentifierRef {
         let len = self.arcs().count();
 
         for (i, arc) in self.arcs().enumerate() {
-            write!(f, "{}", arc)?;
+            write!(f, "{arc}")?;
 
             if let Some(j) = i.checked_add(1) {
                 if j < len {

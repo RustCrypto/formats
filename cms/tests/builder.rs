@@ -860,9 +860,9 @@ fn test_create_password_recipient_info() {
     ) -> OctetString {
         let encryption_params = &encryption_algorithm_identifier.parameters.clone().unwrap();
         let iv_der = encryption_params.to_der().unwrap();
-        let iv_octet_string = OctetString::from_der(iv_der.as_slice()).unwrap();
+        
 
-        iv_octet_string
+        OctetString::from_der(iv_der.as_slice()).unwrap()
     }
 
     /// Unpad a content-encryption key (CEK) according RFC 3211, §2.3.1

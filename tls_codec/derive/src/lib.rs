@@ -411,7 +411,7 @@ impl TlsAttr {
                             },
                             _ => Err(syn::Error::new_spanned(
                                 ident,
-                                format!("Unexpected identifier {}", ident),
+                                format!("Unexpected identifier {ident}"),
                             )),
                         }
                     })
@@ -426,7 +426,7 @@ impl TlsAttr {
                             "cd_field" => Ok(TlsAttr::CdField),
                             _ => Err(syn::Error::new_spanned(
                                 ident,
-                                format!("Unexpected identifier {}", ident),
+                                format!("Unexpected identifier {ident}"),
                             )),
                         }
                     } else {
@@ -659,13 +659,13 @@ pub fn serialize_bytes_macro_derive(input: TokenStream) -> TokenStream {
 /// Returns identifiers to use as bindings in generated code
 fn make_n_ids(n: usize) -> Vec<Ident> {
     (0..n)
-        .map(|i| Ident::new(&format!("__arg{}", i), Span::call_site()))
+        .map(|i| Ident::new(&format!("__arg{i}"), Span::call_site()))
         .collect()
 }
 
 /// Returns identifier to define a constant equal to the discriminant of a variant
 fn discriminant_id(variant: &Ident) -> Ident {
-    Ident::new(&format!("__TLS_CODEC_{}", variant), Span::call_site())
+    Ident::new(&format!("__TLS_CODEC_{variant}"), Span::call_site())
 }
 
 /// Returns definitions of constants equal to the discriminants of each variant
@@ -1159,7 +1159,7 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 .iter()
                 .map(|m| match m {
                     Member::Named(named) => {
-                        Member::Named(Ident::new(&format!("value_{}", named), Span::call_site()))
+                        Member::Named(Ident::new(&format!("value_{named}"), Span::call_site()))
                     }
                     Member::Unnamed(unnamed) => Member::Named(Ident::new(
                         &format!("value_{}", unnamed.index),
@@ -1206,7 +1206,7 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                         .iter()
                         .map(|m| match m {
                             Member::Named(named) => Member::Named(Ident::new(
-                                &format!("value_{}", named),
+                                &format!("value_{named}"),
                                 Span::call_site(),
                             )),
                             Member::Unnamed(unnamed) => Member::Named(Ident::new(
@@ -1398,21 +1398,19 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
     let annotated_item_ident = annotated_item.ident.clone();
     // Create Alias Idents by adding prefixes
     let deserializable_ident = Ident::new(
-        &format!("Deserializable{}", annotated_item_ident),
+        &format!("Deserializable{annotated_item_ident}"),
         Span::call_site(),
     );
     let undeserializable_ident = Ident::new(
-        &format!("Undeserializable{}", annotated_item_ident),
+        &format!("Undeserializable{annotated_item_ident}"),
         Span::call_site(),
     );
     let annotated_item_visibility = annotated_item.vis.clone();
     let doc_string_deserializable = format!(
-        "Alias for the deserializable version of the [`{}`].",
-        annotated_item_ident
+        "Alias for the deserializable version of the [`{annotated_item_ident}`]."
     );
     let doc_string_undeserializable = format!(
-        "Alias for the version of the [`{}`] that cannot be deserialized.",
-        annotated_item_ident
+        "Alias for the version of the [`{annotated_item_ident}`] that cannot be deserialized."
     );
     quote! {
         #annotated_item

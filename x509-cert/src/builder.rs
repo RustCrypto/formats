@@ -72,9 +72,9 @@ impl core::error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
-            Error::PublicKey(err) => write!(f, "public key error: {}", err),
-            Error::Signature(err) => write!(f, "signature error: {}", err),
+            Error::Asn1(err) => write!(f, "ASN.1 error: {err}"),
+            Error::PublicKey(err) => write!(f, "public key error: {err}"),
+            Error::Signature(err) => write!(f, "signature error: {err}"),
             Error::NonUniqueRdn => write!(
                 f,
                 "Each RelativeDistinguishedName MUST contain exactly one AttributeTypeAndValue."

@@ -34,10 +34,10 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Asn1(err) => write!(f, "PKCS#1 ASN.1 error: {}", err),
+            Error::Asn1(err) => write!(f, "PKCS#1 ASN.1 error: {err}"),
             Error::Crypto => f.write_str("PKCS#1 cryptographic error"),
             #[cfg(feature = "pkcs8")]
-            Error::Pkcs8(err) => write!(f, "{}", err),
+            Error::Pkcs8(err) => write!(f, "{err}"),
             Error::Version => f.write_str("PKCS#1 version error"),
         }
     }

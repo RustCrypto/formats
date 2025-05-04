@@ -166,7 +166,7 @@ fn decode_sample_pfx() {
     let pfx = Pfx::from_der(bytes).expect("expected valid data");
     let reenc_content = pfx.to_der().unwrap();
     assert_eq!(bytes, reenc_content.as_slice());
-    println!("{:?}", pfx);
+    println!("{pfx:?}");
 
     assert_eq!(Version::V3, pfx.version);
     assert_eq!(ID_DATA, pfx.auth_safe.content_type);
@@ -594,7 +594,7 @@ fn decode_sample_pfx2() {
     let pfx = Pfx::from_der(bytes).expect("expected valid data");
     let reenc_content = pfx.to_der().unwrap();
     assert_eq!(bytes, reenc_content.as_slice());
-    println!("{:?}", pfx);
+    println!("{pfx:?}");
 
     assert_eq!(Version::V3, pfx.version);
     assert_eq!(ID_DATA, pfx.auth_safe.content_type);

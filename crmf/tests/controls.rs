@@ -20,7 +20,7 @@ fn pki_archive_options_test() {
     let pao2 = PkiArchiveOptions::from_der(encoded_data.as_slice()).unwrap();
     let encoded_data2 = pao2.to_der().unwrap();
     assert_eq!(encoded_data, encoded_data2);
-    println!("Encoded : {:02X?}", encoded_data);
+    println!("Encoded : {encoded_data:02X?}");
     match pao2 {
         PkiArchiveOptions::EncryptedPrivKey(EncryptedKey::EnvelopedData(ed2)) => {
             let reencoded_ed = ed2.to_der().unwrap();
