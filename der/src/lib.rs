@@ -374,7 +374,7 @@ pub use crate::{
     encoding_rules::EncodingRules,
     error::{Error, ErrorKind, Result},
     header::Header,
-    length::{IndefiniteLength, Length},
+    length::Length,
     ord::{DerOrd, ValueOrd},
     reader::{Reader, slice::SliceReader},
     tag::{Class, FixedTag, IsConstructed, Tag, TagMode, TagNumber, Tagged},
