@@ -189,6 +189,24 @@ impl Tag {
         Err(ErrorKind::TagNumberInvalid.into())
     }
 
+    /// Returns true if given context-specific (or any given class) tag number matches the peeked tag.
+    pub(crate) fn peek_matches<'a, R: Reader<'a>>(
+        reader: &mut R,
+        expected_class: Class,
+        expected_tag_number: TagNumber,
+    ) -> Result<bool> {
+        // Peek tag or ignore end of stream
+        let Some(tag) = Tag::peek_optional(reader)? else {
+            return Ok(false);
+        };
+        // Ignore tags with different numbers
+        if tag.class() != expected_class || tag.number() != expected_tag_number {
+            return Ok(false);
+        }
+        // Tag matches
+        Ok(true)
+    }
+
     /// Assert that this [`Tag`] matches the provided expected tag.
     ///
     /// On mismatch, returns an [`Error`] with [`ErrorKind::TagUnexpected`].

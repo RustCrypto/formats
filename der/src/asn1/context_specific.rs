@@ -47,7 +47,7 @@ impl<T> ContextSpecific<T> {
     where
         T: Decode<'a>,
     {
-        if !peek_tag_matches(reader, Class::ContextSpecific, tag_number)? {
+        if !Tag::peek_matches(reader, Class::ContextSpecific, tag_number)? {
             return Ok(None);
         }
         Ok(Some(Self::decode(reader)?))
@@ -67,7 +67,7 @@ impl<T> ContextSpecific<T> {
         T: DecodeValue<'a> + IsConstructed,
     {
         // Peek tag number
-        if !peek_tag_matches::<_, T::Error>(reader, Class::ContextSpecific, tag_number)? {
+        if !Tag::peek_matches(reader, Class::ContextSpecific, tag_number)? {
             return Ok(None);
         }
         // Decode IMPLICIT header
@@ -90,28 +90,6 @@ impl<T> ContextSpecific<T> {
             value,
         }))
     }
-}
-
-/// Returns true if given context-specific (or any given class) field
-/// should be decoded, based on peeked tag.
-fn peek_tag_matches<'a, R: Reader<'a>, E>(
-    reader: &mut R,
-    expected_class: Class,
-    expected_tag_number: TagNumber,
-) -> Result<bool, E>
-where
-    E: From<Error>,
-{
-    // Peek tag or ignore end of stream
-    let Some(tag) = Tag::peek_optional(reader)? else {
-        return Ok(false);
-    };
-    // Ignore tags with different numbers
-    if tag.class() != expected_class || tag.number() != expected_tag_number {
-        return Ok(false);
-    }
-    // Tag matches
-    Ok(true)
 }
 
 impl<'a, T> Choice<'a> for ContextSpecific<T>
