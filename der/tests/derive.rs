@@ -111,9 +111,10 @@ mod choice {
 
     /// `Choice` with `IMPLICIT` tagging.
     mod implicit {
+        use der::asn1::Null;
         use der::{
             Choice, Decode, Encode, Sequence, SliceWriter,
-            asn1::{BitStringRef, GeneralizedTime},
+            asn1::{BitStringRef, GeneralizedTime, SequenceOf},
         };
         use hex_literal::hex;
 
@@ -129,6 +130,9 @@ mod choice {
 
             #[asn1(context_specific = "2", type = "UTF8String")]
             Utf8String(String),
+
+            #[asn1(context_specific = "3")]
+            SequenceOfNulls(SequenceOf<Null, 1>),
         }
 
         impl<'a> ImplicitChoice<'a> {
@@ -178,6 +182,24 @@ mod choice {
             let mut encoder = SliceWriter::new(&mut buf);
             cs_time.encode(&mut encoder).unwrap();
             assert_eq!(TIME_DER, encoder.finish().unwrap());
+        }
+
+        #[test]
+        fn roundtrip_implicit_constructed_variant() {
+            let mut seq = SequenceOf::new();
+            seq.add(Null).unwrap();
+            let obj = ImplicitChoice::SequenceOfNulls(seq);
+            let mut buf = [0u8; 128];
+
+            let mut encoder = SliceWriter::new(&mut buf);
+            obj.encode(&mut encoder).unwrap();
+
+            let encoded = encoder.finish().unwrap();
+            println!("encoded: {:02X?}", encoded);
+
+            let decoded = ImplicitChoice::from_der(encoded).unwrap();
+
+            assert_eq!(decoded, obj);
         }
 
         /// Test case for `CHOICE` inside `[0]` `EXPLICIT` tag in `SEQUENCE`.
