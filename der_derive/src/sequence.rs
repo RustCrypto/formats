@@ -135,12 +135,12 @@ impl DeriveSequence {
         let (_, ty_generics, where_clause) = self.generics.split_for_impl();
         let (impl_generics, _, _) = self.generics.split_for_impl();
 
-        let mut encoded_lengths = Vec::new();
+        let mut sum_lengths = Vec::new();
         let mut encode_fields = Vec::new();
 
         for field in &self.fields {
             let field = field.to_encode_tokens();
-            encoded_lengths.push(quote!(#field.encoded_len()?));
+            sum_lengths.push(quote!(let len = (len + #field.encoded_len()?)?;));
             encode_fields.push(quote!(#field.encode(writer)?;));
         }
 
@@ -149,12 +149,9 @@ impl DeriveSequence {
             impl #impl_generics ::der::EncodeValue for #ident #ty_generics #where_clause {
                 fn value_len(&self) -> ::der::Result<::der::Length> {
                     use ::der::Encode as _;
-
-                    [
-                        #(#encoded_lengths),*
-                    ]
-                        .into_iter()
-                        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
+                    let len = ::der::Length::ZERO;
+                    #(#sum_lengths)*
+                    Ok(len)
                 }
 
                 fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
