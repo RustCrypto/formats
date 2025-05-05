@@ -149,7 +149,10 @@ impl CertificateType {
             .filter_map(|rdn| {
                 let out = SetOfVec::<AttributeTypeAndValue>::from_iter(
                     rdn.iter()
-                        .filter(|attr_value| attr_value.oid == rfc4519::COUNTRY_NAME)
+                        .filter(|attr_value| {
+                            attr_value.oid == rfc4519::COUNTRY_NAME
+                                || attr_value.oid == rfc4519::COMMON_NAME
+                        })
                         .cloned(),
                 )
                 .ok()?;
