@@ -243,42 +243,6 @@ pub trait Builder: Sized {
         S::VerifyingKey: EncodePublicKey;
 
     /// Run the object through the signer and build it.
-    ///
-    /// # Notes
-    ///
-    /// When using ECDSA signers, the `Signature` parameter will need to be explicit
-    /// as multiple implementation of [`signature::Signer`] with various signature
-    /// are available.
-    ///
-    /// This would look like:
-    #[cfg_attr(feature = "std", doc = "```no_run")]
-    #[cfg_attr(not(feature = "std"), doc = "```ignore")]
-    /// # use rand::rng;
-    /// # use std::{
-    /// #     str::FromStr,
-    /// #     time::Duration
-    /// # };
-    /// # use x509_cert::{
-    /// #     builder::{self, CertificateBuilder, Builder},
-    /// #     name::Name,
-    /// #     serial_number::SerialNumber,
-    /// #     spki::SubjectPublicKeyInfo,
-    /// #     time::Validity
-    /// # };
-    /// #
-    /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
-    /// # let builder = CertificateBuilder::new(
-    /// #     builder::profile::cabf::Root::new(
-    /// #         false,
-    /// #         Name::from_str("CN=World domination corporation").unwrap()
-    /// #     ).unwrap(),
-    /// #     SerialNumber::from(42u32),
-    /// #     Validity::from_now(Duration::new(5, 0)).unwrap(),
-    /// #     SubjectPublicKeyInfo::from_key(signer.verifying_key()).unwrap()
-    /// # ).unwrap();
-    /// let certificate = builder.build::<_, ecdsa::der::Signature<_>>(&signer).unwrap();
-    /// ```
     fn build<S, Signature>(mut self, signer: &S) -> Result<Self::Output>
     where
         S: Signer<Signature>,
@@ -294,45 +258,6 @@ pub trait Builder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    ///
-    /// # Notes
-    ///
-    /// When using ECDSA signers, the `Signature` parameter will need to be explicit
-    /// as multiple implementation of [`signature::Signer`] with various signature
-    /// are available.
-    ///
-    /// This would look like:
-    #[cfg_attr(feature = "std", doc = "```no_run")]
-    #[cfg_attr(not(feature = "std"), doc = "```ignore")]
-    /// # use rand::rng;
-    /// # use std::{
-    /// #     str::FromStr,
-    /// #     time::Duration
-    /// # };
-    /// # use x509_cert::{
-    /// #     builder::{self, CertificateBuilder, Builder},
-    /// #     name::Name,
-    /// #     serial_number::SerialNumber,
-    /// #     spki::SubjectPublicKeyInfo,
-    /// #     time::Validity
-    /// # };
-    /// #
-    /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
-    /// # let builder = CertificateBuilder::new(
-    /// #     builder::profile::cabf::Root::new(
-    /// #         false,
-    /// #         Name::from_str("CN=World domination corporation").unwrap()
-    /// #     ).unwrap(),
-    /// #     SerialNumber::from(42u32),
-    /// #     Validity::from_now(Duration::new(5, 0)).unwrap(),
-    /// #     SubjectPublicKeyInfo::from_key(signer.verifying_key()).unwrap()
-    /// # ).unwrap();
-    /// let certificate = builder.build_with_rng::<_, ecdsa::der::Signature<_>, _>(
-    ///     &signer,
-    ///     &mut rng
-    /// ).unwrap();
-    /// ```
     fn build_with_rng<S, Signature, R>(mut self, signer: &S, rng: &mut R) -> Result<Self::Output>
     where
         S: RandomizedSigner<Signature>,
@@ -426,45 +351,6 @@ pub trait AsyncBuilder: Sized {
         S::VerifyingKey: EncodePublicKey;
 
     /// Run the object through the signer and build it.
-    ///
-    /// # Notes
-    ///
-    /// When using ECDSA signers, the `Signature` parameter will need to be explicit
-    /// as multiple implementation of [`signature::AsyncSigner`] with various signature
-    /// are available.
-    ///
-    /// This would look like:
-    #[cfg_attr(feature = "std", doc = "```no_run")]
-    #[cfg_attr(not(feature = "std"), doc = "```ignore")]
-    /// # use rand::rng;
-    /// # use std::{
-    /// #     str::FromStr,
-    /// #     time::Duration
-    /// # };
-    /// # use x509_cert::{
-    /// #     builder::{self, CertificateBuilder, AsyncBuilder},
-    /// #     name::Name,
-    /// #     serial_number::SerialNumber,
-    /// #     spki::SubjectPublicKeyInfo,
-    /// #     time::Validity
-    /// # };
-    /// #
-    /// # async fn build() -> builder::Result<()> {
-    /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
-    /// # let builder = CertificateBuilder::new(
-    /// #     builder::profile::cabf::Root::new(
-    /// #         false,
-    /// #         Name::from_str("CN=World domination corporation").unwrap()
-    /// #     ).unwrap(),
-    /// #     SerialNumber::from(42u32),
-    /// #     Validity::from_now(Duration::new(5, 0)).unwrap(),
-    /// #     SubjectPublicKeyInfo::from_key(signer.verifying_key()).unwrap()
-    /// # ).unwrap();
-    /// let certificate = builder.build_async::<_, ecdsa::der::Signature<_>>(&signer).await?;
-    /// # Ok(())
-    /// # }
-    /// ```
     async fn build_async<S, Signature>(mut self, signer: &S) -> Result<Self::Output>
     where
         S: AsyncSigner<Signature>,
@@ -480,45 +366,6 @@ pub trait AsyncBuilder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    ///
-    /// # Notes
-    ///
-    /// When using ECDSA signers, the `Signature` parameter will need to be explicit
-    /// as multiple implementation of [`signature::AsyncSigner`] with various signature
-    /// are available.
-    ///
-    /// This would look like:
-    #[cfg_attr(feature = "std", doc = "```no_run")]
-    #[cfg_attr(not(feature = "std"), doc = "```ignore")]
-    /// # use rand::rng;
-    /// # use std::{
-    /// #     str::FromStr,
-    /// #     time::Duration
-    /// # };
-    /// # use x509_cert::{
-    /// #     builder::{self, CertificateBuilder, AsyncBuilder},
-    /// #     name::Name,
-    /// #     serial_number::SerialNumber,
-    /// #     spki::SubjectPublicKeyInfo,
-    /// #     time::Validity
-    /// # };
-    /// #
-    /// # async fn build() -> builder::Result<()> {
-    /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
-    /// # let builder = CertificateBuilder::new(
-    /// #     builder::profile::cabf::Root::new(
-    /// #         false,
-    /// #         Name::from_str("CN=World domination corporation").unwrap()
-    /// #     ).unwrap(),
-    /// #     SerialNumber::from(42u32),
-    /// #     Validity::from_now(Duration::new(5, 0)).unwrap(),
-    /// #     SubjectPublicKeyInfo::from_key(signer.verifying_key()).unwrap()
-    /// # ).unwrap();
-    /// let certificate = builder.build_with_rng_async::<_, ecdsa::der::Signature<_>, _>(&signer, &mut rng).await?;
-    /// # Ok(())
-    /// # }
-    /// ```
     async fn build_with_rng_async<S, Signature, R>(
         mut self,
         signer: &S,
