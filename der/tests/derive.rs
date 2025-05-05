@@ -131,7 +131,7 @@ mod choice {
             #[asn1(context_specific = "2", type = "UTF8String")]
             Utf8String(String),
 
-            #[asn1(context_specific = "3")]
+            #[asn1(context_specific = "3", constructed = "true")]
             SequenceOfNulls(SequenceOf<Null, 1>),
         }
 
