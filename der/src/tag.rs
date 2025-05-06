@@ -436,10 +436,6 @@ impl Encode for Tag {
 
         let number = self.number().value();
 
-        // if writer.encoding_rules() == EncodingRules::Der {
-        //     return Err(ErrorKind::TagNumberInvalid.into())
-        // }
-
         if number < u32::from(TagNumber::MASK) {
             first_byte |= (number & 0x1F) as u8;
             writer.write_byte(first_byte)?;
