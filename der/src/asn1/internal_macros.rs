@@ -146,16 +146,16 @@ macro_rules! impl_custom_class {
                 // Decode IMPLICIT header
                 let header = Header::decode(reader)?;
 
+                // the encoding shall be constructed if the base encoding is constructed
+                if header.tag.is_constructed() != T::CONSTRUCTED {
+                    return Err(header.tag.non_canonical_error().into());
+                }
+
                 // read_nested checks if header matches decoded length
                 let value = reader.read_nested(header.length, |reader| {
                     // Decode inner IMPLICIT value
                     T::decode_value(reader, header)
                 })?;
-
-                // the encoding shall be constructed if the base encoding is constructed
-                if header.tag.is_constructed() != T::CONSTRUCTED {
-                    return Err(header.tag.non_canonical_error().into());
-                }
 
                 Ok(Some(Self {
                     tag_number,
