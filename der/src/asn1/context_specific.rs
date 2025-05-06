@@ -28,18 +28,16 @@ impl<T> ContextSpecific<T> {
     /// Attempt to decode an `EXPLICIT` ASN.1 `CONTEXT-SPECIFIC` field with the
     /// provided [`TagNumber`].
     ///
-    /// This method has the following behavior which is designed to simplify
-    /// handling of extension fields, which are denoted in an ASN.1 schema
-    /// using the `...` ellipsis extension marker:
+    /// This method has the following behavior which decodes tag numbers one by one
+    /// in extension fields, which are denoted in an ASN.1 schema using
+    /// the `...` ellipsis extension marker:
     ///
-    /// - Skips over [`ContextSpecific`] fields with a tag number lower than
-    ///   the current one, consuming and ignoring them.
-    /// - Returns `Ok(None)` if a [`ContextSpecific`] field with a higher tag
-    ///   number is encountered. These fields are not consumed in this case,
-    ///   allowing a field with a lower tag number to be omitted, then the
-    ///   higher numbered field consumed as a follow-up.
     /// - Returns `Ok(None)` if anything other than a [`ContextSpecific`] field
     ///   is encountered.
+    /// - Returns `Ok(None)` if a [`ContextSpecific`] field with a different tag
+    ///   number is encountered. These fields are not consumed in this case.
+    /// - Returns `Err(ErrorKind::Noncanonical)` if constructed bit is primitive.
+    /// - Returns `Ok(Some(..))` if tag number matches.
     pub fn decode_explicit<'a, R: Reader<'a>>(
         reader: &mut R,
         tag_number: TagNumber,
@@ -59,6 +57,10 @@ impl<T> ContextSpecific<T> {
     /// This method otherwise behaves the same as `decode_explicit`,
     /// but should be used in cases where the particular fields are `IMPLICIT`
     /// as opposed to `EXPLICIT`.
+    ///
+    /// Differences from `EXPLICIT`:
+    /// - Returns `Err(ErrorKind::Noncanonical)` if constructed bit
+    ///   does not match constructed bit of the base encoding.
     pub fn decode_implicit<'a, R: Reader<'a>>(
         reader: &mut R,
         tag_number: TagNumber,
@@ -111,12 +113,12 @@ where
         // Decode EXPLICIT header
         let header = Header::decode(reader)?;
 
+        // encoding shall be constructed
+        if !header.tag.is_constructed() {
+            return Err(header.tag.non_canonical_error().into());
+        }
         match header.tag {
-            Tag::ContextSpecific {
-                number,
-                // encoding shall be constructed
-                constructed: true,
-            } => Ok(Self {
+            Tag::ContextSpecific { number, .. } => Ok(Self {
                 tag_number: number,
                 tag_mode: TagMode::default(),
                 value: reader.read_nested(header.length, |reader| {
