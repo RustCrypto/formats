@@ -78,9 +78,6 @@ pub enum Tag {
     /// `OCTET STRING` tag: `4`.
     OctetString,
 
-    /// `OCTET STRING` tag: `4` (constructed).
-    OctetStringConstructed,
-
     /// `NULL` tag: `5`.
     Null,
 
@@ -240,7 +237,6 @@ impl Tag {
             Tag::Integer => TagNumber(2),
             Tag::BitString => TagNumber(3),
             Tag::OctetString => TagNumber(4),
-            Tag::OctetStringConstructed => TagNumber(4),
             Tag::Null => TagNumber(5),
             Tag::ObjectIdentifier => TagNumber(6),
             Tag::Real => TagNumber(9),
@@ -267,7 +263,7 @@ impl Tag {
     /// Does this tag represent a constructed (as opposed to primitive) field?
     pub const fn is_constructed(self) -> bool {
         match self {
-            Tag::Sequence | Tag::Set | Tag::OctetStringConstructed => true,
+            Tag::Sequence | Tag::Set => true,
             Tag::Application { constructed, .. }
             | Tag::ContextSpecific { constructed, .. }
             | Tag::Private { constructed, .. } => constructed,
@@ -349,7 +345,7 @@ impl<'a> Decode<'a> for Tag {
             0x1A => Tag::VisibleString,
             0x1B => Tag::GeneralString,
             0x1E => Tag::BmpString,
-            0x24 if reader.encoding_rules() == EncodingRules::Ber => Tag::OctetStringConstructed, // constructed
+            0x24 if reader.encoding_rules() == EncodingRules::Ber => Tag::OctetString, // constructed
             0x30 => Tag::Sequence, // constructed
             0x31 => Tag::Set,      // constructed
             0x40..=0x7F => {
@@ -485,7 +481,6 @@ impl fmt::Display for Tag {
             Tag::Integer => f.write_str("INTEGER"),
             Tag::BitString => f.write_str("BIT STRING"),
             Tag::OctetString => f.write_str("OCTET STRING"),
-            Tag::OctetStringConstructed => f.write_str("OCTET STRING (constructed)"),
             Tag::Null => f.write_str("NULL"),
             Tag::ObjectIdentifier => f.write_str("OBJECT IDENTIFIER"),
             Tag::Real => f.write_str("REAL"),
