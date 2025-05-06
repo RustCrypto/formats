@@ -507,7 +507,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.9"
-source = "git+https://github.com/RustCrypto/signatures.git#d2a93b3d5a45a54c19ef29ddc009d9ad22d8b057"
+source = "git+https://github.com/RustCrypto/signatures.git#7febf15d74927018d818d5404258153db76b59df"
 dependencies = [
  "der",
  "digest",
@@ -1221,7 +1221,7 @@ checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.4"
-source = "git+https://github.com/RustCrypto/signatures.git#d2a93b3d5a45a54c19ef29ddc009d9ad22d8b057"
+source = "git+https://github.com/RustCrypto/signatures.git#7febf15d74927018d818d5404258153db76b59df"
 dependencies = [
  "hmac",
  "subtle",
