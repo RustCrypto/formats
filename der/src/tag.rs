@@ -7,7 +7,9 @@ mod number;
 
 pub use self::{class::Class, mode::TagMode, number::TagNumber};
 
-use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Writer};
+use crate::{
+    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Length, Reader, Result, Writer,
+};
 use core::{cmp::Ordering, fmt};
 
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
@@ -76,6 +78,9 @@ pub enum Tag {
     /// `OCTET STRING` tag: `4`.
     OctetString,
 
+    /// `OCTET STRING` tag: `4` (constructed).
+    OctetStringConstructed,
+
     /// `NULL` tag: `5`.
     Null,
 
@@ -91,10 +96,10 @@ pub enum Tag {
     /// `UTF8String` tag: `12`.
     Utf8String,
 
-    /// `SEQUENCE` tag: `16`.
+    /// `SEQUENCE` tag: `16` (constructed).
     Sequence,
 
-    /// `SET` and `SET OF` tag: `17`.
+    /// `SET` and `SET OF` tag: `17` (constructed).
     Set,
 
     /// `NumericString` tag: `18`.
@@ -235,6 +240,7 @@ impl Tag {
             Tag::Integer => TagNumber(2),
             Tag::BitString => TagNumber(3),
             Tag::OctetString => TagNumber(4),
+            Tag::OctetStringConstructed => TagNumber(4),
             Tag::Null => TagNumber(5),
             Tag::ObjectIdentifier => TagNumber(6),
             Tag::Real => TagNumber(9),
@@ -261,7 +267,7 @@ impl Tag {
     /// Does this tag represent a constructed (as opposed to primitive) field?
     pub const fn is_constructed(self) -> bool {
         match self {
-            Tag::Sequence | Tag::Set => true,
+            Tag::Sequence | Tag::Set | Tag::OctetStringConstructed => true,
             Tag::Application { constructed, .. }
             | Tag::ContextSpecific { constructed, .. }
             | Tag::Private { constructed, .. } => constructed,
@@ -343,6 +349,7 @@ impl<'a> Decode<'a> for Tag {
             0x1A => Tag::VisibleString,
             0x1B => Tag::GeneralString,
             0x1E => Tag::BmpString,
+            0x24 if reader.encoding_rules() == EncodingRules::Ber => Tag::OctetStringConstructed, // constructed
             0x30 => Tag::Sequence, // constructed
             0x31 => Tag::Set,      // constructed
             0x40..=0x7F => {
@@ -433,6 +440,10 @@ impl Encode for Tag {
 
         let number = self.number().value();
 
+        // if writer.encoding_rules() == EncodingRules::Der {
+        //     return Err(ErrorKind::TagNumberInvalid.into())
+        // }
+
         if number < u32::from(TagNumber::MASK) {
             first_byte |= (number & 0x1F) as u8;
             writer.write_byte(first_byte)?;
@@ -474,6 +485,7 @@ impl fmt::Display for Tag {
             Tag::Integer => f.write_str("INTEGER"),
             Tag::BitString => f.write_str("BIT STRING"),
             Tag::OctetString => f.write_str("OCTET STRING"),
+            Tag::OctetStringConstructed => f.write_str("OCTET STRING (constructed)"),
             Tag::Null => f.write_str("NULL"),
             Tag::ObjectIdentifier => f.write_str("OBJECT IDENTIFIER"),
             Tag::Real => f.write_str("REAL"),
