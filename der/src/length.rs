@@ -1,6 +1,9 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Reader, Result, SliceWriter, Tag, Writer};
+use crate::{
+    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Reader, Result, SliceWriter, Tag,
+    Writer,
+};
 use core::{
     cmp::Ordering,
     fmt,
@@ -25,8 +28,8 @@ impl Length {
     /// Length of `1`
     pub const ONE: Self = Self(1);
 
-    /// Maximum length (`u32::MAX`).
-    pub const MAX: Self = Self(u32::MAX);
+    /// Maximum length (`u32::MAX` - 1).
+    pub const MAX: Self = Self(u32::MAX - 1);
 
     /// Maximum number of octets in a DER encoding of a [`Length`] using the
     /// rules implemented by this crate.
@@ -44,7 +47,7 @@ impl Length {
     /// This function is const-safe and therefore useful for [`Length`] constants.
     #[allow(clippy::cast_possible_truncation)]
     pub(crate) const fn new_usize(len: usize) -> Result<Self> {
-        if len > (u32::MAX as usize) {
+        if len > (u32::MAX as usize) - 1 {
             Err(Error::from_kind(ErrorKind::Overflow))
         } else {
             Ok(Length(len as u32))
@@ -55,6 +58,12 @@ impl Length {
     pub const fn is_zero(self) -> bool {
         let value = self.0;
         value == 0
+    }
+
+    /// Is this length indefinite?
+    pub const fn is_indefinite(self) -> bool {
+        let value = self.0;
+        value == u32::MAX
     }
 
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`
@@ -90,7 +99,7 @@ impl Length {
             0x80..=0xFF => Some(0x81),
             0x100..=0xFFFF => Some(0x82),
             0x10000..=0xFFFFFF => Some(0x83),
-            0x1000000..=0xFFFFFFFF => Some(0x84),
+            0x1000000..=0xFFFFFFFE => Some(0x84),
             _ => None,
         }
     }
@@ -214,6 +223,9 @@ impl<'a> Decode<'a> for Length {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
             // lengths, which are not allowed in DER, so disallow that byte.
             len if len < INDEFINITE_LENGTH_OCTET => Ok(len.into()),
+            INDEFINITE_LENGTH_OCTET if reader.encoding_rules() == EncodingRules::Ber => {
+                Ok(Self(u32::MAX))
+            }
             INDEFINITE_LENGTH_OCTET => Err(ErrorKind::IndefiniteLength.into()),
             // 1-4 byte variable-sized length prefix
             tag @ 0x81..=0x84 => {
