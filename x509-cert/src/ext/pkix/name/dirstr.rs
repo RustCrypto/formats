@@ -98,4 +98,25 @@ impl DirectoryString {
             Self::BmpString(s) => Cow::Owned(s.to_string()),
         }
     }
+
+    /// Returns `&str` for `PrintableString`, `TeletexString` and `Utf8String`
+    ///
+    /// Warning: Returns `""` empty string for [`DirectoryString::BmpString`] variant
+    #[deprecated(since = "0.3.0-pre.0", note = "use `DirectoryString::value` instead")]
+    #[allow(clippy::should_implement_trait)]
+    pub fn as_ref(&self) -> &str {
+        match self {
+            Self::PrintableString(s) => s.as_ref(),
+            Self::TeletexString(s) => s.as_ref(),
+            Self::Utf8String(s) => s.as_ref(),
+            // BMPString is not str-compatible
+            Self::BmpString(_s) => "",
+        }
+    }
+}
+
+impl From<DirectoryString> for String {
+    fn from(value: DirectoryString) -> Self {
+        value.value().into_owned()
+    }
 }
