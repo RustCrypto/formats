@@ -20,7 +20,7 @@ checksum = "512761e0bb2578dd7380c6baaa0f4ce03e84f95e960231d1dec8bf4d7d6e2627"
 [[package]]
 name = "aead"
 version = "0.6.0-rc.0"
-source = "git+https://github.com/RustCrypto/traits.git#ac5443909846354e11570e2968937a62f2019bed"
+source = "git+https://github.com/RustCrypto/traits.git#439fc8c28c61b09eff35349b4c091a5586d70ea7"
 dependencies = [
  "crypto-common",
  "inout",
@@ -414,7 +414,7 @@ dependencies = [
 [[package]]
 name = "crypto-common"
 version = "0.2.0-rc.2"
-source = "git+https://github.com/RustCrypto/traits.git#ac5443909846354e11570e2968937a62f2019bed"
+source = "git+https://github.com/RustCrypto/traits.git#439fc8c28c61b09eff35349b4c091a5586d70ea7"
 dependencies = [
  "hybrid-array",
  "rand_core 0.9.3",
@@ -507,7 +507,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.9"
-source = "git+https://github.com/RustCrypto/signatures.git#7febf15d74927018d818d5404258153db76b59df"
+source = "git+https://github.com/RustCrypto/signatures.git#b66adc00be5c4cf594331c091da8ea71e5f5f32d"
 dependencies = [
  "der",
  "digest",
@@ -527,7 +527,7 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 [[package]]
 name = "elliptic-curve"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/RustCrypto/traits.git#ac5443909846354e11570e2968937a62f2019bed"
+source = "git+https://github.com/RustCrypto/traits.git#439fc8c28c61b09eff35349b4c091a5586d70ea7"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -1221,7 +1221,7 @@ checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.4"
-source = "git+https://github.com/RustCrypto/signatures.git#7febf15d74927018d818d5404258153db76b59df"
+source = "git+https://github.com/RustCrypto/signatures.git#b66adc00be5c4cf594331c091da8ea71e5f5f32d"
 dependencies = [
  "hmac",
  "subtle",
@@ -1252,7 +1252,7 @@ dependencies = [
 [[package]]
 name = "rsa"
 version = "0.10.0-pre.4"
-source = "git+https://github.com/RustCrypto/RSA.git#471c06b15d3f5d735e4a34e7db9b56efce325014"
+source = "git+https://github.com/RustCrypto/RSA.git#01c9228a547b9aaf761a768593bcb07552459440"
 dependencies = [
  "const-oid",
  "crypto-bigint",
@@ -1496,7 +1496,7 @@ dependencies = [
 [[package]]
 name = "signature"
 version = "3.0.0-pre"
-source = "git+https://github.com/RustCrypto/traits.git#ac5443909846354e11570e2968937a62f2019bed"
+source = "git+https://github.com/RustCrypto/traits.git#439fc8c28c61b09eff35349b4c091a5586d70ea7"
 dependencies = [
  "digest",
  "rand_core 0.9.3",
