@@ -5,6 +5,7 @@
 mod internal_macros;
 
 mod any;
+mod application;
 pub(crate) mod bit_string;
 #[cfg(feature = "alloc")]
 mod bmp_string;
@@ -21,6 +22,7 @@ mod octet_string;
 mod oid;
 mod optional;
 mod printable_string;
+mod private;
 #[cfg(feature = "real")]
 mod real;
 mod sequence;
@@ -33,6 +35,7 @@ mod videotex_string;
 
 pub use self::{
     any::AnyRef,
+    application::{Application, ApplicationRef},
     bit_string::{BitStringIter, BitStringRef},
     choice::Choice,
     context_specific::{ContextSpecific, ContextSpecificRef},
@@ -43,6 +46,7 @@ pub use self::{
     null::Null,
     octet_string::OctetStringRef,
     printable_string::PrintableStringRef,
+    private::{Private, PrivateRef},
     sequence::{Sequence, SequenceRef},
     sequence_of::{SequenceOf, SequenceOfIter},
     set_of::{SetOf, SetOfIter},
