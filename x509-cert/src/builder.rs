@@ -13,9 +13,13 @@ use spki::{
 use crate::{
     AlgorithmIdentifier, SubjectPublicKeyInfo,
     certificate::{Certificate, TbsCertificate, Version},
-    ext::{AsExtension, Extensions},
+    crl::{CertificateList, RevokedCert, TbsCertList},
+    ext::{
+        AsExtension, Extensions,
+        pkix::{AuthorityKeyIdentifier, CrlNumber, SubjectKeyIdentifier},
+    },
     serial_number::SerialNumber,
-    time::Validity,
+    time::{Time, Validity},
 };
 
 pub mod profile;
@@ -562,5 +566,121 @@ where
         S::VerifyingKey: EncodePublicKey,
     {
         <T as Builder>::finalize(self, signer)
+    }
+}
+
+/// X.509 CRL builder
+pub struct CrlBuilder {
+    tbs: TbsCertList,
+}
+
+impl CrlBuilder {
+    /// Create a `CrlBuilder` with the given issuer and the given monotonic [`CrlNumber`]
+    #[cfg(feature = "std")]
+    pub fn new(issuer: &Certificate, crl_number: CrlNumber) -> der::Result<Self> {
+        let this_update = Time::now()?;
+        Self::new_with_this_update(issuer, crl_number, this_update)
+    }
+
+    /// Create a `CrlBuilder` with the given issuer, a given monotonic [`CrlNumber`], and valid
+    /// from the given `this_update` start validity date.
+    pub fn new_with_this_update(
+        issuer: &Certificate,
+        crl_number: CrlNumber,
+        this_update: Time,
+    ) -> der::Result<Self> {
+        // Replaced later when the finalize is called
+        let signature_alg = AlgorithmIdentifier {
+            oid: NULL_OID,
+            parameters: None,
+        };
+
+        let issuer_name = issuer.tbs_certificate.subject().clone();
+
+        let mut crl_extensions = Extensions::new();
+        crl_extensions.push(crl_number.to_extension(&issuer_name, &crl_extensions)?);
+        let aki = match issuer
+            .tbs_certificate
+            .get_extension::<AuthorityKeyIdentifier>()?
+        {
+            Some((_, aki)) => aki,
+            None => {
+                let ski = SubjectKeyIdentifier::try_from(
+                    issuer
+                        .tbs_certificate
+                        .subject_public_key_info()
+                        .owned_to_ref(),
+                )?;
+                AuthorityKeyIdentifier {
+                    // KeyIdentifier must be the same as subjectKeyIdentifier
+                    key_identifier: Some(ski.0.clone()),
+                    // other fields must not be present.
+                    ..Default::default()
+                }
+            }
+        };
+        crl_extensions.push(aki.to_extension(&issuer_name, &crl_extensions)?);
+
+        let tbs = TbsCertList {
+            version: Version::V2,
+            signature: signature_alg,
+            issuer: issuer_name,
+            this_update,
+            next_update: None,
+            revoked_certificates: None,
+            crl_extensions: Some(crl_extensions),
+        };
+
+        Ok(Self { tbs })
+    }
+
+    /// Make the CRL valid until the given `next_update`
+    pub fn with_next_update(mut self, next_update: Option<Time>) -> Self {
+        self.tbs.next_update = next_update;
+        self
+    }
+
+    /// Add certificates to the revocation list
+    pub fn with_certificates<I>(mut self, revoked: I) -> Self
+    where
+        I: Iterator<Item = RevokedCert>,
+    {
+        let certificates = self
+            .tbs
+            .revoked_certificates
+            .get_or_insert_with(vec::Vec::new);
+
+        let mut revoked: vec::Vec<RevokedCert> = revoked.collect();
+        certificates.append(&mut revoked);
+
+        self
+    }
+}
+
+impl Builder for CrlBuilder {
+    type Output = CertificateList;
+
+    fn finalize<S>(&mut self, cert_signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        self.tbs.signature = cert_signer.signature_algorithm_identifier()?;
+
+        self.tbs.to_der().map_err(Error::from)
+    }
+
+    fn assemble<S>(self, signature: BitString, _signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        let signature_algorithm = self.tbs.signature.clone();
+
+        Ok(CertificateList {
+            tbs_cert_list: self.tbs,
+            signature_algorithm,
+            signature,
+        })
     }
 }
