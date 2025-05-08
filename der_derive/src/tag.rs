@@ -15,8 +15,26 @@ pub(crate) enum Tag {
     /// Universal tags with an associated [`Asn1Type`].
     Universal(Asn1Type),
 
-    /// Context-specific tags with an associated [`TagNumber`].
+    /// `APPLICATION` tags with an associated [`TagNumber`].
+    Application {
+        /// Is the inner ASN.1 type constructed?
+        constructed: bool,
+
+        /// Context-specific tag number
+        number: TagNumber,
+    },
+
+    /// `CONTEXT-SPECIFIC` tags with an associated [`TagNumber`].
     ContextSpecific {
+        /// Is the inner ASN.1 type constructed?
+        constructed: bool,
+
+        /// Context-specific tag number
+        number: TagNumber,
+    },
+
+    /// `PRIVATE` tags with an associated [`TagNumber`].
+    Private {
         /// Is the inner ASN.1 type constructed?
         constructed: bool,
 
@@ -30,20 +48,40 @@ impl Tag {
     pub fn to_tokens(self) -> TokenStream {
         match self {
             Tag::Universal(ty) => ty.tag(),
+            Tag::Application {
+                constructed,
+                number,
+            } => {
+                let number = number.to_tokens();
+
+                quote! {
+                    ::der::Tag::Application {
+                        constructed: #constructed,
+                        number: #number,
+                    }
+                }
+            }
             Tag::ContextSpecific {
                 constructed,
                 number,
             } => {
-                let constructed = if constructed {
-                    quote!(true)
-                } else {
-                    quote!(false)
-                };
-
                 let number = number.to_tokens();
 
                 quote! {
                     ::der::Tag::ContextSpecific {
+                        constructed: #constructed,
+                        number: #number,
+                    }
+                }
+            }
+            Tag::Private {
+                constructed,
+                number,
+            } => {
+                let number = number.to_tokens();
+
+                quote! {
+                    ::der::Tag::Private {
                         constructed: #constructed,
                         number: #number,
                     }
