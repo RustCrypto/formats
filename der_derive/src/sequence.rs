@@ -373,6 +373,13 @@ mod tests {
 
                 #[asn1(context_specific = "2", type = "UTF8String")]
                 utf8_string: String,
+
+                #[asn1(application = "3", type = "OCTET STRING")]
+                app_octet_string: &[u8],
+
+                #[asn1(private = "4", type = "IA5String")]
+                private_ia5_string: String,
+
             }
         };
 
@@ -382,7 +389,7 @@ mod tests {
             ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
             "'a"
         );
-        assert_eq!(ir.fields.len(), 3);
+        assert_eq!(ir.fields.len(), 5);
 
         let bit_string = &ir.fields[0];
         assert_eq!(bit_string.ident, "bit_string");
@@ -410,5 +417,29 @@ mod tests {
             Some(ClassNum::ContextSpecific("2".parse().unwrap()))
         );
         assert_eq!(utf8_string.attrs.tag_mode, TagMode::Implicit);
+
+        let app_octet_string = &ir.fields[3];
+        assert_eq!(app_octet_string.ident, "app_octet_string");
+        assert_eq!(
+            app_octet_string.attrs.asn1_type,
+            Some(Asn1Type::OctetString)
+        );
+        assert_eq!(
+            app_octet_string.attrs.class_num,
+            Some(ClassNum::Application("3".parse().unwrap()))
+        );
+        assert_eq!(app_octet_string.attrs.tag_mode, TagMode::Implicit);
+
+        let private_ia5_string = &ir.fields[4];
+        assert_eq!(private_ia5_string.ident, "private_ia5_string");
+        assert_eq!(
+            private_ia5_string.attrs.asn1_type,
+            Some(Asn1Type::Ia5String)
+        );
+        assert_eq!(
+            private_ia5_string.attrs.class_num,
+            Some(ClassNum::Private("4".parse().unwrap()))
+        );
+        assert_eq!(private_ia5_string.attrs.tag_mode, TagMode::Implicit);
     }
 }

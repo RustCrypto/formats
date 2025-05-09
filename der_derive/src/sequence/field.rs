@@ -1,7 +1,7 @@
 //! Sequence field IR and lowerings
 
 use crate::{
-    Asn1Type, FieldAttrs, TagMode, TagNumber, TypeAttrs,
+    Asn1Type, FieldAttrs, TagMode, TypeAttrs,
     attributes::{ClassNum, ClassTokens},
 };
 use proc_macro2::TokenStream;
@@ -234,7 +234,7 @@ impl LowerFieldEncoder {
         if optional {
             self.encoder = quote! {
                 #encoder.as_ref().map(|field| {
-                    ::der::asn1::ContextSpecificRef {
+                    #ref_type {
                         tag_number: #number_tokens,
                         tag_mode: #mode_tokens,
                         value: field,
@@ -243,7 +243,7 @@ impl LowerFieldEncoder {
             };
         } else {
             self.encoder = quote! {
-                ::der::asn1::ContextSpecificRef {
+                #ref_type {
                     tag_number: #number_tokens,
                     tag_mode: #mode_tokens,
                     value: &#encoder,
@@ -346,12 +346,12 @@ mod tests {
         assert_eq!(
             field.to_decode_tokens().to_string(),
             quote! {
-                let implicit_field = ::der::asn1::ContextSpecific::<>::decode_implicit(
+                let implicit_field = ::der::asn1::ContextSpecific::<_>::decode_implicit(
                         reader,
                         ::der::TagNumber(0u32)
                     )?
                     .ok_or_else(|| {
-                        der::Tag::ContextSpecific {
+                        ::der::Tag::ContextSpecific {
                             number: ::der::TagNumber(0u32),
                             constructed: false
                         }

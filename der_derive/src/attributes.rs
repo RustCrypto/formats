@@ -297,21 +297,26 @@ impl FieldAttrs {
     }
 
     pub fn custom_class_decoder(&self, class_num: &ClassNum) -> TokenStream {
-        let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
-        let tag_number = class_num.tag_number().to_tokens();
+        let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or(quote!(_));
+        let ClassTokens {
+            tag_type,
+            tag_number,
+            class_type,
+            ..
+        } = class_num.to_tokens(type_params, self.tag_mode);
 
         let context_specific = match self.tag_mode {
             TagMode::Explicit => {
                 if self.extensible || self.is_optional() {
                     quote! {
-                        ::der::asn1::ContextSpecific::<#type_params>::decode_explicit(
+                        #class_type::decode_explicit(
                             reader,
                             #tag_number
                         )?
                     }
                 } else {
                     quote! {
-                        match ::der::asn1::ContextSpecific::<#type_params>::decode(reader)? {
+                        match #class_type::decode(reader)? {
                             field if field.tag_number == #tag_number => Some(field),
                             _ => None
                         }
@@ -320,7 +325,7 @@ impl FieldAttrs {
             }
             TagMode::Implicit => {
                 quote! {
-                    ::der::asn1::ContextSpecific::<#type_params>::decode_implicit(
+                    #class_type::decode_implicit(
                         reader,
                         #tag_number
                     )?
@@ -339,7 +344,7 @@ impl FieldAttrs {
             let constructed = self.constructed;
             quote! {
                 #context_specific.ok_or_else(|| {
-                    der::Tag::ContextSpecific {
+                    #tag_type {
                         number: #tag_number,
                         constructed: #constructed
                     }.value_error()
@@ -352,10 +357,16 @@ impl FieldAttrs {
     pub fn value_encode(&self, binding: &TokenStream) -> TokenStream {
         match &self.class_num {
             Some(class_num) => {
-                let tag_number = class_num.tag_number().to_tokens();
                 let tag_mode = self.tag_mode.to_tokens();
+                let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or(quote!(_));
+                let ClassTokens {
+                    ref_type,
+                    tag_number,
+                    ..
+                } = class_num.to_tokens(type_params, self.tag_mode);
+
                 quote! {
-                    ::der::asn1::ContextSpecificRef {
+                    #ref_type {
                         tag_number: #tag_number,
                         tag_mode: #tag_mode,
                         value: #binding,
@@ -464,41 +475,42 @@ pub(crate) struct ClassTokens {
 
 impl ClassNum {
     pub fn to_tokens(&self, type_params: TokenStream, tag_mode: TagMode) -> ClassTokens {
+        // Future-proof for potential ContextSpecificExplicit / ContextSpecificImplicit split
         match (tag_mode, self) {
             (TagMode::Explicit, Self::ContextSpecific(tag_number)) => ClassTokens {
                 tag_type: quote!(::der::Tag::ContextSpecific),
                 class_type: quote!(::der::asn1::ContextSpecific::<#type_params>),
-                ref_type: quote!(::der::asn1::ContextSpecificRef::<'_, #type_params>),
+                ref_type: quote!(::der::asn1::ContextSpecificRef),
                 tag_number: tag_number.to_tokens(),
             },
             (TagMode::Implicit, Self::ContextSpecific(tag_number)) => ClassTokens {
                 tag_type: quote!(::der::Tag::ContextSpecific),
                 class_type: quote!(::der::asn1::ContextSpecific::<#type_params>),
-                ref_type: quote!(::der::asn1::ContextSpecificRef::<'_, #type_params>),
+                ref_type: quote!(::der::asn1::ContextSpecificRef),
                 tag_number: tag_number.to_tokens(),
             },
             (TagMode::Explicit, Self::Private(tag_number)) => ClassTokens {
                 tag_type: quote!(::der::Tag::Private),
                 class_type: quote!(::der::asn1::Private::<#type_params>),
-                ref_type: quote!(::der::asn1::PrivateRef::<'_, #type_params>),
+                ref_type: quote!(::der::asn1::PrivateRef),
                 tag_number: tag_number.to_tokens(),
             },
             (TagMode::Implicit, Self::Private(tag_number)) => ClassTokens {
                 tag_type: quote!(::der::Tag::Private),
                 class_type: quote!(::der::asn1::Private::<#type_params>),
-                ref_type: quote!(::der::asn1::PrivateRef::<'_, #type_params>),
+                ref_type: quote!(::der::asn1::PrivateRef),
                 tag_number: tag_number.to_tokens(),
             },
             (TagMode::Explicit, Self::Application(tag_number)) => ClassTokens {
                 tag_type: quote!(::der::Tag::Application),
                 class_type: quote!(::der::asn1::Application::<#type_params>),
-                ref_type: quote!(::der::asn1::ApplicationRef::<'_, #type_params>),
+                ref_type: quote!(::der::asn1::ApplicationRef),
                 tag_number: tag_number.to_tokens(),
             },
             (TagMode::Implicit, Self::Application(tag_number)) => ClassTokens {
                 tag_type: quote!(::der::Tag::Application),
                 class_type: quote!(::der::asn1::Application::<#type_params>),
-                ref_type: quote!(::der::asn1::ApplicationRef::<'_, #type_params>),
+                ref_type: quote!(::der::asn1::ApplicationRef),
                 tag_number: tag_number.to_tokens(),
             },
         }
