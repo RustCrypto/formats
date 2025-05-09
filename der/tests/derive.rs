@@ -788,7 +788,7 @@ mod decode_encode_value {
 }
 
 #[cfg(all(feature = "derive", feature = "oid"))]
-mod sequence_application {
+mod custom_application {
     use const_oid::ObjectIdentifier;
     use der::{Decode, DecodeValue, Encode, EncodeValue, FixedTag, Sequence, Tag, TagNumber};
     use hex_literal::hex;
@@ -796,7 +796,7 @@ mod sequence_application {
     const TACHO_CERT_DER: &[u8] = &hex!(
     "7F 21  81 C8" // Application 33
 
-        "7F 4E  81 81" // Appliction 78
+        "7F 4E  81 81" // Application 78
 
             "5F 29" // Application 41
                 "01 00"
