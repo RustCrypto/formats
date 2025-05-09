@@ -95,8 +95,8 @@ impl SequenceField {
             lowerer.apply_asn1_type(ty, attrs.optional);
         }
 
-        if let Some(tag_number) = &attrs.class_num {
-            lowerer.apply_context_specific(tag_number, &attrs.tag_mode, attrs.optional);
+        if let Some(class_num) = &attrs.class_num {
+            lowerer.apply_class_and_number(class_num, &attrs.tag_mode, attrs.optional);
         }
 
         if let Some(default) = &attrs.default {
@@ -256,7 +256,7 @@ impl LowerFieldEncoder {
 #[cfg(test)]
 mod tests {
     use super::SequenceField;
-    use crate::{FieldAttrs, TagMode, TagNumber};
+    use crate::{FieldAttrs, TagMode, TagNumber, attributes::ClassNum};
     use proc_macro2::Span;
     use quote::quote;
     use syn::{Ident, Path, PathSegment, Type, TypePath, punctuated::Punctuated};
@@ -326,7 +326,7 @@ mod tests {
 
         let attrs = FieldAttrs {
             asn1_type: None,
-            context_specific: Some(TagNumber(0)),
+            class_num: Some(ClassNum::ContextSpecific(TagNumber(0))),
             default: None,
             extensible: false,
             optional: false,

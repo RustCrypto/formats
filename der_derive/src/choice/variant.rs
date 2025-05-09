@@ -123,9 +123,9 @@ impl ChoiceVariant {
     pub(super) fn to_value_len_tokens(&self) -> TokenStream {
         let ident = &self.ident;
 
-        match self.attrs.context_specific {
-            Some(tag_number) => {
-                let tag_number = tag_number.to_tokens();
+        match &self.attrs.class_num {
+            Some(class_num) => {
+                let tag_number = class_num.tag_number().to_tokens();
                 let tag_mode = self.attrs.tag_mode.to_tokens();
 
                 quote! {
@@ -154,7 +154,10 @@ impl ChoiceVariant {
 #[cfg(test)]
 mod tests {
     use super::ChoiceVariant;
-    use crate::{Asn1Type, FieldAttrs, Tag, TagMode, TagNumber, choice::variant::TagOrPath};
+    use crate::{
+        Asn1Type, FieldAttrs, Tag, TagMode, TagNumber, attributes::ClassNum,
+        choice::variant::TagOrPath,
+    };
     use proc_macro2::Span;
     use quote::quote;
     use syn::Ident;
@@ -254,7 +257,7 @@ mod tests {
                 let ident = Ident::new("ExplicitVariant", Span::call_site());
                 let attrs = FieldAttrs {
                     constructed,
-                    context_specific: Some(TagNumber(tag_number)),
+                    class_num: Some(ClassNum::ContextSpecific(TagNumber(tag_number))),
                     ..Default::default()
                 };
                 assert_eq!(attrs.tag_mode, TagMode::Explicit);
@@ -339,7 +342,7 @@ mod tests {
 
                 let attrs = FieldAttrs {
                     constructed,
-                    context_specific: Some(TagNumber(tag_number)),
+                    class_num: Some(ClassNum::ContextSpecific(TagNumber(tag_number))),
                     tag_mode: TagMode::Implicit,
                     ..Default::default()
                 };
