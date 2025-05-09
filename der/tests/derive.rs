@@ -841,7 +841,7 @@ mod sequence_application {
 
     impl FixedTag for TachographCertificate<'_> {
         const TAG: Tag = Tag::Application {
-            number: TagNumber(33),
+            number: TagNumber(33), // 7F 21
             constructed: true,
         };
     }
