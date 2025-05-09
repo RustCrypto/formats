@@ -36,7 +36,7 @@ mod videotex_string;
 pub use self::{
     any::AnyRef,
     application::{Application, ApplicationRef},
-    bit_string::{BitStringIter, BitStringRef},
+    bit_string::{AsBitStringRef, BitStringIter, BitStringRef},
     choice::Choice,
     context_specific::{ContextSpecific, ContextSpecificRef},
     general_string::GeneralStringRef,
