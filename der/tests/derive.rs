@@ -849,7 +849,6 @@ mod sequence_application {
     /// EU Tachograph G2 certificate body
     #[derive(Sequence)]
     #[asn1(tag_mode = "IMPLICIT")]
-
     pub struct TachographCertificateBody<'a> {
         /// primitive
         #[asn1(application = "41", type = "OCTET STRING")]
@@ -880,10 +879,9 @@ mod sequence_application {
         pub expiration_date: &'a [u8],
     }
 
-    /// EU Tachograph certificate public key
+    /// EU Tachograph G2 certificate public key
     #[derive(Sequence)]
     #[asn1(tag_mode = "IMPLICIT")]
-
     pub struct CertificatePublicKey<'a> {
         pub domain_parameters: ObjectIdentifier,
 
