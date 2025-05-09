@@ -468,3 +468,18 @@ fn certificate_arbitrary() {
         check_arbitrary(certificate);
     }
 }
+
+#[cfg(feature = "pem")]
+#[test]
+fn decode_cert_bmpstring() {
+    let der_encoded_cert = include_bytes!("examples/windows_bmpstring.pem");
+    let result = Certificate::from_pem(der_encoded_cert);
+    let cert: Certificate = result.unwrap();
+
+    let common_name = cert.tbs_certificate().issuer().common_name().unwrap();
+
+    assert_eq!(
+        common_name.unwrap().value(),
+        "WDKTestCert 混沌,133906716390833193"
+    );
+}
