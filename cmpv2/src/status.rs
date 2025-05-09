@@ -122,11 +122,11 @@ flags! {
     ///
     /// [RFC 4210 Section 5.2.3]: https://www.rfc-editor.org/rfc/rfc4210#section-5.2.3
     #[allow(missing_docs)]
-    pub enum PkiFailureInfoValues: u16 {
+    pub enum PkiFailureInfoValues: u32 {
         BadAlg = 0,
         BadMessageCheck = 1,
         BadRequest      = 2,
-        BadTime         = 2,
+        BadTime         = 3,
         BadCertId       = 4,
         BadDataFormat   = 5,
         WrongAuthority  = 6,
