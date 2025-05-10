@@ -105,6 +105,7 @@ impl DeriveSequence {
 
         quote! {
             impl #impl_generics #ident #ty_generics #where_clause {
+                #[doc(hidden)]
                 fn decode_value_inner<R: ::der::Reader<#lifetime>>(reader: &mut R) -> ::core::result::Result<Self, #error> {
                     use ::der::{Decode as _, DecodeValue as _, Reader as _};
                     #(#decode_body)*
