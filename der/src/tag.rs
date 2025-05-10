@@ -169,8 +169,8 @@ impl Tag {
 
     pub(crate) fn peek_optional<'a>(reader: &impl Reader<'a>) -> Result<Option<Self>> {
         let mut buf = [0u8; Self::MAX_SIZE];
-
         if reader.peek_into(&mut buf[0..1]).is_err() {
+            // Ignore empty buffer
             return Ok(None);
         }
 
@@ -750,8 +750,12 @@ mod tests {
     #[test]
     fn peek_long_tags() {
         let reader = SliceReader::new(&hex!("DF8FFFFFFF7F")).expect("valid reader");
+        let tag = Tag::peek(&reader).expect("peeked tag");
+        assert!(!tag.is_context_specific());
+        assert!(!tag.is_application());
+        assert!(tag.is_private());
         assert_eq!(
-            Tag::peek(&reader).expect("peeked tag"),
+            tag,
             Tag::Private {
                 constructed: false,
                 number: TagNumber(u32::MAX)

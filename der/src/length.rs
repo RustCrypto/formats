@@ -340,11 +340,15 @@ mod tests {
             Length::from(0x10000u32),
             Length::from_der(&[0x83, 0x01, 0x00, 0x00]).unwrap()
         );
+        assert_eq!(
+            Length::from(0xFFFFFFFFu32),
+            Length::from_der(&[0x84, 0xFF, 0xFF, 0xFF, 0xFF]).unwrap()
+        );
     }
 
     #[test]
     fn encode() {
-        let mut buffer = [0u8; 4];
+        let mut buffer = [0u8; 5];
 
         assert_eq!(&[0x00], Length::ZERO.encode_to_slice(&mut buffer).unwrap());
 
@@ -374,6 +378,12 @@ mod tests {
                 .encode_to_slice(&mut buffer)
                 .unwrap()
         );
+        assert_eq!(
+            &[0x84, 0xFF, 0xFF, 0xFF, 0xFF],
+            Length::from(0xFFFFFFFFu32)
+                .encode_to_slice(&mut buffer)
+                .unwrap()
+        );
     }
 
     #[test]
@@ -388,5 +398,10 @@ mod tests {
     #[test]
     fn der_ord() {
         assert_eq!(Length::ONE.der_cmp(&Length::MAX).unwrap(), Ordering::Less);
+        assert_eq!(Length::ONE.der_cmp(&Length::ONE).unwrap(), Ordering::Equal);
+        assert_eq!(
+            Length::ONE.der_cmp(&Length::ZERO).unwrap(),
+            Ordering::Greater
+        );
     }
 }
