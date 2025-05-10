@@ -103,5 +103,6 @@ mod tests {
     #[test]
     fn reject_non_canonical() {
         assert!(Null::from_der(&[0x05, 0x81, 0x00]).is_err());
+        assert!(Null::from_der(&[0x05, 0x01, 0xAA]).is_err());
     }
 }
