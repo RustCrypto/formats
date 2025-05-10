@@ -241,6 +241,17 @@ impl<'a> arbitrary::Arbitrary<'a> for BitStringRef<'a> {
         arbitrary::size_hint::and(u8::size_hint(depth), BytesRef::size_hint(depth))
     }
 }
+/// How write it better? Like `AsRef<BitStringRef<'a>>`
+pub trait AsBitStringRef<'a> {
+    /// Implemented on BitString and BitStringRef
+    fn as_bitstring_ref(&'a self) -> BitStringRef<'a>;
+}
+
+impl<'a> AsBitStringRef<'a> for BitStringRef<'a> {
+    fn as_bitstring_ref(&'a self) -> BitStringRef<'a> {
+        self.clone()
+    }
+}
 
 #[cfg(feature = "alloc")]
 pub use self::allocating::BitString;
@@ -444,6 +455,12 @@ mod allocating {
     impl OwnedToRef for BitString {
         type Borrowed<'a> = BitStringRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+            self.into()
+        }
+    }
+
+    impl<'a> AsBitStringRef<'a> for BitString {
+        fn as_bitstring_ref(&'a self) -> BitStringRef<'a> {
             self.into()
         }
     }
