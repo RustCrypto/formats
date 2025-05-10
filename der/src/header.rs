@@ -33,14 +33,13 @@ impl Header {
 
         for i in 2..Self::MAX_SIZE {
             let slice = &mut buf[0..i];
-            if reader.peek_into(slice).is_ok() {
-                if let Ok(header) = Self::from_der(slice) {
-                    return Ok(header);
-                }
+            reader.peek_into(slice)?;
+            if let Ok(header) = Self::from_der(slice) {
+                return Ok(header);
             }
         }
-
-        Self::from_der(&buf)
+        reader.peek_into(&mut buf[..])?;
+        Self::from_der(&buf[..])
     }
 }
 
@@ -85,21 +84,48 @@ impl DerOrd for Header {
 #[cfg(test)]
 mod tests {
     use super::Header;
-    use crate::{Length, Reader, SliceReader, Tag};
+    use crate::{Encode, Length, Reader, SliceReader, Tag, TagNumber};
     use hex_literal::hex;
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn peek() {
         // INTEGER: 42
         const EXAMPLE_MSG: &[u8] = &hex!("02012A00");
 
-        let reader = SliceReader::new(EXAMPLE_MSG).unwrap();
+        let reader = SliceReader::new(EXAMPLE_MSG).expect("slice to be valid length");
         assert_eq!(reader.position(), Length::ZERO);
 
-        let header = Header::peek(&reader).unwrap();
+        let header = Header::peek(&reader).expect("peeked tag");
         assert_eq!(header.tag, Tag::Integer);
         assert_eq!(header.length, Length::ONE);
         assert_eq!(reader.position(), Length::ZERO); // Position unchanged
+    }
+
+    #[test]
+    fn peek_max_header() {
+        const MAX_HEADER: [u8; 11] = hex!("BF8FFFFFFF7F 84FFFFFFFF");
+        let reader = SliceReader::new(&MAX_HEADER).expect("slice to be valid length");
+
+        let header = Header::peek(&reader).expect("peeked tag");
+        assert_eq!(
+            header.tag,
+            Tag::ContextSpecific {
+                constructed: true,
+                number: TagNumber(0xFFFFFFFF)
+            }
+        );
+        assert_eq!(
+            header.length,
+            Length::new_usize(0xFFFFFFFF).expect("u32 to fit")
+        );
+        assert_eq!(header.encoded_len(), Ok(Length::new(11)));
+        assert_eq!(reader.position(), Length::ZERO); // Position unchanged
+    }
+    #[test]
+    fn negative_peek_overlength_header() {
+        const MAX_HEADER: [u8; 12] = hex!("BF8FFFFFFFFF7F 84FFFFFFFF");
+        let reader = SliceReader::new(&MAX_HEADER).expect("slice to be valid length");
+        // Should not decode
+        Header::peek(&reader).expect_err("overlength error");
     }
 }
