@@ -94,8 +94,11 @@ pub(crate) struct FieldAttrs {
     /// Is the inner type constructed?
     pub constructed: bool,
 
-    /// Value of the `#[asn1(context_specific = "...")] attribute if provided.
-    pub context_specific: Option<TagNumber>,
+    /// Class and number from the following attributes:
+    /// - `#[asn1(application = "...")]`
+    /// - `#[asn1(context_specific = "...")]`
+    /// - `#[asn1(private = "...")]`
+    pub class_num: Option<ClassNum>,
 
     /// Indicates name of function that supplies the default value, which will be used in cases
     /// where encoding is omitted per DER and to omit the encoding per DER
@@ -130,7 +133,7 @@ impl FieldAttrs {
     pub fn parse(attrs: &[Attribute], type_attrs: &TypeAttrs) -> syn::Result<Self> {
         let mut asn1_type = None;
         let mut constructed = None;
-        let mut context_specific = None;
+        let mut class_num = None;
         let mut default = None;
         let mut should_deref = None;
         let mut extensible = None;
@@ -143,11 +146,34 @@ impl FieldAttrs {
         for attr in parsed_attrs {
             // `context_specific = "..."` attribute
             if let Some(tag_number) = attr.parse_value("context_specific")? {
-                if context_specific.is_some() {
-                    abort!(attr.name, "duplicate ASN.1 `context_specific` attribute");
+                if class_num.is_some() {
+                    abort!(
+                        attr.name,
+                        "duplicate ASN.1 class attribute (`application`, `context_specific`, `private`)"
+                    );
                 }
 
-                context_specific = Some(tag_number);
+                class_num = Some(ClassNum::ContextSpecific(tag_number));
+            // `private = "..."` attribute
+            } else if let Some(tag_number) = attr.parse_value("private")? {
+                if class_num.is_some() {
+                    abort!(
+                        attr.name,
+                        "duplicate ASN.1 class attribute (`application`, `context_specific`, `private`)"
+                    );
+                }
+
+                class_num = Some(ClassNum::Private(tag_number));
+            // `application = "..."` attribute
+            } else if let Some(tag_number) = attr.parse_value("application")? {
+                if class_num.is_some() {
+                    abort!(
+                        attr.name,
+                        "duplicate ASN.1 class attribute (`application`, `context_specific`, `private`)"
+                    );
+                }
+
+                class_num = Some(ClassNum::Application(tag_number));
             // `default` attribute
             } else if attr.parse_value::<String>("default")?.is_some() {
                 if default.is_some() {
@@ -205,7 +231,7 @@ impl FieldAttrs {
                 abort!(
                     attr.name,
                     "unknown field-level `asn1` attribute \
-                    (valid options are `constructed`, `context_specific`, `default`, `deref`, `extensible`, `optional`, `tag_mode`, `type`)",
+                    (valid options are `application`, `constructed`, `context_specific`, `default`, `deref`, `extensible`, `optional`, `private`, `tag_mode`, `type`)",
                 );
             }
         }
@@ -213,7 +239,7 @@ impl FieldAttrs {
         Ok(Self {
             asn1_type,
             constructed: constructed.unwrap_or_default(),
-            context_specific,
+            class_num,
             default,
             should_deref: should_deref.unwrap_or_default(),
             extensible: extensible.unwrap_or_default(),
@@ -224,8 +250,16 @@ impl FieldAttrs {
 
     /// Get the expected [`Tag`] for this field.
     pub fn tag(&self) -> syn::Result<Option<Tag>> {
-        match self.context_specific {
-            Some(tag_number) => Ok(Some(Tag::ContextSpecific {
+        match self.class_num {
+            Some(ClassNum::Application(tag_number)) => Ok(Some(Tag::Application {
+                constructed: self.constructed,
+                number: tag_number,
+            })),
+            Some(ClassNum::ContextSpecific(tag_number)) => Ok(Some(Tag::ContextSpecific {
+                constructed: self.constructed,
+                number: tag_number,
+            })),
+            Some(ClassNum::Private(tag_number)) => Ok(Some(Tag::Private {
                 constructed: self.constructed,
                 number: tag_number,
             })),
@@ -242,56 +276,8 @@ impl FieldAttrs {
 
     /// Get a `der::Decoder` object which respects these field attributes.
     pub fn decoder(&self) -> TokenStream {
-        if let Some(tag_number) = self.context_specific {
-            let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
-            let tag_number = tag_number.to_tokens();
-
-            let context_specific = match self.tag_mode {
-                TagMode::Explicit => {
-                    if self.extensible || self.is_optional() {
-                        quote! {
-                            ::der::asn1::ContextSpecific::<#type_params>::decode_explicit(
-                                reader,
-                                #tag_number
-                            )?
-                        }
-                    } else {
-                        quote! {
-                            match ::der::asn1::ContextSpecific::<#type_params>::decode(reader)? {
-                                field if field.tag_number == #tag_number => Some(field),
-                                _ => None
-                            }
-                        }
-                    }
-                }
-                TagMode::Implicit => {
-                    quote! {
-                        ::der::asn1::ContextSpecific::<#type_params>::decode_implicit(
-                            reader,
-                            #tag_number
-                        )?
-                    }
-                }
-            };
-
-            if self.is_optional() {
-                if let Some(default) = &self.default {
-                    quote!(#context_specific.map(|cs| cs.value).unwrap_or_else(#default))
-                } else {
-                    quote!(#context_specific.map(|cs| cs.value))
-                }
-            } else {
-                // TODO(tarcieri): better error handling?
-                let constructed = self.constructed;
-                quote! {
-                    #context_specific.ok_or_else(|| {
-                        der::Tag::ContextSpecific {
-                            number: #tag_number,
-                            constructed: #constructed
-                        }.value_error()
-                    })?.value
-                }
-            }
+        if let Some(class_num) = &self.class_num {
+            self.custom_class_decoder(class_num)
         } else if let Some(default) = &self.default {
             let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
             self.asn1_type.map(|ty| ty.decoder()).unwrap_or_else(|| {
@@ -310,14 +296,77 @@ impl FieldAttrs {
         }
     }
 
+    pub fn custom_class_decoder(&self, class_num: &ClassNum) -> TokenStream {
+        let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or(quote!(_));
+        let ClassTokens {
+            tag_type,
+            tag_number,
+            class_type,
+            ..
+        } = class_num.to_tokens(type_params, self.tag_mode);
+
+        let context_specific = match self.tag_mode {
+            TagMode::Explicit => {
+                if self.extensible || self.is_optional() {
+                    quote! {
+                        #class_type::decode_explicit(
+                            reader,
+                            #tag_number
+                        )?
+                    }
+                } else {
+                    quote! {
+                        match #class_type::decode(reader)? {
+                            field if field.tag_number == #tag_number => Some(field),
+                            _ => None
+                        }
+                    }
+                }
+            }
+            TagMode::Implicit => {
+                quote! {
+                    #class_type::decode_implicit(
+                        reader,
+                        #tag_number
+                    )?
+                }
+            }
+        };
+
+        if self.is_optional() {
+            if let Some(default) = &self.default {
+                quote!(#context_specific.map(|cs| cs.value).unwrap_or_else(#default))
+            } else {
+                quote!(#context_specific.map(|cs| cs.value))
+            }
+        } else {
+            // TODO(tarcieri): better error handling?
+            let constructed = self.constructed;
+            quote! {
+                #context_specific.ok_or_else(|| {
+                    #tag_type {
+                        number: #tag_number,
+                        constructed: #constructed
+                    }.value_error()
+                })?.value
+            }
+        }
+    }
+
     /// Get tokens to encode the binding using `::der::EncodeValue`.
     pub fn value_encode(&self, binding: &TokenStream) -> TokenStream {
-        match self.context_specific {
-            Some(tag_number) => {
-                let tag_number = tag_number.to_tokens();
+        match &self.class_num {
+            Some(class_num) => {
                 let tag_mode = self.tag_mode.to_tokens();
+                let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or(quote!(_));
+                let ClassTokens {
+                    ref_type,
+                    tag_number,
+                    ..
+                } = class_num.to_tokens(type_params, self.tag_mode);
+
                 quote! {
-                    ::der::asn1::ContextSpecificRef {
+                    #ref_type {
                         tag_number: #tag_number,
                         tag_mode: #tag_mode,
                         value: #binding,
@@ -405,5 +454,72 @@ impl AttrNameValue {
         } else {
             None
         })
+    }
+}
+
+/// Class and tag number
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum ClassNum {
+    ContextSpecific(TagNumber),
+    Private(TagNumber),
+    Application(TagNumber),
+}
+
+pub(crate) struct ClassTokens {
+    pub tag_type: TokenStream,
+    pub tag_number: TokenStream,
+
+    pub class_type: TokenStream,
+    pub ref_type: TokenStream,
+}
+
+impl ClassNum {
+    pub fn to_tokens(&self, type_params: TokenStream, tag_mode: TagMode) -> ClassTokens {
+        // Future-proof for potential ContextSpecificExplicit / ContextSpecificImplicit split
+        match (tag_mode, self) {
+            (TagMode::Explicit, Self::ContextSpecific(tag_number)) => ClassTokens {
+                tag_type: quote!(::der::Tag::ContextSpecific),
+                class_type: quote!(::der::asn1::ContextSpecific::<#type_params>),
+                ref_type: quote!(::der::asn1::ContextSpecificRef),
+                tag_number: tag_number.to_tokens(),
+            },
+            (TagMode::Implicit, Self::ContextSpecific(tag_number)) => ClassTokens {
+                tag_type: quote!(::der::Tag::ContextSpecific),
+                class_type: quote!(::der::asn1::ContextSpecific::<#type_params>),
+                ref_type: quote!(::der::asn1::ContextSpecificRef),
+                tag_number: tag_number.to_tokens(),
+            },
+            (TagMode::Explicit, Self::Private(tag_number)) => ClassTokens {
+                tag_type: quote!(::der::Tag::Private),
+                class_type: quote!(::der::asn1::Private::<#type_params>),
+                ref_type: quote!(::der::asn1::PrivateRef),
+                tag_number: tag_number.to_tokens(),
+            },
+            (TagMode::Implicit, Self::Private(tag_number)) => ClassTokens {
+                tag_type: quote!(::der::Tag::Private),
+                class_type: quote!(::der::asn1::Private::<#type_params>),
+                ref_type: quote!(::der::asn1::PrivateRef),
+                tag_number: tag_number.to_tokens(),
+            },
+            (TagMode::Explicit, Self::Application(tag_number)) => ClassTokens {
+                tag_type: quote!(::der::Tag::Application),
+                class_type: quote!(::der::asn1::Application::<#type_params>),
+                ref_type: quote!(::der::asn1::ApplicationRef),
+                tag_number: tag_number.to_tokens(),
+            },
+            (TagMode::Implicit, Self::Application(tag_number)) => ClassTokens {
+                tag_type: quote!(::der::Tag::Application),
+                class_type: quote!(::der::asn1::Application::<#type_params>),
+                ref_type: quote!(::der::asn1::ApplicationRef),
+                tag_number: tag_number.to_tokens(),
+            },
+        }
+    }
+    pub fn tag_number(&self) -> TagNumber {
+        match self {
+            ClassNum::ContextSpecific(tag_number) => *tag_number,
+            ClassNum::Private(tag_number) => *tag_number,
+            ClassNum::Application(tag_number) => *tag_number,
+        }
     }
 }

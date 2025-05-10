@@ -787,6 +787,140 @@ mod decode_encode_value {
     }
 }
 
+#[cfg(all(feature = "derive", feature = "oid"))]
+mod custom_application {
+    use const_oid::ObjectIdentifier;
+    use der::{Decode, DecodeValue, Encode, EncodeValue, FixedTag, Sequence, Tag, TagNumber};
+    use hex_literal::hex;
+
+    const TACHO_CERT_DER: &[u8] = &hex!(
+    "7F 21  81 C8" // Application 33
+
+        "7F 4E  81 81" // Application 78
+
+            "5F 29" // Application 41
+                "01 00"
+            "42 08" // Application 2
+                "FD 45 43 20 01 FF FF 01"
+            "5F 4C  07" // Application 76
+                "FF 53 4D 52 44 54 0E"
+            "7F 49  4D" // Application 73
+                "06 08 2A 86 48  CE 3D 03 01 07 86 41 04
+        30 E8 EE D8 05 1D FB 8F  05 BF 4E 34 90 B8 A0 1C
+        83 21 37 4E 99 41 67 70  64 28 23 A2 C9 E1 21 16
+        D9 27 46 45 94 DD CB CC  79 42 B5 F3 EE 1A A3 AB
+        A2 5C E1 6B 20 92 00 F0  09 70 D9 CF 83 0A 33 4B"
+
+
+            "5F 20 08" // Application 32
+                "17 47 52 20 02  FF FF 01"
+            "5F 25 04" // Application 37
+                "62 A3 B0 D0"
+            "5F 24 04" // Application 36
+                "6F F6 49 50"
+        "5F 37 40" // Application 55
+            "6D 3E FD 97
+        BE 83 EC 65 5F 51 4D 8C  47 60 DB FD 9B A2 D1 5D
+        3C 1A 21 93 CE D7 EA F2  A2 0D 89 CC 4A 4F 0C 4B
+        E5 3F A3 F9 0F 20 B5 74  67 26 DB 19 9E FF DE 0B
+        D0 B9 2C B9 D1 5A E2 18  08 6C F0 E2"
+    );
+
+    /// EU Tachograph G2 certificate
+    #[derive(DecodeValue, EncodeValue)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    pub struct TachographCertificate<'a> {
+        /// constructed
+        #[asn1(application = "78")]
+        pub body: TachographCertificateBody<'a>,
+
+        /// primitive
+        #[asn1(application = "55", type = "OCTET STRING")]
+        pub signature: &'a [u8],
+    }
+
+    impl FixedTag for TachographCertificate<'_> {
+        const TAG: Tag = Tag::Application {
+            number: TagNumber(33), // 7F 21
+            constructed: true,
+        };
+    }
+
+    /// EU Tachograph G2 certificate body
+    #[derive(Sequence)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    pub struct TachographCertificateBody<'a> {
+        /// primitive
+        #[asn1(application = "41", type = "OCTET STRING")]
+        pub profile_identifier: &'a [u8],
+
+        /// primitive
+        #[asn1(application = "2", type = "OCTET STRING")]
+        pub authority_reference: &'a [u8],
+
+        /// primitive
+        #[asn1(application = "76", type = "OCTET STRING")]
+        pub holder_authorisation: &'a [u8],
+
+        /// constructed
+        #[asn1(application = "73")]
+        pub public_key: CertificatePublicKey<'a>,
+
+        /// primitive
+        #[asn1(application = "32", type = "OCTET STRING")]
+        pub holder_reference: &'a [u8],
+
+        /// primitive
+        #[asn1(application = "37", type = "OCTET STRING")]
+        pub effective_date: &'a [u8],
+
+        /// primitive
+        #[asn1(application = "36", type = "OCTET STRING")]
+        pub expiration_date: &'a [u8],
+    }
+
+    /// EU Tachograph G2 certificate public key
+    #[derive(Sequence)]
+    #[asn1(tag_mode = "IMPLICIT")]
+    pub struct CertificatePublicKey<'a> {
+        pub domain_parameters: ObjectIdentifier,
+
+        #[asn1(context_specific = "6", type = "OCTET STRING")]
+        pub public_point: &'a [u8],
+    }
+    #[test]
+    fn decode_tacho_application_tags() {
+        let tacho_cert = TachographCertificate::from_der(TACHO_CERT_DER).unwrap();
+
+        let sig = tacho_cert.signature;
+        assert_eq!(&sig[..2], hex!("6D 3E"));
+        assert_eq!(tacho_cert.body.profile_identifier, &[0x00]);
+        assert_eq!(
+            tacho_cert.body.authority_reference,
+            hex!("FD 45 43 20 01 FF FF 01")
+        );
+        assert_eq!(
+            tacho_cert.body.holder_authorisation,
+            hex!("FF 53 4D 52 44 54 0E")
+        );
+        assert_eq!(
+            tacho_cert.body.public_key.domain_parameters,
+            ObjectIdentifier::new_unwrap("1.2.840.10045.3.1.7")
+        );
+        assert_eq!(
+            &tacho_cert.body.public_key.public_point[..4],
+            hex!("04 30 E8 EE")
+        );
+        const GREECE: &[u8] = b"GR ";
+        assert_eq!(&tacho_cert.body.holder_reference[1..4], GREECE);
+
+        // Re-encode
+        let mut buf = [0u8; 256];
+        let encoded = tacho_cert.encode_to_slice(&mut buf).unwrap();
+        assert_eq!(encoded, TACHO_CERT_DER);
+    }
+}
+
 /// Custom derive test cases for the `BitString` macro.
 #[cfg(feature = "std")]
 mod bitstring {

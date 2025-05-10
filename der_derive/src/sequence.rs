@@ -185,7 +185,7 @@ impl DeriveSequence {
 #[allow(clippy::bool_assert_comparison)]
 mod tests {
     use super::DeriveSequence;
-    use crate::{Asn1Type, TagMode};
+    use crate::{Asn1Type, TagMode, attributes::ClassNum};
     use syn::parse_quote;
 
     /// X.509 SPKI `AlgorithmIdentifier`.
@@ -210,13 +210,13 @@ mod tests {
         let algorithm_field = &ir.fields[0];
         assert_eq!(algorithm_field.ident, "algorithm");
         assert_eq!(algorithm_field.attrs.asn1_type, None);
-        assert_eq!(algorithm_field.attrs.context_specific, None);
+        assert_eq!(algorithm_field.attrs.class_num, None);
         assert_eq!(algorithm_field.attrs.tag_mode, TagMode::Explicit);
 
         let parameters_field = &ir.fields[1];
         assert_eq!(parameters_field.ident, "parameters");
         assert_eq!(parameters_field.attrs.asn1_type, None);
-        assert_eq!(parameters_field.attrs.context_specific, None);
+        assert_eq!(parameters_field.attrs.class_num, None);
         assert_eq!(parameters_field.attrs.tag_mode, TagMode::Explicit);
     }
 
@@ -244,7 +244,7 @@ mod tests {
         let algorithm_field = &ir.fields[0];
         assert_eq!(algorithm_field.ident, "algorithm");
         assert_eq!(algorithm_field.attrs.asn1_type, None);
-        assert_eq!(algorithm_field.attrs.context_specific, None);
+        assert_eq!(algorithm_field.attrs.class_num, None);
         assert_eq!(algorithm_field.attrs.tag_mode, TagMode::Explicit);
 
         let subject_public_key_field = &ir.fields[1];
@@ -253,7 +253,7 @@ mod tests {
             subject_public_key_field.attrs.asn1_type,
             Some(Asn1Type::BitString)
         );
-        assert_eq!(subject_public_key_field.attrs.context_specific, None);
+        assert_eq!(subject_public_key_field.attrs.class_num, None);
         assert_eq!(subject_public_key_field.attrs.tag_mode, TagMode::Explicit);
     }
 
@@ -312,7 +312,7 @@ mod tests {
         let version_field = &ir.fields[0];
         assert_eq!(version_field.ident, "version");
         assert_eq!(version_field.attrs.asn1_type, None);
-        assert_eq!(version_field.attrs.context_specific, None);
+        assert_eq!(version_field.attrs.class_num, None);
         assert_eq!(version_field.attrs.extensible, false);
         assert_eq!(version_field.attrs.optional, false);
         assert_eq!(version_field.attrs.tag_mode, TagMode::Explicit);
@@ -320,7 +320,7 @@ mod tests {
         let algorithm_field = &ir.fields[1];
         assert_eq!(algorithm_field.ident, "private_key_algorithm");
         assert_eq!(algorithm_field.attrs.asn1_type, None);
-        assert_eq!(algorithm_field.attrs.context_specific, None);
+        assert_eq!(algorithm_field.attrs.class_num, None);
         assert_eq!(algorithm_field.attrs.extensible, false);
         assert_eq!(algorithm_field.attrs.optional, false);
         assert_eq!(algorithm_field.attrs.tag_mode, TagMode::Explicit);
@@ -331,7 +331,7 @@ mod tests {
             private_key_field.attrs.asn1_type,
             Some(Asn1Type::OctetString)
         );
-        assert_eq!(private_key_field.attrs.context_specific, None);
+        assert_eq!(private_key_field.attrs.class_num, None);
         assert_eq!(private_key_field.attrs.extensible, false);
         assert_eq!(private_key_field.attrs.optional, false);
         assert_eq!(private_key_field.attrs.tag_mode, TagMode::Explicit);
@@ -340,8 +340,8 @@ mod tests {
         assert_eq!(attributes_field.ident, "attributes");
         assert_eq!(attributes_field.attrs.asn1_type, None);
         assert_eq!(
-            attributes_field.attrs.context_specific,
-            Some("0".parse().unwrap())
+            attributes_field.attrs.class_num,
+            Some(ClassNum::ContextSpecific("0".parse().unwrap()))
         );
         assert_eq!(attributes_field.attrs.extensible, true);
         assert_eq!(attributes_field.attrs.optional, true);
@@ -351,8 +351,8 @@ mod tests {
         assert_eq!(public_key_field.ident, "public_key");
         assert_eq!(public_key_field.attrs.asn1_type, Some(Asn1Type::BitString));
         assert_eq!(
-            public_key_field.attrs.context_specific,
-            Some("1".parse().unwrap())
+            public_key_field.attrs.class_num,
+            Some(ClassNum::ContextSpecific("1".parse().unwrap()))
         );
         assert_eq!(public_key_field.attrs.extensible, true);
         assert_eq!(public_key_field.attrs.optional, true);
@@ -373,6 +373,13 @@ mod tests {
 
                 #[asn1(context_specific = "2", type = "UTF8String")]
                 utf8_string: String,
+
+                #[asn1(application = "3", type = "OCTET STRING")]
+                app_octet_string: &[u8],
+
+                #[asn1(private = "4", type = "IA5String")]
+                private_ia5_string: String,
+
             }
         };
 
@@ -382,30 +389,57 @@ mod tests {
             ir.generics.lifetimes().next().unwrap().lifetime.to_string(),
             "'a"
         );
-        assert_eq!(ir.fields.len(), 3);
+        assert_eq!(ir.fields.len(), 5);
 
         let bit_string = &ir.fields[0];
         assert_eq!(bit_string.ident, "bit_string");
         assert_eq!(bit_string.attrs.asn1_type, Some(Asn1Type::BitString));
         assert_eq!(
-            bit_string.attrs.context_specific,
-            Some("0".parse().unwrap())
+            bit_string.attrs.class_num,
+            Some(ClassNum::ContextSpecific("0".parse().unwrap()))
         );
         assert_eq!(bit_string.attrs.tag_mode, TagMode::Implicit);
 
         let time = &ir.fields[1];
         assert_eq!(time.ident, "time");
         assert_eq!(time.attrs.asn1_type, Some(Asn1Type::GeneralizedTime));
-        assert_eq!(time.attrs.context_specific, Some("1".parse().unwrap()));
+        assert_eq!(
+            time.attrs.class_num,
+            Some(ClassNum::ContextSpecific("1".parse().unwrap()))
+        );
         assert_eq!(time.attrs.tag_mode, TagMode::Implicit);
 
         let utf8_string = &ir.fields[2];
         assert_eq!(utf8_string.ident, "utf8_string");
         assert_eq!(utf8_string.attrs.asn1_type, Some(Asn1Type::Utf8String));
         assert_eq!(
-            utf8_string.attrs.context_specific,
-            Some("2".parse().unwrap())
+            utf8_string.attrs.class_num,
+            Some(ClassNum::ContextSpecific("2".parse().unwrap()))
         );
         assert_eq!(utf8_string.attrs.tag_mode, TagMode::Implicit);
+
+        let app_octet_string = &ir.fields[3];
+        assert_eq!(app_octet_string.ident, "app_octet_string");
+        assert_eq!(
+            app_octet_string.attrs.asn1_type,
+            Some(Asn1Type::OctetString)
+        );
+        assert_eq!(
+            app_octet_string.attrs.class_num,
+            Some(ClassNum::Application("3".parse().unwrap()))
+        );
+        assert_eq!(app_octet_string.attrs.tag_mode, TagMode::Implicit);
+
+        let private_ia5_string = &ir.fields[4];
+        assert_eq!(private_ia5_string.ident, "private_ia5_string");
+        assert_eq!(
+            private_ia5_string.attrs.asn1_type,
+            Some(Asn1Type::Ia5String)
+        );
+        assert_eq!(
+            private_ia5_string.attrs.class_num,
+            Some(ClassNum::Private("4".parse().unwrap()))
+        );
+        assert_eq!(private_ia5_string.attrs.tag_mode, TagMode::Implicit);
     }
 }

@@ -1,6 +1,6 @@
 //! Choice variant IR and lowerings
 
-use crate::{FieldAttrs, Tag, TypeAttrs};
+use crate::{FieldAttrs, Tag, TypeAttrs, attributes::ClassTokens};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Fields, Ident, Path, Type, Variant};
@@ -123,13 +123,23 @@ impl ChoiceVariant {
     pub(super) fn to_value_len_tokens(&self) -> TokenStream {
         let ident = &self.ident;
 
-        match self.attrs.context_specific {
-            Some(tag_number) => {
-                let tag_number = tag_number.to_tokens();
+        match &self.attrs.class_num {
+            Some(class_num) => {
+                let type_params = self
+                    .attrs
+                    .asn1_type
+                    .map(|ty| ty.type_path())
+                    .unwrap_or(quote!(_));
+                let ClassTokens {
+                    ref_type,
+                    tag_number,
+                    ..
+                } = class_num.to_tokens(type_params, self.attrs.tag_mode);
+
                 let tag_mode = self.attrs.tag_mode.to_tokens();
 
                 quote! {
-                    Self::#ident(variant) => ::der::asn1::ContextSpecificRef {
+                    Self::#ident(variant) => #ref_type {
                         tag_number: #tag_number,
                         tag_mode: #tag_mode,
                         value: variant,
@@ -154,7 +164,10 @@ impl ChoiceVariant {
 #[cfg(test)]
 mod tests {
     use super::ChoiceVariant;
-    use crate::{Asn1Type, FieldAttrs, Tag, TagMode, TagNumber, choice::variant::TagOrPath};
+    use crate::{
+        Asn1Type, FieldAttrs, Tag, TagMode, TagNumber, attributes::ClassNum,
+        choice::variant::TagOrPath,
+    };
     use proc_macro2::Span;
     use quote::quote;
     use syn::Ident;
@@ -254,7 +267,7 @@ mod tests {
                 let ident = Ident::new("ExplicitVariant", Span::call_site());
                 let attrs = FieldAttrs {
                     constructed,
-                    context_specific: Some(TagNumber(tag_number)),
+                    class_num: Some(ClassNum::ContextSpecific(TagNumber(tag_number))),
                     ..Default::default()
                 };
                 assert_eq!(attrs.tag_mode, TagMode::Explicit);
@@ -274,12 +287,12 @@ mod tests {
                             constructed: #constructed,
                             number: #tag_number,
                         } => Ok(Self::ExplicitVariant(
-                            match ::der::asn1::ContextSpecific::<>::decode(reader)? {
+                            match ::der::asn1::ContextSpecific::<_>::decode(reader)? {
                                 field if field.tag_number == #tag_number => Some(field),
                                 _ => None
                             }
                             .ok_or_else(|| {
-                                der::Tag::ContextSpecific {
+                                ::der::Tag::ContextSpecific {
                                     number: #tag_number,
                                     constructed: #constructed
                                 }
@@ -339,7 +352,7 @@ mod tests {
 
                 let attrs = FieldAttrs {
                     constructed,
-                    context_specific: Some(TagNumber(tag_number)),
+                    class_num: Some(ClassNum::ContextSpecific(TagNumber(tag_number))),
                     tag_mode: TagMode::Implicit,
                     ..Default::default()
                 };
@@ -359,12 +372,12 @@ mod tests {
                             constructed: #constructed,
                             number: #tag_number,
                         } => Ok(Self::ImplicitVariant(
-                            ::der::asn1::ContextSpecific::<>::decode_implicit(
+                            ::der::asn1::ContextSpecific::<_>::decode_implicit(
                                 reader,
                                 #tag_number
                             )?
                             .ok_or_else(|| {
-                                der::Tag::ContextSpecific {
+                                ::der::Tag::ContextSpecific {
                                   number: #tag_number,
                                   constructed: #constructed
                                 }

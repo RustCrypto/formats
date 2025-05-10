@@ -1,6 +1,9 @@
 //! Sequence field IR and lowerings
 
-use crate::{Asn1Type, FieldAttrs, TagMode, TagNumber, TypeAttrs};
+use crate::{
+    Asn1Type, FieldAttrs, TagMode, TypeAttrs,
+    attributes::{ClassNum, ClassTokens},
+};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, Ident, Path, Type};
@@ -66,7 +69,7 @@ impl SequenceField {
             );
 
             // TODO(tarcieri): support for context-specific fields with defaults?
-            if self.attrs.context_specific.is_none() {
+            if self.attrs.class_num.is_none() {
                 lowerer.apply_default(default, &self.field_type);
             }
         }
@@ -92,8 +95,8 @@ impl SequenceField {
             lowerer.apply_asn1_type(ty, attrs.optional);
         }
 
-        if let Some(tag_number) = &attrs.context_specific {
-            lowerer.apply_context_specific(tag_number, &attrs.tag_mode, attrs.optional);
+        if let Some(class_num) = &attrs.class_num {
+            lowerer.apply_class_and_number(class_num, &attrs.tag_mode, attrs.optional);
         }
 
         if let Some(default) = &attrs.default {
@@ -220,21 +223,18 @@ impl LowerFieldEncoder {
         };
     }
 
-    /// Make this field context-specific.
-    fn apply_context_specific(
-        &mut self,
-        tag_number: &TagNumber,
-        tag_mode: &TagMode,
-        optional: bool,
-    ) {
+    /// Make this field application, context-specific, or private.
+    fn apply_class_and_number(&mut self, class_num: &ClassNum, tag_mode: &TagMode, optional: bool) {
         let encoder = &self.encoder;
-        let number_tokens = tag_number.to_tokens();
+        let type_params = quote!(_);
+        let ClassTokens { ref_type, .. } = class_num.to_tokens(type_params, *tag_mode);
+        let number_tokens = class_num.tag_number().to_tokens();
         let mode_tokens = tag_mode.to_tokens();
 
         if optional {
             self.encoder = quote! {
                 #encoder.as_ref().map(|field| {
-                    ::der::asn1::ContextSpecificRef {
+                    #ref_type {
                         tag_number: #number_tokens,
                         tag_mode: #mode_tokens,
                         value: field,
@@ -243,7 +243,7 @@ impl LowerFieldEncoder {
             };
         } else {
             self.encoder = quote! {
-                ::der::asn1::ContextSpecificRef {
+                #ref_type {
                     tag_number: #number_tokens,
                     tag_mode: #mode_tokens,
                     value: &#encoder,
@@ -256,7 +256,7 @@ impl LowerFieldEncoder {
 #[cfg(test)]
 mod tests {
     use super::SequenceField;
-    use crate::{FieldAttrs, TagMode, TagNumber};
+    use crate::{FieldAttrs, TagMode, TagNumber, attributes::ClassNum};
     use proc_macro2::Span;
     use quote::quote;
     use syn::{Ident, Path, PathSegment, Type, TypePath, punctuated::Punctuated};
@@ -285,7 +285,7 @@ mod tests {
 
         let attrs = FieldAttrs {
             asn1_type: None,
-            context_specific: None,
+            class_num: None,
             default: None,
             extensible: false,
             optional: false,
@@ -326,7 +326,7 @@ mod tests {
 
         let attrs = FieldAttrs {
             asn1_type: None,
-            context_specific: Some(TagNumber(0)),
+            class_num: Some(ClassNum::ContextSpecific(TagNumber(0))),
             default: None,
             extensible: false,
             optional: false,
@@ -346,12 +346,12 @@ mod tests {
         assert_eq!(
             field.to_decode_tokens().to_string(),
             quote! {
-                let implicit_field = ::der::asn1::ContextSpecific::<>::decode_implicit(
+                let implicit_field = ::der::asn1::ContextSpecific::<_>::decode_implicit(
                         reader,
                         ::der::TagNumber(0u32)
                     )?
                     .ok_or_else(|| {
-                        der::Tag::ContextSpecific {
+                        ::der::Tag::ContextSpecific {
                             number: ::der::TagNumber(0u32),
                             constructed: false
                         }
