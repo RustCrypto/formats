@@ -1,6 +1,6 @@
 //! Trust anchor-related structures as defined in RFC 5914
 
-use crate::certificate::{CertificateInner, Profile, Rfc5280, TbsCertificateInner};
+use crate::certificate::{AllocDerMemory, CertificateInner, Profile, Rfc5280, TbsCertificateInner};
 use crate::ext::pkix::{NameConstraints, certpolicy::CertificatePolicies};
 use crate::{ext::Extensions, name::Name};
 
@@ -76,7 +76,7 @@ pub struct CertPathControls<P: Profile = Rfc5280> {
     pub ta_name: Name,
 
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
-    pub certificate: Option<CertificateInner<P>>,
+    pub certificate: Option<CertificateInner<'static, AllocDerMemory, P>>,
 
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", optional = "true")]
     pub policy_set: Option<CertificatePolicies>,
@@ -89,6 +89,45 @@ pub struct CertPathControls<P: Profile = Rfc5280> {
 
     #[asn1(context_specific = "4", tag_mode = "IMPLICIT", optional = "true")]
     pub path_len_constraint: Option<u32>,
+}
+
+impl<'__der_lifetime, P: Profile> CertPathControls<P> {
+    fn decode_value_inner2<R: ::der::Reader<'__der_lifetime>>(
+        reader: &mut R,
+    ) -> ::core::result::Result<Self, ::der::Error> {
+        use ::der::{Decode as _, DecodeValue as _, Reader as _};
+        let ta_name = reader.decode()?;
+        use der::Decode;
+
+        let certificate: CertificateInner<'__der_lifetime, AllocDerMemory, P> =
+            Decode::decode(reader)?;
+        let certificate = Some(certificate);
+        // let certificate = ::der::asn1::ContextSpecific::decode_implicit(
+        //         reader,
+        //         ::der::TagNumber(0u32),
+        //     )?
+        //     .map(|cs| cs.value);
+        let policy_set =
+            ::der::asn1::ContextSpecific::decode_implicit(reader, ::der::TagNumber(1u32))?
+                .map(|cs| cs.value);
+        let policy_flags =
+            ::der::asn1::ContextSpecific::decode_implicit(reader, ::der::TagNumber(2u32))?
+                .map(|cs| cs.value);
+        let name_constr =
+            ::der::asn1::ContextSpecific::decode_implicit(reader, ::der::TagNumber(3u32))?
+                .map(|cs| cs.value);
+        let path_len_constraint =
+            ::der::asn1::ContextSpecific::decode_implicit(reader, ::der::TagNumber(4u32))?
+                .map(|cs| cs.value);
+        Ok(Self {
+            ta_name,
+            certificate,
+            policy_set,
+            policy_flags,
+            name_constr,
+            path_len_constraint,
+        })
+    }
 }
 
 flags! {
