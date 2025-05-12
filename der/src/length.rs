@@ -34,6 +34,9 @@ impl Length {
     /// Maximum length (`u32::MAX` - 1).
     pub const MAX: Self = Self(MAX_U32);
 
+    /// Indefinite length (encoded as `0x80`).
+    pub const INDEFINITE: Self = Self(u32::MAX);
+
     /// Maximum number of octets in a DER encoding of a [`Length`] using the
     /// rules implemented by this crate.
     pub(crate) const MAX_SIZE: usize = 5;
@@ -77,6 +80,9 @@ impl Length {
 
     /// Perform saturating addition of two lengths.
     pub fn saturating_add(self, rhs: Self) -> Self {
+        if self.is_indefinite() || rhs.is_indefinite() {
+            return Self::INDEFINITE;
+        }
         let sum = self.0.saturating_add(rhs.0);
         if sum < Self::MAX.0 {
             Self(sum)
@@ -87,6 +93,9 @@ impl Length {
 
     /// Perform saturating subtraction of two lengths.
     pub fn saturating_sub(self, rhs: Self) -> Self {
+        if self.is_indefinite() || rhs.is_indefinite() {
+            return Self::INDEFINITE;
+        }
         Self(self.0.saturating_sub(rhs.0))
     }
 
@@ -117,6 +126,9 @@ impl Add for Length {
     type Output = Result<Self>;
 
     fn add(self, other: Self) -> Result<Self> {
+        if self.is_indefinite() || other.is_indefinite() {
+            return Ok(Self::INDEFINITE);
+        }
         self.0
             .checked_add(other.0)
             .ok_or_else(|| ErrorKind::Overflow.into())
@@ -238,7 +250,7 @@ impl<'a> Decode<'a> for Length {
             // lengths, which are not allowed in DER, so disallow that byte.
             len if len < INDEFINITE_LENGTH_OCTET => Ok(len.into()),
             INDEFINITE_LENGTH_OCTET if reader.encoding_rules() == EncodingRules::Ber => {
-                Ok(Self(u32::MAX))
+                Ok(Self::INDEFINITE)
             }
             INDEFINITE_LENGTH_OCTET => Err(ErrorKind::IndefiniteLength.into()),
             // 1-4 byte variable-sized length prefix
@@ -277,11 +289,15 @@ impl Encode for Length {
             0x80..=0xFF => Ok(Length(2)),
             0x100..=0xFFFF => Ok(Length(3)),
             0x10000..=0xFFFFFF => Ok(Length(4)),
-            0x1000000..=0xFFFFFFFF => Ok(Length(5)),
+            0x1000000..=MAX_U32 => Ok(Length(5)),
+            u32::MAX => Ok(Length(1)),
         }
     }
 
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        if self.is_indefinite() {
+            return Err(ErrorKind::IndefiniteLength.into());
+        }
         match self.initial_octet() {
             Some(tag_byte) => {
                 writer.write_byte(tag_byte)?;
