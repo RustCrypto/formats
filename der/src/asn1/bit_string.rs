@@ -472,6 +472,7 @@ impl Iterator for BitStringIter<'_> {
         self.position = self.position.checked_add(1)?;
         Some(byte & bit != 0)
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         let len = self.bit_string.bit_len().saturating_sub(self.position);
         (len, Some(len))
