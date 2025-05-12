@@ -195,12 +195,6 @@ impl From<u16> for Length {
     }
 }
 
-// impl From<u32> for Length {
-//     fn from(len: u32) -> Length {
-//         Length(len)
-//     }
-// }
-
 impl TryFrom<u32> for Length {
     type Error = Error;
 
