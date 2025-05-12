@@ -125,6 +125,7 @@ impl<'a, T> Iterator for SequenceOfIter<'a, T> {
     fn next(&mut self) -> Option<&'a T> {
         self.inner.next()
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
