@@ -162,6 +162,10 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         debug_assert!(self.position <= self.input_len());
         self.input_len().saturating_sub(self.position)
     }
+
+    fn peek_remaining(&mut self) -> Result<&'a [u8], Error> {
+        self.remaining()
+    }
 }
 
 #[cfg(test)]

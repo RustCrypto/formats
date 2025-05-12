@@ -100,4 +100,9 @@ impl<'i> Reader<'i> for PemReader<'i> {
         self.position = new_position;
         Ok(buf)
     }
+
+    fn peek_remaining(&mut self) -> Result<&'i [u8], Error> {
+        // Can't borrow from PEM because it requires decoding
+        Err(ErrorKind::Reader.into())
+    }
 }

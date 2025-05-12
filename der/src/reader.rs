@@ -12,6 +12,11 @@ use crate::{
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
+/// End of contents length
+const EOC_LENGTH: Length = Length::new(2);
+/// End of contents
+const EOC_BYTES: [u8; 2] = [0x00, 0x00];
+
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Sized {
     /// Get the [`EncodingRules`] which should be applied when decoding the input.
@@ -121,6 +126,9 @@ pub trait Reader<'r>: Sized {
         Tag::peek(self)
     }
 
+    /// Attempt to peek remaining bytes.
+    fn peek_remaining(&mut self) -> Result<&'r [u8], Error>;
+
     /// Read a single byte.
     fn read_byte(&mut self) -> Result<u8, Error> {
         let mut buf = [0];
@@ -171,5 +179,34 @@ pub trait Reader<'r>: Sized {
         let header = Header::peek(self)?;
         let header_len = header.encoded_len()?;
         self.read_slice((header_len + header.length)?)
+    }
+
+    /// Returns length of current indefinite segment
+    fn peek_indefinite_length(&mut self) -> Result<Length, Error> {
+        let remaining_len = self.remaining_len();
+
+        let slice = self.peek_remaining()?;
+        if remaining_len < EOC_LENGTH {
+            return Err(ErrorKind::Incomplete {
+                expected_len: EOC_LENGTH,
+                actual_len: remaining_len,
+            }
+            .into());
+        }
+        let content_len = (remaining_len - EOC_LENGTH)?;
+        let content_usize = usize::try_from(content_len)?;
+        if &slice[content_usize..] != &EOC_BYTES {
+            return Err(ErrorKind::IndefiniteLength.into());
+        }
+        Ok(content_len)
+    }
+    /// Reads 2 end-of-contents bytes [0x00, 0x00]
+    fn read_end_of_contents(&mut self) -> Result<(), Error> {
+        let mut eoc_buf = [0u8; 2];
+        self.read_into(&mut eoc_buf)?;
+        if eoc_buf != EOC_BYTES {
+            return Err(ErrorKind::IndefiniteLength.into());
+        }
+        Ok(())
     }
 }

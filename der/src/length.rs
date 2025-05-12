@@ -220,8 +220,8 @@ impl TryFrom<u32> for Length {
 }
 
 impl From<Length> for u32 {
-    fn from(length: Length) -> u32 {
-        length.0
+    fn from(len: Length) -> u32 {
+        if len == Length::INDEFINITE { 0 } else { len.0 }
     }
 }
 
@@ -237,7 +237,11 @@ impl TryFrom<Length> for usize {
     type Error = Error;
 
     fn try_from(len: Length) -> Result<usize> {
-        len.0.try_into().map_err(|_| ErrorKind::Overflow.into())
+        if len == Length::INDEFINITE {
+            Ok(0)
+        } else {
+            len.0.try_into().map_err(|_| ErrorKind::Overflow.into())
+        }
     }
 }
 

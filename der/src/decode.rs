@@ -63,7 +63,7 @@ where
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<T, <T as DecodeValue<'a>>::Error> {
         let header = Header::decode(reader)?;
         header.tag.assert_eq(T::TAG)?;
-        T::decode_value(reader, header)
+        T::decode_nested_value(reader, header)
     }
 }
 
@@ -119,6 +119,42 @@ pub trait DecodeValue<'a>: Sized {
 
     /// Attempt to decode this message using the provided [`Reader`].
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error>;
+
+    /// Attempt to decode this nested message using the provided [`Reader`].
+    ///
+    /// When indefinite length occurs, trailing '00 00' bytes are eaten.
+    fn decode_nested_value<R: Reader<'a>>(
+        reader: &mut R,
+        header: Header,
+    ) -> Result<Self, Self::Error> {
+        let fixed_header = swap_header_if_indefinite(reader, header)?;
+
+        // Now expected length is known
+        let result = reader.read_nested(fixed_header.length, |reader| {
+            Self::decode_value(reader, fixed_header)
+        });
+        if header.length.is_indefinite() {
+            reader.read_end_of_contents()?;
+        }
+        result
+    }
+}
+
+/// Returns valid length if indefinite length was given.
+///
+/// [`Reader`] must support peeking the remaining bytes.
+fn swap_header_if_indefinite<'a, R: Reader<'a>>(
+    reader: &mut R,
+    header: Header,
+) -> Result<Header, Error> {
+    if header.length.is_indefinite() {
+        Ok(Header {
+            tag: header.tag,
+            length: reader.peek_indefinite_length()?,
+        })
+    } else {
+        Ok(header)
+    }
 }
 
 #[cfg(feature = "alloc")]
