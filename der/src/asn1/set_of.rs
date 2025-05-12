@@ -191,6 +191,10 @@ impl<'a, T> Iterator for SetOfIter<'a, T> {
     fn next(&mut self) -> Option<&'a T> {
         self.inner.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 
 impl<T> ExactSizeIterator for SetOfIter<'_, T> {}
@@ -478,7 +482,7 @@ mod tests {
     use super::SetOf;
     #[cfg(feature = "alloc")]
     use super::SetOfVec;
-    use crate::ErrorKind;
+    use crate::{DerOrd, ErrorKind};
 
     #[test]
     fn setof_tryfrom_array() {
@@ -492,6 +496,17 @@ mod tests {
         let arr = [1u16, 1];
         let err = SetOf::try_from(arr).err().unwrap();
         assert_eq!(err.kind(), ErrorKind::SetDuplicate);
+    }
+
+    #[test]
+    fn setof_valueord_value_cmp() {
+        use core::cmp::Ordering;
+
+        let arr1 = [3u16, 2, 1, 5, 0];
+        let arr2 = [3u16, 2, 1, 4, 0];
+        let set1 = SetOf::try_from(arr1).unwrap();
+        let set2 = SetOf::try_from(arr2).unwrap();
+        assert_eq!(set1.der_cmp(&set2), Ok(Ordering::Greater));
     }
 
     #[cfg(feature = "alloc")]

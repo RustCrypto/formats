@@ -125,6 +125,10 @@ impl<'a, T> Iterator for SequenceOfIter<'a, T> {
     fn next(&mut self) -> Option<&'a T> {
         self.inner.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 
 impl<T> ExactSizeIterator for SequenceOfIter<'_, T> {}
@@ -237,5 +241,30 @@ where
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         iter_cmp(self.iter(), other.iter())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::asn1::SequenceOf;
+    use crate::ord::DerOrd;
+
+    #[test]
+    fn sequenceof_valueord_value_cmp() {
+        use core::cmp::Ordering;
+
+        let arr1 = {
+            let mut arr: SequenceOf<u16, 2> = SequenceOf::new();
+            arr.add(0u16).expect("element to be added");
+            arr.add(2u16).expect("element to be added");
+            arr
+        };
+        let arr2 = {
+            let mut arr: SequenceOf<u16, 2> = SequenceOf::new();
+            arr.add(0u16).expect("element to be added");
+            arr.add(1u16).expect("element to be added");
+            arr
+        };
+        assert_eq!(arr1.der_cmp(&arr2), Ok(Ordering::Greater));
     }
 }
