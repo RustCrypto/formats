@@ -573,6 +573,8 @@ where
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
+    use core::cmp::Ordering;
+
     use super::{BitStringRef, Result, Tag};
     use crate::asn1::AnyRef;
     use hex_literal::hex;
@@ -619,5 +621,14 @@ mod tests {
             parse_bitstring(&[0x03]).err().unwrap().kind(),
             Tag::BitString.value_error().kind()
         )
+    }
+
+    #[test]
+    fn bitstring_valueord_value_cmp() {
+        use crate::ord::DerOrd;
+
+        let bs1 = parse_bitstring(&hex!("00010204")).unwrap();
+        let bs2 = parse_bitstring(&hex!("00010203")).unwrap();
+        assert_eq!(bs1.der_cmp(&bs2), Ok(Ordering::Greater));
     }
 }

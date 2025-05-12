@@ -249,7 +249,7 @@ mod tests {
     use crate::ord::DerOrd;
 
     #[test]
-    fn setof_valueord_value_cmp() {
+    fn sequenceof_valueord_value_cmp() {
         use core::cmp::Ordering;
 
         let arr1 = {
