@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - conversions between `heapless:Vec<u8>` and `OctetStringRef` ([#1735])
 - impl `Hash` for `SetOf` ([#1764])
 - implement `Uint`/`Int` conversions from native types ([#1762])
+- add support for `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags ([#1819]) ([#1825])
 
 ### Changed
 - Bump `const-oid` to v0.10 ([#1676])
@@ -38,10 +39,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use 2024 edition, bump MSRV to 1.85 ([#1670])
 - Reject zero lengths reads ([#1716])
 - deprecate `TagNumber::new` ([#1727])
+- use strict context-specific skipping condition (equal tag numbers only) ([#1740])
+- add `IsConstructed` trait, impl'ed on any `FixedTag` ([#1744])
+- const `Any::to_ref`, `BytesOwned::to_ref` ([#1797])
+- return `ErrorKind::Noncanonical` in `EXPLICIT` when primitive ([#1818])
+- use `read_nested` to check length of `IMPLICIT` types ([#1739])
 
 ### Fixed
 - fix append in `Encode::encode_to_vec` ([#1760])
 - fix derive optional OCTET/BIT STRING on `Option<&[u8]>` ([#1737])
+- fix X.680 tag order: compare class and number first ([#1790])
+- fix BMPString compatibility in derive macros ([#1793])
+- fix Tag::peek_optional for 6-byte and 7+ byte tags ([#1804])
+- fix `Header::peek` for 11-byte tag-lengths ([#1828])
+- fix panic in value_cmp: add `Iterator::size_hint` ([#1830])
 
 ### Removed
 - `TagNumber::N0..N30` consts (#1724)
@@ -77,9 +88,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1731]: https://github.com/RustCrypto/formats/pull/1731
 [#1735]: https://github.com/RustCrypto/formats/pull/1735
 [#1737]: https://github.com/RustCrypto/formats/pull/1737
+[#1739]: https://github.com/RustCrypto/formats/pull/1739
 [#1760]: https://github.com/RustCrypto/formats/pull/1760
 [#1762]: https://github.com/RustCrypto/formats/pull/1762
 [#1764]: https://github.com/RustCrypto/formats/pull/1764
+[#1740]: https://github.com/RustCrypto/formats/pull/1740
+[#1744]: https://github.com/RustCrypto/formats/pull/1744
+[#1790]: https://github.com/RustCrypto/formats/pull/1790
+[#1793]: https://github.com/RustCrypto/formats/pull/1793
+[#1797]: https://github.com/RustCrypto/formats/pull/1797
+[#1804]: https://github.com/RustCrypto/formats/pull/1804
+[#1818]: https://github.com/RustCrypto/formats/pull/1818
+[#1819]: https://github.com/RustCrypto/formats/pull/1819
+[#1825]: https://github.com/RustCrypto/formats/pull/1825
+[#1828]: https://github.com/RustCrypto/formats/pull/1828
+[#1830]: https://github.com/RustCrypto/formats/pull/1830
 
 ## 0.7.10 (2024-04-18)
 ### Fixed
