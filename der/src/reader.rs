@@ -195,7 +195,7 @@ pub trait Reader<'r>: Sized {
         }
         let content_len = (remaining_len - EOC_LENGTH)?;
         let content_usize = usize::try_from(content_len)?;
-        if &slice[content_usize..] != &EOC_BYTES {
+        if slice[content_usize..] != EOC_BYTES {
             return Err(ErrorKind::IndefiniteLength.into());
         }
         Ok(content_len)
