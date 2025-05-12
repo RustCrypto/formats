@@ -30,7 +30,8 @@ pub trait Decode<'a>: Sized + 'a {
     fn from_ber(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let mut reader = SliceReader::new_with_encoding_rules(bytes, EncodingRules::Ber)?;
         let result = Self::decode(&mut reader)?;
-        Ok(reader.finish(result)?)
+        reader.finish()?;
+        Ok(result)
     }
 
     /// Parse `Self` from the provided DER-encoded byte slice.
@@ -39,7 +40,8 @@ pub trait Decode<'a>: Sized + 'a {
     fn from_der(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let mut reader = SliceReader::new(bytes)?;
         let result = Self::decode(&mut reader)?;
-        Ok(reader.finish(result)?)
+        reader.finish()?;
+        Ok(result)
     }
 
     /// Parse `Self` from the provided DER-encoded byte slice.

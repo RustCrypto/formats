@@ -73,7 +73,8 @@ impl<'a> AnyRef<'a> {
 
         let mut decoder = SliceReader::new(self.value())?;
         let result = T::decode_value(&mut decoder, header)?;
-        Ok(decoder.finish(result)?)
+        decoder.finish()?;
+        Ok(result)
     }
 
     /// Is this value an ASN.1 `NULL` value?
@@ -91,7 +92,8 @@ impl<'a> AnyRef<'a> {
         self.tag.assert_eq(Tag::Sequence)?;
         let mut reader = SliceReader::new(self.value.as_slice())?;
         let result = f(&mut reader)?;
-        Ok(reader.finish(result)?)
+        reader.finish()?;
+        Ok(result)
     }
 }
 
