@@ -163,7 +163,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         self.input_len().saturating_sub(self.position)
     }
 
-    fn peek_remaining(&mut self) -> Result<&'a [u8], Error> {
+    fn peek_remaining(&self) -> Result<&'a [u8], Error> {
         self.remaining()
     }
 }

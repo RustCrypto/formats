@@ -5,12 +5,13 @@ pub(crate) mod pem;
 pub(crate) mod slice;
 
 use crate::{
-    Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag, Header, Length, Tag,
-    TagMode, TagNumber, asn1::ContextSpecific,
+    AnyRef, Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag, Header, Length,
+    Tag, TagMode, TagNumber, asn1::ContextSpecific,
 };
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
+use slice::SliceReader;
 
 /// End of contents length
 const EOC_LENGTH: Length = Length::new(2);
@@ -127,7 +128,7 @@ pub trait Reader<'r>: Sized {
     }
 
     /// Attempt to peek remaining bytes.
-    fn peek_remaining(&mut self) -> Result<&'r [u8], Error>;
+    fn peek_remaining(&self) -> Result<&'r [u8], Error>;
 
     /// Read a single byte.
     fn read_byte(&mut self) -> Result<u8, Error> {
@@ -183,29 +184,43 @@ pub trait Reader<'r>: Sized {
 
     /// Returns length of current indefinite segment
     fn peek_indefinite_length(&mut self) -> Result<Length, Error> {
-        let remaining_len = self.remaining_len();
+        //let remaining_len = self.remaining_len();
+
+        // if remaining_len < EOC_LENGTH {
+        //     return Err(ErrorKind::Incomplete {
+        //         expected_len: EOC_LENGTH,
+        //         actual_len: remaining_len,
+        //     }
+        //     .into());
+        // }
 
         let slice = self.peek_remaining()?;
-        if remaining_len < EOC_LENGTH {
-            return Err(ErrorKind::Incomplete {
-                expected_len: EOC_LENGTH,
-                actual_len: remaining_len,
+
+        let mut peeker = SliceReader::new_with_encoding_rules(slice, EncodingRules::Ber)?;
+        for _ in 0..10000 {
+            let mut eoc_buf = [0u8; 2];
+            peeker.peek_into(&mut eoc_buf)?;
+            if eoc_buf == EOC_BYTES {
+                peeker.read_slice(EOC_LENGTH)?;
+                break;
             }
-            .into());
+            let header = Header::decode(&mut peeker)?;
+            let len = if header.length.is_indefinite() && header.tag.is_constructed() {
+                (peeker.peek_indefinite_length()? + EOC_LENGTH)?
+            } else {
+                header.length
+            };
+            peeker.read_slice(len)?;
         }
-        let content_len = (remaining_len - EOC_LENGTH)?;
-        let content_usize = usize::try_from(content_len)?;
-        if slice[content_usize..] != EOC_BYTES {
-            return Err(ErrorKind::IndefiniteLength.into());
-        }
-        Ok(content_len)
+
+        peeker.offset() - EOC_LENGTH
     }
     /// Reads 2 end-of-contents bytes [0x00, 0x00]
     fn read_end_of_contents(&mut self) -> Result<(), Error> {
-        let mut eoc_buf = [0u8; 2];
-        self.read_into(&mut eoc_buf)?;
-        if eoc_buf != EOC_BYTES {
-            return Err(ErrorKind::IndefiniteLength.into());
+        //let mut eoc_buf = [0u8; 2];
+        let eoc_bytes = self.read_slice(EOC_LENGTH)?;
+        if eoc_bytes != EOC_BYTES {
+            return Err(ErrorKind::FileNotFound.into());
         }
         Ok(())
     }

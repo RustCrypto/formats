@@ -141,3 +141,9 @@ fn cms_decode_signed_der() {
     // should match the original
     assert_eq!(reencoded_der_signed_data_in_ci, der_signed_data_in_ci)
 }
+
+#[test]
+fn cms_decode_ber() {
+    let ber_pkcs7 = include_bytes!("../tests/examples/ber_pkcs7.bin");
+    let _ci = ContentInfo::from_ber(ber_pkcs7).expect("decoded ber");
+}

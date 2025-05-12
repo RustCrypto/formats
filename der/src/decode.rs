@@ -127,33 +127,22 @@ pub trait DecodeValue<'a>: Sized {
         reader: &mut R,
         header: Header,
     ) -> Result<Self, Self::Error> {
-        let fixed_header = swap_header_if_indefinite(reader, header)?;
+        if !header.length.is_indefinite() {
+            // TODO: maybe refactor whole der to read_nested here
+            Self::decode_value(reader, header)
+        } else {
+            let fixed_header = Header {
+                tag: header.tag,
+                length: reader.peek_indefinite_length()?,
+            };
+            // Now expected length is known
+            let result = reader.read_nested(fixed_header.length, |reader| {
+                Self::decode_value(reader, fixed_header)
+            });
 
-        // Now expected length is known
-        let result = reader.read_nested(fixed_header.length, |reader| {
-            Self::decode_value(reader, fixed_header)
-        });
-        if header.length.is_indefinite() {
             reader.read_end_of_contents()?;
+            result
         }
-        result
-    }
-}
-
-/// Returns valid length if indefinite length was given.
-///
-/// [`Reader`] must support peeking the remaining bytes.
-fn swap_header_if_indefinite<'a, R: Reader<'a>>(
-    reader: &mut R,
-    header: Header,
-) -> Result<Header, Error> {
-    if header.length.is_indefinite() {
-        Ok(Header {
-            tag: header.tag,
-            length: reader.peek_indefinite_length()?,
-        })
-    } else {
-        Ok(header)
     }
 }
 

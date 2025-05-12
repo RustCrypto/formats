@@ -3,7 +3,6 @@
 
 use const_oid::ObjectIdentifier;
 use der::{Any, Decode, Sequence, asn1::BitString};
-use hex_literal::hex;
 
 /// X.509 `AlgorithmIdentifier`
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
