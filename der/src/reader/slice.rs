@@ -104,12 +104,16 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         self.position = nested_reader.position;
         self.failed = nested_reader.failed;
 
-        ret.and_then(|value| {
-            nested_reader.finish(value).map_err(|e| {
-                self.failed = true;
-                e.into()
-            })
-        })
+        match ret {
+            Ok(value) => {
+                nested_reader.finish().map_err(|e| {
+                    self.failed = true;
+                    e.into()
+                })?;
+                Ok(value)
+            }
+            Err(err) => Err(err),
+        }
     }
 
     fn read_slice(&mut self, len: Length) -> Result<&'a [u8], Error> {
@@ -144,7 +148,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         kind.at(self.position)
     }
 
-    fn finish<T>(self, value: T) -> Result<T, Error> {
+    fn finish(self) -> Result<(), Error> {
         if self.is_failed() {
             Err(ErrorKind::Failed.at(self.position))
         } else if !self.is_finished() {
@@ -154,7 +158,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
             }
             .at(self.position))
         } else {
-            Ok(value)
+            Ok(())
         }
     }
 
@@ -218,7 +222,7 @@ mod tests {
         let x = i8::decode(&mut reader).unwrap();
         assert_eq!(42i8, x);
 
-        let err = reader.finish(x).err().unwrap();
+        let err = reader.finish().err().unwrap();
         assert_eq!(Some(Length::from(3u8)), err.position());
 
         assert_eq!(

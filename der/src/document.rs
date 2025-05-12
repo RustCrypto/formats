@@ -187,7 +187,7 @@ impl TryFrom<Vec<u8>> for Document {
     fn try_from(der_bytes: Vec<u8>) -> Result<Self, Error> {
         let mut decoder = SliceReader::new(&der_bytes)?;
         decode_sequence(&mut decoder)?;
-        decoder.finish(())?;
+        decoder.finish()?;
 
         let length = der_bytes.len().try_into()?;
         Ok(Self { der_bytes, length })
