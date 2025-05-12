@@ -26,6 +26,7 @@ pem-rfc7468 = { version = "1.0.0-rc.3", optional = true, features = ["alloc"] }
 time = { version = "0.3.4", optional = true, default-features = false }
 zeroize = { version = "1.8", optional = true, default-features = false }
 heapless = { version = "0.8", optional = true, default-features = false }
+tynm = { version = "0.2", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "1"
@@ -42,6 +43,7 @@ derive = ["dep:der_derive"]
 oid = ["dep:const-oid"]
 pem = ["dep:pem-rfc7468", "alloc", "zeroize"]
 real = []
+clarify = ["dep:tynm", "std", "pem", "derive", "oid"]
 
 [package.metadata.docs.rs]
 all-features = true

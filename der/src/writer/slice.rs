@@ -106,7 +106,7 @@ impl<'a> SliceWriter<'a> {
 
     /// Reserve a portion of the internal buffer, updating the internal cursor
     /// position and returning a mutable slice.
-    fn reserve(&mut self, len: impl TryInto<Length>) -> Result<&mut [u8]> {
+    pub(crate) fn reserve(&mut self, len: impl TryInto<Length>) -> Result<&mut [u8]> {
         if self.is_failed() {
             return Err(ErrorKind::Failed.at(self.position));
         }
@@ -123,6 +123,11 @@ impl<'a> SliceWriter<'a> {
 
         self.position = end;
         Ok(slice)
+    }
+
+    /// Returns current position in the buffer.
+    pub fn position(&self) -> Length {
+        self.position
     }
 }
 
