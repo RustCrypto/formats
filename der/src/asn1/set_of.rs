@@ -191,6 +191,10 @@ impl<'a, T> Iterator for SetOfIter<'a, T> {
     fn next(&mut self) -> Option<&'a T> {
         self.inner.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 
 impl<T> ExactSizeIterator for SetOfIter<'_, T> {}
@@ -495,7 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn setof_valueord() {
+    fn setof_valueord_value_cmp() {
         use core::cmp::Ordering;
 
         let arr1 = [3u16, 2, 1, 5, 0];
