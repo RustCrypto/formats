@@ -10,6 +10,9 @@ use core::{
     ops::{Add, Sub},
 };
 
+/// Maximum length as a `u32`.
+const MAX_U32: u32 = u32::MAX - 1;
+
 /// Octet identifying an indefinite length as described in X.690 Section
 /// 8.1.3.6.1:
 ///
@@ -29,7 +32,7 @@ impl Length {
     pub const ONE: Self = Self(1);
 
     /// Maximum length (`u32::MAX` - 1).
-    pub const MAX: Self = Self(u32::MAX - 1);
+    pub const MAX: Self = Self(MAX_U32);
 
     /// Maximum number of octets in a DER encoding of a [`Length`] using the
     /// rules implemented by this crate.
@@ -47,7 +50,7 @@ impl Length {
     /// This function is const-safe and therefore useful for [`Length`] constants.
     #[allow(clippy::cast_possible_truncation)]
     pub(crate) const fn new_usize(len: usize) -> Result<Self> {
-        if len > (u32::MAX as usize) - 1 {
+        if len > Self::MAX.0 as usize {
             Err(Error::from_kind(ErrorKind::Overflow))
         } else {
             Ok(Length(len as u32))
@@ -74,7 +77,12 @@ impl Length {
 
     /// Perform saturating addition of two lengths.
     pub fn saturating_add(self, rhs: Self) -> Self {
-        Self(self.0.saturating_add(rhs.0))
+        let sum = self.0.saturating_add(rhs.0);
+        if sum < Self::MAX.0 {
+            Self(sum)
+        } else {
+            Self::MAX
+        }
     }
 
     /// Perform saturating subtraction of two lengths.
@@ -99,7 +107,7 @@ impl Length {
             0x80..=0xFF => Some(0x81),
             0x100..=0xFFFF => Some(0x82),
             0x10000..=0xFFFFFF => Some(0x83),
-            0x1000000..=0xFFFFFFFE => Some(0x84),
+            0x1000000..=MAX_U32 => Some(0x84),
             _ => None,
         }
     }
@@ -112,7 +120,7 @@ impl Add for Length {
         self.0
             .checked_add(other.0)
             .ok_or_else(|| ErrorKind::Overflow.into())
-            .map(Self)
+            .and_then(TryInto::try_into)
     }
 }
 
@@ -136,7 +144,7 @@ impl Add<u32> for Length {
     type Output = Result<Self>;
 
     fn add(self, other: u32) -> Result<Self> {
-        self + Length::from(other)
+        self + Length::try_from(other)?
     }
 }
 
@@ -187,9 +195,21 @@ impl From<u16> for Length {
     }
 }
 
-impl From<u32> for Length {
-    fn from(len: u32) -> Length {
-        Length(len)
+// impl From<u32> for Length {
+//     fn from(len: u32) -> Length {
+//         Length(len)
+//     }
+// }
+
+impl TryFrom<u32> for Length {
+    type Error = Error;
+
+    fn try_from(len: u32) -> Result<Length> {
+        if len <= Self::MAX.0 {
+            Ok(Length(len))
+        } else {
+            Err(ErrorKind::Overflow.into())
+        }
     }
 }
 
@@ -238,7 +258,7 @@ impl<'a> Decode<'a> for Length {
                         | u32::from(reader.read_byte()?);
                 }
 
-                let length = Length::from(decoded_len);
+                let length = Length::try_from(decoded_len)?;
 
                 // X.690 Section 10.1: DER lengths must be encoded with a minimum
                 // number of octets
@@ -312,7 +332,7 @@ impl fmt::Display for Length {
 #[cfg(feature = "arbitrary")]
 impl<'a> arbitrary::Arbitrary<'a> for Length {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Self(u.arbitrary()?))
+        Ok(Self(u.int_in_range(0..=MAX_U32)?))
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
@@ -349,12 +369,16 @@ mod tests {
         );
 
         assert_eq!(
-            Length::from(0x10000u32),
+            Length::try_from(0x10000u32).unwrap(),
             Length::from_der(&[0x83, 0x01, 0x00, 0x00]).unwrap()
         );
         assert_eq!(
-            Length::from(0xFFFFFFFFu32),
-            Length::from_der(&[0x84, 0xFF, 0xFF, 0xFF, 0xFF]).unwrap()
+            Length::try_from(0xFFFFFFFEu32).unwrap(),
+            Length::from_der(&[0x84, 0xFF, 0xFF, 0xFF, 0xFE]).unwrap()
+        );
+        assert_eq!(
+            Length::from_der(&[0x84, 0xFF, 0xFF, 0xFF, 0xFF]),
+            Err(ErrorKind::Overflow.into())
         );
     }
 
@@ -386,13 +410,15 @@ mod tests {
 
         assert_eq!(
             &[0x83, 0x01, 0x00, 0x00],
-            Length::from(0x10000u32)
+            Length::try_from(0x10000u32)
+                .unwrap()
                 .encode_to_slice(&mut buffer)
                 .unwrap()
         );
         assert_eq!(
-            &[0x84, 0xFF, 0xFF, 0xFF, 0xFF],
-            Length::from(0xFFFFFFFFu32)
+            &[0x84, 0xFF, 0xFF, 0xFF, 0xFE],
+            Length::try_from(0xFFFFFFFEu32)
+                .unwrap()
                 .encode_to_slice(&mut buffer)
                 .unwrap()
         );
