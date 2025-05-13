@@ -381,7 +381,7 @@ fn access_attributes() {
     let name = Name::from_str("emailAddress=foo@example.com,UID=identity:ds.group.3891111,OU=management:ds.group.3891111,CN=OQFAvDNDWs.google.com,O=Google LLC,L=Mountain View,ST=California,C=US").unwrap();
 
     assert_eq!(
-        <_ as AsRef<str>>::as_ref(&name.common_name().unwrap().unwrap()),
+        name.common_name().unwrap().unwrap().value(),
         "OQFAvDNDWs.google.com"
     );
 
@@ -391,22 +391,16 @@ fn access_attributes() {
     );
 
     assert_eq!(
-        <_ as AsRef<str>>::as_ref(&name.state_or_province().unwrap().unwrap()),
+        name.state_or_province().unwrap().unwrap().value(),
         "California"
     );
 
-    assert_eq!(
-        <_ as AsRef<str>>::as_ref(&name.locality().unwrap().unwrap()),
-        "Mountain View"
-    );
+    assert_eq!(name.locality().unwrap().unwrap().value(), "Mountain View");
+
+    assert_eq!(name.organization().unwrap().unwrap().value(), "Google LLC");
 
     assert_eq!(
-        <_ as AsRef<str>>::as_ref(&name.organization().unwrap().unwrap()),
-        "Google LLC"
-    );
-
-    assert_eq!(
-        <_ as AsRef<str>>::as_ref(&name.organization_unit().unwrap().unwrap()),
+        name.organization_unit().unwrap().unwrap().value(),
         "management:ds.group.3891111"
     );
 
