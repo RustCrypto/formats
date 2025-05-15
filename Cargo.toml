@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "base16ct",
     "base32ct",
-    #"base64ct",
+    "base64ct",
     "cmpv2",
     "cms",
     "const-oid",
@@ -26,9 +26,6 @@ members = [
     "x509-cert",
     "x509-cert/test-support",
     "x509-ocsp"
-]
-exclude = [
-    "base64ct",
 ]
 
 [profile.dev]
@@ -65,7 +62,7 @@ x509-ocsp = { path = "./x509-ocsp" }
 
 # https://github.com/RustCrypto/signatures/pull/913
 # https://github.com/RustCrypto/signatures/pull/923
-ecdsa   = { git = "https://github.com/RustCrypto/signatures.git" }
+ecdsa = { git = "https://github.com/RustCrypto/signatures.git" }
 rfc6979 = { git = "https://github.com/RustCrypto/signatures.git" }
 # https://github.com/RustCrypto/key-wraps/pull/34
 # https://github.com/RustCrypto/key-wraps/pull/35
@@ -78,10 +75,10 @@ ansi-x963-kdf = { git = "https://github.com/RustCrypto/KDFs.git" }
 
 
 # https://github.com/RustCrypto/traits/pull/1777
-crypto-common  = { git = "https://github.com/RustCrypto/traits.git" }
+crypto-common = { git = "https://github.com/RustCrypto/traits.git" }
 elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
-signature      = { git = "https://github.com/RustCrypto/traits.git" }
-aead           = { git = "https://github.com/RustCrypto/traits.git" }
+signature = { git = "https://github.com/RustCrypto/traits.git" }
+aead = { git = "https://github.com/RustCrypto/traits.git" }
 
 # https://github.com/RustCrypto/RSA/pull/478
 # https://github.com/RustCrypto/RSA/pull/504
