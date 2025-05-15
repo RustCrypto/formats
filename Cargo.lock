@@ -137,8 +137,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "base64ct"
 version = "1.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89e25b6adfb930f02d1981565a6e5d9c547ac15a96606256d3b59040e5cd4ca3"
+
+[[package]]
+name = "base64ct"
+version = "1.8.0-pre"
+dependencies = [
+ "base64",
+ "proptest",
+]
 
 [[package]]
 name = "bincode"
@@ -933,7 +949,7 @@ dependencies = [
 name = "pem-rfc7468"
 version = "1.0.0-rc.2"
 dependencies = [
- "base64ct",
+ "base64ct 1.7.3",
 ]
 
 [[package]]
@@ -1516,7 +1532,7 @@ name = "spki"
 version = "0.8.0-rc.1"
 dependencies = [
  "arbitrary",
- "base64ct",
+ "base64ct 1.7.3",
  "der",
  "digest",
  "hex-literal",

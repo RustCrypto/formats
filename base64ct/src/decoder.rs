@@ -1,11 +1,10 @@
 //! Buffered Base64 decoder.
 
 use crate::{
-    encoding,
-    line_ending::{CHAR_CR, CHAR_LF},
     Encoding,
     Error::{self, InvalidLength},
-    MIN_LINE_WIDTH,
+    MIN_LINE_WIDTH, encoding,
+    line_ending::{CHAR_CR, CHAR_LF},
 };
 use core::{cmp, marker::PhantomData};
 
@@ -545,7 +544,7 @@ impl<'i> Iterator for LineReader<'i> {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use crate::{alphabet::Alphabet, test_vectors::*, Base64, Base64Unpadded, Decoder};
+    use crate::{Base64, Base64Unpadded, Decoder, alphabet::Alphabet, test_vectors::*};
 
     #[cfg(feature = "std")]
     use {alloc::vec::Vec, std::io::Read};
