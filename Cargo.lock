@@ -20,7 +20,7 @@ checksum = "512761e0bb2578dd7380c6baaa0f4ce03e84f95e960231d1dec8bf4d7d6e2627"
 [[package]]
 name = "aead"
 version = "0.6.0-rc.0"
-source = "git+https://github.com/RustCrypto/traits.git#439fc8c28c61b09eff35349b4c091a5586d70ea7"
+source = "git+https://github.com/RustCrypto/traits.git#ae58a7766614dab71973fb3286754f782ed90820"
 dependencies = [
  "crypto-common",
  "inout",
@@ -105,9 +105,9 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "backtrace"
-version = "0.3.74"
+version = "0.3.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d82cb332cdfaed17ae235a638438ac4d4839913cc2af585c3c6746e8f8bee1a"
+checksum = "6806a6321ec58106fea15becdad98371e28d92ccbc7c8f1b3b6dd724fe8f1002"
 dependencies = [
  "addr2line",
  "cfg-if",
@@ -166,9 +166,9 @@ checksum = "5e764a1d40d510daf35e07be9eb06e75770908c27d411ee6c92109c9840eaaf7"
 
 [[package]]
 name = "bitflags"
-version = "2.9.0"
+version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
+checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
 
 [[package]]
 name = "block-buffer"
@@ -259,18 +259,18 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.35"
+version = "4.5.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8aa86934b44c19c50f87cc2790e19f54f7a67aedb64101c2e1a2e5ecfb73944"
+checksum = "ed93b9805f8ba930df42c2590f05453d5ec36cbb85d018868a5b24d31f6ac000"
 dependencies = [
  "clap_builder",
 ]
 
 [[package]]
 name = "clap_builder"
-version = "4.5.35"
+version = "4.5.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2414dbb2dd0695280da6ea9261e327479e9d37b0630f6b53ba2a11c60c679fd9"
+checksum = "379026ff283facf611b0ea629334361c4211d1b12ee01024eec1591133b04120"
 dependencies = [
  "anstyle",
  "clap_lex",
@@ -399,9 +399,9 @@ checksum = "43da5946c66ffcc7745f48db692ffbb10a83bfe0afd96235c5c2a4fb23994929"
 
 [[package]]
 name = "crypto-bigint"
-version = "0.7.0-pre.2"
+version = "0.7.0-pre.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87a5061ea0870b06f7fdd5a0f7268e30c04de1932c148cca0ce5c79a88d18bed"
+checksum = "f727d84cf16cb51297e4388421e2e51b2f94ffe92ee1d8664d81676901196fa3"
 dependencies = [
  "hybrid-array",
  "num-traits",
@@ -414,7 +414,7 @@ dependencies = [
 [[package]]
 name = "crypto-common"
 version = "0.2.0-rc.2"
-source = "git+https://github.com/RustCrypto/traits.git#439fc8c28c61b09eff35349b4c091a5586d70ea7"
+source = "git+https://github.com/RustCrypto/traits.git#ae58a7766614dab71973fb3286754f782ed90820"
 dependencies = [
  "hybrid-array",
  "rand_core 0.9.3",
@@ -423,9 +423,10 @@ dependencies = [
 [[package]]
 name = "crypto-primes"
 version = "0.7.0-dev"
-source = "git+https://github.com/entropyxyz/crypto-primes.git#541a5eb1c05664385aaff2697faf72c7200a9786"
+source = "git+https://github.com/entropyxyz/crypto-primes.git#04f927401b9eed948d4d26d149064cc292fea72e"
 dependencies = [
  "crypto-bigint",
+ "libm",
  "rand_core 0.9.3",
 ]
 
@@ -507,7 +508,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-pre.9"
-source = "git+https://github.com/RustCrypto/signatures.git#b66adc00be5c4cf594331c091da8ea71e5f5f32d"
+source = "git+https://github.com/RustCrypto/signatures.git#6f17b321202299d5e39a2d542814f1e0cb24853c"
 dependencies = [
  "der",
  "digest",
@@ -527,7 +528,7 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 [[package]]
 name = "elliptic-curve"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/RustCrypto/traits.git#439fc8c28c61b09eff35349b4c091a5586d70ea7"
+source = "git+https://github.com/RustCrypto/traits.git#ae58a7766614dab71973fb3286754f782ed90820"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -633,9 +634,9 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.2.15"
+version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4567c8db10ae91089c99af84c68c38da3ec2f087c3f82960bcdbf3656b6f4d7"
+checksum = "335ff9f135e4384c8150d6f27c6daed433577f86b4750418338c01a1a2528592"
 dependencies = [
  "cfg-if",
  "libc",
@@ -718,9 +719,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.15.2"
+version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
+checksum = "84b26c544d002229e640969970a2e74021aadf6e2f96372b9c58eff97de08eb3"
 
 [[package]]
 name = "heapless"
@@ -734,9 +735,9 @@ dependencies = [
 
 [[package]]
 name = "hermit-abi"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbd780fe5cc30f81464441920d82ac8740e2e46b29a6fad543ddd075229ce37e"
+checksum = "f154ce46856750ed433c8649605bf7ed2de3bc35fd9d2a9f30cddd873c80cb08"
 
 [[package]]
 name = "hex-literal"
@@ -835,15 +836,21 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
-version = "0.2.171"
+version = "0.2.172"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
+checksum = "d750af042f7ef4f724306de029d18836c26c1765a54a6a3f094cbd23a7267ffa"
+
+[[package]]
+name = "libm"
+version = "0.2.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9fbbcab51052fe104eb5e5d351cf728d30a5be1fe14d9be8a3b097481fb97de"
 
 [[package]]
 name = "linux-raw-sys"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe7db12097d22ec582439daf8618b8fdd1a7bef6270e9af3b1ebcd30893cf413"
+checksum = "cd945864f07fe9f5371a27ad7b52a172b4b499999f1d97574c9fa68373937e12"
 
 [[package]]
 name = "memchr"
@@ -905,7 +912,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 [[package]]
 name = "p256"
 version = "0.14.0-pre.2"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#e31132665d2d8440d806cb249c109e5f4b788708"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#2c26594973a0c412c0bc60e8cbf6cae800ed5ffa"
 dependencies = [
  "ecdsa",
  "elliptic-curve",
@@ -923,7 +930,7 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 [[package]]
 name = "pbkdf2"
 version = "0.13.0-pre.1"
-source = "git+https://github.com/RustCrypto/password-hashes.git#0b8ff354d6e42730ee45c9d7d5e582c58b3f5a8c"
+source = "git+https://github.com/RustCrypto/password-hashes.git#68c5d80962210dbbb4f1c1fe7436e03dc34e62c8"
 dependencies = [
  "digest",
  "hmac",
@@ -1039,7 +1046,7 @@ dependencies = [
 [[package]]
 name = "primefield"
 version = "0.14.0-pre.0"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#e31132665d2d8440d806cb249c109e5f4b788708"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#2c26594973a0c412c0bc60e8cbf6cae800ed5ffa"
 dependencies = [
  "crypto-bigint",
  "ff",
@@ -1051,7 +1058,7 @@ dependencies = [
 [[package]]
 name = "primeorder"
 version = "0.14.0-pre.2"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#e31132665d2d8440d806cb249c109e5f4b788708"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#2c26594973a0c412c0bc60e8cbf6cae800ed5ffa"
 dependencies = [
  "elliptic-curve",
 ]
@@ -1067,9 +1074,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.94"
+version = "1.0.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a31971752e70b8b2686d7e46ec17fb38dad4051d94024c88df49b667caea9c84"
+checksum = "02b3e5e68a3a1a02aad3ec490a98007cbc13c37cbe84a3cd7b8e406d76e7f778"
 dependencies = [
  "unicode-ident",
 ]
@@ -1162,7 +1169,7 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
- "getrandom 0.2.15",
+ "getrandom 0.2.16",
 ]
 
 [[package]]
@@ -1221,7 +1228,7 @@ checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
 [[package]]
 name = "rfc6979"
 version = "0.5.0-pre.4"
-source = "git+https://github.com/RustCrypto/signatures.git#b66adc00be5c4cf594331c091da8ea71e5f5f32d"
+source = "git+https://github.com/RustCrypto/signatures.git#6f17b321202299d5e39a2d542814f1e0cb24853c"
 dependencies = [
  "hmac",
  "subtle",
@@ -1252,7 +1259,7 @@ dependencies = [
 [[package]]
 name = "rsa"
 version = "0.10.0-pre.4"
-source = "git+https://github.com/RustCrypto/RSA.git#01c9228a547b9aaf761a768593bcb07552459440"
+source = "git+https://github.com/RustCrypto/RSA.git#b831df856f694dfdbba9727d739219acce0f9c81"
 dependencies = [
  "const-oid",
  "crypto-bigint",
@@ -1315,9 +1322,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "1.0.5"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d97817398dd4bb2e6da002002db259209759911da105da92bec29ccb12cf58bf"
+checksum = "c71e83d6afe7ff64890ec6b71d6a69bb8a610ab78ce364b3352876bb4c801266"
 dependencies = [
  "bitflags",
  "errno",
@@ -1347,7 +1354,7 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 [[package]]
 name = "salsa20"
 version = "0.11.0-pre.2"
-source = "git+https://github.com/RustCrypto/stream-ciphers.git#94f861690846f3237e103f8c67ff3c9e4cbda28a"
+source = "git+https://github.com/RustCrypto/stream-ciphers.git#ddbb1b34488cb9c79300a4a69bbec9fc8f835738"
 dependencies = [
  "cfg-if",
  "cipher",
@@ -1365,7 +1372,7 @@ dependencies = [
 [[package]]
 name = "scrypt"
 version = "0.12.0-pre.2"
-source = "git+https://github.com/RustCrypto/password-hashes.git#0b8ff354d6e42730ee45c9d7d5e582c58b3f5a8c"
+source = "git+https://github.com/RustCrypto/password-hashes.git#68c5d80962210dbbb4f1c1fe7436e03dc34e62c8"
 dependencies = [
  "pbkdf2",
  "salsa20",
@@ -1496,7 +1503,7 @@ dependencies = [
 [[package]]
 name = "signature"
 version = "3.0.0-pre"
-source = "git+https://github.com/RustCrypto/traits.git#439fc8c28c61b09eff35349b4c091a5586d70ea7"
+source = "git+https://github.com/RustCrypto/traits.git#ae58a7766614dab71973fb3286754f782ed90820"
 dependencies = [
  "digest",
  "rand_core 0.9.3",
@@ -1538,9 +1545,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
-version = "2.0.100"
+version = "2.0.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b09a44accad81e1ba1cd74a32461ba89dee89095ba17b32f5d03683b1b1fc2a0"
+checksum = "8ce2b7fc941b3a24138a0a7cf8e858bfc6a992e7978a068a5c760deb0ed43caf"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1563,9 +1570,9 @@ checksum = "1ac9aa371f599d22256307c24a9d748c041e548cbf599f35d890f9d365361790"
 
 [[package]]
 name = "tempfile"
-version = "3.19.1"
+version = "3.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7437ac7763b9b123ccf33c338a5cc1bac6f69b45a136c19bdd8a65e3916435bf"
+checksum = "e8a64e3985349f2441a1a9ef0b853f869006c3855f2cda6862a94d26ebb9d6a1"
 dependencies = [
  "fastrand",
  "getrandom 0.3.3",
@@ -1698,9 +1705,9 @@ checksum = "bfb942dfe1d8e29a7ee7fcbde5bd2b9a25fb89aa70caea2eba3bee836ff41076"
 
 [[package]]
 name = "trybuild"
-version = "1.0.104"
+version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ae08be68c056db96f0e6c6dd820727cca756ced9e1f4cc7fdd20e2a55e23898"
+checksum = "1c9bf9513a2f4aeef5fdac8677d7d349c79fdbcc03b9c86da6e9d254f1e43be2"
 dependencies = [
  "glob",
  "serde",
@@ -1866,9 +1873,9 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "winnow"
-version = "0.7.6"
+version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63d3fcd9bba44b03821e7d699eeee959f3126dcc4aa8e4ae18ec617c2a5cea10"
+checksum = "c06928c8748d81b05c9be96aad92e1b6ff01833332f281e8cfca3be4b35fc9ec"
 dependencies = [
  "memchr",
 ]
@@ -1947,18 +1954,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.24"
+version = "0.8.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2586fea28e186957ef732a5f8b3be2da217d65c5969d4b1e17f973ebbe876879"
+checksum = "a1702d9583232ddb9174e01bb7c15a2ab8fb1bc6f227aa1233858c351a3ba0cb"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.24"
+version = "0.8.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a996a8f63c5c4448cd959ac1bab0aaa3306ccfd060472f85943ee0750f0169be"
+checksum = "28a6e20d751156648aa063f3800b706ee209a32c0b4d9f24be3d980b01be55ef"
 dependencies = [
  "proc-macro2",
  "quote",
