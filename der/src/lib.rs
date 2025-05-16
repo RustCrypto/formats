@@ -358,6 +358,8 @@ mod tag;
 mod writer;
 
 #[cfg(feature = "alloc")]
+mod berder;
+#[cfg(feature = "alloc")]
 mod bytes_owned;
 #[cfg(feature = "alloc")]
 mod document;
@@ -383,6 +385,9 @@ pub use crate::{
 
 #[cfg(feature = "alloc")]
 pub use crate::{asn1::Any, document::Document};
+
+#[cfg(feature = "alloc")]
+pub use crate::berder::ber_to_der;
 
 #[cfg(feature = "derive")]
 pub use der_derive::{BitString, Choice, DecodeValue, EncodeValue, Enumerated, Sequence, ValueOrd};
