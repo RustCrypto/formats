@@ -245,8 +245,9 @@ mod allocating {
 
     impl<'a> From<&UintRef<'a>> for Uint {
         fn from(value: &UintRef<'a>) -> Uint {
-            let inner = BytesOwned::new(value.as_bytes()).expect("Invalid Uint");
-            Uint { inner }
+            Uint {
+                inner: value.inner.into(),
+            }
         }
     }
 
