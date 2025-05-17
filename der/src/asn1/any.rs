@@ -106,7 +106,7 @@ impl<'a> Decode<'a> for AnyRef<'a> {
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<AnyRef<'a>, Error> {
         let header = Header::decode(reader)?;
-        Self::decode_value(reader, header)
+        Self::decode_nested_value(reader, header)
     }
 }
 
@@ -254,7 +254,7 @@ mod allocating {
 
         fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Error> {
             let header = Header::decode(reader)?;
-            Self::decode_value(reader, header)
+            Self::decode_nested_value(reader, header)
         }
     }
 
