@@ -1,11 +1,17 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Reader, Result, SliceWriter, Tag, Writer};
+use crate::{
+    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Reader, Result, SliceWriter, Tag,
+    Writer,
+};
 use core::{
     cmp::Ordering,
     fmt,
     ops::{Add, Sub},
 };
+
+/// Maximum length as a `u32`.
+const MAX_U32: u32 = u32::MAX - 1;
 
 /// Octet identifying an indefinite length as described in X.690 Section
 /// 8.1.3.6.1:
@@ -25,8 +31,11 @@ impl Length {
     /// Length of `1`
     pub const ONE: Self = Self(1);
 
-    /// Maximum length (`u32::MAX`).
-    pub const MAX: Self = Self(u32::MAX);
+    /// Maximum length (`u32::MAX` - 1).
+    pub const MAX: Self = Self(MAX_U32);
+
+    /// Indefinite length (encoded as `0x80`).
+    pub const INDEFINITE: Self = Self(u32::MAX);
 
     /// Maximum number of octets in a DER encoding of a [`Length`] using the
     /// rules implemented by this crate.
@@ -44,7 +53,7 @@ impl Length {
     /// This function is const-safe and therefore useful for [`Length`] constants.
     #[allow(clippy::cast_possible_truncation)]
     pub(crate) const fn new_usize(len: usize) -> Result<Self> {
-        if len > (u32::MAX as usize) {
+        if len > Self::MAX.0 as usize {
             Err(Error::from_kind(ErrorKind::Overflow))
         } else {
             Ok(Length(len as u32))
@@ -57,6 +66,12 @@ impl Length {
         value == 0
     }
 
+    /// Is this length indefinite?
+    pub const fn is_indefinite(self) -> bool {
+        let value = self.0;
+        value == u32::MAX
+    }
+
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`
     /// is the length of the inner "value" portion of the message.
     pub fn for_tlv(self, tag: Tag) -> Result<Self> {
@@ -65,11 +80,22 @@ impl Length {
 
     /// Perform saturating addition of two lengths.
     pub fn saturating_add(self, rhs: Self) -> Self {
-        Self(self.0.saturating_add(rhs.0))
+        if self.is_indefinite() || rhs.is_indefinite() {
+            return Self::INDEFINITE;
+        }
+        let sum = self.0.saturating_add(rhs.0);
+        if sum < Self::MAX.0 {
+            Self(sum)
+        } else {
+            Self::MAX
+        }
     }
 
     /// Perform saturating subtraction of two lengths.
     pub fn saturating_sub(self, rhs: Self) -> Self {
+        if self.is_indefinite() || rhs.is_indefinite() {
+            return Self::INDEFINITE;
+        }
         Self(self.0.saturating_sub(rhs.0))
     }
 
@@ -90,7 +116,7 @@ impl Length {
             0x80..=0xFF => Some(0x81),
             0x100..=0xFFFF => Some(0x82),
             0x10000..=0xFFFFFF => Some(0x83),
-            0x1000000..=0xFFFFFFFF => Some(0x84),
+            0x1000000..=MAX_U32 => Some(0x84),
             _ => None,
         }
     }
@@ -100,10 +126,13 @@ impl Add for Length {
     type Output = Result<Self>;
 
     fn add(self, other: Self) -> Result<Self> {
+        if self.is_indefinite() || other.is_indefinite() {
+            return Ok(Self::INDEFINITE);
+        }
         self.0
             .checked_add(other.0)
             .ok_or_else(|| ErrorKind::Overflow.into())
-            .map(Self)
+            .and_then(TryInto::try_into)
     }
 }
 
@@ -127,7 +156,7 @@ impl Add<u32> for Length {
     type Output = Result<Self>;
 
     fn add(self, other: u32) -> Result<Self> {
-        self + Length::from(other)
+        self + Length::try_from(other)?
     }
 }
 
@@ -178,15 +207,21 @@ impl From<u16> for Length {
     }
 }
 
-impl From<u32> for Length {
-    fn from(len: u32) -> Length {
-        Length(len)
+impl TryFrom<u32> for Length {
+    type Error = Error;
+
+    fn try_from(len: u32) -> Result<Length> {
+        if len <= Self::MAX.0 {
+            Ok(Length(len))
+        } else {
+            Err(ErrorKind::Overflow.into())
+        }
     }
 }
 
 impl From<Length> for u32 {
-    fn from(length: Length) -> u32 {
-        length.0
+    fn from(len: Length) -> u32 {
+        if len == Length::INDEFINITE { 0 } else { len.0 }
     }
 }
 
@@ -202,7 +237,11 @@ impl TryFrom<Length> for usize {
     type Error = Error;
 
     fn try_from(len: Length) -> Result<usize> {
-        len.0.try_into().map_err(|_| ErrorKind::Overflow.into())
+        if len == Length::INDEFINITE {
+            Ok(0)
+        } else {
+            len.0.try_into().map_err(|_| ErrorKind::Overflow.into())
+        }
     }
 }
 
@@ -214,6 +253,9 @@ impl<'a> Decode<'a> for Length {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
             // lengths, which are not allowed in DER, so disallow that byte.
             len if len < INDEFINITE_LENGTH_OCTET => Ok(len.into()),
+            INDEFINITE_LENGTH_OCTET if reader.encoding_rules() == EncodingRules::Ber => {
+                Ok(Self::INDEFINITE)
+            }
             INDEFINITE_LENGTH_OCTET => Err(ErrorKind::IndefiniteLength.into()),
             // 1-4 byte variable-sized length prefix
             tag @ 0x81..=0x84 => {
@@ -226,7 +268,7 @@ impl<'a> Decode<'a> for Length {
                         | u32::from(reader.read_byte()?);
                 }
 
-                let length = Length::from(decoded_len);
+                let length = Length::try_from(decoded_len)?;
 
                 // X.690 Section 10.1: DER lengths must be encoded with a minimum
                 // number of octets
@@ -251,11 +293,15 @@ impl Encode for Length {
             0x80..=0xFF => Ok(Length(2)),
             0x100..=0xFFFF => Ok(Length(3)),
             0x10000..=0xFFFFFF => Ok(Length(4)),
-            0x1000000..=0xFFFFFFFF => Ok(Length(5)),
+            0x1000000..=MAX_U32 => Ok(Length(5)),
+            u32::MAX => Ok(Length(1)),
         }
     }
 
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        if self.is_indefinite() {
+            return Err(ErrorKind::IndefiniteLength.into());
+        }
         match self.initial_octet() {
             Some(tag_byte) => {
                 writer.write_byte(tag_byte)?;
@@ -300,7 +346,7 @@ impl fmt::Display for Length {
 #[cfg(feature = "arbitrary")]
 impl<'a> arbitrary::Arbitrary<'a> for Length {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Self(u.arbitrary()?))
+        Ok(Self(u.int_in_range(0..=MAX_U32)?))
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
@@ -337,12 +383,16 @@ mod tests {
         );
 
         assert_eq!(
-            Length::from(0x10000u32),
+            Length::try_from(0x10000u32).unwrap(),
             Length::from_der(&[0x83, 0x01, 0x00, 0x00]).unwrap()
         );
         assert_eq!(
-            Length::from(0xFFFFFFFFu32),
-            Length::from_der(&[0x84, 0xFF, 0xFF, 0xFF, 0xFF]).unwrap()
+            Length::try_from(0xFFFFFFFEu32).unwrap(),
+            Length::from_der(&[0x84, 0xFF, 0xFF, 0xFF, 0xFE]).unwrap()
+        );
+        assert_eq!(
+            Length::from_der(&[0x84, 0xFF, 0xFF, 0xFF, 0xFF]),
+            Err(ErrorKind::Overflow.into())
         );
     }
 
@@ -374,13 +424,15 @@ mod tests {
 
         assert_eq!(
             &[0x83, 0x01, 0x00, 0x00],
-            Length::from(0x10000u32)
+            Length::try_from(0x10000u32)
+                .unwrap()
                 .encode_to_slice(&mut buffer)
                 .unwrap()
         );
         assert_eq!(
-            &[0x84, 0xFF, 0xFF, 0xFF, 0xFF],
-            Length::from(0xFFFFFFFFu32)
+            &[0x84, 0xFF, 0xFF, 0xFF, 0xFE],
+            Length::try_from(0xFFFFFFFEu32)
+                .unwrap()
                 .encode_to_slice(&mut buffer)
                 .unwrap()
         );
