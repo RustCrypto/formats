@@ -9,12 +9,11 @@ use cbc::cipher::{
 };
 use pbkdf2::{
     hmac::{
-        EagerHash,
+        block_api::EagerHash,
         digest::{
-            HashMarker,
-            block_buffer::Eager,
-            core_api::{BlockSizeUser, BufferKindUser, FixedOutputCore, UpdateCore},
-            typenum::{IsLess, Le, NonZero, U12, U16, U256},
+            FixedOutput, HashMarker, Update,
+            block_api::BlockSizeUser,
+            typenum::{IsLess, NonZero, True, U12, U16, U256},
         },
     },
     pbkdf2_hmac,
@@ -231,16 +230,9 @@ impl EncryptionKey {
     /// Derive key using PBKDF2.
     fn derive_with_pbkdf2<D>(password: &[u8], params: &Pbkdf2Params, length: usize) -> Self
     where
-        D: EagerHash,
-        D::Core: Sync
-            + HashMarker
-            + UpdateCore
-            + FixedOutputCore
-            + BufferKindUser<BufferKind = Eager>
-            + Default
-            + Clone,
-        <D::Core as BlockSizeUser>::BlockSize: IsLess<U256>,
-        Le<<D::Core as BlockSizeUser>::BlockSize, U256>: NonZero,
+        D: EagerHash + HashMarker + Update + FixedOutput + Default + Clone,
+        <D as EagerHash>::Core: Sync,
+        <D as BlockSizeUser>::BlockSize: IsLess<U256, Output = True> + NonZero,
     {
         let mut buffer = [0u8; MAX_KEY_LEN];
 
