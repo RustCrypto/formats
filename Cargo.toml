@@ -4,13 +4,13 @@ members = [
     "base16ct",
     "base32ct",
     "base64ct",
-    #"cmpv2",
-    #"cms",
+    "cmpv2",
+    "cms",
     "const-oid",
-    #"crmf",
+    "crmf",
     "der",
     "der_derive",
-    #"gss-api",
+    "gss-api",
     "pem-rfc7468",
     "pkcs1",
     "pkcs5",
@@ -22,16 +22,6 @@ members = [
     "tai64",
     "tls_codec",
     "tls_codec/derive",
-    #"x509-tsp",
-    #"x509-cert",
-    #"x509-cert/test-support",
-    #"x509-ocsp"
-]
-exclude = [
-    "cmpv2",
-    "cms",
-    "crmf",
-    "gss-api",
     "x509-tsp",
     "x509-cert",
     "x509-cert/test-support",
@@ -82,6 +72,7 @@ aes-kw = { git = "https://github.com/RustCrypto/key-wraps.git" }
 
 # https://github.com/RustCrypto/KDFs/pull/102
 ansi-x963-kdf = { git = "https://github.com/RustCrypto/KDFs.git" }
+hkdf = { git = "https://github.com/RustCrypto/KDFs.git" }
 
 
 # https://github.com/RustCrypto/traits/pull/1777
@@ -101,10 +92,12 @@ rsa = { git = "https://github.com/RustCrypto/RSA.git" }
 pbkdf2 = { git = "https://github.com/RustCrypto/password-hashes.git" }
 scrypt = { git = "https://github.com/RustCrypto/password-hashes.git" }
 
+crypto-bigint = { git = "https://github.com/RustCrypto/crypto-bigint.git" }
 crypto-primes = { git = "https://github.com/entropyxyz/crypto-primes.git" }
 
 # https://github.com/RustCrypto/elliptic-curves/pull/1125
 # https://github.com/RustCrypto/elliptic-curves/pull/1131
+primefield = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
 p256 = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
 
 cbc = { git = "https://github.com/RustCrypto/block-modes.git" }
@@ -114,6 +107,7 @@ salsa20 = { git = "https://github.com/RustCrypto/stream-ciphers.git" }
 
 sha1 = { git = "https://github.com/RustCrypto/hashes.git" }
 sha2 = { git = "https://github.com/RustCrypto/hashes.git" }
+sha3 = { git = "https://github.com/RustCrypto/hashes.git" }
 whirlpool = { git = "https://github.com/RustCrypto/hashes.git" }
 
 hmac = { git = "https://github.com/RustCrypto/MACs.git" }
