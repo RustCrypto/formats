@@ -662,7 +662,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs1"
-version = "0.8.0-rc.1"
+version = "0.8.0-rc.2"
 dependencies = [
  "const-oid",
  "der",
@@ -692,7 +692,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.8.0-rc.3"
+version = "0.8.0-rc.4"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -710,7 +710,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.11.0-rc.3"
+version = "0.11.0-rc.4"
 dependencies = [
  "der",
  "hex-literal",
@@ -959,7 +959,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.8.0-rc.4"
+version = "0.8.0-rc.5"
 dependencies = [
  "base16ct",
  "der",
@@ -1064,7 +1064,7 @@ dependencies = [
 
 [[package]]
 name = "spki"
-version = "0.8.0-rc.1"
+version = "0.8.0-rc.2"
 dependencies = [
  "arbitrary",
  "base64ct 1.7.3",
