@@ -493,7 +493,6 @@ impl TryFrom<&ScryptParams> for scrypt::Params {
             log_n,
             params.block_size.into(),
             params.parallelization.into(),
-            scrypt::Params::RECOMMENDED_LEN,
         )
         .map_err(|_| ScryptParams::INVALID_ERR)
     }

@@ -9,7 +9,7 @@ use cbc::cipher::{
 };
 use pbkdf2::{
     hmac::{
-        block_api::EagerHash,
+        EagerHash,
         digest::{
             FixedOutput, HashMarker, Update,
             block_api::BlockSizeUser,

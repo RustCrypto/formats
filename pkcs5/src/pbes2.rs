@@ -176,7 +176,7 @@ impl Parameters {
         let mut salt = [0u8; Self::DEFAULT_SALT_LEN];
         rng.fill_bytes(&mut salt);
 
-        scrypt::Params::new(14, 8, 1, 32)
+        scrypt::Params::new(14, 8, 1)
             .ok()
             .and_then(|params| Self::scrypt_aes256cbc(params, &salt, iv).ok())
             .expect("invalid scrypt parameters")

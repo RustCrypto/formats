@@ -202,7 +202,7 @@ fn decrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
 #[test]
 fn encrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
     let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes128gcm(
-        pkcs5::scrypt::Params::new(14, 8, 1, 16).unwrap(),
+        pkcs5::scrypt::Params::new(14, 8, 1).unwrap(),
         &hex!("05BE17663E551D120F81308E"),
         hex!("D7E967A5DF6189471BCC1F49"),
     )
@@ -232,7 +232,7 @@ fn decrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
 #[test]
 fn encrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
     let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes256gcm(
-        pkcs5::scrypt::Params::new(15, 8, 1, 32).unwrap(),
+        pkcs5::scrypt::Params::new(15, 8, 1).unwrap(),
         &hex!("F67F4005A8393BD41F5B4981"),
         hex!("98B118A950D39E2ECB5B125C"),
     )
@@ -274,7 +274,7 @@ fn encrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
 #[test]
 fn encrypt_ed25519_der_encpriv_aes256_scrypt() {
     let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes256cbc(
-        pkcs5::scrypt::Params::new(15, 8, 1, 32).unwrap(),
+        pkcs5::scrypt::Params::new(15, 8, 1).unwrap(),
         &hex!("E6211E2348AD69E0"),
         hex!("9BD0A6251F2254F9FD5963887C27CF01"),
     )
