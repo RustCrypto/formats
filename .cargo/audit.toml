@@ -1,4 +1,5 @@
 [advisories]
 ignore = [
     "RUSTSEC-2024-0436", #paste
+    "RUSTSEC-2023-0071", #rsa marvin attack - patched in 0.10, we're depending on 0.10.0-rc.0
 ] # advisory IDs to ignore e.g. ["RUSTSEC-2019-0001", ...]
