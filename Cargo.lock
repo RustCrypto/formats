@@ -451,7 +451,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.8.0-rc.2"
+version = "0.8.0-rc.3"
 dependencies = [
  "arbitrary",
  "bytes",
@@ -468,7 +468,7 @@ dependencies = [
 
 [[package]]
 name = "der_derive"
-version = "0.8.0-rc.2"
+version = "0.8.0-rc.3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -932,7 +932,7 @@ dependencies = [
 
 [[package]]
 name = "pem-rfc7468"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 dependencies = [
  "base64ct 1.7.3",
 ]
