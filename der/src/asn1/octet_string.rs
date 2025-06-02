@@ -4,7 +4,6 @@ use crate::{
     BytesRef, Decode, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
     Tag, Writer, asn1::AnyRef, ord::OrdIsValueOrd,
 };
-use alloc::borrow::Cow;
 
 /// ASN.1 `OCTET STRING` type: borrowed form.
 ///
@@ -114,14 +113,6 @@ impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a Cow<'a, [u8]>> for OctetStringRef<'a> {
-    type Error = Error;
-
-    fn try_from(byte_slice: &'a Cow<'a, [u8]>) -> Result<Self, Error> {
-        OctetStringRef::new(byte_slice)
-    }
-}
-
 impl<'a, const N: usize> TryFrom<&'a [u8; N]> for OctetStringRef<'a> {
     type Error = Error;
 
@@ -138,14 +129,6 @@ impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
             .as_bytes()
             .try_into()
             .map_err(|_| Tag::OctetString.length_error())
-    }
-}
-
-impl<'a> TryFrom<OctetStringRef<'a>> for Cow<'a, [u8]> {
-    type Error = Error;
-
-    fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
-        Ok(Cow::Borrowed(octet_string.as_bytes()))
     }
 }
 
@@ -177,6 +160,7 @@ pub use self::allocating::OctetString;
 mod allocating {
     use super::*;
     use crate::referenced::*;
+    use alloc::borrow::Cow;
     use alloc::vec::Vec;
 
     /// ASN.1 `OCTET STRING` type: owned form..
@@ -296,6 +280,22 @@ mod allocating {
     impl From<OctetString> for Vec<u8> {
         fn from(octet_string: OctetString) -> Vec<u8> {
             octet_string.into_bytes()
+        }
+    }
+
+    impl<'a> TryFrom<&'a Cow<'a, [u8]>> for OctetStringRef<'a> {
+        type Error = Error;
+
+        fn try_from(byte_slice: &'a Cow<'a, [u8]>) -> Result<Self, Error> {
+            OctetStringRef::new(byte_slice)
+        }
+    }
+
+    impl<'a> TryFrom<OctetStringRef<'a>> for Cow<'a, [u8]> {
+        type Error = Error;
+
+        fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
+            Ok(Cow::Borrowed(octet_string.as_bytes()))
         }
     }
 
