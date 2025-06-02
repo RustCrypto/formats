@@ -119,11 +119,18 @@ impl ObjectIdentifier {
 
     /// Parse an OID from from its BER/DER encoding.
     pub fn from_bytes(ber_bytes: &[u8]) -> Result<Self> {
-        ObjectIdentifierRef::from_bytes(ber_bytes)?.try_into()
+        Self::from_bytes_sized(ber_bytes)
     }
 }
 
 impl<const MAX_SIZE: usize> ObjectIdentifier<MAX_SIZE> {
+    /// Parse an OID from from its BER/DER encoding.
+    ///
+    /// Returns `Err(Error::Length)` if bytes do not fit in `MAX_SIZE`.
+    pub fn from_bytes_sized(ber_bytes: &[u8]) -> Result<Self> {
+        ObjectIdentifierRef::from_bytes(ber_bytes)?.try_into()
+    }
+
     /// Get the BER/DER serialization of this OID as bytes.
     ///
     /// Note that this encoding omits the ASN.1 tag/length, and only contains the value portion of
