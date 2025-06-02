@@ -166,7 +166,7 @@ fn reencode_cert() {
 
 #[test]
 fn decode_oversized_oids() {
-    let o1parse = ObjectIdentifier::from_der(&hex!(
+    let o1parse: ObjectIdentifier = Decode::from_der(&hex!(
         "06252B060104018237150885C8B86B87AFF00383A99F3C96C34081ADE6494D82B0E91D85B2873D"
     ))
     .unwrap();
