@@ -4,7 +4,7 @@ use crate::{
     DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, Tag, Tagged, Writer,
     asn1::AnyRef, ord::OrdIsValueOrd,
 };
-use const_oid::ObjectIdentifier;
+use const_oid::{ObjectIdentifier, ObjectIdentifierRef};
 
 #[cfg(feature = "alloc")]
 use super::Any;
@@ -20,7 +20,7 @@ impl<'a, const MAX_SIZE: usize> DecodeValue<'a> for ObjectIdentifier<MAX_SIZE> {
 
         let actual_len = reader.read_into(slice)?.len();
         debug_assert_eq!(actual_len, header.length.try_into()?);
-        Ok(Self::from_bytes_generic(slice)?)
+        Ok(ObjectIdentifierRef::from_bytes(slice)?.try_into()?)
     }
 }
 
@@ -67,9 +67,7 @@ impl<const MAX_SIZE: usize> TryFrom<AnyRef<'_>> for ObjectIdentifier<MAX_SIZE> {
 
     fn try_from(any: AnyRef<'_>) -> Result<ObjectIdentifier<MAX_SIZE>> {
         any.tag().assert_eq(Tag::ObjectIdentifier)?;
-        Ok(ObjectIdentifier::<MAX_SIZE>::from_bytes_generic(
-            any.value(),
-        )?)
+        Ok(ObjectIdentifierRef::from_bytes(any.value())?.try_into()?)
     }
 }
 
