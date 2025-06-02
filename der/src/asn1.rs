@@ -18,6 +18,7 @@ mod ia5_string;
 mod integer;
 mod null;
 mod octet_string;
+mod octet_string2;
 #[cfg(feature = "oid")]
 mod oid;
 mod optional;
