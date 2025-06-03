@@ -175,7 +175,7 @@ impl<'i, E: Encoding> Decoder<'i, E> {
         }
 
         // Append `decoded_len` zeroes to the vector
-        buf.extend(iter::repeat(0).take(remaining_len));
+        buf.extend(iter::repeat_n(0, remaining_len));
         self.decode(&mut buf[start_len..])?;
         Ok(&buf[start_len..])
     }
