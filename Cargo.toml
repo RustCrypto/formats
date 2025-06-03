@@ -27,16 +27,6 @@ members = [
     "x509-cert/test-support",
     "x509-ocsp"
 ]
-exclude = [
-    "cmpv2",
-    "cms",
-    "crmf",
-    "gss-api",
-    "x509-tsp",
-    "x509-cert",
-    "x509-cert/test-support",
-    "x509-ocsp"
-]
 
 [profile.dev]
 opt-level = 2
