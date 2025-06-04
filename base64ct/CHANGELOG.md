@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.8.0 (2025-06-04)
+### Changed
+- Bump edition to 2024; MSRV 1.85 ([#1839])
+
+[#1839]: https://github.com/RustCrypto/formats/pull/1839
+
 ## 1.7.3 (2025-03-13)
 ### Changed
 - Don't fail with `InvalidLength` when reading nothing at end of data ([#1716]).
@@ -27,8 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - derive additional traits on alphabets ([#1578])
 
 ### Changed
-- MSRV 1.85 // Edition 2024 ([#1670])
-- reject zero-length decode requests ([#1387])
+- ~~MSRV 1.85 // Edition 2024 ([#1670])~~
+- ~~reject zero-length decode requests ([#1387])~~
 - use `core::error::Error` ([#1681])
 
 [#1387]: https://github.com/RustCrypto/formats/pull/1387
