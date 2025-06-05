@@ -58,11 +58,3 @@ tls_codec_derive = { path = "./tls_codec/derive" }
 x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
-
-# Pending release of primeorder 0.14.0-pre.4
-# https://github.com/RustCrypto/elliptic-curves/pull/1230
-primeorder = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
-
-# Pending release of elliptic-curve 0.14.0-rc.4
-# https://github.com/RustCrypto/traits/pull/1891
-elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
