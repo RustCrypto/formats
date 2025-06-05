@@ -106,9 +106,8 @@ impl<'a> Reader<'a> for SliceReader<'a> {
 
         match ret {
             Ok(value) => {
-                nested_reader.finish().map_err(|e| {
+                nested_reader.finish().inspect_err(|_e| {
                     self.failed = true;
-                    e.into()
                 })?;
                 Ok(value)
             }
