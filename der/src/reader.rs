@@ -72,9 +72,9 @@ pub trait Reader<'r>: Sized {
         kind.at(self.position())
     }
 
-    /// Finish decoding, returning the given value if there is no
+    /// Finish decoding, returning `Ok(())` if there is no
     /// remaining data, or an error otherwise
-    fn finish<T>(self, value: T) -> Result<T, Error> {
+    fn finish(self) -> Result<(), Error> {
         if !self.is_finished() {
             Err(ErrorKind::TrailingData {
                 decoded: self.position(),
@@ -82,7 +82,7 @@ pub trait Reader<'r>: Sized {
             }
             .at(self.position()))
         } else {
-            Ok(value)
+            Ok(())
         }
     }
 
