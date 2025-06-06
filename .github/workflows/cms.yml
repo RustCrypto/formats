@@ -23,7 +23,6 @@ env:
 
 jobs:
   build:
-    if: false # disabled while we migrate to digest newtypes
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -54,7 +53,6 @@ jobs:
         nightly-cmd:
 
   test:
-    if: false # disabled while we migrate to digest newtypes
     runs-on: ubuntu-latest
     strategy:
       matrix:
