@@ -65,7 +65,7 @@ where
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<T, <T as DecodeValue<'a>>::Error> {
         let header = Header::decode(reader)?;
         header.tag.assert_eq(T::TAG)?;
-        T::decode_value(reader, header)
+        T::decode_nested_value(reader, header)
     }
 }
 
@@ -121,6 +121,31 @@ pub trait DecodeValue<'a>: Sized {
 
     /// Attempt to decode this message using the provided [`Reader`].
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error>;
+
+    /// Attempt to decode this nested message using the provided [`Reader`].
+    ///
+    /// When indefinite length occurs, trailing '00 00' bytes are eaten.
+    fn decode_nested_value<R: Reader<'a>>(
+        reader: &mut R,
+        header: Header,
+    ) -> Result<Self, Self::Error> {
+        if !header.length.is_indefinite() {
+            // TODO: maybe refactor whole der to read_nested here
+            Self::decode_value(reader, header)
+        } else {
+            let fixed_header = Header {
+                tag: header.tag,
+                length: reader.peek_indefinite_length()?,
+            };
+            // Now expected length is known
+            let result = reader.read_nested(fixed_header.length, |reader| {
+                Self::decode_value(reader, fixed_header)
+            });
+
+            reader.read_end_of_contents()?;
+            result
+        }
+    }
 }
 
 #[cfg(feature = "alloc")]
