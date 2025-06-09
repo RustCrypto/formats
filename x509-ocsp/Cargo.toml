@@ -19,7 +19,7 @@ rust-version = "1.85"
 const-oid = { version = "0.10.0-rc.0", default-features = false, features = ["db"] }
 der = { version = "0.8.0-rc.3", features = ["alloc", "derive", "oid"] }
 spki = { version = "0.8.0-rc.0", features = ["alloc"] }
-x509-cert = { version = "=0.3.0-pre.0", default-features = false }
+x509-cert = { version = "0.3.0-rc.0", default-features = false }
 
 # Optional
 digest = { version = "0.11.0-rc.0", optional = true, default-features = false, features = ["oid"] }
