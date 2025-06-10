@@ -115,7 +115,7 @@ impl_extension!(FreshestCrl, critical = false);
 /// ```
 ///
 /// [RFC 5280 Section 5.3.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.3.1
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Enumerated)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Enumerated, Ord, PartialOrd)]
 #[allow(missing_docs)]
 #[repr(u32)]
 pub enum CrlReason {
