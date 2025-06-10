@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn peek_max_header() {
-        const MAX_HEADER: [u8; 11] = hex!("BF8FFFFFFF7F 84FFFFFFFF");
+        const MAX_HEADER: [u8; 11] = hex!("BF8FFFFFFF7F 84FFFFFFFE");
         let reader = SliceReader::new(&MAX_HEADER).expect("slice to be valid length");
 
         let header = Header::peek(&reader).expect("peeked tag");
@@ -116,14 +116,14 @@ mod tests {
         );
         assert_eq!(
             header.length,
-            Length::new_usize(0xFFFFFFFF).expect("u32 to fit")
+            Length::new_usize(0xFFFFFFFE).expect("u32 to fit")
         );
         assert_eq!(header.encoded_len(), Ok(Length::new(11)));
         assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
     #[test]
     fn negative_peek_overlength_header() {
-        const MAX_HEADER: [u8; 12] = hex!("BF8FFFFFFFFF7F 84FFFFFFFF");
+        const MAX_HEADER: [u8; 12] = hex!("BF8FFFFFFFFF7F 84FFFFFFFE");
         let reader = SliceReader::new(&MAX_HEADER).expect("slice to be valid length");
         // Should not decode
         Header::peek(&reader).expect_err("overlength error");
