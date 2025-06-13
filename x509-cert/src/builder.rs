@@ -12,7 +12,7 @@ use spki::{
 
 use crate::{
     AlgorithmIdentifier, SubjectPublicKeyInfo,
-    certificate::{Certificate, TbsCertificate, Version},
+    certificate::{self, Certificate, TbsCertificate, Version},
     crl::{CertificateList, RevokedCert, TbsCertList},
     ext::{
         AsExtension, Extensions,
@@ -570,11 +570,17 @@ where
 }
 
 /// X.509 CRL builder
-pub struct CrlBuilder {
-    tbs: TbsCertList,
+pub struct CrlBuilder<P = certificate::Rfc5280>
+where
+    P: certificate::Profile,
+{
+    tbs: TbsCertList<P>,
 }
 
-impl CrlBuilder {
+impl<P> CrlBuilder<P>
+where
+    P: certificate::Profile,
+{
     /// Create a `CrlBuilder` with the given issuer and the given monotonic [`CrlNumber`]
     #[cfg(feature = "std")]
     pub fn new(issuer: &Certificate, crl_number: CrlNumber) -> der::Result<Self> {
@@ -643,22 +649,25 @@ impl CrlBuilder {
     /// Add certificates to the revocation list
     pub fn with_certificates<I>(mut self, revoked: I) -> Self
     where
-        I: Iterator<Item = RevokedCert>,
+        I: Iterator<Item = RevokedCert<P>>,
     {
         let certificates = self
             .tbs
             .revoked_certificates
             .get_or_insert_with(vec::Vec::new);
 
-        let mut revoked: vec::Vec<RevokedCert> = revoked.collect();
+        let mut revoked: vec::Vec<RevokedCert<P>> = revoked.collect();
         certificates.append(&mut revoked);
 
         self
     }
 }
 
-impl Builder for CrlBuilder {
-    type Output = CertificateList;
+impl<P> Builder for CrlBuilder<P>
+where
+    P: certificate::Profile,
+{
+    type Output = CertificateList<P>;
 
     fn finalize<S>(&mut self, cert_signer: &S) -> Result<vec::Vec<u8>>
     where

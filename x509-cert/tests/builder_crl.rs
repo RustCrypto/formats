@@ -14,6 +14,7 @@ use x509_cert::{
         Builder, CertificateBuilder, CrlBuilder,
         profile::{self, cabf::tls::CertificateType},
     },
+    certificate::Rfc5280,
     crl::RevokedCert,
     ext::{
         AsExtension,
@@ -51,7 +52,7 @@ fn crl_signer() {
 
     let crl_number = CrlNumber::try_from(42u128).unwrap();
 
-    let builder = CrlBuilder::new(&ca_certificate, crl_number)
+    let builder = CrlBuilder::<Rfc5280>::new(&ca_certificate, crl_number)
         .unwrap()
         .with_certificates(
             vec![
@@ -117,7 +118,7 @@ fn crl_verify() {
 
     let revocation_date = SystemTime::now() - Duration::from_secs(5);
 
-    let builder = CrlBuilder::new(&ca_certificate, crl_number)
+    let builder = CrlBuilder::<Rfc5280>::new(&ca_certificate, crl_number)
         .unwrap()
         .with_certificates(
             vec![RevokedCert {
