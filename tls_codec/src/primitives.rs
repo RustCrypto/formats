@@ -46,12 +46,12 @@ impl<T: Serialize> Serialize for Option<T> {
 
 impl<T: SerializeBytes> SerializeBytes for Option<T> {
     #[inline]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         match self {
             Some(e) => {
                 let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
                 out.push(1);
-                out.append(&mut e.tls_serialize()?);
+                out.append(&mut e.tls_serialize_bytes()?);
                 Ok(out)
             }
             None => Ok(vec![0]),
@@ -68,8 +68,8 @@ impl<T: Serialize> Serialize for &Option<T> {
 
 impl<T: SerializeBytes> SerializeBytes for &Option<T> {
     #[inline]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        (*self).tls_serialize()
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        (*self).tls_serialize_bytes()
     }
 }
 
@@ -140,15 +140,15 @@ macro_rules! impl_unsigned {
 
         impl SerializeBytes for &$t {
             #[inline]
-            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+            fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
                 Ok(self.to_be_bytes().to_vec())
             }
         }
 
         impl SerializeBytes for $t {
             #[inline]
-            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-                <&Self as SerializeBytes>::tls_serialize(&self)
+            fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+                <&Self as SerializeBytes>::tls_serialize_bytes(&self)
             }
         }
 
@@ -368,7 +368,7 @@ impl<T> Serialize for PhantomData<T> {
 
 impl<T> SerializeBytes for PhantomData<T> {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         Ok(vec![])
     }
 }
@@ -390,8 +390,8 @@ impl<T: Serialize> Serialize for Box<T> {
 
 impl<T: SerializeBytes> SerializeBytes for Box<T> {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        self.as_ref().tls_serialize()
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        self.as_ref().tls_serialize_bytes()
     }
 }
 

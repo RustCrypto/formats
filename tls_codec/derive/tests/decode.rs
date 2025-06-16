@@ -1,6 +1,6 @@
 #![cfg(feature = "std")]
 use tls_codec::{
-    Deserialize, DeserializeBytes, Error, Serialize, Size, TlsSliceU16, TlsVecU8, TlsVecU16,
+    Deserialize, DeserializeBytes, Error, Serialize, SerializeDetached, DeserializeExact, Size, TlsSliceU16, TlsVecU8, TlsVecU16,
     TlsVecU32, VLBytes,
 };
 use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize};

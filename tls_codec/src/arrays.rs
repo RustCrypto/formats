@@ -45,7 +45,7 @@ impl<const LEN: usize> DeserializeBytes for [u8; LEN] {
 }
 
 impl<const LEN: usize> SerializeBytes for [u8; LEN] {
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         Ok(self.to_vec())
     }
 }

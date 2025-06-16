@@ -129,10 +129,20 @@ pub trait Serialize: Size {
     /// The function returns the number of bytes written to `writer`.
     #[cfg(feature = "std")]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error>;
+}
+
+pub trait SerializeDetached {
 
     /// Serialize `self` and return it as a byte vector.
     #[cfg(feature = "std")]
-    fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error>;
+
+}
+
+impl <T: Serialize> SerializeDetached for T {
+    /// Serialize `self` and return it as a byte vector.
+    #[cfg(feature = "std")]
+    fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error>{
         let mut buffer = Vec::with_capacity(self.tls_serialized_len());
         let written = self.tls_serialize(&mut buffer)?;
         debug_assert_eq!(
@@ -160,7 +170,7 @@ pub trait Serialize: Size {
 /// * `tls_serialize` that returns a byte vector
 pub trait SerializeBytes: Size {
     /// Serialize `self` and return it as a byte vector.
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error>;
 }
 
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
@@ -176,6 +186,9 @@ pub trait Deserialize: Size {
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error>
     where
         Self: Sized;
+}
+
+pub trait DeserializeExact {
 
     /// This function deserializes the provided `bytes` and returns the populated
     /// struct. All bytes must be consumed.
@@ -185,8 +198,23 @@ pub trait Deserialize: Size {
     #[cfg(feature = "std")]
     fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
     where
-        Self: Sized,
-    {
+        Self: Sized;
+    
+
+}
+
+impl <T: Deserialize> DeserializeExact for T {
+    
+
+    /// This function deserializes the provided `bytes` and returns the populated
+    /// struct. All bytes must be consumed.
+    ///
+    /// Returns an error if not all bytes are read from the input, or if an error
+    /// occurs during deserialization.
+    #[cfg(feature = "std")]
+    fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
+    where
+        Self: Sized {
         let mut bytes = bytes.as_ref();
         let out = Self::tls_deserialize(&mut bytes)?;
 
@@ -211,7 +239,15 @@ pub trait DeserializeBytes: Size {
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
         Self: Sized;
+}
 
+pub trait DeserializeExactBytes {
+    fn tls_deserialize_exact_bytes(bytes: &[u8]) -> Result<Self, Error>
+    where
+        Self: Sized;
+}
+
+impl <T: DeserializeBytes> DeserializeExactBytes for T {
     /// This function deserializes the provided `bytes` and returns the populated
     /// struct. All bytes must be consumed.
     ///
@@ -272,4 +308,22 @@ impl TryFrom<usize> for U24 {
             Ok(U24(value.to_be_bytes()[LEN - 3..].try_into()?))
         }
     }
+}
+
+fn deserialize_primitives() {
+    use crate::Deserialize;
+    let mut b = &[77u8, 88, 1, 99] as &[u8];
+
+    let a = u8::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
+    assert_eq!(1, a.tls_serialized_len());
+    assert_eq!(77, a);
+    let a = u8::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
+    assert_eq!(1, a.tls_serialized_len());
+    assert_eq!(88, a);
+    let a = u16::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
+    assert_eq!(2, a.tls_serialized_len());
+    assert_eq!(355, a);
+
+    // It's empty now.
+    assert!(u8::tls_deserialize(&mut b).is_err())
 }

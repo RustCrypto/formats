@@ -27,6 +27,7 @@ fn deserialize_primitives() {
 #[test]
 fn deserialize_option_bytes() {
     use tls_codec::DeserializeBytes;
+    use tls_codec::SerializeDetached;
     for b in [Some(0u8), None] {
         let b_encoded = b.tls_serialize_detached().expect("Unable to tls_serialize");
         let (b_decoded, remainder) = Option::<u8>::tls_deserialize_bytes(b_encoded.as_slice())
@@ -64,6 +65,7 @@ fn deserialize_bytes_primitives() {
 #[test]
 fn deserialize_tls_vec() {
     use tls_codec::Deserialize;
+    use tls_codec::SerializeDetached;
     let mut b = &[1u8, 4, 77, 88, 1, 99] as &[u8];
 
     let a = u8::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
@@ -92,6 +94,7 @@ fn deserialize_tls_vec() {
 #[test]
 fn deserialize_bytes_tls_vec() {
     use tls_codec::DeserializeBytes;
+    use tls_codec::SerializeDetached;
     let b = &[1u8, 4, 77, 88, 1, 99] as &[u8];
 
     let (a, remainder) = u8::tls_deserialize_bytes(b).expect("Unable to tls_deserialize");
@@ -121,6 +124,7 @@ fn deserialize_bytes_tls_vec() {
 #[test]
 fn deserialize_tls_byte_vec() {
     use tls_codec::Deserialize;
+    use tls_codec::SerializeDetached;
     let mut b = &[1u8, 4, 77, 88, 1, 99] as &[u8];
 
     let a = u8::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
@@ -187,6 +191,7 @@ fn deserialize_tuples() {
 #[test]
 fn deserialize_var_len_vec() {
     use tls_codec::Deserialize;
+    use tls_codec::SerializeDetached;
     fn test_it<
         T: Serialize + Deserialize + tls_codec::DeserializeBytes + std::fmt::Debug + PartialEq,
     >(
@@ -232,6 +237,7 @@ fn deserialize_var_len_vec() {
 #[test]
 fn deserialize_tls_vl_bytes() {
     use tls_codec::Deserialize;
+    use tls_codec::SerializeDetached;
     let mut b = &[4u8, 77, 88, 1, 99] as &[u8];
 
     let v = VLBytes::tls_deserialize(&mut b).expect("Unable to tls_deserialize");
@@ -257,6 +263,7 @@ fn deserialize_tls_vl_bytes() {
 #[test]
 fn deserialize_bytes_tls_vl_bytes() {
     use tls_codec::DeserializeBytes;
+    use tls_codec::SerializeDetached;
     let b = &[4u8, 77, 88, 1, 99];
 
     let (v, remainder) = VLBytes::tls_deserialize_bytes(b).expect("Unable to tls_deserialize");

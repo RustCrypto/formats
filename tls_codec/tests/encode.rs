@@ -1,6 +1,6 @@
 #![cfg(feature = "std")]
 
-use tls_codec::{Serialize, TlsVecU16, TlsVecU24, U24, VLByteSlice, VLBytes};
+use tls_codec::{Serialize, SerializeDetached, TlsVecU16, TlsVecU24, U24, VLByteSlice, VLBytes};
 
 #[test]
 fn serialize_primitives() {

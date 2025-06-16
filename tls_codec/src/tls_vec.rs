@@ -56,7 +56,7 @@ macro_rules! impl_byte_deserialize {
             let mut result = Self {
                 vec: vec![0u8; len],
             };
-            bytes.read_exact(result.vec.as_mut_slice())?;
+            bytes.read_exact(&mut result.vec)?;
             Ok(result)
         }
 
@@ -207,7 +207,7 @@ macro_rules! impl_serialize_bytes_bytes {
             let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
             let mut vec = Vec::<u8>::with_capacity(tls_serialized_len);
-            let length_vec = <$size as SerializeBytes>::tls_serialize(&byte_length.try_into().unwrap())?;
+            let length_vec = <$size as SerializeBytes>::tls_serialize_bytes(&byte_length.try_into().unwrap())?;
             let mut written = length_vec.len();
             vec.extend_from_slice(&length_vec);
 
@@ -311,7 +311,7 @@ macro_rules! impl_tls_vec_codec_bytes {
         }
 
         impl SerializeBytes for $name {
-            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+            fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
                 self.serialize_bytes_bytes()
             }
         }
@@ -448,12 +448,12 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        impl<T: $($bounds + )*> core::ops::IndexMut<usize> for $name<T> {
+        /* impl<T: $($bounds + )*> core::ops::IndexMut<usize> for $name<T> {
             #[inline]
             fn index_mut(&mut self, i: usize) -> &mut Self::Output {
                 self.vec.index_mut(i)
             }
-        }
+        } */
 
         impl<T: $($bounds + )*> core::borrow::Borrow<[T]> for $name<T> {
             #[inline]
@@ -646,12 +646,12 @@ macro_rules! impl_tls_vec {
             }
         }
 
-        impl core::ops::IndexMut<usize> for $name {
+        /* impl core::ops::IndexMut<usize> for $name {
             #[inline]
             fn index_mut(&mut self, i: usize) -> &mut Self::Output {
                 self.vec.index_mut(i)
             }
-        }
+        } */
 
         impl core::borrow::Borrow<[u8]> for $name {
             #[inline]

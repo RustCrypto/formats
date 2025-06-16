@@ -37,15 +37,15 @@ struct SomeValue {
 fn lifetime_struct() {
     let value = vec![7u8; 33];
     let s = StructWithLifetime { value: &value };
-    let serialized_s = s.tls_serialize().unwrap();
-    assert_eq!(serialized_s, value.tls_serialize().unwrap());
+    let serialized_s = s.tls_serialize_bytes().unwrap();
+    assert_eq!(serialized_s, value.tls_serialize_bytes().unwrap());
 }
 
 #[test]
 fn simple_enum() {
-    let serialized = ExtensionType::KeyId.tls_serialize().unwrap();
+    let serialized = ExtensionType::KeyId.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 3], serialized);
-    let serialized = ExtensionType::SomethingElse.tls_serialize().unwrap();
+    let serialized = ExtensionType::SomethingElse.tls_serialize_bytes().unwrap();
     assert_eq!(vec![1, 244], serialized);
 }
 
@@ -56,7 +56,7 @@ fn simple_struct() {
         extension_data: vec![1, 2, 3, 4, 5],
         additional_data: None,
     };
-    let serialized = extension.tls_serialize().unwrap();
+    let serialized = extension.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 3, 5, 1, 2, 3, 4, 5, 0], serialized);
 }
 
@@ -68,14 +68,14 @@ fn tuple_struct() {
         additional_data: None,
     };
     let x = TupleStruct(ext, 6);
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 3, 5, 1, 2, 3, 4, 5, 0, 6], serialized);
 }
 
 #[test]
 fn byte_arrays() {
     let x = [0u8, 1, 2, 3];
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 1, 2, 3], serialized);
 }
 
@@ -83,11 +83,11 @@ fn byte_arrays() {
 fn lifetimes() {
     let x = vec![1, 2, 3, 4];
     let s = StructWithLifetime { value: &x };
-    let serialized = s.tls_serialize().unwrap();
+    let serialized = s.tls_serialize_bytes().unwrap();
     assert_eq!(vec![4, 1, 2, 3, 4], serialized);
 
     pub fn do_some_serializing(val: &StructWithLifetime) -> Vec<u8> {
-        val.tls_serialize().unwrap()
+        val.tls_serialize_bytes().unwrap()
     }
     let serialized = do_some_serializing(&s);
     assert_eq!(vec![4, 1, 2, 3, 4], serialized);
@@ -108,7 +108,7 @@ mod custom {
     }
 
     pub fn tls_serialize(v: &[u8]) -> Result<Vec<u8>, tls_codec::Error> {
-        v.tls_serialize()
+        v.tls_serialize_bytes()
     }
 }
 
@@ -118,7 +118,7 @@ fn custom() {
         values: vec![0, 1, 2],
         a: 3,
     };
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![3, 0, 1, 2, 3], serialized);
 }
 
@@ -138,7 +138,7 @@ fn optional_member() {
         ref_optional_member: &None,
         ref_vector: &v,
     };
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![1, 0, 0, 0, 6, 0, 6, 0, 1, 0, 2, 0, 3], serialized);
 }
 
@@ -151,7 +151,7 @@ enum EnumWithTupleVariant {
 #[test]
 fn enum_with_tuple_variant() {
     let x = EnumWithTupleVariant::A(3, 4);
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 3, 0, 0, 0, 4], serialized);
 }
 
@@ -164,7 +164,7 @@ enum EnumWithStructVariant {
 #[test]
 fn enum_with_struct_variant() {
     let x = EnumWithStructVariant::A { foo: 3, bar: 4 };
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 3, 0, 0, 0, 4], serialized);
 }
 
@@ -179,14 +179,14 @@ enum EnumWithDataAndDiscriminant {
 #[test]
 fn enum_with_data_and_discriminant() {
     let x = EnumWithDataAndDiscriminant::A(4);
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 3, 4], serialized);
 }
 
 #[test]
 fn discriminant_is_incremented_implicitly() {
     let x = EnumWithDataAndDiscriminant::B;
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 4], serialized);
 }
 
@@ -217,12 +217,12 @@ enum EnumWithDataAndConstDiscriminant {
 #[test]
 fn enum_with_data_and_const_discriminant() {
     let serialized = EnumWithDataAndConstDiscriminant::A(4)
-        .tls_serialize()
+        .tls_serialize_bytes()
         .unwrap();
     assert_eq!(vec![0, 3, 4], serialized);
-    let serialized = EnumWithDataAndConstDiscriminant::B.tls_serialize().unwrap();
+    let serialized = EnumWithDataAndConstDiscriminant::B.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 4], serialized);
-    let serialized = EnumWithDataAndConstDiscriminant::C.tls_serialize().unwrap();
+    let serialized = EnumWithDataAndConstDiscriminant::C.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 12], serialized);
 }
 
@@ -235,7 +235,7 @@ enum EnumWithCustomSerializedField {
 #[test]
 fn enum_with_custom_serialized_field() {
     let x = EnumWithCustomSerializedField::A(vec![1, 2, 3]);
-    let serialized = x.tls_serialize().unwrap();
+    let serialized = x.tls_serialize_bytes().unwrap();
     assert_eq!(vec![0, 3, 1, 2, 3], serialized);
 }
 
@@ -249,7 +249,7 @@ fn that_skip_attribute_on_struct_works() {
         assert_eq!(test.tls_serialized_len(), expected.len());
 
         // Check serialization.
-        assert_eq!(test.tls_serialize().unwrap(), expected);
+        assert_eq!(test.tls_serialize_bytes().unwrap(), expected);
     }
 
     #[derive(Debug, PartialEq, TlsSerializeBytes, TlsSize)]
