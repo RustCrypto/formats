@@ -5,7 +5,7 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)] // only allowed for transmuting newtype references
 #![warn(
     // TODO: re-enable this lint and fix its warnings
     // clippy::arithmetic_side_effects,
@@ -343,6 +343,7 @@ pub mod referenced;
 
 pub(crate) mod arrayvec;
 mod bytes_ref;
+mod bytes_ref2;
 mod datetime;
 mod decode;
 mod encode;
