@@ -104,18 +104,6 @@ impl DeriveSequence {
         let error = self.error.to_token_stream();
 
         quote! {
-            impl #impl_generics #ident #ty_generics #where_clause {
-                #[doc(hidden)]
-                fn decode_value_inner<R: ::der::Reader<#lifetime>>(reader: &mut R) -> ::core::result::Result<Self, #error> {
-                    use ::der::{Decode as _, DecodeValue as _, Reader as _};
-                    #(#decode_body)*
-
-                    Ok(Self {
-                        #(#decode_result),*
-                    })
-                }
-            }
-
             impl #impl_generics ::der::DecodeValue<#lifetime> for #ident #ty_generics #where_clause {
                 type Error = #error;
 
@@ -123,7 +111,12 @@ impl DeriveSequence {
                     reader: &mut R,
                     header: ::der::Header,
                 ) -> ::core::result::Result<Self, #error> {
-                    reader.read_nested(header.length, Self::decode_value_inner)
+                    use ::der::{Decode as _, DecodeValue as _, Reader as _};
+                    #(#decode_body)*
+
+                    Ok(Self {
+                        #(#decode_result),*
+                    })
                 }
             }
         }
@@ -146,7 +139,6 @@ impl DeriveSequence {
         }
 
         quote! {
-
             impl #impl_generics ::der::EncodeValue for #ident #ty_generics #where_clause {
                 fn value_len(&self) -> ::der::Result<::der::Length> {
                     use ::der::Encode as _;

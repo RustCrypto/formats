@@ -110,18 +110,16 @@ where
 {
     type Error = T::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        reader.read_nested(header.length, |reader| {
-            let mut result = Self::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> Result<Self, Self::Error> {
+        let mut result = Self::new();
 
-            while !reader.is_finished() {
-                result.inner.push(T::decode(reader)?)?;
-            }
+        while !reader.is_finished() {
+            result.inner.push(T::decode(reader)?)?;
+        }
 
-            // Ensure elements of the `SetOf` are sorted and will serialize as valid DER
-            der_sort(result.inner.as_mut())?;
-            Ok(result)
-        })
+        // Ensure elements of the `SetOf` are sorted and will serialize as valid DER
+        der_sort(result.inner.as_mut())?;
+        Ok(result)
     }
 }
 
@@ -334,17 +332,15 @@ where
 {
     type Error = T::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        reader.read_nested(header.length, |reader| {
-            let mut inner = Vec::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> Result<Self, Self::Error> {
+        let mut inner = Vec::new();
 
-            while !reader.is_finished() {
-                inner.push(T::decode(reader)?);
-            }
+        while !reader.is_finished() {
+            inner.push(T::decode(reader)?);
+        }
 
-            der_sort(inner.as_mut())?;
-            Ok(Self { inner })
-        })
+        der_sort(inner.as_mut())?;
+        Ok(Self { inner })
     }
 }
 
