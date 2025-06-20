@@ -20,6 +20,7 @@ pub trait FixedTag {
 }
 
 /// Types which have an ASN.1 [`Tag`].
+#[diagnostic::on_unimplemented(note = "Consider adding impl of `FixedTag` to `{Self}`")]
 pub trait Tagged {
     /// Get the ASN.1 tag that this type is encoded with.
     fn tag(&self) -> Tag;
@@ -35,6 +36,7 @@ impl<T: FixedTag + ?Sized> Tagged for T {
 /// Types which have a constant ASN.1 constructed bit.
 ///
 /// Auto-implemented on all types that implement [`FixedTag`].
+#[diagnostic::on_unimplemented(note = "Consider adding impl of `FixedTag` to `{Self}`")]
 pub trait IsConstructed {
     /// ASN.1 constructed bit
     const CONSTRUCTED: bool;

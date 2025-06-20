@@ -16,6 +16,9 @@ use alloc::boxed::Box;
 ///
 /// This trait provides the core abstraction upon which all decoding operations
 /// are based.
+#[diagnostic::on_unimplemented(
+    note = "Consider adding impls of `DecodeValue` and `FixedTag` to `{Self}`"
+)]
 pub trait Decode<'a>: Sized + 'a {
     /// Type returned in the event of a decoding error.
     type Error: From<Error> + 'static;
@@ -90,6 +93,9 @@ where
 /// to first decode data from Base64.
 ///
 /// This trait is inspired by the [`DeserializeOwned` trait from `serde`](https://docs.rs/serde/latest/serde/de/trait.DeserializeOwned.html).
+#[diagnostic::on_unimplemented(
+    note = "`DecodeOwned` is auto-impl'd for all lifetime-free types which impl `Decode`"
+)]
 pub trait DecodeOwned: for<'a> Decode<'a> {}
 
 impl<T> DecodeOwned for T where T: for<'a> Decode<'a> {}
@@ -99,6 +105,9 @@ impl<T> DecodeOwned for T where T: for<'a> Decode<'a> {}
 /// This trait is automatically impl'd for any type which impls both
 /// [`DecodeOwned`] and [`PemLabel`].
 #[cfg(feature = "pem")]
+#[diagnostic::on_unimplemented(
+    note = "`DecodePem` is auto-impl'd for all lifetime-free types which impl both `Decode` and `PemLabel`"
+)]
 pub trait DecodePem: DecodeOwned + PemLabel {
     /// Try to decode this type from PEM.
     fn from_pem(pem: impl AsRef<[u8]>) -> Result<Self, <Self as Decode<'static>>::Error>;
