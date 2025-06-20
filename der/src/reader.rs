@@ -1,5 +1,6 @@
 //! Reader trait.
 
+pub(crate) mod ber;
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
 pub(crate) mod slice;
@@ -17,8 +18,8 @@ use alloc::vec::Vec;
 
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Clone {
-    /// Get the [`EncodingRules`] which should be applied when decoding the input.
-    fn encoding_rules(&self) -> EncodingRules;
+    /// [`EncodingRules`] which should be applied when decoding the input.
+    const ENCODING_RULES: EncodingRules = EncodingRules::Der;
 
     /// Get the length of the input.
     fn input_len(&self) -> Length;

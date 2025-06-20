@@ -1,6 +1,6 @@
 //! Trait definition for [`Decode`].
 
-use crate::{EncodingRules, Error, FixedTag, Header, Reader, SliceReader};
+use crate::{BerReader, Error, FixedTag, Header, Reader, SliceReader};
 use core::marker::PhantomData;
 
 #[cfg(feature = "pem")]
@@ -31,7 +31,7 @@ pub trait Decode<'a>: Sized + 'a {
     /// Note that most usages should probably use [`Decode::from_der`]. This method allows some
     /// BER productions which are not allowed under DER.
     fn from_ber(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        let mut reader = SliceReader::new_with_encoding_rules(bytes, EncodingRules::Ber)?;
+        let mut reader = BerReader::from_bytes(bytes)?;
         let result = Self::decode(&mut reader)?;
         reader.finish()?;
         Ok(result)

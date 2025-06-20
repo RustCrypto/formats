@@ -376,7 +376,7 @@ pub use crate::{
     header::Header,
     length::Length,
     ord::{DerOrd, ValueOrd},
-    reader::{Reader, slice::SliceReader},
+    reader::{Reader, ber::BerReader, slice::SliceReader},
     tag::{Class, FixedTag, IsConstructed, Tag, TagMode, TagNumber, Tagged},
     writer::{Writer, slice::SliceWriter},
 };
