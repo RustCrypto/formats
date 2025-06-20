@@ -279,7 +279,7 @@ impl LineWrapper {
             .ok_or(InvalidLength)?;
 
         // The `wrap_blocks` function should ensure the buffer is no larger than a Base64 block
-        debug_assert!(buffer_len <= 4, "buffer too long: {}", buffer_len);
+        debug_assert!(buffer_len <= 4, "buffer too long: {buffer_len}");
 
         // Ensure space in buffer to add newlines
         let buffer_end = buffer_len
