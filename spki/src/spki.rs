@@ -97,12 +97,10 @@ where
 {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                algorithm: reader.decode()?,
-                subject_public_key: Key::decode(reader)?,
-            })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        Ok(Self {
+            algorithm: reader.decode()?,
+            subject_public_key: Key::decode(reader)?,
         })
     }
 }

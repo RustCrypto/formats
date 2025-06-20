@@ -37,24 +37,22 @@ pub struct SafeBag {
 }
 
 impl<'a> ::der::DecodeValue<'a> for SafeBag {
-    type Error = ::der::Error;
+    type Error = der::Error;
 
     fn decode_value<R: ::der::Reader<'a>>(
         reader: &mut R,
-        header: ::der::Header,
+        _header: ::der::Header,
     ) -> ::der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            let bag_id = reader.decode()?;
-            let bag_value = match reader.tlv_bytes() {
-                Ok(v) => v.to_vec(),
-                Err(e) => return Err(e),
-            };
-            let bag_attributes = reader.decode()?;
-            Ok(Self {
-                bag_id,
-                bag_value,
-                bag_attributes,
-            })
+        let bag_id = reader.decode()?;
+        let bag_value = match reader.tlv_bytes() {
+            Ok(v) => v.to_vec(),
+            Err(e) => return Err(e),
+        };
+        let bag_attributes = reader.decode()?;
+        Ok(Self {
+            bag_id,
+            bag_value,
+            bag_attributes,
         })
     }
 }

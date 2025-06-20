@@ -196,40 +196,37 @@ where
 {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            // Parse and validate `version` INTEGER.
-            let version = Version::decode(reader)?;
-            let algorithm = reader.decode()?;
-            let private_key = Key::decode(reader)?;
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        // Parse and validate `version` INTEGER.
+        let version = Version::decode(reader)?;
+        let algorithm = reader.decode()?;
+        let private_key = Key::decode(reader)?;
 
-            let _attributes =
-                reader.context_specific::<SequenceRef<'_>>(ATTRIBUTES_TAG, TagMode::Implicit)?;
+        let _attributes =
+            reader.context_specific::<SequenceRef<'_>>(ATTRIBUTES_TAG, TagMode::Implicit)?;
 
-            let public_key =
-                reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
+        let public_key = reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
 
-            if version.has_public_key() != public_key.is_some() {
-                return Err(reader.error(
-                    der::Tag::ContextSpecific {
-                        constructed: true,
-                        number: PUBLIC_KEY_TAG,
-                    }
-                    .value_error()
-                    .kind(),
-                ));
-            }
+        if version.has_public_key() != public_key.is_some() {
+            return Err(reader.error(
+                der::Tag::ContextSpecific {
+                    constructed: true,
+                    number: PUBLIC_KEY_TAG,
+                }
+                .value_error()
+                .kind(),
+            ));
+        }
 
-            // Ignore any remaining extension fields
-            while !reader.is_finished() {
-                reader.decode::<ContextSpecific<AnyRef<'_>>>()?;
-            }
+        // Ignore any remaining extension fields
+        while !reader.is_finished() {
+            reader.decode::<ContextSpecific<AnyRef<'_>>>()?;
+        }
 
-            Ok(Self {
-                algorithm,
-                private_key,
-                public_key,
-            })
+        Ok(Self {
+            algorithm,
+            private_key,
+            public_key,
         })
     }
 }

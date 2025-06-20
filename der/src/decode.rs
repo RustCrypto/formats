@@ -68,7 +68,7 @@ where
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<T, <T as DecodeValue<'a>>::Error> {
         let header = Header::decode(reader)?;
         header.tag.assert_eq(T::TAG)?;
-        T::decode_value(reader, header)
+        reader.read_value(header, |r| T::decode_value(r, header))
     }
 }
 

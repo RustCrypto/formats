@@ -189,19 +189,18 @@ where
 }
 
 impl<'a, P: Profile> DecodeValue<'a> for Validity<P> {
-    type Error = ::der::Error;
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            let not_before = reader.decode()?;
-            let not_after = reader.decode()?;
-            let out = Self {
-                not_before,
-                not_after,
-                _profile: PhantomData,
-            };
+    type Error = der::Error;
 
-            Ok(out)
-        })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        let not_before = reader.decode()?;
+        let not_after = reader.decode()?;
+        let out = Self {
+            not_before,
+            not_after,
+            _profile: PhantomData,
+        };
+
+        Ok(out)
     }
 }
 

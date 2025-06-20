@@ -68,16 +68,14 @@ where
 {
     type Error = T::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        reader.read_nested(header.length, |reader| {
-            let mut sequence_of = Self::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> Result<Self, Self::Error> {
+        let mut sequence_of = Self::new();
 
-            while !reader.is_finished() {
-                sequence_of.add(T::decode(reader)?)?;
-            }
+        while !reader.is_finished() {
+            sequence_of.add(T::decode(reader)?)?;
+        }
 
-            Ok(sequence_of)
-        })
+        Ok(sequence_of)
     }
 }
 
@@ -133,6 +131,21 @@ impl<'a, T> Iterator for SequenceOfIter<'a, T> {
 
 impl<T> ExactSizeIterator for SequenceOfIter<'_, T> {}
 
+impl<T: Encode> EncodeValue for [T] {
+    fn value_len(&self) -> Result<Length, Error> {
+        self.iter()
+            .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
+        for elem in self {
+            elem.encode(writer)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl<'a, T, const N: usize> DecodeValue<'a> for [T; N]
 where
     T: Decode<'a>,
@@ -164,11 +177,7 @@ where
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
-        for elem in self {
-            elem.encode(writer)?;
-        }
-
-        Ok(())
+        self.as_slice().encode_value(writer)
     }
 }
 
@@ -186,27 +195,20 @@ where
 }
 
 #[cfg(feature = "alloc")]
-fn decode_value_vec_inner<'a, T: Decode<'a>, R: Reader<'a>>(
-    reader: &mut R,
-) -> Result<Vec<T>, T::Error> {
-    let mut sequence_of = Vec::<T>::new();
-
-    while !reader.is_finished() {
-        sequence_of.push(T::decode(reader)?);
-    }
-
-    Ok(sequence_of)
-}
-
-#[cfg(feature = "alloc")]
 impl<'a, T> DecodeValue<'a> for Vec<T>
 where
     T: Decode<'a>,
 {
     type Error = T::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        reader.read_nested(header.length, decode_value_vec_inner)
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> Result<Self, Self::Error> {
+        let mut sequence_of = Vec::<T>::new();
+
+        while !reader.is_finished() {
+            sequence_of.push(T::decode(reader)?);
+        }
+
+        Ok(sequence_of)
     }
 }
 
@@ -221,11 +223,7 @@ where
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
-        for elem in self {
-            elem.encode(writer)?;
-        }
-
-        Ok(())
+        self.as_slice().encode_value(writer)
     }
 }
 

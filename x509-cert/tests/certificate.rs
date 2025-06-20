@@ -42,14 +42,12 @@ impl<'a> DecodeValue<'a> for DeferDecodeCertificate<'a> {
 
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
-        header: Header,
+        _header: Header,
     ) -> der::Result<DeferDecodeCertificate<'a>> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                tbs_certificate: reader.tlv_bytes()?,
-                signature_algorithm: reader.tlv_bytes()?,
-                signature: reader.tlv_bytes()?,
-            })
+        Ok(Self {
+            tbs_certificate: reader.tlv_bytes()?,
+            signature_algorithm: reader.tlv_bytes()?,
+            signature: reader.tlv_bytes()?,
         })
     }
 }
@@ -87,25 +85,23 @@ impl<'a> DecodeValue<'a> for DeferDecodeTbsCertificate<'a> {
 
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
-        header: Header,
+        _header: Header,
     ) -> der::Result<DeferDecodeTbsCertificate<'a>> {
-        reader.read_nested(header.length, |reader| {
-            let version = ContextSpecific::decode_explicit(reader, ::der::TagNumber(0))?
-                .map(|cs| cs.value)
-                .unwrap_or_else(Default::default);
+        let version = ContextSpecific::decode_explicit(reader, ::der::TagNumber(0))?
+            .map(|cs| cs.value)
+            .unwrap_or_else(Default::default);
 
-            Ok(Self {
-                version,
-                serial_number: reader.tlv_bytes()?,
-                signature: reader.tlv_bytes()?,
-                issuer: reader.tlv_bytes()?,
-                validity: reader.tlv_bytes()?,
-                subject: reader.tlv_bytes()?,
-                subject_public_key_info: reader.tlv_bytes()?,
-                issuer_unique_id: reader.decode()?,
-                subject_unique_id: reader.decode()?,
-                extensions: reader.tlv_bytes()?,
-            })
+        Ok(Self {
+            version,
+            serial_number: reader.tlv_bytes()?,
+            signature: reader.tlv_bytes()?,
+            issuer: reader.tlv_bytes()?,
+            validity: reader.tlv_bytes()?,
+            subject: reader.tlv_bytes()?,
+            subject_public_key_info: reader.tlv_bytes()?,
+            issuer_unique_id: reader.decode()?,
+            subject_unique_id: reader.decode()?,
+            extensions: reader.tlv_bytes()?,
         })
     }
 }
