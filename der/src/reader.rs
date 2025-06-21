@@ -4,6 +4,9 @@
 pub(crate) mod pem;
 pub(crate) mod slice;
 
+#[cfg(feature = "pem")]
+mod position;
+
 use crate::{
     Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag, Header, Length, Tag,
     TagMode, TagNumber, asn1::ContextSpecific,
