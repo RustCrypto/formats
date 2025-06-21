@@ -151,8 +151,8 @@ macro_rules! impl_custom_class {
                     return Err(header.tag.non_canonical_error().into());
                 }
 
-                // read_value checks if header matches decoded length
-                let value = reader.read_value(header, |reader| {
+                // read_nested checks if header matches decoded length
+                let value = reader.read_nested(header.length, |reader| {
                     // Decode inner IMPLICIT value
                     T::decode_value(reader, header)
                 })?;
@@ -192,7 +192,7 @@ macro_rules! impl_custom_class {
                     Tag::$class_enum_name { number, .. } => Ok(Self {
                         tag_number: number,
                         tag_mode: TagMode::default(),
-                        value: reader.read_value(header, |reader| {
+                        value: reader.read_nested(header.length, |reader| {
                             // Decode inner tag-length-value of EXPLICIT
                             T::decode(reader)
                         })?,
