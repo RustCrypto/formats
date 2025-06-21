@@ -166,29 +166,7 @@ impl Tag {
     ///
     /// Does not modify the reader's state.
     pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
-        Self::peek_optional(reader)?.ok_or_else(|| Error::incomplete(reader.input_len()))
-    }
-
-    pub(crate) fn peek_optional<'a>(reader: &impl Reader<'a>) -> Result<Option<Self>> {
-        let mut buf = [0u8; Self::MAX_SIZE];
-        if reader.peek_into(&mut buf[0..1]).is_err() {
-            // Ignore empty buffer
-            return Ok(None);
-        }
-
-        if let Ok(tag) = Self::from_der(&buf[0..1]) {
-            return Ok(Some(tag));
-        }
-
-        for i in 2..=Self::MAX_SIZE {
-            let slice = &mut buf[0..i];
-            reader.peek_into(slice)?;
-
-            if let Ok(tag) = Self::from_der(slice) {
-                return Ok(Some(tag));
-            }
-        }
-        Err(ErrorKind::TagNumberInvalid.into())
+        Self::decode(&mut reader.clone())
     }
 
     /// Returns true if given context-specific (or any given class) tag number matches the peeked tag.
@@ -197,16 +175,12 @@ impl Tag {
         expected_class: Class,
         expected_tag_number: TagNumber,
     ) -> Result<bool> {
-        // Peek tag or ignore end of stream
-        let Some(tag) = Tag::peek_optional(reader)? else {
-            return Ok(false);
-        };
-        // Ignore tags with different numbers
-        if tag.class() != expected_class || tag.number() != expected_tag_number {
+        if reader.is_finished() {
             return Ok(false);
         }
-        // Tag matches
-        Ok(true)
+
+        let tag = Self::peek(reader)?;
+        Ok(tag.class() == expected_class && tag.number() == expected_tag_number)
     }
 
     /// Assert that this [`Tag`] matches the provided expected tag.
