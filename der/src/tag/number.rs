@@ -62,6 +62,18 @@ impl TagNumber {
     }
 }
 
+impl From<u32> for TagNumber {
+    fn from(value: u32) -> TagNumber {
+        TagNumber(value)
+    }
+}
+
+impl From<TagNumber> for u32 {
+    fn from(number: TagNumber) -> u32 {
+        number.0
+    }
+}
+
 impl fmt::Display for TagNumber {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)

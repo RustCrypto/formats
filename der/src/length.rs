@@ -1,8 +1,8 @@
 //! Length calculations for encoded ASN.1 DER values
 
 use crate::{
-    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Reader, Result, SliceWriter, Tag,
-    Writer,
+    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Header, Reader, Result, SliceWriter,
+    Tag, Writer,
 };
 use core::{
     cmp::Ordering,
@@ -347,6 +347,8 @@ fn decode_indefinite_length<'a, R: Reader<'a>>(reader: &mut R) -> Result<Length>
     let start_pos = reader.position();
 
     loop {
+        let current_pos = reader.position();
+
         // Look for the end-of-contents marker
         if reader.peek_byte() == Some(EOC_TAG) {
             // Drain the end-of-contents tag
@@ -355,15 +357,14 @@ fn decode_indefinite_length<'a, R: Reader<'a>>(reader: &mut R) -> Result<Length>
             // Read the length byte and ensure it's zero (i.e. the full EOC is `00 00`)
             let length_byte = reader.read_byte()?;
             if length_byte == 0 {
-                return reader.position() - start_pos;
+                return current_pos - start_pos;
             } else {
                 return Err(reader.error(ErrorKind::IndefiniteLength));
             }
         }
 
-        let _tag = Tag::decode(reader)?;
-        let inner_length = Length::decode(reader)?;
-        reader.drain(inner_length)?;
+        let header = Header::decode(reader)?;
+        reader.drain(header.length)?;
     }
 }
 
@@ -470,6 +471,9 @@ mod tests {
         /// Length of example in octets.
         const EXAMPLE_LEN: usize = 68;
 
+        /// Length of end-of-content octets (i.e. `00 00`).
+        const EOC_LEN: usize = 2;
+
         /// Test vector from: <https://github.com/RustCrypto/formats/issues/779#issuecomment-2902948789>
         ///
         /// Notably this example contains nested indefinite lengths to ensure the decoder handles
@@ -496,7 +500,30 @@ mod tests {
         let pos = usize::try_from(reader.position()).unwrap();
         assert_eq!(pos, 2);
 
-        // The first two bytes are the header and the rest is the length of the message
-        assert_eq!(usize::try_from(length).unwrap(), EXAMPLE_LEN - pos);
+        // The first two bytes are the header and the rest is the length of the message.
+        // The last four are two end-of-content markers (2 * 2 bytes).
+        assert_eq!(
+            usize::try_from(length).unwrap(),
+            EXAMPLE_LEN - pos - (EOC_LEN * 2)
+        );
+
+        // Read OID
+        reader.tlv_bytes().unwrap();
+        // Read SEQUENCE
+        reader.tlv_bytes().unwrap();
+
+        // We're now at the next indefinite length record
+        let tag = Tag::decode(&mut reader).unwrap();
+        assert_eq!(
+            tag,
+            Tag::ContextSpecific {
+                constructed: true,
+                number: 0u32.into()
+            }
+        );
+
+        // Parse the inner indefinite length
+        let length = Length::decode(&mut reader).unwrap();
+        assert_eq!(usize::try_from(length).unwrap(), 18);
     }
 }
