@@ -198,7 +198,7 @@ pub enum ErrorKind {
     #[cfg(feature = "std")]
     Io(std::io::ErrorKind),
 
-    /// Indefinite length disallowed.
+    /// Indefinite length disallowed (or malformed when decoding BER)
     IndefiniteLength,
 
     /// Incorrect length for a given field.
@@ -324,7 +324,7 @@ impl fmt::Display for ErrorKind {
             ),
             #[cfg(feature = "std")]
             ErrorKind::Io(err) => write!(f, "I/O error: {err:?}"),
-            ErrorKind::IndefiniteLength => write!(f, "indefinite length disallowed"),
+            ErrorKind::IndefiniteLength => write!(f, "indefinite length disallowed/malformed"),
             ErrorKind::Length { tag } => write!(f, "incorrect length for {tag}"),
             ErrorKind::Noncanonical { tag } => {
                 write!(f, "ASN.1 {tag} not canonically encoded as DER")
