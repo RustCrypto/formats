@@ -10,10 +10,12 @@ where
     type Error = T::Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Option<T>, Self::Error> {
-        if let Some(tag) = Tag::peek_optional(reader)? {
-            if T::can_decode(tag) {
-                return T::decode(reader).map(Some);
-            }
+        if reader.is_finished() {
+            return Ok(None);
+        }
+
+        if T::can_decode(Tag::peek(reader)?) {
+            return T::decode(reader).map(Some);
         }
 
         Ok(None)

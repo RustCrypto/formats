@@ -14,9 +14,6 @@ pub struct Header {
 }
 
 impl Header {
-    /// Maximum number of DER octets a header can be in this crate.
-    pub(crate) const MAX_SIZE: usize = Tag::MAX_SIZE + Length::MAX_SIZE;
-
     /// Create a new [`Header`] from a [`Tag`] and a specified length.
     ///
     /// Returns an error if the length exceeds the limits of [`Length`].
@@ -29,17 +26,7 @@ impl Header {
     ///
     /// Does not modify the reader's state.
     pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
-        let mut buf = [0u8; Self::MAX_SIZE];
-
-        for i in 2..Self::MAX_SIZE {
-            let slice = &mut buf[0..i];
-            reader.peek_into(slice)?;
-            if let Ok(header) = Self::from_der(slice) {
-                return Ok(header);
-            }
-        }
-        reader.peek_into(&mut buf[..])?;
-        Self::from_der(&buf[..])
+        Header::decode(&mut reader.clone())
     }
 }
 
