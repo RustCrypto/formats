@@ -84,6 +84,7 @@ pub(super) struct Resumption {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::Position;
     use crate::{ErrorKind, Length};
