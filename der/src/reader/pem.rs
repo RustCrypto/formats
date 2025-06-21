@@ -51,11 +51,6 @@ impl<'i> Reader<'i> for PemReader<'i> {
         self.position.input_len()
     }
 
-    fn peek_into(&self, buf: &mut [u8]) -> Result<()> {
-        self.clone().read_into(buf)?;
-        Ok(())
-    }
-
     fn position(&self) -> Length {
         self.position.current()
     }

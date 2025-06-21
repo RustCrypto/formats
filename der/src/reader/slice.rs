@@ -84,11 +84,6 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         self.bytes.len()
     }
 
-    fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()> {
-        self.clone().read_into(buf)?;
-        Ok(())
-    }
-
     fn position(&self) -> Length {
         self.position
     }

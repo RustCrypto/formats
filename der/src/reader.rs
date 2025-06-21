@@ -16,18 +16,12 @@ use crate::{
 use alloc::vec::Vec;
 
 /// Reader trait which reads DER-encoded input.
-pub trait Reader<'r>: Sized {
+pub trait Reader<'r>: Clone {
     /// Get the [`EncodingRules`] which should be applied when decoding the input.
     fn encoding_rules(&self) -> EncodingRules;
 
     /// Get the length of the input.
     fn input_len(&self) -> Length;
-
-    /// Peek at the decoded PEM without updating the internal state, writing into the provided
-    /// output buffer.
-    ///
-    /// Attempts to fill the entire buffer, returning an error if there is not enough data.
-    fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()>;
 
     /// Get the position within the buffer.
     fn position(&self) -> Length;
@@ -119,6 +113,16 @@ pub trait Reader<'r>: Sized {
     fn peek_byte(&self) -> Option<u8> {
         let mut byte = [0];
         self.peek_into(&mut byte).ok().map(|_| byte[0])
+    }
+
+    /// Peek at the decoded data without updating the internal state, writing into the provided
+    /// output buffer.
+    ///
+    /// Attempts to fill the entire buffer, returning an error if there is not enough data.
+    fn peek_into(&self, buf: &mut [u8]) -> Result<(), Error> {
+        let mut reader = self.clone();
+        reader.read_into(buf)?;
+        Ok(())
     }
 
     /// Peek forward in the input data, attempting to decode a [`Header`] from
