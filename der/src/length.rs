@@ -1,6 +1,9 @@
 //! Length calculations for encoded ASN.1 DER values
 
-use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Reader, Result, SliceWriter, Tag, Writer};
+use crate::{
+    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Reader, Result, SliceWriter, Tag,
+    Writer,
+};
 use core::{
     cmp::Ordering,
     fmt,
@@ -211,10 +214,14 @@ impl<'a> Decode<'a> for Length {
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Length> {
         match reader.read_byte()? {
-            // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite
-            // lengths, which are not allowed in DER, so disallow that byte.
             len if len < INDEFINITE_LENGTH_OCTET => Ok(len.into()),
-            INDEFINITE_LENGTH_OCTET => Err(ErrorKind::IndefiniteLength.into()),
+            // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite lengths
+            INDEFINITE_LENGTH_OCTET => match reader.encoding_rules() {
+                // Indefinite lengths are allowed when decoding BER
+                EncodingRules::Ber => decode_indefinite_length(&mut reader.clone()),
+                // Indefinite lengths are disallowed when decoding DER
+                EncodingRules::Der => Err(ErrorKind::IndefiniteLength.into()),
+            },
             // 1-4 byte variable-sized length prefix
             tag @ 0x81..=0x84 => {
                 let nbytes = tag.checked_sub(0x80).ok_or(ErrorKind::Overlength)? as usize;
@@ -308,12 +315,65 @@ impl<'a> arbitrary::Arbitrary<'a> for Length {
     }
 }
 
+/// Decode indefinite lengths as used by ASN.1 BER and described in X.690 Section 8.1.3.6:
+///
+/// > 8.1.3.6 For the indefinite form, the length octets indicate that the
+/// > contents octets are terminated by end-of-contents
+/// > octets (see 8.1.5), and shall consist of a single octet.
+/// >
+/// > 8.1.3.6.1 The single octet shall have bit 8 set to one, and bits 7 to
+/// > 1 set to zero.
+/// >
+/// > 8.1.3.6.2 If this form of length is used, then end-of-contents octets
+/// > (see 8.1.5) shall be present in the encoding following the contents
+/// > octets.
+/// >
+/// > [...]
+/// >
+/// > 8.1.5 End-of-contents octets
+/// > The end-of-contents octets shall be present if the length is encoded as specified in 8.1.3.6,
+/// > otherwise they shall not be present.
+/// >
+/// > The end-of-contents octets shall consist of two zero octets.
+///
+/// This function decodes TLV records until it finds an end-of-contents marker (`00 00`), and
+/// computes the resulting length as the amount of data decoded.
+fn decode_indefinite_length<'a, R: Reader<'a>>(reader: &mut R) -> Result<Length> {
+    /// The end-of-contents octets can be considered as the encoding of a value whose tag is
+    /// universal class, whose form is primitive, whose number of the tag is zero, and whose
+    /// contents are absent.
+    const EOC_TAG: u8 = 0x00;
+
+    let start_pos = reader.position();
+
+    loop {
+        // Look for the end-of-contents marker
+        if reader.peek_byte() == Some(EOC_TAG) {
+            // Drain the end-of-contents tag
+            reader.drain(Length::ONE)?;
+
+            // Read the length byte and ensure it's zero (i.e. the full EOC is `00 00`)
+            let length_byte = reader.read_byte()?;
+            if length_byte == 0 {
+                return reader.position() - start_pos;
+            } else {
+                return Err(reader.error(ErrorKind::IndefiniteLength));
+            }
+        }
+
+        let _tag = Tag::decode(reader)?;
+        let inner_length = Length::decode(reader)?;
+        reader.drain(inner_length)?;
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::Length;
-    use crate::{Decode, DerOrd, Encode, ErrorKind};
+    use crate::{Decode, DerOrd, Encode, EncodingRules, ErrorKind, Reader, SliceReader, Tag};
     use core::cmp::Ordering;
+    use hex_literal::hex;
 
     #[test]
     fn decode() {
@@ -403,5 +463,40 @@ mod tests {
             Length::ONE.der_cmp(&Length::ZERO).unwrap(),
             Ordering::Greater
         );
+    }
+
+    #[test]
+    fn indefinite() {
+        /// Length of example in octets.
+        const EXAMPLE_LEN: usize = 68;
+
+        /// Test vector from: <https://github.com/RustCrypto/formats/issues/779#issuecomment-2902948789>
+        ///
+        /// Notably this example contains nested indefinite lengths to ensure the decoder handles
+        /// them correctly.
+        const EXAMPLE_BER: [u8; EXAMPLE_LEN] = hex!(
+            "30 80 06 09 2A 86 48 86 F7 0D 01 07 01
+             30 1D 06 09 60 86 48 01 65 03 04 01 2A 04 10 37
+             34 3D F1 47 0D F6 25 EE B6 F4 BF D2 F1 AC C3 A0
+             80 04 10 CC 74 AD F6 5D 97 3C 8B 72 CD 51 E1 B9
+             27 F0 F0 00 00 00 00"
+        );
+
+        let mut reader =
+            SliceReader::new_with_encoding_rules(&EXAMPLE_BER, EncodingRules::Ber).unwrap();
+
+        // Decode initial tag of the message, leaving the reader at the length
+        let tag = Tag::decode(&mut reader).unwrap();
+        assert_eq!(tag, Tag::Sequence);
+
+        // Decode indefinite length
+        let length = Length::decode(&mut reader).unwrap();
+
+        // Decoding the length should leave the position at the end of the indefinite length octet
+        let pos = usize::try_from(reader.position()).unwrap();
+        assert_eq!(pos, 2);
+
+        // The first two bytes are the header and the rest is the length of the message
+        assert_eq!(usize::try_from(length).unwrap(), EXAMPLE_LEN - pos);
     }
 }

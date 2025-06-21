@@ -75,6 +75,28 @@ pub trait Reader<'r>: Clone {
         T::decode(self)
     }
 
+    /// Drain the given amount of data from the reader, discarding it.
+    fn drain(&mut self, mut amount: Length) -> Result<(), Error> {
+        const BUFFER_SIZE: usize = 16;
+        let mut buffer = [0u8; BUFFER_SIZE];
+
+        while amount > Length::ZERO {
+            let amount_usize = usize::try_from(amount)?;
+
+            let nbytes_drained = if amount_usize >= BUFFER_SIZE {
+                self.read_into(&mut buffer)?;
+                Length::try_from(BUFFER_SIZE)?
+            } else {
+                self.read_into(&mut buffer[..amount_usize])?;
+                amount
+            };
+
+            amount = (amount - nbytes_drained)?;
+        }
+
+        Ok(())
+    }
+
     /// Return an error with the given [`ErrorKind`], annotating it with
     /// context about where the error occurred.
     fn error(&mut self, kind: ErrorKind) -> Error {
@@ -95,7 +117,7 @@ pub trait Reader<'r>: Clone {
         }
     }
 
-    /// Have we read all of the input data?
+    /// Have we read all input data?
     fn is_finished(&self) -> bool {
         self.remaining_len().is_zero()
     }
@@ -185,7 +207,7 @@ pub trait Reader<'r>: Clone {
         self.read_value(header, f)
     }
 
-    /// Obtain a slice of bytes contain a complete TLV production suitable for parsing later.
+    /// Obtain a slice of bytes containing a complete TLV production suitable for parsing later.
     fn tlv_bytes(&mut self) -> Result<&'r [u8], Error> {
         let header = Header::peek(self)?;
         let header_len = header.encoded_len()?;
