@@ -32,7 +32,7 @@ pub trait Profile: PartialEq + Debug + Eq + Ord + Clone + Copy + Default + 'stat
         // since some X.509 implementations interpret the limit of 20 bytes to refer
         // to the pre-encoded value.
         if serial.inner.len() > SerialNumber::<Self>::MAX_DECODE_LEN {
-            Err(Tag::Integer.value_error())
+            Err(Tag::Integer.value_error().into())
         } else {
             Ok(())
         }

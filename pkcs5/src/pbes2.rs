@@ -450,7 +450,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
         // TODO(tarcieri): support for non-AES algorithms?
         let iv = match alg.parameters {
             Some(params) => params.decode_as::<OctetStringRef<'_>>()?.as_bytes(),
-            None => return Err(Tag::OctetString.value_error()),
+            None => return Err(Tag::OctetString.value_error().into()),
         };
 
         match alg.oid {

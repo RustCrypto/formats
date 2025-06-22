@@ -63,7 +63,7 @@ impl<'a> AnyRef<'a> {
         T: Choice<'a> + DecodeValue<'a>,
     {
         if !T::can_decode(self.tag) {
-            return Err(self.tag.unexpected_error(None).into());
+            return Err(self.tag.unexpected_error(None).to_error().into());
         }
 
         let header = Header {

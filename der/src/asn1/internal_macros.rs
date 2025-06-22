@@ -148,7 +148,7 @@ macro_rules! impl_custom_class {
 
                 // the encoding shall be constructed if the base encoding is constructed
                 if header.tag.is_constructed() != T::CONSTRUCTED {
-                    return Err(header.tag.non_canonical_error().into());
+                    return Err(reader.error(header.tag.non_canonical_error()).into());
                 }
 
                 // read_nested checks if header matches decoded length
@@ -186,7 +186,7 @@ macro_rules! impl_custom_class {
 
                 // encoding shall be constructed
                 if !header.tag.is_constructed() {
-                    return Err(header.tag.non_canonical_error().into());
+                    return Err(reader.error(header.tag.non_canonical_error()).into());
                 }
                 match header.tag {
                     Tag::$class_enum_name { number, .. } => Ok(Self {
@@ -197,7 +197,7 @@ macro_rules! impl_custom_class {
                             T::decode(reader)
                         })?,
                     }),
-                    tag => Err(tag.unexpected_error(None).into()),
+                    tag => Err(reader.error(tag.unexpected_error(None)).into())
                 }
             }
         }
@@ -264,7 +264,7 @@ macro_rules! impl_custom_class {
                         tag_mode: TagMode::default(),
                         value: T::from_der(any.value())?,
                     }),
-                    tag => Err(tag.unexpected_error(None).into()),
+                    tag => Err(tag.unexpected_error(None).to_error().into()),
                 }
             }
         }

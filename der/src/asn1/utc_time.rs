@@ -44,7 +44,7 @@ impl UtcTime {
         if datetime.year() <= UtcTime::MAX_YEAR {
             Ok(Self(datetime))
         } else {
-            Err(Self::TAG.value_error())
+            Err(Self::TAG.value_error().into())
         }
     }
 
@@ -86,7 +86,7 @@ impl<'a> DecodeValue<'a> for UtcTime {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         if Self::LENGTH != usize::try_from(header.length)? {
-            return Err(Self::TAG.value_error());
+            return Err(reader.error(Self::TAG.value_error()));
         }
 
         let mut bytes = [0u8; Self::LENGTH];
@@ -125,10 +125,10 @@ impl<'a> DecodeValue<'a> for UtcTime {
                 .ok_or(ErrorKind::DateTime)?;
 
                 DateTime::new(year, month, day, hour, minute, second)
-                    .map_err(|_| Self::TAG.value_error())
+                    .map_err(|_| reader.error(Self::TAG.value_error()))
                     .and_then(|dt| Self::from_unix_duration(dt.unix_duration()))
             }
-            _ => Err(Self::TAG.value_error()),
+            _ => Err(reader.error(Self::TAG.value_error())),
         }
     }
 }
@@ -142,7 +142,7 @@ impl EncodeValue for UtcTime {
         let year = match self.0.year() {
             y @ 1950..=1999 => y.checked_sub(1900),
             y @ 2000..=2049 => y.checked_sub(2000),
-            _ => return Err(Self::TAG.value_error()),
+            _ => return Err(Self::TAG.value_error().into()),
         }
         .and_then(|y| u8::try_from(y).ok())
         .ok_or(ErrorKind::DateTime)?;

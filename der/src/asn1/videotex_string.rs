@@ -34,12 +34,12 @@ impl<'a> VideotexStringRef<'a> {
         // Validate all characters are within VideotexString's allowed set
         // FIXME: treat as if it were IA5String
         if input.iter().any(|&c| c > 0x7F) {
-            return Err(Self::TAG.value_error());
+            return Err(Self::TAG.value_error().into());
         }
 
         StrRef::from_bytes(input)
             .map(|inner| Self { inner })
-            .map_err(|_| Self::TAG.value_error())
+            .map_err(|_| Self::TAG.value_error().into())
     }
 }
 

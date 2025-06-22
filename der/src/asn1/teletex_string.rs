@@ -57,12 +57,12 @@ impl<'a> TeletexStringRef<'a> {
 
         // FIXME: support higher part of the charset
         if input.iter().any(|&c| c > 0x7F) {
-            return Err(Self::TAG.value_error());
+            return Err(Self::TAG.value_error().into());
         }
 
         StrRef::from_bytes(input)
             .map(|inner| Self { inner })
-            .map_err(|_| Self::TAG.value_error())
+            .map_err(|_| Self::TAG.value_error().into())
     }
 }
 
@@ -135,7 +135,7 @@ mod allocation {
 
             StrOwned::from_bytes(input)
                 .map(|inner| Self { inner })
-                .map_err(|_| Self::TAG.value_error())
+                .map_err(|_| Self::TAG.value_error().into())
         }
     }
 
@@ -198,7 +198,7 @@ mod allocation {
 
             StrOwned::new(input)
                 .map(|inner| Self { inner })
-                .map_err(|_| Self::TAG.value_error())
+                .map_err(|_| Self::TAG.value_error().into())
         }
     }
 }

@@ -220,16 +220,22 @@ impl<'a> Decode<'a> for Length {
                 // Indefinite lengths are allowed when decoding BER
                 EncodingRules::Ber => decode_indefinite_length(&mut reader.clone()),
                 // Indefinite lengths are disallowed when decoding DER
-                EncodingRules::Der => Err(ErrorKind::IndefiniteLength.into()),
+                EncodingRules::Der => Err(reader.error(ErrorKind::IndefiniteLength)),
             },
             // 1-4 byte variable-sized length prefix
             tag @ 0x81..=0x84 => {
-                let nbytes = tag.checked_sub(0x80).ok_or(ErrorKind::Overlength)? as usize;
+                let nbytes = tag
+                    .checked_sub(0x80)
+                    .ok_or_else(|| reader.error(ErrorKind::Overlength))?
+                    as usize;
+
                 debug_assert!(nbytes <= 4);
 
                 let mut decoded_len = 0u32;
                 for _ in 0..nbytes {
-                    decoded_len = decoded_len.checked_shl(8).ok_or(ErrorKind::Overflow)?
+                    decoded_len = decoded_len
+                        .checked_shl(8)
+                        .ok_or_else(|| reader.error(ErrorKind::Overflow))?
                         | u32::from(reader.read_byte()?);
                 }
 
@@ -240,12 +246,12 @@ impl<'a> Decode<'a> for Length {
                 if length.initial_octet() == Some(tag) {
                     Ok(length)
                 } else {
-                    Err(ErrorKind::Overlength.into())
+                    Err(reader.error(ErrorKind::Overlength))
                 }
             }
             _ => {
                 // We specialize to a maximum 4-byte length (including initial octet)
-                Err(ErrorKind::Overlength.into())
+                Err(reader.error(ErrorKind::Overlength))
             }
         }
     }

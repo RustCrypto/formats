@@ -213,8 +213,7 @@ where
                     constructed: true,
                     number: PUBLIC_KEY_TAG,
                 }
-                .value_error()
-                .kind(),
+                .value_error(),
             ));
         }
 

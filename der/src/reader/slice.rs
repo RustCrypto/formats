@@ -1,6 +1,6 @@
 //! Slice reader.
 
-use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Length, Reader, Tag};
+use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Length, Reader};
 
 /// [`Reader`] which consumes an input byte slice.
 #[derive(Clone, Debug)]
@@ -42,11 +42,6 @@ impl<'a> SliceReader<'a> {
     pub fn error(&mut self, kind: ErrorKind) -> Error {
         self.failed = true;
         kind.at(self.position)
-    }
-
-    /// Return an error for an invalid value with the given tag.
-    pub fn value_error(&mut self, tag: Tag) -> Error {
-        self.error(tag.value_error().kind())
     }
 
     /// Did the decoding operation fail due to an error?

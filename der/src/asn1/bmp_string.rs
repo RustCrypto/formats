@@ -22,7 +22,7 @@ impl BmpString {
         let bytes = bytes.into();
 
         if bytes.len() % 2 != 0 {
-            return Err(Tag::BmpString.length_error());
+            return Err(Tag::BmpString.length_error().into());
         }
 
         let ret = Self {
@@ -34,7 +34,7 @@ impl BmpString {
                 // Character is in the Basic Multilingual Plane
                 Ok(c) if (c as u64) < u64::from(u16::MAX) => (),
                 // Characters outside Basic Multilingual Plane or unpaired surrogates
-                _ => return Err(Tag::BmpString.value_error()),
+                _ => return Err(Tag::BmpString.value_error().into()),
             }
         }
 

@@ -426,7 +426,7 @@ pub(crate) fn decode_decimal(tag: Tag, hi: u8, lo: u8) -> Result<u8> {
     if hi.is_ascii_digit() && lo.is_ascii_digit() {
         Ok((hi - b'0') * 10 + (lo - b'0'))
     } else {
-        Err(tag.value_error())
+        Err(tag.value_error().into())
     }
 }
 
@@ -438,7 +438,7 @@ where
     let hi_val = value / 10;
 
     if hi_val >= 10 {
-        return Err(tag.value_error());
+        return Err(tag.value_error().into());
     }
 
     writer.write_byte(b'0'.checked_add(hi_val).ok_or(ErrorKind::Overflow)?)?;

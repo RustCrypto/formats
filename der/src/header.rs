@@ -38,7 +38,7 @@ impl<'a> Decode<'a> for Header {
 
         let length = Length::decode(reader).map_err(|e| {
             if e.kind() == ErrorKind::Overlength {
-                ErrorKind::Length { tag }.into()
+                reader.error(tag.length_error())
             } else {
                 e
             }

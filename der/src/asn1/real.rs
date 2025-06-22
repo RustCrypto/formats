@@ -31,7 +31,7 @@ impl<'a> DecodeValue<'a> for f64 {
 
             if base != 0 {
                 // Real related error: base is not DER compliant (base encoded in enum)
-                return Err(Tag::Real.value_error());
+                return Err(reader.error(Tag::Real.value_error()));
             }
 
             // Section 8.5.7.3
@@ -52,7 +52,7 @@ impl<'a> DecodeValue<'a> for f64 {
                 }
                 _ => {
                     // Real related error: encoded exponent cannot be represented on an IEEE-754 double
-                    return Err(Tag::Real.value_error());
+                    return Err(reader.error(Tag::Real.value_error()));
                 }
             };
             // Section 8.5.7.5: Read the remaining bytes for the mantissa
@@ -72,14 +72,14 @@ impl<'a> DecodeValue<'a> for f64 {
                 1 => Ok(f64::NEG_INFINITY),
                 2 => Ok(f64::NAN),
                 3 => Ok(-0.0_f64),
-                _ => Err(Tag::Real.value_error()),
+                _ => Err(reader.error(Tag::Real.value_error())),
             }
         } else {
             let astr = StrRef::from_bytes(&bytes[1..])?;
             match astr.inner.parse::<f64>() {
                 Ok(val) => Ok(val),
                 // Real related error: encoding not supported or malformed
-                Err(_) => Err(Tag::Real.value_error()),
+                Err(_) => Err(reader.error(Tag::Real.value_error())),
             }
         }
     }
@@ -174,7 +174,7 @@ impl EncodeValue for f64 {
                 3 => first_byte |= 0b0000_0010,
                 _ => {
                     // TODO: support multi octet exponent encoding?
-                    return Err(Tag::Real.value_error());
+                    return Err(Tag::Real.value_error().into());
                 }
             }
 

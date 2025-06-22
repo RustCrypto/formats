@@ -523,8 +523,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "908741ea702207ae9456173adf9aaa8fffdd3a057e55ca9c77f62a05b9ad08d1"
+source = "git+https://github.com/RustCrypto/signatures.git?branch=der-error-fixups#80909c41ef37718c7f2dfb3b8cd6c828b907f1e6"
 dependencies = [
  "der",
  "digest",
@@ -544,8 +543,7 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 [[package]]
 name = "elliptic-curve"
 version = "0.14.0-rc.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb5fad57f7e416b8f8e81df65daa6a87e402a4469990fd1ba36a8c79515a5fbf"
+source = "git+https://github.com/RustCrypto/traits.git?branch=elliptic-curve%2Fder-error-fixups#89dcefcba7896d1e6dd34871ad484c186909d2a9"
 dependencies = [
  "base16ct",
  "crypto-bigint",

@@ -306,6 +306,11 @@ impl ErrorKind {
     pub fn at(self, position: Length) -> Error {
         Error::new(self, position)
     }
+
+    /// Convert to an error, omitting position information.
+    pub fn to_error(self) -> Error {
+        Error::from_kind(self)
+    }
 }
 
 impl fmt::Display for ErrorKind {

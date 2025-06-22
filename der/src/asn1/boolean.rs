@@ -25,7 +25,7 @@ impl<'a> DecodeValue<'a> for bool {
         match reader.read_byte()? {
             FALSE_OCTET => Ok(false),
             TRUE_OCTET => Ok(true),
-            _ => Err(Self::TAG.non_canonical_error()),
+            _ => Err(reader.error(Self::TAG.non_canonical_error())),
         }
     }
 }
