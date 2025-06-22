@@ -7,7 +7,9 @@ mod number;
 
 pub use self::{class::Class, mode::TagMode, number::TagNumber};
 
-use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Writer};
+use crate::{
+    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Length, Reader, Result, Writer,
+};
 use core::{cmp::Ordering, fmt};
 
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
@@ -318,6 +320,7 @@ impl<'a> Decode<'a> for Tag {
             0x1A => Tag::VisibleString,
             0x1B => Tag::GeneralString,
             0x1E => Tag::BmpString,
+            0x24 if reader.encoding_rules() == EncodingRules::Ber => Tag::OctetString,
             0x30 => Tag::Sequence, // constructed
             0x31 => Tag::Set,      // constructed
             0x40..=0x7F => {
