@@ -160,7 +160,7 @@ impl DeriveEnumerated {
                 fn try_from(n: #repr) -> ::core::result::Result<Self, #error> {
                     match n {
                         #(#try_from_body)*
-                        _ => Err(#tag.value_error().into())
+                        _ => Err(#tag.value_error().to_error().into())
                     }
                 }
             }

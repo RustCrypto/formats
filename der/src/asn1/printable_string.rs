@@ -83,13 +83,13 @@ impl<'a> PrintableStringRef<'a> {
                 | b':'
                 | b'='
                 | b'?' => (),
-                _ => return Err(Self::TAG.value_error()),
+                _ => return Err(Self::TAG.value_error().into()),
             }
         }
 
         StrRef::from_bytes(input)
             .map(|inner| Self { inner })
-            .map_err(|_| Self::TAG.value_error())
+            .map_err(|_| Self::TAG.value_error().into())
     }
 }
 
@@ -173,7 +173,7 @@ mod allocation {
 
             StrOwned::from_bytes(input)
                 .map(|inner| Self { inner })
-                .map_err(|_| Self::TAG.value_error())
+                .map_err(|_| Self::TAG.value_error().into())
         }
     }
 
@@ -236,7 +236,7 @@ mod allocation {
 
             StrOwned::new(input)
                 .map(|inner| Self { inner })
-                .map_err(|_| Self::TAG.value_error())
+                .map_err(|_| Self::TAG.value_error().into())
         }
     }
 }

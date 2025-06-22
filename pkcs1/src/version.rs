@@ -53,8 +53,8 @@ impl TryFrom<u8> for Version {
 
 impl<'a> Decode<'a> for Version {
     type Error = der::Error;
-    fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
-        Version::try_from(u8::decode(decoder)?).map_err(|_| Self::TAG.value_error())
+    fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
+        Version::try_from(u8::decode(reader)?).map_err(|_| reader.error(Self::TAG.value_error()))
     }
 }
 

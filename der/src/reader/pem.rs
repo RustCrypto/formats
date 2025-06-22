@@ -68,7 +68,7 @@ impl<'i> Reader<'i> for PemReader<'i> {
 
     fn read_slice(&mut self, _len: Length) -> Result<&'i [u8]> {
         // Can't borrow from PEM because it requires decoding
-        Err(ErrorKind::Reader.into())
+        Err(self.error(ErrorKind::Reader))
     }
 
     fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8]> {

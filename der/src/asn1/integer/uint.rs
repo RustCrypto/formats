@@ -25,11 +25,11 @@ macro_rules! impl_encoding_traits {
                     let max_length = u32::from(header.length) as usize;
 
                     if max_length == 0 {
-                        return Err(Tag::Integer.length_error());
+                        return Err(reader.error(Tag::Integer.length_error()));
                     }
 
                     if max_length > buf.len() {
-                        return Err(Self::TAG.non_canonical_error());
+                        return Err(reader.error(Self::TAG.non_canonical_error()));
                     }
 
                     let bytes = reader.read_into(&mut buf[..max_length])?;
@@ -37,7 +37,7 @@ macro_rules! impl_encoding_traits {
 
                     // Ensure we compute the same encoded length as the original any value
                     if header.length != result.value_len()? {
-                        return Err(Self::TAG.non_canonical_error());
+                        return Err(reader.error(Self::TAG.non_canonical_error()));
                     }
 
                     Ok(result)
@@ -127,7 +127,7 @@ impl<'a> DecodeValue<'a> for UintRef<'a> {
 
         // Ensure we compute the same encoded length as the original any value.
         if result.value_len()? != header.length {
-            return Err(Self::TAG.non_canonical_error());
+            return Err(reader.error(Self::TAG.non_canonical_error()));
         }
 
         Ok(result)
@@ -221,7 +221,7 @@ mod allocating {
 
             // Ensure we compute the same encoded length as the original any value.
             if result.value_len()? != header.length {
-                return Err(Self::TAG.non_canonical_error());
+                return Err(reader.error(Self::TAG.non_canonical_error()));
             }
 
             Ok(result)
@@ -328,11 +328,11 @@ pub(crate) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
     // integer (since we're decoding an unsigned integer).
     // We expect all such cases to have a leading `0x00` byte.
     match bytes {
-        [] => Err(Tag::Integer.non_canonical_error()),
+        [] => Err(Tag::Integer.non_canonical_error().into()),
         [0] => Ok(bytes),
-        [0, byte, ..] if *byte < 0x80 => Err(Tag::Integer.non_canonical_error()),
+        [0, byte, ..] if *byte < 0x80 => Err(Tag::Integer.non_canonical_error().into()),
         [0, rest @ ..] => Ok(rest),
-        [byte, ..] if *byte >= 0x80 => Err(Tag::Integer.value_error()),
+        [byte, ..] if *byte >= 0x80 => Err(Tag::Integer.value_error().into()),
         _ => Ok(bytes),
     }
 }

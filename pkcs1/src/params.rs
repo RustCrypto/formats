@@ -39,10 +39,10 @@ impl Default for TrailerField {
 impl<'a> DecodeValue<'a> for TrailerField {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(decoder: &mut R, header: der::Header) -> der::Result<Self> {
-        match u8::decode_value(decoder, header)? {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        match u8::decode_value(reader, header)? {
             1 => Ok(TrailerField::BC),
-            _ => Err(Self::TAG.value_error()),
+            _ => Err(reader.error(Self::TAG.value_error())),
         }
     }
 }

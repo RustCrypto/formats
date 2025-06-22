@@ -21,11 +21,11 @@ macro_rules! impl_encoding_traits {
                     let max_length = u32::from(header.length) as usize;
 
                     if max_length == 0 {
-                        return Err(Tag::Integer.length_error());
+                        return Err(reader.error(Tag::Integer.length_error()));
                     }
 
                     if max_length > buf.len() {
-                        return Err(Self::TAG.non_canonical_error());
+                        return Err(reader.error(Self::TAG.non_canonical_error()));
                     }
 
                     let bytes = reader.read_into(&mut buf[..max_length])?;
@@ -40,7 +40,7 @@ macro_rules! impl_encoding_traits {
 
                     // Ensure we compute the same encoded length as the original any value
                     if header.length != result.value_len()? {
-                        return Err(Self::TAG.non_canonical_error());
+                        return Err(reader.error(Self::TAG.non_canonical_error()));
                     }
 
                     Ok(result)
@@ -144,7 +144,7 @@ impl<'a> DecodeValue<'a> for IntRef<'a> {
 
         // Ensure we compute the same encoded length as the original any value.
         if result.value_len()? != header.length {
-            return Err(Self::TAG.non_canonical_error());
+            return Err(reader.error(Self::TAG.non_canonical_error()));
         }
 
         Ok(result)
@@ -238,7 +238,7 @@ mod allocating {
 
             // Ensure we compute the same encoded length as the original any value.
             if result.value_len()? != header.length {
-                return Err(Self::TAG.non_canonical_error());
+                return Err(reader.error(Self::TAG.non_canonical_error()));
             }
 
             Ok(result)
@@ -375,13 +375,15 @@ mod allocating {
 
 /// Ensure `INTEGER` is canonically encoded.
 fn validate_canonical(bytes: &[u8]) -> Result<()> {
+    let non_canonical_error = Tag::Integer.non_canonical_error().into();
+
     // The `INTEGER` type always encodes a signed value and we're decoding
     // as signed here, so we allow a zero extension or sign extension byte,
     // but only as permitted under DER canonicalization.
     match bytes {
-        [] => Err(Tag::Integer.non_canonical_error()),
-        [0x00, byte, ..] if *byte < 0x80 => Err(Tag::Integer.non_canonical_error()),
-        [0xFF, byte, ..] if *byte >= 0x80 => Err(Tag::Integer.non_canonical_error()),
+        [] => Err(non_canonical_error),
+        [0x00, byte, ..] if *byte < 0x80 => Err(non_canonical_error),
+        [0xFF, byte, ..] if *byte >= 0x80 => Err(non_canonical_error),
         _ => Ok(()),
     }
 }

@@ -20,7 +20,7 @@ impl Salt {
         let slice = slice.as_ref();
 
         if slice.len() > Self::MAX_LEN {
-            return Err(Self::TAG.length_error());
+            return Err(Self::TAG.length_error().into());
         }
 
         let mut inner = [0u8; Self::MAX_LEN];
@@ -62,7 +62,7 @@ impl<'a> DecodeValue<'a> for Salt {
         let length = usize::try_from(header.length)?;
 
         if length > Self::MAX_LEN {
-            return Err(Self::TAG.length_error());
+            return Err(reader.error(Self::TAG.length_error()));
         }
 
         let mut inner = [0u8; Self::MAX_LEN];

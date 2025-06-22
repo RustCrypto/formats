@@ -58,3 +58,11 @@ tls_codec_derive = { path = "./tls_codec/derive" }
 x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
+
+[patch.crates-io.elliptic-curve]
+git = "https://github.com/RustCrypto/traits.git"
+branch = "elliptic-curve/der-error-fixups"
+
+[patch.crates-io.ecdsa]
+git = "https://github.com/RustCrypto/signatures.git"
+branch = "der-error-fixups"

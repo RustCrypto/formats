@@ -128,7 +128,7 @@ impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
         octet_string
             .as_bytes()
             .try_into()
-            .map_err(|_| Tag::OctetString.length_error())
+            .map_err(|_| Tag::OctetString.length_error().into())
     }
 }
 
@@ -140,7 +140,7 @@ impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for heapless::Vec<u8, N> {
         octet_string
             .as_bytes()
             .try_into()
-            .map_err(|_| Tag::OctetString.length_error())
+            .map_err(|_| Tag::OctetString.length_error().into())
     }
 }
 

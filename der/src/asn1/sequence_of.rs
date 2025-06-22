@@ -162,7 +162,7 @@ where
                 .into_array()
                 .map(|elem| elem.expect("arrayvec length mismatch")))
         } else {
-            Err(Self::TAG.length_error().into())
+            Err(reader.error(Self::TAG.length_error()).into())
         }
     }
 }

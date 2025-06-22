@@ -39,7 +39,7 @@ impl<'a> BitStringRef<'a> {
     /// from the final octet. This number is 0 if the value is octet-aligned.
     pub fn new(unused_bits: u8, bytes: &'a [u8]) -> Result<Self> {
         if (unused_bits > Self::MAX_UNUSED_BITS) || (unused_bits != 0 && bytes.is_empty()) {
-            return Err(Self::TAG.value_error());
+            return Err(Self::TAG.value_error().into());
         }
 
         let inner = BytesRef::new(bytes).map_err(|_| Self::TAG.length_error())?;
@@ -206,8 +206,9 @@ impl<'a, const N: usize> TryFrom<BitStringRef<'a>> for [u8; N] {
 
     fn try_from(bit_string: BitStringRef<'a>) -> Result<Self> {
         let bytes: &[u8] = TryFrom::try_from(bit_string)?;
-
-        bytes.try_into().map_err(|_| Tag::BitString.length_error())
+        bytes
+            .try_into()
+            .map_err(|_| Tag::BitString.length_error().into())
     }
 }
 
@@ -217,7 +218,7 @@ impl<'a> TryFrom<BitStringRef<'a>> for &'a [u8] {
     fn try_from(bit_string: BitStringRef<'a>) -> Result<&'a [u8]> {
         bit_string
             .as_bytes()
-            .ok_or_else(|| Tag::BitString.value_error())
+            .ok_or_else(|| Tag::BitString.value_error().into())
     }
 }
 
@@ -400,7 +401,7 @@ mod allocating {
             bit_string
                 .as_bytes()
                 .map(|bytes| bytes.to_vec())
-                .ok_or_else(|| Tag::BitString.value_error())
+                .ok_or_else(|| Tag::BitString.value_error().into())
         }
     }
 
@@ -620,7 +621,7 @@ mod tests {
     fn reject_unused_bits_in_empty_string() {
         assert_eq!(
             parse_bitstring(&[0x03]).err().unwrap().kind(),
-            Tag::BitString.value_error().kind()
+            Tag::BitString.value_error()
         )
     }
 

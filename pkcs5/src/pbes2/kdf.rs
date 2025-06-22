@@ -160,7 +160,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Kdf {
                 oid => Err(ErrorKind::OidUnknown { oid }.into()),
             }
         } else {
-            Err(Tag::OctetString.value_error())
+            Err(Tag::OctetString.value_error().into())
         }
     }
 }
@@ -334,7 +334,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Pbkdf2Prf {
         if let Some(params) = alg.parameters {
             // TODO(tarcieri): support non-NULL parameters?
             if !params.is_null() {
-                return Err(params.tag().value_error());
+                return Err(params.tag().value_error().into());
             }
         }
 

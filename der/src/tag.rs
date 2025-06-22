@@ -190,7 +190,7 @@ impl Tag {
         if self == expected {
             Ok(self)
         } else {
-            Err(self.unexpected_error(Some(expected)))
+            Err(self.unexpected_error(Some(expected)).into())
         }
     }
 
@@ -266,30 +266,29 @@ impl Tag {
     }
 
     /// Create an [`Error`] for an invalid [`Length`].
-    pub fn length_error(self) -> Error {
-        ErrorKind::Length { tag: self }.into()
+    pub fn length_error(self) -> ErrorKind {
+        ErrorKind::Length { tag: self }
     }
 
     /// Create an [`Error`] for an non-canonical value with the ASN.1 type
     /// identified by this tag.
-    pub fn non_canonical_error(self) -> Error {
-        ErrorKind::Noncanonical { tag: self }.into()
+    pub fn non_canonical_error(self) -> ErrorKind {
+        ErrorKind::Noncanonical { tag: self }
     }
 
     /// Create an [`Error`] because the current tag was unexpected, with an
     /// optional expected tag.
-    pub fn unexpected_error(self, expected: Option<Self>) -> Error {
+    pub fn unexpected_error(self, expected: Option<Self>) -> ErrorKind {
         ErrorKind::TagUnexpected {
             expected,
             actual: self,
         }
-        .into()
     }
 
     /// Create an [`Error`] for an invalid value with the ASN.1 type identified
     /// by this tag.
-    pub fn value_error(self) -> Error {
-        ErrorKind::Value { tag: self }.into()
+    pub fn value_error(self) -> ErrorKind {
+        ErrorKind::Value { tag: self }
     }
 }
 
@@ -346,8 +345,8 @@ impl<'a> Decode<'a> for Tag {
                 }
             }
             // universal tag in long form
-            0x1F => return Err(ErrorKind::TagNumberInvalid.into()),
-            byte => return Err(ErrorKind::TagUnknown { byte }.into()),
+            0x1F => return Err(reader.error(ErrorKind::TagNumberInvalid)),
+            byte => return Err(reader.error(ErrorKind::TagUnknown { byte })),
         };
 
         Ok(tag)
@@ -370,24 +369,24 @@ fn parse_parts<'a, R: Reader<'a>>(first_byte: u8, reader: &mut R) -> Result<(boo
 
         if byte & 0x80 == 0 {
             if multi_byte_tag_number < u32::from(TagNumber::MASK) {
-                return Err(ErrorKind::TagNumberInvalid.into());
+                return Err(reader.error(ErrorKind::TagNumberInvalid));
             }
 
             return Ok((constructed, TagNumber(multi_byte_tag_number)));
         } else if i == 0 && multi_byte_tag_number == 0 {
             // 8.1.2.4.2c says "bits 7 to 1 of the first subsequent octet shall not all be zero"
-            return Err(ErrorKind::TagNumberInvalid.into());
+            return Err(reader.error(ErrorKind::TagNumberInvalid));
         }
 
         if multi_byte_tag_number.leading_zeros() < 7 {
-            return Err(ErrorKind::TagNumberInvalid.into());
+            return Err(reader.error(ErrorKind::TagNumberInvalid));
         }
 
         multi_byte_tag_number <<= 7;
     }
 
     // missing terminator byte
-    Err(ErrorKind::TagNumberInvalid.into())
+    Err(reader.error(ErrorKind::TagNumberInvalid))
 }
 
 impl Encode for Tag {

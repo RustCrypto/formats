@@ -49,7 +49,7 @@ impl GeneralizedTime {
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
         DateTime::from_unix_duration(unix_duration)
             .map(Into::into)
-            .map_err(|_| Self::TAG.value_error())
+            .map_err(|_| Self::TAG.value_error().into())
     }
 
     /// Get the duration of this timestamp since `UNIX_EPOCH`.
@@ -62,7 +62,7 @@ impl GeneralizedTime {
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         DateTime::try_from(time)
             .map(Into::into)
-            .map_err(|_| Self::TAG.value_error())
+            .map_err(|_| Self::TAG.value_error().into())
     }
 
     /// Convert to [`SystemTime`].
@@ -79,7 +79,7 @@ impl<'a> DecodeValue<'a> for GeneralizedTime {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         if Self::LENGTH != usize::try_from(header.length)? {
-            return Err(Self::TAG.value_error());
+            return Err(reader.error(Self::TAG.value_error()));
         }
 
         let mut bytes = [0u8; Self::LENGTH];
@@ -117,10 +117,10 @@ impl<'a> DecodeValue<'a> for GeneralizedTime {
                 let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
 
                 DateTime::new(year, month, day, hour, minute, second)
-                    .map_err(|_| Self::TAG.value_error())
+                    .map_err(|_| reader.error(Self::TAG.value_error()))
                     .and_then(|dt| Self::from_unix_duration(dt.unix_duration()))
             }
-            _ => Err(Self::TAG.value_error()),
+            _ => Err(reader.error(Self::TAG.value_error())),
         }
     }
 }

@@ -99,7 +99,7 @@ impl<'a> DecodeValue<'a> for EcPrivateKey<'a> {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
         if u8::decode(reader)? != VERSION {
-            return Err(Tag::Integer.value_error());
+            return Err(reader.error(Tag::Integer.value_error()));
         }
 
         let private_key = OctetStringRef::decode(reader)?.as_bytes();

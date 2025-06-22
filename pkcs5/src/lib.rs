@@ -199,7 +199,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
         if alg.oid == pbes2::PBES2_OID {
             match alg.parameters {
                 Some(params) => pbes2::Parameters::try_from(params).map(Into::into),
-                None => Err(Tag::OctetString.value_error()),
+                None => Err(Tag::OctetString.value_error().into()),
             }
         } else {
             pbes1::Algorithm::try_from(alg).map(Into::into)
