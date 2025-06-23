@@ -1,9 +1,9 @@
 pub(crate) mod commentwriter;
 pub(crate) mod hexdisplaylines;
 
+use crate::SliceWriter;
 use crate::std::io::Write;
-use crate::{Encode, SliceWriter};
-use crate::{EncodeValue, ErrorKind, Header, Length, Result, Tag, TagMode, TagNumber, Tagged};
+use crate::{Length, Result, Tag};
 use commentwriter::{CommentWriter, JavaCommentWriter, XmlCommentWriter};
 use core::cell::RefCell;
 use core::ops::DerefMut;
