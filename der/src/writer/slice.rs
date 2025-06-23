@@ -125,7 +125,8 @@ impl<'a> SliceWriter<'a> {
         Ok(slice)
     }
 
-    pub(crate) fn position(&self) -> Length {
+    /// Returns current position in the buffer.
+    pub fn position(&self) -> Length {
         self.position
     }
 }
