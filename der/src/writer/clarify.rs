@@ -21,11 +21,21 @@ static INDENT_STR: &str =
 pub struct ClarifySliceWriter<'a> {
     writer: SliceWriter<'a>,
 
+    clarifier: Clarifier,
+}
+
+/// Clarifier that creates HEX with comments
+pub struct Clarifier {
     // Buffer into which debug HEX and comments are written
     debug_ref: Rc<RefCell<Vec<u8>>>,
 
+    // Position in the buffer is used to track how long is the current sub-message
+    last_position: u32,
+
     /// Used for debug indentation
-    depth: Vec<u32>,
+    ///
+    /// Pushes writer positions on the stack
+    depth: Vec<Option<u32>>,
 
     indent_enabled: bool,
     comment_writer: Box<dyn CommentWriter>,
@@ -37,19 +47,30 @@ pub struct FinishOutputs<'a> {
     //pub debug_ref: Vec<u8>,
 }
 
-impl<'a> ClarifySliceWriter<'a> {
-    /// Create a new encoder with the given byte slice as a backing buffer.
-    pub fn new(bytes: &'a mut [u8], debug_ref: Rc<RefCell<Vec<u8>>>, comment_xml: bool) -> Self {
+impl Clarifier {
+    pub fn new(debug_ref: Rc<RefCell<Vec<u8>>>, comment_xml: bool) -> Self {
         Self {
-            writer: SliceWriter::new(bytes),
             debug_ref,
+
+            last_position: 0,
             depth: Vec::new(),
+
             indent_enabled: true,
             comment_writer: if comment_xml {
                 Box::new(XmlCommentWriter::default())
             } else {
                 Box::new(JavaCommentWriter::default())
             },
+        }
+    }
+}
+
+impl<'a> ClarifySliceWriter<'a> {
+    /// Create a new encoder with the given byte slice as a backing buffer.
+    pub fn new(bytes: &'a mut [u8], debug_ref: Rc<RefCell<Vec<u8>>>, comment_xml: bool) -> Self {
+        Self {
+            writer: SliceWriter::new(bytes),
+            clarifier: Clarifier::new(debug_ref, comment_xml),
         }
     }
 
@@ -118,11 +139,26 @@ impl<'a> ClarifySliceWriter<'a> {
     //         self.error(ErrorKind::Length { tag: Tag::Sequence })
     //     }
     // }
+
+    /// Reserve a portion of the internal buffer, updating the internal cursor
+    /// position and returning a mutable slice.
+    fn reserve(&mut self, len: impl TryInto<Length>) -> Result<&mut [u8]> {
+        self.writer.reserve(len)
+    }
+}
+
+impl Clarifier {
     /// Returns indentation, for example "\n\t" for depth == 1
     pub fn indent_str(&self) -> &'static str {
         let ilen = self.depth.len() * 1;
         let ilen = ilen.min(INDENT_STR.len());
         &INDENT_STR[..ilen]
+    }
+
+    pub fn write_clarify_indent_if_enabled(&mut self) {
+        if self.indent_enabled {
+            self.write_clarify_indent();
+        }
     }
 
     /// Writes indentation to debug output, for example "\n\t" for depth == 1
@@ -180,54 +216,36 @@ impl<'a> ClarifySliceWriter<'a> {
         }
     }
 
-    /// Reserve a portion of the internal buffer, updating the internal cursor
-    /// position and returning a mutable slice.
-    fn reserve(&mut self, len: impl TryInto<Length>) -> Result<&mut [u8]> {
-        self.writer.reserve(len)
-    }
-
-    fn clarify_start_value_type_str(&mut self, type_name: &str) {
+    /// input: u32::from(self.writer.position())
+    pub fn clarify_start_value_type_str(&mut self, writer_pos: Option<u32>, type_name: &str) {
         self.indent_enabled = true;
-        self.depth.push(u32::from(self.writer.position()));
+        self.depth.push(writer_pos);
 
         let type_name = strip_transparent_types(type_name);
         self.write_clarify_type_str("type", &type_name);
     }
 
-    fn clarify_end_value_type_str(&mut self, type_name: &str) {
-        let current = u32::from(self.writer.position());
-        let last_pos = self.depth.pop().unwrap_or(current);
-        let diff = current - last_pos;
+    fn clarify_end_value_type_str(&mut self, writer_pos: Option<u32>, type_name: &str) {
+        let last_pos = self.depth.pop().unwrap_or(writer_pos);
 
-        if diff > 16 {
-            let type_name = strip_transparent_types(type_name);
-            self.write_clarify_indent();
-            self.write_clarify_type_str("end", type_name.as_ref());
-        }
-    }
-}
-
-impl<'a> Writer for ClarifySliceWriter<'a> {
-    fn write(&mut self, slice: &[u8]) -> Result<()> {
-        self.reserve(slice.len())?.copy_from_slice(slice);
-
-        if self.indent_enabled {
-            self.write_clarify_indent();
+        match (writer_pos, last_pos) {
+            (Some(writer_pos), Some(last_pos)) => {
+                let diff = writer_pos - last_pos;
+                if diff < 16 {
+                    // ignore short runs
+                    return;
+                }
+            }
+            _ => {}
         }
 
-        self.write_clarify_hex(slice);
-        Ok(())
-    }
-
-    fn clarify_start_value_type<T>(&mut self) {
-        self.clarify_start_value_type_str(&tynm::type_name::<T>());
-    }
-    fn clarify_end_value_type<T>(&mut self) {
-        self.clarify_end_value_type_str(&tynm::type_name::<T>());
+        let type_name = strip_transparent_types(type_name);
+        self.write_clarify_indent();
+        self.write_clarify_type_str("end", type_name.as_ref());
     }
 
     /// for better tag-length pretty-printing inline
-    fn clarify_end_tag(&mut self, _tag: &Tag) {
+    pub fn clarify_end_tag(&mut self, _tag: &Tag) {
         // just to print a single length byte without indent
         self.indent_enabled = false;
     }
@@ -240,9 +258,16 @@ impl<'a> Writer for ClarifySliceWriter<'a> {
     //     self.indent_enabled = enabled;
     // }
 
-    fn clarify_field_name(&mut self, field_name: &str) {
+    pub fn clarify_field_name(&mut self, field_name: &str) {
         self.write_clarify_indent();
         self.write_clarify_type_str("field", field_name);
+    }
+
+    pub fn clarify_start_value_type<T>(&mut self) {
+        self.clarify_start_value_type_str(Some(self.last_position), &tynm::type_name::<T>());
+    }
+    pub fn clarify_end_value_type<T>(&mut self) {
+        self.clarify_end_value_type_str(Some(self.last_position), &tynm::type_name::<T>());
     }
 
     // fn clarify_end_length(&mut self, tag: Option<&Tag>, length: Length) {
@@ -264,15 +289,23 @@ impl<'a> Writer for ClarifySliceWriter<'a> {
     //     self.write_debug_int(value);
     // }
 
-    fn clarify_choice(&mut self, choice_name: &[u8]) {
+    pub fn clarify_choice(&mut self, choice_name: &[u8]) {
         self.write_clarify_indent();
         if let Ok(choice_name) = std::str::from_utf8(choice_name) {
             self.write_clarify_type_str("CHOICE", choice_name);
         }
     }
+}
 
-    fn is_clarify(&self) -> bool {
-        true
+impl<'a> Writer for ClarifySliceWriter<'a> {
+    fn write(&mut self, slice: &[u8]) -> Result<()> {
+        self.reserve(slice.len())?.copy_from_slice(slice);
+        self.clarifier.last_position += slice.len() as u32;
+
+        self.clarifier.write_clarify_indent_if_enabled();
+        self.clarifier.write_clarify_hex(slice);
+
+        Ok(())
     }
 }
 
