@@ -479,3 +479,10 @@ fn decode_cert_bmpstring() {
         "WDKTestCert 混沌,133906716390833193"
     );
 }
+
+#[cfg(feature = "pem")]
+#[test]
+fn decode_cert_with_comments() {
+    let pem_encoded_cert = include_bytes!("examples/lenovo_pk.pem");
+    Certificate::from_pem(pem_encoded_cert).expect("parse certificate with comments in the header");
+}
