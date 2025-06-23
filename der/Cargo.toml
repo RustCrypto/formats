@@ -33,7 +33,7 @@ hex-literal = "1"
 proptest = "1"
 
 [features]
-default = ["clarify"]
+default = []
 alloc = ["zeroize?/alloc"]
 std = ["alloc"]
 
@@ -43,7 +43,7 @@ derive = ["dep:der_derive"]
 oid = ["dep:const-oid"]
 pem = ["dep:pem-rfc7468", "alloc", "zeroize"]
 real = []
-clarify = ["std", "pem", "dep:tynm"]
+clarify = ["std", "pem", "dep:tynm", "derive"]
 
 [package.metadata.docs.rs]
 all-features = true
