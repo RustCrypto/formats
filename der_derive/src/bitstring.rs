@@ -165,7 +165,7 @@ impl DeriveBitString {
 
             impl #impl_generics ::der::EncodeValue for #ident #ty_generics #where_clause {
                 fn value_len(&self) -> der::Result<der::Length> {
-                    Ok(der::Length::new(#max_expected_bytes + 1))
+                    Ok(der::Length::new(#max_expected_bytes as u32 + 1))
                 }
 
                 fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {

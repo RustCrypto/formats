@@ -33,7 +33,7 @@ impl Salt {
 
         Ok(Self {
             inner,
-            length: Length::new(slice.len() as u16),
+            length: Length::new(slice.len() as u32),
         })
     }
 

@@ -171,6 +171,12 @@ impl Tag {
         Self::decode(&mut reader.clone())
     }
 
+    /// Peek at whether the next byte in the reader has the constructed bit set.
+    pub(crate) fn peek_is_constructed<'a>(reader: &impl Reader<'a>) -> Result<bool> {
+        let octet = reader.clone().read_byte()?;
+        Ok(octet & CONSTRUCTED_FLAG != 0)
+    }
+
     /// Returns true if given context-specific (or any given class) tag number matches the peeked tag.
     pub(crate) fn peek_matches<'a, R: Reader<'a>>(
         reader: &mut R,
@@ -400,7 +406,7 @@ impl Encode for Tag {
         let length = if number <= 30 {
             Length::ONE
         } else {
-            Length::new(number.ilog2() as u16 / 7 + 2)
+            Length::new(number.ilog2() / 7 + 2)
         };
 
         Ok(length)
