@@ -216,7 +216,7 @@ impl<'a> Decode<'a> for Length {
         match reader.read_byte()? {
             len if len < INDEFINITE_LENGTH_OCTET => Ok(len.into()),
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite lengths
-            INDEFINITE_LENGTH_OCTET => match reader.encoding_rules() {
+            INDEFINITE_LENGTH_OCTET => match R::ENCODING_RULES {
                 // Indefinite lengths are allowed when decoding BER
                 EncodingRules::Ber => decode_indefinite_length(&mut reader.clone()),
                 // Indefinite lengths are disallowed when decoding DER
@@ -378,7 +378,7 @@ fn decode_indefinite_length<'a, R: Reader<'a>>(reader: &mut R) -> Result<Length>
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::Length;
-    use crate::{Decode, DerOrd, Encode, EncodingRules, ErrorKind, Reader, SliceReader, Tag};
+    use crate::{BerReader, Decode, DerOrd, Encode, ErrorKind, Reader, Tag};
     use core::cmp::Ordering;
     use hex_literal::hex;
 
@@ -492,8 +492,7 @@ mod tests {
              27 F0 F0 00 00 00 00"
         );
 
-        let mut reader =
-            SliceReader::new_with_encoding_rules(&EXAMPLE_BER, EncodingRules::Ber).unwrap();
+        let mut reader = BerReader::from_bytes(&EXAMPLE_BER).unwrap();
 
         // Decode initial tag of the message, leaving the reader at the length
         let tag = Tag::decode(&mut reader).unwrap();
@@ -514,9 +513,9 @@ mod tests {
         );
 
         // Read OID
-        reader.tlv_bytes().unwrap();
+        reader.drain_tlv().unwrap();
         // Read SEQUENCE
-        reader.tlv_bytes().unwrap();
+        reader.drain_tlv().unwrap();
 
         // We're now at the next indefinite length record
         let tag = Tag::decode(&mut reader).unwrap();

@@ -1,15 +1,12 @@
 //! Slice reader.
 
-use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Length, Reader};
+use crate::{BytesRef, Decode, Error, ErrorKind, Length, Reader};
 
 /// [`Reader`] which consumes an input byte slice.
 #[derive(Clone, Debug)]
 pub struct SliceReader<'a> {
     /// Byte slice being decoded.
     bytes: BytesRef<'a>,
-
-    /// Encoding rules to apply when decoding the input.
-    encoding_rules: EncodingRules,
 
     /// Did the decoding operation fail?
     failed: bool,
@@ -21,17 +18,8 @@ pub struct SliceReader<'a> {
 impl<'a> SliceReader<'a> {
     /// Create a new slice reader for the given byte slice.
     pub fn new(bytes: &'a [u8]) -> Result<Self, Error> {
-        Self::new_with_encoding_rules(bytes, EncodingRules::default())
-    }
-
-    /// Create a new slice reader with the given encoding rules.
-    pub fn new_with_encoding_rules(
-        bytes: &'a [u8],
-        encoding_rules: EncodingRules,
-    ) -> Result<Self, Error> {
         Ok(Self {
             bytes: BytesRef::new(bytes)?,
-            encoding_rules,
             failed: false,
             position: Length::ZERO,
         })
@@ -71,10 +59,6 @@ impl<'a> SliceReader<'a> {
 }
 
 impl<'a> Reader<'a> for SliceReader<'a> {
-    fn encoding_rules(&self) -> EncodingRules {
-        self.encoding_rules
-    }
-
     fn input_len(&self) -> Length {
         self.bytes.len()
     }

@@ -1,7 +1,7 @@
 //! Streaming PEM reader.
 
 use super::{Reader, position::Position};
-use crate::{EncodingRules, Error, ErrorKind, Length, Result};
+use crate::{Error, ErrorKind, Length, Result};
 use pem_rfc7468::Decoder;
 
 /// `Reader` type which decodes PEM on-the-fly.
@@ -10,9 +10,6 @@ use pem_rfc7468::Decoder;
 pub struct PemReader<'i> {
     /// Inner PEM decoder.
     decoder: Decoder<'i>,
-
-    /// Encoding rules to apply when decoding the input.
-    encoding_rules: EncodingRules,
 
     /// Position tracker.
     position: Position,
@@ -29,7 +26,6 @@ impl<'i> PemReader<'i> {
 
         Ok(Self {
             decoder,
-            encoding_rules: EncodingRules::default(),
             position: Position::new(input_len),
         })
     }
@@ -43,10 +39,6 @@ impl<'i> PemReader<'i> {
 
 #[cfg(feature = "pem")]
 impl<'i> Reader<'i> for PemReader<'i> {
-    fn encoding_rules(&self) -> EncodingRules {
-        self.encoding_rules
-    }
-
     fn input_len(&self) -> Length {
         self.position.input_len()
     }

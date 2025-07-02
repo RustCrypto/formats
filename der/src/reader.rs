@@ -1,5 +1,6 @@
 //! Reader trait.
 
+pub(crate) mod ber;
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
 pub(crate) mod slice;
@@ -17,8 +18,8 @@ use alloc::vec::Vec;
 
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Clone {
-    /// Get the [`EncodingRules`] which should be applied when decoding the input.
-    fn encoding_rules(&self) -> EncodingRules;
+    /// [`EncodingRules`] which should be applied when decoding the input.
+    const ENCODING_RULES: EncodingRules = EncodingRules::Der;
 
     /// Get the length of the input.
     fn input_len(&self) -> Length;
@@ -83,6 +84,12 @@ pub trait Reader<'r>: Clone {
         }
 
         Ok(())
+    }
+
+    /// Read the header of a TLV field and drain the value portion of the field.
+    fn drain_tlv(&mut self) -> Result<(), Error> {
+        let header = Header::decode(self)?;
+        self.drain(header.length)
     }
 
     /// Return an error with the given [`ErrorKind`], annotating it with
