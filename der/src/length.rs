@@ -40,6 +40,9 @@ impl Length {
     /// Maximum length (`u32::MAX`).
     pub const MAX: Self = Self::new(u32::MAX);
 
+    /// Length of end-of-content octets (i.e. `00 00`).
+    pub(crate) const EOC_LEN: Self = Self::new(2);
+
     /// Maximum number of octets in a DER encoding of a [`Length`] using the
     /// rules implemented by this crate.
     pub(crate) const MAX_SIZE: usize = 5;
@@ -90,6 +93,26 @@ impl Length {
     /// Perform saturating subtraction of two lengths.
     pub fn saturating_sub(self, rhs: Self) -> Self {
         Self::new(self.inner.saturating_sub(rhs.inner))
+    }
+
+    /// If the length is indefinite, compute a length with the EOC marker removed
+    /// (i.e. the final two bytes `00 00`).
+    ///
+    /// Otherwise (as should always be the case with DER), the length is unchanged.
+    ///
+    /// This method notably preserves the `indefinite` flag when performing arithmetic.
+    pub(crate) fn sans_eoc(self) -> Self {
+        if self.indefinite {
+            // We expect EOC to be present when this is called.
+            debug_assert!(self >= Self::EOC_LEN);
+
+            Self {
+                inner: self.saturating_sub(Self::EOC_LEN).inner,
+                indefinite: true,
+            }
+        } else {
+            self
+        }
     }
 
     /// Get initial octet of the encoded length (if one is required).
@@ -379,22 +402,12 @@ fn decode_indefinite_length<'a, R: Reader<'a>>(reader: &mut R) -> Result<Length>
     let start_pos = reader.position();
 
     loop {
-        let current_pos = reader.position();
-
         // Look for the end-of-contents marker
         if reader.peek_byte() == Some(EOC_TAG) {
-            // Drain the end-of-contents tag
-            reader.drain(Length::ONE)?;
-
-            // Read the length byte and ensure it's zero (i.e. the full EOC is `00 00`)
-            let length_byte = reader.read_byte()?;
-
-            if length_byte != 0 {
-                return Err(reader.error(ErrorKind::IndefiniteLength));
-            }
+            read_eoc(reader)?;
 
             // Compute how much we read and flag the decoded length as indefinite
-            let mut ret = (current_pos - start_pos)?;
+            let mut ret = (reader.position() - start_pos)?;
             ret.indefinite = true;
             return Ok(ret);
         }
@@ -402,6 +415,21 @@ fn decode_indefinite_length<'a, R: Reader<'a>>(reader: &mut R) -> Result<Length>
         let header = Header::decode(reader)?;
         reader.drain(header.length)?;
     }
+}
+
+/// Read an expected end-of-contents (EOC) marker: `00 00`.
+///
+/// # Errors
+///
+/// - Returns `ErrorKind::IndefiniteLength` if the EOC marker isn't present as expected.
+pub(crate) fn read_eoc<'a>(reader: &mut impl Reader<'a>) -> Result<()> {
+    for _ in 0..Length::EOC_LEN.inner as usize {
+        if reader.read_byte()? != 0 {
+            return Err(reader.error(ErrorKind::IndefiniteLength));
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -507,9 +535,6 @@ mod tests {
         /// Length of example in octets.
         const EXAMPLE_LEN: usize = 68;
 
-        /// Length of end-of-content octets (i.e. `00 00`).
-        const EOC_LEN: usize = 2;
-
         /// Test vector from: <https://github.com/RustCrypto/formats/issues/779#issuecomment-2902948789>
         ///
         /// Notably this example contains nested indefinite lengths to ensure the decoder handles
@@ -534,7 +559,7 @@ mod tests {
 
         // Decode indefinite length
         let length = Length::decode(&mut reader).unwrap();
-        assert!(length.indefinite);
+        assert!(length.is_indefinite());
 
         // Decoding the length should leave the position at the end of the indefinite length octet
         let pos = usize::try_from(reader.position()).unwrap();
@@ -542,10 +567,7 @@ mod tests {
 
         // The first two bytes are the header and the rest is the length of the message.
         // The last four are two end-of-content markers (2 * 2 bytes).
-        assert_eq!(
-            usize::try_from(length).unwrap(),
-            EXAMPLE_LEN - pos - (EOC_LEN * 2)
-        );
+        assert_eq!(usize::try_from(length).unwrap(), EXAMPLE_LEN - pos);
 
         // Read OID
         reader.tlv_bytes().unwrap();
@@ -564,7 +586,7 @@ mod tests {
 
         // Parse the inner indefinite length
         let length = Length::decode(&mut reader).unwrap();
-        assert!(length.indefinite);
-        assert_eq!(usize::try_from(length).unwrap(), 18);
+        assert!(length.is_indefinite());
+        assert_eq!(usize::try_from(length).unwrap(), 20);
     }
 }

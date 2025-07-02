@@ -141,3 +141,14 @@ fn cms_decode_signed_der() {
     // should match the original
     assert_eq!(reencoded_der_signed_data_in_ci, der_signed_data_in_ci)
 }
+
+#[test]
+fn cms_decode_signed_ber() {
+    let cms_ber = include_bytes!("../tests/examples/cms_ber.bin");
+    let _ci_ber = ContentInfo::from_ber(cms_ber).unwrap();
+
+    // TODO(tarcieri): ensure BER and DER decode identically
+    // let cms_der = include_bytes!("../tests/examples/cms_der.bin");
+    // let ci_der = ContentInfo::from_der(cms_der).unwrap();
+    // assert_eq!(ci_ber, ci_der);
+}

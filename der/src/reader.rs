@@ -9,7 +9,7 @@ mod position;
 
 use crate::{
     Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag, Header, Length, Tag,
-    TagMode, TagNumber, asn1::ContextSpecific,
+    TagMode, TagNumber, asn1::ContextSpecific, length::read_eoc,
 };
 
 #[cfg(feature = "alloc")]
@@ -41,7 +41,14 @@ pub trait Reader<'r>: Clone {
         E: From<Error>,
         F: FnOnce(&mut Self) -> Result<T, E>,
     {
-        self.read_nested(header.length, f)
+        let ret = self.read_nested(header.length.sans_eoc(), f)?;
+
+        // Consume EOC marker if the length is indefinite.
+        if header.length.is_indefinite() {
+            read_eoc(self)?;
+        }
+
+        Ok(ret)
     }
 
     /// Attempt to read data borrowed directly from the input as a slice,
