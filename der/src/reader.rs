@@ -32,6 +32,18 @@ pub trait Reader<'r>: Clone {
         E: From<Error>,
         F: FnOnce(&mut Self) -> Result<T, E>;
 
+    /// Read a value (i.e. the "V" part of a "TLV" field) using the provided header.
+    ///
+    /// This calls the provided function `f` with a nested reader created using
+    /// [`Reader::read_nested`].
+    fn read_value<T, F, E>(&mut self, header: Header, f: F) -> Result<T, E>
+    where
+        E: From<Error>,
+        F: FnOnce(&mut Self) -> Result<T, E>,
+    {
+        self.read_nested(header.length, f)
+    }
+
     /// Attempt to read data borrowed directly from the input as a slice,
     /// updating the internal cursor position.
     ///
@@ -192,7 +204,7 @@ pub trait Reader<'r>: Clone {
     {
         let header = Header::decode(self)?;
         header.tag.assert_eq(Tag::Sequence)?;
-        self.read_nested(header.length, f)
+        self.read_value(header, f)
     }
 
     /// Obtain a slice of bytes containing a complete TLV production suitable for parsing later.
