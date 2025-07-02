@@ -36,12 +36,13 @@ pub trait Reader<'r>: Clone {
     ///
     /// This calls the provided function `f` with a nested reader created using
     /// [`Reader::read_nested`].
-    fn read_value<T, F, E>(&mut self, header: Header, f: F) -> Result<T, E>
+    fn read_value<T, F, E>(&mut self, mut header: Header, f: F) -> Result<T, E>
     where
         E: From<Error>,
-        F: FnOnce(&mut Self) -> Result<T, E>,
+        F: FnOnce(&mut Self, Header) -> Result<T, E>,
     {
-        let ret = self.read_nested(header.length.sans_eoc(), f)?;
+        header.length = header.length.sans_eoc();
+        let ret = self.read_nested(header.length, |r| f(r, header))?;
 
         // Consume EOC marker if the length is indefinite.
         if header.length.is_indefinite() {
@@ -211,7 +212,7 @@ pub trait Reader<'r>: Clone {
     {
         let header = Header::decode(self)?;
         header.tag.assert_eq(Tag::Sequence)?;
-        self.read_value(header, f)
+        self.read_value(header, |r, _| f(r))
     }
 
     /// Obtain a slice of bytes containing a complete TLV production suitable for parsing later.
