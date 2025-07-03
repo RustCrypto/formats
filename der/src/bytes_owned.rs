@@ -69,6 +69,7 @@ impl<'a> DecodeValue<'a> for BytesOwned {
             // Parse constructed indefinite length data
             // TODO(tarcieri): extract this somewhere reusable
             let mut bytes = Vec::with_capacity(header.length.try_into()?);
+            let mut offset = 0;
 
             while !reader.is_finished() {
                 let h = Header::decode(reader)?;
@@ -79,9 +80,11 @@ impl<'a> DecodeValue<'a> for BytesOwned {
                     return Err(reader.error(ErrorKind::IndefiniteLength));
                 }
 
-                // TODO(tarcieri): more efficient reader
-                let mut chunk = reader.read_vec(h.length)?;
-                bytes.append(&mut chunk);
+                // Add enough zeroes into the `Vec` to store the chunk
+                let l = usize::try_from(h.length)?;
+                bytes.extend(core::iter::repeat_n(0, l));
+                reader.read_into(&mut bytes[offset..(offset + l)])?;
+                offset += l;
             }
 
             return Self::new(bytes);
