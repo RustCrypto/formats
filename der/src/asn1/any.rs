@@ -3,8 +3,8 @@
 #![cfg_attr(feature = "arbitrary", allow(clippy::arithmetic_side_effects))]
 
 use crate::{
-    BytesRef, Choice, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, Header, Length,
-    Reader, SliceReader, Tag, Tagged, ValueOrd, Writer,
+    BytesRef, Choice, Decode, DecodeValue, DerOrd, EncodeValue, EncodingRules, Error, ErrorKind,
+    Header, Length, Reader, SliceReader, Tag, Tagged, ValueOrd, Writer,
 };
 use core::cmp::Ordering;
 
@@ -62,6 +62,17 @@ impl<'a> AnyRef<'a> {
     where
         T: Choice<'a> + DecodeValue<'a>,
     {
+        self.decode_as_encoding(EncodingRules::Der)
+    }
+
+    /// Attempt to decode this [`AnyRef`] type into the inner value.
+    pub fn decode_as_encoding<T>(
+        self,
+        encoding: EncodingRules,
+    ) -> Result<T, <T as DecodeValue<'a>>::Error>
+    where
+        T: Choice<'a> + DecodeValue<'a>,
+    {
         if !T::can_decode(self.tag) {
             return Err(self.tag.unexpected_error(None).to_error().into());
         }
@@ -71,7 +82,7 @@ impl<'a> AnyRef<'a> {
             length: self.value.len(),
         };
 
-        let mut decoder = SliceReader::new(self.value())?;
+        let mut decoder = SliceReader::new_with_encoding_rules(self.value(), encoding)?;
         let result = T::decode_value(&mut decoder, header)?;
         decoder.finish()?;
         Ok(result)
@@ -186,9 +197,6 @@ mod allocating {
         /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
         pub fn new(tag: Tag, bytes: impl Into<Box<[u8]>>) -> Result<Self, Error> {
             let value = BytesOwned::new(bytes)?;
-
-            // Ensure the tag and value are a valid `AnyRef`.
-            AnyRef::new(tag, value.as_slice())?;
             Ok(Self { tag, value })
         }
 
@@ -202,7 +210,18 @@ mod allocating {
         where
             T: Choice<'a> + DecodeValue<'a>,
         {
-            AnyRef::from(self).decode_as()
+            self.decode_as_encoding(EncodingRules::Der)
+        }
+
+        /// Attempt to decode this [`Any`] type into the inner value with the given encoding rules.
+        pub fn decode_as_encoding<'a, T>(
+            &'a self,
+            encoding: EncodingRules,
+        ) -> Result<T, <T as DecodeValue<'a>>::Error>
+        where
+            T: Choice<'a> + DecodeValue<'a>,
+        {
+            AnyRef::from(self).decode_as_encoding(encoding)
         }
 
         /// Encode the provided type as an [`Any`] value.
@@ -256,7 +275,7 @@ mod allocating {
 
         fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Error> {
             let header = Header::decode(reader)?;
-            Self::decode_value(reader, header)
+            reader.read_value(header, Self::decode_value)
         }
     }
 
@@ -264,8 +283,10 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
-            let value = reader.read_vec(header.length)?;
-            Self::new(header.tag, value)
+            Ok(Self {
+                tag: header.tag,
+                value: BytesOwned::decode_value(reader, header)?,
+            })
         }
     }
 
@@ -281,7 +302,6 @@ mod allocating {
 
     impl<'a> From<&'a Any> for AnyRef<'a> {
         fn from(any: &'a Any) -> AnyRef<'a> {
-            // Ensured to parse successfully in constructor
             any.to_ref()
         }
     }
