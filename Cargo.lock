@@ -978,7 +978,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.8.0-rc.4"
+version = "0.8.0-rc.5"
 dependencies = [
  "aes",
  "aes-gcm",
