@@ -56,6 +56,13 @@ impl<'a> AnyRef<'a> {
     pub fn value(self) -> &'a [u8] {
         self.value.as_slice()
     }
+    /// Returns [`Tag`] and [`Length`] of self.
+    pub fn header(&self) -> Header {
+        Header {
+            tag: self.tag,
+            length: self.value.len(),
+        }
+    }
 
     /// Attempt to decode this [`AnyRef`] type into the inner value.
     pub fn decode_as<T>(self) -> Result<T, <T as DecodeValue<'a>>::Error>
@@ -77,10 +84,7 @@ impl<'a> AnyRef<'a> {
             return Err(self.tag.unexpected_error(None).to_error().into());
         }
 
-        let header = Header {
-            tag: self.tag,
-            length: self.value.len(),
-        };
+        let header = self.header();
 
         let mut decoder = SliceReader::new_with_encoding_rules(self.value(), encoding)?;
         let result = T::decode_value(&mut decoder, header)?;
