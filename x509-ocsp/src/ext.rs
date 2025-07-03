@@ -1,7 +1,7 @@
 //! OCSP Extensions
 
 use crate::OcspGeneralizedTime;
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use const_oid::{
     AssociatedOid,
     db::rfc6960::{
@@ -49,7 +49,7 @@ impl AssociatedOid for Nonce {
 
 impl Nonce {
     /// Creates a Nonce object given the bytes
-    pub fn new(bytes: impl Into<Vec<u8>>) -> Result<Self, der::Error> {
+    pub fn new(bytes: impl Into<Box<[u8]>>) -> Result<Self, der::Error> {
         Ok(Self(OctetString::new(bytes)?))
     }
 

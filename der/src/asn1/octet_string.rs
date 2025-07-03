@@ -159,11 +159,10 @@ pub use self::allocating::OctetString;
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::referenced::*;
-    use alloc::borrow::Cow;
-    use alloc::vec::Vec;
+    use crate::{BytesOwned, referenced::*};
+    use alloc::{borrow::Cow, boxed::Box, vec::Vec};
 
-    /// ASN.1 `OCTET STRING` type: owned form..
+    /// ASN.1 `OCTET STRING` type: owned form.
     ///
     /// Octet strings represent contiguous sequences of octets, a.k.a. bytes.
     ///
@@ -171,17 +170,17 @@ mod allocating {
     /// the backing data.
     #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     pub struct OctetString {
-        /// Bitstring represented as a slice of bytes.
-        pub(super) inner: Vec<u8>,
+        /// Inner bytestring type.
+        pub(super) inner: BytesOwned,
     }
 
     impl OctetString {
         /// Create a new ASN.1 `OCTET STRING`.
-        pub fn new(bytes: impl Into<Vec<u8>>) -> Result<Self, Error> {
-            let inner = bytes.into();
+        pub fn new(bytes: impl Into<Box<[u8]>>) -> Result<Self, Error> {
+            let inner = BytesOwned::new(bytes)?;
 
             // Ensure the bytes parse successfully as an `OctetStringRef`
-            OctetStringRef::new(&inner)?;
+            OctetStringRef::new(inner.as_slice())?;
 
             Ok(Self { inner })
         }
@@ -192,13 +191,13 @@ mod allocating {
         }
 
         /// Take ownership of the octet string.
-        pub fn into_bytes(self) -> Vec<u8> {
-            self.inner
+        pub fn into_bytes(self) -> Box<[u8]> {
+            self.inner.into()
         }
 
         /// Get the length of the inner byte slice.
         pub fn len(&self) -> Length {
-            self.value_len().expect("invalid OCTET STRING length")
+            self.inner.len()
         }
 
         /// Is the inner byte slice empty?
@@ -219,17 +218,18 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
-            Self::new(reader.read_vec(header.length)?)
+            let inner = BytesOwned::decode_value(reader, header)?;
+            Ok(Self { inner })
         }
     }
 
     impl EncodeValue for OctetString {
         fn value_len(&self) -> Result<Length, Error> {
-            self.inner.len().try_into()
+            self.inner.value_len()
         }
 
         fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
-            writer.write(&self.inner)
+            self.inner.encode_value(writer)
         }
     }
 
@@ -239,8 +239,9 @@ mod allocating {
 
     impl<'a> From<&'a OctetString> for OctetStringRef<'a> {
         fn from(octet_string: &'a OctetString) -> OctetStringRef<'a> {
-            // Ensured to parse successfully in constructor
-            OctetStringRef::new(&octet_string.inner).expect("invalid OCTET STRING")
+            OctetStringRef {
+                inner: octet_string.inner.owned_to_ref(),
+            }
         }
     }
 
@@ -250,7 +251,7 @@ mod allocating {
         type Owned = OctetString;
         fn ref_to_owned(&self) -> Self::Owned {
             OctetString {
-                inner: Vec::from(self.inner.as_slice()),
+                inner: self.inner.into(),
             }
         }
     }
@@ -279,7 +280,7 @@ mod allocating {
 
     impl From<OctetString> for Vec<u8> {
         fn from(octet_string: OctetString) -> Vec<u8> {
-            octet_string.into_bytes()
+            octet_string.into_bytes().into()
         }
     }
 
@@ -326,7 +327,7 @@ mod bytes {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            OctetString::decode_value(reader, header).map(|octet_string| octet_string.inner.into())
+            OctetString::decode_value(reader, header).map(Into::into)
         }
     }
 
@@ -361,6 +362,23 @@ mod bytes {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use crate::asn1::{OctetStringRef, PrintableStringRef};
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn decode_ber() {
+        use crate::{Decode, asn1::OctetString};
+        use hex_literal::hex;
+
+        const EXAMPLE_BER: &[u8] = &hex!(
+            "2480" // Constructed indefinite length OCTET STRING
+            "040648656c6c6f2c" // Segment containing "Hello,"
+            "040620776f726c64" // Segment containing world
+            "0000" // End-of-contents marker
+        );
+
+        let decoded = OctetString::from_ber(EXAMPLE_BER).unwrap();
+        assert_eq!(decoded.as_bytes(), b"Hello, world");
+    }
 
     #[test]
     fn octet_string_decode_into() {
