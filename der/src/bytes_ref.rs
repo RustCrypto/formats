@@ -2,7 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StrRef, Writer,
+    DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, Header, Length, Reader, Result, StrRef,
+    Writer,
 };
 use core::cmp::Ordering;
 
@@ -74,6 +75,10 @@ impl<'a> DecodeValue<'a> for BytesRef<'a> {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+        if header.length.is_indefinite() && !header.tag.is_constructed() {
+            return Err(reader.error(ErrorKind::IndefiniteLength));
+        }
+
         reader.read_slice(header.length).and_then(Self::new)
     }
 }
