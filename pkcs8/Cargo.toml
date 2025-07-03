@@ -17,7 +17,7 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8.0-rc.3", features = ["oid"] }
+der = { version = "0.8.0-rc.6", features = ["oid"] }
 spki = { version = "0.8.0-rc.0" }
 
 # optional dependencies
