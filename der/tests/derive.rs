@@ -204,6 +204,7 @@ mod choice {
 
         /// Test case for `CHOICE` inside `[0]` `EXPLICIT` tag in `SEQUENCE`.
         #[derive(Sequence, Debug, Eq, PartialEq)]
+        #[allow(dead_code)]
         pub struct ExplicitChoiceInsideSequence<'a> {
             #[asn1(tag_mode = "EXPLICIT", context_specific = "0")]
             choice_field: ImplicitChoice<'a>,
@@ -396,17 +397,17 @@ mod sequence {
         let spki_bytes = hex!(
         // first SPKI
         "30 1A
-            30 0D 
+            30 0D
                 06 09
-                    2A 86 48 86 F7 0D 01 01 01 
+                    2A 86 48 86 F7 0D 01 01 01
                 05 00
             03 09
                 00 A0 A1 A2 A3 A4 A5 A6 A7"
         // second SPKI
         "30 1A
-            30 0D 
+            30 0D
                 06 09
-                    2A 86 48 86 F7 0D 01 01 01 
+                    2A 86 48 86 F7 0D 01 01 01
                 05 00
             03 09
                 00 B0 B1 B2 B3 B4 B5 B6 B7");
@@ -422,6 +423,7 @@ mod sequence {
 
     /// PKCS#8v2 `OneAsymmetricKey`
     #[derive(Sequence)]
+    #[allow(dead_code)]
     pub struct OneAsymmetricKey<'a> {
         pub version: u8,
         pub private_key_algorithm: AlgorithmIdentifier<'a>,
@@ -441,6 +443,7 @@ mod sequence {
     /// X.509 extension
     // TODO(tarcieri): tests for code derived with the `default` attribute
     #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
+    #[allow(dead_code)]
     pub struct Extension<'a> {
         extn_id: ObjectIdentifier,
         #[asn1(default = "critical_default")]
@@ -779,6 +782,7 @@ mod decode_encode_value {
     /// Example of a structure, that does not have a tag and is not a sequence
     /// but can be encoded as `[0] IMPLICIT`
     #[derive(DecodeValue, EncodeValue, Default, Eq, PartialEq, Debug)]
+    #[allow(dead_code)]
     struct DecodeEncodeCheck {
         field: bool,
     }
@@ -1225,6 +1229,7 @@ mod infer_default {
     }
 
     #[derive(Sequence)]
+    #[allow(dead_code)]
     struct Foo {
         #[asn1(default = "Default::default")]
         pub use_default_default: bool,
@@ -1233,6 +1238,7 @@ mod infer_default {
         pub use_custom: bool,
     }
 
+    #[allow(dead_code)]
     fn something_true() -> bool {
         todo!()
     }
