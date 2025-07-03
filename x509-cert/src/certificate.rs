@@ -5,7 +5,9 @@ use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use core::{cmp::Ordering, fmt::Debug};
+use der::asn1::{AsBitStringRef, BitStringRef};
 use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd, asn1::BitString};
+use der::{DecodeValue, DerOrd, EncodeValue, FixedTag};
 
 #[cfg(feature = "pem")]
 use der::{
@@ -111,8 +113,24 @@ impl Default for Version {
 }
 
 /// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
-pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
+pub type TbsCertificate = TbsCertificateInner<'static, Rfc5280>;
 
+pub trait DerMemory {
+    type BITSTRING<'m>: FixedTag
+        + DecodeValue<'m, Error = der::Error>
+        + EncodeValue
+        + DerOrd
+        + Clone
+        + Debug
+        + Eq
+        + PartialEq
+        + AsBitStringRef<'m>;
+}
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
+pub struct AllocDerMemory;
+impl DerMemory for AllocDerMemory {
+    type BITSTRING<'a> = BitString;
+}
 /// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
 ///
 /// ASN.1 structure containing the names of the subject and issuer, a public
@@ -141,7 +159,7 @@ pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct TbsCertificateInner<P: Profile = Rfc5280> {
+pub struct TbsCertificateInner<'m, MEM: DerMemory + 'static, P: Profile = Rfc5280> {
     /// The certificate version.
     ///
     /// Note that this value defaults to Version 1 per the RFC. However,
@@ -162,13 +180,13 @@ pub struct TbsCertificateInner<P: Profile = Rfc5280> {
     pub(crate) issuer_unique_id: Option<BitString>,
 
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
-    pub(crate) subject_unique_id: Option<BitString>,
+    pub(crate) subject_unique_id: Option<MEM::BITSTRING<'m>>,
 
     #[asn1(context_specific = "3", tag_mode = "EXPLICIT", optional = "true")]
     pub(crate) extensions: Option<ext::Extensions>,
 }
 
-impl<P: Profile> TbsCertificateInner<P> {
+impl<'m, MEM: DerMemory, P: Profile> TbsCertificateInner<'m, MEM, P> {
     /// [`Version`] of this certificate (v1/v2/v3).
     pub fn version(&self) -> Version {
         self.version
@@ -225,8 +243,10 @@ impl<P: Profile> TbsCertificateInner<P> {
     /// issuing CA.
     ///
     /// (NOTE: added in X.509 v2)
-    pub fn subject_unique_id(&self) -> &Option<BitString> {
-        &self.subject_unique_id
+    pub fn subject_unique_id(&'m self) -> Option<BitStringRef<'m>> {
+        self.subject_unique_id
+            .as_ref()
+            .map(|id| id.as_bitstring_ref())
     }
 
     /// Certificate extensions.
@@ -318,7 +338,7 @@ impl<P: Profile> TbsCertificateInner<P> {
 /// X.509 certificates are defined in [RFC 5280 Section 4.1].
 ///
 /// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
-pub type Certificate = CertificateInner<Rfc5280>;
+pub type Certificate = CertificateInner<'static, Rfc5280>;
 
 /// X.509 certificates are defined in [RFC 5280 Section 4.1].
 ///
@@ -334,15 +354,15 @@ pub type Certificate = CertificateInner<Rfc5280>;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct CertificateInner<P: Profile = Rfc5280> {
-    pub(crate) tbs_certificate: TbsCertificateInner<P>,
+pub struct CertificateInner<'m, MEM: DerMemory + 'static, P: Profile = Rfc5280> {
+    pub(crate) tbs_certificate: TbsCertificateInner<'m, MEM, P>,
     pub(crate) signature_algorithm: AlgorithmIdentifier,
     pub(crate) signature: BitString,
 }
 
-impl<P: Profile> CertificateInner<P> {
+impl<'m, MEM: DerMemory, P: Profile> CertificateInner<'m, MEM, P> {
     /// Get the [`TbsCertificateInner`] (i.e. the part the signature is computed over).
-    pub fn tbs_certificate(&self) -> &TbsCertificateInner<P> {
+    pub fn tbs_certificate(&self) -> &TbsCertificateInner<'m, MEM, P> {
         &self.tbs_certificate
     }
 
@@ -359,7 +379,7 @@ impl<P: Profile> CertificateInner<P> {
 }
 
 #[cfg(feature = "pem")]
-impl<P: Profile> PemLabel for CertificateInner<P> {
+impl<'m, MEM: DerMemory, P: Profile> PemLabel for CertificateInner<'m, MEM, P> {
     const PEM_LABEL: &'static str = "CERTIFICATE";
 }
 
@@ -377,7 +397,7 @@ impl<P: Profile> PemLabel for CertificateInner<P> {
 pub type PkiPath = Vec<Certificate>;
 
 #[cfg(feature = "pem")]
-impl<P: Profile> CertificateInner<P> {
+impl<P: Profile> CertificateInner<'static, AllocDerMemory, P> {
     /// Parse a chain of pem-encoded certificates from a slice.
     ///
     /// Returns the list of certificates.
