@@ -17,7 +17,7 @@ rust-version = "1.85"
 
 [dependencies]
 der = { version = "0.8.0-rc.6", features = ["alloc", "derive", "oid"], default-features = false }
-spki = { version = "0.8.0-rc.0", default-features = false }
+spki = { version = "0.8.0-rc.3", default-features = false }
 x509-cert = { version = "0.3.0-rc.0", default-features = false }
 const-oid = { version = "0.10.0", features = ["db"], default-features = false }
 cms = { version = "=0.3.0-pre.0", default-features = false }
@@ -29,7 +29,7 @@ zeroize = { version = "1.8.1", optional = true, default-features = false }
 [dev-dependencies]
 hex-literal = "1"
 pkcs8 = { version = "0.11.0-rc.1", features = ["pkcs5", "getrandom"] }
-pkcs5 = { version = "0.8.0-rc.0", features = ["pbes2", "3des"] }
+pkcs5 = { version = "0.8.0-rc.3", features = ["pbes2", "3des"] }
 sha2 = "0.11.0-rc.0"
 whirlpool = "0.11.0-rc.0"
 
