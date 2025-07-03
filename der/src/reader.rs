@@ -32,26 +32,6 @@ pub trait Reader<'r>: Clone {
         E: From<Error>,
         F: FnOnce(&mut Self) -> Result<T, E>;
 
-    /// Read a value (i.e. the "V" part of a "TLV" field) using the provided header.
-    ///
-    /// This calls the provided function `f` with a nested reader created using
-    /// [`Reader::read_nested`].
-    fn read_value<T, F, E>(&mut self, mut header: Header, f: F) -> Result<T, E>
-    where
-        E: From<Error>,
-        F: FnOnce(&mut Self, Header) -> Result<T, E>,
-    {
-        header.length = header.length.sans_eoc();
-        let ret = self.read_nested(header.length, |r| f(r, header))?;
-
-        // Consume EOC marker if the length is indefinite.
-        if header.length.is_indefinite() {
-            read_eoc(self)?;
-        }
-
-        Ok(ret)
-    }
-
     /// Attempt to read data borrowed directly from the input as a slice,
     /// updating the internal cursor position.
     ///
@@ -212,7 +192,7 @@ pub trait Reader<'r>: Clone {
     {
         let header = Header::decode(self)?;
         header.tag.assert_eq(Tag::Sequence)?;
-        self.read_value(header, |r, _| f(r))
+        read_value(self, header, |r, _| f(r))
     }
 
     /// Obtain a slice of bytes containing a complete TLV production suitable for parsing later.
@@ -221,4 +201,25 @@ pub trait Reader<'r>: Clone {
         let header_len = header.encoded_len()?;
         self.read_slice((header_len + header.length)?)
     }
+}
+
+/// Read a value (i.e. the "V" part of a "TLV" field) using the provided header.
+///
+/// This calls the provided function `f` with a nested reader created using
+/// [`Reader::read_nested`].
+pub(crate) fn read_value<'r, R, T, F, E>(reader: &mut R, mut header: Header, f: F) -> Result<T, E>
+where
+    R: Reader<'r>,
+    E: From<Error>,
+    F: FnOnce(&mut R, Header) -> Result<T, E>,
+{
+    header.length = header.length.sans_eoc();
+    let ret = reader.read_nested(header.length, |r| f(r, header))?;
+
+    // Consume EOC marker if the length is indefinite.
+    if header.length.is_indefinite() {
+        read_eoc(reader)?;
+    }
+
+    Ok(ret)
 }
