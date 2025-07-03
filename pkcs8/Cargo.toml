@@ -18,7 +18,7 @@ rust-version = "1.85"
 
 [dependencies]
 der = { version = "0.8.0-rc.6", features = ["oid"] }
-spki = { version = "0.8.0-rc.0" }
+spki = { version = "0.8.0-rc.3" }
 
 # optional dependencies
 rand_core = { version = "0.9", optional = true, default-features = false }

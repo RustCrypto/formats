@@ -18,7 +18,7 @@ rust-version = "1.85"
 [dependencies]
 crmf = "=0.3.0-pre.0"
 der = { version = "0.8.0-rc.6", features = ["alloc", "derive", "flagset", "oid"] }
-spki = { version = "0.8.0-rc.0" }
+spki = { version = "0.8.0-rc.3" }
 x509-cert = { version = "0.3.0-rc.0", default-features = false }
 
 digest = { version = "0.11.0-pre.10", optional = true, default-features = false }
