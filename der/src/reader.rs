@@ -223,3 +223,39 @@ where
 
     Ok(ret)
 }
+
+/// Read a constructed value into a [`Vec`], removing intermediate headers and assembling the result
+/// into a single contiguous bytestring.
+///
+/// The end-of-content marker is not handled by this function. Instead, it's expected for this to
+/// be called with a nested reader which ends immediately before the EOC.
+#[cfg(feature = "alloc")]
+pub(crate) fn read_constructed_vec<'r, R: Reader<'r>>(
+    reader: &mut R,
+    header: Header,
+) -> crate::Result<Vec<u8>> {
+    if !header.length.is_indefinite() {
+        return Err(reader.error(ErrorKind::IndefiniteLength));
+    }
+
+    let mut bytes = Vec::with_capacity(header.length.try_into()?);
+    let mut offset = 0;
+
+    while !reader.is_finished() {
+        let h = Header::decode(reader)?;
+        h.tag.assert_eq(header.tag)?;
+
+        // Indefinite length headers can't be indefinite
+        if h.length.is_indefinite() {
+            return Err(reader.error(ErrorKind::IndefiniteLength));
+        }
+
+        // Add enough zeroes into the `Vec` to store the chunk
+        let l = usize::try_from(h.length)?;
+        bytes.extend(core::iter::repeat_n(0, l));
+        reader.read_into(&mut bytes[offset..(offset + l)])?;
+        offset += l;
+    }
+
+    Ok(bytes)
+}
