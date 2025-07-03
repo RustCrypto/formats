@@ -152,7 +152,7 @@ macro_rules! impl_custom_class {
                 }
 
                 // read_value checks if header matches decoded length
-                let value = reader.read_value(header, T::decode_value)?;
+                let value = crate::reader::read_value(reader, header, T::decode_value)?;
 
                 Ok(Some(Self {
                     tag_number,
@@ -189,7 +189,7 @@ macro_rules! impl_custom_class {
                     Tag::$class_enum_name { number, .. } => Ok(Self {
                         tag_number: number,
                         tag_mode: TagMode::default(),
-                        value: reader.read_value(header, |reader, _| {
+                        value: crate::reader::read_value(reader, header, |reader, _| {
                             // Decode inner tag-length-value of EXPLICIT
                             T::decode(reader)
                         })?,

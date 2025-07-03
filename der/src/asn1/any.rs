@@ -176,7 +176,7 @@ pub use self::allocating::Any;
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::{BytesOwned, referenced::*};
+    use crate::{BytesOwned, reader::read_value, referenced::*};
     use alloc::boxed::Box;
 
     /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
@@ -275,7 +275,7 @@ mod allocating {
 
         fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Error> {
             let header = Header::decode(reader)?;
-            reader.read_value(header, Self::decode_value)
+            read_value(reader, header, Self::decode_value)
         }
     }
 
