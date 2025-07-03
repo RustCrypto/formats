@@ -2,8 +2,8 @@
 //! library-level length limitation i.e. `Length::max()`.
 
 use crate::{
-    BytesRef, Decode, DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, Header, Length, Reader,
-    Result, StrRef, Writer, referenced::OwnedToRef,
+    BytesRef, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StrRef,
+    Writer, reader::read_constructed_vec, referenced::OwnedToRef,
 };
 use alloc::{boxed::Box, vec::Vec};
 use core::cmp::Ordering;
@@ -66,28 +66,7 @@ impl<'a> DecodeValue<'a> for BytesOwned {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         // Reassemble indefinite length string types
         if header.length.is_indefinite() && !header.tag.is_constructed() {
-            // Parse constructed indefinite length data
-            // TODO(tarcieri): extract this somewhere reusable
-            let mut bytes = Vec::with_capacity(header.length.try_into()?);
-            let mut offset = 0;
-
-            while !reader.is_finished() {
-                let h = Header::decode(reader)?;
-                h.tag.assert_eq(header.tag)?;
-
-                // Indefinite length headers can't be indefinite
-                if h.length.is_indefinite() {
-                    return Err(reader.error(ErrorKind::IndefiniteLength));
-                }
-
-                // Add enough zeroes into the `Vec` to store the chunk
-                let l = usize::try_from(h.length)?;
-                bytes.extend(core::iter::repeat_n(0, l));
-                reader.read_into(&mut bytes[offset..(offset + l)])?;
-                offset += l;
-            }
-
-            return Self::new(bytes);
+            return Self::new(read_constructed_vec(reader, header)?);
         }
 
         reader.read_vec(header.length).and_then(Self::new)
