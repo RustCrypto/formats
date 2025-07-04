@@ -3,7 +3,7 @@
 
 use crate::{
     BytesRef, DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StrRef,
-    Writer, reader::read_constructed_vec, referenced::OwnedToRef,
+    Writer, length::indefinite::read_constructed_vec, referenced::OwnedToRef,
 };
 use alloc::{boxed::Box, vec::Vec};
 use core::cmp::Ordering;
