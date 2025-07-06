@@ -11,6 +11,7 @@ members = [
     "der",
     "der_derive",
     "gss-api",
+    "mcf",
     "pem-rfc7468",
     "pkcs1",
     "pkcs5",

@@ -1,0 +1,15 @@
+[package]
+name = "mcf"
+version = "0.0.0"
+authors = ["RustCrypto Developers"]
+edition = "2024"
+rust-version = "1.85"
+readme = "README.md"
+repository = "https://github.com/RustCrypto/formats"
+license = "Apache-2.0 OR MIT"
+keywords = ["crypt", "crypto", "password-hash", "password-hashing"]
+categories = ["cryptography", "authentication", "encoding", "no-std", "parser-implementations"]
+description = """
+Pure Rust implementation of the Modular Crypt Format (MCF) which is used to store password hashes
+in the form `${id}$...`
+"""
