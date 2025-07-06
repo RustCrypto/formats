@@ -1,6 +1,6 @@
 version: 2
 updates:
- package-ecosystem: cargo
+- package-ecosystem: cargo
   versioning-strategy: lockfile-only
   directory: "/"
   allow:
