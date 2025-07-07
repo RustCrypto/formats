@@ -22,11 +22,11 @@ fn parse_sha512_hash() {
     assert_eq!("6", hash.id());
 
     let mut fields = hash.fields();
-    assert_eq!("rounds=100000", fields.next().unwrap());
-    assert_eq!("exn6tVc2j/MZD8uG", fields.next().unwrap());
+    assert_eq!("rounds=100000", fields.next().unwrap().as_str());
+    assert_eq!("exn6tVc2j/MZD8uG", fields.next().unwrap().as_str());
     assert_eq!(
         "BI1Xh8qQSK9J4m14uwy7abn.ctj/TIAzlaVCto0MQrOFIeTXsc1iwzH16XEWo/a7c7Y9eVJvufVzYAs4EsPOy0",
-        fields.next().unwrap()
+        fields.next().unwrap().as_str()
     );
     assert_eq!(None, fields.next());
 }
