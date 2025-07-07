@@ -14,6 +14,12 @@ Pure Rust implementation of the Modular Crypt Format (MCF) which is used to stor
 in the form `${id}$...`
 """
 
+[dependencies]
+base64ct = { version = "1.7", features = ["alloc"] }
+
+[dev-dependencies]
+hex-literal = "1"
+
 [features]
 default = ["alloc"]
 alloc = []

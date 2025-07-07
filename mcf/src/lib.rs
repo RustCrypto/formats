@@ -16,14 +16,19 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
+mod base64;
+mod error;
 mod fields;
 
+pub use base64::Base64;
+pub use error::{Error, Result};
 pub use fields::{Field, Fields};
 
-use core::fmt;
-
 #[cfg(feature = "alloc")]
-use {alloc::string::String, core::str};
+use {
+    alloc::string::String,
+    core::{fmt, str},
+};
 
 /// Debug message used in panics when invariants aren't properly held.
 #[cfg(feature = "alloc")]
@@ -154,20 +159,4 @@ fn validate_id(id: &str) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Result type for `mcf`.
-pub type Result<T> = core::result::Result<T, Error>;
-
-/// Error type.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-#[non_exhaustive]
-pub struct Error {}
-
-impl core::error::Error for Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("modular crypt format error")
-    }
 }
