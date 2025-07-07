@@ -1,6 +1,6 @@
 //! ASN.1 `TeletexString` support.
 //!
-use crate::{FixedTag, Result, StrRef, Tag, asn1::AnyRef};
+use crate::{FixedTag, Result, StringRef, Tag, asn1::AnyRef};
 use core::{fmt, ops::Deref};
 
 macro_rules! impl_teletex_string {
@@ -44,7 +44,7 @@ macro_rules! impl_teletex_string {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct TeletexStringRef<'a> {
     /// Inner value
-    inner: StrRef<'a>,
+    inner: StringRef<'a>,
 }
 
 impl<'a> TeletexStringRef<'a> {
@@ -60,7 +60,7 @@ impl<'a> TeletexStringRef<'a> {
             return Err(Self::TAG.value_error().into());
         }
 
-        StrRef::from_bytes(input)
+        StringRef::from_bytes(input)
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error().into())
     }
@@ -69,7 +69,7 @@ impl<'a> TeletexStringRef<'a> {
 impl_teletex_string!(TeletexStringRef<'a>, 'a);
 
 impl<'a> Deref for TeletexStringRef<'a> {
-    type Target = StrRef<'a>;
+    type Target = StringRef<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -96,7 +96,7 @@ mod allocation {
     use super::TeletexStringRef;
 
     use crate::{
-        BytesRef, Error, FixedTag, Result, StrOwned, Tag,
+        BytesRef, Error, FixedTag, Result, StringOwned, Tag,
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
     };
@@ -120,7 +120,7 @@ mod allocation {
     #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
     pub struct TeletexString {
         /// Inner value
-        inner: StrOwned,
+        inner: StringOwned,
     }
 
     impl TeletexString {
@@ -133,7 +133,7 @@ mod allocation {
 
             TeletexStringRef::new(input)?;
 
-            StrOwned::from_bytes(input)
+            StringOwned::from_bytes(input)
                 .map(|inner| Self { inner })
                 .map_err(|_| Self::TAG.value_error().into())
         }
@@ -142,7 +142,7 @@ mod allocation {
     impl_teletex_string!(TeletexString);
 
     impl Deref for TeletexString {
-        type Target = StrOwned;
+        type Target = StringOwned;
 
         fn deref(&self) -> &Self::Target {
             &self.inner
@@ -152,7 +152,7 @@ mod allocation {
     impl<'a> From<TeletexStringRef<'a>> for TeletexString {
         fn from(value: TeletexStringRef<'a>) -> TeletexString {
             let inner =
-                StrOwned::from_bytes(value.inner.as_bytes()).expect("Invalid TeletexString");
+                StringOwned::from_bytes(value.inner.as_bytes()).expect("Invalid TeletexString");
             Self { inner }
         }
     }
@@ -196,7 +196,7 @@ mod allocation {
         fn try_from(input: String) -> Result<Self> {
             TeletexStringRef::new(&input)?;
 
-            StrOwned::new(input)
+            StringOwned::new(input)
                 .map(|inner| Self { inner })
                 .map_err(|_| Self::TAG.value_error().into())
         }

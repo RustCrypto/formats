@@ -8,7 +8,7 @@
 )]
 
 use crate::{
-    BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, StrRef,
+    BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, StringRef,
     Tag, Writer,
 };
 
@@ -75,7 +75,7 @@ impl<'a> DecodeValue<'a> for f64 {
                 _ => Err(reader.error(Tag::Real.value_error())),
             }
         } else {
-            let astr = StrRef::from_bytes(&bytes[1..])?;
+            let astr = StringRef::from_bytes(&bytes[1..])?;
             match astr.inner.parse::<f64>() {
                 Ok(val) => Ok(val),
                 // Real related error: encoding not supported or malformed

@@ -1,6 +1,6 @@
 //! ASN.1 `VideotexString` support.
 
-use crate::{FixedTag, Result, StrRef, Tag, asn1::AnyRef};
+use crate::{FixedTag, Result, StringRef, Tag, asn1::AnyRef};
 use core::{fmt, ops::Deref};
 
 /// ASN.1 `VideotexString` type.
@@ -20,7 +20,7 @@ use core::{fmt, ops::Deref};
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct VideotexStringRef<'a> {
     /// Inner value
-    inner: StrRef<'a>,
+    inner: StringRef<'a>,
 }
 
 impl<'a> VideotexStringRef<'a> {
@@ -37,7 +37,7 @@ impl<'a> VideotexStringRef<'a> {
             return Err(Self::TAG.value_error().into());
         }
 
-        StrRef::from_bytes(input)
+        StringRef::from_bytes(input)
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error().into())
     }
@@ -46,7 +46,7 @@ impl<'a> VideotexStringRef<'a> {
 impl_string_type!(VideotexStringRef<'a>, 'a);
 
 impl<'a> Deref for VideotexStringRef<'a> {
-    type Target = StrRef<'a>;
+    type Target = StringRef<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
