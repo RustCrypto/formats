@@ -54,7 +54,7 @@ macro_rules! impl_printable_string {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct PrintableStringRef<'a> {
     /// Inner value
-    inner: StringRef<'a>,
+    inner: &'a StringRef,
 }
 
 impl<'a> PrintableStringRef<'a> {
@@ -91,15 +91,20 @@ impl<'a> PrintableStringRef<'a> {
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error().into())
     }
+
+    /// Borrow the inner `str`.
+    pub fn as_str(&self) -> &'a str {
+        self.inner.as_str()
+    }
 }
 
 impl_printable_string!(PrintableStringRef<'a>, 'a);
 
 impl<'a> Deref for PrintableStringRef<'a> {
-    type Target = StringRef<'a>;
+    type Target = StringRef;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        self.inner
     }
 }
 impl<'a> From<&PrintableStringRef<'a>> for PrintableStringRef<'a> {
@@ -110,7 +115,7 @@ impl<'a> From<&PrintableStringRef<'a>> for PrintableStringRef<'a> {
 
 impl<'a> From<PrintableStringRef<'a>> for AnyRef<'a> {
     fn from(printable_string: PrintableStringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::PrintableString, printable_string.inner.into())
+        AnyRef::from_tag_and_value(Tag::PrintableString, printable_string.inner.as_ref())
     }
 }
 
@@ -126,7 +131,7 @@ mod allocation {
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
     };
-    use alloc::string::String;
+    use alloc::{borrow::ToOwned, string::String};
     use core::{fmt, ops::Deref};
 
     /// ASN.1 `PrintableString` type.
@@ -214,7 +219,7 @@ mod allocation {
         type Owned = PrintableString;
         fn ref_to_owned(&self) -> Self::Owned {
             PrintableString {
-                inner: self.inner.ref_to_owned(),
+                inner: self.inner.to_owned(),
             }
         }
     }
@@ -223,7 +228,7 @@ mod allocation {
         type Borrowed<'a> = PrintableStringRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             PrintableStringRef {
-                inner: self.inner.owned_to_ref(),
+                inner: self.inner.as_ref(),
             }
         }
     }

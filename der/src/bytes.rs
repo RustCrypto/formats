@@ -1,91 +1,82 @@
 //! Common handling for types backed by byte slices with enforcement of a
 //! library-level length limitation i.e. `Length::max()`.
 
-use crate::{
-    DecodeValue, DerOrd, EncodeValue, Error, ErrorKind, Header, Length, Reader, Result, StringRef,
-    Writer,
-};
+use crate::{DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, Writer};
 use core::cmp::Ordering;
 
-#[cfg(feature = "alloc")]
-use crate::StringOwned;
+/// Byte slice newtype which respects the `Length::MAX` limit.
+#[derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub(crate) struct BytesRef([u8]);
 
-/// Byte slice newtype which respects the `Length::max()` limit.
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
-pub(crate) struct BytesRef<'a> {
-    /// Precomputed `Length` (avoids possible panicking conversions)
-    pub length: Length,
-
-    /// Inner value
-    pub inner: &'a [u8],
-}
-
-impl<'a> BytesRef<'a> {
+impl BytesRef {
     /// Constant value representing an empty byte slice.
-    pub const EMPTY: Self = Self {
-        length: Length::ZERO,
-        inner: &[],
-    };
+    pub const EMPTY: &'static Self = Self::new_unchecked(&[]);
 
     /// Create a new [`BytesRef`], ensuring that the provided `slice` value
-    /// is shorter than `Length::max()`.
-    pub const fn new(slice: &'a [u8]) -> Result<Self> {
+    /// is shorter than `Length::MAX`.
+    pub const fn new(slice: &[u8]) -> Result<&Self> {
         match Length::new_usize(slice.len()) {
-            Ok(length) => Ok(Self {
-                length,
-                inner: slice,
-            }),
+            Ok(_) => Ok(Self::new_unchecked(slice)),
             Err(err) => Err(err),
         }
     }
 
-    /// Borrow the inner byte slice
-    pub fn as_slice(&self) -> &'a [u8] {
-        self.inner
+    /// Perform a raw conversion of a byte slice to `Self` without first performing a length check.
+    pub(crate) const fn new_unchecked(slice: &[u8]) -> &Self {
+        // SAFETY: `Self` is a `repr(transparent)` newtype for `[u8]`
+        #[allow(unsafe_code)]
+        unsafe {
+            &*(slice as *const [u8] as *const Self)
+        }
     }
 
-    /// Get the [`Length`] of this [`BytesRef`]
-    pub fn len(self) -> Length {
-        self.length
+    /// Borrow the inner byte slice
+    pub const fn as_slice(&self) -> &[u8] {
+        &self.0
+    }
+
+    /// Get the [`Length`] of this [`BytesRef`].
+    pub fn len(&self) -> Length {
+        debug_assert!(u32::try_from(self.0.len()).is_ok());
+
+        #[allow(clippy::cast_possible_truncation)] // checked by constructors
+        Length::new(self.0.len() as u32)
     }
 
     /// Is this [`BytesRef`] empty?
-    pub fn is_empty(self) -> bool {
-        self.len() == Length::ZERO
+    pub const fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
-    /// Get a prefix of a [`BytesRef`] of the given length.
-    pub fn prefix(self, length: Length) -> Result<Self> {
+    /// Get a prefix of a [`crate::bytes_ref::BytesRef`] of the given length.
+    pub fn prefix(&self, length: Length) -> Result<&Self> {
         let inner = self
             .as_slice()
             .get(..usize::try_from(length)?)
-            .ok_or_else(|| Error::incomplete(self.length))?;
+            .ok_or_else(|| Error::incomplete(self.len()))?;
 
-        Ok(Self { length, inner })
+        Ok(Self::new_unchecked(inner))
     }
 }
 
-impl AsRef<[u8]> for BytesRef<'_> {
+impl AsRef<[u8]> for BytesRef {
     fn as_ref(&self) -> &[u8] {
         self.as_slice()
     }
 }
 
-impl<'a> DecodeValue<'a> for BytesRef<'a> {
+impl<'a> DecodeValue<'a> for &'a BytesRef {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        if header.length.is_indefinite() && !header.tag.is_constructed() {
-            return Err(reader.error(ErrorKind::IndefiniteLength));
-        }
-
-        reader.read_slice(header.length).and_then(Self::new)
+        BytesRef::new(reader.read_slice(header.length)?)
     }
 }
 
-impl EncodeValue for BytesRef<'_> {
+impl EncodeValue for BytesRef {
     fn value_len(&self) -> Result<Length> {
-        Ok(self.length)
+        Ok(self.len())
     }
 
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
@@ -93,64 +84,29 @@ impl EncodeValue for BytesRef<'_> {
     }
 }
 
-impl Default for BytesRef<'_> {
-    fn default() -> Self {
-        Self {
-            length: Length::ZERO,
-            inner: &[],
-        }
-    }
-}
-
-impl DerOrd for BytesRef<'_> {
+impl DerOrd for BytesRef {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
         Ok(self.as_slice().cmp(other.as_slice()))
     }
 }
 
-impl<'a> From<StringRef<'a>> for BytesRef<'a> {
-    fn from(s: StringRef<'a>) -> BytesRef<'a> {
-        let bytes = s.as_bytes();
-        debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
-
-        BytesRef {
-            inner: bytes,
-            length: s.length,
-        }
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl<'a> From<&'a StringOwned> for BytesRef<'a> {
-    fn from(s: &'a StringOwned) -> BytesRef<'a> {
-        let bytes = s.as_bytes();
-        debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
-
-        BytesRef {
-            inner: bytes,
-            length: s.length,
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a [u8]> for BytesRef<'a> {
+impl<'a> TryFrom<&'a [u8]> for &'a BytesRef {
     type Error = Error;
 
     fn try_from(slice: &'a [u8]) -> Result<Self> {
-        Self::new(slice)
+        BytesRef::new(slice)
     }
 }
 
-// Implement by hand because the derive would create invalid values.
-// Make sure the length and the inner.len matches.
+/// Implemented by hand because the derive would create invalid values.
+/// Makes sure the length and the inner.len matches.
 #[cfg(feature = "arbitrary")]
-impl<'a> arbitrary::Arbitrary<'a> for BytesRef<'a> {
+impl<'a> arbitrary::Arbitrary<'a> for &'a BytesRef {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        let length = u.arbitrary()?;
-        Ok(Self {
-            length,
-            inner: u.bytes(u32::from(length) as usize)?,
-        })
+        let length: Length = u.arbitrary()?;
+        Ok(BytesRef::new_unchecked(
+            u.bytes(u32::from(length) as usize)?,
+        ))
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
@@ -162,12 +118,11 @@ impl<'a> arbitrary::Arbitrary<'a> for BytesRef<'a> {
 pub(crate) mod allocating {
     use super::BytesRef;
     use crate::{
-        DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, StringRef, Writer,
+        DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, Writer,
         length::indefinite::read_constructed_vec,
-        referenced::{OwnedToRef, RefToOwned},
     };
-    use alloc::{boxed::Box, vec::Vec};
-    use core::cmp::Ordering;
+    use alloc::{borrow::ToOwned, boxed::Box, vec::Vec};
+    use core::{borrow::Borrow, cmp::Ordering, ops::Deref};
 
     /// Byte slice newtype which respects the `Length::max()` limit.
     #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
@@ -190,34 +145,37 @@ pub(crate) mod allocating {
                 inner,
             })
         }
-
-        /// Borrow the inner byte slice
-        pub const fn as_slice(&self) -> &[u8] {
-            &self.inner
-        }
-
-        /// Get the [`Length`] of this [`BytesRef`]
-        pub const fn len(&self) -> Length {
-            self.length
-        }
-
-        /// Is this [`BytesOwned`] empty?
-        pub const fn is_empty(&self) -> bool {
-            self.len().is_zero()
-        }
-
-        /// Create [`BytesRef`] from allocated [`BytesOwned`].
-        pub const fn to_ref(&self) -> BytesRef<'_> {
-            BytesRef {
-                length: self.length,
-                inner: &self.inner,
-            }
-        }
     }
 
     impl AsRef<[u8]> for BytesOwned {
         fn as_ref(&self) -> &[u8] {
-            self.as_slice()
+            &self.inner
+        }
+    }
+
+    impl AsRef<BytesRef> for BytesOwned {
+        fn as_ref(&self) -> &BytesRef {
+            BytesRef::new_unchecked(&self.inner)
+        }
+    }
+
+    impl Borrow<[u8]> for BytesOwned {
+        fn borrow(&self) -> &[u8] {
+            &self.inner
+        }
+    }
+
+    impl Borrow<BytesRef> for BytesOwned {
+        fn borrow(&self) -> &BytesRef {
+            BytesRef::new_unchecked(&self.inner)
+        }
+    }
+
+    impl Deref for BytesOwned {
+        type Target = BytesRef;
+
+        fn deref(&self) -> &BytesRef {
+            self.borrow()
         }
     }
 
@@ -265,40 +223,11 @@ pub(crate) mod allocating {
         }
     }
 
-    impl From<StringRef<'_>> for BytesOwned {
-        fn from(s: StringRef<'_>) -> BytesOwned {
-            let bytes = s.as_bytes();
-            debug_assert_eq!(bytes.len(), usize::try_from(s.length).expect("overflow"));
-
+    impl From<&BytesRef> for BytesOwned {
+        fn from(bytes: &BytesRef) -> BytesOwned {
             BytesOwned {
-                inner: Box::from(bytes),
-                length: s.length,
-            }
-        }
-    }
-
-    impl OwnedToRef for BytesOwned {
-        type Borrowed<'a> = BytesRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
-            BytesRef {
-                length: self.length,
-                inner: self.inner.as_ref(),
-            }
-        }
-    }
-
-    impl<'a> RefToOwned<'a> for BytesRef<'a> {
-        type Owned = BytesOwned;
-        fn ref_to_owned(&self) -> Self::Owned {
-            BytesOwned::from(*self)
-        }
-    }
-
-    impl From<BytesRef<'_>> for BytesOwned {
-        fn from(s: BytesRef<'_>) -> BytesOwned {
-            BytesOwned {
-                length: s.length,
-                inner: Box::from(s.inner),
+                length: bytes.len(),
+                inner: bytes.as_slice().into(),
             }
         }
     }
@@ -324,6 +253,17 @@ pub(crate) mod allocating {
 
         fn try_from(bytes: Vec<u8>) -> Result<Self> {
             Self::new(bytes)
+        }
+    }
+
+    impl ToOwned for BytesRef {
+        type Owned = BytesOwned;
+
+        fn to_owned(&self) -> BytesOwned {
+            BytesOwned {
+                inner: self.as_slice().into(),
+                length: self.len(),
+            }
         }
     }
 

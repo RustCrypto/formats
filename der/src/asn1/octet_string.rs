@@ -13,7 +13,7 @@ use crate::{
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct OctetStringRef<'a> {
     /// Inner value
-    inner: BytesRef<'a>,
+    inner: &'a BytesRef,
 }
 
 impl<'a> OctetStringRef<'a> {
@@ -57,7 +57,7 @@ impl<'a> DecodeValue<'a> for OctetStringRef<'a> {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
-        let inner = BytesRef::decode_value(reader, header)?;
+        let inner = <&'a BytesRef>::decode_value(reader, header)?;
         Ok(Self { inner })
     }
 }
@@ -240,7 +240,7 @@ mod allocating {
     impl<'a> From<&'a OctetString> for OctetStringRef<'a> {
         fn from(octet_string: &'a OctetString) -> OctetStringRef<'a> {
             OctetStringRef {
-                inner: octet_string.inner.owned_to_ref(),
+                inner: octet_string.inner.as_ref(),
             }
         }
     }

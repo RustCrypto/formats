@@ -29,14 +29,14 @@ pub struct AnyRef<'a> {
     tag: Tag,
 
     /// Inner value encoded as bytes.
-    value: BytesRef<'a>,
+    value: &'a BytesRef,
 }
 
 impl<'a> AnyRef<'a> {
     /// [`AnyRef`] representation of the ASN.1 `NULL` type.
     pub const NULL: Self = Self {
         tag: Tag::Null,
-        value: BytesRef::EMPTY,
+        value: BytesRef::new_unchecked(&[]),
     };
 
     /// Create a new [`AnyRef`] from the provided [`Tag`] and DER bytes.
@@ -48,7 +48,7 @@ impl<'a> AnyRef<'a> {
     }
 
     /// Infallible creation of an [`AnyRef`] from a [`BytesRef`].
-    pub(crate) fn from_tag_and_value(tag: Tag, value: BytesRef<'a>) -> Self {
+    pub(crate) fn from_tag_and_value(tag: Tag, value: &'a BytesRef) -> Self {
         Self { tag, value }
     }
 
@@ -129,7 +129,7 @@ impl<'a> DecodeValue<'a> for AnyRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
         Ok(Self {
             tag: header.tag,
-            value: BytesRef::decode_value(reader, header)?,
+            value: <&'a BytesRef>::decode_value(reader, header)?,
         })
     }
 }
@@ -152,12 +152,12 @@ impl Tagged for AnyRef<'_> {
 
 impl ValueOrd for AnyRef<'_> {
     fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
-        self.value.der_cmp(&other.value)
+        self.value.der_cmp(other.value)
     }
 }
 
-impl<'a> From<AnyRef<'a>> for BytesRef<'a> {
-    fn from(any: AnyRef<'a>) -> BytesRef<'a> {
+impl<'a> From<AnyRef<'a>> for &'a BytesRef {
+    fn from(any: AnyRef<'a>) -> &'a BytesRef {
         any.value
     }
 }
@@ -256,10 +256,10 @@ mod allocating {
         }
 
         /// Create a new [`AnyRef`] from the provided [`Any`] owned tag and bytes.
-        pub const fn to_ref(&self) -> AnyRef<'_> {
+        pub fn to_ref(&self) -> AnyRef<'_> {
             AnyRef {
                 tag: self.tag,
-                value: self.value.to_ref(),
+                value: self.value.as_ref(),
             }
         }
     }

@@ -20,7 +20,7 @@ use core::{fmt, ops::Deref};
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct VideotexStringRef<'a> {
     /// Inner value
-    inner: StringRef<'a>,
+    inner: &'a StringRef,
 }
 
 impl<'a> VideotexStringRef<'a> {
@@ -46,10 +46,10 @@ impl<'a> VideotexStringRef<'a> {
 impl_string_type!(VideotexStringRef<'a>, 'a);
 
 impl<'a> Deref for VideotexStringRef<'a> {
-    type Target = StringRef<'a>;
+    type Target = StringRef;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        self.inner
     }
 }
 
@@ -64,14 +64,14 @@ impl<'a> From<&VideotexStringRef<'a>> for VideotexStringRef<'a> {
 }
 
 impl<'a> From<VideotexStringRef<'a>> for AnyRef<'a> {
-    fn from(printable_string: VideotexStringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::VideotexString, printable_string.inner.into())
+    fn from(videotex_string: VideotexStringRef<'a>) -> AnyRef<'a> {
+        AnyRef::from_tag_and_value(Tag::VideotexString, videotex_string.inner.as_ref())
     }
 }
 
 impl<'a> From<VideotexStringRef<'a>> for &'a [u8] {
-    fn from(printable_string: VideotexStringRef<'a>) -> &'a [u8] {
-        printable_string.as_bytes()
+    fn from(videotex_string: VideotexStringRef<'a>) -> &'a [u8] {
+        videotex_string.inner.as_bytes()
     }
 }
 
@@ -93,7 +93,7 @@ mod tests {
             0x15, 0x0b, 0x54, 0x65, 0x73, 0x74, 0x20, 0x55, 0x73, 0x65, 0x72, 0x20, 0x31,
         ];
 
-        let printable_string = VideotexStringRef::from_der(example_bytes).unwrap();
-        assert_eq!(printable_string.as_str(), "Test User 1");
+        let videotex_string = VideotexStringRef::from_der(example_bytes).unwrap();
+        assert_eq!(videotex_string.as_str(), "Test User 1");
     }
 }

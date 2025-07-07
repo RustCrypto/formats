@@ -29,7 +29,7 @@ use {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Utf8StringRef<'a> {
     /// Inner value
-    inner: StringRef<'a>,
+    inner: &'a StringRef,
 }
 
 impl<'a> Utf8StringRef<'a> {
@@ -40,15 +40,20 @@ impl<'a> Utf8StringRef<'a> {
     {
         StringRef::from_bytes(input.as_ref()).map(|inner| Self { inner })
     }
+
+    /// Borrow the inner `str`.
+    pub fn as_str(&self) -> &'a str {
+        self.inner.as_str()
+    }
 }
 
 impl_string_type!(Utf8StringRef<'a>, 'a);
 
 impl<'a> Deref for Utf8StringRef<'a> {
-    type Target = StringRef<'a>;
+    type Target = StringRef;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        self.inner
     }
 }
 
@@ -64,7 +69,7 @@ impl<'a> From<&Utf8StringRef<'a>> for Utf8StringRef<'a> {
 
 impl<'a> From<Utf8StringRef<'a>> for AnyRef<'a> {
     fn from(utf_string: Utf8StringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::Utf8String, utf_string.inner.into())
+        AnyRef::from_tag_and_value(Tag::Utf8String, utf_string.inner.as_ref())
     }
 }
 

@@ -41,7 +41,7 @@ impl OrdIsValueOrd for Null {}
 
 impl<'a> From<Null> for AnyRef<'a> {
     fn from(_: Null) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::Null, BytesRef::default())
+        AnyRef::from_tag_and_value(Tag::Null, BytesRef::EMPTY)
     }
 }
 
