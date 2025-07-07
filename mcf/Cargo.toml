@@ -13,3 +13,7 @@ description = """
 Pure Rust implementation of the Modular Crypt Format (MCF) which is used to store password hashes
 in the form `${id}$...`
 """
+
+[features]
+default = ["alloc"]
+alloc = []

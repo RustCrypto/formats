@@ -12,7 +12,7 @@ pub struct Fields<'a>(&'a str);
 impl<'a> Fields<'a> {
     /// Create a new field iterator from an MCF hash, returning an error in the event the hash
     /// doesn't start with a leading `$` prefix.
-    pub(crate) fn new(s: &'a str) -> Result<Self> {
+    pub fn new(s: &'a str) -> Result<Self> {
         let mut ret = Self(s);
 
         if ret.next() != Some(Field("")) {

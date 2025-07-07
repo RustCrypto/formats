@@ -13,16 +13,20 @@
     unused_qualifications
 )]
 
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
 mod fields;
 
 pub use fields::{Field, Fields};
 
-use alloc::string::String;
-use core::{fmt, str};
+use core::fmt;
+
+#[cfg(feature = "alloc")]
+use {alloc::string::String, core::str};
 
 /// Debug message used in panics when invariants aren't properly held.
+#[cfg(feature = "alloc")]
 const INVARIANT_MSG: &str = "should be ensured valid by constructor";
 
 /// Modular Crypt Format (MCF) serialized password hash.
@@ -39,8 +43,10 @@ const INVARIANT_MSG: &str = "should be ensured valid by constructor";
 /// ```text
 /// $6$rounds=100000$exn6tVc2j/MZD8uG$BI1Xh8qQSK9J4m14uwy7abn.ctj/TIAzlaVCto0MQrOFIeTXsc1iwzH16XEWo/a7c7Y9eVJvufVzYAs4EsPOy0
 /// ```
+#[cfg(feature = "alloc")]
 pub struct McfHash(String);
 
+#[cfg(feature = "alloc")]
 impl McfHash {
     /// Parse the given input string, returning an [`McfHash`] if valid.
     pub fn new(s: impl Into<String>) -> Result<McfHash> {
@@ -76,18 +82,21 @@ impl McfHash {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl AsRef<str> for McfHash {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
+#[cfg(feature = "alloc")]
 impl fmt::Display for McfHash {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }
 
+#[cfg(feature = "alloc")]
 impl str::FromStr for McfHash {
     type Err = Error;
 
@@ -97,6 +106,7 @@ impl str::FromStr for McfHash {
 }
 
 /// Perform validations that the given string is well-formed MCF.
+#[cfg(feature = "alloc")]
 fn validate(s: &str) -> Result<()> {
     // Validates the hash begins with a leading `$`
     let mut fields = Fields::new(s)?;
@@ -124,6 +134,7 @@ fn validate(s: &str) -> Result<()> {
 ///
 /// Allowed characters match the regex: `[a-z0-9\-]`, where the first and last characters do NOT
 /// contain a `-`.
+#[cfg(feature = "alloc")]
 fn validate_id(id: &str) -> Result<()> {
     let first = id.chars().next().ok_or(Error {})?;
     let last = id.chars().last().ok_or(Error {})?;
