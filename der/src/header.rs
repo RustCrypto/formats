@@ -36,8 +36,7 @@ impl<'a> Decode<'a> for Header {
     type Error = Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Header> {
-        let is_constructed = Tag::peek_is_constructed(reader)?;
-        let tag = Tag::decode(reader)?;
+        let (tag, is_constructed) = Tag::decode_with_constructed_bit(reader)?;
 
         let length = Length::decode(reader).map_err(|e| {
             if e.kind() == ErrorKind::Overlength {

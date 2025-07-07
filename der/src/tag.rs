@@ -164,17 +164,73 @@ impl Tag {
     /// rules implemented by this crate.
     pub(crate) const MAX_SIZE: usize = 6;
 
+    /// Decode a [`Tag`] in addition to returning the value of the constructed bit.
+    pub(crate) fn decode_with_constructed_bit<'a>(
+        reader: &mut impl Reader<'a>,
+    ) -> Result<(Self, bool)> {
+        let first_byte = reader.read_byte()?;
+        let is_constructed = first_byte & CONSTRUCTED_FLAG != 0;
+
+        let tag = match first_byte {
+            0x01 => Tag::Boolean,
+            0x02 => Tag::Integer,
+            0x03 => Tag::BitString,
+            0x04 => Tag::OctetString,
+            0x05 => Tag::Null,
+            0x06 => Tag::ObjectIdentifier,
+            0x09 => Tag::Real,
+            0x0A => Tag::Enumerated,
+            0x0C => Tag::Utf8String,
+            0x12 => Tag::NumericString,
+            0x13 => Tag::PrintableString,
+            0x14 => Tag::TeletexString,
+            0x15 => Tag::VideotexString,
+            0x16 => Tag::Ia5String,
+            0x17 => Tag::UtcTime,
+            0x18 => Tag::GeneralizedTime,
+            0x1A => Tag::VisibleString,
+            0x1B => Tag::GeneralString,
+            0x1E => Tag::BmpString,
+            0x24 if reader.encoding_rules() == EncodingRules::Ber => Tag::OctetString,
+            0x30 => Tag::Sequence, // constructed
+            0x31 => Tag::Set,      // constructed
+            0x40..=0x7F => {
+                let (constructed, number) = parse_parts(first_byte, reader)?;
+
+                Tag::Application {
+                    constructed,
+                    number,
+                }
+            }
+            0x80..=0xBF => {
+                let (constructed, number) = parse_parts(first_byte, reader)?;
+
+                Tag::ContextSpecific {
+                    constructed,
+                    number,
+                }
+            }
+            0xC0..=0xFF => {
+                let (constructed, number) = parse_parts(first_byte, reader)?;
+
+                Tag::Private {
+                    constructed,
+                    number,
+                }
+            }
+            // universal tag in long form
+            0x1F => return Err(reader.error(ErrorKind::TagNumberInvalid)),
+            byte => return Err(reader.error(ErrorKind::TagUnknown { byte })),
+        };
+
+        Ok((tag, is_constructed))
+    }
+
     /// Peek at the next byte in the reader and attempt to decode it as a [`Tag`] value.
     ///
     /// Does not modify the reader's state.
     pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
         Self::decode(&mut reader.clone())
-    }
-
-    /// Peek at whether the next byte in the reader has the constructed bit set.
-    pub(crate) fn peek_is_constructed<'a>(reader: &impl Reader<'a>) -> Result<bool> {
-        let octet = reader.clone().read_byte()?;
-        Ok(octet & CONSTRUCTED_FLAG != 0)
     }
 
     /// Returns true if given context-specific (or any given class) tag number matches the peeked tag.
@@ -304,61 +360,7 @@ impl<'a> Decode<'a> for Tag {
     type Error = Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self> {
-        let first_byte = reader.read_byte()?;
-
-        let tag = match first_byte {
-            0x01 => Tag::Boolean,
-            0x02 => Tag::Integer,
-            0x03 => Tag::BitString,
-            0x04 => Tag::OctetString,
-            0x05 => Tag::Null,
-            0x06 => Tag::ObjectIdentifier,
-            0x09 => Tag::Real,
-            0x0A => Tag::Enumerated,
-            0x0C => Tag::Utf8String,
-            0x12 => Tag::NumericString,
-            0x13 => Tag::PrintableString,
-            0x14 => Tag::TeletexString,
-            0x15 => Tag::VideotexString,
-            0x16 => Tag::Ia5String,
-            0x17 => Tag::UtcTime,
-            0x18 => Tag::GeneralizedTime,
-            0x1A => Tag::VisibleString,
-            0x1B => Tag::GeneralString,
-            0x1E => Tag::BmpString,
-            0x24 if reader.encoding_rules() == EncodingRules::Ber => Tag::OctetString,
-            0x30 => Tag::Sequence, // constructed
-            0x31 => Tag::Set,      // constructed
-            0x40..=0x7F => {
-                let (constructed, number) = parse_parts(first_byte, reader)?;
-
-                Tag::Application {
-                    constructed,
-                    number,
-                }
-            }
-            0x80..=0xBF => {
-                let (constructed, number) = parse_parts(first_byte, reader)?;
-
-                Tag::ContextSpecific {
-                    constructed,
-                    number,
-                }
-            }
-            0xC0..=0xFF => {
-                let (constructed, number) = parse_parts(first_byte, reader)?;
-
-                Tag::Private {
-                    constructed,
-                    number,
-                }
-            }
-            // universal tag in long form
-            0x1F => return Err(reader.error(ErrorKind::TagNumberInvalid)),
-            byte => return Err(reader.error(ErrorKind::TagUnknown { byte })),
-        };
-
-        Ok(tag)
+        Self::decode_with_constructed_bit(reader).map(|(tag, _)| tag)
     }
 }
 
