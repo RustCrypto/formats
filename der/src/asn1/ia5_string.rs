@@ -1,6 +1,6 @@
 //! ASN.1 `IA5String` support.
 
-use crate::{FixedTag, Result, StrRef, Tag, asn1::AnyRef};
+use crate::{FixedTag, Result, StringRef, Tag, asn1::AnyRef};
 use core::{fmt, ops::Deref};
 
 macro_rules! impl_ia5_string {
@@ -37,7 +37,7 @@ macro_rules! impl_ia5_string {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Ia5StringRef<'a> {
     /// Inner value
-    inner: StrRef<'a>,
+    inner: StringRef<'a>,
 }
 
 impl<'a> Ia5StringRef<'a> {
@@ -53,7 +53,7 @@ impl<'a> Ia5StringRef<'a> {
             return Err(Self::TAG.value_error().into());
         }
 
-        StrRef::from_bytes(input)
+        StringRef::from_bytes(input)
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error().into())
     }
@@ -62,7 +62,7 @@ impl<'a> Ia5StringRef<'a> {
 impl_ia5_string!(Ia5StringRef<'a>, 'a);
 
 impl<'a> Deref for Ia5StringRef<'a> {
-    type Target = StrRef<'a>;
+    type Target = StringRef<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -88,7 +88,7 @@ pub use self::allocation::Ia5String;
 mod allocation {
     use super::Ia5StringRef;
     use crate::{
-        Error, FixedTag, Result, StrOwned, Tag,
+        Error, FixedTag, Result, StringOwned, Tag,
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
     };
@@ -108,7 +108,7 @@ mod allocation {
     #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
     pub struct Ia5String {
         /// Inner value
-        inner: StrOwned,
+        inner: StringOwned,
     }
 
     impl Ia5String {
@@ -120,7 +120,7 @@ mod allocation {
             let input = input.as_ref();
             Ia5StringRef::new(input)?;
 
-            StrOwned::from_bytes(input)
+            StringOwned::from_bytes(input)
                 .map(|inner| Self { inner })
                 .map_err(|_| Self::TAG.value_error().into())
         }
@@ -129,7 +129,7 @@ mod allocation {
     impl_ia5_string!(Ia5String);
 
     impl Deref for Ia5String {
-        type Target = StrOwned;
+        type Target = StringOwned;
 
         fn deref(&self) -> &Self::Target {
             &self.inner
@@ -179,7 +179,7 @@ mod allocation {
         fn try_from(input: String) -> Result<Self> {
             Ia5StringRef::new(&input)?;
 
-            StrOwned::new(input)
+            StringOwned::new(input)
                 .map(|inner| Self { inner })
                 .map_err(|_| Self::TAG.value_error().into())
         }

@@ -1,7 +1,7 @@
 //! ASN.1 `UTF8String` support.
 
 use crate::{
-    EncodeValue, Error, FixedTag, Length, Result, StrRef, Tag, Writer, asn1::AnyRef,
+    EncodeValue, Error, FixedTag, Length, Result, StringRef, Tag, Writer, asn1::AnyRef,
     ord::OrdIsValueOrd,
 };
 use core::{fmt, ops::Deref, str};
@@ -29,7 +29,7 @@ use {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Utf8StringRef<'a> {
     /// Inner value
-    inner: StrRef<'a>,
+    inner: StringRef<'a>,
 }
 
 impl<'a> Utf8StringRef<'a> {
@@ -38,14 +38,14 @@ impl<'a> Utf8StringRef<'a> {
     where
         T: AsRef<[u8]> + ?Sized,
     {
-        StrRef::from_bytes(input.as_ref()).map(|inner| Self { inner })
+        StringRef::from_bytes(input.as_ref()).map(|inner| Self { inner })
     }
 }
 
 impl_string_type!(Utf8StringRef<'a>, 'a);
 
 impl<'a> Deref for Utf8StringRef<'a> {
-    type Target = StrRef<'a>;
+    type Target = StringRef<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
