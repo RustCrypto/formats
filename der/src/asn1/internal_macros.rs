@@ -122,6 +122,17 @@ macro_rules! impl_custom_class {
                 Ok(Some(Self::decode(reader)?))
             }
 
+            /// Decode inner tag-length-value of `EXPLICIT` field.
+            fn decode_explicit_inner<'a, R: Reader<'a>>(
+                reader: &mut R,
+                header: Header
+            ) -> Result<T, T::Error>
+            where
+                T: Decode<'a>
+            {
+                reader.read_nested(header.length, |r| T::decode(r))
+            }
+
             #[doc = concat!("Attempt to decode an `IMPLICIT` ASN.1 `", $asn1_class_name, "` field with the")]
             /// provided [`TagNumber`].
             ///
@@ -152,7 +163,7 @@ macro_rules! impl_custom_class {
                 }
 
                 // read_value checks if header matches decoded length
-                let value = crate::reader::read_value(reader, header, T::decode_value)?;
+                let value = crate::reader::read_value(reader, header, T::decode_value_nested)?;
 
                 Ok(Some(Self {
                     tag_number,
@@ -189,10 +200,7 @@ macro_rules! impl_custom_class {
                     Tag::$class_enum_name { number, .. } => Ok(Self {
                         tag_number: number,
                         tag_mode: TagMode::default(),
-                        value: crate::reader::read_value(reader, header, |reader, _| {
-                            // Decode inner tag-length-value of EXPLICIT
-                            T::decode(reader)
-                        })?,
+                        value: crate::reader::read_value(reader, header, Self::decode_explicit_inner)?,
                     }),
                     tag => Err(reader.error(tag.unexpected_error(None)).into())
                 }

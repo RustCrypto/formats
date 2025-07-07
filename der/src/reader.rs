@@ -192,7 +192,7 @@ pub trait Reader<'r>: Clone {
     {
         let header = Header::decode(self)?;
         header.tag.assert_eq(Tag::Sequence)?;
-        read_value(self, header, |r, _| f(r))
+        read_value(self, header, |r, h| r.read_nested(h.length, |r| f(r)))
     }
 
     /// Obtain a slice of bytes containing a complete TLV production suitable for parsing later.
@@ -214,7 +214,7 @@ where
     F: FnOnce(&mut R, Header) -> Result<T, E>,
 {
     header.length = header.length.sans_eoc();
-    let ret = reader.read_nested(header.length, |r| f(r, header))?;
+    let ret = f(reader, header)?;
 
     // Consume EOC marker if the length is indefinite.
     if header.length.is_indefinite() {
