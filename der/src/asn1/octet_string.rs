@@ -60,6 +60,11 @@ impl<'a> DecodeValue<'a> for OctetStringRef<'a> {
         let inner = BytesRef::decode_value(reader, header)?;
         Ok(Self { inner })
     }
+
+    // Primitive types don't need to use `read_nested`
+    fn decode_value_nested<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
+        Self::decode_value(reader, header)
+    }
 }
 
 impl EncodeValue for OctetStringRef<'_> {
@@ -220,6 +225,14 @@ mod allocating {
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
             let inner = BytesOwned::decode_value(reader, header)?;
             Ok(Self { inner })
+        }
+
+        // Primitive types don't need to use `read_nested`
+        fn decode_value_nested<R: Reader<'a>>(
+            reader: &mut R,
+            header: Header,
+        ) -> Result<Self, Error> {
+            Self::decode_value(reader, header)
         }
     }
 
