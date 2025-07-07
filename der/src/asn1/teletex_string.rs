@@ -44,7 +44,7 @@ macro_rules! impl_teletex_string {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct TeletexStringRef<'a> {
     /// Inner value
-    inner: StringRef<'a>,
+    inner: &'a StringRef,
 }
 
 impl<'a> TeletexStringRef<'a> {
@@ -64,15 +64,20 @@ impl<'a> TeletexStringRef<'a> {
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error().into())
     }
+
+    /// Borrow the inner `str`.
+    pub fn as_str(&self) -> &'a str {
+        self.inner.as_str()
+    }
 }
 
 impl_teletex_string!(TeletexStringRef<'a>, 'a);
 
 impl<'a> Deref for TeletexStringRef<'a> {
-    type Target = StringRef<'a>;
+    type Target = StringRef;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        self.inner
     }
 }
 
@@ -84,7 +89,7 @@ impl<'a> From<&TeletexStringRef<'a>> for TeletexStringRef<'a> {
 
 impl<'a> From<TeletexStringRef<'a>> for AnyRef<'a> {
     fn from(teletex_string: TeletexStringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::TeletexString, teletex_string.inner.into())
+        AnyRef::from_tag_and_value(Tag::TeletexString, teletex_string.inner.as_ref())
     }
 }
 
@@ -100,7 +105,7 @@ mod allocation {
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
     };
-    use alloc::string::String;
+    use alloc::{borrow::ToOwned, string::String};
     use core::{fmt, ops::Deref};
 
     /// ASN.1 `TeletexString` type.
@@ -176,7 +181,7 @@ mod allocation {
         type Owned = TeletexString;
         fn ref_to_owned(&self) -> Self::Owned {
             TeletexString {
-                inner: self.inner.ref_to_owned(),
+                inner: self.inner.to_owned(),
             }
         }
     }
@@ -185,7 +190,7 @@ mod allocation {
         type Borrowed<'a> = TeletexStringRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             TeletexStringRef {
-                inner: self.inner.owned_to_ref(),
+                inner: self.inner.as_ref(),
             }
         }
     }

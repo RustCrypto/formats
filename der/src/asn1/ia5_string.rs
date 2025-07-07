@@ -37,7 +37,7 @@ macro_rules! impl_ia5_string {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Ia5StringRef<'a> {
     /// Inner value
-    inner: StringRef<'a>,
+    inner: &'a StringRef,
 }
 
 impl<'a> Ia5StringRef<'a> {
@@ -57,15 +57,20 @@ impl<'a> Ia5StringRef<'a> {
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error().into())
     }
+
+    /// Borrow the inner `str`.
+    pub fn as_str(&self) -> &'a str {
+        self.inner.as_str()
+    }
 }
 
 impl_ia5_string!(Ia5StringRef<'a>, 'a);
 
 impl<'a> Deref for Ia5StringRef<'a> {
-    type Target = StringRef<'a>;
+    type Target = StringRef;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        self.inner
     }
 }
 
@@ -77,7 +82,7 @@ impl<'a> From<&Ia5StringRef<'a>> for Ia5StringRef<'a> {
 
 impl<'a> From<Ia5StringRef<'a>> for AnyRef<'a> {
     fn from(internationalized_string: Ia5StringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::Ia5String, internationalized_string.inner.into())
+        AnyRef::from_tag_and_value(Tag::Ia5String, internationalized_string.inner.as_ref())
     }
 }
 
@@ -92,7 +97,7 @@ mod allocation {
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
     };
-    use alloc::string::String;
+    use alloc::{borrow::ToOwned, string::String};
     use core::{fmt, ops::Deref};
 
     /// ASN.1 `IA5String` type.
@@ -138,14 +143,15 @@ mod allocation {
 
     impl<'a> From<Ia5StringRef<'a>> for Ia5String {
         fn from(ia5_string: Ia5StringRef<'a>) -> Ia5String {
-            let inner = ia5_string.inner.into();
-            Self { inner }
+            Self {
+                inner: ia5_string.inner.to_owned(),
+            }
         }
     }
 
     impl<'a> From<&'a Ia5String> for AnyRef<'a> {
         fn from(ia5_string: &'a Ia5String) -> AnyRef<'a> {
-            AnyRef::from_tag_and_value(Tag::Ia5String, (&ia5_string.inner).into())
+            AnyRef::from_tag_and_value(Tag::Ia5String, ia5_string.inner.as_ref())
         }
     }
 
@@ -159,7 +165,7 @@ mod allocation {
         type Owned = Ia5String;
         fn ref_to_owned(&self) -> Self::Owned {
             Ia5String {
-                inner: self.inner.ref_to_owned(),
+                inner: self.inner.to_owned(),
             }
         }
     }
@@ -168,7 +174,7 @@ mod allocation {
         type Borrowed<'a> = Ia5StringRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             Ia5StringRef {
-                inner: self.inner.owned_to_ref(),
+                inner: self.inner.as_ref(),
             }
         }
     }

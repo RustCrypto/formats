@@ -6,7 +6,7 @@ use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Length, Reader};
 #[derive(Clone, Debug)]
 pub struct SliceReader<'a> {
     /// Byte slice being decoded.
-    bytes: BytesRef<'a>,
+    bytes: &'a BytesRef,
 
     /// Encoding rules to apply when decoding the input.
     encoding_rules: EncodingRules,

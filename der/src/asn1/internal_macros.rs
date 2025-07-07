@@ -51,7 +51,7 @@ macro_rules! impl_string_type {
                 type Error = $crate::Error;
 
                 fn decode_value<R: Reader<'__der>>(reader: &mut R, header: Header) -> $crate::Result<Self> {
-                    Self::new(BytesRef::decode_value(reader, header)?.as_slice())
+                    Self::new(<&'__der BytesRef>::decode_value(reader, header)?.as_slice())
                 }
             }
 

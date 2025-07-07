@@ -161,10 +161,13 @@ impl<'a> AlgorithmIdentifierRef<'a> {
             self.oid,
             match self.parameters {
                 None => None,
-                Some(p) => match p {
-                    AnyRef::NULL => None,
-                    _ => Some(p.decode_as::<ObjectIdentifier>()?),
-                },
+                Some(p) => {
+                    if p.is_null() {
+                        None
+                    } else {
+                        Some(p.decode_as::<ObjectIdentifier>()?)
+                    }
+                }
             },
         ))
     }

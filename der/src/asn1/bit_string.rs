@@ -26,7 +26,7 @@ pub struct BitStringRef<'a> {
     bit_length: usize,
 
     /// Bitstring represented as a slice of bytes.
-    inner: BytesRef<'a>,
+    inner: &'a BytesRef,
 }
 
 impl<'a> BitStringRef<'a> {
@@ -145,7 +145,7 @@ impl<'a> DecodeValue<'a> for BitStringRef<'a> {
         };
 
         let unused_bits = reader.read_byte()?;
-        let inner = BytesRef::decode_value(reader, header)?;
+        let inner = <&'a BytesRef>::decode_value(reader, header)?;
         Self::new(unused_bits, inner.as_slice())
     }
 }
@@ -164,7 +164,7 @@ impl EncodeValue for BitStringRef<'_> {
 impl ValueOrd for BitStringRef<'_> {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
         match self.unused_bits.cmp(&other.unused_bits) {
-            Ordering::Equal => self.inner.der_cmp(&other.inner),
+            Ordering::Equal => self.inner.der_cmp(other.inner),
             ordering => Ok(ordering),
         }
     }
@@ -233,13 +233,13 @@ impl<'a> arbitrary::Arbitrary<'a> for BitStringRef<'a> {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         Self::new(
             u.int_in_range(0..=Self::MAX_UNUSED_BITS)?,
-            BytesRef::arbitrary(u)?.as_slice(),
+            <&'a BytesRef>::arbitrary(u)?.as_slice(),
         )
         .map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
-        arbitrary::size_hint::and(u8::size_hint(depth), BytesRef::size_hint(depth))
+        arbitrary::size_hint::and(u8::size_hint(depth), <&'a BytesRef>::size_hint(depth))
     }
 }
 
@@ -421,13 +421,13 @@ mod allocating {
         fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
             Self::new(
                 u.int_in_range(0..=Self::MAX_UNUSED_BITS)?,
-                BytesRef::arbitrary(u)?.as_slice(),
+                <&'a BytesRef>::arbitrary(u)?.as_slice(),
             )
             .map_err(|_| arbitrary::Error::IncorrectFormat)
         }
 
         fn size_hint(depth: usize) -> (usize, Option<usize>) {
-            arbitrary::size_hint::and(u8::size_hint(depth), BytesRef::size_hint(depth))
+            arbitrary::size_hint::and(u8::size_hint(depth), <&'a BytesRef>::size_hint(depth))
         }
     }
 
