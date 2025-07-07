@@ -15,11 +15,12 @@
 
 extern crate alloc;
 
+mod fields;
+
+pub use fields::{Field, Fields};
+
 use alloc::string::String;
 use core::{fmt, str};
-
-/// MCF field delimiter: `$`.
-pub const DELIMITER: char = '$';
 
 /// Debug message used in panics when invariants aren't properly held.
 const INVARIANT_MSG: &str = "should be ensured valid by constructor";
@@ -59,6 +60,7 @@ impl McfHash {
             .expect(INVARIANT_MSG)
             .next()
             .expect(INVARIANT_MSG)
+            .as_str()
     }
 
     /// Get an iterator over the parts of the password hash as delimited by `$`, excluding the
@@ -68,7 +70,7 @@ impl McfHash {
 
         // Remove the leading identifier
         let id = fields.next().expect(INVARIANT_MSG);
-        debug_assert_eq!(id, self.id());
+        debug_assert_eq!(self.id(), id.as_str());
 
         fields
     }
@@ -101,13 +103,13 @@ fn validate(s: &str) -> Result<()> {
 
     // Validate characters in the identifier field
     let id = fields.next().ok_or(Error {})?;
-    validate_id(id)?;
+    validate_id(id.as_str())?;
 
     // Validate the remaining fields have an appropriate format
     let mut any = false;
     for field in fields {
         any = true;
-        validate_field(field)?;
+        field.validate()?;
     }
 
     // Must have at least one field.
@@ -141,63 +143,6 @@ fn validate_id(id: &str) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Validate a field in the password hash is well-formed.
-///
-/// Fields include characters in the regexp range `[A-Za-z0-9./+=,\-]`.
-fn validate_field(field: &str) -> Result<()> {
-    if field.is_empty() {
-        return Err(Error {});
-    }
-
-    for c in field.chars() {
-        match c {
-            'A'..='Z' | 'a'..='z' | '0'..='9' | '.' | '/' | '+' | '=' | ',' | '-' => (),
-            _ => return Err(Error {}),
-        }
-    }
-
-    Ok(())
-}
-
-/// Iterator over the `$`-delimited fields of an MCF hash.
-pub struct Fields<'a>(&'a str);
-
-impl<'a> Fields<'a> {
-    /// Create a new field iterator from an MCF hash, returning an error in the event the hash
-    /// doesn't start with a leading `$` prefix.
-    fn new(s: &'a str) -> Result<Self> {
-        let mut ret = Self(s);
-
-        if ret.next() != Some("") {
-            return Err(Error {});
-        }
-
-        Ok(ret)
-    }
-}
-
-impl<'a> Iterator for Fields<'a> {
-    type Item = &'a str;
-
-    fn next(&mut self) -> Option<&'a str> {
-        if self.0.is_empty() {
-            return None;
-        }
-
-        match self.0.split_once(DELIMITER) {
-            Some((field, rest)) => {
-                self.0 = rest;
-                Some(field)
-            }
-            None => {
-                let ret = self.0;
-                self.0 = "";
-                Some(ret)
-            }
-        }
-    }
 }
 
 /// Result type for `mcf`.
