@@ -1,7 +1,10 @@
 //! Fields of an MCF password hash, delimited by `$`
 
-use crate::{Error, Result};
+use crate::{Base64, Error, Result};
 use core::fmt;
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 /// MCF field delimiter: `$`.
 pub const DELIMITER: char = '$';
@@ -60,12 +63,23 @@ impl<'a> Field<'a> {
     }
 
     /// Borrow the field's contents as a `str`.
-    pub fn as_str(&self) -> &'a str {
+    pub fn as_str(self) -> &'a str {
         self.0
     }
 
+    /// Decode Base64 into the provided output buffer.
+    pub fn decode_base64_into(self, base64_variant: Base64, out: &mut [u8]) -> Result<&[u8]> {
+        Ok(base64_variant.decode(self.0, out)?)
+    }
+
+    /// Decode this field as the provided Base64 variant.
+    #[cfg(feature = "alloc")]
+    pub fn decode_base64(self, base64_variant: Base64) -> Result<Vec<u8>> {
+        Ok(base64_variant.decode_vec(self.0)?)
+    }
+
     /// Validate a field in the password hash is well-formed.
-    pub(crate) fn validate(&self) -> Result<()> {
+    pub(crate) fn validate(self) -> Result<()> {
         if self.0.is_empty() {
             return Err(Error {});
         }
