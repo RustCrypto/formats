@@ -58,7 +58,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/mcf
+[crate-image]: https://img.shields.io/crates/v/mcf?logo=rust
 [crate-link]: https://crates.io/crates/mcf
 [docs-image]: https://docs.rs/mcf/badge.svg
 [docs-link]: https://docs.rs/mcf/

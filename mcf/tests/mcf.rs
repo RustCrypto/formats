@@ -1,5 +1,7 @@
 //! Modular Crypt Format integration tests.
 
+#![cfg(feature = "alloc")]
+
 use mcf::McfHash;
 
 #[test]
