@@ -133,7 +133,7 @@ pub trait DecodeValue<'a>: Sized {
 
     /// Attempt to decode this message using the nested [`Reader`], using [`Reader::read_nested`] wrapper.
     ///
-    /// For primitive types, this function can be overriden to [`DecodeValue::decode_value`] directly.
+    /// For primitive types, this function can be overridden to [`DecodeValue::decode_value`] directly.
     fn decode_value_nested<R: Reader<'a>>(
         reader: &mut R,
         header: Header,
