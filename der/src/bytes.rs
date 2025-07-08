@@ -118,8 +118,8 @@ impl<'a> arbitrary::Arbitrary<'a> for &'a BytesRef {
 pub(crate) mod allocating {
     use super::BytesRef;
     use crate::{
-        DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, Writer,
-        length::indefinite::read_constructed_vec,
+        DecodeValue, DerOrd, EncodeValue, EncodingRules, Error, Header, Length, Reader, Result,
+        Writer, length::indefinite::read_constructed_vec,
     };
     use alloc::{borrow::ToOwned, boxed::Box, vec::Vec};
     use core::{borrow::Borrow, cmp::Ordering, ops::Deref};
@@ -184,7 +184,10 @@ pub(crate) mod allocating {
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             // Reassemble indefinite length string types
-            if header.length.is_indefinite() && header.tag.is_constructed() {
+            if reader.encoding_rules() == EncodingRules::Ber
+                && header.length.is_indefinite()
+                && !header.tag.is_constructed()
+            {
                 return Self::new(read_constructed_vec(reader, header)?);
             }
 
