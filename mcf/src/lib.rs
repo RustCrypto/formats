@@ -85,6 +85,18 @@ impl McfHash {
 
         fields
     }
+
+    /// Push an additional field onto the password hash string.
+    pub fn push_field(&mut self, field: Field<'_>) {
+        self.0.push(fields::DELIMITER);
+        self.0.push_str(field.as_str());
+    }
+
+    /// Push an additional field onto the password hash string, encoding it first as Base64.
+    pub fn push_field_base64(&mut self, field: &[u8], base64_encoding: Base64) {
+        self.0.push(fields::DELIMITER);
+        self.0.push_str(&base64_encoding.encode_string(field));
+    }
 }
 
 #[cfg(feature = "alloc")]
