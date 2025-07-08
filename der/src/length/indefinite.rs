@@ -90,7 +90,13 @@ pub(crate) fn read_constructed_vec<'r, R: Reader<'r>>(
         let h = Header::decode(reader)?;
         h.tag().assert_eq(inner_tag)?;
 
-        // Indefinite length headers can't be indefinite
+        // This constructed string is ‘recursively constructed’
+        // as one of its segments is itself encoded with
+        // constructed, indefinite-length method.
+        // This is currently chosen to be unsupported.
+        //
+        // See discussion:
+        //   - https://github.com/RustCrypto/formats/issues/779#issuecomment-3049589340
         if h.length().is_indefinite() {
             return Err(reader.error(ErrorKind::IndefiniteLength));
         }

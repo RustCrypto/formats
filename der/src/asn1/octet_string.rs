@@ -489,4 +489,25 @@ mod tests {
 
         assert_eq!(decoded.as_bytes(), b"Hello, world");
     }
+
+    #[test]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
+    fn decode_ber_recursive_unsupported() {
+        use crate::{Decode, Error, ErrorKind, Length, asn1::OctetString};
+        use hex_literal::hex;
+
+        const EXAMPLE_BER: &[u8] = &hex!(
+            "2480" // Constructed indefinite length OCTET STRING
+                "2480" // Constructed indefinite length OCTET STRING
+                    "040648656c6c6f2c" // Segment containing "Hello,"
+                    "040620776f726c64" // Segment containing " world"
+                "0000" // End-of-contents marker
+                "040620776f726c64" // Segment containing " world"
+            "0000" // End-of-contents marker
+        );
+
+        let err = OctetString::from_ber(EXAMPLE_BER).err().unwrap();
+        let expected = Error::new(ErrorKind::IndefiniteLength, Length::new(4));
+        assert_eq!(expected, err);
+    }
 }
