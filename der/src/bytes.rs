@@ -152,7 +152,10 @@ pub(crate) mod allocating {
             inner_tag: Tag,
         ) -> Result<Self> {
             // Reassemble indefinite length string types
-            if reader.encoding_rules() == EncodingRules::Ber && header.length.is_indefinite() {
+            if reader.encoding_rules() == EncodingRules::Ber
+                && header.length.is_indefinite()
+                && !inner_tag.is_constructed()
+            {
                 return Self::new(read_constructed_vec(reader, header, inner_tag)?);
             }
 
