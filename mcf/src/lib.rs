@@ -60,6 +60,23 @@ impl McfHash {
         Ok(Self(s))
     }
 
+    /// Create an [`McfHash`] from an identifier.
+    ///
+    /// # Returns
+    ///
+    /// Error if the identifier is invalid.
+    ///
+    /// Allowed characters match the regex: `[a-z0-9\-]`, where the first and last characters do NOT
+    /// contain a `-`.
+    pub fn from_id(id: &str) -> Result<McfHash> {
+        validate_id(id)?;
+
+        let mut hash = String::with_capacity(1 + id.len());
+        hash.push(fields::DELIMITER);
+        hash.push_str(id);
+        Ok(Self(hash))
+    }
+
     /// Get the contained string as a `str`.
     pub fn as_str(&self) -> &str {
         &self.0
@@ -125,6 +142,11 @@ impl str::FromStr for McfHash {
 /// Perform validations that the given string is well-formed MCF.
 #[cfg(feature = "alloc")]
 fn validate(s: &str) -> Result<()> {
+    // Disallow trailing `$`
+    if s.ends_with(fields::DELIMITER) {
+        return Err(Error {});
+    }
+
     // Validates the hash begins with a leading `$`
     let mut fields = Fields::new(s)?;
 
@@ -133,15 +155,8 @@ fn validate(s: &str) -> Result<()> {
     validate_id(id.as_str())?;
 
     // Validate the remaining fields have an appropriate format
-    let mut any = false;
     for field in fields {
-        any = true;
         field.validate()?;
-    }
-
-    // Must have at least one field.
-    if !any {
-        return Err(Error {});
     }
 
     Ok(())

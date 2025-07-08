@@ -13,16 +13,27 @@ const EXAMPLE_HASH: &[u8] = &hex!(
 );
 
 #[test]
+fn from_id() {
+    let mcf_hash = McfHash::from_id("6").unwrap();
+    assert_eq!("$6", mcf_hash.as_str());
+}
+
+#[test]
 fn parse_malformed() {
     assert!("Hello, world!".parse::<McfHash>().is_err());
     assert!("$".parse::<McfHash>().is_err());
-    assert!("$foo".parse::<McfHash>().is_err());
     assert!("$$".parse::<McfHash>().is_err());
     assert!("$$foo".parse::<McfHash>().is_err());
     assert!("$foo$".parse::<McfHash>().is_err());
     assert!("$-$foo".parse::<McfHash>().is_err());
     assert!("$foo-$bar".parse::<McfHash>().is_err());
     assert!("$-foo$bar".parse::<McfHash>().is_err());
+}
+
+#[test]
+fn parse_id_only() {
+    let hash: McfHash = "$6".parse().unwrap();
+    assert_eq!("6", hash.id());
 }
 
 #[test]
