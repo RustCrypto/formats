@@ -147,7 +147,7 @@ macro_rules! impl_custom_class {
                 let header = Header::decode(reader)?;
 
                 // the encoding shall be constructed if the base encoding is constructed
-                if header.tag.is_constructed() != T::CONSTRUCTED {
+                if header.tag.is_constructed() != T::CONSTRUCTED && reader.encoding_rules() == EncodingRules::Der {
                     return Err(reader.error(header.tag.non_canonical_error()).into());
                 }
 

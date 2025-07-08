@@ -184,7 +184,7 @@ pub(crate) mod allocating {
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             // Reassemble indefinite length string types
-            if header.length.is_indefinite() && !header.tag.is_constructed() {
+            if header.length.is_indefinite() && header.tag.is_constructed() {
                 return Self::new(read_constructed_vec(reader, header)?);
             }
 

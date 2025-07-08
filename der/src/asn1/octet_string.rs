@@ -372,7 +372,7 @@ mod tests {
         const EXAMPLE_BER: &[u8] = &hex!(
             "2480" // Constructed indefinite length OCTET STRING
             "040648656c6c6f2c" // Segment containing "Hello,"
-            "040620776f726c64" // Segment containing world
+            "040620776f726c64" // Segment containing "world"
             "0000" // End-of-contents marker
         );
 
@@ -396,19 +396,19 @@ mod tests {
                 "A080" // indefinite length explicit tag
                 "2480" // Constructed indefinite length OCTET STRING
                 "040648656c6c6f2c" // Segment containing "Hello,"
-                "040620776f726c64" // Segment containing world
+                "040620776f726c64" // Segment containing "world"
                 "0000" // End-of-contents marker
                 "0000" // End-of-contents marker
             );
 
             let mut reader =
                 SliceReader::new_with_encoding_rules(EXAMPLE_BER, EncodingRules::Ber).unwrap();
-    
+
             let decoded = ContextSpecific::<OctetString>::decode_explicit(&mut reader, tag_number)
                 .unwrap()
                 .unwrap()
                 .value;
-    
+
             assert_eq!(decoded.as_bytes(), b"Hello, world");
         }
 
@@ -422,12 +422,12 @@ mod tests {
 
             let mut reader =
                 SliceReader::new_with_encoding_rules(EXAMPLE_BER, EncodingRules::Ber).unwrap();
-    
+
             let decoded = ContextSpecific::<OctetString>::decode_implicit(&mut reader, tag_number)
                 .unwrap()
                 .unwrap()
                 .value;
-    
+
             assert_eq!(decoded.as_bytes(), b"Hello, world");
         }
     }
