@@ -15,14 +15,16 @@ pub struct Fields<'a>(&'a str);
 impl<'a> Fields<'a> {
     /// Create a new field iterator from an MCF hash, returning an error in the event the hash
     /// doesn't start with a leading `$` prefix.
-    pub fn new(s: &'a str) -> Result<Self> {
+    ///
+    /// NOTE: this method is deliberately non-public because it doesn't first validate the fields
+    /// are well-formed. Calling it with non-validated inputs can lead to invalid [`Field`] values.
+    pub(crate) fn new(s: &'a str) -> Self {
         let mut ret = Self(s);
 
-        if ret.next() != Some(Field("")) {
-            return Err(Error {});
-        }
+        let should_be_empty = ret.next().expect("shouldn't be empty");
+        debug_assert_eq!(should_be_empty.as_str(), "");
 
-        Ok(ret)
+        ret
     }
 }
 

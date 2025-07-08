@@ -31,8 +31,46 @@ use {
 };
 
 /// Debug message used in panics when invariants aren't properly held.
-#[cfg(feature = "alloc")]
 const INVARIANT_MSG: &str = "should be ensured valid by constructor";
+
+/// Zero-copy decoder for hashes in the Modular Crypt Format (MCF).
+///
+/// For more information, see [`McfHash`].
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct McfHashRef<'a>(&'a str);
+
+impl<'a> McfHashRef<'a> {
+    /// Parse the given input string, returning an [`McfHashRef`] if valid.
+    pub fn new(s: &'a str) -> Result<Self> {
+        validate(s)?;
+        Ok(Self(s))
+    }
+
+    /// Get the contained string as a `str`.
+    pub fn as_str(self) -> &'a str {
+        self.0
+    }
+
+    /// Get the algorithm identifier for this MCF hash.
+    pub fn id(self) -> &'a str {
+        Fields::new(self.as_str())
+            .next()
+            .expect(INVARIANT_MSG)
+            .as_str()
+    }
+
+    /// Get an iterator over the parts of the password hash as delimited by `$`, excluding the
+    /// initial identifier.
+    pub fn fields(self) -> Fields<'a> {
+        let mut fields = Fields::new(self.as_str());
+
+        // Remove the leading identifier
+        let id = fields.next().expect(INVARIANT_MSG);
+        debug_assert_eq!(self.id(), id.as_str());
+
+        fields
+    }
+}
 
 /// Modular Crypt Format (MCF) serialized password hash.
 ///
@@ -49,6 +87,7 @@ const INVARIANT_MSG: &str = "should be ensured valid by constructor";
 /// $6$rounds=100000$exn6tVc2j/MZD8uG$BI1Xh8qQSK9J4m14uwy7abn.ctj/TIAzlaVCto0MQrOFIeTXsc1iwzH16XEWo/a7c7Y9eVJvufVzYAs4EsPOy0
 /// ```
 #[cfg(feature = "alloc")]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct McfHash(String);
 
 #[cfg(feature = "alloc")]
@@ -82,25 +121,20 @@ impl McfHash {
         &self.0
     }
 
+    /// Get an [`McfHashRef`] which corresponds to this owned [`McfHash`].
+    pub fn as_mcf_hash_ref(&self) -> McfHashRef {
+        McfHashRef(self.as_str())
+    }
+
     /// Get the algorithm identifier for this MCF hash.
     pub fn id(&self) -> &str {
-        Fields::new(self.as_str())
-            .expect(INVARIANT_MSG)
-            .next()
-            .expect(INVARIANT_MSG)
-            .as_str()
+        self.as_mcf_hash_ref().id()
     }
 
     /// Get an iterator over the parts of the password hash as delimited by `$`, excluding the
     /// initial identifier.
     pub fn fields(&self) -> Fields {
-        let mut fields = Fields::new(self.as_str()).expect(INVARIANT_MSG);
-
-        // Remove the leading identifier
-        let id = fields.next().expect(INVARIANT_MSG);
-        debug_assert_eq!(self.id(), id.as_str());
-
-        fields
+        self.as_mcf_hash_ref().fields()
     }
 
     /// Push an additional field onto the password hash string.
@@ -113,6 +147,12 @@ impl McfHash {
     pub fn push_field_base64(&mut self, field: &[u8], base64_encoding: Base64) {
         self.0.push(fields::DELIMITER);
         self.0.push_str(&base64_encoding.encode_string(field));
+    }
+}
+
+impl<'a> AsRef<str> for McfHashRef<'a> {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 
@@ -140,15 +180,19 @@ impl str::FromStr for McfHash {
 }
 
 /// Perform validations that the given string is well-formed MCF.
-#[cfg(feature = "alloc")]
 fn validate(s: &str) -> Result<()> {
+    // Require leading `$`
+    if !s.starts_with(fields::DELIMITER) {
+        return Err(Error {});
+    }
+
     // Disallow trailing `$`
     if s.ends_with(fields::DELIMITER) {
         return Err(Error {});
     }
 
     // Validates the hash begins with a leading `$`
-    let mut fields = Fields::new(s)?;
+    let mut fields = Fields::new(s);
 
     // Validate characters in the identifier field
     let id = fields.next().ok_or(Error {})?;
@@ -166,7 +210,6 @@ fn validate(s: &str) -> Result<()> {
 ///
 /// Allowed characters match the regex: `[a-z0-9\-]`, where the first and last characters do NOT
 /// contain a `-`.
-#[cfg(feature = "alloc")]
 fn validate_id(id: &str) -> Result<()> {
     let first = id.chars().next().ok_or(Error {})?;
     let last = id.chars().last().ok_or(Error {})?;
