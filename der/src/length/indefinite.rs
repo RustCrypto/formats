@@ -22,6 +22,9 @@
 use crate::{Decode, ErrorKind, Header, Length, Reader};
 
 #[cfg(feature = "alloc")]
+use crate::Tag;
+
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 /// Octet identifying an indefinite length as described in X.690 Section
@@ -81,6 +84,7 @@ pub(crate) fn read_eoc<'a>(reader: &mut impl Reader<'a>) -> crate::Result<()> {
 pub(crate) fn read_constructed_vec<'r, R: Reader<'r>>(
     reader: &mut R,
     header: Header,
+    inner_tag: Tag,
 ) -> crate::Result<Vec<u8>> {
     if !header.length.is_indefinite() {
         return Err(reader.error(ErrorKind::IndefiniteLength));
@@ -91,7 +95,7 @@ pub(crate) fn read_constructed_vec<'r, R: Reader<'r>>(
 
     while !reader.is_finished() {
         let h = Header::decode(reader)?;
-        h.tag.assert_eq(header.tag)?;
+        h.tag.assert_eq(inner_tag)?;
 
         // Indefinite length headers can't be indefinite
         if h.length.is_indefinite() {

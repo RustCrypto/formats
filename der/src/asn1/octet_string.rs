@@ -218,7 +218,7 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
-            let inner = BytesOwned::decode_value(reader, header)?;
+            let inner = BytesOwned::decode_value_parts(reader, header, Self::TAG)?;
             Ok(Self { inner })
         }
     }
@@ -382,7 +382,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "alloc")]
-    fn decode_context_specific_ber() {
+    fn decode_context_specific_ber_explicit() {
         use crate::{
             EncodingRules, SliceReader, TagNumber,
             asn1::{ContextSpecific, OctetString},
@@ -391,45 +391,53 @@ mod tests {
 
         let tag_number = TagNumber(0);
 
-        {
-            const EXAMPLE_BER: &[u8] = &hex!(
-                "A080" // indefinite length explicit tag
-                "2480" // Constructed indefinite length OCTET STRING
-                "040648656c6c6f2c" // Segment containing "Hello,"
-                "040620776f726c64" // Segment containing "world"
-                "0000" // End-of-contents marker
-                "0000" // End-of-contents marker
-            );
+        const EXAMPLE_BER: &[u8] = &hex!(
+            "A080" // indefinite length explicit tag
+            "2480" // Constructed indefinite length OCTET STRING
+            "040648656c6c6f2c" // Segment containing "Hello,"
+            "040620776f726c64" // Segment containing "world"
+            "0000" // End-of-contents marker
+            "0000" // End-of-contents marker
+        );
 
-            let mut reader =
-                SliceReader::new_with_encoding_rules(EXAMPLE_BER, EncodingRules::Ber).unwrap();
+        let mut reader =
+            SliceReader::new_with_encoding_rules(EXAMPLE_BER, EncodingRules::Ber).unwrap();
 
-            let decoded = ContextSpecific::<OctetString>::decode_explicit(&mut reader, tag_number)
-                .unwrap()
-                .unwrap()
-                .value;
+        let decoded = ContextSpecific::<OctetString>::decode_explicit(&mut reader, tag_number)
+            .unwrap()
+            .unwrap()
+            .value;
 
-            assert_eq!(decoded.as_bytes(), b"Hello, world");
-        }
+        assert_eq!(decoded.as_bytes(), b"Hello, world");
+    }
 
-        {
-            const EXAMPLE_BER: &[u8] = &hex!(
-                "A080" // implicit tag, constructed indefinite length OCTET STRING
-                "040648656c6c6f2c" // Segment containing "Hello,"
-                "040620776f726c64" // Segment containing world
-                "0000" // End-of-contents marker
-            );
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn decode_context_specific_ber_implicit() {
+        use crate::{
+            EncodingRules, SliceReader, TagNumber,
+            asn1::{ContextSpecific, OctetString},
+        };
+        use hex_literal::hex;
 
-            let mut reader =
-                SliceReader::new_with_encoding_rules(EXAMPLE_BER, EncodingRules::Ber).unwrap();
+        let tag_number = TagNumber(0);
 
-            let decoded = ContextSpecific::<OctetString>::decode_implicit(&mut reader, tag_number)
-                .unwrap()
-                .unwrap()
-                .value;
+        const EXAMPLE_BER: &[u8] = &hex!(
+            "A080" // implicit tag, constructed indefinite length OCTET STRING
+            "040648656c6c6f2c" // Segment containing "Hello,"
+            "040620776f726c64" // Segment containing world
+            "0000" // End-of-contents marker
+        );
 
-            assert_eq!(decoded.as_bytes(), b"Hello, world");
-        }
+        let mut reader =
+            SliceReader::new_with_encoding_rules(EXAMPLE_BER, EncodingRules::Ber).unwrap();
+
+        let decoded = ContextSpecific::<OctetString>::decode_implicit(&mut reader, tag_number)
+            .unwrap()
+            .unwrap()
+            .value;
+
+        assert_eq!(decoded.as_bytes(), b"Hello, world");
     }
 
     #[test]
