@@ -149,7 +149,7 @@ impl<'a> Decode<'a> for Document {
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Document, Error> {
         let header = Header::peek(reader)?;
-        let length = (header.encoded_len()? + header.length)?;
+        let length = (header.encoded_len()? + header.length())?;
         let bytes = reader.read_slice(length)?;
 
         Ok(Self {
@@ -324,9 +324,9 @@ impl ZeroizeOnDrop for SecretDocument {}
 /// entire sequence including the header.
 fn decode_sequence<'a>(decoder: &mut SliceReader<'a>) -> Result<&'a [u8], Error> {
     let header = Header::peek(decoder)?;
-    header.tag.assert_eq(Tag::Sequence)?;
+    header.tag().assert_eq(Tag::Sequence)?;
 
-    let len = (header.encoded_len()? + header.length)?;
+    let len = (header.encoded_len()? + header.length())?;
     decoder.read_slice(len)
 }
 
