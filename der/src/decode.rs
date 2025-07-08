@@ -138,15 +138,7 @@ pub trait DecodeValue<'a>: Sized {
         reader: &mut R,
         header: Header,
     ) -> Result<Self, Self::Error> {
-        if Self::should_read_nested(reader) {
-            reader.read_nested(header.length, |r| Self::decode_value(r, header))
-        } else {
-            Self::decode_value(reader, header)
-        }
-    }
-    /// Returns true if decoder should use [`Reader::read_nested`] wrapper.
-    fn should_read_nested<R: Reader<'a>>(_reader: &mut R) -> bool {
-        true
+        reader.read_nested(header.length, |r| Self::decode_value(r, header))
     }
 }
 

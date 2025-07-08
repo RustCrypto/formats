@@ -1,8 +1,8 @@
 //! ASN.1 `OCTET STRING` support.
 
 use crate::{
-    BytesRef, Decode, DecodeValue, EncodeValue, EncodingRules, Error, ErrorKind, FixedTag, Header,
-    Length, Reader, Tag, Writer, asn1::AnyRef, ord::OrdIsValueOrd,
+    BytesRef, Decode, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
+    Tag, Writer, asn1::AnyRef, ord::OrdIsValueOrd,
 };
 
 /// ASN.1 `OCTET STRING` type: borrowed form.
@@ -59,11 +59,6 @@ impl<'a> DecodeValue<'a> for OctetStringRef<'a> {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
         let inner = BytesRef::decode_value(reader, header)?;
         Ok(Self { inner })
-    }
-
-    // Primitive types don't need to use `read_nested`. OctetString is primitive in DER.
-    fn should_read_nested<R: Reader<'a>>(reader: &mut R) -> bool {
-        reader.encoding_rules() == EncodingRules::Ber
     }
 }
 
@@ -164,7 +159,7 @@ pub use self::allocating::OctetString;
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::{BytesOwned, EncodingRules, referenced::*};
+    use crate::{BytesOwned, referenced::*};
     use alloc::{borrow::Cow, boxed::Box, vec::Vec};
 
     /// ASN.1 `OCTET STRING` type: owned form.
@@ -225,11 +220,6 @@ mod allocating {
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
             let inner = BytesOwned::decode_value(reader, header)?;
             Ok(Self { inner })
-        }
-
-        // Primitive types don't need to use `read_nested`. OctetString is primitive in DER.
-        fn should_read_nested<R: Reader<'a>>(reader: &mut R) -> bool {
-            reader.encoding_rules() == EncodingRules::Ber
         }
     }
 
