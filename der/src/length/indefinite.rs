@@ -83,14 +83,14 @@ pub(crate) fn read_eoc<'a>(reader: &mut impl Reader<'a>) -> crate::Result<()> {
 #[cfg(feature = "alloc")]
 pub(crate) fn read_constructed_vec<'r, R: Reader<'r>>(
     reader: &mut R,
-    header: Header,
+    length: Length,
     inner_tag: Tag,
 ) -> crate::Result<Vec<u8>> {
-    if !header.length.is_indefinite() {
+    if !length.is_indefinite() {
         return Err(reader.error(ErrorKind::IndefiniteLength));
     }
 
-    let mut bytes = Vec::with_capacity(header.length.try_into()?);
+    let mut bytes = Vec::with_capacity(length.try_into()?);
     let mut offset = 0;
 
     while !reader.is_finished() {

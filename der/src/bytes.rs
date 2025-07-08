@@ -156,7 +156,7 @@ pub(crate) mod allocating {
                 && header.length.is_indefinite()
                 && !inner_tag.is_constructed()
             {
-                return Self::new(read_constructed_vec(reader, header, inner_tag)?);
+                return Self::new(read_constructed_vec(reader, header.length, inner_tag)?);
             }
 
             Self::decode_value(reader, header)
