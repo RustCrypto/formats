@@ -364,6 +364,16 @@ mod tests {
     use crate::asn1::{OctetStringRef, PrintableStringRef};
 
     #[test]
+    fn octet_string_decode_into() {
+        // PrintableString "hi"
+        let der = b"\x13\x02\x68\x69";
+        let oct = OctetStringRef::new(der).unwrap();
+
+        let res = oct.decode_into::<PrintableStringRef<'_>>().unwrap();
+        assert_eq!(AsRef::<str>::as_ref(&res), "hi");
+    }
+
+    #[test]
     #[cfg(feature = "alloc")]
     fn decode_ber() {
         use crate::{Decode, asn1::OctetString};
@@ -425,7 +435,7 @@ mod tests {
         const EXAMPLE_BER: &[u8] = &hex!(
             "A080" // implicit tag, constructed indefinite length OCTET STRING
             "040648656c6c6f2c" // Segment containing "Hello,"
-            "040620776f726c64" // Segment containing world
+            "040620776f726c64" // Segment containing "world"
             "0000" // End-of-contents marker
         );
 
@@ -438,15 +448,5 @@ mod tests {
             .value;
 
         assert_eq!(decoded.as_bytes(), b"Hello, world");
-    }
-
-    #[test]
-    fn octet_string_decode_into() {
-        // PrintableString "hi"
-        let der = b"\x13\x02\x68\x69";
-        let oct = OctetStringRef::new(der).unwrap();
-
-        let res = oct.decode_into::<PrintableStringRef<'_>>().unwrap();
-        assert_eq!(AsRef::<str>::as_ref(&res), "hi");
     }
 }
