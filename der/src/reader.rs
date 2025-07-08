@@ -191,7 +191,7 @@ pub trait Reader<'r>: Clone {
         E: From<Error>,
     {
         let header = Header::decode(self)?;
-        header.tag.assert_eq(Tag::Sequence)?;
+        header.tag().assert_eq(Tag::Sequence)?;
         read_value(self, header, |r, _| f(r))
     }
 
@@ -199,7 +199,7 @@ pub trait Reader<'r>: Clone {
     fn tlv_bytes(&mut self) -> Result<&'r [u8], Error> {
         let header = Header::peek(self)?;
         let header_len = header.encoded_len()?;
-        self.read_slice((header_len + header.length)?)
+        self.read_slice((header_len + header.length())?)
     }
 }
 
@@ -207,17 +207,17 @@ pub trait Reader<'r>: Clone {
 ///
 /// This calls the provided function `f` with a nested reader created using
 /// [`Reader::read_nested`].
-pub(crate) fn read_value<'r, R, T, F, E>(reader: &mut R, mut header: Header, f: F) -> Result<T, E>
+pub(crate) fn read_value<'r, R, T, F, E>(reader: &mut R, header: Header, f: F) -> Result<T, E>
 where
     R: Reader<'r>,
     E: From<Error>,
     F: FnOnce(&mut R, Header) -> Result<T, E>,
 {
-    header.length = header.length.sans_eoc();
-    let ret = reader.read_nested(header.length, |r| f(r, header))?;
+    let header = header.copy_with_length(header.length().sans_eoc());
+    let ret = reader.read_nested(header.length(), |r| f(r, header))?;
 
     // Consume EOC marker if the length is indefinite.
-    if header.length.is_indefinite() {
+    if header.length().is_indefinite() {
         read_eoc(reader)?;
     }
 

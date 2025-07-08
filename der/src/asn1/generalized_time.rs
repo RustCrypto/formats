@@ -78,7 +78,7 @@ impl<'a> DecodeValue<'a> for GeneralizedTime {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        if Self::LENGTH != usize::try_from(header.length)? {
+        if Self::LENGTH != usize::try_from(header.length())? {
             return Err(reader.error(Self::TAG.value_error()));
         }
 

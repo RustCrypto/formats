@@ -70,7 +70,7 @@ impl<'a> der::DecodeValue<'a> for DirectoryString {
     type Error = der::Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        match header.tag {
+        match header.tag() {
             PrintableString::TAG => {
                 PrintableString::decode_value(reader, header).map(Self::PrintableString)
             }

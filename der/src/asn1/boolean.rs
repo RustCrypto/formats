@@ -18,7 +18,7 @@ impl<'a> DecodeValue<'a> for bool {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        if header.length != Length::ONE {
+        if header.length() != Length::ONE {
             return Err(reader.error(ErrorKind::Length { tag: Self::TAG }));
         }
 
