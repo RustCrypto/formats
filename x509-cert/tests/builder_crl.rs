@@ -176,7 +176,7 @@ fn crl_verify() {
             .as_bytes(),
     );
     assert_eq!(status.code(), Some(2));
-    println!("{}", verification_output);
-    println!("{}", verification_stderr);
+    println!("{verification_output}");
+    println!("{verification_stderr}");
     assert!(verification_stderr.contains("certificate revoked"));
 }
