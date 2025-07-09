@@ -195,7 +195,7 @@ mod choice {
             obj.encode(&mut encoder).unwrap();
 
             let encoded = encoder.finish().unwrap();
-            println!("encoded: {:02X?}", encoded);
+            println!("encoded: {encoded:02X?}");
 
             let decoded = ImplicitChoice::from_der(encoded).unwrap();
 

@@ -122,7 +122,7 @@ impl McfHash {
     }
 
     /// Get an [`McfHashRef`] which corresponds to this owned [`McfHash`].
-    pub fn as_mcf_hash_ref(&self) -> McfHashRef {
+    pub fn as_mcf_hash_ref(&self) -> McfHashRef<'_> {
         McfHashRef(self.as_str())
     }
 
@@ -133,7 +133,7 @@ impl McfHash {
 
     /// Get an iterator over the parts of the password hash as delimited by `$`, excluding the
     /// initial identifier.
-    pub fn fields(&self) -> Fields {
+    pub fn fields(&self) -> Fields<'_> {
         self.as_mcf_hash_ref().fields()
     }
 
