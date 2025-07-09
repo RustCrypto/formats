@@ -382,7 +382,7 @@ mod tests {
         const EXAMPLE_BER: &[u8] = &hex!(
             "2480" // Constructed indefinite length OCTET STRING
             "040648656c6c6f2c" // Segment containing "Hello,"
-            "040620776f726c64" // Segment containing "world"
+            "040620776f726c64" // Segment containing " world"
             "0000" // End-of-contents marker
         );
 
@@ -405,7 +405,7 @@ mod tests {
             "A080" // indefinite length explicit tag
             "2480" // Constructed indefinite length OCTET STRING
             "040648656c6c6f2c" // Segment containing "Hello,"
-            "040620776f726c64" // Segment containing "world"
+            "040620776f726c64" // Segment containing " world"
             "0000" // End-of-contents marker
             "0000" // End-of-contents marker
         );
@@ -435,7 +435,7 @@ mod tests {
         const EXAMPLE_BER: &[u8] = &hex!(
             "A080" // implicit tag, constructed indefinite length OCTET STRING
             "040648656c6c6f2c" // Segment containing "Hello,"
-            "040620776f726c64" // Segment containing "world"
+            "040620776f726c64" // Segment containing " world"
             "0000" // End-of-contents marker
         );
 
