@@ -118,8 +118,8 @@ impl<'a> arbitrary::Arbitrary<'a> for &'a BytesRef {
 pub(crate) mod allocating {
     use super::BytesRef;
     use crate::{
-        DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, Writer,
-        length::indefinite::read_constructed_vec,
+        DecodeValue, DerOrd, EncodeValue, EncodingRules, Error, Header, Length, Reader, Result,
+        Tag, Writer, length::indefinite::read_constructed_vec,
     };
     use alloc::{borrow::ToOwned, boxed::Box, vec::Vec};
     use core::{borrow::Borrow, cmp::Ordering, ops::Deref};
@@ -144,6 +144,22 @@ pub(crate) mod allocating {
                 length: Length::try_from(inner.len())?,
                 inner,
             })
+        }
+        /// Decodes [`BytesOwned`] as DER, or from parts, when using a BER reader.
+        pub fn decode_value_parts<'a, R: Reader<'a>>(
+            reader: &mut R,
+            header: Header,
+            inner_tag: Tag,
+        ) -> Result<Self> {
+            // Reassemble indefinite length string types
+            if reader.encoding_rules() == EncodingRules::Ber
+                && header.length.is_indefinite()
+                && !inner_tag.is_constructed()
+            {
+                return Self::new(read_constructed_vec(reader, header.length, inner_tag)?);
+            }
+
+            Self::decode_value(reader, header)
         }
     }
 
@@ -183,11 +199,6 @@ pub(crate) mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            // Reassemble indefinite length string types
-            if header.length.is_indefinite() && !header.tag.is_constructed() {
-                return Self::new(read_constructed_vec(reader, header)?);
-            }
-
             reader.read_vec(header.length).and_then(Self::new)
         }
     }

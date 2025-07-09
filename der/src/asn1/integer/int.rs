@@ -231,7 +231,7 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            let bytes = BytesOwned::decode_value(reader, header)?;
+            let bytes = BytesOwned::decode_value_parts(reader, header, Self::TAG)?;
             validate_canonical(bytes.as_slice())?;
 
             let result = Self::new(bytes.as_slice())?;
