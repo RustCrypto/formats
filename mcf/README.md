@@ -11,14 +11,15 @@ Pure Rust implementation of the Modular Crypt Format (MCF), which is used to sto
 
 ## About
 
-Modular Crypt Format is the name for a bespoke set of formats that take the form `${id}$...`, where
-`{id}` is a short numeric or lower case alphanumeric algorithm identifier optionally containing a
-hyphen character (`-`), followed  by `$` as a delimiter, further followed by an algorithm-specific
-serialization of a password hash, typically  using a variant (often an algorithm-specific variant)
-of Base64.
+Modular Crypt Format is the name for a bespoke set of password hash formats associated with the
+POSIX [`crypt(3)`] function which take the form `${id}$...`, where `{id}` is a short numeric or
+lower case alphanumeric  algorithm identifier optionally containing a hyphen character (`-`),
+followed  by `$` as a delimiter, further followed by an algorithm-specific serialization of a
+password hash, typically using a variant (often an algorithm-specific variant) of Base64.
 
-This algorithm-specific  serialization contains one or more fields `${first}[${second}]...`, where
-each field only uses characters in the regexp range `[A-Za-z0-9./+=,\-]`.
+This algorithm-specific serialization contains one or more fields `${first}[${second}]...`, where
+each field only uses characters in the regexp range `[A-Za-z0-9./+=,\-]`. Usually, these include
+a salt and the output of a password hashing function.
 
 Note that MCF has no official specification describing it, and no central registry of identifiers
 exists, nor are there more specific rules for the format than outlined above. MCF is more of an
@@ -72,4 +73,5 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
+[`crypt(3)`]: https://en.wikipedia.org/wiki/Crypt_(C)
 [PassLib documentation]: https://passlib.readthedocs.io/en/stable/modular_crypt_format.html
