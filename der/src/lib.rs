@@ -399,6 +399,9 @@ pub use {
     pem_rfc7468 as pem,
 };
 
+#[cfg(feature = "clarify")]
+pub use writer::clarify::ClarifySliceWriter;
+
 #[cfg(feature = "time")]
 pub use time;
 

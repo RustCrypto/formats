@@ -1,18 +1,52 @@
 pub(crate) mod commentwriter;
 pub(crate) mod hexdisplaylines;
 
-use crate::SliceWriter;
 use crate::std::io::Write;
+use crate::{Encode, Error, SliceWriter};
 use crate::{Length, Result, Tag};
 use commentwriter::{CommentWriter, JavaCommentWriter, XmlCommentWriter};
-use core::cell::RefCell;
-use core::ops::DerefMut;
 use hexdisplaylines::HexDisplayLines;
 use std::borrow::Cow;
+use std::println;
 use std::string::String;
-use std::{boxed::Box, rc::Rc, vec::Vec};
+use std::{boxed::Box, vec::Vec};
 
 use super::Writer;
+
+pub trait EncodeClarifyExt: Encode {
+    /// Encode this type as pretty-printed hex DER, with comments.
+    fn to_der_clarify(&self, flavor: ClarifyFlavor) -> Result<String> {
+        let outputs = self.to_der_clarify_ignorant(flavor);
+        // Propagate encode and finish errors
+        outputs.raw?;
+        Ok(String::from_utf8(outputs.clarify_buf).expect("clarified output to be utf-8"))
+    }
+
+    /// Encode this type as pretty-printed hex DER, with comments.
+    /// Ignores any errors that occur during [`Encode::encode`].
+    fn to_der_clarify_ignorant(&self, flavor: ClarifyFlavor) -> ClarifyOutputs<'static> {
+        let len = match self.encoded_len() {
+            Ok(len) => len,
+            Err(err) => return ClarifyOutputs::from_err(err),
+        };
+
+        let mut buf = Vec::with_capacity(u32::from(len) as usize);
+        let mut writer = ClarifySliceWriter::new(&mut buf, Vec::new(), flavor);
+        let result = self.encode(&mut writer);
+
+        let outputs = writer.finish();
+        let outputs = ClarifyOutputs {
+            // prioritize Encode::encode errors
+            raw: result.and(outputs.raw),
+            // but use buffer from finish() (even if encode failed)
+            clarify_buf: outputs.clarify_buf,
+        };
+
+        outputs.into_owned()
+    }
+}
+
+impl<T> EncodeClarifyExt for T where T: Encode {}
 
 static INDENT_STR: &str =
     "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
@@ -27,7 +61,7 @@ pub struct ClarifySliceWriter<'a> {
 /// Clarifier that creates HEX with comments
 pub struct Clarifier {
     // Buffer into which debug HEX and comments are written
-    debug_ref: Rc<RefCell<Vec<u8>>>,
+    clarify_buf: Vec<u8>,
 
     // Position in the buffer is used to track how long is the current sub-message
     last_position: u32,
@@ -42,24 +76,54 @@ pub struct Clarifier {
 }
 
 /// Returned by .finish()
-pub struct FinishOutputs<'a> {
-    pub raw: Result<&'a [u8]>,
-    //pub debug_ref: Vec<u8>,
+pub struct ClarifyOutputs<'a> {
+    pub raw: Result<Cow<'a, [u8]>>,
+    pub clarify_buf: Vec<u8>,
+}
+
+impl<'a> ClarifyOutputs<'a> {
+    pub fn from_err(err: Error) -> ClarifyOutputs<'static> {
+        ClarifyOutputs {
+            raw: Err(err),
+            clarify_buf: Vec::new(),
+        }
+    }
+
+    pub fn into_owned(self) -> ClarifyOutputs<'static> {
+        ClarifyOutputs {
+            raw: self.raw.map(|raw| Cow::Owned(raw.into_owned())),
+            clarify_buf: self.clarify_buf,
+        }
+    }
+    // pub fn and(result: Result<Cow<'a, [u8]>>) {
+    //     ClarifyOutputs {
+    //         // prioritize Encode::encode errors
+    //         raw: result.and(outputs.raw),
+    //         clarify_buf: outputs.clarify_buf,
+    //     };
+    // }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum ClarifyFlavor {
+    XmlComments,
+    JavaComments,
+    RustHex,
 }
 
 impl Clarifier {
-    pub fn new(debug_ref: Rc<RefCell<Vec<u8>>>, comment_xml: bool) -> Self {
+    pub fn new(clarify_buf: Vec<u8>, flavor: ClarifyFlavor) -> Self {
         Self {
-            debug_ref,
+            clarify_buf,
 
             last_position: 0,
             depth: Vec::new(),
 
             indent_enabled: true,
-            comment_writer: if comment_xml {
-                Box::new(XmlCommentWriter::default())
-            } else {
-                Box::new(JavaCommentWriter::default())
+            comment_writer: match flavor {
+                ClarifyFlavor::XmlComments => Box::new(XmlCommentWriter::default()),
+                ClarifyFlavor::JavaComments => Box::new(JavaCommentWriter::default()),
+                ClarifyFlavor::RustHex => todo!(),
             },
         }
     }
@@ -67,10 +131,10 @@ impl Clarifier {
 
 impl<'a> ClarifySliceWriter<'a> {
     /// Create a new encoder with the given byte slice as a backing buffer.
-    pub fn new(bytes: &'a mut [u8], debug_ref: Rc<RefCell<Vec<u8>>>, comment_xml: bool) -> Self {
+    pub fn new(bytes: &'a mut [u8], clarify_buf: Vec<u8>, flavor: ClarifyFlavor) -> Self {
         Self {
             writer: SliceWriter::new(bytes),
-            clarifier: Clarifier::new(debug_ref, comment_xml),
+            clarifier: Clarifier::new(clarify_buf, flavor),
         }
     }
 
@@ -98,10 +162,10 @@ impl<'a> ClarifySliceWriter<'a> {
 
     /// Finish encoding to the buffer, returning a slice containing the data
     /// written to the buffer.
-    pub fn finish(self) -> FinishOutputs<'a> {
-        FinishOutputs {
-            raw: self.writer.finish(),
-            //debug_buf: self.debug.expect("debug buf not taken"),
+    pub fn finish(self) -> ClarifyOutputs<'a> {
+        ClarifyOutputs {
+            raw: self.writer.finish().map(|raw| Cow::Borrowed(raw)),
+            clarify_buf: self.clarifier.clarify_buf,
         }
     }
 
@@ -164,28 +228,24 @@ impl Clarifier {
     /// Writes indentation to debug output, for example "\n\t" for depth == 1
     pub fn write_clarify_indent(&mut self) {
         let indent = self.indent_str();
-        let mut debugbuf = self.debug_ref.borrow_mut();
         {
-            self.comment_writer
-                .before_new_line(&mut debugbuf.deref_mut());
-            write!(debugbuf, "\n{}", indent).unwrap();
+            self.comment_writer.before_new_line(&mut self.clarify_buf);
+            write!(&mut self.clarify_buf, "\n{}", indent).unwrap();
         }
     }
 
     /// Writes hex bytes to debug output, for example "30 04 "
     pub fn write_clarify_hex(&mut self, slice: &[u8]) {
         let indent = self.indent_str();
-        let mut debugbuf = self.debug_ref.borrow_mut();
         {
-            write!(debugbuf, "{}", HexDisplayLines(&slice, indent)).unwrap();
+            write!(&mut self.clarify_buf, "{}", HexDisplayLines(&slice, indent)).unwrap();
         }
     }
 
     /// Writes string to debug output, for example a comment "// SEQUENCE"
     pub fn write_clarify_str(&mut self, s: &str) {
-        let mut debugbuf = self.debug_ref.borrow_mut();
         {
-            write!(debugbuf, "{}", s).unwrap();
+            write!(&mut self.clarify_buf, "{}", s).unwrap();
         }
     }
     /// Writes string to debug output, for example a comment: `// SEQUENCE: name`
@@ -299,6 +359,7 @@ impl Clarifier {
 
 impl<'a> Writer for ClarifySliceWriter<'a> {
     fn write(&mut self, slice: &[u8]) -> Result<()> {
+        println!("writing {slice:?}");
         self.reserve(slice.len())?.copy_from_slice(slice);
         self.clarifier.last_position += slice.len() as u32;
 
@@ -309,28 +370,44 @@ impl<'a> Writer for ClarifySliceWriter<'a> {
     }
 }
 
-fn strip_transparent_types(type_name: &str) -> Cow<'_, str> {
-    // EncodeValueRef is commonly used and it is completely transparent
-    let type_name = if let Some(stripped) = type_name.strip_prefix("EncodeValueRef<") {
-        let stripped = stripped.strip_suffix(">").unwrap_or(stripped);
-        stripped
-    } else {
-        type_name
-    };
+/// Strips wrappers, such as `EncodeValueRef`, which is commonly used and is completely transparent
+fn strip_transparent_types(mut type_name: &str) -> Cow<'_, str> {
+    let prefixes = [
+        "EncodeValueRef<",
+        "ApplicationRef<",
+        "ContextSpecificRef<",
+        "PrivateRef<",
+    ];
 
-    let type_name = if let Some(stripped) = type_name.strip_prefix("ApplicationRef<") {
-        let stripped = stripped.strip_suffix(">").unwrap_or(stripped);
-        stripped
-    } else {
-        type_name
-    };
-
-    let type_name = if let Some(stripped) = type_name.strip_prefix("ContextSpecificRef<") {
-        let stripped = stripped.strip_suffix(">").unwrap_or(stripped);
-        stripped
-    } else {
-        type_name
-    };
+    for prefix in prefixes {
+        type_name = if let Some(stripped) = type_name.strip_prefix(prefix) {
+            let stripped = stripped.strip_suffix(">").unwrap_or(stripped);
+            stripped
+        } else {
+            type_name
+        };
+    }
 
     Cow::Borrowed(type_name)
+}
+
+#[cfg(test)]
+pub mod test {
+    use std::{println, vec::Vec};
+
+    use crate::{
+        asn1::OctetString,
+        writer::clarify::{ClarifyFlavor, EncodeClarifyExt},
+    };
+
+    #[test]
+    fn clarify_simple_octetstring() {
+        let obj = OctetString::new(&[0xAA, 0xBB, 0xCC]).unwrap();
+
+        let clarified = obj
+            .to_der_clarify(ClarifyFlavor::XmlComments)
+            .expect("encoded DER");
+
+        println!("clarified: {clarified}");
+    }
 }
