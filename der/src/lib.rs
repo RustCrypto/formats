@@ -364,7 +364,7 @@ pub use crate::{
     asn1::bit_string::allowed_len_bit_string::AllowedLenBitString,
     asn1::{AnyRef, Choice, Sequence},
     datetime::DateTime,
-    decode::{Decode, DecodeOwned, DecodeValue},
+    decode::{Decode, DecodeOwned, DecodeValue, DecodeValueExt},
     encode::{Encode, EncodeValue},
     encode_ref::{EncodeRef, EncodeValueRef},
     encoding_rules::EncodingRules,

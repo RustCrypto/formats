@@ -1,13 +1,16 @@
 //! Trait definition for [`Decode`].
 
-use crate::{EncodingRules, Error, FixedTag, Header, Reader, SliceReader, reader::read_value};
+use crate::{
+    AnyRef, Choice, EncodingRules, Error, FixedTag, Header, Reader, SliceReader, Tag,
+    reader::read_value,
+};
 use core::marker::PhantomData;
 
 #[cfg(feature = "pem")]
 use crate::{PemReader, pem::PemLabel};
 
 #[cfg(doc)]
-use crate::{ErrorKind, Length, Tag};
+use crate::{ErrorKind, Length};
 
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
@@ -143,3 +146,18 @@ where
         Ok(Box::new(T::decode_value(reader, header)?))
     }
 }
+
+/// Extension trait for [`DecodeValue`], simplifying slice decoding.
+pub trait DecodeValueExt<'a>: DecodeValue<'a> {
+    /// Parse `Self` from the provided DER-encoded value bytes, i.e. without the tag-length.
+    ///
+    /// Returns [`ErrorKind::TrailingData`] if message is incomplete.
+    fn from_der_value(tag: Tag, value: &'a [u8]) -> Result<Self, <Self as DecodeValue<'a>>::Error>
+    where
+        Self: Choice<'a>,
+    {
+        AnyRef::new(tag, value)?.decode_as::<Self>()
+    }
+}
+
+impl<'a, T> DecodeValueExt<'a> for T where T: DecodeValue<'a> {}
