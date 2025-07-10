@@ -57,6 +57,14 @@ impl<'a> AnyRef<'a> {
         self.value.as_slice()
     }
 
+    /// Returns [`Tag`] and [`Length`] of self.
+    pub fn header(&self) -> Header {
+        Header {
+            tag: self.tag,
+            length: self.value.len(),
+        }
+    }
+
     /// Attempt to decode this [`AnyRef`] type into the inner value.
     pub fn decode_as<T>(self) -> Result<T, <T as DecodeValue<'a>>::Error>
     where
@@ -77,13 +85,8 @@ impl<'a> AnyRef<'a> {
             return Err(self.tag.unexpected_error(None).to_error().into());
         }
 
-        let header = Header {
-            tag: self.tag,
-            length: self.value.len(),
-        };
-
         let mut decoder = SliceReader::new_with_encoding_rules(self.value(), encoding)?;
-        let result = T::decode_value(&mut decoder, header)?;
+        let result = T::decode_value(&mut decoder, self.header())?;
         decoder.finish()?;
         Ok(result)
     }
@@ -205,6 +208,14 @@ mod allocating {
             self.value.as_slice()
         }
 
+        /// Returns [`Tag`] and [`Length`] of self.
+        pub fn header(&self) -> Header {
+            Header {
+                tag: self.tag,
+                length: self.value.len(),
+            }
+        }
+
         /// Attempt to decode this [`Any`] type into the inner value.
         pub fn decode_as<'a, T>(&'a self) -> Result<T, <T as DecodeValue<'a>>::Error>
         where
@@ -221,7 +232,7 @@ mod allocating {
         where
             T: Choice<'a> + DecodeValue<'a>,
         {
-            AnyRef::from(self).decode_as_encoding(encoding)
+            self.to_ref().decode_as_encoding(encoding)
         }
 
         /// Encode the provided type as an [`Any`] value.
