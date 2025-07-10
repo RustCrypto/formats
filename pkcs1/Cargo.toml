@@ -31,9 +31,6 @@ std = ["der/std", "alloc"]
 pem = ["alloc", "der/pem"]
 zeroize = ["der/zeroize"]
 
-# TODO(tarcieri): stub! (for `rsa` crate for now) remove before release
-pkcs8 = []
-
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
