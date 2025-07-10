@@ -85,10 +85,8 @@ impl<'a> AnyRef<'a> {
             return Err(self.tag.unexpected_error(None).to_error().into());
         }
 
-        let header = self.header();
-
         let mut decoder = SliceReader::new_with_encoding_rules(self.value(), encoding)?;
-        let result = T::decode_value(&mut decoder, header)?;
+        let result = T::decode_value(&mut decoder, self.header())?;
         decoder.finish()?;
         Ok(result)
     }
