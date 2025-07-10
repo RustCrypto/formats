@@ -30,9 +30,9 @@ tls_codec = { version = "0.4.0", default-features = false, features = ["derive"]
 [dev-dependencies]
 hex-literal = "1"
 rand = "0.9"
-rsa = { version = "0.10.0-rc.1", features = ["sha2"] }
-ecdsa = { version = "0.17.0-rc.3", features = ["digest", "pem"] }
-p256 = "=0.14.0-pre.8"
+rsa = { version = "0.10.0-rc.3", features = ["sha2"] }
+ecdsa = { version = "0.17.0-rc.4", features = ["digest", "pem"] }
+p256 = "=0.14.0-pre.9"
 rstest = "0.25"
 sha2 = { version = "0.11.0-rc.0", features = ["oid"] }
 tempfile = "3.5.0"
