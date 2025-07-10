@@ -1,6 +1,6 @@
 [package]
 name = "pkcs5"
-version = "0.8.0-rc.5"
+version = "0.8.0-rc.6"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #5:
 Password-Based Cryptography Specification Version 2.1 (RFC 8018)
@@ -16,8 +16,8 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8.0-rc.6", features = ["oid"] }
-spki = { version = "0.8.0-rc.3" }
+der = { version = "0.8.0-rc.7", features = ["oid"] }
+spki = "0.8.0-rc.4"
 
 # optional dependencies
 cbc = { version = "0.2.0-rc.0", optional = true }

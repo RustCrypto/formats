@@ -455,7 +455,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.8.0-rc.6"
+version = "0.8.0-rc.7"
 dependencies = [
  "arbitrary",
  "bytes",
@@ -978,7 +978,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkcs1"
-version = "0.8.0-rc.2"
+version = "0.8.0-rc.3"
 dependencies = [
  "const-oid",
  "der",
@@ -1007,7 +1007,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.8.0-rc.5"
+version = "0.8.0-rc.6"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -1025,7 +1025,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.11.0-rc.5"
+version = "0.11.0-rc.6"
 dependencies = [
  "der",
  "hex-literal",
@@ -1375,7 +1375,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.8.0-rc.6"
+version = "0.8.0-rc.8"
 dependencies = [
  "base16ct",
  "der",
@@ -1511,7 +1511,7 @@ checksum = "04dc19736151f35336d325007ac991178d504a119863a2fcb3758cdb5e52c50d"
 
 [[package]]
 name = "spki"
-version = "0.8.0-rc.3"
+version = "0.8.0-rc.4"
 dependencies = [
  "arbitrary",
  "base64ct",
