@@ -19,19 +19,20 @@ rust-version = "1.85"
 der = { version = "0.8.0-rc.6", features = ["oid"] }
 spki = { version = "0.8.0-rc.3" }
 
-# optional dependencies
-pkcs8 = { version = "0.11.0-rc.5", optional = true, default-features = false }
-
 [dev-dependencies]
 const-oid = { version = "0.10", features = ["db"] }
 hex-literal = "1"
 tempfile = "3"
 
 [features]
-zeroize = ["der/zeroize"]
-alloc = ["der/alloc", "zeroize", "pkcs8?/alloc"]
-pem = ["alloc", "der/pem", "pkcs8?/pem"]
+alloc = ["der/alloc", "zeroize"]
 std = ["der/std", "alloc"]
+
+pem = ["alloc", "der/pem"]
+zeroize = ["der/zeroize"]
+
+# TODO(tarcieri): stub! (for `rsa` crate for now) remove before release
+pkcs8 = []
 
 [package.metadata.docs.rs]
 all-features = true

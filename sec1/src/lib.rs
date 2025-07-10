@@ -60,18 +60,14 @@ pub use crate::traits::EncodeEcPrivateKey;
 #[cfg(feature = "pem")]
 pub use der::pem::{self, LineEnding};
 
-#[cfg(feature = "pkcs8")]
-pub use pkcs8;
-
-#[cfg(feature = "pkcs8")]
-use pkcs8::ObjectIdentifier;
+#[cfg(feature = "der")]
+use der::asn1::ObjectIdentifier;
 
 #[cfg(all(doc, feature = "serde"))]
 use serdect::serde;
 
-/// Algorithm [`ObjectIdentifier`] for elliptic curve public key cryptography
-/// (`id-ecPublicKey`).
+/// Algorithm [`ObjectIdentifier`] for elliptic curve public key cryptography (`id-ecPublicKey`).
 ///
 /// <http://oid-info.com/get/1.2.840.10045.2.1>
-#[cfg(feature = "pkcs8")]
+#[cfg(feature = "der")]
 pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");

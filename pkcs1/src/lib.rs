@@ -51,12 +51,10 @@ pub use crate::{
 pub use der::pem::{self, LineEnding};
 
 /// `rsaEncryption` Object Identifier (OID)
-#[cfg(feature = "pkcs8")]
 pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.1");
 
 /// `AlgorithmIdentifier` for RSA.
-#[cfg(feature = "pkcs8")]
-pub const ALGORITHM_ID: pkcs8::AlgorithmIdentifierRef<'static> = pkcs8::AlgorithmIdentifierRef {
+pub const ALGORITHM_ID: spki::AlgorithmIdentifierRef<'static> = spki::AlgorithmIdentifierRef {
     oid: ALGORITHM_OID,
     parameters: Some(der::asn1::AnyRef::NULL),
 };
