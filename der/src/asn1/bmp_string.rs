@@ -93,7 +93,7 @@ impl<'a> DecodeValue<'a> for BmpString {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        Self::from_ucs2(reader.read_vec(header.length)?)
+        Self::from_ucs2(reader.read_vec(header.length())?)
     }
 }
 

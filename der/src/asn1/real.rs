@@ -20,7 +20,7 @@ impl<'a> DecodeValue<'a> for f64 {
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = <&'a BytesRef>::decode_value(reader, header)?.as_slice();
 
-        if header.length == Length::ZERO {
+        if header.length() == Length::ZERO {
             Ok(0.0)
         } else if is_nth_bit_one::<7>(bytes) {
             // Binary encoding from section 8.5.7 applies

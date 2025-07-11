@@ -9,19 +9,55 @@ use core::cmp::Ordering;
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Header {
     /// Tag representing the type of the encoded value
-    pub tag: Tag,
+    tag: Tag,
 
     /// Length of the encoded value
-    pub length: Length,
+    length: Length,
+
+    /// True if value is constructed, rather than primitive
+    constructed: bool,
 }
 
 impl Header {
+    /// Create a new [`Header`] from a [`Tag`] and a [`Length`].
+    pub fn new(tag: Tag, length: Length) -> Self {
+        Self {
+            tag,
+            length,
+            constructed: length.is_indefinite(),
+        }
+    }
+
     /// Create a new [`Header`] from a [`Tag`] and a specified length.
     ///
     /// Returns an error if the length exceeds the limits of [`Length`].
-    pub fn new(tag: Tag, length: impl TryInto<Length>) -> Result<Self> {
+    pub fn try_new(tag: Tag, length: impl TryInto<Length>) -> Result<Self> {
         let length = length.try_into().map_err(|_| ErrorKind::Overflow)?;
-        Ok(Self { tag, length })
+        Ok(Self::new(tag, length))
+    }
+
+    /// [`Tag`] of this header.
+    pub fn tag(&self) -> Tag {
+        self.tag
+    }
+
+    /// [`Length`] of this header.
+    pub fn length(&self) -> Length {
+        self.length
+    }
+
+    /// True if the [`Tag`] of this header has its constructed bit set.
+    pub fn is_constructed(&self) -> bool {
+        self.constructed
+    }
+
+    /// Copy of header with adjusted length.
+    pub fn copy_with_length(&self, length: Length) -> Self {
+        Self {
+            tag: self.tag,
+            length,
+            constructed: self.constructed,
+        }
     }
 
     /// Peek forward in the reader, attempting to decode a [`Header`] at the current position.
@@ -51,7 +87,11 @@ impl<'a> Decode<'a> for Header {
             return Err(reader.error(ErrorKind::IndefiniteLength));
         }
 
-        Ok(Self { tag, length })
+        Ok(Self {
+            tag,
+            length,
+            constructed: is_constructed,
+        })
     }
 }
 
@@ -90,8 +130,8 @@ mod tests {
         assert_eq!(reader.position(), Length::ZERO);
 
         let header = Header::peek(&reader).expect("peeked tag");
-        assert_eq!(header.tag, Tag::Integer);
-        assert_eq!(header.length, Length::ONE);
+        assert_eq!(header.tag(), Tag::Integer);
+        assert_eq!(header.length(), Length::ONE);
         assert_eq!(reader.position(), Length::ZERO); // Position unchanged
     }
 
@@ -109,7 +149,7 @@ mod tests {
             }
         );
         assert_eq!(
-            header.length,
+            header.length(),
             Length::new_usize(0xFFFFFFFF).expect("u32 to fit")
         );
         assert_eq!(header.encoded_len(), Ok(Length::new(11)));
