@@ -56,13 +56,6 @@ impl<'a> AnyRef<'a> {
     pub fn value(self) -> &'a [u8] {
         self.value.as_slice()
     }
-    /// Returns [`Tag`] and [`Length`] of self.
-    pub fn header(&self) -> Header {
-        Header {
-            tag: self.tag,
-            length: self.value.len(),
-        }
-    }
 
     /// Returns [`Tag`] and [`Length`] of self.
     pub fn header(&self) -> Header {
@@ -94,7 +87,7 @@ impl<'a> AnyRef<'a> {
 
         let mut decoder = SliceReader::new_with_encoding_rules(self.value(), encoding)?;
         let result = T::decode_value(&mut decoder, self.header())?;
-      
+
         decoder.finish()?;
         Ok(result)
     }
