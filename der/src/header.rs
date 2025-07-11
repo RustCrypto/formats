@@ -69,6 +69,7 @@ impl Encode for Header {
     }
 }
 
+#[allow(unused_variables)]
 fn clarify_start_tag(writer: &mut impl Writer, tag: &Tag) {
     #[cfg(feature = "clarify")]
     if let Some(clarifier) = writer.clarifier() {
@@ -76,6 +77,7 @@ fn clarify_start_tag(writer: &mut impl Writer, tag: &Tag) {
     }
 }
 
+#[allow(unused_variables)]
 fn clarify_end_length(writer: &mut impl Writer, tag: &Tag, length: Length) {
     #[cfg(feature = "clarify")]
     if let Some(clarifier) = writer.clarifier() {

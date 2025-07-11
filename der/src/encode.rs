@@ -88,6 +88,7 @@ where
     }
 }
 
+#[allow(unused_variables)]
 fn clarify_start_value_type<T: ?Sized>(writer: &mut impl Writer) {
     #[cfg(feature = "clarify")]
     if let Some(clarifier) = writer.clarifier() {
@@ -95,6 +96,7 @@ fn clarify_start_value_type<T: ?Sized>(writer: &mut impl Writer) {
     }
 }
 
+#[allow(unused_variables)]
 fn clarify_end_value_type<T: ?Sized>(writer: &mut impl Writer) {
     #[cfg(feature = "clarify")]
     if let Some(clarifier) = writer.clarifier() {
