@@ -62,10 +62,10 @@ pub struct ClarifySliceWriter<'a> {
 
 /// Clarifier that creates HEX with comments
 pub struct Clarifier {
-    // Buffer into which debug HEX and comments are written
+    /// Buffer into which debug HEX and comments are written
     clarify_buf: Vec<u8>,
 
-    // Position in the buffer is used to track how long is the current sub-message
+    /// Position in the buffer is used to track how long is the current sub-message
     last_position: u32,
 
     /// Used for debug indentation
@@ -73,13 +73,19 @@ pub struct Clarifier {
     /// Pushes writer positions on the stack
     depth: Vec<Option<u32>>,
 
+    /// Determines if newlines and indent are currently enabled
     indent_enabled: bool,
+
+    /// Sans-io buffer for comments
     comment_writer: Box<dyn CommentWriter>,
 }
 
 /// Returned by .finish()
 pub struct ClarifyOutputs<'a> {
+    /// Raw DER/BER buffer
     pub raw: Result<Cow<'a, [u8]>>,
+
+    /// Hex-encoded DER/BER with comments
     pub clarify_buf: Vec<u8>,
 }
 
@@ -97,13 +103,6 @@ impl<'a> ClarifyOutputs<'a> {
             clarify_buf: self.clarify_buf,
         }
     }
-    // pub fn and(result: Result<Cow<'a, [u8]>>) {
-    //     ClarifyOutputs {
-    //         // prioritize Encode::encode errors
-    //         raw: result.and(outputs.raw),
-    //         clarify_buf: outputs.clarify_buf,
-    //     };
-    // }
 }
 
 /// Determines how comments will look like
@@ -225,17 +224,14 @@ impl Clarifier {
     }
     /// Writes string to debug output, for example a comment: `// SEQUENCE: name`
     pub fn write_clarify_type_str(&mut self, start_end: &str, type_name: &str) {
-        //let mut debugbuf = self.debug_ref.borrow_mut();
-
         let comment = format!("{start_end}: {type_name} ");
         self.comment_writer.comment(&comment);
     }
 
     /// Writes string to debug output, for example a comment: `// "abc"`
     pub fn write_clarify_value_quote(&mut self, type_name: &str, value: &[u8]) {
-        //let mut debugbuf = self.debug_ref.borrow_mut();
-
         let contains_control = value.iter().any(|&c| c == 0x7F || (c < 0x20 && c != b'\n'));
+
         if value.len() > 2 && !contains_control {
             let type_name = strip_transparent_types(type_name);
             let comment = format!("{} {:?} ", type_name, String::from_utf8_lossy(value));
@@ -278,26 +274,12 @@ impl Clarifier {
         self.write_clarify_type_str("end", type_name.as_ref());
     }
 
-    // /// for better tag-length pretty-printing inline
-    // pub fn clarify_end_tag(&mut self, _tag: &Tag) {
-    //     // just to print a single length byte without indent
-    //     self.indent_enabled = false;
-    // }
-
     /// for better tag-length pretty-printing inline
     pub fn clarify_header_start_tag(&mut self, _tag: &Tag) {
         self.write_clarify_indent();
         // just to print header bytes without indent
         self.indent_enabled = false;
     }
-
-    // fn debug_set_indent_enabled(&mut self, enabled: bool) {
-    //     if !enabled {
-    //         // Write tabs before we switch to in-line mode
-    //         self.write_debug_indent();
-    //     }
-    //     self.indent_enabled = enabled;
-    // }
 
     /// Writes field name, i.e. field: `public_key`
     ///
@@ -329,15 +311,6 @@ impl Clarifier {
             self.write_clarify_type_str("len", &format!("{length}"));
         }
     }
-
-    // fn clarify_value_quote(&mut self, _type_name: &str, tag_name: &[u8]) {
-    //     //self.write_debug_value_quote(type_name, tag_name);
-    //     self.write_debug_value_quote("", tag_name);
-    // }
-
-    // fn debug_int(&mut self, value: i64) {
-    //     self.write_debug_int(value);
-    // }
 
     /// Writes pretty-printed `CHOICE name`
     pub fn clarify_choice(&mut self, choice_name: &[u8]) {
