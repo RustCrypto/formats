@@ -25,14 +25,21 @@ where
     debug_assert!(size_of::<T>() <= MAX_INT_SIZE);
 
     let mut buf1 = [0u8; MAX_INT_SIZE];
-    let mut encoder1 = SliceWriter::new(&mut buf1);
-    a.encode_value(&mut encoder1)?;
-
     let mut buf2 = [0u8; MAX_INT_SIZE];
-    let mut encoder2 = SliceWriter::new(&mut buf2);
-    b.encode_value(&mut encoder2)?;
 
-    Ok(encoder1.finish()?.cmp(encoder2.finish()?))
+    let buf1 = encode_value_to_slice(&mut buf1, &a)?;
+    let buf2 = encode_value_to_slice(&mut buf2, &b)?;
+
+    Ok(buf1.cmp(buf2))
+}
+
+fn encode_value_to_slice<'a, T>(buf: &'a mut [u8], value: &T) -> Result<&'a [u8]>
+where
+    T: EncodeValue,
+{
+    let mut encoder = SliceWriter::new(buf);
+    value.encode_value(&mut encoder)?;
+    encoder.finish()
 }
 
 #[cfg(test)]
