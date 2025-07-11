@@ -6,7 +6,7 @@ pub mod sequence {
 
     use const_oid::ObjectIdentifier;
     use der::{
-        AnyRef, ClarifyFlavor, EncodeClarifyExt, Sequence, ValueOrd,
+        AnyRef, ClarifyFlavor, Decode, EncodeClarifyExt, Sequence, ValueOrd,
         asn1::{OctetString, SetOf},
     };
     use hex_literal::hex;
@@ -38,7 +38,7 @@ pub mod sequence {
 
     #[test]
     fn clarify_simple_octetstring_javacomments() {
-        let obj = OctetString::new(&[0xAA, 0xBB, 0xCC]).unwrap();
+        let obj = OctetString::new(hex!("AA BB CC")).unwrap();
 
         let clarified = obj
             .to_der_clarify(ClarifyFlavor::JavaComments)
@@ -52,7 +52,7 @@ pub mod sequence {
 
     #[test]
     fn clarify_simple_octetstring_rusthex() {
-        let obj = OctetString::new(&[0xAA, 0xBB, 0xCC]).unwrap();
+        let obj = OctetString::new(hex!("AA BB CC")).unwrap();
 
         let clarified = obj
             .to_der_clarify(ClarifyFlavor::RustHex)
@@ -66,10 +66,12 @@ pub mod sequence {
 
     #[test]
     fn clarify_simple_octetstring_long_rusthex() {
-        let obj = OctetString::new(&[
-            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD,
-            0xEE, 0xFF, 0x01,
-        ])
+        let obj = OctetString::from_der(&hex!(
+            "04 11" // tag: OCTET STRING len: 17 type: OctetString
+                "00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF
+                01"
+            "" // end: OctetString
+        ))
         .unwrap();
 
         let clarified = obj
@@ -80,14 +82,6 @@ pub mod sequence {
         assert_eq!(
             clarified,
             "\n\"04 11\" // tag: OCTET STRING len: 17 type: OctetString \n\t\"00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF \n\t01\"\n\"\" // end: OctetString "
-        );
-
-        // use-case example:
-        hex!(
-            "04 11" // tag: OCTET STRING len: 17 type: OctetString
-                "00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF
-                01"
-            "" // end: OctetString
         );
     }
 }
