@@ -164,3 +164,13 @@ where
         T::encode_value(self, writer)
     }
 }
+
+/// Encodes value only (without tag + length) to a slice.
+pub(crate) fn encode_value_to_slice<'a, T>(buf: &'a mut [u8], value: &T) -> Result<&'a [u8]>
+where
+    T: EncodeValue,
+{
+    let mut encoder = SliceWriter::new(buf);
+    value.encode_value(&mut encoder)?;
+    encoder.finish()
+}

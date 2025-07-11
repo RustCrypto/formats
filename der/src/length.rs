@@ -3,10 +3,7 @@
 pub(crate) mod indefinite;
 
 use self::indefinite::INDEFINITE_LENGTH_OCTET;
-use crate::{
-    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Reader, Result, SliceWriter, Tag,
-    Writer,
-};
+use crate::{Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Reader, Result, Tag, Writer};
 use core::{
     cmp::Ordering,
     fmt,
@@ -327,13 +324,10 @@ impl DerOrd for Length {
         let mut buf1 = [0u8; Self::MAX_SIZE];
         let mut buf2 = [0u8; Self::MAX_SIZE];
 
-        let mut encoder1 = SliceWriter::new(&mut buf1);
-        encoder1.encode(self)?;
+        let buf1 = self.encode_to_slice(&mut buf1)?;
+        let buf2 = other.encode_to_slice(&mut buf2)?;
 
-        let mut encoder2 = SliceWriter::new(&mut buf2);
-        encoder2.encode(other)?;
-
-        Ok(encoder1.finish()?.cmp(encoder2.finish()?))
+        Ok(buf1.cmp(buf2))
     }
 }
 
