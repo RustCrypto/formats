@@ -17,7 +17,10 @@ use super::Writer;
 pub trait EncodeClarifyExt: Encode {
     /// Encode this type as pretty-printed hex DER, with comments.
     fn to_der_clarify(&self, flavor: ClarifyFlavor) -> Result<String> {
-        let outputs = self.to_der_clarify_err_ignorant(flavor);
+        let outputs = self.to_der_clarify_err_ignorant(ClarifyOptions {
+            flavor,
+            ..Default::default()
+        });
         // Propagate encode and finish errors
         outputs.raw?;
         Ok(String::from_utf8(outputs.clarify_buf).expect("clarified output to be utf-8"))
@@ -25,7 +28,7 @@ pub trait EncodeClarifyExt: Encode {
 
     /// Encode this type as pretty-printed hex DER, with comments.
     /// Ignores any errors that occur during [`Encode::encode`].
-    fn to_der_clarify_err_ignorant(&self, flavor: ClarifyFlavor) -> ClarifyOutputs<'static> {
+    fn to_der_clarify_err_ignorant(&self, options: ClarifyOptions) -> ClarifyOutputs<'static> {
         let len = match self.encoded_len() {
             Ok(len) => len,
             Err(err) => return ClarifyOutputs::from_err(err),
@@ -33,7 +36,7 @@ pub trait EncodeClarifyExt: Encode {
 
         let mut buf = vec![0u8; u32::from(len) as usize];
 
-        let mut writer = ClarifySliceWriter::new(&mut buf, Vec::new(), flavor);
+        let mut writer = ClarifySliceWriter::new(&mut buf, Vec::new(), options);
         let result = self.encode(&mut writer);
 
         let outputs = writer.finish();
@@ -49,6 +52,25 @@ pub trait EncodeClarifyExt: Encode {
 }
 
 impl<T> EncodeClarifyExt for T where T: Encode {}
+
+/// Options to customize pretty-printing.
+#[derive(Clone)]
+pub struct ClarifyOptions {
+    /// How should comments look like?
+    pub flavor: ClarifyFlavor,
+
+    /// Write types? E.g `type: OctetStringRef`
+    pub print_types: bool,
+}
+
+impl Default for ClarifyOptions {
+    fn default() -> Self {
+        Self {
+            flavor: Default::default(),
+            print_types: true,
+        }
+    }
+}
 
 static INDENT_STR: &str =
     "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
@@ -75,6 +97,8 @@ pub struct Clarifier {
 
     /// Determines if newlines and indent are currently enabled
     indent_enabled: bool,
+
+    print_types: bool,
 
     /// Sans-io buffer for comments
     comment_writer: Box<dyn CommentWriter>,
@@ -106,11 +130,12 @@ impl<'a> ClarifyOutputs<'a> {
 }
 
 /// Determines how comments will look like
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub enum ClarifyFlavor {
     /// `01 02 <!-- comment -->`
     XmlComments,
     /// `01 02 // comment`
+    #[default]
     JavaComments,
     /// `"01 02" // comment`
     RustHex,
@@ -118,7 +143,7 @@ pub enum ClarifyFlavor {
 
 impl Clarifier {
     /// Creates new Clarifier with buffer, that accumulates comments and hex bytes.
-    pub fn new(clarify_buf: Vec<u8>, flavor: ClarifyFlavor) -> Self {
+    pub fn new(clarify_buf: Vec<u8>, options: ClarifyOptions) -> Self {
         Self {
             clarify_buf,
 
@@ -126,7 +151,10 @@ impl Clarifier {
             depth: Vec::new(),
 
             indent_enabled: true,
-            comment_writer: match flavor {
+
+            print_types: options.print_types,
+
+            comment_writer: match options.flavor {
                 ClarifyFlavor::XmlComments => Box::new(XmlCommentWriter::default()),
                 ClarifyFlavor::JavaComments => Box::new(JavaCommentWriter::default()),
                 ClarifyFlavor::RustHex => Box::new(RustHexWriter::default()),
@@ -137,10 +165,10 @@ impl Clarifier {
 
 impl<'a> ClarifySliceWriter<'a> {
     /// Create a new encoder with the given byte slice as a backing buffer.
-    pub fn new(bytes: &'a mut [u8], clarify_buf: Vec<u8>, flavor: ClarifyFlavor) -> Self {
+    pub fn new(bytes: &'a mut [u8], clarify_buf: Vec<u8>, options: ClarifyOptions) -> Self {
         Self {
             writer: SliceWriter::new(bytes),
-            clarifier: Clarifier::new(clarify_buf, flavor),
+            clarifier: Clarifier::new(clarify_buf, options),
         }
     }
 
@@ -254,8 +282,10 @@ impl Clarifier {
         self.indent_enabled = true;
         self.depth.push(writer_pos);
 
-        let type_name = strip_transparent_types(type_name);
-        self.write_clarify_type_str("type", &type_name);
+        if self.print_types {
+            let type_name = strip_transparent_types(type_name);
+            self.write_clarify_type_str("type", &type_name);
+        }
     }
 
     fn clarify_end_value_type_str(&mut self, writer_pos: Option<u32>, type_name: &str) {
