@@ -15,10 +15,25 @@ readme = "README.md"
 rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8.0-rc.7", features = ["alloc", "derive", "oid", "pem"] }
-cms = { version = "=0.3.0-pre.0" }
-cmpv2 = { version = "=0.3.0-pre.0", features = ["alloc"] }
+der = { version = "0.8.0-rc.7", default-features = false, features = ["derive", "oid"] }
+cms = { version = "=0.3.0-pre.0", default-features = false }
+cmpv2 = { version = "=0.3.0-pre.0", default-features = false }
 x509-cert = { version = "0.3.0-rc.0", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "der/std",
+    "cms/std", 
+    "cmpv2/std",
+    "x509-cert/std",
+    "alloc"
+]
+alloc = [
+    "der/alloc",
+    "cmpv2/alloc"
+]
+pem = ["der/pem"]
 
 [dev-dependencies]
 hex-literal = "1"
