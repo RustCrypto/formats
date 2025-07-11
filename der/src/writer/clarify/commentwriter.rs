@@ -23,7 +23,7 @@ impl CommentWriter for JavaCommentWriter {
     }
 
     fn before_new_line(&mut self, w: &mut dyn Write) {
-        if self.buf.len() == 0 {
+        if self.buf.is_empty() {
             return;
         }
         let _ = w.write_all(b" // ");
@@ -43,7 +43,7 @@ impl CommentWriter for XmlCommentWriter {
     }
 
     fn before_new_line(&mut self, w: &mut dyn Write) {
-        if self.buf.len() == 0 {
+        if self.buf.is_empty() {
             return;
         }
         let _ = w.write_all(b" <!-- ");
@@ -68,7 +68,7 @@ impl CommentWriter for RustHexWriter {
         if self.started_newline {
             w.write_all(b"\"").ok();
         }
-        if self.buf.len() == 0 {
+        if self.buf.is_empty() {
             return;
         }
         w.write_all(b" // ").ok();

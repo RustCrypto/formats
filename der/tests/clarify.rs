@@ -1,5 +1,7 @@
 //! Tests for clarify pretty-printing support.
 #![cfg(all(feature = "derive", feature = "alloc", feature = "clarify"))]
+// TODO: fix needless_question_mark in the derive crate
+#![allow(clippy::needless_question_mark)]
 
 pub mod sequence {
     use std::{println, str::FromStr};

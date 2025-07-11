@@ -21,7 +21,7 @@ impl fmt::Display for HexDisplayLines<'_, '_> {
                 first = false;
             }
             for byte in chunk {
-                write!(f, "{:02X} ", byte)?;
+                write!(f, "{byte:02X} ")?;
             }
         }
         Ok(())

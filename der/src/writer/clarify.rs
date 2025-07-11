@@ -31,8 +31,7 @@ pub trait EncodeClarifyExt: Encode {
             Err(err) => return ClarifyOutputs::from_err(err),
         };
 
-        let mut buf: Vec<u8> = Vec::new();
-        buf.resize(u32::from(len) as usize, 0u8);
+        let mut buf = vec![0u8; u32::from(len) as usize];
 
         let mut writer = ClarifySliceWriter::new(&mut buf, Vec::new(), flavor);
         let result = self.encode(&mut writer);
@@ -146,73 +145,16 @@ impl<'a> ClarifySliceWriter<'a> {
         }
     }
 
-    // /// Encode a value which impls the [`Encode`] trait.
-    // pub fn encode<T: Encode>(&mut self, encodable: &T) -> Result<()> {
-    //     self.writer.encode(encodable)
-    // }
-
-    // /// Return an error with the given [`ErrorKind`], annotating it with
-    // /// context about where the error occurred.
-    // pub fn error<T>(&mut self, kind: ErrorKind) -> Result<T> {
-    //     self.writer.error(kind)
-    // }
-
-    // /// Did the decoding operation fail due to an error?
-    // pub fn is_failed(&self) -> bool {
-    //     self.writer.is_failed()
-    // }
-
-    // /// Finish encoding to the buffer, returning a slice containing the data
-    // /// written to the buffer.
-    // pub fn finish_internal(&self) -> Result<&'a [u8]> {
-    //     self.writer.finish()
-    // }
-
     /// Finish encoding to the buffer, returning a slice containing the data
     /// written to the buffer.
     pub fn finish(mut self) -> ClarifyOutputs<'a> {
         self.clarifier.flush_line();
 
         ClarifyOutputs {
-            raw: self.writer.finish().map(|raw| Cow::Borrowed(raw)),
+            raw: self.writer.finish().map(Cow::Borrowed),
             clarify_buf: self.clarifier.clarify_buf,
         }
     }
-
-    // /// Encode a `CONTEXT-SPECIFIC` field with the provided tag number and mode.
-    // pub fn context_specific<T>(
-    //     &mut self,
-    //     tag_number: TagNumber,
-    //     tag_mode: TagMode,
-    //     value: &T,
-    // ) -> Result<()>
-    // where
-    //     T: EncodeValue + Tagged,
-    // {
-    //     self.writer.context_specific(tag_number, tag_mode, value)
-    // }
-
-    // /// Encode an ASN.1 `SEQUENCE` of the given length.
-    // ///
-    // /// Spawns a nested slice writer which is expected to be exactly the
-    // /// specified length upon completion.
-    // pub fn sequence<F>(&mut self, length: Length, f: F) -> Result<()>
-    // where
-    //     F: FnOnce(&mut DebugSliceWriter<'_>) -> Result<()>,
-    // {
-    //     Header::new(Tag::Sequence, length).and_then(|header| header.encode(self))?;
-
-    //     let debug_ref = self.debug_ref.clone();
-    //     let mut nested_encoder = DebugSliceWriter::new(self.reserve(length)?, debug_ref, true);
-    //     f(&mut nested_encoder)?;
-
-    //     let nresult: FinishOutputs<'_> = nested_encoder.finish();
-    //     if nresult.raw?.len() == usize::try_from(length)? {
-    //         Ok(())
-    //     } else {
-    //         self.error(ErrorKind::Length { tag: Tag::Sequence })
-    //     }
-    // }
 
     /// Reserve a portion of the internal buffer, updating the internal cursor
     /// position and returning a mutable slice.
@@ -224,7 +166,7 @@ impl<'a> ClarifySliceWriter<'a> {
 impl Clarifier {
     /// Returns indentation, for example "\n\t" for depth == 1
     pub fn indent_str(&self) -> &'static str {
-        let ilen = self.depth.len() * 1;
+        let ilen = self.depth.len();
         let ilen = ilen.min(INDENT_STR.len());
         &INDENT_STR[..ilen]
     }
@@ -256,7 +198,7 @@ impl Clarifier {
         self.flush_line();
 
         let indent = self.indent_str();
-        write!(&mut self.clarify_buf, "\n{}", indent).ok();
+        write!(&mut self.clarify_buf, "\n{indent}").ok();
 
         // write e.g. '"' before hex
         self.comment_writer.start_new_line(&mut self.clarify_buf);
@@ -279,13 +221,13 @@ impl Clarifier {
 
     /// Writes string to debug output, for example a comment "// SEQUENCE"
     pub fn write_clarify_str(&mut self, s: &str) {
-        write!(&mut self.clarify_buf, "{}", s).unwrap();
+        write!(&mut self.clarify_buf, "{s}").ok();
     }
     /// Writes string to debug output, for example a comment: `// SEQUENCE: name`
     pub fn write_clarify_type_str(&mut self, start_end: &str, type_name: &str) {
         //let mut debugbuf = self.debug_ref.borrow_mut();
 
-        let comment = format!("{}: {} ", start_end, type_name);
+        let comment = format!("{start_end}: {type_name} ");
         self.comment_writer.comment(&comment);
     }
 
@@ -303,13 +245,15 @@ impl Clarifier {
 
     /// Writes int to debug output, for example a comment: `// integer: 16dec`
     pub fn write_clarify_int(&mut self, value: i64) {
-        if value >= 10 || value < 0 {
+        if !(0..10).contains(&value) {
             let comment = format!("integer: {value}dec ");
             self.comment_writer.comment(&comment);
         }
     }
 
-    /// input: u32::from(self.writer.position())
+    /// Writes e.g. `type: OctetString`
+    ///
+    /// Expected `writer_pos` input: `u32::from(self.writer.position())`
     pub fn clarify_start_value_type_str(&mut self, writer_pos: Option<u32>, type_name: &str) {
         self.indent_enabled = true;
         self.depth.push(writer_pos);
@@ -321,15 +265,12 @@ impl Clarifier {
     fn clarify_end_value_type_str(&mut self, writer_pos: Option<u32>, type_name: &str) {
         let last_pos = self.depth.pop().unwrap_or(writer_pos);
 
-        match (writer_pos, last_pos) {
-            (Some(writer_pos), Some(last_pos)) => {
-                let diff = writer_pos - last_pos;
-                if diff < 15 {
-                    // ignore short runs
-                    return;
-                }
+        if let (Some(writer_pos), Some(last_pos)) = (writer_pos, last_pos) {
+            let diff = writer_pos - last_pos;
+            if diff < 16 {
+                // ignore short runs
+                return;
             }
-            _ => {}
         }
 
         let type_name = strip_transparent_types(type_name);
@@ -382,10 +323,10 @@ impl Clarifier {
     pub fn clarify_header_end_length(&mut self, tag: Option<&Tag>, length: Length) {
         self.indent_enabled = true;
         if let Some(tag) = tag {
-            self.write_clarify_type_str("tag", &format!("{}", tag));
+            self.write_clarify_type_str("tag", &format!("{tag}"));
         }
         if u32::from(length) >= 10 {
-            self.write_clarify_type_str("len", &format!("{}", length));
+            self.write_clarify_type_str("len", &format!("{length}"));
         }
     }
 
@@ -408,6 +349,7 @@ impl Clarifier {
 }
 
 impl<'a> Writer for ClarifySliceWriter<'a> {
+    #[allow(clippy::cast_possible_truncation)]
     fn write(&mut self, slice: &[u8]) -> Result<()> {
         self.reserve(slice.len())?.copy_from_slice(slice);
         self.clarifier.last_position += slice.len() as u32;
@@ -434,8 +376,7 @@ fn strip_transparent_types(mut type_name: &str) -> Cow<'_, str> {
 
     for prefix in prefixes {
         type_name = if let Some(stripped) = type_name.strip_prefix(prefix) {
-            let stripped = stripped.strip_suffix(">").unwrap_or(stripped);
-            stripped
+            stripped.strip_suffix(">").unwrap_or(stripped)
         } else {
             type_name
         };
