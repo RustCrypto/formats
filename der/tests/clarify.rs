@@ -87,7 +87,7 @@ pub mod sequence {
         );
     }
     #[test]
-    fn clarify_one_assymmetric_key_rusthex() {
+    fn clarify_one_asymmetric_key_rusthex() {
         let obj = OneAsymmetricKey {
             version: 1,
             private_key_algorithm: AlgorithmIdentifier {
