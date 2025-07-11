@@ -146,6 +146,7 @@ FB E7 1F 85 26 15 60 73  7C 24 B0 10 24 F9 2A 02
     }
 
     #[derive(Sequence, Debug, Clone)]
+    #[allow(dead_code)]
     pub struct HeaplessTypeCheck {
         #[asn1(type = "OCTET STRING", deref = "true")]
         pub octet_string_heapless: heapless::Vec<u8, 16>,

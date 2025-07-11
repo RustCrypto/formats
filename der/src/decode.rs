@@ -1,6 +1,6 @@
 //! Trait definition for [`Decode`].
 
-use crate::{EncodingRules, Error, FixedTag, Header, Reader, SliceReader};
+use crate::{EncodingRules, Error, FixedTag, Header, Reader, SliceReader, reader::read_value};
 use core::marker::PhantomData;
 
 #[cfg(feature = "pem")]
@@ -68,7 +68,7 @@ where
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<T, <T as DecodeValue<'a>>::Error> {
         let header = Header::decode(reader)?;
         header.tag.assert_eq(T::TAG)?;
-        reader.read_nested(header.length, |r| T::decode_value(r, header))
+        read_value(reader, header, T::decode_value)
     }
 }
 

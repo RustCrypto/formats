@@ -30,7 +30,7 @@ impl<'a, T> Sequence<'a> for Box<T> where T: Sequence<'a> {}
 /// This is a zero-copy reference type which borrows from the input data.
 pub struct SequenceRef<'a> {
     /// Body of the `SEQUENCE`.
-    body: BytesRef<'a>,
+    body: &'a BytesRef,
 }
 
 impl<'a> SequenceRef<'a> {
@@ -51,7 +51,7 @@ impl<'a> DecodeValue<'a> for SequenceRef<'a> {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         Ok(Self {
-            body: BytesRef::decode_value(reader, header)?,
+            body: <&'a BytesRef>::decode_value(reader, header)?,
         })
     }
 }

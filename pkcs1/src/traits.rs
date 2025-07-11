@@ -12,19 +12,10 @@ use {
     der::{pem::PemLabel, zeroize::Zeroizing},
 };
 
-#[cfg(feature = "pkcs8")]
-use {
-    crate::{ALGORITHM_ID, ALGORITHM_OID},
-    der::asn1::{BitStringRef, OctetStringRef},
-};
-
 #[cfg(feature = "std")]
 use std::path::Path;
 
-#[cfg(all(feature = "alloc", feature = "pkcs8"))]
-use der::Decode;
-
-#[cfg(all(feature = "alloc", any(feature = "pem", feature = "pkcs8")))]
+#[cfg(all(feature = "alloc", feature = "pem"))]
 use crate::{RsaPrivateKey, RsaPublicKey};
 
 /// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
@@ -151,53 +142,5 @@ pub trait EncodeRsaPublicKey {
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         let doc = self.to_pkcs1_der()?;
         Ok(doc.write_pem_file(path, RsaPublicKey::PEM_LABEL, line_ending)?)
-    }
-}
-
-#[cfg(feature = "pkcs8")]
-impl<T> DecodeRsaPrivateKey for T
-where
-    T: for<'a> TryFrom<pkcs8::PrivateKeyInfoRef<'a>, Error = pkcs8::Error>,
-{
-    fn from_pkcs1_der(private_key: &[u8]) -> Result<Self> {
-        let private_key = OctetStringRef::new(private_key)?;
-        Ok(Self::try_from(pkcs8::PrivateKeyInfoRef {
-            algorithm: ALGORITHM_ID,
-            private_key,
-            public_key: None,
-        })?)
-    }
-}
-
-#[cfg(feature = "pkcs8")]
-impl<T> DecodeRsaPublicKey for T
-where
-    T: for<'a> TryFrom<pkcs8::SubjectPublicKeyInfoRef<'a>, Error = spki::Error>,
-{
-    fn from_pkcs1_der(public_key: &[u8]) -> Result<Self> {
-        Ok(Self::try_from(pkcs8::SubjectPublicKeyInfoRef {
-            algorithm: ALGORITHM_ID,
-            subject_public_key: BitStringRef::from_bytes(public_key)?,
-        })?)
-    }
-}
-
-#[cfg(all(feature = "alloc", feature = "pkcs8"))]
-impl<T: pkcs8::EncodePrivateKey> EncodeRsaPrivateKey for T {
-    fn to_pkcs1_der(&self) -> Result<SecretDocument> {
-        let pkcs8_doc = self.to_pkcs8_der()?;
-        let pkcs8_key = pkcs8::PrivateKeyInfoRef::from_der(pkcs8_doc.as_bytes())?;
-        pkcs8_key.algorithm.assert_algorithm_oid(ALGORITHM_OID)?;
-        RsaPrivateKey::from_der(pkcs8_key.private_key.as_bytes())?.try_into()
-    }
-}
-
-#[cfg(all(feature = "alloc", feature = "pkcs8"))]
-impl<T: pkcs8::EncodePublicKey> EncodeRsaPublicKey for T {
-    fn to_pkcs1_der(&self) -> Result<Document> {
-        let doc = self.to_public_key_der()?;
-        let spki = pkcs8::SubjectPublicKeyInfoRef::from_der(doc.as_bytes())?;
-        spki.algorithm.assert_algorithm_oid(ALGORITHM_OID)?;
-        RsaPublicKey::from_der(spki.subject_public_key.raw_bytes())?.try_into()
     }
 }

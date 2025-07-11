@@ -168,6 +168,9 @@ pub enum ErrorKind {
     /// Date-and-time related errors.
     DateTime,
 
+    /// Invalid encoding rules.
+    EncodingRules,
+
     /// This error indicates a previous DER parsing operation resulted in
     /// an error and tainted the state of a `Decoder` or `Encoder`.
     ///
@@ -317,6 +320,7 @@ impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ErrorKind::DateTime => write!(f, "date/time error"),
+            ErrorKind::EncodingRules => write!(f, "invalid encoding rules"),
             ErrorKind::Failed => write!(f, "operation failed"),
             #[cfg(feature = "std")]
             ErrorKind::FileNotFound => write!(f, "file not found"),

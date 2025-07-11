@@ -51,7 +51,7 @@ macro_rules! impl_string_type {
                 type Error = $crate::Error;
 
                 fn decode_value<R: Reader<'__der>>(reader: &mut R, header: Header) -> $crate::Result<Self> {
-                    Self::new(BytesRef::decode_value(reader, header)?.as_slice())
+                    Self::new(<&'__der BytesRef>::decode_value(reader, header)?.as_slice())
                 }
             }
 
@@ -147,15 +147,13 @@ macro_rules! impl_custom_class {
                 let header = Header::decode(reader)?;
 
                 // the encoding shall be constructed if the base encoding is constructed
-                if header.tag.is_constructed() != T::CONSTRUCTED {
+                if header.tag.is_constructed() != T::CONSTRUCTED
+                    && reader.encoding_rules() == EncodingRules::Der {
                     return Err(reader.error(header.tag.non_canonical_error()).into());
                 }
 
-                // read_nested checks if header matches decoded length
-                let value = reader.read_nested(header.length, |reader| {
-                    // Decode inner IMPLICIT value
-                    T::decode_value(reader, header)
-                })?;
+                // read_value checks if header matches decoded length
+                let value = crate::reader::read_value(reader, header, T::decode_value)?;
 
                 Ok(Some(Self {
                     tag_number,
@@ -192,7 +190,7 @@ macro_rules! impl_custom_class {
                     Tag::$class_enum_name { number, .. } => Ok(Self {
                         tag_number: number,
                         tag_mode: TagMode::default(),
-                        value: reader.read_nested(header.length, |reader| {
+                        value: crate::reader::read_value(reader, header, |reader, _| {
                             // Decode inner tag-length-value of EXPLICIT
                             T::decode(reader)
                         })?,

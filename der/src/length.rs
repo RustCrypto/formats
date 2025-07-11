@@ -1,8 +1,11 @@
 //! Length calculations for encoded ASN.1 DER values
 
+pub(crate) mod indefinite;
+
+use self::indefinite::INDEFINITE_LENGTH_OCTET;
 use crate::{
-    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Header, Reader, Result, SliceWriter,
-    Tag, Writer,
+    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Reader, Result, SliceWriter, Tag,
+    Writer,
 };
 use core::{
     cmp::Ordering,
@@ -10,26 +13,31 @@ use core::{
     ops::{Add, Sub},
 };
 
-/// Octet identifying an indefinite length as described in X.690 Section
-/// 8.1.3.6.1:
-///
-/// > The single octet shall have bit 8 set to one, and bits 7 to
-/// > 1 set to zero.
-const INDEFINITE_LENGTH_OCTET: u8 = 0b10000000; // 0x80
-
 /// ASN.1-encoded length.
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
-pub struct Length(u32);
+#[derive(Copy, Clone, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct Length {
+    /// Inner length as a `u32`. Note that the decoder and encoder also support a maximum length
+    /// of 32-bits.
+    inner: u32,
+
+    /// Flag bit which specifies whether the length was indeterminate when decoding ASN.1 BER.
+    ///
+    /// This should always be false when working with DER.
+    indefinite: bool,
+}
 
 impl Length {
     /// Length of `0`
-    pub const ZERO: Self = Self(0);
+    pub const ZERO: Self = Self::new(0);
 
     /// Length of `1`
-    pub const ONE: Self = Self(1);
+    pub const ONE: Self = Self::new(1);
 
     /// Maximum length (`u32::MAX`).
-    pub const MAX: Self = Self(u32::MAX);
+    pub const MAX: Self = Self::new(u32::MAX);
+
+    /// Length of end-of-content octets (i.e. `00 00`).
+    pub(crate) const EOC_LEN: Self = Self::new(2);
 
     /// Maximum number of octets in a DER encoding of a [`Length`] using the
     /// rules implemented by this crate.
@@ -38,8 +46,11 @@ impl Length {
     /// Create a new [`Length`] for any value which fits inside of a [`u16`].
     ///
     /// This function is const-safe and therefore useful for [`Length`] constants.
-    pub const fn new(value: u16) -> Self {
-        Self(value as u32)
+    pub const fn new(value: u32) -> Self {
+        Self {
+            inner: value,
+            indefinite: false,
+        }
     }
 
     /// Create a new [`Length`] for any value which fits inside the length type.
@@ -50,14 +61,18 @@ impl Length {
         if len > (u32::MAX as usize) {
             Err(Error::from_kind(ErrorKind::Overflow))
         } else {
-            Ok(Length(len as u32))
+            Ok(Self::new(len as u32))
         }
     }
 
     /// Is this length equal to zero?
     pub const fn is_zero(self) -> bool {
-        let value = self.0;
-        value == 0
+        self.inner == 0
+    }
+
+    /// Was this length decoded from an indefinite length when decoding BER?
+    pub(crate) const fn is_indefinite(self) -> bool {
+        self.indefinite
     }
 
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`
@@ -68,12 +83,32 @@ impl Length {
 
     /// Perform saturating addition of two lengths.
     pub fn saturating_add(self, rhs: Self) -> Self {
-        Self(self.0.saturating_add(rhs.0))
+        Self::new(self.inner.saturating_add(rhs.inner))
     }
 
     /// Perform saturating subtraction of two lengths.
     pub fn saturating_sub(self, rhs: Self) -> Self {
-        Self(self.0.saturating_sub(rhs.0))
+        Self::new(self.inner.saturating_sub(rhs.inner))
+    }
+
+    /// If the length is indefinite, compute a length with the EOC marker removed
+    /// (i.e. the final two bytes `00 00`).
+    ///
+    /// Otherwise (as should always be the case with DER), the length is unchanged.
+    ///
+    /// This method notably preserves the `indefinite` flag when performing arithmetic.
+    pub(crate) fn sans_eoc(self) -> Self {
+        if self.indefinite {
+            // We expect EOC to be present when this is called.
+            debug_assert!(self >= Self::EOC_LEN);
+
+            Self {
+                inner: self.saturating_sub(Self::EOC_LEN).inner,
+                indefinite: true,
+            }
+        } else {
+            self
+        }
     }
 
     /// Get initial octet of the encoded length (if one is required).
@@ -89,7 +124,7 @@ impl Length {
     /// >    most significant bit;
     /// > c) the value 11111111₂ shall not be used.
     fn initial_octet(self) -> Option<u8> {
-        match self.0 {
+        match self.inner {
             0x80..=0xFF => Some(0x81),
             0x100..=0xFFFF => Some(0x82),
             0x10000..=0xFFFFFF => Some(0x83),
@@ -103,10 +138,10 @@ impl Add for Length {
     type Output = Result<Self>;
 
     fn add(self, other: Self) -> Result<Self> {
-        self.0
-            .checked_add(other.0)
+        self.inner
+            .checked_add(other.inner)
             .ok_or_else(|| ErrorKind::Overflow.into())
-            .map(Self)
+            .map(Self::new)
     }
 }
 
@@ -154,10 +189,10 @@ impl Sub for Length {
     type Output = Result<Self>;
 
     fn sub(self, other: Length) -> Result<Self> {
-        self.0
-            .checked_sub(other.0)
+        self.inner
+            .checked_sub(other.inner)
             .ok_or_else(|| ErrorKind::Overflow.into())
-            .map(Self)
+            .map(Self::new)
     }
 }
 
@@ -171,25 +206,25 @@ impl Sub<Length> for Result<Length> {
 
 impl From<u8> for Length {
     fn from(len: u8) -> Length {
-        Length(len.into())
+        Length::new(len.into())
     }
 }
 
 impl From<u16> for Length {
     fn from(len: u16) -> Length {
-        Length(len.into())
+        Length::new(len.into())
     }
 }
 
 impl From<u32> for Length {
     fn from(len: u32) -> Length {
-        Length(len)
+        Length::new(len)
     }
 }
 
 impl From<Length> for u32 {
     fn from(length: Length) -> u32 {
-        length.0
+        length.inner
     }
 }
 
@@ -205,7 +240,7 @@ impl TryFrom<Length> for usize {
     type Error = Error;
 
     fn try_from(len: Length) -> Result<usize> {
-        len.0.try_into().map_err(|_| ErrorKind::Overflow.into())
+        len.inner.try_into().map_err(|_| ErrorKind::Overflow.into())
     }
 }
 
@@ -218,7 +253,7 @@ impl<'a> Decode<'a> for Length {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite lengths
             INDEFINITE_LENGTH_OCTET => match reader.encoding_rules() {
                 // Indefinite lengths are allowed when decoding BER
-                EncodingRules::Ber => decode_indefinite_length(&mut reader.clone()),
+                EncodingRules::Ber => indefinite::decode_indefinite_length(&mut reader.clone()),
                 // Indefinite lengths are disallowed when decoding DER
                 EncodingRules::Der => Err(reader.error(ErrorKind::IndefiniteLength)),
             },
@@ -259,12 +294,12 @@ impl<'a> Decode<'a> for Length {
 
 impl Encode for Length {
     fn encoded_len(&self) -> Result<Length> {
-        match self.0 {
-            0..=0x7F => Ok(Length(1)),
-            0x80..=0xFF => Ok(Length(2)),
-            0x100..=0xFFFF => Ok(Length(3)),
-            0x10000..=0xFFFFFF => Ok(Length(4)),
-            0x1000000..=0xFFFFFFFF => Ok(Length(5)),
+        match self.inner {
+            0..=0x7F => Ok(Length::new(1)),
+            0x80..=0xFF => Ok(Length::new(2)),
+            0x100..=0xFFFF => Ok(Length::new(3)),
+            0x10000..=0xFFFFFF => Ok(Length::new(4)),
+            0x1000000..=0xFFFFFFFF => Ok(Length::new(5)),
         }
     }
 
@@ -274,7 +309,7 @@ impl Encode for Length {
                 writer.write_byte(tag_byte)?;
 
                 // Strip leading zeroes
-                match self.0.to_be_bytes() {
+                match self.inner.to_be_bytes() {
                     [0, 0, 0, byte] => writer.write_byte(byte),
                     [0, 0, bytes @ ..] => writer.write(&bytes),
                     [0, bytes @ ..] => writer.write(&bytes),
@@ -282,7 +317,7 @@ impl Encode for Length {
                 }
             }
             #[allow(clippy::cast_possible_truncation)]
-            None => writer.write_byte(self.0 as u8),
+            None => writer.write_byte(self.inner as u8),
         }
     }
 }
@@ -302,9 +337,19 @@ impl DerOrd for Length {
     }
 }
 
+impl fmt::Debug for Length {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.indefinite {
+            write!(f, "Length({self} [indefinite])")
+        } else {
+            f.debug_tuple("Length").field(&self.inner).finish()
+        }
+    }
+}
+
 impl fmt::Display for Length {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+        self.inner.fmt(f)
     }
 }
 
@@ -313,7 +358,7 @@ impl fmt::Display for Length {
 #[cfg(feature = "arbitrary")]
 impl<'a> arbitrary::Arbitrary<'a> for Length {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
-        Ok(Self(u.arbitrary()?))
+        Ok(Self::new(u.arbitrary()?))
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
@@ -321,66 +366,12 @@ impl<'a> arbitrary::Arbitrary<'a> for Length {
     }
 }
 
-/// Decode indefinite lengths as used by ASN.1 BER and described in X.690 Section 8.1.3.6:
-///
-/// > 8.1.3.6 For the indefinite form, the length octets indicate that the
-/// > contents octets are terminated by end-of-contents
-/// > octets (see 8.1.5), and shall consist of a single octet.
-/// >
-/// > 8.1.3.6.1 The single octet shall have bit 8 set to one, and bits 7 to
-/// > 1 set to zero.
-/// >
-/// > 8.1.3.6.2 If this form of length is used, then end-of-contents octets
-/// > (see 8.1.5) shall be present in the encoding following the contents
-/// > octets.
-/// >
-/// > [...]
-/// >
-/// > 8.1.5 End-of-contents octets
-/// > The end-of-contents octets shall be present if the length is encoded as specified in 8.1.3.6,
-/// > otherwise they shall not be present.
-/// >
-/// > The end-of-contents octets shall consist of two zero octets.
-///
-/// This function decodes TLV records until it finds an end-of-contents marker (`00 00`), and
-/// computes the resulting length as the amount of data decoded.
-fn decode_indefinite_length<'a, R: Reader<'a>>(reader: &mut R) -> Result<Length> {
-    /// The end-of-contents octets can be considered as the encoding of a value whose tag is
-    /// universal class, whose form is primitive, whose number of the tag is zero, and whose
-    /// contents are absent.
-    const EOC_TAG: u8 = 0x00;
-
-    let start_pos = reader.position();
-
-    loop {
-        let current_pos = reader.position();
-
-        // Look for the end-of-contents marker
-        if reader.peek_byte() == Some(EOC_TAG) {
-            // Drain the end-of-contents tag
-            reader.drain(Length::ONE)?;
-
-            // Read the length byte and ensure it's zero (i.e. the full EOC is `00 00`)
-            let length_byte = reader.read_byte()?;
-            if length_byte == 0 {
-                return current_pos - start_pos;
-            } else {
-                return Err(reader.error(ErrorKind::IndefiniteLength));
-            }
-        }
-
-        let header = Header::decode(reader)?;
-        reader.drain(header.length)?;
-    }
-}
-
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::Length;
-    use crate::{Decode, DerOrd, Encode, EncodingRules, ErrorKind, Reader, SliceReader, Tag};
+    use crate::{Decode, DerOrd, Encode, ErrorKind};
     use core::cmp::Ordering;
-    use hex_literal::hex;
 
     #[test]
     fn decode() {
@@ -470,66 +461,5 @@ mod tests {
             Length::ONE.der_cmp(&Length::ZERO).unwrap(),
             Ordering::Greater
         );
-    }
-
-    #[test]
-    fn indefinite() {
-        /// Length of example in octets.
-        const EXAMPLE_LEN: usize = 68;
-
-        /// Length of end-of-content octets (i.e. `00 00`).
-        const EOC_LEN: usize = 2;
-
-        /// Test vector from: <https://github.com/RustCrypto/formats/issues/779#issuecomment-2902948789>
-        ///
-        /// Notably this example contains nested indefinite lengths to ensure the decoder handles
-        /// them correctly.
-        const EXAMPLE_BER: [u8; EXAMPLE_LEN] = hex!(
-            "30 80 06 09 2A 86 48 86 F7 0D 01 07 01
-             30 1D 06 09 60 86 48 01 65 03 04 01 2A 04 10 37
-             34 3D F1 47 0D F6 25 EE B6 F4 BF D2 F1 AC C3 A0
-             80 04 10 CC 74 AD F6 5D 97 3C 8B 72 CD 51 E1 B9
-             27 F0 F0 00 00 00 00"
-        );
-
-        let mut reader =
-            SliceReader::new_with_encoding_rules(&EXAMPLE_BER, EncodingRules::Ber).unwrap();
-
-        // Decode initial tag of the message, leaving the reader at the length
-        let tag = Tag::decode(&mut reader).unwrap();
-        assert_eq!(tag, Tag::Sequence);
-
-        // Decode indefinite length
-        let length = Length::decode(&mut reader).unwrap();
-
-        // Decoding the length should leave the position at the end of the indefinite length octet
-        let pos = usize::try_from(reader.position()).unwrap();
-        assert_eq!(pos, 2);
-
-        // The first two bytes are the header and the rest is the length of the message.
-        // The last four are two end-of-content markers (2 * 2 bytes).
-        assert_eq!(
-            usize::try_from(length).unwrap(),
-            EXAMPLE_LEN - pos - (EOC_LEN * 2)
-        );
-
-        // Read OID
-        reader.tlv_bytes().unwrap();
-        // Read SEQUENCE
-        reader.tlv_bytes().unwrap();
-
-        // We're now at the next indefinite length record
-        let tag = Tag::decode(&mut reader).unwrap();
-        assert_eq!(
-            tag,
-            Tag::ContextSpecific {
-                constructed: true,
-                number: 0u32.into()
-            }
-        );
-
-        // Parse the inner indefinite length
-        let length = Length::decode(&mut reader).unwrap();
-        assert_eq!(usize::try_from(length).unwrap(), 18);
     }
 }

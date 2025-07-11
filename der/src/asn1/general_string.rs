@@ -4,7 +4,7 @@ use crate::{BytesRef, DecodeValue, EncodeValue, FixedTag, Header, Length, Reader
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct GeneralStringRef<'a> {
     /// Raw contents, unchecked
-    inner: BytesRef<'a>,
+    inner: &'a BytesRef,
 }
 impl<'a> GeneralStringRef<'a> {
     /// This is currently `&[u8]` internally, as `GeneralString` is not fully implemented yet
@@ -21,7 +21,7 @@ impl<'a> DecodeValue<'a> for GeneralStringRef<'a> {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         Ok(Self {
-            inner: BytesRef::decode_value(reader, header)?,
+            inner: <&'a BytesRef>::decode_value(reader, header)?,
         })
     }
 }
