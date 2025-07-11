@@ -83,7 +83,7 @@ pub mod sequence {
         println!("clarified: {clarified}");
         assert_eq!(
             clarified,
-            "\n\"04 11\" // tag: OCTET STRING len: 17 type: OctetString \n\t\"00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF \n\t01\"\n\"\" // end: OctetString "
+            "\n\"04 11\" // tag: OCTET STRING len: 17 type: OctetString \n\t\"00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF \n\t 01\"\n\"\" // end: OctetString "
         );
     }
     #[test]
