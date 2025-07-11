@@ -12,7 +12,6 @@ impl fmt::Display for HexDisplayLines<'_, '_> {
             } else {
                 first = false;
             }
-
             for byte in chunk {
                 write!(f, "{:02X} ", byte)?;
             }

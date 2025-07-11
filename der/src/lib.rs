@@ -400,7 +400,7 @@ pub use {
 };
 
 #[cfg(feature = "clarify")]
-pub use writer::clarify::ClarifySliceWriter;
+pub use writer::clarify::{Clarifier, ClarifyFlavor, ClarifySliceWriter, EncodeClarifyExt};
 
 #[cfg(feature = "time")]
 pub use time;

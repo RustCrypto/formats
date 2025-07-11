@@ -2,21 +2,22 @@ pub(crate) mod commentwriter;
 pub(crate) mod hexdisplaylines;
 
 use crate::std::io::Write;
+use crate::writer::clarify::commentwriter::RustHexWriter;
 use crate::{Encode, Error, SliceWriter};
 use crate::{Length, Result, Tag};
 use commentwriter::{CommentWriter, JavaCommentWriter, XmlCommentWriter};
 use hexdisplaylines::HexDisplayLines;
 use std::borrow::Cow;
-use std::println;
 use std::string::String;
 use std::{boxed::Box, vec::Vec};
 
 use super::Writer;
 
+/// Extension trait, auto-implemented on [`Encode`]
 pub trait EncodeClarifyExt: Encode {
     /// Encode this type as pretty-printed hex DER, with comments.
     fn to_der_clarify(&self, flavor: ClarifyFlavor) -> Result<String> {
-        let outputs = self.to_der_clarify_ignorant(flavor);
+        let outputs = self.to_der_clarify_err_ignorant(flavor);
         // Propagate encode and finish errors
         outputs.raw?;
         Ok(String::from_utf8(outputs.clarify_buf).expect("clarified output to be utf-8"))
@@ -24,13 +25,15 @@ pub trait EncodeClarifyExt: Encode {
 
     /// Encode this type as pretty-printed hex DER, with comments.
     /// Ignores any errors that occur during [`Encode::encode`].
-    fn to_der_clarify_ignorant(&self, flavor: ClarifyFlavor) -> ClarifyOutputs<'static> {
+    fn to_der_clarify_err_ignorant(&self, flavor: ClarifyFlavor) -> ClarifyOutputs<'static> {
         let len = match self.encoded_len() {
             Ok(len) => len,
             Err(err) => return ClarifyOutputs::from_err(err),
         };
 
-        let mut buf = Vec::with_capacity(u32::from(len) as usize);
+        let mut buf: Vec<u8> = Vec::new();
+        buf.resize(u32::from(len) as usize, 0u8);
+
         let mut writer = ClarifySliceWriter::new(&mut buf, Vec::new(), flavor);
         let result = self.encode(&mut writer);
 
@@ -104,14 +107,19 @@ impl<'a> ClarifyOutputs<'a> {
     // }
 }
 
+/// Determines how comments will look like
 #[derive(Copy, Clone, Debug)]
 pub enum ClarifyFlavor {
+    /// `01 02 <!-- comment -->`
     XmlComments,
+    /// `01 02 // comment`
     JavaComments,
+    /// `"01 02" // comment`
     RustHex,
 }
 
 impl Clarifier {
+    /// Creates new Clarifier with buffer, that accumulates comments and hex bytes.
     pub fn new(clarify_buf: Vec<u8>, flavor: ClarifyFlavor) -> Self {
         Self {
             clarify_buf,
@@ -123,7 +131,7 @@ impl Clarifier {
             comment_writer: match flavor {
                 ClarifyFlavor::XmlComments => Box::new(XmlCommentWriter::default()),
                 ClarifyFlavor::JavaComments => Box::new(JavaCommentWriter::default()),
-                ClarifyFlavor::RustHex => todo!(),
+                ClarifyFlavor::RustHex => Box::new(RustHexWriter::default()),
             },
         }
     }
@@ -162,7 +170,9 @@ impl<'a> ClarifySliceWriter<'a> {
 
     /// Finish encoding to the buffer, returning a slice containing the data
     /// written to the buffer.
-    pub fn finish(self) -> ClarifyOutputs<'a> {
+    pub fn finish(mut self) -> ClarifyOutputs<'a> {
+        self.clarifier.flush_line();
+
         ClarifyOutputs {
             raw: self.writer.finish().map(|raw| Cow::Borrowed(raw)),
             clarify_buf: self.clarifier.clarify_buf,
@@ -219,34 +229,48 @@ impl Clarifier {
         &INDENT_STR[..ilen]
     }
 
+    /// Writes indent if it is currently enabled
     pub fn write_clarify_indent_if_enabled(&mut self) {
         if self.indent_enabled {
             self.write_clarify_indent();
         }
     }
 
+    fn flush_line(&mut self) {
+        // if current line ends in space
+        if self
+            .clarify_buf
+            .last()
+            .map(|last| *last == b' ')
+            .unwrap_or_default()
+        {
+            // remove space
+            self.clarify_buf.pop();
+        }
+        // write comment after hex
+        self.comment_writer.before_new_line(&mut self.clarify_buf);
+    }
+
     /// Writes indentation to debug output, for example "\n\t" for depth == 1
     pub fn write_clarify_indent(&mut self) {
+        self.flush_line();
+
         let indent = self.indent_str();
-        {
-            self.comment_writer.before_new_line(&mut self.clarify_buf);
-            write!(&mut self.clarify_buf, "\n{}", indent).unwrap();
-        }
+        write!(&mut self.clarify_buf, "\n{}", indent).ok();
+
+        // write e.g. '"' before hex
+        self.comment_writer.start_new_line(&mut self.clarify_buf);
     }
 
     /// Writes hex bytes to debug output, for example "30 04 "
     pub fn write_clarify_hex(&mut self, slice: &[u8]) {
         let indent = self.indent_str();
-        {
-            write!(&mut self.clarify_buf, "{}", HexDisplayLines(&slice, indent)).unwrap();
-        }
+        write!(&mut self.clarify_buf, "{}", HexDisplayLines(&slice, indent)).ok();
     }
 
     /// Writes string to debug output, for example a comment "// SEQUENCE"
     pub fn write_clarify_str(&mut self, s: &str) {
-        {
-            write!(&mut self.clarify_buf, "{}", s).unwrap();
-        }
+        write!(&mut self.clarify_buf, "{}", s).unwrap();
     }
     /// Writes string to debug output, for example a comment: `// SEQUENCE: name`
     pub fn write_clarify_type_str(&mut self, start_end: &str, type_name: &str) {
@@ -291,7 +315,7 @@ impl Clarifier {
         match (writer_pos, last_pos) {
             (Some(writer_pos), Some(last_pos)) => {
                 let diff = writer_pos - last_pos;
-                if diff < 16 {
+                if diff < 15 {
                     // ignore short runs
                     return;
                 }
@@ -304,9 +328,16 @@ impl Clarifier {
         self.write_clarify_type_str("end", type_name.as_ref());
     }
 
+    // /// for better tag-length pretty-printing inline
+    // pub fn clarify_end_tag(&mut self, _tag: &Tag) {
+    //     // just to print a single length byte without indent
+    //     self.indent_enabled = false;
+    // }
+
     /// for better tag-length pretty-printing inline
-    pub fn clarify_end_tag(&mut self, _tag: &Tag) {
-        // just to print a single length byte without indent
+    pub fn clarify_header_start_tag(&mut self, _tag: &Tag) {
+        self.write_clarify_indent();
+        // just to print header bytes without indent
         self.indent_enabled = false;
     }
 
@@ -318,27 +349,36 @@ impl Clarifier {
     //     self.indent_enabled = enabled;
     // }
 
+    /// Writes field name, i.e. field: `public_key`
+    ///
+    /// when used on Sequence field:
+    /// ```text
+    /// public_key: Option<&'a [u8]>
+    /// ```
     pub fn clarify_field_name(&mut self, field_name: &str) {
         self.write_clarify_indent();
         self.write_clarify_type_str("field", field_name);
     }
 
-    pub fn clarify_start_value_type<T>(&mut self) {
+    /// Writes e.g. `// type: OctetString`
+    pub fn clarify_start_value_type<T: ?Sized>(&mut self) {
         self.clarify_start_value_type_str(Some(self.last_position), &tynm::type_name::<T>());
     }
-    pub fn clarify_end_value_type<T>(&mut self) {
+    /// Writes e.g. `// end: OctetString`
+    pub fn clarify_end_value_type<T: ?Sized>(&mut self) {
         self.clarify_end_value_type_str(Some(self.last_position), &tynm::type_name::<T>());
     }
 
-    // fn clarify_end_length(&mut self, tag: Option<&Tag>, length: Length) {
-    //     self.indent_enabled = true;
-    //     if let Some(tag) = tag {
-    //         self.write_debug_type_str("tag", &format!("{}", tag));
-    //     }
-    //     if u32::from(length) >= 10 {
-    //         self.write_debug_type_str("len", &format!("{}", length));
-    //     }
-    // }
+    /// Writes e.g. `// tag: OCTET STRING len: 17`
+    pub fn clarify_header_end_length(&mut self, tag: Option<&Tag>, length: Length) {
+        self.indent_enabled = true;
+        if let Some(tag) = tag {
+            self.write_clarify_type_str("tag", &format!("{}", tag));
+        }
+        if u32::from(length) >= 10 {
+            self.write_clarify_type_str("len", &format!("{}", length));
+        }
+    }
 
     // fn clarify_value_quote(&mut self, _type_name: &str, tag_name: &[u8]) {
     //     //self.write_debug_value_quote(type_name, tag_name);
@@ -349,6 +389,7 @@ impl Clarifier {
     //     self.write_debug_int(value);
     // }
 
+    /// Writes pretty-printed `CHOICE name`
     pub fn clarify_choice(&mut self, choice_name: &[u8]) {
         self.write_clarify_indent();
         if let Ok(choice_name) = std::str::from_utf8(choice_name) {
@@ -359,7 +400,6 @@ impl Clarifier {
 
 impl<'a> Writer for ClarifySliceWriter<'a> {
     fn write(&mut self, slice: &[u8]) -> Result<()> {
-        println!("writing {slice:?}");
         self.reserve(slice.len())?.copy_from_slice(slice);
         self.clarifier.last_position += slice.len() as u32;
 
@@ -367,6 +407,10 @@ impl<'a> Writer for ClarifySliceWriter<'a> {
         self.clarifier.write_clarify_hex(slice);
 
         Ok(())
+    }
+
+    fn clarifier(&mut self) -> Option<&mut Clarifier> {
+        Some(&mut self.clarifier)
     }
 }
 
@@ -389,25 +433,4 @@ fn strip_transparent_types(mut type_name: &str) -> Cow<'_, str> {
     }
 
     Cow::Borrowed(type_name)
-}
-
-#[cfg(test)]
-pub mod test {
-    use std::{println, vec::Vec};
-
-    use crate::{
-        asn1::OctetString,
-        writer::clarify::{ClarifyFlavor, EncodeClarifyExt},
-    };
-
-    #[test]
-    fn clarify_simple_octetstring() {
-        let obj = OctetString::new(&[0xAA, 0xBB, 0xCC]).unwrap();
-
-        let clarified = obj
-            .to_der_clarify(ClarifyFlavor::XmlComments)
-            .expect("encoded DER");
-
-        println!("clarified: {clarified}");
-    }
 }
