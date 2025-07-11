@@ -299,9 +299,11 @@ impl Clarifier {
             }
         }
 
-        let type_name = strip_transparent_types(type_name);
-        self.write_clarify_indent();
-        self.write_clarify_type_str("end", type_name.as_ref());
+        if self.print_types {
+            let type_name = strip_transparent_types(type_name);
+            self.write_clarify_indent();
+            self.write_clarify_type_str("end", type_name.as_ref());
+        }
     }
 
     /// for better tag-length pretty-printing inline
