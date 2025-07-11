@@ -1,14 +1,22 @@
+use core::fmt::Write;
 use std::fmt;
 
-/// (bytes, indent)
-pub struct HexDisplayLines<'a, 'i>(pub &'a [u8], pub &'i str);
+/// (bytes, indent, nl_ident)
+pub struct HexDisplayLines<'a, 'i> {
+    pub bytes: &'a [u8],
+    pub indent: &'i str,
+    pub space: bool,
+}
 
 impl fmt::Display for HexDisplayLines<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut first = true;
-        for chunk in self.0.chunks(16) {
+        for chunk in self.bytes.chunks(16) {
             if !first {
-                write!(f, "\n{}", self.1)?;
+                write!(f, "\n{}", self.indent)?;
+                if self.space {
+                    f.write_char(' ').ok();
+                }
             } else {
                 first = false;
             }

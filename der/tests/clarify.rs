@@ -2,11 +2,11 @@
 #![cfg(all(feature = "derive", feature = "alloc", feature = "clarify"))]
 
 pub mod sequence {
-    use std::println;
+    use std::{println, str::FromStr};
 
     use const_oid::ObjectIdentifier;
     use der::{
-        AnyRef, ClarifyFlavor, Decode, EncodeClarifyExt, Sequence, ValueOrd,
+        AnyRef, ClarifyFlavor, Decode, EncodeClarifyExt, Sequence, TagNumber, ValueOrd,
         asn1::{OctetString, SetOf},
     };
     use hex_literal::hex;
@@ -82,6 +82,70 @@ pub mod sequence {
         assert_eq!(
             clarified,
             "\n\"04 11\" // tag: OCTET STRING len: 17 type: OctetString \n\t\"00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF \n\t01\"\n\"\" // end: OctetString "
+        );
+    }
+    #[test]
+    fn clarify_one_assymetric_key_rusthex() {
+        let obj = OneAsymmetricKey {
+            version: 1,
+            private_key_algorithm: AlgorithmIdentifier {
+                algorithm: ObjectIdentifier::from_str("1.2.3.4.5.6.7.8").expect("valid oid"),
+                parameters: Some(
+                    AnyRef::new(
+                        der::Tag::ContextSpecific {
+                            constructed: true,
+                            number: TagNumber(0),
+                        },
+                        &[0xAA, 0xBB],
+                    )
+                    .expect("valid length"),
+                ),
+            },
+            private_key: &[
+                0x00, 0x11, 0x22, 0x33, 0x00, 0x11, 0x22, 0x33, 0x00, 0x11, 0x22, 0x33, 0x00, 0x11,
+                0x22, 0x33, 0x00, 0x11, 0x22, 0x33, 0x00, 0x11, 0x22, 0x33, 0x00, 0x11, 0x22, 0x33,
+            ],
+            attributes: None,
+            public_key: Some(&[
+                0x44, 0x55, 0x66, 0x77, 0x44, 0x55, 0x66, 0x77, 0x44, 0x55, 0x66, 0x77, 0x44, 0x55,
+                0x66, 0x77, 0x44, 0x55, 0x66, 0x77, 0x44, 0x55, 0x66, 0x77, 0x44, 0x55, 0x66, 0x77,
+            ]),
+        };
+        let clarified = obj
+            .to_der_clarify(ClarifyFlavor::RustHex)
+            .expect("encoded DER");
+
+        //println!("clarified: {clarified}");
+
+        assert!(clarified.contains("type: OneAsymmetricKey"));
+        assert!(clarified.contains("tag: CONTEXT-SPECIFIC [0] (constructed)"));
+        assert!(clarified.contains("tag: CONTEXT-SPECIFIC [1] (constructed)"));
+        assert!(clarified.contains("type: AlgorithmIdentifier"));
+        assert!(clarified.contains("tag: OBJECT IDENTIFIER"));
+        assert!(clarified.contains("type: ObjectIdentifier"));
+        assert!(clarified.contains("end: OneAsymmetricKey"));
+
+        hex!(
+            "30 51" // tag: SEQUENCE len: 81 type: OneAsymmetricKey
+                "02 01" // tag: INTEGER type: u8
+                        "01"
+                "30 0D" // tag: SEQUENCE len: 13 type: AlgorithmIdentifier
+                        "06 07" // tag: OBJECT IDENTIFIER type: ObjectIdentifier
+                                "2A 03 04 05 06 07 08"
+                        "A0 02" // tag: CONTEXT-SPECIFIC [0] (constructed) type: AnyRef
+                                "AA BB"
+                "04 1C" // tag: OCTET STRING len: 28 type: OctetStringRef
+                        "00 11 22 33 00 11 22 33 00 11 22 33 00 11 22 33
+                         00 11 22 33 00 11 22 33 00 11 22 33"
+                "" // end: OctetStringRef
+                "A1 1F" // tag: CONTEXT-SPECIFIC [1] (constructed) len: 31 type: ContextSpecificRef<BitStringRef>
+                        "03 1D" // tag: BIT STRING len: 29 type: BitStringRef
+                                "00"
+                                "44 55 66 77 44 55 66 77 44 55 66 77 44 55 66 77
+                                 44 55 66 77 44 55 66 77 44 55 66 77"
+                        "" // end: BitStringRef
+                "" // end: ContextSpecificRef<BitStringRef>
+            "" // end: OneAsymmetricKey
         );
     }
 }

@@ -263,9 +263,18 @@ impl Clarifier {
     }
 
     /// Writes hex bytes to debug output, for example "30 04 "
-    pub fn write_clarify_hex(&mut self, slice: &[u8]) {
+    pub fn write_clarify_hex(&mut self, bytes: &[u8]) {
         let indent = self.indent_str();
-        write!(&mut self.clarify_buf, "{}", HexDisplayLines(&slice, indent)).ok();
+        write!(
+            &mut self.clarify_buf,
+            "{}",
+            HexDisplayLines {
+                bytes,
+                indent,
+                space: self.comment_writer.needs_newline_space()
+            }
+        )
+        .ok();
     }
 
     /// Writes string to debug output, for example a comment "// SEQUENCE"
@@ -418,9 +427,9 @@ impl<'a> Writer for ClarifySliceWriter<'a> {
 fn strip_transparent_types(mut type_name: &str) -> Cow<'_, str> {
     let prefixes = [
         "EncodeValueRef<",
-        "ApplicationRef<",
-        "ContextSpecificRef<",
-        "PrivateRef<",
+        // "ApplicationRef<",
+        // "ContextSpecificRef<",
+        // "PrivateRef<",
     ];
 
     for prefix in prefixes {
