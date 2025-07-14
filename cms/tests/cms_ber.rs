@@ -31,6 +31,6 @@ mod tests {
                 0x00, 0x00,
             0x00, 0x00,
         ];
-        assert!(matches!(ContentInfo::from_ber(EXAMPLE_BER), Ok(_)));
+        assert!(ContentInfo::from_ber(EXAMPLE_BER).is_ok());
     }
 }
