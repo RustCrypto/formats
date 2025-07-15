@@ -27,13 +27,6 @@ use crate::Tag;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
-/// Octet identifying an indefinite length as described in X.690 Section
-/// 8.1.3.6.1:
-///
-/// > The single octet shall have bit 8 set to one, and bits 7 to
-/// > 1 set to zero.
-pub(super) const INDEFINITE_LENGTH_OCTET: u8 = 0b10000000; // 0x80
-
 /// The end-of-contents octets can be considered as the encoding of a value whose tag is
 /// universal class, whose form is primitive, whose number of the tag is zero, and whose
 /// contents are absent.

@@ -1,8 +1,9 @@
 //! ASN.1 DER headers.
 
-use crate::{
-    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Length, Reader, Result, Tag, Writer,
-};
+#[cfg(feature = "ber")]
+use crate::EncodingRules;
+use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Tag, Writer};
+
 use core::cmp::Ordering;
 
 /// ASN.1 DER headers: tag + length component of TLV-encoded values
@@ -46,10 +47,14 @@ impl<'a> Decode<'a> for Header {
             }
         })?;
 
+        #[cfg(feature = "ber")]
         if length.is_indefinite() && !is_constructed {
             debug_assert_eq!(reader.encoding_rules(), EncodingRules::Ber);
             return Err(reader.error(ErrorKind::IndefiniteLength));
         }
+
+        #[cfg(not(feature = "ber"))]
+        debug_assert_eq!(is_constructed, tag.is_constructed());
 
         Ok(Self { tag, length })
     }
