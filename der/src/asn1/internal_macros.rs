@@ -335,3 +335,73 @@ macro_rules! impl_custom_class_ref {
         }
     };
 }
+
+macro_rules! impl_custom_class_explicit {
+    ($explicit_class_type_name: ident, $class_enum_name: ident, $asn1_class_name: literal, $class_bits_str: literal) => {
+        #[doc = concat!("`", $asn1_class_name, "` field reference, with const `EXPLICIT` encoding.")]
+        ///
+        ///
+        /// This type encodes a field which is specific to a particular context
+        /// and is identified by a [`TagNumber`].
+        ///
+        /// Inner value might implement [`Encode`], [`Decode`] or both.
+        #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+        pub struct $explicit_class_type_name<const NUMBER: u32, T> {
+            /// Inner value might implement [`Encode`], [`Decode`] or both.
+            pub value: T,
+        }
+
+        impl<const NUMBER: u32, T> $explicit_class_type_name<NUMBER, T> {
+            #[doc = concat!("Returns const [`TagNumber`], associated with this `EXPLICIT` `", $asn1_class_name, "` wrapper.")]
+            pub const fn tag_number() -> TagNumber {
+                TagNumber(NUMBER)
+            }
+
+            #[doc = concat!("Returns const [`TagMode::Explicit`], associated with this `EXPLICIT` `", $asn1_class_name, "` wrapper.")]
+            pub const fn tag_mode() -> TagMode {
+                TagMode::Explicit
+            }
+        }
+
+        impl<const NUMBER: u32, T> EncodeValue for $explicit_class_type_name<NUMBER, T>
+        where
+            T: Encode,
+        {
+            fn value_len(&self) -> Result<Length, Error> {
+                self.value.encoded_len()
+            }
+
+            fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
+                // Encode EXPLICIT value (with tag and length)
+                self.value.encode(writer)
+            }
+        }
+
+        impl<'a, const NUMBER: u32, T> DecodeValue<'a> for $explicit_class_type_name<NUMBER, T>
+        where
+            T: Decode<'a>,
+        {
+            type Error = T::Error;
+
+            fn decode_value<R: Reader<'a>>(
+                reader: &mut R,
+                header: Header,
+            ) -> Result<Self, Self::Error> {
+                // encoding shall be constructed
+                if !header.tag.is_constructed() {
+                    return Err(reader.error(header.tag.non_canonical_error()).into());
+                }
+                Ok(Self {
+                    value: T::decode(reader)?,
+                })
+            }
+        }
+
+        impl<const NUMBER: u32, T> FixedTag for $explicit_class_type_name<NUMBER, T> {
+            const TAG: Tag = Tag::$class_enum_name {
+                constructed: true,
+                number: Self::tag_number(),
+            };
+        }
+    };
+}
