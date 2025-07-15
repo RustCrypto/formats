@@ -6,7 +6,7 @@ extern crate test;
 use base64ct::{Base64Unpadded, Encoding};
 use test::Bencher;
 
-const B64_LEN: usize = 100_002;
+const B64_LEN: usize = 100_000;
 const RAW_LEN: usize = (3 * B64_LEN) / 4;
 
 #[inline(never)]
