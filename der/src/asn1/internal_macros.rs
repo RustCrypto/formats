@@ -168,7 +168,7 @@ macro_rules! impl_custom_class {
             T: Decode<'a> + Tagged,
         {
             fn can_decode(tag: Tag) -> bool {
-                tag.is_context_specific()
+                tag.class() == Class::$class_enum_name
             }
         }
 
