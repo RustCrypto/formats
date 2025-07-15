@@ -8,9 +8,6 @@ use crate::{
 };
 use core::cmp::Ordering;
 
-#[cfg(feature = "alloc")]
-use crate::SliceWriter;
-
 /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
 ///
 /// This is a zero-copy reference type which borrows from the input data.
@@ -179,7 +176,7 @@ pub use self::allocating::Any;
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::{BytesOwned, reader::read_value, referenced::*};
+    use crate::{BytesOwned, encode::encode_value_to_slice, reader::read_value, referenced::*};
     use alloc::boxed::Box;
 
     /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
@@ -242,9 +239,7 @@ mod allocating {
         {
             let encoded_len = usize::try_from(msg.value_len()?)?;
             let mut buf = vec![0u8; encoded_len];
-            let mut writer = SliceWriter::new(&mut buf);
-            msg.encode_value(&mut writer)?;
-            writer.finish()?;
+            encode_value_to_slice(&mut buf, msg)?;
             Any::new(msg.tag(), buf)
         }
 
