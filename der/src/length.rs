@@ -1,8 +1,15 @@
 //! Length calculations for encoded ASN.1 DER values
 
+#[cfg(feature = "ber")]
 pub(crate) mod indefinite;
 
-use self::indefinite::INDEFINITE_LENGTH_OCTET;
+/// Octet identifying an indefinite length as described in X.690 Section
+/// 8.1.3.6.1:
+///
+/// > The single octet shall have bit 8 set to one, and bits 7 to
+/// > 1 set to zero.
+pub(super) const INDEFINITE_LENGTH_OCTET: u8 = 0b10000000; // 0x80
+
 use crate::{Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Reader, Result, Tag, Writer};
 use core::{
     cmp::Ordering,
@@ -20,6 +27,7 @@ pub struct Length {
     /// Flag bit which specifies whether the length was indeterminate when decoding ASN.1 BER.
     ///
     /// This should always be false when working with DER.
+    #[cfg(feature = "ber")]
     indefinite: bool,
 }
 
@@ -34,6 +42,7 @@ impl Length {
     pub const MAX: Self = Self::new(u32::MAX);
 
     /// Length of end-of-content octets (i.e. `00 00`).
+    #[cfg(feature = "ber")]
     pub(crate) const EOC_LEN: Self = Self::new(2);
 
     /// Maximum number of octets in a DER encoding of a [`Length`] using the
@@ -46,6 +55,8 @@ impl Length {
     pub const fn new(value: u32) -> Self {
         Self {
             inner: value,
+
+            #[cfg(feature = "ber")]
             indefinite: false,
         }
     }
@@ -68,6 +79,7 @@ impl Length {
     }
 
     /// Was this length decoded from an indefinite length when decoding BER?
+    #[cfg(feature = "ber")]
     pub(crate) const fn is_indefinite(self) -> bool {
         self.indefinite
     }
@@ -94,6 +106,7 @@ impl Length {
     /// Otherwise (as should always be the case with DER), the length is unchanged.
     ///
     /// This method notably preserves the `indefinite` flag when performing arithmetic.
+    #[cfg(feature = "ber")]
     pub(crate) fn sans_eoc(self) -> Self {
         if self.indefinite {
             // We expect EOC to be present when this is called.
@@ -104,6 +117,7 @@ impl Length {
                 indefinite: true,
             }
         } else {
+            // Return DER length
             self
         }
     }
@@ -250,6 +264,7 @@ impl<'a> Decode<'a> for Length {
             // Note: per X.690 Section 8.1.3.6.1 the byte 0x80 encodes indefinite lengths
             INDEFINITE_LENGTH_OCTET => match reader.encoding_rules() {
                 // Indefinite lengths are allowed when decoding BER
+                #[cfg(feature = "ber")]
                 EncodingRules::Ber => indefinite::decode_indefinite_length(&mut reader.clone()),
                 // Indefinite lengths are disallowed when decoding DER
                 EncodingRules::Der => Err(reader.error(ErrorKind::IndefiniteLength)),
@@ -333,11 +348,12 @@ impl DerOrd for Length {
 
 impl fmt::Debug for Length {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        #[cfg(feature = "ber")]
         if self.indefinite {
-            write!(f, "Length({self} [indefinite])")
-        } else {
-            f.debug_tuple("Length").field(&self.inner).finish()
+            return write!(f, "Length([indefinite])");
         }
+
+        f.debug_tuple("Length").field(&self.inner).finish()
     }
 }
 

@@ -41,6 +41,7 @@ derive = ["dep:der_derive"]
 oid = ["dep:const-oid"]
 pem = ["dep:pem-rfc7468", "alloc", "zeroize"]
 real = []
+ber = ["alloc"]
 
 [package.metadata.docs.rs]
 all-features = true
