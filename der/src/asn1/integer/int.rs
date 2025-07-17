@@ -311,9 +311,7 @@ mod allocating {
 
                     fn try_from(value: $int) -> $crate::Result<Self> {
                         let mut buf  = [0u8; 16];
-                        let mut writer = $crate::SliceWriter::new(&mut buf[..]);
-                        value.encode_value(&mut writer)?;
-                        let buf = writer.finish()?;
+                        let buf = $crate::encode::encode_value_to_slice(&mut buf, &value)?;
                         Int::new(buf)
                     }
                 }
