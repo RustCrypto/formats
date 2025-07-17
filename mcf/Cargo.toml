@@ -1,6 +1,6 @@
 [package]
 name = "mcf"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["RustCrypto Developers"]
 edition = "2024"
 rust-version = "1.85"
@@ -13,3 +13,13 @@ description = """
 Pure Rust implementation of the Modular Crypt Format (MCF) which is used to store password hashes
 in the form `${id}$...`
 """
+
+[dependencies]
+base64ct = { version = "1.7", features = ["alloc"] }
+
+[dev-dependencies]
+hex-literal = "1"
+
+[features]
+default = ["alloc"]
+alloc = []

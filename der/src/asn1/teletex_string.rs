@@ -1,6 +1,6 @@
 //! ASN.1 `TeletexString` support.
 //!
-use crate::{FixedTag, Result, StrRef, Tag, asn1::AnyRef};
+use crate::{FixedTag, Result, StringRef, Tag, asn1::AnyRef};
 use core::{fmt, ops::Deref};
 
 macro_rules! impl_teletex_string {
@@ -44,7 +44,7 @@ macro_rules! impl_teletex_string {
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct TeletexStringRef<'a> {
     /// Inner value
-    inner: StrRef<'a>,
+    inner: &'a StringRef,
 }
 
 impl<'a> TeletexStringRef<'a> {
@@ -60,19 +60,24 @@ impl<'a> TeletexStringRef<'a> {
             return Err(Self::TAG.value_error().into());
         }
 
-        StrRef::from_bytes(input)
+        StringRef::from_bytes(input)
             .map(|inner| Self { inner })
             .map_err(|_| Self::TAG.value_error().into())
+    }
+
+    /// Borrow the inner `str`.
+    pub fn as_str(&self) -> &'a str {
+        self.inner.as_str()
     }
 }
 
 impl_teletex_string!(TeletexStringRef<'a>, 'a);
 
 impl<'a> Deref for TeletexStringRef<'a> {
-    type Target = StrRef<'a>;
+    type Target = StringRef;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        self.inner
     }
 }
 
@@ -84,7 +89,7 @@ impl<'a> From<&TeletexStringRef<'a>> for TeletexStringRef<'a> {
 
 impl<'a> From<TeletexStringRef<'a>> for AnyRef<'a> {
     fn from(teletex_string: TeletexStringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::TeletexString, teletex_string.inner.into())
+        AnyRef::from_tag_and_value(Tag::TeletexString, teletex_string.inner.as_ref())
     }
 }
 
@@ -96,11 +101,11 @@ mod allocation {
     use super::TeletexStringRef;
 
     use crate::{
-        BytesRef, Error, FixedTag, Result, StrOwned, Tag,
+        BytesRef, Error, FixedTag, Result, StringOwned, Tag,
         asn1::AnyRef,
         referenced::{OwnedToRef, RefToOwned},
     };
-    use alloc::string::String;
+    use alloc::{borrow::ToOwned, string::String};
     use core::{fmt, ops::Deref};
 
     /// ASN.1 `TeletexString` type.
@@ -120,7 +125,7 @@ mod allocation {
     #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
     pub struct TeletexString {
         /// Inner value
-        inner: StrOwned,
+        inner: StringOwned,
     }
 
     impl TeletexString {
@@ -133,7 +138,7 @@ mod allocation {
 
             TeletexStringRef::new(input)?;
 
-            StrOwned::from_bytes(input)
+            StringOwned::from_bytes(input)
                 .map(|inner| Self { inner })
                 .map_err(|_| Self::TAG.value_error().into())
         }
@@ -142,7 +147,7 @@ mod allocation {
     impl_teletex_string!(TeletexString);
 
     impl Deref for TeletexString {
-        type Target = StrOwned;
+        type Target = StringOwned;
 
         fn deref(&self) -> &Self::Target {
             &self.inner
@@ -152,7 +157,7 @@ mod allocation {
     impl<'a> From<TeletexStringRef<'a>> for TeletexString {
         fn from(value: TeletexStringRef<'a>) -> TeletexString {
             let inner =
-                StrOwned::from_bytes(value.inner.as_bytes()).expect("Invalid TeletexString");
+                StringOwned::from_bytes(value.inner.as_bytes()).expect("Invalid TeletexString");
             Self { inner }
         }
     }
@@ -176,7 +181,7 @@ mod allocation {
         type Owned = TeletexString;
         fn ref_to_owned(&self) -> Self::Owned {
             TeletexString {
-                inner: self.inner.ref_to_owned(),
+                inner: self.inner.to_owned(),
             }
         }
     }
@@ -185,7 +190,7 @@ mod allocation {
         type Borrowed<'a> = TeletexStringRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             TeletexStringRef {
-                inner: self.inner.owned_to_ref(),
+                inner: self.inner.as_ref(),
             }
         }
     }
@@ -196,7 +201,7 @@ mod allocation {
         fn try_from(input: String) -> Result<Self> {
             TeletexStringRef::new(&input)?;
 
-            StrOwned::new(input)
+            StringOwned::new(input)
                 .map(|inner| Self { inner })
                 .map_err(|_| Self::TAG.value_error().into())
         }

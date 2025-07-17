@@ -5,7 +5,7 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)] // only allowed for transmuting newtype references
 #![warn(
     // TODO: re-enable this lint and fix its warnings
     // clippy::arithmetic_side_effects,
@@ -342,7 +342,7 @@ pub mod asn1;
 pub mod referenced;
 
 pub(crate) mod arrayvec;
-mod bytes_ref;
+mod bytes;
 mod datetime;
 mod decode;
 mod encode;
@@ -353,16 +353,12 @@ mod header;
 mod length;
 mod ord;
 mod reader;
-mod str_ref;
+mod string;
 mod tag;
 mod writer;
 
 #[cfg(feature = "alloc")]
-mod bytes_owned;
-#[cfg(feature = "alloc")]
 mod document;
-#[cfg(feature = "alloc")]
-mod str_owned;
 
 pub use crate::{
     asn1::bit_string::allowed_len_bit_string::AllowedLenBitString,
@@ -408,6 +404,7 @@ pub use zeroize;
 #[cfg(all(feature = "alloc", feature = "zeroize"))]
 pub use crate::document::SecretDocument;
 
-pub(crate) use crate::{arrayvec::ArrayVec, bytes_ref::BytesRef, str_ref::StrRef};
+pub(crate) use crate::{arrayvec::ArrayVec, bytes::BytesRef, string::StringRef};
+
 #[cfg(feature = "alloc")]
-pub(crate) use crate::{bytes_owned::BytesOwned, str_owned::StrOwned};
+pub(crate) use crate::{bytes::allocating::BytesOwned, string::allocating::StringOwned};

@@ -1,8 +1,9 @@
 //! ASN.1 DER headers.
 
-use crate::{
-    Decode, DerOrd, Encode, EncodingRules, Error, ErrorKind, Length, Reader, Result, Tag, Writer,
-};
+#[cfg(feature = "ber")]
+use crate::EncodingRules;
+use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Tag, Writer};
+
 use core::cmp::Ordering;
 
 /// ASN.1 DER headers: tag + length component of TLV-encoded values
@@ -36,8 +37,7 @@ impl<'a> Decode<'a> for Header {
     type Error = Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Header> {
-        let is_constructed = Tag::peek_is_constructed(reader)?;
-        let tag = Tag::decode(reader)?;
+        let (tag, is_constructed) = Tag::decode_with_constructed_bit(reader)?;
 
         let length = Length::decode(reader).map_err(|e| {
             if e.kind() == ErrorKind::Overlength {
@@ -47,10 +47,14 @@ impl<'a> Decode<'a> for Header {
             }
         })?;
 
+        #[cfg(feature = "ber")]
         if length.is_indefinite() && !is_constructed {
             debug_assert_eq!(reader.encoding_rules(), EncodingRules::Ber);
             return Err(reader.error(ErrorKind::IndefiniteLength));
         }
+
+        #[cfg(not(feature = "ber"))]
+        debug_assert_eq!(is_constructed, tag.is_constructed());
 
         Ok(Self { tag, length })
     }

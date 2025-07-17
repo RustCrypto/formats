@@ -87,7 +87,7 @@ impl_encoding_traits!(u8, u16, u32, u64, u128);
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct UintRef<'a> {
     /// Inner value
-    inner: BytesRef<'a>,
+    inner: &'a BytesRef,
 }
 
 impl<'a> UintRef<'a> {
@@ -122,7 +122,7 @@ impl<'a> DecodeValue<'a> for UintRef<'a> {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = BytesRef::decode_value(reader, header)?.as_slice();
+        let bytes = <&'a BytesRef>::decode_value(reader, header)?.as_slice();
         let result = Self::new(decode_to_slice(bytes)?)?;
 
         // Ensure we compute the same encoded length as the original any value.
@@ -170,6 +170,7 @@ mod allocating {
         ord::OrdIsValueOrd,
         referenced::{OwnedToRef, RefToOwned},
     };
+    use alloc::borrow::ToOwned;
 
     /// Unsigned arbitrary precision ASN.1 `INTEGER` type.
     ///
@@ -216,7 +217,7 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            let bytes = BytesOwned::decode_value(reader, header)?;
+            let bytes = BytesOwned::decode_value_parts(reader, header, Self::TAG)?;
             let result = Self::new(decode_to_slice(bytes.as_slice())?)?;
 
             // Ensure we compute the same encoded length as the original any value.
@@ -260,7 +261,7 @@ mod allocating {
     impl<'a> RefToOwned<'a> for UintRef<'a> {
         type Owned = Uint;
         fn ref_to_owned(&self) -> Self::Owned {
-            let inner = self.inner.ref_to_owned();
+            let inner = self.inner.to_owned();
 
             Uint { inner }
         }
@@ -269,7 +270,7 @@ mod allocating {
     impl OwnedToRef for Uint {
         type Borrowed<'a> = UintRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
-            let inner = self.inner.owned_to_ref();
+            let inner = self.inner.as_ref();
 
             UintRef { inner }
         }
@@ -283,9 +284,7 @@ mod allocating {
 
                     fn try_from(value: $uint) -> $crate::Result<Self> {
                         let mut buf  = [0u8; 17];
-                        let mut writer = $crate::SliceWriter::new(&mut buf[..]);
-                        value.encode_value(&mut writer)?;
-                        let buf = writer.finish()?;
+                        let buf = $crate::encode::encode_value_to_slice(&mut buf, &value)?;
                         Uint::new(buf)
                     }
                 }

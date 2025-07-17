@@ -9,11 +9,14 @@ mod position;
 
 use crate::{
     Decode, DecodeValue, Encode, EncodingRules, Error, ErrorKind, FixedTag, Header, Length, Tag,
-    TagMode, TagNumber, asn1::ContextSpecific, length::indefinite::read_eoc,
+    TagMode, TagNumber, asn1::ContextSpecific,
 };
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
+
+#[cfg(feature = "ber")]
+use crate::length::indefinite::read_eoc;
 
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Clone {
@@ -207,16 +210,22 @@ pub trait Reader<'r>: Clone {
 ///
 /// This calls the provided function `f` with a nested reader created using
 /// [`Reader::read_nested`].
-pub(crate) fn read_value<'r, R, T, F, E>(reader: &mut R, mut header: Header, f: F) -> Result<T, E>
+pub(crate) fn read_value<'r, R, T, F, E>(reader: &mut R, header: Header, f: F) -> Result<T, E>
 where
     R: Reader<'r>,
     E: From<Error>,
     F: FnOnce(&mut R, Header) -> Result<T, E>,
 {
-    header.length = header.length.sans_eoc();
+    #[cfg(feature = "ber")]
+    let header = Header {
+        length: header.length.sans_eoc(),
+        tag: header.tag,
+    };
+
     let ret = f(reader, header)?;
 
     // Consume EOC marker if the length is indefinite.
+    #[cfg(feature = "ber")]
     if header.length.is_indefinite() {
         read_eoc(reader)?;
     }

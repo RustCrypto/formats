@@ -8,7 +8,7 @@
 )]
 
 use crate::{
-    BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, StrRef,
+    BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, StringRef,
     Tag, Writer,
 };
 
@@ -18,7 +18,7 @@ impl<'a> DecodeValue<'a> for f64 {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = BytesRef::decode_value(reader, header)?.as_slice();
+        let bytes = <&'a BytesRef>::decode_value(reader, header)?.as_slice();
 
         if header.length == Length::ZERO {
             Ok(0.0)
@@ -75,8 +75,8 @@ impl<'a> DecodeValue<'a> for f64 {
                 _ => Err(reader.error(Tag::Real.value_error())),
             }
         } else {
-            let astr = StrRef::from_bytes(&bytes[1..])?;
-            match astr.inner.parse::<f64>() {
+            let astr = StringRef::from_bytes(&bytes[1..])?;
+            match astr.as_str().parse::<f64>() {
                 Ok(val) => Ok(val),
                 // Real related error: encoding not supported or malformed
                 Err(_) => Err(reader.error(Tag::Real.value_error())),

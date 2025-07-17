@@ -13,16 +13,64 @@
     unused_qualifications
 )]
 
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
-use alloc::string::String;
-use core::{fmt, str};
+mod base64;
+mod error;
+mod fields;
 
-/// MCF field delimiter: `$`.
-pub const DELIMITER: char = '$';
+pub use base64::Base64;
+pub use error::{Error, Result};
+pub use fields::{Field, Fields};
+
+#[cfg(feature = "alloc")]
+use {
+    alloc::string::String,
+    core::{fmt, str},
+};
 
 /// Debug message used in panics when invariants aren't properly held.
 const INVARIANT_MSG: &str = "should be ensured valid by constructor";
+
+/// Zero-copy decoder for hashes in the Modular Crypt Format (MCF).
+///
+/// For more information, see [`McfHash`].
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct McfHashRef<'a>(&'a str);
+
+impl<'a> McfHashRef<'a> {
+    /// Parse the given input string, returning an [`McfHashRef`] if valid.
+    pub fn new(s: &'a str) -> Result<Self> {
+        validate(s)?;
+        Ok(Self(s))
+    }
+
+    /// Get the contained string as a `str`.
+    pub fn as_str(self) -> &'a str {
+        self.0
+    }
+
+    /// Get the algorithm identifier for this MCF hash.
+    pub fn id(self) -> &'a str {
+        Fields::new(self.as_str())
+            .next()
+            .expect(INVARIANT_MSG)
+            .as_str()
+    }
+
+    /// Get an iterator over the parts of the password hash as delimited by `$`, excluding the
+    /// initial identifier.
+    pub fn fields(self) -> Fields<'a> {
+        let mut fields = Fields::new(self.as_str());
+
+        // Remove the leading identifier
+        let id = fields.next().expect(INVARIANT_MSG);
+        debug_assert_eq!(self.id(), id.as_str());
+
+        fields
+    }
+}
 
 /// Modular Crypt Format (MCF) serialized password hash.
 ///
@@ -38,8 +86,11 @@ const INVARIANT_MSG: &str = "should be ensured valid by constructor";
 /// ```text
 /// $6$rounds=100000$exn6tVc2j/MZD8uG$BI1Xh8qQSK9J4m14uwy7abn.ctj/TIAzlaVCto0MQrOFIeTXsc1iwzH16XEWo/a7c7Y9eVJvufVzYAs4EsPOy0
 /// ```
+#[cfg(feature = "alloc")]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct McfHash(String);
 
+#[cfg(feature = "alloc")]
 impl McfHash {
     /// Parse the given input string, returning an [`McfHash`] if valid.
     pub fn new(s: impl Into<String>) -> Result<McfHash> {
@@ -48,44 +99,78 @@ impl McfHash {
         Ok(Self(s))
     }
 
+    /// Create an [`McfHash`] from an identifier.
+    ///
+    /// # Returns
+    ///
+    /// Error if the identifier is invalid.
+    ///
+    /// Allowed characters match the regex: `[a-z0-9\-]`, where the first and last characters do NOT
+    /// contain a `-`.
+    pub fn from_id(id: &str) -> Result<McfHash> {
+        validate_id(id)?;
+
+        let mut hash = String::with_capacity(1 + id.len());
+        hash.push(fields::DELIMITER);
+        hash.push_str(id);
+        Ok(Self(hash))
+    }
+
     /// Get the contained string as a `str`.
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
+    /// Get an [`McfHashRef`] which corresponds to this owned [`McfHash`].
+    pub fn as_mcf_hash_ref(&self) -> McfHashRef<'_> {
+        McfHashRef(self.as_str())
+    }
+
     /// Get the algorithm identifier for this MCF hash.
     pub fn id(&self) -> &str {
-        Fields::new(self.as_str())
-            .expect(INVARIANT_MSG)
-            .next()
-            .expect(INVARIANT_MSG)
+        self.as_mcf_hash_ref().id()
     }
 
     /// Get an iterator over the parts of the password hash as delimited by `$`, excluding the
     /// initial identifier.
-    pub fn fields(&self) -> Fields {
-        let mut fields = Fields::new(self.as_str()).expect(INVARIANT_MSG);
+    pub fn fields(&self) -> Fields<'_> {
+        self.as_mcf_hash_ref().fields()
+    }
 
-        // Remove the leading identifier
-        let id = fields.next().expect(INVARIANT_MSG);
-        debug_assert_eq!(id, self.id());
+    /// Push an additional field onto the password hash string.
+    pub fn push_field(&mut self, field: Field<'_>) {
+        self.0.push(fields::DELIMITER);
+        self.0.push_str(field.as_str());
+    }
 
-        fields
+    /// Push an additional field onto the password hash string, encoding it first as Base64.
+    pub fn push_field_base64(&mut self, field: &[u8], base64_encoding: Base64) {
+        self.0.push(fields::DELIMITER);
+        self.0.push_str(&base64_encoding.encode_string(field));
     }
 }
 
+impl<'a> AsRef<str> for McfHashRef<'a> {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+#[cfg(feature = "alloc")]
 impl AsRef<str> for McfHash {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
+#[cfg(feature = "alloc")]
 impl fmt::Display for McfHash {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }
 
+#[cfg(feature = "alloc")]
 impl str::FromStr for McfHash {
     type Err = Error;
 
@@ -96,23 +181,26 @@ impl str::FromStr for McfHash {
 
 /// Perform validations that the given string is well-formed MCF.
 fn validate(s: &str) -> Result<()> {
+    // Require leading `$`
+    if !s.starts_with(fields::DELIMITER) {
+        return Err(Error {});
+    }
+
+    // Disallow trailing `$`
+    if s.ends_with(fields::DELIMITER) {
+        return Err(Error {});
+    }
+
     // Validates the hash begins with a leading `$`
-    let mut fields = Fields::new(s)?;
+    let mut fields = Fields::new(s);
 
     // Validate characters in the identifier field
     let id = fields.next().ok_or(Error {})?;
-    validate_id(id)?;
+    validate_id(id.as_str())?;
 
     // Validate the remaining fields have an appropriate format
-    let mut any = false;
     for field in fields {
-        any = true;
-        validate_field(field)?;
-    }
-
-    // Must have at least one field.
-    if !any {
-        return Err(Error {});
+        field.validate()?;
     }
 
     Ok(())
@@ -141,77 +229,4 @@ fn validate_id(id: &str) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Validate a field in the password hash is well-formed.
-///
-/// Fields include characters in the regexp range `[A-Za-z0-9./+=,\-]`.
-fn validate_field(field: &str) -> Result<()> {
-    if field.is_empty() {
-        return Err(Error {});
-    }
-
-    for c in field.chars() {
-        match c {
-            'A'..='Z' | 'a'..='z' | '0'..='9' | '.' | '/' | '+' | '=' | ',' | '-' => (),
-            _ => return Err(Error {}),
-        }
-    }
-
-    Ok(())
-}
-
-/// Iterator over the `$`-delimited fields of an MCF hash.
-pub struct Fields<'a>(&'a str);
-
-impl<'a> Fields<'a> {
-    /// Create a new field iterator from an MCF hash, returning an error in the event the hash
-    /// doesn't start with a leading `$` prefix.
-    fn new(s: &'a str) -> Result<Self> {
-        let mut ret = Self(s);
-
-        if ret.next() != Some("") {
-            return Err(Error {});
-        }
-
-        Ok(ret)
-    }
-}
-
-impl<'a> Iterator for Fields<'a> {
-    type Item = &'a str;
-
-    fn next(&mut self) -> Option<&'a str> {
-        if self.0.is_empty() {
-            return None;
-        }
-
-        match self.0.split_once(DELIMITER) {
-            Some((field, rest)) => {
-                self.0 = rest;
-                Some(field)
-            }
-            None => {
-                let ret = self.0;
-                self.0 = "";
-                Some(ret)
-            }
-        }
-    }
-}
-
-/// Result type for `mcf`.
-pub type Result<T> = core::result::Result<T, Error>;
-
-/// Error type.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-#[non_exhaustive]
-pub struct Error {}
-
-impl core::error::Error for Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("modular crypt format error")
-    }
 }

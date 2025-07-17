@@ -22,14 +22,10 @@
 use crate::{Decode, ErrorKind, Header, Length, Reader};
 
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use crate::Tag;
 
-/// Octet identifying an indefinite length as described in X.690 Section
-/// 8.1.3.6.1:
-///
-/// > The single octet shall have bit 8 set to one, and bits 7 to
-/// > 1 set to zero.
-pub(super) const INDEFINITE_LENGTH_OCTET: u8 = 0b10000000; // 0x80
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 /// The end-of-contents octets can be considered as the encoding of a value whose tag is
 /// universal class, whose form is primitive, whose number of the tag is zero, and whose
@@ -80,18 +76,19 @@ pub(crate) fn read_eoc<'a>(reader: &mut impl Reader<'a>) -> crate::Result<()> {
 #[cfg(feature = "alloc")]
 pub(crate) fn read_constructed_vec<'r, R: Reader<'r>>(
     reader: &mut R,
-    header: Header,
+    length: Length,
+    inner_tag: Tag,
 ) -> crate::Result<Vec<u8>> {
-    if !header.length.is_indefinite() {
+    if !length.is_indefinite() {
         return Err(reader.error(ErrorKind::IndefiniteLength));
     }
 
-    let mut bytes = Vec::with_capacity(header.length.try_into()?);
+    let mut bytes = Vec::with_capacity(length.try_into()?);
     let mut offset = 0;
 
     while !reader.is_finished() {
         let h = Header::decode(reader)?;
-        h.tag.assert_eq(header.tag)?;
+        h.tag.assert_eq(inner_tag)?;
 
         // Indefinite length headers can't be indefinite
         if h.length.is_indefinite() {

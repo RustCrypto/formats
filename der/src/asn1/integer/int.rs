@@ -102,7 +102,7 @@ impl_encoding_traits!(i8 => u8, i16 => u16, i32 => u32, i64 => u64, i128 => u128
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct IntRef<'a> {
     /// Inner value
-    inner: BytesRef<'a>,
+    inner: &'a BytesRef,
 }
 
 impl<'a> IntRef<'a> {
@@ -137,7 +137,7 @@ impl<'a> DecodeValue<'a> for IntRef<'a> {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = BytesRef::decode_value(reader, header)?;
+        let bytes = <&'a BytesRef>::decode_value(reader, header)?;
         validate_canonical(bytes.as_slice())?;
 
         let result = Self::new(bytes.as_slice())?;
@@ -184,7 +184,7 @@ mod allocating {
         ord::OrdIsValueOrd,
         referenced::{OwnedToRef, RefToOwned},
     };
-    use alloc::vec::Vec;
+    use alloc::{borrow::ToOwned, vec::Vec};
 
     /// Signed arbitrary precision ASN.1 `INTEGER` type.
     ///
@@ -231,7 +231,7 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            let bytes = BytesOwned::decode_value(reader, header)?;
+            let bytes = BytesOwned::decode_value_parts(reader, header, Self::TAG)?;
             validate_canonical(bytes.as_slice())?;
 
             let result = Self::new(bytes.as_slice())?;
@@ -288,7 +288,7 @@ mod allocating {
     impl<'a> RefToOwned<'a> for IntRef<'a> {
         type Owned = Int;
         fn ref_to_owned(&self) -> Self::Owned {
-            let inner = self.inner.ref_to_owned();
+            let inner = self.inner.to_owned();
 
             Int { inner }
         }
@@ -297,7 +297,7 @@ mod allocating {
     impl OwnedToRef for Int {
         type Borrowed<'a> = IntRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
-            let inner = self.inner.owned_to_ref();
+            let inner = self.inner.as_ref();
 
             IntRef { inner }
         }
@@ -311,9 +311,7 @@ mod allocating {
 
                     fn try_from(value: $int) -> $crate::Result<Self> {
                         let mut buf  = [0u8; 16];
-                        let mut writer = $crate::SliceWriter::new(&mut buf[..]);
-                        value.encode_value(&mut writer)?;
-                        let buf = writer.finish()?;
+                        let buf = $crate::encode::encode_value_to_slice(&mut buf, &value)?;
                         Int::new(buf)
                     }
                 }
