@@ -6,6 +6,7 @@ use core::{cell::Cell, cmp::Ordering, fmt};
 /// For example `Vec<EncodeValueLenCached<Vec<()>>>` won't need to calculate inner `Vec`'s length twice.
 ///
 /// Warning: users of this type should call [`EncodeValueLenCached::clear_len_cache`] on all objects before using encoding.
+/// Otherwise, any errors during [`EncodeValue::encode_value`] will make the cache invalid!
 ///
 /// ```rust
 /// use der::{asn1::SequenceOf, Encode, EncodeValueLenCached};
