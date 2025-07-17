@@ -5,6 +5,8 @@ use core::{cell::Cell, cmp::Ordering, fmt};
 ///
 /// For example `Vec<EncodeValueLenCached<Vec<()>>>` won't need to calculate inner `Vec`'s length twice.
 ///
+/// Warning: users of this type should call [`EncodeValueLenCached::clear_len_cache`] on all objects before using encoding.
+///
 /// ```rust
 /// use der::{asn1::SequenceOf, Encode, EncodeValueLenCached};
 /// let mut big_vec = SequenceOf::<EncodeValueLenCached<SequenceOf<(), 128>>, 1>::new();
@@ -16,6 +18,10 @@ use core::{cell::Cell, cmp::Ordering, fmt};
 ///
 /// let mut buf = [0u8; 300];
 ///
+/// // Ensure, that length cache is clear.
+/// for cached in big_vec.iter() {
+///     cached.clear_len_cache();
+/// }
 /// // Here, inner SequenceOf calculates it's value length once
 /// big_vec.encode_to_slice(&mut buf).unwrap();
 /// ```
@@ -30,7 +36,7 @@ impl<T> EncodeValueLenCached<T> {
     /// Clears cache, in cases when [`EncodeValue::value_len`] was called by accident,
     ///
     /// without subsequent [`EncodeValue::encode_value`].
-    pub fn clear_cache(&self) {
+    pub fn clear_len_cache(&self) {
         self.cached_len.set(None)
     }
 }
