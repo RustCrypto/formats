@@ -168,7 +168,7 @@ macro_rules! impl_custom_class {
             T: Decode<'a> + Tagged,
         {
             fn can_decode(tag: Tag) -> bool {
-                tag.is_context_specific()
+                tag.class() == Class::$class_enum_name
             }
         }
 
@@ -302,7 +302,7 @@ macro_rules! impl_custom_class_ref {
         }
 
         impl<'a, T> $ref_class_type_name<'a, T> {
-            /// Convert to a [`ContextSpecific`].
+            /// Convert to a [`EncodeValue`] object using [`EncodeValueRef`].
             fn encoder(&self) -> $class_type_name<EncodeValueRef<'a, T>> {
                 $class_type_name {
                     tag_number: self.tag_number,
