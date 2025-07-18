@@ -374,7 +374,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "ber")]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
     fn decode_ber() {
         use crate::{Decode, asn1::OctetString};
         use hex_literal::hex;
@@ -391,7 +391,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "ber")]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
     fn decode_context_specific_ber_explicit() {
         use crate::{
             EncodingRules, SliceReader, TagNumber,
@@ -422,7 +422,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "ber")]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
     fn decode_context_specific_ber_implicit() {
         use crate::{
             EncodingRules, SliceReader, TagNumber,

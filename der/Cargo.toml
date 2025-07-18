@@ -37,13 +37,13 @@ alloc = ["zeroize?/alloc"]
 std = ["alloc"]
 
 arbitrary = ["dep:arbitrary", "const-oid?/arbitrary", "std"]
+ber = []
 bytes = ["dep:bytes", "alloc"]
+clarify = ["dep:tynm", "std", "pem", "derive", "oid"]
 derive = ["dep:der_derive"]
 oid = ["dep:const-oid"]
 pem = ["dep:pem-rfc7468", "alloc", "zeroize"]
 real = []
-ber = ["alloc"]
-clarify = ["dep:tynm", "std", "pem", "derive", "oid"]
 
 [package.metadata.docs.rs]
 all-features = true
