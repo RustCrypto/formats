@@ -1,3 +1,5 @@
+//! SymmetricKeyPackage types
+
 use alloc::vec::Vec;
 use der::Enumerated;
 use der::Sequence;
