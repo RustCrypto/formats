@@ -2,8 +2,8 @@
 
 use crate::{
     Choice, Class, Decode, DecodeValue, DerOrd, Encode, EncodeValue, EncodeValueRef, EncodingRules,
-    Error, Header, Length, Reader, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer, asn1::AnyRef,
-    tag::IsConstructed,
+    Error, FixedTag, Header, Length, Reader, Tag, TagMode, TagNumber, Tagged, ValueOrd, Writer,
+    asn1::AnyRef, tag::IsConstructed,
 };
 use core::cmp::Ordering;
 
@@ -23,13 +23,23 @@ impl_custom_class_ref!(
     "0b10000000"
 );
 
+impl_custom_class_explicit!(
+    ContextSpecificExplicit,
+    ContextSpecific,
+    "CONTEXT-SPECIFIC",
+    "0b10000000"
+);
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::ContextSpecific;
     use crate::{
         Decode, Encode, SliceReader, TagMode, TagNumber,
-        asn1::{BitStringRef, ContextSpecificRef, SetOf, Utf8StringRef},
+        asn1::{
+            BitStringRef, ContextSpecificRef, SetOf, Utf8StringRef,
+            context_specific::ContextSpecificExplicit,
+        },
     };
     use hex_literal::hex;
 
@@ -193,5 +203,35 @@ mod tests {
         assert_eq!(field.value.len(), 2);
         assert_eq!(field.value.get(0).cloned(), Some(hello));
         assert_eq!(field.value.get(1).cloned(), Some(world));
+    }
+
+    #[test]
+    fn round_trip_explicit() {
+        let field =
+            ContextSpecificExplicit::<1, BitStringRef<'_>>::from_der(EXAMPLE_BYTES).unwrap();
+        assert_eq!(
+            field.value,
+            BitStringRef::from_bytes(&EXAMPLE_BYTES[5..]).unwrap()
+        );
+        assert_eq!(
+            ContextSpecificExplicit::<1, BitStringRef<'_>>::tag_mode(),
+            TagMode::Explicit
+        );
+        assert_eq!(
+            ContextSpecificExplicit::<1, BitStringRef<'_>>::tag_number(),
+            TagNumber(1)
+        );
+
+        let mut buf = [0u8; 128];
+        let encoded = field.encode_to_slice(&mut buf).unwrap();
+        assert_eq!(encoded, EXAMPLE_BYTES);
+
+        // should not decode as tag CONTEXT-SPECIFIC [2]
+        assert!(ContextSpecificExplicit::<2, BitStringRef<'_>>::from_der(EXAMPLE_BYTES).is_err());
+
+        // should be different than CONTEXT-SPECIFIC [1]
+        let invalid_field = ContextSpecificExplicit::<2, BitStringRef<'_>> { value: field.value };
+        let invalid_encoded = invalid_field.encode_to_slice(&mut buf).unwrap();
+        assert_ne!(invalid_encoded, EXAMPLE_BYTES);
     }
 }
