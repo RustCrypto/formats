@@ -128,8 +128,8 @@ pub struct ChallengeFormat<'encoding> {
     pub encoding: Encoding<'encoding>,
     #[asn1(default = "Default::default")]
     pub check_digit: bool,
-    pub min: u32,
-    pub max: u32,
+    pub min: der::asn1::IntRef<'encoding>,
+    pub max: der::asn1::IntRef<'encoding>,
 }
 
 /// The `Encoding` type is defined in [RFC 6031 Section 3.2.7].
