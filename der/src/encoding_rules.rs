@@ -21,6 +21,19 @@ pub enum EncodingRules {
     Der,
 }
 
+impl EncodingRules {
+    /// Are we using Basic Encoding Rules?
+    #[cfg(feature = "ber")]
+    pub const fn is_ber(self) -> bool {
+        matches!(self, EncodingRules::Ber)
+    }
+
+    /// Are we using Distinguished Encoding Rules?
+    pub const fn is_der(self) -> bool {
+        matches!(self, EncodingRules::Der)
+    }
+}
+
 impl FromStr for EncodingRules {
     type Err = Error;
 
