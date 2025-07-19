@@ -40,6 +40,7 @@ pub type SymmetricKeys = Vec<OneSymmetricKey>;
 /// The `OneSymmetricKey` type is defined in [RFC 6031 Section 2.0].
 ///
 /// ```text
+///      OneSymmetricKey ::= SEQUENCE {
 ///        sKeyAttrs  SEQUENCE SIZE (1..MAX) OF Attribute
 ///                                       {{ SKeyAttributes }}  OPTIONAL,
 ///        sKey       OCTET STRING OPTIONAL }
