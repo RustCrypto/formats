@@ -118,7 +118,7 @@ impl<'a> arbitrary::Arbitrary<'a> for &'a BytesRef {
 pub(crate) mod allocating {
     use super::BytesRef;
     #[cfg(feature = "ber")]
-    use crate::{EncodingRules, length::indefinite::read_constructed_vec};
+    use crate::length::indefinite::read_constructed_vec;
 
     use crate::{
         DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, Tag, Writer,
@@ -156,7 +156,7 @@ pub(crate) mod allocating {
         ) -> Result<Self> {
             // Reassemble indefinite length string types
             #[cfg(feature = "ber")]
-            if reader.encoding_rules() == EncodingRules::Ber
+            if reader.encoding_rules().is_ber()
                 && header.length.is_indefinite()
                 && !inner_tag.is_constructed()
             {

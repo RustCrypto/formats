@@ -143,12 +143,13 @@ macro_rules! impl_custom_class {
                 if !Tag::peek_matches(reader, Class::$class_enum_name, tag_number)? {
                     return Ok(None);
                 }
+
                 // Decode IMPLICIT header
                 let header = Header::decode(reader)?;
 
                 // the encoding shall be constructed if the base encoding is constructed
                 if header.tag.is_constructed() != T::CONSTRUCTED
-                    && reader.encoding_rules() == EncodingRules::Der {
+                    && reader.encoding_rules().is_der() {
                     return Err(reader.error(header.tag.non_canonical_error()).into());
                 }
 
