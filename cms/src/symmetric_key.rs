@@ -25,7 +25,7 @@ pub struct SymmetricKeyPackage {
     pub version: KeyPkgVersion,
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
     pub s_key_pkg_attrs: Option<Vec<Attribute>>,
-    pub skeys: SymmetricKeys,
+    pub s_keys: SymmetricKeys,
 }
 
 /// The `SymmetricKeys` type is defined in [RFC 6031 Section 2.0].
