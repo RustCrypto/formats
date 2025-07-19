@@ -1,9 +1,7 @@
 //! SymmetricKeyPackage types
 
-use alloc::vec::Vec;
-use der::Enumerated;
-use der::Sequence;
-use der::asn1::{OctetString, Utf8StringRef};
+use alloc::{string::String, vec::Vec};
+use der::{Enumerated, Sequence, asn1::OctetString};
 use x509_cert::attr::Attribute;
 
 /// The `SymmetricKeyPackage` type is defined in [RFC 6031 Section 2.0].
@@ -85,10 +83,10 @@ pub enum KeyPkgVersion {
 /// [RFC 6031 Section 3.2.6]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.6
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub struct FriendlyName<'friendly_name> {
-    pub friendly_name: Utf8StringRef<'friendly_name>,
+pub struct FriendlyName {
+    pub friendly_name: String,
     #[asn1(optional = "true")]
-    pub friendly_name_lang_tag: Option<Utf8StringRef<'friendly_name>>,
+    pub friendly_name_lang_tag: Option<String>,
 }
 
 /// The `PSKCAlgorithmParameters` type is defined in [RFC 6031 Section 3.2.7].
@@ -104,10 +102,10 @@ pub struct FriendlyName<'friendly_name> {
 /// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub struct PSKCAlgorithmParameters<'params> {
-    pub suite: Utf8StringRef<'params>,
-    pub challenge_format: ChallengeFormat<'params>,
-    pub response_format: ResponseFormat<'params>,
+pub struct PSKCAlgorithmParameters<'range> {
+    pub suite: String,
+    pub challenge_format: ChallengeFormat<'range>,
+    pub response_format: ResponseFormat,
 }
 
 /// The `ChallengeFormat` type is defined in [RFC 6031 Section 3.2.7].
@@ -124,12 +122,12 @@ pub struct PSKCAlgorithmParameters<'params> {
 /// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub struct ChallengeFormat<'encoding> {
-    pub encoding: Encoding<'encoding>,
+pub struct ChallengeFormat<'range> {
+    pub encoding: Encoding,
     #[asn1(default = "Default::default")]
     pub check_digit: bool,
-    pub min: der::asn1::IntRef<'encoding>,
-    pub max: der::asn1::IntRef<'encoding>,
+    pub min: der::asn1::IntRef<'range>,
+    pub max: der::asn1::IntRef<'range>,
 }
 
 /// The `Encoding` type is defined in [RFC 6031 Section 3.2.7].
@@ -140,7 +138,7 @@ pub struct ChallengeFormat<'encoding> {
 /// ```
 ///
 /// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
-pub type Encoding<'encoding> = Utf8StringRef<'encoding>;
+pub type Encoding = String;
 
 /// The `ResponseFormat` type is defined in [RFC 6031 Section 3.2.7].
 ///
@@ -155,8 +153,8 @@ pub type Encoding<'encoding> = Utf8StringRef<'encoding>;
 /// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub struct ResponseFormat<'encoding> {
-    pub encoding: Encoding<'encoding>,
+pub struct ResponseFormat {
+    pub encoding: Encoding,
     pub length: u32,
     #[asn1(default = "Default::default")]
     pub check_digit: bool,
@@ -173,9 +171,9 @@ pub struct ResponseFormat<'encoding> {
 /// [RFC 6031 Section 3.2.12]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.12
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub struct ValueMac<'mac> {
-    pub mac_algorithm: Utf8StringRef<'mac>,
-    pub mac: Utf8StringRef<'mac>,
+pub struct ValueMac {
+    pub mac_algorithm: String,
+    pub mac: String,
 }
 
 /// The `PSKCKeyUsages` type is defined in [RFC 6031 Section 3.3.4].
@@ -196,7 +194,7 @@ pub type PSKCKeyUsages<'keys_usage> = Vec<PSKCKeyUsage<'keys_usage>>;
 /// ```
 ///
 /// [RFC 6031 Section 3.3.4]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.4
-pub type PSKCKeyUsage<'pskc_key_usage> = Utf8StringRef<'pskc_key_usage>;
+pub type PSKCKeyUsage<'pskc_key_usage> = String;
 
 /// The `PINPolicy` type is defined in [RFC 6031 Section 3.3.5]
 ///
@@ -213,11 +211,11 @@ pub type PSKCKeyUsage<'pskc_key_usage> = Utf8StringRef<'pskc_key_usage>;
 /// [RFC 6031 Section 3.3.5]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.5
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub struct PINPolicy<'pin> {
+pub struct PINPolicy {
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", optional = "true")]
-    pub pin_key_id: Option<Utf8StringRef<'pin>>,
+    pub pin_key_id: Option<String>,
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT")]
-    pub pin_usage_mode: PINUsageMode<'pin>,
+    pub pin_usage_mode: PINUsageMode,
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", optional = "true")]
     pub max_failed_attempts: Option<u32>,
     #[asn1(context_specific = "3", tag_mode = "IMPLICIT", optional = "true")]
@@ -225,7 +223,7 @@ pub struct PINPolicy<'pin> {
     #[asn1(context_specific = "4", tag_mode = "IMPLICIT", optional = "true")]
     pub max_length: Option<u32>,
     #[asn1(context_specific = "5", tag_mode = "IMPLICIT", optional = "true")]
-    pub pin_encoding: Option<Encoding<'pin>>,
+    pub pin_encoding: Option<Encoding>,
 }
 
 /// The `PINUsageMode` type is defined in [RFC 6031 Section 3.3.5]
@@ -236,4 +234,4 @@ pub struct PINPolicy<'pin> {
 /// ```
 ///
 /// [RFC 6031 Section 3.3.5]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.5
-pub type PINUsageMode<'pin_usage> = Utf8StringRef<'pin_usage>;
+pub type PINUsageMode = String;
