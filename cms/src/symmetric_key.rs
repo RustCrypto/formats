@@ -102,9 +102,9 @@ pub struct FriendlyName {
 /// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub struct PSKCAlgorithmParameters<'range> {
+pub struct PSKCAlgorithmParameters {
     pub suite: String,
-    pub challenge_format: ChallengeFormat<'range>,
+    pub challenge_format: ChallengeFormat,
     pub response_format: ResponseFormat,
 }
 
@@ -122,12 +122,12 @@ pub struct PSKCAlgorithmParameters<'range> {
 /// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub struct ChallengeFormat<'range> {
+pub struct ChallengeFormat {
     pub encoding: Encoding,
     #[asn1(default = "Default::default")]
     pub check_digit: bool,
-    pub min: der::asn1::IntRef<'range>,
-    pub max: der::asn1::IntRef<'range>,
+    pub min: der::asn1::Int,
+    pub max: der::asn1::Int,
 }
 
 /// The `Encoding` type is defined in [RFC 6031 Section 3.2.7].
@@ -183,7 +183,7 @@ pub struct ValueMac {
 /// ```
 ///
 /// [RFC 6031 Section 3.3.4]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.4
-pub type PSKCKeyUsages<'keys_usage> = Vec<PSKCKeyUsage<'keys_usage>>;
+pub type PSKCKeyUsages = Vec<PSKCKeyUsage>;
 
 /// The `PSKCKeyUsage` type is defined in [RFC 6031 Section 3.3.4].
 ///
@@ -194,7 +194,7 @@ pub type PSKCKeyUsages<'keys_usage> = Vec<PSKCKeyUsage<'keys_usage>>;
 /// ```
 ///
 /// [RFC 6031 Section 3.3.4]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.4
-pub type PSKCKeyUsage<'pskc_key_usage> = String;
+pub type PSKCKeyUsage = String;
 
 /// The `PINPolicy` type is defined in [RFC 6031 Section 3.3.5]
 ///
