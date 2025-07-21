@@ -19,7 +19,7 @@ pub trait EncodeClarifyExt: Encode {
     fn to_der_clarify(&self, flavor: ClarifyFlavor) -> Result<String> {
         let outputs = self.to_der_clarify_err_ignorant(ClarifyOptions {
             flavor,
-            ..Default::default()
+            ..ClarifyOptions::<()>::default()
         });
         // Propagate encode and finish errors
         outputs.raw?;
@@ -28,7 +28,10 @@ pub trait EncodeClarifyExt: Encode {
 
     /// Encode this type as pretty-printed hex DER, with comments.
     /// Ignores any errors that occur during [`Encode::encode`].
-    fn to_der_clarify_err_ignorant(&self, options: ClarifyOptions) -> ClarifyOutputs<'static> {
+    fn to_der_clarify_err_ignorant<H: ClarifyHook>(
+        &self,
+        options: ClarifyOptions<H>,
+    ) -> ClarifyOutputs<'static> {
         let len = match self.encoded_len() {
             Ok(len) => len,
             Err(err) => return ClarifyOutputs::from_err(err),
@@ -53,21 +56,65 @@ pub trait EncodeClarifyExt: Encode {
 
 impl<T> EncodeClarifyExt for T where T: Encode {}
 
+/// This trait allows implementers to modify how types are printed, for example.
+pub trait ClarifyHook: Default {
+    /// Write types? E.g. `type: OctetStringRef`
+    fn should_print_types() -> bool {
+        true
+    }
+
+    /// Print the given length? E.g. `len: 17`
+    fn should_write_len(length: u32) -> bool {
+        length >= 10
+    }
+
+    /// Returns type name of given T type
+    ///
+    /// Defaults to `std::any::type_name::<T>()`
+    fn type_name<T: ?Sized>() -> Cow<'static, str> {
+        Cow::Borrowed(std::any::type_name::<T>())
+    }
+
+    /// Strips wrappers, such as `EncodeValueRef`, which is commonly used and is completely transparent
+    fn strip_transparent_types(mut type_name: &str) -> Cow<'_, str> {
+        let prefixes = [
+            "EncodeValueRef<",
+            "der::encode_ref::EncodeValueRef<",
+            // You can add more:
+            // "ApplicationRef<",
+            // "ContextSpecificRef<",
+            // "PrivateRef<",
+        ];
+
+        for prefix in prefixes {
+            type_name = if let Some(stripped) = type_name.strip_prefix(prefix) {
+                stripped.strip_suffix(">").unwrap_or(stripped)
+            } else {
+                type_name
+            };
+        }
+
+        Cow::Borrowed(type_name)
+    }
+}
+
+impl ClarifyHook for () {}
+
 /// Options to customize pretty-printing.
 #[derive(Clone)]
-pub struct ClarifyOptions {
+pub struct ClarifyOptions<H: ClarifyHook> {
     /// How should comments look like?
     pub flavor: ClarifyFlavor,
 
-    /// Write types? E.g `type: OctetStringRef`
-    pub print_types: bool,
+    /// Customization hook, for printing type names
+    pub hook: H,
 }
 
-impl Default for ClarifyOptions {
+impl<H: ClarifyHook> Default for ClarifyOptions<H> {
     fn default() -> Self {
         Self {
             flavor: Default::default(),
-            print_types: true,
+            hook: H::default(),
         }
     }
 }
@@ -76,14 +123,14 @@ static INDENT_STR: &str =
     "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
 
 /// [`Writer`] which encodes DER as hex with comments.
-pub struct ClarifySliceWriter<'a> {
+pub struct ClarifySliceWriter<'a, H: ClarifyHook> {
     writer: SliceWriter<'a>,
 
-    clarifier: Clarifier,
+    clarifier: CommentClarifier<H>,
 }
 
 /// Clarifier that creates HEX with comments
-pub struct Clarifier {
+pub struct CommentClarifier<H: ClarifyHook> {
     /// Buffer into which debug HEX and comments are written
     clarify_buf: Vec<u8>,
 
@@ -98,7 +145,9 @@ pub struct Clarifier {
     /// Determines if newlines and indent are currently enabled
     indent_enabled: bool,
 
-    print_types: bool,
+    /// Optional parameters and hooks
+    #[allow(dead_code)]
+    options: ClarifyOptions<H>,
 
     /// Sans-io buffer for comments
     comment_writer: Box<dyn CommentWriter>,
@@ -141,9 +190,42 @@ pub enum ClarifyFlavor {
     RustHex,
 }
 
-impl Clarifier {
+/// Common interface for all clarifiers
+pub trait Clarifier {
+    /// Notifies clarifier, that tag-length will be now writter.
+    ///
+    /// For better tag-length pretty-printing inline,
+    /// implementations should disable ident, until length is not written.
+    fn clarify_header_start_tag(&mut self, _tag: &Tag);
+
+    /// Writes e.g. `// tag: OCTET STRING len: 17`
+    fn clarify_header_end_length(&mut self, tag: Option<&Tag>, length: Length);
+
+    /// Writes e.g. `// end: OctetString`
+    fn clarify_end_value_type<T>(&mut self)
+    where
+        T: ?Sized;
+
+    /// Writes e.g. `// type: OctetString`
+    fn clarify_start_value_type<T>(&mut self)
+    where
+        T: ?Sized;
+
+    /// Writes pretty-printed `CHOICE name`
+    fn clarify_choice(&mut self, choice_name: &[u8]);
+
+    /// Writes field name, i.e. field: `public_key`
+    ///
+    /// when used on Sequence field:
+    /// ```text
+    /// public_key: Option<&'a [u8]>
+    /// ```
+    fn clarify_field_name(&mut self, field_name: &str);
+}
+
+impl<H: ClarifyHook> CommentClarifier<H> {
     /// Creates new Clarifier with buffer, that accumulates comments and hex bytes.
-    pub fn new(clarify_buf: Vec<u8>, options: ClarifyOptions) -> Self {
+    pub fn new(clarify_buf: Vec<u8>, options: ClarifyOptions<H>) -> Self {
         Self {
             clarify_buf,
 
@@ -152,23 +234,22 @@ impl Clarifier {
 
             indent_enabled: true,
 
-            print_types: options.print_types,
-
             comment_writer: match options.flavor {
                 ClarifyFlavor::XmlComments => Box::new(XmlCommentWriter::default()),
                 ClarifyFlavor::JavaComments => Box::new(JavaCommentWriter::default()),
                 ClarifyFlavor::RustHex => Box::new(RustHexWriter::default()),
             },
+            options,
         }
     }
 }
 
-impl<'a> ClarifySliceWriter<'a> {
+impl<'a, H: ClarifyHook> ClarifySliceWriter<'a, H> {
     /// Create a new encoder with the given byte slice as a backing buffer.
-    pub fn new(bytes: &'a mut [u8], clarify_buf: Vec<u8>, options: ClarifyOptions) -> Self {
+    pub fn new(bytes: &'a mut [u8], clarify_buf: Vec<u8>, options: ClarifyOptions<H>) -> Self {
         Self {
             writer: SliceWriter::new(bytes),
-            clarifier: Clarifier::new(clarify_buf, options),
+            clarifier: CommentClarifier::new(clarify_buf, options),
         }
     }
 
@@ -190,9 +271,9 @@ impl<'a> ClarifySliceWriter<'a> {
     }
 }
 
-impl Clarifier {
+impl<H: ClarifyHook> CommentClarifier<H> {
     /// Returns indentation, for example "\n\t" for depth == 1
-    pub fn indent_str(&self) -> &'static str {
+    fn indent_str(&self) -> &'static str {
         let ilen = self.depth.len();
         let ilen = ilen.min(INDENT_STR.len());
         &INDENT_STR[..ilen]
@@ -257,12 +338,11 @@ impl Clarifier {
     }
 
     /// Writes string to debug output, for example a comment: `// "abc"`
-    pub fn write_clarify_value_quote(&mut self, type_name: &str, value: &[u8]) {
+    pub fn write_clarify_value_quote(&mut self, name: &str, value: &[u8]) {
         let contains_control = value.iter().any(|&c| c == 0x7F || (c < 0x20 && c != b'\n'));
 
         if value.len() > 2 && !contains_control {
-            let type_name = strip_transparent_types(type_name);
-            let comment = format!("{} {:?} ", type_name, String::from_utf8_lossy(value));
+            let comment = format!("{} {:?} ", name, String::from_utf8_lossy(value));
             self.comment_writer.comment(&comment);
         }
     }
@@ -278,12 +358,12 @@ impl Clarifier {
     /// Writes e.g. `type: OctetString`
     ///
     /// Expected `writer_pos` input: `u32::from(self.writer.position())`
-    pub fn clarify_start_value_type_str(&mut self, writer_pos: Option<u32>, type_name: &str) {
+    fn clarify_start_value_type_str(&mut self, writer_pos: Option<u32>, type_name: &str) {
         self.indent_enabled = true;
         self.depth.push(writer_pos);
 
-        if self.print_types {
-            let type_name = strip_transparent_types(type_name);
+        if H::should_print_types() {
+            let type_name = H::strip_transparent_types(type_name);
             self.write_clarify_type_str("type", &type_name);
         }
     }
@@ -299,53 +379,46 @@ impl Clarifier {
             }
         }
 
-        if self.print_types {
-            let type_name = strip_transparent_types(type_name);
+        if H::should_print_types() {
             self.write_clarify_indent();
+            let type_name = H::strip_transparent_types(type_name);
             self.write_clarify_type_str("end", type_name.as_ref());
         }
     }
+}
 
-    /// for better tag-length pretty-printing inline
-    pub fn clarify_header_start_tag(&mut self, _tag: &Tag) {
+impl<H: ClarifyHook> Clarifier for CommentClarifier<H> {
+    fn clarify_header_start_tag(&mut self, _tag: &Tag) {
         self.write_clarify_indent();
         // just to print header bytes without indent
         self.indent_enabled = false;
     }
 
-    /// Writes field name, i.e. field: `public_key`
-    ///
-    /// when used on Sequence field:
-    /// ```text
-    /// public_key: Option<&'a [u8]>
-    /// ```
-    pub fn clarify_field_name(&mut self, field_name: &str) {
+    fn clarify_field_name(&mut self, field_name: &str) {
         self.write_clarify_indent();
         self.write_clarify_type_str("field", field_name);
     }
 
-    /// Writes e.g. `// type: OctetString`
-    pub fn clarify_start_value_type<T: ?Sized>(&mut self) {
-        self.clarify_start_value_type_str(Some(self.last_position), &tynm::type_name::<T>());
-    }
-    /// Writes e.g. `// end: OctetString`
-    pub fn clarify_end_value_type<T: ?Sized>(&mut self) {
-        self.clarify_end_value_type_str(Some(self.last_position), &tynm::type_name::<T>());
+    fn clarify_start_value_type<T: ?Sized>(&mut self) {
+        // Here you can use tynm::type_name::<T>()
+        self.clarify_start_value_type_str(Some(self.last_position), &H::type_name::<T>());
     }
 
-    /// Writes e.g. `// tag: OCTET STRING len: 17`
-    pub fn clarify_header_end_length(&mut self, tag: Option<&Tag>, length: Length) {
+    fn clarify_end_value_type<T: ?Sized>(&mut self) {
+        self.clarify_end_value_type_str(Some(self.last_position), &H::type_name::<T>());
+    }
+
+    fn clarify_header_end_length(&mut self, tag: Option<&Tag>, length: Length) {
         self.indent_enabled = true;
         if let Some(tag) = tag {
             self.write_clarify_type_str("tag", &format!("{tag}"));
         }
-        if u32::from(length) >= 10 {
+        if H::should_write_len(u32::from(length)) {
             self.write_clarify_type_str("len", &format!("{length}"));
         }
     }
 
-    /// Writes pretty-printed `CHOICE name`
-    pub fn clarify_choice(&mut self, choice_name: &[u8]) {
+    fn clarify_choice(&mut self, choice_name: &[u8]) {
         self.write_clarify_indent();
         if let Ok(choice_name) = std::str::from_utf8(choice_name) {
             self.write_clarify_type_str("CHOICE", choice_name);
@@ -353,7 +426,7 @@ impl Clarifier {
     }
 }
 
-impl<'a> Writer for ClarifySliceWriter<'a> {
+impl<'a, H: ClarifyHook> Writer for ClarifySliceWriter<'a, H> {
     #[allow(clippy::cast_possible_truncation)]
     fn write(&mut self, slice: &[u8]) -> Result<()> {
         self.reserve(slice.len())?.copy_from_slice(slice);
@@ -365,27 +438,7 @@ impl<'a> Writer for ClarifySliceWriter<'a> {
         Ok(())
     }
 
-    fn clarifier(&mut self) -> Option<&mut Clarifier> {
+    fn clarifier(&mut self) -> Option<&mut impl Clarifier> {
         Some(&mut self.clarifier)
     }
-}
-
-/// Strips wrappers, such as `EncodeValueRef`, which is commonly used and is completely transparent
-fn strip_transparent_types(mut type_name: &str) -> Cow<'_, str> {
-    let prefixes = [
-        "EncodeValueRef<",
-        // "ApplicationRef<",
-        // "ContextSpecificRef<",
-        // "PrivateRef<",
-    ];
-
-    for prefix in prefixes {
-        type_name = if let Some(stripped) = type_name.strip_prefix(prefix) {
-            stripped.strip_suffix(">").unwrap_or(stripped)
-        } else {
-            type_name
-        };
-    }
-
-    Cow::Borrowed(type_name)
 }

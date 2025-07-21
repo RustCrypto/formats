@@ -92,6 +92,7 @@ where
 fn clarify_start_value_type<T: ?Sized>(writer: &mut impl Writer) {
     #[cfg(feature = "clarify")]
     if let Some(clarifier) = writer.clarifier() {
+        use crate::Clarifier;
         clarifier.clarify_start_value_type::<T>();
     }
 }
@@ -100,6 +101,7 @@ fn clarify_start_value_type<T: ?Sized>(writer: &mut impl Writer) {
 fn clarify_end_value_type<T: ?Sized>(writer: &mut impl Writer) {
     #[cfg(feature = "clarify")]
     if let Some(clarifier) = writer.clarifier() {
+        use crate::Clarifier;
         clarifier.clarify_end_value_type::<T>();
     }
 }

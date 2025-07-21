@@ -4,11 +4,12 @@
 #![allow(clippy::needless_question_mark)]
 
 pub mod sequence {
-    use std::{println, str::FromStr};
+    use std::{borrow::Cow, println, str::FromStr};
 
     use const_oid::ObjectIdentifier;
     use der::{
-        AnyRef, ClarifyFlavor, Decode, EncodeClarifyExt, Sequence, TagNumber, ValueOrd,
+        AnyRef, ClarifyFlavor, ClarifyHook, Decode, EncodeClarifyExt, Sequence, TagNumber,
+        ValueOrd,
         asn1::{OctetString, SetOf},
     };
     use hex_literal::hex;
@@ -48,7 +49,7 @@ pub mod sequence {
 
         assert_eq!(
             clarified,
-            "\n04 03 // tag: OCTET STRING type: OctetString \n\tAA BB CC"
+            "\n04 03 // tag: OCTET STRING type: der::asn1::octet_string::allocating::OctetString \n\tAA BB CC"
         )
     }
 
@@ -62,7 +63,7 @@ pub mod sequence {
 
         assert_eq!(
             clarified,
-            "\n\"04 03\" // tag: OCTET STRING type: OctetString \n\t\"AA BB CC\""
+            "\n\"04 03\" // tag: OCTET STRING type: der::asn1::octet_string::allocating::OctetString \n\t\"AA BB CC\""
         )
     }
 
@@ -83,7 +84,7 @@ pub mod sequence {
         println!("clarified: {clarified}");
         assert_eq!(
             clarified,
-            "\n\"04 11\" // tag: OCTET STRING len: 17 type: OctetString \n\t\"00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF \n\t 01\"\n\"\" // end: OctetString "
+            "\n\"04 11\" // tag: OCTET STRING len: 17 type: der::asn1::octet_string::allocating::OctetString \n\t\"00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF \n\t 01\"\n\"\" // end: der::asn1::octet_string::allocating::OctetString "
         );
     }
     #[test]
@@ -113,11 +114,14 @@ pub mod sequence {
                 0x66, 0x77, 0x44, 0x55, 0x66, 0x77, 0x44, 0x55, 0x66, 0x77, 0x44, 0x55, 0x66, 0x77,
             ]),
         };
-        let clarified = obj
-            .to_der_clarify(ClarifyFlavor::RustHex)
-            .expect("encoded DER");
+        let clarified = obj.to_der_clarify_err_ignorant(der::ClarifyOptions {
+            flavor: ClarifyFlavor::RustHex,
+            hook: TynmClarifyHook::default(),
+        });
 
-        //println!("clarified: {clarified}");
+        clarified.raw.expect("encoded DER");
+        let clarified = String::from_utf8(clarified.clarify_buf).expect("utf-8");
+        println!("clarified: {clarified}");
 
         assert!(clarified.contains("type: OneAsymmetricKey"));
         assert!(clarified.contains("tag: CONTEXT-SPECIFIC [0] (constructed)"));
@@ -149,5 +153,13 @@ pub mod sequence {
                 "" // end: ContextSpecificRef<BitStringRef>
             "" // end: OneAsymmetricKey
         );
+    }
+
+    #[derive(Default)]
+    struct TynmClarifyHook {}
+    impl ClarifyHook for TynmClarifyHook {
+        fn type_name<T: ?Sized>() -> Cow<'static, str> {
+            Cow::Owned(tynm::type_name::<T>())
+        }
     }
 }

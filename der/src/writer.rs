@@ -23,8 +23,8 @@ pub trait Writer {
 
     #[cfg(feature = "clarify")]
     /// Should return Some(clarifier) for clarify writers
-    fn clarifier(&mut self) -> Option<&mut clarify::Clarifier> {
-        None
+    fn clarifier(&mut self) -> Option<&mut impl clarify::Clarifier> {
+        Option::<&mut clarify::CommentClarifier<()>>::None
     }
 }
 
