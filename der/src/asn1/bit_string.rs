@@ -78,7 +78,11 @@ impl<'a> BitStringRef<'a> {
 
     /// Get the length of this `BIT STRING` in bits.
     pub fn bit_len(&self) -> usize {
-        self.bit_len_checked().unwrap_or(0)
+        let bit_len = self.bit_len_checked();
+        debug_assert!(bit_len.is_some());
+
+        // Ensured to be valid in the constructor.
+        bit_len.unwrap_or(0)
     }
 
     /// Get the number of bytes/octets needed to represent this `BIT STRING`
@@ -356,8 +360,11 @@ mod allocating {
 
         /// Get the length of this `BIT STRING` in bits.
         pub fn bit_len(&self) -> usize {
-            // bit_len was checked in constructor, so bit_len_checked never returns error.
-            self.bit_len_checked().unwrap_or(0)
+            let bit_len = self.bit_len_checked();
+            debug_assert!(bit_len.is_some());
+
+            // Ensured to be valid in the constructor.
+            bit_len.unwrap_or(0)
         }
 
         /// Is the inner byte slice empty?
