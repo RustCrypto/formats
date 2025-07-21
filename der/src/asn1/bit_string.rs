@@ -36,11 +36,13 @@ impl<'a> BitStringRef<'a> {
         let unused_bits = UnusedBits::new(unused_bits, bytes)?;
         let inner = BytesRef::new(bytes).map_err(|_| Self::TAG.length_error())?;
         let value = Self::new_unchecked(unused_bits, inner);
-        value.bit_len_checked()?;
+        value
+            .bit_len_checked()
+            .ok_or_else(|| Error::from(ErrorKind::Overflow))?;
         Ok(value)
     }
 
-    /// Internal function. Assumtions:
+    /// Internal function. Assumptions:
     /// - [`UnusedBits`] was checked for given [`BytesRef`],
     /// - [`BitStringRef::bit_len_checked`] was called and returned `Ok`.
     pub(crate) fn new_unchecked(unused_bits: UnusedBits, inner: &'a BytesRef) -> Self {
@@ -64,12 +66,14 @@ impl<'a> BitStringRef<'a> {
         *self.unused_bits != 0
     }
 
-    /// Get the length of this `BIT STRING` in bits.
-    fn bit_len_checked(&self) -> Result<usize> {
-        usize::try_from(self.inner.len())?
-            .checked_mul(8)
+    /// Get the length of this `BIT STRING` in bits, or `None` if the value overflows.
+    ///
+    /// Ensured to be valid in the constructor.
+    fn bit_len_checked(&self) -> Option<usize> {
+        usize::try_from(self.inner.len())
+            .ok()
+            .and_then(|n| n.checked_mul(8))
             .and_then(|n| n.checked_sub(usize::from(*self.unused_bits)))
-            .ok_or(ErrorKind::Overflow.into())
     }
 
     /// Get the length of this `BIT STRING` in bits.
@@ -343,8 +347,10 @@ mod allocating {
             BytesRef::new_unchecked(&self.inner)
         }
 
-        /// Get the length of this `BIT STRING` in bits.
-        fn bit_len_checked(&self) -> Result<usize> {
+        /// Get the length of this `BIT STRING` in bits, or `None` if the value overflows.
+        ///
+        /// Ensured to be valid in the constructor.
+        fn bit_len_checked(&self) -> Option<usize> {
             BitStringRef::new_unchecked(self.unused_bits, self.bytes_ref()).bit_len_checked()
         }
 
