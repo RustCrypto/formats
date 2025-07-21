@@ -206,7 +206,7 @@ pub type PSKCKeyUsage = String;
 ///      minLength         [3] INTEGER (0..MAX) OPTIONAL,
 ///      maxLength         [4] INTEGER (0..MAX) OPTIONAL,
 ///      pinEncoding       [5] Encoding OPTIONAL }
-///
+/// ```
 ///
 /// [RFC 6031 Section 3.3.5]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.5
 #[derive(Sequence, PartialEq, Eq)]
