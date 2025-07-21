@@ -192,7 +192,7 @@ pub enum ClarifyFlavor {
 
 /// Common interface for all clarifiers
 pub trait Clarifier {
-    /// Notifies clarifier, that tag-length will be now writter.
+    /// Notifies clarifier, that tag-length will now be written.
     ///
     /// For better tag-length pretty-printing inline,
     /// implementations should disable ident, until length is not written.
