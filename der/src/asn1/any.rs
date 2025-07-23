@@ -170,6 +170,151 @@ impl<'a> TryFrom<&'a [u8]> for AnyRef<'a> {
     }
 }
 
+/// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
+///
+/// This type provides the same functionality as [`AnyRef`] but may own the
+/// backing data.
+///
+/// [`AnyCow`] provides similar functionality to `Cow` type from standard library.
+pub enum AnyCow<'a> {
+    Borrowed(AnyRef<'a>),
+
+    #[cfg(feature = "alloc")]
+    Owned(Any),
+}
+
+impl<'a> AnyCow<'a> {
+    /// Create a new [`AnyCow`] from the provided [`Tag`] and DER bytes.
+    pub const fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self, Error> {
+        match AnyRef::new(tag, bytes) {
+            Ok(value) => Ok(Self::Borrowed(value)),
+            Err(err) => Err(err),
+        }
+    }
+
+    pub(crate) fn bytes_ref(&self) -> &BytesRef {
+        match self {
+            AnyCow::Borrowed(any_ref) => any_ref.value,
+
+            #[cfg(feature = "alloc")]
+            AnyCow::Owned(any) => any.bytes_ref(),
+        }
+    }
+
+    /// Get the raw value for this [`AnyCow`] type as a byte slice.
+    pub fn value(&'a self) -> &'a [u8] {
+        self.bytes_ref().as_slice()
+    }
+
+    /// Returns [`Tag`] and [`Length`] of self.
+    pub fn header(&self) -> Header {
+        match self {
+            AnyCow::Borrowed(any_ref) => any_ref.header(),
+
+            #[cfg(feature = "alloc")]
+            AnyCow::Owned(any) => any.header(),
+        }
+    }
+
+    /// Attempt to decode this [`AnyRef`] type into the inner value.
+    pub fn decode_as_encoding<T>(
+        &'a self,
+        encoding: EncodingRules,
+    ) -> Result<T, <T as DecodeValue<'a>>::Error>
+    where
+        T: Choice<'a> + DecodeValue<'a>,
+    {
+        match self {
+            AnyCow::Borrowed(any_ref) => any_ref.decode_as_encoding(encoding),
+
+            #[cfg(feature = "alloc")]
+            AnyCow::Owned(any) => any.decode_as_encoding(encoding),
+        }
+    }
+
+    /// Attempt to make this [`AnyCow`] allocated.
+    #[cfg(feature = "alloc")]
+    pub fn into_owned(self) -> AnyCow<'static> {
+        use crate::referenced::RefToOwned;
+        match self {
+            AnyCow::Borrowed(any_ref) => AnyCow::Owned(any_ref.ref_to_owned()),
+            AnyCow::Owned(any) => AnyCow::Owned(any),
+        }
+    }
+}
+
+impl<'a> Choice<'a> for AnyCow<'a> {
+    fn can_decode(_: Tag) -> bool {
+        true
+    }
+}
+
+impl<'a> Decode<'a> for AnyCow<'a> {
+    type Error = Error;
+
+    fn decode<R: Reader<'a>>(reader: &mut R) -> Result<AnyCow<'a>, Error> {
+        let header = Header::decode(reader)?;
+        Self::decode_value(reader, header)
+    }
+}
+
+impl<'a> DecodeValue<'a> for AnyCow<'a> {
+    type Error = Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
+        Ok(Self::Borrowed(AnyRef::decode_value(reader, header)?))
+    }
+}
+
+impl EncodeValue for AnyCow<'_> {
+    fn value_len(&self) -> Result<Length, Error> {
+        match self {
+            AnyCow::Borrowed(any_ref) => any_ref.value_len(),
+
+            #[cfg(feature = "alloc")]
+            AnyCow::Owned(any) => any.value_len(),
+        }
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
+        match self {
+            AnyCow::Borrowed(any_ref) => any_ref.encode_value(writer),
+
+            #[cfg(feature = "alloc")]
+            AnyCow::Owned(any) => any.encode_value(writer),
+        }
+    }
+}
+
+impl Tagged for AnyCow<'_> {
+    fn tag(&self) -> Tag {
+        match self {
+            AnyCow::Borrowed(any_ref) => any_ref.tag(),
+
+            #[cfg(feature = "alloc")]
+            AnyCow::Owned(any) => any.tag(),
+        }
+    }
+}
+
+impl ValueOrd for AnyCow<'_> {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
+        self.bytes_ref().der_cmp(other.bytes_ref())
+    }
+}
+
+impl<'a> From<&'a AnyCow<'a>> for &'a BytesRef {
+    fn from(any: &'a AnyCow<'a>) -> &'a BytesRef {
+        any.bytes_ref()
+    }
+}
+
+impl<'a> From<AnyRef<'a>> for AnyCow<'a> {
+    fn from(any_ref: AnyRef<'a>) -> Self {
+        Self::Borrowed(any_ref)
+    }
+}
+
 #[cfg(feature = "alloc")]
 pub use self::allocating::Any;
 
@@ -198,6 +343,10 @@ mod allocating {
         pub fn new(tag: Tag, bytes: impl Into<Box<[u8]>>) -> Result<Self, Error> {
             let value = BytesOwned::new(bytes)?;
             Ok(Self { tag, value })
+        }
+
+        pub(crate) fn bytes_ref(&self) -> &BytesRef {
+            &self.value
         }
 
         /// Allow access to value
@@ -321,6 +470,12 @@ mod allocating {
     impl ValueOrd for Any {
         fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
             self.value.der_cmp(&other.value)
+        }
+    }
+
+    impl<'a> From<Any> for AnyCow<'a> {
+        fn from(any: Any) -> Self {
+            Self::Owned(any)
         }
     }
 
