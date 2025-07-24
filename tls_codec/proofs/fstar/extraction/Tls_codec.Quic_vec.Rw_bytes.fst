@@ -125,7 +125,7 @@ let tls_serialize_bytes
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -166,7 +166,7 @@ let impl: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_1: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -209,7 +209,7 @@ let impl_1: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_2: Tls_codec.t_Deserialize Tls_codec.Quic_vec.t_VLBytes =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -373,7 +373,7 @@ let impl_2: Tls_codec.t_Deserialize Tls_codec.Quic_vec.t_VLBytes =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_3: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -412,7 +412,7 @@ let impl_3: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_4: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun

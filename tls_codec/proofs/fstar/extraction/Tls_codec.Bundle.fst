@@ -86,46 +86,11 @@ let impl_1: Core.Fmt.t_Display t_Error =
       <:
       (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
   }
-(* 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl: Core.Error.t_Error t_Error =
-  {
-    _super_13156757144345117315 = FStar.Tactics.Typeclasses.solve;
-    _super_389846626086906045 = FStar.Tactics.Typeclasses.solve
-  } *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_2: Core.Convert.t_From t_Error Std.Io.Error.t_Error =
-  {
-    f_from_pre = (fun (e: Std.Io.Error.t_Error) -> true);
-    f_from_post = (fun (e: Std.Io.Error.t_Error) (out: t_Error) -> true);
-    f_from
-    =
-    fun (e: Std.Io.Error.t_Error) ->
-      
-        Error_DecodingError
-        (Core.Hint.must_use #Alloc.String.t_String
-            (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 1)
-                    (mk_usize 1)
-                    (let list = ["io error: "] in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                      Rust_primitives.Hax.array_of_list 1 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_debug #Std.Io.Error.t_Error e
-                          <:
-                          Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                      Rust_primitives.Hax.array_of_list 1 list)
-                  <:
-                  Core.Fmt.t_Arguments)
-              <:
-              Alloc.String.t_String))
-        <:
-        t_Error
-  }
+assume val impl: Core.Error.t_Error t_Error
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume val impl_2: Core.Convert.t_From t_Error Std.Io.Error.t_Error 
 
 /// The `Size` trait needs to be implemented by any struct that should be
 /// efficiently serialized.
@@ -145,7 +110,7 @@ class t_Size (v_Self: Type0) = {
 /// * `tls_serialize` that takes a buffer to write the serialization to
 /// * `tls_serialize_detached` that returns a byte vector
 class t_Serialize (v_Self: Type0) = {
-  [@@@ FStar.Tactics.Typeclasses.no_method]_super_2997919293107846837:t_Size v_Self;
+  [@@@ FStar.Tactics.Typeclasses.no_method]_super_6186925850915422136:t_Size v_Self;
   f_tls_serialize_pre:#v_W: Type0 -> {| i1: Std.Io.t_Write v_W |} -> v_Self -> v_W -> Type0;
   f_tls_serialize_post:
       #v_W: Type0 ->
@@ -172,104 +137,15 @@ class t_SerializeDetached (v_Self: Type0) = {
         (fun result -> f_tls_serialize_detached_post x0 result)
 }
 
-
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-assume val impl_write_vec: Std.Io.t_Write (Alloc.Vec.t_Vec Rust_primitives.Integers.u8
-            Alloc.Alloc.t_Global)
-[@@ FStar.Tactics.Typeclasses.tcinstance]
-assume val impl_read_vec: Std.Io.t_Read (Rust_primitives.Arrays.t_Slice Rust_primitives.Integers.u8
-        )
-
-[@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_3 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Serialize v_T)
-    : t_SerializeDetached v_T =
-  {
-    f_tls_serialize_detached_pre = (fun (self: v_T) -> true);
-    f_tls_serialize_detached_post
-    =
-    (fun
-        (self: v_T)
-        (out1: Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) t_Error)
-        ->
-        true);
-    f_tls_serialize_detached
-    =
-    fun (self: v_T) ->
-      let buffer:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global =
-        Alloc.Vec.impl__with_capacity #u8
-          (f_tls_serialized_len #v_T #i1._super_2997919293107846837 self <: usize)
-      in
-      let tmp0, out:(Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global & Core.Result.t_Result usize t_Error) =
-        f_tls_serialize #v_T
-          #FStar.Tactics.Typeclasses.solve
-          #(Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)
-          self
-          buffer
-      in
-      let buffer:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global = tmp0 in
-      match out <: Core.Result.t_Result usize t_Error with
-      | Core.Result.Result_Ok written ->
-        let _:Prims.unit =
-          if true
-          then
-            let _:Prims.unit =
-              match
-                written, Alloc.Vec.impl_1__len #u8 #Alloc.Alloc.t_Global buffer <: (usize & usize)
-              with
-              | left_val, right_val -> Hax_lib.v_assert (left_val =. right_val <: bool)
-            in
-            ()
-        in
-        if written <>. (Alloc.Vec.impl_1__len #u8 #Alloc.Alloc.t_Global buffer <: usize)
-        then
-          Core.Result.Result_Err
-          (Error_EncodingError
-            (Core.Hint.must_use #Alloc.String.t_String
-                (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
-                        (mk_usize 2)
-                        (let list =
-                            [
-                              "Expected that ";
-                              " bytes were written but the output holds ";
-                              " bytes"
-                            ]
-                          in
-                          FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
-                          Rust_primitives.Hax.array_of_list 3 list)
-                        (let list =
-                            [
-                              Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument;
-                              Core.Fmt.Rt.impl__new_display #usize
-                                (Alloc.Vec.impl_1__len #u8 #Alloc.Alloc.t_Global buffer <: usize)
-                              <:
-                              Core.Fmt.Rt.t_Argument
-                            ]
-                          in
-                          FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                          Rust_primitives.Hax.array_of_list 2 list)
-                      <:
-                      Core.Fmt.t_Arguments)
-                  <:
-                  Alloc.String.t_String))
-            <:
-            t_Error)
-          <:
-          Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) t_Error
-        else
-          Core.Result.Result_Ok buffer
-          <:
-          Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) t_Error
-      | Core.Result.Result_Err err ->
-        Core.Result.Result_Err err
-        <:
-        Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) t_Error
-  }
+assume val impl_3 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Serialize v_T)
+    : t_SerializeDetached v_T 
 
 /// The `SerializeBytes` trait provides a function to serialize a struct or enum.
 /// The trait provides one function:
 /// * `tls_serialize` that returns a byte vector
 class t_SerializeBytes (v_Self: Type0) = {
-  [@@@ FStar.Tactics.Typeclasses.no_method]_super_2997919293107846837:t_Size v_Self;
+  [@@@ FStar.Tactics.Typeclasses.no_method]_super_6186925850915422136:t_Size v_Self;
   f_tls_serialize_bytes_pre:v_Self -> Type0;
   f_tls_serialize_bytes_post:
       v_Self ->
@@ -284,7 +160,7 @@ class t_SerializeBytes (v_Self: Type0) = {
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
 /// struct or enum.
 class t_Deserialize (v_Self: Type0) = {
-  [@@@ FStar.Tactics.Typeclasses.no_method]_super_2997919293107846837:t_Size v_Self;
+  [@@@ FStar.Tactics.Typeclasses.no_method]_super_6186925850915422136:t_Size v_Self;
   f_tls_deserialize_pre:#v_R: Type0 -> {| i1: Std.Io.t_Read v_R |} -> v_R -> Type0;
   f_tls_deserialize_post:
       #v_R: Type0 ->
@@ -320,60 +196,14 @@ class t_DeserializeExact (v_Self: Type0) = {
 }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_4 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Deserialize v_T)
-    : t_DeserializeExact v_T =
-  {
-    f_tls_deserialize_exact_pre
-    =
-    (fun
-        (#iimpl_677085834_: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()]
-          i3:
-          Core.Convert.t_AsRef iimpl_677085834_ (t_Slice u8))
-        (bytes: iimpl_677085834_)
-        ->
-        true);
-    f_tls_deserialize_exact_post
-    =
-    (fun
-        (#iimpl_677085834_: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()]
-          i3:
-          Core.Convert.t_AsRef iimpl_677085834_ (t_Slice u8))
-        (bytes: iimpl_677085834_)
-        (out2: Core.Result.t_Result v_T t_Error)
-        ->
-        true);
-    f_tls_deserialize_exact
-    =
-    fun
-      (#iimpl_677085834_: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()]
-        i3:
-        Core.Convert.t_AsRef iimpl_677085834_ (t_Slice u8))
-      (bytes: iimpl_677085834_)
-      ->
-      let bytes:t_Slice u8 =
-        Core.Convert.f_as_ref #iimpl_677085834_ #(t_Slice u8) #FStar.Tactics.Typeclasses.solve bytes
-      in
-      let tmp0, out1:(t_Slice u8 & Core.Result.t_Result v_T t_Error) =
-        f_tls_deserialize #v_T #FStar.Tactics.Typeclasses.solve #(t_Slice u8) bytes
-      in
-      let bytes:t_Slice u8 = tmp0 in
-      match out1 <: Core.Result.t_Result v_T t_Error with
-      | Core.Result.Result_Ok out ->
-        if ~.(Core.Slice.impl__is_empty #u8 bytes <: bool)
-        then
-          Core.Result.Result_Err (Error_TrailingData <: t_Error) <: Core.Result.t_Result v_T t_Error
-        else Core.Result.Result_Ok out <: Core.Result.t_Result v_T t_Error
-      | Core.Result.Result_Err err -> Core.Result.Result_Err err <: Core.Result.t_Result v_T t_Error
-  }
+assume val impl_4 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Deserialize v_T)
+    : t_DeserializeExact v_T 
 
 /// The `DeserializeBytes` trait defines functions to deserialize a byte slice
 /// to a struct or enum. In contrast to [`Deserialize`], this trait operates
 /// directly on byte slices and can return any remaining bytes.
 class t_DeserializeBytes (v_Self: Type0) = {
-  [@@@ FStar.Tactics.Typeclasses.no_method]_super_2997919293107846837:t_Size v_Self;
+  [@@@ FStar.Tactics.Typeclasses.no_method]_super_6186925850915422136:t_Size v_Self;
   f_tls_deserialize_bytes_pre:t_Slice u8 -> Type0;
   f_tls_deserialize_bytes_post:t_Slice u8 -> Core.Result.t_Result (v_Self & t_Slice u8) t_Error
     -> Type0;
@@ -393,28 +223,8 @@ class t_DeserializeExactBytes (v_Self: Type0) = {
 }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_5 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_DeserializeBytes v_T)
-    : t_DeserializeExactBytes v_T =
-  {
-    f_tls_deserialize_exact_bytes_pre = (fun (bytes: t_Slice u8) -> true);
-    f_tls_deserialize_exact_bytes_post
-    =
-    (fun (bytes: t_Slice u8) (out1: Core.Result.t_Result v_T t_Error) -> true);
-    f_tls_deserialize_exact_bytes
-    =
-    fun (bytes: t_Slice u8) ->
-      match
-        f_tls_deserialize_bytes #v_T #FStar.Tactics.Typeclasses.solve bytes
-        <:
-        Core.Result.t_Result (v_T & t_Slice u8) t_Error
-      with
-      | Core.Result.Result_Ok (out, remainder) ->
-        if ~.(Core.Slice.impl__is_empty #u8 remainder <: bool)
-        then
-          Core.Result.Result_Err (Error_TrailingData <: t_Error) <: Core.Result.t_Result v_T t_Error
-        else Core.Result.Result_Ok out <: Core.Result.t_Result v_T t_Error
-      | Core.Result.Result_Err err -> Core.Result.Result_Err err <: Core.Result.t_Result v_T t_Error
-  }
+assume val impl_5 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_DeserializeBytes v_T)
+    : t_DeserializeExactBytes v_T 
 
 /// A 3 byte wide unsigned integer type as defined in [RFC 5246].
 /// [RFC 5246]: https://datatracker.ietf.org/doc/html/rfc5246#section-4.4
@@ -468,65 +278,19 @@ let impl_6__to_be_bytes (self: t_U24) : t_Array u8 (mk_usize 3) = self._0
 let f_from__impl_7__v_LEN: usize = Core.Mem.size_of #usize ()
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_7: Core.Convert.t_From usize t_U24 =
-  {
-    f_from_pre = (fun (value: t_U24) -> true);
-    f_from_post = (fun (value: t_U24) (out: usize) -> true);
-    f_from
-    =
-    fun (value: t_U24) ->
-      let usize_bytes:t_Array u8 (mk_usize 8) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 8) in
-      let usize_bytes:t_Array u8 (mk_usize 8) =
-        Rust_primitives.Hax.Monomorphized_update_at.update_at_range_from usize_bytes
-          ({ Core.Ops.Range.f_start = f_from__impl_7__v_LEN -! mk_usize 3 <: usize }
-            <:
-            Core.Ops.Range.t_RangeFrom usize)
-          (Core.Slice.impl__copy_from_slice #u8
-              (usize_bytes.[ {
-                    Core.Ops.Range.f_start = f_from__impl_7__v_LEN -! mk_usize 3 <: usize
-                  }
-                  <:
-                  Core.Ops.Range.t_RangeFrom usize ]
-                <:
-                t_Slice u8)
-              (value._0 <: t_Slice u8)
-            <:
-            t_Slice u8)
-      in
-      mk_usize 0
-  }
+assume val impl_7: Core.Convert.t_From usize t_U24 
 
 let f_try_from__impl_8__v_LEN: usize = Core.Mem.size_of #usize ()
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl__from__primitives (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Size v_T)
-    : t_Size (Core.Option.t_Option v_T) =
-  {
-    f_tls_serialized_len_pre = (fun (self: Core.Option.t_Option v_T) -> true);
-    f_tls_serialized_len_post = (fun (self: Core.Option.t_Option v_T) (out: usize) -> true);
-    f_tls_serialized_len
-    =
-    fun (self: Core.Option.t_Option v_T) ->
-      mk_usize 1 +!
-      (match self <: Core.Option.t_Option v_T with
-        | Core.Option.Option_Some v ->
-          f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve v <: usize
-        | Core.Option.Option_None  -> mk_usize 0)
-  }
+assume val impl__from__primitives (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Size v_T)
+    : t_Size (Core.Option.t_Option v_T) 
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_1__from__primitives
+assume val impl_1__from__primitives
       (#v_T: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Size v_T)
-    : t_Size (Core.Option.t_Option v_T) =
-  {
-    f_tls_serialized_len_pre = (fun (self: Core.Option.t_Option v_T) -> true);
-    f_tls_serialized_len_post = (fun (self: Core.Option.t_Option v_T) (out: usize) -> true);
-    f_tls_serialized_len
-    =
-    fun (self: Core.Option.t_Option v_T) ->
-      f_tls_serialized_len #(Core.Option.t_Option v_T) #FStar.Tactics.Typeclasses.solve self
-  }
+    : t_Size (Core.Option.t_Option v_T) 
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_2__from__primitives
@@ -534,7 +298,7 @@ let impl_2__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Serialize v_T)
     : t_Serialize (Core.Option.t_Option v_T) =
   {
-    _super_2997919293107846837 = i1._super_2997919293107846837;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -645,7 +409,7 @@ let impl_3__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_SerializeBytes v_T)
     : t_SerializeBytes (Core.Option.t_Option v_T) =
   {
-    _super_2997919293107846837 = i1._super_2997919293107846837;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: Core.Option.t_Option v_T) -> true);
     f_tls_serialize_bytes_post
     =
@@ -661,7 +425,7 @@ let impl_3__from__primitives
       | Core.Option.Option_Some e ->
         let out:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global =
           Alloc.Vec.impl__with_capacity #u8
-            ((f_tls_serialized_len #v_T #i1._super_2997919293107846837 e <: usize) +! mk_usize 1
+            ((f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve e <: usize) +! mk_usize 1
               <:
               usize)
         in
@@ -705,7 +469,7 @@ let impl_4__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Serialize v_T)
     : t_Serialize (Core.Option.t_Option v_T) =
   {
-    _super_2997919293107846837 = i1._super_2997919293107846837;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -751,7 +515,7 @@ let impl_5__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_SerializeBytes v_T)
     : t_SerializeBytes (Core.Option.t_Option v_T) =
   {
-    _super_2997919293107846837 = i1._super_2997919293107846837;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: Core.Option.t_Option v_T) -> true);
     f_tls_serialize_bytes_post
     =
@@ -770,7 +534,7 @@ let impl_5__from__primitives
 let impl_6 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Deserialize v_T)
     : t_Deserialize (Core.Option.t_Option v_T) =
   {
-    _super_2997919293107846837 = i1._super_2997919293107846837;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -887,14 +651,10 @@ let impl_37: t_Size u8 =
     f_tls_serialized_len = fun (self: u8) -> mk_usize 1
   }
 
-
-[@@ FStar.Tactics.Typeclasses.tcinstance]
-assume val default_u8: Core.Default.t_Default Rust_primitives.Integers.u8
-
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_31: t_Deserialize u8 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -953,7 +713,7 @@ let impl_31: t_Deserialize u8 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_32: t_DeserializeBytes u8 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -1025,7 +785,7 @@ let impl_7__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_DeserializeBytes v_T)
     : t_DeserializeBytes (Core.Option.t_Option v_T) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -1108,7 +868,7 @@ let impl_7__from__primitives
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_35: t_Serialize u8 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -1181,7 +941,7 @@ let impl_38: t_Size u8 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_33: t_SerializeBytes u8 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: u8) -> true);
     f_tls_serialize_bytes_post
     =
@@ -1199,7 +959,7 @@ let impl_33: t_SerializeBytes u8 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_34: t_SerializeBytes u8 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: u8) -> true);
     f_tls_serialize_bytes_post
     =
@@ -1213,7 +973,7 @@ let impl_34: t_SerializeBytes u8 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_36: t_Serialize u8 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -1260,7 +1020,7 @@ let impl_45: t_Size u16 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_39: t_Deserialize u16 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -1378,7 +1138,7 @@ let deserialize_primitives (_: Prims.unit) : Prims.unit =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_40: t_DeserializeBytes u16 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -1447,7 +1207,7 @@ let impl_40: t_DeserializeBytes u16 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_43: t_Serialize u16 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -1520,7 +1280,7 @@ let impl_46: t_Size u16 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_41: t_SerializeBytes u16 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: u16) -> true);
     f_tls_serialize_bytes_post
     =
@@ -1541,7 +1301,7 @@ let impl_41: t_SerializeBytes u16 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_42: t_SerializeBytes u16 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: u16) -> true);
     f_tls_serialize_bytes_post
     =
@@ -1558,7 +1318,7 @@ let impl_42: t_SerializeBytes u16 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_44: t_Serialize u16 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -1605,7 +1365,7 @@ let impl_53: t_Size t_U24 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_47: t_Deserialize t_U24 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -1660,7 +1420,7 @@ let impl_47: t_Deserialize t_U24 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_48: t_DeserializeBytes t_U24 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -1728,7 +1488,7 @@ let impl_48: t_DeserializeBytes t_U24 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_51: t_Serialize t_U24 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -1801,7 +1561,7 @@ let impl_54: t_Size t_U24 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_49: t_SerializeBytes t_U24 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: t_U24) -> true);
     f_tls_serialize_bytes_post
     =
@@ -1821,7 +1581,7 @@ let impl_49: t_SerializeBytes t_U24 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_50: t_SerializeBytes t_U24 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: t_U24) -> true);
     f_tls_serialize_bytes_post
     =
@@ -1838,7 +1598,7 @@ let impl_50: t_SerializeBytes t_U24 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_52: t_Serialize t_U24 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -1885,7 +1645,7 @@ let impl_61: t_Size u32 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_55: t_Deserialize u32 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -1944,7 +1704,7 @@ let impl_55: t_Deserialize u32 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_56: t_DeserializeBytes u32 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -2013,7 +1773,7 @@ let impl_56: t_DeserializeBytes u32 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_59: t_Serialize u32 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -2086,7 +1846,7 @@ let impl_62: t_Size u32 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_57: t_SerializeBytes u32 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: u32) -> true);
     f_tls_serialize_bytes_post
     =
@@ -2107,7 +1867,7 @@ let impl_57: t_SerializeBytes u32 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_58: t_SerializeBytes u32 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: u32) -> true);
     f_tls_serialize_bytes_post
     =
@@ -2124,7 +1884,7 @@ let impl_58: t_SerializeBytes u32 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_60: t_Serialize u32 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -2171,7 +1931,7 @@ let impl_69: t_Size u64 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_63: t_Deserialize u64 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -2230,7 +1990,7 @@ let impl_63: t_Deserialize u64 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_64: t_DeserializeBytes u64 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -2299,7 +2059,7 @@ let impl_64: t_DeserializeBytes u64 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_67: t_Serialize u64 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -2372,7 +2132,7 @@ let impl_70: t_Size u64 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_65: t_SerializeBytes u64 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: u64) -> true);
     f_tls_serialize_bytes_post
     =
@@ -2393,7 +2153,7 @@ let impl_65: t_SerializeBytes u64 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_66: t_SerializeBytes u64 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: u64) -> true);
     f_tls_serialize_bytes_post
     =
@@ -2410,7 +2170,7 @@ let impl_66: t_SerializeBytes u64 =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_68: t_Serialize u64 =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -2516,7 +2276,7 @@ let impl_9__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: t_Deserialize v_U)
     : t_Deserialize (v_T & v_U) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -2576,7 +2336,7 @@ let impl_10__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: t_DeserializeBytes v_U)
     : t_DeserializeBytes (v_T & v_U) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -2614,7 +2374,7 @@ let impl_11__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: t_Serialize v_U)
     : t_Serialize (v_T & v_U) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -2696,7 +2456,7 @@ let impl_13__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i5: t_Deserialize v_V)
     : t_Deserialize (v_T & v_U & v_V) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -2768,7 +2528,7 @@ let impl_14__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i5: t_DeserializeBytes v_V)
     : t_DeserializeBytes (v_T & v_U & v_V) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -2821,7 +2581,7 @@ let impl_15__from__primitives
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i5: t_Serialize v_V)
     : t_Serialize (v_T & v_U & v_V) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -2897,7 +2657,7 @@ let impl_17__from__primitives: t_Size Prims.unit =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_18__from__primitives: t_Deserialize Prims.unit =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -2931,7 +2691,7 @@ let impl_18__from__primitives: t_Deserialize Prims.unit =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_19__from__primitives: t_DeserializeBytes Prims.unit =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -2947,7 +2707,7 @@ let impl_19__from__primitives: t_DeserializeBytes Prims.unit =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_20: t_Serialize Prims.unit =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -2992,7 +2752,7 @@ let impl_21 (#v_T: Type0) : t_Size (Core.Marker.t_PhantomData v_T) =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_22 (#v_T: Type0) : t_Deserialize (Core.Marker.t_PhantomData v_T) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -3030,7 +2790,7 @@ let impl_22 (#v_T: Type0) : t_Deserialize (Core.Marker.t_PhantomData v_T) =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_23 (#v_T: Type0) : t_DeserializeBytes (Core.Marker.t_PhantomData v_T) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -3053,7 +2813,7 @@ let impl_23 (#v_T: Type0) : t_DeserializeBytes (Core.Marker.t_PhantomData v_T) =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_24 (#v_T: Type0) : t_Serialize (Core.Marker.t_PhantomData v_T) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -3090,7 +2850,7 @@ let impl_24 (#v_T: Type0) : t_Serialize (Core.Marker.t_PhantomData v_T) =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_25 (#v_T: Type0) : t_SerializeBytes (Core.Marker.t_PhantomData v_T) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: Core.Marker.t_PhantomData v_T) -> true);
     f_tls_serialize_bytes_post
     =
@@ -3132,7 +2892,7 @@ let impl_26 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Size 
 let impl_27 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Serialize v_T)
     : t_Serialize (Alloc.Boxed.t_Box v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -3181,7 +2941,7 @@ let impl_27 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Seria
 let impl_28 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_SerializeBytes v_T)
     : t_SerializeBytes (Alloc.Boxed.t_Box v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: Alloc.Boxed.t_Box v_T Alloc.Alloc.t_Global) -> true);
     f_tls_serialize_bytes_post
     =
@@ -3207,7 +2967,7 @@ let impl_28 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Seria
 let impl_29 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Deserialize v_T)
     : t_Deserialize (Alloc.Boxed.t_Box v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -3253,7 +3013,7 @@ let impl_29 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_Deser
 let impl_30 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: t_DeserializeBytes v_T)
     : t_DeserializeBytes (Alloc.Boxed.t_Box v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =

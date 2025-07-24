@@ -518,7 +518,7 @@ let impl_2
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -660,7 +660,7 @@ let impl_3
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_SerializeBytes v_T)
     : Tls_codec.t_SerializeBytes (t_Slice v_T) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: t_Slice v_T) -> true);
     f_tls_serialize_bytes_post
     =
@@ -792,7 +792,7 @@ let impl_4
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_SerializeBytes v_T)
     : Tls_codec.t_SerializeBytes (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) -> true);
     f_tls_serialize_bytes_post
     =
@@ -815,7 +815,7 @@ let impl_5
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_SerializeBytes v_T)
     : Tls_codec.t_SerializeBytes (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) -> true);
     f_tls_serialize_bytes_post
     =
@@ -1173,7 +1173,7 @@ let impl_9: Tls_codec.t_Size t_VLBytes =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_10: Tls_codec.t_DeserializeBytes t_VLBytes =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =

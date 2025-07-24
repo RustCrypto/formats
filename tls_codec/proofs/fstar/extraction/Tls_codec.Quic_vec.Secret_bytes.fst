@@ -210,7 +210,7 @@ let impl: Tls_codec.t_Size t_SecretVLBytes =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_1: Tls_codec.t_DeserializeBytes t_SecretVLBytes =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -243,7 +243,7 @@ let impl_1: Tls_codec.t_DeserializeBytes t_SecretVLBytes =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_2: Tls_codec.t_Serialize t_SecretVLBytes =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -286,7 +286,7 @@ let impl_2: Tls_codec.t_Serialize t_SecretVLBytes =
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_3: Tls_codec.t_Deserialize t_SecretVLBytes =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun

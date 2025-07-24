@@ -152,7 +152,7 @@ let read_length
 let impl (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_deserialize_pre
     =
     (fun
@@ -355,7 +355,7 @@ let impl_2
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Core.Fmt.t_Debug v_T)
     : Tls_codec.t_Serialize (t_Slice v_T) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
@@ -478,7 +478,7 @@ let impl_1
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Core.Fmt.t_Debug v_T)
     : Tls_codec.t_Serialize (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
-    _super_2997919293107846837 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_pre
     =
     (fun
