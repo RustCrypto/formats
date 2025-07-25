@@ -40,4 +40,5 @@ pub mod enveloped_data;
 pub mod kemri;
 pub mod revocation;
 pub mod signed_data;
+pub mod symmetric_key;
 pub mod timestamped_data;
