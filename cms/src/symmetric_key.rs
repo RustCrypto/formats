@@ -1,8 +1,66 @@
 //! SymmetricKeyPackage types
 
 use alloc::{string::String, vec::Vec};
-use der::{Enumerated, Sequence, asn1::OctetString};
+use der::ErrorKind;
+use der::asn1::Utf8StringRef;
+use der::{
+    DecodeValue, EncodeValue, Enumerated, FixedTag, Header, Length, Reader, Sequence, Tag, Writer,
+    asn1::OctetString,
+};
 use x509_cert::attr::Attribute;
+
+macro_rules! impl_str_enum {
+    (
+        $(#[$attr:meta])* $vis: vis enum $name: ident {
+            $( $(#[$attr_item: meta])* $item: ident => $value: expr,)*
+        }
+    )=> {
+        $(#[$attr])*
+        $vis enum $name {
+            $( $(#[$attr_item])* $item, )*
+        }
+
+        impl AsRef<str> for $name {
+            fn as_ref(&self) -> &str {
+                match self {
+                    $( Self::$item => $value, )*
+                }
+            }
+        }
+
+        impl<'d> DecodeValue<'d> for $name {
+            type Error = der::Error;
+
+            fn decode_value<R: Reader<'d>>(reader: &mut R, header: Header) -> der::Result<Self> {
+                let value = Utf8StringRef::decode_value(reader, header)?;
+
+                match value.as_ref() {
+                    $( $value => Ok(Self::$item), )*
+                    _ => Err(der::Error::new(
+                        ErrorKind::Value { tag: Self::TAG },
+                        reader.position(),
+                    )),
+                }
+            }
+        }
+
+        impl EncodeValue for $name {
+            fn value_len(&self) -> der::Result<Length> {
+                Utf8StringRef::new(self.as_ref())?.value_len()
+            }
+
+            fn encode_value(&self, encoder: &mut impl Writer) -> der::Result<()> {
+                Utf8StringRef::new(self.as_ref())?.encode_value(encoder)
+            }
+        }
+
+        impl FixedTag for $name {
+            const TAG: Tag = String::TAG;
+        }
+
+
+    };
+}
 
 /// The `SymmetricKeyPackage` type is defined in [RFC 6031 Section 2.0].
 ///
@@ -130,15 +188,29 @@ pub struct ChallengeFormat {
     pub max: der::asn1::Int,
 }
 
-/// The `Encoding` type is defined in [RFC 6031 Section 3.2.7].
-///
-/// ```text
-///    Encoding ::= UTF8STRING ("DECIMAL" | "HEXADECIMAL" |
-///                 "ALPHANUMERIC" |"BASE64" |"BINARY")
-/// ```
-///
-/// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
-pub type Encoding = String;
+impl_str_enum!(
+    /// The `Encoding` type is defined in [RFC 6031 Section 3.2.7].
+    ///
+    /// ```text
+    ///    Encoding ::= UTF8STRING ("DECIMAL" | "HEXADECIMAL" |
+    ///                 "ALPHANUMERIC" |"BASE64" |"BINARY")
+    /// ```
+    ///
+    /// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub enum Encoding {
+        /// "DECIMAL"
+        Decimal => "DECIMAL",
+        /// "HEXADECIMAL",
+        Hexadecimal => "HEXADECIMAL",
+        /// "ALPHANUMERIC",
+        Alphanumeric => "ALPHANUMERIC",
+        /// "BASE64",
+        Base64 => "BASE64",
+        /// "BINARY",
+        Binary => "BINARY",
+    }
+);
 
 /// The `ResponseFormat` type is defined in [RFC 6031 Section 3.2.7].
 ///
@@ -185,16 +257,42 @@ pub struct ValueMac {
 /// [RFC 6031 Section 3.3.4]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.4
 pub type PSKCKeyUsages = Vec<PSKCKeyUsage>;
 
-/// The `PSKCKeyUsage` type is defined in [RFC 6031 Section 3.3.4].
-///
-/// ```text
-///    PSKCKeyUsage ::= UTF8String ("OTP" | "CR" | "Encrypt" |
-///                     "Integrity" | "Verify" | "Unlock" | "Decrypt" |
-///                     "KeyWrap" | "Unwrap" | "Derive" | "Generate")
-/// ```
-///
-/// [RFC 6031 Section 3.3.4]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.4
-pub type PSKCKeyUsage = String;
+impl_str_enum!(
+    /// The `PSKCKeyUsage` type is defined in [RFC 6031 Section 3.3.4].
+    ///
+    /// ```text
+    ///    PSKCKeyUsage ::= UTF8String ("OTP" | "CR" | "Encrypt" |
+    ///                     "Integrity" | "Verify" | "Unlock" | "Decrypt" |
+    ///                     "KeyWrap" | "Unwrap" | "Derive" | "Generate")
+    /// ```
+    ///
+    /// [RFC 6031 Section 3.3.4]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.4
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub enum PSKCKeyUsage {
+        /// "OTP"
+        Otp => "Otp",
+        /// "CR"
+        Cr => "CR",
+        /// "Encrypt"
+        Encrypt => "Encrypt",
+        /// "Integrity"
+        Integrity => "Integrity",
+        /// "Verify"
+        Verify => "Verify",
+        /// "Unlock"
+        Unlock => "Unlock",
+        /// "Decrypt"
+        Decrypt => "Decrypt",
+        /// "KeyWrap"
+        KeyWrap => "KeyWrap",
+        /// "Unwrap"
+        Unwrap => "Unwrap",
+        /// "Derive"
+        Derive => "Derive",
+        /// "Generate"
+        Generate => "Generate",
+    }
+);
 
 /// The `PINPolicy` type is defined in [RFC 6031 Section 3.3.5]
 ///
@@ -226,12 +324,25 @@ pub struct PINPolicy {
     pub pin_encoding: Option<Encoding>,
 }
 
-/// The `PINUsageMode` type is defined in [RFC 6031 Section 3.3.5]
-///
-/// ```text
-///   PINUsageMode ::= UTF8String ("Local" | "Prepend" | "Append" |
-///                     "Algorithmic")
-/// ```
-///
-/// [RFC 6031 Section 3.3.5]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.5
-pub type PINUsageMode = String;
+impl_str_enum!(
+
+    /// The `PINUsageMode` type is defined in [RFC 6031 Section 3.3.5]
+    ///
+    /// ```text
+    ///   PINUsageMode ::= UTF8String ("Local" | "Prepend" | "Append" |
+    ///                     "Algorithmic")
+    /// ```
+    ///
+    /// [RFC 6031 Section 3.3.5]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.5
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub enum PINUsageMode {
+        /// "Local"
+        Local => "Local",
+        /// "Prepend"
+        Prepend => "Prepend",
+        /// "Append"
+        Append => "Append",
+        /// "Algorithmic"
+        Algorithmic => "Algorithmic",
+    }
+);
