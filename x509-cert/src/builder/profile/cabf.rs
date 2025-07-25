@@ -212,7 +212,7 @@ impl BuilderProfile for Root {
 pub mod tls;
 
 pub mod codesigning {
-    //! <https://cabforum.org/wp-content/uploads/Baseline-Requirements-for-the-Issuance-and-Management-of-Code-Signing.v2.8.pdf>
+    //! <https://cabforum.org/uploads/Baseline-Requirements-for-the-Issuance-and-Management-of-Code-Signing.v2.8.pdf>
     // TODO
 }
 
