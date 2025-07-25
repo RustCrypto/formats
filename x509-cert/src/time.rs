@@ -1,6 +1,6 @@
 //! X.501 time types as defined in RFC 5280
 
-use core::{fmt, marker::PhantomData, time::Duration};
+use core::{fmt, marker::PhantomData, str::FromStr, time::Duration};
 use der::asn1::{GeneralizedTime, UtcTime};
 use der::{Choice, DateTime, DecodeValue, Encode, Header, Length, Reader, Sequence, ValueOrd};
 
@@ -102,6 +102,24 @@ impl From<UtcTime> for Time {
 impl From<GeneralizedTime> for Time {
     fn from(time: GeneralizedTime) -> Time {
         Time::GeneralTime(time)
+    }
+}
+
+impl From<DateTime> for Time {
+    fn from(time: DateTime) -> Time {
+        UtcTime::from_date_time(time)
+            .map(Self::UtcTime)
+            .unwrap_or_else(|_e| Self::GeneralTime(GeneralizedTime::from_date_time(time)))
+    }
+}
+
+impl FromStr for Time {
+    type Err = der::Error;
+
+    fn from_str(input: &str) -> der::Result<Self> {
+        let datetime = DateTime::from_str(input)?;
+
+        Ok(Self::from(datetime))
     }
 }
 
@@ -221,3 +239,27 @@ impl<P: Profile> ::der::EncodeValue for Validity<P> {
 }
 
 impl<P: Profile> Sequence<'_> for Validity<P> {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_time() {
+        let time = Time::from_str("1970-01-01T00:00:00Z").expect("parse date from string");
+        assert!(matches!(time, Time::UtcTime(_)));
+        assert_eq!(alloc::format!("{}", time), "1970-01-01T00:00:00Z");
+
+        let time = Time::from_str("2020-01-01T00:00:00Z").expect("parse date from string");
+        assert!(matches!(time, Time::UtcTime(_)));
+        assert_eq!(alloc::format!("{}", time), "2020-01-01T00:00:00Z");
+
+        let time = Time::from_str("2049-12-31T23:59:59Z").expect("parse date from string");
+        assert!(matches!(time, Time::UtcTime(_)));
+        assert_eq!(alloc::format!("{}", time), "2049-12-31T23:59:59Z");
+
+        let time = Time::from_str("2050-01-01T00:00:00Z").expect("parse date from string");
+        assert!(matches!(time, Time::GeneralTime(_)));
+        assert_eq!(alloc::format!("{}", time), "2050-01-01T00:00:00Z");
+    }
+}
