@@ -523,8 +523,7 @@ dependencies = [
 [[package]]
 name = "ecdsa"
 version = "0.17.0-rc.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "112839e868b3376c2066506d42331023165d687a7ed38b2ed77f28763d9a7742"
+source = "git+https://github.com/dwhjames/RustCrypto-signatures?branch=tmp_der_header_refactor#ea347624f952f64b5364b8473e76d607bfcce4d0"
 dependencies = [
  "der",
  "digest",

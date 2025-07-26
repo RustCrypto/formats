@@ -92,7 +92,7 @@ impl<'a> SliceWriter<'a> {
     where
         F: FnOnce(&mut SliceWriter<'_>) -> Result<()>,
     {
-        Header::new(Tag::Sequence, length).and_then(|header| header.encode(self))?;
+        Header::new(Tag::Sequence, length).encode(self)?;
 
         let mut nested_encoder = SliceWriter::new(self.reserve(length)?);
         f(&mut nested_encoder)?;

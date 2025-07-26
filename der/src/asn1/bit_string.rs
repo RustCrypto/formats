@@ -139,10 +139,7 @@ impl<'a> DecodeValue<'a> for BitStringRef<'a> {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let header = Header {
-            tag: header.tag,
-            length: (header.length - Length::ONE)?,
-        };
+        let header = header.with_length((header.length() - Length::ONE)?);
 
         let unused_bits = reader.read_byte()?;
         let inner = <&'a BytesRef>::decode_value(reader, header)?;
@@ -354,7 +351,7 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            let inner_len = (header.length - Length::ONE)?;
+            let inner_len = (header.length() - Length::ONE)?;
             let unused_bits = reader.read_byte()?;
             let inner = reader.read_vec(inner_len)?;
             Self::new(unused_bits, inner)
