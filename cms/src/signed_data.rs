@@ -181,8 +181,8 @@ impl ValueOrd for SignerIdentifier {
     }
 }
 
-impl From<Certificate> for SignerIdentifier {
-    fn from(cert: Certificate) -> Self {
+impl From<&Certificate> for SignerIdentifier {
+    fn from(cert: &Certificate) -> Self {
         let tbs = cert.tbs_certificate();
 
         match tbs.get_extension::<SubjectKeyIdentifier>() {
