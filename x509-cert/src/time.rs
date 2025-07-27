@@ -142,7 +142,9 @@ impl TryFrom<SystemTime> for Time {
     type Error = der::Error;
 
     fn try_from(time: SystemTime) -> der::Result<Time> {
-        Ok(GeneralizedTime::try_from(time)?.into())
+        let datetime = DateTime::from_system_time(time)?;
+
+        Ok(datetime.into())
     }
 }
 
