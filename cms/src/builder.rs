@@ -30,7 +30,7 @@ use cipher::{
     rand_core::CryptoRng,
 };
 use const_oid::ObjectIdentifier;
-use core::{cmp::Ordering, fmt, marker::PhantomData};
+use core::{cmp::Ordering, fmt, future::ready, marker::PhantomData};
 use der::{
     Any, AnyRef, Decode, Encode, ErrorKind, Tag,
     asn1::{BitString, Null, OctetString, OctetStringRef, SetOfVec},
@@ -416,9 +416,30 @@ impl<'s> SignedDataBuilder<'s> {
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
     {
-        let signer_info = signer_info_builder
+        self.add_signer_info_cb::<S, Signature, _>(signer_info_builder, signer, |_| Ok(()))
+    }
+
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub fn add_signer_info_cb<S, Signature, CB>(
+        &mut self,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
+        callback: CB,
+    ) -> Result<&mut Self>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S: Signer<Signature>,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+        CB: FnOnce(&mut SignerInfo) -> Result<()>,
+    {
+        let mut signer_info = signer_info_builder
             .build::<S, Signature>(signer)
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+
+        callback(&mut signer_info)?;
+
         self.signer_infos.push(signer_info);
 
         Ok(self)
@@ -439,9 +460,37 @@ impl<'s> SignedDataBuilder<'s> {
         Signature: SignatureBitStringEncoding,
         R: CryptoRng + ?Sized,
     {
-        let signer_info = signer_info_builder
+        self.add_signer_info_with_rng_cb::<S, Signature, _, R>(
+            signer_info_builder,
+            signer,
+            |_| Ok(()),
+            rng,
+        )
+    }
+
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub fn add_signer_info_with_rng_cb<S, Signature, CB, R>(
+        &mut self,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
+        callback: CB,
+        rng: &mut R,
+    ) -> Result<&mut Self>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S: RandomizedSigner<Signature>,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+        CB: FnOnce(&mut SignerInfo) -> Result<()>,
+        R: CryptoRng + ?Sized,
+    {
+        let mut signer_info = signer_info_builder
             .build_with_rng::<S, Signature, R>(signer, rng)
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+
+        callback(&mut signer_info)?;
+
         self.signer_infos.push(signer_info);
 
         Ok(self)
@@ -460,10 +509,33 @@ impl<'s> SignedDataBuilder<'s> {
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
     {
-        let signer_info = signer_info_builder
+        self.add_signer_info_cb_async(signer_info_builder, signer, |_| ready(Ok(())))
+            .await
+    }
+
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub async fn add_signer_info_cb_async<S, Signature, F, CB>(
+        &mut self,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
+        callback: CB,
+    ) -> Result<&mut Self>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S: AsyncSigner<Signature>,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+        F: Future<Output = Result<()>>,
+        CB: FnOnce(&mut SignerInfo) -> F,
+    {
+        let mut signer_info = signer_info_builder
             .build_async::<S, Signature>(signer)
             .await
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+
+        callback(&mut signer_info).await?;
+
         self.signer_infos.push(signer_info);
 
         Ok(self)
@@ -484,10 +556,35 @@ impl<'s> SignedDataBuilder<'s> {
         Signature: SignatureBitStringEncoding,
         R: CryptoRng + ?Sized,
     {
-        let signer_info = signer_info_builder
+        self.add_signer_info_with_rng_cb_async(signer_info_builder, signer, rng, |_| ready(Ok(())))
+            .await
+    }
+
+    /// Add a signer info. The signature will be calculated. Note that the encapsulated content
+    /// must not be changed after the first signer info was added.
+    pub async fn add_signer_info_with_rng_cb_async<S, Signature, R, F, CB>(
+        &mut self,
+        signer_info_builder: SignerInfoBuilder<'_>,
+        signer: &S,
+        rng: &mut R,
+        callback: CB,
+    ) -> Result<&mut Self>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S: AsyncRandomizedSigner<Signature>,
+        S::VerifyingKey: EncodePublicKey,
+        Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
+        F: Future<Output = Result<()>>,
+        CB: FnOnce(&mut SignerInfo) -> F,
+    {
+        let mut signer_info = signer_info_builder
             .build_with_rng_async::<S, Signature, R>(signer, rng)
             .await
             .map_err(|_| der::Error::from(ErrorKind::Failed))?;
+
+        callback(&mut signer_info).await?;
+
         self.signer_infos.push(signer_info);
 
         Ok(self)
