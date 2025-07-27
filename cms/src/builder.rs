@@ -254,8 +254,17 @@ impl Builder for SignerInfoBuilder<'_> {
                 attr.oid.cmp(&const_oid::db::rfc5911::ID_CONTENT_TYPE) == Ordering::Equal
             });
             if let Some(signed_attributes_content_type) = signed_attributes_content_type {
+                if signed_attributes_content_type.values.len() != 1 {
+                    return Err(der::Error::from(ErrorKind::Failed).into());
+                }
+                let Some(value) = signed_attributes_content_type.values.get(0) else {
+                    return Err(der::Error::from(ErrorKind::Failed).into());
+                };
+
+                let value = value.decode_as::<ObjectIdentifier>()?;
+
                 // Check against `eContentType`
-                if signed_attributes_content_type.oid != econtent_type {
+                if value != econtent_type {
                     // Mismatch between content types: encapsulated content info <-> signed attributes.
                     return Err(der::Error::from(ErrorKind::Failed).into());
                 }
