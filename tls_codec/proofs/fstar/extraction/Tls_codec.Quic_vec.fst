@@ -212,21 +212,18 @@ let write_variable_length (content_length: usize)
                 let _:Prims.unit =
                   if ~.(len_len <=. mk_usize 8 <: bool)
                   then
-                    Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1
+                    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 1) =
+                      let list = [Core.Fmt.Rt.impl__new_display #usize len_len] in
+                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
+                      Rust_primitives.Hax.array_of_list 1 list
+                    in
+                    Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1
                               (mk_usize 1)
                               (mk_usize 1)
                               (let list = ["Invalid vector len_len "] in
                                 FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
                                 Rust_primitives.Hax.array_of_list 1 list)
-                              (let list =
-                                  [
-                                    Core.Fmt.Rt.impl__new_display #usize len_len
-                                    <:
-                                    Core.Fmt.Rt.t_Argument
-                                  ]
-                                in
-                                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                                Rust_primitives.Hax.array_of_list 1 list)
+                              args
                             <:
                             Core.Fmt.t_Arguments)
                         <:
@@ -404,23 +401,19 @@ let write_variable_length (content_length: usize)
                       let _:Prims.unit =
                         if ~.false
                         then
-                          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1
+                          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 1) =
+                            let list = [Core.Fmt.Rt.impl__new_display #usize len_len] in
+                            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
+                            Rust_primitives.Hax.array_of_list 1 list
+                          in
+                          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1
                                     (mk_usize 1)
                                     (mk_usize 1)
                                     (let list = ["Invalid vector len_len "] in
                                       FStar.Pervasives.assert_norm
                                       (Prims.eq2 (List.Tot.length list) 1);
                                       Rust_primitives.Hax.array_of_list 1 list)
-                                    (let list =
-                                        [
-                                          Core.Fmt.Rt.impl__new_display #usize len_len
-                                          <:
-                                          Core.Fmt.Rt.t_Argument
-                                        ]
-                                      in
-                                      FStar.Pervasives.assert_norm
-                                      (Prims.eq2 (List.Tot.length list) 1);
-                                      Rust_primitives.Hax.array_of_list 1 list)
+                                    args
                                   <:
                                   Core.Fmt.t_Arguments)
                               <:
@@ -513,6 +506,9 @@ let impl_1 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_code
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
+assume val size_vec #v_T: Tls_codec.Bundle.t_Size (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global)
+
+[@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_2
       (#v_T: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
@@ -589,7 +585,7 @@ let impl_2
                       let read:usize =
                         read +!
                         (Tls_codec.f_tls_serialized_len #v_T
-                            #FStar.Tactics.Typeclasses.solve
+                            #i1._super_6186925850915422136
                             element
                           <:
                           usize)
@@ -655,10 +651,10 @@ let impl_2
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_3
+assume val impl_3
       (#v_T: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_SerializeBytes v_T)
-    : Tls_codec.t_SerializeBytes (t_Slice v_T) =
+    : Tls_codec.t_SerializeBytes (t_Slice v_T) (* =
   {
     _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: t_Slice v_T) -> true);
@@ -712,8 +708,7 @@ let impl_3
                 Core.Slice.Iter.t_Iter v_T)
               out
               (fun out e ->
-                  let out:(Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global &
-                    Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
+                  let out:(Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
                     out
                   in
                   let e:v_T = e in
@@ -784,7 +779,7 @@ let impl_3
         Core.Result.Result_Err err
         <:
         Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) Tls_codec.t_Error
-  }
+  } *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_4
@@ -838,7 +833,7 @@ let write_hex (f: Core.Fmt.t_Formatter) (data: t_Slice u8)
   then
     let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
       Core.Fmt.impl_11__write_fmt f
-        (Core.Fmt.Rt.impl_2__new_const (mk_usize 1)
+        (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
             (let list = ["0x"] in
               FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
               Rust_primitives.Hax.array_of_list 1 list)
@@ -858,19 +853,20 @@ let write_hex (f: Core.Fmt.t_Formatter) (data: t_Slice u8)
             (fun f byte ->
                 let f:Core.Fmt.t_Formatter = f in
                 let byte:u8 = byte in
+                let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 1) =
+                  let list = [Core.Fmt.Rt.impl__new_lower_hex #u8 byte] in
+                  FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
+                  Rust_primitives.Hax.array_of_list 1 list
+                in
                 let tmp0, out:(Core.Fmt.t_Formatter &
                   Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
                   Core.Fmt.impl_11__write_fmt f
-                    (Core.Fmt.Rt.impl_2__new_v1_formatted ((let list = [""] in
+                    (Core.Fmt.Rt.impl_1__new_v1_formatted ((let list = [""] in
                             FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
                             Rust_primitives.Hax.array_of_list 1 list)
                           <:
                           t_Slice string)
-                        ((let list = [Core.Fmt.Rt.impl__new_lower_hex #u8 byte] in
-                            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                            Rust_primitives.Hax.array_of_list 1 list)
-                          <:
-                          t_Slice Core.Fmt.Rt.t_Argument)
+                        (args <: t_Slice Core.Fmt.Rt.t_Argument)
                         ((let list =
                               [
                                 {
@@ -891,7 +887,6 @@ let write_hex (f: Core.Fmt.t_Formatter) (data: t_Slice u8)
                             Rust_primitives.Hax.array_of_list 1 list)
                           <:
                           t_Slice Core.Fmt.Rt.t_Placeholder)
-                        (Core.Fmt.Rt.impl_UnsafeArg__new () <: Core.Fmt.Rt.t_UnsafeArg)
                       <:
                       Core.Fmt.t_Arguments)
                 in
@@ -944,7 +939,7 @@ let write_hex (f: Core.Fmt.t_Formatter) (data: t_Slice u8)
   else
     let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
       Core.Fmt.impl_11__write_fmt f
-        (Core.Fmt.Rt.impl_2__new_const (mk_usize 1)
+        (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
             (let list = ["b\"\""] in
               FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
               Rust_primitives.Hax.array_of_list 1 list)
@@ -970,7 +965,8 @@ let write_hex (f: Core.Fmt.t_Formatter) (data: t_Slice u8)
 /// This is faster than the generic version.
 type t_VLBytes = { f_vec:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global }
 
-let impl_16: Core.Clone.t_Clone t_VLBytes = { f_clone = (fun x -> x) }
+let impl_16: Core.Clone.t_Clone t_VLBytes =
+  { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
@@ -1023,7 +1019,7 @@ let impl_VLBytes__vec (self: t_VLBytes) : t_Slice u8 =
     #FStar.Tactics.Typeclasses.solve
     self.f_vec
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
+(* [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_23: Core.Fmt.t_Debug t_VLBytes =
   {
     f_fmt_pre = (fun (self: t_VLBytes) (f: Core.Fmt.t_Formatter) -> true);
@@ -1040,12 +1036,14 @@ let impl_23: Core.Fmt.t_Debug t_VLBytes =
     fun (self: t_VLBytes) (f: Core.Fmt.t_Formatter) ->
       let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
         Core.Fmt.impl_11__write_fmt f
-          (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 1)
+          (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 1)
               (mk_usize 0)
               (let list = ["VLBytes { "] in
                 FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
                 Rust_primitives.Hax.array_of_list 1 list)
-              (Core.Fmt.Rt.impl__none () <: t_Array Core.Fmt.Rt.t_Argument (mk_usize 0))
+              (let list:Prims.list Core.Fmt.Rt.t_Argument = [] in
+                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 0);
+                Rust_primitives.Hax.array_of_list 0 list)
             <:
             Core.Fmt.t_Arguments)
       in
@@ -1061,7 +1059,7 @@ let impl_23: Core.Fmt.t_Debug t_VLBytes =
             let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
             =
               Core.Fmt.impl_11__write_fmt f
-                (Core.Fmt.Rt.impl_2__new_const (mk_usize 1)
+                (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
                     (let list = [" }"] in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
                       Rust_primitives.Hax.array_of_list 1 list)
@@ -1081,7 +1079,7 @@ let impl_23: Core.Fmt.t_Debug t_VLBytes =
         f, (Core.Result.Result_Err err <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
         <:
         (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-  }
+  } *)
 
 /// Get a reference to the vlbytes's vec.
 let impl_VLBytes__as_slice (self: t_VLBytes) : t_Slice u8 =
@@ -1210,24 +1208,24 @@ let impl_10: Tls_codec.t_DeserializeBytes t_VLBytes =
                   let _:Prims.unit =
                     if ~.(length <=. (cast (v_MAX_LEN <: u64) <: usize) <: bool)
                     then
-                      Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1
+                      let args:(usize & u64) = length, v_MAX_LEN <: (usize & u64) in
+                      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+                        let list =
+                          [
+                            Core.Fmt.Rt.impl__new_display #usize args._1;
+                            Core.Fmt.Rt.impl__new_display #u64 args._2
+                          ]
+                        in
+                        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+                        Rust_primitives.Hax.array_of_list 2 list
+                      in
+                      Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1
                                 (mk_usize 3)
                                 (mk_usize 2)
                                 (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                                   FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                                   Rust_primitives.Hax.array_of_list 3 list)
-                                (let list =
-                                    [
-                                      Core.Fmt.Rt.impl__new_display #usize length
-                                      <:
-                                      Core.Fmt.Rt.t_Argument;
-                                      Core.Fmt.Rt.impl__new_display #u64 v_MAX_LEN
-                                      <:
-                                      Core.Fmt.Rt.t_Argument
-                                    ]
-                                  in
-                                  FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                                  Rust_primitives.Hax.array_of_list 2 list)
+                                args
                               <:
                               Core.Fmt.t_Arguments)
                           <:
@@ -1239,26 +1237,26 @@ let impl_10: Tls_codec.t_DeserializeBytes t_VLBytes =
           in
           if length >. (cast (v_MAX_LEN <: u64) <: usize)
           then
+            let args:(usize & u64) = length, v_MAX_LEN <: (usize & u64) in
+            let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+              let list =
+                [
+                  Core.Fmt.Rt.impl__new_display #usize args._1;
+                  Core.Fmt.Rt.impl__new_display #u64 args._2
+                ]
+              in
+              FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+              Rust_primitives.Hax.array_of_list 2 list
+            in
             Core.Result.Result_Err
             (Tls_codec.Error_DecodingError
               (Core.Hint.must_use #Alloc.String.t_String
-                  (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+                  (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                           (mk_usize 2)
                           (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                             FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                             Rust_primitives.Hax.array_of_list 3 list)
-                          (let list =
-                              [
-                                Core.Fmt.Rt.impl__new_display #usize length
-                                <:
-                                Core.Fmt.Rt.t_Argument;
-                                Core.Fmt.Rt.impl__new_display #u64 v_MAX_LEN
-                                <:
-                                Core.Fmt.Rt.t_Argument
-                              ]
-                            in
-                            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                            Rust_primitives.Hax.array_of_list 2 list)
+                          args
                         <:
                         Core.Fmt.t_Arguments)
                     <:
@@ -1307,26 +1305,26 @@ let impl_10: Tls_codec.t_DeserializeBytes t_VLBytes =
                     in
                     ()
                 in
+                let args:(usize & usize) = remaining_len, length <: (usize & usize) in
+                let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+                  let list =
+                    [
+                      Core.Fmt.Rt.impl__new_display #usize args._1;
+                      Core.Fmt.Rt.impl__new_display #usize args._2
+                    ]
+                  in
+                  FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+                  Rust_primitives.Hax.array_of_list 2 list
+                in
                 Core.Result.Result_Err
                 (Tls_codec.Error_DecodingError
                   (Core.Hint.must_use #Alloc.String.t_String
-                      (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+                      (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                               (mk_usize 2)
                               (let list = [""; " bytes were read but "; " were expected"] in
                                 FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                                 Rust_primitives.Hax.array_of_list 3 list)
-                              (let list =
-                                  [
-                                    Core.Fmt.Rt.impl__new_display #usize remaining_len
-                                    <:
-                                    Core.Fmt.Rt.t_Argument;
-                                    Core.Fmt.Rt.impl__new_display #usize length
-                                    <:
-                                    Core.Fmt.Rt.t_Argument
-                                  ]
-                                in
-                                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                                Rust_primitives.Hax.array_of_list 2 list)
+                              args
                             <:
                             Core.Fmt.t_Arguments)
                         <:
@@ -1354,7 +1352,7 @@ let impl_11: Tls_codec.t_Size t_VLBytes =
 
 type t_VLByteSlice = | VLByteSlice : t_Slice u8 -> t_VLByteSlice
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
+(* [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_12: Core.Fmt.t_Debug t_VLByteSlice =
   {
     f_fmt_pre = (fun (self: t_VLByteSlice) (f: Core.Fmt.t_Formatter) -> true);
@@ -1371,7 +1369,7 @@ let impl_12: Core.Fmt.t_Debug t_VLByteSlice =
     fun (self: t_VLByteSlice) (f: Core.Fmt.t_Formatter) ->
       let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
         Core.Fmt.impl_11__write_fmt f
-          (Core.Fmt.Rt.impl_2__new_const (mk_usize 1)
+          (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
               (let list = ["VLByteSlice { "] in
                 FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
                 Rust_primitives.Hax.array_of_list 1 list)
@@ -1390,7 +1388,7 @@ let impl_12: Core.Fmt.t_Debug t_VLByteSlice =
             let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
             =
               Core.Fmt.impl_11__write_fmt f
-                (Core.Fmt.Rt.impl_2__new_const (mk_usize 1)
+                (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
                     (let list = [" }"] in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
                       Rust_primitives.Hax.array_of_list 1 list)
@@ -1411,7 +1409,7 @@ let impl_12: Core.Fmt.t_Debug t_VLByteSlice =
         <:
         (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
   }
-
+ *)
 /// Get the raw slice.
 let impl_13__as_slice (self: t_VLByteSlice) : t_Slice u8 = self._0
 

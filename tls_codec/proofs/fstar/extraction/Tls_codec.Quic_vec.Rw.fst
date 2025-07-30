@@ -229,7 +229,7 @@ let impl (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.
                       let read:usize =
                         read +!
                         (Tls_codec.f_tls_serialized_len #v_T
-                            #FStar.Tactics.Typeclasses.solve
+                            #i1._super_6186925850915422136
                             element
                           <:
                           usize)
@@ -393,7 +393,7 @@ let impl_2
               let acc:usize = acc in
               let e:v_T = e in
               acc +!
-              (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve e <: usize)
+              (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 e <: usize)
               <:
               usize)
       in

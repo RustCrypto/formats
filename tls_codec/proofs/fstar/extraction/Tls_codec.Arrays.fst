@@ -59,26 +59,28 @@ let impl (v_LEN: usize) : Tls_codec.t_Serialize (t_Array u8 v_LEN) =
           if written =. v_LEN
           then Core.Result.Result_Ok written <: Core.Result.t_Result usize Tls_codec.t_Error
           else
+            let args:(usize & usize) = v_LEN, written <: (usize & usize) in
+            let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+              let list =
+                [
+                  Core.Fmt.Rt.impl__new_display #usize args._1;
+                  Core.Fmt.Rt.impl__new_display #usize args._2
+                ]
+              in
+              FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+              Rust_primitives.Hax.array_of_list 2 list
+            in
             Core.Result.Result_Err
             (Tls_codec.Error_InvalidWriteLength
               (Core.Hint.must_use #Alloc.String.t_String
-                  (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+                  (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                           (mk_usize 2)
                           (let list =
                               ["Expected to write "; " bytes but only "; " were written."]
                             in
                             FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                             Rust_primitives.Hax.array_of_list 3 list)
-                          (let list =
-                              [
-                                Core.Fmt.Rt.impl__new_display #usize v_LEN <: Core.Fmt.Rt.t_Argument;
-                                Core.Fmt.Rt.impl__new_display #usize written
-                                <:
-                                Core.Fmt.Rt.t_Argument
-                              ]
-                            in
-                            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                            Rust_primitives.Hax.array_of_list 2 list)
+                          args
                         <:
                         Core.Fmt.t_Arguments)
                     <:

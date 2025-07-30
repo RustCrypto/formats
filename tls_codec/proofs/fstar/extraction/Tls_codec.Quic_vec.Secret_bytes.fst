@@ -17,7 +17,8 @@ let _ =
 /// a [`Vec<u8>`].
 type t_SecretVLBytes = | SecretVLBytes : Tls_codec.Quic_vec.t_VLBytes -> t_SecretVLBytes
 
-let impl_4: Core.Clone.t_Clone t_SecretVLBytes = { f_clone = (fun x -> x) }
+let impl_4: Core.Clone.t_Clone t_SecretVLBytes =
+  { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
@@ -75,7 +76,7 @@ val impl_SecretVLBytes__vec': self: t_SecretVLBytes -> t_Slice u8
 unfold
 let impl_SecretVLBytes__vec = impl_SecretVLBytes__vec'
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
+(* [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_12: Core.Fmt.t_Debug t_SecretVLBytes =
   {
     f_fmt_pre = (fun (self: t_SecretVLBytes) (f: Core.Fmt.t_Formatter) -> true);
@@ -92,12 +93,14 @@ let impl_12: Core.Fmt.t_Debug t_SecretVLBytes =
     fun (self: t_SecretVLBytes) (f: Core.Fmt.t_Formatter) ->
       let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
         Core.Fmt.impl_11__write_fmt f
-          (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 1)
+          (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 1)
               (mk_usize 0)
               (let list = ["SecretVLBytes { "] in
                 FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
                 Rust_primitives.Hax.array_of_list 1 list)
-              (Core.Fmt.Rt.impl__none () <: t_Array Core.Fmt.Rt.t_Argument (mk_usize 0))
+              (let list:Prims.list Core.Fmt.Rt.t_Argument = [] in
+                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 0);
+                Rust_primitives.Hax.array_of_list 0 list)
             <:
             Core.Fmt.t_Arguments)
       in
@@ -113,7 +116,7 @@ let impl_12: Core.Fmt.t_Debug t_SecretVLBytes =
             let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
             =
               Core.Fmt.impl_11__write_fmt f
-                (Core.Fmt.Rt.impl_2__new_const (mk_usize 1)
+                (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
                     (let list = [" }"] in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
                       Rust_primitives.Hax.array_of_list 1 list)
@@ -133,7 +136,7 @@ let impl_12: Core.Fmt.t_Debug t_SecretVLBytes =
         f, (Core.Result.Result_Err err <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
         <:
         (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-  }
+  } *)
 
 /// Get a reference to the vlbytes's vec.
 let impl_SecretVLBytes__as_slice (self: t_SecretVLBytes) : t_Slice u8 =

@@ -9,7 +9,7 @@ let _ =
   let open Std.Io in
   let open Tls_codec in
   let open Tls_codec.Primitives in
-  let open Zeroize in
+  (* let open Zeroize in *)
   ()
 
 type t_TlsVecU8 (v_T: Type0) = { f_vec:Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global }
@@ -122,7 +122,7 @@ let impl_7__iter (#v_T: Type0) (self: t_TlsVecU8 v_T) : Core.Slice.Iter.t_Iter v
       t_Slice v_T)
 
 /// Retains only the elements specified by the predicate.
-let impl_7__retain
+(* let impl_7__retain
       (#v_T #v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: Core.Ops.Function.t_FnMut v_F v_T)
       (self: t_TlsVecU8 v_T)
@@ -133,7 +133,7 @@ let impl_7__retain
     <:
     t_TlsVecU8 v_T
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_7__len_len (#v_T: Type0) (_: Prims.unit) : usize = mk_usize 1
@@ -220,7 +220,7 @@ let impl_11 (#v_T: Type0) : Core.Borrow.t_Borrow (t_TlsVecU8 v_T) (t_Slice v_T) 
         self.f_vec
   }
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
+(* [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_12 (#v_T: Type0) : Core.Iter.Traits.Collect.t_FromIterator (t_TlsVecU8 v_T) v_T =
   {
     f_from_iter_pre
@@ -255,7 +255,7 @@ let impl_12 (#v_T: Type0) : Core.Iter.Traits.Collect.t_FromIterator (t_TlsVecU8 
           iter
       in
       { f_vec = vec } <: t_TlsVecU8 v_T
-  }
+  } *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_13 (#v_T: Type0)
@@ -317,24 +317,23 @@ let impl_2__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -389,7 +388,7 @@ let impl_2__get_content_lengths
       (self: t_TlsVecU8 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_TlsVecU8 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_TlsVecU8 v_T) #(i1._super_6186925850915422136) self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 1 in
   let max_len:usize =
@@ -405,7 +404,18 @@ let impl_2__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -413,14 +423,7 @@ let impl_2__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -540,7 +543,7 @@ let impl_2__serialize
 let impl_19 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsVecU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_serialize_pre
     =
     (fun
@@ -580,7 +583,7 @@ let impl_19 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
 let impl_21 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsVecU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_serialize_pre
     =
     (fun
@@ -616,96 +619,13 @@ let impl_21 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
       writer, hax_temp_output <: (v_W & Core.Result.t_Result usize Tls_codec.t_Error)
   }
 
-let impl_4__deserialize
+assume val impl_4__deserialize
       (#v_T #v_R: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Deserialize v_T)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: Std.Io.t_Read v_R)
       (bytes: v_R)
-    : (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error) =
-  let result:t_TlsVecU8 v_T = { f_vec = Alloc.Vec.impl__new #v_T () } <: t_TlsVecU8 v_T in
-  let tmp0, out:(v_R & Core.Result.t_Result u8 Tls_codec.t_Error) =
-    Tls_codec.f_tls_deserialize #u8 #FStar.Tactics.Typeclasses.solve #v_R bytes
-  in
-  let bytes:v_R = tmp0 in
-  match out <: Core.Result.t_Result u8 Tls_codec.t_Error with
-  | Core.Result.Result_Ok len ->
-    let read:usize = Tls_codec.f_tls_serialized_len #u8 #FStar.Tactics.Typeclasses.solve len in
-    let len_len:usize = read in
-    (match
-        Rust_primitives.Hax.while_loop_return (fun temp_0_ ->
-              let bytes, read, result:(v_R & usize & t_TlsVecU8 v_T) = temp_0_ in
-              (read -! len_len <: usize) <.
-              (Core.Result.impl__unwrap #usize
-                  #Core.Convert.t_Infallible
-                  (Core.Convert.f_try_into #u8 #usize #FStar.Tactics.Typeclasses.solve len
-                    <:
-                    Core.Result.t_Result usize Core.Convert.t_Infallible)
-                <:
-                usize)
-              <:
-              bool)
-          (fun temp_0_ ->
-              let bytes, read, result:(v_R & usize & t_TlsVecU8 v_T) = temp_0_ in
-              true)
-          (fun temp_0_ ->
-              let bytes, read, result:(v_R & usize & t_TlsVecU8 v_T) = temp_0_ in
-              Rust_primitives.Hax.Int.from_machine (mk_u32 0) <: Hax_lib.Int.t_Int)
-          (bytes, read, result <: (v_R & usize & t_TlsVecU8 v_T))
-          (fun temp_0_ ->
-              let bytes, read, result:(v_R & usize & t_TlsVecU8 v_T) = temp_0_ in
-              let tmp0, out:(v_R & Core.Result.t_Result v_T Tls_codec.t_Error) =
-                Tls_codec.f_tls_deserialize #v_T #FStar.Tactics.Typeclasses.solve #v_R bytes
-              in
-              let bytes:v_R = tmp0 in
-              match out <: Core.Result.t_Result v_T Tls_codec.t_Error with
-              | Core.Result.Result_Ok element ->
-                let read:usize =
-                  read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
-                    <:
-                    usize)
-                in
-                let result:t_TlsVecU8 v_T = impl_7__push #v_T result element in
-                Core.Ops.Control_flow.ControlFlow_Continue
-                (bytes, read, result <: (v_R & usize & t_TlsVecU8 v_T))
-                <:
-                Core.Ops.Control_flow.t_ControlFlow
-                  (Core.Ops.Control_flow.t_ControlFlow
-                      (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error)
-                      (Prims.unit & (v_R & usize & t_TlsVecU8 v_T))) (v_R & usize & t_TlsVecU8 v_T)
-              | Core.Result.Result_Err err ->
-                Core.Ops.Control_flow.ControlFlow_Break
-                (Core.Ops.Control_flow.ControlFlow_Break
-                  (bytes,
-                    (Core.Result.Result_Err err
-                      <:
-                      Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error)
-                    <:
-                    (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error))
-                  <:
-                  Core.Ops.Control_flow.t_ControlFlow
-                    (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error)
-                    (Prims.unit & (v_R & usize & t_TlsVecU8 v_T)))
-                <:
-                Core.Ops.Control_flow.t_ControlFlow
-                  (Core.Ops.Control_flow.t_ControlFlow
-                      (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error)
-                      (Prims.unit & (v_R & usize & t_TlsVecU8 v_T))) (v_R & usize & t_TlsVecU8 v_T))
-        <:
-        Core.Ops.Control_flow.t_ControlFlow
-          (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error)
-          (v_R & usize & t_TlsVecU8 v_T)
-      with
-      | Core.Ops.Control_flow.ControlFlow_Break ret -> ret
-      | Core.Ops.Control_flow.ControlFlow_Continue (bytes, read, result) ->
-        let hax_temp_output:Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error =
-          Core.Result.Result_Ok result <: Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error
-        in
-        bytes, hax_temp_output <: (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error))
-  | Core.Result.Result_Err err ->
-    bytes, (Core.Result.Result_Err err <: Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error)
-    <:
-    (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error)
+    : (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error) 
+  
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_23
@@ -713,7 +633,7 @@ let impl_23
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (t_TlsVecU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_deserialize_pre
     =
     (fun
@@ -746,11 +666,11 @@ let impl_23
       bytes, hax_temp_output <: (v_R & Core.Result.t_Result (t_TlsVecU8 v_T) Tls_codec.t_Error)
   }
 
-let impl_5__deserialize_bytes
+assume val impl_5__deserialize_bytes
       (#v_T: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
       (bytes: t_Slice u8)
-    : Core.Result.t_Result (t_TlsVecU8 v_T & t_Slice u8) Tls_codec.t_Error =
+    : Core.Result.t_Result (t_TlsVecU8 v_T & t_Slice u8) Tls_codec.t_Error (* =
   let result:t_TlsVecU8 v_T = { f_vec = Alloc.Vec.impl__new #v_T () } <: t_TlsVecU8 v_T in
   match
     Tls_codec.f_tls_deserialize_bytes #u8 #FStar.Tactics.Typeclasses.solve bytes
@@ -832,8 +752,8 @@ let impl_5__deserialize_bytes
         Core.Result.t_Result (t_TlsVecU8 v_T & t_Slice u8) Tls_codec.t_Error)
   | Core.Result.Result_Err err ->
     Core.Result.Result_Err err
-    <:
-    Core.Result.t_Result (t_TlsVecU8 v_T & t_Slice u8) Tls_codec.t_Error
+    <: 
+    Core.Result.t_Result (t_TlsVecU8 v_T & t_Slice u8) Tls_codec.t_Error *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_24
@@ -841,7 +761,7 @@ let impl_24
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (t_TlsVecU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -965,7 +885,7 @@ let impl_30__iter (#v_T: Type0) (self: t_TlsVecU16 v_T) : Core.Slice.Iter.t_Iter
       t_Slice v_T)
 
 /// Retains only the elements specified by the predicate.
-let impl_30__retain
+(* let impl_30__retain
       (#v_T #v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: Core.Ops.Function.t_FnMut v_F v_T)
       (self: t_TlsVecU16 v_T)
@@ -976,7 +896,7 @@ let impl_30__retain
     <:
     t_TlsVecU16 v_T
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_30__len_len (#v_T: Type0) (_: Prims.unit) : usize = mk_usize 2
@@ -1063,7 +983,7 @@ let impl_34 (#v_T: Type0) : Core.Borrow.t_Borrow (t_TlsVecU16 v_T) (t_Slice v_T)
         self.f_vec
   }
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
+(* [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_35 (#v_T: Type0) : Core.Iter.Traits.Collect.t_FromIterator (t_TlsVecU16 v_T) v_T =
   {
     f_from_iter_pre
@@ -1098,7 +1018,7 @@ let impl_35 (#v_T: Type0) : Core.Iter.Traits.Collect.t_FromIterator (t_TlsVecU16
           iter
       in
       { f_vec = vec } <: t_TlsVecU16 v_T
-  }
+  } *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_36 (#v_T: Type0)
@@ -1162,24 +1082,23 @@ let impl_25__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -1234,7 +1153,7 @@ let impl_25__get_content_lengths
       (self: t_TlsVecU16 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_TlsVecU16 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_TlsVecU16 v_T) #(i1._super_6186925850915422136) self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 2 in
   let max_len:usize =
@@ -1250,7 +1169,18 @@ let impl_25__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -1258,14 +1188,7 @@ let impl_25__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -1385,7 +1308,7 @@ let impl_25__serialize
 let impl_42 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsVecU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_serialize_pre
     =
     (fun
@@ -1425,7 +1348,7 @@ let impl_42 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
 let impl_44 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsVecU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_serialize_pre
     =
     (fun
@@ -1461,12 +1384,12 @@ let impl_44 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
       writer, hax_temp_output <: (v_W & Core.Result.t_Result usize Tls_codec.t_Error)
   }
 
-let impl_27__deserialize
+assume val impl_27__deserialize
       (#v_T #v_R: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Deserialize v_T)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: Std.Io.t_Read v_R)
       (bytes: v_R)
-    : (v_R & Core.Result.t_Result (t_TlsVecU16 v_T) Tls_codec.t_Error) =
+    : (v_R & Core.Result.t_Result (t_TlsVecU16 v_T) Tls_codec.t_Error) (* =
   let result:t_TlsVecU16 v_T = { f_vec = Alloc.Vec.impl__new #v_T () } <: t_TlsVecU16 v_T in
   let tmp0, out:(v_R & Core.Result.t_Result u16 Tls_codec.t_Error) =
     Tls_codec.f_tls_deserialize #u16 #FStar.Tactics.Typeclasses.solve #v_R bytes
@@ -1552,7 +1475,7 @@ let impl_27__deserialize
   | Core.Result.Result_Err err ->
     bytes, (Core.Result.Result_Err err <: Core.Result.t_Result (t_TlsVecU16 v_T) Tls_codec.t_Error)
     <:
-    (v_R & Core.Result.t_Result (t_TlsVecU16 v_T) Tls_codec.t_Error)
+    (v_R & Core.Result.t_Result (t_TlsVecU16 v_T) Tls_codec.t_Error) *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_46
@@ -1560,7 +1483,7 @@ let impl_46
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (t_TlsVecU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_deserialize_pre
     =
     (fun
@@ -1593,11 +1516,11 @@ let impl_46
       bytes, hax_temp_output <: (v_R & Core.Result.t_Result (t_TlsVecU16 v_T) Tls_codec.t_Error)
   }
 
-let impl_28__deserialize_bytes
+assume val impl_28__deserialize_bytes
       (#v_T: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
       (bytes: t_Slice u8)
-    : Core.Result.t_Result (t_TlsVecU16 v_T & t_Slice u8) Tls_codec.t_Error =
+    : Core.Result.t_Result (t_TlsVecU16 v_T & t_Slice u8) Tls_codec.t_Error(*  =
   let result:t_TlsVecU16 v_T = { f_vec = Alloc.Vec.impl__new #v_T () } <: t_TlsVecU16 v_T in
   match
     Tls_codec.f_tls_deserialize_bytes #u16 #FStar.Tactics.Typeclasses.solve bytes
@@ -1680,7 +1603,7 @@ let impl_28__deserialize_bytes
   | Core.Result.Result_Err err ->
     Core.Result.Result_Err err
     <:
-    Core.Result.t_Result (t_TlsVecU16 v_T & t_Slice u8) Tls_codec.t_Error
+    Core.Result.t_Result (t_TlsVecU16 v_T & t_Slice u8) Tls_codec.t_Error *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_47
@@ -1688,7 +1611,7 @@ let impl_47
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (t_TlsVecU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -1812,7 +1735,7 @@ let impl_53__iter (#v_T: Type0) (self: t_TlsVecU24 v_T) : Core.Slice.Iter.t_Iter
       t_Slice v_T)
 
 /// Retains only the elements specified by the predicate.
-let impl_53__retain
+(* let impl_53__retain
       (#v_T #v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: Core.Ops.Function.t_FnMut v_F v_T)
       (self: t_TlsVecU24 v_T)
@@ -1822,8 +1745,8 @@ let impl_53__retain
     { self with f_vec = Alloc.Vec.impl_1__retain #v_T #Alloc.Alloc.t_Global #v_F self.f_vec f }
     <:
     t_TlsVecU24 v_T
-  in
-  self
+  in 
+  self*)
 
 /// Get the number of bytes used for the length encoding.
 let impl_53__len_len (#v_T: Type0) (_: Prims.unit) : usize = mk_usize 3
@@ -1910,7 +1833,7 @@ let impl_57 (#v_T: Type0) : Core.Borrow.t_Borrow (t_TlsVecU24 v_T) (t_Slice v_T)
         self.f_vec
   }
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
+(* [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_58 (#v_T: Type0) : Core.Iter.Traits.Collect.t_FromIterator (t_TlsVecU24 v_T) v_T =
   {
     f_from_iter_pre
@@ -1945,7 +1868,7 @@ let impl_58 (#v_T: Type0) : Core.Iter.Traits.Collect.t_FromIterator (t_TlsVecU24
           iter
       in
       { f_vec = vec } <: t_TlsVecU24 v_T
-  }
+  } *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_59 (#v_T: Type0)
@@ -2009,24 +1932,23 @@ let impl_48__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -2067,6 +1989,10 @@ let impl_66 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
+assume val try_into_U24_usize : Core.Convert.t_TryInto Tls_codec.Bundle.t_U24
+        Rust_primitives.Integers.usize
+
+[@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_68 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Size v_T)
     : Tls_codec.t_Size (t_TlsVecU24 v_T) =
   {
@@ -2081,7 +2007,7 @@ let impl_48__get_content_lengths
       (self: t_TlsVecU24 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_TlsVecU24 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_TlsVecU24 v_T) #(i1._super_6186925850915422136) self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 3 in
   let max_len:usize =
@@ -2100,7 +2026,18 @@ let impl_48__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -2108,14 +2045,7 @@ let impl_48__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -2238,7 +2168,7 @@ let impl_48__serialize
 let impl_65 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsVecU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_serialize_pre
     =
     (fun
@@ -2278,7 +2208,7 @@ let impl_65 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
 let impl_67 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsVecU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -2314,12 +2244,12 @@ let impl_67 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
       writer, hax_temp_output <: (v_W & Core.Result.t_Result usize Tls_codec.t_Error)
   }
 
-let impl_50__deserialize
+assume val impl_50__deserialize
       (#v_T #v_R: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Deserialize v_T)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: Std.Io.t_Read v_R)
       (bytes: v_R)
-    : (v_R & Core.Result.t_Result (t_TlsVecU24 v_T) Tls_codec.t_Error) =
+    : (v_R & Core.Result.t_Result (t_TlsVecU24 v_T) Tls_codec.t_Error)(*  =
   let result:t_TlsVecU24 v_T = { f_vec = Alloc.Vec.impl__new #v_T () } <: t_TlsVecU24 v_T in
   let tmp0, out:(v_R & Core.Result.t_Result Tls_codec.t_U24 Tls_codec.t_Error) =
     Tls_codec.f_tls_deserialize #Tls_codec.t_U24 #FStar.Tactics.Typeclasses.solve #v_R bytes
@@ -2410,7 +2340,7 @@ let impl_50__deserialize
   | Core.Result.Result_Err err ->
     bytes, (Core.Result.Result_Err err <: Core.Result.t_Result (t_TlsVecU24 v_T) Tls_codec.t_Error)
     <:
-    (v_R & Core.Result.t_Result (t_TlsVecU24 v_T) Tls_codec.t_Error)
+    (v_R & Core.Result.t_Result (t_TlsVecU24 v_T) Tls_codec.t_Error) *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_69
@@ -2418,7 +2348,7 @@ let impl_69
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (t_TlsVecU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_deserialize_pre
     =
     (fun
@@ -2451,11 +2381,11 @@ let impl_69
       bytes, hax_temp_output <: (v_R & Core.Result.t_Result (t_TlsVecU24 v_T) Tls_codec.t_Error)
   }
 
-let impl_51__deserialize_bytes
+assume val impl_51__deserialize_bytes
       (#v_T: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
       (bytes: t_Slice u8)
-    : Core.Result.t_Result (t_TlsVecU24 v_T & t_Slice u8) Tls_codec.t_Error =
+    : Core.Result.t_Result (t_TlsVecU24 v_T & t_Slice u8) Tls_codec.t_Error (* =
   let result:t_TlsVecU24 v_T = { f_vec = Alloc.Vec.impl__new #v_T () } <: t_TlsVecU24 v_T in
   match
     Tls_codec.f_tls_deserialize_bytes #Tls_codec.t_U24 #FStar.Tactics.Typeclasses.solve bytes
@@ -2543,7 +2473,7 @@ let impl_51__deserialize_bytes
   | Core.Result.Result_Err err ->
     Core.Result.Result_Err err
     <:
-    Core.Result.t_Result (t_TlsVecU24 v_T & t_Slice u8) Tls_codec.t_Error
+    Core.Result.t_Result (t_TlsVecU24 v_T & t_Slice u8) Tls_codec.t_Error *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_70
@@ -2551,7 +2481,7 @@ let impl_70
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (t_TlsVecU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -2675,7 +2605,7 @@ let impl_76__iter (#v_T: Type0) (self: t_TlsVecU32 v_T) : Core.Slice.Iter.t_Iter
       t_Slice v_T)
 
 /// Retains only the elements specified by the predicate.
-let impl_76__retain
+(* let impl_76__retain
       (#v_T #v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i3: Core.Ops.Function.t_FnMut v_F v_T)
       (self: t_TlsVecU32 v_T)
@@ -2686,7 +2616,7 @@ let impl_76__retain
     <:
     t_TlsVecU32 v_T
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_76__len_len (#v_T: Type0) (_: Prims.unit) : usize = mk_usize 4
@@ -2773,7 +2703,7 @@ let impl_80 (#v_T: Type0) : Core.Borrow.t_Borrow (t_TlsVecU32 v_T) (t_Slice v_T)
         self.f_vec
   }
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
+(* [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_81 (#v_T: Type0) : Core.Iter.Traits.Collect.t_FromIterator (t_TlsVecU32 v_T) v_T =
   {
     f_from_iter_pre
@@ -2808,7 +2738,7 @@ let impl_81 (#v_T: Type0) : Core.Iter.Traits.Collect.t_FromIterator (t_TlsVecU32
           iter
       in
       { f_vec = vec } <: t_TlsVecU32 v_T
-  }
+  } *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_82 (#v_T: Type0)
@@ -2872,24 +2802,23 @@ let impl_71__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -2938,6 +2867,9 @@ let impl_91 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
     f_tls_serialized_len = fun (self: t_TlsVecU32 v_T) -> impl_72__tls_serialized_length #v_T self
   }
 
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume val size_Vec_u32 (v_T: Type0) : Tls_codec.Bundle.t_Size (Tls_codec.Tls_vec.t_TlsVecU32 v_T)
+
 let impl_71__get_content_lengths
       (#v_T: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
@@ -2960,7 +2892,18 @@ let impl_71__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -2968,14 +2911,7 @@ let impl_71__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -3095,7 +3031,7 @@ let impl_71__serialize
 let impl_88 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsVecU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -3135,7 +3071,7 @@ let impl_88 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_cod
 let impl_90 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsVecU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -3216,7 +3152,7 @@ let impl_73__deserialize
               | Core.Result.Result_Ok element ->
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -3270,7 +3206,7 @@ let impl_92
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (t_TlsVecU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_deserialize_pre
     =
     (fun
@@ -3348,7 +3284,7 @@ let impl_74__deserialize_bytes
                 let remainder:t_Slice u8 = next_remainder in
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -3398,7 +3334,7 @@ let impl_93
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (t_TlsVecU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -3412,7 +3348,8 @@ let impl_93
 
 type t_TlsByteVecU8 = { f_vec:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global }
 
-let impl_106: Core.Clone.t_Clone t_TlsByteVecU8 = { f_clone = (fun x -> x) }
+let impl_106: Core.Clone.t_Clone t_TlsByteVecU8 =
+  { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
@@ -3503,7 +3440,7 @@ let impl_TlsByteVecU8__iter (self: t_TlsByteVecU8) : Core.Slice.Iter.t_Iter u8 =
       t_Slice u8)
 
 /// Retains only the elements specified by the predicate.
-let impl_TlsByteVecU8__retain
+(* let impl_TlsByteVecU8__retain
       (#v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Core.Ops.Function.t_FnMut v_F u8)
       (self: t_TlsByteVecU8)
@@ -3514,7 +3451,7 @@ let impl_TlsByteVecU8__retain
     <:
     t_TlsByteVecU8
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_TlsByteVecU8__len_len (_: Prims.unit) : usize = mk_usize 1
@@ -3596,7 +3533,7 @@ let impl_99: Core.Borrow.t_Borrow t_TlsByteVecU8 (t_Slice u8) =
         self.f_vec
   }
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
+(* [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_100: Core.Iter.Traits.Collect.t_FromIterator t_TlsByteVecU8 u8 =
   {
     f_from_iter_pre
@@ -3631,7 +3568,7 @@ let impl_100: Core.Iter.Traits.Collect.t_FromIterator t_TlsByteVecU8 u8 =
           iter
       in
       { f_vec = vec } <: t_TlsByteVecU8
-  }
+  } *)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_101: Core.Convert.t_From t_TlsByteVecU8 (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
@@ -3688,24 +3625,23 @@ let impl_TlsByteVecU8__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -3740,25 +3676,24 @@ let impl_TlsByteVecU8__deserialize_bytes
     in
     if false && len >. (cast (Core.Num.impl_u16__MAX <: u16) <: usize)
     then
+      let args:(usize & u16) = len, Core.Num.impl_u16__MAX <: (usize & u16) in
+      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+        let list =
+          [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #u16 args._2]
+        in
+        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+        Rust_primitives.Hax.array_of_list 2 list
+      in
       bytes,
       (Core.Result.Result_Err
         (Tls_codec.Error_DecodingError
           (Core.Hint.must_use #Alloc.String.t_String
-              (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+              (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                       (mk_usize 2)
                       (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                         FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                         Rust_primitives.Hax.array_of_list 3 list)
-                      (let list =
-                          [
-                            Core.Fmt.Rt.impl__new_display #usize len <: Core.Fmt.Rt.t_Argument;
-                            Core.Fmt.Rt.impl__new_display #u16 Core.Num.impl_u16__MAX
-                            <:
-                            Core.Fmt.Rt.t_Argument
-                          ]
-                        in
-                        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                        Rust_primitives.Hax.array_of_list 2 list)
+                      args
                     <:
                     Core.Fmt.t_Arguments)
                 <:
@@ -3818,24 +3753,23 @@ let impl_TlsByteVecU8__deserialize_bytes_bytes (bytes: t_Slice u8)
     in
     if false && len >. (cast (Core.Num.impl_u16__MAX <: u16) <: usize)
     then
+      let args:(usize & u16) = len, Core.Num.impl_u16__MAX <: (usize & u16) in
+      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+        let list =
+          [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #u16 args._2]
+        in
+        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+        Rust_primitives.Hax.array_of_list 2 list
+      in
       Core.Result.Result_Err
       (Tls_codec.Error_DecodingError
         (Core.Hint.must_use #Alloc.String.t_String
-            (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+            (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                     (mk_usize 2)
                     (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                       Rust_primitives.Hax.array_of_list 3 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize len <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #u16 Core.Num.impl_u16__MAX
-                          <:
-                          Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -3926,7 +3860,18 @@ let impl_TlsByteVecU8__get_content_lengths (self: t_TlsByteVecU8)
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -3934,14 +3879,7 @@ let impl_TlsByteVecU8__get_content_lengths (self: t_TlsByteVecU8)
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -4254,7 +4192,8 @@ let impl_114: Tls_codec.t_SerializeBytes t_TlsByteVecU8 =
 
 type t_TlsByteVecU16 = { f_vec:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global }
 
-let impl_127: Core.Clone.t_Clone t_TlsByteVecU16 = { f_clone = (fun x -> x) }
+let impl_127: Core.Clone.t_Clone t_TlsByteVecU16 =
+  { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
@@ -4345,7 +4284,7 @@ let impl_TlsByteVecU16__iter (self: t_TlsByteVecU16) : Core.Slice.Iter.t_Iter u8
       t_Slice u8)
 
 /// Retains only the elements specified by the predicate.
-let impl_TlsByteVecU16__retain
+(* let impl_TlsByteVecU16__retain
       (#v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Core.Ops.Function.t_FnMut v_F u8)
       (self: t_TlsByteVecU16)
@@ -4356,7 +4295,7 @@ let impl_TlsByteVecU16__retain
     <:
     t_TlsByteVecU16
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_TlsByteVecU16__len_len (_: Prims.unit) : usize = mk_usize 2
@@ -4530,24 +4469,23 @@ let impl_TlsByteVecU16__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -4583,25 +4521,24 @@ let impl_TlsByteVecU16__deserialize_bytes
     in
     if false && len >. (cast (Core.Num.impl_u16__MAX <: u16) <: usize)
     then
+      let args:(usize & u16) = len, Core.Num.impl_u16__MAX <: (usize & u16) in
+      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+        let list =
+          [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #u16 args._2]
+        in
+        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+        Rust_primitives.Hax.array_of_list 2 list
+      in
       bytes,
       (Core.Result.Result_Err
         (Tls_codec.Error_DecodingError
           (Core.Hint.must_use #Alloc.String.t_String
-              (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+              (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                       (mk_usize 2)
                       (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                         FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                         Rust_primitives.Hax.array_of_list 3 list)
-                      (let list =
-                          [
-                            Core.Fmt.Rt.impl__new_display #usize len <: Core.Fmt.Rt.t_Argument;
-                            Core.Fmt.Rt.impl__new_display #u16 Core.Num.impl_u16__MAX
-                            <:
-                            Core.Fmt.Rt.t_Argument
-                          ]
-                        in
-                        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                        Rust_primitives.Hax.array_of_list 2 list)
+                      args
                     <:
                     Core.Fmt.t_Arguments)
                 <:
@@ -4661,24 +4598,23 @@ let impl_TlsByteVecU16__deserialize_bytes_bytes (bytes: t_Slice u8)
     in
     if false && len >. (cast (Core.Num.impl_u16__MAX <: u16) <: usize)
     then
+      let args:(usize & u16) = len, Core.Num.impl_u16__MAX <: (usize & u16) in
+      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+        let list =
+          [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #u16 args._2]
+        in
+        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+        Rust_primitives.Hax.array_of_list 2 list
+      in
       Core.Result.Result_Err
       (Tls_codec.Error_DecodingError
         (Core.Hint.must_use #Alloc.String.t_String
-            (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+            (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                     (mk_usize 2)
                     (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                       Rust_primitives.Hax.array_of_list 3 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize len <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #u16 Core.Num.impl_u16__MAX
-                          <:
-                          Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -4769,7 +4705,18 @@ let impl_TlsByteVecU16__get_content_lengths (self: t_TlsByteVecU16)
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -4777,14 +4724,7 @@ let impl_TlsByteVecU16__get_content_lengths (self: t_TlsByteVecU16)
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -5097,7 +5037,8 @@ let impl_135: Tls_codec.t_SerializeBytes t_TlsByteVecU16 =
 
 type t_TlsByteVecU24 = { f_vec:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global }
 
-let impl_148: Core.Clone.t_Clone t_TlsByteVecU24 = { f_clone = (fun x -> x) }
+let impl_148: Core.Clone.t_Clone t_TlsByteVecU24 =
+  { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
@@ -5188,7 +5129,7 @@ let impl_TlsByteVecU24__iter (self: t_TlsByteVecU24) : Core.Slice.Iter.t_Iter u8
       t_Slice u8)
 
 /// Retains only the elements specified by the predicate.
-let impl_TlsByteVecU24__retain
+(* let impl_TlsByteVecU24__retain
       (#v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Core.Ops.Function.t_FnMut v_F u8)
       (self: t_TlsByteVecU24)
@@ -5199,7 +5140,7 @@ let impl_TlsByteVecU24__retain
     <:
     t_TlsByteVecU24
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_TlsByteVecU24__len_len (_: Prims.unit) : usize = mk_usize 3
@@ -5373,24 +5314,23 @@ let impl_TlsByteVecU24__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -5426,25 +5366,24 @@ let impl_TlsByteVecU24__deserialize_bytes
     in
     if false && len >. (cast (Core.Num.impl_u16__MAX <: u16) <: usize)
     then
+      let args:(usize & u16) = len, Core.Num.impl_u16__MAX <: (usize & u16) in
+      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+        let list =
+          [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #u16 args._2]
+        in
+        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+        Rust_primitives.Hax.array_of_list 2 list
+      in
       bytes,
       (Core.Result.Result_Err
         (Tls_codec.Error_DecodingError
           (Core.Hint.must_use #Alloc.String.t_String
-              (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+              (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                       (mk_usize 2)
                       (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                         FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                         Rust_primitives.Hax.array_of_list 3 list)
-                      (let list =
-                          [
-                            Core.Fmt.Rt.impl__new_display #usize len <: Core.Fmt.Rt.t_Argument;
-                            Core.Fmt.Rt.impl__new_display #u16 Core.Num.impl_u16__MAX
-                            <:
-                            Core.Fmt.Rt.t_Argument
-                          ]
-                        in
-                        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                        Rust_primitives.Hax.array_of_list 2 list)
+                      args
                     <:
                     Core.Fmt.t_Arguments)
                 <:
@@ -5504,24 +5443,23 @@ let impl_TlsByteVecU24__deserialize_bytes_bytes (bytes: t_Slice u8)
     in
     if false && len >. (cast (Core.Num.impl_u16__MAX <: u16) <: usize)
     then
+      let args:(usize & u16) = len, Core.Num.impl_u16__MAX <: (usize & u16) in
+      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+        let list =
+          [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #u16 args._2]
+        in
+        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+        Rust_primitives.Hax.array_of_list 2 list
+      in
       Core.Result.Result_Err
       (Tls_codec.Error_DecodingError
         (Core.Hint.must_use #Alloc.String.t_String
-            (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+            (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                     (mk_usize 2)
                     (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                       Rust_primitives.Hax.array_of_list 3 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize len <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #u16 Core.Num.impl_u16__MAX
-                          <:
-                          Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -5615,7 +5553,18 @@ let impl_TlsByteVecU24__get_content_lengths (self: t_TlsByteVecU24)
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -5623,14 +5572,7 @@ let impl_TlsByteVecU24__get_content_lengths (self: t_TlsByteVecU24)
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -5949,7 +5891,8 @@ let impl_156: Tls_codec.t_SerializeBytes t_TlsByteVecU24 =
 
 type t_TlsByteVecU32 = { f_vec:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global }
 
-let impl_169: Core.Clone.t_Clone t_TlsByteVecU32 = { f_clone = (fun x -> x) }
+let impl_169: Core.Clone.t_Clone t_TlsByteVecU32 =
+  { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
@@ -6040,7 +5983,7 @@ let impl_TlsByteVecU32__iter (self: t_TlsByteVecU32) : Core.Slice.Iter.t_Iter u8
       t_Slice u8)
 
 /// Retains only the elements specified by the predicate.
-let impl_TlsByteVecU32__retain
+(* let impl_TlsByteVecU32__retain
       (#v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Core.Ops.Function.t_FnMut v_F u8)
       (self: t_TlsByteVecU32)
@@ -6051,7 +5994,7 @@ let impl_TlsByteVecU32__retain
     <:
     t_TlsByteVecU32
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_TlsByteVecU32__len_len (_: Prims.unit) : usize = mk_usize 4
@@ -6225,24 +6168,23 @@ let impl_TlsByteVecU32__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -6278,25 +6220,24 @@ let impl_TlsByteVecU32__deserialize_bytes
     in
     if false && len >. (cast (Core.Num.impl_u16__MAX <: u16) <: usize)
     then
+      let args:(usize & u16) = len, Core.Num.impl_u16__MAX <: (usize & u16) in
+      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+        let list =
+          [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #u16 args._2]
+        in
+        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+        Rust_primitives.Hax.array_of_list 2 list
+      in
       bytes,
       (Core.Result.Result_Err
         (Tls_codec.Error_DecodingError
           (Core.Hint.must_use #Alloc.String.t_String
-              (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+              (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                       (mk_usize 2)
                       (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                         FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                         Rust_primitives.Hax.array_of_list 3 list)
-                      (let list =
-                          [
-                            Core.Fmt.Rt.impl__new_display #usize len <: Core.Fmt.Rt.t_Argument;
-                            Core.Fmt.Rt.impl__new_display #u16 Core.Num.impl_u16__MAX
-                            <:
-                            Core.Fmt.Rt.t_Argument
-                          ]
-                        in
-                        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                        Rust_primitives.Hax.array_of_list 2 list)
+                      args
                     <:
                     Core.Fmt.t_Arguments)
                 <:
@@ -6356,24 +6297,23 @@ let impl_TlsByteVecU32__deserialize_bytes_bytes (bytes: t_Slice u8)
     in
     if false && len >. (cast (Core.Num.impl_u16__MAX <: u16) <: usize)
     then
+      let args:(usize & u16) = len, Core.Num.impl_u16__MAX <: (usize & u16) in
+      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+        let list =
+          [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #u16 args._2]
+        in
+        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+        Rust_primitives.Hax.array_of_list 2 list
+      in
       Core.Result.Result_Err
       (Tls_codec.Error_DecodingError
         (Core.Hint.must_use #Alloc.String.t_String
-            (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+            (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                     (mk_usize 2)
                     (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                       Rust_primitives.Hax.array_of_list 3 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize len <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #u16 Core.Num.impl_u16__MAX
-                          <:
-                          Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -6464,7 +6404,18 @@ let impl_TlsByteVecU32__get_content_lengths (self: t_TlsByteVecU32)
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -6472,14 +6423,7 @@ let impl_TlsByteVecU32__get_content_lengths (self: t_TlsByteVecU32)
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -6950,7 +6894,7 @@ let impl_185__iter
       t_Slice v_T)
 
 /// Retains only the elements specified by the predicate.
-let impl_185__retain
+(* let impl_185__retain
       (#v_T #v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Zeroize.t_Zeroize v_T)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i4: Core.Ops.Function.t_FnMut v_F v_T)
@@ -6962,7 +6906,7 @@ let impl_185__retain
     <:
     t_SecretTlsVecU8 v_T
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_185__len_len
@@ -7174,24 +7118,23 @@ let impl_178__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -7258,7 +7201,7 @@ let impl_178__get_content_lengths
       (self: t_SecretTlsVecU8 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_SecretTlsVecU8 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_SecretTlsVecU8 v_T) #i1._super_6186925850915422136 self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 1 in
   let max_len:usize =
@@ -7274,7 +7217,18 @@ let impl_178__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -7282,14 +7236,7 @@ let impl_178__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -7415,7 +7362,7 @@ let impl_197
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_SecretTlsVecU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i2._super_6186925850915422136;
     f_tls_serialize_pre
     =
     (fun
@@ -7458,7 +7405,7 @@ let impl_199
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_SecretTlsVecU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -7542,7 +7489,7 @@ let impl_180__deserialize
               | Core.Result.Result_Ok element ->
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -7602,7 +7549,7 @@ let impl_201
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (t_SecretTlsVecU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_deserialize_pre
     =
     (fun
@@ -7685,7 +7632,7 @@ let impl_181__deserialize_bytes
                 let remainder:t_Slice u8 = next_remainder in
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -7736,7 +7683,7 @@ let impl_202
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (t_SecretTlsVecU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -7747,6 +7694,9 @@ let impl_202
         true);
     f_tls_deserialize_bytes = fun (bytes: t_Slice u8) -> impl_181__deserialize_bytes #v_T bytes
   }
+
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume val zeroize_vec #v_T: Zeroize.t_Zeroize (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_182 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Zeroize.t_Zeroize v_T)
@@ -7948,7 +7898,7 @@ let impl_210__iter
       t_Slice v_T)
 
 /// Retains only the elements specified by the predicate.
-let impl_210__retain
+(* let impl_210__retain
       (#v_T #v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Zeroize.t_Zeroize v_T)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i4: Core.Ops.Function.t_FnMut v_F v_T)
@@ -7960,7 +7910,7 @@ let impl_210__retain
     <:
     t_SecretTlsVecU16 v_T
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_210__len_len
@@ -8174,24 +8124,23 @@ let impl_203__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -8258,7 +8207,7 @@ let impl_203__get_content_lengths
       (self: t_SecretTlsVecU16 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_SecretTlsVecU16 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_SecretTlsVecU16 v_T) #i1._super_6186925850915422136 self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 2 in
   let max_len:usize =
@@ -8274,7 +8223,18 @@ let impl_203__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -8282,14 +8242,7 @@ let impl_203__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -8415,7 +8368,7 @@ let impl_222
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_SecretTlsVecU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -8458,7 +8411,7 @@ let impl_224
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_SecretTlsVecU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -8542,7 +8495,7 @@ let impl_205__deserialize
               | Core.Result.Result_Ok element ->
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -8602,7 +8555,7 @@ let impl_226
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (t_SecretTlsVecU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_deserialize_pre
     =
     (fun
@@ -8685,7 +8638,7 @@ let impl_206__deserialize_bytes
                 let remainder:t_Slice u8 = next_remainder in
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -8736,7 +8689,7 @@ let impl_227
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (t_SecretTlsVecU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -8947,7 +8900,7 @@ let impl_235__iter
       <:
       t_Slice v_T)
 
-/// Retains only the elements specified by the predicate.
+(* /// Retains only the elements specified by the predicate.
 let impl_235__retain
       (#v_T #v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Zeroize.t_Zeroize v_T)
@@ -8960,7 +8913,7 @@ let impl_235__retain
     <:
     t_SecretTlsVecU24 v_T
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_235__len_len
@@ -9174,24 +9127,23 @@ let impl_228__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -9237,6 +9189,10 @@ let impl_248
     fun (self: t_SecretTlsVecU24 v_T) -> impl_229__tls_serialized_length #v_T self
   }
 
+
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume val size_secret_vec #v_T {|i1: Zeroize.t_Zeroize v_T|}: Tls_codec.Bundle.t_Size (Tls_codec.Tls_vec.t_SecretTlsVecU24 v_T)
+
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_250
       (#v_T: Type0)
@@ -9277,7 +9233,18 @@ let impl_228__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -9285,14 +9252,7 @@ let impl_228__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -9421,7 +9381,7 @@ let impl_247
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_SecretTlsVecU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -9464,7 +9424,7 @@ let impl_249
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_SecretTlsVecU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -9553,7 +9513,7 @@ let impl_230__deserialize
               | Core.Result.Result_Ok element ->
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -9613,7 +9573,7 @@ let impl_251
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (t_SecretTlsVecU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_deserialize_pre
     =
     (fun
@@ -9701,7 +9661,7 @@ let impl_231__deserialize_bytes
                 let remainder:t_Slice u8 = next_remainder in
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -9752,7 +9712,7 @@ let impl_252
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (t_SecretTlsVecU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -9964,7 +9924,7 @@ let impl_260__iter
       t_Slice v_T)
 
 /// Retains only the elements specified by the predicate.
-let impl_260__retain
+(* let impl_260__retain
       (#v_T #v_F: Type0)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Zeroize.t_Zeroize v_T)
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i4: Core.Ops.Function.t_FnMut v_F v_T)
@@ -9976,7 +9936,7 @@ let impl_260__retain
     <:
     t_SecretTlsVecU32 v_T
   in
-  self
+  self *)
 
 /// Get the number of bytes used for the length encoding.
 let impl_260__len_len
@@ -10190,24 +10150,23 @@ let impl_253__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -10274,7 +10233,7 @@ let impl_253__get_content_lengths
       (self: t_SecretTlsVecU32 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_SecretTlsVecU32 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_SecretTlsVecU32 v_T) #i1._super_6186925850915422136 self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 4 in
   let max_len:usize =
@@ -10290,7 +10249,18 @@ let impl_253__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -10298,14 +10268,7 @@ let impl_253__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -10431,7 +10394,7 @@ let impl_272
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_SecretTlsVecU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -10474,7 +10437,7 @@ let impl_274
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_SecretTlsVecU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -10558,7 +10521,7 @@ let impl_255__deserialize
               | Core.Result.Result_Ok element ->
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -10618,7 +10581,7 @@ let impl_276
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_Deserialize v_T)
     : Tls_codec.t_Deserialize (t_SecretTlsVecU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_deserialize_pre
     =
     (fun
@@ -10701,7 +10664,7 @@ let impl_256__deserialize_bytes
                 let remainder:t_Slice u8 = next_remainder in
                 let read:usize =
                   read +!
-                  (Tls_codec.f_tls_serialized_len #v_T #FStar.Tactics.Typeclasses.solve element
+                  (Tls_codec.f_tls_serialized_len #v_T #i1._super_6186925850915422136 element
                     <:
                     usize)
                 in
@@ -10752,7 +10715,7 @@ let impl_277
       (#[FStar.Tactics.Typeclasses.tcresolve ()] i2: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (t_SecretTlsVecU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i2._super_6186925850915422136);
     f_tls_deserialize_bytes_pre = (fun (bytes: t_Slice u8) -> true);
     f_tls_deserialize_bytes_post
     =
@@ -10821,24 +10784,23 @@ let impl_279__assert_written_bytes (self: t_TlsByteSliceU8) (tls_serialized_len 
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -10888,7 +10850,18 @@ let impl_279__get_content_lengths (self: t_TlsByteSliceU8)
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -10896,14 +10869,7 @@ let impl_279__get_content_lengths (self: t_TlsByteSliceU8)
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -11087,24 +11053,23 @@ let impl_285__assert_written_bytes (self: t_TlsByteSliceU16) (tls_serialized_len
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -11158,7 +11123,18 @@ let impl_285__get_content_lengths (self: t_TlsByteSliceU16)
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -11166,14 +11142,7 @@ let impl_285__get_content_lengths (self: t_TlsByteSliceU16)
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -11357,24 +11326,23 @@ let impl_291__assert_written_bytes (self: t_TlsByteSliceU24) (tls_serialized_len
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -11431,7 +11399,18 @@ let impl_291__get_content_lengths (self: t_TlsByteSliceU24)
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -11439,14 +11418,7 @@ let impl_291__get_content_lengths (self: t_TlsByteSliceU24)
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -11633,24 +11605,23 @@ let impl_297__assert_written_bytes (self: t_TlsByteSliceU32) (tls_serialized_len
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -11704,7 +11675,18 @@ let impl_297__get_content_lengths (self: t_TlsByteSliceU32)
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -11712,14 +11694,7 @@ let impl_297__get_content_lengths (self: t_TlsByteSliceU32)
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -11927,24 +11902,23 @@ let impl_304__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -11979,7 +11953,7 @@ let impl_304__get_content_lengths
       (self: t_TlsSliceU8 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_TlsSliceU8 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_TlsSliceU8 v_T) #i1._super_6186925850915422136 self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 1 in
   let max_len:usize =
@@ -11995,7 +11969,18 @@ let impl_304__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -12003,14 +11988,7 @@ let impl_304__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -12132,7 +12110,7 @@ let impl_304__serialize
 let impl_305 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsSliceU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = i1._super_6186925850915422136;
     f_tls_serialize_pre
     =
     (fun
@@ -12172,7 +12150,7 @@ let impl_305 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_co
 let impl_306 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsSliceU8 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -12250,24 +12228,23 @@ let impl_311__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -12306,7 +12283,7 @@ let impl_311__get_content_lengths
       (self: t_TlsSliceU16 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_TlsSliceU16 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_TlsSliceU16 v_T) #i1._super_6186925850915422136 self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 2 in
   let max_len:usize =
@@ -12322,7 +12299,18 @@ let impl_311__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -12330,14 +12318,7 @@ let impl_311__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -12459,7 +12440,7 @@ let impl_311__serialize
 let impl_312 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsSliceU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -12499,7 +12480,7 @@ let impl_312 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_co
 let impl_313 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsSliceU16 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -12577,24 +12558,23 @@ let impl_318__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -12633,7 +12613,7 @@ let impl_318__get_content_lengths
       (self: t_TlsSliceU24 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_TlsSliceU24 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_TlsSliceU24 v_T) #i1._super_6186925850915422136 self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 3 in
   let max_len:usize =
@@ -12652,7 +12632,18 @@ let impl_318__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -12660,14 +12651,7 @@ let impl_318__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -12792,7 +12776,7 @@ let impl_318__serialize
 let impl_319 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsSliceU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -12832,7 +12816,7 @@ let impl_319 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_co
 let impl_320 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsSliceU24 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -12910,24 +12894,23 @@ let impl_325__assert_written_bytes
   in
   if written <>. tls_serialized_len
   then
+    let args:(usize & usize) = tls_serialized_len, written <: (usize & usize) in
+    let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+      let list =
+        [Core.Fmt.Rt.impl__new_display #usize args._1; Core.Fmt.Rt.impl__new_display #usize args._2]
+      in
+      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+      Rust_primitives.Hax.array_of_list 2 list
+    in
     Core.Result.Result_Err
     (Tls_codec.Error_EncodingError
       (Core.Hint.must_use #Alloc.String.t_String
-          (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+          (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                   (mk_usize 2)
                   (let list = [""; " bytes should have been serialized but "; " were written"] in
                     FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                     Rust_primitives.Hax.array_of_list 3 list)
-                  (let list =
-                      [
-                        Core.Fmt.Rt.impl__new_display #usize tls_serialized_len
-                        <:
-                        Core.Fmt.Rt.t_Argument;
-                        Core.Fmt.Rt.impl__new_display #usize written <: Core.Fmt.Rt.t_Argument
-                      ]
-                    in
-                    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                    Rust_primitives.Hax.array_of_list 2 list)
+                  args
                 <:
                 Core.Fmt.t_Arguments)
             <:
@@ -12966,7 +12949,7 @@ let impl_325__get_content_lengths
       (self: t_TlsSliceU32 v_T)
     : Core.Result.t_Result (usize & usize) Tls_codec.t_Error =
   let tls_serialized_len:usize =
-    Tls_codec.f_tls_serialized_len #(t_TlsSliceU32 v_T) #FStar.Tactics.Typeclasses.solve self
+    Tls_codec.f_tls_serialized_len #(t_TlsSliceU32 v_T) #i1._super_6186925850915422136 self
   in
   let byte_length:usize = tls_serialized_len -! mk_usize 4 in
   let max_len:usize =
@@ -12982,7 +12965,18 @@ let impl_325__get_content_lengths
       let _:Prims.unit =
         if ~.(byte_length <=. max_len <: bool)
         then
-          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1 (mk_usize
+          let args:(usize & usize) = byte_length, max_len <: (usize & usize) in
+          let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+            let list =
+              [
+                Core.Fmt.Rt.impl__new_display #usize args._1;
+                Core.Fmt.Rt.impl__new_display #usize args._2
+              ]
+            in
+            FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+            Rust_primitives.Hax.array_of_list 2 list
+          in
+          Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1 (mk_usize
                       2)
                     (mk_usize 2)
                     (let list =
@@ -12990,14 +12984,7 @@ let impl_325__get_content_lengths
                       in
                       FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                       Rust_primitives.Hax.array_of_list 2 list)
-                    (let list =
-                        [
-                          Core.Fmt.Rt.impl__new_display #usize byte_length <: Core.Fmt.Rt.t_Argument;
-                          Core.Fmt.Rt.impl__new_display #usize max_len <: Core.Fmt.Rt.t_Argument
-                        ]
-                      in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                      Rust_primitives.Hax.array_of_list 2 list)
+                    args
                   <:
                   Core.Fmt.t_Arguments)
               <:
@@ -13119,7 +13106,7 @@ let impl_325__serialize
 let impl_326 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsSliceU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun
@@ -13159,7 +13146,7 @@ let impl_326 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_co
 let impl_327 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Serialize v_T)
     : Tls_codec.t_Serialize (t_TlsSliceU32 v_T) =
   {
-    _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
+    _super_6186925850915422136 = (i1._super_6186925850915422136);
     f_tls_serialize_pre
     =
     (fun

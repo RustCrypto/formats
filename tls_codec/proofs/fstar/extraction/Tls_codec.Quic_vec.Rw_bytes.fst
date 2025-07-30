@@ -27,24 +27,26 @@ let tls_serialize_bytes
           let _:Prims.unit =
             if ~.((cast (content_length <: usize) <: u64) <=. Tls_codec.Quic_vec.v_MAX_LEN <: bool)
             then
-              Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1
+              let args:(usize & u64) =
+                content_length, Tls_codec.Quic_vec.v_MAX_LEN <: (usize & u64)
+              in
+              let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+                let list =
+                  [
+                    Core.Fmt.Rt.impl__new_display #usize args._1;
+                    Core.Fmt.Rt.impl__new_display #u64 args._2
+                  ]
+                in
+                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+                Rust_primitives.Hax.array_of_list 2 list
+              in
+              Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1
                         (mk_usize 2)
                         (mk_usize 2)
                         (let list = ["Vector can't be encoded. It's too large. "; " >= "] in
                           FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
                           Rust_primitives.Hax.array_of_list 2 list)
-                        (let list =
-                            [
-                              Core.Fmt.Rt.impl__new_display #usize content_length
-                              <:
-                              Core.Fmt.Rt.t_Argument;
-                              Core.Fmt.Rt.impl__new_display #u64 Tls_codec.Quic_vec.v_MAX_LEN
-                              <:
-                              Core.Fmt.Rt.t_Argument
-                            ]
-                          in
-                          FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                          Rust_primitives.Hax.array_of_list 2 list)
+                        args
                       <:
                       Core.Fmt.t_Arguments)
                   <:
@@ -261,25 +263,26 @@ let impl_2: Tls_codec.t_Deserialize Tls_codec.Quic_vec.t_VLBytes =
                   let _:Prims.unit =
                     if ~.(length <=. (cast (Tls_codec.Quic_vec.v_MAX_LEN <: u64) <: usize) <: bool)
                     then
-                      Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_2__new_v1
+                      let args:(usize & u64) =
+                        length, Tls_codec.Quic_vec.v_MAX_LEN <: (usize & u64)
+                      in
+                      let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+                        let list =
+                          [
+                            Core.Fmt.Rt.impl__new_display #usize args._1;
+                            Core.Fmt.Rt.impl__new_display #u64 args._2
+                          ]
+                        in
+                        FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+                        Rust_primitives.Hax.array_of_list 2 list
+                      in
+                      Rust_primitives.Hax.never_to_any (Core.Panicking.panic_fmt (Core.Fmt.Rt.impl_1__new_v1
                                 (mk_usize 3)
                                 (mk_usize 2)
                                 (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                                   FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                                   Rust_primitives.Hax.array_of_list 3 list)
-                                (let list =
-                                    [
-                                      Core.Fmt.Rt.impl__new_display #usize length
-                                      <:
-                                      Core.Fmt.Rt.t_Argument;
-                                      Core.Fmt.Rt.impl__new_display #u64
-                                        Tls_codec.Quic_vec.v_MAX_LEN
-                                      <:
-                                      Core.Fmt.Rt.t_Argument
-                                    ]
-                                  in
-                                  FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                                  Rust_primitives.Hax.array_of_list 2 list)
+                                args
                               <:
                               Core.Fmt.t_Arguments)
                           <:
@@ -291,27 +294,27 @@ let impl_2: Tls_codec.t_Deserialize Tls_codec.Quic_vec.t_VLBytes =
           in
           if length >. (cast (Tls_codec.Quic_vec.v_MAX_LEN <: u64) <: usize)
           then
+            let args:(usize & u64) = length, Tls_codec.Quic_vec.v_MAX_LEN <: (usize & u64) in
+            let args:t_Array Core.Fmt.Rt.t_Argument (mk_usize 2) =
+              let list =
+                [
+                  Core.Fmt.Rt.impl__new_display #usize args._1;
+                  Core.Fmt.Rt.impl__new_display #u64 args._2
+                ]
+              in
+              FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
+              Rust_primitives.Hax.array_of_list 2 list
+            in
             bytes,
             (Core.Result.Result_Err
               (Tls_codec.Error_DecodingError
                 (Core.Hint.must_use #Alloc.String.t_String
-                    (Alloc.Fmt.format (Core.Fmt.Rt.impl_2__new_v1 (mk_usize 3)
+                    (Alloc.Fmt.format (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 3)
                             (mk_usize 2)
                             (let list = ["Trying to allocate "; " bytes. Only "; " allowed."] in
                               FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 3);
                               Rust_primitives.Hax.array_of_list 3 list)
-                            (let list =
-                                [
-                                  Core.Fmt.Rt.impl__new_display #usize length
-                                  <:
-                                  Core.Fmt.Rt.t_Argument;
-                                  Core.Fmt.Rt.impl__new_display #u64 Tls_codec.Quic_vec.v_MAX_LEN
-                                  <:
-                                  Core.Fmt.Rt.t_Argument
-                                ]
-                              in
-                              FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 2);
-                              Rust_primitives.Hax.array_of_list 2 list)
+                            args
                           <:
                           Core.Fmt.t_Arguments)
                       <:

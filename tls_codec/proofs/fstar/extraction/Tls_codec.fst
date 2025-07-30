@@ -3,7 +3,12 @@ module Tls_codec
 open Core
 open FStar.Mul
 
-include Tls_codec.Bundle {t_Error as t_Error}
+let t_Error = Tls_codec.Bundle.t_Error
+include Tls_codec.Bundle {t_Size as t_Size}
+include Tls_codec.Bundle {t_Serialize as t_Serialize}
+include Tls_codec.Bundle {t_SerializeBytes as t_SerializeBytes}
+include Tls_codec.Bundle {t_Deserialize as t_Deserialize}
+include Tls_codec.Bundle {t_DeserializeBytes as t_DeserializeBytes}
 
 include Tls_codec.Bundle {Error_EncodingError as Error_EncodingError}
 
