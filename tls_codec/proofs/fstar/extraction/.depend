@@ -2,7 +2,7 @@
 # Executable: "/home/maxime/cryspen/FStar/stage2/out/bin/fstar.exe"
 # Hash: 8d3d5485c477b1be8ddd0b441274c372e6fe31db
 # Running in directory "/home/maxime/test/formats/tls_codec/proofs/fstar/extraction"
-# Command line arguments: "["fstar.exe", "--warn_error", "-321-331-241-274-239-271", "--ext", "context_pruning", "--z3version", "4.13.3", "--query_stats", "--cache_checked_modules", "--cache_dir", "/home/maxime/test/formats/.fstar-cache/checked", "--already_cached", "+Prims+FStar+LowStar+C+Spec.Loops+TestLib", "--include", "/home/maxime/.hax/hacl_home/lib", "--include", "/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core", "--include", "/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives", "--include", "/home/maxime/cryspen/hax/hax-lib/proofs/fstar/extraction", "--include", "/home/maxime/test/formats/tls_codec/proofs/fstar/extraction", "--include", "../models", "--dep", "full", "Tls_codec.Arrays.fst", "Tls_codec.Bundle.fst", "Tls_codec.fst", "Tls_codec.Primitives.fst", "Tls_codec.Quic_vec.fst", "Tls_codec.Quic_vec.Rw_bytes.fst", "Tls_codec.Quic_vec.Rw.fst", "Tls_codec.Quic_vec.Secret_bytes.fst", "Tls_codec.Tls_vec.fst", "--extract", "* -Prims -LowStar -FStar"]"
+# Command line arguments: "["fstar.exe", "--warn_error", "-321-331-241-274-239-271", "--ext", "context_pruning", "--z3version", "4.13.3", "--query_stats", "--cache_checked_modules", "--cache_dir", "/home/maxime/test/formats/.fstar-cache/checked", "--already_cached", "+Prims+FStar+LowStar+C+Spec.Loops+TestLib", "--include", "/home/maxime/.hax/hacl_home/lib", "--include", "/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core", "--include", "/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives", "--include", "/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proofs/fstar/extraction", "--include", "/home/maxime/test/formats/tls_codec/proofs/fstar/extraction", "--include", "../models", "--dep", "full", "Tls_codec.Arrays.fst", "Tls_codec.Bundle.fst", "Tls_codec.fst", "Tls_codec.Primitives.fst", "Tls_codec.Quic_vec.fst", "Tls_codec.Quic_vec.Rw_bytes.fst", "Tls_codec.Quic_vec.Rw.fst", "Tls_codec.Quic_vec.Secret_bytes.fst", "Tls_codec.Tls_vec.fst", "--extract", "* -Prims -LowStar -FStar"]"
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Preorder.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Preorder.fst \
@@ -30,16 +30,6 @@ FStar_Reflection_V2_Collect.ml: \
 FStar_Reflection_V2_Collect.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Collect.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Alloc.Fmt.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Fmt.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Alloc_Fmt.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Fmt.fsti.checked
-
 /home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Primitives.fst.checked: \
 	Tls_codec.Primitives.fst \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Bundle.fst.checked \
@@ -61,21 +51,14 @@ Tls_codec_Primitives.cmx: \
 	Core.cmx \
 	Tls_codec_Bundle.cmx
 
-/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Alloc.fst \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Array.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Array.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Alloc_Alloc.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked
-
-Alloc_Alloc.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked
-
-Alloc_Alloc.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked
-
-Alloc_Alloc.cmx: \
-	Alloc_Alloc.ml
+Core_Array.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Array.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Derived.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Reflection.V2.Derived.fst \
@@ -98,6 +81,13 @@ FStar_Reflection_V2_Derived.ml: \
 FStar_Reflection_V2_Derived.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Derived.fst.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Take.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Take.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Iter_Adapters_Take.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Take.fsti.checked
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Derived.Lemmas.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Reflection.V1.Derived.Lemmas.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Classical.fsti.checked \
@@ -115,24 +105,6 @@ FStar_Reflection_V1_Derived_Lemmas.ml: \
 
 FStar_Reflection_V1_Derived_Lemmas.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Derived.Lemmas.fst.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Slice.Iter.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Slice_Iter.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked
-
-Core_Slice_Iter.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked
-
-Core_Slice_Iter.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked
-
-Core_Slice_Iter.cmx: \
-	Core_Slice_Iter.ml \
-	Rust_primitives.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Order.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Order.fst \
@@ -156,123 +128,18 @@ FStar_Order.krml: \
 FStar_All.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.All.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.TypeClassPlaceHolder.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Hint.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Hint.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_TypeClassPlaceHolder.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked
-
-Core_TypeClassPlaceHolder.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked
-
-Core_TypeClassPlaceHolder.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked
-
-Core_TypeClassPlaceHolder.cmx: \
-	Core_TypeClassPlaceHolder.ml
+Core_Hint.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Hint.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Pervasives.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.NormSteps.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Vec.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.Drain.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Alloc_Vec.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked
-
-Alloc_Vec.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked
-
-Alloc_Vec.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked
-
-Alloc_Vec.cmx: \
-	Alloc_Vec.ml \
-	Rust_primitives.cmx \
-	Core_Option.cmx \
-	Rust_primitives_Hax.cmx \
-	Core_Ops_Index.cmx \
-	Rust_primitives_Integers.cmx \
-	Alloc_Vec_Drain.cmx
-
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives_Hax.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked
-
-Rust_primitives_Hax.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked
-
-Rust_primitives_Hax.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked
-
-Rust_primitives_Hax.cmx: \
-	Rust_primitives_Hax.ml \
-	Rust_primitives_Integers.cmx \
-	Rust_primitives_Arrays.cmx \
-	Core_Ops_Index.cmx \
-	Core_Slice.cmx \
-	Alloc_Boxed.cmx \
-	Alloc_Alloc.cmx \
-	Core_Iter_Traits_Iterator.cmx \
-	Core_Ops_Control_flow.cmx
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Clone.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Clone.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked
-
-Core_Clone.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked
-
-Core_Clone.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked
-
-Core_Clone.cmx: \
-	Core_Clone.ml
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Array.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Array.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Array.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Array.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Char.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Char.fsti \
@@ -356,16 +223,6 @@ FStar_Squash.krml: \
 FStar_Reflection_V1_Compare.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Compare.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Error.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Error.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Error.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Error.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Ghost.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Ghost.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Ghost.fsti.checked \
@@ -388,6 +245,20 @@ FStar_Seq.ml: \
 
 FStar_Seq.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Num.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Num.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Arith.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lemmas.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Num.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pprint.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Pprint.fsti \
@@ -427,23 +298,31 @@ FStar_BV.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Step_by.fst \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Traits.Collect.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Iter_Adapters_Step_by.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked
+Core_Iter_Traits_Collect.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked
 
-Core_Iter_Adapters_Step_by.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked
+Core_Iter_Traits_Collect.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked
 
-Core_Iter_Adapters_Step_by.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked
+Core_Iter_Traits_Collect.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked
 
-Core_Iter_Adapters_Step_by.cmx: \
-	Core_Iter_Adapters_Step_by.ml \
-	Rust_primitives.cmx
+Core_Iter_Traits_Collect.cmx: \
+	Core_Iter_Traits_Collect.ml \
+	Rust_primitives.cmx \
+	Core_Iter_Traits_Iterator.cmx \
+	Alloc_Vec.cmx \
+	Alloc_Alloc.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Pervasives.Native.fst \
@@ -480,23 +359,6 @@ FStar_Pervasives_Native.krml: \
 FStar_Tactics_V2_Bare.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.Bare.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Index.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Ops_Index.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked
-
-Core_Ops_Index.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked
-
-Core_Ops_Index.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked
-
-Core_Ops_Index.cmx: \
-	Core_Ops_Index.ml
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Formula.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Reflection.V1.Formula.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
@@ -517,6 +379,17 @@ FStar_Reflection_V1_Formula.ml: \
 FStar_Reflection_V1_Formula.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Formula.fst.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Monomorphized_update_at.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Monomorphized_update_at.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Rust_primitives_Hax_Monomorphized_update_at.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Monomorphized_update_at.fsti.checked
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.Base.fsti.checked \
@@ -524,22 +397,6 @@ FStar_Reflection_V1_Formula.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BitVector.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Result_Option_bundle.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Result_Option_bundle.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked
-
-Core_Result_Option_bundle.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked
-
-Core_Result_Option_bundle.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked
-
-Core_Result_Option_bundle.cmx: \
-	Core_Result_Option_bundle.ml
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.V1.fsti \
@@ -566,31 +423,6 @@ Core_Result_Option_bundle.cmx: \
 FStar_Tactics_V1.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.String.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.String.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Char.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Alloc_String.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked
-
-Alloc_String.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked
-
-Alloc_String.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked
-
-Alloc_String.cmx: \
-	Alloc_String.ml \
-	Core_Option.cmx \
-	Core_TypeClassPlaceHolder.cmx
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.Logic.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.V2.Logic.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
@@ -604,63 +436,11 @@ Alloc_String.cmx: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Fmt.Rt.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Fmt_Rt.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Default.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Default.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Names.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.Names.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Float.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.BitVectors.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked
-
-Rust_primitives.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked
-
-Rust_primitives.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked
-
-Rust_primitives.cmx: \
-	Rust_primitives.ml \
-	Rust_primitives_Integers.cmx \
-	Rust_primitives_Arrays.cmx \
-	Rust_primitives_BitVectors.cmx \
-	Rust_primitives_Float.cmx \
-	Rust_primitives_Char.cmx \
-	Core_Option.cmx \
-	Core_Result.cmx \
-	Core_Ops_Control_flow.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Print.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.Print.fst \
@@ -682,21 +462,13 @@ FStar_Tactics_Print.ml: \
 FStar_Tactics_Print.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Print.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proofs/fstar/extraction/Hax_lib.Prop.fst \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Borrow.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Borrow.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Hax_lib_Prop.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked
-
-Hax_lib_Prop.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked
-
-Hax_lib_Prop.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked
-
-Hax_lib_Prop.cmx: \
-	Hax_lib_Prop.ml
+Core_Borrow.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Borrow.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.Typeclasses.fst \
@@ -731,13 +503,6 @@ FStar_Tactics_Typeclasses.ml: \
 FStar_Tactics_Typeclasses.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Float.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Float.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives_Float.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Float.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt16.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt16.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
@@ -746,35 +511,22 @@ Rust_primitives_Float.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.Drain.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Vec.Drain.fsti \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Marker.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Alloc_Vec_Drain.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.Drain.fsti.checked
+Core_Marker.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+Core_Marker.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked
 
-Core_Ops.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked
+Core_Marker.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked
 
-Core_Ops.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked
-
-Core_Ops.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked
-
-Core_Ops.cmx: \
-	Core_Ops.ml \
-	Rust_primitives.cmx \
-	Core_Ops_Index.cmx
+Core_Marker.cmx: \
+	Core_Marker.ml
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Int.fst \
@@ -803,6 +555,22 @@ FStar_Int.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.V2.Data.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Fmt.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Fmt.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.V2.Builtins.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Stubs.Reflection.V2.Builtins.fsti \
@@ -847,6 +615,19 @@ FStar_Reflection_V2_Formula.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Core.Hash.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Hash.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Hash.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Hash.fsti.checked
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Pure.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Monotonic.Pure.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
@@ -872,25 +653,27 @@ FStar_Syntax_Syntax.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Hint.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Hint.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Hint.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Hint.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.BV.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.Lemmas.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Flatten.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Flatten.fsti \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Slice.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Iter_Adapters_Flatten.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Flatten.fsti.checked
+Core_Slice.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lib.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Math.Lib.fst \
@@ -902,13 +685,6 @@ FStar_Math_Lib.ml: \
 
 FStar_Math_Lib.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lib.fst.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Zip.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Iter_Adapters_Zip.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Heap.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Monotonic.Heap.fst \
@@ -931,6 +707,29 @@ FStar_Monotonic_Heap.ml: \
 FStar_Monotonic_Heap.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Heap.fst.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Option.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Option.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked
+
+Core_Option.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked
+
+Core_Option.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked
+
+Core_Option.cmx: \
+	Core_Option.ml \
+	Core_Result_Option_bundle.cmx \
+	Core_Default.cmx
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.SyntaxHelpers.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.V2.SyntaxHelpers.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.SyntaxHelpers.fsti.checked \
@@ -951,7 +750,7 @@ FStar_Tactics_V2_SyntaxHelpers.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.SyntaxHelpers.fst.checked
 
 /home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Drop.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Drop.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Drop.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
@@ -977,6 +776,18 @@ FStar_Mul.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.Base.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.BitVectors.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.BitVectors.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.FunctionalExtensionality.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Rust_primitives_BitVectors.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.BitVectors.fsti.checked
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Int.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
@@ -985,6 +796,26 @@ FStar_Mul.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BitVector.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Rev.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Iter_Adapters_Rev.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Std.Io.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Std.Io.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Error.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Std_Io.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Common.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Stubs.Tactics.Common.fsti \
@@ -995,20 +826,6 @@ FStar_Mul.krml: \
 FStar_Tactics_Common.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Common.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Num.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Num.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Arith.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lemmas.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Num.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt8.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt8.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
@@ -1017,13 +834,22 @@ Core_Num.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Sources.Repeat_with.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Sources.Repeat_with.fsti \
+/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Error.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Std.Io.Error.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Iter_Sources_Repeat_with.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Sources.Repeat_with.fsti.checked
+Std_Io_Error.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Error.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Flatten.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Flatten.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Iter_Adapters_Flatten.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Flatten.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Compare.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Reflection.V2.Compare.fst \
@@ -1058,14 +884,6 @@ FStar_Tactics_V2_SyntaxCoercions.ml: \
 FStar_Tactics_V2_SyntaxCoercions.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.SyntaxCoercions.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Char.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Char.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives_Char.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.List.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
@@ -1094,6 +912,28 @@ FStar_List.krml: \
 
 FStar_Tactics_V1_Builtins.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.V1.Builtins.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Panicking.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Panicking.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked
+
+Core_Panicking.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked
+
+Core_Panicking.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked
+
+Core_Panicking.cmx: \
+	Core_Panicking.ml \
+	Rust_primitives.cmx \
+	Rust_primitives_Hax.cmx \
+	Core_Fmt.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.Base.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Seq.Base.fsti \
@@ -1150,22 +990,6 @@ FStar_Tactics_SMT.ml: \
 
 FStar_Tactics_SMT.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.SMT.fst.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Slice.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Slice.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked
 
 /home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Quic_vec.Rw.fst.checked: \
 	Tls_codec.Quic_vec.Rw.fst \
@@ -1259,19 +1083,6 @@ FStar_Tactics_MApply.ml: \
 FStar_Tactics_MApply.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.MApply.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Arrays.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives_Arrays.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt16.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt16.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt16.fsti.checked \
@@ -1286,6 +1097,30 @@ FStar_UInt16.ml: \
 
 FStar_UInt16.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt16.fst.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked
+
+Core.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked
+
+Core.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked
+
+Core.cmx: \
+	Core.ml \
+	Rust_primitives.cmx \
+	Core_Num.cmx \
+	Core_Iter.cmx \
+	Core_Ops.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Classical.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Classical.fst \
@@ -1319,19 +1154,6 @@ FStar_Reflection_V1_Derived.ml: \
 FStar_Reflection_V1_Derived.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Derived.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Hash.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Hash.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Hash.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Hash.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/Prims.fst
 
@@ -1340,6 +1162,23 @@ Prims.ml: \
 
 Prims.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Index.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Ops_Index.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked
+
+Core_Ops_Index.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked
+
+Core_Ops_Index.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked
+
+Core_Ops_Index.cmx: \
+	Core_Ops_Index.ml
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.Logic.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.V1.Logic.fsti \
@@ -1353,16 +1192,8 @@ Prims.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked: \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-FStar_Tactics.krml: \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked
-
 /home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Control_flow.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Control_flow.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
 Core_Ops_Control_flow.ml: \
@@ -1376,6 +1207,45 @@ Core_Ops_Control_flow.krml: \
 
 Core_Ops_Control_flow.cmx: \
 	Core_Ops_Control_flow.ml
+
+/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked: \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+FStar_Tactics.krml: \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Alloc.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Alloc_Alloc.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked
+
+Alloc_Alloc.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked
+
+Alloc_Alloc.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked
+
+Alloc_Alloc.cmx: \
+	Alloc_Alloc.ml
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Range.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Ops_Range.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lemmas.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Math.Lemmas.fst \
@@ -1408,6 +1278,14 @@ FStar_Math_Lemmas.krml: \
 
 FStar_Reflection_V1_Builtins.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.V1.Builtins.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Default.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Default.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Visit.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.Visit.fst \
@@ -1457,16 +1335,6 @@ FStar_UInt64.ml: \
 FStar_UInt64.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt64.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Error.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Std.Io.Error.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Std_Io_Error.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Error.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.NormSteps.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.NormSteps.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.NormSteps.fsti.checked \
@@ -1502,27 +1370,26 @@ FStar_Int_Cast.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Preorder.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Panicking.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Panicking.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked
+Core_Ops.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked
 
-Core_Panicking.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked
+Core_Ops.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked
 
-Core_Panicking.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked
+Core_Ops.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked
 
-Core_Panicking.cmx: \
-	Core_Panicking.ml \
+Core_Ops.cmx: \
+	Core_Ops.ml \
 	Rust_primitives.cmx \
-	Rust_primitives_Hax.cmx \
-	Core_Fmt.cmx
+	Core_Ops_Index.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Types.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Stubs.Tactics.Types.fsti \
@@ -1541,6 +1408,31 @@ FStar_Tactics_Types.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.String.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.String.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Char.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Alloc_String.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked
+
+Alloc_String.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked
+
+Alloc_String.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked
+
+Alloc_String.cmx: \
+	Alloc_String.ml \
+	Core_Option.cmx \
+	Core_TypeClassPlaceHolder.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Classical.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Classical.fsti \
@@ -1568,18 +1460,15 @@ FStar_Tactics_V1_Logic.ml: \
 FStar_Tactics_V1_Logic.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.Logic.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Std.Io.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Std.Io.fsti \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Mem.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Mem.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Error.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Std_Io.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.fsti.checked
+Core_Mem.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Mem.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Sealed.Inhabited.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Sealed.Inhabited.fst \
@@ -1711,16 +1600,6 @@ Tls_codec_Bundle.cmx: \
 	Rust_primitives_Integers.cmx \
 	Core_Array.cmx
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Mem.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Mem.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Mem.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Mem.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Pervasives.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.fsti.checked \
@@ -1789,20 +1668,32 @@ FStar_Seq_Base.krml: \
 FStar_Tactics_Unseal.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Unseal.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Range.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Zip.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Iter_Adapters_Zip.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Ops_Range.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked
+Core_Iter.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.Effect.fsti \
@@ -1870,37 +1761,15 @@ FStar_Tactics_V2_Logic.ml: \
 FStar_Tactics_V2_Logic.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.Logic.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.fsti.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Fmt.Rt.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked
-
-Core.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked
-
-Core.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked
-
-Core.cmx: \
-	Core.ml \
-	Rust_primitives.cmx \
-	Core_Num.cmx \
-	Core_Iter.cmx \
-	Core_Ops.cmx
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Borrow.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Borrow.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Borrow.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Borrow.fsti.checked
+Core_Fmt_Rt.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked
 
 /home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Quic_vec.Secret_bytes.fst.checked: \
 	Tls_codec.Quic_vec.Secret_bytes.fst \
@@ -2023,6 +1892,18 @@ FStar_Tactics_MApply0.krml: \
 FStar_String.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.String.fsti.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Alloc.Slice.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Slice.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Cmp.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Alloc_Slice.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Slice.fsti.checked
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Heap.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Monotonic.Heap.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Preorder.fst.checked \
@@ -2082,6 +1963,13 @@ FStar_Reflection_Const.ml: \
 
 FStar_Reflection_Const.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.Const.fst.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Float.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Float.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Rust_primitives_Float.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Float.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.TSet.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.TSet.fsti \
@@ -2191,6 +2079,46 @@ Tls_codec_Tls_vec.cmx: \
 	Core_Ops_Range.cmx \
 	Core_Ops_Drop.cmx
 
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Traits.Iterator.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Str.Iter.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Sources.Repeat_with.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Take.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Flatten.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Iter_Traits_Iterator.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked
+
+Core_Iter_Traits_Iterator.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked
+
+Core_Iter_Traits_Iterator.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked
+
+Core_Iter_Traits_Iterator.cmx: \
+	Core_Iter_Traits_Iterator.ml \
+	Rust_primitives.cmx \
+	Core_Option.cmx \
+	Core_Iter_Adapters_Enumerate.cmx \
+	Core_Iter_Adapters_Step_by.cmx \
+	Core_Iter_Adapters_Rev.cmx \
+	Core_Iter_Adapters_Map.cmx \
+	Core_Iter_Adapters_Flatten.cmx \
+	Core_Iter_Adapters_Zip.cmx \
+	Core_Iter_Adapters_Take.cmx \
+	Core_Iter_Sources_Repeat_with.cmx \
+	Core_Str_Iter.cmx
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int64.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Int64.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int64.fsti.checked \
@@ -2212,6 +2140,19 @@ FStar_Int64.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BV.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Arrays.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Rust_primitives_Arrays.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.Derived.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.V1.Derived.fst \
@@ -2239,37 +2180,70 @@ FStar_Tactics_V1_Derived.ml: \
 FStar_Tactics_V1_Derived.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.Derived.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Int.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives_Hax_Int.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked
-
-Rust_primitives_Hax_Int.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked
-
-Rust_primitives_Hax_Int.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked
-
-Rust_primitives_Hax_Int.cmx: \
-	Rust_primitives_Hax_Int.ml \
-	Core.cmx \
-	Rust_primitives.cmx
-
-/home/maxime/test/formats/.fstar-cache/checked/Alloc.Slice.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Slice.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Cmp.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Alloc_Slice.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Slice.fsti.checked
+Rust_primitives_Hax.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked
+
+Rust_primitives_Hax.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked
+
+Rust_primitives_Hax.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked
+
+Rust_primitives_Hax.cmx: \
+	Rust_primitives_Hax.ml \
+	Rust_primitives_Integers.cmx \
+	Rust_primitives_Arrays.cmx \
+	Core_Ops_Index.cmx \
+	Core_Slice.cmx \
+	Alloc_Boxed.cmx \
+	Alloc_Alloc.cmx \
+	Core_Iter_Traits_Iterator.cmx \
+	Core_Ops_Control_flow.cmx
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Convert.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Array.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Convert.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked
+
+Core_Convert.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked
+
+Core_Convert.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked
+
+Core_Convert.cmx: \
+	Core_Convert.ml \
+	Rust_primitives.cmx \
+	Core_Result.cmx \
+	Core_Array.cmx \
+	Core_Slice.cmx \
+	Core_Num_Error.cmx \
+	Rust_primitives_Integers.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt.fst \
@@ -2298,6 +2272,41 @@ FStar_UInt.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Char.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Char.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Rust_primitives_Char.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Str.Iter.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Str.Iter.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Str_Iter.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Str.Iter.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Enumerate.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Iter_Adapters_Enumerate.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked
+
+Core_Iter_Adapters_Enumerate.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked
+
+Core_Iter_Adapters_Enumerate.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked
+
+Core_Iter_Adapters_Enumerate.cmx: \
+	Core_Iter_Adapters_Enumerate.ml \
+	Rust_primitives.cmx
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.StrongExcludedMiddle.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.StrongExcludedMiddle.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.IndefiniteDescription.fsti.checked \
@@ -2323,6 +2332,23 @@ FStar_UInt8.ml: \
 
 FStar_UInt8.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt8.fst.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.TypeClassPlaceHolder.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_TypeClassPlaceHolder.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked
+
+Core_TypeClassPlaceHolder.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked
+
+Core_TypeClassPlaceHolder.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked
+
+Core_TypeClassPlaceHolder.cmx: \
+	Core_TypeClassPlaceHolder.ml
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Issue.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Issue.fsti \
@@ -2365,11 +2391,64 @@ FStar_Reflection_TermEq_Simple.ml: \
 FStar_Reflection_TermEq_Simple.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.TermEq.Simple.fst.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Alloc.Fmt.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Fmt.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Alloc_Fmt.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Fmt.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proofs/fstar/extraction/Hax_lib.Prop.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Hax_lib_Prop.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked
+
+Hax_lib_Prop.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked
+
+Hax_lib_Prop.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked
+
+Hax_lib_Prop.cmx: \
+	Hax_lib_Prop.ml
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Clone.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Clone.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked
+
+Core_Clone.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked
+
+Core_Clone.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked
+
+Core_Clone.cmx: \
+	Core_Clone.ml
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Easy.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.Easy.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Logic.Lemmas.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Arith.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Arith.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Ops_Arith.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Arith.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Prelude.fsti \
@@ -2412,45 +2491,21 @@ FStar_ErasedLogic.ml: \
 FStar_ErasedLogic.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.ErasedLogic.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Traits.Iterator.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Str.Iter.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Sources.Repeat_with.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Take.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Flatten.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Boxed.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Iter_Traits_Iterator.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked
+Alloc_Boxed.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked
 
-Core_Iter_Traits_Iterator.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked
+Alloc_Boxed.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked
 
-Core_Iter_Traits_Iterator.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked
+Alloc_Boxed.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked
 
-Core_Iter_Traits_Iterator.cmx: \
-	Core_Iter_Traits_Iterator.ml \
-	Rust_primitives.cmx \
-	Core_Option.cmx \
-	Core_Iter_Adapters_Enumerate.cmx \
-	Core_Iter_Adapters_Step_by.cmx \
-	Core_Iter_Adapters_Rev.cmx \
-	Core_Iter_Adapters_Map.cmx \
-	Core_Iter_Adapters_Flatten.cmx \
-	Core_Iter_Adapters_Zip.cmx \
-	Core_Iter_Adapters_Take.cmx \
-	Core_Iter_Sources_Repeat_with.cmx \
-	Core_Str_Iter.cmx
+Alloc_Boxed.cmx: \
+	Alloc_Boxed.ml
 
 /home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Quic_vec.fst.checked: \
 	Tls_codec.Quic_vec.fst \
@@ -2544,6 +2599,23 @@ Tls_codec_Quic_vec.cmx: \
 	Alloc_Fmt.cmx \
 	Core_Ops_Range.cmx
 
+/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Deref.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Ops_Deref.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked
+
+Core_Ops_Deref.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked
+
+Core_Ops_Deref.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked
+
+Core_Ops_Deref.cmx: \
+	Core_Ops_Deref.ml
+
 /home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Arrays.fst.checked: \
 	Tls_codec.Arrays.fst \
 	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Slice.fsti.checked \
@@ -2604,47 +2676,6 @@ Tls_codec_Arrays.cmx: \
 	Alloc_Alloc.cmx \
 	Alloc_Slice.cmx
 
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.BitVectors.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.BitVectors.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.FunctionalExtensionality.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives_BitVectors.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.BitVectors.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Convert.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Array.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Convert.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked
-
-Core_Convert.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked
-
-Core_Convert.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked
-
-Core_Convert.cmx: \
-	Core_Convert.ml \
-	Rust_primitives.cmx \
-	Core_Result.cmx \
-	Core_Array.cmx \
-	Core_Slice.cmx \
-	Core_Num_Error.cmx \
-	Rust_primitives_Integers.cmx
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Result.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Stubs.Tactics.Result.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Types.fsti.checked \
@@ -2652,6 +2683,19 @@ Core_Convert.cmx: \
 
 FStar_Tactics_Result.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Result.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Folds.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Folds.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lemmas.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Rust_primitives_Hax_Folds.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Folds.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Calc.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Calc.fst \
@@ -2669,57 +2713,27 @@ FStar_Calc.ml: \
 FStar_Calc.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Calc.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Arith.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Arith.fsti \
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Integers.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int128.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt128.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int64.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt64.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int32.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt32.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int16.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt16.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int8.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt8.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Ops_Arith.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Arith.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Traits.Collect.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Iter_Traits_Collect.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked
-
-Core_Iter_Traits_Collect.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked
-
-Core_Iter_Traits_Collect.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked
-
-Core_Iter_Traits_Collect.cmx: \
-	Core_Iter_Traits_Collect.ml \
-	Rust_primitives.cmx \
-	Core_Iter_Traits_Iterator.cmx \
-	Alloc_Vec.cmx \
-	Alloc_Alloc.cmx
-
-/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Boxed.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Alloc_Boxed.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked
-
-Alloc_Boxed.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked
-
-Alloc_Boxed.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked
-
-Alloc_Boxed.cmx: \
-	Alloc_Boxed.ml
+Rust_primitives_Integers.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Logic.Lemmas.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.Logic.Lemmas.fst \
@@ -2736,6 +2750,44 @@ FStar_Tactics_Logic_Lemmas.ml: \
 FStar_Tactics_Logic_Lemmas.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Logic.Lemmas.fst.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Step_by.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Iter_Adapters_Step_by.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked
+
+Core_Iter_Adapters_Step_by.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked
+
+Core_Iter_Adapters_Step_by.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked
+
+Core_Iter_Adapters_Step_by.cmx: \
+	Core_Iter_Adapters_Step_by.ml \
+	Rust_primitives.cmx
+
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Int.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Rust_primitives_Hax_Int.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked
+
+Rust_primitives_Hax_Int.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked
+
+Rust_primitives_Hax_Int.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked
+
+Rust_primitives_Hax_Int.cmx: \
+	Rust_primitives_Hax_Int.ml \
+	Core.cmx \
+	Rust_primitives.cmx
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt64.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt64.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
@@ -2743,30 +2795,6 @@ FStar_Tactics_Logic_Lemmas.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Rev.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Iter_Adapters_Rev.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Deref.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Ops_Deref.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked
-
-Core_Ops_Deref.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked
-
-Core_Ops_Deref.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked
-
-Core_Ops_Deref.cmx: \
-	Core_Ops_Deref.ml
 
 /home/maxime/test/formats/.fstar-cache/checked/Zeroize.fsti.checked: \
 	/home/maxime/test/formats/tls_codec/proofs/fstar/models/Zeroize.fsti \
@@ -2807,12 +2835,39 @@ FStar_List_Tot_Properties.krml: \
 FStar_Tactics_Types_Reflection.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Types.Reflection.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Map.fsti \
+/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Float.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.BitVectors.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Iter_Adapters_Map.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked
+Rust_primitives.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked
+
+Rust_primitives.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked
+
+Rust_primitives.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked
+
+Rust_primitives.cmx: \
+	Rust_primitives.ml \
+	Rust_primitives_Integers.cmx \
+	Rust_primitives_Arrays.cmx \
+	Rust_primitives_BitVectors.cmx \
+	Rust_primitives_Float.cmx \
+	Rust_primitives_Char.cmx \
+	Core_Option.cmx \
+	Core_Result.cmx \
+	Core_Ops_Control_flow.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Derived.Lemmas.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Reflection.V2.Derived.Lemmas.fst \
@@ -2848,14 +2903,6 @@ FStar_FunctionalExtensionality.ml: \
 FStar_FunctionalExtensionality.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.FunctionalExtensionality.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Num.Error.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Num_Error.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.Lemmas.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.BV.Lemmas.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.Lemmas.fsti.checked \
@@ -2874,6 +2921,39 @@ FStar_Tactics_BV_Lemmas.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Vec.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.Drain.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Alloc_Vec.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked
+
+Alloc_Vec.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked
+
+Alloc_Vec.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked
+
+Alloc_Vec.cmx: \
+	Alloc_Vec.ml \
+	Rust_primitives.cmx \
+	Core_Option.cmx \
+	Rust_primitives_Hax.cmx \
+	Core_Ops_Index.cmx \
+	Rust_primitives_Integers.cmx \
+	Alloc_Vec_Drain.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.Properties.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Seq.Properties.fsti \
@@ -2951,49 +3031,6 @@ FStar_Tactics_Names.ml: \
 
 FStar_Tactics_Names.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Names.fst.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Iter.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Option.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Option.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked
-
-Core_Option.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked
-
-Core_Option.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked
-
-Core_Option.cmx: \
-	Core_Option.ml \
-	Core_Result_Option_bundle.cmx \
-	Core_Default.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BitVector.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.BitVector.fst \
@@ -3079,24 +3116,6 @@ FStar_Int32.ml: \
 FStar_Int32.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int32.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Enumerate.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Iter_Adapters_Enumerate.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked
-
-Core_Iter_Adapters_Enumerate.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked
-
-Core_Iter_Adapters_Enumerate.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked
-
-Core_Iter_Adapters_Enumerate.cmx: \
-	Core_Iter_Adapters_Enumerate.ml \
-	Rust_primitives.cmx
-
 /home/maxime/test/formats/.fstar-cache/checked/Tls_codec.fst.checked: \
 	Tls_codec.fst \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Bundle.fst.checked \
@@ -3142,23 +3161,33 @@ FStar_Tactics_BV.ml: \
 FStar_Tactics_BV.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Folds.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Folds.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lemmas.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives_Hax_Folds.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Folds.fsti.checked
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.TermEq.Simple.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Reflection.TermEq.Simple.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Impls.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Std.Io.Impls.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Std_Io_Impls.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Impls.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Cmp.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Cmp.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Cmp.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Cmp.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.TermEq.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Reflection.TermEq.fsti \
@@ -3167,16 +3196,6 @@ Rust_primitives_Hax_Folds.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.V2.Data.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Core.Cmp.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Cmp.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Cmp.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Cmp.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Sealed.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Sealed.fsti \
@@ -3188,28 +3207,6 @@ FStar_Sealed.krml: \
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.NormSteps.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.NormSteps.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Integers.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int128.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt128.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int64.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt64.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int32.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt32.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int16.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt16.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int8.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt8.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Rust_primitives_Integers.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int128.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Int128.fst \
@@ -3266,6 +3263,24 @@ FStar_Reflection_V1.ml: \
 FStar_Reflection_V1.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.fst.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proofs/fstar/extraction/Hax_lib.fst \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Hax_lib.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked
+
+Hax_lib.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked
+
+Hax_lib.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked
+
+Hax_lib.cmx: \
+	Hax_lib.ml
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BitVector.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.BitVector.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.Base.fsti.checked \
@@ -3281,6 +3296,32 @@ FStar_Exn.ml: \
 
 FStar_Exn.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Exn.fst.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Sources.Repeat_with.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Sources.Repeat_with.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Iter_Sources_Repeat_with.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Sources.Repeat_with.fsti.checked
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Result.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Result.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked
+
+Core_Result.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked
+
+Core_Result.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked
+
+Core_Result.cmx: \
+	Core_Result.ml \
+	Core_Result_Option_bundle.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Easy.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Tactics.Easy.fst \
@@ -3321,23 +3362,23 @@ FStar_Monotonic_Witnessed.ml: \
 FStar_Monotonic_Witnessed.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Witnessed.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proofs/fstar/extraction/Hax_lib.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proofs/fstar/extraction/Hax_lib.Int.fst \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Hax_lib.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked
+Hax_lib_Int.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked
 
-Hax_lib.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked
+Hax_lib_Int.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked
 
-Hax_lib.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked
+Hax_lib_Int.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked
 
-Hax_lib.cmx: \
-	Hax_lib.ml
+Hax_lib_Int.cmx: \
+	Hax_lib_Int.ml \
+	Core.cmx
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Stubs.Reflection.Types.fsti \
@@ -3365,40 +3406,6 @@ FStar_TSet.ml: \
 FStar_TSet.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.TSet.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Fmt.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Core_Fmt.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proofs/fstar/extraction/Hax_lib.Int.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Hax_lib_Int.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked
-
-Hax_lib_Int.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked
-
-Hax_lib_Int.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked
-
-Hax_lib_Int.cmx: \
-	Hax_lib_Int.ml \
-	Core.cmx
-
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lemmas.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Math.Lemmas.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
@@ -3424,22 +3431,21 @@ FStar_PropositionalExtensionality.ml: \
 FStar_PropositionalExtensionality.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.PropositionalExtensionality.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Marker.fst \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Result_Option_bundle.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Marker.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked
+Core_Result_Option_bundle.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked
 
-Core_Marker.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked
+Core_Result_Option_bundle.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked
 
-Core_Marker.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked
+Core_Result_Option_bundle.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked
 
-Core_Marker.cmx: \
-	Core_Marker.ml
+Core_Result_Option_bundle.cmx: \
+	Core_Result_Option_bundle.ml
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.PredicateExtensionality.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.PredicateExtensionality.fst \
@@ -3454,34 +3460,25 @@ FStar_PredicateExtensionality.ml: \
 FStar_PredicateExtensionality.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.PredicateExtensionality.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Take.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Take.fsti \
+/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.Drain.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Vec.Drain.fsti \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Iter_Adapters_Take.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Take.fsti.checked
+Alloc_Vec_Drain.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.Drain.fsti.checked
 
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Squash.fsti.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Squash.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Result.fst \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Map.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Result.ml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked
-
-Core_Result.fs: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked
-
-Core_Result.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked
-
-Core_Result.cmx: \
-	Core_Result.ml \
-	Core_Result_Option_bundle.cmx
+Core_Iter_Adapters_Map.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked
 
 /home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Quic_vec.Rw_bytes.fst.checked: \
 	Tls_codec.Quic_vec.Rw_bytes.fst \
@@ -3556,6 +3553,14 @@ FStar_List_Tot_Base.ml: \
 FStar_List_Tot_Base.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.Base.fst.checked
 
+/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Num.Error.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
+
+Core_Num_Error.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked
+
 /home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int8.fst.checked: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Int8.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int8.fsti.checked \
@@ -3572,40 +3577,63 @@ FStar_Int8.ml: \
 FStar_Int8.krml: \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int8.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Monomorphized_update_at.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Monomorphized_update_at.fsti \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
+/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Slice.Iter.fst \
 	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Rust_primitives_Hax_Monomorphized_update_at.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Monomorphized_update_at.fsti.checked
+Core_Slice_Iter.ml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked
 
-/home/maxime/test/formats/.fstar-cache/checked/Core.Str.Iter.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Str.Iter.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked \
+Core_Slice_Iter.fs: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked
+
+Core_Slice_Iter.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked
+
+Core_Slice_Iter.cmx: \
+	Core_Slice_Iter.ml \
+	Rust_primitives.cmx
+
+/home/maxime/test/formats/.fstar-cache/checked/Core.Error.fsti.checked: \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Error.fsti \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
+	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
 
-Core_Str_Iter.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Str.Iter.fsti.checked
-
-/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Impls.fsti.checked: \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Std.Io.Impls.fsti \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.fsti.checked \
-	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked
-
-Std_Io_Impls.krml: \
-	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Impls.fsti.checked
+Core_Error.krml: \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Error.fsti.checked
 
 ALL_FST_FILES= \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Alloc.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Boxed.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.String.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Vec.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Clone.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Convert.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Enumerate.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Step_by.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Traits.Collect.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Traits.Iterator.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Marker.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Control_flow.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Deref.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Index.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Option.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Panicking.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Result.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Result_Option_bundle.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Slice.Iter.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.TypeClassPlaceHolder.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Int.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proofs/fstar/extraction/Hax_lib.Int.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proofs/fstar/extraction/Hax_lib.Prop.fst \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proofs/fstar/extraction/Hax_lib.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.BV.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.BitVector.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Calc.fst \
@@ -3692,34 +3720,6 @@ ALL_FST_FILES= \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt8.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/Prims.fst \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/legacy/FStar.ErasedLogic.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Alloc.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Boxed.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.String.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Vec.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Clone.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Convert.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Enumerate.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Step_by.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Traits.Collect.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Traits.Iterator.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Marker.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Control_flow.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Deref.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Index.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Option.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Panicking.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Result.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Result_Option_bundle.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Slice.Iter.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.TypeClassPlaceHolder.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Int.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.fst \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.fst \
-	/home/maxime/cryspen/hax/hax-lib/proofs/fstar/extraction/Hax_lib.Int.fst \
-	/home/maxime/cryspen/hax/hax-lib/proofs/fstar/extraction/Hax_lib.Prop.fst \
-	/home/maxime/cryspen/hax/hax-lib/proofs/fstar/extraction/Hax_lib.fst \
 	Tls_codec.Arrays.fst \
 	Tls_codec.Bundle.fst \
 	Tls_codec.Primitives.fst \
@@ -3731,6 +3731,43 @@ ALL_FST_FILES= \
 	Tls_codec.fst
 
 ALL_FSTI_FILES= \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Fmt.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Slice.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Alloc.Vec.Drain.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Array.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Borrow.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Cmp.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Default.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Error.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Fmt.Rt.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Fmt.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Hash.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Hint.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Flatten.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Map.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Rev.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Take.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Zip.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.Sources.Repeat_with.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Iter.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Mem.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Num.Error.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Num.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Arith.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Drop.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Ops.Range.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Slice.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Core.Str.Iter.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Std.Io.Error.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Std.Io.Impls.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core/Std.Io.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Arrays.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.BitVectors.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Char.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Float.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Folds.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Monomorphized_update_at.fsti \
+	/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Integers.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.All.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.Attributes.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.BV.fsti \
@@ -3810,141 +3847,110 @@ ALL_FSTI_FILES= \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt32.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt64.fsti \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib/FStar.UInt8.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Fmt.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Slice.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Alloc.Vec.Drain.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Array.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Borrow.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Cmp.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Default.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Error.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Fmt.Rt.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Fmt.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Hash.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Hint.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Flatten.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Map.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Rev.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Take.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Adapters.Zip.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.Sources.Repeat_with.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Iter.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Mem.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Num.Error.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Num.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Arith.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Drop.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Ops.Range.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Slice.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Core.Str.Iter.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Std.Io.Error.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Std.Io.Impls.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core/Std.Io.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Arrays.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.BitVectors.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Char.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Float.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Folds.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Hax.Monomorphized_update_at.fsti \
-	/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives/Rust_primitives.Integers.fsti \
 	/home/maxime/test/formats/tls_codec/proofs/fstar/models/Zeroize.fsti
 
 ALL_CHECKED_FILES= \
-	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Impls.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Str.Iter.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Monomorphized_update_at.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Error.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int8.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.Base.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Quic_vec.Rw_bytes.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Squash.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Take.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.Drain.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.PredicateExtensionality.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.PropositionalExtensionality.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.V2.Data.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lemmas.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.TSet.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.Types.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Int.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Witnessed.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Logic.Lemmas.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int64.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Easy.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Result.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Sources.Repeat_with.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Exn.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BitVector.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Range.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int128.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.NormSteps.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Sealed.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Cmp.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.TermEq.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Cmp.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Impls.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.TermEq.Simple.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Folds.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Classical.Sugar.fsti.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int32.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int128.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.Derived.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BitVector.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Names.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.TypeChecker.Core.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BV.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Float.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt128.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.Properties.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.Lemmas.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.Error.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.FunctionalExtensionality.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Derived.Lemmas.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Map.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Types.Reflection.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.Properties.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Zeroize.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt64.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Logic.Lemmas.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Arith.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Integers.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Calc.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Folds.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Result.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.BitVectors.fsti.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Arrays.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Deref.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Quic_vec.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Boxed.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.ErasedLogic.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Set.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Set.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Prelude.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Arith.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Easy.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Fmt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.TermEq.Simple.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.Properties.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Issue.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt8.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.StrongExcludedMiddle.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Enumerate.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Str.Iter.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt32.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Slice.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Int.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Convert.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.Derived.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.Lemmas.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int64.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Iterator.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Tls_vec.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.TSet.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Float.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.Const.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.VConfig.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Calc.fsti.checked \
@@ -3952,121 +3958,120 @@ ALL_CHECKED_FILES= \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.V1.Data.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Ghost.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Heap.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Slice.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.String.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.MApply0.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.V2.Builtins.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.FunctionalExtensionality.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.IndefiniteDescription.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Quic_vec.Secret_bytes.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Borrow.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.Logic.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Arith.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt32.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Effect.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Unseal.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.NamedView.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.Base.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int8.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Util.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Mem.fsti.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Bundle.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int16.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.TermEq.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Attributes.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Sealed.Inhabited.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Mem.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.Logic.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Classical.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.SyntaxHelpers.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Types.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Witnessed.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int.Cast.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.NormSteps.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Error.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt64.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.SyntaxHelpers.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Visit.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.V1.Builtins.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.MApply0.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lemmas.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Range.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Control_flow.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.Logic.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/Prims.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Hash.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Derived.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Classical.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt16.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Arrays.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.MApply.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.ST.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Quic_vec.Rw.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.SMT.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.IndefiniteDescription.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt128.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.NamedView.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.Base.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Panicking.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.V1.Builtins.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Char.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.SyntaxCoercions.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Compare.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Sources.Repeat_with.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Flatten.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.Error.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt8.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Tactics.Common.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Std.Io.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Rev.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.BitVectors.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.List.Tot.Properties.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Mul.fst.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Drop.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.SyntaxHelpers.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Option.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Heap.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Zip.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Math.Lib.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Flatten.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.BV.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Hint.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Compare.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Syntax.Syntax.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Monotonic.Pure.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Hash.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int32.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Formula.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Stubs.Reflection.V2.Builtins.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.MApply.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.Drain.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Marker.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt16.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Float.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Typeclasses.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Hax_lib.Prop.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Borrow.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Print.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Names.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Default.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Fmt.Rt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.Logic.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.String.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V1.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Result_Option_bundle.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.UInt.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.Monomorphized_update_at.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Formula.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Ops.Index.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.V2.Bare.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.Native.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Step_by.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Traits.Collect.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.Print.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Tactics.SMT.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.BV.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pprint.fsti.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Num.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Seq.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Ghost.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Error.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Compare.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Squash.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Heap.fst.checked \
@@ -4074,20 +4079,15 @@ ALL_CHECKED_FILES= \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Int16.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Char.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Array.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Clone.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Rust_primitives.Hax.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Vec.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Pervasives.fsti.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.TypeClassPlaceHolder.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Hint.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.All.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Order.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Core.Slice.Iter.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V1.Derived.Lemmas.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Iter.Adapters.Take.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Derived.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Alloc.fst.checked \
+	/home/maxime/test/formats/.fstar-cache/checked/Core.Array.fsti.checked \
 	/home/maxime/test/formats/.fstar-cache/checked/Tls_codec.Primitives.fst.checked \
-	/home/maxime/test/formats/.fstar-cache/checked/Alloc.Fmt.fsti.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Reflection.V2.Collect.fst.checked \
 	/home/maxime/cryspen/FStar/stage2/out/lib/fstar/ulib.checked/FStar.Preorder.fst.checked
 
@@ -4170,7 +4170,6 @@ ALL_ML_FILES= \
 	Tls_codec_Quic_vec_Secret_bytes.ml
 
 ALL_KRML_FILES= \
-	Core_Iter_Adapters_Zip.krml \
 	Core_Ops_Index.krml \
 	Core_Ops_Control_flow.krml \
 	Core_Result_Option_bundle.krml \
@@ -4186,6 +4185,7 @@ ALL_KRML_FILES= \
 	Core_Ops.krml \
 	Core_Iter_Adapters_Map.krml \
 	Core_Iter_Adapters_Rev.krml \
+	Core_Iter_Adapters_Zip.krml \
 	Core_Str_Iter.krml \
 	Core_Iter_Sources_Repeat_with.krml \
 	Core_Iter_Adapters_Take.krml \

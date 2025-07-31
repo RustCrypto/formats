@@ -3,9 +3,9 @@
   "include_dirs": [
     "/home/maxime/.hax/hacl_home/lib",
     "",
-    "/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/core",
-    "/home/maxime/cryspen/hax/hax-lib/proof-libs/fstar/rust_primitives",
-    "/home/maxime/cryspen/hax/hax-lib/proofs/fstar/extraction",
+    "/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/core",
+    "/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proof-libs/fstar/rust_primitives",
+    "/home/maxime/.cargo/git/checkouts/hax-580ebeee043cdea1/8914649/hax-lib/proofs/fstar/extraction",
     "/home/maxime/test/formats/tls_codec/proofs/fstar/extraction",
     "../models"
   ]

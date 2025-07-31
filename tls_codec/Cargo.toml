@@ -21,7 +21,7 @@ zeroize = { version = "1.8", default-features = false, features = [
 arbitrary = { version = "1.4", features = ["derive"], optional = true }
 tls_codec_derive = { version = "=0.4.2", path = "./derive", optional = true }
 serde = { version = "1.0.184", features = ["derive"], optional = true }
-hax-lib = {path = "../../../cryspen/hax/hax-lib"}
+hax-lib = {git = "https://github.com/cryspen/hax", branch = "tls-codec-lib"}
 
 [dev-dependencies]
 criterion = { version = "0.6", default-features = false }
