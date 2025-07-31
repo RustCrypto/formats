@@ -393,13 +393,13 @@ macro_rules! impl_vec_members {
         }
 
         /// Retains only the elements specified by the predicate.
-        #[inline]
+        /* #[inline]
         pub fn retain<F>(&mut self, f: F)
         where
             F: FnMut(&$element_type) -> bool,
         {
             self.vec.retain(f)
-        }
+        } */
 
         /// Get the number of bytes used for the length encoding.
         #[inline(always)]

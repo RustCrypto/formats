@@ -76,67 +76,12 @@ val impl_SecretVLBytes__vec': self: t_SecretVLBytes -> t_Slice u8
 unfold
 let impl_SecretVLBytes__vec = impl_SecretVLBytes__vec'
 
-(* [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_12: Core.Fmt.t_Debug t_SecretVLBytes =
-  {
-    f_fmt_pre = (fun (self: t_SecretVLBytes) (f: Core.Fmt.t_Formatter) -> true);
-    f_fmt_post
-    =
-    (fun
-        (self: t_SecretVLBytes)
-        (f: Core.Fmt.t_Formatter)
-        (out1: (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error))
-        ->
-        true);
-    f_fmt
-    =
-    fun (self: t_SecretVLBytes) (f: Core.Fmt.t_Formatter) ->
-      let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
-        Core.Fmt.impl_11__write_fmt f
-          (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 1)
-              (mk_usize 0)
-              (let list = ["SecretVLBytes { "] in
-                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                Rust_primitives.Hax.array_of_list 1 list)
-              (let list:Prims.list Core.Fmt.Rt.t_Argument = [] in
-                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 0);
-                Rust_primitives.Hax.array_of_list 0 list)
-            <:
-            Core.Fmt.t_Arguments)
-      in
-      let f:Core.Fmt.t_Formatter = tmp0 in
-      match out <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error with
-      | Core.Result.Result_Ok _ ->
-        let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
-          Tls_codec.Quic_vec.write_hex f (impl_SecretVLBytes__vec self <: t_Slice u8)
-        in
-        let f:Core.Fmt.t_Formatter = tmp0 in
-        (match out <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error with
-          | Core.Result.Result_Ok _ ->
-            let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-            =
-              Core.Fmt.impl_11__write_fmt f
-                (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
-                    (let list = [" }"] in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                      Rust_primitives.Hax.array_of_list 1 list)
-                  <:
-                  Core.Fmt.t_Arguments)
-            in
-            let f:Core.Fmt.t_Formatter = tmp0 in
-            let hax_temp_output:Core.Result.t_Result Prims.unit Core.Fmt.t_Error = out in
-            f, hax_temp_output
-            <:
-            (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-          | Core.Result.Result_Err err ->
-            f, (Core.Result.Result_Err err <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-            <:
-            (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error))
-      | Core.Result.Result_Err err ->
-        f, (Core.Result.Result_Err err <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-        <:
-        (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-  } *)
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume
+val impl_17': Core.Fmt.t_Debug t_SecretVLBytes
+
+unfold
+let impl_17 = impl_17'
 
 /// Get a reference to the vlbytes's vec.
 let impl_SecretVLBytes__as_slice (self: t_SecretVLBytes) : t_Slice u8 =
@@ -154,7 +99,7 @@ let impl_SecretVLBytes__pop (self: t_SecretVLBytes) : (t_SecretVLBytes & Core.Op
   self, hax_temp_output <: (t_SecretVLBytes & Core.Option.t_Option u8)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_14: Core.Convert.t_From t_SecretVLBytes (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
+let impl_13: Core.Convert.t_From t_SecretVLBytes (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
   {
     f_from_pre = (fun (vec: Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) -> true);
     f_from_post
@@ -164,7 +109,7 @@ let impl_14: Core.Convert.t_From t_SecretVLBytes (Alloc.Vec.t_Vec u8 Alloc.Alloc
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_15: Core.Convert.t_From t_SecretVLBytes (t_Slice u8) =
+let impl_14: Core.Convert.t_From t_SecretVLBytes (t_Slice u8) =
   {
     f_from_pre = (fun (slice: t_Slice u8) -> true);
     f_from_post = (fun (slice: t_Slice u8) (out: t_SecretVLBytes) -> true);
@@ -177,7 +122,7 @@ let impl_15: Core.Convert.t_From t_SecretVLBytes (t_Slice u8) =
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_16 (v_N: usize) : Core.Convert.t_From t_SecretVLBytes (t_Array u8 v_N) =
+let impl_15 (v_N: usize) : Core.Convert.t_From t_SecretVLBytes (t_Array u8 v_N) =
   {
     f_from_pre = (fun (slice: t_Array u8 v_N) -> true);
     f_from_post = (fun (slice: t_Array u8 v_N) (out: t_SecretVLBytes) -> true);
@@ -190,7 +135,7 @@ let impl_16 (v_N: usize) : Core.Convert.t_From t_SecretVLBytes (t_Array u8 v_N) 
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_17: Core.Convert.t_AsRef t_SecretVLBytes (t_Slice u8) =
+let impl_16: Core.Convert.t_AsRef t_SecretVLBytes (t_Slice u8) =
   {
     f_as_ref_pre = (fun (self: t_SecretVLBytes) -> true);
     f_as_ref_post = (fun (self: t_SecretVLBytes) (out: t_Slice u8) -> true);
@@ -251,7 +196,7 @@ let impl_2: Tls_codec.t_Serialize t_SecretVLBytes =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: t_SecretVLBytes)
         (writer: v_W)
         ->
@@ -260,7 +205,7 @@ let impl_2: Tls_codec.t_Serialize t_SecretVLBytes =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: t_SecretVLBytes)
         (writer: v_W)
         (out1: (v_W & Core.Result.t_Result usize Tls_codec.t_Error))
@@ -270,7 +215,7 @@ let impl_2: Tls_codec.t_Serialize t_SecretVLBytes =
     =
     fun
       (#v_W: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
       (self: t_SecretVLBytes)
       (writer: v_W)
       ->
@@ -294,7 +239,7 @@ let impl_3: Tls_codec.t_Deserialize t_SecretVLBytes =
     =
     (fun
         (#v_R: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
         (bytes: v_R)
         ->
         true);
@@ -302,7 +247,7 @@ let impl_3: Tls_codec.t_Deserialize t_SecretVLBytes =
     =
     (fun
         (#v_R: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
         (bytes: v_R)
         (out1: (v_R & Core.Result.t_Result t_SecretVLBytes Tls_codec.t_Error))
         ->
@@ -311,7 +256,7 @@ let impl_3: Tls_codec.t_Deserialize t_SecretVLBytes =
     =
     fun
       (#v_R: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
       (bytes: v_R)
       ->
       let tmp0, out:(v_R & Core.Result.t_Result Tls_codec.Quic_vec.t_VLBytes Tls_codec.t_Error) =
@@ -322,9 +267,9 @@ let impl_3: Tls_codec.t_Deserialize t_SecretVLBytes =
       in
       let bytes:v_R = tmp0 in
       match out <: Core.Result.t_Result Tls_codec.Quic_vec.t_VLBytes Tls_codec.t_Error with
-      | Core.Result.Result_Ok hoist112 ->
+      | Core.Result.Result_Ok hoist102 ->
         let hax_temp_output:Core.Result.t_Result t_SecretVLBytes Tls_codec.t_Error =
-          Core.Result.Result_Ok (SecretVLBytes hoist112 <: t_SecretVLBytes)
+          Core.Result.Result_Ok (SecretVLBytes hoist102 <: t_SecretVLBytes)
           <:
           Core.Result.t_Result t_SecretVLBytes Tls_codec.t_Error
         in

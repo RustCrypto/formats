@@ -13,7 +13,7 @@ let _ =
 
 let tls_serialize_bytes
       (#v_W: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
       (writer: v_W)
       (bytes: t_Slice u8)
     : (v_W & Core.Result.t_Result usize Tls_codec.t_Error) =
@@ -132,7 +132,7 @@ let impl: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: Tls_codec.Quic_vec.t_VLBytes)
         (writer: v_W)
         ->
@@ -141,7 +141,7 @@ let impl: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: Tls_codec.Quic_vec.t_VLBytes)
         (writer: v_W)
         (out1: (v_W & Core.Result.t_Result usize Tls_codec.t_Error))
@@ -151,7 +151,7 @@ let impl: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
     =
     fun
       (#v_W: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
       (self: Tls_codec.Quic_vec.t_VLBytes)
       (writer: v_W)
       ->
@@ -173,7 +173,7 @@ let impl_1: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: Tls_codec.Quic_vec.t_VLBytes)
         (writer: v_W)
         ->
@@ -182,7 +182,7 @@ let impl_1: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: Tls_codec.Quic_vec.t_VLBytes)
         (writer: v_W)
         (out1: (v_W & Core.Result.t_Result usize Tls_codec.t_Error))
@@ -192,7 +192,7 @@ let impl_1: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLBytes =
     =
     fun
       (#v_W: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
       (self: Tls_codec.Quic_vec.t_VLBytes)
       (writer: v_W)
       ->
@@ -216,7 +216,7 @@ let impl_2: Tls_codec.t_Deserialize Tls_codec.Quic_vec.t_VLBytes =
     =
     (fun
         (#v_R: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
         (bytes: v_R)
         ->
         true);
@@ -224,7 +224,7 @@ let impl_2: Tls_codec.t_Deserialize Tls_codec.Quic_vec.t_VLBytes =
     =
     (fun
         (#v_R: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
         (bytes: v_R)
         (out1: (v_R & Core.Result.t_Result Tls_codec.Quic_vec.t_VLBytes Tls_codec.t_Error))
         ->
@@ -233,7 +233,7 @@ let impl_2: Tls_codec.t_Deserialize Tls_codec.Quic_vec.t_VLBytes =
     =
     fun
       (#v_R: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
       (bytes: v_R)
       ->
       let tmp0, out:(v_R & Core.Result.t_Result (usize & usize) Tls_codec.t_Error) =
@@ -381,7 +381,7 @@ let impl_3: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: Tls_codec.Quic_vec.t_VLByteSlice)
         (writer: v_W)
         ->
@@ -390,7 +390,7 @@ let impl_3: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: Tls_codec.Quic_vec.t_VLByteSlice)
         (writer: v_W)
         (out1: (v_W & Core.Result.t_Result usize Tls_codec.t_Error))
@@ -400,7 +400,7 @@ let impl_3: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
     =
     fun
       (#v_W: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
       (self: Tls_codec.Quic_vec.t_VLByteSlice)
       (writer: v_W)
       ->
@@ -420,7 +420,7 @@ let impl_4: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: Tls_codec.Quic_vec.t_VLByteSlice)
         (writer: v_W)
         ->
@@ -429,7 +429,7 @@ let impl_4: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: Tls_codec.Quic_vec.t_VLByteSlice)
         (writer: v_W)
         (out1: (v_W & Core.Result.t_Result usize Tls_codec.t_Error))
@@ -439,7 +439,7 @@ let impl_4: Tls_codec.t_Serialize Tls_codec.Quic_vec.t_VLByteSlice =
     =
     fun
       (#v_W: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
       (self: Tls_codec.Quic_vec.t_VLByteSlice)
       (writer: v_W)
       ->

@@ -200,8 +200,8 @@ let write_variable_length (content_length: usize)
     <:
     Core.Result.t_Result u64 Core.Num.Error.t_TryFromIntError
   with
-  | Core.Result.Result_Ok hoist71 ->
-    (match length_encoding_bytes hoist71 <: Core.Result.t_Result usize Tls_codec.t_Error with
+  | Core.Result.Result_Ok hoist69 ->
+    (match length_encoding_bytes hoist69 <: Core.Result.t_Result usize Tls_codec.t_Error with
       | Core.Result.Result_Ok len_len ->
         let _:Prims.unit =
           if ~.false
@@ -440,7 +440,7 @@ let write_variable_length (content_length: usize)
     Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) Tls_codec.t_Error
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_6 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Size v_T)
+let impl_6 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Tls_codec.t_Size v_T)
     : Tls_codec.t_Size (t_Slice v_T) =
   {
     f_tls_serialized_len_pre = (fun (self: t_Slice v_T) -> true);
@@ -474,7 +474,7 @@ let impl_6 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_code
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Size v_T)
+let impl (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Tls_codec.t_Size v_T)
     : Tls_codec.t_Size (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
     f_tls_serialized_len_pre = (fun (self: Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) -> true);
@@ -490,7 +490,7 @@ let impl (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_1 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_Size v_T)
+let impl_1 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Tls_codec.t_Size v_T)
     : Tls_codec.t_Size (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
     f_tls_serialized_len_pre = (fun (self: Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) -> true);
@@ -506,12 +506,9 @@ let impl_1 (#v_T: Type0) (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_code
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-assume val size_vec #v_T: Tls_codec.Bundle.t_Size (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global)
-
-[@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_2
       (#v_T: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_DeserializeBytes v_T)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Tls_codec.t_DeserializeBytes v_T)
     : Tls_codec.t_DeserializeBytes (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
     _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
@@ -585,7 +582,7 @@ let impl_2
                       let read:usize =
                         read +!
                         (Tls_codec.f_tls_serialized_len #v_T
-                            #i1._super_6186925850915422136
+                            #FStar.Tactics.Typeclasses.solve
                             element
                           <:
                           usize)
@@ -651,10 +648,10 @@ let impl_2
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-assume val impl_3
+let impl_3
       (#v_T: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_SerializeBytes v_T)
-    : Tls_codec.t_SerializeBytes (t_Slice v_T) (* =
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Tls_codec.t_SerializeBytes v_T)
+    : Tls_codec.t_SerializeBytes (t_Slice v_T) =
   {
     _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
     f_tls_serialize_bytes_pre = (fun (self: t_Slice v_T) -> true);
@@ -708,31 +705,29 @@ assume val impl_3
                 Core.Slice.Iter.t_Iter v_T)
               out
               (fun out e ->
-                  let out:(Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
-                    out
-                  in
+                  let out:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global = out in
                   let e:v_T = e in
                   match
                     Tls_codec.f_tls_serialize_bytes #v_T #FStar.Tactics.Typeclasses.solve e
                     <:
                     Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) Tls_codec.t_Error
                   with
-                  | Core.Result.Result_Ok hoist76 ->
-                    Core.Ops.Control_flow.ControlFlow_Continue
-                    (Alloc.Vec.impl_1__append #u8 #Alloc.Alloc.t_Global out hoist76
-                      <:
-                      (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global &
-                        Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global))
+                  | Core.Result.Result_Ok serialized_e ->
+                    let tmp0, tmp1:(Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global &
+                      Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
+                      Alloc.Vec.impl_1__append #u8 #Alloc.Alloc.t_Global out serialized_e
+                    in
+                    let out:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global = tmp0 in
+                    let serialized_e:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global = tmp1 in
+                    let _:Prims.unit = () in
+                    Core.Ops.Control_flow.ControlFlow_Continue out
                     <:
                     Core.Ops.Control_flow.t_ControlFlow
                       (Core.Ops.Control_flow.t_ControlFlow
                           (Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)
                               Tls_codec.t_Error)
-                          (Prims.unit &
-                            (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global &
-                              Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)))
-                      (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global &
-                        Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)
+                          (Prims.unit & Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global))
+                      (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)
                   | Core.Result.Result_Err err ->
                     Core.Ops.Control_flow.ControlFlow_Break
                     (Core.Ops.Control_flow.ControlFlow_Break
@@ -744,23 +739,18 @@ assume val impl_3
                       Core.Ops.Control_flow.t_ControlFlow
                         (Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)
                             Tls_codec.t_Error)
-                        (Prims.unit &
-                          (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global &
-                            Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)))
+                        (Prims.unit & Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global))
                     <:
                     Core.Ops.Control_flow.t_ControlFlow
                       (Core.Ops.Control_flow.t_ControlFlow
                           (Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)
                               Tls_codec.t_Error)
-                          (Prims.unit &
-                            (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global &
-                              Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)))
-                      (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global &
-                        Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global))
+                          (Prims.unit & Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global))
+                      (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global))
             <:
             Core.Ops.Control_flow.t_ControlFlow
               (Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) Tls_codec.t_Error)
-              (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global & Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)
+              (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global)
           with
           | Core.Ops.Control_flow.ControlFlow_Break ret -> ret
           | Core.Ops.Control_flow.ControlFlow_Continue out ->
@@ -779,12 +769,12 @@ assume val impl_3
         Core.Result.Result_Err err
         <:
         Core.Result.t_Result (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) Tls_codec.t_Error
-  } *)
+  }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_4
       (#v_T: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_SerializeBytes v_T)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Tls_codec.t_SerializeBytes v_T)
     : Tls_codec.t_SerializeBytes (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
     _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
@@ -807,7 +797,7 @@ let impl_4
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 let impl_5
       (#v_T: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Tls_codec.t_SerializeBytes v_T)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Tls_codec.t_SerializeBytes v_T)
     : Tls_codec.t_SerializeBytes (Alloc.Vec.t_Vec v_T Alloc.Alloc.t_Global) =
   {
     _super_6186925850915422136 = FStar.Tactics.Typeclasses.solve;
@@ -965,50 +955,50 @@ let write_hex (f: Core.Fmt.t_Formatter) (data: t_Slice u8)
 /// This is faster than the generic version.
 type t_VLBytes = { f_vec:Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global }
 
-let impl_16: Core.Clone.t_Clone t_VLBytes =
+let impl_15: Core.Clone.t_Clone t_VLBytes =
   { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
-val impl_17': Core.Marker.t_StructuralPartialEq t_VLBytes
+val impl_16': Core.Marker.t_StructuralPartialEq t_VLBytes
+
+unfold
+let impl_16 = impl_16'
+
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume
+val impl_17': Core.Cmp.t_PartialEq t_VLBytes t_VLBytes
 
 unfold
 let impl_17 = impl_17'
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
-val impl_18': Core.Cmp.t_PartialEq t_VLBytes t_VLBytes
+val impl_18': Core.Cmp.t_Eq t_VLBytes
 
 unfold
 let impl_18 = impl_18'
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
-val impl_19': Core.Cmp.t_Eq t_VLBytes
+val impl_19': Core.Hash.t_Hash t_VLBytes
 
 unfold
 let impl_19 = impl_19'
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
 assume
-val impl_20': Core.Hash.t_Hash t_VLBytes
-
-unfold
-let impl_20 = impl_20'
-
-[@@ FStar.Tactics.Typeclasses.tcinstance]
-assume
-val impl_22': Core.Cmp.t_PartialOrd t_VLBytes t_VLBytes
-
-unfold
-let impl_22 = impl_22'
-
-[@@ FStar.Tactics.Typeclasses.tcinstance]
-assume
-val impl_21': Core.Cmp.t_Ord t_VLBytes
+val impl_21': Core.Cmp.t_PartialOrd t_VLBytes t_VLBytes
 
 unfold
 let impl_21 = impl_21'
+
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume
+val impl_20': Core.Cmp.t_Ord t_VLBytes
+
+unfold
+let impl_20 = impl_20'
 
 /// Generate a new variable-length byte vector.
 let impl_VLBytes__new (vec: Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) : t_VLBytes =
@@ -1019,67 +1009,12 @@ let impl_VLBytes__vec (self: t_VLBytes) : t_Slice u8 =
     #FStar.Tactics.Typeclasses.solve
     self.f_vec
 
-(* [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_23: Core.Fmt.t_Debug t_VLBytes =
-  {
-    f_fmt_pre = (fun (self: t_VLBytes) (f: Core.Fmt.t_Formatter) -> true);
-    f_fmt_post
-    =
-    (fun
-        (self: t_VLBytes)
-        (f: Core.Fmt.t_Formatter)
-        (out1: (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error))
-        ->
-        true);
-    f_fmt
-    =
-    fun (self: t_VLBytes) (f: Core.Fmt.t_Formatter) ->
-      let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
-        Core.Fmt.impl_11__write_fmt f
-          (Core.Fmt.Rt.impl_1__new_v1 (mk_usize 1)
-              (mk_usize 0)
-              (let list = ["VLBytes { "] in
-                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                Rust_primitives.Hax.array_of_list 1 list)
-              (let list:Prims.list Core.Fmt.Rt.t_Argument = [] in
-                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 0);
-                Rust_primitives.Hax.array_of_list 0 list)
-            <:
-            Core.Fmt.t_Arguments)
-      in
-      let f:Core.Fmt.t_Formatter = tmp0 in
-      match out <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error with
-      | Core.Result.Result_Ok _ ->
-        let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
-          write_hex f (impl_VLBytes__vec self <: t_Slice u8)
-        in
-        let f:Core.Fmt.t_Formatter = tmp0 in
-        (match out <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error with
-          | Core.Result.Result_Ok _ ->
-            let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-            =
-              Core.Fmt.impl_11__write_fmt f
-                (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
-                    (let list = [" }"] in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                      Rust_primitives.Hax.array_of_list 1 list)
-                  <:
-                  Core.Fmt.t_Arguments)
-            in
-            let f:Core.Fmt.t_Formatter = tmp0 in
-            let hax_temp_output:Core.Result.t_Result Prims.unit Core.Fmt.t_Error = out in
-            f, hax_temp_output
-            <:
-            (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-          | Core.Result.Result_Err err ->
-            f, (Core.Result.Result_Err err <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-            <:
-            (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error))
-      | Core.Result.Result_Err err ->
-        f, (Core.Result.Result_Err err <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-        <:
-        (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-  } *)
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume
+val impl_27': Core.Fmt.t_Debug t_VLBytes
+
+unfold
+let impl_27 = impl_27'
 
 /// Get a reference to the vlbytes's vec.
 let impl_VLBytes__as_slice (self: t_VLBytes) : t_Slice u8 =
@@ -1097,7 +1032,7 @@ let impl_VLBytes__pop (self: t_VLBytes) : (t_VLBytes & Core.Option.t_Option u8) 
   self, hax_temp_output <: (t_VLBytes & Core.Option.t_Option u8)
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_25: Core.Convert.t_From t_VLBytes (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
+let impl_23: Core.Convert.t_From t_VLBytes (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) =
   {
     f_from_pre = (fun (vec: Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) -> true);
     f_from_post = (fun (vec: Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Global) (out: t_VLBytes) -> true);
@@ -1105,7 +1040,7 @@ let impl_25: Core.Convert.t_From t_VLBytes (Alloc.Vec.t_Vec u8 Alloc.Alloc.t_Glo
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_26: Core.Convert.t_From t_VLBytes (t_Slice u8) =
+let impl_24: Core.Convert.t_From t_VLBytes (t_Slice u8) =
   {
     f_from_pre = (fun (slice: t_Slice u8) -> true);
     f_from_post = (fun (slice: t_Slice u8) (out: t_VLBytes) -> true);
@@ -1118,7 +1053,7 @@ let impl_26: Core.Convert.t_From t_VLBytes (t_Slice u8) =
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_27 (v_N: usize) : Core.Convert.t_From t_VLBytes (t_Array u8 v_N) =
+let impl_25 (v_N: usize) : Core.Convert.t_From t_VLBytes (t_Array u8 v_N) =
   {
     f_from_pre = (fun (slice: t_Array u8 v_N) -> true);
     f_from_post = (fun (slice: t_Array u8 v_N) (out: t_VLBytes) -> true);
@@ -1131,7 +1066,7 @@ let impl_27 (v_N: usize) : Core.Convert.t_From t_VLBytes (t_Array u8 v_N) =
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_28: Core.Convert.t_AsRef t_VLBytes (t_Slice u8) =
+let impl_26: Core.Convert.t_AsRef t_VLBytes (t_Slice u8) =
   {
     f_as_ref_pre = (fun (self: t_VLBytes) -> true);
     f_as_ref_post = (fun (self: t_VLBytes) (out: t_Slice u8) -> true);
@@ -1352,69 +1287,18 @@ let impl_11: Tls_codec.t_Size t_VLBytes =
 
 type t_VLByteSlice = | VLByteSlice : t_Slice u8 -> t_VLByteSlice
 
-(* [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_12: Core.Fmt.t_Debug t_VLByteSlice =
-  {
-    f_fmt_pre = (fun (self: t_VLByteSlice) (f: Core.Fmt.t_Formatter) -> true);
-    f_fmt_post
-    =
-    (fun
-        (self: t_VLByteSlice)
-        (f: Core.Fmt.t_Formatter)
-        (out1: (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error))
-        ->
-        true);
-    f_fmt
-    =
-    fun (self: t_VLByteSlice) (f: Core.Fmt.t_Formatter) ->
-      let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
-        Core.Fmt.impl_11__write_fmt f
-          (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
-              (let list = ["VLByteSlice { "] in
-                FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                Rust_primitives.Hax.array_of_list 1 list)
-            <:
-            Core.Fmt.t_Arguments)
-      in
-      let f:Core.Fmt.t_Formatter = tmp0 in
-      match out <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error with
-      | Core.Result.Result_Ok _ ->
-        let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error) =
-          write_hex f self._0
-        in
-        let f:Core.Fmt.t_Formatter = tmp0 in
-        (match out <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error with
-          | Core.Result.Result_Ok _ ->
-            let tmp0, out:(Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-            =
-              Core.Fmt.impl_11__write_fmt f
-                (Core.Fmt.Rt.impl_1__new_const (mk_usize 1)
-                    (let list = [" }"] in
-                      FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 1);
-                      Rust_primitives.Hax.array_of_list 1 list)
-                  <:
-                  Core.Fmt.t_Arguments)
-            in
-            let f:Core.Fmt.t_Formatter = tmp0 in
-            let hax_temp_output:Core.Result.t_Result Prims.unit Core.Fmt.t_Error = out in
-            f, hax_temp_output
-            <:
-            (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-          | Core.Result.Result_Err err ->
-            f, (Core.Result.Result_Err err <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-            <:
-            (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error))
-      | Core.Result.Result_Err err ->
-        f, (Core.Result.Result_Err err <: Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-        <:
-        (Core.Fmt.t_Formatter & Core.Result.t_Result Prims.unit Core.Fmt.t_Error)
-  }
- *)
+[@@ FStar.Tactics.Typeclasses.tcinstance]
+assume
+val impl_28': Core.Fmt.t_Debug t_VLByteSlice
+
+unfold
+let impl_28 = impl_28'
+
 /// Get the raw slice.
-let impl_13__as_slice (self: t_VLByteSlice) : t_Slice u8 = self._0
+let impl_12__as_slice (self: t_VLByteSlice) : t_Slice u8 = self._0
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_14: Tls_codec.t_Size t_VLByteSlice =
+let impl_13: Tls_codec.t_Size t_VLByteSlice =
   {
     f_tls_serialized_len_pre = (fun (self: t_VLByteSlice) -> true);
     f_tls_serialized_len_post = (fun (self: t_VLByteSlice) (out: usize) -> true);
@@ -1422,7 +1306,7 @@ let impl_14: Tls_codec.t_Size t_VLByteSlice =
   }
 
 [@@ FStar.Tactics.Typeclasses.tcinstance]
-let impl_15: Tls_codec.t_Size t_VLByteSlice =
+let impl_14: Tls_codec.t_Size t_VLByteSlice =
   {
     f_tls_serialized_len_pre = (fun (self: t_VLByteSlice) -> true);
     f_tls_serialized_len_post = (fun (self: t_VLByteSlice) (out: usize) -> true);

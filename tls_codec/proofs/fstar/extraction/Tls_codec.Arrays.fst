@@ -26,7 +26,7 @@ let impl (v_LEN: usize) : Tls_codec.t_Serialize (t_Array u8 v_LEN) =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: t_Array u8 v_LEN)
         (writer: v_W)
         ->
@@ -35,7 +35,7 @@ let impl (v_LEN: usize) : Tls_codec.t_Serialize (t_Array u8 v_LEN) =
     =
     (fun
         (#v_W: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
         (self: t_Array u8 v_LEN)
         (writer: v_W)
         (out1: (v_W & Core.Result.t_Result usize Tls_codec.t_Error))
@@ -45,7 +45,7 @@ let impl (v_LEN: usize) : Tls_codec.t_Serialize (t_Array u8 v_LEN) =
     =
     fun
       (#v_W: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Write v_W)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Write v_W)
       (self: t_Array u8 v_LEN)
       (writer: v_W)
       ->
@@ -112,7 +112,7 @@ let impl_1 (v_LEN: usize) : Tls_codec.t_Deserialize (t_Array u8 v_LEN) =
     =
     (fun
         (#v_R: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
         (bytes: v_R)
         ->
         true);
@@ -120,7 +120,7 @@ let impl_1 (v_LEN: usize) : Tls_codec.t_Deserialize (t_Array u8 v_LEN) =
     =
     (fun
         (#v_R: Type0)
-        (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+        (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
         (bytes: v_R)
         (out2: (v_R & Core.Result.t_Result (t_Array u8 v_LEN) Tls_codec.t_Error))
         ->
@@ -129,7 +129,7 @@ let impl_1 (v_LEN: usize) : Tls_codec.t_Deserialize (t_Array u8 v_LEN) =
     =
     fun
       (#v_R: Type0)
-      (#[FStar.Tactics.Typeclasses.tcresolve ()] i1: Std.Io.t_Read v_R)
+      (#[FStar.Tactics.Typeclasses.tcresolve ()] i0: Std.Io.t_Read v_R)
       (bytes: v_R)
       ->
       let out:t_Array u8 v_LEN = Rust_primitives.Hax.repeat (mk_u8 0) v_LEN in

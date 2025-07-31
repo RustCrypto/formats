@@ -187,7 +187,8 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
 
         // Serialize the elements
         for e in self.iter() {
-            out.append(&mut e.tls_serialize_bytes()?);
+            let mut serialized_e = e.tls_serialize_bytes()?;
+            out.append(&mut serialized_e);
         }
         #[cfg(debug_assertions)]
         if out.len() - len_len != content_length {
@@ -239,6 +240,7 @@ fn write_hex(f: &mut fmt::Formatter<'_>, data: &[u8]) -> fmt::Result {
 
 macro_rules! impl_vl_bytes_generic {
     ($name:ident) => {
+        #[hax_lib::opaque]
         impl fmt::Debug for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(f, "{} {{ ", stringify!($name))?;
@@ -387,6 +389,7 @@ impl Size for &VLBytes {
 
 pub struct VLByteSlice<'a>(pub &'a [u8]);
 
+#[hax_lib::opaque]
 impl fmt::Debug for VLByteSlice<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "VLByteSlice {{ ")?;
