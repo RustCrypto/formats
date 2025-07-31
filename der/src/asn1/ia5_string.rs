@@ -110,7 +110,7 @@ mod allocation {
     /// For UTF-8, use [`String`][`alloc::string::String`].
     ///
     /// [International Alphabet No. 5 (IA5)]: https://en.wikipedia.org/wiki/T.50_%28standard%29
-    #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
+    #[derive(Clone, Eq, PartialEq, PartialOrd, Ord, Hash)]
     pub struct Ia5String {
         /// Inner value
         inner: StringOwned,
