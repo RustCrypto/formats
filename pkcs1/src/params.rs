@@ -288,7 +288,7 @@ impl<'a> RsaOaepParams<'a> {
                     parameters: Some(AnyRef::NULL),
                 }),
             },
-            p_source: pspecicied_algorithm_identifier(label),
+            p_source: pspecified_algorithm_identifier(label),
         }
     }
 
@@ -386,7 +386,7 @@ impl<'a> TryFrom<&'a [u8]> for RsaOaepParams<'a> {
     }
 }
 
-fn pspecicied_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentifierRef<'_> {
+fn pspecified_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentifierRef<'_> {
     AlgorithmIdentifierRef {
         oid: OID_PSPECIFIED,
         parameters: Some(
@@ -397,5 +397,5 @@ fn pspecicied_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentif
 
 /// Default Source Algorithm, empty string
 fn default_pempty_string<'a>() -> AlgorithmIdentifierRef<'a> {
-    pspecicied_algorithm_identifier(&[])
+    pspecified_algorithm_identifier(&[])
 }
