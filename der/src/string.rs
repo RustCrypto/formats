@@ -103,7 +103,7 @@ pub(crate) mod allocating {
     use core::{borrow::Borrow, ops::Deref, str};
 
     /// String newtype which respects the [`Length::max`] limit.
-    #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+    #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
     pub struct StringOwned {
         /// Inner value
         pub(crate) inner: String,

@@ -154,13 +154,14 @@ macro_rules! impl_custom_class {
                 if !Tag::peek_matches(reader, Class::$class_enum_name, tag_number)? {
                     return Ok(None);
                 }
+
                 // Decode IMPLICIT header
                 let header = Header::decode(reader)?;
 
                 // the encoding shall be constructed if the base encoding is constructed
-                if header.tag.is_constructed() != T::CONSTRUCTED
-                    && reader.encoding_rules() == EncodingRules::Der {
-                    return Err(reader.error(header.tag.non_canonical_error()).into());
+                if header.tag().is_constructed() != T::CONSTRUCTED
+                    && reader.encoding_rules().is_der() {
+                    return Err(reader.error(header.tag().non_canonical_error()).into());
                 }
 
                 // read_value checks if header matches decoded length
@@ -179,7 +180,7 @@ macro_rules! impl_custom_class {
             T: Decode<'a> + Tagged,
         {
             fn can_decode(tag: Tag) -> bool {
-                tag.is_context_specific()
+                tag.class() == Class::$class_enum_name
             }
         }
 
@@ -194,10 +195,10 @@ macro_rules! impl_custom_class {
                 let header = Header::decode(reader)?;
 
                 // encoding shall be constructed
-                if !header.tag.is_constructed() {
-                    return Err(reader.error(header.tag.non_canonical_error()).into());
+                if !header.tag().is_constructed() {
+                    return Err(reader.error(header.tag().non_canonical_error()).into());
                 }
-                match header.tag {
+                match header.tag() {
                     Tag::$class_enum_name { number, .. } => Ok(Self {
                         tag_number: number,
                         tag_mode: TagMode::default(),
@@ -310,7 +311,7 @@ macro_rules! impl_custom_class_ref {
         }
 
         impl<'a, T> $ref_class_type_name<'a, T> {
-            /// Convert to a [`ContextSpecific`].
+            /// Convert to a [`EncodeValue`] object using [`EncodeValueRef`].
             fn encoder(&self) -> $class_type_name<EncodeValueRef<'a, T>> {
                 $class_type_name {
                     tag_number: self.tag_number,

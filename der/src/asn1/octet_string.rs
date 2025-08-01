@@ -374,8 +374,26 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "ber")]
-    fn decode_ber() {
+    #[cfg(all(feature = "alloc", feature = "ber"))]
+    fn decode_ber_primitive_definite() {
+        use crate::{Decode, asn1::OctetString};
+        use hex_literal::hex;
+
+        const EXAMPLE: &[u8] = &hex!(
+            "040c" // primitive definite length OCTET STRING
+            "48656c6c6f2c20776f726c64" // "Hello, world"
+        );
+
+        let decoded = OctetString::from_ber(EXAMPLE).unwrap();
+        assert_eq!(decoded.as_bytes(), b"Hello, world");
+
+        let decoded = OctetString::from_der(EXAMPLE).unwrap();
+        assert_eq!(decoded.as_bytes(), b"Hello, world");
+    }
+
+    #[test]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
+    fn decode_ber_constructed_indefinite() {
         use crate::{Decode, asn1::OctetString};
         use hex_literal::hex;
 
@@ -391,7 +409,29 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "ber")]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
+    fn decode_ber_constructed_definite() {
+        use crate::{Decode, Error, ErrorKind, Length, Tag, asn1::OctetString};
+        use hex_literal::hex;
+
+        const EXAMPLE_BER: &[u8] = &hex!(
+            "2410" // Constructed definite length OCTET STRING
+            "040648656c6c6f2c" // Segment containing "Hello,"
+            "040620776f726c64" // Segment containing " world"
+        );
+
+        let err = OctetString::from_ber(EXAMPLE_BER).err().unwrap();
+        let expected = Error::new(
+            ErrorKind::Noncanonical {
+                tag: Tag::OctetString,
+            },
+            Length::new(1),
+        );
+        assert_eq!(expected, err);
+    }
+
+    #[test]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
     fn decode_context_specific_ber_explicit() {
         use crate::{
             EncodingRules, SliceReader, TagNumber,
@@ -422,7 +462,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "ber")]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
     fn decode_context_specific_ber_implicit() {
         use crate::{
             EncodingRules, SliceReader, TagNumber,
@@ -448,5 +488,26 @@ mod tests {
             .value;
 
         assert_eq!(decoded.as_bytes(), b"Hello, world");
+    }
+
+    #[test]
+    #[cfg(all(feature = "alloc", feature = "ber"))]
+    fn decode_ber_recursive_unsupported() {
+        use crate::{Decode, Error, ErrorKind, Length, asn1::OctetString};
+        use hex_literal::hex;
+
+        const EXAMPLE_BER: &[u8] = &hex!(
+            "2480" // Constructed indefinite length OCTET STRING
+                "2480" // Constructed indefinite length OCTET STRING
+                    "040648656c6c6f2c" // Segment containing "Hello,"
+                    "040620776f726c64" // Segment containing " world"
+                "0000" // End-of-contents marker
+                "040620776f726c64" // Segment containing " world"
+            "0000" // End-of-contents marker
+        );
+
+        let err = OctetString::from_ber(EXAMPLE_BER).err().unwrap();
+        let expected = Error::new(ErrorKind::IndefiniteLength, Length::new(4));
+        assert_eq!(expected, err);
     }
 }

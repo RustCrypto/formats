@@ -112,6 +112,7 @@ fn sub_ca_certificate() {
         "e_sub_ca_crl_distribution_points_missing",
         "e_sub_ca_certificate_policies_missing",
         "w_sub_ca_aia_does_not_contain_issuing_ca_url",
+        "e_invalid_ca_certificate_policies",
     ];
 
     zlint::check_certificate(pem.as_bytes(), ignored);

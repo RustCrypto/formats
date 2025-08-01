@@ -8,9 +8,9 @@ use core::cmp::Ordering;
 use der::asn1::{ObjectIdentifier, OctetString, SetOfVec};
 use der::{Any, Choice, DerOrd, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
-use x509_cert::attr::Attributes;
-use x509_cert::ext::pkix::SubjectKeyIdentifier;
-use x509_cert::impl_newtype;
+use x509_cert::{
+    attr::Attributes, certificate::Certificate, ext::pkix::SubjectKeyIdentifier, impl_newtype,
+};
 
 /// The `SignedData` type is defined in [RFC 5652 Section 5.1].
 ///
@@ -178,6 +178,23 @@ impl ValueOrd for SignerIdentifier {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         use der::Encode;
         self.to_der()?.der_cmp(&other.to_der()?)
+    }
+}
+
+impl From<&Certificate> for SignerIdentifier {
+    fn from(cert: &Certificate) -> Self {
+        let tbs = cert.tbs_certificate();
+
+        match tbs.get_extension::<SubjectKeyIdentifier>() {
+            Ok(Some((_critical, ski))) => Self::SubjectKeyIdentifier(ski),
+            _ => {
+                let isn = IssuerAndSerialNumber {
+                    issuer: tbs.issuer().clone(),
+                    serial_number: tbs.serial_number().clone(),
+                };
+                Self::IssuerAndSerialNumber(isn)
+            }
+        }
     }
 }
 

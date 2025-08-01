@@ -49,7 +49,7 @@ pub(super) fn decode_indefinite_length<'a>(reader: &mut impl Reader<'a>) -> crat
         }
 
         let header = Header::decode(reader)?;
-        reader.drain(header.length)?;
+        reader.drain(header.length())?;
     }
 }
 
@@ -88,15 +88,21 @@ pub(crate) fn read_constructed_vec<'r, R: Reader<'r>>(
 
     while !reader.is_finished() {
         let h = Header::decode(reader)?;
-        h.tag.assert_eq(inner_tag)?;
+        h.tag().assert_eq(inner_tag)?;
 
-        // Indefinite length headers can't be indefinite
-        if h.length.is_indefinite() {
+        // This constructed string is ‘recursively constructed’
+        // as one of its segments is itself encoded with
+        // constructed, indefinite-length method.
+        // This is currently chosen to be unsupported.
+        //
+        // See discussion:
+        //   - https://github.com/RustCrypto/formats/issues/779#issuecomment-3049589340
+        if h.length().is_indefinite() {
             return Err(reader.error(ErrorKind::IndefiniteLength));
         }
 
         // Add enough zeroes into the `Vec` to store the chunk
-        let l = usize::try_from(h.length)?;
+        let l = usize::try_from(h.length())?;
         bytes.extend(core::iter::repeat_n(0, l));
         reader.read_into(&mut bytes[offset..(offset + l)])?;
         offset += l;

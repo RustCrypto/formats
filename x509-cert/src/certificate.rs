@@ -411,7 +411,7 @@ impl<P: Profile> CertificateInner<P> {
             }
         }
 
-        while position < input.len() - 1 {
+        while position + 1 < input.len() {
             let rest = &input[position..];
             let end_pos = find_boundary(rest, end_boundary)
                 .ok_or(pem::Error::PostEncapsulationBoundary)?

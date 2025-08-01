@@ -140,7 +140,7 @@ pub trait EncodeValue {
     where
         Self: Tagged,
     {
-        Header::new(self.tag(), self.value_len()?)
+        Ok(Header::new(self.tag(), self.value_len()?))
     }
 
     /// Compute the length of this value (sans [`Tag`]+[`Length`] header) when

@@ -141,7 +141,7 @@ impl<'a> DecodeValue<'a> for String {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        Ok(String::from_utf8(reader.read_vec(header.length)?)?)
+        Ok(String::from_utf8(reader.read_vec(header.length())?)?)
     }
 }
 

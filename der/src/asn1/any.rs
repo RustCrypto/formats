@@ -56,10 +56,7 @@ impl<'a> AnyRef<'a> {
 
     /// Returns [`Tag`] and [`Length`] of self.
     pub fn header(&self) -> Header {
-        Header {
-            tag: self.tag,
-            length: self.value.len(),
-        }
+        Header::new(self.tag, self.value.len())
     }
 
     /// Attempt to decode this [`AnyRef`] type into the inner value.
@@ -128,7 +125,7 @@ impl<'a> DecodeValue<'a> for AnyRef<'a> {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
         Ok(Self {
-            tag: header.tag,
+            tag: header.tag(),
             value: <&'a BytesRef>::decode_value(reader, header)?,
         })
     }
@@ -207,10 +204,7 @@ mod allocating {
 
         /// Returns [`Tag`] and [`Length`] of self.
         pub fn header(&self) -> Header {
-            Header {
-                tag: self.tag,
-                length: self.value.len(),
-            }
+            Header::new(self.tag, self.value.len())
         }
 
         /// Attempt to decode this [`Any`] type into the inner value.
@@ -290,7 +284,7 @@ mod allocating {
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
             Ok(Self {
-                tag: header.tag,
+                tag: header.tag(),
                 value: BytesOwned::decode_value(reader, header)?,
             })
         }

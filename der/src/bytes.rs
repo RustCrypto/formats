@@ -70,7 +70,7 @@ impl<'a> DecodeValue<'a> for &'a BytesRef {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        BytesRef::new(reader.read_slice(header.length)?)
+        BytesRef::new(reader.read_slice(header.length())?)
     }
 }
 
@@ -118,7 +118,7 @@ impl<'a> arbitrary::Arbitrary<'a> for &'a BytesRef {
 pub(crate) mod allocating {
     use super::BytesRef;
     #[cfg(feature = "ber")]
-    use crate::{EncodingRules, length::indefinite::read_constructed_vec};
+    use crate::{ErrorKind, length::indefinite::read_constructed_vec};
 
     use crate::{
         DecodeValue, DerOrd, EncodeValue, Error, Header, Length, Reader, Result, Tag, Writer,
@@ -154,13 +154,24 @@ pub(crate) mod allocating {
             header: Header,
             inner_tag: Tag,
         ) -> Result<Self> {
-            // Reassemble indefinite length string types
             #[cfg(feature = "ber")]
-            if reader.encoding_rules() == EncodingRules::Ber
-                && header.length.is_indefinite()
-                && !inner_tag.is_constructed()
-            {
-                return Self::new(read_constructed_vec(reader, header.length, inner_tag)?);
+            if header.is_constructed() {
+                if header.length().is_indefinite() && reader.encoding_rules().is_ber() {
+                    // Reassemble indefinite length string types
+                    return Self::new(read_constructed_vec(reader, header.length(), inner_tag)?);
+                } else {
+                    // NOTE:
+                    // constructed strings with definite length unsupported
+                    // See discussion
+                    //   - https://github.com/RustCrypto/formats/issues/779#issuecomment-3049869721
+                    //
+                    // NOTE: this repositions the error to be at the end of the header
+                    // rather than at the beginning of the value
+                    return Err(Error::new(
+                        ErrorKind::Noncanonical { tag: header.tag() },
+                        reader.position().saturating_sub(Length::ONE),
+                    ));
+                }
             }
 
             #[cfg(not(feature = "ber"))]
@@ -206,7 +217,7 @@ pub(crate) mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            reader.read_vec(header.length).and_then(Self::new)
+            reader.read_vec(header.length()).and_then(Self::new)
         }
     }
 
