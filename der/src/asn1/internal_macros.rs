@@ -130,7 +130,7 @@ macro_rules! impl_custom_class {
             where
                 T: Decode<'a>
             {
-                reader.read_nested(header.length, |r| T::decode(r))
+                reader.read_nested(header.length(), |r| T::decode(r))
             }
 
             #[doc = concat!("Attempt to decode an `IMPLICIT` ASN.1 `", $asn1_class_name, "` field with the")]
