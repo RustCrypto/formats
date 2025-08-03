@@ -57,7 +57,7 @@ builder = [
     "dep:ansi-x963-kdf",
     "dep:cbc",
     "dep:cipher",
-    "dep:digest",
+    "digest",
     "elliptic-curve/ecdh",
     "elliptic-curve/pkcs8",
     "dep:rsa",
