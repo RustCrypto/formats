@@ -334,7 +334,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.8.0-rc.7"
+version = "0.8.0-rc.8"
 dependencies = [
  "arbitrary",
  "bytes",
@@ -351,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "der_derive"
-version = "0.8.0-rc.3"
+version = "0.8.0-rc.4"
 dependencies = [
  "proc-macro2",
  "quote",
