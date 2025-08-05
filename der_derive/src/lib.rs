@@ -185,7 +185,7 @@ fn default_lifetime() -> Lifetime {
 ///
 /// The enum must consist entirely of 1-tuple variants wrapping inner
 /// types which must also impl the [`Decode`][2] and [`Encode`][3]
-/// traits. It will will also generate [`From`] impls for each of the
+/// traits. It will also generate [`From`] impls for each of the
 /// inner types of the variants into the enum that wraps them.
 ///
 /// # Usage
