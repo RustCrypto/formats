@@ -89,7 +89,7 @@ pub struct CertRequest {
 ///       extensions   [9] Extensions{{CertExtensions}}  OPTIONAL }
 /// ```
 ///
-/// Note, the EXPLICIT tagging attribute used in the definition of the the issuer and subject fields
+/// Note, the EXPLICIT tagging attribute used in the definition of the issuer and subject fields
 /// is because Name is a CHOICE and the original tag type cannot be obscured by an IMPLICIT tag.
 /// See 31.2.6 in X.680:
 ///

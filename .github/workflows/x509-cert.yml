@@ -22,7 +22,6 @@ env:
 
 jobs:
   build:
-    if: false # disabled while we migrate to digest newtypes
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -50,7 +49,6 @@ jobs:
       install-zlint: true
 
   test:
-    if: false # disabled while we migrate to digest newtypes
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -74,7 +72,6 @@ jobs:
       - run: cargo test --all-features --release
 
   fuzz:
-    if: false # disabled while we migrate to digest newtypes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
