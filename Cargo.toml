@@ -4,13 +4,13 @@ members = [
     "base16ct",
     "base32ct",
     "base64ct",
-    #"cmpv2",
-    #"cms",
+    "cmpv2",
+    "cms",
     "const-oid",
-    #"crmf",
+    "crmf",
     "der",
     "der_derive",
-    #"gss-api",
+    "gss-api",
     "mcf",
     "pem-rfc7468",
     "pkcs1",
@@ -23,16 +23,6 @@ members = [
     "tai64",
     "tls_codec",
     "tls_codec/derive",
-    #"x509-tsp",
-    #"x509-cert",
-    #"x509-cert/test-support",
-    #"x509-ocsp"
-]
-exclude = [
-    "cmpv2",
-    "cms",
-    "crmf",
-    "gss-api",
     "x509-tsp",
     "x509-cert",
     "x509-cert/test-support",
@@ -69,3 +59,8 @@ tls_codec_derive = { path = "./tls_codec/derive" }
 x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
+
+elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
+ecdsa = { git = "https://github.com/RustCrypto/signatures.git" }
+primefield = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
+p256       = { git = "https://github.com/RustCrypto/elliptic-curves.git" }

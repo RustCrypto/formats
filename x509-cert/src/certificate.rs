@@ -433,7 +433,7 @@ impl<P> CertificateInner<P>
 where
     P: Profile,
 {
-    /// Return the hash of the DER serialization of this cetificate
+    /// Return the hash of the DER serialization of this certificate
     pub fn hash<D>(&self) -> der::Result<Output<D>>
     where
         D: Digest,
