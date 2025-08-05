@@ -1,0 +1,46 @@
+--- Cargo.toml
++++ Cargo.toml
+@@ -4,13 +4,13 @@ members = [
+     "base16ct",
+     "base32ct",
+     "base64ct",
+-    "cmpv2",
+-    "cms",
++    #"cmpv2",
++    #"cms",
+     "const-oid",
+-    "crmf",
++    #"crmf",
+     "der",
+     "der_derive",
+-    "gss-api",
++    #"gss-api",
+     "pem-rfc7468",
+     "pkcs1",
+     "pkcs5",
+@@ -89,6 +99,7 @@ crypto-common = { git = "https://github.com/RustCrypto/traits.git" }
+ elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
+ signature = { git = "https://github.com/RustCrypto/traits.git" }
+ aead = { git = "https://github.com/RustCrypto/traits.git" }
++digest = { git = "https://github.com/RustCrypto/traits.git" }
+ 
+ # https://github.com/RustCrypto/RSA/pull/478
+ # https://github.com/RustCrypto/RSA/pull/504
+@@ -96,6 +107,7 @@ rsa = { git = "https://github.com/RustCrypto/RSA.git" }
+ 
+ # https://github.com/RustCrypto/password-hashes/pull/577
+ # https://github.com/RustCrypto/password-hashes/pull/578
++# https://github.com/RustCrypto/password-hashes/pull/592
+ pbkdf2 = { git = "https://github.com/RustCrypto/password-hashes.git" }
+ scrypt = { git = "https://github.com/RustCrypto/password-hashes.git" }
+ 
+@@ -109,3 +121,9 @@ cbc = { git = "https://github.com/RustCrypto/block-modes.git" }
+ ctr = { git = "https://github.com/RustCrypto/block-modes.git" }
+ aes-gcm = { git = "https://github.com/RustCrypto/AEADs.git" }
+ salsa20 = { git = "https://github.com/RustCrypto/stream-ciphers.git" }
++
++sha1 = { git = "https://github.com/RustCrypto/hashes.git" }
++sha2 = { git = "https://github.com/RustCrypto/hashes.git" }
++whirlpool = { git = "https://github.com/RustCrypto/hashes.git" }
++
++hmac = { git = "https://github.com/RustCrypto/MACs.git" }
