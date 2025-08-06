@@ -97,11 +97,23 @@ impl ChoiceVariant {
         Ok(Self { ident, attrs, tag })
     }
 
-    /// Derive a match arm of the impl body for `TryFrom<der::asn1::Any<'_>>`.
+    /// Derive a match arm of the impl body for `der::Decode<'_>`.
     pub(super) fn to_decode_tokens(&self) -> TokenStream {
         let tag = self.tag.to_tokens();
         let ident = &self.ident;
         let decoder = self.attrs.decoder();
+
+        match self.attrs.asn1_type {
+            Some(..) => quote! { #tag => Ok(Self::#ident(#decoder.try_into()?)), },
+            None => quote! { #tag => Ok(Self::#ident(#decoder)), },
+        }
+    }
+
+    /// Derive a match arm of the impl body for `der::DecodeValue<'_>`.
+    pub(super) fn to_decode_value_tokens(&self) -> TokenStream {
+        let tag = self.tag.to_tokens();
+        let ident = &self.ident;
+        let decoder = self.attrs.value_decoder();
 
         match self.attrs.asn1_type {
             Some(..) => quote! { #tag => Ok(Self::#ident(#decoder.try_into()?)), },
@@ -184,6 +196,16 @@ mod tests {
             quote! {
                 ::der::Tag::Utf8String => Ok(Self::ExampleVariant(
                     reader.decode()?
+                )),
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            variant.to_decode_value_tokens().to_string(),
+            quote! {
+                ::der::Tag::Utf8String => Ok(Self::ExampleVariant(
+                    <_>::decode_value(reader, header)?
                 )),
             }
             .to_string()

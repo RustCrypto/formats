@@ -76,6 +76,7 @@ impl DeriveChoice {
 
         let mut can_decode_body = Vec::new();
         let mut decode_body = Vec::new();
+        let mut decode_value_body = Vec::new();
         let mut encode_body = Vec::new();
         let mut value_len_body = Vec::new();
         let mut tagged_body = Vec::new();
@@ -83,6 +84,7 @@ impl DeriveChoice {
         for variant in &self.variants {
             can_decode_body.push(variant.tag.to_tokens());
             decode_body.push(variant.to_decode_tokens());
+            decode_value_body.push(variant.to_decode_value_tokens());
             encode_body.push(variant.to_encode_value_tokens());
             value_len_body.push(variant.to_value_len_tokens());
             tagged_body.push(variant.to_tagged_tokens());
@@ -108,6 +110,24 @@ impl DeriveChoice {
                     use der::Reader as _;
                     match ::der::Tag::peek(reader)? {
                         #(#decode_body)*
+                        actual => Err(::der::Error::new(
+                            ::der::ErrorKind::TagUnexpected {
+                                expected: None,
+                                actual
+                            },
+                            reader.position()
+                        ).into()
+                        ),
+                    }
+                }
+            }
+
+            impl #impl_generics ::der::DecodeValue<#lifetime> for #ident #ty_generics #where_clause {
+                type Error = #error;
+
+                fn decode_value<R: ::der::Reader<#lifetime>>(reader: &mut R, header: der::Header) -> ::core::result::Result<Self, #error> {
+                    match header.tag() {
+                        #(#decode_value_body)*
                         actual => Err(::der::Error::new(
                             ::der::ErrorKind::TagUnexpected {
                                 expected: None,

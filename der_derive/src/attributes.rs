@@ -296,6 +296,26 @@ impl FieldAttrs {
         }
     }
 
+    /// Get a `der::DecodeValue` member which respects these field attributes.
+    pub fn value_decoder(&self) -> TokenStream {
+        if let Some(default) = &self.default {
+            let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or_default();
+            self.asn1_type.map(|ty| ty.value_decoder()).unwrap_or_else(|| {
+                quote! {
+                    Option::<#type_params>::decode_value(reader, header)?.unwrap_or_else(#default),
+                }
+            })
+        } else if self.is_optional() {
+            self.asn1_type
+                .map(|ty| ty.value_decoder_optional())
+                .unwrap_or_else(|| quote!(<_>::decode_value(reader, header)?))
+        } else {
+            self.asn1_type
+                .map(|ty| ty.value_decoder())
+                .unwrap_or_else(|| quote!(<_>::decode_value(reader, header)?))
+        }
+    }
+
     pub fn custom_class_decoder(&self, class_num: &ClassNum) -> TokenStream {
         let type_params = self.asn1_type.map(|ty| ty.type_path()).unwrap_or(quote!(_));
         let ClassTokens {

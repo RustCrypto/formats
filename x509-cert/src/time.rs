@@ -2,7 +2,7 @@
 
 use core::{fmt, marker::PhantomData, str::FromStr, time::Duration};
 use der::asn1::{GeneralizedTime, UtcTime};
-use der::{Choice, DateTime, DecodeValue, Encode, Header, Length, Reader, Sequence, Tag, ValueOrd};
+use der::{Choice, DateTime, DecodeValue, Encode, Header, Length, Reader, Sequence, ValueOrd};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -120,19 +120,6 @@ impl FromStr for Time {
         let datetime = DateTime::from_str(input)?;
 
         Ok(Self::from(datetime))
-    }
-}
-
-impl<'a> DecodeValue<'a> for Time {
-    type Error = der::Error;
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        match header.tag() {
-            Tag::UtcTime => Ok(Self::UtcTime(UtcTime::decode_value(reader, header)?)),
-            Tag::GeneralizedTime => Ok(Self::GeneralTime(GeneralizedTime::decode_value(
-                reader, header,
-            )?)),
-            tag => Err(reader.error(tag.unexpected_error(None))),
-        }
     }
 }
 

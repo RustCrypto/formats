@@ -2,7 +2,7 @@ use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::string::ToString;
 use der::{
-    Choice, FixedTag, Header, Reader, ValueOrd,
+    Choice, ValueOrd,
     asn1::{Any, BmpString, PrintableString, TeletexString},
 };
 
@@ -66,27 +66,6 @@ impl<'a> TryFrom<&'a Any> for DirectoryString {
     }
 }
 
-impl<'a> der::DecodeValue<'a> for DirectoryString {
-    type Error = der::Error;
-
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        match header.tag() {
-            PrintableString::TAG => {
-                PrintableString::decode_value(reader, header).map(Self::PrintableString)
-            }
-            TeletexString::TAG => {
-                TeletexString::decode_value(reader, header).map(Self::TeletexString)
-            }
-            String::TAG => String::decode_value(reader, header).map(Self::Utf8String),
-            BmpString::TAG => BmpString::decode_value(reader, header).map(Self::BmpString),
-            actual => Err(der::ErrorKind::TagUnexpected {
-                expected: None,
-                actual,
-            }
-            .into()),
-        }
-    }
-}
 impl DirectoryString {
     /// Returns `Borrowed` variant for UTF-8 compatible strings
     /// and `Owned` variant otherwise.
