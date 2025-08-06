@@ -61,10 +61,23 @@ impl Asn1Type {
         let type_path = self.type_path();
         quote!(#type_path::decode(reader)?)
     }
+
     /// Get a `der::Decoder` optional object for a particular ASN.1 type
     pub fn decoder_optional(self) -> TokenStream {
         let type_path = self.type_path();
         quote!(Option::<#type_path>::decode(reader)?)
+    }
+
+    /// Get a `der::DecodeValue` member object for a particular ASN.1 type
+    pub fn value_decoder(self) -> TokenStream {
+        let type_path = self.type_path();
+        quote!(#type_path::decode_value(reader, header)?)
+    }
+
+    /// Get a `der::DecodeValue` member object for a particular ASN.1 type
+    pub fn value_decoder_optional(self) -> TokenStream {
+        let type_path = self.type_path();
+        quote!(Option::<#type_path>::decode_value(reader, header)?)
     }
 
     /// Get a `der::Encoder` object for a particular ASN.1 type
