@@ -50,7 +50,7 @@ tokio = { version = "1.45.1", features = ["macros", "rt"] }
 x509-cert = { version = "0.3.0-rc.0", features = ["pem"] }
 
 [features]
-std = ["der/std", "spki/std"]
+std = ["der/std", "x509-cert/std", "spki/std"]
 builder = [
     "dep:aes",
     "dep:aes-kw",
