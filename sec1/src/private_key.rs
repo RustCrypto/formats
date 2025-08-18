@@ -102,7 +102,7 @@ impl<'a> DecodeValue<'a> for EcPrivateKey<'a> {
             return Err(reader.error(Tag::Integer.value_error()));
         }
 
-        let private_key = OctetStringRef::decode(reader)?.as_bytes();
+        let private_key = <&OctetStringRef>::decode(reader)?.as_bytes();
         let parameters = reader.context_specific(EC_PARAMETERS_TAG, TagMode::Explicit)?;
         let public_key = reader
             .context_specific::<BitStringRef<'_>>(PUBLIC_KEY_TAG, TagMode::Explicit)?

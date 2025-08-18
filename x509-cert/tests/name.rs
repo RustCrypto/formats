@@ -1,11 +1,15 @@
 //! Name tests
 
 use const_oid::ObjectIdentifier;
-use der::asn1::{Ia5StringRef, OctetStringRef, PrintableStringRef, SetOfVec, Utf8StringRef};
-use der::{Any, Decode, Encode, Tag, Tagged};
+use der::{
+    Any, Decode, Encode, Tag, Tagged,
+    asn1::{Ia5StringRef, OctetStringRef, PrintableStringRef, SetOfVec, Utf8StringRef},
+};
 use hex_literal::hex;
-use x509_cert::attr::AttributeTypeAndValue;
-use x509_cert::name::{Name, RdnSequence, RelativeDistinguishedName};
+use x509_cert::{
+    attr::AttributeTypeAndValue,
+    name::{Name, RdnSequence, RelativeDistinguishedName},
+};
 
 #[test]
 fn decode_name() {

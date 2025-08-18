@@ -175,7 +175,7 @@ impl<Data> PemLabel for EncryptedPrivateKeyInfo<Data> {
 }
 
 /// [`EncryptedPrivateKeyInfo`] with [`OctetStringRef`] encrypted data.
-pub type EncryptedPrivateKeyInfoRef<'a> = EncryptedPrivateKeyInfo<OctetStringRef<'a>>;
+pub type EncryptedPrivateKeyInfoRef<'a> = EncryptedPrivateKeyInfo<&'a OctetStringRef>;
 
 #[cfg(feature = "alloc")]
 /// [`EncryptedPrivateKeyInfo`] with [`OctetString`] encrypted data.

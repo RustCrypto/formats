@@ -367,7 +367,7 @@ where
 }
 
 /// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and `&[u8]` key.
-pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, OctetStringRef<'a>, BitStringRef<'a>>;
+pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, BitStringRef<'a>>;
 
 /// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
 #[cfg(feature = "alloc")]
@@ -389,6 +389,8 @@ impl BitStringLike for BitStringRef<'_> {
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
+    use alloc::borrow::ToOwned;
+    use core::borrow::Borrow;
     use der::referenced::*;
 
     impl BitStringLike for BitString {
@@ -402,7 +404,7 @@ mod allocating {
         fn ref_to_owned(&self) -> Self::Owned {
             PrivateKeyInfoOwned {
                 algorithm: self.algorithm.ref_to_owned(),
-                private_key: self.private_key.ref_to_owned(),
+                private_key: self.private_key.to_owned(),
                 public_key: self.public_key.ref_to_owned(),
             }
         }
@@ -413,7 +415,7 @@ mod allocating {
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             PrivateKeyInfoRef {
                 algorithm: self.algorithm.owned_to_ref(),
-                private_key: self.private_key.owned_to_ref(),
+                private_key: self.private_key.borrow(),
                 public_key: self.public_key.owned_to_ref(),
             }
         }

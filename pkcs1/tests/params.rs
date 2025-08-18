@@ -168,7 +168,7 @@ fn decode_oaep_param() {
             .p_source
             .parameters_any()
             .unwrap()
-            .decode_as::<OctetStringRef<'_>>()
+            .decode_as::<&OctetStringRef>()
             .unwrap()
             .is_empty(),
     );
@@ -224,7 +224,7 @@ fn decode_oaep_param_default() {
             .p_source
             .parameters_any()
             .unwrap()
-            .decode_as::<OctetStringRef<'_>>()
+            .decode_as::<&OctetStringRef>()
             .unwrap()
             .is_empty(),
     );

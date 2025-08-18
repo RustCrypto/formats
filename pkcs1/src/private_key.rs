@@ -170,10 +170,10 @@ impl<'a> TryFrom<&'a [u8]> for RsaPrivateKey<'a> {
     }
 }
 
-impl<'a> TryFrom<OctetStringRef<'a>> for RsaPrivateKey<'a> {
+impl<'a> TryFrom<&'a OctetStringRef> for RsaPrivateKey<'a> {
     type Error = Error;
 
-    fn try_from(bytes: OctetStringRef<'a>) -> Result<Self> {
+    fn try_from(bytes: &'a OctetStringRef) -> Result<Self> {
         Ok(Self::from_der(bytes.as_bytes())?)
     }
 }

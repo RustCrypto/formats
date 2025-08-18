@@ -946,7 +946,7 @@ fn test_create_password_recipient_info() {
             .to_der()
             .unwrap();
         let iv = Iv::<cbc::Decryptor<Aes128>>::try_from(
-            OctetStringRef::from_der(algorithm_params_der.as_slice())
+            <&OctetStringRef>::from_der(algorithm_params_der.as_slice())
                 .unwrap()
                 .as_bytes(),
         )
