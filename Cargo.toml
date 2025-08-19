@@ -61,6 +61,7 @@ x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
 elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
-ecdsa = { git = "https://github.com/RustCrypto/signatures.git" }
-primefield = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
-p256       = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
+ecdsa          = { git = "https://github.com/RustCrypto/signatures.git" }
+primefield     = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
+p256           = { git = "https://github.com/baloo/elliptic-curves.git", branch = "baloo/crypto-bigint/0.7.0-rc.1" }
+rsa            = { git = "https://github.com/RustCrypto/RSA.git" }

@@ -542,8 +542,8 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
 name = "elliptic-curve"
-version = "0.14.0-rc.11"
-source = "git+https://github.com/RustCrypto/traits.git#a7b906402e867fb5b9745eff92b0fe7f2b750c7f"
+version = "0.14.0-rc.12"
+source = "git+https://github.com/RustCrypto/traits.git#9ca298409b8da26edc48216ec4e931ce22317494"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -931,7 +931,7 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 [[package]]
 name = "p256"
 version = "0.14.0-pre.9"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#c3ea0336c49baab13cba6f13df44716defa28d45"
+source = "git+https://github.com/baloo/elliptic-curves.git?branch=baloo%2Fcrypto-bigint%2F0.7.0-rc.1#31fb93e6059f51f7971ab6c0e9d1c7a3559036e6"
 dependencies = [
  "ecdsa",
  "elliptic-curve",
@@ -1064,7 +1064,7 @@ dependencies = [
 [[package]]
 name = "primefield"
 version = "0.14.0-pre.4"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#c3ea0336c49baab13cba6f13df44716defa28d45"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#e797acd5ae9d40effd7f2cafbde698a114042999"
 dependencies = [
  "crypto-bigint",
  "ff",
@@ -1249,8 +1249,7 @@ dependencies = [
 [[package]]
 name = "rsa"
 version = "0.10.0-rc.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b311b61ea276fd51ccb77f6995c5f70084db933bab9655ba51fe5d831ea25b39"
+source = "git+https://github.com/RustCrypto/RSA.git#f32d85d1ed394a6d03f0403f423c19fda475b8bf"
 dependencies = [
  "const-oid",
  "crypto-bigint",
