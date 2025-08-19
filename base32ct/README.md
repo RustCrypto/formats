@@ -18,6 +18,13 @@ Supports `no_std` environments and avoids heap allocations in the core API
 
 [Documentation][docs-link]
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
+
 ## License
 
 Licensed under either of:

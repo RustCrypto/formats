@@ -11,6 +11,13 @@ format in Rust.
 
 [Documentation][docs-link]
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
+
 ## License
 
 Licensed under either of:
@@ -37,7 +44,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/tai64.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/tai64.yml
 
-[//]: # (general links)
+[//]: # (links)
 
 [RustCrypto]: https://github.com/RustCrypto/
 [TAI64(N)]: https://cr.yp.to/libtai/tai64.html

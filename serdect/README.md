@@ -38,6 +38,12 @@ help reduce the overall timing variability.
 - [`serde-json`](https://crates.io/crates/serde-json) v1
 - [`toml`](https://crates.io/crates/toml) v0.7
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
 
 ## License
 
