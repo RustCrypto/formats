@@ -94,9 +94,9 @@ checksum = "862ed96ca487e809f1c8e5a8447f6ee2cf102f846893800b20cebdf541fc6bbd"
 
 [[package]]
 name = "arbitrary"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dde20b3d026af13f561bdd0f15edf01fc734f0dafcedbaf42bba506a9517f223"
+checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 dependencies = [
  "derive_arbitrary",
 ]
@@ -180,9 +180,9 @@ checksum = "5e764a1d40d510daf35e07be9eb06e75770908c27d411ee6c92109c9840eaaf7"
 
 [[package]]
 name = "bitflags"
-version = "2.9.1"
+version = "2.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
+checksum = "6a65b545ab31d687cff52899d4890855fec459eb6afe0da6417b8a18da87aa29"
 
 [[package]]
 name = "block-buffer"
@@ -411,9 +411,8 @@ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
 name = "crypto-bigint"
-version = "0.7.0-rc.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "737a2363b81de8cc95d8780d84aecb4b3c6f41e4473759da6636072b5514c875"
+version = "0.7.0-rc.1"
+source = "git+https://github.com/RustCrypto/crypto-bigint.git#3c3a24a85c439c8946e133eb717bfbf8e86148bc"
 dependencies = [
  "hybrid-array",
  "num-traits",
@@ -490,9 +489,9 @@ dependencies = [
 
 [[package]]
 name = "derive_arbitrary"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30542c1ad912e0e3d22a1935c290e12e8a29d704a420177a31faad4a601a0800"
+checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -542,8 +541,8 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
 name = "elliptic-curve"
-version = "0.14.0-rc.11"
-source = "git+https://github.com/RustCrypto/traits.git#a7b906402e867fb5b9745eff92b0fe7f2b750c7f"
+version = "0.14.0-rc.12"
+source = "git+https://github.com/RustCrypto/traits.git#40508e0480c748542358c620e055b12aa858b042"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -931,7 +930,7 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 [[package]]
 name = "p256"
 version = "0.14.0-pre.9"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#c3ea0336c49baab13cba6f13df44716defa28d45"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#aba09809dd4e0c4f591ffa7285c77165f8e509bd"
 dependencies = [
  "ecdsa",
  "elliptic-curve",
@@ -1064,7 +1063,7 @@ dependencies = [
 [[package]]
 name = "primefield"
 version = "0.14.0-pre.4"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#c3ea0336c49baab13cba6f13df44716defa28d45"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#aba09809dd4e0c4f591ffa7285c77165f8e509bd"
 dependencies = [
  "crypto-bigint",
  "ff",
@@ -1249,8 +1248,7 @@ dependencies = [
 [[package]]
 name = "rsa"
 version = "0.10.0-rc.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b311b61ea276fd51ccb77f6995c5f70084db933bab9655ba51fe5d831ea25b39"
+source = "git+https://github.com/RustCrypto/RSA.git#f32d85d1ed394a6d03f0403f423c19fda475b8bf"
 dependencies = [
  "const-oid",
  "crypto-bigint",
