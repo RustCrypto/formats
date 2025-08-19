@@ -377,7 +377,6 @@ mod tests {
 
     #[test]
     fn octet_string_decode() {
-        // PrintableString "hi"
         const EXAMPLE: &[u8] = &hex!(
             "040c" // primitive definite length OCTET STRING
             "48656c6c6f2c20776f726c64" // "Hello, world"
