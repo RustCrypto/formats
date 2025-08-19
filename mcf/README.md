@@ -35,12 +35,12 @@ For more information and history on MCF, see the [PassLib documentation].
 $6$rounds=100000$exn6tVc2j/MZD8uG$BI1Xh8qQSK9J4m14uwy7abn.ctj/TIAzlaVCto0MQrOFIeTXsc1iwzH16XEWo/a7c7Y9eVJvufVzYAs4EsPOy0
 ```
 
-## Minimum Supported Rust Version
+## Minimum Supported Rust Version (MSRV) Policy
 
-This crate requires **Rust 1.85** at a minimum.
+MSRV increases are not considered breaking changes and can happen in patch releases.
 
-We may change the MSRV in the future, but it will be accompanied by a minor
-version bump.
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
 
 ## License
 

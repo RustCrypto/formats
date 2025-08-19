@@ -41,12 +41,12 @@ fixed-width line wrapping.
 - bcrypt Base64: `.`, `/`, `[A-Z]`, `[a-z]`, `[0-9]`
 - `crypt(3)` Base64: `.`, `-`, `[0-9]`, `[A-Z]`, `[a-z]`
 
-## Minimum Supported Rust Version
+## Minimum Supported Rust Version (MSRV) Policy
 
-This crate requires **Rust 1.85** at a minimum.
-   
-We may change the MSRV in the future, but it will be accompanied by a minor
-version bump.
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
 
 ## License
 
