@@ -62,8 +62,6 @@
 #[cfg(feature = "alloc")]
 #[macro_use]
 extern crate alloc;
-#[cfg(feature = "std")]
-extern crate std;
 
 /// Function for decoding and encoding lower Base16 (hex)
 pub mod lower;
