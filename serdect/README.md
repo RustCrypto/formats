@@ -31,12 +31,12 @@ using a constant-time hex serialization with human-readable formats should
 help reduce the overall timing variability.
 
 `serdect` is tested against the following crates:
-- [`bincode`](https://crates.io/crates/bincode) v1
+- [`bincode`](https://crates.io/crates/bincode) v2
 - [`ciborium`](https://crates.io/crates/ciborium) v0.2
 - [`rmp-serde`](https://crates.io/crates/rmp-serde) v1
 - [`serde-json-core`](https://crates.io/crates/serde-json-core) v0.5
 - [`serde-json`](https://crates.io/crates/serde-json) v1
-- [`toml`](https://crates.io/crates/toml) v0.7
+- [`toml`](https://crates.io/crates/toml) v0.8
 
 ## Minimum Supported Rust Version (MSRV) Policy
 
