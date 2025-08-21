@@ -423,7 +423,7 @@ dependencies = [
  "hybrid-array",
  "num-traits",
  "rand_core",
- "serdect",
+ "serdect 0.3.0",
  "subtle",
  "zeroize",
 ]
@@ -1383,7 +1383,7 @@ dependencies = [
  "der",
  "hex-literal",
  "hybrid-array",
- "serdect",
+ "serdect 0.4.0",
  "subtle",
  "tempfile",
  "zeroize",
@@ -1449,6 +1449,16 @@ dependencies = [
 [[package]]
 name = "serdect"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f42f67da2385b51a5f9652db9c93d78aeaf7610bf5ec366080b6de810604af53"
+dependencies = [
+ "base16ct 0.2.0",
+ "serde",
+]
+
+[[package]]
+name = "serdect"
+version = "0.4.0"
 dependencies = [
  "base16ct 0.2.0",
  "bincode",
