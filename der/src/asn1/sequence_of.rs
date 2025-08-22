@@ -245,11 +245,9 @@ where
 #[cfg(test)]
 mod tests {
     use crate::asn1::SequenceOf;
-    use crate::{DerOrd, Length, Decode, ErrorKind};
-
+    use crate::{Decode, DerOrd, ErrorKind, Length};
 
     use hex_literal::hex;
-
 
     #[test]
     fn sequenceof_valueord_value_cmp() {
@@ -277,7 +275,8 @@ mod tests {
                 "0201" // INTEGER tag and length
                     "05"
         );
-        let err = SequenceOf::<u16, 5>::from_der(invalid_data).unwrap_err();
+        let err = SequenceOf::<u16, 5>::from_der(invalid_data)
+            .expect_err("read_nested should narrow down the data slice");
         assert_eq!(
             ErrorKind::Incomplete {
                 expected_len: Length::new(5),

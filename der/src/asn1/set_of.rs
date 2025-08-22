@@ -514,7 +514,8 @@ mod tests {
                 "0201" // INTEGER tag and length
                     "04"
         );
-        let err = SetOf::<u16, 5>::from_der(invalid_data).unwrap_err();
+        let err = SetOf::<u16, 5>::from_der(invalid_data)
+            .expect_err("read_nested should narrow down the data slice");
         assert_eq!(
             ErrorKind::Incomplete {
                 expected_len: Length::new(5),
