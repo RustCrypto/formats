@@ -245,7 +245,11 @@ where
 #[cfg(test)]
 mod tests {
     use crate::asn1::SequenceOf;
-    use crate::ord::DerOrd;
+    use crate::{DerOrd, Length, Decode, ErrorKind};
+
+
+    use hex_literal::hex;
+
 
     #[test]
     fn sequenceof_valueord_value_cmp() {
@@ -264,5 +268,22 @@ mod tests {
             arr
         };
         assert_eq!(arr1.der_cmp(&arr2), Ok(Ordering::Greater));
+    }
+
+    #[test]
+    fn sequenceof_data_too_short() {
+        let invalid_data = &hex!(
+            "3002" // SEQUENCE tag and length (shorter than actual data)
+                "0201" // INTEGER tag and length
+                    "05"
+        );
+        let err = SequenceOf::<u16, 5>::from_der(invalid_data).unwrap_err();
+        assert_eq!(
+            ErrorKind::Incomplete {
+                expected_len: Length::new(5),
+                actual_len: Length::new(4)
+            },
+            err.kind()
+        );
     }
 }

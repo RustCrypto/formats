@@ -478,7 +478,9 @@ mod tests {
     use super::SetOf;
     #[cfg(feature = "alloc")]
     use super::SetOfVec;
-    use crate::{DerOrd, ErrorKind};
+    use crate::{Decode, DerOrd, ErrorKind, Length};
+
+    use hex_literal::hex;
 
     #[test]
     fn setof_tryfrom_array() {
@@ -503,6 +505,23 @@ mod tests {
         let set1 = SetOf::try_from(arr1).unwrap();
         let set2 = SetOf::try_from(arr2).unwrap();
         assert_eq!(set1.der_cmp(&set2), Ok(Ordering::Greater));
+    }
+
+    #[test]
+    fn setof_data_too_short() {
+        let invalid_data = &hex!(
+            "3102" // SET tag and length (shorter than actual data)
+                "0201" // INTEGER tag and length
+                    "04"
+        );
+        let err = SetOf::<u16, 5>::from_der(invalid_data).unwrap_err();
+        assert_eq!(
+            ErrorKind::Incomplete {
+                expected_len: Length::new(5),
+                actual_len: Length::new(4)
+            },
+            err.kind()
+        );
     }
 
     #[cfg(feature = "alloc")]
