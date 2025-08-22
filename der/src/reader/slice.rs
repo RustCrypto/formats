@@ -222,4 +222,26 @@ mod tests {
             err.kind()
         );
     }
+
+    #[test]
+    fn read_nested_trailing_data() {
+        let len: Length = Length::new_usize(EXAMPLE_MSG.len()).expect("usize to be valid length");
+        let mut reader = SliceReader::new(EXAMPLE_MSG).expect("SliceReader to be created");
+
+        let nested_err: crate::Error = reader
+            .read_nested(len, |rdr| {
+                let x = i8::decode(rdr)?;
+                assert_eq!(42i8, x);
+                Ok(())
+            })
+            .unwrap_err();
+
+        assert_eq!(
+            ErrorKind::TrailingData {
+                decoded: 3u8.into(),
+                remaining: 1u8.into(),
+            },
+            nested_err.kind()
+        );
+    }
 }
