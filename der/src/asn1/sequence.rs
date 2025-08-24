@@ -35,7 +35,7 @@ pub struct SequenceRef<'a> {
 }
 
 impl<'a> SequenceRef<'a> {
-    /// Create a new [`SequenceRef`] from the provided DER bytes.
+    /// Create a new [`SequenceRef`] from the DER bytes of the inner value.
     pub fn new(slice: &'a [u8]) -> Result<Self> {
         BytesRef::new(slice)
             .map(|body| Self { body })
