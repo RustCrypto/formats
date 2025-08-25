@@ -346,6 +346,7 @@ mod bytes;
 mod datetime;
 mod decode;
 mod encode;
+mod encode_cached;
 mod encode_ref;
 mod encoding_rules;
 mod error;
@@ -366,6 +367,7 @@ pub use crate::{
     datetime::DateTime,
     decode::{Decode, DecodeOwned, DecodeValue},
     encode::{Encode, EncodeValue},
+    encode_cached::EncodeValueLenCached,
     encode_ref::{EncodeRef, EncodeValueRef},
     encoding_rules::EncodingRules,
     error::{Error, ErrorKind, Result},
