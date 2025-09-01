@@ -1383,7 +1383,7 @@ dependencies = [
  "der",
  "hex-literal",
  "hybrid-array",
- "serdect 0.4.0",
+ "serdect 0.4.1",
  "subtle",
  "tempfile",
  "zeroize",
@@ -1458,7 +1458,7 @@ dependencies = [
 
 [[package]]
 name = "serdect"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "base16ct 0.3.0",
  "bincode",
