@@ -1460,7 +1460,7 @@ dependencies = [
 name = "serdect"
 version = "0.4.0"
 dependencies = [
- "base16ct 0.2.0",
+ "base16ct 0.3.0",
  "bincode",
  "ciborium",
  "hex-literal",

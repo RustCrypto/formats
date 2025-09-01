@@ -16,7 +16,7 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-base16ct = { version = "0.2", default-features = false }
+base16ct = { version = "0.3", default-features = false }
 serde = { version = "1.0.184", default-features = false }
 
 # optional featuresw
