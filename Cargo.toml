@@ -60,9 +60,13 @@ x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
-crypto-bigint  = { git = "https://github.com/RustCrypto/crypto-bigint.git" }
+block-buffer = { git = "https://github.com/RustCrypto/utils" }
+crypto-bigint = { git = "https://github.com/RustCrypto/crypto-bigint.git" }
+crypto-common = { git = "https://github.com/RustCrypto/traits" }
+digest = { git = "https://github.com/RustCrypto/traits" }
 elliptic-curve = { git = "https://github.com/RustCrypto/traits.git" }
-ecdsa          = { git = "https://github.com/RustCrypto/signatures.git" }
-primefield     = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
-p256           = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
-rsa            = { git = "https://github.com/RustCrypto/RSA.git" }
+ecdsa = { git = "https://github.com/RustCrypto/signatures.git" }
+inout = { git = "https://github.com/RustCrypto/utils" }
+primefield = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
+p256 = { git = "https://github.com/RustCrypto/elliptic-curves.git" }
+rsa = { git = "https://github.com/RustCrypto/RSA.git" }
