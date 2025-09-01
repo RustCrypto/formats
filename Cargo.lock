@@ -1379,7 +1379,7 @@ dependencies = [
 name = "sec1"
 version = "0.8.0-rc.8"
 dependencies = [
- "base16ct 0.2.0",
+ "base16ct 0.3.0",
  "der",
  "hex-literal",
  "hybrid-array",
