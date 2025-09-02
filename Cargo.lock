@@ -124,12 +124,6 @@ dependencies = [
 
 [[package]]
 name = "base16ct"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
-
-[[package]]
-name = "base16ct"
 version = "0.3.0"
 
 [[package]]
@@ -193,8 +187,7 @@ checksum = "34efbcccd345379ca2868b2b2c9d3782e9cc58ba87bc7d79d5b53d9c9ae6f25d"
 [[package]]
 name = "block-buffer"
 version = "0.11.0-rc.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a229bfd78e4827c91b9b95784f69492c1b77c1ab75a45a8a037b139215086f94"
+source = "git+https://github.com/RustCrypto/utils#adfccfea2686ef191b607f653cc3587753b6ec66"
 dependencies = [
  "hybrid-array",
 ]
@@ -202,8 +195,7 @@ dependencies = [
 [[package]]
 name = "block-padding"
 version = "0.4.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee88d14c41bbae2e333f574a27fc73d96fe1039e5a356c20d06a7f2a34cd8e5a"
+source = "git+https://github.com/RustCrypto/utils#adfccfea2686ef191b607f653cc3587753b6ec66"
 dependencies = [
  "hybrid-array",
 ]
@@ -417,13 +409,13 @@ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
 name = "crypto-bigint"
-version = "0.7.0-rc.1"
-source = "git+https://github.com/RustCrypto/crypto-bigint.git#3c3a24a85c439c8946e133eb717bfbf8e86148bc"
+version = "0.7.0-rc.2"
+source = "git+https://github.com/RustCrypto/crypto-bigint.git#60047823b17a8400969dca71416a363e71c74a03"
 dependencies = [
  "hybrid-array",
  "num-traits",
  "rand_core",
- "serdect 0.3.0",
+ "serdect",
  "subtle",
  "zeroize",
 ]
@@ -431,8 +423,7 @@ dependencies = [
 [[package]]
 name = "crypto-common"
 version = "0.2.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a23fa214dea9efd4dacee5a5614646b30216ae0f05d4bb51bafb50e9da1c5be"
+source = "git+https://github.com/RustCrypto/traits#b91704f633a83798c1ba89f908cff067ddc7d843"
 dependencies = [
  "hybrid-array",
  "rand_core",
@@ -516,8 +507,7 @@ dependencies = [
 [[package]]
 name = "digest"
 version = "0.11.0-rc.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "460dd7f37e4950526b54a5a6b1f41b6c8e763c58eb9a8fc8fc05ba5c2f44ca7b"
+source = "git+https://github.com/RustCrypto/traits#b91704f633a83798c1ba89f908cff067ddc7d843"
 dependencies = [
  "block-buffer",
  "const-oid",
@@ -548,9 +538,9 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 [[package]]
 name = "elliptic-curve"
 version = "0.14.0-rc.12"
-source = "git+https://github.com/RustCrypto/traits.git#40508e0480c748542358c620e055b12aa858b042"
+source = "git+https://github.com/RustCrypto/traits#b91704f633a83798c1ba89f908cff067ddc7d843"
 dependencies = [
- "base16ct 0.2.0",
+ "base16ct",
  "crypto-bigint",
  "digest",
  "ff",
@@ -767,9 +757,9 @@ dependencies = [
 
 [[package]]
 name = "hybrid-array"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "891d15931895091dea5c47afa5b3c9a01ba634b311919fd4d41388fa0e3d76af"
+checksum = "6fe39a812f039072707ce38020acbab2f769087952eddd9e2b890f37654b2349"
 dependencies = [
  "typenum",
  "zeroize",
@@ -788,8 +778,7 @@ dependencies = [
 [[package]]
 name = "inout"
 version = "0.2.0-rc.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c774c86bce20ea04abe1c37cf0051c5690079a3a28ef5fdac2a5a0412b3d7d74"
+source = "git+https://github.com/RustCrypto/utils#adfccfea2686ef191b607f653cc3587753b6ec66"
 dependencies = [
  "block-padding",
  "hybrid-array",
@@ -936,7 +925,7 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 [[package]]
 name = "p256"
 version = "0.14.0-pre.9"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#aba09809dd4e0c4f591ffa7285c77165f8e509bd"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#e25ccd1617ca75b8d3047ba4f884d6d2348c6d5f"
 dependencies = [
  "ecdsa",
  "elliptic-curve",
@@ -1069,7 +1058,7 @@ dependencies = [
 [[package]]
 name = "primefield"
 version = "0.14.0-pre.4"
-source = "git+https://github.com/RustCrypto/elliptic-curves.git#aba09809dd4e0c4f591ffa7285c77165f8e509bd"
+source = "git+https://github.com/RustCrypto/elliptic-curves.git#e25ccd1617ca75b8d3047ba4f884d6d2348c6d5f"
 dependencies = [
  "crypto-bigint",
  "ff",
@@ -1379,11 +1368,11 @@ dependencies = [
 name = "sec1"
 version = "0.8.0-rc.8"
 dependencies = [
- "base16ct 0.3.0",
+ "base16ct",
  "der",
  "hex-literal",
  "hybrid-array",
- "serdect 0.4.1",
+ "serdect",
  "subtle",
  "tempfile",
  "zeroize",
@@ -1448,19 +1437,9 @@ dependencies = [
 
 [[package]]
 name = "serdect"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f42f67da2385b51a5f9652db9c93d78aeaf7610bf5ec366080b6de810604af53"
-dependencies = [
- "base16ct 0.2.0",
- "serde",
-]
-
-[[package]]
-name = "serdect"
 version = "0.4.1"
 dependencies = [
- "base16ct 0.3.0",
+ "base16ct",
  "bincode",
  "ciborium",
  "hex-literal",
