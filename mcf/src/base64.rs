@@ -9,11 +9,13 @@ use alloc::{string::String, vec::Vec};
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Base64 {
-    /// bcrypt encoding.
+    /// bcrypt encoding. Also used by the following schemes:
+    /// - scrypt
+    /// - yescrypt
     ///
     /// ```text
-    /// ./         [A-Z]      [a-z]     [0-9]
-    /// 0x2e-0x2f, 0x41-0x5a, 0x61-0x7a, 0x30-0x39
+    /// ./         [0-9]      [A-Z]      [a-z]
+    /// 0x2e-0x2f, 0x30-0x39, 0x41-0x5a, 0x61-0x7a
     /// ```
     Bcrypt,
 
@@ -25,7 +27,7 @@ pub enum Base64 {
     /// ```
     Crypt,
 
-    /// `crypt(3)` Base64 encoding for the following schemes:
+    /// `crypt(3)` Base64 encoding. Used by the following schemes:
     /// - sha1_crypt,
     /// - sha256_crypt,
     /// - sha512_crypt,
