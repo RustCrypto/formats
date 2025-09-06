@@ -69,6 +69,27 @@ impl<'a> McfHashRef<'a> {
     }
 }
 
+impl<'a> From<McfHashRef<'a>> for &'a str {
+    fn from(hash: McfHashRef<'a>) -> &'a str {
+        hash.0
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl From<McfHashRef<'_>> for alloc::string::String {
+    fn from(hash: McfHashRef<'_>) -> Self {
+        hash.0.into()
+    }
+}
+
+impl<'a> TryFrom<&'a str> for McfHashRef<'a> {
+    type Error = Error;
+
+    fn try_from(s: &'a str) -> Result<Self> {
+        Self::new(s)
+    }
+}
+
 #[cfg(feature = "alloc")]
 mod allocating {
     use crate::{Base64, Error, Field, Fields, McfHashRef, Result, fields, validate, validate_id};
@@ -173,6 +194,14 @@ mod allocating {
         type Error = Error;
 
         fn try_from(s: String) -> Result<Self> {
+            Self::new(s)
+        }
+    }
+
+    impl TryFrom<&str> for McfHash {
+        type Error = Error;
+
+        fn try_from(s: &str) -> Result<Self> {
             Self::new(s)
         }
     }
