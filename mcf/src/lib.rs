@@ -160,21 +160,21 @@ mod allocating {
             self.as_mcf_hash_ref().fields()
         }
 
-        /// Push an additional field onto the password hash string, first adding a leading `$`.
+        /// Encode the given data as the specified variant of Base64 and push it onto the password
+        /// hash string, first adding a `$` delimiter.
+        pub fn push_base64(&mut self, field: &[u8], base64_encoding: Base64) {
+            self.0.push(fields::DELIMITER);
+            self.0.push_str(&base64_encoding.encode_string(field));
+        }
+
+        /// Push an additional field onto the password hash string, first adding a `$` delimiter.
         pub fn push_field(&mut self, field: Field<'_>) {
             self.0.push(fields::DELIMITER);
             self.0.push_str(field.as_str());
         }
 
-        /// Push an additional field onto the password hash string, adding a leading `$` and then
-        /// encoding it into the specified variant of Base64.
-        pub fn push_field_base64(&mut self, field: &[u8], base64_encoding: Base64) {
-            self.0.push(fields::DELIMITER);
-            self.0.push_str(&base64_encoding.encode_string(field));
-        }
-
-        /// Push a raw string onto the MCF hash, ensuring it validates as a [`Field`] and also
-        /// adding a leading `$`.
+        /// Push a raw string onto the MCF hash, first adding a `$` delimiter and also ensuring it
+        /// validates as a [`Field`].
         ///
         /// # Errors
         /// - If the provided `str` fails to validate as a [`Field`] (i.e. contains characters
