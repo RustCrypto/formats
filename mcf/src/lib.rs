@@ -132,6 +132,7 @@ mod allocating {
         pub fn from_id(id: &str) -> Result<McfHash> {
             validate_id(id)?;
 
+            // TODO(tarcieri): overestimate capacity so most password hashes fit?
             let mut hash = String::with_capacity(1 + id.len());
             hash.push(fields::DELIMITER);
             hash.push_str(id);
@@ -159,16 +160,29 @@ mod allocating {
             self.as_mcf_hash_ref().fields()
         }
 
-        /// Push an additional field onto the password hash string.
+        /// Push an additional field onto the password hash string, first adding a leading `$`.
         pub fn push_field(&mut self, field: Field<'_>) {
             self.0.push(fields::DELIMITER);
             self.0.push_str(field.as_str());
         }
 
-        /// Push an additional field onto the password hash string, encoding it first as Base64.
+        /// Push an additional field onto the password hash string, adding a leading `$` and then
+        /// encoding it into the specified variant of Base64.
         pub fn push_field_base64(&mut self, field: &[u8], base64_encoding: Base64) {
             self.0.push(fields::DELIMITER);
             self.0.push_str(&base64_encoding.encode_string(field));
+        }
+
+        /// Push a raw string onto the MCF hash, ensuring it validates as a [`Field`] and also
+        /// adding a leading `$`.
+        ///
+        /// # Errors
+        /// - If the provided `str` fails to validate as a [`Field`] (i.e. contains characters
+        ///   outside the allowed set)
+        pub fn push_str(&mut self, s: &str) -> Result<()> {
+            let field = Field::new(s)?;
+            self.push_field(field);
+            Ok(())
         }
     }
 
