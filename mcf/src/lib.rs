@@ -25,19 +25,20 @@ pub use error::{Error, Result};
 pub use fields::{Field, Fields};
 
 #[cfg(feature = "alloc")]
-pub use allocating::McfHash;
+pub use allocating::PasswordHash;
 
 /// Debug message used in panics when invariants aren't properly held.
 const INVARIANT_MSG: &str = "should be ensured valid by constructor";
 
-/// Zero-copy decoder for hashes in the Modular Crypt Format (MCF).
+/// Password hash reference type for hashes encoded in the Modular Crypt Format (MCF),
+/// e.g. `$<id>$...`.
 ///
-/// For more information, see [`McfHash`].
+/// For more information, see [`PasswordHash`].
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct McfHashRef<'a>(&'a str);
+pub struct PasswordHashRef<'a>(&'a str);
 
-impl<'a> McfHashRef<'a> {
-    /// Parse the given input string, returning an [`McfHashRef`] if valid.
+impl<'a> PasswordHashRef<'a> {
+    /// Parse the given input string, returning an [`PasswordHashRef`] if valid.
     pub fn new(s: &'a str) -> Result<Self> {
         validate(s)?;
         Ok(Self(s))
@@ -69,20 +70,20 @@ impl<'a> McfHashRef<'a> {
     }
 }
 
-impl<'a> From<McfHashRef<'a>> for &'a str {
-    fn from(hash: McfHashRef<'a>) -> &'a str {
+impl<'a> From<PasswordHashRef<'a>> for &'a str {
+    fn from(hash: PasswordHashRef<'a>) -> &'a str {
         hash.0
     }
 }
 
 #[cfg(feature = "alloc")]
-impl From<McfHashRef<'_>> for alloc::string::String {
-    fn from(hash: McfHashRef<'_>) -> Self {
+impl From<PasswordHashRef<'_>> for alloc::string::String {
+    fn from(hash: PasswordHashRef<'_>) -> Self {
         hash.0.into()
     }
 }
 
-impl<'a> TryFrom<&'a str> for McfHashRef<'a> {
+impl<'a> TryFrom<&'a str> for PasswordHashRef<'a> {
     type Error = Error;
 
     fn try_from(s: &'a str) -> Result<Self> {
@@ -92,11 +93,14 @@ impl<'a> TryFrom<&'a str> for McfHashRef<'a> {
 
 #[cfg(feature = "alloc")]
 mod allocating {
-    use crate::{Base64, Error, Field, Fields, McfHashRef, Result, fields, validate, validate_id};
+    use crate::{
+        Base64, Error, Field, Fields, PasswordHashRef, Result, fields, validate, validate_id,
+    };
     use alloc::string::String;
     use core::{fmt, str};
 
-    /// Modular Crypt Format (MCF) serialized password hash.
+    /// Password hash encoded in the Modular Crypt Format (MCF). Owned form with builder
+    /// functionality.
     ///
     /// Password hashes in this format take the form `${id}$...`, where `{id}` is a short numeric or
     /// alphanumeric algorithm identifier optionally containing a `-`, followed by `$` as a delimiter,
@@ -111,17 +115,17 @@ mod allocating {
     /// $6$rounds=100000$exn6tVc2j/MZD8uG$BI1Xh8qQSK9J4m14uwy7abn.ctj/TIAzlaVCto0MQrOFIeTXsc1iwzH16XEWo/a7c7Y9eVJvufVzYAs4EsPOy0
     /// ```
     #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-    pub struct McfHash(String);
+    pub struct PasswordHash(String);
 
-    impl McfHash {
-        /// Parse the given input string, returning an [`McfHash`] if valid.
-        pub fn new(s: impl Into<String>) -> Result<McfHash> {
+    impl PasswordHash {
+        /// Parse the given input string, returning an [`PasswordHash`] if valid.
+        pub fn new(s: impl Into<String>) -> Result<PasswordHash> {
             let s = s.into();
             validate(&s)?;
             Ok(Self(s))
         }
 
-        /// Create an [`McfHash`] from an identifier.
+        /// Create an [`PasswordHash`] from an identifier.
         ///
         /// # Returns
         ///
@@ -129,7 +133,7 @@ mod allocating {
         ///
         /// Allowed characters match the regex: `[a-z0-9\-]`, where the first and last characters do NOT
         /// contain a `-`.
-        pub fn from_id(id: &str) -> Result<McfHash> {
+        pub fn from_id(id: &str) -> Result<PasswordHash> {
             validate_id(id)?;
 
             // TODO(tarcieri): overestimate capacity so most password hashes fit?
@@ -144,9 +148,9 @@ mod allocating {
             &self.0
         }
 
-        /// Get an [`McfHashRef`] which corresponds to this owned [`McfHash`].
-        pub fn as_mcf_hash_ref(&self) -> McfHashRef<'_> {
-            McfHashRef(self.as_str())
+        /// Get an [`PasswordHashRef`] which corresponds to this owned [`PasswordHash`].
+        pub fn as_mcf_hash_ref(&self) -> PasswordHashRef<'_> {
+            PasswordHashRef(self.as_str())
         }
 
         /// Get the algorithm identifier for this MCF hash.
@@ -186,25 +190,25 @@ mod allocating {
         }
     }
 
-    impl<'a> AsRef<str> for McfHashRef<'a> {
+    impl<'a> AsRef<str> for PasswordHashRef<'a> {
         fn as_ref(&self) -> &str {
             self.as_str()
         }
     }
 
-    impl AsRef<str> for McfHash {
+    impl AsRef<str> for PasswordHash {
         fn as_ref(&self) -> &str {
             self.as_str()
         }
     }
 
-    impl From<McfHash> for String {
-        fn from(hash: McfHash) -> Self {
+    impl From<PasswordHash> for String {
+        fn from(hash: PasswordHash) -> Self {
             hash.0
         }
     }
 
-    impl TryFrom<String> for McfHash {
+    impl TryFrom<String> for PasswordHash {
         type Error = Error;
 
         fn try_from(s: String) -> Result<Self> {
@@ -212,7 +216,7 @@ mod allocating {
         }
     }
 
-    impl TryFrom<&str> for McfHash {
+    impl TryFrom<&str> for PasswordHash {
         type Error = Error;
 
         fn try_from(s: &str) -> Result<Self> {
@@ -220,13 +224,13 @@ mod allocating {
         }
     }
 
-    impl fmt::Display for McfHash {
+    impl fmt::Display for PasswordHash {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             f.write_str(self.as_str())
         }
     }
 
-    impl str::FromStr for McfHash {
+    impl str::FromStr for PasswordHash {
         type Err = Error;
 
         fn from_str(s: &str) -> Result<Self> {
