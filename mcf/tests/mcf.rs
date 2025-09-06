@@ -65,7 +65,7 @@ fn parse_sha512_hash() {
 #[test]
 fn push_fields() {
     let mut hash = McfHash::new("$6$rounds=100000").unwrap();
-    hash.push_field_base64(EXAMPLE_SALT, Base64::ShaCrypt);
-    hash.push_field_base64(EXAMPLE_HASH, Base64::ShaCrypt);
+    hash.push_base64(EXAMPLE_SALT, Base64::ShaCrypt);
+    hash.push_base64(EXAMPLE_HASH, Base64::ShaCrypt);
     assert_eq!(SHA512_HASH, hash.as_str());
 }
