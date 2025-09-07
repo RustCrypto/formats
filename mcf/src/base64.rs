@@ -1,5 +1,7 @@
 //! Base64 encoding variants.
 
+#![cfg(feature = "base64")]
+
 use base64ct::{Base64Bcrypt, Base64Crypt, Base64ShaCrypt, Encoding as _, Error as B64Error};
 
 #[cfg(feature = "alloc")]

@@ -15,11 +15,12 @@ in the form `${id}$...`
 """
 
 [dependencies]
-base64ct = { version = "1.7", features = ["alloc"] }
+base64ct = { version = "1.7", optional = true }
 
 [dev-dependencies]
 hex-literal = "1"
 
 [features]
-default = ["alloc"]
-alloc = []
+default = ["alloc", "base64"]
+alloc = ["base64ct?/alloc"]
+base64 = ["dep:base64ct"]

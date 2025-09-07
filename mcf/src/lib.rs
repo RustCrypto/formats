@@ -20,12 +20,13 @@ mod base64;
 mod error;
 mod fields;
 
-pub use base64::Base64;
 pub use error::{Error, Result};
 pub use fields::{Field, Fields};
 
 #[cfg(feature = "alloc")]
 pub use allocating::PasswordHash;
+#[cfg(feature = "base64")]
+pub use base64::Base64;
 
 /// Debug message used in panics when invariants aren't properly held.
 const INVARIANT_MSG: &str = "should be ensured valid by constructor";
@@ -93,11 +94,12 @@ impl<'a> TryFrom<&'a str> for PasswordHashRef<'a> {
 
 #[cfg(feature = "alloc")]
 mod allocating {
-    use crate::{
-        Base64, Error, Field, Fields, PasswordHashRef, Result, fields, validate, validate_id,
-    };
+    use crate::{Error, Field, Fields, PasswordHashRef, Result, fields, validate, validate_id};
     use alloc::string::String;
     use core::{fmt, str};
+
+    #[cfg(feature = "base64")]
+    use crate::Base64;
 
     /// Password hash encoded in the Modular Crypt Format (MCF). Owned form with builder
     /// functionality.
@@ -166,6 +168,7 @@ mod allocating {
 
         /// Encode the given data as the specified variant of Base64 and push it onto the password
         /// hash string, first adding a `$` delimiter.
+        #[cfg(feature = "base64")]
         pub fn push_base64(&mut self, field: &[u8], base64_encoding: Base64) {
             self.0.push(fields::DELIMITER);
             self.0.push_str(&base64_encoding.encode_string(field));
