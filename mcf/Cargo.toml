@@ -1,6 +1,6 @@
 [package]
 name = "mcf"
-version = "0.2.0-pre"
+version = "0.2.0"
 authors = ["RustCrypto Developers"]
 edition = "2024"
 rust-version = "1.85"
