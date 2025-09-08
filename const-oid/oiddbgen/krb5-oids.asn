@@ -1,0 +1,72 @@
+https://web.mit.edu/kerberos/krb5-oids/krb5-oids.asn
+
+Krb5-OIDS {
+	iso(1) identified-organization(3) dod(6) internet(1)
+	security(5) kerberosV5(2) modules(4) krb5-oids(3)
+} DEFINITIONS ::= BEGIN
+
+EXPORTS -- none -- ;
+
+--
+-- NOTE: Identifier names in this module are subject to change at any time.
+-- Applications should not rely on these identifier names for any reason,
+-- and the EXPORTS clause above reflects this.  The identifier names are
+-- primarily intended for human readers.
+--
+-- Contact <krb5-oid-registrar@mit.edu> to request assignments under
+-- the krb5 OID arc.
+--
+
+-- krb5 OID arc, per RFC 1510 (with "dod" node corrected)
+id-krb5 OBJECT IDENTIFIER ::= {	iso(1) identified-organization(3) dod(6) internet(1) security(5) kerberosV5(2)}
+
+-- assigned by pkinit (work in progress)
+id-principalName	OBJECT IDENTIFIER ::= { id-krb5 2 }
+
+--
+-- arc for PKINIT (RFC 4556)
+--
+id-pkinit	OBJECT IDENTIFIER ::= { id-krb5 3 }
+
+id-pkauthdata	OBJECT IDENTIFIER ::= { id-pkinit 1 }
+id-pkdhkeydata	OBJECT IDENTIFIER ::= { id-pkinit 2 }
+id-pkrkeydata	OBJECT IDENTIFIER ::= { id-pkinit 3 }
+id-pkekuoid	OBJECT IDENTIFIER ::= { id-pkinit 4 }
+id-pkkdcekuoid	OBJECT IDENTIFIER ::= { id-pkinit 5 }
+
+-- draft-ietf-kitten-pkinit-alg-agility
+id-pkinit-kdf	OBJECT IDENTIFIER         ::= { id-pkinit 6 }
+id-pkinit-kdf-ah-sha1 OBJECT IDENTIFIER   ::= { id-pkinit-kdf sha1(1) }
+id-pkinit-kdf-ah-sha256 OBJECT IDENTIFIER ::= { id-pkinit-kdf sha256(2) }
+id-pkinit-kdf-ah-sha512 OBJECT IDENTIFIER ::= { id-pkinit-kdf sha512(3) }
+id-pkinit-kdf-ah-sha384 OBJECT IDENTIFIER ::= { id-pkinit-kdf sha384(4) }
+
+-- IAKERB (work in progress)
+id-iakerb	OBJECT IDENTIFIER ::= { id-krb5 5 }
+
+--
+-- krb5 ASN.1 modules
+--
+id-krb5-modules		OBJECT IDENTIFIER ::= { id-krb5 4 }
+
+-- RFC 4120 module
+id-krb5-krb5spec2	OBJECT IDENTIFIER ::= { id-krb5-modules 2 }
+
+-- OID for this module
+id-krb5-OIDS		OBJECT IDENTIFIER ::= { id-krb5-modules 3 }
+
+-- krb-extensions (work in progress)
+
+id-krb5-krb5spec3	OBJECT IDENTIFIER ::= { id-krb5-modules 4 }
+
+id-pkinit-module	OBJECT IDENTIFIER ::= { id-krb5-modules 5 }
+
+id-pkinit-agility-module OBJECT IDENTIFIER ::= { id-pkinit-module 1 }
+
+id-cammac-module	OBJECT IDENTIFIER ::= { id-krb5-modules 7 }
+
+id-spake-module		OBJECT IDENTIFIER ::= { id-krb5-modules 8 }
+
+id-authentication-indicators OBJECT IDENTIFIER ::= { id-krb5-modules 9 }
+
+END
