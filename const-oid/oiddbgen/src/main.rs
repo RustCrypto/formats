@@ -43,6 +43,11 @@ const MDS: &[(&str, &str)] = &[
     ("brng", include_str!("../stb/brng.asn")),
     ("bash", include_str!("../stb/bash.asn")),
     ("bake", include_str!("../stb/bake.asn")),
+    // created from: https://oidref.com/1.3.6.1.4.1.311
+    ("microsoft", include_str!("../microsoft.asn")),
+
+    // loaded from https://web.mit.edu/kerberos/krb5-oids/krb5-oids.asn
+    ("kerberosv5", include_str!("../krb5-oids.asn")),
 ];
 
 // Bases defined in other places.
