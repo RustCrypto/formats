@@ -406,7 +406,7 @@ mod serde_impl {
             type Value = Vec<u8>;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str("either a bytes blob or a sequence of u8")
+                f.write_str("either a byte blob or a sequence of u8")
             }
 
             // New format (native bytes; e.g., CBOR/Bincode/Msgpack)
