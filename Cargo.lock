@@ -1010,7 +1010,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.8.0-rc.6"
+version = "0.8.0-rc.7"
 dependencies = [
  "aes",
  "aes-gcm",
