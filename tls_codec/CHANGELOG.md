@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- [#2022](https://github.com/RustCrypto/formats/pull/2022) Optimize serde serialization of byte vectors using `serde_bytes`. Deserialization of the old serialized format will still work, but newly serialized instances of `VLBytes` will have the new format.
+
 ## 0.4.2
 
 - [#1628](https://github.com/RustCrypto/formats/pull/1628) Bump MSRV to 1.74
