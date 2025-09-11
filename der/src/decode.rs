@@ -73,7 +73,7 @@ where
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<T, <T as DecodeValue<'a>>::Error> {
         let header = Header::decode(reader)?;
         header.tag().assert_eq(T::TAG)?;
-        read_value(reader, header, T::decode_value)
+        read_value(reader, header, T::decode_value_nested)
     }
 }
 
@@ -135,6 +135,16 @@ pub trait DecodeValue<'a>: Sized {
 
     /// Attempt to decode this message using the provided [`Reader`].
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error>;
+
+    /// Attempt to decode this message using the nested [`Reader`], using [`Reader::read_nested`] wrapper.
+    ///
+    /// For primitive types, this function can be overridden to [`DecodeValue::decode_value`] directly.
+    fn decode_value_nested<R: Reader<'a>>(
+        reader: &mut R,
+        header: Header,
+    ) -> Result<Self, Self::Error> {
+        reader.read_nested(header.length(), |r| Self::decode_value(r, header))
+    }
 }
 
 #[cfg(feature = "alloc")]

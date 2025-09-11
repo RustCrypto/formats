@@ -275,7 +275,7 @@ mod allocating {
 
         fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Error> {
             let header = Header::decode(reader)?;
-            read_value(reader, header, Self::decode_value)
+            read_value(reader, header, Self::decode_value_nested)
         }
     }
 
