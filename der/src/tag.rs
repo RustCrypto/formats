@@ -1,7 +1,7 @@
 //! ASN.1 tags.
 #![cfg_attr(feature = "arbitrary", allow(clippy::arithmetic_side_effects))]
 
-mod class;
+pub(crate) mod class;
 mod mode;
 mod number;
 
@@ -164,6 +164,31 @@ impl Tag {
     /// Maximum number of octets in a DER encoding of a [`Tag`] using the
     /// rules implemented by this crate.
     pub(crate) const MAX_SIZE: usize = 6;
+
+    /// Creates a [`Tag`] of non-`UNIVERSAL` class.
+    /// Allowed classes are:
+    /// - `APPLICATION` [`Class::Application`],
+    /// - `CONTEXT-SPECIFIC` [`Class::ContextSpecific`],
+    /// - `PRIVATE` [`Class::Private`],
+    ///
+    /// Returns [`Tag::Null`] otherwise.
+    pub const fn new_non_universal(class: Class, number: TagNumber, constructed: bool) -> Tag {
+        match class {
+            Class::Application => Tag::Application {
+                constructed,
+                number,
+            },
+            Class::ContextSpecific => Tag::ContextSpecific {
+                constructed,
+                number,
+            },
+            Class::Private => Tag::Private {
+                constructed,
+                number,
+            },
+            Class::Universal => Tag::Null,
+        }
+    }
 
     /// Decode a [`Tag`] in addition to returning the value of the constructed bit.
     pub(crate) fn decode_with_constructed_bit<'a>(
