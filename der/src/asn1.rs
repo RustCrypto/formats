@@ -44,7 +44,7 @@ pub use self::{
     ia5_string::Ia5StringRef,
     integer::{int::IntRef, uint::UintRef},
     null::Null,
-    octet_string::{OctetStringRef, OctetStringRef2},
+    octet_string::{OctetStringRef, OctetStringRefDeriveHack},
     printable_string::PrintableStringRef,
     private::{Private, PrivateRef},
     sequence::{Sequence, SequenceRef},
