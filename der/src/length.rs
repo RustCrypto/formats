@@ -45,10 +45,6 @@ impl Length {
     #[cfg(feature = "ber")]
     pub(crate) const EOC_LEN: Self = Self::new(2);
 
-    /// Maximum number of octets in a DER encoding of a [`Length`] using the
-    /// rules implemented by this crate.
-    pub(crate) const MAX_SIZE: usize = 5;
-
     /// Create a new [`Length`] for any value which fits inside of a [`u16`].
     ///
     /// This function is const-safe and therefore useful for [`Length`] constants.
@@ -336,13 +332,8 @@ impl Encode for Length {
 
 impl DerOrd for Length {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        let mut buf1 = [0u8; Self::MAX_SIZE];
-        let mut buf2 = [0u8; Self::MAX_SIZE];
-
-        let buf1 = self.encode_to_slice(&mut buf1)?;
-        let buf2 = other.encode_to_slice(&mut buf2)?;
-
-        Ok(buf1.cmp(buf2))
+        // The DER encoding has the same ordering as the integer value
+        Ok(self.inner.cmp(&other.inner))
     }
 }
 
