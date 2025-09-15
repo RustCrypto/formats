@@ -44,7 +44,7 @@ pub struct TimeStampedData<'a> {
     #[asn1(optional = "true")]
     pub meta_data: Option<MetaData>,
     #[asn1(optional = "true")]
-    pub content: Option<OctetStringRef<'a>>,
+    pub content: Option<&'a OctetStringRef>,
     pub temporal_evidence: Evidence,
 }
 

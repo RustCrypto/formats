@@ -89,13 +89,13 @@ pub struct NegTokenInit<'a> {
 
     /// This field, if present, contains the optimistic mechanism token.
     #[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
-    pub mech_token: Option<OctetStringRef<'a>>,
+    pub mech_token: Option<&'a OctetStringRef>,
 
     /// This field, if present, contains an MIC token for the mechanism
     /// list in the initial negotiation message.  This MIC token is
     /// computed according to Section 5.
     #[asn1(context_specific = "3", optional = "true", tag_mode = "IMPLICIT")]
-    pub mech_list_mic: Option<OctetStringRef<'a>>,
+    pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
 /// `ContextFlags` as defined in [RFC 4178 Section 4.2.1].
@@ -172,7 +172,7 @@ pub struct NegTokenTarg<'a> {
     /// from the list has been selected by the target or to carry the
     /// tokens specific to the selected security mechanism.
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub response_token: Option<OctetStringRef<'a>>,
+    pub response_token: Option<&'a OctetStringRef>,
 
     /// If the selected mechanism is capable of integrity protection, this
     ///  field must be present in the last message of the negotiation,
@@ -182,7 +182,7 @@ pub struct NegTokenTarg<'a> {
     ///  allows to verify that the list initially sent by the initiator has
     ///  been received unmodified by the target.
     #[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
-    pub mech_list_mic: Option<OctetStringRef<'a>>,
+    pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
 /// `NegResult` as defined in [RFC 2479 Section 3.2.1].
@@ -252,13 +252,13 @@ pub struct NegTokenResp<'a> {
     /// This field, if present, contains tokens specific to the mechanism
     /// selected.
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub response_token: Option<OctetStringRef<'a>>,
+    pub response_token: Option<&'a OctetStringRef>,
 
     /// This field, if present, contains an MIC token for the mechanism
     /// list in the initial negotiation message.  This MIC token is
     /// computed according to Section 5.
     #[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
-    pub mech_list_mic: Option<OctetStringRef<'a>>,
+    pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Enumerated)]
@@ -302,7 +302,7 @@ pub struct NegHints<'a> {
     ///
     /// [X690]: https://www.itu.int/rec/T-REC-X.690/
     #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
-    pub hint_address: Option<OctetStringRef<'a>>,
+    pub hint_address: Option<&'a OctetStringRef>,
 }
 
 /// `NegTokenInit2` as defined in [MS-SPNG Section 2.2.1].
@@ -337,7 +337,7 @@ pub struct NegTokenInit2<'a> {
     ///
     /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub mech_token: Option<OctetStringRef<'a>>,
+    pub mech_token: Option<&'a OctetStringRef>,
 
     /// The server supplies the negotiation hints using a NegHints structure.
     #[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
@@ -347,7 +347,7 @@ pub struct NegTokenInit2<'a> {
     ///
     /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
     #[asn1(context_specific = "4", optional = "true", tag_mode = "EXPLICIT")]
-    pub mech_list_mic: Option<OctetStringRef<'a>>,
+    pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
 #[cfg(test)]

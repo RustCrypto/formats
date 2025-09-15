@@ -31,6 +31,11 @@ impl BytesRef {
         }
     }
 
+    /// Get a pointer to this [`BytesRef`].
+    pub(crate) const fn as_ptr(&self) -> *const BytesRef {
+        self as *const BytesRef
+    }
+
     /// Borrow the inner byte slice
     pub const fn as_slice(&self) -> &[u8] {
         &self.0

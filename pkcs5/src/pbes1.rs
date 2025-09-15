@@ -154,7 +154,7 @@ impl TryFrom<AnyRef<'_>> for Parameters {
     fn try_from(any: AnyRef<'_>) -> der::Result<Parameters> {
         any.sequence(|reader| {
             Ok(Parameters {
-                salt: OctetStringRef::decode(reader)?
+                salt: <&OctetStringRef>::decode(reader)?
                     .as_bytes()
                     .try_into()
                     .map_err(|_| Tag::OctetString.value_error())?,

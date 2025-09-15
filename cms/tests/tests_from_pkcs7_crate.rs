@@ -123,7 +123,7 @@ fn cms_decode_signed_der() {
         sd.encap_content_info
             .econtent
             .unwrap()
-            .decode_as::<OctetStringRef>()
+            .decode_as::<&OctetStringRef>()
             .unwrap()
             .as_bytes()
             .len(),

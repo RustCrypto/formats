@@ -1,11 +1,11 @@
 //! Attribute-related types
+//!
 use alloc::{boxed::Box, vec};
+use core::borrow::Borrow;
 use der::{
     DecodeValue, EncodeValue, FixedTag, Length, Tag,
     asn1::{OctetString, OctetStringRef},
-    referenced::OwnedToRef,
 };
-
 use x509_cert::time::Time;
 
 use crate::signed_data::SignerInfo;
@@ -50,8 +50,8 @@ impl MessageDigest {
 
     /// Return an [`OctetStringRef`] pointing to the underlying data
     #[inline]
-    pub fn as_octet_string_ref<'a>(&'a self) -> OctetStringRef<'a> {
-        self.0.owned_to_ref()
+    pub fn as_octet_string_ref(&self) -> &OctetStringRef {
+        self.0.borrow()
     }
 }
 

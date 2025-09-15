@@ -93,7 +93,8 @@ impl Asn1Type {
             Asn1Type::BitString => quote!(::der::asn1::BitStringRef),
             Asn1Type::Ia5String => quote!(::der::asn1::Ia5StringRef),
             Asn1Type::GeneralizedTime => quote!(::der::asn1::GeneralizedTime),
-            Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef),
+            // TODO(tarcieri): natively support `OctetStringRef`, remove `OctetStringRef2`
+            Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef2),
             Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef),
             Asn1Type::TeletexString => quote!(::der::asn1::TeletexStringRef),
             Asn1Type::VideotexString => quote!(::der::asn1::VideotexStringRef),
