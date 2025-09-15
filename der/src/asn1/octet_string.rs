@@ -5,9 +5,12 @@ use crate::{
     Tag, Writer, asn1::AnyRef, ord::OrdIsValueOrd,
 };
 
-// TODO(tarcieri): custom derive hack until the logic is updated to support `&'a` reference types
+/// Custom derive hack until `der_derive` is updated to support `&'a MyRef` reference types.
+///
+/// This is not considered a stable part of the public API and may be removed without warning.
+// TODO(tarcieri): update `der_derive` to support `OctetStringRef` properly. See #2039
 #[doc(hidden)]
-pub type OctetStringRef2<'a> = &'a OctetStringRef;
+pub type OctetStringRefDeriveHack<'a> = &'a OctetStringRef;
 
 /// ASN.1 `OCTET STRING` type: borrowed form.
 ///
