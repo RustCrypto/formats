@@ -18,7 +18,7 @@ rust-version = "1.85"
 const-oid = { version = "0.10", features = ["db"] }
 der = { version = "0.8.0-rc.9", features = ["ber", "derive", "oid"] }
 spki = "0.8.0-rc.4"
-x509-cert = { version = "0.3.0-rc.0", default-features = false }
+x509-cert = { version = "0.3.0-rc.2", default-features = false }
 
 # optional dependencies
 aes = { version = "0.9.0-rc.1", optional = true }
@@ -27,8 +27,8 @@ ansi-x963-kdf = { version = "0.1.0-rc.0", optional = true }
 cbc = { version = "0.2.0-rc.1", optional = true }
 cipher = { version = "0.5.0-rc.1", features = ["alloc", "block-padding", "rand_core"], optional = true }
 digest = { version = "0.11.0-rc.1", optional = true }
-elliptic-curve = { version = "0.14.0-rc.13", optional = true }
-rsa = { version = "0.10.0-rc.6", optional = true }
+elliptic-curve = { version = "0.14.0-rc.14", optional = true }
+rsa = { version = "0.10.0-rc.8", optional = true }
 sha1 = { version = "0.11.0-rc.2", optional = true }
 sha2 = { version = "0.11.0-rc.2", optional = true }
 sha3 = { version = "0.11.0-rc.3", optional = true }
@@ -45,7 +45,7 @@ pbkdf2 = "0.13.0-rc.1"
 rand = "0.9"
 rsa = { version = "0.10.0-rc.6", features = ["sha2"] }
 ecdsa = { version = "0.17.0-rc.6", features = ["digest", "pem"] }
-p256 = "=0.14.0-pre.10"
+p256 = "=0.14.0-pre.11"
 tokio = { version = "1.45.1", features = ["macros", "rt"] }
 x509-cert = { version = "0.3.0-rc.0", features = ["pem"] }
 
