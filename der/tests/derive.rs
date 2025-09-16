@@ -278,7 +278,7 @@ mod sequence {
     use core::marker::PhantomData;
     use der::{
         Decode, Encode, Sequence, ValueOrd,
-        asn1::{AnyRef, ObjectIdentifier, SetOf},
+        asn1::{AnyRef, ObjectIdentifier, SequenceRef, SetOf},
     };
     use hex_literal::hex;
 
@@ -722,6 +722,28 @@ mod sequence {
             ALGORITHM_IDENTIFIER_DER,
             algorithm_identifier.to_der().unwrap()
         );
+    }
+
+    #[derive(Debug, Sequence)]
+    pub struct OidAndImplicitSequence<'a> {
+        pub oid: ObjectIdentifier,
+        #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
+        pub data: SequenceRef<'a>,
+    }
+
+    #[test]
+    fn roundtrip_oid_and_implicit_sequence() {
+        let obj_data: &[u8] = &hex!(
+            "30 09" // SEQUENCE
+                "06 03" // OBJECT IDENTIFIER
+                    "29 01 01" // oid "1.1.1.1"
+                "A0 02" // CONTEXT-SPECIFIC [0] (constructed)
+                    "AA BB"
+        );
+        let obj = OidAndImplicitSequence::from_der(obj_data).unwrap();
+
+        assert_eq!(obj.data.as_bytes(), &hex!("AA BB"));
+        assert_eq!(obj_data, &obj.to_der().unwrap());
     }
 }
 
