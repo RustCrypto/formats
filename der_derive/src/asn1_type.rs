@@ -59,7 +59,7 @@ impl Asn1Type {
     /// Get a `der::Decoder` object for a particular ASN.1 type
     pub fn decoder(self) -> TokenStream {
         let type_path = self.type_path();
-        quote!(#type_path::decode(reader)?)
+        quote!(<#type_path>::decode(reader)?)
     }
 
     /// Get a `der::Decoder` optional object for a particular ASN.1 type
@@ -71,7 +71,7 @@ impl Asn1Type {
     /// Get a `der::DecodeValue` member object for a particular ASN.1 type
     pub fn value_decoder(self) -> TokenStream {
         let type_path = self.type_path();
-        quote!(#type_path::decode_value(reader, header)?)
+        quote!(<#type_path>::decode_value(reader, header)?)
     }
 
     /// Get a `der::DecodeValue` member object for a particular ASN.1 type
@@ -83,7 +83,7 @@ impl Asn1Type {
     /// Get a `der::Encoder` object for a particular ASN.1 type
     pub fn encoder(self, binding: &TokenStream) -> TokenStream {
         let type_path = self.type_path();
-        quote!(#type_path::try_from(#binding)?)
+        quote!(<#type_path>::try_from(#binding)?)
     }
 
     /// Get the Rust type path for a particular ASN.1 type.
@@ -93,8 +93,7 @@ impl Asn1Type {
             Asn1Type::BitString => quote!(::der::asn1::BitStringRef),
             Asn1Type::Ia5String => quote!(::der::asn1::Ia5StringRef),
             Asn1Type::GeneralizedTime => quote!(::der::asn1::GeneralizedTime),
-            // TODO(tarcieri): natively support `OctetStringRef`, remove `OctetStringRefDeriveHack`
-            Asn1Type::OctetString => quote!(::der::asn1::OctetStringRefDeriveHack),
+            Asn1Type::OctetString => quote!(&::der::asn1::OctetStringRef),
             Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef),
             Asn1Type::TeletexString => quote!(::der::asn1::TeletexStringRef),
             Asn1Type::VideotexString => quote!(::der::asn1::VideotexStringRef),
