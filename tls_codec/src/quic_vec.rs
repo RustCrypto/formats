@@ -142,13 +142,6 @@ impl<T: Size> Size for Vec<T> {
     }
 }
 
-impl<T: Size> Size for &Vec<T> {
-    #[inline(always)]
-    fn tls_serialized_len(&self) -> usize {
-        (*self).tls_serialized_len()
-    }
-}
-
 impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
@@ -383,13 +376,6 @@ impl DeserializeBytes for VLBytes {
     }
 }
 
-impl Size for &VLBytes {
-    #[inline(always)]
-    fn tls_serialized_len(&self) -> usize {
-        (*self).tls_serialized_len()
-    }
-}
-
 #[cfg(feature = "serde")]
 mod serde_impl {
     use std::{fmt, vec::Vec};
@@ -455,13 +441,6 @@ impl VLByteSlice<'_> {
     #[inline(always)]
     pub fn as_slice(&self) -> &[u8] {
         self.0
-    }
-}
-
-impl Size for &VLByteSlice<'_> {
-    #[inline]
-    fn tls_serialized_len(&self) -> usize {
-        tls_serialize_bytes_len(self.0)
     }
 }
 
@@ -620,13 +599,6 @@ mod rw_bytes {
         }
     }
 
-    impl Serialize for &VLBytes {
-        #[inline(always)]
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            (*self).tls_serialize(writer)
-        }
-    }
-
     impl Deserialize for VLBytes {
         fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
             let (length, _) = rw::read_length(bytes)?;
@@ -650,12 +622,6 @@ mod rw_bytes {
             };
             bytes.read_exact(result.vec.as_mut_slice())?;
             Ok(result)
-        }
-    }
-
-    impl Serialize for &VLByteSlice<'_> {
-        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            tls_serialize_bytes(writer, self.0)
         }
     }
 

@@ -175,7 +175,7 @@ fn simple_struct() {
 }
 
 #[derive(TlsDeserialize, TlsDeserializeBytes, Clone, TlsSize, PartialEq)]
-struct DeserializeOnlyStruct(u16);
+pub struct DeserializeOnlyStruct(u16);
 
 // KAT from MLS
 
@@ -281,7 +281,7 @@ mod custom {
 }
 
 #[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSerialize, TlsSize)]
-struct CustomBytes {
+pub struct CustomBytes {
     #[tls_codec(with = "custom_bytes")]
     values: Vec<u8>,
     a: u8,
@@ -419,7 +419,7 @@ fn enum_with_custom_serialized_field() {
 
 #[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSerialize, TlsSize)]
 #[repr(u8)]
-enum EnumWithCustomSerializedFieldBytes {
+pub enum EnumWithCustomSerializedFieldBytes {
     A(#[tls_codec(with = "custom_bytes")] Vec<u8>),
 }
 

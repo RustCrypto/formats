@@ -238,20 +238,6 @@ macro_rules! impl_tls_vec_codec_generic {
             }
         }
 
-        impl<T: $($bounds + )* Serialize> Serialize for &$name<T> {
-            #[cfg(feature = "std")]
-            fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                self.serialize(writer)
-            }
-        }
-
-        impl<T: $($bounds + )* Size> Size for &$name<T> {
-            #[inline]
-            fn tls_serialized_len(&self) -> usize {
-                self.tls_serialized_length()
-            }
-        }
-
         impl<T: $($bounds + )* Deserialize> Deserialize for $name<T> {
             #[cfg(feature = "std")]
             fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
@@ -277,20 +263,6 @@ macro_rules! impl_tls_vec_codec_bytes {
         }
 
         impl Size for $name {
-            #[inline]
-            fn tls_serialized_len(&self) -> usize {
-                self.tls_serialized_byte_length()
-            }
-        }
-
-        impl Serialize for &$name {
-            #[cfg(feature = "std")]
-            fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                self.serialize_bytes(writer)
-            }
-        }
-
-        impl Size for &$name {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -919,24 +891,10 @@ macro_rules! impl_tls_byte_slice {
             impl_byte_size!(self, $size, $name, $len_len);
         }
 
-        impl<'a> Serialize for &$name<'a> {
-            #[cfg(feature = "std")]
-            fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                self.serialize_bytes(writer)
-            }
-        }
-
         impl<'a> Serialize for $name<'a> {
             #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize_bytes(writer)
-            }
-        }
-
-        impl<'a> Size for &$name<'a> {
-            #[inline]
-            fn tls_serialized_len(&self) -> usize {
-                self.tls_serialized_byte_length()
             }
         }
 
@@ -975,24 +933,10 @@ macro_rules! impl_tls_slice {
             impl_serialize!(self, $size, $name, $len_len);
         }
 
-        impl<'a, T: Serialize> Serialize for &$name<'a, T> {
-            #[cfg(feature = "std")]
-            fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                self.serialize(writer)
-            }
-        }
-
         impl<'a, T: Serialize> Serialize for $name<'a, T> {
             #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
-            }
-        }
-
-        impl<'a, T: Size> Size for &$name<'a, T> {
-            #[inline]
-            fn tls_serialized_len(&self) -> usize {
-                self.tls_serialized_length()
             }
         }
 

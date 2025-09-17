@@ -20,13 +20,6 @@ impl<T: Size> Size for Option<T> {
     }
 }
 
-impl<T: Size> Size for &Option<T> {
-    #[inline]
-    fn tls_serialized_len(&self) -> usize {
-        (*self).tls_serialized_len()
-    }
-}
-
 impl<T: Serialize> Serialize for Option<T> {
     #[cfg(feature = "std")]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
@@ -56,13 +49,6 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
             }
             None => Ok(vec![0]),
         }
-    }
-}
-
-impl<T: Serialize> Serialize for &Option<T> {
-    #[cfg(feature = "std")]
-    fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-        (*self).tls_serialize(writer)
     }
 }
 
@@ -162,25 +148,10 @@ macro_rules! impl_unsigned {
             }
         }
 
-        impl Serialize for &$t {
-            #[cfg(feature = "std")]
-            #[inline]
-            fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                <$t as Serialize>::tls_serialize(self, writer)
-            }
-        }
-
         impl Size for $t {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 $bytes
-            }
-        }
-
-        impl Size for &$t {
-            #[inline]
-            fn tls_serialized_len(&self) -> usize {
-                (*self).tls_serialized_len()
             }
         }
     };

@@ -788,13 +788,6 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                         0
                     }
                 }
-
-                impl #impl_generics tls_codec::Size for &#ident #ty_generics #where_clause {
-                    #[inline]
-                    fn tls_serialized_len(&self) -> usize {
-                        tls_codec::Size::tls_serialized_len(*self)
-                    }
-                }
             }
         }
         TlsStruct::Enum(Enum {
@@ -826,13 +819,6 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                             #(#field_arms)*
                         };
                         core::mem::size_of::<#repr>() + field_len
-                    }
-                }
-
-                impl #impl_generics tls_codec::Size for &#ident #ty_generics #where_clause {
-                    #[inline]
-                    fn tls_serialized_len(&self) -> usize {
-                        tls_codec::Size::tls_serialized_len(*self)
                     }
                 }
             }
@@ -886,17 +872,10 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                                     }
                                 }
                             }
-
-                            impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
-                                fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                                    tls_codec::Serialize::tls_serialize(*self, writer)
-                                }
-                            }
                         }
                     } else {
                         quote! {
                             impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {}
-                            impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {}
                         }
                     }
                 }
@@ -992,17 +971,10 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                                     }
                                 }
                             }
-
-                            impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {
-                                fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
-                                    tls_codec::Serialize::tls_serialize(*self, writer)
-                                }
-                            }
                         }
                     } else {
                         quote! {
                             impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {}
-                            impl #impl_generics tls_codec::Serialize for &#ident #ty_generics #where_clause {}
                         }
                     }
                 }

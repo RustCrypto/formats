@@ -273,3 +273,18 @@ impl TryFrom<usize> for U24 {
         }
     }
 }
+
+// Blanket implementations for borrowed types.
+
+impl<T: Size> Size for &T {
+    #[inline]
+    fn tls_serialized_len(&self) -> usize {
+        (*self).tls_serialized_len()
+    }
+}
+
+impl<T: Serialize> Serialize for &T {
+    fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
+        (*self).tls_serialize(writer)
+    }
+}
