@@ -18,6 +18,33 @@ use core::{
 };
 
 /// ASN.1-encoded length.
+///
+/// ## Examples
+/// ```
+/// use der::{Decode, Length, SliceReader};
+///
+/// let mut reader = SliceReader::new(&[0x82, 0xAA, 0xBB]).unwrap();
+/// let length = Length::decode(&mut reader).expect("valid length");
+///
+/// assert_eq!(length, Length::new(0xAABB));
+/// ```
+///
+/// 5-byte lengths are supported:
+/// ```
+/// use der::{Encode, Length};
+/// let length = Length::new(0x10000000);
+///
+/// assert_eq!(length.encoded_len(), Ok(Length::new(5)));
+/// ```
+///
+/// Invalid lengths produce an error:
+/// ```
+/// use der::{Decode, Length, SliceReader};
+///
+/// let mut reader = SliceReader::new(&[0x81, 0x7F]).unwrap();
+///
+/// Length::decode(&mut reader).expect_err("non-canonical length should be rejected");
+/// ```
 #[derive(Copy, Clone, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Length {
     /// Inner length as a `u32`. Note that the decoder and encoder also support a maximum length

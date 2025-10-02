@@ -7,6 +7,27 @@ use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Ta
 use core::cmp::Ordering;
 
 /// ASN.1 DER headers: tag + length component of TLV-encoded values
+///
+///
+/// ## Examples
+/// ```
+/// use der::{Decode, Header, Length, Reader, SliceReader, Tag};
+///
+/// let mut reader = SliceReader::new(&[0x04, 0x02, 0x31, 0x32]).unwrap();
+/// let header = Header::decode(&mut reader).expect("valid header");
+///
+/// assert_eq!(header, Header::new(Tag::OctetString, Length::new(2)));
+///
+/// assert_eq!(reader.read_slice(2u8.into()).unwrap(), b"12");
+/// ```
+///
+/// ```
+/// use der::{Encode, Header, Length, Tag};
+/// let header = Header::new(Tag::Sequence, Length::new(256));
+///
+/// // Header of 256-byte SEQUENCE is 4-byte long
+/// assert_eq!(header.encoded_len(), Ok(Length::new(4)));
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Header {
     /// Tag representing the type of the encoded value
