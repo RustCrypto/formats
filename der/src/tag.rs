@@ -62,6 +62,34 @@ impl<T: FixedTag + ?Sized> IsConstructed for T {
 /// - Bits 8/7: [`Class`]
 /// - Bit 6: primitive (0) or constructed (1)
 /// - Bits 5-1: tag number
+///
+/// ## Examples
+/// ```
+/// use der::{Decode, Tag, SliceReader};
+///
+/// let mut reader = SliceReader::new(&[0x30]).unwrap();
+/// let tag = Tag::decode(&mut reader).expect("valid tag");
+///
+/// assert_eq!(tag, Tag::Sequence);
+/// ```
+///
+/// Invalid tags produce an error:
+/// ```
+/// use der::{Decode, Tag};
+///
+/// // 0x21 is an invalid CONSTRUCTED BOOLEAN
+/// Tag::from_der(&[0x21]).expect_err("invalid tag");
+/// ```
+///
+/// `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags are supported:
+/// ```
+/// use der::{Decode, Tag, TagNumber};
+///
+/// // `APPLICATION [33] (constructed)`
+/// let tag = Tag::from_der(&[0x7F, 0x21]).expect("valid tag");
+///
+/// assert_eq!(tag, Tag::Application { constructed: true, number: TagNumber(33) });
+/// ```
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[non_exhaustive]
