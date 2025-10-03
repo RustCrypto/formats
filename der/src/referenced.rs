@@ -61,6 +61,12 @@ where
 
 #[cfg(feature = "alloc")]
 mod allocating {
+    use std::borrow::Cow;
+
+    use crate::{
+        DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Tag, Tagged, Writer,
+    };
+
     use super::{OwnedToRef, RefToOwned};
     use alloc::boxed::Box;
 
@@ -77,6 +83,96 @@ mod allocating {
 
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             self.as_ref()
+        }
+    }
+
+    impl<'a, T> FixedTag for Cow<'a, T>
+    where
+        T: Clone,
+        &'a T: FixedTag,
+    {
+        const TAG: Tag = <&'a T as FixedTag>::TAG;
+    }
+
+    // impl<'a, T> Tagged for Cow<'a, T>
+    // where
+    //     T: Clone,
+    //     &'a T: Tagged,
+    // {
+    //     fn tag(&self) -> Tag {
+    //         match self {
+    //             Cow::Borrowed(object) => object.tag(),
+    //             Cow::Owned(object) => object.tag(),
+    //         }
+    //     }
+    // }
+
+    // impl<'a, T> Decode<'a> for Cow<'a, T>
+    // where
+    //     T: Clone,
+    //     &'a T: Decode<'a>,
+    // {
+    //     type Error = <&'a T as Decode<'a>>::Error;
+
+    //     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, Self::Error> {
+    //         let object = <&'a T as Decode<'a>>::decode(reader)?;
+    //         Ok(Self::Borrowed(object))
+    //     }
+    // }
+
+    impl<'a, T> DecodeValue<'a> for Cow<'a, T>
+    where
+        T: Clone,
+        &'a T: DecodeValue<'a>,
+    {
+        type Error = <&'a T as DecodeValue<'a>>::Error;
+
+        fn decode_value<R: Reader<'a>>(
+            reader: &mut R,
+            header: Header,
+        ) -> Result<Self, Self::Error> {
+            let value = <&'a T as DecodeValue<'a>>::decode_value(reader, header)?;
+            Ok(Self::Borrowed(value))
+        }
+    }
+
+    impl<'a, T> Encode for &'a Cow<'a, T>
+    where
+        T: Clone,
+        &'a T: Encode,
+    {
+        fn encoded_len(&self) -> crate::Result<Length> {
+            match self {
+                Cow::Borrowed(object) => object.encoded_len(),
+                Cow::Owned(object) => object.encoded_len(),
+            }
+        }
+
+        fn encode(&self, encoder: &mut impl Writer) -> crate::Result<()> {
+            match self {
+                Cow::Borrowed(object) => object.encode(encoder),
+                Cow::Owned(object) => object.encode(encoder),
+            }
+        }
+    }
+
+    impl<'a, T> EncodeValue for &'a Cow<'a, T>
+    where
+        T: Clone,
+        &'a T: EncodeValue,
+    {
+        fn value_len(&self) -> crate::Result<Length> {
+            match self {
+                Cow::Borrowed(value) => value.value_len(),
+                Cow::Owned(value) => value.value_len(),
+            }
+        }
+
+        fn encode_value(&self, encoder: &mut impl Writer) -> crate::Result<()> {
+            match self {
+                Cow::Borrowed(value) => value.encode_value(encoder),
+                Cow::Owned(value) => value.encode_value(encoder),
+            }
         }
     }
 }
