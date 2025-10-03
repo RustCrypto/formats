@@ -17,20 +17,22 @@ use {
 use crate::ErrorKind;
 
 #[cfg(doc)]
-use crate::Tag;
+use crate::{FixedTag, Tag};
 
-/// Encoding trait.
+/// Encode trait produces a complete TLV (Tag-Length-Value) structure.
+///
+/// As opposed to [`EncodeValue`], implementer is expected to write ASN.1 DER tag and length header before value.
 #[diagnostic::on_unimplemented(
     note = "Consider adding impls of `EncodeValue` and `FixedTag` to `{Self}`"
 )]
 pub trait Encode {
-    /// Compute the length of this value in bytes when encoded as ASN.1 DER.
+    /// Compute the length of this TLV object in bytes when encoded as ASN.1 DER.
     fn encoded_len(&self) -> Result<Length>;
 
-    /// Encode this value as ASN.1 DER using the provided [`Writer`].
+    /// Encode this TLV object as ASN.1 DER using the provided [`Writer`].
     fn encode(&self, encoder: &mut impl Writer) -> Result<()>;
 
-    /// Encode this value to the provided byte slice, returning a sub-slice
+    /// Encode this TLV object to the provided byte slice, returning a sub-slice
     /// containing the encoded message.
     fn encode_to_slice<'a>(&self, buf: &'a mut [u8]) -> Result<&'a [u8]> {
         let mut writer = SliceWriter::new(buf);
@@ -38,7 +40,7 @@ pub trait Encode {
         writer.finish()
     }
 
-    /// Encode this message as ASN.1 DER, appending it to the provided
+    /// Encode this TLV object as ASN.1 DER, appending it to the provided
     /// byte vector.
     #[cfg(feature = "alloc")]
     fn encode_to_vec(&self, buf: &mut Vec<u8>) -> Result<Length> {
@@ -60,7 +62,7 @@ pub trait Encode {
         actual_len.try_into()
     }
 
-    /// Encode this type as DER, returning a byte vector.
+    /// Encode this TLV object as ASN.1 DER, returning a byte vector.
     #[cfg(feature = "alloc")]
     fn to_der(&self) -> Result<Vec<u8>> {
         let mut buf = Vec::new();
@@ -73,12 +75,12 @@ impl<T> Encode for T
 where
     T: EncodeValue + Tagged + ?Sized,
 {
-    /// Compute the length of this value in bytes when encoded as ASN.1 DER.
+    /// Compute the length of this TLV object in bytes when encoded as ASN.1 DER.
     fn encoded_len(&self) -> Result<Length> {
         self.value_len().and_then(|len| len.for_tlv(self.tag()))
     }
 
-    /// Encode this value as ASN.1 DER using the provided [`Writer`].
+    /// Encode this TLV object as ASN.1 DER using the provided [`Writer`].
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.header()?.encode(writer)?;
         self.encode_value(writer)
@@ -134,6 +136,12 @@ where
 
 /// Encode the value part of a Tag-Length-Value encoded field, sans the [`Tag`]
 /// and [`Length`].
+///
+/// As opposed to [`Encode`], implementer is expected to write the inner content only,
+/// without the [`Header`].
+///
+/// When [`EncodeValue`] is paired with [`FixedTag`],
+/// it produces a complete TLV ASN.1 DER encoding as [`Encode`] trait.
 pub trait EncodeValue {
     /// Get the [`Header`] used to encode this value.
     fn header(&self) -> Result<Header>

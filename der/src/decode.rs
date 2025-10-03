@@ -16,10 +16,13 @@ use alloc::boxed::Box;
 #[cfg(feature = "ber")]
 use crate::EncodingRules;
 
-/// Decoding trait.
+/// Decode trait parses a complete TLV (Tag-Length-Value) structure.
 ///
 /// This trait provides the core abstraction upon which all decoding operations
 /// are based.
+///
+/// When decoding fails, a [`Decode::Error`] type is thrown.
+/// Most ASN.1 DER objects return a builtin der [`Error`] type as [`Decode::Error`], which can be made from [`ErrorKind`].
 #[diagnostic::on_unimplemented(
     note = "Consider adding impls of `DecodeValue` and `FixedTag` to `{Self}`"
 )]
@@ -27,7 +30,7 @@ pub trait Decode<'a>: Sized + 'a {
     /// Type returned in the event of a decoding error.
     type Error: From<Error> + 'static;
 
-    /// Attempt to decode this message using the provided decoder.
+    /// Attempt to decode this TLV message using the provided decoder.
     fn decode<R: Reader<'a>>(decoder: &mut R) -> Result<Self, Self::Error>;
 
     /// Parse `Self` from the provided BER-encoded byte slice.
@@ -127,13 +130,16 @@ impl<T: DecodeOwned<Error = Error> + PemLabel> DecodePem for T {
     }
 }
 
-/// Decode the value part of a Tag-Length-Value encoded field, sans the [`Tag`]
-/// and [`Length`].
+/// DecodeValue trait parses the value part of a Tag-Length-Value object,
+/// sans the [`Tag`] and [`Length`].
+///
+/// As opposed to [`Decode`], implementer is expected to read the inner content only,
+/// without the [`Header`], which was decoded beforehand.
 pub trait DecodeValue<'a>: Sized {
     /// Type returned in the event of a decoding error.
     type Error: From<Error> + 'static;
 
-    /// Attempt to decode this message using the provided [`Reader`].
+    /// Attempt to decode this value using the provided [`Reader`].
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error>;
 }
 
