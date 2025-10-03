@@ -14,12 +14,41 @@ use core::{cmp::Ordering, fmt};
 const CONSTRUCTED_FLAG: u8 = 0b100000;
 
 /// Types which have a constant ASN.1 [`Tag`].
+///
+/// ## Example
+/// ```
+/// use der::{FixedTag, Tag};
+///
+/// struct MyOctetString;
+///
+/// impl FixedTag for MyOctetString {
+///     const TAG: Tag = Tag::OctetString;
+/// }
+/// ```
 pub trait FixedTag {
     /// ASN.1 tag
     const TAG: Tag;
 }
 
 /// Types which have an ASN.1 [`Tag`].
+///
+/// ## Example
+/// ```
+/// use der::{Tag, Tagged};
+///
+/// /// Struct, which Tag depends on data
+/// struct MyOctetOrBitString(bool);
+///
+/// impl Tagged for MyOctetOrBitString {
+///     fn tag(&self) -> Tag {
+///         if self.0 {
+///             Tag::OctetString
+///         } else {
+///             Tag::BitString
+///         }
+///     }
+/// }
+/// ```
 #[diagnostic::on_unimplemented(note = "Consider adding impl of `FixedTag` to `{Self}`")]
 pub trait Tagged {
     /// Get the ASN.1 tag that this type is encoded with.
@@ -36,6 +65,38 @@ impl<T: FixedTag + ?Sized> Tagged for T {
 /// Types which have a constant ASN.1 constructed bit.
 ///
 /// Auto-implemented on all types that implement [`FixedTag`].
+///
+/// ## Example
+/// ```
+/// use der::{asn1::ContextSpecific, DecodeValue, ErrorKind, Header, IsConstructed, Length, Reader, Result, SliceReader, TagNumber};
+///
+/// /// Type, which can be decoded for example as `CONTEXT-SPECIFIC [0] (primitive)`
+/// struct MyPrimitiveYear(u16);
+///
+/// impl IsConstructed for MyPrimitiveYear {
+///     const CONSTRUCTED: bool = false;
+/// }
+///
+/// impl<'a> DecodeValue<'a> for MyPrimitiveYear {
+///     type Error = der::Error;
+///
+///     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+///         let slice = reader.read_slice(Length::new(4))?;
+///         let year = std::str::from_utf8(slice).ok().and_then(|s| s.parse::<u16>().ok());
+///         if let Some(year) = year {
+///             Ok(Self(year))
+///         } else {
+///             Err(ErrorKind::DateTime.into())
+///         }
+///     }
+/// }
+///
+/// let mut reader = SliceReader::new(b"\x80\x041670".as_slice()).unwrap();
+///
+/// let decoded = ContextSpecific::<MyPrimitiveYear>::decode_implicit(&mut reader, TagNumber(0)).unwrap().unwrap();
+///
+/// assert_eq!(decoded.value.0, 1670);
+/// ```
 #[diagnostic::on_unimplemented(note = "Consider adding impl of `FixedTag` to `{Self}`")]
 pub trait IsConstructed {
     /// ASN.1 constructed bit
