@@ -90,13 +90,13 @@ impl Profile for Raw {
 #[derive(Default)]
 pub enum Version {
     /// Version 1 (default)
-    #[default]
     V1 = 0,
 
     /// Version 2
     V2 = 1,
 
     /// Version 3
+    #[default]
     V3 = 2,
 }
 
