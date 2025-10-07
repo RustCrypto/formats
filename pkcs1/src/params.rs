@@ -32,7 +32,6 @@ pub enum TrailerField {
     BC = 1,
 }
 
-
 impl<'a> DecodeValue<'a> for TrailerField {
     type Error = der::Error;
 

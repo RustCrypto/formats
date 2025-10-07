@@ -106,7 +106,6 @@ impl ValueOrd for Version {
     }
 }
 
-
 /// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
 pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
 

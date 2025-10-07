@@ -21,7 +21,6 @@ pub enum ExtensionType {
     SomethingElse = 500,
 }
 
-
 #[derive(
     TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, TlsSerialize, TlsSize, Clone, Default,
 )]
