@@ -87,8 +87,10 @@ impl Profile for Raw {
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]
+#[derive(Default)]
 pub enum Version {
     /// Version 1 (default)
+    #[default]
     V1 = 0,
 
     /// Version 2
@@ -104,11 +106,6 @@ impl ValueOrd for Version {
     }
 }
 
-impl Default for Version {
-    fn default() -> Self {
-        Self::V1
-    }
-}
 
 /// X.509 `TbsCertificate` as defined in [RFC 5280 Section 4.1]
 pub type TbsCertificate = TbsCertificateInner<Rfc5280>;

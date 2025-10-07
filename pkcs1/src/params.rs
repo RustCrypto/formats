@@ -25,16 +25,13 @@ const SHA_1_AI: AlgorithmIdentifierRef<'_> = AlgorithmIdentifierRef {
 /// [RFC 8017 Appendix 2.3]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.3
 #[derive(Clone, Debug, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[derive(Default)]
 pub enum TrailerField {
     /// the only supported value (0xbc, default)
+    #[default]
     BC = 1,
 }
 
-impl Default for TrailerField {
-    fn default() -> Self {
-        Self::BC
-    }
-}
 
 impl<'a> DecodeValue<'a> for TrailerField {
     type Error = der::Error;

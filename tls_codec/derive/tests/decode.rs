@@ -9,7 +9,9 @@ use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSiz
     TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize,
 )]
 #[repr(u16)]
+#[derive(Default)]
 pub enum ExtensionType {
+    #[default]
     Reserved = 0,
     Capabilities = 1,
     Lifetime = 2,
@@ -19,11 +21,6 @@ pub enum ExtensionType {
     SomethingElse = 500,
 }
 
-impl Default for ExtensionType {
-    fn default() -> Self {
-        Self::Reserved
-    }
-}
 
 #[derive(
     TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, TlsSerialize, TlsSize, Clone, Default,
