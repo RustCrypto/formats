@@ -15,6 +15,22 @@ use crate::pem;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Error type.
+///
+/// ## Example
+/// ```
+/// use der::{Decode, ErrorKind, Reader};
+///
+/// struct MyDecodable;
+///
+/// impl<'a> Decode<'a> for MyDecodable {
+///     type Error = der::Error;
+///
+///     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, der::Error> {
+///         // Error implements From<ErrorKind>
+///         Err(ErrorKind::OidMalformed.into())
+///     }
+/// }
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Error {
     /// Kind of error.
@@ -162,6 +178,15 @@ impl From<time::error::ComponentRange> for Error {
 }
 
 /// Error type.
+///
+/// # Example
+/// ```
+/// use der::{asn1::OctetStringRef, Decode, ErrorKind};
+///
+/// let err = <&OctetStringRef>::from_der(&[0x04, 0x80, 0x00]).unwrap_err();
+///
+/// assert_eq!(err.kind(), ErrorKind::IndefiniteLength);
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ErrorKind {
