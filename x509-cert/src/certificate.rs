@@ -87,8 +87,10 @@ impl Profile for Raw {
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]
+#[derive(Default)]
 pub enum Version {
     /// Version 1 (default)
+    #[default]
     V1 = 0,
 
     /// Version 2
@@ -101,12 +103,6 @@ pub enum Version {
 impl ValueOrd for Version {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         (*self as u8).value_cmp(&(*other as u8))
-    }
-}
-
-impl Default for Version {
-    fn default() -> Self {
-        Self::V1
     }
 }
 
