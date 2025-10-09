@@ -26,8 +26,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 ///     type Error = der::Error;
 ///
 ///     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, der::Error> {
-///         // Error implements From<ErrorKind>
-///         Err(ErrorKind::OidMalformed.into())
+///         Err(reader.error(ErrorKind::OidMalformed))
 ///     }
 /// }
 /// ```
