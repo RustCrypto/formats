@@ -23,6 +23,29 @@ use crate::EncodingRules;
 ///
 /// When decoding fails, a [`Decode::Error`] type is thrown.
 /// Most ASN.1 DER objects return a builtin der [`Error`] type as [`Decode::Error`], which can be made from [`ErrorKind`].
+///
+/// ## Example
+///
+/// ```
+/// # #[cfg(all(feature = "alloc", feature = "std"))]
+/// # {
+/// use der::{Any, Decode, Reader};
+///
+/// /// Wrapper around Any, with custom foreign trait support.
+/// ///
+/// /// For example: serde Serialize/Deserialize
+/// pub struct AnySerde(pub Any);
+///
+/// impl<'a> Decode<'a> for AnySerde {
+///     type Error = der::Error;
+///
+///     fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
+///         // calls impl Decode for Any
+///         Ok(Self(Any::decode(reader)?))
+///     }
+/// }
+/// # }
+/// ```
 #[diagnostic::on_unimplemented(
     note = "Consider adding impls of `DecodeValue` and `FixedTag` to `{Self}`"
 )]
