@@ -37,6 +37,18 @@ impl GeneralizedTimeNanos {
     pub fn to_unix_duration(&self) -> Duration {
         self.datetime.unix_duration() + Duration::from_nanos(u64::from(self.nanoseconds))
     }
+
+    /// Create a new [`GeneralizedTimeNanos`] given a [`Duration`] since
+    /// `UNIX_EPOCH` (a.k.a. "Unix time")
+    pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
+        let datetime =
+            DateTime::from_unix_duration(unix_duration).map_err(|_| Self::TAG.value_error())?;
+
+        Ok(GeneralizedTimeNanos {
+            datetime,
+            nanoseconds: unix_duration.subsec_nanos(),
+        })
+    }
 }
 
 /// Decode 2-digit decimal value
