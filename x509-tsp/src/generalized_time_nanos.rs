@@ -2,7 +2,7 @@ use core::str::FromStr;
 use core::time::Duration;
 use der::{
     DateTime, DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
-    Writer,
+    Writer, asn1::GeneralizedTime,
 };
 
 /// ASN.1 `GeneralizedTime` type.
@@ -36,6 +36,15 @@ impl GeneralizedTimeNanos {
     /// Get the duration of this timestamp since `UNIX_EPOCH`.
     pub fn to_unix_duration(&self) -> Duration {
         self.datetime.unix_duration() + Duration::from_nanos(u64::from(self.nanoseconds))
+    }
+}
+
+impl From<GeneralizedTime> for GeneralizedTimeNanos {
+    fn from(time: GeneralizedTime) -> Self {
+        Self {
+            datetime: time.to_date_time(),
+            nanoseconds: 0,
+        }
     }
 }
 
