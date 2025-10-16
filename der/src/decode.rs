@@ -161,32 +161,32 @@ impl<T: DecodeOwned<Error = Error> + PemLabel> DecodePem for T {
 ///
 /// ## Example
 /// ```
-/// use der::{Decode, DecodeValue, ErrorKind, FixedTag, Header, Length, Reader, Tag};
+/// use der::{Decode, DecodeValue, ErrorKind, FixedTag, Header, Reader, Tag};
 ///
-/// /// 4-digit year
-/// struct MyStringYear(u16);
+/// /// 1-byte month
+/// struct MyByteMonth(u8);
 ///
-/// impl<'a> DecodeValue<'a> for MyStringYear {
+/// impl<'a> DecodeValue<'a> for MyByteMonth {
 ///     type Error = der::Error;
 ///
 ///     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-///         let slice = reader.read_slice(Length::new(4))?;
-///         let year = std::str::from_utf8(slice).ok().and_then(|s| s.parse::<u16>().ok());
-///         if let Some(year) = year {
-///             Ok(Self(year))
+///         let month = reader.read_byte()?;
+///         
+///         if (0..12).contains(&month) {
+///             Ok(Self(month))
 ///         } else {
 ///             Err(reader.error(ErrorKind::DateTime))
 ///         }
 ///     }
 /// }
 ///
-/// impl FixedTag for MyStringYear {
-///     const TAG: Tag = Tag::Utf8String;
+/// impl FixedTag for MyByteMonth {
+///     const TAG: Tag = Tag::OctetString;
 /// }
 ///
-/// let year = MyStringYear::from_der(b"\x0C\x041670").expect("year to decode");
+/// let month = MyByteMonth::from_der(b"\x04\x01\x09").expect("month to decode");
 ///
-/// assert_eq!(year.0, 1670);
+/// assert_eq!(month.0, 9);
 /// ```
 pub trait DecodeValue<'a>: Sized {
     /// Type returned in the event of a decoding error.
