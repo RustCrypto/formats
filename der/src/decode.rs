@@ -158,6 +158,36 @@ impl<T: DecodeOwned<Error = Error> + PemLabel> DecodePem for T {
 ///
 /// As opposed to [`Decode`], implementer is expected to read the inner content only,
 /// without the [`Header`], which was decoded beforehand.
+///
+/// ## Example
+/// ```
+/// use der::{Decode, DecodeValue, ErrorKind, FixedTag, Header, Reader, Tag};
+///
+/// /// 1-byte month
+/// struct MyByteMonth(u8);
+///
+/// impl<'a> DecodeValue<'a> for MyByteMonth {
+///     type Error = der::Error;
+///
+///     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
+///         let month = reader.read_byte()?;
+///         
+///         if (0..12).contains(&month) {
+///             Ok(Self(month))
+///         } else {
+///             Err(reader.error(ErrorKind::DateTime))
+///         }
+///     }
+/// }
+///
+/// impl FixedTag for MyByteMonth {
+///     const TAG: Tag = Tag::OctetString;
+/// }
+///
+/// let month = MyByteMonth::from_der(b"\x04\x01\x09").expect("month to decode");
+///
+/// assert_eq!(month.0, 9);
+/// ```
 pub trait DecodeValue<'a>: Sized {
     /// Type returned in the event of a decoding error.
     type Error: From<Error> + 'static;

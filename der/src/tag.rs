@@ -86,7 +86,7 @@ impl<T: FixedTag + ?Sized> Tagged for T {
 ///         if let Some(year) = year {
 ///             Ok(Self(year))
 ///         } else {
-///             Err(ErrorKind::DateTime.into())
+///             Err(reader.error(ErrorKind::DateTime))
 ///         }
 ///     }
 /// }
