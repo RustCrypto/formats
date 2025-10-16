@@ -158,6 +158,36 @@ impl<T: DecodeOwned<Error = Error> + PemLabel> DecodePem for T {
 ///
 /// As opposed to [`Decode`], implementer is expected to read the inner content only,
 /// without the [`Header`], which was decoded beforehand.
+///
+/// ## Example
+/// ```
+/// use der::{Decode, DecodeValue, ErrorKind, FixedTag, Header, Length, Reader, Tag};
+///
+/// /// 4-digit year
+/// struct MyStringYear(u16);
+///
+/// impl<'a> DecodeValue<'a> for MyStringYear {
+///     type Error = der::Error;
+///
+///     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
+///         let slice = reader.read_slice(Length::new(4))?;
+///         let year = std::str::from_utf8(slice).ok().and_then(|s| s.parse::<u16>().ok());
+///         if let Some(year) = year {
+///             Ok(Self(year))
+///         } else {
+///             Err(reader.error(ErrorKind::DateTime))
+///         }
+///     }
+/// }
+///
+/// impl FixedTag for MyStringYear {
+///     const TAG: Tag = Tag::Utf8String;
+/// }
+///
+/// let year = MyStringYear::from_der(b"\x0C\x041670").expect("year to decode");
+///
+/// assert_eq!(year.0, 1670);
+/// ```
 pub trait DecodeValue<'a>: Sized {
     /// Type returned in the event of a decoding error.
     type Error: From<Error> + 'static;
