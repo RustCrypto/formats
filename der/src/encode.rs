@@ -21,7 +21,32 @@ use crate::{FixedTag, Tag};
 
 /// Encode trait produces a complete TLV (Tag-Length-Value) structure.
 ///
-/// As opposed to [`EncodeValue`], implementer is expected to write ASN.1 DER tag and length header before value.
+/// As opposed to [`EncodeValue`], implementer is expected to write whole ASN.1 DER header, before writing value.
+///
+/// ## Example
+///
+/// ```
+/// # #[cfg(all(feature = "alloc", feature = "std"))]
+/// # {
+/// use der::{Any, Encode, Length, Reader, Writer};
+///
+/// /// Wrapper around Any, with custom foreign trait support.
+/// ///
+/// /// For example: serde Serialize/Deserialize
+/// pub struct AnySerde(pub Any);
+///
+/// impl Encode for AnySerde {
+///
+///     fn encoded_len(&self) -> der::Result<Length> {
+///         self.0.encoded_len()
+///     }
+///
+///     fn encode(&self, encoder: &mut impl Writer) -> der::Result<()> {
+///         self.0.encode(encoder)
+///     }
+/// }
+/// # }
+/// ```
 #[diagnostic::on_unimplemented(
     note = "Consider adding impls of `EncodeValue` and `FixedTag` to `{Self}`"
 )]
