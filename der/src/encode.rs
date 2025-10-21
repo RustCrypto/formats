@@ -41,8 +41,8 @@ use crate::{FixedTag, Tag};
 ///         self.0.encoded_len()
 ///     }
 ///
-///     fn encode(&self, encoder: &mut impl Writer) -> der::Result<()> {
-///         self.0.encode(encoder)
+///     fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {
+///         self.0.encode(writer)
 ///     }
 /// }
 /// # }
@@ -55,7 +55,7 @@ pub trait Encode {
     fn encoded_len(&self) -> Result<Length>;
 
     /// Encode this TLV object as ASN.1 DER using the provided [`Writer`].
-    fn encode(&self, encoder: &mut impl Writer) -> Result<()>;
+    fn encode(&self, writer: &mut impl Writer) -> Result<()>;
 
     /// Encode this TLV object to the provided byte slice, returning a sub-slice
     /// containing the encoded message.
@@ -167,6 +167,34 @@ where
 ///
 /// When [`EncodeValue`] is paired with [`FixedTag`],
 /// it produces a complete TLV ASN.1 DER encoding as [`Encode`] trait.
+///
+/// ## Example
+/// ```
+/// use der::{Encode, EncodeValue, ErrorKind, FixedTag, Length, Tag, Writer};
+///
+/// /// 1-byte month
+/// struct MyByteMonth(u8);
+///
+/// impl EncodeValue for MyByteMonth {
+///
+///     fn value_len(&self) -> der::Result<Length> {
+///         Ok(Length::new(1))
+///     }
+///
+///     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
+///         writer.write_byte(self.0)?;
+///         Ok(())
+///     }
+/// }
+///
+/// impl FixedTag for MyByteMonth {
+///     const TAG: Tag = Tag::OctetString;
+/// }
+///
+/// let month_der = MyByteMonth(9).to_der().expect("month to encode");
+///
+/// assert_eq!(month_der, b"\x04\x01\x09");
+/// ```
 pub trait EncodeValue {
     /// Get the [`Header`] used to encode this value.
     fn header(&self) -> Result<Header>
@@ -182,7 +210,7 @@ pub trait EncodeValue {
 
     /// Encode value (sans [`Tag`]+[`Length`] header) as ASN.1 DER using the
     /// provided [`Writer`].
-    fn encode_value(&self, encoder: &mut impl Writer) -> Result<()>;
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()>;
 }
 
 #[cfg(feature = "alloc")]
@@ -203,7 +231,7 @@ pub(crate) fn encode_value_to_slice<'a, T>(buf: &'a mut [u8], value: &T) -> Resu
 where
     T: EncodeValue,
 {
-    let mut encoder = SliceWriter::new(buf);
-    value.encode_value(&mut encoder)?;
-    encoder.finish()
+    let mut writer = SliceWriter::new(buf);
+    value.encode_value(&mut writer)?;
+    writer.finish()
 }
