@@ -191,7 +191,9 @@ where
 ///     const TAG: Tag = Tag::OctetString;
 /// }
 ///
-/// let month_der = MyByteMonth(9).to_der().expect("month to encode");
+/// let month = MyByteMonth(9);
+/// let mut buf = [0u8; 16];
+/// let month_der = month.encode_to_slice(&mut buf).expect("month to encode");
 ///
 /// assert_eq!(month_der, b"\x04\x01\x09");
 /// ```
