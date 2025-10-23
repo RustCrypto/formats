@@ -123,8 +123,29 @@ impl Encode for Header {
     }
 
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
+        clarify_start_tag(writer, &self.tag);
         self.tag.encode(writer)?;
-        self.length.encode(writer)
+        let result = self.length.encode(writer);
+        clarify_end_length(writer, &self.tag, self.length);
+        result
+    }
+}
+
+#[allow(unused_variables)]
+fn clarify_start_tag(writer: &mut impl Writer, tag: &Tag) {
+    #[cfg(feature = "clarify")]
+    if let Some(clarifier) = writer.clarifier() {
+        use crate::Clarifier;
+        clarifier.clarify_header_start_tag(tag);
+    }
+}
+
+#[allow(unused_variables)]
+fn clarify_end_length(writer: &mut impl Writer, tag: &Tag, length: Length) {
+    #[cfg(feature = "clarify")]
+    if let Some(clarifier) = writer.clarifier() {
+        use crate::Clarifier;
+        clarifier.clarify_header_end_length(Some(tag), length);
     }
 }
 
