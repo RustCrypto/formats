@@ -193,9 +193,6 @@ pub trait DecodeValue<'a>: Sized {
     type Error: From<Error> + 'static;
 
     /// Attempt to decode this value using the provided [`Reader`].
-    ///
-    /// Note: in this method, implementers should *not* check header tag (which can be
-    /// different from the usual object tag when using IMPLICIT tagging, for example).
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error>;
 }
 
