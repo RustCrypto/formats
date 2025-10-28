@@ -95,7 +95,8 @@
 //! // "heapless" usage when the `alloc` feature is disabled.
 //! use der::{
 //!     asn1::{AnyRef, ObjectIdentifier},
-//!     DecodeValue, Decode, SliceReader, Encode, Header, Reader, Sequence
+//!     Decode, DecodeValue, Encode, EncodeValue, Header, Length,
+//!     Reader, Sequence, SliceReader, Writer
 //! };
 //!
 //! /// X.509 `AlgorithmIdentifier`.
@@ -131,12 +132,16 @@
 //!     }
 //! }
 //!
-//! impl<'a> ::der::EncodeValue for AlgorithmIdentifier<'a> {
-//!     fn value_len(&self) -> ::der::Result<::der::Length> {
+//! impl<'a> EncodeValue for AlgorithmIdentifier<'a> {
+//!     fn value_len(&self) -> der::Result<Length> {
+//!         // Length of the Value part in Tag-Length-Value structure
+//!         // is calculated for every TLV header in the tree.
+//!         // Therefore, in this example `AlgorithmIdentifier::value_len`
+//!         // will be called once, originating from `Encode::to_der()`.
 //!         self.algorithm.encoded_len()? + self.parameters.encoded_len()?
 //!     }
 //!
-//!     fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
+//!     fn encode_value(&self, writer: &mut impl Writer) -> der::Result<()> {
 //!         self.algorithm.encode(writer)?;
 //!         self.parameters.encode(writer)?;
 //!         Ok(())
