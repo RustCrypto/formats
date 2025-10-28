@@ -74,6 +74,42 @@ impl GeneralizedTime {
 
 impl_any_conversions!(GeneralizedTime);
 
+/// Creates a [`GeneralizedTime`] from its individual, ascii
+/// encoded components.
+fn decode_from_values(
+    year: (u8, u8, u8, u8),
+    month: (u8, u8),
+    day: (u8, u8),
+    hour: (u8, u8),
+    min: (u8, u8),
+    sec: (u8, u8),
+) -> Result<GeneralizedTime> {
+    let year = u16::from(datetime::decode_decimal(
+        GeneralizedTime::TAG,
+        year.0,
+        year.1,
+    )?)
+    .checked_mul(100)
+    .and_then(|y| {
+        y.checked_add(
+            datetime::decode_decimal(GeneralizedTime::TAG, year.2, year.3)
+                .ok()?
+                .into(),
+        )
+    })
+    .ok_or(ErrorKind::DateTime)?;
+    let month = datetime::decode_decimal(GeneralizedTime::TAG, month.0, month.1)?;
+    let day = datetime::decode_decimal(GeneralizedTime::TAG, day.0, day.1)?;
+    let hour = datetime::decode_decimal(GeneralizedTime::TAG, hour.0, hour.1)?;
+    let minute = datetime::decode_decimal(GeneralizedTime::TAG, min.0, min.1)?;
+    let second = datetime::decode_decimal(GeneralizedTime::TAG, sec.0, sec.1)?;
+
+    let dt = DateTime::new(year, month, day, hour, minute, second)
+        .map_err(|_| GeneralizedTime::TAG.value_error())?;
+
+    GeneralizedTime::from_unix_duration(dt.unix_duration())
+}
+
 impl<'a> DecodeValue<'a> for GeneralizedTime {
     type Error = Error;
 
@@ -103,23 +139,15 @@ impl<'a> DecodeValue<'a> for GeneralizedTime {
                 sec1,
                 sec2,
                 b'Z',
-            ] => {
-                let year = u16::from(datetime::decode_decimal(Self::TAG, y1, y2)?)
-                    .checked_mul(100)
-                    .and_then(|y| {
-                        y.checked_add(datetime::decode_decimal(Self::TAG, y3, y4).ok()?.into())
-                    })
-                    .ok_or(ErrorKind::DateTime)?;
-                let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
-                let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
-                let hour = datetime::decode_decimal(Self::TAG, hour1, hour2)?;
-                let minute = datetime::decode_decimal(Self::TAG, min1, min2)?;
-                let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
-
-                DateTime::new(year, month, day, hour, minute, second)
-                    .map_err(|_| reader.error(Self::TAG.value_error()))
-                    .and_then(|dt| Self::from_unix_duration(dt.unix_duration()))
-            }
+            ] => decode_from_values(
+                (y1, y2, y3, y4),
+                (mon1, mon2),
+                (day1, day2),
+                (hour1, hour2),
+                (min1, min2),
+                (sec1, sec2),
+            )
+            .map_err(|err| reader.error(err.kind())),
             _ => Err(reader.error(Self::TAG.value_error())),
         }
     }
