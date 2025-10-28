@@ -21,12 +21,9 @@ impl<'a, const MAX_SIZE: usize> DecodeValue<'a> for ObjectIdentifier<MAX_SIZE> {
         let actual_len = reader.read_into(slice)?.len();
         debug_assert_eq!(actual_len, header.length().try_into()?);
 
-        let oid_ref = ObjectIdentifierRef::from_bytes(slice)
-            .map_err(|oid_err| reader.error(Error::from(oid_err).kind()))?;
-        let oid = oid_ref
-            .try_into()
-            .map_err(|oid_err| reader.error(Error::from(oid_err).kind()))?;
-        Ok(oid)
+        ObjectIdentifierRef::from_bytes(slice)
+            .and_then(TryInto::try_into)
+            .map_err(|oid_err| reader.error(Error::from(oid_err).kind()))
     }
 }
 
