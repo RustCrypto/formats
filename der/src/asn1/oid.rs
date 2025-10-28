@@ -16,11 +16,14 @@ impl<'a, const MAX_SIZE: usize> DecodeValue<'a> for ObjectIdentifier<MAX_SIZE> {
         let mut buf = [0u8; MAX_SIZE];
         let slice = buf
             .get_mut(..header.length().try_into()?)
-            .ok_or_else(|| Self::TAG.length_error())?;
+            .ok_or_else(|| reader.error(Self::TAG.length_error()))?;
 
         let actual_len = reader.read_into(slice)?.len();
         debug_assert_eq!(actual_len, header.length().try_into()?);
-        Ok(ObjectIdentifierRef::from_bytes(slice)?.try_into()?)
+
+        ObjectIdentifierRef::from_bytes(slice)
+            .and_then(TryInto::try_into)
+            .map_err(|oid_err| reader.error(Error::from(oid_err).kind()))
     }
 }
 
