@@ -219,8 +219,8 @@ mod allocating {
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             let bytes = BytesOwned::decode_value_parts(reader, header, Self::TAG)?;
-            let result =
-                Self::new(decode_to_slice(bytes.as_slice()).map_err(|kind| reader.error(kind))?)?;
+            let bytes = decode_to_slice(bytes.as_slice()).map_err(|kind| reader.error(kind))?;
+            let result = Self::new(bytes)?;
 
             // Ensure we compute the same encoded length as the original any value.
             if result.value_len()? != header.length() {
