@@ -252,8 +252,8 @@ mod tests {
         assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
 
         let mut buf = [0u8; 128];
-        let mut encoder = SliceWriter::new(&mut buf);
-        utc_time.encode(&mut encoder).unwrap();
-        assert_eq!(example_bytes, encoder.finish().unwrap());
+        let mut writer = SliceWriter::new(&mut buf);
+        utc_time.encode(&mut writer).unwrap();
+        assert_eq!(example_bytes, writer.finish().unwrap());
     }
 }

@@ -113,30 +113,18 @@
 //!     type Error = der::Error;
 //!
 //!     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
-//!        // The `der::Decoder::Decode` method can be used to decode any
+//!        // The `der::Decode::decode` method can be used to decode any
 //!        // type which impls the `Decode` trait, which is impl'd for
 //!        // all of the ASN.1 built-in types in the `der` crate.
-//!        //
-//!        // Note that if your struct's fields don't contain an ASN.1
-//!        // built-in type specifically, there are also helper methods
-//!        // for all of the built-in types supported by this library
-//!        // which can be used to select a specific type.
-//!        //
-//!        // For example, another way of decoding this particular field,
-//!        // which contains an ASN.1 `OBJECT IDENTIFIER`, is by calling
-//!        // `decoder.oid()`. Similar methods are defined for other
-//!        // ASN.1 built-in types.
 //!        let algorithm = reader.decode()?;
 //!
 //!        // This field contains an ASN.1 `OPTIONAL` type. The `der` crate
 //!        // maps this directly to Rust's `Option` type and provides
 //!        // impls of the `Decode` and `Encode` traits for `Option`.
-//!        // To explicitly request an `OPTIONAL` type be decoded, use the
-//!        // `decoder.optional()` method.
 //!        let parameters = reader.decode()?;
 //!
-//!        // The value returned from the provided `FnOnce` will be
-//!        // returned from the `any.sequence(...)` call above.
+//!        // The value returned from this `decode_value` will be
+//!        // returned from the `AlgorithmIdentifier::decode` call, unchanged.
 //!        // Note that the entire sequence body *MUST* be consumed
 //!        // or an error will be returned.
 //!        Ok(Self { algorithm, parameters })
@@ -171,15 +159,15 @@
 //! // which impls `Sequence` can be serialized by calling `Encode::to_der()`.
 //! //
 //! // If you would prefer to avoid allocations, you can create a byte array
-//! // as backing storage instead, pass that to `der::Encoder::new`, and then
-//! // encode the `parameters` value using `encoder.encode(parameters)`.
+//! // as backing storage instead, pass that to `der::SliceWriter::new`, and then
+//! // encode the `parameters` value using `writer.encode(parameters)`.
 //! let der_encoded_parameters = parameters.to_der().unwrap();
 //!
 //! let algorithm_identifier = AlgorithmIdentifier {
 //!     // OID for `id-ecPublicKey`, if you're curious
 //!     algorithm: "1.2.840.10045.2.1".parse().unwrap(),
 //!
-//!     // `Any<'a>` impls `TryFrom<&'a [u8]>`, which parses the provided
+//!     // `AnyRef<'a>` impls `TryFrom<&'a [u8]>`, which parses the provided
 //!     // slice as an ASN.1 DER-encoded message.
 //!     parameters: Some(der_encoded_parameters.as_slice().try_into().unwrap())
 //! };
@@ -188,14 +176,14 @@
 //! // allocating a `Vec<u8>` for storage.
 //! //
 //! // As mentioned earlier, if you don't have the `alloc` feature enabled you
-//! // can create a fix-sized array instead, then call `Encoder::new` with a
+//! // can create a fix-sized array instead, then call `SliceWriter::new` with a
 //! // reference to it, then encode the message using
-//! // `encoder.encode(algorithm_identifier)`, then finally `encoder.finish()`
+//! // `writer.encode(algorithm_identifier)`, then finally `writer.finish()`
 //! // to obtain a byte slice containing the encoded message.
 //! let der_encoded_algorithm_identifier = algorithm_identifier.to_der().unwrap();
 //!
-//! // Deserialize the `AlgorithmIdentifier` we just serialized from ASN.1 DER
-//! // using `der::Decode::from_bytes`.
+//! // Deserialize the `AlgorithmIdentifier` bytes we just serialized from ASN.1 DER
+//! // using `der::Decode::from_der`.
 //! let decoded_algorithm_identifier = AlgorithmIdentifier::from_der(
 //!     &der_encoded_algorithm_identifier
 //! ).unwrap();

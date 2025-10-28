@@ -61,9 +61,9 @@ where
         }
     }
 
-    fn encode(&self, encoder: &mut impl Writer) -> Result<(), Error> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<(), Error> {
         match self {
-            Some(encodable) => encodable.encode(encoder),
+            Some(encodable) => encodable.encode(writer),
             None => Ok(()),
         }
     }
