@@ -23,9 +23,10 @@ impl<'a, const MAX_SIZE: usize> DecodeValue<'a> for ObjectIdentifier<MAX_SIZE> {
 
         let oid_ref = ObjectIdentifierRef::from_bytes(slice)
             .map_err(|oid_err| reader.error(Error::from(oid_err).kind()))?;
-        Ok(oid_ref
+        let oid = oid_ref
             .try_into()
-            .map_err(|oid_err| reader.error(Error::from(oid_err).kind()))?)
+            .map_err(|oid_err| reader.error(Error::from(oid_err).kind()))?;
+        Ok(oid)
     }
 }
 
