@@ -5,7 +5,7 @@ use crate::{
     AnyRef, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
     Result, Tag, ValueOrd, Writer, ord::OrdIsValueOrd,
 };
-use core::cmp::Ordering;
+use core::{cmp::Ordering, result};
 
 #[cfg(feature = "alloc")]
 pub use allocating::Uint;
@@ -33,7 +33,8 @@ macro_rules! impl_encoding_traits {
                     }
 
                     let bytes = reader.read_into(&mut buf[..max_length])?;
-                    let result = Self::from_be_bytes(decode_to_array(bytes)?);
+                    let bytes = decode_to_array(bytes).map_err(|kind| reader.error(kind))?;
+                    let result = Self::from_be_bytes(bytes);
 
                     // Ensure we compute the same encoded length as the original any value
                     if header.length() != result.value_len()? {
@@ -123,7 +124,7 @@ impl<'a> DecodeValue<'a> for UintRef<'a> {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = <&'a BytesRef>::decode_value(reader, header)?.as_slice();
-        let result = Self::new(decode_to_slice(bytes)?)?;
+        let result = Self::new(decode_to_slice(bytes).map_err(|kind| reader.error(kind))?)?;
 
         // Ensure we compute the same encoded length as the original any value.
         if result.value_len()? != header.length() {
@@ -218,7 +219,8 @@ mod allocating {
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
             let bytes = BytesOwned::decode_value_parts(reader, header, Self::TAG)?;
-            let result = Self::new(decode_to_slice(bytes.as_slice())?)?;
+            let result =
+                Self::new(decode_to_slice(bytes.as_slice()).map_err(|kind| reader.error(kind))?)?;
 
             // Ensure we compute the same encoded length as the original any value.
             if result.value_len()? != header.length() {
@@ -319,7 +321,7 @@ mod allocating {
 /// zeroes removed.
 ///
 /// Returns a byte array of the requested size containing a big endian integer.
-pub(crate) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
+pub(crate) fn decode_to_slice(bytes: &[u8]) -> result::Result<&[u8], ErrorKind> {
     // The `INTEGER` type always encodes a signed value, so for unsigned
     // values the leading `0x00` byte may need to be removed.
     //
@@ -338,7 +340,7 @@ pub(crate) fn decode_to_slice(bytes: &[u8]) -> Result<&[u8]> {
 
 /// Decode an unsigned integer into a byte array of the requested size
 /// containing a big endian integer.
-pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
+pub(super) fn decode_to_array<const N: usize>(bytes: &[u8]) -> result::Result<[u8; N], ErrorKind> {
     let input = decode_to_slice(bytes)?;
 
     // Compute number of leading zeroes to add
@@ -412,20 +414,20 @@ mod tests {
     #[test]
     fn decode_to_array_extra_zero() {
         let err = decode_to_array::<4>(&[0, 1, 2]).err().unwrap();
-        assert_eq!(err.kind(), ErrorKind::Noncanonical { tag: Tag::Integer });
+        assert_eq!(err, ErrorKind::Noncanonical { tag: Tag::Integer });
     }
 
     #[test]
     fn decode_to_array_missing_zero() {
         // We're decoding an unsigned integer, but this value would be signed
         let err = decode_to_array::<4>(&[0xFF, 0xFE]).err().unwrap();
-        assert_eq!(err.kind(), ErrorKind::Value { tag: Tag::Integer });
+        assert_eq!(err, ErrorKind::Value { tag: Tag::Integer });
     }
 
     #[test]
     fn decode_to_array_oversized_input() {
         let err = decode_to_array::<1>(&[1, 2, 3]).err().unwrap();
-        assert_eq!(err.kind(), ErrorKind::Length { tag: Tag::Integer });
+        assert_eq!(err, ErrorKind::Length { tag: Tag::Integer });
     }
 
     #[test]
