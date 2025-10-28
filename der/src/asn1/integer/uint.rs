@@ -329,11 +329,11 @@ pub(crate) fn decode_to_slice(bytes: &[u8]) -> result::Result<&[u8], ErrorKind> 
     // integer (since we're decoding an unsigned integer).
     // We expect all such cases to have a leading `0x00` byte.
     match bytes {
-        [] => Err(Tag::Integer.non_canonical_error().into()),
+        [] => Err(Tag::Integer.non_canonical_error()),
         [0] => Ok(bytes),
-        [0, byte, ..] if *byte < 0x80 => Err(Tag::Integer.non_canonical_error().into()),
+        [0, byte, ..] if *byte < 0x80 => Err(Tag::Integer.non_canonical_error()),
         [0, rest @ ..] => Ok(rest),
-        [byte, ..] if *byte >= 0x80 => Err(Tag::Integer.value_error().into()),
+        [byte, ..] if *byte >= 0x80 => Err(Tag::Integer.value_error()),
         _ => Ok(bytes),
     }
 }
