@@ -98,14 +98,14 @@ mod choice {
             let mut buf = [0u8; 128];
 
             let utc_time = Time::from_der(UTC_TIMESTAMP_DER).unwrap();
-            let mut encoder = SliceWriter::new(&mut buf);
-            utc_time.encode(&mut encoder).unwrap();
-            assert_eq!(UTC_TIMESTAMP_DER, encoder.finish().unwrap());
+            let mut writer = SliceWriter::new(&mut buf);
+            utc_time.encode(&mut writer).unwrap();
+            assert_eq!(UTC_TIMESTAMP_DER, writer.finish().unwrap());
 
             let general_time = Time::from_der(GENERAL_TIMESTAMP_DER).unwrap();
-            let mut encoder = SliceWriter::new(&mut buf);
-            general_time.encode(&mut encoder).unwrap();
-            assert_eq!(GENERAL_TIMESTAMP_DER, encoder.finish().unwrap());
+            let mut writer = SliceWriter::new(&mut buf);
+            general_time.encode(&mut writer).unwrap();
+            assert_eq!(GENERAL_TIMESTAMP_DER, writer.finish().unwrap());
         }
     }
 
@@ -174,14 +174,14 @@ mod choice {
             let mut buf = [0u8; 128];
 
             let cs_bit_string = ImplicitChoice::from_der(BITSTRING_DER).unwrap();
-            let mut encoder = SliceWriter::new(&mut buf);
-            cs_bit_string.encode(&mut encoder).unwrap();
-            assert_eq!(BITSTRING_DER, encoder.finish().unwrap());
+            let mut writer = SliceWriter::new(&mut buf);
+            cs_bit_string.encode(&mut writer).unwrap();
+            assert_eq!(BITSTRING_DER, writer.finish().unwrap());
 
             let cs_time = ImplicitChoice::from_der(TIME_DER).unwrap();
-            let mut encoder = SliceWriter::new(&mut buf);
-            cs_time.encode(&mut encoder).unwrap();
-            assert_eq!(TIME_DER, encoder.finish().unwrap());
+            let mut writer = SliceWriter::new(&mut buf);
+            cs_time.encode(&mut writer).unwrap();
+            assert_eq!(TIME_DER, writer.finish().unwrap());
         }
 
         #[test]
@@ -191,10 +191,10 @@ mod choice {
             let obj = ImplicitChoice::SequenceOfNulls(seq);
             let mut buf = [0u8; 128];
 
-            let mut encoder = SliceWriter::new(&mut buf);
-            obj.encode(&mut encoder).unwrap();
+            let mut writer = SliceWriter::new(&mut buf);
+            obj.encode(&mut writer).unwrap();
 
-            let encoded = encoder.finish().unwrap();
+            let encoded = writer.finish().unwrap();
             println!("encoded: {encoded:02X?}");
 
             let decoded = ImplicitChoice::from_der(encoded).unwrap();
@@ -261,13 +261,13 @@ mod enumerated {
     fn encode() {
         let mut buf = [0u8; 128];
 
-        let mut encoder = SliceWriter::new(&mut buf);
-        CrlReason::Unspecified.encode(&mut encoder).unwrap();
-        assert_eq!(UNSPECIFIED_DER, encoder.finish().unwrap());
+        let mut writer = SliceWriter::new(&mut buf);
+        CrlReason::Unspecified.encode(&mut writer).unwrap();
+        assert_eq!(UNSPECIFIED_DER, writer.finish().unwrap());
 
-        let mut encoder = SliceWriter::new(&mut buf);
-        CrlReason::KeyCompromise.encode(&mut encoder).unwrap();
-        assert_eq!(KEY_COMPROMISE_DER, encoder.finish().unwrap());
+        let mut writer = SliceWriter::new(&mut buf);
+        CrlReason::KeyCompromise.encode(&mut writer).unwrap();
+        assert_eq!(KEY_COMPROMISE_DER, writer.finish().unwrap());
     }
 }
 

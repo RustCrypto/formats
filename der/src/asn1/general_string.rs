@@ -30,7 +30,7 @@ impl EncodeValue for GeneralStringRef<'_> {
         self.inner.value_len()
     }
 
-    fn encode_value(&self, encoder: &mut impl Writer) -> crate::Result<()> {
-        self.inner.encode_value(encoder)
+    fn encode_value(&self, writer: &mut impl Writer) -> crate::Result<()> {
+        self.inner.encode_value(writer)
     }
 }

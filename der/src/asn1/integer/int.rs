@@ -507,10 +507,10 @@ mod tests {
             let uint = IntRef::from_der(example).unwrap();
 
             let mut buf = [0u8; 128];
-            let mut encoder = SliceWriter::new(&mut buf);
-            uint.encode(&mut encoder).unwrap();
+            let mut writer = SliceWriter::new(&mut buf);
+            uint.encode(&mut writer).unwrap();
 
-            let result = encoder.finish().unwrap();
+            let result = writer.finish().unwrap();
             assert_eq!(example, result);
         }
 
@@ -518,10 +518,10 @@ mod tests {
             let uint = IntRef::from_der(example).unwrap();
 
             let mut buf = [0u8; 128];
-            let mut encoder = SliceWriter::new(&mut buf);
-            uint.encode(&mut encoder).unwrap();
+            let mut writer = SliceWriter::new(&mut buf);
+            uint.encode(&mut writer).unwrap();
 
-            let result = encoder.finish().unwrap();
+            let result = writer.finish().unwrap();
             assert_eq!(example, result);
         }
     }

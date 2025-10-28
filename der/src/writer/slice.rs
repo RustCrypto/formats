@@ -19,7 +19,7 @@ pub struct SliceWriter<'a> {
 }
 
 impl<'a> SliceWriter<'a> {
-    /// Create a new encoder with the given byte slice as a backing buffer.
+    /// Create a new writer with the given byte slice as a backing buffer.
     pub fn new(bytes: &'a mut [u8]) -> Self {
         Self {
             bytes,
@@ -94,10 +94,10 @@ impl<'a> SliceWriter<'a> {
     {
         Header::new(Tag::Sequence, length).encode(self)?;
 
-        let mut nested_encoder = SliceWriter::new(self.reserve(length)?);
-        f(&mut nested_encoder)?;
+        let mut nested_writer = SliceWriter::new(self.reserve(length)?);
+        f(&mut nested_writer)?;
 
-        if nested_encoder.finish()?.len() == usize::try_from(length)? {
+        if nested_writer.finish()?.len() == usize::try_from(length)? {
             Ok(())
         } else {
             self.error(ErrorKind::Length { tag: Tag::Sequence })
