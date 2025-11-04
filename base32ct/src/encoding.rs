@@ -101,11 +101,15 @@ impl<T: Alphabet> Encoding for T {
             c[6] = Self::decode_5bits(src_rem[6]);
         };
 
-        if !src_rem.is_empty() {
+        err |= (src_rem.len() == 1) as u8;
+        err |= (src_rem.len() == 3) as u8;
+        err |= (src_rem.len() == 6) as u8;
+
+        if src_rem.len() >= 2 {
             dst_rem[0] = (((c[0] << 3) | (c[1] >> 2)) & 0xff) as u8;
         }
 
-        if src_rem.len() >= 3 {
+        if src_rem.len() >= 4 {
             dst_rem[1] = (((c[1] << 6) | (c[2] << 1) | (c[3] >> 4)) & 0xff) as u8;
         }
 
@@ -113,7 +117,7 @@ impl<T: Alphabet> Encoding for T {
             dst_rem[2] = (((c[3] << 4) | (c[4] >> 1)) & 0xff) as u8;
         }
 
-        if src_rem.len() >= 6 {
+        if src_rem.len() >= 7 {
             dst_rem[3] = (((c[4] << 7) | (c[5] << 2) | (c[6] >> 3)) & 0xff) as u8;
         }
 

@@ -185,3 +185,16 @@ fn encode_base32() {
         );
     }
 }
+
+#[test]
+fn decode_unpadded_truncated() {
+    let string = "foobarba";
+    for length in 1..=7 {
+        let s = &string[..length];
+        let s_padded: String = s.chars().chain(std::iter::repeat('=')).take(8).collect();
+        assert!(s_padded.starts_with(s));
+        assert_eq!(s_padded.len(), 8);
+        assert_eq!(Base32::decode_vec(s), Err(base32ct::Error::InvalidEncoding));
+        assert_eq!(Base32Unpadded::decode_vec(s), Base32::decode_vec(&s_padded));
+    }
+}
