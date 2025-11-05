@@ -108,7 +108,28 @@ where
     /// Encode this TLV object as ASN.1 DER using the provided [`Writer`].
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.header()?.encode(writer)?;
-        self.encode_value(writer)
+        clarify_start_value_type::<T>(writer);
+        let result = self.encode_value(writer);
+        clarify_end_value_type::<T>(writer);
+        result
+    }
+}
+
+#[allow(unused_variables)]
+fn clarify_start_value_type<T: ?Sized>(writer: &mut impl Writer) {
+    #[cfg(feature = "clarify")]
+    if let Some(clarifier) = writer.clarifier() {
+        use crate::Clarifier;
+        clarifier.clarify_start_value_type::<T>();
+    }
+}
+
+#[allow(unused_variables)]
+fn clarify_end_value_type<T: ?Sized>(writer: &mut impl Writer) {
+    #[cfg(feature = "clarify")]
+    if let Some(clarifier) = writer.clarifier() {
+        use crate::Clarifier;
+        clarifier.clarify_end_value_type::<T>();
     }
 }
 

@@ -1,5 +1,7 @@
 //! Writer trait.
 
+#[cfg(feature = "clarify")]
+pub mod clarify;
 #[cfg(feature = "pem")]
 pub(crate) mod pem;
 pub(crate) mod slice;
@@ -17,6 +19,12 @@ pub trait Writer {
     /// Write a single byte.
     fn write_byte(&mut self, byte: u8) -> Result<()> {
         self.write(&[byte])
+    }
+
+    #[cfg(feature = "clarify")]
+    /// Should return Some(clarifier) for clarify writers
+    fn clarifier(&mut self) -> Option<&mut impl clarify::Clarifier> {
+        Option::<&mut clarify::CommentClarifier<()>>::None
     }
 }
 

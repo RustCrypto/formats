@@ -27,9 +27,12 @@ time = { version = "0.3.4", optional = true, default-features = false }
 zeroize = { version = "1.8", optional = true, default-features = false }
 heapless = { version = "0.8", optional = true, default-features = false }
 
+
 [dev-dependencies]
 hex-literal = "1"
 proptest = "1"
+tynm = "0.2"
+
 
 [features]
 alloc = ["zeroize?/alloc"]
@@ -38,6 +41,7 @@ std = ["alloc"]
 arbitrary = ["dep:arbitrary", "const-oid?/arbitrary", "std"]
 ber = []
 bytes = ["dep:bytes", "alloc"]
+clarify = ["std", "pem", "derive", "oid"]
 derive = ["dep:der_derive"]
 oid = ["dep:const-oid"]
 pem = ["dep:pem-rfc7468", "alloc", "zeroize"]

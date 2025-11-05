@@ -395,6 +395,12 @@ pub use {
     pem_rfc7468 as pem,
 };
 
+#[cfg(feature = "clarify")]
+pub use writer::clarify::{
+    Clarifier, ClarifyFlavor, ClarifyHook, ClarifyOptions, ClarifySliceWriter, CommentClarifier,
+    EncodeClarifyExt,
+};
+
 #[cfg(feature = "time")]
 pub use time;
 
