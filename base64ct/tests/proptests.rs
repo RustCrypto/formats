@@ -5,7 +5,7 @@
 // warning: use of deprecated function `base64::encode`: Use Engine::encode
 #![allow(deprecated)]
 
-use base64ct::{Base64 as Base64ct, Encoding};
+use base64ct::{Base64 as Base64ct, Base64Unpadded as Base64UnpaddedCt, Encoding};
 use proptest::{prelude::*, string::*};
 
 /// Incremental Base64 decoder.
@@ -147,5 +147,24 @@ proptest! {
         }
 
         prop_assert_eq!(expected, encoder.finish().unwrap());
+    }
+
+    /// Make sure that base64ct and base64 both decode the same values
+    /// when expecting padded inputs, and produce the same outputs for those values.
+    #[test]
+    fn decode_arbitrary_padded(string in string_regex("[a-zA-Z0-9/+=?]{0,256}").unwrap()) {
+        let actual = Base64ct::decode_vec(&string);
+        let expected = base64::decode( &string);
+        assert_eq!(actual.ok(), expected.ok());
+    }
+
+    /// Make sure that base64ct and base64 both decode the same values
+    /// when expecting unpadded inputs, and produce the same outputs for those values.
+    #[test]
+    fn decode_arbitrary_unpadded(string in string_regex("[a-zA-Z0-9/+=?]{0,256}").unwrap()) {
+        use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine as _};
+        let actual = Base64UnpaddedCt::decode_vec(&string);
+        let expected = STANDARD_NO_PAD.decode(&string);
+        assert_eq!(actual.ok(), expected.ok());
     }
 }
