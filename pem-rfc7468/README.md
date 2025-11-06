@@ -56,6 +56,13 @@ The paper [Util::Lookup: Exploiting key decoding in cryptographic libraries][Uti
 demonstrates how the leakage from non-constant-time PEM parsers can be used
 to practically extract RSA private keys from SGX enclaves.
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
+
 ## License
 
 Licensed under either of:

@@ -13,12 +13,12 @@ Custom derive support for the `der` crate's `Choice` and `Sequence` traits:
 
 [Documentation][docs-link]
 
-## Minimum Supported Rust Version
+## Minimum Supported Rust Version (MSRV) Policy
 
-This crate requires **Rust 1.71** at a minimum.
+MSRV increases are not considered breaking changes and can happen in patch releases.
 
-We may change the MSRV in the future, but it will be accompanied by a minor
-version bump.
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
 
 ## License
 
@@ -44,7 +44,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/der.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/der.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.71+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 

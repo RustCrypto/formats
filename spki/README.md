@@ -14,6 +14,14 @@ Specified in [RFC 5280 § 4.1].
 
 [Documentation][docs-link]
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch
+releases.
+
+The crate MSRV accounts for all supported targets and crate feature
+combinations, excluding explicitly unstable features.
+
 ## License
 
 Licensed under either of:

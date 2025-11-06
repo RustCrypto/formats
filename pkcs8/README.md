@@ -52,6 +52,13 @@ OpenSSL for the  following algorithms:
 Please open an issue if you encounter trouble using it with a particular
 algorithm, including the ones listed above or other algorithms.
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
+
 ## License
 
 Licensed under either of:
@@ -73,12 +80,12 @@ dual licensed as above, without any additional terms or conditions.
 [crate-link]: https://crates.io/crates/pkcs8
 [docs-image]: https://docs.rs/pkcs8/badge.svg
 [docs-link]: https://docs.rs/pkcs8/
+[build-image]: https://github.com/RustCrypto/formats/actions/workflows/pkcs8.yml/badge.svg
+[build-link]: https://github.com/RustCrypto/formats/actions/workflows/pkcs8.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
-[build-image]: https://github.com/RustCrypto/formats/workflows/pkcs8/badge.svg?branch=master&event=push
-[build-link]: https://github.com/RustCrypto/formats/actions
 
 [//]: # (links)
 
