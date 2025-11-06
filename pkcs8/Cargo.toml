@@ -22,7 +22,7 @@ spki = "0.8.0-rc.4"
 
 # optional dependencies
 rand_core = { version = "0.10.0-rc-2", optional = true, default-features = false }
-pkcs5 = { version = "0.8.0-rc.8", optional = true, features = ["rand_core"] }
+pkcs5 = { version = "0.8.0-rc.9", optional = true, features = ["rand_core"] }
 subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]
