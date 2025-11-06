@@ -11,6 +11,9 @@ use crate::asn1::ObjectIdentifier;
 #[cfg(feature = "pem")]
 use crate::pem;
 
+#[cfg(doc)]
+use crate::{Reader, Writer};
+
 /// Result type.
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -196,7 +199,7 @@ pub enum ErrorKind {
     EncodingRules,
 
     /// This error indicates a previous DER parsing operation resulted in
-    /// an error and tainted the state of a `Decoder` or `Encoder`.
+    /// an error and tainted the state of a [`Reader`] or [`Writer`].
     ///
     /// Once this occurs, the overall operation has failed and cannot be
     /// subsequently resumed.
