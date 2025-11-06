@@ -35,6 +35,13 @@ serialization/deserialization
 - Serialize for `(T, U)` and `(T, U, V)` where `T, U, V` implement Serialize`
 - Deserialize for `(T, U)` and `(T, U, V)` where `T, U, V` implement Deserialize`
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
+
 ## License
 
 Licensed under either of:

@@ -29,6 +29,13 @@ PEM encoded RSA public keys begin with:
 -----BEGIN RSA PUBLIC KEY-----
 ```
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
+
 ## License
 
 Licensed under either of:
@@ -50,12 +57,12 @@ dual licensed as above, without any additional terms or conditions.
 [crate-link]: https://crates.io/crates/pkcs1
 [docs-image]: https://docs.rs/pkcs1/badge.svg
 [docs-link]: https://docs.rs/pkcs1/
+[build-image]: https://github.com/RustCrypto/formats/actions/workflows/pkcs1.yml/badge.svg
+[build-link]: https://github.com/RustCrypto/formats/actions/workflows/pkcs1.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
-[build-image]: https://github.com/RustCrypto/formats/workflows/pkcs1/badge.svg?branch=master&event=push
-[build-link]: https://github.com/RustCrypto/formats/actions
 
 [//]: # (links)
 

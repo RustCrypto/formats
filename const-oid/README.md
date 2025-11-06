@@ -55,6 +55,13 @@ obtain the BER/DER serialization of an OID, even one declared `const`.
 Additionally, it impls `FromStr` and `TryFrom<&[u8]>` and functions just as
 well as a runtime OID library.
 
+## Minimum Supported Rust Version (MSRV) Policy
+
+MSRV increases are not considered breaking changes and can happen in patch releases.
+
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
+
 ## License
 
 Licensed under either of:

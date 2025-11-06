@@ -2,9 +2,10 @@
 
 [![Crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
-![Apache2/MIT licensed][license-image]
-![MSRV][rustc-image]
 [![Build Status][build-image]][build-link]
+![Apache2/MIT licensed][license-image]
+![Rust Version][rustc-image]
+[![Project Chat][chat-image]][chat-link]
 
 An implementation of the [TAI64(N)] (*Temps Atomique International*) timestamp
 format in Rust.
@@ -43,6 +44,8 @@ dual licensed as above, without any additional terms or conditions.
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/tai64.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/tai64.yml
+[chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
+[chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 
 [//]: # (links)
 
