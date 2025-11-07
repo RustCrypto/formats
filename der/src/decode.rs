@@ -11,7 +11,10 @@ use crate::{PemReader, pem::PemLabel};
 use crate::{ErrorKind, Length, Tag};
 
 #[cfg(feature = "alloc")]
-use alloc::boxed::Box;
+use alloc::{
+    borrow::{Cow, ToOwned},
+    boxed::Box,
+};
 
 #[cfg(feature = "ber")]
 use crate::EncodingRules;
@@ -205,5 +208,18 @@ where
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         Ok(Box::new(T::decode_value(reader, header)?))
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a, T> DecodeValue<'a> for Cow<'a, T>
+where
+    T: ToOwned + ?Sized,
+    &'a T: DecodeValue<'a>,
+{
+    type Error = <&'a T as DecodeValue<'a>>::Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
+        Ok(Cow::Borrowed(<&'a T>::decode_value(reader, header)?))
     }
 }

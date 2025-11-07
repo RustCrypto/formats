@@ -4,7 +4,11 @@ use crate::{Header, Length, Result, SliceWriter, Tagged, Writer};
 use core::marker::PhantomData;
 
 #[cfg(feature = "alloc")]
-use {alloc::boxed::Box, alloc::vec::Vec};
+use alloc::{
+    borrow::{Cow, ToOwned},
+    boxed::Box,
+    vec::Vec,
+};
 
 #[cfg(feature = "pem")]
 use {
@@ -225,6 +229,21 @@ where
     }
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
         T::encode_value(self, writer)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T> EncodeValue for Cow<'_, T>
+where
+    T: ToOwned + ?Sized,
+    for<'a> &'a T: EncodeValue,
+{
+    fn value_len(&self) -> Result<Length> {
+        self.as_ref().value_len()
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<()> {
+        self.as_ref().encode_value(writer)
     }
 }
 
