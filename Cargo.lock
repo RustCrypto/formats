@@ -417,8 +417,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-primes"
-version = "0.7.0-pre.3"
-source = "git+https://github.com/baloo/crypto-primes.git?branch=baloo%2Frand_core%2F0.10.0-rc.2#620edda8ea6be672697b0e2ce44f1c72091aaad9"
+version = "0.7.0-pre.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fdd9b2855017318a49714c07ee8895b89d3510d54fa6d86be5835de74c389609"
 dependencies = [
  "crypto-bigint",
  "libm",
@@ -1201,8 +1202,9 @@ dependencies = [
 
 [[package]]
 name = "rsa"
-version = "0.10.0-rc.9"
-source = "git+https://github.com/RustCrypto/RSA#e85e9711a085671db4b21b848df281635de0576a"
+version = "0.10.0-rc.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e499c52862d75a86c0024cc99dcb6d7127d15af3beae7b03573d62fab7ade08a"
 dependencies = [
  "const-oid",
  "crypto-bigint",
