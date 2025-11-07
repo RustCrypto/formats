@@ -383,6 +383,9 @@ mod tests {
     };
     use hex_literal::hex;
 
+    #[cfg(feature = "alloc")]
+    use {crate::Encode, alloc::borrow::Cow};
+
     #[test]
     fn octet_string_decode() {
         // PrintableString "hi"
@@ -403,6 +406,22 @@ mod tests {
 
         let res = oct.decode_into::<PrintableStringRef<'_>>().unwrap();
         assert_eq!(AsRef::<str>::as_ref(&res), "hi");
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn cow_octet_string_decode_and_encode() {
+        // PrintableString "hi"
+        const EXAMPLE: &[u8] = &hex!(
+            "040c" // primitive definite length OCTET STRING
+            "48656c6c6f2c20776f726c64" // "Hello, world"
+        );
+
+        let decoded = Cow::<OctetStringRef>::from_der(EXAMPLE).unwrap();
+        assert_eq!(decoded.as_bytes(), b"Hello, world");
+
+        let encoded = decoded.to_der().unwrap();
+        assert_eq!(EXAMPLE, encoded);
     }
 
     #[test]

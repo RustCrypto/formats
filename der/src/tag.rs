@@ -10,6 +10,9 @@ pub use self::{class::Class, mode::TagMode, number::TagNumber};
 use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Writer};
 use core::{cmp::Ordering, fmt};
 
+#[cfg(feature = "alloc")]
+use alloc::borrow::{Cow, ToOwned};
+
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
 const CONSTRUCTED_FLAG: u8 = 0b100000;
 
@@ -28,6 +31,15 @@ const CONSTRUCTED_FLAG: u8 = 0b100000;
 pub trait FixedTag {
     /// ASN.1 tag
     const TAG: Tag;
+}
+
+#[cfg(feature = "alloc")]
+impl<'a, T> FixedTag for Cow<'a, T>
+where
+    T: ToOwned + ?Sized,
+    &'a T: FixedTag,
+{
+    const TAG: Tag = <&'a T>::TAG;
 }
 
 /// Types which have an ASN.1 [`Tag`].
