@@ -20,6 +20,9 @@ use crate::length::indefinite::read_eoc;
 
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Clone {
+    /// Does this reader support the `read_slice` method? (i.e. can it borrow from his input?)
+    const CAN_READ_SLICE: bool;
+
     /// Get the [`EncodingRules`] which should be applied when decoding the input.
     fn encoding_rules(&self) -> EncodingRules;
 

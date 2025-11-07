@@ -212,14 +212,20 @@ where
 }
 
 #[cfg(feature = "alloc")]
-impl<'a, T> DecodeValue<'a> for Cow<'a, T>
+impl<'a, T, E> DecodeValue<'a> for Cow<'a, T>
 where
     T: ToOwned + ?Sized,
-    &'a T: DecodeValue<'a>,
+    &'a T: DecodeValue<'a, Error = E>,
+    T::Owned: for<'b> DecodeValue<'b, Error = E>,
+    E: From<Error> + 'static,
 {
-    type Error = <&'a T as DecodeValue<'a>>::Error;
+    type Error = E;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        Ok(Cow::Borrowed(<&'a T>::decode_value(reader, header)?))
+        if R::CAN_READ_SLICE {
+            <&'a T>::decode_value(reader, header).map(Cow::Borrowed)
+        } else {
+            T::Owned::decode_value(reader, header).map(Cow::Owned)
+        }
     }
 }
