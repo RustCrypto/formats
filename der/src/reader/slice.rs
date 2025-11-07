@@ -71,6 +71,8 @@ impl<'a> SliceReader<'a> {
 }
 
 impl<'a> Reader<'a> for SliceReader<'a> {
+    const CAN_READ_SLICE: bool = true;
+
     fn encoding_rules(&self) -> EncodingRules {
         self.encoding_rules
     }

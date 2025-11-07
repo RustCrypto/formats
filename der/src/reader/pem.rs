@@ -43,6 +43,8 @@ impl<'i> PemReader<'i> {
 
 #[cfg(feature = "pem")]
 impl<'i> Reader<'i> for PemReader<'i> {
+    const CAN_READ_SLICE: bool = false;
+
     fn encoding_rules(&self) -> EncodingRules {
         self.encoding_rules
     }
