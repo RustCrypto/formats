@@ -437,7 +437,7 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.8.0-rc.9"
+version = "0.8.0-rc.10"
 dependencies = [
  "arbitrary",
  "bytes",
@@ -944,7 +944,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.8.0-rc.9"
+version = "0.8.0-rc.10"
 dependencies = [
  "aes",
  "aes-gcm",
