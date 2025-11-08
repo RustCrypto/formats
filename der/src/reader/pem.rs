@@ -5,7 +5,6 @@ use crate::{EncodingRules, Error, ErrorKind, Length, Result};
 use pem_rfc7468::Decoder;
 
 /// `Reader` type which decodes PEM on-the-fly.
-#[cfg(feature = "pem")]
 #[derive(Clone)]
 pub struct PemReader<'i> {
     /// Inner PEM decoder.
@@ -18,7 +17,6 @@ pub struct PemReader<'i> {
     position: Position,
 }
 
-#[cfg(feature = "pem")]
 impl<'i> PemReader<'i> {
     /// Create a new PEM reader which decodes data on-the-fly.
     ///
@@ -41,8 +39,7 @@ impl<'i> PemReader<'i> {
     }
 }
 
-#[cfg(feature = "pem")]
-impl<'i> Reader<'i> for PemReader<'i> {
+impl<'i> Reader<'static> for PemReader<'i> {
     const CAN_READ_SLICE: bool = false;
 
     fn encoding_rules(&self) -> EncodingRules {
@@ -68,7 +65,7 @@ impl<'i> Reader<'i> for PemReader<'i> {
         ret
     }
 
-    fn read_slice(&mut self, _len: Length) -> Result<&'i [u8]> {
+    fn read_slice(&mut self, _len: Length) -> Result<&'static [u8]> {
         // Can't borrow from PEM because it requires decoding
         Err(self.error(ErrorKind::Reader))
     }
