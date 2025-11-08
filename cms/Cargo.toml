@@ -16,7 +16,7 @@ rust-version = "1.85"
 
 [dependencies]
 const-oid = { version = "0.10", features = ["db"] }
-der = { version = "0.8.0-rc.9", features = ["ber", "derive", "oid"] }
+der = { version = "0.8.0-rc.10", features = ["ber", "derive", "oid"] }
 spki = "0.8.0-rc.4"
 x509-cert = { version = "0.3.0-rc.2", default-features = false }
 
@@ -40,7 +40,7 @@ aes = "0.9.0-rc.2"
 getrandom = "0.3"
 hex-literal = "1"
 pem-rfc7468 = "1"
-pkcs5 = "0.8.0-rc.9"
+pkcs5 = "0.8.0-rc.10"
 pbkdf2 = "0.13.0-rc.2"
 rand = "0.10.0-rc.1"
 rsa = { version = "0.10.0-rc.10", features = ["sha2"] }
