@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.0 (2025-11-08)
+### Added
+- `detect_base64_line_width` and `new_detect_wrap` ([#1464])
+
+### Changed
+- Use `core::error::Error` ([#1571])
+- Upgrade to Rust 2024 edition; MSRV 1.85 ([#1670])
+
+[#1464]: https://github.com/RustCrypto/formats/pull/1464
+[#1571]: https://github.com/RustCrypto/formats/pull/1571
+[#1670]: https://github.com/RustCrypto/formats/pull/1670
+
 ## 0.7.0 (2023-02-26)
 ### Changed
 - MSRV 1.60 ([#802])
