@@ -156,9 +156,9 @@ checksum = "812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3"
 
 [[package]]
 name = "block-buffer"
-version = "0.11.0-rc.5"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9ef36a6fcdb072aa548f3da057640ec10859eb4e91ddf526ee648d50c76a949"
+checksum = "96eb4cdd6cf1b31d671e9efe75c5d1ec614776856cefbe109ca373554a6d514f"
 dependencies = [
  "hybrid-array",
 ]
@@ -207,9 +207,9 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "chacha20"
-version = "0.10.0-rc.3"
+version = "0.10.0-rc.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3585020fc6766ef7ff5c58d69819dbca16a19008ae347bb5d3e4e145c495eb38"
+checksum = "99cbf41c6ec3c4b9eaf7f8f5c11a72cd7d3aa0428125c20d5ef4d09907a0f019"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -312,7 +312,7 @@ dependencies = [
  "pbkdf2",
  "pem-rfc7468",
  "pkcs5",
- "rand 0.10.0-rc.1",
+ "rand 0.10.0-rc.5",
  "rsa",
  "sha1",
  "sha2",
@@ -1090,9 +1090,9 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.10.0-rc.1"
+version = "0.10.0-rc.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e7d245ced4538f0406b1579d3d4a6515a2ff1bdf20733492e2e4fc90a648769"
+checksum = "be866deebbade98028b705499827ad6967c8bb1e21f96a2609913c8c076e9307"
 dependencies = [
  "chacha20",
  "getrandom",
@@ -1879,7 +1879,7 @@ dependencies = [
  "ecdsa",
  "hex-literal",
  "p256",
- "rand 0.10.0-rc.1",
+ "rand 0.10.0-rc.5",
  "rsa",
  "rstest",
  "sha1",
@@ -1910,7 +1910,7 @@ dependencies = [
  "digest",
  "hex-literal",
  "lazy_static",
- "rand 0.10.0-rc.1",
+ "rand 0.10.0-rc.5",
  "rand_core 0.10.0-rc-2",
  "rsa",
  "sha1",
