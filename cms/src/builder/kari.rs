@@ -305,7 +305,7 @@ where
         ) = match self.eckey_encryption_info {
             EcKeyEncryptionInfo::Ec(recipient_public_key) => {
                 // Generate ephemeral key using ecdh
-                let ephemeral_secret = EphemeralSecret::random(rng);
+                let Ok(ephemeral_secret) = EphemeralSecret::try_from_rng(rng);
                 let ephemeral_public_key_encoded_point =
                     ephemeral_secret.public_key().to_encoded_point(false);
 
