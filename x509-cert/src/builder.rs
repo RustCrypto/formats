@@ -271,7 +271,7 @@ pub trait Builder: Sized {
     /// # };
     /// #
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
+    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -322,7 +322,7 @@ pub trait Builder: Sized {
     /// # };
     /// #
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
+    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -455,7 +455,7 @@ pub trait AsyncBuilder: Sized {
     /// #
     /// # async fn build() -> builder::Result<()> {
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
+    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -509,7 +509,7 @@ pub trait AsyncBuilder: Sized {
     /// #
     /// # async fn build() -> builder::Result<()> {
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
+    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,

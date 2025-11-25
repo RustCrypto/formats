@@ -45,7 +45,7 @@ pbkdf2 = "0.13.0-rc.2"
 rand = "0.10.0-rc.1"
 rsa = { version = "0.10.0-rc.10", features = ["sha2"] }
 ecdsa = { version = "0.17.0-rc.6", features = ["digest", "pem"] }
-p256 = "0.14.0-rc.0"
+p256 = "0.14.0-rc.1"
 tokio = { version = "1.45.1", features = ["macros", "rt"] }
 x509-cert = { version = "0.3.0-rc.0", features = ["pem"] }
 
