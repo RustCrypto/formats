@@ -59,9 +59,3 @@ tls_codec_derive = { path = "./tls_codec/derive" }
 x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
-
-elliptic-curve = { git = "https://github.com/RustCrypto/traits" }
-ff = { git = "https://github.com/tarcieri/ff", branch = "rand_core/v0.10.0-rc-2" }
-group = { git = "https://github.com/tarcieri/group", branch = "rand_core/v0.10.0-rc-2" }
-p256 = { git = "https://github.com/RustCrypto/elliptic-curves " }
-primefield = { git = "https://github.com/RustCrypto/elliptic-curves " }
