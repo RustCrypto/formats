@@ -23,8 +23,8 @@ impl AssociatedOid for BasicConstraints {
     const OID: ObjectIdentifier = ID_CE_BASIC_CONSTRAINTS;
 }
 
-impl crate::ext::AsExtension for BasicConstraints {
-    fn critical(
+impl crate::ext::Criticality for BasicConstraints {
+    fn criticality(
         &self,
         _subject: &crate::name::Name,
         _extensions: &[crate::ext::Extension],

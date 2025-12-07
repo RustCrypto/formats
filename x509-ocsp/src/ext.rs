@@ -15,7 +15,7 @@ use der::{
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
-    ext::{AsExtension, Extension, pkix::AuthorityInfoAccessSyntax},
+    ext::{Criticality, Extension, pkix::AuthorityInfoAccessSyntax},
     impl_newtype,
     name::Name,
 };
@@ -26,8 +26,8 @@ use rand_core::CryptoRng;
 // x509-cert's is not exported
 macro_rules! impl_extension {
     ($newtype:ty, critical = $critical:expr) => {
-        impl AsExtension for $newtype {
-            fn critical(&self, _subject: &Name, _extensions: &[Extension]) -> bool {
+        impl Criticality for $newtype {
+            fn criticality(&self, _subject: &Name, _extensions: &[Extension]) -> bool {
                 $critical
             }
         }

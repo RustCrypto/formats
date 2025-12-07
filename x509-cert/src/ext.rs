@@ -44,6 +44,26 @@ pub struct Extension {
 /// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
 pub type Extensions = alloc::vec::Vec<Extension>;
 
+/// Trait for types that define their default criticality as an extension.
+///
+/// This is used for most der::Encode types that are used as extensions.
+pub trait Criticality {
+    /// Should the extension be marked critical
+    ///
+    /// This affects the behavior of a validator when using the generated certificate.
+    /// See [RFC 5280 Section 4.2]:
+    /// ```text
+    /// A certificate-using system MUST reject the certificate if it encounters
+    /// a critical extension it does not recognize or a critical extension
+    /// that contains information that it cannot process.  A non-critical
+    /// extension MAY be ignored if it is not recognized, but MUST be
+    /// processed if it is recognized.
+    /// ```
+    ///
+    /// [RFC 5280 Section 4.2]: https://www.rfc-editor.org/rfc/rfc5280#section-4.2
+    fn criticality(&self, subject: &crate::name::Name, extensions: &[Extension]) -> bool;
+}
+
 /// Trait to be implemented by extensions to allow them to be formatted as x509 v3 extensions by
 /// builder.
 ///
@@ -65,40 +85,50 @@ pub type Extensions = alloc::vec::Vec<Extension>;
 ///     const OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.32473.1");
 /// }
 ///
-/// impl ext::AsExtension for CaptainAge {
-///     fn critical(&self, _subject: &name::Name, _extensions: &[ext::Extension]) -> bool {
+/// impl ext::Criticality for CaptainAge {
+///     fn criticality(&self, _subject: &name::Name, _extensions: &[ext::Extension]) -> bool {
 ///         false
 ///     }
 /// }
 /// ```
-pub trait AsExtension: AssociatedOid + der::Encode {
-    /// Should the extension be marked critical
-    ///
-    /// This affects the behavior of a validator when using the generated certificate.
-    /// See [RFC 5280 Section 4.2]:
-    /// ```text
-    /// A certificate-using system MUST reject the certificate if it encounters
-    /// a critical extension it does not recognize or a critical extension
-    /// that contains information that it cannot process.  A non-critical
-    /// extension MAY be ignored if it is not recognized, but MUST be
-    /// processed if it is recognized.
-    /// ```
-    ///
-    /// [RFC 5280 Section 4.2]: https://www.rfc-editor.org/rfc/rfc5280#section-4.2
-    fn critical(&self, subject: &crate::name::Name, extensions: &[Extension]) -> bool;
+pub trait AsExtension {
+    /// The error type returned when encoding the extension.
+    type Error;
 
     /// Returns the Extension with the content encoded.
     fn to_extension(
         &self,
         subject: &crate::name::Name,
         extensions: &[Extension],
-    ) -> Result<Extension, der::Error> {
-        let content = OctetString::new(<Self as der::Encode>::to_der(self)?)?;
+    ) -> Result<Extension, Self::Error>;
+}
 
+impl<T: Criticality + AssociatedOid + der::Encode> AsExtension for T {
+    type Error = der::Error;
+
+    fn to_extension(
+        &self,
+        subject: &crate::name::Name,
+        extensions: &[Extension],
+    ) -> Result<Extension, Self::Error> {
         Ok(Extension {
             extn_id: <Self as AssociatedOid>::OID,
-            critical: self.critical(subject, extensions),
-            extn_value: content,
+            critical: self.criticality(subject, extensions),
+            extn_value: OctetString::new(self.to_der()?)?,
         })
+    }
+}
+
+impl<T: AsExtension> AsExtension for (bool, T) {
+    type Error = T::Error;
+
+    fn to_extension(
+        &self,
+        subject: &crate::name::Name,
+        extensions: &[Extension],
+    ) -> Result<Extension, Self::Error> {
+        let mut extension = self.1.to_extension(subject, extensions)?;
+        extension.critical = self.0;
+        Ok(extension)
     }
 }

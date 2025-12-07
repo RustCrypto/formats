@@ -81,14 +81,14 @@ macro_rules! impl_newtype {
     };
 }
 
-/// Implements the AsExtension traits for every defined Extension paylooad
+/// Implements the Criticality trait for every defined Extension paylooad
 macro_rules! impl_extension {
     ($newtype:ty) => {
         impl_extension!($newtype, critical = false);
     };
     ($newtype:ty, critical = $critical:expr) => {
-        impl crate::ext::AsExtension for $newtype {
-            fn critical(
+        impl crate::ext::Criticality for $newtype {
+            fn criticality(
                 &self,
                 _subject: &crate::name::Name,
                 _extensions: &[crate::ext::Extension],
