@@ -13,6 +13,7 @@ members = [
     "gss-api",
     "mcf",
     "pem-rfc7468",
+    "phc",
     "pkcs1",
     "pkcs5",
     "pkcs8",
