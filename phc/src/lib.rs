@@ -174,8 +174,10 @@ impl PasswordHash {
         })
     }
 
-    /// Serialize this [`PasswordHash`] as a [`PasswordHashString`].
+    /// DEPRECATED: serialize this [`PasswordHash`] as a [`PasswordHashString`].
+    #[allow(deprecated)]
     #[cfg(feature = "alloc")]
+    #[deprecated(since = "0.3.0", note = "Use `PasswordHash` or `String` instead")]
     pub fn serialize(&self) -> PasswordHashString {
         self.into()
     }
@@ -221,11 +223,15 @@ impl fmt::Display for PasswordHash {
     }
 }
 
-/// Serialized [`PasswordHash`].
+/// DEPRECATED: serialized [`PasswordHash`].
 ///
 /// This type contains a serialized password hash string which is ensured to
 /// parse successfully.
-// TODO(tarcieri): cached parsed representations? or at least structural data
+///
+/// This was originally available to provide an owned representation for a password hash, but now
+/// that [`PasswordHash`] is fully owned, it can be used instead, or `String` to store a
+/// serialized PHC string.
+#[deprecated(since = "0.3.0", note = "Use `PasswordHash` or `String` instead")]
 #[cfg(feature = "alloc")]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PasswordHashString {
@@ -234,7 +240,7 @@ pub struct PasswordHashString {
 }
 
 #[cfg(feature = "alloc")]
-#[allow(clippy::len_without_is_empty)]
+#[allow(clippy::len_without_is_empty, deprecated)]
 impl PasswordHashString {
     /// Parse a password hash from a string in the PHC string format.
     pub fn new(s: &str) -> Result<Self> {
@@ -287,6 +293,7 @@ impl PasswordHashString {
     }
 }
 
+#[allow(deprecated)]
 #[cfg(feature = "alloc")]
 impl AsRef<str> for PasswordHashString {
     fn as_ref(&self) -> &str {
@@ -294,6 +301,7 @@ impl AsRef<str> for PasswordHashString {
     }
 }
 
+#[allow(deprecated)]
 #[cfg(feature = "alloc")]
 impl From<PasswordHash> for PasswordHashString {
     fn from(hash: PasswordHash) -> PasswordHashString {
@@ -301,6 +309,7 @@ impl From<PasswordHash> for PasswordHashString {
     }
 }
 
+#[allow(deprecated)]
 #[cfg(feature = "alloc")]
 impl From<&PasswordHash> for PasswordHashString {
     fn from(hash: &PasswordHash) -> PasswordHashString {
@@ -310,6 +319,7 @@ impl From<&PasswordHash> for PasswordHashString {
     }
 }
 
+#[allow(deprecated)]
 #[cfg(feature = "alloc")]
 impl FromStr for PasswordHashString {
     type Err = Error;
@@ -319,6 +329,7 @@ impl FromStr for PasswordHashString {
     }
 }
 
+#[allow(deprecated)]
 #[cfg(feature = "alloc")]
 impl fmt::Display for PasswordHashString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
