@@ -74,9 +74,16 @@ fn parse_sha512_hash() {
 
 #[cfg(feature = "base64")]
 #[test]
-fn push_fields() {
+fn push_base64() {
     let mut hash = PasswordHash::new("$6$rounds=100000").unwrap();
     hash.push_base64(EXAMPLE_SALT, Base64::ShaCrypt);
     hash.push_base64(EXAMPLE_HASH, Base64::ShaCrypt);
     assert_eq!(SHA512_HASH, hash.as_str());
+}
+
+#[test]
+fn push_displayable() {
+    let mut hash = PasswordHash::from_id("6").unwrap();
+    hash.push_displayable("rounds=100000").unwrap();
+    assert_eq!("$6$rounds=100000", hash.as_str());
 }
