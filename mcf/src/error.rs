@@ -17,3 +17,9 @@ impl fmt::Display for Error {
         f.write_str("modular crypt format error")
     }
 }
+
+impl From<fmt::Error> for Error {
+    fn from(_: fmt::Error) -> Self {
+        Error {}
+    }
+}
