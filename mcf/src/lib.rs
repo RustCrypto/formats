@@ -20,6 +20,7 @@ mod base64;
 mod error;
 mod fields;
 
+use core::fmt;
 pub use error::{Error, Result};
 pub use fields::{Field, Fields};
 
@@ -68,6 +69,12 @@ impl<'a> PasswordHashRef<'a> {
         debug_assert_eq!(self.id(), id.as_str());
 
         fields
+    }
+}
+
+impl fmt::Display for PasswordHashRef<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 
