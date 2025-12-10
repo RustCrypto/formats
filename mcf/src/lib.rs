@@ -5,7 +5,7 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 #![warn(
     clippy::mod_module_files,
     clippy::unwrap_used,
@@ -36,23 +36,34 @@ const INVARIANT_MSG: &str = "should be ensured valid by constructor";
 /// e.g. `$<id>$...`.
 ///
 /// For more information, see [`PasswordHash`].
-#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct PasswordHashRef<'a>(&'a str);
+#[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub struct PasswordHashRef(str);
 
-impl<'a> PasswordHashRef<'a> {
+impl PasswordHashRef {
     /// Parse the given input string, returning an [`PasswordHashRef`] if valid.
-    pub fn new(s: &'a str) -> Result<Self> {
+    pub fn new(s: &str) -> Result<&PasswordHashRef> {
         validate(s)?;
-        Ok(Self(s))
+        Ok(Self::new_unchecked(s))
+    }
+
+    /// Construct a new [`PasswordHashRef`] string from the given input `str` reference without
+    /// first asserting its validity.
+    fn new_unchecked(s: &str) -> &PasswordHashRef {
+        // SAFETY: `Self` is a `repr(transparent)` newtype for `str`
+        #[allow(unsafe_code)]
+        unsafe {
+            &*(s as *const str as *const Self)
+        }
     }
 
     /// Get the contained string as a `str`.
-    pub fn as_str(self) -> &'a str {
-        self.0
+    pub fn as_str(&self) -> &str {
+        &self.0
     }
 
     /// Get the algorithm identifier for this MCF hash.
-    pub fn id(self) -> &'a str {
+    pub fn id(&self) -> &str {
         Fields::new(self.as_str())
             .next()
             .expect(INVARIANT_MSG)
@@ -61,7 +72,7 @@ impl<'a> PasswordHashRef<'a> {
 
     /// Get an iterator over the parts of the password hash as delimited by `$`, excluding the
     /// initial identifier.
-    pub fn fields(self) -> Fields<'a> {
+    pub fn fields(&self) -> Fields<'_> {
         let mut fields = Fields::new(self.as_str());
 
         // Remove the leading identifier
@@ -72,38 +83,40 @@ impl<'a> PasswordHashRef<'a> {
     }
 }
 
-impl fmt::Display for PasswordHashRef<'_> {
+impl AsRef<str> for &PasswordHashRef {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl fmt::Display for PasswordHashRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }
 
-impl<'a> From<PasswordHashRef<'a>> for &'a str {
-    fn from(hash: PasswordHashRef<'a>) -> &'a str {
-        hash.0
+impl<'a> From<&'a PasswordHashRef> for &'a str {
+    fn from(hash: &'a PasswordHashRef) -> &'a str {
+        hash.as_str()
     }
 }
 
-#[cfg(feature = "alloc")]
-impl From<PasswordHashRef<'_>> for alloc::string::String {
-    fn from(hash: PasswordHashRef<'_>) -> Self {
-        hash.0.into()
-    }
-}
-
-impl<'a> TryFrom<&'a str> for PasswordHashRef<'a> {
+impl<'a> TryFrom<&'a str> for &'a PasswordHashRef {
     type Error = Error;
 
     fn try_from(s: &'a str) -> Result<Self> {
-        Self::new(s)
+        PasswordHashRef::new(s)
     }
 }
 
 #[cfg(feature = "alloc")]
 mod allocating {
-    use crate::{Error, Field, Fields, PasswordHashRef, Result, fields, validate, validate_id};
-    use alloc::string::{String, ToString};
-    use core::{fmt, str};
+    use crate::{Error, Field, PasswordHashRef, Result, fields, validate, validate_id};
+    use alloc::{
+        borrow::ToOwned,
+        string::{String, ToString},
+    };
+    use core::{borrow::Borrow, fmt, ops::Deref, str::FromStr};
 
     #[cfg(feature = "base64")]
     use crate::Base64;
@@ -152,27 +165,6 @@ mod allocating {
             Ok(Self(hash))
         }
 
-        /// Get the contained string as a `str`.
-        pub fn as_str(&self) -> &str {
-            &self.0
-        }
-
-        /// Get an [`PasswordHashRef`] which corresponds to this owned [`PasswordHash`].
-        pub fn as_mcf_hash_ref(&self) -> PasswordHashRef<'_> {
-            PasswordHashRef(self.as_str())
-        }
-
-        /// Get the algorithm identifier for this MCF hash.
-        pub fn id(&self) -> &str {
-            self.as_mcf_hash_ref().id()
-        }
-
-        /// Get an iterator over the parts of the password hash as delimited by `$`, excluding the
-        /// initial identifier.
-        pub fn fields(&self) -> Fields<'_> {
-            self.as_mcf_hash_ref().fields()
-        }
-
         /// Encode the given data as the specified variant of Base64 and push it onto the password
         /// hash string, first adding a `$` delimiter.
         #[cfg(feature = "base64")]
@@ -207,21 +199,43 @@ mod allocating {
         }
     }
 
-    impl<'a> AsRef<str> for PasswordHashRef<'a> {
+    impl AsRef<str> for PasswordHash {
         fn as_ref(&self) -> &str {
-            self.as_str()
+            self.0.as_str()
         }
     }
 
-    impl AsRef<str> for PasswordHash {
-        fn as_ref(&self) -> &str {
-            self.as_str()
+    impl AsRef<PasswordHashRef> for PasswordHash {
+        fn as_ref(&self) -> &PasswordHashRef {
+            PasswordHashRef::new_unchecked(&self.0)
+        }
+    }
+
+    impl Borrow<PasswordHashRef> for PasswordHash {
+        fn borrow(&self) -> &PasswordHashRef {
+            self.as_ref()
+        }
+    }
+
+    impl Deref for PasswordHash {
+        type Target = PasswordHashRef;
+
+        fn deref(&self) -> &PasswordHashRef {
+            self.as_ref()
         }
     }
 
     impl From<PasswordHash> for String {
         fn from(hash: PasswordHash) -> Self {
             hash.0
+        }
+    }
+
+    impl FromStr for PasswordHash {
+        type Err = Error;
+
+        fn from_str(s: &str) -> Result<Self> {
+            Self::new(s)
         }
     }
 
@@ -247,11 +261,33 @@ mod allocating {
         }
     }
 
-    impl str::FromStr for PasswordHash {
-        type Err = Error;
+    //
+    // PasswordHashRef extensions
+    //
 
-        fn from_str(s: &str) -> Result<Self> {
-            Self::new(s)
+    impl<'a> From<&'a PasswordHash> for &'a PasswordHashRef {
+        fn from(hash: &'a PasswordHash) -> &'a PasswordHashRef {
+            hash.as_ref()
+        }
+    }
+
+    impl From<&PasswordHashRef> for PasswordHash {
+        fn from(hash: &PasswordHashRef) -> Self {
+            PasswordHash(hash.into())
+        }
+    }
+
+    impl From<&PasswordHashRef> for String {
+        fn from(hash: &PasswordHashRef) -> Self {
+            hash.0.into()
+        }
+    }
+
+    impl ToOwned for PasswordHashRef {
+        type Owned = PasswordHash;
+
+        fn to_owned(&self) -> PasswordHash {
+            self.into()
         }
     }
 }
