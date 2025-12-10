@@ -398,6 +398,6 @@ mod tests {
     fn reject_new_invalid_char() {
         let s = "01234_abcde";
         let err = Salt::from_b64(s).err().unwrap();
-        assert_eq!(err, Error::B64Encoding(base64ct::Error::InvalidEncoding));
+        assert_eq!(err, Error::Base64(base64ct::Error::InvalidEncoding));
     }
 }

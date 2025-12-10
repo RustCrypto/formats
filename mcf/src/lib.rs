@@ -184,7 +184,7 @@ mod allocating {
         pub fn push_displayable<D: fmt::Display>(&mut self, displayable: D) -> Result<()> {
             // TODO(tarcieri): avoid intermediate allocation?
             let mut buf = String::new();
-            fmt::write(&mut buf, format_args!("{}", displayable))?;
+            fmt::write(&mut buf, format_args!("{displayable}"))?;
             self.push_str(&buf)
         }
 
@@ -310,19 +310,19 @@ mod allocating {
 fn validate(s: &str) -> Result<()> {
     // Require leading `$`
     if !s.starts_with(fields::DELIMITER) {
-        return Err(Error {});
+        return Err(Error::DelimiterInvalid);
     }
 
     // Disallow trailing `$`
     if s.ends_with(fields::DELIMITER) {
-        return Err(Error {});
+        return Err(Error::DelimiterInvalid);
     }
 
     // Validates the hash begins with a leading `$`
     let mut fields = Fields::new(s);
 
     // Validate characters in the identifier field
-    let id = fields.next().ok_or(Error {})?;
+    let id = fields.next().ok_or(Error::IdentifierMissing)?;
     validate_id(id.as_str())?;
 
     // Validate the remaining fields have an appropriate format
@@ -338,20 +338,20 @@ fn validate(s: &str) -> Result<()> {
 /// Allowed characters match the regex: `[a-z0-9\-]`, where the first and last characters do NOT
 /// contain a `-`.
 fn validate_id(id: &str) -> Result<()> {
-    let first = id.chars().next().ok_or(Error {})?;
-    let last = id.chars().last().ok_or(Error {})?;
+    let first = id.chars().next().ok_or(Error::IdentifierInvalid)?;
+    let last = id.chars().last().ok_or(Error::IdentifierInvalid)?;
 
     for c in [first, last] {
         match c {
             'a'..='z' | '0'..='9' => (),
-            _ => return Err(Error {}),
+            _ => return Err(Error::IdentifierInvalid),
         }
     }
 
     for c in id.chars() {
         match c {
             'a'..='z' | '0'..='9' | '-' => (),
-            _ => return Err(Error {}),
+            _ => return Err(Error::IdentifierInvalid),
         }
     }
 
