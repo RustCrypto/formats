@@ -147,6 +147,15 @@ mod allocating {
             Ok(Self(s))
         }
 
+        /// Borrow the contents of this password hash as a [`PasswordHashRef`].
+        ///
+        /// Similar conversions can be performed using [`AsRef`], [`Borrow`], and [`Deref`], however
+        /// this one is useful when the return type may be ambiguous and avoiding potential
+        /// inference bugs is preferable.
+        pub fn as_password_hash_ref(&self) -> &PasswordHashRef {
+            PasswordHashRef::new_unchecked(&self.0)
+        }
+
         /// Create an [`PasswordHash`] from an identifier.
         ///
         /// # Returns
@@ -207,13 +216,13 @@ mod allocating {
 
     impl AsRef<PasswordHashRef> for PasswordHash {
         fn as_ref(&self) -> &PasswordHashRef {
-            PasswordHashRef::new_unchecked(&self.0)
+            self.as_password_hash_ref()
         }
     }
 
     impl Borrow<PasswordHashRef> for PasswordHash {
         fn borrow(&self) -> &PasswordHashRef {
-            self.as_ref()
+            self.as_password_hash_ref()
         }
     }
 
@@ -221,13 +230,19 @@ mod allocating {
         type Target = PasswordHashRef;
 
         fn deref(&self) -> &PasswordHashRef {
-            self.as_ref()
+            self.as_password_hash_ref()
         }
     }
 
     impl From<PasswordHash> for String {
         fn from(hash: PasswordHash) -> Self {
             hash.0
+        }
+    }
+
+    impl From<&PasswordHash> for String {
+        fn from(hash: &PasswordHash) -> Self {
+            hash.0.clone()
         }
     }
 
@@ -267,7 +282,7 @@ mod allocating {
 
     impl<'a> From<&'a PasswordHash> for &'a PasswordHashRef {
         fn from(hash: &'a PasswordHash) -> &'a PasswordHashRef {
-            hash.as_ref()
+            hash.as_password_hash_ref()
         }
     }
 
