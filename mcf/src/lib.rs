@@ -102,7 +102,7 @@ impl<'a> TryFrom<&'a str> for PasswordHashRef<'a> {
 #[cfg(feature = "alloc")]
 mod allocating {
     use crate::{Error, Field, Fields, PasswordHashRef, Result, fields, validate, validate_id};
-    use alloc::string::String;
+    use alloc::string::{String, ToString};
     use core::{fmt, str};
 
     #[cfg(feature = "base64")]
@@ -179,6 +179,13 @@ mod allocating {
         pub fn push_base64(&mut self, field: &[u8], base64_encoding: Base64) {
             self.0.push(fields::DELIMITER);
             self.0.push_str(&base64_encoding.encode_string(field));
+        }
+
+        /// Push a type which impls [`fmt::Display`], first adding a `$` delimiter and ensuring the
+        /// added characters comprise a valid field.
+        pub fn push_displayable<D: fmt::Display>(&mut self, displayable: D) -> Result<()> {
+            // TODO(tarcieri): avoid intermediate allocation?
+            self.push_str(&displayable.to_string())
         }
 
         /// Push an additional field onto the password hash string, first adding a `$` delimiter.
