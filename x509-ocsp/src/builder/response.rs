@@ -101,7 +101,7 @@ impl OcspResponseBuilder {
     /// extension encoding fails.
     ///
     /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
-    pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
+    pub fn with_extension<E: AsExtension>(mut self, ext: E) -> Result<Self, E::Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
         match self.response_extensions {
             Some(ref mut exts) => exts.push(ext),

@@ -80,7 +80,10 @@ impl RequestBuilder {
     /// Extensions need to implement [`AsExtension`], examples may be found in
     /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
     /// [the implementors](../ext/trait.AsExtension.html#implementors).
-    pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
+    pub fn add_extension<E: AsExtension>(
+        &mut self,
+        extension: &E,
+    ) -> core::result::Result<(), E::Error> {
         let ext = extension.to_extension(&self.info.subject, &self.extension_req.0)?;
 
         self.extension_req.0.push(ext);
