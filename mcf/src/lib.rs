@@ -112,10 +112,7 @@ impl<'a> TryFrom<&'a str> for &'a PasswordHashRef {
 #[cfg(feature = "alloc")]
 mod allocating {
     use crate::{Error, Field, PasswordHashRef, Result, fields, validate, validate_id};
-    use alloc::{
-        borrow::ToOwned,
-        string::{String, ToString},
-    };
+    use alloc::{borrow::ToOwned, string::String};
     use core::{borrow::Borrow, fmt, ops::Deref, str::FromStr};
 
     #[cfg(feature = "base64")]
@@ -186,7 +183,9 @@ mod allocating {
         /// added characters comprise a valid field.
         pub fn push_displayable<D: fmt::Display>(&mut self, displayable: D) -> Result<()> {
             // TODO(tarcieri): avoid intermediate allocation?
-            self.push_str(&displayable.to_string())
+            let mut buf = String::new();
+            fmt::write(&mut buf, format_args!("{}", displayable))?;
+            self.push_str(&buf)
         }
 
         /// Push an additional field onto the password hash string, first adding a `$` delimiter.
