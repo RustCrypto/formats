@@ -15,7 +15,7 @@ use crate::{
     certificate::{self, Certificate, TbsCertificate, Version},
     crl::{CertificateList, RevokedCert, TbsCertList},
     ext::{
-        AsExtension, Extensions,
+        Extensions, ToExtension,
         pkix::{AuthorityKeyIdentifier, CrlNumber, SubjectKeyIdentifier},
     },
     serial_number::SerialNumber,
@@ -216,12 +216,12 @@ where
 
     /// Add an extension to this certificate
     ///
-    /// Extensions need to implement [`AsExtension`], examples may be found in
-    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
-    /// [the implementors](../ext/trait.AsExtension.html#implementors).
-    pub fn add_extension<E: AsExtension>(
+    /// Extensions need to implement [`ToExtension`], examples may be found in
+    /// in [`ToExtension` documentation](../ext/trait.ToExtension.html#examples) or
+    /// [the implementors](../ext/trait.ToExtension.html#implementors).
+    pub fn add_extension<E: ToExtension>(
         &mut self,
-        extension: &E,
+        extension: E,
     ) -> core::result::Result<(), E::Error> {
         let ext = extension.to_extension(&self.tbs.subject, &self.extensions)?;
         self.extensions.push(ext);

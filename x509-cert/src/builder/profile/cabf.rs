@@ -8,7 +8,7 @@ use crate::{
     builder::{BuilderProfile, Error, Result},
     certificate::TbsCertificate,
     ext::{
-        AsExtension, Extension,
+        Extension, ToExtension,
         pkix::{
             AuthorityKeyIdentifier, BasicConstraints, KeyUsage, KeyUsages, SubjectKeyIdentifier,
         },
