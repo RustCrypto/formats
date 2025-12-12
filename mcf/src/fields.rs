@@ -74,25 +74,25 @@ impl<'a> Field<'a> {
     /// Decode Base64 into the provided output buffer.
     #[cfg(feature = "base64")]
     pub fn decode_base64_into(self, base64_variant: Base64, out: &mut [u8]) -> Result<&[u8]> {
-        base64_variant.decode(self.0, out).map_err(|_| Error {})
+        Ok(base64_variant.decode(self.0, out)?)
     }
 
     /// Decode this field as the provided Base64 variant.
     #[cfg(all(feature = "alloc", feature = "base64"))]
     pub fn decode_base64(self, base64_variant: Base64) -> Result<Vec<u8>> {
-        base64_variant.decode_vec(self.0).map_err(|_| Error {})
+        Ok(base64_variant.decode_vec(self.0)?)
     }
 
     /// Validate a field in the password hash is well-formed.
     pub(crate) fn validate(self) -> Result<()> {
         if self.0.is_empty() {
-            return Err(Error {});
+            return Err(Error::FieldInvalid);
         }
 
         for c in self.0.chars() {
             match c {
                 'A'..='Z' | 'a'..='z' | '0'..='9' | '.' | '/' | '+' | '=' | ',' | '-' => (),
-                _ => return Err(Error {}),
+                _ => return Err(Error::EncodingInvalid),
             }
         }
 

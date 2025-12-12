@@ -12,7 +12,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[non_exhaustive]
 pub enum Error {
     /// "B64" encoding error.
-    B64Encoding(B64Error),
+    Base64(B64Error),
 
     /// Password hash string invalid.
     MissingField,
@@ -64,7 +64,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> core::result::Result<(), fmt::Error> {
         match self {
-            Self::B64Encoding(err) => write!(f, "{err}"),
+            Self::Base64(err) => write!(f, "{err}"),
             Self::MissingField => write!(f, "password hash string missing field"),
             Self::OutputSize { provided, expected } => match provided {
                 Ordering::Less => write!(
@@ -92,7 +92,7 @@ impl fmt::Display for Error {
 impl core::error::Error for Error {
     fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
         match self {
-            Self::B64Encoding(err) => Some(err),
+            Self::Base64(err) => Some(err),
             _ => None,
         }
     }
@@ -100,12 +100,12 @@ impl core::error::Error for Error {
 
 impl From<B64Error> for Error {
     fn from(err: B64Error) -> Error {
-        Error::B64Encoding(err)
+        Error::Base64(err)
     }
 }
 
 impl From<base64ct::InvalidLengthError> for Error {
     fn from(_: base64ct::InvalidLengthError) -> Error {
-        Error::B64Encoding(B64Error::InvalidLength)
+        Error::Base64(B64Error::InvalidLength)
     }
 }
