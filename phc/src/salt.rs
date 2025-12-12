@@ -79,10 +79,10 @@ const INVARIANT_VIOLATED_MSG: &str = "salt string invariant violated";
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Salt {
     /// Length of the salt in bytes.
-    pub(super) length: u8,
+    pub length: u8,
 
     /// Byte array containing an ASCII-encoded string.
-    pub(super) bytes: [u8; Self::MAX_LENGTH],
+    pub bytes: [u8; Self::MAX_LENGTH],
 }
 
 #[allow(clippy::len_without_is_empty)]
