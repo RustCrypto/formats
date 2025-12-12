@@ -8,7 +8,7 @@ use spki::{
 
 use crate::{
     builder::{Builder, Error, NULL_OID, Result},
-    ext::AsExtension,
+    ext::ToExtension,
     name::Name,
     request::{CertReq, CertReqInfo, ExtensionReq, attributes::AsAttribute},
 };
@@ -77,12 +77,12 @@ impl RequestBuilder {
 
     /// Add an extension to this certificate request
     ///
-    /// Extensions need to implement [`AsExtension`], examples may be found in
-    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
-    /// [the implementors](../ext/trait.AsExtension.html#implementors).
-    pub fn add_extension<E: AsExtension>(
+    /// Extensions need to implement [`ToExtension`], examples may be found in
+    /// in [`ToExtension` documentation](../ext/trait.ToExtension.html#examples) or
+    /// [the implementors](../ext/trait.ToExtension.html#implementors).
+    pub fn add_extension<E: ToExtension>(
         &mut self,
-        extension: &E,
+        extension: E,
     ) -> core::result::Result<(), E::Error> {
         let ext = extension.to_extension(&self.info.subject, &self.extension_req.0)?;
 

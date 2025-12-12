@@ -17,7 +17,7 @@ use x509_cert::{
     certificate::Rfc5280,
     crl::RevokedCert,
     ext::{
-        AsExtension,
+        ToExtension,
         pkix::{CrlNumber, CrlReason, name::GeneralName},
     },
     name::Name,
