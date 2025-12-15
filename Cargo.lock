@@ -870,9 +870,9 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "pbkdf2"
-version = "0.13.0-rc.3"
+version = "0.13.0-rc.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c148c9a0a9a7d256a8ea004fae8356c02ccc44cf8c06e7d68fdbedb48de1beb"
+checksum = "c015873c38594dfb7724f90b2ed912a606697393bda2d39fd83c2394301f808a"
 dependencies = [
  "digest",
  "hmac",
@@ -1326,9 +1326,9 @@ dependencies = [
 
 [[package]]
 name = "scrypt"
-version = "0.12.0-rc.4"
+version = "0.12.0-rc.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "167695481f302b1be08d453c6fc266f0c437be29577ee74537385c7243961326"
+checksum = "7b2159e8b7c18b0d131f07810192788598e955bf21263096f3bf707ab6cd90fc"
 dependencies = [
  "pbkdf2",
  "salsa20",
