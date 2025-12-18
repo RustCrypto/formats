@@ -9,7 +9,7 @@ use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
     Certificate,
     certificate::Rfc5280,
-    ext::{AsExtension, pkix::name::GeneralName},
+    ext::{ToExtension, pkix::name::GeneralName},
     name::Name,
 };
 
@@ -45,7 +45,7 @@ use x509_cert::{
 ///     .with_request(Request::from_issuer::<Sha1>(&issuer, SerialNumber::from(2usize)).unwrap())
 ///     .with_request(Request::from_issuer::<Sha1>(&issuer, SerialNumber::from(3usize)).unwrap())
 ///     .with_request(Request::from_issuer::<Sha1>(&issuer, SerialNumber::from(4usize)).unwrap())
-///     .with_extension(Nonce::generate(&mut rng, 32).unwrap())
+///     .with_extension(&Nonce::generate(&mut rng, 32).unwrap())
 ///     .unwrap()
 ///     .build();
 ///
@@ -53,7 +53,7 @@ use x509_cert::{
 /// let signer_cert_chain = vec![cert.clone()];
 /// let req = OcspRequestBuilder::default()
 ///     .with_request(Request::from_cert::<Sha1>(&issuer, &cert).unwrap())
-///     .with_extension(Nonce::generate(&mut rng, 32).unwrap())
+///     .with_extension(&Nonce::generate(&mut rng, 32).unwrap())
 ///     .unwrap()
 ///     .sign(&mut signer, Some(signer_cert_chain))
 ///     .unwrap();
@@ -96,7 +96,7 @@ impl OcspRequestBuilder {
     /// extension encoding fails.
     ///
     /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
-    pub fn with_extension<E: AsExtension>(mut self, ext: E) -> Result<Self, E::Error> {
+    pub fn with_extension<E: ToExtension>(mut self, ext: E) -> Result<Self, E::Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
         match self.tbs.request_extensions {
             Some(ref mut exts) => exts.push(ext),
