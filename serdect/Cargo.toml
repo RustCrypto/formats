@@ -19,13 +19,13 @@ rust-version = "1.85"
 base16ct = { version = "0.3", default-features = false }
 serde = { version = "1.0.184", default-features = false }
 
-# optional featuresw
+# optional features
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
-bincode = "1"
 ciborium = "0.2"
 hex-literal = "1"
+postcard = { version = "1", features = ["use-std"] }
 proptest = "1"
 rmp-serde = "1"
 serde = { version = "1.0.184", default-features = false, features = ["derive"] }
