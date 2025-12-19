@@ -203,7 +203,15 @@ impl Tai64N {
         }
     }
 
-    /// Convert `TAI64N`to `SystemTime`.
+    /// Convert `TAI64N` to `SystemTime`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the timestamp cannot be represented as `SystemTime`. This can
+    /// occur when the `Tai64N` value is outside the range representable by the
+    /// platform's `SystemTime` (typically backed by `i64` seconds from Unix epoch).
+    ///
+    /// For a non-panicking alternative, use `SystemTime::try_from(tai64n)`.
     #[cfg(feature = "std")]
     pub fn to_system_time(self) -> SystemTime {
         match self.duration_since(&Self::UNIX_EPOCH) {
@@ -265,6 +273,19 @@ impl From<SystemTime> for Tai64N {
     }
 }
 
+#[cfg(feature = "std")]
+impl TryFrom<Tai64N> for SystemTime {
+    type Error = Error;
+
+    fn try_from(tai: Tai64N) -> Result<Self, Self::Error> {
+        match tai.duration_since(&Tai64N::UNIX_EPOCH) {
+            Ok(d) => UNIX_EPOCH.checked_add(d),
+            Err(d) => UNIX_EPOCH.checked_sub(d),
+        }
+        .ok_or(Error::TimestampOverflow)
+    }
+}
+
 #[allow(clippy::suspicious_arithmetic_impl)]
 impl ops::Add<Duration> for Tai64N {
     type Output = Self;
@@ -320,6 +341,9 @@ pub enum Error {
 
     /// Nanosecond part must be <= 999999999.
     NanosInvalid,
+
+    /// Timestamp cannot be represented as `SystemTime` (overflow/underflow).
+    TimestampOverflow,
 }
 
 impl fmt::Display for Error {
@@ -327,6 +351,7 @@ impl fmt::Display for Error {
         let description = match self {
             Error::LengthInvalid => "length invalid",
             Error::NanosInvalid => "invalid number of nanoseconds",
+            Error::TimestampOverflow => "timestamp cannot be represented as SystemTime",
         };
 
         write!(f, "{description}")
@@ -337,6 +362,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[cfg(all(test, feature = "std"))]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -359,5 +385,41 @@ mod tests {
         let t1 = tai64n.to_system_time();
 
         assert_eq!(t, t1);
+    }
+
+    #[test]
+    #[should_panic(expected = "overflow when adding duration to instant")]
+    fn to_system_time_panics_from_slice() {
+        let malicious_timestamp: [u8; 12] = [
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
+        ];
+
+        let timestamp = Tai64N::from_slice(&malicious_timestamp).unwrap();
+        let _ = timestamp.to_system_time(); // panics here
+    }
+
+    #[test]
+    fn try_into_system_time_success() {
+        let tai = Tai64N::now();
+        let result: Result<SystemTime, _> = tai.try_into();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn try_into_system_time_overflow() {
+        let malicious: [u8; 12] = [
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
+        ];
+        let tai = Tai64N::from_slice(&malicious).unwrap();
+        let result: Result<SystemTime, _> = tai.try_into();
+        assert_eq!(result, Err(Error::TimestampOverflow));
+    }
+
+    #[test]
+    fn try_into_system_time_roundtrip() {
+        let original = SystemTime::now();
+        let tai = Tai64N::from(original);
+        let recovered: SystemTime = tai.try_into().expect("should be representable");
+        assert_eq!(original, recovered);
     }
 }
