@@ -433,7 +433,7 @@ mod tests {
 
         #[cfg(feature = "base64")]
         {
-            let salt_bytes = salt.decode_base64(Base64::ShaCrypt).unwrap();
+            let salt_bytes = salt.decode_base64(Base64::Crypt).unwrap();
             assert_eq!(EXAMPLE_SALT, salt_bytes.as_slice());
         }
 
@@ -445,7 +445,7 @@ mod tests {
 
         #[cfg(feature = "base64")]
         {
-            let hash_bytes = hash.decode_base64(Base64::ShaCrypt).unwrap();
+            let hash_bytes = hash.decode_base64(Base64::Crypt).unwrap();
             assert_eq!(EXAMPLE_HASH, hash_bytes.as_slice());
         }
 
@@ -456,8 +456,8 @@ mod tests {
     #[test]
     fn push_base64() {
         let mut hash = PasswordHash::new("$6$rounds=100000").unwrap();
-        hash.push_base64(EXAMPLE_SALT, Base64::ShaCrypt);
-        hash.push_base64(EXAMPLE_HASH, Base64::ShaCrypt);
+        hash.push_base64(EXAMPLE_SALT, Base64::Crypt);
+        hash.push_base64(EXAMPLE_HASH, Base64::Crypt);
         assert_eq!(SHA512_HASH, hash.as_str());
     }
 

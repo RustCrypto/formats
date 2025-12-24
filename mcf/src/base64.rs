@@ -2,7 +2,7 @@
 
 #![cfg(feature = "base64")]
 
-use base64ct::{Base64Bcrypt, Base64Crypt, Base64ShaCrypt, Encoding as _, Error as B64Error};
+use base64ct::{Base64Bcrypt, Base64ShaCrypt, Encoding as _, Error as B64Error};
 
 #[cfg(feature = "alloc")]
 use alloc::{string::String, vec::Vec};
@@ -19,25 +19,21 @@ pub enum Base64 {
     /// ```
     Bcrypt,
 
-    /// `crypt(3)` encoding.
+    /// `crypt(3)` Base64 encoding.
+    ///
+    /// Used by the following schemes:
+    /// - MD5-Crypt
+    /// - scrypt
+    /// - SHA1-Crypt
+    /// - SHA256-Crypt
+    /// - SHA512-Crypt
+    /// - yescrypt
     ///
     /// ```text
     /// [.-9]      [A-Z]      [a-z]
     /// 0x2e-0x39, 0x41-0x5a, 0x61-0x7a
     /// ```
     Crypt,
-
-    /// `crypt(3)` Base64 encoding for the following schemes:
-    /// - sha1_crypt,
-    /// - sha256_crypt,
-    /// - sha512_crypt,
-    /// - md5_crypt
-    ///
-    /// ```text
-    /// [.-9]      [A-Z]      [a-z]
-    /// 0x2e-0x39, 0x41-0x5a, 0x61-0x7a
-    /// ```
-    ShaCrypt,
 }
 
 impl Base64 {
@@ -45,8 +41,7 @@ impl Base64 {
     pub fn decode(self, src: impl AsRef<[u8]>, dst: &mut [u8]) -> Result<&[u8], B64Error> {
         match self {
             Self::Bcrypt => Base64Bcrypt::decode(src, dst),
-            Self::Crypt => Base64Crypt::decode(src, dst),
-            Self::ShaCrypt => Base64ShaCrypt::decode(src, dst),
+            Self::Crypt => Base64ShaCrypt::decode(src, dst),
         }
     }
 
@@ -55,8 +50,7 @@ impl Base64 {
     pub fn decode_vec(self, input: &str) -> Result<Vec<u8>, B64Error> {
         match self {
             Self::Bcrypt => Base64Bcrypt::decode_vec(input),
-            Self::Crypt => Base64Crypt::decode_vec(input),
-            Self::ShaCrypt => Base64ShaCrypt::decode_vec(input),
+            Self::Crypt => Base64ShaCrypt::decode_vec(input),
         }
     }
 
@@ -67,8 +61,7 @@ impl Base64 {
     pub fn encode<'a>(self, src: &[u8], dst: &'a mut [u8]) -> Result<&'a str, B64Error> {
         match self {
             Self::Bcrypt => Base64Bcrypt::encode(src, dst),
-            Self::Crypt => Base64Crypt::encode(src, dst),
-            Self::ShaCrypt => Base64ShaCrypt::encode(src, dst),
+            Self::Crypt => Base64ShaCrypt::encode(src, dst),
         }
         .map_err(Into::into)
     }
@@ -81,8 +74,7 @@ impl Base64 {
     pub fn encode_string(self, input: &[u8]) -> String {
         match self {
             Self::Bcrypt => Base64Bcrypt::encode_string(input),
-            Self::Crypt => Base64Crypt::encode_string(input),
-            Self::ShaCrypt => Base64ShaCrypt::encode_string(input),
+            Self::Crypt => Base64ShaCrypt::encode_string(input),
         }
     }
 
@@ -90,8 +82,7 @@ impl Base64 {
     pub fn encoded_len(self, bytes: &[u8]) -> usize {
         match self {
             Self::Bcrypt => Base64Bcrypt::encoded_len(bytes),
-            Self::Crypt => Base64Crypt::encoded_len(bytes),
-            Self::ShaCrypt => Base64ShaCrypt::encoded_len(bytes),
+            Self::Crypt => Base64ShaCrypt::encoded_len(bytes),
         }
     }
 }
