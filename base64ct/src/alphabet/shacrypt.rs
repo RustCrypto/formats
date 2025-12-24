@@ -5,11 +5,11 @@ use super::{Alphabet, DecodeStep, EncodeStep};
 /// Little endian variant of the `crypt(3)` Base64 encoding.
 ///
 /// Used by the following schemes:
-/// - md5_crypt
+/// - MD5-Crypt
 /// - scrypt
-/// - sha1_crypt
-/// - sha256_crypt
-/// - sha512_crypt
+/// - SHA1-Crypt
+/// - SHA256-Crypt
+/// - SHA512-Crypt
 /// - yescrypt
 ///
 /// ```text
