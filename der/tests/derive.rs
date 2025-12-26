@@ -15,13 +15,21 @@
 #[allow(dead_code)]
 pub struct CustomError(der::Error);
 
+impl core::error::Error for CustomError {}
+
+impl core::fmt::Display for CustomError {
+    fn fmt(&self, _: &mut core::fmt::Formatter) -> core::fmt::Result {
+        unimplemented!()
+    }
+}
+
 impl From<der::Error> for CustomError {
     fn from(value: der::Error) -> Self {
         Self(value)
     }
 }
 
-impl From<std::convert::Infallible> for CustomError {
+impl From<core::convert::Infallible> for CustomError {
     fn from(_value: std::convert::Infallible) -> Self {
         unreachable!()
     }

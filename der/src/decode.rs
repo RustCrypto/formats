@@ -54,7 +54,7 @@ use crate::EncodingRules;
 )]
 pub trait Decode<'a>: Sized + 'a {
     /// Type returned in the event of a decoding error.
-    type Error: From<Error> + 'static;
+    type Error: core::error::Error + From<Error> + 'static;
 
     /// Attempt to decode this TLV message using the provided decoder.
     fn decode<R: Reader<'a>>(decoder: &mut R) -> Result<Self, Self::Error>;
@@ -193,7 +193,7 @@ impl<T: DecodeOwned<Error = Error> + PemLabel> DecodePem for T {
 /// ```
 pub trait DecodeValue<'a>: Sized {
     /// Type returned in the event of a decoding error.
-    type Error: From<Error> + 'static;
+    type Error: core::error::Error + From<Error> + 'static;
 
     /// Attempt to decode this value using the provided [`Reader`].
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error>;
@@ -217,7 +217,7 @@ where
     T: ToOwned + ?Sized,
     &'a T: DecodeValue<'a, Error = E>,
     T::Owned: for<'b> DecodeValue<'b, Error = E>,
-    E: From<Error> + 'static,
+    E: core::error::Error + From<Error> + 'static,
 {
     type Error = E;
 
