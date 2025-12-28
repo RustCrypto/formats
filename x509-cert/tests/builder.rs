@@ -6,7 +6,7 @@ use der::{
     pem::LineEnding,
 };
 use p256::{NistP256, ecdsa::DerSignature, pkcs8::DecodePrivateKey};
-use rand::rngs::OsRng;
+use rand::rngs::SysRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
@@ -316,7 +316,7 @@ fn dynamic_signer() {
     let csr_builder = RequestBuilder::new(subject).expect("construct builder");
 
     let csr = if true {
-        let req_signer = p256::ecdsa::SigningKey::try_from_rng(&mut OsRng).unwrap();
+        let req_signer = p256::ecdsa::SigningKey::try_from_rng(&mut SysRng).unwrap();
         csr_builder
             .build::<_, p256::ecdsa::DerSignature>(&req_signer)
             .expect("Sign request")
