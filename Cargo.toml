@@ -61,6 +61,4 @@ x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
-# https://github.com/rust-random/rand/pull/1697
-rand = { git = "https://github.com/rust-random/rand", rev = "99ae06fb348e5c5fee0fe41d2201bd4cbb107635" }
-getrandom = { git = "https://github.com/rust-random/getrandom.git", rev = "f67c70110f706f80d7dd6fa52e38d0920754fe2c" }
+rand = { git = "https://github.com/rust-random/rand" }
