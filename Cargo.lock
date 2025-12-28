@@ -306,7 +306,7 @@ dependencies = [
  "digest",
  "ecdsa",
  "elliptic-curve",
- "getrandom",
+ "getrandom 0.3.4",
  "hex-literal",
  "p256",
  "pbkdf2",
@@ -547,7 +547,7 @@ dependencies = [
  "base16ct",
  "crypto-bigint",
  "digest",
- "getrandom",
+ "getrandom 0.3.4",
  "hkdf",
  "hybrid-array",
  "once_cell",
@@ -659,6 +659,18 @@ dependencies = [
  "libc",
  "r-efi",
  "rand_core 0.10.0-rc-3",
+ "wasip2",
+]
+
+[[package]]
+name = "getrandom"
+version = "0.4.0-rc.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b99f0d993a2b9b97b9a201193aa8ad21305cde06a3be9a7e1f8f4201e5cc27e"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "r-efi",
  "wasip2",
 ]
 
@@ -949,7 +961,7 @@ name = "phc"
 version = "0.6.0-rc.0"
 dependencies = [
  "base64ct",
- "getrandom",
+ "getrandom 0.4.0-rc.0",
  "rand_core 0.10.0-rc-3",
  "subtle",
 ]
@@ -1161,7 +1173,7 @@ version = "0.10.0-rc.5"
 source = "git+https://github.com/rust-random/rand?rev=99ae06fb348e5c5fee0fe41d2201bd4cbb107635#99ae06fb348e5c5fee0fe41d2201bd4cbb107635"
 dependencies = [
  "chacha20",
- "getrandom",
+ "getrandom 0.3.4",
  "rand_core 0.10.0-rc-3",
 ]
 
@@ -1181,7 +1193,7 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "99d9a13982dcf210057a8a78572b2217b667c3beacbf3a0d8b454f6f82837d38"
 dependencies = [
- "getrandom",
+ "getrandom 0.3.4",
 ]
 
 [[package]]
@@ -1634,7 +1646,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8a64e3985349f2441a1a9ef0b853f869006c3855f2cda6862a94d26ebb9d6a1"
 dependencies = [
  "fastrand",
- "getrandom",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys",
