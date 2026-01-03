@@ -1451,11 +1451,11 @@ name = "sec1"
 version = "0.8.0-rc.10"
 dependencies = [
  "base16ct 1.0.0",
+ "ctutils",
  "der",
  "hex-literal",
  "hybrid-array",
  "serdect",
- "subtle",
  "tempfile",
  "zeroize",
 ]

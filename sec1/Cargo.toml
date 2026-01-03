@@ -18,10 +18,10 @@ rust-version = "1.85"
 
 [dependencies]
 base16ct = { version = "1", optional = true, default-features = false }
+ctutils = { version = "0.3", optional = true, default-features = false }
 der = { version = "0.8.0-rc.10", optional = true, features = ["oid"] }
 hybrid-array = { version = "0.4", optional = true, default-features = false }
 serdect = { version = "0.4", optional = true, default-features = false, features = ["alloc"] }
-subtle = { version = "2", optional = true, default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
@@ -37,6 +37,7 @@ der = ["dep:der", "zeroize"]
 pem = ["alloc", "der/pem"]
 point = ["dep:base16ct", "dep:hybrid-array"]
 serde = ["dep:serdect"]
+subtle = [] # TODO(tarcieri): remove this when elliptic-curve is updated
 zeroize = ["dep:zeroize", "der?/zeroize"]
 
 [package.metadata.docs.rs]

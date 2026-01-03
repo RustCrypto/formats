@@ -19,11 +19,11 @@ use hybrid_array::{Array, ArraySize, typenum::U1};
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
+#[cfg(feature = "ctutils")]
+use ctutils::{Choice, CtSelect};
+
 #[cfg(feature = "serde")]
 use serdect::serde::{Deserialize, Serialize, de, ser};
-
-#[cfg(feature = "subtle")]
-use subtle::{Choice, ConditionallySelectable};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -254,23 +254,6 @@ where
     }
 }
 
-#[cfg(feature = "subtle")]
-impl<Size> ConditionallySelectable for EncodedPoint<Size>
-where
-    Size: ModulusSize,
-    <Size::UncompressedPointSize as ArraySize>::ArrayType<u8>: Copy,
-{
-    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
-        let mut bytes = Array::default();
-
-        for (i, byte) in bytes.iter_mut().enumerate() {
-            *byte = u8::conditional_select(&a.bytes[i], &b.bytes[i], choice);
-        }
-
-        Self { bytes }
-    }
-}
-
 impl<Size> Copy for EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -389,6 +372,23 @@ where
         base16ct::mixed::decode(hex, &mut buf)
             .map_err(|_| Error::PointEncoding)
             .and_then(Self::from_bytes)
+    }
+}
+
+// TODO(tarcieri): add `ctutils` support to `hybrid-array`
+#[cfg(feature = "ctutils")]
+impl<Size> CtSelect for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn ct_select(&self, other: &Self, choice: Choice) -> Self {
+        let mut bytes = Array::default();
+
+        for (i, byte) in bytes.iter_mut().enumerate() {
+            *byte = self.bytes[i].ct_select(&other.bytes[i], choice);
+        }
+
+        Self { bytes }
     }
 }
 
@@ -565,8 +565,8 @@ mod tests {
     #[cfg(feature = "alloc")]
     use alloc::string::ToString;
 
-    #[cfg(feature = "subtle")]
-    use subtle::ConditionallySelectable;
+    #[cfg(feature = "ctutils")]
+    use ctutils::CtSelect;
 
     type EncodedPoint = super::EncodedPoint<U32>;
 
@@ -731,16 +731,16 @@ mod tests {
         assert_eq!(compressed_point.as_bytes(), &COMPRESSED_BYTES[..]);
     }
 
-    #[cfg(feature = "subtle")]
+    #[cfg(feature = "ctutils")]
     #[test]
-    fn conditional_select() {
+    fn ct_select() {
         let a = EncodedPoint::from_bytes(&COMPRESSED_BYTES[..]).unwrap();
         let b = EncodedPoint::from_bytes(&UNCOMPRESSED_BYTES[..]).unwrap();
 
-        let a_selected = EncodedPoint::conditional_select(&a, &b, 0.into());
+        let a_selected = EncodedPoint::ct_select(&a, &b, 0.into());
         assert_eq!(a, a_selected);
 
-        let b_selected = EncodedPoint::conditional_select(&a, &b, 1.into());
+        let b_selected = EncodedPoint::ct_select(&a, &b, 1.into());
         assert_eq!(b, b_selected);
     }
 
