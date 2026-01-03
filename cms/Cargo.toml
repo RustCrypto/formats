@@ -25,27 +25,27 @@ aes = { version = "0.9.0-rc.2", optional = true }
 aes-kw = { version = "0.3.0-rc.1", optional = true }
 ansi-x963-kdf = { version = "0.1.0-rc.1", optional = true }
 cbc = { version = "0.2.0-rc.2", optional = true }
-cipher = { version = "0.5.0-rc.2", features = ["alloc", "block-padding", "rand_core"], optional = true }
-digest = { version = "0.11.0-rc.4", optional = true }
-elliptic-curve = { version = "0.14.0-rc.16", optional = true }
+cipher = { version = "0.5.0-rc.3", features = ["alloc", "block-padding", "rand_core"], optional = true }
+digest = { version = "0.11.0-rc.5", optional = true }
+elliptic-curve = { version = "0.14.0-rc.18", optional = true }
 rsa = { version = "0.10.0-rc.10", optional = true }
 sha1 = { version = "0.11.0-rc.3", optional = true }
 sha2 = { version = "0.11.0-rc.3", optional = true }
 sha3 = { version = "0.11.0-rc.3", optional = true }
-signature = { version = "3.0.0-rc.5", features = ["digest", "alloc"], optional = true }
+signature = { version = "3.0.0-rc.6", features = ["digest", "alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true }
 
 [dev-dependencies]
 aes = "0.9.0-rc.2"
-getrandom = "0.3"
+getrandom = "0.4.0-rc.0"
 hex-literal = "1"
 pem-rfc7468 = "1"
 pkcs5 = "0.8.0-rc.10"
 pbkdf2 = "0.13.0-rc.2"
-rand = "0.10.0-rc.1"
+rand = "0.10.0-rc.5"
 rsa = { version = "0.10.0-rc.10", features = ["sha2"] }
-ecdsa = { version = "0.17.0-rc.6", features = ["digest", "pem"] }
-p256 = "0.14.0-rc.1"
+ecdsa = { version = "0.17.0-rc.9", features = ["digest", "pem"] }
+p256 = "0.14.0-rc.2"
 tokio = { version = "1.45.1", features = ["macros", "rt"] }
 x509-cert = { version = "0.3.0-rc.0", features = ["pem"] }
 
