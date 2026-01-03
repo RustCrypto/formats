@@ -35,6 +35,18 @@ pub struct Extension {
     pub extn_value: OctetString,
 }
 
+impl ToExtension for Extension {
+    type Error = der::Error;
+
+    fn to_extension(
+        self,
+        _subject: &crate::name::Name,
+        _extensions: &[Extension],
+    ) -> Result<Extension, Self::Error> {
+        Ok(self)
+    }
+}
+
 /// Extensions as defined in [RFC 5280 Section 4.1.2.9].
 ///
 /// ```text
@@ -91,44 +103,68 @@ pub trait Criticality {
 ///     }
 /// }
 /// ```
-pub trait AsExtension {
+pub trait ToExtension {
     /// The error type returned when encoding the extension.
     type Error;
 
     /// Returns the Extension with the content encoded.
     fn to_extension(
-        &self,
+        self,
         subject: &crate::name::Name,
         extensions: &[Extension],
     ) -> Result<Extension, Self::Error>;
 }
 
-impl<T: Criticality + AssociatedOid + der::Encode> AsExtension for T {
+impl<T: Criticality + AssociatedOid + der::Encode> ToExtension for &T {
     type Error = der::Error;
 
     fn to_extension(
-        &self,
+        self,
         subject: &crate::name::Name,
         extensions: &[Extension],
     ) -> Result<Extension, Self::Error> {
-        Ok(Extension {
-            extn_id: <Self as AssociatedOid>::OID,
-            critical: self.criticality(subject, extensions),
-            extn_value: OctetString::new(self.to_der()?)?,
-        })
+        let criticality = self.criticality(subject, extensions);
+        (criticality, self).to_extension(subject, extensions)
     }
 }
 
-impl<T: AsExtension> AsExtension for (bool, T) {
-    type Error = T::Error;
+impl<T: Criticality + der::Encode> ToExtension for (ObjectIdentifier, &T) {
+    type Error = der::Error;
 
     fn to_extension(
-        &self,
+        self,
         subject: &crate::name::Name,
         extensions: &[Extension],
     ) -> Result<Extension, Self::Error> {
-        let mut extension = self.1.to_extension(subject, extensions)?;
-        extension.critical = self.0;
-        Ok(extension)
+        let criticality = self.1.criticality(subject, extensions);
+        (self.0, criticality, self.1).to_extension(subject, extensions)
+    }
+}
+
+impl<T: AssociatedOid + der::Encode> ToExtension for (bool, &T) {
+    type Error = der::Error;
+
+    fn to_extension(
+        self,
+        subject: &crate::name::Name,
+        extensions: &[Extension],
+    ) -> Result<Extension, Self::Error> {
+        (T::OID, self.0, self.1).to_extension(subject, extensions)
+    }
+}
+
+impl<T: der::Encode> ToExtension for (ObjectIdentifier, bool, &T) {
+    type Error = der::Error;
+
+    fn to_extension(
+        self,
+        _subject: &crate::name::Name,
+        _extensions: &[Extension],
+    ) -> Result<Extension, Self::Error> {
+        Ok(Extension {
+            extn_id: self.0,
+            critical: self.1,
+            extn_value: OctetString::new(self.2.to_der()?)?,
+        })
     }
 }

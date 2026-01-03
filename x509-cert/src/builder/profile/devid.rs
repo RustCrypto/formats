@@ -19,7 +19,7 @@ use crate::{
     builder::{BuilderProfile, Result},
     certificate::TbsCertificate,
     ext::{
-        AsExtension, Extension,
+        Extension, ToExtension,
         pkix::{
             AuthorityKeyIdentifier, KeyUsage, KeyUsages, SubjectAltName,
             name::{GeneralName, GeneralNames, HardwareModuleName, OtherName},

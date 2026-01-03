@@ -127,7 +127,7 @@ mod builder {
     use crate::{CertId, Request, builder::Error};
     use const_oid::AssociatedOid;
     use digest::Digest;
-    use x509_cert::{Certificate, ext::AsExtension, name::Name, serial_number::SerialNumber};
+    use x509_cert::{Certificate, ext::ToExtension, name::Name, serial_number::SerialNumber};
 
     impl Request {
         /// Returns a new `Request` with the specified `CertID`
@@ -172,7 +172,7 @@ mod builder {
         /// extension encoding fails.
         ///
         /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
-        pub fn with_extension<E: AsExtension>(mut self, ext: E) -> Result<Self, E::Error> {
+        pub fn with_extension<E: ToExtension>(mut self, ext: E) -> Result<Self, E::Error> {
             let ext = ext.to_extension(&Name::default(), &[])?;
             match self.single_request_extensions {
                 Some(ref mut exts) => exts.push(ext),
