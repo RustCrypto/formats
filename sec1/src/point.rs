@@ -19,11 +19,11 @@ use hybrid_array::{Array, ArraySize, typenum::U1};
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
+#[cfg(feature = "ctutils")]
+use ctutils::{Choice, CtSelect};
+
 #[cfg(feature = "serde")]
 use serdect::serde::{Deserialize, Serialize, de, ser};
-
-#[cfg(feature = "subtle")]
-use subtle::{Choice, ConditionallySelectable};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -254,23 +254,6 @@ where
     }
 }
 
-#[cfg(feature = "subtle")]
-impl<Size> ConditionallySelectable for EncodedPoint<Size>
-where
-    Size: ModulusSize,
-    <Size::UncompressedPointSize as ArraySize>::ArrayType<u8>: Copy,
-{
-    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
-        let mut bytes = Array::default();
-
-        for (i, byte) in bytes.iter_mut().enumerate() {
-            *byte = u8::conditional_select(&a.bytes[i], &b.bytes[i], choice);
-        }
-
-        Self { bytes }
-    }
-}
-
 impl<Size> Copy for EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -336,17 +319,6 @@ where
     }
 }
 
-#[cfg(feature = "zeroize")]
-impl<Size> Zeroize for EncodedPoint<Size>
-where
-    Size: ModulusSize,
-{
-    fn zeroize(&mut self) {
-        self.bytes.zeroize();
-        *self = Self::identity();
-    }
-}
-
 impl<Size> fmt::Display for EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -392,6 +364,40 @@ where
     }
 }
 
+// TODO(tarcieri): add `ctutils` support to `hybrid-array`
+#[cfg(feature = "ctutils")]
+impl<Size> CtSelect for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn ct_select(&self, other: &Self, choice: Choice) -> Self {
+        let mut bytes = Array::default();
+
+        for (i, byte) in bytes.iter_mut().enumerate() {
+            *byte = self.bytes[i].ct_select(&other.bytes[i], choice);
+        }
+
+        Self { bytes }
+    }
+}
+
+#[cfg(feature = "subtle")]
+impl<Size> subtle::ConditionallySelectable for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+    <Size::UncompressedPointSize as ArraySize>::ArrayType<u8>: Copy,
+{
+    fn conditional_select(a: &Self, b: &Self, choice: subtle::Choice) -> Self {
+        let mut bytes = Array::default();
+
+        for (i, byte) in bytes.iter_mut().enumerate() {
+            *byte = u8::conditional_select(&a.bytes[i], &b.bytes[i], choice);
+        }
+
+        Self { bytes }
+    }
+}
+
 #[cfg(feature = "serde")]
 impl<Size> Serialize for EncodedPoint<Size>
 where
@@ -416,6 +422,17 @@ where
     {
         let bytes = serdect::slice::deserialize_hex_or_bin_vec(deserializer)?;
         Self::from_bytes(bytes).map_err(de::Error::custom)
+    }
+}
+
+#[cfg(feature = "zeroize")]
+impl<Size> Zeroize for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn zeroize(&mut self) {
+        self.bytes.zeroize();
+        *self = Self::identity();
     }
 }
 
