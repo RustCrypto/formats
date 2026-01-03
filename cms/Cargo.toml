@@ -40,14 +40,14 @@ aes = "0.9.0-rc.2"
 getrandom = "0.4.0-rc.0"
 hex-literal = "1"
 pem-rfc7468 = "1"
-pkcs5 = "0.8.0-rc.10"
-pbkdf2 = "0.13.0-rc.2"
+pkcs5 = "0.8.0-rc.11"
+pbkdf2 = "0.13.0-rc.5"
 rand = "0.10.0-rc.5"
-rsa = { version = "0.10.0-rc.10", features = ["sha2"] }
-ecdsa = { version = "0.17.0-rc.9", features = ["digest", "pem"] }
+rsa = { version = "0.10.0-rc.11", features = ["sha2"] }
+ecdsa = { version = "0.17.0-rc.10", features = ["digest", "pem"] }
 p256 = "0.14.0-rc.2"
 tokio = { version = "1.45.1", features = ["macros", "rt"] }
-x509-cert = { version = "0.3.0-rc.0", features = ["pem"] }
+x509-cert = { version = "0.3.0-rc.2", features = ["pem"] }
 
 [features]
 std = ["der/std", "x509-cert/std", "spki/std"]

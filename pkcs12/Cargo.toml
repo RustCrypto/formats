@@ -18,18 +18,18 @@ rust-version = "1.85"
 [dependencies]
 der = { version = "0.8.0-rc.10", features = ["alloc", "derive", "oid"], default-features = false }
 spki = { version = "0.8.0-rc.4", default-features = false }
-x509-cert = { version = "0.3.0-rc.0", default-features = false }
+x509-cert = { version = "0.3.0-rc.2", default-features = false }
 const-oid = { version = "0.10", features = ["db"], default-features = false }
 cms = { version = "=0.3.0-pre.0", default-features = false }
 
 # optional dependencies
-digest = { version = "0.11.0-rc.4", features = ["alloc"], optional = true }
+digest = { version = "0.11.0-rc.5", features = ["alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "1"
 pkcs8 = { version = "0.11.0-rc.8", features = ["pkcs5"] }
-pkcs5 = { version = "0.8.0-rc.10", features = ["pbes2", "3des"] }
+pkcs5 = { version = "0.8.0-rc.11", features = ["pbes2", "3des"] }
 sha2 = "0.11.0-rc.3"
 whirlpool = "0.11.0-rc.3"
 
