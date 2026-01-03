@@ -1533,7 +1533,7 @@ dependencies = [
 
 [[package]]
 name = "serdect"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "base16ct 1.0.0",
  "ciborium",
