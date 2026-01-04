@@ -42,7 +42,7 @@ hex-literal = "1"
 pem-rfc7468 = "1"
 pkcs5 = "0.8.0-rc.11"
 pbkdf2 = "0.13.0-rc.5"
-rand = "0.10.0-rc.5"
+rand = "0.10.0-rc.6"
 rsa = { version = "0.10.0-rc.11", features = ["sha2"] }
 ecdsa = { version = "0.17.0-rc.10", features = ["digest", "pem"] }
 p256 = "0.14.0-rc.2"
