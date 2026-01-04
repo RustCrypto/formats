@@ -19,10 +19,10 @@ rust-version = "1.85"
 crmf = "=0.3.0-pre.0"
 der = { version = "0.8.0-rc.10", features = ["alloc", "derive", "flagset", "oid"] }
 spki = "0.8.0-rc.4"
-x509-cert = { version = "0.3.0-rc.0", default-features = false }
+x509-cert = { version = "0.3.0-rc.3", default-features = false }
 
 # optional features
-digest = { version = "0.11.0-rc.4", optional = true, default-features = false }
+digest = { version = "0.11.0-rc.5", optional = true, default-features = false }
 
 [dev-dependencies]
 const-oid = { version = "0.10", features = ["db"] }
