@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.10.2 (2026-01-07)
+### Added
+- `ObjectIdentifier::from_bytes_sized` which ensures OIDs use all available space in the backing
+  array ([#1852])
+- Microsoft and Kerberos OIDs ([#2035])
+
+### Fixed
+- Switch from `doc_auto_cfg` to `doc_cfg` ([#2072])
+
+[#1852]: https://github.com/RustCrypto/formats/pull/1852
+[#2035]: https://github.com/RustCrypto/formats/pull/2035
+[#2072]: https://github.com/RustCrypto/formats/pull/2072
+
 ## 0.10.1 (2025-04-08)
 ### Added
 - RFC9688 OIDs ([#1692])
