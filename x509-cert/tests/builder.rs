@@ -5,8 +5,7 @@ use der::{
     asn1::{Ia5String, PrintableString},
     pem::LineEnding,
 };
-use p256::{NistP256, ecdsa::DerSignature, pkcs8::DecodePrivateKey};
-use rand::rngs::SysRng;
+use p256::{NistP256, ecdsa::DerSignature, elliptic_curve::Generate, pkcs8::DecodePrivateKey};
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
@@ -314,9 +313,10 @@ fn dynamic_signer() {
     let subject = Name::from_str("CN=Test").expect("parse common name");
 
     let csr_builder = RequestBuilder::new(subject).expect("construct builder");
+    let mut rng = rand::rng();
 
     let csr = if true {
-        let req_signer = p256::ecdsa::SigningKey::try_from_rng(&mut SysRng).unwrap();
+        let req_signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
         csr_builder
             .build::<_, p256::ecdsa::DerSignature>(&req_signer)
             .expect("Sign request")
