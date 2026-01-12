@@ -15,7 +15,7 @@ in the form `${id}$...`
 """
 
 [dependencies]
-base64ct = { version = "1.7", optional = true }
+base64ct = { version = "1.8.3", optional = true }
 
 [dev-dependencies]
 hex-literal = "1"
