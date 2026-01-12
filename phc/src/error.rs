@@ -25,6 +25,7 @@ pub enum Error {
         /// - [`Ordering::Equal`]: Size is not exactly as `expected`.
         /// - [`Ordering::Greater`]: Size is too long.
         provided: Ordering,
+
         /// Expected output size in relation to `provided`.
         ///
         /// - [`Ordering::Less`]: Minimum size.

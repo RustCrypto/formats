@@ -956,9 +956,9 @@ dependencies = [
 
 [[package]]
 name = "pbkdf2"
-version = "0.13.0-rc.5"
+version = "0.13.0-rc.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c015873c38594dfb7724f90b2ed912a606697393bda2d39fd83c2394301f808a"
+checksum = "9fb9b101849c3ddab38905781f5aa7ae14ea06e87befaf0e7b003e5d3186250d"
 dependencies = [
  "digest",
  "hmac",
