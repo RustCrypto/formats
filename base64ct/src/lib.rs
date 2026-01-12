@@ -89,6 +89,7 @@ mod test_vectors;
 pub use crate::{
     alphabet::{
         bcrypt::Base64Bcrypt,
+        pbkdf2::Base64Pbkdf2,
         shacrypt::Base64ShaCrypt,
         standard::{Base64, Base64Unpadded},
         url::{Base64Url, Base64UrlUnpadded},
