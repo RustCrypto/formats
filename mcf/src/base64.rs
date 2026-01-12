@@ -3,7 +3,8 @@
 #![cfg(feature = "base64")]
 
 use base64ct::{
-    Base64Bcrypt, Base64ShaCrypt, Base64Unpadded as B64, Encoding as _, Error as B64Error,
+    Base64Bcrypt, Base64Pbkdf2, Base64ShaCrypt, Base64Unpadded as B64, Encoding as _,
+    Error as B64Error,
 };
 
 #[cfg(feature = "alloc")]
@@ -45,6 +46,16 @@ pub enum Base64 {
     /// 0x2e-0x39, 0x41-0x5a, 0x61-0x7a
     /// ```
     Crypt,
+
+    /// PBKDF2 Base64 encoding.
+    ///
+    /// This is a variant of the unpadded standard Base64 with `.` in place of `+`:
+    ///
+    /// ```text
+    /// [A-Z]      [a-z]      [0-9]      .     /
+    /// 0x41-0x5a, 0x61-0x7a, 0x30-0x39, 0x2e, 0x2f
+    /// ```
+    Pbkdf2,
 }
 
 impl Base64 {
@@ -54,6 +65,7 @@ impl Base64 {
             Self::B64 => B64::decode(src, dst),
             Self::Bcrypt => Base64Bcrypt::decode(src, dst),
             Self::Crypt => Base64ShaCrypt::decode(src, dst),
+            Self::Pbkdf2 => Base64Pbkdf2::decode(src, dst),
         }
     }
 
@@ -64,6 +76,7 @@ impl Base64 {
             Self::B64 => B64::decode_vec(input),
             Self::Bcrypt => Base64Bcrypt::decode_vec(input),
             Self::Crypt => Base64ShaCrypt::decode_vec(input),
+            Self::Pbkdf2 => Base64Pbkdf2::decode_vec(input),
         }
     }
 
@@ -76,6 +89,7 @@ impl Base64 {
             Self::B64 => B64::encode(src, dst),
             Self::Bcrypt => Base64Bcrypt::encode(src, dst),
             Self::Crypt => Base64ShaCrypt::encode(src, dst),
+            Self::Pbkdf2 => Base64Pbkdf2::encode(src, dst),
         }
         .map_err(Into::into)
     }
@@ -90,6 +104,7 @@ impl Base64 {
             Self::B64 => B64::encode_string(input),
             Self::Bcrypt => Base64Bcrypt::encode_string(input),
             Self::Crypt => Base64ShaCrypt::encode_string(input),
+            Self::Pbkdf2 => Base64Pbkdf2::encode_string(input),
         }
     }
 
@@ -99,6 +114,7 @@ impl Base64 {
             Self::B64 => B64::encoded_len(bytes),
             Self::Bcrypt => Base64Bcrypt::encoded_len(bytes),
             Self::Crypt => Base64ShaCrypt::encoded_len(bytes),
+            Self::Pbkdf2 => Base64Pbkdf2::encoded_len(bytes),
         }
     }
 }

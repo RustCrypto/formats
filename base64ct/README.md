@@ -40,6 +40,7 @@ fixed-width line wrapping.
 - URL-safe Base64: `[A-Z]`, `[a-z]`, `[0-9]`, `-`, `_`
 - bcrypt Base64: `.`, `/`, `[A-Z]`, `[a-z]`, `[0-9]`
 - `crypt(3)` Base64: `.`, `-`, `[0-9]`, `[A-Z]`, `[a-z]`
+- PBKDF2 Base64: `[A-Z]`, `[a-z]`, `[0-9]`, `.`, `/`
 
 ## Minimum Supported Rust Version (MSRV) Policy
 
