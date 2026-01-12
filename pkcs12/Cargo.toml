@@ -20,7 +20,7 @@ der = { version = "0.8.0-rc.10", features = ["alloc", "derive", "oid"], default-
 spki = { version = "0.8.0-rc.4", default-features = false }
 x509-cert = { version = "0.3.0-rc.3", default-features = false }
 const-oid = { version = "0.10", features = ["db"], default-features = false }
-cms = { version = "=0.3.0-pre.0", default-features = false }
+cms = { version = "=0.3.0-pre.1", default-features = false }
 
 # optional dependencies
 digest = { version = "0.11.0-rc.5", features = ["alloc"], optional = true }
