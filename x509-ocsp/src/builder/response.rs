@@ -6,7 +6,7 @@ use crate::{
 };
 use alloc::vec::Vec;
 use der::Encode;
-use rand_core::CryptoRng;
+use rand_core::{CryptoRng, RngCore};
 use signature::{RandomizedSigner, Signer};
 use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
@@ -168,7 +168,7 @@ impl OcspResponseBuilder {
     where
         S: RandomizedSigner<Sig> + DynSignatureAlgorithmIdentifier,
         Sig: SignatureBitStringEncoding,
-        R: CryptoRng + ?Sized,
+        R: CryptoRng + RngCore + ?Sized,
     {
         let tbs_response_data = self.into_response_data(produced_at);
         let signature_algorithm = signer.signature_algorithm_identifier()?;
