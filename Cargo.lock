@@ -1024,7 +1024,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs5"
-version = "0.8.0-rc.11"
+version = "0.8.0-rc.12"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -1042,7 +1042,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.11.0-rc.8"
+version = "0.11.0-rc.9"
 dependencies = [
  "der",
  "hex-literal",
