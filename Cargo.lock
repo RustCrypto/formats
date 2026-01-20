@@ -1441,15 +1441,14 @@ dependencies = [
 [[package]]
 name = "sec1"
 version = "0.8.0-rc.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2568531a8ace88b848310caa98fb2115b151ef924d54aa523e659c21b9d32d71"
 dependencies = [
  "base16ct",
  "ctutils",
  "der",
- "hex-literal",
  "hybrid-array",
- "serdect",
  "subtle",
- "tempfile",
  "zeroize",
 ]
 
