@@ -8,10 +8,7 @@ use der::{
     asn1::{self, Int},
 };
 #[cfg(feature = "builder")]
-use {
-    alloc::vec,
-    signature::rand_core::{CryptoRng, RngCore},
-};
+use {alloc::vec, signature::rand_core::CryptoRng};
 
 use crate::certificate::{Profile, Rfc5280};
 
@@ -80,7 +77,7 @@ impl<P: Profile> SerialNumber<P> {
     /// of output from the CSPRNG. This currently defaults to a 17-bytes long serial number.
     ///
     /// [ballot 164]: https://cabforum.org/2016/03/31/ballot-164/
-    pub fn generate<R: CryptoRng + RngCore + ?Sized>(rng: &mut R) -> Self {
+    pub fn generate<R: CryptoRng + ?Sized>(rng: &mut R) -> Self {
         Self::generate_with_prefix(&[], 17, rng)
             .expect("a random of 17 is acceptable, and rng may not fail")
     }
@@ -94,7 +91,7 @@ impl<P: Profile> SerialNumber<P> {
     /// equal or below 19 (to account for leading sign disambiguation, and the maximum length of 20).
     ///
     /// [ballot 164]: https://cabforum.org/2016/03/31/ballot-164/
-    pub fn generate_with_prefix<R: CryptoRng + RngCore + ?Sized>(
+    pub fn generate_with_prefix<R: CryptoRng + ?Sized>(
         prefix: &[u8],
         rand_len: usize,
         rng: &mut R,

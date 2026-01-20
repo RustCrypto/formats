@@ -4,8 +4,7 @@ use alloc::vec;
 use core::fmt;
 use der::{Encode, asn1::BitString, referenced::OwnedToRef};
 use signature::{
-    AsyncRandomizedSigner, AsyncSigner, Keypair, RandomizedSigner, Signer,
-    rand_core::{CryptoRng, RngCore},
+    AsyncRandomizedSigner, AsyncSigner, Keypair, RandomizedSigner, Signer, rand_core::CryptoRng,
 };
 use spki::{
     DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier, SignatureBitStringEncoding,
@@ -348,7 +347,7 @@ pub trait Builder: Sized {
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
-        R: CryptoRng + RngCore + ?Sized,
+        R: CryptoRng + ?Sized,
     {
         let blob = self.finalize(signer)?;
 
@@ -540,7 +539,7 @@ pub trait AsyncBuilder: Sized {
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
-        R: CryptoRng + RngCore + ?Sized,
+        R: CryptoRng + ?Sized,
     {
         let blob = self.finalize(signer)?;
 

@@ -23,7 +23,7 @@ use pem_rfc7468::LineEnding;
 use pkcs5::pbes2::Pbkdf2Params;
 use rand::rngs::SysRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
-use rsa::rand_core::{CryptoRng, RngCore, TryRngCore};
+use rsa::rand_core::{CryptoRng, TryRngCore};
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use rsa::{pkcs1v15, pss};
 use sha2::Sha256;
@@ -690,10 +690,7 @@ fn test_create_password_recipient_info() {
         key_derivation_params: pkcs5::pbes2::Pbkdf2Params,
     }
     impl<'a> Aes128CbcPwriEncryptor<'a> {
-        pub fn new<R: CryptoRng + RngCore + ?Sized>(
-            challenge_password: &'a [u8],
-            rng: &mut R,
-        ) -> Self {
+        pub fn new<R: CryptoRng + ?Sized>(challenge_password: &'a [u8], rng: &mut R) -> Self {
             let mut key_encryption_iv = [0u8; 16];
             rng.fill_bytes(key_encryption_iv.as_mut_slice());
             let key_encryption_iv = key_encryption_iv.into();
@@ -711,7 +708,7 @@ fn test_create_password_recipient_info() {
     }
     impl PwriEncryptor for Aes128CbcPwriEncryptor<'_> {
         const BLOCK_LENGTH_BITS: usize = 128; // AES block length
-        fn encrypt_rfc3211<R: CryptoRng + RngCore + ?Sized>(
+        fn encrypt_rfc3211<R: CryptoRng + ?Sized>(
             &mut self,
             padded_content_encryption_key: &[u8],
             _rng: &mut R,

@@ -8,7 +8,7 @@
 
 // Super imports
 use super::{
-    AlgorithmIdentifierOwned, CryptoRng, RecipientInfoBuilder, RecipientInfoType, Result, RngCore,
+    AlgorithmIdentifierOwned, CryptoRng, RecipientInfoBuilder, RecipientInfoType, Result,
     UserKeyingMaterial,
     utils::kw::{KeyWrapAlgorithm, WrappedKey},
 };
@@ -250,9 +250,10 @@ where
         })
     }
 }
-impl<R, C, KA, KW, Enc> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
+impl<R: ?Sized, C, KA, KW, Enc> RecipientInfoBuilder
+    for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
 where
-    R: CryptoRng + RngCore + ?Sized,
+    R: CryptoRng,
     KA: KeyAgreementAlgorithm + AssociatedOid,
     C: CurveArithmetic + AssociatedOid + PointCompression,
     AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,

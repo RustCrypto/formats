@@ -21,7 +21,7 @@ use x509_cert::{
 };
 
 #[cfg(feature = "rand")]
-use rand_core::{CryptoRng, RngCore};
+use rand_core::CryptoRng;
 
 // x509-cert's is not exported
 macro_rules! impl_extension {
@@ -64,7 +64,7 @@ impl Nonce {
     #[cfg(feature = "rand")]
     pub fn generate<R>(rng: &mut R, length: usize) -> Result<Self, der::Error>
     where
-        R: CryptoRng + RngCore + ?Sized,
+        R: CryptoRng + ?Sized,
     {
         let mut bytes = alloc::vec![0; length];
         rng.fill_bytes(&mut bytes);

@@ -3,7 +3,7 @@
 use crate::{OcspRequest, Request, Signature, TbsRequest, Version, builder::Error};
 use alloc::vec::Vec;
 use der::Encode;
-use rand_core::{CryptoRng, RngCore};
+use rand_core::CryptoRng;
 use signature::{RandomizedSigner, Signer};
 use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
@@ -148,7 +148,7 @@ impl OcspRequestBuilder {
     where
         S: RandomizedSigner<Sig> + DynSignatureAlgorithmIdentifier,
         Sig: SignatureBitStringEncoding,
-        R: CryptoRng + RngCore + ?Sized,
+        R: CryptoRng + ?Sized,
     {
         let signature_algorithm = signer.signature_algorithm_identifier()?;
         let signature = signer
