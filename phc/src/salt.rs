@@ -8,7 +8,7 @@ use core::{
     str::{self, FromStr},
 };
 #[cfg(feature = "rand_core")]
-use rand_core::{CryptoRng, RngCore, TryCryptoRng, TryRngCore};
+use rand_core::{CryptoRng, TryCryptoRng};
 
 /// Error message used with `expect` for when internal invariants are violated
 /// (i.e. the contents of a [`Salt`] should always be valid)
@@ -117,14 +117,14 @@ impl Salt {
 
     /// Generate a random [`Salt`] from the given [`CryptoRng`].
     #[cfg(feature = "rand_core")]
-    pub fn from_rng<R: CryptoRng + RngCore + ?Sized>(rng: &mut R) -> Self {
+    pub fn from_rng<R: CryptoRng + ?Sized>(rng: &mut R) -> Self {
         let Ok(out) = Self::try_from_rng(rng);
         out
     }
 
     /// Generate a random [`Salt`] from the given [`TryCryptoRng`].
     #[cfg(feature = "rand_core")]
-    pub fn try_from_rng<R: TryCryptoRng + TryRngCore + ?Sized>(
+    pub fn try_from_rng<R: TryCryptoRng + ?Sized>(
         rng: &mut R,
     ) -> core::result::Result<Self, R::Error> {
         let mut bytes = [0u8; Self::RECOMMENDED_LENGTH];
@@ -256,14 +256,14 @@ impl SaltString {
 
     /// Generate a random B64-encoded [`SaltString`] from [`CryptoRng`].
     #[cfg(feature = "rand_core")]
-    pub fn from_rng<R: CryptoRng + RngCore + ?Sized>(rng: &mut R) -> Self {
+    pub fn from_rng<R: CryptoRng + ?Sized>(rng: &mut R) -> Self {
         let Ok(out) = Self::try_from_rng(rng);
         out
     }
 
     /// Generate a random B64-encoded [`SaltString`] from [`TryCryptoRng`].
     #[cfg(feature = "rand_core")]
-    pub fn try_from_rng<R: TryCryptoRng + TryRngCore + ?Sized>(
+    pub fn try_from_rng<R: TryCryptoRng + ?Sized>(
         rng: &mut R,
     ) -> core::result::Result<Self, R::Error> {
         Ok(Salt::try_from_rng(rng)?.to_salt_string())
