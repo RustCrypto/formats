@@ -17,10 +17,7 @@ use der::{
 
 #[cfg(feature = "encryption")]
 use {
-    crate::EncryptedPrivateKeyInfoRef,
-    der::zeroize::Zeroizing,
-    pkcs5::pbes2,
-    rand_core::{CryptoRng, RngCore},
+    crate::EncryptedPrivateKeyInfoRef, der::zeroize::Zeroizing, pkcs5::pbes2, rand_core::CryptoRng,
 };
 
 #[cfg(feature = "pem")]
@@ -151,7 +148,7 @@ where
     ///   - p: 1
     /// - Cipher: AES-256-CBC (best available option for PKCS#5 encryption)
     #[cfg(feature = "encryption")]
-    pub fn encrypt<R: CryptoRng + RngCore + ?Sized>(
+    pub fn encrypt<R: CryptoRng>(
         &self,
         rng: &mut R,
         password: impl AsRef<[u8]>,
