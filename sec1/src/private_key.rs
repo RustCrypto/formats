@@ -15,7 +15,6 @@ use der::{
 
 #[cfg(all(feature = "alloc", feature = "zeroize"))]
 use der::SecretDocument;
-
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
 

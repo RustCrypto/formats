@@ -4,15 +4,12 @@ use crate::Result;
 
 #[cfg(feature = "alloc")]
 use der::SecretDocument;
-
-#[cfg(feature = "pem")]
-use {crate::LineEnding, alloc::string::String, der::pem::PemLabel};
-
 #[cfg(feature = "std")]
 use std::path::Path;
-
 #[cfg(feature = "pem")]
 use {crate::EcPrivateKey, zeroize::Zeroizing};
+#[cfg(feature = "pem")]
+use {crate::LineEnding, alloc::string::String, der::pem::PemLabel};
 
 /// Parse an [`EcPrivateKey`] from a SEC1-encoded document.
 pub trait DecodeEcPrivateKey: Sized {
