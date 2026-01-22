@@ -31,33 +31,27 @@ use zeroize::Zeroize;
 /// Trait for supported modulus sizes which precomputes the typenums for various point encodings so
 /// they don't need to be included as bounds.
 // TODO(tarcieri): replace this all with const generic expressions.
-pub trait ModulusSize:
-    'static + ArraySize + Copy + Debug + Add<U1, Output = Self::CompressedPointSize>
-{
+pub trait ModulusSize: ArraySize + Add<U1, Output = Self::CompressedPointSize> {
     /// Size of a compressed point for the given elliptic curve when encoded using the SEC1
     /// `Elliptic-Curve-Point-to-Octet-String` algorithm (including leading `0x02` or `0x03`
     /// tag byte).
-    type CompressedPointSize: 'static
-        + ArraySize
-        + Copy
-        + Debug
-        + Add<Self, Output = Self::UncompressedPointSize>;
+    type CompressedPointSize: ArraySize + Add<Self, Output = Self::UncompressedPointSize>;
 
     /// Size of an uncompressed point for the given elliptic curve when encoded using the SEC1
     /// `Elliptic-Curve-Point-to-Octet-String` algorithm (including leading `0x04` tag byte).
-    type UncompressedPointSize: 'static + ArraySize + Copy + Debug;
+    type UncompressedPointSize: ArraySize;
 
     /// Size of an untagged point for given elliptic curve, i.e. size of two serialized base field
     /// elements when concatenated.
-    type UntaggedPointSize: 'static + ArraySize + Copy + Debug + Sub<Self, Output = Self>;
+    type UntaggedPointSize: ArraySize + Sub<Self, Output = Self>;
 }
 
 impl<T> ModulusSize for T
 where
-    T: 'static + ArraySize + Copy + Debug,
-    T: Add<U1, Output: 'static + ArraySize + Copy + Debug>,
-    T: Add<T, Output: 'static + ArraySize + Copy + Debug + Sub<T, Output = T>>,
-    <T as Add<U1>>::Output: Add<T, Output: 'static + ArraySize + Copy + Debug>,
+    T: ArraySize,
+    T: Add<U1, Output: ArraySize>,
+    T: Add<T, Output: ArraySize + Sub<T, Output = T>>,
+    <T as Add<U1>>::Output: Add<T, Output: 'static + ArraySize>,
 {
     type CompressedPointSize = <T as Add<U1>>::Output;
     type UncompressedPointSize = <Self::CompressedPointSize as Add<T>>::Output;
