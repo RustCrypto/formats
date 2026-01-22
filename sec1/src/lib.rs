@@ -40,29 +40,23 @@ mod private_key;
 #[cfg(feature = "der")]
 mod traits;
 
-#[cfg(feature = "der")]
-pub use der;
-
 pub use crate::error::{Error, Result};
 
 #[cfg(feature = "point")]
 pub use crate::point::EncodedPoint;
-
+#[cfg(all(feature = "alloc", feature = "der"))]
+pub use crate::traits::EncodeEcPrivateKey;
+#[cfg(feature = "der")]
+pub use crate::{parameters::EcParameters, private_key::EcPrivateKey, traits::DecodeEcPrivateKey};
+#[cfg(feature = "der")]
+pub use der;
+#[cfg(feature = "pem")]
+pub use der::pem::{self, LineEnding};
 #[cfg(feature = "point")]
 pub use hybrid_array::typenum::consts;
 
 #[cfg(feature = "der")]
-pub use crate::{parameters::EcParameters, private_key::EcPrivateKey, traits::DecodeEcPrivateKey};
-
-#[cfg(all(feature = "alloc", feature = "der"))]
-pub use crate::traits::EncodeEcPrivateKey;
-
-#[cfg(feature = "pem")]
-pub use der::pem::{self, LineEnding};
-
-#[cfg(feature = "der")]
 use der::asn1::ObjectIdentifier;
-
 #[cfg(all(doc, feature = "serde"))]
 use serdect::serde;
 

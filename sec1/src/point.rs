@@ -18,13 +18,10 @@ use hybrid_array::{Array, ArraySize, typenum::U1};
 
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
-
 #[cfg(feature = "ctutils")]
 use ctutils::{Choice, CtSelect};
-
 #[cfg(feature = "serde")]
 use serdect::serde::{Deserialize, Serialize, de, ser};
-
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
 
