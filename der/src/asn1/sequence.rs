@@ -2,8 +2,8 @@
 //! `SEQUENCE`s to Rust structs.
 
 use crate::{
-    BytesRef, DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, Tag,
-    Writer,
+    BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result,
+    Tag, Writer,
 };
 
 #[cfg(feature = "alloc")]
@@ -28,12 +28,20 @@ impl<'a, T> Sequence<'a> for Box<T> where T: Sequence<'a> {}
 /// DER-encoded `SEQUENCE`.
 ///
 /// This is a zero-copy reference type which borrows from the input data.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct SequenceRef<'a> {
     /// Body of the `SEQUENCE`.
     body: &'a BytesRef,
 }
 
 impl<'a> SequenceRef<'a> {
+    /// Create a new [`SequenceRef`] from the provided DER bytes.
+    pub fn new(slice: &'a [u8]) -> Result<Self> {
+        BytesRef::new(slice)
+            .map(|body| Self { body })
+            .map_err(|_| ErrorKind::Length { tag: Self::TAG }.into())
+    }
+
     /// Borrow the inner byte slice.
     pub fn as_bytes(&self) -> &'a [u8] {
         self.body.as_slice()
