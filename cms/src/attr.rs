@@ -5,8 +5,10 @@ use core::borrow::Borrow;
 use der::{
     DecodeValue, EncodeValue, FixedTag, Length, Tag,
     asn1::{OctetString, OctetStringRef},
+    oid::db::rfc6268,
 };
-use x509_cert::time::Time;
+
+use x509_cert::{attr::Attribute, time::Time};
 
 use crate::signed_data::SignerInfo;
 
@@ -98,6 +100,30 @@ impl From<MessageDigest> for vec::Vec<u8> {
     #[inline]
     fn from(value: MessageDigest) -> vec::Vec<u8> {
         value.0.into_bytes().into()
+    }
+}
+
+impl TryFrom<&Attribute> for MessageDigest {
+    type Error = der::Error;
+
+    fn try_from(attr: &Attribute) -> Result<Self, Self::Error> {
+        if attr.oid != rfc6268::ID_MESSAGE_DIGEST {
+            return Err(der::ErrorKind::OidUnknown { oid: attr.oid }.into());
+        }
+
+        // A message-digest attribute MUST have a single attribute value, even
+        // though the syntax is defined as a SET OF AttributeValue.  There MUST
+        // NOT be zero or multiple instances of AttributeValue present.
+
+        if attr.values.len() != 1 {
+            return Err(der::ErrorKind::Value { tag: Tag::Set }.into());
+        }
+        let message_digest = attr
+            .values
+            .get(0)
+            .expect("Invariant violation, only one value is present in the attribute");
+
+        message_digest.decode_as::<OctetString>().map(Self)
     }
 }
 
