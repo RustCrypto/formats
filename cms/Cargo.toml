@@ -1,6 +1,6 @@
 [package]
 name = "cms"
-version = "0.3.0-pre.1"
+version = "0.3.0-pre.2"
 description = """
 Pure Rust implementation of the Cryptographic Message Syntax (CMS) as described in RFC 5652 and RFC 3274.
 """
