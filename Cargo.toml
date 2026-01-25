@@ -61,6 +61,4 @@ x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
-crypto-primes = { git = "https://github.com/entropyxyz/crypto-primes" }
 rand = { git = "https://github.com/rust-random/rand", branch = "rand_core/v0.10.0-rc-6" }
-rsa = { git = "https://github.com/RustCrypto/RSA" }

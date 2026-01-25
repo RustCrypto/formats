@@ -251,9 +251,9 @@ dependencies = [
 
 [[package]]
 name = "cipher"
-version = "0.5.0-rc.5"
+version = "0.5.0-rc.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b557bad79bc426785757001b5d732f323ae965363983d758295c1a1935496880"
+checksum = "eba4d87abf4032a6d927f84b71af5086128a3349b929b4501c51a0fe0981a937"
 dependencies = [
  "block-buffer",
  "crypto-common",
@@ -447,8 +447,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-primes"
-version = "0.7.0-pre.7"
-source = "git+https://github.com/entropyxyz/crypto-primes#ba1024f4985d351d83dc588ee2607604ad19dba6"
+version = "0.7.0-pre.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "334a79c97c0b7fa536716dc132fd417d0afbf471440a41fc25a5d9f66d8771cd"
 dependencies = [
  "crypto-bigint",
  "libm",
@@ -531,9 +532,9 @@ dependencies = [
 
 [[package]]
 name = "digest"
-version = "0.11.0-rc.8"
+version = "0.11.0-rc.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fc1408b7a9f59a7b933faff3e9e7fc15a05a524effd3b3d1601156944c8077f"
+checksum = "bff8de092798697546237a3a701e4174fe021579faec9b854379af9bf1e31962"
 dependencies = [
  "block-buffer",
  "const-oid",
@@ -1350,8 +1351,9 @@ dependencies = [
 
 [[package]]
 name = "rsa"
-version = "0.10.0-rc.13"
-source = "git+https://github.com/RustCrypto/RSA#aceaef909cd70dd83a60298d3f2a12d5258d8496"
+version = "0.10.0-rc.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ef381dd6f207f81aff2ee3a8264eddd68ba475bbfcdb44ca445e5906bce381b"
 dependencies = [
  "const-oid",
  "crypto-bigint",
