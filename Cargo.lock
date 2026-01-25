@@ -1089,7 +1089,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.11.0-rc.9"
+version = "0.11.0-rc.10"
 dependencies = [
  "der",
  "hex-literal",
