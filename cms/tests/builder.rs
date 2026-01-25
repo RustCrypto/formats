@@ -21,9 +21,8 @@ use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
 use p256::{NistP256, pkcs8::DecodePrivateKey};
 use pem_rfc7468::LineEnding;
 use pkcs5::pbes2::Pbkdf2Params;
-use rand::rngs::SysRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
-use rsa::rand_core::{CryptoRng, TryRngCore};
+use rsa::rand_core::CryptoRng;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use rsa::{pkcs1v15, pss};
 use sha2::Sha256;
@@ -159,7 +158,7 @@ fn test_build_signed_data() {
         .add_signer_info_with_rng::<pss::SigningKey<Sha256>, pss::Signature, _>(
             signer_info_builder_3,
             &signer_3,
-            &mut SysRng.unwrap_err(),
+            &mut rand::rng(),
         )
         .expect("error adding PKCS1v15 RSA signer info")
         .build()
@@ -183,7 +182,7 @@ fn test_build_signed_data() {
 #[test]
 fn test_build_enveloped_data() {
     let recipient_identifier = recipient_identifier(1);
-    let mut rng = SysRng.unwrap_err();
+    let mut rng = rand::rng();
     let bits = 2048;
     let recipient_private_key =
         RsaPrivateKey::new(&mut rng, bits).expect("failed to generate a key");
@@ -195,7 +194,7 @@ fn test_build_enveloped_data() {
     )
     .expect("Could not create a KeyTransRecipientInfoBuilder");
 
-    let mut rng = SysRng.unwrap_err();
+    let mut rng = rand::rng();
     let mut builder = EnvelopedDataBuilder::new(
         None,
         "Arbitrary unencrypted content".as_bytes(),
@@ -657,7 +656,7 @@ async fn async_builder() {
         .add_signer_info_with_rng_async::<pss::SigningKey<Sha256>, pss::Signature, _>(
             signer_info_builder_3,
             &signer_3,
-            &mut SysRng.unwrap_err(),
+            &mut rand::rng(),
         )
         .await
         .expect("error adding PKCS1v15 RSA signer info")
@@ -897,7 +896,7 @@ fn test_create_password_recipient_info() {
         content_encryption_key
     }
 
-    let mut the_one_and_only_rng = SysRng.unwrap_err();
+    let mut the_one_and_only_rng = rand::rng();
 
     // Encrypt the content-encryption key (CEK) using custom encryptor
     // of type `Aes128CbcPwriEncryptor`:
