@@ -18,7 +18,7 @@ rust-version = "1.85"
 const-oid = { version = "0.10", features = ["db"] }
 der = { version = "0.8.0-rc.10", features = ["ber", "derive", "oid"] }
 spki = "0.8.0-rc.4"
-x509-cert = { version = "0.3.0-rc.3", default-features = false }
+x509-cert = { version = "0.3.0-rc.4", default-features = false }
 
 # optional dependencies
 aes = { version = "0.9.0-rc.2", optional = true }
@@ -47,7 +47,7 @@ rsa = { version = "0.10.0-rc.14", features = ["sha2"] }
 ecdsa = { version = "0.17.0-rc.14", features = ["digest", "pem"] }
 p256 = "0.14.0-rc.6"
 tokio = { version = "1.45.1", features = ["macros", "rt"] }
-x509-cert = { version = "0.3.0-rc.3", features = ["pem"] }
+x509-cert = { version = "0.3.0-rc.4", features = ["pem"] }
 
 [features]
 std = ["der/std", "x509-cert/std", "spki/std"]
