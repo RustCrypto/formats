@@ -29,7 +29,7 @@ tls_codec = { version = "0.4", default-features = false, features = ["derive"], 
 
 [dev-dependencies]
 hex-literal = "1"
-rand = "0.10.0-rc.7"
+rand = "0.10.0-rc.8"
 rsa = { version = "0.10.0-rc.14", features = ["sha2"] }
 ecdsa = { version = "0.17.0-rc.14", features = ["digest", "pem"] }
 p256 = "0.14.0-rc.6"
