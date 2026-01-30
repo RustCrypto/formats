@@ -11,6 +11,7 @@ pub(crate) mod bit_string;
 mod bmp_string;
 mod boolean;
 mod choice;
+mod class_tagged;
 mod context_specific;
 mod general_string;
 mod generalized_time;
@@ -35,10 +36,10 @@ mod videotex_string;
 
 pub use self::{
     any::AnyRef,
-    application::{Application, ApplicationRef},
+    application::{Application, ApplicationExplicit, ApplicationRef},
     bit_string::{BitStringIter, BitStringRef},
     choice::Choice,
-    context_specific::{ContextSpecific, ContextSpecificRef},
+    context_specific::{ContextSpecific, ContextSpecificExplicit, ContextSpecificRef},
     general_string::GeneralStringRef,
     generalized_time::GeneralizedTime,
     ia5_string::Ia5StringRef,
@@ -46,7 +47,7 @@ pub use self::{
     null::Null,
     octet_string::OctetStringRef,
     printable_string::PrintableStringRef,
-    private::{Private, PrivateRef},
+    private::{Private, PrivateExplicit, PrivateRef},
     sequence::{Sequence, SequenceRef},
     sequence_of::{SequenceOf, SequenceOfIter},
     set_of::{SetOf, SetOfIter},
