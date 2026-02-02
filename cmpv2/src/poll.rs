@@ -38,9 +38,12 @@ pub type PollReqContentId = Int;
 /// ```
 ///
 /// [RFC 4210 Section 5.3.22]: https://www.rfc-editor.org/rfc/rfc4210#section-5.3.22
+pub type PollRepContent<'a> = Vec<PollRepContentInner<'a>>;
+
+/// The `PollRepContentInner` type represents an element of the `PollRepContent` type.
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct PollRepContent<'a> {
+pub struct PollRepContentInner<'a> {
     pub cert_req_id: PollReqContentId,
     pub check_after: u64,
     pub reason: Option<PkiFreeText<'a>>,
