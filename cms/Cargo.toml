@@ -37,7 +37,7 @@ zeroize = { version = "1.8.1", optional = true }
 
 [dev-dependencies]
 aes = "0.9.0-rc.2"
-getrandom = "0.4.0-rc.0"
+getrandom = "0.4"
 hex-literal = "1"
 pem-rfc7468 = "1"
 pkcs5 = "0.8.0-rc.13"

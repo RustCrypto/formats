@@ -23,7 +23,7 @@ x509-cert = { version = "0.3.0-rc.4", default-features = false }
 
 # Optional
 digest = { version = "0.11.0-rc.9", optional = true, default-features = false, features = ["oid"] }
-rand_core = { version = "0.10.0-rc-6", optional = true, default-features = false }
+rand_core = { version = "0.10", optional = true, default-features = false }
 signature = { version = "3.0.0-rc.9", optional = true, default-features = false, features = ["digest", "rand_core"] }
 
 [dev-dependencies]
