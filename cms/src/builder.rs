@@ -26,7 +26,7 @@ use alloc::{
     vec::Vec,
 };
 use cipher::{
-    BlockModeEncrypt, Iv, Key, KeyIvInit, block_padding::Pkcs7, crypto_common::Generate,
+    BlockModeEncrypt, Iv, Key, KeyIvInit, block_padding::Pkcs7, common::Generate,
     rand_core::CryptoRng,
 };
 use const_oid::ObjectIdentifier;

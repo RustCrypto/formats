@@ -48,7 +48,7 @@ use elliptic_curve::{
     AffinePoint, Curve, CurveArithmetic, FieldBytesSize, Generate, PublicKey,
     ecdh::{EphemeralSecret, SharedSecret},
     point::PointCompression,
-    sec1::{FromEncodedPoint, ModulusSize, ToEncodedPoint},
+    sec1::{FromSec1Point, ModulusSize, ToSec1Point},
 };
 
 /// The `EccCmsSharedInfo` type is defined in [RFC 5753 Section 7.2].
@@ -256,7 +256,7 @@ where
     R: CryptoRng,
     KA: KeyAgreementAlgorithm + AssociatedOid,
     C: CurveArithmetic + AssociatedOid + PointCompression,
-    AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
+    AffinePoint<C>: FromSec1Point<C> + ToSec1Point<C>,
     FieldBytesSize<C>: ModulusSize,
     KW: KeyWrapAlgorithm,
     Enc: KeySizeUser,
@@ -307,7 +307,7 @@ where
                 // Generate ephemeral key using ecdh
                 let ephemeral_secret = EphemeralSecret::generate_from_rng(rng);
                 let ephemeral_public_key_encoded_point =
-                    ephemeral_secret.public_key().to_encoded_point(false);
+                    ephemeral_secret.public_key().to_sec1_point(false);
 
                 // Compute a shared secret with recipient public key. Non-uniformly random, but will be used as input for KDF later.
                 let non_uniformly_random_shared_secret =
