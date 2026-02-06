@@ -14,7 +14,7 @@ for Abstract Syntax Notation One (ASN.1) as described in [ITU X.690].
 
 ## About
 
-This crate provides a `no_std`-friendly implementation of a subset of ASN.1 DER
+This crate provides a `no_std`/`no_alloc`-friendly implementation of a subset of ASN.1 DER
 necessary for decoding/encoding the following cryptography-related formats
 implemented as crates maintained by the [RustCrypto] project:
 
@@ -28,8 +28,8 @@ implemented as crates maintained by the [RustCrypto] project:
 - [`x509-cert`]: Public Key Infrastructure Certificate
 - [`x509-ocsp`]: Online Certificate Status Protocol
 
-The core implementation avoids any heap usage (with convenience methods
-that allocate gated under the off-by-default `alloc` feature).
+The core implementation avoids any heap usage (with convenience methods that allocate gated under
+the off-by-default `alloc` feature).
 
 The DER decoder in this crate performs checks to ensure that the input document
 is in canonical form, and will return errors if non-canonical productions are
@@ -41,8 +41,8 @@ encountered. There is currently no way to disable these checks.
 - Performs DER canonicalization checks at decoding time
 - `no_std` friendly: supports "heapless" usage
 - Optionally supports `alloc` and `std` if desired
-- No hard dependencies! Self-contained implementation with optional
-  integrations with the following crates, all of which are `no_std` friendly:
+- No hard dependencies! Self-contained implementation with optional integrations with the following crates, all of
+  which are `no_std`/`no_alloc` friendly:
   - `const-oid`: const-friendly OID implementation
   - `pem-rfc7468`: PKCS/PKIX-flavored PEM library with constant-time decoder/encoders
   - `time` crate: date/time library

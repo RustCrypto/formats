@@ -4,14 +4,14 @@ version = "0.8.0-rc.10"
 description = """
 Pure Rust embedded-friendly implementation of the Distinguished Encoding Rules
 (DER) for Abstract Syntax Notation One (ASN.1) as described in ITU X.690 with
-full support for heapless no_std targets
+full support for heapless `no_std`/`no_alloc` targets
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 homepage = "https://github.com/RustCrypto/formats/tree/master/der"
 repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
-keywords = ["asn1", "crypto", "itu", "pkcs"]
+keywords = ["asn1", "crypto", "no-alloc", "itu", "pkcs"]
 readme = "README.md"
 edition = "2024"
 rust-version = "1.85"
