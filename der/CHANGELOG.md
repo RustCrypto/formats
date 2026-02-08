@@ -20,13 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for tags beyond 30 ([#1651])
 - const `::new` to `Length`, `BytesRef`, and `AnyRef` ([#1713])
 - const `GeneralizedTime::from_date_time` ([#1718])
-- `Decode::from_der_partial` (#1725)
+- `Decode::from_der_partial` ([#1725])
 - conversions between `BitStringRef`/`OctetStringRef` and `[u8; N]` ([#1731])
 - add class bits consts for Application and Private tag support ([#1721])
 - conversions between `heapless:Vec<u8>` and `OctetStringRef` ([#1735])
 - impl `Hash` for `SetOf` ([#1764])
 - implement `Uint`/`Int` conversions from native types ([#1762])
-- add support for `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags ([#1819]) ([#1825])
+- add support for `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags ([#1819]) ([#1825]) ([#1944])
+- support `Cow<[u8]>` in derive(Sequence) ([#1850])
+- add `diagnostic::on_unimplemented` attributes ([#1876])
+- add `Reader::read_value`, auto-nest `DecodeValue` ([#1877]) ([#1895]) ([#1897]) ([#1901])
+- indefinite length support ([#1884]) ([#1885]) ([#1894]) ([#1900]) ([#1902]) ([#1910])
+- constructed OctetString support ([#1899]) ([#1922])
+- add string conversions, predicate methods for EncodingRules ([#1903]) ([#1953])
+- add fn `Any::header` ([#1935])
+- add `Tag::RelativeOid` ([#1942])
+- add ber feature ([#1948]) ([#1950])
+- add Hash derive for StringOwned and Ia5String ([#1973])
+- add impl `DecodeValue/EncodeValue/Tagged` for `Cow` ([#2093])
 
 ### Changed
 - Bump `const-oid` to v0.10 ([#1676])
@@ -44,6 +55,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - const `Any::to_ref`, `BytesOwned::to_ref` ([#1797])
 - return `ErrorKind::Noncanonical` in `EXPLICIT` when primitive ([#1818])
 - use `read_nested` to check length of `IMPLICIT` types ([#1739])
+- simplify `From<&UintRef<'a>>` for `Uint` ([#1840])
+- make `ObjectIdentifier<MAX_SIZE>` impls generic ([#1851])
+- extract `reader::position::Position` ([#1880])
+- make `Reader` cloneable ([#1883])
+- simplify `Header::peek` and `Tag::peek` ([#1886])
+- improve constructed bit handling ([#1919])
+- use fat pointer in `OctetStringRef`, consolidate bytes/string modules, improve internal ref types ([#1920]) ([#1921]) ([#1998]) ([#2040])
+- change constructor `Header::new`, add `Header::with_length`, tests for constructed octet string ([#1931]) ([#1930])
+- simplify der_cmp for Length ([#1997])
+- add doc examples of `EncodeValue`, `Encode`, `DecodeValue`, `Decode`, `Error`, `ErrorKind`, `Tagged`, `FixedTag`, `IsConstructed`, `Tag`, `Length`, `Header` ([#2075]) ([#2071]) ([#2070]) ([#2064]) ([#2058]) ([#2052]) ([#2053]) ([#2051])
+- rename variable encoder -> writer and improve example ([#2078])
+- have `PemReader` decode to `Cow::Owned` ([#2094])
 
 ### Fixed
 - fix append in `Encode::encode_to_vec` ([#1760])
@@ -52,11 +75,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix BMPString compatibility in derive macros ([#1793])
 - fix Tag::peek_optional for 6-byte and 7+ byte tags ([#1804])
 - fix `Header::peek` for 11-byte tag-lengths ([#1828])
-- fix panic in value_cmp: add `Iterator::size_hint` ([#1830])
+- fix panic in `value_cmp`: add `Iterator::size_hint` ([#1830])
+- error position tracking improvements ([#1889]) ([#2080]) ([#2079])
+- bound `Decode(Value)::Error` on `core::error::Error` ([#2137])
 
 ### Removed
-- `TagNumber::N0..N30` consts (#1724)
+- `TagNumber::N0..N30` consts ([#1724])
 - 256MiB limit on `Length` ([#1726])
+- remove generic `<T>` from `Reader::finish` ([#1833])
 
 [#1055]: https://github.com/RustCrypto/formats/pull/1055
 [#1321]: https://github.com/RustCrypto/formats/pull/1321
