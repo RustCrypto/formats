@@ -55,3 +55,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: crate-ci/typos@v1.43.3
+
+  changelogs:
+    runs-on: ubuntu-latest
+      - uses: actions/checkout@v6
+      - name: Lint changelogs
+        uses: super-linter/super-linter@v8.5.0
+        env:
+          FILTER_REGEX_INCLUDE: ^[^/]+/CHANGELOG.md$
