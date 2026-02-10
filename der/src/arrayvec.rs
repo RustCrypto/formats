@@ -1,6 +1,6 @@
 //! Array-backed append-only vector type.
 // TODO(tarcieri): use `core` impl of `ArrayVec`
-// See: https://github.com/rust-lang/rfcs/pull/2990
+// See: https://github.com/rust-lang/rfcs/pull/3316
 
 use crate::{ErrorKind, Result};
 
