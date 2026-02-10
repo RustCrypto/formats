@@ -24,20 +24,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - conversions between `BitStringRef`/`OctetStringRef` and `[u8; N]` ([#1731])
 - add class bits consts for Application and Private tag support ([#1721])
 - conversions between `heapless:Vec<u8>` and `OctetStringRef` ([#1735])
+- `IsConstructed` trait, impl'ed on any `FixedTag` ([#1744])
 - impl `Hash` for `SetOf` ([#1764])
 - implement `Uint`/`Int` conversions from native types ([#1762])
-- add support for `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags ([#1819]) ([#1825]) ([#1944])
+- support for `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags ([#1819]) ([#1825]) ([#1944])
 - support `Cow<[u8]>` in derive(Sequence) ([#1850])
-- add `diagnostic::on_unimplemented` attributes ([#1876])
-- add `Reader::read_value`, auto-nest `DecodeValue` ([#1877]) ([#1895]) ([#1897]) ([#1901])
+- `diagnostic::on_unimplemented` attributes ([#1876])
+- `Reader::read_value`, auto-nest `DecodeValue` ([#1877]) ([#1895]) ([#1897]) ([#1901])
 - indefinite length support ([#1884]) ([#1885]) ([#1894]) ([#1900]) ([#1902]) ([#1910])
 - constructed OctetString support ([#1899]) ([#1922])
-- add string conversions, predicate methods for EncodingRules ([#1903]) ([#1953])
-- add fn `Any::header` ([#1935])
-- add `Tag::RelativeOid` ([#1942])
-- add ber feature ([#1948]) ([#1950])
-- add Hash derive for StringOwned and Ia5String ([#1973])
-- add impl `DecodeValue/EncodeValue/Tagged` for `Cow` ([#2093])
+- string conversions, predicate methods for EncodingRules ([#1903]) ([#1953])
+- fn `Any::header` ([#1935])
+- `Tag::RelativeOid` ([#1942])
+- ber feature ([#1948]) ([#1950])
+- Hash derive for StringOwned and Ia5String ([#1973])
+- impl `DecodeValue/EncodeValue/Tagged` for `Cow` ([#2093])
 
 ### Changed
 - Bump `const-oid` to v0.10 ([#1676])
@@ -51,7 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject zero lengths reads ([#1716])
 - deprecate `TagNumber::new` ([#1727])
 - use strict context-specific skipping condition (equal tag numbers only) ([#1740])
-- add `IsConstructed` trait, impl'ed on any `FixedTag` ([#1744])
 - const `Any::to_ref`, `BytesOwned::to_ref` ([#1797])
 - return `ErrorKind::Noncanonical` in `EXPLICIT` when primitive ([#1818])
 - use `read_nested` to check length of `IMPLICIT` types ([#1739])
@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add doc examples of `EncodeValue`, `Encode`, `DecodeValue`, `Decode`, `Error`, `ErrorKind`, `Tagged`, `FixedTag`, `IsConstructed`, `Tag`, `Length`, `Header` ([#2075]) ([#2071]) ([#2070]) ([#2064]) ([#2058]) ([#2052]) ([#2053]) ([#2051])
 - rename variable encoder -> writer and improve example ([#2078])
 - have `PemReader` decode to `Cow::Owned` ([#2094])
+- only sort `SET OF` types with `EncodingRules::Der` ([#2219])
 
 ### Fixed
 - fix append in `Encode::encode_to_vec` ([#1760])
@@ -78,11 +79,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix panic in `value_cmp`: add `Iterator::size_hint` ([#1830])
 - error position tracking improvements ([#1889]) ([#2080]) ([#2079])
 - bound `Decode(Value)::Error` on `core::error::Error` ([#2137])
+- have `SetOf(Vec)::insert` check for duplicates ([#2217])
 
 ### Removed
 - `TagNumber::N0..N30` consts ([#1724])
 - 256MiB limit on `Length` ([#1726])
 - remove generic `<T>` from `Reader::finish` ([#1833])
+- `SequenceOf` and `SetOf` ([#2220])
 
 [#1055]: https://github.com/RustCrypto/formats/pull/1055
 [#1321]: https://github.com/RustCrypto/formats/pull/1321
@@ -129,6 +132,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1825]: https://github.com/RustCrypto/formats/pull/1825
 [#1828]: https://github.com/RustCrypto/formats/pull/1828
 [#1830]: https://github.com/RustCrypto/formats/pull/1830
+[#1833]: https://github.com/RustCrypto/formats/pull/1833
+[#1840]: https://github.com/RustCrypto/formats/pull/1840
+[#1850]: https://github.com/RustCrypto/formats/pull/1850
+[#1851]: https://github.com/RustCrypto/formats/pull/1851
+[#1876]: https://github.com/RustCrypto/formats/pull/1876
+[#1877]: https://github.com/RustCrypto/formats/pull/1877
+[#1880]: https://github.com/RustCrypto/formats/pull/1880
+[#1883]: https://github.com/RustCrypto/formats/pull/1883
+[#1884]: https://github.com/RustCrypto/formats/pull/1884
+[#1885]: https://github.com/RustCrypto/formats/pull/1885
+[#1886]: https://github.com/RustCrypto/formats/pull/1886
+[#1889]: https://github.com/RustCrypto/formats/pull/1889
+[#1894]: https://github.com/RustCrypto/formats/pull/1894
+[#1895]: https://github.com/RustCrypto/formats/pull/1895
+[#1897]: https://github.com/RustCrypto/formats/pull/1897
+[#1899]: https://github.com/RustCrypto/formats/pull/1899
+[#1900]: https://github.com/RustCrypto/formats/pull/1900
+[#1901]: https://github.com/RustCrypto/formats/pull/1901
+[#1902]: https://github.com/RustCrypto/formats/pull/1902
+[#1903]: https://github.com/RustCrypto/formats/pull/1903
+[#1910]: https://github.com/RustCrypto/formats/pull/1910
+[#1919]: https://github.com/RustCrypto/formats/pull/1919
+[#1920]: https://github.com/RustCrypto/formats/pull/1920
+[#1921]: https://github.com/RustCrypto/formats/pull/1921
+[#1922]: https://github.com/RustCrypto/formats/pull/1922
+[#1930]: https://github.com/RustCrypto/formats/pull/1930
+[#1931]: https://github.com/RustCrypto/formats/pull/1931
+[#1935]: https://github.com/RustCrypto/formats/pull/1935
+[#1942]: https://github.com/RustCrypto/formats/pull/1942
+[#1944]: https://github.com/RustCrypto/formats/pull/1944
+[#1948]: https://github.com/RustCrypto/formats/pull/1948
+[#1950]: https://github.com/RustCrypto/formats/pull/1950
+[#1953]: https://github.com/RustCrypto/formats/pull/1953
+[#1973]: https://github.com/RustCrypto/formats/pull/1973
+[#1997]: https://github.com/RustCrypto/formats/pull/1997
+[#1998]: https://github.com/RustCrypto/formats/pull/1998
+[#2137]: https://github.com/RustCrypto/formats/pull/2137
+[#2040]: https://github.com/RustCrypto/formats/pull/2040
+[#2051]: https://github.com/RustCrypto/formats/pull/2051
+[#2052]: https://github.com/RustCrypto/formats/pull/2052
+[#2053]: https://github.com/RustCrypto/formats/pull/2053
+[#2058]: https://github.com/RustCrypto/formats/pull/2058
+[#2064]: https://github.com/RustCrypto/formats/pull/2064
+[#2070]: https://github.com/RustCrypto/formats/pull/2070
+[#2071]: https://github.com/RustCrypto/formats/pull/2071
+[#2075]: https://github.com/RustCrypto/formats/pull/2075
+[#2078]: https://github.com/RustCrypto/formats/pull/2078
+[#2079]: https://github.com/RustCrypto/formats/pull/2079
+[#2080]: https://github.com/RustCrypto/formats/pull/2080
+[#2093]: https://github.com/RustCrypto/formats/pull/2093
+[#2094]: https://github.com/RustCrypto/formats/pull/2094
+[#2217]: https://github.com/RustCrypto/formats/pull/2217
+[#2219]: https://github.com/RustCrypto/formats/pull/2219
+[#2220]: https://github.com/RustCrypto/formats/pull/2220
 
 ## 0.7.10 (2024-04-18)
 ### Fixed
