@@ -33,7 +33,9 @@ macro_rules! impl_encoding_traits {
                     }
 
                     let bytes = reader.read_into(&mut buf[..max_length])?;
-                    let result = Self::from_be_bytes(decode_to_array(bytes)?);
+                    let result = Self::from_be_bytes(
+                        decode_to_array(bytes).map_err(|err| reader.error(err.kind()))?
+                    );
 
                     // Ensure we compute the same encoded length as the original any value
                     if header.length() != result.value_len()? {
@@ -123,7 +125,7 @@ impl<'a> DecodeValue<'a> for UintRef<'a> {
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
         let bytes = <&'a BytesRef>::decode_value(reader, header)?.as_slice();
-        let result = Self::new(decode_to_slice(bytes)?)?;
+        let result = Self::new(decode_to_slice(bytes).map_err(|err| reader.error(err.kind()))?)?;
 
         // Ensure we compute the same encoded length as the original any value.
         if result.value_len()? != header.length() {
