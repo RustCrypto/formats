@@ -51,7 +51,7 @@
 //!  
 //! ## Legacy DES-CBC and DES-EDE3-CBC (3DES) support (optional)
 //! When the `des-insecure` and/or `3des` features are enabled this crate provides support for
-//! private keys encrypted with with DES-CBC and DES-EDE3-CBC (3DES or Triple DES) symmetric
+//! private keys encrypted with DES-CBC and DES-EDE3-CBC (3DES or Triple DES) symmetric
 //! encryption, respectively.
 //!
 //! ⚠️ WARNING ⚠️
