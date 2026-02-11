@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## 0.8.0 (UNRELEASED)
+
+### Added
+- `Sequence`, `Enumerated` and `Choice` macros now support `#[asn1(error = Ty)]` attribute that provides a custom error type for `Decode`/`DecodeValue` implementations ([#1560])
+- `BitString` macro ([#1720]) ([#1733])
+- `DecodeValue`, `EncodeValue` macros ([#1722])
+- impl DecodeValue for Choice ([#1986])
+- derive support for `APPLICATION` and `PRIVATE` tags ([#1825])
+
+### Changed
+- move `der/derive` => `der_derive` ([#1457])
+- use `TryFrom` conversions for `asn1(type = ...)` ([#1562])
+- rewrite `EncodeValue::value_len` as simple addition ([#1810])
+- change OctetStringRef `&` handling due to der type changes ([#2043]) ([#2040]) ([#1998])
+
+[#1457]: https://github.com/RustCrypto/formats/pull/1457
+[#1560]: https://github.com/RustCrypto/formats/pull/1560
+[#1562]: https://github.com/RustCrypto/formats/pull/1562
+[#1720]: https://github.com/RustCrypto/formats/pull/1720
+[#1722]: https://github.com/RustCrypto/formats/pull/1722
+[#1733]: https://github.com/RustCrypto/formats/pull/1733
+[#1825]: https://github.com/RustCrypto/formats/pull/1825
+[#1810]: https://github.com/RustCrypto/formats/pull/1810
+[#1986]: https://github.com/RustCrypto/formats/pull/1986
+[#1998]: https://github.com/RustCrypto/formats/pull/1998
+[#2040]: https://github.com/RustCrypto/formats/pull/2040
+[#2043]: https://github.com/RustCrypto/formats/pull/2043
+
 ## 0.7.3 (2024-07-09)
 ### Changed
 - avoid type inference when using default ([#1443])
