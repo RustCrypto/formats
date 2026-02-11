@@ -10,7 +10,7 @@ on:
       "const-oid/v**",
       "crmf/v**",
       "der/v**",
-      "der_derive/v**"
+      "der_derive/v**",
       "gss-api/v**",
       "mcf/v**",
       "pem-rfc7468/v**",
