@@ -2,13 +2,11 @@
 //!
 //! # Ordering Notes
 //!
-//! Some DER serializer implementations fail to properly sort elements of a
-//! `SET OF`. This is technically non-canonical, but occurs frequently
-//! enough that most DER decoders tolerate it. Unfortunately because
-//! of that, we must also follow suit.
+//! Some DER serializer implementations fail to properly sort elements of a `SET OF`. This is
+//! technically non-canonical, but occurs frequently enough that most DER decoders tolerate it.
 //!
-//! However, all types in this module sort elements of a set at decode-time,
-//! ensuring they'll be in the proper order if reserialized.
+//! When decoding with `EncodingRules::Der`, this implementation sorts the elements of `SET OF` at
+//! decode-time to ensure reserializations are canonical.
 
 use crate::{
     ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header,
@@ -116,8 +114,11 @@ where
             result.inner.push(T::decode(reader)?)?;
         }
 
-        // Ensure elements of the `SetOf` are sorted and will serialize as valid DER
-        der_sort(result.inner.as_mut())?;
+        if reader.encoding_rules().is_der() {
+            // Ensure elements of the `SetOf` are sorted and will serialize as valid DER
+            der_sort(result.inner.as_mut())?;
+        }
+
         Ok(result)
     }
 }
@@ -339,7 +340,10 @@ where
             inner.push(T::decode(reader)?);
         }
 
-        der_sort(inner.as_mut())?;
+        if reader.encoding_rules().is_der() {
+            der_sort(inner.as_mut())?;
+        }
+
         Ok(Self { inner })
     }
 }
