@@ -5,20 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## 0.8.0 (UNRELEASED)
-
+## 0.8.0 (2026-02-11)
 ### Added
-- `Sequence`, `Enumerated` and `Choice` macros now support `#[asn1(error = Ty)]` attribute that provides a custom error type for `Decode`/`DecodeValue` implementations ([#1560])
-- `BitString` macro ([#1720]) ([#1733])
+- `Sequence`, `Enumerated` and `Choice` macros now support `#[asn1(error = Ty)]` attribute that provides a custom error
+  type for `Decode`/`DecodeValue` implementations ([#1560])
+- `BitString` macro ([#1720], [#1733])
 - `DecodeValue`, `EncodeValue` macros ([#1722])
-- impl DecodeValue for Choice ([#1986])
-- derive support for `APPLICATION` and `PRIVATE` tags ([#1825])
+- Derive support for `APPLICATION` and `PRIVATE` tags ([#1825])
+- Impl `DecodeValue` for `Choice` ([#1986])
 
 ### Changed
-- move `der/derive` => `der_derive` ([#1457])
-- use `TryFrom` conversions for `asn1(type = ...)` ([#1562])
-- rewrite `EncodeValue::value_len` as simple addition ([#1810])
-- change OctetStringRef `&` handling due to der type changes ([#2043]) ([#2040]) ([#1998])
+- Use `TryFrom` conversions for `asn1(type = ...)` ([#1562])
+- Rewrite `EncodeValue::value_len` as simple addition ([#1810])
+- Change OctetStringRef `&` handling due to `der` type changes ([#1998], [#2040], [#2043])
 
 [#1457]: https://github.com/RustCrypto/formats/pull/1457
 [#1560]: https://github.com/RustCrypto/formats/pull/1560
