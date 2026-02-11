@@ -62,6 +62,7 @@ where
 }
 
 /// Compare the order of two iterators using [`DerCmp`] on the values.
+#[cfg(feature = "alloc")]
 pub(crate) fn iter_cmp<'a, I, T>(a: I, b: I) -> Result<Ordering>
 where
     I: Iterator<Item = &'a T> + ExactSizeIterator,
