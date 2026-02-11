@@ -288,7 +288,7 @@ pub use self::allocating::BitString;
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::referenced::*;
+    use crate::{asn1::Any, referenced::*};
     use alloc::vec::Vec;
 
     /// Owned form of ASN.1 `BIT STRING` type.
@@ -432,6 +432,30 @@ mod allocating {
         fn from(bit_string: &'a BitString) -> BitStringRef<'a> {
             // Ensured to parse successfully in constructor
             BitStringRef::new_unchecked(bit_string.unused_bits, bit_string.bytes_ref())
+        }
+    }
+
+    impl From<BitStringRef<'_>> for Any {
+        fn from(bit_string_ref: BitStringRef<'_>) -> Any {
+            Any::from(&bit_string_ref)
+        }
+    }
+
+    impl From<&BitStringRef<'_>> for Any {
+        fn from(bit_string_ref: &BitStringRef<'_>) -> Any {
+            Any::encode_from(bit_string_ref).expect("should encode successfully")
+        }
+    }
+
+    impl From<BitString> for Any {
+        fn from(bit_string: BitString) -> Any {
+            bit_string.owned_to_ref().into()
+        }
+    }
+
+    impl From<&BitString> for Any {
+        fn from(bit_string: &BitString) -> Any {
+            bit_string.owned_to_ref().into()
         }
     }
 
