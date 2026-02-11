@@ -26,7 +26,9 @@ mod private;
 #[cfg(feature = "real")]
 mod real;
 mod sequence;
+#[cfg(feature = "alloc")]
 mod sequence_of;
+#[cfg(feature = "alloc")]
 mod set_of;
 mod teletex_string;
 mod utc_time;
@@ -48,8 +50,6 @@ pub use self::{
     printable_string::PrintableStringRef,
     private::{Private, PrivateRef},
     sequence::{Sequence, SequenceRef},
-    sequence_of::{SequenceOf, SequenceOfIter},
-    set_of::{SetOf, SetOfIter},
     teletex_string::TeletexStringRef,
     utc_time::UtcTime,
     utf8_string::Utf8StringRef,

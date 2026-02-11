@@ -9,193 +9,11 @@
 //! decode-time to ensure reserializations are canonical.
 
 use crate::{
-    ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header,
-    Length, Reader, Tag, ValueOrd, Writer, arrayvec, ord::iter_cmp,
+    Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header, Length,
+    Reader, Tag, ValueOrd, Writer, ord::iter_cmp,
 };
 use core::cmp::Ordering;
-
-#[cfg(feature = "alloc")]
 use {alloc::vec::Vec, core::slice};
-
-/// ASN.1 `SET OF` backed by an array.
-///
-/// This type implements an append-only `SET OF` type which is stack-based
-/// and does not depend on `alloc` support.
-// TODO(tarcieri): use `ArrayVec` when/if it's merged into `core`
-// See: https://github.com/rust-lang/rfcs/pull/2990
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct SetOf<T, const N: usize>
-where
-    T: DerOrd,
-{
-    inner: ArrayVec<T, N>,
-}
-
-impl<T, const N: usize> SetOf<T, N>
-where
-    T: DerOrd,
-{
-    /// Create a new [`SetOf`].
-    pub fn new() -> Self {
-        Self {
-            inner: ArrayVec::default(),
-        }
-    }
-
-    /// Add an item to this [`SetOf`].
-    ///
-    /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
-    #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
-    pub fn add(&mut self, new_elem: T) -> Result<(), Error> {
-        self.insert_ordered(new_elem)
-    }
-
-    /// Insert an item into this [`SetOf`].
-    pub fn insert(&mut self, item: T) -> Result<(), Error> {
-        check_duplicate(&item, self.iter())?;
-        self.inner.push(item)?;
-        der_sort(self.inner.as_mut())
-    }
-
-    /// Insert an item into this [`SetOf`].
-    ///
-    /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
-    pub fn insert_ordered(&mut self, item: T) -> Result<(), Error> {
-        // Ensure set elements are lexicographically ordered
-        if let Some(last) = self.inner.last() {
-            check_der_ordering(last, &item)?;
-        }
-
-        self.inner.push(item)
-    }
-
-    /// Get the nth element from this [`SetOf`].
-    pub fn get(&self, index: usize) -> Option<&T> {
-        self.inner.get(index)
-    }
-
-    /// Iterate over the elements of this [`SetOf`].
-    pub fn iter(&self) -> SetOfIter<'_, T> {
-        SetOfIter {
-            inner: self.inner.iter(),
-        }
-    }
-
-    /// Is this [`SetOf`] empty?
-    pub fn is_empty(&self) -> bool {
-        self.inner.is_empty()
-    }
-
-    /// Number of elements in this [`SetOf`].
-    pub fn len(&self) -> usize {
-        self.inner.len()
-    }
-}
-
-impl<T, const N: usize> Default for SetOf<T, N>
-where
-    T: DerOrd,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<'a, T, const N: usize> DecodeValue<'a> for SetOf<T, N>
-where
-    T: Decode<'a> + DerOrd,
-{
-    type Error = T::Error;
-
-    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> Result<Self, Self::Error> {
-        let mut result = Self::new();
-
-        while !reader.is_finished() {
-            result.inner.push(T::decode(reader)?)?;
-        }
-
-        if reader.encoding_rules().is_der() {
-            // Ensure elements of the `SetOf` are sorted and will serialize as valid DER
-            der_sort(result.inner.as_mut())?;
-        }
-
-        Ok(result)
-    }
-}
-
-impl<T, const N: usize> EncodeValue for SetOf<T, N>
-where
-    T: Encode + DerOrd,
-{
-    fn value_len(&self) -> Result<Length, Error> {
-        self.iter()
-            .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
-    }
-
-    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
-        for elem in self.iter() {
-            elem.encode(writer)?;
-        }
-
-        Ok(())
-    }
-}
-
-impl<T, const N: usize> FixedTag for SetOf<T, N>
-where
-    T: DerOrd,
-{
-    const TAG: Tag = Tag::Set;
-}
-
-impl<T, const N: usize> TryFrom<[T; N]> for SetOf<T, N>
-where
-    T: DerOrd,
-{
-    type Error = Error;
-
-    fn try_from(mut arr: [T; N]) -> Result<SetOf<T, N>, Error> {
-        der_sort(&mut arr)?;
-
-        let mut result = SetOf::new();
-
-        for elem in arr {
-            result.insert_ordered(elem)?;
-        }
-
-        Ok(result)
-    }
-}
-
-impl<T, const N: usize> ValueOrd for SetOf<T, N>
-where
-    T: DerOrd,
-{
-    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
-        iter_cmp(self.iter(), other.iter())
-    }
-}
-
-/// Iterator over the elements of an [`SetOf`].
-#[derive(Clone, Debug)]
-pub struct SetOfIter<'a, T> {
-    /// Inner iterator.
-    inner: arrayvec::Iter<'a, T>,
-}
-
-impl<'a, T> Iterator for SetOfIter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<&'a T> {
-        self.inner.next()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.inner.size_hint()
-    }
-}
-
-impl<T> ExactSizeIterator for SetOfIter<'_, T> {}
 
 /// ASN.1 `SET OF` backed by a [`Vec`].
 ///
@@ -494,55 +312,12 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use super::SetOf;
-    #[cfg(feature = "alloc")]
     use super::SetOfVec;
-    use crate::{DerOrd, ErrorKind};
+    use crate::ErrorKind;
 
-    #[test]
-    fn setof_insert() {
-        let mut setof = SetOf::<u8, 10>::new();
-        setof.insert(42).unwrap();
-        assert_eq!(setof.len(), 1);
-        assert_eq!(*setof.iter().next().unwrap(), 42);
-
-        // Ensure duplicates are disallowed
-        assert_eq!(
-            setof.insert(42).unwrap_err().kind(),
-            ErrorKind::SetDuplicate
-        );
-        assert_eq!(setof.len(), 1);
-    }
-
-    #[test]
-    fn setof_tryfrom_array() {
-        let arr = [3u16, 2, 1, 65535, 0];
-        let set = SetOf::try_from(arr).unwrap();
-        assert!(set.iter().copied().eq([0, 1, 2, 3, 65535]));
-    }
-
-    #[test]
-    fn setof_tryfrom_array_reject_duplicates() {
-        let arr = [1u16, 1];
-        let err = SetOf::try_from(arr).err().unwrap();
-        assert_eq!(err.kind(), ErrorKind::SetDuplicate);
-    }
-
-    #[test]
-    fn setof_valueord_value_cmp() {
-        use core::cmp::Ordering;
-
-        let arr1 = [3u16, 2, 1, 5, 0];
-        let arr2 = [3u16, 2, 1, 4, 0];
-        let set1 = SetOf::try_from(arr1).unwrap();
-        let set2 = SetOf::try_from(arr2).unwrap();
-        assert_eq!(set1.der_cmp(&set2), Ok(Ordering::Greater));
-    }
-
-    #[cfg(feature = "alloc")]
     #[test]
     fn setofvec_insert() {
         let mut setof = SetOfVec::new();
@@ -558,7 +333,6 @@ mod tests {
         assert_eq!(setof.len(), 1);
     }
 
-    #[cfg(feature = "alloc")]
     #[test]
     fn setofvec_tryfrom_array() {
         let arr = [3u16, 2, 1, 65535, 0];
@@ -566,7 +340,6 @@ mod tests {
         assert_eq!(set.as_ref(), &[0, 1, 2, 3, 65535]);
     }
 
-    #[cfg(feature = "alloc")]
     #[test]
     fn setofvec_tryfrom_vec() {
         let vec = vec![3u16, 2, 1, 65535, 0];
@@ -574,7 +347,6 @@ mod tests {
         assert_eq!(set.as_ref(), &[0, 1, 2, 3, 65535]);
     }
 
-    #[cfg(feature = "alloc")]
     #[test]
     fn setofvec_tryfrom_vec_reject_duplicates() {
         let vec = vec![1u16, 1];

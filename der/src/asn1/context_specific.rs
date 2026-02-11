@@ -27,11 +27,11 @@ impl_custom_class_ref!(
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::ContextSpecific;
-    use crate::{
-        Decode, Encode, SliceReader, TagMode, TagNumber,
-        asn1::{BitStringRef, ContextSpecificRef, SetOf, Utf8StringRef},
-    };
+    use crate::{Decode, Encode, SliceReader, TagMode, TagNumber, asn1::BitStringRef};
     use hex_literal::hex;
+
+    #[cfg(feature = "alloc")]
+    use crate::asn1::{ContextSpecificRef, SetOfVec, Utf8StringRef};
 
     // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`
     const EXAMPLE_BYTES: &[u8] =
@@ -125,12 +125,13 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn context_specific_explicit_ref() {
-        let mut set = SetOf::new();
+        let mut set = SetOfVec::new();
         set.insert(8u16).unwrap();
         set.insert(7u16).unwrap();
 
-        let field = ContextSpecificRef::<SetOf<u16, 2>> {
+        let field = ContextSpecificRef::<SetOfVec<u16>> {
             value: &set,
             tag_number: TagNumber(2),
             tag_mode: TagMode::Explicit,
@@ -147,7 +148,7 @@ mod tests {
         );
 
         let mut reader = SliceReader::new(encoded).unwrap();
-        let field = ContextSpecific::<SetOf<u16, 2>>::decode_explicit(&mut reader, TagNumber(2))
+        let field = ContextSpecific::<SetOfVec<u16>>::decode_explicit(&mut reader, TagNumber(2))
             .unwrap()
             .unwrap();
 
@@ -157,15 +158,16 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn context_specific_implicit_ref() {
         let hello = Utf8StringRef::new("Hello").unwrap();
         let world = Utf8StringRef::new("world").unwrap();
 
-        let mut set = SetOf::new();
+        let mut set = SetOfVec::new();
         set.insert(hello).unwrap();
         set.insert(world).unwrap();
 
-        let field = ContextSpecificRef::<SetOf<Utf8StringRef<'_>, 2>> {
+        let field = ContextSpecificRef::<SetOfVec<Utf8StringRef<'_>>> {
             value: &set,
             tag_number: TagNumber(2),
             tag_mode: TagMode::Implicit,
@@ -183,7 +185,7 @@ mod tests {
         );
 
         let mut reader = SliceReader::new(encoded).unwrap();
-        let field = ContextSpecific::<SetOf<Utf8StringRef<'_>, 2>>::decode_implicit(
+        let field = ContextSpecific::<SetOfVec<Utf8StringRef<'_>>>::decode_implicit(
             &mut reader,
             TagNumber(2),
         )
