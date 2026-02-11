@@ -46,8 +46,7 @@ where
 
     /// Add an item to this [`SetOf`].
     ///
-    /// Items MUST be added in lexicographical order according to the
-    /// [`DerOrd`] impl on `T`.
+    /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
     #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
     pub fn add(&mut self, new_elem: T) -> Result<(), Error> {
         self.insert_ordered(new_elem)
@@ -55,14 +54,14 @@ where
 
     /// Insert an item into this [`SetOf`].
     pub fn insert(&mut self, item: T) -> Result<(), Error> {
+        check_duplicate(&item, self.iter())?;
         self.inner.push(item)?;
         der_sort(self.inner.as_mut())
     }
 
     /// Insert an item into this [`SetOf`].
     ///
-    /// Items MUST be added in lexicographical order according to the
-    /// [`DerOrd`] impl on `T`.
+    /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
     pub fn insert_ordered(&mut self, item: T) -> Result<(), Error> {
         // Ensure set elements are lexicographically ordered
         if let Some(last) = self.inner.last() {
@@ -266,6 +265,7 @@ where
 
     /// Insert an item into this [`SetOfVec`]. Must be unique.
     pub fn insert(&mut self, item: T) -> Result<(), Error> {
+        check_duplicate(&item, self.iter())?;
         self.inner.push(item);
         der_sort(&mut self.inner)
     }
@@ -417,7 +417,7 @@ where
     }
 }
 
-// Implement by hand because the derive would create invalid values.
+// Implement by hand because custom derive would create invalid values.
 // Use the conversion from Vec to create a valid value.
 #[cfg(feature = "arbitrary")]
 impl<'a, T> arbitrary::Arbitrary<'a> for SetOfVec<T>
@@ -432,6 +432,24 @@ where
     fn size_hint(_depth: usize) -> (usize, Option<usize>) {
         (0, None)
     }
+}
+
+/// Check if the given item is a duplicate, given an iterator over sorted items (which we can
+/// short-circuit once we hit `Ordering::Less`.
+fn check_duplicate<'a, T, I>(item: &T, iter: I) -> Result<(), Error>
+where
+    T: DerOrd + 'a,
+    I: Iterator<Item = &'a T>,
+{
+    for item2 in iter {
+        match item.der_cmp(item2)? {
+            Ordering::Less => return Ok(()), // all remaining items are greater
+            Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
+            Ordering::Greater => continue,
+        }
+    }
+
+    Ok(())
 }
 
 /// Ensure set elements are lexicographically ordered using [`DerOrd`].
@@ -481,6 +499,21 @@ mod tests {
     use crate::{DerOrd, ErrorKind};
 
     #[test]
+    fn setof_insert() {
+        let mut setof = SetOf::<u8, 10>::new();
+        setof.insert(42).unwrap();
+        assert_eq!(setof.len(), 1);
+        assert_eq!(*setof.iter().next().unwrap(), 42);
+
+        // Ensure duplicates are disallowed
+        assert_eq!(
+            setof.insert(42).unwrap_err().kind(),
+            ErrorKind::SetDuplicate
+        );
+        assert_eq!(setof.len(), 1);
+    }
+
+    #[test]
     fn setof_tryfrom_array() {
         let arr = [3u16, 2, 1, 65535, 0];
         let set = SetOf::try_from(arr).unwrap();
@@ -503,6 +536,22 @@ mod tests {
         let set1 = SetOf::try_from(arr1).unwrap();
         let set2 = SetOf::try_from(arr2).unwrap();
         assert_eq!(set1.der_cmp(&set2), Ok(Ordering::Greater));
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn setofvec_insert() {
+        let mut setof = SetOfVec::new();
+        setof.insert(42).unwrap();
+        assert_eq!(setof.len(), 1);
+        assert_eq!(*setof.iter().next().unwrap(), 42);
+
+        // Ensure duplicates are disallowed
+        assert_eq!(
+            setof.insert(42).unwrap_err().kind(),
+            ErrorKind::SetDuplicate
+        );
+        assert_eq!(setof.len(), 1);
     }
 
     #[cfg(feature = "alloc")]
