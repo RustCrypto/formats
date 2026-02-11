@@ -45,7 +45,6 @@ jobs:
       - run: cargo hack build --target ${{ matrix.target }} --feature-powerset --exclude-features arbitrary,std,heapless
 
   minimal-versions:
-    if: false # TODO: temp disabled due to unpublished prerelease dependencies
     uses: RustCrypto/actions/.github/workflows/minimal-versions.yml@master
     with:
       working-directory: ${{ github.workflow }}
