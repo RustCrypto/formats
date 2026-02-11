@@ -203,7 +203,7 @@ where
         let private_key = Key::decode(reader)?;
 
         let _attributes =
-            reader.context_specific::<SequenceRef<'_>>(ATTRIBUTES_TAG, TagMode::Implicit)?;
+            reader.context_specific::<&SequenceRef>(ATTRIBUTES_TAG, TagMode::Implicit)?;
 
         let public_key = reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
 
