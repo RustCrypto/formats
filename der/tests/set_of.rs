@@ -1,6 +1,6 @@
 //! `SetOf` tests.
 
-#![cfg(all(feature = "alloc", feature = "heapless"))]
+#![cfg(all(any(unix, windows), feature = "alloc", feature = "heapless"))]
 
 use der::{DerOrd, asn1::SetOfVec};
 use proptest::{prelude::*, string::*};
