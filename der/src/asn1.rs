@@ -26,9 +26,7 @@ mod private;
 #[cfg(feature = "real")]
 mod real;
 mod sequence;
-#[cfg(feature = "alloc")]
 mod sequence_of;
-#[cfg(feature = "alloc")]
 mod set_of;
 mod teletex_string;
 mod utc_time;
@@ -68,6 +66,15 @@ pub use self::{
     set_of::SetOfVec,
     teletex_string::TeletexString,
 };
+
+#[cfg(feature = "heapless")]
+pub use self::{
+    sequence_of::{SequenceOf, SequenceOfIter},
+    set_of::SetOf,
+};
+
+#[cfg(any(feature = "alloc", feature = "heapless"))]
+pub use set_of::SetOfIter;
 
 #[cfg(feature = "oid")]
 pub use const_oid::ObjectIdentifier;

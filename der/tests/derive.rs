@@ -118,10 +118,12 @@ mod choice {
     }
 
     /// `Choice` with `IMPLICIT` tagging.
+    #[cfg(feature = "heapless")]
     mod implicit {
+        use der::asn1::Null;
         use der::{
             Choice, Decode, Encode, Sequence, SliceWriter,
-            asn1::{BitStringRef, GeneralizedTime},
+            asn1::{BitStringRef, GeneralizedTime, SequenceOf},
         };
         use hex_literal::hex;
 
@@ -137,6 +139,9 @@ mod choice {
 
             #[asn1(context_specific = "2", type = "UTF8String")]
             Utf8String(String),
+
+            #[asn1(context_specific = "3", constructed = "true")]
+            SequenceOfNulls(SequenceOf<Null, 1>),
         }
 
         impl<'a> ImplicitChoice<'a> {
@@ -186,6 +191,24 @@ mod choice {
             let mut writer = SliceWriter::new(&mut buf);
             cs_time.encode(&mut writer).unwrap();
             assert_eq!(TIME_DER, writer.finish().unwrap());
+        }
+
+        #[test]
+        fn roundtrip_implicit_constructed_variant() {
+            let mut seq = SequenceOf::new();
+            seq.add(Null).unwrap();
+            let obj = ImplicitChoice::SequenceOfNulls(seq);
+            let mut buf = [0u8; 128];
+
+            let mut writer = SliceWriter::new(&mut buf);
+            obj.encode(&mut writer).unwrap();
+
+            let encoded = writer.finish().unwrap();
+            println!("encoded: {encoded:02X?}");
+
+            let decoded = ImplicitChoice::from_der(encoded).unwrap();
+
+            assert_eq!(decoded, obj);
         }
 
         /// Test case for `CHOICE` inside `[0]` `EXPLICIT` tag in `SEQUENCE`.
@@ -258,13 +281,13 @@ mod enumerated {
 }
 
 /// Custom derive test cases for the `Sequence` macro.
-#[cfg(feature = "oid")]
+#[cfg(all(feature = "heapless", feature = "oid"))]
 mod sequence {
     use super::CustomError;
     use core::marker::PhantomData;
     use der::{
         Decode, Encode, Sequence, ValueOrd,
-        asn1::{AnyRef, ObjectIdentifier},
+        asn1::{AnyRef, ObjectIdentifier, SetOf},
     };
     use hex_literal::hex;
 
@@ -407,23 +430,24 @@ mod sequence {
         assert_eq!(spki.subject_public_key, hex!("B0 B1 B2 B3 B4 B5 B6 B7"));
     }
 
-    // /// PKCS#8v2 `OneAsymmetricKey`
-    // #[derive(Sequence)]
-    // pub struct OneAsymmetricKey<'a> {
-    //     pub version: u8,
-    //     pub private_key_algorithm: AlgorithmIdentifier<'a>,
-    //     #[asn1(type = "OCTET STRING")]
-    //     pub private_key: &'a [u8],
-    //     #[asn1(context_specific = "0", extensible = "true", optional = "true")]
-    //     pub attributes: Option<SetOf<AnyRef<'a>, 1>>,
-    //     #[asn1(
-    //         context_specific = "1",
-    //         extensible = "true",
-    //         optional = "true",
-    //         type = "BIT STRING"
-    //     )]
-    //     pub public_key: Option<&'a [u8]>,
-    // }
+    /// PKCS#8v2 `OneAsymmetricKey`
+    #[derive(Sequence)]
+    #[allow(dead_code)]
+    pub struct OneAsymmetricKey<'a> {
+        pub version: u8,
+        pub private_key_algorithm: AlgorithmIdentifier<'a>,
+        #[asn1(type = "OCTET STRING")]
+        pub private_key: &'a [u8],
+        #[asn1(context_specific = "0", extensible = "true", optional = "true")]
+        pub attributes: Option<SetOf<AnyRef<'a>, 1>>,
+        #[asn1(
+            context_specific = "1",
+            extensible = "true",
+            optional = "true",
+            type = "BIT STRING"
+        )]
+        pub public_key: Option<&'a [u8]>,
+    }
 
     /// X.509 extension
     // TODO(tarcieri): tests for code derived with the `default` attribute
