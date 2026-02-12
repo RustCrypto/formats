@@ -37,16 +37,16 @@
 //! - [`bool`]: ASN.1 `BOOLEAN`.
 //! - [`i8`], [`i16`], [`i32`], [`i64`], [`i128`]: ASN.1 `INTEGER`.
 //! - [`u8`], [`u16`], [`u32`], [`u64`], [`u128`]: ASN.1 `INTEGER`.
-//! - [`f64`]: ASN.1 `REAL` (requires `real` crate feature).
+//! - [`f64`]: ASN.1 `REAL` (gated on `real` crate feature)
 //! - [`str`], [`String`][`alloc::string::String`]: ASN.1 `UTF8String`. See also [`Utf8StringRef`].
-//!   (note: `String` requires `alloc` feature).
 //! - [`Option`]: ASN.1 `OPTIONAL`.
-//! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime` (requires `std` feature).
-//! - [`Vec`][`alloc::vec::Vec`]: ASN.1 `SEQUENCE OF` (requires `alloc` feature).
+//! - [`SystemTime`][`std::time::SystemTime`]: ASN.1 `GeneralizedTime`. Requires `std` feature.
+//! - [`Vec`][`alloc::vec::Vec`]: ASN.1 `SEQUENCE OF` (requires `alloc` feature)
+//! - `[T; N]`: ASN.1 `SEQUENCE OF`. See also [`SequenceOf`].
 //!
 //! The following ASN.1 types provided by this crate also impl these traits:
 //! - [`Any`], [`AnyRef`]: ASN.1 `ANY`.
-//! - [`BitString`], [`BitStringRef`]: ASN.1 `BIT STRING`.
+//! - [`BitString`], [`BitStringRef`]: ASN.1 `BIT STRING`
 //! - [`GeneralizedTime`]: ASN.1 `GeneralizedTime`.
 //! - [`Ia5StringRef`]: ASN.1 `IA5String`.
 //! - [`Null`]: ASN.1 `NULL`.
@@ -55,7 +55,8 @@
 //! - [`PrintableStringRef`]: ASN.1 `PrintableString` (ASCII subset).
 //! - [`TeletexStringRef`]: ASN.1 `TeletexString`.
 //! - [`VideotexStringRef`]: ASN.1 `VideotexString`.
-//! - [`SetOfVec`]: ASN.1 `SET OF`.
+//! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`.
+//! - [`SetOf`] (requires `heapless` feature), [`SetOfVec`] (requires `alloc`): ASN.1 `SET OF`.
 //! - [`UintRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes.
 //! - [`UtcTime`]: ASN.1 `UTCTime`.
 //! - [`Utf8StringRef`]: ASN.1 `UTF8String`.
@@ -313,6 +314,8 @@
 //! [`PrintableStringRef`]: asn1::PrintableStringRef
 //! [`TeletexStringRef`]: asn1::TeletexStringRef
 //! [`VideotexStringRef`]: asn1::VideotexStringRef
+//! [`SequenceOf`]: asn1::SequenceOf
+//! [`SetOf`]: asn1::SetOf
 //! [`SetOfVec`]: asn1::SetOfVec
 //! [`UintRef`]: asn1::UintRef
 //! [`UtcTime`]: asn1::UtcTime

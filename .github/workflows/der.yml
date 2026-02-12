@@ -91,7 +91,16 @@ jobs:
       - run: cargo hack test --feature-powerset --exclude-features arbitrary,std,heapless
       - run: cargo test --features arbitrary
       - run: cargo test --features std
-      #- run: cargo test --all-features # TODO(tarcieri): test heapless
+
+  # Test `heapless` feature (requires MSRV 1.87)
+  test-heapless:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.87
+      - run: cargo test --features heapless
 
   derive:
     runs-on: ubuntu-latest
