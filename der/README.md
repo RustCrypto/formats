@@ -39,7 +39,7 @@ encountered. There is currently no way to disable these checks.
 
 - Rich support for ASN.1 types used by PKCS/PKIX documents
 - Performs DER canonicalization checks at decoding time
-- `no_std` friendly: supports "heapless" usage
+- `no_std`/`no_alloc` friendly (supports "heapless" usage)
 - Optionally supports `alloc` and `std` if desired
 - No hard dependencies! Self-contained implementation with optional integrations with the following crates, all of
   which are `no_std`/`no_alloc` friendly:
