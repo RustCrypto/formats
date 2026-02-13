@@ -62,7 +62,7 @@ fn from_pem() {
 #[test]
 fn to_pem() {
     let spki = SpkiBorrowed::from_der(SPKI_DER).unwrap();
-    let pem = spki.to_pem(LineEnding::LF).unwrap();
+    let pem = spki.to_pem(LineEnding::default()).unwrap();
     assert_eq!(&pem, SPKI_PEM);
 }
 

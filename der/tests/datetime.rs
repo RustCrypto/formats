@@ -1,5 +1,7 @@
 //! Tests for the [`DateTime`] type.
 
+#![cfg(any(unix, windows))]
+
 use der::{DateTime, Decode, Encode, asn1::UtcTime};
 use proptest::prelude::*;
 

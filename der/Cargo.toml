@@ -29,7 +29,8 @@ zeroize = { version = "1.8", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "1"
-proptest = "1"
+[target.'cfg(any(unix, windows))'.dev-dependencies]
+proptest = "1.10"
 
 [features]
 alloc = ["zeroize?/alloc"]
