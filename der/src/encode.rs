@@ -233,7 +233,7 @@ pub trait EncodeValue {
     /// encoded as ASN.1 DER.
     ///
     /// # Errors
-    /// Returns an error if the value length could not be computed.
+    /// Returns an error if the value length could not be computed (e.g. overflow).
     fn value_len(&self) -> Result<Length>;
 
     /// Encode value (sans [`Tag`]+[`Length`] header) as ASN.1 DER using the

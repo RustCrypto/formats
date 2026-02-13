@@ -6,7 +6,7 @@
 //! issues related to these tests, run:
 //!
 //! ```text
-//! $ cargo expand --test derive_heapless --all-features
+//! $ cargo expand --test derive_no_alloc --all-features
 //! ```
 
 #![cfg(feature = "derive")]
