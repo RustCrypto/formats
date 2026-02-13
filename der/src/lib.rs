@@ -55,7 +55,7 @@
 //! - [`PrintableStringRef`]: ASN.1 `PrintableString` (ASCII subset).
 //! - [`TeletexStringRef`]: ASN.1 `TeletexString`.
 //! - [`VideotexStringRef`]: ASN.1 `VideotexString`.
-//! - [`SequenceOf`]: ASN.1 `SEQUENCE OF`.
+//! - [`SequenceOf`] (requires `heapless` feature): ASN.1 `SEQUENCE OF`.
 //! - [`SetOf`] (requires `heapless` feature), [`SetOfVec`] (requires `alloc`): ASN.1 `SET OF`.
 //! - [`UintRef`]: ASN.1 unsigned `INTEGER` with raw access to encoded bytes.
 //! - [`UtcTime`]: ASN.1 `UTCTime`.
