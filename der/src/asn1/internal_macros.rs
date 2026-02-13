@@ -103,12 +103,14 @@ macro_rules! impl_custom_class {
             /// in extension fields, which are denoted in an ASN.1 schema using
             /// the `...` ellipsis extension marker:
             ///
+            /// - Returns `Ok(Some(..))` if tag number matches.
             #[doc = concat!("- Returns `Ok(None)` if class other than [`Class::", stringify!($class_enum_name), "`] tag")]
             ///   is encountered.
             /// - Returns `Ok(None)` if a field with a different tag number is encountered.
             ///   These fields are not consumed in this case.
-            /// - Returns [`ErrorKind::Noncanonical`] if constructed bit is primitive.
-            /// - Returns `Ok(Some(..))` if tag number matches.
+            ///
+            /// # Errors
+            /// Returns [`ErrorKind::Noncanonical`] if constructed bit is primitive.
             pub fn decode_explicit<'a, R: Reader<'a>>(
                 reader: &mut R,
                 tag_number: TagNumber,
@@ -132,6 +134,9 @@ macro_rules! impl_custom_class {
             /// Differences from `EXPLICIT`:
             /// - Returns [`ErrorKind::Noncanonical`] if constructed bit
             ///   does not match constructed bit of the base encoding.
+            ///
+            /// # Errors
+            /// Returns `T::Error` in the event of a decoding error.
             pub fn decode_implicit<'a, R: Reader<'a>>(
                 reader: &mut R,
                 tag_number: TagNumber,

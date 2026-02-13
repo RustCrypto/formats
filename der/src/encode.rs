@@ -56,13 +56,22 @@ use crate::{FixedTag, Tag};
 )]
 pub trait Encode {
     /// Compute the length of this TLV object in bytes when encoded as ASN.1 DER.
+    ///
+    /// # Errors
+    /// Returns an error if the length could not be computed (e.g. overflow).
     fn encoded_len(&self) -> Result<Length>;
 
     /// Encode this TLV object as ASN.1 DER using the provided [`Writer`].
+    ///
+    /// # Errors
+    /// In the event an encoding error occurred.
     fn encode(&self, writer: &mut impl Writer) -> Result<()>;
 
     /// Encode this TLV object to the provided byte slice, returning a sub-slice
     /// containing the encoded message.
+    ///
+    /// # Errors
+    /// In the event an encoding error occurred.
     fn encode_to_slice<'a>(&self, buf: &'a mut [u8]) -> Result<&'a [u8]> {
         let mut writer = SliceWriter::new(buf);
         self.encode(&mut writer)?;
@@ -71,6 +80,9 @@ pub trait Encode {
 
     /// Encode this TLV object as ASN.1 DER, appending it to the provided
     /// byte vector.
+    ///
+    /// # Errors
+    /// In the event an encoding error occurred.
     #[cfg(feature = "alloc")]
     fn encode_to_vec(&self, buf: &mut Vec<u8>) -> Result<Length> {
         let expected_len = usize::try_from(self.encoded_len()?)?;
@@ -92,6 +104,9 @@ pub trait Encode {
     }
 
     /// Encode this TLV object as ASN.1 DER, returning a byte vector.
+    ///
+    /// # Errors
+    /// In the event an encoding error occurred.
     #[cfg(feature = "alloc")]
     fn to_der(&self) -> Result<Vec<u8>> {
         let mut buf = Vec::new();
@@ -104,12 +119,10 @@ impl<T> Encode for T
 where
     T: EncodeValue + Tagged + ?Sized,
 {
-    /// Compute the length of this TLV object in bytes when encoded as ASN.1 DER.
     fn encoded_len(&self) -> Result<Length> {
         self.value_len().and_then(|len| len.for_tlv(self.tag()))
     }
 
-    /// Encode this TLV object as ASN.1 DER using the provided [`Writer`].
     fn encode(&self, writer: &mut impl Writer) -> Result<()> {
         self.header()?.encode(writer)?;
         self.encode_value(writer)
@@ -141,6 +154,9 @@ where
 )]
 pub trait EncodePem: Encode + PemLabel {
     /// Try to encode this type as PEM.
+    ///
+    /// # Errors
+    /// If a PEM encoding error occurred.
     fn to_pem(&self, line_ending: LineEnding) -> Result<String>;
 }
 
@@ -203,6 +219,9 @@ where
 /// ```
 pub trait EncodeValue {
     /// Get the [`Header`] used to encode this value.
+    ///
+    /// # Errors
+    /// Returns an error if the header could not be computed.
     fn header(&self) -> Result<Header>
     where
         Self: Tagged,
@@ -212,10 +231,16 @@ pub trait EncodeValue {
 
     /// Compute the length of this value (sans [`Tag`]+[`Length`] header) when
     /// encoded as ASN.1 DER.
+    ///
+    /// # Errors
+    /// Returns an error if the value length could not be computed.
     fn value_len(&self) -> Result<Length>;
 
     /// Encode value (sans [`Tag`]+[`Length`] header) as ASN.1 DER using the
     /// provided [`Writer`].
+    ///
+    /// # Errors
+    /// In the event an encoding error occurred.
     fn encode_value(&self, writer: &mut impl Writer) -> Result<()>;
 }
 

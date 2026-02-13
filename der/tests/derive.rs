@@ -8,10 +8,14 @@
 //! $ cargo expand --test derive --all-features
 
 #![cfg(all(feature = "derive", feature = "alloc"))]
-// TODO: fix needless_question_mark in the derive crate
-#![allow(clippy::bool_assert_comparison, clippy::needless_question_mark)]
+#![allow(
+    clippy::bool_assert_comparison,
+    clippy::needless_question_mark, // TODO: fix needless_question_mark in the derive crate
+    clippy::std_instead_of_core
+)]
 
-#[derive(Debug)]
+/// Custom error type.
+#[derive(Clone, Copy, Debug)]
 #[allow(dead_code)]
 pub struct CustomError(der::Error);
 
@@ -352,7 +356,7 @@ mod sequence {
         )]
         pub only_contains_attribute_certs: bool,
 
-        /// Test handling of PhantomData.
+        /// Test handling of `PhantomData`.
         pub phantom: PhantomData<()>,
     }
 
@@ -977,9 +981,7 @@ mod bitstring {
         assert_eq!(reencoded, BITSTRING_EXAMPLE);
     }
 
-    /// this BitString will allow only 3..=4 bits in Decode
-    ///
-    /// but will always Encode 4 bits
+    /// This `BitString` will allow only `3..=4` bits in `Decode`, but will always `Encode` 4-bits.
     #[derive(BitString)]
     pub struct MyBitString3or4 {
         pub bit_0: bool,
@@ -1116,60 +1118,60 @@ mod bitstring {
     ///  ```
     #[derive(Clone, Debug, Eq, PartialEq, BitString)]
     pub struct PasswordFlags {
-        /// case-sensitive (0)
+        /// `case-sensitive` (0)
         pub case_sensitive: bool,
 
-        /// local (1)
+        /// `local` (1)
         pub local: bool,
 
-        /// change-disabled (2)
+        /// `change-disabled` (2)
         pub change_disabled: bool,
 
-        /// unblock-disabled (3)
+        /// `unblock-disabled` (3)
         pub unblock_disabled: bool,
 
-        /// initialized (4)
+        /// `initialized` (4)
         pub initialized: bool,
 
-        /// needs-padding (5)
+        /// `needs-padding` (5)
         pub needs_padding: bool,
 
-        /// unblockingPassword (6)
+        /// `unblockingPassword` (6)
         pub unblocking_password: bool,
 
-        /// soPassword (7)
+        /// `soPassword` (7)
         pub so_password: bool,
 
-        /// disable-allowed (8)
+        /// `disable-allowed` (8)
         pub disable_allowed: bool,
 
-        /// integrity-protected (9)
+        /// `integrity-protected` (9)
         pub integrity_protected: bool,
 
-        /// confidentiality-protected (10)
+        /// `confidentiality-protected` (10)
         pub confidentiality_protected: bool,
 
-        /// exchangeRefData (11)
+        /// `exchangeRefData` (11)
         pub exchange_ref_data: bool,
 
         /// Second edition 2016-05-15
-        /// resetRetryCounter1 (12)
+        /// `resetRetryCounter1` (12)
         #[asn1(optional = "true")]
         pub reset_retry_counter1: bool,
 
-        /// resetRetryCounter2 (13)
+        /// `resetRetryCounter2` (13)
         #[asn1(optional = "true")]
         pub reset_retry_counter2: bool,
 
-        /// context-dependent (14)
+        /// `context-dependent` (14)
         #[asn1(optional = "true")]
         pub context_dependent: bool,
 
-        /// multiStepProtocol (15)
+        /// `multiStepProtocol` (15)
         #[asn1(optional = "true")]
         pub multi_step_protocol: bool,
 
-        /// fake_bit_for_testing (16)
+        /// `fake_bit_for_testing` (16)
         #[asn1(optional = "true")]
         pub fake_bit_for_testing: bool,
     }
@@ -1196,7 +1198,7 @@ mod bitstring {
     }
 }
 mod infer_default {
-    //! When another crate might define a PartialEq for another type, the use of
+    //! When another crate might define a `PartialEq` for another type, the use of
     //! `default="Default::default"` in the der derivation will not provide enough
     //! information for `der_derive` crate to figure out.
     //!

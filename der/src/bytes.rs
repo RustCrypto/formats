@@ -27,13 +27,13 @@ impl BytesRef {
         // SAFETY: `Self` is a `repr(transparent)` newtype for `[u8]`
         #[allow(unsafe_code)]
         unsafe {
-            &*(slice as *const [u8] as *const Self)
+            &*(core::ptr::from_ref::<[u8]>(slice) as *const Self)
         }
     }
 
     /// Get a pointer to this [`BytesRef`].
     pub(crate) const fn as_ptr(&self) -> *const BytesRef {
-        self as *const BytesRef
+        core::ptr::from_ref::<BytesRef>(self)
     }
 
     /// Borrow the inner byte slice

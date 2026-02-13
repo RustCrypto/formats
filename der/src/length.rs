@@ -75,6 +75,7 @@ impl Length {
     /// Create a new [`Length`] for any value which fits inside of a [`u16`].
     ///
     /// This function is const-safe and therefore useful for [`Length`] constants.
+    #[must_use]
     pub const fn new(value: u32) -> Self {
         Self {
             inner: value,
@@ -97,6 +98,7 @@ impl Length {
     }
 
     /// Is this length equal to zero?
+    #[must_use]
     pub const fn is_zero(self) -> bool {
         self.inner == 0
     }
@@ -109,16 +111,21 @@ impl Length {
 
     /// Get the length of DER Tag-Length-Value (TLV) encoded data if `self`
     /// is the length of the inner "value" portion of the message.
+    ///
+    /// # Errors
+    /// Returns an error if an overflow occurred computing the length.
     pub fn for_tlv(self, tag: Tag) -> Result<Self> {
         tag.encoded_len()? + self.encoded_len()? + self
     }
 
     /// Perform saturating addition of two lengths.
+    #[must_use]
     pub fn saturating_add(self, rhs: Self) -> Self {
         Self::new(self.inner.saturating_add(rhs.inner))
     }
 
     /// Perform saturating subtraction of two lengths.
+    #[must_use]
     pub fn saturating_sub(self, rhs: Self) -> Self {
         Self::new(self.inner.saturating_sub(rhs.inner))
     }
@@ -476,7 +483,7 @@ mod tests {
     fn add_overflows_when_max_length_exceeded() {
         let result = Length::MAX + Length::ONE;
         assert_eq!(
-            result.err().map(|err| err.kind()),
+            result.err().map(super::super::error::Error::kind),
             Some(ErrorKind::Overflow)
         );
     }

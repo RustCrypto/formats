@@ -24,7 +24,7 @@ impl StringRef {
         // SAFETY: `Self` is a `repr(transparent)` newtype for `str`
         #[allow(unsafe_code)]
         unsafe {
-            &*(s as *const str as *const Self)
+            &*(core::ptr::from_ref::<str>(s) as *const Self)
         }
     }
 

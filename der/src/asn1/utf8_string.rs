@@ -34,6 +34,9 @@ pub struct Utf8StringRef<'a> {
 
 impl<'a> Utf8StringRef<'a> {
     /// Create a new ASN.1 `UTF8String`.
+    ///
+    /// # Errors
+    /// If `input` contains invalid characters.
     pub fn new<T>(input: &'a T) -> Result<Self>
     where
         T: AsRef<[u8]> + ?Sized,
@@ -42,6 +45,7 @@ impl<'a> Utf8StringRef<'a> {
     }
 
     /// Borrow the inner `str`.
+    #[must_use]
     pub fn as_str(&self) -> &'a str {
         self.inner.as_str()
     }

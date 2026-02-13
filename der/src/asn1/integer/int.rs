@@ -107,6 +107,9 @@ pub struct IntRef<'a> {
 
 impl<'a> IntRef<'a> {
     /// Create a new [`IntRef`] from a byte slice.
+    ///
+    /// # Errors
+    /// Returns [`Error`] if `bytes` is too long.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
         let inner = BytesRef::new(strip_leading_ones(bytes))
             .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
@@ -116,16 +119,19 @@ impl<'a> IntRef<'a> {
 
     /// Borrow the inner byte slice which contains the least significant bytes
     /// of a big endian integer value with all leading ones stripped.
+    #[must_use]
     pub fn as_bytes(&self) -> &'a [u8] {
         self.inner.as_slice()
     }
 
     /// Get the length of this [`IntRef`] in bytes.
+    #[must_use]
     pub fn len(&self) -> Length {
         self.inner.len()
     }
 
     /// Is the inner byte slice empty?
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
@@ -201,6 +207,9 @@ mod allocating {
 
     impl Int {
         /// Create a new [`Int`] from a byte slice.
+        ///
+        /// # Errors
+        /// If `bytes` is too long.
         pub fn new(bytes: &[u8]) -> Result<Self> {
             let inner = BytesOwned::new(strip_leading_ones(bytes))
                 .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
@@ -210,16 +219,19 @@ mod allocating {
 
         /// Borrow the inner byte slice which contains the least significant bytes
         /// of a big endian integer value with all leading ones stripped.
+        #[must_use]
         pub fn as_bytes(&self) -> &[u8] {
             self.inner.as_slice()
         }
 
         /// Get the length of this [`Int`] in bytes.
+        #[must_use]
         pub fn len(&self) -> Length {
             self.inner.len()
         }
 
         /// Is the inner byte slice empty?
+        #[must_use]
         pub fn is_empty(&self) -> bool {
             self.inner.is_empty()
         }

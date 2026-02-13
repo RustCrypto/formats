@@ -59,6 +59,9 @@ pub struct PrintableStringRef<'a> {
 
 impl<'a> PrintableStringRef<'a> {
     /// Create a new ASN.1 `PrintableString`.
+    ///
+    /// # Errors
+    /// If `input` contains characters outside the allowed range.
     pub fn new<T>(input: &'a T) -> Result<Self>
     where
         T: AsRef<[u8]> + ?Sized,
@@ -93,6 +96,7 @@ impl<'a> PrintableStringRef<'a> {
     }
 
     /// Borrow the inner `str`.
+    #[must_use]
     pub fn as_str(&self) -> &'a str {
         self.inner.as_str()
     }
@@ -169,6 +173,9 @@ mod allocation {
 
     impl PrintableString {
         /// Create a new ASN.1 `PrintableString`.
+        ///
+        /// # Errors
+        /// If any characters are out-of-range.
         pub fn new<T>(input: &T) -> Result<Self>
         where
             T: AsRef<[u8]> + ?Sized,

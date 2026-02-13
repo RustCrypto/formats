@@ -13,6 +13,9 @@ use core::{cmp::Ordering, marker::PhantomData};
 pub trait DerOrd {
     /// Return an [`Ordering`] between `self` and `other` when serialized as
     /// ASN.1 DER.
+    ///
+    /// # Errors
+    /// If an encoding error occurred during the comparison.
     fn der_cmp(&self, other: &Self) -> Result<Ordering>;
 }
 
@@ -22,6 +25,9 @@ pub trait DerOrd {
 pub trait ValueOrd {
     /// Return an [`Ordering`] between value portion of TLV-encoded `self` and
     /// `other` when serialized as ASN.1 DER.
+    ///
+    /// # Errors
+    /// If an encoding error occurred during the comparison.
     fn value_cmp(&self, other: &Self) -> Result<Ordering>;
 }
 
@@ -79,14 +85,14 @@ where
     Ok(length_ord)
 }
 
-/// Provide a no-op implementation for PhantomData
+/// Provide a no-op implementation for `PhantomData`
 impl<T> ValueOrd for PhantomData<T> {
     fn value_cmp(&self, _other: &Self) -> Result<Ordering> {
         Ok(Ordering::Equal)
     }
 }
 
-/// Provide a no-op implementation for PhantomData
+/// Provide a no-op implementation for `PhantomData`
 impl<T> DerOrd for PhantomData<T> {
     fn der_cmp(&self, _other: &Self) -> Result<Ordering> {
         Ok(Ordering::Equal)

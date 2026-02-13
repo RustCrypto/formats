@@ -70,6 +70,9 @@ impl DateTime {
     };
 
     /// Create a new [`DateTime`] from the given UTC time components.
+    ///
+    /// # Errors
+    /// Returns [`Error`] with [`ErrorKind::DateTime`] in the event the date is invalid.
     pub const fn new(
         year: u16,
         month: u8,
@@ -161,7 +164,8 @@ impl DateTime {
 
     /// Compute a [`DateTime`] from the given [`Duration`] since the `UNIX_EPOCH`.
     ///
-    /// Returns `Err` if the value is outside the supported date range.
+    /// # Errors
+    /// Returns error if the value is outside the supported date range.
     // TODO(tarcieri): checked arithmetic
     #[allow(clippy::arithmetic_side_effects)]
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
@@ -241,41 +245,51 @@ impl DateTime {
     }
 
     /// Get the year.
+    #[must_use]
     pub fn year(&self) -> u16 {
         self.year
     }
 
     /// Get the month.
+    #[must_use]
     pub fn month(&self) -> u8 {
         self.month
     }
 
     /// Get the day.
+    #[must_use]
     pub fn day(&self) -> u8 {
         self.day
     }
 
     /// Get the hour.
+    #[must_use]
     pub fn hour(&self) -> u8 {
         self.hour
     }
 
     /// Get the minutes.
+    #[must_use]
     pub fn minutes(&self) -> u8 {
         self.minutes
     }
 
     /// Get the seconds.
+    #[must_use]
     pub fn seconds(&self) -> u8 {
         self.seconds
     }
 
     /// Compute [`Duration`] since `UNIX_EPOCH` from the given calendar date.
+    #[must_use]
     pub fn unix_duration(&self) -> Duration {
         self.unix_duration
     }
 
     /// Instantiate from [`SystemTime`].
+    ///
+    /// # Errors
+    /// If a time conversion error occurred.
     #[cfg(feature = "std")]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         time.duration_since(UNIX_EPOCH)
@@ -285,6 +299,7 @@ impl DateTime {
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
+    #[must_use]
     pub fn to_system_time(&self) -> SystemTime {
         UNIX_EPOCH + self.unix_duration()
     }
@@ -318,7 +333,7 @@ impl FromStr for DateTime {
                 b'Z',
             ] => {
                 let tag = Tag::GeneralizedTime;
-                let year = decode_year(&[year1, year2, year3, year4])?;
+                let year = decode_year([year1, year2, year3, year4])?;
                 let month = decode_decimal(tag, month1, month2).map_err(|_| ErrorKind::DateTime)?;
                 let day = decode_decimal(tag, day1, day2).map_err(|_| ErrorKind::DateTime)?;
                 let hour = decode_decimal(tag, hour1, hour2).map_err(|_| ErrorKind::DateTime)?;
@@ -448,7 +463,7 @@ where
 /// Decode 4-digit year.
 // TODO(tarcieri): checked arithmetic
 #[allow(clippy::arithmetic_side_effects)]
-fn decode_year(year: &[u8; 4]) -> Result<u16> {
+fn decode_year(year: [u8; 4]) -> Result<u16> {
     let tag = Tag::GeneralizedTime;
     let hi = decode_decimal(tag, year[0], year[1]).map_err(|_| ErrorKind::DateTime)?;
     let lo = decode_decimal(tag, year[2], year[3]).map_err(|_| ErrorKind::DateTime)?;

@@ -10,10 +10,7 @@ use crate::{EncodeValue, Result, encode::encode_value_to_slice};
 /// Is the highest bit of the first byte in the slice set to `1`? (if present)
 #[inline]
 fn is_highest_bit_set(bytes: &[u8]) -> bool {
-    bytes
-        .first()
-        .map(|byte| byte & 0b10000000 != 0)
-        .unwrap_or(false)
+    bytes.first().is_some_and(|byte| byte & 0b10000000 != 0)
 }
 
 /// Compare two integer values

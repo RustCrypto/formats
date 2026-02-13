@@ -44,6 +44,7 @@ pub struct Error {
 
 impl Error {
     /// Create a new [`Error`].
+    #[must_use]
     pub const fn new(kind: ErrorKind, position: Length) -> Error {
         Error {
             kind,
@@ -61,6 +62,7 @@ impl Error {
     /// Create a new [`ErrorKind::Incomplete`] for the given length.
     ///
     /// Computes the expected len as being one greater than `actual_len`.
+    #[must_use]
     pub fn incomplete(actual_len: Length) -> Self {
         match actual_len + Length::ONE {
             Ok(expected_len) => ErrorKind::Incomplete {
@@ -73,11 +75,13 @@ impl Error {
     }
 
     /// Get the [`ErrorKind`] which occurred.
+    #[must_use]
     pub fn kind(self) -> ErrorKind {
         self.kind
     }
 
     /// Get the position inside of the message where the error occurred.
+    #[must_use]
     pub fn position(self) -> Option<Length> {
         self.position
     }
@@ -333,11 +337,13 @@ pub enum ErrorKind {
 impl ErrorKind {
     /// Annotate an [`ErrorKind`] with context about where it occurred,
     /// returning an error.
+    #[must_use]
     pub fn at(self, position: Length) -> Error {
         Error::new(self, position)
     }
 
     /// Convert to an error, omitting position information.
+    #[must_use]
     pub fn to_error(self) -> Error {
         Error::from_kind(self)
     }

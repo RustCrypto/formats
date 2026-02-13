@@ -43,6 +43,7 @@ where
     where
         T: 'a;
 
+    #[allow(clippy::redundant_closure_for_method_calls, reason = "MSRV")]
     fn owned_to_ref(&self) -> Self::Borrowed<'_> {
         self.as_ref().map(|o| o.owned_to_ref())
     }
@@ -54,6 +55,8 @@ where
     T::Owned: OwnedToRef,
 {
     type Owned = Option<T::Owned>;
+
+    #[allow(clippy::redundant_closure_for_method_calls, reason = "MSRV")]
     fn ref_to_owned(&self) -> Self::Owned {
         self.as_ref().map(|o| o.ref_to_owned())
     }

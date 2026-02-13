@@ -36,7 +36,10 @@ pub struct SequenceRef {
 }
 
 impl SequenceRef {
-    /// Create a new ASN.1 `OCTET STRING` from a byte slice.
+    /// Create a new ASN.1 `SEQUENCE` from a byte slice.
+    ///
+    /// # Errors
+    /// Returns [`Error`] in the event `slice` is too long.
     pub fn new(slice: &[u8]) -> Result<&Self> {
         BytesRef::new(slice)
             .map(Self::from_bytes_ref)
@@ -55,6 +58,7 @@ impl SequenceRef {
     }
 
     /// Borrow the inner byte slice.
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.body.as_slice()
     }

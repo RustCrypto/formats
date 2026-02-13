@@ -33,6 +33,9 @@ pub trait Reader<'r>: Clone {
     fn position(&self) -> Length;
 
     /// Read nested data of the given length.
+    ///
+    /// # Errors
+    /// If `f` returns an error.
     fn read_nested<T, F, E>(&mut self, len: Length, f: F) -> Result<T, E>
     where
         E: From<Error>,
@@ -41,14 +44,16 @@ pub trait Reader<'r>: Clone {
     /// Attempt to read data borrowed directly from the input as a slice,
     /// updating the internal cursor position.
     ///
-    /// # Returns
-    /// - `Ok(slice)` on success
+    /// # Errors
     /// - `Err(ErrorKind::Incomplete)` if there is not enough data
     /// - `Err(ErrorKind::Reader)` if the reader can't borrow from the input
     fn read_slice(&mut self, len: Length) -> Result<&'r [u8], Error>;
 
     /// Attempt to decode an ASN.1 `CONTEXT-SPECIFIC` field with the
     /// provided [`TagNumber`].
+    ///
+    /// # Errors
+    /// If a decoding error occurred.
     fn context_specific<T>(
         &mut self,
         tag_number: TagNumber,
@@ -65,11 +70,17 @@ pub trait Reader<'r>: Clone {
     }
 
     /// Decode a value which impls the [`Decode`] trait.
+    ///
+    /// # Errors
+    /// Returns `T::Error` if a decoding error occurred.
     fn decode<T: Decode<'r>>(&mut self) -> Result<T, T::Error> {
         T::decode(self)
     }
 
     /// Drain the given amount of data from the reader, discarding it.
+    ///
+    /// # Errors
+    /// If an error occurred reading the given `amount` of data.
     fn drain(&mut self, mut amount: Length) -> Result<(), Error> {
         const BUFFER_SIZE: usize = 16;
         let mut buffer = [0u8; BUFFER_SIZE];
@@ -98,7 +109,10 @@ pub trait Reader<'r>: Clone {
     }
 
     /// Finish decoding, returning `Ok(())` if there is no
-    /// remaining data, or an error otherwise
+    /// remaining data, or an error otherwise.
+    ///
+    /// # Errors
+    /// If there is trailing data remaining in the reader.
     fn finish(self) -> Result<(), Error> {
         if !self.is_finished() {
             Err(ErrorKind::TrailingData {
@@ -132,9 +146,10 @@ pub trait Reader<'r>: Clone {
     }
 
     /// Peek at the decoded data without updating the internal state, writing into the provided
-    /// output buffer.
+    /// output buffer. Attempts to fill the entire buffer.
     ///
-    /// Attempts to fill the entire buffer, returning an error if there is not enough data.
+    /// # Errors
+    /// If there is not enough data.
     fn peek_into(&self, buf: &mut [u8]) -> Result<(), Error> {
         let mut reader = self.clone();
         reader.read_into(buf)?;
@@ -145,18 +160,27 @@ pub trait Reader<'r>: Clone {
     /// the data at the current position in the decoder.
     ///
     /// Does not modify the decoder's state.
-    #[deprecated(since = "0.8.0-rc.1", note = "use `Header::peek` instead")]
+    ///
+    /// # Errors
+    /// If [`Header::peek`] returns an error.
+    #[deprecated(since = "0.8.0", note = "use `Header::peek` instead")]
     fn peek_header(&self) -> Result<Header, Error> {
         Header::peek(self)
     }
 
     /// Peek at the next tag in the reader.
-    #[deprecated(since = "0.8.0-rc.1", note = "use `Tag::peek` instead")]
+    ///
+    /// # Errors
+    /// If [`Tag::peek`] returns an error.
+    #[deprecated(since = "0.8.0", note = "use `Tag::peek` instead")]
     fn peek_tag(&self) -> Result<Tag, Error> {
         Tag::peek(self)
     }
 
     /// Read a single byte.
+    ///
+    /// # Errors
+    /// If the byte could not be read.
     fn read_byte(&mut self) -> Result<u8, Error> {
         let mut buf = [0];
         self.read_into(&mut buf)?;
@@ -166,9 +190,8 @@ pub trait Reader<'r>: Clone {
     /// Attempt to read input data, writing it into the provided buffer, and
     /// returning a slice on success.
     ///
-    /// # Returns
-    /// - `Ok(slice)` if there is sufficient data
-    /// - `Err(ErrorKind::Incomplete)` if there is not enough data
+    /// # Errors
+    /// - `ErrorKind::Incomplete` if there is not enough data
     fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8], Error> {
         let input = self.read_slice(buf.len().try_into()?)?;
         buf.copy_from_slice(input);
@@ -176,6 +199,9 @@ pub trait Reader<'r>: Clone {
     }
 
     /// Read a byte vector of the given length.
+    ///
+    /// # Errors
+    /// If a read error occurred.
     #[cfg(feature = "alloc")]
     fn read_vec(&mut self, len: Length) -> Result<Vec<u8>, Error> {
         let mut bytes = vec![0u8; usize::try_from(len)?];
@@ -191,6 +217,9 @@ pub trait Reader<'r>: Clone {
 
     /// Read an ASN.1 `SEQUENCE`, creating a nested [`Reader`] for the body and
     /// calling the provided closure with it.
+    ///
+    /// # Errors
+    /// If `f` returns an error, or if a decoding error occurred.
     fn sequence<F, T, E>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
@@ -202,6 +231,9 @@ pub trait Reader<'r>: Clone {
     }
 
     /// Obtain a slice of bytes containing a complete TLV production suitable for parsing later.
+    ///
+    /// # Errors
+    /// If a decoding error occurred, or a length calculation overflowed.
     fn tlv_bytes(&mut self) -> Result<&'r [u8], Error> {
         let header = Header::peek(self)?;
         let header_len = header.encoded_len()?;

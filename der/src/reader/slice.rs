@@ -20,11 +20,17 @@ pub struct SliceReader<'a> {
 
 impl<'a> SliceReader<'a> {
     /// Create a new slice reader for the given byte slice.
+    ///
+    /// # Errors
+    /// If `bytes` is too long.
     pub fn new(bytes: &'a [u8]) -> Result<Self, Error> {
         Self::new_with_encoding_rules(bytes, EncodingRules::default())
     }
 
     /// Create a new slice reader with the given encoding rules.
+    ///
+    /// # Errors
+    /// If `bytes` is too long.
     pub fn new_with_encoding_rules(
         bytes: &'a [u8],
         encoding_rules: EncodingRules,
@@ -45,6 +51,7 @@ impl<'a> SliceReader<'a> {
     }
 
     /// Did the decoding operation fail due to an error?
+    #[must_use]
     pub fn is_failed(&self) -> bool {
         self.failed
     }

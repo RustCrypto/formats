@@ -35,17 +35,22 @@ impl GeneralizedTime {
     const LENGTH: usize = 15;
 
     /// Create a [`GeneralizedTime`] from a [`DateTime`].
+    #[must_use]
     pub const fn from_date_time(datetime: DateTime) -> Self {
         Self(datetime)
     }
 
     /// Convert this [`GeneralizedTime`] into a [`DateTime`].
+    #[must_use]
     pub const fn to_date_time(&self) -> DateTime {
         self.0
     }
 
     /// Create a new [`GeneralizedTime`] given a [`Duration`] since `UNIX_EPOCH`
-    /// (a.k.a. "Unix time")
+    /// (a.k.a. "Unix time").
+    ///
+    /// # Errors
+    /// Returns [`Error`] with a value error kind in the event `unix_duration` could not be parsed.
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
         DateTime::from_unix_duration(unix_duration)
             .map(Into::into)
@@ -53,11 +58,15 @@ impl GeneralizedTime {
     }
 
     /// Get the duration of this timestamp since `UNIX_EPOCH`.
+    #[must_use]
     pub fn to_unix_duration(&self) -> Duration {
         self.0.unix_duration()
     }
 
     /// Instantiate from [`SystemTime`].
+    ///
+    /// # Errors
+    /// If the time conversion failed.
     #[cfg(feature = "std")]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         DateTime::try_from(time)
@@ -67,6 +76,7 @@ impl GeneralizedTime {
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
+    #[must_use]
     pub fn to_system_time(&self) -> SystemTime {
         self.0.to_system_time()
     }

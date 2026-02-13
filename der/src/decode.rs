@@ -57,12 +57,18 @@ pub trait Decode<'a>: Sized + 'a {
     type Error: core::error::Error + From<Error> + 'static;
 
     /// Attempt to decode this TLV message using the provided decoder.
+    ///
+    /// # Errors
+    /// Returns [`Self::Error`] in the event a decoding error occurred.
     fn decode<R: Reader<'a>>(decoder: &mut R) -> Result<Self, Self::Error>;
 
     /// Parse `Self` from the provided BER-encoded byte slice.
     ///
     /// Note that most usages should probably use [`Decode::from_der`]. This method allows some
     /// BER productions which are not allowed under DER.
+    ///
+    /// # Errors
+    /// Returns [`Self::Error`] in the event a decoding error occurred.
     #[cfg(feature = "ber")]
     fn from_ber(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let mut reader = SliceReader::new_with_encoding_rules(bytes, EncodingRules::Ber)?;
@@ -73,7 +79,8 @@ pub trait Decode<'a>: Sized + 'a {
 
     /// Parse `Self` from the provided DER-encoded byte slice.
     ///
-    /// Returns [`ErrorKind::TrailingData`] if message is incomplete.
+    /// # Errors
+    /// Returns [`Self::Error`] in the event a decoding error occurred.
     fn from_der(bytes: &'a [u8]) -> Result<Self, Self::Error> {
         let mut reader = SliceReader::new(bytes)?;
         let result = Self::decode(&mut reader)?;
@@ -84,6 +91,9 @@ pub trait Decode<'a>: Sized + 'a {
     /// Parse `Self` from the provided DER-encoded byte slice.
     ///
     /// Returns remaining byte slice, without checking for incomplete message.
+    ///
+    /// # Errors
+    /// Returns [`Self::Error`] in the event a decoding error occurred.
     fn from_der_partial(bytes: &'a [u8]) -> Result<(Self, &'a [u8]), Self::Error> {
         let mut reader = SliceReader::new(bytes)?;
         let result = Self::decode(&mut reader)?;
@@ -144,6 +154,9 @@ impl<T> DecodeOwned for T where T: for<'a> Decode<'a> {}
 )]
 pub trait DecodePem: DecodeOwned + PemLabel {
     /// Try to decode this type from PEM.
+    ///
+    /// # Errors
+    /// If a PEM or DER decoding error occurred.
     fn from_pem(pem: impl AsRef<[u8]>) -> Result<Self, <Self as Decode<'static>>::Error>;
 }
 
@@ -156,7 +169,7 @@ impl<T: DecodeOwned<Error = Error> + PemLabel> DecodePem for T {
     }
 }
 
-/// DecodeValue trait parses the value part of a Tag-Length-Value object,
+/// `DecodeValue` trait parses the value part of a Tag-Length-Value object,
 /// sans the [`Tag`] and [`Length`].
 ///
 /// As opposed to [`Decode`], implementer is expected to read the inner content only,
@@ -196,6 +209,9 @@ pub trait DecodeValue<'a>: Sized {
     type Error: core::error::Error + From<Error> + 'static;
 
     /// Attempt to decode this value using the provided [`Reader`].
+    ///
+    /// # Errors
+    /// Returns [`Self::Error`] in the event a decoding error occurred.
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error>;
 }
 

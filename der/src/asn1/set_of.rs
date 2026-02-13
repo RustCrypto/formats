@@ -41,6 +41,7 @@ where
     T: DerOrd,
 {
     /// Create a new [`SetOf`].
+    #[must_use]
     pub fn new() -> Self {
         Self {
             inner: heapless::Vec::default(),
@@ -50,12 +51,18 @@ where
     /// Add an item to this [`SetOf`].
     ///
     /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
+    ///
+    /// # Errors
+    /// If items are added out-of-order or there isn't sufficient space.
     #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
     pub fn add(&mut self, new_elem: T) -> Result<(), Error> {
         self.insert_ordered(new_elem)
     }
 
     /// Insert an item into this [`SetOf`].
+    ///
+    /// # Errors
+    /// If there's a duplicate or sorting error.
     pub fn insert(&mut self, item: T) -> Result<(), Error> {
         check_duplicate(&item, self.iter())?;
         self.try_push(item)?;
@@ -65,6 +72,9 @@ where
     /// Insert an item into this [`SetOf`].
     ///
     /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
+    ///
+    /// # Errors
+    /// If items are added out-of-order or there isn't sufficient space.
     pub fn insert_ordered(&mut self, item: T) -> Result<(), Error> {
         // Ensure set elements are lexicographically ordered
         if let Some(last) = self.inner.last() {
@@ -265,6 +275,7 @@ where
     T: DerOrd,
 {
     /// Create a new [`SetOfVec`].
+    #[must_use]
     pub fn new() -> Self {
         Self {
             inner: Vec::default(),
@@ -273,8 +284,11 @@ where
 
     /// Create a new [`SetOfVec`] from the given iterator.
     ///
-    /// Note: this is an inherent method instead of an impl of the
-    /// [`FromIterator`] trait in order to be fallible.
+    /// Note: this is an inherent method instead of an impl of the [`FromIterator`] trait in order
+    /// to be fallible.
+    ///
+    /// # Errors
+    /// If a sorting error occurred.
     #[allow(clippy::should_implement_trait)]
     pub fn from_iter<I>(iter: I) -> Result<Self, Error>
     where
@@ -287,6 +301,9 @@ where
     ///
     /// Items MUST be added in lexicographical order according to the
     /// [`DerOrd`] impl on `T`.
+    ///
+    /// # Errors
+    /// If a sorting error occurred.
     #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
     pub fn add(&mut self, item: T) -> Result<(), Error> {
         self.insert_ordered(item)
@@ -294,8 +311,11 @@ where
 
     /// Extend a [`SetOfVec`] using an iterator.
     ///
-    /// Note: this is an inherent method instead of an impl of the
-    /// [`Extend`] trait in order to be fallible.
+    /// Note: this is an inherent method instead of an impl of the [`Extend`] trait in order to
+    /// be fallible.
+    ///
+    /// # Errors
+    /// If a sorting error occurred.
     pub fn extend<I>(&mut self, iter: I) -> Result<(), Error>
     where
         I: IntoIterator<Item = T>,
@@ -305,6 +325,9 @@ where
     }
 
     /// Insert an item into this [`SetOfVec`]. Must be unique.
+    ///
+    /// # Errors
+    /// If `item` is a duplicate or a sorting error occurred.
     pub fn insert(&mut self, item: T) -> Result<(), Error> {
         check_duplicate(&item, self.iter())?;
         self.inner.push(item);
@@ -313,8 +336,10 @@ where
 
     /// Insert an item into this [`SetOfVec`]. Must be unique.
     ///
-    /// Items MUST be added in lexicographical order according to the
-    /// [`DerOrd`] impl on `T`.
+    /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
+    ///
+    /// # Errors
+    /// If a sorting error occurred.
     pub fn insert_ordered(&mut self, item: T) -> Result<(), Error> {
         // Ensure set elements are lexicographically ordered
         if let Some(last) = self.inner.last() {
@@ -326,21 +351,25 @@ where
     }
 
     /// Borrow the elements of this [`SetOfVec`] as a slice.
+    #[must_use]
     pub fn as_slice(&self) -> &[T] {
         self.inner.as_slice()
     }
 
     /// Get the nth element from this [`SetOfVec`].
+    #[must_use]
     pub fn get(&self, index: usize) -> Option<&T> {
         self.inner.get(index)
     }
 
     /// Convert this [`SetOfVec`] into the inner [`Vec`].
+    #[must_use]
     pub fn into_vec(self) -> Vec<T> {
         self.inner
     }
 
     /// Iterate over the elements of this [`SetOfVec`].
+    #[must_use]
     pub fn iter(&self) -> SetOfIter<'_, T> {
         SetOfIter {
             inner: self.inner.iter(),
@@ -348,11 +377,13 @@ where
     }
 
     /// Is this [`SetOfVec`] empty?
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
 
     /// Number of elements in this [`SetOfVec`].
+    #[must_use]
     pub fn len(&self) -> usize {
         self.inner.len()
     }

@@ -8,6 +8,7 @@ pub struct GeneralStringRef<'a> {
 }
 impl<'a> GeneralStringRef<'a> {
     /// This is currently `&[u8]` internally, as `GeneralString` is not fully implemented yet
+    #[must_use]
     pub fn as_bytes(&self) -> &'a [u8] {
         self.inner.as_slice()
     }

@@ -28,11 +28,13 @@ impl TagNumber {
         since = "0.8.0",
         note = "use TagNumber(value) directly as inner field is now pub"
     )]
+    #[must_use]
     pub const fn new(value: u32) -> Self {
         Self(value)
     }
 
     /// Create an `APPLICATION` tag with this tag number.
+    #[must_use]
     pub fn application(self, constructed: bool) -> Tag {
         Tag::Application {
             constructed,
@@ -41,6 +43,7 @@ impl TagNumber {
     }
 
     /// Create a `CONTEXT-SPECIFIC` tag with this tag number.
+    #[must_use]
     pub fn context_specific(self, constructed: bool) -> Tag {
         Tag::ContextSpecific {
             constructed,
@@ -49,6 +52,7 @@ impl TagNumber {
     }
 
     /// Create a `PRIVATE` tag with this tag number.
+    #[must_use]
     pub fn private(self, constructed: bool) -> Tag {
         Tag::Private {
             constructed,
@@ -57,6 +61,7 @@ impl TagNumber {
     }
 
     /// Get the inner value.
+    #[must_use]
     pub fn value(self) -> u32 {
         self.0
     }

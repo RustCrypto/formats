@@ -29,9 +29,12 @@ impl<'a> SliceWriter<'a> {
     }
 
     /// Encode a value which impls the [`Encode`] trait.
+    ///
+    /// # Errors
+    /// Returns an error if encoding failed.
     pub fn encode<T: Encode>(&mut self, encodable: &T) -> Result<()> {
         if self.is_failed() {
-            self.error(ErrorKind::Failed)?
+            self.error(ErrorKind::Failed)?;
         }
 
         encodable.encode(self).map_err(|e| {
@@ -42,18 +45,25 @@ impl<'a> SliceWriter<'a> {
 
     /// Return an error with the given [`ErrorKind`], annotating it with
     /// context about where the error occurred.
+    ///
+    /// # Errors
+    /// This function is designed to generate errors.
     pub fn error<T>(&mut self, kind: ErrorKind) -> Result<T> {
         self.failed = true;
         Err(kind.at(self.position))
     }
 
     /// Did the decoding operation fail due to an error?
+    #[must_use]
     pub fn is_failed(&self) -> bool {
         self.failed
     }
 
     /// Finish encoding to the buffer, returning a slice containing the data
     /// written to the buffer.
+    ///
+    /// # Errors
+    /// If we're overlength, or writing already failed.
     pub fn finish(self) -> Result<&'a [u8]> {
         let position = self.position;
 
@@ -67,6 +77,9 @@ impl<'a> SliceWriter<'a> {
     }
 
     /// Encode a `CONTEXT-SPECIFIC` field with the provided tag number and mode.
+    ///
+    /// # Errors
+    /// If an encoding error occurred.
     pub fn context_specific<T>(
         &mut self,
         tag_number: TagNumber,
@@ -88,6 +101,9 @@ impl<'a> SliceWriter<'a> {
     ///
     /// Spawns a nested slice writer which is expected to be exactly the
     /// specified length upon completion.
+    ///
+    /// # Errors
+    /// If an encoding error occurred.
     pub fn sequence<F>(&mut self, length: Length, f: F) -> Result<()>
     where
         F: FnOnce(&mut SliceWriter<'_>) -> Result<()>,
