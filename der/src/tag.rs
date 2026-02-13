@@ -333,6 +333,9 @@ impl Tag {
     /// Peek at the next byte in the reader and attempt to decode it as a [`Tag`] value.
     ///
     /// Does not modify the reader's state.
+    ///
+    /// # Errors
+    /// If a decoding error occurred.
     pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
         Self::decode(&mut reader.clone())
     }
@@ -353,7 +356,8 @@ impl Tag {
 
     /// Assert that this [`Tag`] matches the provided expected tag.
     ///
-    /// On mismatch, returns an [`Error`] with [`ErrorKind::TagUnexpected`].
+    /// # Errors
+    /// Returns an [`Error`] with [`ErrorKind::TagUnexpected`] on mismatch.
     pub fn assert_eq(self, expected: Tag) -> Result<Tag> {
         if self == expected {
             Ok(self)
@@ -363,6 +367,7 @@ impl Tag {
     }
 
     /// Get the [`Class`] that corresponds to this [`Tag`].
+    #[must_use]
     pub const fn class(self) -> Class {
         match self {
             Tag::Application { .. } => Class::Application,
@@ -373,6 +378,7 @@ impl Tag {
     }
 
     /// Get the [`TagNumber`] for this tag.
+    #[must_use]
     pub const fn number(self) -> TagNumber {
         match self {
             Tag::Boolean => TagNumber(1),
@@ -404,6 +410,7 @@ impl Tag {
     }
 
     /// Does this tag represent a constructed (as opposed to primitive) field?
+    #[must_use]
     pub const fn is_constructed(self) -> bool {
         match self {
             Tag::Sequence | Tag::Set => true,
@@ -415,38 +422,45 @@ impl Tag {
     }
 
     /// Is this an application tag?
+    #[must_use]
     pub const fn is_application(self) -> bool {
         matches!(self.class(), Class::Application)
     }
 
     /// Is this a context-specific tag?
+    #[must_use]
     pub const fn is_context_specific(self) -> bool {
         matches!(self.class(), Class::ContextSpecific)
     }
 
     /// Is this a private tag?
+    #[must_use]
     pub const fn is_private(self) -> bool {
         matches!(self.class(), Class::Private)
     }
 
     /// Is this a universal tag?
+    #[must_use]
     pub const fn is_universal(self) -> bool {
         matches!(self.class(), Class::Universal)
     }
 
     /// Create an [`Error`] for an invalid [`Length`].
+    #[must_use]
     pub fn length_error(self) -> ErrorKind {
         ErrorKind::Length { tag: self }
     }
 
     /// Create an [`Error`] for an non-canonical value with the ASN.1 type
     /// identified by this tag.
+    #[must_use]
     pub fn non_canonical_error(self) -> ErrorKind {
         ErrorKind::Noncanonical { tag: self }
     }
 
     /// Create an [`Error`] because the current tag was unexpected, with an
     /// optional expected tag.
+    #[must_use]
     pub fn unexpected_error(self, expected: Option<Self>) -> ErrorKind {
         ErrorKind::TagUnexpected {
             expected,
@@ -456,6 +470,7 @@ impl Tag {
 
     /// Create an [`Error`] for an invalid value with the ASN.1 type identified
     /// by this tag.
+    #[must_use]
     pub fn value_error(self) -> ErrorKind {
         ErrorKind::Value { tag: self }
     }

@@ -53,11 +53,13 @@ impl fmt::Display for Class {
 
 impl Class {
     /// Returns class as 2 most-significant bits (mask 0b11000000)
+    #[must_use]
     pub const fn bits(&self) -> u8 {
         *self as u8
     }
 
     /// Returns class extracted from 2 most-significant bits (mask 0b11000000)
+    #[must_use]
     pub const fn from_bits(bits: u8) -> Self {
         match (bits >> 6) & 0b11 {
             0b00 => Class::Universal,

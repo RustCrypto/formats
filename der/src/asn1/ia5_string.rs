@@ -42,6 +42,9 @@ pub struct Ia5StringRef<'a> {
 
 impl<'a> Ia5StringRef<'a> {
     /// Create a new `IA5String`.
+    ///
+    /// # Errors
+    /// In the event characters are outside `IA5String`'s allowed set.
     pub fn new<T>(input: &'a T) -> Result<Self>
     where
         T: AsRef<[u8]> + ?Sized,
@@ -59,6 +62,7 @@ impl<'a> Ia5StringRef<'a> {
     }
 
     /// Borrow the inner `str`.
+    #[must_use]
     pub fn as_str(&self) -> &'a str {
         self.inner.as_str()
     }
@@ -118,6 +122,9 @@ mod allocation {
 
     impl Ia5String {
         /// Create a new `IA5String`.
+        ///
+        /// # Errors
+        /// If characters are out of range.
         pub fn new<T>(input: &T) -> Result<Self>
         where
             T: AsRef<[u8]> + ?Sized,

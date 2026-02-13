@@ -42,6 +42,7 @@ pub struct Header {
 
 impl Header {
     /// Create a new [`Header`] from a [`Tag`] and a [`Length`].
+    #[must_use]
     pub fn new(tag: Tag, length: Length) -> Self {
         #[cfg(feature = "ber")]
         let constructed = tag.is_constructed() || length.is_indefinite();
@@ -55,21 +56,25 @@ impl Header {
     }
 
     /// [`Tag`] of this header.
+    #[must_use]
     pub fn tag(&self) -> Tag {
         self.tag
     }
 
     /// [`Length`] of this header.
+    #[must_use]
     pub fn length(&self) -> Length {
         self.length
     }
 
     /// True if the [`Tag`] of this header has its constructed bit set.
+    #[must_use]
     pub fn is_constructed(&self) -> bool {
         self.constructed
     }
 
     /// Copy of header with adjusted length.
+    #[must_use]
     pub fn with_length(&self, length: Length) -> Self {
         Self {
             tag: self.tag,
@@ -81,6 +86,9 @@ impl Header {
     /// Peek forward in the reader, attempting to decode a [`Header`] at the current position.
     ///
     /// Does not modify the reader's state.
+    ///
+    /// # Errors
+    /// Returns [`Error`] in the event a header decoding error occurred.
     pub fn peek<'a>(reader: &impl Reader<'a>) -> Result<Self> {
         Header::decode(&mut reader.clone())
     }

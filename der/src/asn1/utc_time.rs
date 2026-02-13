@@ -40,6 +40,9 @@ impl UtcTime {
     pub const MAX_YEAR: u16 = 2049;
 
     /// Create a [`UtcTime`] from a [`DateTime`].
+    ///
+    /// # Errors
+    /// Returns [`Error`] in the event `datetime` has a year that exceeds [`UtcTime::MAX_YEAR`].
     pub fn from_date_time(datetime: DateTime) -> Result<Self> {
         if datetime.year() <= UtcTime::MAX_YEAR {
             Ok(Self(datetime))
@@ -49,22 +52,30 @@ impl UtcTime {
     }
 
     /// Convert this [`UtcTime`] into a [`DateTime`].
+    #[must_use]
     pub fn to_date_time(&self) -> DateTime {
         self.0
     }
 
     /// Create a new [`UtcTime`] given a [`Duration`] since `UNIX_EPOCH`
     /// (a.k.a. "Unix time")
+    ///
+    /// # Errors
+    /// If [`DateTime`] couldn't be created from `unix_duration` successfully.
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
         DateTime::from_unix_duration(unix_duration)?.try_into()
     }
 
     /// Get the duration of this timestamp since `UNIX_EPOCH`.
+    #[must_use]
     pub fn to_unix_duration(&self) -> Duration {
         self.0.unix_duration()
     }
 
     /// Instantiate from [`SystemTime`].
+    ///
+    /// # Errors
+    /// If a time conversion error occurred.
     #[cfg(feature = "std")]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         DateTime::try_from(time)
@@ -74,6 +85,7 @@ impl UtcTime {
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
+    #[must_use]
     pub fn to_system_time(&self) -> SystemTime {
         self.0.to_system_time()
     }
@@ -209,6 +221,7 @@ impl From<UtcTime> for SystemTime {
 // The DateTime type has a way bigger range of valid years than UtcTime,
 // so the DateTime year is mapped into a valid range to throw away less inputs.
 #[cfg(feature = "arbitrary")]
+#[allow(clippy::unwrap_in_result)]
 impl<'a> arbitrary::Arbitrary<'a> for UtcTime {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         const MIN_YEAR: u16 = 1970;

@@ -24,11 +24,13 @@ pub enum EncodingRules {
 impl EncodingRules {
     /// Are we using Basic Encoding Rules?
     #[cfg(feature = "ber")]
+    #[must_use]
     pub const fn is_ber(self) -> bool {
         matches!(self, EncodingRules::Ber)
     }
 
     /// Are we using Distinguished Encoding Rules?
+    #[must_use]
     pub const fn is_der(self) -> bool {
         matches!(self, EncodingRules::Der)
     }

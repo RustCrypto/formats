@@ -18,6 +18,9 @@ pub struct BmpString {
 
 impl BmpString {
     /// Create a new [`BmpString`] from its UCS-2 encoding.
+    ///
+    /// # Errors
+    /// If `bytes` contains out-of-range characters.
     pub fn from_ucs2(bytes: impl Into<Box<[u8]>>) -> Result<Self> {
         let bytes = bytes.into();
 
@@ -42,6 +45,9 @@ impl BmpString {
     }
 
     /// Create a new [`BmpString`] from a UTF-8 string.
+    ///
+    /// # Errors
+    /// If a length calculation overflowed or an internal conversion failed.
     pub fn from_utf8(utf8: &str) -> Result<Self> {
         let capacity = utf8
             .len()
@@ -58,17 +64,20 @@ impl BmpString {
     }
 
     /// Borrow the encoded UCS-2 as bytes.
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.bytes.as_ref()
     }
 
     /// Obtain the inner bytes.
     #[inline]
+    #[must_use]
     pub fn into_bytes(self) -> Box<[u8]> {
         self.bytes.into()
     }
 
     /// Get an iterator over characters in the string.
+    #[allow(clippy::missing_panics_doc)]
     pub fn chars(&self) -> impl Iterator<Item = char> + '_ {
         char::decode_utf16(self.codepoints())
             .map(|maybe_char| maybe_char.expect("unpaired surrogates checked in constructor"))
@@ -76,7 +85,7 @@ impl BmpString {
 
     /// Get an iterator over the `u16` codepoints.
     pub fn codepoints(&self) -> impl Iterator<Item = u16> + '_ {
-        // TODO(tarcieri): use `array_chunks`
+        // TODO(tarcieri): use `as_chunks`
         self.as_bytes()
             .chunks_exact(2)
             .map(|chunk| u16::from_be_bytes([chunk[0], chunk[1]]))

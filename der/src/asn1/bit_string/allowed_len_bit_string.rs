@@ -2,7 +2,7 @@ use core::ops::RangeInclusive;
 
 use crate::{Error, ErrorKind, Tag};
 
-/// Trait on automatically derived by BitString macro.
+/// Trait on automatically derived by `BitString` macro.
 /// Used for checking if binary data fits into defined struct.
 ///
 /// ```
@@ -31,7 +31,10 @@ pub trait AllowedLenBitString {
     /// Implementer must specify how many bits are allowed
     const ALLOWED_LEN_RANGE: RangeInclusive<u16>;
 
-    /// Returns an error if the bitstring is not in expected length range
+    /// Check the big length.
+    ///
+    /// # Errors
+    /// Returns an error if the bitstring is not in expected length range.
     fn check_bit_len(bit_len: u16) -> Result<(), Error> {
         let allowed_len_range = Self::ALLOWED_LEN_RANGE;
 

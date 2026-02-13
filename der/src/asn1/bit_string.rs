@@ -32,6 +32,12 @@ impl<'a> BitStringRef<'a> {
     ///
     /// Accepts an optional number of "unused bits" (0-7) which are omitted
     /// from the final octet. This number is 0 if the value is octet-aligned.
+    ///
+    /// # Errors
+    /// Returns [`Error`] if any of the following occur:
+    /// - `unused_bits` is invalid
+    /// - `bytes` is too long
+    /// - an overflow occurred calculating the bit length
     pub fn new(unused_bits: u8, bytes: &'a [u8]) -> Result<Self> {
         let unused_bits = UnusedBits::new(unused_bits, bytes)?;
         let inner = BytesRef::new(bytes).map_err(|_| Self::TAG.length_error())?;
@@ -52,16 +58,21 @@ impl<'a> BitStringRef<'a> {
     /// Create a new ASN.1 `BIT STRING` from the given bytes.
     ///
     /// The "unused bits" are set to 0.
+    ///
+    /// # Errors
+    /// Has the same error cases as [`BitStringRef::new`].
     pub fn from_bytes(bytes: &'a [u8]) -> Result<Self> {
         Self::new(0, bytes)
     }
 
     /// Get the number of unused bits in this byte slice.
+    #[must_use]
     pub fn unused_bits(&self) -> u8 {
         *self.unused_bits
     }
 
     /// Is the number of unused bits a value other than 0?
+    #[must_use]
     pub fn has_unused_bits(&self) -> bool {
         *self.unused_bits != 0
     }
@@ -77,6 +88,7 @@ impl<'a> BitStringRef<'a> {
     }
 
     /// Get the length of this `BIT STRING` in bits.
+    #[must_use]
     pub fn bit_len(&self) -> usize {
         let bit_len = self.bit_len_checked();
         debug_assert!(bit_len.is_some());
@@ -87,11 +99,13 @@ impl<'a> BitStringRef<'a> {
 
     /// Get the number of bytes/octets needed to represent this `BIT STRING`
     /// when serialized in an octet-aligned manner.
+    #[must_use]
     pub fn byte_len(&self) -> Length {
         self.inner.len()
     }
 
     /// Is the inner byte slice empty?
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
@@ -103,6 +117,7 @@ impl<'a> BitStringRef<'a> {
     ///
     /// Use [`BitString::raw_bytes`] to obtain access to the raw value
     /// regardless of the presence of unused bits.
+    #[must_use]
     pub fn as_bytes(&self) -> Option<&'a [u8]> {
         if self.has_unused_bits() {
             None
@@ -116,11 +131,13 @@ impl<'a> BitStringRef<'a> {
     /// Note that the byte string may contain extra unused bits in the final
     /// octet. If the number of unused bits is expected to be 0, the
     /// [`BitStringRef::as_bytes`] function can be used instead.
+    #[must_use]
     pub fn raw_bytes(&self) -> &'a [u8] {
         self.inner.as_slice()
     }
 
     /// Iterator over the bits of this `BIT STRING`.
+    #[must_use]
     pub fn bits(self) -> BitStringIter<'a> {
         BitStringIter {
             bit_string: self,
@@ -129,6 +146,7 @@ impl<'a> BitStringRef<'a> {
     }
 
     /// Returns Some(bit) if index is valid
+    #[must_use]
     pub fn get(&self, position: usize) -> Option<bool> {
         if position >= self.bit_len() {
             return None;
@@ -312,6 +330,12 @@ mod allocating {
         ///
         /// Accepts an optional number of "unused bits" (0-7) which are omitted
         /// from the final octet. This number is 0 if the value is octet-aligned.
+        ///
+        /// # Errors
+        /// Returns [`Error`] if any of the following occur:
+        /// - `unused_bits` is invalid
+        /// - `bytes` is too long
+        /// - an overflow occurred calculating the bit length
         pub fn new(unused_bits: u8, bytes: impl Into<Vec<u8>>) -> Result<Self> {
             let inner = bytes.into();
 
@@ -327,17 +351,22 @@ mod allocating {
         /// Create a new ASN.1 `BIT STRING` from the given bytes.
         ///
         /// The "unused bits" are set to 0.
+        ///
+        /// # Errors
+        /// If `bytes` is too long.
         pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
             Self::new(0, bytes)
         }
 
         /// Get the number of unused bits in the octet serialization of this
         /// `BIT STRING`.
+        #[must_use]
         pub fn unused_bits(&self) -> u8 {
             *self.unused_bits
         }
 
         /// Is the number of unused bits a value other than 0?
+        #[must_use]
         pub fn has_unused_bits(&self) -> bool {
             *self.unused_bits != 0
         }
@@ -356,6 +385,7 @@ mod allocating {
         }
 
         /// Get the length of this `BIT STRING` in bits.
+        #[must_use]
         pub fn bit_len(&self) -> usize {
             let bit_len = self.bit_len_checked();
             debug_assert!(bit_len.is_some());
@@ -365,6 +395,7 @@ mod allocating {
         }
 
         /// Is the inner byte slice empty?
+        #[must_use]
         pub fn is_empty(&self) -> bool {
             self.inner.is_empty()
         }
@@ -376,6 +407,7 @@ mod allocating {
         ///
         /// Use [`BitString::raw_bytes`] to obtain access to the raw value
         /// regardless of the presence of unused bits.
+        #[must_use]
         pub fn as_bytes(&self) -> Option<&[u8]> {
             if self.has_unused_bits() {
                 None
@@ -385,16 +417,19 @@ mod allocating {
         }
 
         /// Borrow the raw bytes of this `BIT STRING`.
+        #[must_use]
         pub fn raw_bytes(&self) -> &[u8] {
             self.inner.as_slice()
         }
 
         /// Iterator over the bits of this `BIT STRING`.
+        #[must_use]
         pub fn bits(&self) -> BitStringIter<'_> {
             BitStringRef::from(self).bits()
         }
 
         /// Returns Some(bit) if index is valid
+        #[must_use]
         pub fn get(&self, position: usize) -> Option<bool> {
             BitStringRef::from(self).get(position)
         }
@@ -475,7 +510,7 @@ mod allocating {
         fn try_from(bit_string: BitStringRef<'a>) -> Result<Vec<u8>> {
             bit_string
                 .as_bytes()
-                .map(|bytes| bytes.to_vec())
+                .map(<[u8]>::to_vec)
                 .ok_or_else(|| Tag::BitString.value_error().into())
         }
     }
@@ -525,6 +560,7 @@ mod allocating {
 }
 
 /// Iterator over the bits of a [`BitString`].
+#[derive(Debug)]
 pub struct BitStringIter<'a> {
     /// [`BitString`] being iterated over.
     bit_string: BitStringRef<'a>,
@@ -683,7 +719,7 @@ mod tests {
         assert_eq!(bits.len(), 18);
 
         for bit in [0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1] {
-            assert_eq!(u8::from(bits.next().unwrap()), bit)
+            assert_eq!(u8::from(bits.next().unwrap()), bit);
         }
 
         // Ensure `None` is returned on successive calls
@@ -696,7 +732,7 @@ mod tests {
         assert_eq!(
             parse_bitstring(&[0x03]).err().unwrap().kind(),
             Tag::BitString.value_error()
-        )
+        );
     }
 
     #[test]

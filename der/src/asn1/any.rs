@@ -37,6 +37,9 @@ impl<'a> AnyRef<'a> {
     };
 
     /// Create a new [`AnyRef`] from the provided [`Tag`] and DER bytes.
+    ///
+    /// # Errors
+    /// Returns [`Error`] with [`ErrorKind::Length`] if `bytes` is too long.
     pub const fn new(tag: Tag, bytes: &'a [u8]) -> Result<Self, Error> {
         match BytesRef::new(bytes) {
             Ok(value) => Ok(Self { tag, value }),
@@ -50,16 +53,21 @@ impl<'a> AnyRef<'a> {
     }
 
     /// Get the raw value for this [`AnyRef`] type as a byte slice.
+    #[must_use]
     pub fn value(self) -> &'a [u8] {
         self.value.as_slice()
     }
 
     /// Returns [`Tag`] and [`Length`] of self.
+    #[must_use]
     pub fn header(&self) -> Header {
         Header::new(self.tag, self.value.len())
     }
 
     /// Attempt to decode this [`AnyRef`] type into the inner value.
+    ///
+    /// # Errors
+    /// Returns `T::Error` if a decoding error occurred.
     pub fn decode_as<T>(self) -> Result<T, <T as DecodeValue<'a>>::Error>
     where
         T: Choice<'a> + DecodeValue<'a>,
@@ -68,6 +76,9 @@ impl<'a> AnyRef<'a> {
     }
 
     /// Attempt to decode this [`AnyRef`] type into the inner value.
+    ///
+    /// # Errors
+    /// Returns `T::Error` if a decoding error occurred.
     pub fn decode_as_encoding<T>(
         self,
         encoding: EncodingRules,
@@ -86,12 +97,16 @@ impl<'a> AnyRef<'a> {
     }
 
     /// Is this value an ASN.1 `NULL` value?
+    #[must_use]
     pub fn is_null(self) -> bool {
         self == Self::NULL
     }
 
     /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
     /// nested reader and calling the provided argument with it.
+    ///
+    /// # Errors
+    /// Returns `E` in the event an error is returned from `F` or if a decoding error occurs.
     pub fn sequence<F, T, E>(self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut SliceReader<'a>) -> Result<T, E>,
@@ -192,22 +207,30 @@ mod allocating {
 
     impl Any {
         /// Create a new [`Any`] from the provided [`Tag`] and DER bytes.
+        ///
+        /// # Errors
+        /// If `bytes` is too long.
         pub fn new(tag: Tag, bytes: impl Into<Box<[u8]>>) -> Result<Self, Error> {
             let value = BytesOwned::new(bytes)?;
             Ok(Self { tag, value })
         }
 
         /// Allow access to value
+        #[must_use]
         pub fn value(&self) -> &[u8] {
             self.value.as_slice()
         }
 
         /// Returns [`Tag`] and [`Length`] of self.
+        #[must_use]
         pub fn header(&self) -> Header {
             Header::new(self.tag, self.value.len())
         }
 
         /// Attempt to decode this [`Any`] type into the inner value.
+        ///
+        /// # Errors
+        /// Returns `T::Error` if a decoding error occurred.
         pub fn decode_as<'a, T>(&'a self) -> Result<T, <T as DecodeValue<'a>>::Error>
         where
             T: Choice<'a> + DecodeValue<'a>,
@@ -216,6 +239,9 @@ mod allocating {
         }
 
         /// Attempt to decode this [`Any`] type into the inner value with the given encoding rules.
+        ///
+        /// # Errors
+        /// Returns `T::Error` if a decoding error occurred.
         pub fn decode_as_encoding<'a, T>(
             &'a self,
             encoding: EncodingRules,
@@ -227,6 +253,9 @@ mod allocating {
         }
 
         /// Encode the provided type as an [`Any`] value.
+        ///
+        /// # Errors
+        /// If an encoding error occurred.
         pub fn encode_from<T>(msg: &T) -> Result<Self, Error>
         where
             T: Tagged + EncodeValue,
@@ -239,6 +268,9 @@ mod allocating {
 
         /// Attempt to decode this value an ASN.1 `SEQUENCE`, creating a new
         /// nested reader and calling the provided argument with it.
+        ///
+        /// # Errors
+        /// If a decoding error occurred.
         pub fn sequence<'a, F, T, E>(&'a self, f: F) -> Result<T, E>
         where
             F: FnOnce(&mut SliceReader<'a>) -> Result<T, E>,
@@ -248,6 +280,7 @@ mod allocating {
         }
 
         /// [`Any`] representation of the ASN.1 `NULL` type.
+        #[must_use]
         pub fn null() -> Self {
             Self {
                 tag: Tag::Null,
@@ -256,6 +289,7 @@ mod allocating {
         }
 
         /// Create a new [`AnyRef`] from the provided [`Any`] owned tag and bytes.
+        #[must_use]
         pub fn to_ref(&self) -> AnyRef<'_> {
             AnyRef {
                 tag: self.tag,
@@ -350,6 +384,7 @@ mod allocating {
 
     impl Any {
         /// Is this value an ASN.1 `NULL` value?
+        #[must_use]
         pub fn is_null(&self) -> bool {
             self.owned_to_ref() == AnyRef::NULL
         }

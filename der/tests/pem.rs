@@ -1,6 +1,7 @@
 //! PEM decoding and encoding tests.
 
 #![cfg(all(feature = "derive", feature = "oid", feature = "pem"))]
+#![allow(missing_docs)]
 
 use der::{
     Any, Decode, DecodePem, EncodePem, Sequence,

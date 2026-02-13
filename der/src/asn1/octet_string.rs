@@ -19,6 +19,9 @@ pub struct OctetStringRef {
 
 impl OctetStringRef {
     /// Create a new ASN.1 `OCTET STRING` from a byte slice.
+    ///
+    /// # Errors
+    /// Returns [`Error`] with [`ErrorKind::Length`] in the event `slice` is too long.
     pub fn new(slice: &[u8]) -> Result<&Self, Error> {
         BytesRef::new(slice)
             .map(Self::from_bytes_ref)
@@ -37,21 +40,27 @@ impl OctetStringRef {
     }
 
     /// Borrow the inner byte slice.
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.inner.as_slice()
     }
 
     /// Get the length of the inner byte slice.
+    #[must_use]
     pub fn len(&self) -> Length {
         self.inner.len()
     }
 
     /// Is the inner byte slice empty?
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
 
     /// Parse `T` from this `OCTET STRING`'s contents.
+    ///
+    /// # Errors
+    /// Returns `T::Error` in the event a decoding error occurred.
     pub fn decode_into<'a, T: Decode<'a>>(&'a self) -> Result<T, T::Error> {
         Decode::from_der(self.as_bytes())
     }
@@ -188,6 +197,9 @@ mod allocating {
 
     impl OctetString {
         /// Create a new ASN.1 `OCTET STRING`.
+        ///
+        /// # Errors
+        /// If `bytes` is too long.
         pub fn new(bytes: impl Into<Box<[u8]>>) -> Result<Self, Error> {
             let inner = BytesOwned::new(bytes)?;
 
@@ -198,21 +210,25 @@ mod allocating {
         }
 
         /// Borrow the inner byte slice.
+        #[must_use]
         pub fn as_bytes(&self) -> &[u8] {
             self.inner.as_slice()
         }
 
         /// Take ownership of the octet string.
+        #[must_use]
         pub fn into_bytes(self) -> Box<[u8]> {
             self.inner.into()
         }
 
         /// Get the length of the inner byte slice.
+        #[must_use]
         pub fn len(&self) -> Length {
             self.inner.len()
         }
 
         /// Is the inner byte slice empty?
+        #[must_use]
         pub fn is_empty(&self) -> bool {
             self.inner.is_empty()
         }

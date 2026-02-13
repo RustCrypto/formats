@@ -2,6 +2,7 @@
 
 use super::{Reader, position::Position};
 use crate::{EncodingRules, Error, ErrorKind, Length, Result};
+use core::fmt;
 use pem_rfc7468::Decoder;
 
 /// `Reader` type which decodes PEM on-the-fly.
@@ -21,6 +22,9 @@ impl<'i> PemReader<'i> {
     /// Create a new PEM reader which decodes data on-the-fly.
     ///
     /// Uses the default 64-character line wrapping.
+    ///
+    /// # Errors
+    /// If a decoding error occurred.
     pub fn new(pem: &'i [u8]) -> Result<Self> {
         let decoder = Decoder::new(pem)?;
         let input_len = Length::try_from(decoder.remaining_len())?;
@@ -34,6 +38,7 @@ impl<'i> PemReader<'i> {
 
     /// Get the PEM label which will be used in the encapsulation boundaries
     /// for this document.
+    #[must_use]
     pub fn type_label(&self) -> &'i str {
         self.decoder.type_label()
     }
@@ -74,5 +79,14 @@ impl<'i> Reader<'static> for PemReader<'i> {
         self.position.advance(Length::try_from(buf.len())?)?;
         self.decoder.decode(buf)?;
         Ok(buf)
+    }
+}
+
+impl fmt::Debug for PemReader<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PemReader")
+            .field("position", &self.position)
+            .field("encoding_rules", &self.encoding_rules)
+            .finish_non_exhaustive()
     }
 }

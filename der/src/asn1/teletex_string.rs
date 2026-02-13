@@ -49,6 +49,9 @@ pub struct TeletexStringRef<'a> {
 
 impl<'a> TeletexStringRef<'a> {
     /// Create a new ASN.1 `TeletexString`.
+    ///
+    /// # Errors
+    /// If `input` contains characters outside the allowed range.
     pub fn new<T>(input: &'a T) -> Result<Self>
     where
         T: AsRef<[u8]> + ?Sized,
@@ -66,6 +69,7 @@ impl<'a> TeletexStringRef<'a> {
     }
 
     /// Borrow the inner `str`.
+    #[must_use]
     pub fn as_str(&self) -> &'a str {
         self.inner.as_str()
     }
@@ -119,7 +123,7 @@ mod allocation {
     /// # Supported characters
     ///
     /// The standard defines a complex character set allowed in this type. However, quoting the ASN.1
-    /// mailing list, "a sizable volume of software in the world treats TeletexString (T61String) as a
+    /// mailing list, "a sizable volume of software in the world treats `TeletexString` (`T61String`) as a
     /// simple 8-bit string with mostly Windows Latin 1 (superset of iso-8859-1) encoding".
     ///
     #[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
@@ -130,6 +134,9 @@ mod allocation {
 
     impl TeletexString {
         /// Create a new ASN.1 `TeletexString`.
+        ///
+        /// # Errors
+        /// If characters are out-of-range.
         pub fn new<T>(input: &T) -> Result<Self>
         where
             T: AsRef<[u8]> + ?Sized,

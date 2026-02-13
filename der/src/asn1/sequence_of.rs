@@ -26,6 +26,7 @@ pub struct SequenceOf<T, const N: usize> {
 #[cfg(feature = "heapless")]
 impl<T, const N: usize> SequenceOf<T, N> {
     /// Create a new [`SequenceOf`].
+    #[must_use]
     pub fn new() -> Self {
         Self {
             inner: heapless::Vec::new(),
@@ -33,6 +34,9 @@ impl<T, const N: usize> SequenceOf<T, N> {
     }
 
     /// Add an element to this [`SequenceOf`].
+    ///
+    /// # Errors
+    /// If this sequence is overlength.
     pub fn add(&mut self, element: T) -> Result<(), Error> {
         self.inner
             .push(element)

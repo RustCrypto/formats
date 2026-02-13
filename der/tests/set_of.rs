@@ -1,6 +1,7 @@
 //! `SetOf` tests.
 
 #![cfg(all(any(unix, windows), feature = "alloc", feature = "heapless"))]
+#![allow(clippy::std_instead_of_alloc)]
 
 use der::{DerOrd, asn1::SetOfVec};
 use proptest::{prelude::*, string::*};

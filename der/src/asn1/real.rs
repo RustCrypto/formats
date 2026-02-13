@@ -202,10 +202,7 @@ impl FixedTag for f64 {
 /// NOTE: this function is zero indexed
 pub(crate) fn is_nth_bit_one<const N: usize>(bytes: &[u8]) -> bool {
     if N < 8 {
-        bytes
-            .first()
-            .map(|byte| byte & (1 << N) != 0)
-            .unwrap_or(false)
+        bytes.first().is_some_and(|byte| byte & (1 << N) != 0)
     } else {
         false
     }

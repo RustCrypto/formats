@@ -15,7 +15,7 @@ use core::{fmt, ops::Deref};
 ///
 /// # Supported characters
 ///
-/// For the practical purposes VideotexString is treated as IA5string, disallowing non-ASCII chars.
+/// For the practical purposes `VideotexString` is treated as `IA5string`, disallowing non-ASCII chars.
 ///
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct VideotexStringRef<'a> {
@@ -25,6 +25,9 @@ pub struct VideotexStringRef<'a> {
 
 impl<'a> VideotexStringRef<'a> {
     /// Create a new ASN.1 `VideotexString`.
+    ///
+    /// # Errors
+    /// If input contains out-of-range characters.
     pub fn new<T>(input: &'a T) -> Result<Self>
     where
         T: AsRef<[u8]> + ?Sized,
