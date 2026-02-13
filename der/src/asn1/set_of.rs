@@ -48,17 +48,6 @@ where
         }
     }
 
-    /// Add an item to this [`SetOf`].
-    ///
-    /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
-    ///
-    /// # Errors
-    /// If items are added out-of-order or there isn't sufficient space.
-    #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
-    pub fn add(&mut self, new_elem: T) -> Result<(), Error> {
-        self.insert_ordered(new_elem)
-    }
-
     /// Insert an item into this [`SetOf`].
     ///
     /// # Errors
@@ -295,18 +284,6 @@ where
         I: IntoIterator<Item = T>,
     {
         Vec::from_iter(iter).try_into()
-    }
-
-    /// Add an element to this [`SetOfVec`].
-    ///
-    /// Items MUST be added in lexicographical order according to the
-    /// [`DerOrd`] impl on `T`.
-    ///
-    /// # Errors
-    /// If a sorting error occurred.
-    #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
-    pub fn add(&mut self, item: T) -> Result<(), Error> {
-        self.insert_ordered(item)
     }
 
     /// Extend a [`SetOfVec`] using an iterator.
