@@ -5,26 +5,7 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
-#![deny(unsafe_code)] // only allowed for transmuting newtype references
-#![warn(
-    // TODO: re-enable this lint and fix its warnings
-    // clippy::arithmetic_side_effects,
-    clippy::cast_lossless,
-    clippy::cast_possible_truncation,
-    clippy::cast_possible_wrap,
-    clippy::cast_precision_loss,
-    clippy::cast_sign_loss,
-    clippy::checked_conversions,
-    clippy::implicit_saturating_sub,
-    clippy::mod_module_files,
-    clippy::panic,
-    clippy::panic_in_result_fn,
-    clippy::unwrap_used,
-    missing_docs,
-    rust_2018_idioms,
-    unused_lifetimes,
-    unused_qualifications
-)]
+#![deny(unsafe_code)] // only allowed for casting newtype references
 
 //! # Usage
 //! ## [`Decode`] and [`Encode`] traits
