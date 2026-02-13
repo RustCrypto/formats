@@ -4,88 +4,91 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.8.0 (UNRELEASED)
-
+## 0.8.0 (2026-02-13)
 ### Added
-- `EncodingRules` enum ([#1321])
 - Custom error types support to the `Decode` and `DecodeValue` traits ([#1055])
+- `EncodingRules` enum ([#1321])
 - `Decode::from_ber` ([#1389])
 - Documentation for field-level `tag_mode` attribute ([#1401])
 - `Hash` implementation for `AlgorithmIdentifier` ([#1414])
 - `SequenceRef::as_bytes` and `AsRef<[u8]>` impl ([#1454])
 - `Reader::peek_into` ([#1478])
 - `GeneralString` variant to `Tag` ([#1512])
-- conversions from `OctetString(Ref)` to `Vec`/`Bytes` ([#1540])
-- Custom error types in derive macros. ([#1560])
+- Conversions from `OctetString(Ref)` to `Vec`/`Bytes` ([#1540])
+- Custom error types in derive macros ([#1560])
 - Support for tags beyond 30 ([#1651])
-- const `::new` to `Length`, `BytesRef`, and `AnyRef` ([#1713])
-- const `GeneralizedTime::from_date_time` ([#1718])
+- Const `::new` to `Length`, `BytesRef`, and `AnyRef` ([#1713])
+- Const `GeneralizedTime::from_date_time` ([#1718])
 - `Decode::from_der_partial` ([#1725])
-- conversions between `BitStringRef`/`OctetStringRef` and `[u8; N]` ([#1731])
-- add class bits consts for Application and Private tag support ([#1721])
+- Conversions between `BitStringRef`/`OctetStringRef` and `[u8; N]` ([#1731])
+- Add class bits consts for Application and Private tag support ([#1721])
 - conversions between `heapless:Vec<u8>` and `OctetStringRef` ([#1735])
 - `IsConstructed` trait, impl'ed on any `FixedTag` ([#1744])
-- impl `Hash` for `SetOf` ([#1764])
-- implement `Uint`/`Int` conversions from native types ([#1762])
-- support for `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags ([#1819]) ([#1825]) ([#1944])
-- support `Cow<[u8]>` in derive(Sequence) ([#1850])
+- Implement `Hash` for `SetOf` ([#1764])
+- Implement `Uint`/`Int` conversions from native types ([#1762])
+- Support for `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags ([#1819], [#1825], [#1944])
+- Support `Cow<[u8]>` in `derive(Sequence)` ([#1850])
 - `diagnostic::on_unimplemented` attributes ([#1876])
-- `Reader::read_value`, auto-nest `DecodeValue` ([#1877]) ([#1895]) ([#1897]) ([#1901])
-- indefinite length support ([#1884]) ([#1885]) ([#1894]) ([#1900]) ([#1902]) ([#1910])
-- constructed OctetString support ([#1899]) ([#1922])
-- string conversions, predicate methods for EncodingRules ([#1903]) ([#1953])
-- fn `Any::header` ([#1935])
+- `Reader::read_value`, auto-nest `DecodeValue` ([#1877], [#1895], [#1897], [#1901])
+- Indefinite length support for BER ([#1884], [#1885], [#1894], [#1900], [#1902], [#1910])
+- Constructed OctetString support ([#1899], [#1922])
+- string conversions, predicate methods for EncodingRules ([#1903], [#1953])
+- `Any::header` ([#1935])
 - `Tag::RelativeOid` ([#1942])
-- ber feature ([#1948]) ([#1950])
-- Hash derive for StringOwned and Ia5String ([#1973])
-- impl `DecodeValue/EncodeValue/Tagged` for `Cow` ([#2093])
+- `ber` feature ([#1948], [#1950])
+- Hash derive for `StringOwned` and `Ia5String` ([#1973])
+- Implement `DecodeValue/EncodeValue/Tagged` for `Cow` ([#2093])
+- Add doc examples for `EncodeValue`, `Encode`, `DecodeValue`, `Decode`, `Error`, `ErrorKind`, `Tagged`, `FixedTag`,
+  `IsConstructed`, `Tag`, `Length`, `Header` ([#2075], [#2071], [#2070], [#2064], [#2058], [#2052], [#2053], [#2051])
+- `SequenceRef::new` ([#2224])
 
 ### Changed
-- Bump `const-oid` to v0.10 ([#1676])
 - Return `Tag::Integer.length_error()` on empty ints ([#1400])
-- have `Reader::peek*` methods take `&mut self` ([#1418])
-- allow all blanket impls on `?Sized` types ([#1451])
-- refactor `Tag::peek` ([#1479])
-- refactor `Header::peek` ([#1480])
-- use `core::error::Error` ([#1553])
+- Allow all blanket impls on `?Sized` types ([#1451])
+- Refactor `Tag::peek` ([#1479])
+- Refactor `Header::peek` ([#1480])
+- Use `core::error::Error` ([#1553])
 - Use 2024 edition, bump MSRV to 1.85 ([#1670])
+- Bump `const-oid` to v0.10 ([#1676])
 - Reject zero lengths reads ([#1716])
-- deprecate `TagNumber::new` ([#1727])
-- use strict context-specific skipping condition (equal tag numbers only) ([#1740])
-- const `Any::to_ref`, `BytesOwned::to_ref` ([#1797])
-- return `ErrorKind::Noncanonical` in `EXPLICIT` when primitive ([#1818])
-- use `read_nested` to check length of `IMPLICIT` types ([#1739])
-- simplify `From<&UintRef<'a>>` for `Uint` ([#1840])
-- make `ObjectIdentifier<MAX_SIZE>` impls generic ([#1851])
-- extract `reader::position::Position` ([#1880])
-- make `Reader` cloneable ([#1883])
-- simplify `Header::peek` and `Tag::peek` ([#1886])
-- improve constructed bit handling ([#1919])
-- use fat pointer in `OctetStringRef`, consolidate bytes/string modules, improve internal ref types ([#1920]) ([#1921]) ([#1998]) ([#2040])
-- change constructor `Header::new`, add `Header::with_length`, tests for constructed octet string ([#1931]) ([#1930])
-- simplify der_cmp for Length ([#1997])
-- add doc examples of `EncodeValue`, `Encode`, `DecodeValue`, `Decode`, `Error`, `ErrorKind`, `Tagged`, `FixedTag`, `IsConstructed`, `Tag`, `Length`, `Header` ([#2075]) ([#2071]) ([#2070]) ([#2064]) ([#2058]) ([#2052]) ([#2053]) ([#2051])
-- rename variable encoder -> writer and improve example ([#2078])
-- have `PemReader` decode to `Cow::Owned` ([#2094])
-- only sort `SET OF` types with `EncodingRules::Der` ([#2219])
+- Deprecate `TagNumber::new` ([#1727])
+- Use strict context-specific skipping condition (equal tag numbers only) ([#1740])
+- Const `Any::to_ref`, `BytesOwned::to_ref` ([#1797])
+- Return `ErrorKind::Noncanonical` in `EXPLICIT` when primitive ([#1818])
+- Use `read_nested` to check length of `IMPLICIT` types ([#1739])
+- Simplify `From<&UintRef<'a>>` for `Uint` ([#1840])
+- Make `ObjectIdentifier<MAX_SIZE>` impls generic ([#1851])
+- Extract `reader::position::Position` ([#1880])
+- Make `Reader` cloneable ([#1883])
+- Simplify `Header::peek` and `Tag::peek` ([#1886])
+- Improve constructed bit handling ([#1919])
+- Use fat pointer in `OctetStringRef`, consolidate bytes/string modules, improve internal ref types
+  ([#1920], [#1921], [#1998], [#2040])
+- Change constructor `Header::new`, add `Header::with_length`, tests for constructed octet string ([#1931], [#1930])
+- Simplify `der_cmp` for `Length` ([#1997])
+- Rename variable encoder -> writer and improve example ([#2078])
+- Have `PemReader` decode to `Cow::Owned` ([#2094])
+- Only sort `SET OF` types with `EncodingRules::Der` ([#2219])
+- `SetOf` and `SequenceOf` now require `heapless` feature ([#2220], [#2229])
 
 ### Fixed
-- fix append in `Encode::encode_to_vec` ([#1760])
-- fix derive optional OCTET/BIT STRING on `Option<&[u8]>` ([#1737])
-- fix X.680 tag order: compare class and number first ([#1790])
-- fix BMPString compatibility in derive macros ([#1793])
-- fix Tag::peek_optional for 6-byte and 7+ byte tags ([#1804])
-- fix `Header::peek` for 11-byte tag-lengths ([#1828])
-- fix panic in `value_cmp`: add `Iterator::size_hint` ([#1830])
-- error position tracking improvements ([#1889]) ([#2080]) ([#2079])
-- bound `Decode(Value)::Error` on `core::error::Error` ([#2137])
-- have `SetOf(Vec)::insert` check for duplicates ([#2217])
+- Append in `Encode::encode_to_vec` ([#1760])
+- Derive optional OCTET/BIT STRING on `Option<&[u8]>` ([#1737])
+- X.680 tag order: compare class and number first ([#1790])
+- BMPString compatibility in derive macros ([#1793])
+- `Tag::peek_optional` for 6-byte and 7+ byte tags ([#1804])
+- `Header::peek` for 11-byte tag-lengths ([#1828])
+- Panic in `value_cmp`: add `Iterator::size_hint` ([#1830])
+- Error position tracking improvements ([#1889], [#2080], [#2079])
+- Bound `Decode(Value)::Error` on `core::error::Error` ([#2137])
+- Have `SetOf(Vec)::insert` check for duplicates ([#2217])
 
 ### Removed
 - `TagNumber::N0..N30` consts ([#1724])
 - 256MiB limit on `Length` ([#1726])
-- remove generic `<T>` from `Reader::finish` ([#1833])
-- `SequenceOf` and `SetOf` ([#2220])
+- Generic `<T>` from `Reader::finish` ([#1833])
+- Deprecated `SetOf(Vec)::add` methods ([#2232])
+- `SequenceRef` lifetime ([#2224])
 
 [#1055]: https://github.com/RustCrypto/formats/pull/1055
 [#1321]: https://github.com/RustCrypto/formats/pull/1321
@@ -93,7 +96,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1400]: https://github.com/RustCrypto/formats/pull/1400
 [#1401]: https://github.com/RustCrypto/formats/pull/1401
 [#1414]: https://github.com/RustCrypto/formats/pull/1414
-[#1418]: https://github.com/RustCrypto/formats/pull/1418
 [#1451]: https://github.com/RustCrypto/formats/pull/1451
 [#1454]: https://github.com/RustCrypto/formats/pull/1454
 [#1478]: https://github.com/RustCrypto/formats/pull/1478
@@ -186,6 +188,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2217]: https://github.com/RustCrypto/formats/pull/2217
 [#2219]: https://github.com/RustCrypto/formats/pull/2219
 [#2220]: https://github.com/RustCrypto/formats/pull/2220
+[#2224]: https://github.com/RustCrypto/formats/pull/2224
+[#2229]: https://github.com/RustCrypto/formats/pull/2229
+[#2232]: https://github.com/RustCrypto/formats/pull/2232
 
 ## 0.7.10 (2024-04-18)
 ### Fixed

@@ -17,7 +17,7 @@ rust-version = "1.85"
 
 [dependencies]
 const-oid = { version = "0.10", features = ["db"] }
-der = { version = "0.8.0-rc.10", features = ["alloc", "derive", "flagset", "oid"] }
+der = { version = "0.8", features = ["alloc", "derive", "flagset", "oid"] }
 spki = { version = "0.8.0-rc.4", features = ["alloc"] }
 
 # optional dependencies
