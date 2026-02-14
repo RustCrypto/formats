@@ -25,7 +25,7 @@ aes = { version = "0.9.0-rc.4", optional = true }
 aes-kw = { version = "0.3.0-rc.2", optional = true }
 ansi-x963-kdf = { version = "0.1.0-rc.2", optional = true }
 cbc = { version = "0.2.0-rc.3", optional = true }
-cipher = { version = "0.5.0-rc.8", features = ["alloc", "block-padding", "rand_core"], optional = true }
+cipher = { version = "0.5", features = ["alloc", "block-padding", "rand_core"], optional = true }
 digest = { version = "0.11", optional = true }
 elliptic-curve = { version = "0.14.0-rc.28", optional = true }
 rsa = { version = "0.10.0-rc.15", optional = true }
