@@ -22,7 +22,7 @@ spki = "0.8.0-rc.4"
 x509-cert = { version = "0.3.0-rc.4", default-features = false }
 
 # optional features
-digest = { version = "0.11.0-rc.8", optional = true, default-features = false }
+digest = { version = "0.11", optional = true, default-features = false }
 
 [dev-dependencies]
 const-oid = { version = "0.10", features = ["db"] }

@@ -23,7 +23,7 @@ const-oid = { version = "0.10", features = ["db"], default-features = false }
 cms = { version = "=0.3.0-pre.2", default-features = false }
 
 # optional dependencies
-digest = { version = "0.11.0-rc.8", features = ["alloc"], optional = true }
+digest = { version = "0.11", features = ["alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true, default-features = false }
 
 [dev-dependencies]
