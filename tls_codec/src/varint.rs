@@ -11,7 +11,7 @@ impl TlsVarInt {
     pub const MAX: u64 = (1 << 62) - 1;
     const MAX_LOG: usize = 3;
 
-    /// Wraps an unsinged integer as variable-length int.
+    /// Wraps an unsigned integer as variable-length int.
     ///
     /// Returns [`Error::InvalidVectorLength`] if the value is larger than
     /// [`TlsVarInt::MAX`].
