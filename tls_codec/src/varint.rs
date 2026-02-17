@@ -31,7 +31,8 @@ impl TlsVarInt {
         self.0
     }
 
-    /// Returns the number of bytes required to encode this variable-length int.
+    /// Returns the number of bytes required to encode this variable-length
+    /// int.
     pub(crate) const fn bytes_len(&self) -> usize {
         let value = self.0;
         if !cfg!(fuzzing) {
@@ -48,9 +49,11 @@ impl TlsVarInt {
         }
     }
 
-    /// Writes the bytes of this variable-length at the beginning of the buffer.
+    /// Writes the bytes of this variable-length at the beginning of the
+    /// buffer.
     ///
-    /// The buffer must be at least of the length returned by [`Self::bytes_len`].
+    /// The buffer must be at least of the length returned by
+    /// [`Self::bytes_len`].
     pub(crate) fn write_bytes(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let len = self.bytes_len();
         if !cfg!(fuzzing) {

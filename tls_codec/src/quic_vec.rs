@@ -27,10 +27,11 @@ use crate::{DeserializeBytes, Error, SerializeBytes, Size};
 #[cfg(feature = "mls")]
 const MAX_MLS_LEN: u64 = (1 << 30) - 1;
 
-/// Thin wrapper around [`TlsVarInt`] representing the length of encoded vector content in bytes.
+/// Thin wrapper around [`TlsVarInt`] representing the length of encoded vector
+/// content in bytes.
 ///
-/// When `mls` feature is enabled, the maximum length is limited to 30-bit. Otherwise, this type is
-/// no-op.
+/// When `mls` feature is enabled, the maximum length is limited to 30-bit.
+/// Otherwise, this type is no-op.
 struct ContentLength(super::TlsVarInt);
 
 impl ContentLength {
@@ -152,8 +153,8 @@ impl<T: Size> Size for &[T] {
         let len_len = ContentLength::from_usize(content_length)
             .map(|content_length| content_length.0.bytes_len())
             .unwrap_or({
-                // We can't do anything about the error unless we change the trait.
-                // Let's say there's no content for now.
+                // We can't do anything about the error unless we change the
+                // trait. Let's say there's no content for now.
                 0
             });
         content_length + len_len
@@ -272,7 +273,8 @@ fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
     let len_len = ContentLength::from_usize(content_length)
         .map(|content_length| content_length.0.bytes_len())
         .unwrap_or({
-            // We can't do anything about the error. Let's say there's no content.
+            // We can't do anything about the error. Let's say there's no
+            // content.
             0
         });
     content_length + len_len
