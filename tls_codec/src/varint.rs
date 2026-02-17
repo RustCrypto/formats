@@ -13,20 +13,19 @@ impl TlsVarInt {
 
     /// Wraps an unsinged integer as variable-length int.
     ///
-    /// Returns `None` if the value is larger than [`Self::MAX`].
-    pub const fn new(value: u64) -> Option<Self> {
+    /// Returns [`Error::InvalidVectorLength`] if the value is larger than
+    /// [`TlsVarInt::MAX`].
+    #[inline]
+    pub(crate) fn try_new(value: u64) -> Result<Self, Error> {
         if Self::MAX < value {
-            None
+            Err(Error::InvalidVectorLength)
         } else {
-            Some(Self(value))
+            Ok(Self(value))
         }
     }
 
-    pub(crate) fn try_new(value: u64) -> Result<Self, Error> {
-        Self::new(value).ok_or(Error::InvalidVectorLength)
-    }
-
     /// Returns the value of this variable-length int.
+    #[inline]
     pub const fn value(&self) -> u64 {
         self.0
     }
@@ -35,9 +34,6 @@ impl TlsVarInt {
     /// int.
     pub(crate) const fn bytes_len(&self) -> usize {
         let value = self.0;
-        if !cfg!(fuzzing) {
-            debug_assert!(value <= Self::MAX);
-        }
         if value <= 0x3f {
             1
         } else if value <= 0x3fff {
@@ -52,17 +48,12 @@ impl TlsVarInt {
     /// Writes the bytes of this variable-length at the beginning of the
     /// buffer.
     ///
+    /// Returns how many bytes were written.
+    ///
     /// The buffer must be at least of the length returned by
     /// [`Self::bytes_len`].
     pub(crate) fn write_bytes(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let len = self.bytes_len();
-        if !cfg!(fuzzing) {
-            debug_assert!(len <= 8, "Invalid varint len {len}");
-        }
-        if len > 8 {
-            return Err(Error::LibraryError);
-        }
-
         if buf.len() < len {
             return Err(Error::InvalidVectorLength);
         }
@@ -77,7 +68,7 @@ impl TlsVarInt {
                 if !cfg!(fuzzing) {
                     debug_assert!(false, "Invalid varint len {len}");
                 }
-                return Err(Error::InvalidVectorLength);
+                return Err(Error::LibraryError);
             }
         }
         let mut value = self.0;
@@ -106,7 +97,6 @@ impl From<TlsVarInt> for u64 {
     }
 }
 
-#[inline(always)]
 fn check_min_len(value: u64, len: usize) -> Result<(), Error> {
     if cfg!(feature = "mls") {
         // ensure that `len` is minimal for the given `value`

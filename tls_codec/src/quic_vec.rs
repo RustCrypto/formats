@@ -35,8 +35,7 @@ const MAX_MLS_LEN: u64 = (1 << 30) - 1;
 struct ContentLength(super::TlsVarInt);
 
 impl ContentLength {
-    #[cfg(not(feature = "mls"))]
-    #[allow(dead_code)] // used in arbitrary
+    #[cfg(all(not(feature = "mls"), feature = "arbitrary"))]
     const MAX: u64 = crate::TlsVarInt::MAX;
 
     #[cfg(feature = "mls")]
@@ -410,6 +409,7 @@ pub mod rw {
     use crate::{Deserialize, Serialize};
 
     impl Deserialize for ContentLength {
+        #[inline(always)]
         fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
             ContentLength::new(crate::TlsVarInt::tls_deserialize(bytes)?)
         }
